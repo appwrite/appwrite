@@ -1,4 +1,4 @@
-import { ShieldCheck } from 'lucide-react'
+import { ShieldCheck, ShoppingCart } from 'lucide-react'
 import { useConsoleProfile } from '@/hooks/use-console-profile'
 
 /**
@@ -6,9 +6,9 @@ import { useConsoleProfile } from '@/hooks/use-console-profile'
  *
  * A professional footer component for the console layout displaying:
  * - Dynamic copyright year with Appwrite branding
- * - Navigation links (Docs, Status, Legal)
+ * - Navigation links (Docs, Status, Legal) and Store after social icons
  * - Trust/compliance badges (SOC 2)
- * - Social media icons
+ * - Social media icons and daily.dev Squad link
  *
  * Props: None
  * State: None (stateless component)
@@ -27,6 +27,11 @@ export function ConsoleFooter() {
       ? [{ label: 'Status' as const, href: 'https://status.appwrite.online' }]
       : []),
   ]
+
+  const storeLink = {
+    label: 'Store',
+    href: 'https://store.appwrite.io/',
+  }
 
   const legalLinks = [
     { label: 'Terms', href: 'https://appwrite.io/terms' },
@@ -50,6 +55,11 @@ export function ConsoleFooter() {
       href: 'https://appwrite.io/discord',
       icon: '/icons/discord-simple.svg',
     },
+    {
+      label: 'daily.dev Squad',
+      href: 'https://apwr.dev/dailydev',
+      icon: '/icons/daily-dev.svg',
+    },
   ]
 
   const getSocialIconMaskStyle = (iconPath: string) => ({
@@ -66,7 +76,7 @@ export function ConsoleFooter() {
   return (
     <footer className="@container flex h-[54px] shrink-0 items-center border-t border-border">
       <div className="mx-auto w-full max-w-7xl flex items-center justify-between gap-2 overflow-visible px-4 sm:px-6">
-        {/* Left section: Logo, Resource Links, and Social Icons */}
+        {/* Left section: Logo, Resource Links, Social Icons, and Store */}
         <div className="flex items-center gap-2 min-w-0 flex-shrink">
           {/* Logo - inline SVG with currentColor so theme (black/white) works on Safari/iOS */}
           <div className="flex items-center ps-0 pe-2.5 py-1.5 flex-shrink-0 text-foreground opacity-60">
@@ -133,6 +143,23 @@ export function ConsoleFooter() {
               </a>
             ))}
           </div>
+
+          {/* Separator */}
+          <div className="hidden h-4 w-px flex-shrink-0 bg-border @[680px]:block" />
+
+          {/* Store */}
+          <a
+            href={storeLink.href}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="hidden items-center gap-1.5 rounded-md px-2.5 py-1.5 text-[13px] text-muted-foreground transition-colors hover:bg-accent hover:text-foreground whitespace-nowrap @[680px]:flex"
+          >
+            <ShoppingCart
+              className="h-3.5 w-3.5 shrink-0 opacity-70"
+              aria-hidden
+            />
+            {storeLink.label}
+          </a>
         </div>
 
         {/* Right section: Trust badge, Legal Links, and Copyright */}

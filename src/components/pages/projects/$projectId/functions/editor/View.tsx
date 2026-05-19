@@ -1,4 +1,11 @@
-import { useState, useCallback, useMemo, useEffect, useRef } from 'react'
+import {
+  useState,
+  useCallback,
+  useMemo,
+  useEffect,
+  useLayoutEffect,
+  useRef,
+} from 'react'
 import { useParams, Link } from '@tanstack/react-router'
 import { useTheme } from 'next-themes'
 import { isHtmlDarkChrome, isResolvedThemeDarkChrome } from '@/lib/html-theme'
@@ -56,6 +63,13 @@ import {
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { toast } from 'sonner'
 import { cn } from '@/lib/utils'
+import {
+  computeTwoPanelHorizontalLayout,
+  FUNCTIONS_EDITOR_EXPLORER_DEFAULT_WIDTH_PX,
+  FUNCTIONS_EDITOR_EXPLORER_MAX_WIDTH_PX,
+  FUNCTIONS_EDITOR_EXPLORER_MIN_WIDTH_PX,
+  FUNCTIONS_EDITOR_MAIN_MIN_WIDTH_PX,
+} from '@/lib/resizable-layout'
 import {
   DEFAULT_FILES,
   EDITOR_TEMPLATES,
@@ -467,6 +481,36 @@ export function View() {
     lineNumber: number
     column: number
   } | null>(null)
+  const editorSplitContainerRef = useRef<HTMLDivElement>(null)
+  const [editorSplitWidth, setEditorSplitWidth] = useState(0)
+
+  useLayoutEffect(() => {
+    const el = editorSplitContainerRef.current
+    if (!el) return
+    const ro = new ResizeObserver((entries) => {
+      setEditorSplitWidth(entries[0]?.contentRect.width ?? 0)
+    })
+    ro.observe(el)
+    setEditorSplitWidth(el.getBoundingClientRect().width)
+    return () => ro.disconnect()
+  }, [explorerOpen])
+
+  const explorerPanelLayout = useMemo(() => {
+    const layout = computeTwoPanelHorizontalLayout({
+      containerWidth: editorSplitWidth,
+      firstPx: FUNCTIONS_EDITOR_EXPLORER_DEFAULT_WIDTH_PX,
+      firstMinPx: FUNCTIONS_EDITOR_EXPLORER_MIN_WIDTH_PX,
+      firstMaxPx: FUNCTIONS_EDITOR_EXPLORER_MAX_WIDTH_PX,
+      secondMinPx: FUNCTIONS_EDITOR_MAIN_MIN_WIDTH_PX,
+    })
+    return {
+      explorerDefault: layout.firstPercent,
+      explorerMin: layout.firstMinPercent,
+      explorerMax: layout.firstMaxPercent,
+      mainDefault: layout.secondPercent,
+      mainMin: layout.secondMinPercent,
+    }
+  }, [editorSplitWidth])
 
   const isMac =
     typeof navigator !== 'undefined' &&
@@ -1030,14 +1074,21 @@ export function View() {
       )}
 
       {/* File tree (left) + Editor (right), or editor only when explorer closed */}
-      <div className="min-h-0 flex-1 flex h-full">
+      <div
+        ref={editorSplitContainerRef}
+        className="flex h-full min-h-0 min-w-0 flex-1"
+      >
         {explorerOpen ? (
           <ResizablePanelGroup
             direction="horizontal"
-            className="h-full flex-1"
-            autoSaveId="functions-editor-panels"
+            className="h-full min-w-0 flex-1"
           >
-            <ResizablePanel defaultSize={22} minSize={16} maxSize={40}>
+            <ResizablePanel
+              defaultSize={explorerPanelLayout.explorerDefault}
+              minSize={explorerPanelLayout.explorerMin}
+              maxSize={explorerPanelLayout.explorerMax}
+              style={{ minWidth: FUNCTIONS_EDITOR_EXPLORER_MIN_WIDTH_PX }}
+            >
               <div className="flex h-full flex-col border-r border-border bg-background">
                 {/* Explorer header – no close button (moved to left of tabs) */}
                 <div className="flex h-8 shrink-0 items-center justify-between border-b border-border px-2">
@@ -1139,7 +1190,11 @@ export function View() {
                 'after:w-2 after:left-1/2 after:-translate-x-1/2',
               )}
             />
-            <ResizablePanel defaultSize={78} minSize={50}>
+            <ResizablePanel
+              defaultSize={explorerPanelLayout.mainDefault}
+              minSize={explorerPanelLayout.mainMin}
+              style={{ minWidth: FUNCTIONS_EDITOR_MAIN_MIN_WIDTH_PX }}
+            >
               <div
                 className="flex h-full flex-col min-h-0"
                 onKeyDown={(e) => e.stopPropagation()}

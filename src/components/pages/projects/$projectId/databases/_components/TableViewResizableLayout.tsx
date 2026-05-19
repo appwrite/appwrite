@@ -1,4 +1,4 @@
-import type { ReactNode } from 'react'
+import type { PointerEvent, ReactNode } from 'react'
 import {
   useCallback,
   useEffect,
@@ -13,7 +13,22 @@ import {
   ResizablePanelGroup,
 } from '@/components/ui/resizable'
 import { useAuth } from '@/components/global/auth/RequireAuth'
-import { useDatabasesSidebarWidth } from '@/lib/react-query/hooks'
+import {
+  useTableViewSidebarWidth,
+  type TableViewSidebarWidthScope,
+} from '@/lib/react-query/hooks'
+import {
+  parseDatabasesSidebarWidthPx,
+  parseStorageSidebarWidthPx,
+} from '@/lib/user-prefs-keys'
+import {
+  clampTableViewSidebarWidthPx,
+  computeTwoPanelHorizontalLayout,
+  TABLE_VIEW_MAIN_MIN_WIDTH_PX,
+  TABLE_VIEW_SIDEBAR_DEFAULT_WIDTH_PX,
+  TABLE_VIEW_SIDEBAR_MAX_WIDTH_PX,
+  TABLE_VIEW_SIDEBAR_MIN_WIDTH_PX,
+} from '@/lib/resizable-layout'
 import { cn } from '@/lib/utils'
 
 /** Above rows grid stickies (`z-20`–`z-40` in View.tsx), below overlays (`z-50+`). */
@@ -24,65 +39,55 @@ const HANDLE_CLASS = cn(
   'after:w-2 after:left-1/2 after:-translate-x-1/2',
 )
 
-/** Matches legacy fixed sidebar `w-56` (14rem). */
-const SIDEBAR_MIN_WIDTH_PX = 224
-
-/** Minimum width for the main (rows / header / content) pane. */
-const MAIN_MIN_WIDTH_PX = 360
-
-/** Sidebar cannot exceed this width (converted to % of the measured group). */
-const SIDEBAR_MAX_WIDTH_PX = 480
-
-/** Also cap sidebar max at this % (matches previous `maxSize={40}` on smaller groups). */
-const SIDEBAR_MAX_PERCENT_CAP = 40
-
 /** Debounce window for persisting the sidebar width to user prefs. */
 const PERSIST_DEBOUNCE_MS = 250
-
-function pxToMinPercent(
-  px: number,
-  containerWidth: number,
-  fallbackPercent: number,
-): number {
-  if (containerWidth <= 0) return fallbackPercent
-  return Math.min(100, (px / containerWidth) * 100)
-}
 
 type TableViewResizableLayoutProps = {
   sidebar: ReactNode
   children: ReactNode
   className?: string
+  /** Which account pref key to use for sidebar width persistence. */
+  sidebarWidthScope?: TableViewSidebarWidthScope
 }
 
 /**
  * Left sub-navigation + main area with a draggable split, matching the
  * functions code editor and shared `ResizableHandle` styling.
  *
- * Minimum widths are defined in px; the library only accepts %, so we measure
- * the group and convert (see react-resizable-panels constraint notes).
- *
- * The sidebar width is persisted in user (account) preferences as a single
- * shared setting (`console.databases.sidebarWidth`) so it follows the user
- * across devices and is the same across all databases and tables.
+ * Sizes are defined and persisted in px; `react-resizable-panels` only accepts
+ * %, so we measure the group and convert at runtime.
  */
 export function TableViewResizableLayout({
   sidebar,
   children,
   className,
+  sidebarWidthScope = 'databases',
 }: TableViewResizableLayoutProps) {
   const containerRef = useRef<HTMLDivElement>(null)
   const [containerWidth, setContainerWidth] = useState(0)
   const { account } = useAuth()
-  const { widthPercent, setWidthPercent } = useDatabasesSidebarWidth(
-    account as { prefs?: Record<string, unknown> } | undefined,
+  const accountPrefs = account as { prefs?: Record<string, unknown> } | undefined
+  const { persistSidebarWidthPx } = useTableViewSidebarWidth(
+    accountPrefs,
+    sidebarWidthScope,
   )
 
-  // Capture the initial persisted width once so the panel group is created
-  // with stable `defaultSize` props (changing them later would otherwise
-  // cause the library to reset the layout while the user is dragging).
-  const initialWidthPercentRef = useRef(widthPercent)
-  const initialSidebarPercent = initialWidthPercentRef.current
-  const initialMainPercent = 100 - initialSidebarPercent
+  const parsePersistedSidebarPx =
+    sidebarWidthScope === 'storage'
+      ? parseStorageSidebarWidthPx
+      : parseDatabasesSidebarWidthPx
+  const sidebarWidthPx = useMemo(
+    () =>
+      clampTableViewSidebarWidthPx(
+        parsePersistedSidebarPx(accountPrefs?.prefs) ??
+          TABLE_VIEW_SIDEBAR_DEFAULT_WIDTH_PX,
+      ),
+    [accountPrefs?.prefs, parsePersistedSidebarPx],
+  )
+
+  /** Px used for `defaultSize` — set once the group is measured; updated after drag. */
+  const [mountedSidebarPx, setMountedSidebarPx] = useState<number | null>(null)
+  const isSidebarResizingRef = useRef(false)
 
   useLayoutEffect(() => {
     const el = containerRef.current
@@ -96,44 +101,91 @@ export function TableViewResizableLayout({
     return () => ro.disconnect()
   }, [])
 
-  const { sidebarMinPercent, sidebarMaxPercent, mainMinPercent } = useMemo(() => {
-    const w = containerWidth
-    const sidebarMin = pxToMinPercent(SIDEBAR_MIN_WIDTH_PX, w, 14)
-    const sidebarMaxFromPx =
-      w <= 0 ? SIDEBAR_MAX_PERCENT_CAP : (SIDEBAR_MAX_WIDTH_PX / w) * 100
-    const sidebarMaxUncapped = Math.min(SIDEBAR_MAX_PERCENT_CAP, sidebarMaxFromPx)
-    const sidebarMax = Math.max(sidebarMin, sidebarMaxUncapped)
-    const mainFromPx = pxToMinPercent(MAIN_MIN_WIDTH_PX, w, 45)
-    const mainMin =
-      w <= 0
-        ? 45
-        : Math.min(mainFromPx, Math.max(0, 100 - sidebarMin))
-    return {
-      sidebarMinPercent: sidebarMin,
-      sidebarMaxPercent: sidebarMax,
-      mainMinPercent: mainMin,
-    }
-  }, [containerWidth])
+  useEffect(() => {
+    if (containerWidth <= 0 || isSidebarResizingRef.current) return
+    setMountedSidebarPx((prev) =>
+      prev === null || prev !== sidebarWidthPx ? sidebarWidthPx : prev,
+    )
+  }, [containerWidth, sidebarWidthPx])
 
-  // Persist the sidebar width to user prefs after the user stops resizing.
+  const panelLayout = useMemo(() => {
+    if (mountedSidebarPx === null || containerWidth <= 0) return null
+    return computeTwoPanelHorizontalLayout({
+      containerWidth,
+      firstPx: mountedSidebarPx,
+      firstMinPx: TABLE_VIEW_SIDEBAR_MIN_WIDTH_PX,
+      firstMaxPx: TABLE_VIEW_SIDEBAR_MAX_WIDTH_PX,
+      secondMinPx: TABLE_VIEW_MAIN_MIN_WIDTH_PX,
+    })
+  }, [containerWidth, mountedSidebarPx])
+
   const persistTimerRef = useRef<number | null>(null)
-  const lastPersistedRef = useRef(widthPercent)
+  const lastPersistedPxRef = useRef(sidebarWidthPx)
+  const latestSidebarPxRef = useRef(sidebarWidthPx)
+
+  useEffect(() => {
+    if (isSidebarResizingRef.current) return
+    lastPersistedPxRef.current = sidebarWidthPx
+    latestSidebarPxRef.current = sidebarWidthPx
+  }, [sidebarWidthPx])
+
   const handleLayout = useCallback(
     (sizes: number[]) => {
-      const next = sizes[0]
-      if (typeof next !== 'number' || !Number.isFinite(next)) return
-      // Avoid spamming the API if the size hasn't meaningfully changed.
-      if (Math.abs(next - lastPersistedRef.current) < 0.1) return
+      const percent = sizes[0]
+      if (typeof percent !== 'number' || !Number.isFinite(percent)) return
+      if (containerWidth <= 0) return
+      const layout = computeTwoPanelHorizontalLayout({
+        containerWidth,
+        firstPx: (percent / 100) * containerWidth,
+        firstMinPx: TABLE_VIEW_SIDEBAR_MIN_WIDTH_PX,
+        firstMaxPx: TABLE_VIEW_SIDEBAR_MAX_WIDTH_PX,
+        secondMinPx: TABLE_VIEW_MAIN_MIN_WIDTH_PX,
+      })
+      latestSidebarPxRef.current = layout.firstPx
+      if (!isSidebarResizingRef.current) return
+      const nextPx = layout.firstPx
+      if (Math.abs(nextPx - lastPersistedPxRef.current) < 2) return
       if (persistTimerRef.current !== null) {
         window.clearTimeout(persistTimerRef.current)
       }
       persistTimerRef.current = window.setTimeout(() => {
         persistTimerRef.current = null
-        lastPersistedRef.current = next
-        setWidthPercent(next)
+        lastPersistedPxRef.current = nextPx
+        persistSidebarWidthPx(nextPx)
       }, PERSIST_DEBOUNCE_MS)
     },
-    [setWidthPercent],
+    [containerWidth, persistSidebarWidthPx],
+  )
+
+  const finishSidebarResize = useCallback(
+    (e?: PointerEvent<HTMLDivElement>) => {
+      if (!isSidebarResizingRef.current) return
+      isSidebarResizingRef.current = false
+      if (e?.currentTarget.hasPointerCapture(e.pointerId)) {
+        try {
+          e.currentTarget.releasePointerCapture(e.pointerId)
+        } catch {
+          /* already released */
+        }
+      }
+      if (persistTimerRef.current !== null) {
+        window.clearTimeout(persistTimerRef.current)
+        persistTimerRef.current = null
+      }
+      const nextPx = latestSidebarPxRef.current
+      lastPersistedPxRef.current = nextPx
+      setMountedSidebarPx(nextPx)
+      persistSidebarWidthPx(nextPx)
+    },
+    [persistSidebarWidthPx],
+  )
+
+  const handleSidebarResizePointerDown = useCallback(
+    (e: PointerEvent<HTMLDivElement>) => {
+      isSidebarResizingRef.current = true
+      e.currentTarget.setPointerCapture(e.pointerId)
+    },
+    [],
   )
 
   useEffect(() => {
@@ -144,33 +196,54 @@ export function TableViewResizableLayout({
     }
   }, [])
 
+  const shellClassName = cn(
+    'flex h-full min-h-0 min-w-0 flex-1 flex-col',
+    className,
+  )
+
+  if (!panelLayout) {
+    return (
+      <div ref={containerRef} className={shellClassName}>
+        <div className="flex h-full min-h-0 min-w-0 flex-1">
+          <div
+            className="flex h-full min-h-0 shrink-0 flex-col overflow-hidden border-r border-border bg-background"
+            style={{ width: sidebarWidthPx }}
+          >
+            {sidebar}
+          </div>
+          <div className="min-h-0 min-w-0 flex-1">{children}</div>
+        </div>
+      </div>
+    )
+  }
+
   return (
-    <div
-      ref={containerRef}
-      className={cn(
-        'flex h-full min-h-0 min-w-0 flex-1 flex-col',
-        className,
-      )}
-    >
+    <div ref={containerRef} className={shellClassName}>
       <ResizablePanelGroup
+        key={`${sidebarWidthScope}-${mountedSidebarPx}`}
         direction="horizontal"
         className="h-full min-h-0 min-w-0 flex-1"
         onLayout={handleLayout}
       >
         <ResizablePanel
-          defaultSize={initialSidebarPercent}
-          minSize={sidebarMinPercent}
-          maxSize={sidebarMaxPercent}
+          defaultSize={panelLayout.firstPercent}
+          minSize={panelLayout.firstMinPercent}
+          maxSize={panelLayout.firstMaxPercent}
           className="min-w-0"
         >
           <div className="flex h-full min-h-0 min-w-0 flex-col overflow-hidden border-r border-border bg-background">
             {sidebar}
           </div>
         </ResizablePanel>
-        <ResizableHandle className={HANDLE_CLASS} />
+        <ResizableHandle
+          className={HANDLE_CLASS}
+          onPointerDown={handleSidebarResizePointerDown}
+          onPointerUp={finishSidebarResize}
+          onPointerCancel={finishSidebarResize}
+        />
         <ResizablePanel
-          defaultSize={initialMainPercent}
-          minSize={mainMinPercent}
+          defaultSize={panelLayout.secondPercent}
+          minSize={panelLayout.secondMinPercent}
           className="min-w-0"
         >
           {children}

@@ -4,7 +4,7 @@
  * Handles auth limits, sessions, passwords, and MFA.
  */
 
-import { useCallback, useMemo } from 'react'
+import { useCallback, useEffect, useMemo, useRef } from 'react'
 import {
   useMutation,
   useQuery,
@@ -19,8 +19,10 @@ import {
   buildDatabasesSidebarWidthPrefs,
   buildSavedFiltersPrefs,
   buildSavedImageTransformPresetsPrefs,
-  DATABASES_SIDEBAR_WIDTH_DEFAULT_PERCENT,
-  parseDatabasesSidebarWidthPercent,
+  buildStorageSidebarWidthPrefs,
+  DATABASES_SIDEBAR_DEFAULT_WIDTH_PX,
+  parseDatabasesSidebarWidthPx,
+  parseStorageSidebarWidthPx,
   parseSavedFilters,
   parseSavedImageTransformPresets,
   MAX_SAVED_FILTER_NAME_LENGTH,
@@ -34,6 +36,25 @@ import {
   parseRecentImpersonationUsers,
   parseTablesDbRowsListColumnsFromPrefs,
   readRecentImpersonationSessionList,
+  clearLegacyAIChatLocalStorage,
+  clearLegacyBuildNotificationsOptedOutLocalStorage,
+  clearLegacyStorageFilesTablePaneWidthLocalStorage,
+  hasAIChatPanelOpenPref,
+  hasAIChatPanelWidthPref,
+  hasBuildNotificationsOptedOutPref,
+  hasStorageFilesTablePaneWidthPref,
+  mergeAIChatPanelOpenIntoPrefs,
+  mergeAIChatPanelWidthPxIntoPrefs,
+  mergeBuildNotificationsOptedOutIntoPrefs,
+  mergeStorageFilesTablePaneWidthPxIntoPrefs,
+  parseAIChatPanelOpen,
+  parseAIChatPanelWidthPx,
+  parseBuildNotificationsOptedOut,
+  parseStorageFilesTablePaneWidthPx,
+  readLegacyAIChatPanelOpenFromLocalStorage,
+  readLegacyAIChatPanelWidthFromLocalStorage,
+  readLegacyBuildNotificationsOptedOutFromLocalStorage,
+  readLegacyStorageFilesTablePaneWidthFromLocalStorage,
   type UserPrefs,
 } from '@/lib/user-prefs-keys'
 import type {
@@ -706,29 +727,33 @@ export function useSidebarCollapsed(
 }
 
 // ============================================================================
-// DATABASES SIDEBAR WIDTH PREFERENCE
+// TABLE VIEW SIDEBAR WIDTH (DATABASES + STORAGE)
 // ============================================================================
 
+export type TableViewSidebarWidthScope = 'databases' | 'storage'
+
 /**
- * Hook to manage the persisted width (percent) of the tables sidebar inside
- * the database detail view. Persisted in `account.prefs` under
- * `console.databases.sidebarWidth` so the value follows the user across
- * devices and browsers and is shared across all databases/tables.
- *
- * Reads synchronously from the cached account, writes asynchronously through
- * `account.updatePrefs` with optimistic cache updates (matches the pattern of
- * `useSidebarCollapsed`).
- *
- * Must be used within RequireAuth (or where the account query is loaded).
+ * Persisted sidebar width in px for `TableViewResizableLayout`.
+ * - `databases`: `console.databases.sidebarWidth`
+ * - `storage`: `console.storage.sidebarWidth`
  */
-export function useDatabasesSidebarWidth(
+export function useTableViewSidebarWidth(
   account: { prefs?: Record<string, unknown> } | undefined,
+  scope: TableViewSidebarWidthScope = 'databases',
 ) {
   const queryClient = useQueryClient()
+  const parse =
+    scope === 'storage'
+      ? parseStorageSidebarWidthPx
+      : parseDatabasesSidebarWidthPx
+  const build =
+    scope === 'storage'
+      ? buildStorageSidebarWidthPrefs
+      : buildDatabasesSidebarWidthPrefs
 
-  const widthPercent =
-    parseDatabasesSidebarWidthPercent(account?.prefs) ??
-    DATABASES_SIDEBAR_WIDTH_DEFAULT_PERCENT
+  const widthPx =
+    parse(account?.prefs as UserPrefs | undefined) ??
+    DATABASES_SIDEBAR_DEFAULT_WIDTH_PX
 
   const updateMutation = useMutation({
     mutationFn: async (value: number) => {
@@ -737,23 +762,18 @@ export function useDatabasesSidebarWidth(
       }
       return await updateAccountPrefs({
         ...account.prefs,
-        ...buildDatabasesSidebarWidthPrefs(value),
+        ...build(value),
       })
     },
-    // The auth query key includes consoleImpersonationRevision, so an exact
-    // ['account', 'console'] lookup misses it. Use prefix matching to update
-    // every cached variant optimistically.
     onMutate: async (value) => {
+      const patch = build(value)
       queryClient.setQueriesData<{ prefs?: Record<string, unknown> }>(
         { queryKey: ['account', 'console'] },
         (current) =>
           current
             ? {
                 ...current,
-                prefs: {
-                  ...current.prefs,
-                  ...buildDatabasesSidebarWidthPrefs(value),
-                },
+                prefs: { ...current.prefs, ...patch },
               }
             : current,
       )
@@ -763,14 +783,355 @@ export function useDatabasesSidebarWidth(
     },
   })
 
-  const setWidthPercent = useCallback(
+  const persistSidebarWidthPx = useCallback(
     (value: number) => {
       updateMutation.mutate(value)
     },
     [updateMutation],
   )
 
-  return { widthPercent, setWidthPercent }
+  return { widthPx, persistSidebarWidthPx }
+}
+
+// ============================================================================
+// AI CHAT PANEL + BUILD NOTIFICATIONS (ACCOUNT PREFERENCES)
+// ============================================================================
+
+const AI_CHAT_PANEL_WIDTH_PERSIST_DEBOUNCE_MS = 250
+
+async function migrateLegacyBrowserPrefsToAccount(
+  account: ConsoleAccountCache,
+  queryClient: QueryClient,
+): Promise<void> {
+  const prefs = (account.prefs ?? {}) as UserPrefs
+  let next: UserPrefs = { ...prefs }
+  let changed = false
+
+  if (!hasAIChatPanelOpenPref(prefs)) {
+    const legacyOpen = readLegacyAIChatPanelOpenFromLocalStorage()
+    if (legacyOpen !== null) {
+      next = mergeAIChatPanelOpenIntoPrefs(next, legacyOpen)
+      changed = true
+    }
+  }
+
+  if (!hasAIChatPanelWidthPref(prefs)) {
+    const legacyWidth = readLegacyAIChatPanelWidthFromLocalStorage()
+    if (legacyWidth !== null) {
+      next = mergeAIChatPanelWidthPxIntoPrefs(next, legacyWidth)
+      changed = true
+    }
+  }
+
+  if (!hasBuildNotificationsOptedOutPref(prefs)) {
+    const legacyOptedOut = readLegacyBuildNotificationsOptedOutFromLocalStorage()
+    if (legacyOptedOut) {
+      next = mergeBuildNotificationsOptedOutIntoPrefs(next, true)
+      changed = true
+    }
+  }
+
+  if (!hasStorageFilesTablePaneWidthPref(prefs)) {
+    const legacyPaneWidth =
+      readLegacyStorageFilesTablePaneWidthFromLocalStorage()
+    if (legacyPaneWidth !== null) {
+      next = mergeStorageFilesTablePaneWidthPxIntoPrefs(next, legacyPaneWidth)
+      changed = true
+    }
+  }
+
+  if (!changed) {
+    clearLegacyAIChatLocalStorage()
+    clearLegacyBuildNotificationsOptedOutLocalStorage()
+    clearLegacyStorageFilesTablePaneWidthLocalStorage()
+    return
+  }
+
+  await updateAccountPrefs(next)
+  clearLegacyAIChatLocalStorage()
+  clearLegacyBuildNotificationsOptedOutLocalStorage()
+  clearLegacyStorageFilesTablePaneWidthLocalStorage()
+  queryClient.invalidateQueries({ queryKey: ['account', 'console'] })
+}
+
+let legacyBrowserPrefsMigrationPromise: Promise<void> | null = null
+
+function useMigrateLegacyBrowserPrefsToAccount(
+  account: ConsoleAccountCache | undefined,
+) {
+  const queryClient = useQueryClient()
+
+  useEffect(() => {
+    if (!account) return
+    if (!legacyBrowserPrefsMigrationPromise) {
+      legacyBrowserPrefsMigrationPromise = migrateLegacyBrowserPrefsToAccount(
+        account,
+        queryClient,
+      ).catch(() => {
+        legacyBrowserPrefsMigrationPromise = null
+      })
+    }
+  }, [account, queryClient])
+}
+
+/**
+ * AI assistant panel open state (`console.aiChat.panelOpen`).
+ * Migrates legacy localStorage on first account load.
+ */
+export function useAIChatPanelOpen(
+  account: ConsoleAccountCache | undefined,
+) {
+  const queryClient = useQueryClient()
+  useMigrateLegacyBrowserPrefsToAccount(account)
+
+  const isOpen = parseAIChatPanelOpen(account?.prefs as UserPrefs | undefined)
+
+  const updateMutation = useMutation({
+    mutationFn: async (value: boolean) => {
+      if (!account) {
+        throw new Error('Account data not available')
+      }
+      return await updateAccountPrefs(
+        mergeAIChatPanelOpenIntoPrefs(
+          (account.prefs ?? {}) as UserPrefs,
+          value,
+        ),
+      )
+    },
+    onMutate: async (value) => {
+      queryClient.setQueriesData<{ prefs?: Record<string, unknown> }>(
+        { queryKey: ['account', 'console'] },
+        (current) =>
+          current
+            ? {
+                ...current,
+                prefs: mergeAIChatPanelOpenIntoPrefs(
+                  (current.prefs ?? {}) as UserPrefs,
+                  value,
+                ),
+              }
+            : current,
+      )
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['account', 'console'] })
+    },
+  })
+
+  const setIsOpen = useCallback(
+    (value: boolean | ((prev: boolean) => boolean)) => {
+      const nextValue = typeof value === 'function' ? value(isOpen) : value
+      if (!account) return
+      updateMutation.mutate(nextValue)
+    },
+    [account, isOpen, updateMutation],
+  )
+
+  return { isOpen, setIsOpen }
+}
+
+/**
+ * AI assistant panel width (`console.aiChat.panelWidthPx`).
+ * Debounces writes while resizing.
+ */
+export function useAIChatPanelWidth(
+  account: ConsoleAccountCache | undefined,
+) {
+  const queryClient = useQueryClient()
+  useMigrateLegacyBrowserPrefsToAccount(account)
+
+  const widthPx = parseAIChatPanelWidthPx(
+    account?.prefs as UserPrefs | undefined,
+  )
+
+  const persistTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  const updateMutation = useMutation({
+    mutationFn: async (value: number) => {
+      if (!account) {
+        throw new Error('Account data not available')
+      }
+      return await updateAccountPrefs(
+        mergeAIChatPanelWidthPxIntoPrefs(
+          (account.prefs ?? {}) as UserPrefs,
+          value,
+        ),
+      )
+    },
+    onMutate: async (value) => {
+      const patch = mergeAIChatPanelWidthPxIntoPrefs(
+        (account?.prefs ?? {}) as UserPrefs,
+        value,
+      )
+      queryClient.setQueriesData<{ prefs?: Record<string, unknown> }>(
+        { queryKey: ['account', 'console'] },
+        (current) =>
+          current
+            ? {
+                ...current,
+                prefs: { ...current.prefs, ...patch },
+              }
+            : current,
+      )
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['account', 'console'] })
+    },
+  })
+
+  const setWidthPx = useCallback(
+    (value: number | ((prev: number) => number)) => {
+      const nextValue =
+        typeof value === 'function' ? value(widthPx) : value
+      if (!account) return
+      if (persistTimerRef.current !== null) {
+        clearTimeout(persistTimerRef.current)
+      }
+      const patch = mergeAIChatPanelWidthPxIntoPrefs(
+        (account.prefs ?? {}) as UserPrefs,
+        nextValue,
+      )
+      queryClient.setQueriesData<{ prefs?: Record<string, unknown> }>(
+        { queryKey: ['account', 'console'] },
+        (current) =>
+          current
+            ? {
+                ...current,
+                prefs: { ...current.prefs, ...patch },
+              }
+            : current,
+      )
+      persistTimerRef.current = setTimeout(() => {
+        persistTimerRef.current = null
+        updateMutation.mutate(nextValue)
+      }, AI_CHAT_PANEL_WIDTH_PERSIST_DEBOUNCE_MS)
+    },
+    [account, queryClient, updateMutation, widthPx],
+  )
+
+  useEffect(() => {
+    return () => {
+      if (persistTimerRef.current !== null) {
+        clearTimeout(persistTimerRef.current)
+      }
+    }
+  }, [])
+
+  return { widthPx, setWidthPx }
+}
+
+/**
+ * Whether the user opted out of the build-completion notification prompt.
+ */
+export function useBuildNotificationsOptedOut(
+  account: ConsoleAccountCache | undefined,
+) {
+  const queryClient = useQueryClient()
+  useMigrateLegacyBrowserPrefsToAccount(account)
+
+  const optedOut = parseBuildNotificationsOptedOut(
+    account?.prefs as UserPrefs | undefined,
+  )
+
+  const updateMutation = useMutation({
+    mutationFn: async (value: boolean) => {
+      if (!account) {
+        throw new Error('Account data not available')
+      }
+      return await updateAccountPrefs(
+        mergeBuildNotificationsOptedOutIntoPrefs(
+          (account.prefs ?? {}) as UserPrefs,
+          value,
+        ),
+      )
+    },
+    onMutate: async (value) => {
+      queryClient.setQueriesData<{ prefs?: Record<string, unknown> }>(
+        { queryKey: ['account', 'console'] },
+        (current) =>
+          current
+            ? {
+                ...current,
+                prefs: mergeBuildNotificationsOptedOutIntoPrefs(
+                  (current.prefs ?? {}) as UserPrefs,
+                  value,
+                ),
+              }
+            : current,
+      )
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['account', 'console'] })
+    },
+  })
+
+  const setOptedOut = useCallback(
+    (value: boolean) => {
+      if (!account) return
+      updateMutation.mutate(value)
+    },
+    [account, updateMutation],
+  )
+
+  return { optedOut, setOptedOut }
+}
+
+/**
+ * Storage files list / inline preview split: table pane width in px
+ * (`console.storageFiles.tablePaneWidthPx`). Persists on demand (e.g. after drag).
+ */
+export function useStorageFilesTablePaneWidth(
+  account: ConsoleAccountCache | undefined,
+) {
+  const queryClient = useQueryClient()
+  useMigrateLegacyBrowserPrefsToAccount(account)
+
+  const tablePaneWidthPx = parseStorageFilesTablePaneWidthPx(
+    account?.prefs as UserPrefs | undefined,
+  )
+
+  const updateMutation = useMutation({
+    mutationFn: async (value: number) => {
+      if (!account) {
+        throw new Error('Account data not available')
+      }
+      return await updateAccountPrefs(
+        mergeStorageFilesTablePaneWidthPxIntoPrefs(
+          (account.prefs ?? {}) as UserPrefs,
+          value,
+        ),
+      )
+    },
+    onMutate: async (value) => {
+      const patch = mergeStorageFilesTablePaneWidthPxIntoPrefs(
+        (account?.prefs ?? {}) as UserPrefs,
+        value,
+      )
+      queryClient.setQueriesData<{ prefs?: Record<string, unknown> }>(
+        { queryKey: ['account', 'console'] },
+        (current) =>
+          current
+            ? {
+                ...current,
+                prefs: { ...current.prefs, ...patch },
+              }
+            : current,
+      )
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['account', 'console'] })
+    },
+  })
+
+  const persistTablePaneWidthPx = useCallback(
+    (value: number) => {
+      if (!account) return
+      updateMutation.mutate(value)
+    },
+    [account, updateMutation],
+  )
+
+  return { tablePaneWidthPx, persistTablePaneWidthPx }
 }
 
 // ============================================================================

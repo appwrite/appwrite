@@ -37,7 +37,10 @@ import {
   isStorageVideoPreviewSupportedMimeType,
 } from '@/components/global/shared/StorageFilePreviewThumb'
 import { formatBytes } from '@/lib/utils/mock-data'
-import { STORAGE_FILES_SPLIT_HEADER_ROW_H_CLASS } from './files-documents-layout'
+import {
+  STORAGE_FILES_SPLIT_HEADER_ROW_H_CLASS,
+  STORAGE_FILES_SPLIT_PANE_BG_CLASS,
+} from './files-documents-layout'
 import { FileSecurity } from './FileSecurity'
 import { TransformImageWizard } from './TransformImageWizard'
 import {
@@ -287,7 +290,12 @@ export function FileInspectorPanel({
 
   if (!fileId) {
     return (
-      <aside className="flex h-full min-h-0 w-full min-w-0 flex-col bg-muted/10">
+      <aside
+        className={cn(
+          'flex h-full min-h-0 w-full min-w-0 flex-col',
+          STORAGE_FILES_SPLIT_PANE_BG_CLASS,
+        )}
+      >
         <div
           className={cn(
             'flex shrink-0 items-center gap-2 border-b border-border px-3',
@@ -319,7 +327,12 @@ export function FileInspectorPanel({
     if (isLoading) {
       return (
         <TooltipProvider delayDuration={0}>
-          <aside className="flex h-full min-h-0 w-full min-w-0 flex-col bg-muted/10">
+          <aside
+        className={cn(
+          'flex h-full min-h-0 w-full min-w-0 flex-col',
+          STORAGE_FILES_SPLIT_PANE_BG_CLASS,
+        )}
+      >
             <div
               className={cn(
                 'flex shrink-0 items-center justify-between gap-2 border-b border-border px-3',
@@ -361,7 +374,12 @@ export function FileInspectorPanel({
     }
     return (
       <TooltipProvider delayDuration={0}>
-        <aside className="flex h-full min-h-0 w-full min-w-0 flex-col bg-muted/10">
+        <aside
+        className={cn(
+          'flex h-full min-h-0 w-full min-w-0 flex-col',
+          STORAGE_FILES_SPLIT_PANE_BG_CLASS,
+        )}
+      >
           <div
             className={cn(
               'flex shrink-0 items-center justify-between gap-2 border-b border-border px-3',
@@ -716,7 +734,12 @@ export function FileInspectorPanel({
   return (
     <>
       <TooltipProvider delayDuration={0}>
-      <aside className="flex h-full min-h-0 w-full min-w-0 flex-col bg-muted/10">
+      <aside
+        className={cn(
+          'flex h-full min-h-0 w-full min-w-0 flex-col',
+          STORAGE_FILES_SPLIT_PANE_BG_CLASS,
+        )}
+      >
         <div
           className={cn(
             'flex shrink-0 items-center justify-between gap-2 border-b border-border px-3',

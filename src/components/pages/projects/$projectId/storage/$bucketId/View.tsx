@@ -33,6 +33,7 @@ import {
   fileQueryOptions,
   getBucketFromProjectCaches,
   getConsoleAccountFromCache,
+  useStorageFilesTablePaneWidth,
 } from '@/lib/react-query/hooks'
 import { ServiceHeader, type Tab } from '../../shared/ServiceHeader'
 import { CopyableId } from '@/components/global/shared/CopyableId'
@@ -83,14 +84,19 @@ import type { CompactFilterKey } from '@/lib/table-filters'
 import { FiltersPopover } from '@/components/global/shared/FiltersPopover'
 import { FileInspectorPanel } from '../_components/FileInspectorPanel'
 import {
-  readStoredStorageFilesTablePaneWidthPx,
+  clampSplitFirstPaneWidthPx,
+  fitSplitFirstPaneWidthOnContainerResize,
+} from '@/lib/resizable-layout'
+import {
   STORAGE_FILES_PREVIEW_PANE_MIN_PX,
   STORAGE_FILES_TABLE_PREVIEW_SPLIT_MIN_VIEWPORT_PX,
   STORAGE_FILES_STACKED_PREVIEW_MAX_H_CLASS,
   STORAGE_FILES_TABLE_EDGE_COL_PX,
+  STORAGE_FILES_TABLE_PANE_MAX_PX,
   STORAGE_FILES_TABLE_PANE_MIN_PX,
-  STORAGE_FILES_TABLE_PANE_WIDTH_STORAGE_KEY,
   STORAGE_FILES_SPLIT_HEADER_ROW_H_CLASS,
+  STORAGE_FILES_SPLIT_PANE_BG_CLASS,
+  defaultStorageFilesTablePaneWidthPx,
   STORAGE_SPREADSHEET_BODY_CELL_BORDER,
   STORAGE_SPREADSHEET_BODY_CELL_BORDER_LAST,
   STORAGE_SPREADSHEET_HEADER_CELL_BORDER_SPLIT_TOP,
@@ -101,7 +107,6 @@ import {
 } from '../_components/files-documents-layout'
 import { useMediaMinWidth } from '@/hooks/use-media-min-width'
 import { useAuth } from '@/components/global/auth/RequireAuth'
-import type { UserPrefs } from '@/lib/user-prefs-keys'
 import {
   STORAGE_FILES_LIST_COLUMN_WIDTH_KEYS,
   STORAGE_FILES_LIST_DATA_COLUMN_MIN_WIDTH_PX,
@@ -109,7 +114,10 @@ import {
   getStorageFilesListColumnWidthsFromPrefs,
   mergeStorageFilesListColumnWidthsIntoPrefs,
   mergeStorageFilesListColumnWidthsWithDefaults,
+  hasStorageFilesTablePaneWidthPref,
+  parseStorageFilesTablePaneWidthPx,
   type StorageFilesListColumnWidthKey,
+  type UserPrefs,
 } from '@/lib/user-prefs-keys'
 
 const STORAGE_FILES_STACKED_COL_STYLES: Record<
@@ -246,6 +254,8 @@ export function View() {
       : undefined
 
   const queryClient = useQueryClient()
+  const { account } = useAuth()
+  const { persistTablePaneWidthPx } = useStorageFilesTablePaneWidth(account)
 
   const prefetchInspectorFileData = useCallback(
     (targetFileId: string) => {
@@ -868,10 +878,23 @@ export function View() {
     useInlineFilePreviewPane && !wideEnoughForTablePreviewSplit
   const splitFilesTable =
     useInlineFilePreviewPane && !isFilesStackedLayout
-  const [fileTablePaneWidthPx, setFileTablePaneWidthPx] = useState(
-    readStoredStorageFilesTablePaneWidthPx,
+  const filesTablePanePrefs = account?.prefs as UserPrefs | undefined
+  const hasFilesTablePaneWidthPref = hasStorageFilesTablePaneWidthPref(
+    filesTablePanePrefs,
   )
+  const hasFilesTablePaneWidthPrefRef = useRef(hasFilesTablePaneWidthPref)
+  hasFilesTablePaneWidthPrefRef.current = hasFilesTablePaneWidthPref
+  const [fileTablePaneWidthPx, setFileTablePaneWidthPx] = useState(() => {
+    const parsed = parseStorageFilesTablePaneWidthPx(
+      getConsoleAccountFromCache(queryClient)?.prefs as UserPrefs | undefined,
+    )
+    if (parsed !== null) return parsed
+    return defaultStorageFilesTablePaneWidthPx(
+      STORAGE_FILES_TABLE_PREVIEW_SPLIT_MIN_VIEWPORT_PX,
+    )
+  })
   const [isFilesSplitResizing, setIsFilesSplitResizing] = useState(false)
+  const isFilesSplitResizingRef = useRef(false)
   const filesSplitContainerRef = useRef<HTMLDivElement>(null)
   const fileTablePaneWidthRef = useRef(fileTablePaneWidthPx)
   fileTablePaneWidthRef.current = fileTablePaneWidthPx
@@ -879,6 +902,7 @@ export function View() {
   const handleFilesSplitPointerDown = useCallback(
     (e: ReactPointerEvent<HTMLButtonElement>) => {
       e.preventDefault()
+      isFilesSplitResizingRef.current = true
       setIsFilesSplitResizing(true)
       const btn = e.currentTarget
       btn.setPointerCapture(e.pointerId)
@@ -887,19 +911,20 @@ export function View() {
       const splitEl = filesSplitContainerRef.current
       const onMove = (ev: globalThis.PointerEvent) => {
         if (!splitEl) return
-        const maxTable = Math.max(
+        const next = clampSplitFirstPaneWidthPx(
+          startW + (ev.clientX - startX),
+          splitEl.clientWidth,
           STORAGE_FILES_TABLE_PANE_MIN_PX,
-          splitEl.clientWidth - STORAGE_FILES_PREVIEW_PANE_MIN_PX,
-        )
-        const delta = ev.clientX - startX
-        const next = Math.min(
-          maxTable,
-          Math.max(STORAGE_FILES_TABLE_PANE_MIN_PX, startW + delta),
+          STORAGE_FILES_TABLE_PANE_MAX_PX,
+          STORAGE_FILES_PREVIEW_PANE_MIN_PX,
         )
         setFileTablePaneWidthPx(next)
         fileTablePaneWidthRef.current = next
       }
       const onUp = () => {
+        const finalWidth = fileTablePaneWidthRef.current
+        persistTablePaneWidthPx(finalWidth)
+        isFilesSplitResizingRef.current = false
         setIsFilesSplitResizing(false)
         try {
           btn.releasePointerCapture(e.pointerId)
@@ -909,16 +934,12 @@ export function View() {
         window.removeEventListener('pointermove', onMove)
         window.removeEventListener('pointerup', onUp)
         window.removeEventListener('pointercancel', onUp)
-        localStorage.setItem(
-          STORAGE_FILES_TABLE_PANE_WIDTH_STORAGE_KEY,
-          String(fileTablePaneWidthRef.current),
-        )
       }
       window.addEventListener('pointermove', onMove)
       window.addEventListener('pointerup', onUp)
       window.addEventListener('pointercancel', onUp)
     },
-    [],
+    [persistTablePaneWidthPx],
   )
 
   useEffect(() => {
@@ -935,20 +956,29 @@ export function View() {
     if (isFilesStackedLayout) return
     const el = filesSplitContainerRef.current
     if (!el) return
-    const clamp = () => {
-      const maxTable = Math.max(
-        STORAGE_FILES_TABLE_PANE_MIN_PX,
-        el.clientWidth - STORAGE_FILES_PREVIEW_PANE_MIN_PX,
-      )
-      setFileTablePaneWidthPx((w) => Math.min(w, maxTable))
+    const fitOnContainerResize = () => {
+      if (isFilesSplitResizingRef.current) return
+      const containerW = el.clientWidth
+      if (containerW <= 0) return
+      setFileTablePaneWidthPx((w) => {
+        if (!hasFilesTablePaneWidthPrefRef.current) {
+          return defaultStorageFilesTablePaneWidthPx(containerW)
+        }
+        return fitSplitFirstPaneWidthOnContainerResize(
+          w,
+          containerW,
+          STORAGE_FILES_TABLE_PANE_MIN_PX,
+          STORAGE_FILES_TABLE_PANE_MAX_PX,
+          STORAGE_FILES_PREVIEW_PANE_MIN_PX,
+        )
+      })
     }
-    const ro = new ResizeObserver(clamp)
+    const ro = new ResizeObserver(fitOnContainerResize)
     ro.observe(el)
-    clamp()
+    fitOnContainerResize()
     return () => ro.disconnect()
   }, [isFilesStackedLayout])
 
-  const { account } = useAuth()
   const [fileListColumnWidths, setFileListColumnWidths] = useState<
     Record<StorageFilesListColumnWidthKey, number>
   >(() => {
@@ -1361,14 +1391,18 @@ export function View() {
                   <div
                     style={
                       splitFilesTable
-                        ? { width: fileTablePaneWidthPx }
+                        ? {
+                            width: fileTablePaneWidthPx,
+                            minWidth: STORAGE_FILES_TABLE_PANE_MIN_PX,
+                          }
                         : undefined
                     }
                     className={cn(
                       'flex min-h-0 min-w-0 flex-col',
                       useInlineFilePreviewPane
                         ? cn(
-                            'border-border bg-background',
+                            'border-border',
+                            STORAGE_FILES_SPLIT_PANE_BG_CLASS,
                             isFilesStackedLayout
                               ? 'flex-1 min-h-0 w-full border-b border-border'
                               : 'shrink-0 border-r border-border',
@@ -2036,7 +2070,8 @@ export function View() {
                   </div>
                   <div
                     className={cn(
-                      'flex min-h-0 min-w-0 flex-col bg-muted/10',
+                      'flex min-h-0 min-w-0 flex-col',
+                      STORAGE_FILES_SPLIT_PANE_BG_CLASS,
                       isFilesStackedLayout
                         ? cn(
                             'flex-none overflow-y-auto overscroll-contain',
@@ -2075,35 +2110,33 @@ export function View() {
                       onKeyDown={(e) => {
                         const splitEl = filesSplitContainerRef.current
                         if (!splitEl) return
-                        const maxTable = Math.max(
-                          STORAGE_FILES_TABLE_PANE_MIN_PX,
-                          splitEl.clientWidth -
-                            STORAGE_FILES_PREVIEW_PANE_MIN_PX,
-                        )
                         const step = 24
                         if (e.key === 'ArrowLeft') {
                           e.preventDefault()
                           setFileTablePaneWidthPx((w) => {
-                            const next = Math.max(
-                              STORAGE_FILES_TABLE_PANE_MIN_PX,
+                            const next = clampSplitFirstPaneWidthPx(
                               w - step,
+                              splitEl.clientWidth,
+                              STORAGE_FILES_TABLE_PANE_MIN_PX,
+                              STORAGE_FILES_TABLE_PANE_MAX_PX,
+                              STORAGE_FILES_PREVIEW_PANE_MIN_PX,
                             )
                             fileTablePaneWidthRef.current = next
-                            localStorage.setItem(
-                              STORAGE_FILES_TABLE_PANE_WIDTH_STORAGE_KEY,
-                              String(next),
-                            )
+                            persistTablePaneWidthPx(next)
                             return next
                           })
                         } else if (e.key === 'ArrowRight') {
                           e.preventDefault()
                           setFileTablePaneWidthPx((w) => {
-                            const next = Math.min(maxTable, w + step)
-                            fileTablePaneWidthRef.current = next
-                            localStorage.setItem(
-                              STORAGE_FILES_TABLE_PANE_WIDTH_STORAGE_KEY,
-                              String(next),
+                            const next = clampSplitFirstPaneWidthPx(
+                              w + step,
+                              splitEl.clientWidth,
+                              STORAGE_FILES_TABLE_PANE_MIN_PX,
+                              STORAGE_FILES_TABLE_PANE_MAX_PX,
+                              STORAGE_FILES_PREVIEW_PANE_MIN_PX,
                             )
+                            fileTablePaneWidthRef.current = next
+                            persistTablePaneWidthPx(next)
                             return next
                           })
                         }

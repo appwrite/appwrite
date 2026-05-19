@@ -30,15 +30,14 @@ import { useLocation } from '@tanstack/react-router'
 import { toast } from 'sonner'
 import { Bell } from 'lucide-react'
 import type { RealtimeResponseEvent, Models } from '@appwrite.io/console'
+import { useAuth } from '@/components/global/auth/RequireAuth'
 import { useFavicon, type FaviconVariant } from '@/hooks/use-favicon'
 import { usesThemeAwareFaviconHost } from '@/lib/utils/theme-favicon-host'
 import { registerConsoleRealtimeListener } from '@/lib/realtime/console-hub'
 import { registerRegionalConsoleRealtimeListener } from '@/lib/realtime/regional-console-hub'
 import { PROJECT_CHANNELS } from '@/lib/realtime/constants'
 import { isDeploymentTimeout } from '@/lib/utils/deployment-status'
-
-/** localStorage key for remembering that the user explicitly opted out of the prompt. */
-const OPT_OUT_STORAGE_KEY = 'appwrite.buildNotifications.optedOut'
+import { useBuildNotificationsOptedOut } from '@/lib/react-query/hooks'
 
 interface ActiveBuild {
   deploymentId: string
@@ -151,24 +150,6 @@ function notificationsSupported(): boolean {
   return typeof window !== 'undefined' && typeof Notification !== 'undefined'
 }
 
-function userOptedOut(): boolean {
-  if (typeof window === 'undefined') return false
-  try {
-    return window.localStorage.getItem(OPT_OUT_STORAGE_KEY) === '1'
-  } catch {
-    return false
-  }
-}
-
-function rememberUserOptedOut(): void {
-  if (typeof window === 'undefined') return
-  try {
-    window.localStorage.setItem(OPT_OUT_STORAGE_KEY, '1')
-  } catch {
-    // Ignore storage write failures (private mode, etc.)
-  }
-}
-
 /**
  * Show an in-app prompt asking the user to enable browser notifications. We
  * surface this only when we've actually seen a build kick off, so the request
@@ -176,7 +157,10 @@ function rememberUserOptedOut(): void {
  * for `Notification.requestPermission()` to actually display a prompt in
  * Safari, Firefox, and recent Chrome.
  */
-function handleEnableClick(toastId: string | number): void {
+function handleEnableClick(
+  toastId: string | number,
+  rememberOptedOut: () => void,
+): void {
   try {
     const result = Notification.requestPermission()
     const handle = (perm: NotificationPermission) => {
@@ -200,7 +184,7 @@ function handleEnableClick(toastId: string | number): void {
           }
         }, 800)
       } else if (perm === 'denied') {
-        rememberUserOptedOut()
+        rememberOptedOut()
         toast.message('Notifications blocked', {
           description:
             'You can re-enable them anytime from your browser settings.',
@@ -220,11 +204,14 @@ function handleEnableClick(toastId: string | number): void {
   }
 }
 
-function maybeShowEnableToast(): void {
+function maybeShowEnableToast(
+  rememberOptedOut: () => void,
+  optedOut: boolean,
+): void {
   if (permissionPromptShown) return
   if (!notificationsSupported()) return
   if (Notification.permission !== 'default') return
-  if (userOptedOut()) return
+  if (optedOut) return
   permissionPromptShown = true
 
   toast.custom(
@@ -248,7 +235,7 @@ function maybeShowEnableToast(): void {
           <button
             type="button"
             onClick={() => {
-              rememberUserOptedOut()
+              rememberOptedOut()
               toast.dismiss(toastId)
             }}
             className="h-8 rounded-md px-3 text-[12px] font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
@@ -257,7 +244,7 @@ function maybeShowEnableToast(): void {
           </button>
           <button
             type="button"
-            onClick={() => handleEnableClick(toastId)}
+            onClick={() => handleEnableClick(toastId, rememberOptedOut)}
             className="h-8 rounded-md bg-primary px-3 text-[12px] font-medium text-primary-foreground transition-colors hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
           >
             Enable
@@ -276,9 +263,15 @@ interface BuildNotificationsProviderProps {
 export function BuildNotificationsProvider({
   projectId,
 }: BuildNotificationsProviderProps) {
+  const { account } = useAuth()
+  const { optedOut, setOptedOut } = useBuildNotificationsOptedOut(account)
   const { setFavicon, getCurrentFavicon } = useFavicon()
   const queryClient = useQueryClient()
   const location = useLocation()
+  const optedOutRef = useRef(optedOut)
+  optedOutRef.current = optedOut
+  const rememberOptedOutRef = useRef(() => setOptedOut(true))
+  rememberOptedOutRef.current = () => setOptedOut(true)
   const relevanceCtx = parseRelevance(location.pathname)
   // Stringified context so the route-change effect re-runs whenever the
   // user navigates between sections OR between specific resources.
@@ -396,7 +389,10 @@ export function BuildNotificationsProvider({
         // becomes a no-op after the first nudge). Only surface the prompt on
         // build-relevant pages so users in unrelated sections aren't pinged.
         if (relevanceCtxRef.current.type !== null) {
-          maybeShowEnableToast()
+          maybeShowEnableToast(
+            () => rememberOptedOutRef.current(),
+            optedOutRef.current,
+          )
         }
         return
       }
@@ -486,7 +482,10 @@ export function BuildNotificationsProvider({
         // notifications so they hear about completion. Already gated by the
         // relevance check above, so we know we're on the right page.
         if (isNew) {
-          maybeShowEnableToast()
+          maybeShowEnableToast(
+            () => rememberOptedOutRef.current(),
+            optedOutRef.current,
+          )
         }
         return
       }

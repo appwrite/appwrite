@@ -9,7 +9,7 @@ import {
   useRef,
   useState,
 } from 'react'
-import { useQueryClient } from '@tanstack/react-query'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { useLocation, useParams } from '@tanstack/react-router'
 import {
   ImageFormat,
@@ -65,10 +65,18 @@ import {
   useUploadAssistantAttachments,
   ASSISTANT_ATTACHMENTS_BUCKET_ID,
   useProject,
+  consoleAccountQueryOptions,
+  useAIChatPanelOpen,
+  useAIChatPanelWidth,
   type AssistantConversation,
   type AssistantMessage,
 } from '@/lib/react-query/hooks'
 import { useAuth } from '@/components/global/auth/RequireAuth'
+import {
+  AI_CHAT_PANEL_DEFAULT_WIDTH_PX,
+  AI_CHAT_PANEL_MAX_WIDTH_PX,
+  AI_CHAT_PANEL_MIN_WIDTH_PX,
+} from '@/lib/user-prefs-keys'
 import { getApiEndpoint, sdk } from '@/lib/appwrite/sdk'
 import { useAvifSupport } from '@/lib/avif-support'
 import { registerConsoleRealtimeListener } from '@/lib/realtime'
@@ -94,7 +102,6 @@ interface AIChatContextValue {
 }
 
 const AIChatContext = createContext<AIChatContextValue | null>(null)
-const OPEN_STATE_STORAGE_KEY = 'ai-chat-panel-open'
 const AUTH_ROUTE_PATHNAMES = new Set([
   '/sign-in',
   '/sign-up',
@@ -115,10 +122,11 @@ export function AIChatProvider({ children }: { children: React.ReactNode }) {
     () => isAssistantBlockedPath(location.pathname),
     [location.pathname],
   )
-  const [isOpen, setIsOpen] = useState(() => {
-    if (typeof window === 'undefined') return false
-    return localStorage.getItem(OPEN_STATE_STORAGE_KEY) === 'true'
+  const { data: account } = useQuery({
+    ...consoleAccountQueryOptions(),
+    enabled: !isAssistantBlocked,
   })
+  const { isOpen, setIsOpen } = useAIChatPanelOpen(account)
   const [activeConversationId, setActiveConversationId] = useState<
     string | null
   >(null)
@@ -126,23 +134,18 @@ export function AIChatProvider({ children }: { children: React.ReactNode }) {
   const openChat = useCallback(() => {
     if (isAssistantBlocked) return
     setIsOpen(true)
-  }, [isAssistantBlocked])
-  const closeChat = useCallback(() => setIsOpen(false), [])
+  }, [isAssistantBlocked, setIsOpen])
+  const closeChat = useCallback(() => setIsOpen(false), [setIsOpen])
   const toggleChat = useCallback(() => {
     if (isAssistantBlocked) return
     setIsOpen((prev) => !prev)
-  }, [isAssistantBlocked])
+  }, [isAssistantBlocked, setIsOpen])
 
   useEffect(() => {
     if (isAssistantBlocked && isOpen) {
       setIsOpen(false)
     }
-  }, [isAssistantBlocked, isOpen])
-
-  useEffect(() => {
-    if (typeof window === 'undefined') return
-    localStorage.setItem(OPEN_STATE_STORAGE_KEY, isOpen ? 'true' : 'false')
-  }, [isOpen])
+  }, [isAssistantBlocked, isOpen, setIsOpen])
 
   return (
     <AIChatContext.Provider
@@ -235,10 +238,9 @@ function applyPlaceholderValues(
   return resolved
 }
 
-const MIN_WIDTH = 320
-const MAX_WIDTH = 600
-const DEFAULT_WIDTH = 400
-const STORAGE_KEY = 'ai-chat-panel-width'
+const MIN_WIDTH = AI_CHAT_PANEL_MIN_WIDTH_PX
+const MAX_WIDTH = AI_CHAT_PANEL_MAX_WIDTH_PX
+const DEFAULT_WIDTH = AI_CHAT_PANEL_DEFAULT_WIDTH_PX
 const AUTO_SCROLL_BOTTOM_THRESHOLD = 24
 
 interface AssistantMessageRowProps {
@@ -1247,18 +1249,6 @@ export function AIChatPanel() {
   const [isWaitingForAttachments, setIsWaitingForAttachments] = useState(false)
   const [conversationsPopoverOpen, setConversationsPopoverOpen] =
     useState(false)
-  const [width, setWidth] = useState(() => {
-    if (typeof window !== 'undefined') {
-      const saved = localStorage.getItem(STORAGE_KEY)
-      if (saved) {
-        const parsed = parseInt(saved, 10)
-        if (!isNaN(parsed) && parsed >= MIN_WIDTH && parsed <= MAX_WIDTH) {
-          return parsed
-        }
-      }
-    }
-    return DEFAULT_WIDTH
-  })
   const [isResizing, setIsResizing] = useState(false)
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const messagesContainerRef = useRef<HTMLDivElement>(null)
@@ -1295,6 +1285,7 @@ export function AIChatPanel() {
     params.projectId ?? assistantConversationProjectId(activeConversation)
   const { project, isLoading: projectLoading } = useProject(contextProjectId)
   const { account } = useAuth()
+  const { widthPx: width, setWidthPx: setWidth } = useAIChatPanelWidth(account)
   const queryClient = useQueryClient()
   const accountId = (account as { $id?: string } | undefined)?.$id ?? null
   const organizationId =
@@ -1532,13 +1523,6 @@ export function AIChatPanel() {
       window.setTimeout(() => inputRef.current?.focus(), 300)
     }
   }, [isOpen])
-
-  // Save width to localStorage when it changes
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      localStorage.setItem(STORAGE_KEY, width.toString())
-    }
-  }, [width])
 
   useEffect(() => {
     return () => {

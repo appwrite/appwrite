@@ -77,6 +77,17 @@ import {
   ROWS_DEFAULT_PAGE_SIZE,
 } from '@/lib/react-query/hooks/constants'
 import { RowContextMenu } from '../_components/RowContextMenu'
+import {
+  clampSplitFirstPaneWidthPx,
+  fitSplitFirstPaneWidthOnContainerResize,
+} from '@/lib/resizable-layout'
+import {
+  DOCUMENTS_PREVIEW_PANE_MIN_PX,
+  DOCUMENTS_TABLE_PANE_MAX_PX,
+  DOCUMENTS_TABLE_PANE_MIN_PX,
+  DOCUMENTS_TABLE_PANE_WIDTH_STORAGE_KEY,
+  readStoredDocumentsTablePaneWidthPx,
+} from '../../storage/_components/files-documents-layout'
 
 
 
@@ -242,23 +253,8 @@ const headerCellBorderClass =
 const bodyCellBorderClass = 'border-b border-r border-border'
 const lastCellBorderClass = 'border-b border-border'
 
-const DOCUMENTS_TABLE_PANE_WIDTH_STORAGE_KEY =
-  'console.documentsTablePaneWidthPx'
-const DOCUMENTS_TABLE_PANE_MIN_PX = 260
-const DOCUMENTS_PREVIEW_PANE_MIN_PX = 280
 /** Checkbox + row-actions column width; documents list uses `table-fixed` so edges stay this size. */
 const ROWS_TABLE_EDGE_COL_PX = 40
-
-function readStoredDocumentsTablePaneWidthPx(): number {
-  if (typeof window === 'undefined') return 440
-  const raw = localStorage.getItem(DOCUMENTS_TABLE_PANE_WIDTH_STORAGE_KEY)
-  const n = raw ? parseInt(raw, 10) : NaN
-  return Number.isFinite(n) &&
-    n >= DOCUMENTS_TABLE_PANE_MIN_PX &&
-    n <= 4000
-    ? n
-    : 440
-}
 
 // Row type for the spreadsheet
 interface RowData {
@@ -2792,6 +2788,7 @@ export function RowsSpreadsheet({
   )
   const [isDocumentsSplitResizing, setIsDocumentsSplitResizing] =
     useState(false)
+  const isDocumentsSplitResizingRef = useRef(false)
   const documentSplitContainerRef = useRef<HTMLDivElement>(null)
   const documentTablePaneWidthRef = useRef(documentTablePaneWidthPx)
   documentTablePaneWidthRef.current = documentTablePaneWidthPx
@@ -2799,6 +2796,7 @@ export function RowsSpreadsheet({
   const handleDocumentsSplitPointerDown = useCallback(
     (e: React.PointerEvent<HTMLButtonElement>) => {
       e.preventDefault()
+      isDocumentsSplitResizingRef.current = true
       setIsDocumentsSplitResizing(true)
       const btn = e.currentTarget
       btn.setPointerCapture(e.pointerId)
@@ -2807,19 +2805,18 @@ export function RowsSpreadsheet({
       const splitEl = documentSplitContainerRef.current
       const onMove = (ev: PointerEvent) => {
         if (!splitEl) return
-        const maxTable = Math.max(
+        const next = clampSplitFirstPaneWidthPx(
+          startW + (ev.clientX - startX),
+          splitEl.clientWidth,
           DOCUMENTS_TABLE_PANE_MIN_PX,
-          splitEl.clientWidth - DOCUMENTS_PREVIEW_PANE_MIN_PX,
-        )
-        const delta = ev.clientX - startX
-        const next = Math.min(
-          maxTable,
-          Math.max(DOCUMENTS_TABLE_PANE_MIN_PX, startW + delta),
+          DOCUMENTS_TABLE_PANE_MAX_PX,
+          DOCUMENTS_PREVIEW_PANE_MIN_PX,
         )
         setDocumentTablePaneWidthPx(next)
         documentTablePaneWidthRef.current = next
       }
       const onUp = () => {
+        isDocumentsSplitResizingRef.current = false
         setIsDocumentsSplitResizing(false)
         try {
           btn.releasePointerCapture(e.pointerId)
@@ -2855,16 +2852,21 @@ export function RowsSpreadsheet({
     if (!useInlineDocumentPane || isDocumentsStackedLayout) return
     const el = documentSplitContainerRef.current
     if (!el) return
-    const clamp = () => {
-      const maxTable = Math.max(
-        DOCUMENTS_TABLE_PANE_MIN_PX,
-        el.clientWidth - DOCUMENTS_PREVIEW_PANE_MIN_PX,
+    const fitOnContainerResize = () => {
+      if (isDocumentsSplitResizingRef.current) return
+      setDocumentTablePaneWidthPx((w) =>
+        fitSplitFirstPaneWidthOnContainerResize(
+          w,
+          el.clientWidth,
+          DOCUMENTS_TABLE_PANE_MIN_PX,
+          DOCUMENTS_TABLE_PANE_MAX_PX,
+          DOCUMENTS_PREVIEW_PANE_MIN_PX,
+        ),
       )
-      setDocumentTablePaneWidthPx((w) => Math.min(w, maxTable))
     }
-    const ro = new ResizeObserver(clamp)
+    const ro = new ResizeObserver(fitOnContainerResize)
     ro.observe(el)
-    clamp()
+    fitOnContainerResize()
     return () => ro.disconnect()
   }, [useInlineDocumentPane, isDocumentsStackedLayout])
 
@@ -4066,7 +4068,10 @@ export function RowsSpreadsheet({
         <div
           style={
             useInlineDocumentPane && !isDocumentsStackedLayout
-              ? { width: documentTablePaneWidthPx }
+              ? {
+                  width: documentTablePaneWidthPx,
+                  minWidth: DOCUMENTS_TABLE_PANE_MIN_PX,
+                }
               : undefined
           }
           className={cn(
@@ -4745,17 +4750,16 @@ export function RowsSpreadsheet({
             onKeyDown={(e) => {
               const splitEl = documentSplitContainerRef.current
               if (!splitEl) return
-              const maxTable = Math.max(
-                DOCUMENTS_TABLE_PANE_MIN_PX,
-                splitEl.clientWidth - DOCUMENTS_PREVIEW_PANE_MIN_PX,
-              )
               const step = 24
               if (e.key === 'ArrowLeft') {
                 e.preventDefault()
                 setDocumentTablePaneWidthPx((w) => {
-                  const next = Math.max(
-                    DOCUMENTS_TABLE_PANE_MIN_PX,
+                  const next = clampSplitFirstPaneWidthPx(
                     w - step,
+                    splitEl.clientWidth,
+                    DOCUMENTS_TABLE_PANE_MIN_PX,
+                    DOCUMENTS_TABLE_PANE_MAX_PX,
+                    DOCUMENTS_PREVIEW_PANE_MIN_PX,
                   )
                   documentTablePaneWidthRef.current = next
                   localStorage.setItem(
@@ -4767,7 +4771,13 @@ export function RowsSpreadsheet({
               } else if (e.key === 'ArrowRight') {
                 e.preventDefault()
                 setDocumentTablePaneWidthPx((w) => {
-                  const next = Math.min(maxTable, w + step)
+                  const next = clampSplitFirstPaneWidthPx(
+                    w + step,
+                    splitEl.clientWidth,
+                    DOCUMENTS_TABLE_PANE_MIN_PX,
+                    DOCUMENTS_TABLE_PANE_MAX_PX,
+                    DOCUMENTS_PREVIEW_PANE_MIN_PX,
+                  )
                   documentTablePaneWidthRef.current = next
                   localStorage.setItem(
                     DOCUMENTS_TABLE_PANE_WIDTH_STORAGE_KEY,

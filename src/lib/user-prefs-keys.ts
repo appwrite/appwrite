@@ -5,6 +5,12 @@
  * (see "Team and user preferences (key-value format)").
  */
 
+import {
+  clampTableViewSidebarWidthPx,
+  normalizeLegacySidebarWidthPrefValue,
+  TABLE_VIEW_SIDEBAR_DEFAULT_WIDTH_PX,
+} from '@/lib/resizable-layout'
+
 export type UserPrefs = Record<string, unknown>
 
 /** Max number of saved filter presets per view scope */
@@ -155,25 +161,55 @@ export function buildSavedImageTransformPresetsPrefs(
 // ---------------------------------------------------------------------------
 
 /**
- * Full key: `console.databases.sidebarWidth` - JSON-encoded number representing
- * the percentage (0–100) of the resizable group occupied by the tables sidebar
- * inside the database detail view. Shared across all databases and tables.
+ * Full key: `console.databases.sidebarWidth` - sidebar width in px for
+ * `TableViewResizableLayout` (shared across all databases / tables).
+ * Legacy values ≤60 were stored as percent and are migrated on read.
  */
 export const USER_PREFS_KEY_DATABASES_SIDEBAR_WIDTH =
   'console.databases.sidebarWidth'
 
-/** Default percent for the tables sidebar pane (matches previous defaultSize). */
-export const DATABASES_SIDEBAR_WIDTH_DEFAULT_PERCENT = 20
-
-/** Hard clamp so a corrupted/foreign value can never break the layout. */
-export const DATABASES_SIDEBAR_WIDTH_MIN_PERCENT = 5
-export const DATABASES_SIDEBAR_WIDTH_MAX_PERCENT = 60
-
-export function parseDatabasesSidebarWidthPercent(
+export function parseDatabasesSidebarWidthPx(
   prefs: UserPrefs | null | undefined,
 ): number | null {
+  return parseSidebarWidthPxForKey(prefs, USER_PREFS_KEY_DATABASES_SIDEBAR_WIDTH)
+}
+
+export function buildDatabasesSidebarWidthPrefs(widthPx: number): UserPrefs {
+  return buildSidebarWidthPxPrefsForKey(
+    USER_PREFS_KEY_DATABASES_SIDEBAR_WIDTH,
+    widthPx,
+  )
+}
+
+// ---------------------------------------------------------------------------
+// Storage: buckets sidebar width (separate from databases tables sidebar)
+// ---------------------------------------------------------------------------
+
+/**
+ * Full key: `console.storage.sidebarWidth` - buckets list sidebar width in px.
+ */
+export const USER_PREFS_KEY_STORAGE_SIDEBAR_WIDTH =
+  'console.storage.sidebarWidth'
+
+export function parseStorageSidebarWidthPx(
+  prefs: UserPrefs | null | undefined,
+): number | null {
+  return parseSidebarWidthPxForKey(prefs, USER_PREFS_KEY_STORAGE_SIDEBAR_WIDTH)
+}
+
+export function buildStorageSidebarWidthPrefs(widthPx: number): UserPrefs {
+  return buildSidebarWidthPxPrefsForKey(
+    USER_PREFS_KEY_STORAGE_SIDEBAR_WIDTH,
+    widthPx,
+  )
+}
+
+function parseSidebarWidthPxForKey(
+  prefs: UserPrefs | null | undefined,
+  key: string,
+): number | null {
   if (!prefs) return null
-  const raw = prefs[USER_PREFS_KEY_DATABASES_SIDEBAR_WIDTH]
+  const raw = prefs[key]
   let value: number | null = null
   if (typeof raw === 'number' && Number.isFinite(raw)) {
     value = raw
@@ -182,26 +218,20 @@ export function parseDatabasesSidebarWidthPercent(
     if (Number.isFinite(parsed)) value = parsed
   }
   if (value === null) return null
-  return Math.min(
-    DATABASES_SIDEBAR_WIDTH_MAX_PERCENT,
-    Math.max(DATABASES_SIDEBAR_WIDTH_MIN_PERCENT, value),
-  )
+  return normalizeLegacySidebarWidthPrefValue(value)
 }
 
-export function buildDatabasesSidebarWidthPrefs(percent: number): UserPrefs {
-  const clamped = Math.min(
-    DATABASES_SIDEBAR_WIDTH_MAX_PERCENT,
-    Math.max(DATABASES_SIDEBAR_WIDTH_MIN_PERCENT, percent),
-  )
-  // Store as a string for consistency with other JSON-encoded prefs (saved
-  // filters, recent impersonation users) – the prefs API treats values as
-  // strings.
+function buildSidebarWidthPxPrefsForKey(
+  key: string,
+  widthPx: number,
+): UserPrefs {
   return {
-    [USER_PREFS_KEY_DATABASES_SIDEBAR_WIDTH]: String(
-      Math.round(clamped * 100) / 100,
-    ),
+    [key]: String(clampTableViewSidebarWidthPx(widthPx)),
   }
 }
+
+/** Default when account pref is unset. */
+export { TABLE_VIEW_SIDEBAR_DEFAULT_WIDTH_PX as DATABASES_SIDEBAR_DEFAULT_WIDTH_PX }
 
 // ---------------------------------------------------------------------------
 // Storage: files list column widths (account - same widths for every bucket)
@@ -320,6 +350,100 @@ export function mergeStorageFilesListColumnWidthsIntoPrefs(
   next[USER_PREFS_KEY_STORAGE_FILES_LIST_COLUMN_WIDTHS] =
     JSON.stringify(payload)
   return next
+}
+
+// ---------------------------------------------------------------------------
+// Storage: files list / inline preview split (account - same width every bucket)
+// ---------------------------------------------------------------------------
+
+/**
+ * Full key: `console.storageFiles.tablePaneWidthPx` - table (left) pane width in px
+ * for the files list + inline preview split. When unset, parsers return
+ * {@link STORAGE_FILES_TABLE_PANE_MAX_PX} so the first layout pass keeps a narrow preview.
+ */
+export const USER_PREFS_KEY_STORAGE_FILES_TABLE_PANE_WIDTH_PX =
+  'console.storageFiles.tablePaneWidthPx'
+
+export const STORAGE_FILES_TABLE_PANE_MIN_PX = 260
+export const STORAGE_FILES_TABLE_PANE_MAX_PX = 4000
+
+/** @deprecated Migrated to account prefs; cleared after first sync. */
+export const LEGACY_LOCAL_STORAGE_STORAGE_FILES_TABLE_PANE_WIDTH =
+  'console.storageFilesTablePaneWidthPx'
+
+export function clampStorageFilesTablePaneWidthPx(px: number): number {
+  return Math.min(
+    STORAGE_FILES_TABLE_PANE_MAX_PX,
+    Math.max(STORAGE_FILES_TABLE_PANE_MIN_PX, Math.round(px)),
+  )
+}
+
+export function parseStorageFilesTablePaneWidthPx(
+  prefs: UserPrefs | null | undefined,
+): number | null {
+  const raw = prefs?.[USER_PREFS_KEY_STORAGE_FILES_TABLE_PANE_WIDTH_PX]
+  const n =
+    typeof raw === 'number'
+      ? raw
+      : typeof raw === 'string'
+        ? parseInt(raw, 10)
+        : NaN
+  if (
+    Number.isFinite(n) &&
+    n >= STORAGE_FILES_TABLE_PANE_MIN_PX &&
+    n <= STORAGE_FILES_TABLE_PANE_MAX_PX
+  ) {
+    return n
+  }
+  return null
+}
+
+export function hasStorageFilesTablePaneWidthPref(
+  prefs: UserPrefs | null | undefined,
+): boolean {
+  return prefs?.[USER_PREFS_KEY_STORAGE_FILES_TABLE_PANE_WIDTH_PX] !== undefined
+}
+
+export function mergeStorageFilesTablePaneWidthPxIntoPrefs(
+  prefs: UserPrefs,
+  widthPx: number,
+): UserPrefs {
+  return {
+    ...prefs,
+    [USER_PREFS_KEY_STORAGE_FILES_TABLE_PANE_WIDTH_PX]: String(
+      clampStorageFilesTablePaneWidthPx(widthPx),
+    ),
+  }
+}
+
+export function readLegacyStorageFilesTablePaneWidthFromLocalStorage(): number | null {
+  if (typeof window === 'undefined') return null
+  try {
+    const raw = localStorage.getItem(
+      LEGACY_LOCAL_STORAGE_STORAGE_FILES_TABLE_PANE_WIDTH,
+    )
+    if (!raw) return null
+    const n = parseInt(raw, 10)
+    if (
+      Number.isFinite(n) &&
+      n >= STORAGE_FILES_TABLE_PANE_MIN_PX &&
+      n <= STORAGE_FILES_TABLE_PANE_MAX_PX
+    ) {
+      return n
+    }
+    return null
+  } catch {
+    return null
+  }
+}
+
+export function clearLegacyStorageFilesTablePaneWidthLocalStorage(): void {
+  if (typeof window === 'undefined') return
+  try {
+    localStorage.removeItem(LEGACY_LOCAL_STORAGE_STORAGE_FILES_TABLE_PANE_WIDTH)
+  } catch {
+    /* private mode */
+  }
 }
 
 // ---------------------------------------------------------------------------
@@ -802,6 +926,193 @@ export function deleteTablesDbRowsListColumnsFromPrefs(
   tableId: string,
 ): UserPrefs {
   return mergeTablesDbRowsListColumnsIntoPrefs(prefs, databaseId, tableId, null)
+}
+
+// ---------------------------------------------------------------------------
+// AI assistant panel (account prefs)
+// ---------------------------------------------------------------------------
+
+/** Full key: `console.aiChat.panelOpen` - panel open when true / `"true"`. */
+export const USER_PREFS_KEY_AI_CHAT_PANEL_OPEN = 'console.aiChat.panelOpen'
+
+/** Full key: `console.aiChat.panelWidthPx` - panel width in pixels (string number). */
+export const USER_PREFS_KEY_AI_CHAT_PANEL_WIDTH_PX = 'console.aiChat.panelWidthPx'
+
+export const AI_CHAT_PANEL_MIN_WIDTH_PX = 320
+export const AI_CHAT_PANEL_MAX_WIDTH_PX = 600
+export const AI_CHAT_PANEL_DEFAULT_WIDTH_PX = 400
+
+/** @deprecated Migrated to account prefs; cleared after first sync. */
+export const LEGACY_LOCAL_STORAGE_AI_CHAT_PANEL_OPEN = 'ai-chat-panel-open'
+
+/** @deprecated Migrated to account prefs; cleared after first sync. */
+export const LEGACY_LOCAL_STORAGE_AI_CHAT_PANEL_WIDTH = 'ai-chat-panel-width'
+
+function parseBooleanAccountPref(raw: unknown): boolean | null {
+  if (raw === true || raw === 'true') return true
+  if (raw === false || raw === 'false') return false
+  return null
+}
+
+export function parseAIChatPanelOpen(
+  prefs: UserPrefs | null | undefined,
+): boolean {
+  return parseBooleanAccountPref(prefs?.[USER_PREFS_KEY_AI_CHAT_PANEL_OPEN]) ?? false
+}
+
+export function hasAIChatPanelOpenPref(
+  prefs: UserPrefs | null | undefined,
+): boolean {
+  return prefs?.[USER_PREFS_KEY_AI_CHAT_PANEL_OPEN] !== undefined
+}
+
+export function parseAIChatPanelWidthPx(
+  prefs: UserPrefs | null | undefined,
+): number {
+  const raw = prefs?.[USER_PREFS_KEY_AI_CHAT_PANEL_WIDTH_PX]
+  const n =
+    typeof raw === 'number'
+      ? raw
+      : typeof raw === 'string'
+        ? parseInt(raw, 10)
+        : NaN
+  if (
+    Number.isFinite(n) &&
+    n >= AI_CHAT_PANEL_MIN_WIDTH_PX &&
+    n <= AI_CHAT_PANEL_MAX_WIDTH_PX
+  ) {
+    return n
+  }
+  return AI_CHAT_PANEL_DEFAULT_WIDTH_PX
+}
+
+export function hasAIChatPanelWidthPref(
+  prefs: UserPrefs | null | undefined,
+): boolean {
+  return prefs?.[USER_PREFS_KEY_AI_CHAT_PANEL_WIDTH_PX] !== undefined
+}
+
+export function mergeAIChatPanelOpenIntoPrefs(
+  prefs: UserPrefs,
+  open: boolean,
+): UserPrefs {
+  return {
+    ...prefs,
+    [USER_PREFS_KEY_AI_CHAT_PANEL_OPEN]: open,
+  }
+}
+
+export function mergeAIChatPanelWidthPxIntoPrefs(
+  prefs: UserPrefs,
+  widthPx: number,
+): UserPrefs {
+  const clamped = Math.min(
+    AI_CHAT_PANEL_MAX_WIDTH_PX,
+    Math.max(AI_CHAT_PANEL_MIN_WIDTH_PX, Math.round(widthPx)),
+  )
+  return {
+    ...prefs,
+    [USER_PREFS_KEY_AI_CHAT_PANEL_WIDTH_PX]: String(clamped),
+  }
+}
+
+export function readLegacyAIChatPanelOpenFromLocalStorage(): boolean | null {
+  if (typeof window === 'undefined') return null
+  try {
+    const raw = localStorage.getItem(LEGACY_LOCAL_STORAGE_AI_CHAT_PANEL_OPEN)
+    if (raw === 'true') return true
+    if (raw === 'false') return false
+    return null
+  } catch {
+    return null
+  }
+}
+
+export function readLegacyAIChatPanelWidthFromLocalStorage(): number | null {
+  if (typeof window === 'undefined') return null
+  try {
+    const raw = localStorage.getItem(LEGACY_LOCAL_STORAGE_AI_CHAT_PANEL_WIDTH)
+    if (!raw) return null
+    const n = parseInt(raw, 10)
+    if (
+      Number.isFinite(n) &&
+      n >= AI_CHAT_PANEL_MIN_WIDTH_PX &&
+      n <= AI_CHAT_PANEL_MAX_WIDTH_PX
+    ) {
+      return n
+    }
+    return null
+  } catch {
+    return null
+  }
+}
+
+export function clearLegacyAIChatLocalStorage(): void {
+  if (typeof window === 'undefined') return
+  try {
+    localStorage.removeItem(LEGACY_LOCAL_STORAGE_AI_CHAT_PANEL_OPEN)
+    localStorage.removeItem(LEGACY_LOCAL_STORAGE_AI_CHAT_PANEL_WIDTH)
+  } catch {
+    /* private mode */
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Build completion browser notifications (account prefs)
+// ---------------------------------------------------------------------------
+
+/** Full key: `console.buildNotifications.optedOut` - user dismissed the enable prompt. */
+export const USER_PREFS_KEY_BUILD_NOTIFICATIONS_OPTED_OUT =
+  'console.buildNotifications.optedOut'
+
+/** @deprecated Migrated to account prefs; cleared after first sync. */
+export const LEGACY_LOCAL_STORAGE_BUILD_NOTIFICATIONS_OPTED_OUT =
+  'appwrite.buildNotifications.optedOut'
+
+export function parseBuildNotificationsOptedOut(
+  prefs: UserPrefs | null | undefined,
+): boolean {
+  return (
+    parseBooleanAccountPref(prefs?.[USER_PREFS_KEY_BUILD_NOTIFICATIONS_OPTED_OUT]) ??
+    false
+  )
+}
+
+export function hasBuildNotificationsOptedOutPref(
+  prefs: UserPrefs | null | undefined,
+): boolean {
+  return prefs?.[USER_PREFS_KEY_BUILD_NOTIFICATIONS_OPTED_OUT] !== undefined
+}
+
+export function mergeBuildNotificationsOptedOutIntoPrefs(
+  prefs: UserPrefs,
+  optedOut: boolean,
+): UserPrefs {
+  return {
+    ...prefs,
+    [USER_PREFS_KEY_BUILD_NOTIFICATIONS_OPTED_OUT]: optedOut,
+  }
+}
+
+export function readLegacyBuildNotificationsOptedOutFromLocalStorage(): boolean {
+  if (typeof window === 'undefined') return false
+  try {
+    return (
+      localStorage.getItem(LEGACY_LOCAL_STORAGE_BUILD_NOTIFICATIONS_OPTED_OUT) ===
+      '1'
+    )
+  } catch {
+    return false
+  }
+}
+
+export function clearLegacyBuildNotificationsOptedOutLocalStorage(): void {
+  if (typeof window === 'undefined') return
+  try {
+    localStorage.removeItem(LEGACY_LOCAL_STORAGE_BUILD_NOTIFICATIONS_OPTED_OUT)
+  } catch {
+    /* private mode */
+  }
 }
 
 // ---------------------------------------------------------------------------

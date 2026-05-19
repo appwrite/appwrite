@@ -3,13 +3,15 @@
  * `Spreadsheet` (inline table + right preview split).
  */
 
+import { clampSplitFirstPaneWidthPx } from '@/lib/resizable-layout'
 import { cn } from '@/lib/utils'
+import {
+  STORAGE_FILES_TABLE_PANE_MAX_PX,
+  STORAGE_FILES_TABLE_PANE_MIN_PX,
+} from '@/lib/user-prefs-keys'
 
-export const STORAGE_FILES_TABLE_PANE_WIDTH_STORAGE_KEY =
-  'console.storageFilesTablePaneWidthPx'
+export { STORAGE_FILES_TABLE_PANE_MIN_PX, STORAGE_FILES_TABLE_PANE_MAX_PX }
 
-export const STORAGE_FILES_TABLE_PANE_MIN_PX = 260
-export const STORAGE_FILES_TABLE_PANE_MAX_PX = 4000
 export const STORAGE_FILES_PREVIEW_PANE_MIN_PX = 480
 
 /**
@@ -30,20 +32,47 @@ export const STORAGE_FILES_STACKED_PREVIEW_MAX_H_CLASS =
 /** Checkbox column width in `table-fixed` mode (matches documents rows grid). */
 export const STORAGE_FILES_TABLE_EDGE_COL_PX = 40
 
+/** Shared with Tables / Documents / Vectors DB row grids (inline row preview split). */
+export const DOCUMENTS_TABLE_PANE_WIDTH_STORAGE_KEY =
+  'console.documentsTablePaneWidthPx'
+
+export const DOCUMENTS_TABLE_PANE_MIN_PX = 260
+export const DOCUMENTS_TABLE_PANE_MAX_PX = 4000
+export const DOCUMENTS_PREVIEW_PANE_MIN_PX = 280
+
 /**
- * Reads persisted table (left) pane width. When unset, returns the max width so
- * the first layout clamp yields a narrow preview pane (preview `min-width`).
+ * Table pane width when no pref is saved: as wide as allowed while keeping the
+ * preview at {@link STORAGE_FILES_PREVIEW_PANE_MIN_PX}.
  */
-export function readStoredStorageFilesTablePaneWidthPx(): number {
-  if (typeof window === 'undefined') return STORAGE_FILES_TABLE_PANE_MAX_PX
-  const raw = localStorage.getItem(STORAGE_FILES_TABLE_PANE_WIDTH_STORAGE_KEY)
+export function defaultStorageFilesTablePaneWidthPx(
+  containerWidth: number,
+): number {
+  return clampSplitFirstPaneWidthPx(
+    containerWidth - STORAGE_FILES_PREVIEW_PANE_MIN_PX,
+    containerWidth,
+    STORAGE_FILES_TABLE_PANE_MIN_PX,
+    STORAGE_FILES_TABLE_PANE_MAX_PX,
+    STORAGE_FILES_PREVIEW_PANE_MIN_PX,
+  )
+}
+
+/**
+ * Reads persisted table (left) pane width. When unset, returns the minimum so
+ * the table opens narrow and the preview pane gets the remaining space.
+ */
+export function readStoredDocumentsTablePaneWidthPx(): number {
+  if (typeof window === 'undefined') return DOCUMENTS_TABLE_PANE_MIN_PX
+  const raw = localStorage.getItem(DOCUMENTS_TABLE_PANE_WIDTH_STORAGE_KEY)
   const n = raw ? parseInt(raw, 10) : NaN
   return Number.isFinite(n) &&
-    n >= STORAGE_FILES_TABLE_PANE_MIN_PX &&
-    n <= STORAGE_FILES_TABLE_PANE_MAX_PX
+    n >= DOCUMENTS_TABLE_PANE_MIN_PX &&
+    n <= DOCUMENTS_TABLE_PANE_MAX_PX
     ? n
-    : STORAGE_FILES_TABLE_PANE_MAX_PX
+    : DOCUMENTS_TABLE_PANE_MIN_PX
 }
+
+/** Shared pane surface for the files table and inline file inspector split. */
+export const STORAGE_FILES_SPLIT_PANE_BG_CLASS = 'bg-background'
 
 export const STORAGE_SPREADSHEET_STICKY_THEAD_CLASS =
   'sticky top-0 z-20 bg-background'
