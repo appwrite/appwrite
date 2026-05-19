@@ -15,7 +15,10 @@ trait WebhooksBase
 {
     use Async;
 
-    protected function awaitDeploymentIsBuilt($functionId, $deploymentId): void
+    protected const int DEPLOYMENT_READY_TIMEOUT = 300000;
+    protected const int DEPLOYMENT_POLL_INTERVAL = 500;
+
+    protected function awaitDeploymentIsBuilt(string $functionId, string $deploymentId): void
     {
         $this->assertEventually(function () use ($functionId, $deploymentId) {
             $deployment = $this->client->call(Client::METHOD_GET, '/functions/' . $functionId . '/deployments/' . $deploymentId, [
@@ -26,7 +29,7 @@ trait WebhooksBase
 
             $this->assertEquals(200, $deployment['headers']['status-code']);
             $this->assertEquals('ready', $deployment['body']['status'], \json_encode($deployment['body']));
-        }, 120000, 500);
+        }, self::DEPLOYMENT_READY_TIMEOUT, self::DEPLOYMENT_POLL_INTERVAL);
     }
 
     /**
