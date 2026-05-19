@@ -36,7 +36,7 @@ class Get extends Action
                 group: 'insights',
                 name: 'getInsight',
                 description: '/docs/references/advisor/get-insight.md',
-                auth: [AuthType::ADMIN, AuthType::SESSION, AuthType::KEY, AuthType::JWT],
+                auth: [AuthType::ADMIN, AuthType::KEY],
                 responses: [
                     new SDKResponse(
                         code: Response::STATUS_CODE_OK,
