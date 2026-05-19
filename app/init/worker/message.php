@@ -1,5 +1,6 @@
 <?php
 
+use Appwrite\Database\DatabaseFactory;
 use Appwrite\Event\Event;
 use Appwrite\Event\Realtime;
 use Appwrite\Event\Webhook;
@@ -7,15 +8,12 @@ use Appwrite\Usage\Context;
 use Utopia\Audit\Adapter\Database as AdapterDatabase;
 use Utopia\Audit\Audit as UtopiaAudit;
 use Utopia\Cache\Cache;
-use Utopia\Config\Config;
 use Utopia\Console;
-use Utopia\Database\Adapter\Pool as DatabasePool;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 use Utopia\Database\Validator\Authorization;
 use Utopia\DI\Container;
-use Utopia\DSN\DSN;
 use Utopia\Logger\Log;
 use Utopia\Pools\Group;
 use Utopia\Queue\Publisher;
@@ -41,12 +39,13 @@ return function (Container $container): void {
         return $authorization;
     }, []);
 
-    $container->set('dbForPlatform', fn (Cache $cache, Group $pools, Authorization $authorization) => createPlatformDatabase(
+    $container->set('databaseFactory', fn (Group $pools, Cache $cache, Authorization $authorization) => new DatabaseFactory(
         $pools,
         $cache,
-        $authorization,
-        metadata: false
-    ), ['cache', 'pools', 'authorization']);
+        $authorization
+    ), ['pools', 'cache', 'authorization']);
+
+    $container->set('dbForPlatform', fn (DatabaseFactory $databaseFactory) => $databaseFactory->platform(), ['databaseFactory']);
 
     $container->set('project', function ($message, Database $dbForPlatform) {
         $payload = $message->getPayload() ?? [];
@@ -59,161 +58,64 @@ return function (Container $container): void {
         return $dbForPlatform->getDocument('projects', $project->getId());
     }, ['message', 'dbForPlatform']);
 
-    $container->set('dbForProject', fn (Cache $cache, Group $pools, Document $project, Database $dbForPlatform, Authorization $authorization) => $project->isEmpty() || $project->getId() === 'console'
+    $container->set('dbForProject', fn (DatabaseFactory $databaseFactory, Document $project, Database $dbForPlatform) => $project->isEmpty() || $project->getId() === 'console'
         ? $dbForPlatform
-        : createProjectDatabase(
-            $pools,
-            $cache,
-            $authorization,
+        : $databaseFactory->project(
             $project,
             APP_DATABASE_TIMEOUT_MILLISECONDS_WORKER,
-            metadata: false
-        ), ['cache', 'pools', 'project', 'dbForPlatform', 'authorization']);
+        ), ['databaseFactory', 'project', 'dbForPlatform']);
 
-    $container->set('getProjectDB', function (Group $pools, Database $dbForPlatform, Cache $cache, Authorization $authorization) {
-        $databases = []; // TODO: @Meldiron This should probably be responsibility of utopia-php/pools
-
-        return function (Document $project) use ($pools, $dbForPlatform, $cache, $authorization, &$databases): Database {
+    $container->set('getProjectDB', function (DatabaseFactory $databaseFactory, Database $dbForPlatform) {
+        return function (Document $project) use ($databaseFactory, $dbForPlatform): Database {
             if ($project->isEmpty() || $project->getId() === 'console') {
                 return $dbForPlatform;
             }
 
-            try {
-                $dsn = new DSN($project->getAttribute('database'));
-            } catch (\InvalidArgumentException) {
-                // TODO: Temporary until all projects are using shared tables
-                $dsn = new DSN('mysql://' . $project->getAttribute('database'));
-            }
-
-            if (isset($databases[$dsn->getHost()])) {
-                $database = $databases[$dsn->getHost()];
-                $database->setAuthorization($authorization);
-
-                return configureProjectDatabase($database, $project, $dsn);
-            }
-
-            $adapter = new DatabasePool($pools->get($dsn->getHost()));
-            $database = new Database($adapter, $cache);
-
-            $databases[$dsn->getHost()] = $database;
-
-            $database = configureProjectDatabase($database, $project, $dsn);
-
-            $database
-                ->setDatabase(APP_DATABASE)
-                ->setAuthorization($authorization)
-                ->setTimeout(APP_DATABASE_TIMEOUT_MILLISECONDS_WORKER);
-
-            return $database;
+            return $databaseFactory->project(
+                $project,
+                APP_DATABASE_TIMEOUT_MILLISECONDS_WORKER
+            );
         };
-    }, ['pools', 'dbForPlatform', 'cache', 'authorization']);
+    }, ['databaseFactory', 'dbForPlatform']);
 
-    $container->set('getDatabasesDB', function (Cache $cache, Registry $register, Document $project, Authorization $authorization) {
-        return function (Document $database, ?Document $projectDocument = null) use ($cache, $register, $project, $authorization): Database {
+    $container->set('getDatabasesDB', function (DatabaseFactory $databaseFactory, Document $project) {
+        return function (Document $database, ?Document $projectDocument = null) use ($databaseFactory, $project): Database {
             $projectDocument ??= $project;
-            $databaseDSN = $database->getAttribute('database', $project->getAttribute('database', ''));
-            $databaseType = $database->getAttribute('type', '');
 
             // Backwards-compatibility: older or seeded legacy databases may not have a DSN stored
             // in the "database" attribute. In that case, fall back to the project's database DSN.
-            if ($databaseDSN === '') {
-                $databaseDSN = $projectDocument->getAttribute('database', '');
-            }
+            $databaseConfig = $database->getAttribute('database', '') === ''
+                ? new Document(\array_merge($database->getArrayCopy(), ['database' => $projectDocument->getAttribute('database', '')]))
+                : $database;
 
-            try {
-                $databaseDSN = new DSN($databaseDSN);
-            } catch (\InvalidArgumentException) {
-                $databaseDSN = new DSN('mysql://' . $databaseDSN);
-            }
-
-            try {
-                $dsn = new DSN($projectDocument->getAttribute('database'));
-            } catch (\InvalidArgumentException) {
-                // Temporary fallback until all projects use shared tables
-                $dsn = new DSN('mysql://' . $projectDocument->getAttribute('database'));
-            }
-
-            $pools = $register->get('pools');
-            $databaseHost = $databaseDSN->getHost();
-            $pool = $pools->get($databaseHost);
-
-            $adapter = new DatabasePool($pool);
-            $database = new Database($adapter, $cache);
-            $database
-                ->setDatabase(APP_DATABASE)
-                ->setAuthorization($authorization);
-            $database->getAdapter()->setSupportForAttributes($databaseType !== DOCUMENTSDB);
-
-            $sharedTables = \array_filter(\explode(',', System::getEnv('_APP_DATABASE_SHARED_TABLES', '')));
-
-            $projectsGlobalCollections = getProjectGlobalCollections();
-
-            $database->setGlobalCollections($projectsGlobalCollections);
-
-            // For separate pools (documentsdb/vectorsdb), check their own shared tables config.
-            // If not configured, use dedicated mode to avoid cross-engine tenant type mismatches.
-            if ($databaseHost !== $dsn->getHost()) {
-                $dbTypeSharedTables = match ($databaseType) {
-                    DOCUMENTSDB => \array_filter(\explode(',', System::getEnv('_APP_DATABASE_DOCUMENTSDB_SHARED_TABLES', ''))),
-                    VECTORSDB => \array_filter(\explode(',', System::getEnv('_APP_DATABASE_VECTORSDB_SHARED_TABLES', ''))),
-                    default => [],
-                };
-
-                if (\in_array($databaseHost, $dbTypeSharedTables)) {
-                    $database
-                        ->setSharedTables(true)
-                        ->setGlobalCollections($projectsGlobalCollections)
-                        ->setTenant($projectDocument->getSequence())
-                        ->setNamespace($databaseDSN->getParam('namespace'));
-                } else {
-                    $database
-                        ->setSharedTables(false)
-                        ->setTenant(null)
-                        ->setNamespace('_' . $projectDocument->getSequence());
-                }
-            } elseif (\in_array($dsn->getHost(), $sharedTables, true)) {
-                $database
-                    ->setSharedTables(true)
-                    ->setGlobalCollections($projectsGlobalCollections)
-                    ->setTenant($projectDocument->getSequence())
-                    ->setNamespace($dsn->getParam('namespace'));
-            } else {
-                $database
-                    ->setSharedTables(false)
-                    ->setTenant(null)
-                    ->setNamespace('_' . $projectDocument->getSequence());
-            }
-
-            $database->setTimeout(APP_DATABASE_TIMEOUT_MILLISECONDS_WORKER);
-            return $database;
+            return $databaseFactory->tenant(
+                $databaseConfig,
+                $projectDocument,
+                APP_DATABASE_TIMEOUT_MILLISECONDS_WORKER,
+                preserveDates: true,
+            );
         };
-    }, ['cache', 'register', 'project', 'authorization']);
+    }, ['databaseFactory', 'project']);
 
-    $container->set('getLogsDB', function (Group $pools, Cache $cache, Authorization $authorization) {
+    $container->set('getLogsDB', function (DatabaseFactory $databaseFactory) {
         $database = null;
 
-        return function (?Document $project = null) use ($pools, $cache, $authorization, &$database) {
+        return function (?Document $project = null) use ($databaseFactory, &$database) {
             if ($database !== null && $project !== null && !$project->isEmpty() && $project->getId() !== 'console') {
                 $database->setTenant($project->getSequence());
 
                 return $database;
             }
 
-            $database = createLogsDatabase(
-                $pools,
-                $cache,
-                $authorization,
+            $database = $databaseFactory->logs(
+                $project,
                 APP_DATABASE_TIMEOUT_MILLISECONDS_WORKER,
                 APP_DATABASE_QUERY_MAX_VALUES_WORKER
             );
 
-            if ($project !== null && !$project->isEmpty() && $project->getId() !== 'console') {
-                $database->setTenant($project->getSequence());
-            }
-
             return $database;
         };
-    }, ['pools', 'cache', 'authorization']);
+    }, ['databaseFactory']);
 
     $container->set('abuseRetention', function () {
         return \time() - (int) System::getEnv('_APP_MAINTENANCE_RETENTION_ABUSE', 86400); // 1 day
