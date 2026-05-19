@@ -41,7 +41,7 @@ class XList extends Action
                 group: 'reports',
                 name: 'listReports',
                 description: '/docs/references/advisor/list-reports.md',
-                auth: [AuthType::ADMIN, AuthType::SESSION, AuthType::KEY, AuthType::JWT],
+                auth: [AuthType::ADMIN, AuthType::KEY],
                 responses: [
                     new SDKResponse(
                         code: Response::STATUS_CODE_OK,
