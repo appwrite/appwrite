@@ -42,7 +42,7 @@ class XList extends Action
                 group: 'insights',
                 name: 'listInsights',
                 description: '/docs/references/advisor/list-insights.md',
-                auth: [AuthType::ADMIN, AuthType::SESSION, AuthType::KEY, AuthType::JWT],
+                auth: [AuthType::ADMIN, AuthType::KEY],
                 responses: [
                     new SDKResponse(
                         code: Response::STATUS_CODE_OK,
