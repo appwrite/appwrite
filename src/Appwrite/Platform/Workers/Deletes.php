@@ -399,7 +399,7 @@ class Deletes extends Action
         Targets::delete($getProjectDB($project), Query::equal('sessionInternalId', [$session->getSequence()]));
     }
 
-    private function updateProcessingMigrations(Document $project, callable $getProjectDB){
+    private function updateProcessingMigrations(Document $project, callable $getProjectDB): void {
         /** @var Database $dbForProject */
         $dbForProject = $getProjectDB($project);
 
