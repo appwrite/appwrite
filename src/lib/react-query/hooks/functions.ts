@@ -23,6 +23,8 @@ import {
 } from './constants'
 import { Dependencies } from './dependencies'
 
+const EMPTY_PROXY_RULES: Models.ProxyRule[] = []
+
 // ============================================================================
 // QUERY FUNCTIONS
 // ============================================================================
@@ -1138,7 +1140,7 @@ export function useFunctionDeploymentProxyRules(
   })
 
   return {
-    rules: data?.rules || [],
+    rules: data?.rules ?? EMPTY_PROXY_RULES,
     total: data?.total || 0,
     isLoading,
     error,

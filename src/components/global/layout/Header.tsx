@@ -654,15 +654,9 @@ export function ConsoleHeader({
             <SupportPopover orgId={orgId} />
           </div>
 
-          {/* Console impersonation (operators) - same control style as Support / Assistant */}
-          <div className="hidden @[900px]:flex shrink-0">
-            <ImpersonateConsoleUserPopover />
-          </div>
-
-          {/* Blocks console (operators) - same visibility gate as impersonation */}
-          <div className="hidden @[900px]:flex shrink-0">
-            <BlocksConsoleLink />
-          </div>
+          {/* Operator tools (render nothing when account is not an impersonator) */}
+          <ImpersonateConsoleUserPopover />
+          <BlocksConsoleLink />
 
           {/* Help/Assistant - hidden on small containers; enabled by profile or experimental override */}
           {showAIAssistant && (

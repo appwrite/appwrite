@@ -1,4 +1,4 @@
-import { ShieldCheck, ShoppingCart } from 'lucide-react'
+import { ShieldCheck } from 'lucide-react'
 import { useConsoleProfile } from '@/hooks/use-console-profile'
 
 /**
@@ -6,7 +6,7 @@ import { useConsoleProfile } from '@/hooks/use-console-profile'
  *
  * A professional footer component for the console layout displaying:
  * - Dynamic copyright year with Appwrite branding
- * - Navigation links (Docs, Status, Legal) and Store after social icons
+ * - Navigation links (Docs, Store, Status, Legal) and social icons
  * - Trust/compliance badges (SOC 2)
  * - Social media icons and daily.dev Squad link
  *
@@ -23,15 +23,11 @@ export function ConsoleFooter() {
 
   const resourceLinks = [
     { label: 'Docs', href: 'https://appwrite.io/docs' },
+    { label: 'Store', href: 'https://store.appwrite.io/' },
     ...(cloudStatusEnabled
       ? [{ label: 'Status' as const, href: 'https://status.appwrite.online' }]
       : []),
   ]
-
-  const storeLink = {
-    label: 'Store',
-    href: 'https://store.appwrite.io/',
-  }
 
   const legalLinks = [
     { label: 'Terms', href: 'https://appwrite.io/terms' },
@@ -76,7 +72,7 @@ export function ConsoleFooter() {
   return (
     <footer className="@container flex h-[54px] shrink-0 items-center border-t border-border">
       <div className="mx-auto w-full max-w-7xl flex items-center justify-between gap-2 overflow-visible px-4 sm:px-6">
-        {/* Left section: Logo, Resource Links, Social Icons, and Store */}
+        {/* Left section: Logo, Resource Links, and Social Icons */}
         <div className="flex items-center gap-2 min-w-0 flex-shrink">
           {/* Logo - inline SVG with currentColor so theme (black/white) works on Safari/iOS */}
           <div className="flex items-center ps-0 pe-2.5 py-1.5 flex-shrink-0 text-foreground opacity-60">
@@ -121,23 +117,6 @@ export function ConsoleFooter() {
               </div>
             ))}
           </nav>
-
-          {/* Separator */}
-          <div className="mx-1 hidden h-4 w-px flex-shrink-0 bg-border @[680px]:block" />
-
-          {/* Store */}
-          <a
-            href={storeLink.href}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="hidden items-center gap-1.5 rounded-md px-2.5 py-1.5 text-[13px] text-muted-foreground transition-colors hover:bg-accent hover:text-foreground whitespace-nowrap @[680px]:flex"
-          >
-            <ShoppingCart
-              className="h-3.5 w-3.5 shrink-0 opacity-70"
-              aria-hidden
-            />
-            {storeLink.label}
-          </a>
 
           {/* Separator */}
           <div className="hidden h-4 w-px flex-shrink-0 bg-border @[680px]:block" />

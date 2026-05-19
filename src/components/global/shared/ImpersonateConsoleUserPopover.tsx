@@ -219,7 +219,7 @@ export function ImpersonateConsoleUserPopover() {
           <PopoverTrigger asChild>
             <button
               type="button"
-              className="flex h-9 w-9 shrink-0 cursor-pointer items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+              className="hidden h-9 w-9 shrink-0 cursor-pointer items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-accent hover:text-foreground @[900px]:flex"
               aria-label={isImpersonating ? 'Impersonating' : 'Impersonate'}
             >
               <Eye className="h-4 w-4" />
