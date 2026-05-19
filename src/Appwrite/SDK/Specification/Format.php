@@ -466,6 +466,14 @@ abstract class Format
                                 return 'ConsoleResourceValue';
                         }
                         break;
+                    case 'getEmailTemplate':
+                        switch ($param) {
+                            case 'templateId':
+                                return 'ProjectEmailTemplateId';
+                            case 'locale':
+                                return 'ProjectEmailTemplateLocale';
+                        }
+                        break;
                 }
                 break;
             case 'account':
@@ -757,7 +765,7 @@ abstract class Format
                     case 'updateAuthMethod':
                         switch ($param) {
                             case 'methodId':
-                                return 'AuthMethod';
+                                return 'ProjectAuthMethodId';
                         }
                         break;
                     case 'getPolicy':
@@ -769,22 +777,55 @@ abstract class Format
                     case 'getOAuth2Provider':
                         switch ($param) {
                             case 'providerId':
-                                return 'OAuthProvider';
+                                return 'ProjectOAuthProviderId';
                         }
                         break;
                     case 'getEmailTemplate':
                     case 'updateEmailTemplate':
                         switch ($param) {
                             case 'templateId':
-                                return 'EmailTemplateType';
+                                return 'ProjectEmailTemplateId';
                             case 'locale':
-                                return 'EmailTemplateLocale';
+                                return 'ProjectEmailTemplateLocale';
                         }
                         break;
                     case 'getUsage':
                         switch ($param) {
                             case 'period':
                                 return 'ProjectUsageRange';
+                        }
+                        break;
+                    case 'updateProtocol':
+                        switch ($param) {
+                            case 'protocolId':
+                                return 'ProjectProtocolId';
+                        }
+                        break;
+                    case 'updateService':
+                        switch ($param) {
+                            case 'serviceId':
+                                return 'ProjectServiceId';
+                        }
+                        break;
+                    case 'updateSMTP':
+                    case 'createSMTPTest':
+                        switch ($param) {
+                            case 'secure':
+                                return 'ProjectSMTPSecure';
+                        }
+                        break;
+                    case 'updateOAuth2Google':
+                        switch ($param) {
+                            case 'prompt':
+                                return 'ProjectOAuth2GooglePrompt';
+                        }
+                        break;
+                    case 'createKey':
+                    case 'createEphemeralKey':
+                    case 'updateKey':
+                        switch ($param) {
+                            case 'scopes':
+                                return 'ProjectKeyScopes';
                         }
                         break;
                 }
@@ -878,6 +919,16 @@ abstract class Format
                         switch ($param) {
                             case 'passwordVersion':
                                 return 'PasswordHash';
+                        }
+                        break;
+                }
+                break;
+            case 'presences':
+                switch ($method) {
+                    case 'getUsage':
+                        switch ($param) {
+                            case 'range':
+                                return 'UsageRange';
                         }
                         break;
                 }
@@ -1019,8 +1070,12 @@ abstract class Format
         return self::REQUEST_PARAMETER_OVERRIDES;
     }
 
-    public function getResponseEnumName(string $model, string $param): ?string
+    public function getResponseEnumName(string $model, string $param, ?string $enumSDKName = null): ?string
     {
+        if ($enumSDKName) {
+            return $enumSDKName;
+        }
+
         if ($param === 'type' && \str_starts_with($model, 'platform') && $model !== 'platformList') {
             return 'PlatformType';
         }

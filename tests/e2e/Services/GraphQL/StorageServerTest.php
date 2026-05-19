@@ -262,7 +262,7 @@ class StorageServerTest extends Scope
             'x-appwrite-project' => $projectId,
         ], $this->getHeaders()), $gqlPayload);
 
-        $this->assertEquals(46719, \strlen($file['body']));
+        $this->assertFilePreviewResponse($file);
 
         return $file;
     }

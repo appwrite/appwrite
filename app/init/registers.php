@@ -240,6 +240,12 @@ $register->set('pools', function () {
             'multiple' => true,
             'schemes' => ['redis'],
         ],
+        'lock' => [
+            'type' => 'lock',
+            'dsns' => $fallbackForRedis,
+            'multiple' => false,
+            'schemes' => ['redis'],
+        ],
     ];
 
     $maxConnections = (int) System::getEnv('_APP_CONNECTIONS_MAX', 151);
@@ -332,7 +338,13 @@ $register->set('pools', function () {
 
             $poolAdapter = System::getEnv('_APP_POOL_ADAPTER', default: 'stack') === 'swoole' ? new SwoolePool() : new StackPool();
 
-            $pool = new Pool($poolAdapter, $name, $poolSize, function () use ($type, $resource, $dsn) {
+            // PubSub workers hold one long-lived subscribed connection and also need
+            // spare capacity for publishes from the same process.
+            $connectionPoolSize = $type === 'pubsub'
+                ? max(2, $poolSize)
+                : $poolSize;
+
+            $pool = new Pool($poolAdapter, $name, $connectionPoolSize, function () use ($type, $resource, $dsn) {
                 // Get Adapter
                 switch ($type) {
                     case 'database':
@@ -369,6 +381,8 @@ $register->set('pools', function () {
                         }
 
                         return $adapter;
+                    case 'lock':
+                        return $resource();
                     default:
                         throw new Exception(Exception::GENERAL_SERVER_ERROR, "Server error: Missing adapter implementation.");
                 }
