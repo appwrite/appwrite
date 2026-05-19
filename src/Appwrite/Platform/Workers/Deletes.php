@@ -404,8 +404,8 @@ class Deletes extends Action
         /** @var Database $dbForProject */
         $dbForProject = $getProjectDB($project);
 
-        $days = 3;
-        $date = DateTime::addSeconds(new \DateTime(), -1 * ($days * 24 * 60 * 60)); // 3 days
+        $retention = 3 * 24 * 60 * 60; // 3 Days to seconds
+        $date = DateTime::addSeconds(new \DateTime(), -$retention);
 
         $queries = [
             Query::select($this->selects),
