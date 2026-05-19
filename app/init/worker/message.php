@@ -4,7 +4,6 @@ use Appwrite\Event\Event;
 use Appwrite\Event\Realtime;
 use Appwrite\Event\Webhook;
 use Appwrite\Usage\Context;
-use Appwrite\Utopia\Database\Documents\User;
 use Utopia\Audit\Adapter\Database as AdapterDatabase;
 use Utopia\Audit\Audit as UtopiaAudit;
 use Utopia\Cache\Cache;
@@ -42,18 +41,12 @@ return function (Container $container): void {
         return $authorization;
     }, []);
 
-    $container->set('dbForPlatform', function (Cache $cache, Group $pools, Authorization $authorization) {
-        $adapter = new DatabasePool($pools->get('console'));
-        $dbForPlatform = new Database($adapter, $cache);
-
-        $dbForPlatform
-            ->setDatabase(APP_DATABASE)
-            ->setAuthorization($authorization)
-            ->setNamespace('_console')
-            ->setDocumentType('users', User::class);
-
-        return $dbForPlatform;
-    }, ['cache', 'pools', 'authorization']);
+    $container->set('dbForPlatform', fn (Cache $cache, Group $pools, Authorization $authorization) => createPlatformDatabase(
+        $pools,
+        $cache,
+        $authorization,
+        metadata: false
+    ), ['cache', 'pools', 'authorization']);
 
     $container->set('project', function ($message, Database $dbForPlatform) {
         $payload = $message->getPayload() ?? [];
@@ -66,50 +59,16 @@ return function (Container $container): void {
         return $dbForPlatform->getDocument('projects', $project->getId());
     }, ['message', 'dbForPlatform']);
 
-    $container->set('dbForProject', function (Cache $cache, Group $pools, Document $project, Database $dbForPlatform, Authorization $authorization) {
-        if ($project->isEmpty() || $project->getId() === 'console') {
-            return $dbForPlatform;
-        }
-
-        try {
-            $dsn = new DSN($project->getAttribute('database'));
-        } catch (\InvalidArgumentException) {
-            // TODO: Temporary until all projects are using shared tables
-            $dsn = new DSN('mysql://' . $project->getAttribute('database'));
-        }
-
-        $adapter = new DatabasePool($pools->get($dsn->getHost()));
-        $database = new Database($adapter, $cache);
-        $database->setDocumentType('users', User::class);
-
-        $sharedTables = \explode(',', System::getEnv('_APP_DATABASE_SHARED_TABLES', ''));
-
-        if (\in_array($dsn->getHost(), $sharedTables)) {
-            /** @var array $collections */
-            $collections = Config::getParam('collections', []);
-            $projectCollections = $collections['projects'] ?? [];
-            $projectsGlobalCollections = array_keys($projectCollections);
-            $projectsGlobalCollections[] = 'audit';
-
-            $database
-                ->setSharedTables(true)
-                ->setGlobalCollections($projectsGlobalCollections)
-                ->setTenant($project->getSequence())
-                ->setNamespace($dsn->getParam('namespace'));
-        } else {
-            $database
-                ->setSharedTables(false)
-                ->setTenant(null)
-                ->setNamespace('_' . $project->getSequence());
-        }
-
-        $database
-            ->setDatabase(APP_DATABASE)
-            ->setAuthorization($authorization)
-            ->setTimeout(APP_DATABASE_TIMEOUT_MILLISECONDS_WORKER);
-
-        return $database;
-    }, ['cache', 'pools', 'project', 'dbForPlatform', 'authorization']);
+    $container->set('dbForProject', fn (Cache $cache, Group $pools, Document $project, Database $dbForPlatform, Authorization $authorization) => $project->isEmpty() || $project->getId() === 'console'
+        ? $dbForPlatform
+        : createProjectDatabase(
+            $pools,
+            $cache,
+            $authorization,
+            $project,
+            APP_DATABASE_TIMEOUT_MILLISECONDS_WORKER,
+            metadata: false
+        ), ['cache', 'pools', 'project', 'dbForPlatform', 'authorization']);
 
     $container->set('getProjectDB', function (Group $pools, Database $dbForPlatform, Cache $cache, Authorization $authorization) {
         $databases = []; // TODO: @Meldiron This should probably be responsibility of utopia-php/pools
@@ -129,28 +88,8 @@ return function (Container $container): void {
             if (isset($databases[$dsn->getHost()])) {
                 $database = $databases[$dsn->getHost()];
                 $database->setAuthorization($authorization);
-                $sharedTables = \explode(',', System::getEnv('_APP_DATABASE_SHARED_TABLES', ''));
 
-                if (\in_array($dsn->getHost(), $sharedTables)) {
-                    /** @var array $collections */
-                    $collections = Config::getParam('collections', []);
-                    $projectCollections = $collections['projects'] ?? [];
-                    $projectsGlobalCollections = array_keys($projectCollections);
-                    $projectsGlobalCollections[] = 'audit';
-
-                    $database
-                        ->setSharedTables(true)
-                        ->setGlobalCollections($projectsGlobalCollections)
-                        ->setTenant($project->getSequence())
-                        ->setNamespace($dsn->getParam('namespace'));
-                } else {
-                    $database
-                        ->setSharedTables(false)
-                        ->setTenant(null)
-                        ->setNamespace('_' . $project->getSequence());
-                }
-
-                return $database;
+                return configureProjectDatabase($database, $project, $dsn);
             }
 
             $adapter = new DatabasePool($pools->get($dsn->getHost()));
@@ -158,26 +97,7 @@ return function (Container $container): void {
 
             $databases[$dsn->getHost()] = $database;
 
-            $sharedTables = \explode(',', System::getEnv('_APP_DATABASE_SHARED_TABLES', ''));
-
-            if (\in_array($dsn->getHost(), $sharedTables)) {
-                /** @var array $collections */
-                $collections = Config::getParam('collections', []);
-                $projectCollections = $collections['projects'] ?? [];
-                $projectsGlobalCollections = array_keys($projectCollections);
-                $projectsGlobalCollections[] = 'audit';
-
-                $database
-                    ->setSharedTables(true)
-                    ->setGlobalCollections($projectsGlobalCollections)
-                    ->setTenant($project->getSequence())
-                    ->setNamespace($dsn->getParam('namespace'));
-            } else {
-                $database
-                    ->setSharedTables(false)
-                    ->setTenant(null)
-                    ->setNamespace('_' . $project->getSequence());
-            }
+            $database = configureProjectDatabase($database, $project, $dsn);
 
             $database
                 ->setDatabase(APP_DATABASE)
@@ -226,11 +146,7 @@ return function (Container $container): void {
 
             $sharedTables = \array_filter(\explode(',', System::getEnv('_APP_DATABASE_SHARED_TABLES', '')));
 
-            /** @var array $collections */
-            $collections = Config::getParam('collections', []);
-            $projectCollections = $collections['projects'] ?? [];
-            $projectsGlobalCollections = array_keys($projectCollections);
-            $projectsGlobalCollections[] = 'audit';
+            $projectsGlobalCollections = getProjectGlobalCollections();
 
             $database->setGlobalCollections($projectsGlobalCollections);
 
@@ -283,22 +199,13 @@ return function (Container $container): void {
                 return $database;
             }
 
-            /** @var array $collections */
-            $collections = Config::getParam('collections', []);
-            $logsCollections = $collections['logs'] ?? [];
-            $logsCollections = array_keys($logsCollections);
-
-            $adapter = new DatabasePool($pools->get('logs'));
-            $database = new Database($adapter, $cache);
-
-            $database
-                ->setDatabase(APP_DATABASE)
-                ->setAuthorization($authorization)
-                ->setSharedTables(true)
-                ->setGlobalCollections($logsCollections)
-                ->setNamespace('logsV1')
-                ->setTimeout(APP_DATABASE_TIMEOUT_MILLISECONDS_WORKER)
-                ->setMaxQueryValues(APP_DATABASE_QUERY_MAX_VALUES_WORKER);
+            $database = createLogsDatabase(
+                $pools,
+                $cache,
+                $authorization,
+                APP_DATABASE_TIMEOUT_MILLISECONDS_WORKER,
+                APP_DATABASE_QUERY_MAX_VALUES_WORKER
+            );
 
             if ($project !== null && !$project->isEmpty() && $project->getId() !== 'console') {
                 $database->setTenant($project->getSequence());

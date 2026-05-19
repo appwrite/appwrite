@@ -48,16 +48,170 @@ use Utopia\Telemetry\Adapter as Telemetry;
 use Utopia\Telemetry\Adapter\None as NoTelemetry;
 use Utopia\VCS\Adapter\Git\GitHub as VcsGitHub;
 
-// Runtime Execution
 global $register;
 global $container;
+
+function getProjectGlobalCollections(): array
+{
+    /** @var array $collections */
+    $collections = Config::getParam('collections', []);
+    $projectCollections = $collections['projects'] ?? [];
+    $projectsGlobalCollections = array_keys($projectCollections);
+    $projectsGlobalCollections[] = 'audit';
+
+    return $projectsGlobalCollections;
+}
+
+function configureProjectDatabase(Database $database, Document $project, DSN $dsn): Database
+{
+    $sharedTables = \explode(',', System::getEnv('_APP_DATABASE_SHARED_TABLES', ''));
+
+    if (\in_array($dsn->getHost(), $sharedTables)) {
+        $database
+            ->setSharedTables(true)
+            ->setGlobalCollections(getProjectGlobalCollections())
+            ->setTenant($project->getSequence())
+            ->setNamespace($dsn->getParam('namespace'));
+    } else {
+        $database
+            ->setSharedTables(false)
+            ->setTenant(null)
+            ->setNamespace('_' . $project->getSequence());
+    }
+
+    return $database;
+}
+
+function createPlatformDatabase(
+    Group $pools,
+    Cache $cache,
+    Authorization $authorization,
+    int $timeout = 0,
+    int $maxQueryValues = 0,
+    bool $metadata = true,
+): Database {
+    $adapter = new DatabasePool($pools->get('console'));
+    $database = new Database($adapter, $cache);
+
+    $database
+        ->setDatabase(APP_DATABASE)
+        ->setAuthorization($authorization)
+        ->setNamespace('_console');
+
+    if ($metadata) {
+        $database
+            ->setMetadata('host', \gethostname())
+            ->setMetadata('project', 'console');
+    }
+
+    if ($timeout > 0) {
+        $database->setTimeout($timeout);
+    }
+
+    if ($maxQueryValues > 0) {
+        $database->setMaxQueryValues($maxQueryValues);
+    }
+
+    $database->setDocumentType('users', User::class);
+
+    return $database;
+}
+
+function createProjectDatabase(
+    Group $pools,
+    Cache $cache,
+    Authorization $authorization,
+    Document $project,
+    int $timeout = 0,
+    int $maxQueryValues = 0,
+    bool $metadata = true,
+): Database {
+    try {
+        $dsn = new DSN($project->getAttribute('database'));
+    } catch (\InvalidArgumentException) {
+        // TODO: Temporary until all projects are using shared tables
+        $dsn = new DSN('mysql://' . $project->getAttribute('database'));
+    }
+
+    $adapter = new DatabasePool($pools->get($dsn->getHost()));
+    $database = new Database($adapter, $cache);
+
+    $database
+        ->setDatabase(APP_DATABASE)
+        ->setAuthorization($authorization);
+
+    if ($metadata) {
+        $database
+            ->setMetadata('host', \gethostname())
+            ->setMetadata('project', $project->getId());
+    }
+
+    if ($timeout > 0) {
+        $database->setTimeout($timeout);
+    }
+
+    if ($maxQueryValues > 0) {
+        $database->setMaxQueryValues($maxQueryValues);
+    }
+
+    $database->setDocumentType('users', User::class);
+
+    return configureProjectDatabase($database, $project, $dsn);
+}
+
+function createLogsDatabase(
+    Group $pools,
+    Cache $cache,
+    Authorization $authorization,
+    int $timeout = 0,
+    int $maxQueryValues = 0,
+    ?DatabasePool $adapter = null,
+): Database {
+    /** @var array $collections */
+    $collections = Config::getParam('collections', []);
+    $logsCollections = $collections['logs'] ?? [];
+    $logsCollections = array_keys($logsCollections);
+
+    $adapter ??= new DatabasePool($pools->get('logs'));
+    $database = new Database($adapter, $cache);
+
+    $database
+        ->setDatabase(APP_DATABASE)
+        ->setAuthorization($authorization)
+        ->setSharedTables(true)
+        ->setGlobalCollections($logsCollections)
+        ->setNamespace('logsV1');
+
+    if ($timeout > 0) {
+        $database->setTimeout($timeout);
+    }
+
+    if ($maxQueryValues > 0) {
+        $database->setMaxQueryValues($maxQueryValues);
+    }
+
+    return $database;
+}
+
 $container = new Container();
 
+$container->set('register', fn () => $register);
+
+$container->set('logger', fn ($register) => $register->get('logger'), ['register']);
+
+$container->set('hooks', fn ($register) => $register->get('hooks'), ['register']);
+
 $container->set('console', fn () => new Document(Config::getParam('console')), []);
+
+$container->set('platform', fn () => Config::getParam('platform', []), []);
+
+$container->set('localeCodes', fn () => array_map(fn ($locale) => $locale['code'], Config::getParam('locale-codes', [])));
 
 $container->set('executor', fn () => new Executor(), []);
 
 $container->set('telemetry', fn () => new NoTelemetry(), []);
+
+$container->set('authorization', fn () => new Authorization(), []);
 
 $container->set('publisher', fn (Group $pools) => new BrokerPool(publisher: $pools->get('publisher')), ['pools']);
 
@@ -140,50 +294,13 @@ $container->set('publisherForMessaging', fn (Publisher $publisher) => new Messag
     new Queue(System::getEnv('_APP_MESSAGING_QUEUE_NAME', Event::MESSAGING_QUEUE_NAME))
 ), ['publisher']);
 
-$container->set('logger', function ($register) {
-    return $register->get('logger');
-}, ['register']);
-
-$container->set('hooks', function ($register) {
-    return $register->get('hooks');
-}, ['register']);
-
-$container->set('register', fn () => $register);
-
-$container->set('localeCodes', function () {
-    return array_map(fn ($locale) => $locale['code'], Config::getParam('locale-codes', []));
-});
-
-
-/**
- * Platform configuration
- */
-$container->set('platform', function () {
-    return Config::getParam('platform', []);
-}, []);
-
-$container->set('authorization', function () {
-    return new Authorization();
-}, []);
-
-$container->set('dbForPlatform', function (Group $pools, Cache $cache, Authorization $authorization) {
-
-    $adapter = new DatabasePool($pools->get('console'));
-    $database = new Database($adapter, $cache);
-
-    $database
-        ->setDatabase(APP_DATABASE)
-        ->setAuthorization($authorization)
-        ->setNamespace('_console')
-        ->setMetadata('host', \gethostname())
-        ->setMetadata('project', 'console')
-        ->setTimeout(APP_DATABASE_TIMEOUT_MILLISECONDS_API)
-        ->setMaxQueryValues(APP_DATABASE_QUERY_MAX_VALUES);
-
-    $database->setDocumentType('users', User::class);
-
-    return $database;
-}, ['pools', 'cache', 'authorization']);
+$container->set('dbForPlatform', fn (Group $pools, Cache $cache, Authorization $authorization) => createPlatformDatabase(
+    $pools,
+    $cache,
+    $authorization,
+    APP_DATABASE_TIMEOUT_MILLISECONDS_API,
+    APP_DATABASE_QUERY_MAX_VALUES
+), ['pools', 'cache', 'authorization']);
 
 $container->set('getLogsDB', function (Group $pools, Cache $cache, Authorization $authorization) {
     $database = null;
@@ -194,22 +311,13 @@ $container->set('getLogsDB', function (Group $pools, Cache $cache, Authorization
             return $database;
         }
 
-        $adapter = new DatabasePool($pools->get('logs'));
-        $database = new Database($adapter, $cache);
-
-        /** @var array $collections */
-        $collections = Config::getParam('collections', []);
-        $logsCollections = $collections['logs'] ?? [];
-        $logsCollections = array_keys($logsCollections);
-
-        $database
-            ->setDatabase(APP_DATABASE)
-            ->setAuthorization($authorization)
-            ->setSharedTables(true)
-            ->setGlobalCollections($logsCollections)
-            ->setNamespace('logsV1')
-            ->setTimeout(APP_DATABASE_TIMEOUT_MILLISECONDS_API)
-            ->setMaxQueryValues(APP_DATABASE_QUERY_MAX_VALUES);
+        $database = createLogsDatabase(
+            $pools,
+            $cache,
+            $authorization,
+            APP_DATABASE_TIMEOUT_MILLISECONDS_API,
+            APP_DATABASE_QUERY_MAX_VALUES
+        );
 
         // set tenant
         if ($project !== null && !$project->isEmpty() && $project->getId() !== 'console') {
@@ -234,9 +342,7 @@ $container->set('cache', function (Group $pools, Telemetry $telemetry) {
     return $cache;
 }, ['pools', 'telemetry']);
 
-$container->set('cacheControlForStorage', fn () => function (StorageCacheControl $config): string {
-    return \sprintf('private, max-age=%d', $config->maxAge);
-});
+$container->set('cacheControlForStorage', fn () => fn (StorageCacheControl $config): string => \sprintf('private, max-age=%d', $config->maxAge));
 
 $container->set('redis', function () {
     $host = System::getEnv('_APP_REDIS_HOST', 'localhost');
@@ -253,25 +359,14 @@ $container->set('redis', function () {
     return $redis;
 });
 
-$container->set('locks', function (Group $pools) {
-    return function (string $key, int $ttl, callable $callback, float $timeout = 0.0) use ($pools): mixed {
-        return $pools->get('lock')->use(function (\Redis $redis) use ($key, $ttl, $callback, $timeout) {
-            $lock = new Distributed($redis, $key, ttl: $ttl);
+$container->set('locks', fn (Group $pools) => fn (string $key, int $ttl, callable $callback, float $timeout = 0.0): mixed => $pools->get('lock')->use(
+    fn (\Redis $redis) => (new Distributed($redis, $key, ttl: $ttl))->withLock($callback, timeout: $timeout)
+), ['pools']);
 
-            return $lock->withLock($callback, timeout: $timeout);
-        });
-    };
-}, ['pools']);
+$container->set('timelimit', fn (\Redis $redis) => fn (string $key, int $limit, int $time) => new TimeLimitRedis($key, $limit, $time, $redis), ['redis']);
 
-$container->set('timelimit', function (\Redis $redis) {
-    return function (string $key, int $limit, int $time) use ($redis) {
-        return new TimeLimitRedis($key, $limit, $time, $redis);
-    };
-}, ['redis']);
+$container->set('deviceForLocal', fn (Telemetry $telemetry) => new Device\Telemetry($telemetry, new Local()), ['telemetry']);
 
-$container->set('deviceForLocal', function (Telemetry $telemetry) {
-    return new Device\Telemetry($telemetry, new Local());
-}, ['telemetry']);
 function getDevice(string $root, string $connection = ''): Device
 {
     $connection = ! empty($connection) ? $connection : System::getEnv('_APP_CONNECTIONS_STORAGE', '');
@@ -299,14 +394,14 @@ function getDevice(string $root, string $connection = ''): Device
         switch ($device) {
             case Storage::DEVICE_S3:
                 if (! empty($url)) {
-                    $bucketRoot = (! empty($bucket) ? $bucket . '/' : '') . \ltrim($root, '/');
+                    $bucketRoot = (! empty($bucket) ? "{$bucket}/" : '') . \ltrim($root, '/');
 
                     return new S3($bucketRoot, $accessKey, $accessSecret, $url, $region, $acl);
                 } else {
                     return new AWS($root, $accessKey, $accessSecret, $bucket, $region, $acl);
                 }
                 // no break
-            case STORAGE::DEVICE_DO_SPACES:
+            case Storage::DEVICE_DO_SPACES:
                 $device = new DOSpaces($root, $accessKey, $accessSecret, $bucket, $region, $acl);
                 $device->setHttpVersion(S3::HTTP_VERSION_1_1);
 
@@ -323,9 +418,6 @@ function getDevice(string $root, string $connection = ''): Device
         }
     } else {
         switch (strtolower(System::getEnv('_APP_STORAGE_DEVICE', Storage::DEVICE_LOCAL))) {
-            case Storage::DEVICE_LOCAL:
-            default:
-                return new Local($root);
             case Storage::DEVICE_S3:
                 $s3AccessKey = System::getEnv('_APP_STORAGE_S3_ACCESS_KEY', '');
                 $s3SecretKey = System::getEnv('_APP_STORAGE_S3_SECRET', '');
@@ -334,7 +426,7 @@ function getDevice(string $root, string $connection = ''): Device
                 $s3Acl = 'private';
                 $s3EndpointUrl = System::getEnv('_APP_STORAGE_S3_ENDPOINT', '');
                 if (! empty($s3EndpointUrl)) {
-                    $bucketRoot = (! empty($s3Bucket) ? $s3Bucket . '/' : '') . \ltrim($root, '/');
+                    $bucketRoot = (! empty($s3Bucket) ? "{$s3Bucket}/" : '') . \ltrim($root, '/');
 
                     return new S3($bucketRoot, $s3AccessKey, $s3SecretKey, $s3EndpointUrl, $s3Region, $s3Acl);
                 } else {
@@ -375,46 +467,33 @@ function getDevice(string $root, string $connection = ''): Device
                 $wasabiAcl = 'private';
 
                 return new Wasabi($root, $wasabiAccessKey, $wasabiSecretKey, $wasabiBucket, $wasabiRegion, $wasabiAcl);
+            case Storage::DEVICE_LOCAL:
+            default:
+                return new Local($root);
         }
     }
 }
 
-$container->set('geodb', function ($register) {
-    /** @var Utopia\Registry\Registry $register */
-    return $register->get('geodb');
-}, ['register']);
+$container->set('geodb', fn ($register) => $register->get('geodb'), ['register']);
 
-$container->set('passwordsDictionary', function ($register) {
-    /** @var Utopia\Registry\Registry $register */
-    return $register->get('passwordsDictionary');
-}, ['register']);
+$container->set('passwordsDictionary', fn ($register) => $register->get('passwordsDictionary'), ['register']);
 
 $container->set('servers', function () {
     $platforms = Config::getParam('sdks');
     $server = $platforms[APP_SDK_PLATFORM_SERVER];
 
-    $languages = array_map(function ($language) {
-        return strtolower($language['name']);
-    }, $server['sdks']);
+    $languages = array_map(fn ($language) => strtolower($language['name']), $server['sdks']);
 
     return $languages;
 });
 
-$container->set('promiseAdapter', function ($register) {
-    return $register->get('promiseAdapter');
-}, ['register']);
+$container->set('promiseAdapter', fn ($register) => $register->get('promiseAdapter'), ['register']);
 
-$container->set('gitHub', function (Cache $cache) {
-    return new VcsGitHub($cache);
-}, ['cache']);
+$container->set('gitHub', fn (Cache $cache) => new VcsGitHub($cache), ['cache']);
 
-$container->set('plan', function () {
-    return [];
-});
+$container->set('plan', fn () => []);
 
-$container->set('smsRates', function () {
-    return [];
-});
+$container->set('smsRates', fn () => []);
 
 $container->set(
     'isResourceBlocked',
