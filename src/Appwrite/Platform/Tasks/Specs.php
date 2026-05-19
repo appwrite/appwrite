@@ -79,7 +79,26 @@ class Specs extends Action
             APP_SDK_PLATFORM_CLIENT,
             APP_SDK_PLATFORM_SERVER,
             APP_SDK_PLATFORM_CONSOLE,
+            APP_SDK_PLATFORM_ISOMORPHIC,
         ];
+    }
+
+    /**
+     * Real platforms whose filters apply to a given (possibly virtual) platform.
+     *
+     * The isomorphic platform is a virtual union of `client` and `server` — its spec includes
+     * any route or service that would normally be emitted in either platform's spec. All other
+     * platforms map to themselves.
+     *
+     * @return array<string>
+     */
+    private static function effectivePlatformsFor(string $platform): array
+    {
+        if ($platform === APP_SDK_PLATFORM_ISOMORPHIC) {
+            return [APP_SDK_PLATFORM_CLIENT, APP_SDK_PLATFORM_SERVER];
+        }
+
+        return [$platform];
     }
 
     /**
@@ -121,6 +140,7 @@ class Specs extends Action
             'client' => 1,
             'server' => 2,
             'console' => 1,
+            APP_SDK_PLATFORM_ISOMORPHIC => 1,
         ];
     }
 
@@ -131,7 +151,7 @@ class Specs extends Action
      */
     protected function getKeys(): array
     {
-        return [
+        $keys = [
             APP_SDK_PLATFORM_CLIENT => [
                 'Project' => [
                     'type' => 'apiKey',
@@ -325,6 +345,12 @@ class Specs extends Action
                 ],
             ],
         ];
+
+        // Isomorphic platform shares the auth surface of both client and server runtimes; the
+        // generated SDK picks one auth path at construction time via its factories.
+        $keys[APP_SDK_PLATFORM_ISOMORPHIC] = $keys[APP_SDK_PLATFORM_CLIENT] + $keys[APP_SDK_PLATFORM_SERVER];
+
+        return $keys;
     }
 
     protected function verifyParsedSpec(array $spec): void
@@ -542,6 +568,7 @@ class Specs extends Action
             $routes = [];
             $models = [];
             $services = [];
+            $effectivePlatforms = static::effectivePlatformsFor($platform);
 
             foreach ($appRoutes as $key => $method) {
                 foreach ($method as $route) {
@@ -559,7 +586,10 @@ class Specs extends Action
                         /** @var Method $sdk */
                         $hide = $sdk->isHidden();
 
-                        if ($hide === true || (\is_array($hide) && \in_array($platform, $hide))) {
+                        // A method is hidden from a (possibly virtual) platform when it is hidden
+                        // from every real platform that platform expands to. For real platforms
+                        // this matches the legacy single-element check.
+                        if ($hide === true || (\is_array($hide) && empty(\array_diff($effectivePlatforms, $hide)))) {
                             continue;
                         }
 
@@ -582,7 +612,7 @@ class Specs extends Action
                             continue;
                         }
 
-                        if (!\in_array($platform, $sdkPlatforms)) {
+                        if (empty(\array_intersect($effectivePlatforms, $sdkPlatforms))) {
                             continue;
                         }
 
@@ -601,8 +631,8 @@ class Specs extends Action
                     continue;
                 }
 
-                // Check if current platform is included in service's platforms
-                if (!\in_array($platform, $service['platforms'] ?? [])) {
+                // Check if any effective platform is included in service's platforms
+                if (empty(\array_intersect($effectivePlatforms, $service['platforms'] ?? []))) {
                     continue;
                 }
 

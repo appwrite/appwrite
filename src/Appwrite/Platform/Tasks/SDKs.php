@@ -308,7 +308,8 @@ class SDKs extends Action
                 } else {
                     Console::log('  Fetching API spec...');
 
-                    $specPath = __DIR__ . '/../../../../app/config/specs/swagger2-' . $version . '-' . $language['family'] . '.json';
+                    $specPlatform = $language['specPlatform'] ?? $language['family'];
+                    $specPath = __DIR__ . '/../../../../app/config/specs/swagger2-' . $version . '-' . $specPlatform . '.json';
 
                     if (!file_exists($specPath)) {
                         throw new \Exception('Spec file not found: ' . $specPath . '. Please run "docker compose exec appwrite specs --version=' . $version . '" first to generate the specs.');

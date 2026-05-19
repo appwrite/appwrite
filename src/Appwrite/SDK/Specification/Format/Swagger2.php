@@ -179,7 +179,7 @@ class Swagger2 extends Format
                     $methodSecurities = $methodObj->getAuth();
                     $methodSdkPlatforms = $specs->getSDKPlatformsForRouteSecurity($methodSecurities);
 
-                    if (!\in_array($this->platform, $methodSdkPlatforms)) {
+                    if (empty(\array_intersect($this->effectivePlatforms(), $methodSdkPlatforms))) {
                         continue;
                     }
 

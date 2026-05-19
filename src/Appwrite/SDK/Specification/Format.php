@@ -125,6 +125,22 @@ abstract class Format
         $this->enumBlacklist = $this->buildEnumBlacklist();
     }
 
+    /**
+     * Real platforms whose filters apply to this (possibly virtual) format platform.
+     *
+     * The isomorphic platform expands to client + server; all others map to themselves.
+     *
+     * @return array<string>
+     */
+    protected function effectivePlatforms(): array
+    {
+        if ($this->platform === APP_SDK_PLATFORM_ISOMORPHIC) {
+            return [APP_SDK_PLATFORM_CLIENT, APP_SDK_PLATFORM_SERVER];
+        }
+
+        return [$this->platform];
+    }
+
     protected function buildEnumBlacklist(): array
     {
         $blacklist = [];
