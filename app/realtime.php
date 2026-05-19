@@ -1086,13 +1086,19 @@ $server->onMessage(function (int $connection, string $message) use ($container, 
         if (!empty($projectId) && $projectId !== 'console') {
             // Negative-cache race: if any prior code path queried projects:$projectId
             // before this project existed (e.g. a router probe during connection
-            // setup), the Database's shared cache may hold an empty result. HTTP
-            // worker creates the project via dbForPlatform which purges on write,
-            // but there's a window during which Realtime can re-populate a stale
-            // cache entry. Purge before reading to force a fresh adapter hit.
-            $database->purgeCachedDocument('projects', $projectId);
+            // setup), the Database's shared cache may hold an empty result. Try the
+            // cached read first, and only purge/retry when the first lookup reports
+            // not-found so the shared cache remains effective for normal traffic.
+            try {
+                $project = $authorization->skip(fn () => $database->getDocument('projects', $projectId));
+            } catch (AppwriteException $e) {
+                if ($e->getCode() !== 404) {
+                    throw $e;
+                }
 
-            $project = $authorization->skip(fn () => $database->getDocument('projects', $projectId));
+                $database->purgeCachedDocument('projects', $projectId);
+                $project = $authorization->skip(fn () => $database->getDocument('projects', $projectId));
+            }
 
             $database = getProjectDB($project);
             $database->setAuthorization($authorization);
