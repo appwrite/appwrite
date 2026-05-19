@@ -40,6 +40,7 @@ use function Swoole\Coroutine\batch;
 class Deletes extends Action
 {
     protected array $selects = ['$sequence', '$id', '$collection', '$permissions', '$updatedAt'];
+    public const PROCESSING_STUCK_RETENTION_SECONDS = 3 * 24 * 60 * 60; // 3 days
 
     public static function getName(): string
     {
@@ -403,8 +404,7 @@ class Deletes extends Action
         /** @var Database $dbForProject */
         $dbForProject = $getProjectDB($project);
 
-        $retention = 3 * 24 * 60 * 60; // 3 Days to seconds
-        $date = DateTime::addSeconds(new \DateTime(), -$retention);
+        $date = DateTime::addSeconds(new \DateTime(), -self::PROCESSING_STUCK_RETENTION_SECONDS);
 
         $queries = [
             Query::select($this->selects),
