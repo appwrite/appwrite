@@ -16,6 +16,11 @@ use Utopia\System\System;
 
 class DatabaseFactory
 {
+    /**
+     * @var array<string, DatabasePool>
+     */
+    protected array $adapters = [];
+
     public function __construct(
         protected Group $pools,
         protected Cache $cache,
@@ -30,7 +35,7 @@ class DatabaseFactory
         int $maxQueryValues = 0,
         array $metadata = [],
     ): Database {
-        $database = $this->newDatabase(new DatabasePool($this->pools->get('console')));
+        $database = $this->newDatabase($this->adapter('console'));
 
         $database
             ->setDatabase($this->database)
@@ -51,7 +56,7 @@ class DatabaseFactory
     ): Database {
         $dsn = $this->dsn($project->getAttribute('database'));
         $database = $this->newDatabase(
-            new DatabasePool($this->pools->get($dsn->getHost())),
+            $this->adapter($dsn->getHost()),
             $this->destinationFor($dsn)
         );
 
@@ -75,7 +80,7 @@ class DatabaseFactory
         $collections = Config::getParam('collections', []);
         $logsCollections = \array_keys($collections['logs'] ?? []);
 
-        $database = $this->newDatabase(new DatabasePool($this->pools->get('logs')));
+        $database = $this->newDatabase($this->adapter('logs'));
 
         $database
             ->setDatabase($this->database)
@@ -105,7 +110,7 @@ class DatabaseFactory
         $projectDsn = $this->dsn($project->getAttribute('database'));
         $databaseType = $databaseDocument->getAttribute('type', '');
 
-        $database = $this->newDatabase(new DatabasePool($this->pools->get($databaseDsn->getHost())));
+        $database = $this->newDatabase($this->adapter($databaseDsn->getHost()));
 
         $database
             ->setDatabase($this->database)
@@ -161,6 +166,11 @@ class DatabaseFactory
     protected function newDatabase(Adapter $adapter, ?Database $destination = null): Database
     {
         return new Database($adapter, $this->cache);
+    }
+
+    protected function adapter(string $name): DatabasePool
+    {
+        return $this->adapters[$name] ??= new DatabasePool($this->pools->get($name));
     }
 
     protected function configureDocumentTypes(Database $database): Database
