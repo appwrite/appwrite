@@ -513,6 +513,59 @@ class VCSConsoleClientTest extends Scope
         $this->assertEquals($repositoryBranches['body']['branches'][0]['name'], 'main');
         $this->assertEquals($repositoryBranches['body']['branches'][1]['name'], 'test');
 
+        $repositoryBranches = $this->client->call(Client::METHOD_GET, '/vcs/github/installations/' . $installationId . '/providerRepositories/' . $this->providerRepositoryId . '/branches', array_merge([
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'search' => 'tes',
+        ]);
+
+        $this->assertEquals(200, $repositoryBranches['headers']['status-code']);
+        $this->assertEquals($repositoryBranches['body']['total'], 1);
+        $this->assertCount(1, $repositoryBranches['body']['branches']);
+        $this->assertEquals($repositoryBranches['body']['branches'][0]['name'], 'test');
+
+        $repositoryBranches = $this->client->call(Client::METHOD_GET, '/vcs/github/installations/' . $installationId . '/providerRepositories/' . $this->providerRepositoryId . '/branches', array_merge([
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'queries' => [
+                Query::limit(1)->toString(),
+                Query::offset(1)->toString(),
+            ],
+        ]);
+
+        $this->assertEquals(200, $repositoryBranches['headers']['status-code']);
+        $this->assertEquals($repositoryBranches['body']['total'], 2);
+        $this->assertCount(1, $repositoryBranches['body']['branches']);
+        $this->assertEquals($repositoryBranches['body']['branches'][0]['name'], 'test');
+
+        $repositoryBranches = $this->client->call(Client::METHOD_GET, '/vcs/github/installations/' . $installationId . '/providerRepositories/' . $this->providerRepositoryId . '/branches', array_merge([
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'queries' => [
+                Query::limit(1)->toString(),
+                Query::cursorAfter(new \Utopia\Database\Document(['$id' => 'main']))->toString(),
+            ],
+        ]);
+
+        $this->assertEquals(200, $repositoryBranches['headers']['status-code']);
+        $this->assertEquals($repositoryBranches['body']['total'], 2);
+        $this->assertCount(1, $repositoryBranches['body']['branches']);
+        $this->assertEquals($repositoryBranches['body']['branches'][0]['name'], 'test');
+
+        $repositoryBranches = $this->client->call(Client::METHOD_GET, '/vcs/github/installations/' . $installationId . '/providerRepositories/' . $this->providerRepositoryId . '/branches', array_merge([
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'queries' => [
+                Query::limit(1)->toString(),
+                Query::cursorBefore(new \Utopia\Database\Document(['$id' => 'test']))->toString(),
+            ],
+        ]);
+
+        $this->assertEquals(200, $repositoryBranches['headers']['status-code']);
+        $this->assertEquals($repositoryBranches['body']['total'], 2);
+        $this->assertCount(1, $repositoryBranches['body']['branches']);
+        $this->assertEquals($repositoryBranches['body']['branches'][0]['name'], 'main');
+
         /**
          * Test for FAILURE
          */
@@ -522,6 +575,16 @@ class VCSConsoleClientTest extends Scope
         ], $this->getHeaders()));
 
         $this->assertEquals(404, $repositoryBranches['headers']['status-code']);
+
+        $repositoryBranches = $this->client->call(Client::METHOD_GET, '/vcs/github/installations/' . $installationId . '/providerRepositories/' . $this->providerRepositoryId . '/branches', array_merge([
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'queries' => [
+                Query::cursorAfter(new \Utopia\Database\Document(['$id' => 'missing-branch']))->toString(),
+            ],
+        ]);
+
+        $this->assertEquals(400, $repositoryBranches['headers']['status-code']);
     }
 
     public function testCreateFunctionUsingVCS(): void

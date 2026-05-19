@@ -725,6 +725,18 @@ return [
         'code' => 404,
     ],
 
+    /** Presence */
+    Exception::PRESENCE_NOT_FOUND => [
+        'name' => Exception::PRESENCE_NOT_FOUND,
+        'description' => 'Presence with the requested ID could not be found.',
+        'code' => 404,
+    ],
+    Exception::PRESENCE_ALREADY_EXISTS => [
+        'name' => Exception::PRESENCE_ALREADY_EXISTS,
+        'description' => 'Presence with the requested ID \'%s\' already exists. Try again with a different ID or use ID.unique() to generate a unique ID.',
+        'code' => 409,
+    ],
+
     /** Databases */
     Exception::DATABASE_NOT_FOUND => [
         'name' => Exception::DATABASE_NOT_FOUND,
@@ -1246,6 +1258,26 @@ return [
         'description' => 'The specified database type is not supported for CSV import or export operations.',
         'code' => 400,
     ],
+    Exception::MIGRATION_SOURCE_PROJECT_ID_REQUIRED => [
+        'name' => Exception::MIGRATION_SOURCE_PROJECT_ID_REQUIRED,
+        'description' => 'A source projectId is required for Appwrite migrations. Provide it in the migration credentials.',
+        'code' => 400,
+    ],
+    Exception::MIGRATION_SOURCE_PROJECT_NOT_FOUND => [
+        'name' => Exception::MIGRATION_SOURCE_PROJECT_NOT_FOUND,
+        'description' => 'The source project for the provided projectId was not found. Verify the projectId and the API key has access to it.',
+        'code' => 404,
+    ],
+    Exception::MIGRATION_SOURCE_TYPE_INVALID => [
+        'name' => Exception::MIGRATION_SOURCE_TYPE_INVALID,
+        'description' => 'The migration source type is invalid. Use one of the supported source types.',
+        'code' => 400,
+    ],
+    Exception::MIGRATION_DESTINATION_TYPE_INVALID => [
+        'name' => Exception::MIGRATION_DESTINATION_TYPE_INVALID,
+        'description' => 'The migration destination type is invalid. Use one of the supported destination types.',
+        'code' => 400,
+    ],
 
     /** Realtime */
     Exception::REALTIME_MESSAGE_FORMAT_INVALID => [
@@ -1432,5 +1464,29 @@ return [
         'name' => Exception::MOCK_NUMBER_LIMIT_EXCEEDED,
         'description' => 'The maximum number of mock phones for this project has been reached.',
         'code' => 400,
+    ],
+
+    /** Advisor */
+    Exception::INSIGHT_NOT_FOUND => [
+        'name' => Exception::INSIGHT_NOT_FOUND,
+        'description' => 'Insight with the requested ID could not be found.',
+        'code' => 404,
+    ],
+    Exception::INSIGHT_ALREADY_EXISTS => [
+        'name' => Exception::INSIGHT_ALREADY_EXISTS,
+        'description' => 'Insight with the requested ID already exists. Try again with a different ID or use ID.unique() to generate a unique ID.',
+        'code' => 409,
+    ],
+
+    /** Reports */
+    Exception::REPORT_NOT_FOUND => [
+        'name' => Exception::REPORT_NOT_FOUND,
+        'description' => 'Report with the requested ID could not be found.',
+        'code' => 404,
+    ],
+    Exception::REPORT_ALREADY_EXISTS => [
+        'name' => Exception::REPORT_ALREADY_EXISTS,
+        'description' => 'Report with the requested ID already exists. Try again with a different ID or use ID.unique() to generate a unique ID.',
+        'code' => 409,
     ],
 ];

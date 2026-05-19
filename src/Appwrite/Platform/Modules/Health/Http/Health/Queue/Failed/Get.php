@@ -2,15 +2,15 @@
 
 namespace Appwrite\Platform\Modules\Health\Http\Health\Queue\Failed;
 
-use Appwrite\Event\Build;
-use Appwrite\Event\Database;
-use Appwrite\Event\Delete;
 use Appwrite\Event\Event;
-use Appwrite\Event\Func;
-use Appwrite\Event\Mail;
-use Appwrite\Event\Messaging;
 use Appwrite\Event\Publisher\Audit;
+use Appwrite\Event\Publisher\Build as BuildPublisher;
 use Appwrite\Event\Publisher\Certificate;
+use Appwrite\Event\Publisher\Database as DatabasePublisher;
+use Appwrite\Event\Publisher\Delete as DeletePublisher;
+use Appwrite\Event\Publisher\Func as FunctionPublisher;
+use Appwrite\Event\Publisher\Mail as MailPublisher;
+use Appwrite\Event\Publisher\Messaging as MessagingPublisher;
 use Appwrite\Event\Publisher\Migration as MigrationPublisher;
 use Appwrite\Event\Publisher\Screenshot;
 use Appwrite\Event\Publisher\StatsResources as StatsResourcesPublisher;
@@ -74,17 +74,17 @@ class Get extends Base
             ]), 'The name of the queue')
             ->param('threshold', 5000, new Integer(true), 'Queue size threshold. When hit (equal or higher), endpoint returns server error. Default value is 5000.', true)
             ->inject('response')
-            ->inject('queueForDatabase')
-            ->inject('queueForDeletes')
+            ->inject('publisherForDatabase')
+            ->inject('publisherForDeletes')
             ->inject('publisherForAudits')
-            ->inject('queueForMails')
-            ->inject('queueForFunctions')
+            ->inject('publisherForMails')
+            ->inject('publisherForFunctions')
             ->inject('publisherForStatsResources')
             ->inject('publisherForUsage')
             ->inject('queueForWebhooks')
             ->inject('publisherForCertificates')
-            ->inject('queueForBuilds')
-            ->inject('queueForMessaging')
+            ->inject('publisherForBuilds')
+            ->inject('publisherForMessaging')
             ->inject('publisherForMigrations')
             ->inject('publisherForScreenshots')
             ->callback($this->action(...));
@@ -94,35 +94,35 @@ class Get extends Base
         string $name,
         int|string $threshold,
         Response $response,
-        Database $queueForDatabase,
-        Delete $queueForDeletes,
+        DatabasePublisher $publisherForDatabase,
+        DeletePublisher $publisherForDeletes,
         Audit $publisherForAudits,
-        Mail $queueForMails,
-        Func $queueForFunctions,
+        MailPublisher $publisherForMails,
+        FunctionPublisher $publisherForFunctions,
         StatsResourcesPublisher $publisherForStatsResources,
         UsagePublisher $publisherForUsage,
         Webhook $queueForWebhooks,
         Certificate $publisherForCertificates,
-        Build $queueForBuilds,
-        Messaging $queueForMessaging,
+        BuildPublisher $publisherForBuilds,
+        MessagingPublisher $publisherForMessaging,
         MigrationPublisher $publisherForMigrations,
         Screenshot $publisherForScreenshots,
     ): void {
         $threshold = (int) $threshold;
 
         $queue = match ($name) {
-            System::getEnv('_APP_DATABASE_QUEUE_NAME', Event::DATABASE_QUEUE_NAME) => $queueForDatabase,
-            System::getEnv('_APP_DELETE_QUEUE_NAME', Event::DELETE_QUEUE_NAME) => $queueForDeletes,
+            System::getEnv('_APP_DATABASE_QUEUE_NAME', Event::DATABASE_QUEUE_NAME) => $publisherForDatabase,
+            System::getEnv('_APP_DELETE_QUEUE_NAME', Event::DELETE_QUEUE_NAME) => $publisherForDeletes,
             System::getEnv('_APP_AUDITS_QUEUE_NAME', Event::AUDITS_QUEUE_NAME) => $publisherForAudits,
-            System::getEnv('_APP_MAILS_QUEUE_NAME', Event::MAILS_QUEUE_NAME) => $queueForMails,
-            System::getEnv('_APP_FUNCTIONS_QUEUE_NAME', Event::FUNCTIONS_QUEUE_NAME) => $queueForFunctions,
+            System::getEnv('_APP_MAILS_QUEUE_NAME', Event::MAILS_QUEUE_NAME) => $publisherForMails,
+            System::getEnv('_APP_FUNCTIONS_QUEUE_NAME', Event::FUNCTIONS_QUEUE_NAME) => $publisherForFunctions,
             System::getEnv('_APP_STATS_RESOURCES_QUEUE_NAME', Event::STATS_RESOURCES_QUEUE_NAME) => $publisherForStatsResources,
             System::getEnv('_APP_STATS_USAGE_QUEUE_NAME', Event::STATS_USAGE_QUEUE_NAME) => $publisherForUsage,
             System::getEnv('_APP_WEBHOOK_QUEUE_NAME', Event::WEBHOOK_QUEUE_NAME) => $queueForWebhooks,
             System::getEnv('_APP_CERTIFICATES_QUEUE_NAME', Event::CERTIFICATES_QUEUE_NAME) => $publisherForCertificates,
-            System::getEnv('_APP_BUILDS_QUEUE_NAME', Event::BUILDS_QUEUE_NAME) => $queueForBuilds,
+            System::getEnv('_APP_BUILDS_QUEUE_NAME', Event::BUILDS_QUEUE_NAME) => $publisherForBuilds,
             System::getEnv('_APP_SCREENSHOTS_QUEUE_NAME', Event::SCREENSHOTS_QUEUE_NAME) => $publisherForScreenshots,
-            System::getEnv('_APP_MESSAGING_QUEUE_NAME', Event::MESSAGING_QUEUE_NAME) => $queueForMessaging,
+            System::getEnv('_APP_MESSAGING_QUEUE_NAME', Event::MESSAGING_QUEUE_NAME) => $publisherForMessaging,
             System::getEnv('_APP_MIGRATIONS_QUEUE_NAME', Event::MIGRATIONS_QUEUE_NAME) => $publisherForMigrations,
             default => throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Unknown queue name: ' . $name),
         };

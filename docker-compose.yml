@@ -255,7 +255,7 @@ services:
   appwrite-console:
     <<: *x-logging
     container_name: appwrite-console
-    image: appwrite/console:7.8.45
+    image: appwrite/console:8
     restart: unless-stopped
     networks:
       - appwrite
@@ -1114,6 +1114,13 @@ services:
       - _APP_WORKER_PER_CORE
       - _APP_POOL_ADAPTER
       - _APP_OPENSSL_KEY_V1
+      - _APP_OPTIONS_FORCE_HTTPS
+      - _APP_DOMAIN
+      - _APP_CONSOLE_DOMAIN
+      - _APP_DOMAIN_FUNCTIONS
+      - _APP_DOMAIN_SITES
+      - _APP_MIGRATION_HOST
+      - _APP_CONSOLE_SCHEMA
       - _APP_REDIS_HOST
       - _APP_REDIS_PORT
       - _APP_REDIS_USER
@@ -1145,6 +1152,13 @@ services:
       - _APP_WORKER_PER_CORE
       - _APP_POOL_ADAPTER
       - _APP_OPENSSL_KEY_V1
+      - _APP_OPTIONS_FORCE_HTTPS
+      - _APP_DOMAIN
+      - _APP_CONSOLE_DOMAIN
+      - _APP_DOMAIN_FUNCTIONS
+      - _APP_DOMAIN_SITES
+      - _APP_MIGRATION_HOST
+      - _APP_CONSOLE_SCHEMA
       - _APP_REDIS_HOST
       - _APP_REDIS_PORT
       - _APP_REDIS_USER

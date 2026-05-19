@@ -3,9 +3,11 @@
 namespace Appwrite\Platform\Modules\Functions\Http\Executions;
 
 use Ahc\Jwt\JWT;
-use Appwrite\Event\Delete as DeleteEvent;
 use Appwrite\Event\Event;
-use Appwrite\Event\Func;
+use Appwrite\Event\Message\Delete as DeleteMessage;
+use Appwrite\Event\Message\Func as FunctionMessage;
+use Appwrite\Event\Publisher\Delete as DeletePublisher;
+use Appwrite\Event\Publisher\Func as FunctionPublisher;
 use Appwrite\Extend\Exception;
 use Appwrite\Extend\Exception as AppwriteException;
 use Appwrite\Functions\Validator\Headers;
@@ -95,14 +97,14 @@ class Create extends Base
             ->inject('user')
             ->inject('queueForEvents')
             ->inject('usage')
-            ->inject('queueForFunctions')
+            ->inject('publisherForFunctions')
             ->inject('geodb')
             ->inject('store')
             ->inject('proofForToken')
             ->inject('executor')
             ->inject('platform')
             ->inject('authorization')
-            ->inject('queueForDeletes')
+            ->inject('publisherForDeletes')
             ->inject('executionsRetentionCount')
             ->callback($this->action(...));
     }
@@ -123,14 +125,14 @@ class Create extends Base
         User $user,
         Event $queueForEvents,
         Context $usage,
-        Func $queueForFunctions,
+        FunctionPublisher $publisherForFunctions,
         Reader $geodb,
         Store $store,
         Token $proofForToken,
         Executor $executor,
         array $platform,
         Authorization $authorization,
-        DeleteEvent $queueForDeletes,
+        DeletePublisher $publisherForDeletes,
         int $executionsRetentionCount,
     ) {
         $async = \strval($async) === 'true' || \strval($async) === '1';
@@ -294,20 +296,19 @@ class Create extends Base
         if ($async) {
             if (is_null($scheduledAt)) {
                 $execution = $authorization->skip(fn () => $dbForProject->createDocument('executions', $execution));
-                $queueForFunctions
-                    ->setType('http')
-                    ->setExecution($execution)
-                    ->setFunction($function)
-                    ->setBody($body)
-                    ->setHeaders($headers)
-                    ->setPath($path)
-                    ->setMethod($method)
-                    ->setJWT($jwt)
-                    ->setProject($project)
-                    ->setUser($user)
-                    ->setParam('functionId', $function->getId())
-                    ->setParam('executionId', $execution->getId())
-                    ->trigger();
+                $publisherForFunctions->enqueue(new FunctionMessage(
+                    project: $project,
+                    user: $user,
+                    function: $function,
+                    functionId: $function->getId(),
+                    execution: $execution,
+                    type: 'http',
+                    jwt: $jwt,
+                    body: $body,
+                    path: $path,
+                    headers: $headers,
+                    method: $method,
+                ));
             } else {
                 $data = [
                     'headers' => $headers,
@@ -338,12 +339,12 @@ class Create extends Base
             }
 
             if ($executionsRetentionCount > 0 && ENABLE_EXECUTIONS_LIMIT_ON_ROUTE) {
-                $queueForDeletes
-                    ->setProject($project)
-                    ->setResource($function->getSequence())
-                    ->setResourceType(RESOURCE_TYPE_FUNCTIONS)
-                    ->setType(DELETE_TYPE_EXECUTIONS_LIMIT)
-                    ->trigger();
+                $publisherForDeletes->enqueue(new DeleteMessage(
+                    project: $project,
+                    type: DELETE_TYPE_EXECUTIONS_LIMIT,
+                    resource: (string) $function->getSequence(),
+                    resourceType: RESOURCE_TYPE_FUNCTIONS,
+                ));
             }
 
             $response->setStatusCode(Response::STATUS_CODE_ACCEPTED);
@@ -529,12 +530,12 @@ class Create extends Base
         }
 
         if ($executionsRetentionCount > 0 && ENABLE_EXECUTIONS_LIMIT_ON_ROUTE) {
-            $queueForDeletes
-                ->setProject($project)
-                ->setResource($function->getSequence())
-                ->setResourceType(RESOURCE_TYPE_FUNCTIONS)
-                ->setType(DELETE_TYPE_EXECUTIONS_LIMIT)
-                ->trigger();
+            $publisherForDeletes->enqueue(new DeleteMessage(
+                project: $project,
+                type: DELETE_TYPE_EXECUTIONS_LIMIT,
+                resource: (string) $function->getSequence(),
+                resourceType: RESOURCE_TYPE_FUNCTIONS,
+            ));
         }
 
         $response

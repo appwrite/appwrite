@@ -2,7 +2,7 @@
 
 namespace Appwrite\Platform\Modules\VCS\Http\GitHub\Authorize\External;
 
-use Appwrite\Event\Build;
+use Appwrite\Event\Publisher\Build as BuildPublisher;
 use Appwrite\Extend\Exception;
 use Appwrite\Platform\Action;
 use Appwrite\Platform\Modules\VCS\Http\GitHub\Deployment;
@@ -60,7 +60,7 @@ class Update extends Action
             ->inject('dbForPlatform')
             ->inject('authorization')
             ->inject('getProjectDB')
-            ->inject('queueForBuilds')
+            ->inject('publisherForBuilds')
             ->inject('platform')
             ->callback($this->action(...));
     }
@@ -75,7 +75,7 @@ class Update extends Action
         Database $dbForPlatform,
         Authorization $authorization,
         callable $getProjectDB,
-        Build $queueForBuilds,
+        BuildPublisher $publisherForBuilds,
         array $platform
     ) {
         $installation = $dbForPlatform->getDocument('installations', $installationId);
@@ -136,7 +136,7 @@ class Update extends Action
             ...array_filter(array_column($prFiles, 'previous_filename')) // Filter out null values
         ];
 
-        $this->createGitDeployments($github, $providerInstallationId, $repositories, $providerBranch, $providerBranchUrl, $providerRepositoryName, $providerRepositoryUrl, $providerRepositoryOwner, $providerCommitHash, $providerCommitAuthor, $providerCommitAuthorUrl, $providerCommitMessage, $providerCommitUrl, $providerPullRequestId, $providerAffectedFiles, true, $dbForPlatform, $authorization, $queueForBuilds, $getProjectDB, $platform);
+        $this->createGitDeployments($github, $providerInstallationId, $repositories, $providerBranch, $providerBranchUrl, $providerRepositoryName, $providerRepositoryUrl, $providerRepositoryOwner, $providerCommitHash, $providerCommitAuthor, $providerCommitAuthorUrl, $providerCommitMessage, $providerCommitUrl, $providerPullRequestId, $providerAffectedFiles, true, $dbForPlatform, $authorization, $publisherForBuilds, $getProjectDB, $platform);
 
         $response->noContent();
     }

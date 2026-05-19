@@ -2,13 +2,13 @@
 
 namespace Appwrite\Platform\Modules\VCS\Http\GitHub;
 
-use Appwrite\Event\Build;
 use Appwrite\Event\Event;
+use Appwrite\Event\Message\Build as BuildMessage;
+use Appwrite\Event\Publisher\Build as BuildPublisher;
 use Appwrite\Extend\Exception;
 use Appwrite\Filter\BranchDomain as BranchDomainFilter;
 use Appwrite\Vcs\Comment;
 use Appwrite\Vcs\Validator\BuildTrigger;
-use Appwrite\Vcs\Validator\CommitSkipPatterns;
 use Utopia\Config\Config;
 use Utopia\Console;
 use Utopia\Database\Database;
@@ -22,6 +22,7 @@ use Utopia\Database\Validator\Authorization;
 use Utopia\DSN\DSN;
 use Utopia\Span\Span;
 use Utopia\System\System;
+use Utopia\Validator\Contains;
 use Utopia\VCS\Adapter\Git\GitHub;
 use Utopia\VCS\Exception\RepositoryNotFound;
 
@@ -46,7 +47,7 @@ trait Deployment
         bool $external,
         Database $dbForPlatform,
         Authorization $authorization,
-        Build $queueForBuilds,
+        BuildPublisher $publisherForBuilds,
         callable $getProjectDB,
         array $platform,
     ) {
@@ -61,9 +62,9 @@ trait Deployment
                 $resourceType = $repository->getAttribute('resourceType');
 
                 $logBase = "vcs.github.event.repo.{$repositoryId}";
-                Span::add("{$logBase}.projectId", $projectId);
-                Span::add("{$logBase}.resourceId", $resourceId);
-                Span::add("{$logBase}.resourceType", $resourceType);
+                Span::add('project.id', $projectId);
+                Span::add("{$logBase}.resource.id", $resourceId);
+                Span::add("{$logBase}.resource.type", $resourceType);
 
                 if ($resourceType !== "function" && $resourceType !== "site") {
                     continue;
@@ -97,7 +98,14 @@ trait Deployment
                 $resource = $authorization->skip(fn () => $dbForProject->getDocument($resourceCollection, $resourceId));
                 $resourceInternalId = $resource->getSequence();
 
-                if (!$this->isResourceBuildable($resource, $providerBranch, $providerAffectedFiles, $logBase, $providerCommitMessage)) {
+                $validator = new Contains(VCS_DEPLOYMENT_SKIP_PATTERNS);
+                if ($validator->isValid($providerCommitMessage)) {
+                    Span::add("{$logBase}.build.skipped.reason", $validator->getDescription());
+                    Span::add("{$logBase}.build.skipped", 'true');
+                    continue;
+                }
+
+                if (!$this->isResourceBuildable($resource, $providerBranch, $providerAffectedFiles, $logBase)) {
                     Span::add("{$logBase}.build.skipped", 'true');
                     continue;
                 }
@@ -536,14 +544,16 @@ trait Deployment
 
                 $queueName = $this->getBuildQueueName($project, $dbForPlatform, $authorization);
 
-                $queueForBuilds
-                    ->setQueue($queueName)
-                    ->setType(BUILD_TYPE_DEPLOYMENT)
-                    ->setResource($resource)
-                    ->setDeployment($deployment)
-                    ->setProject($project); // set the project because it won't be set for git deployments
-
-                $queueForBuilds->trigger(); // must trigger here so that we create a build for each function/site
+                $publisherForBuilds->enqueue(
+                    new BuildMessage(
+                        project: $project,
+                        resource: $resource,
+                        deployment: $deployment,
+                        type: BUILD_TYPE_DEPLOYMENT,
+                        platform: $platform,
+                    ),
+                    new \Utopia\Queue\Queue($queueName)
+                );
 
                 Span::add("{$logBase}.build.triggered", 'true');
                 //TODO: Add event?
@@ -552,8 +562,6 @@ trait Deployment
                 $errors[] = $e->getMessage();
             }
         }
-
-        $queueForBuilds->reset(); // prevent shutdown hook from triggering again
 
         if (!empty($errors)) {
             throw new Exception(Exception::GENERAL_UNKNOWN, \implode("\n", $errors));
@@ -569,7 +577,7 @@ trait Deployment
         return System::getEnv('_APP_BUILDS_QUEUE_NAME', Event::BUILDS_QUEUE_NAME);
     }
 
-    private function isResourceBuildable(Document $resource, string $providerBranch, array $providerAffectedFiles, string $logBase, string $providerCommitMessage = ''): bool
+    private function isResourceBuildable(Document $resource, string $providerBranch, array $providerAffectedFiles, string $logBase): bool
     {
         $branchTrigger = new BuildTrigger($resource->getAttribute('providerBranches', []));
         if (!$branchTrigger->isValid($providerBranch)) {
@@ -591,12 +599,6 @@ trait Deployment
                 Span::add("{$logBase}.build.skipped.reason", 'path');
                 return false;
             }
-        }
-
-        $commitSkip = new CommitSkipPatterns($resource->getAttribute('providerCommitSkipPatterns', []));
-        if (!$commitSkip->isValid($providerCommitMessage)) {
-            Span::add("{$logBase}.build.skipped.reason", 'commitMessage');
-            return false;
         }
 
         return true;

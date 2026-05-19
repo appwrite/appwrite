@@ -2,8 +2,9 @@
 
 namespace Appwrite\Platform\Modules\Functions\Http\Deployments\Template;
 
-use Appwrite\Event\Build;
 use Appwrite\Event\Event;
+use Appwrite\Event\Message\Build as BuildMessage;
+use Appwrite\Event\Publisher\Build as BuildPublisher;
 use Appwrite\Extend\Exception;
 use Appwrite\Platform\Modules\Compute\Base;
 use Appwrite\SDK\AuthType;
@@ -76,9 +77,10 @@ class Create extends Base
             ->inject('dbForPlatform')
             ->inject('queueForEvents')
             ->inject('project')
-            ->inject('queueForBuilds')
+            ->inject('publisherForBuilds')
             ->inject('gitHub')
             ->inject('authorization')
+            ->inject('platform')
             ->callback($this->action(...));
     }
 
@@ -96,9 +98,10 @@ class Create extends Base
         Database $dbForPlatform,
         Event $queueForEvents,
         Document $project,
-        Build $queueForBuilds,
+        BuildPublisher $publisherForBuilds,
         GitHub $github,
-        Authorization $authorization
+        Authorization $authorization,
+        array $platform
     ) {
         $function = $dbForProject->getDocument('functions', $functionId);
 
@@ -127,10 +130,11 @@ class Create extends Base
                 project: $project,
                 installation: $installation,
                 dbForProject: $dbForProject,
-                queueForBuilds: $queueForBuilds,
+                publisherForBuilds: $publisherForBuilds,
                 template: $template,
                 github: $github,
                 activate: $activate,
+                platform: $platform,
                 referenceType: $type,
                 reference: $reference
             );
@@ -184,11 +188,14 @@ class Create extends Base
 
         $this->updateEmptyManualRule($project, $function, $deployment, $dbForPlatform, $authorization);
 
-        $queueForBuilds
-            ->setType(BUILD_TYPE_DEPLOYMENT)
-            ->setResource($function)
-            ->setDeployment($deployment)
-            ->setTemplate($template);
+        $publisherForBuilds->enqueue(new BuildMessage(
+            project: $project,
+            resource: $function,
+            deployment: $deployment,
+            type: BUILD_TYPE_DEPLOYMENT,
+            template: $template,
+            platform: $platform,
+        ));
 
         $queueForEvents
             ->setParam('functionId', $function->getId())

@@ -177,6 +177,10 @@ trait ProjectCustom
                     'project.policies.write',
                     'templates.read',
                     'templates.write',
+                    'insights.read',
+                    'insights.write',
+                    'reports.read',
+                    'reports.write',
                 ],
             ]);
 
