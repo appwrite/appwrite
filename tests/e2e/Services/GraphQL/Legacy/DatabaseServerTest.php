@@ -668,50 +668,46 @@ class DatabaseServerTest extends Scope
 
     private function createDocument(array $data): array
     {
-        $document = [];
+        $projectId = $this->getProject()['$id'];
 
-        $this->assertEventually(function () use ($data, &$document) {
-            $projectId = $this->getProject()['$id'];
+        $query = $this->getQuery(self::CREATE_DOCUMENT);
+        $gqlPayload = [
+            'query' => $query,
+            'variables' => [
+                'databaseId' => $data['database']['_id'],
+                'collectionId' => $data['collection']['_id'],
+                'documentId' => ID::unique(),
+                'data' => [
+                    'name' => 'John Doe',
+                    'email' => 'example@appwrite.io',
+                    'age' => 30,
+                    'alive' => true,
+                    'salary' => 9999.9,
+                    'role' => 'crew',
+                    'dob' => '2000-01-01T00:00:00Z',
+                ],
+                'permissions' => [
+                    Permission::read(Role::any()),
+                    Permission::update(Role::any()),
+                    Permission::delete(Role::any()),
+                ],
+            ]
+        ];
 
-            $query = $this->getQuery(self::CREATE_DOCUMENT);
-            $gqlPayload = [
-                'query' => $query,
-                'variables' => [
-                    'databaseId' => $data['database']['_id'],
-                    'collectionId' => $data['collection']['_id'],
-                    'documentId' => ID::unique(),
-                    'data' => [
-                        'name' => 'John Doe',
-                        'email' => 'example@appwrite.io',
-                        'age' => 30,
-                        'alive' => true,
-                        'salary' => 9999.9,
-                        'role' => 'crew',
-                        'dob' => '2000-01-01T00:00:00Z',
-                    ],
-                    'permissions' => [
-                        Permission::read(Role::any()),
-                        Permission::update(Role::any()),
-                        Permission::delete(Role::any()),
-                    ],
-                ]
-            ];
+        $response = $this->client->call(Client::METHOD_POST, '/graphql', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ], $this->getHeaders()), $gqlPayload);
 
-            $response = $this->client->call(Client::METHOD_POST, '/graphql', array_merge([
-                'content-type' => 'application/json',
-                'x-appwrite-project' => $projectId,
-            ], $this->getHeaders()), $gqlPayload);
+        $this->assertArrayNotHasKey(
+            'errors',
+            $response['body'],
+            \json_encode($response['body']['errors'] ?? $response['body'], JSON_PRETTY_PRINT) ?: 'GraphQL response contained errors'
+        );
+        $this->assertIsArray($response['body']['data']);
 
-            $this->assertArrayNotHasKey(
-                'errors',
-                $response['body'],
-                \json_encode($response['body']['errors'] ?? $response['body'], JSON_PRETTY_PRINT) ?: 'GraphQL response contained errors'
-            );
-            $this->assertIsArray($response['body']['data']);
-
-            $document = $response['body']['data']['databasesCreateDocument'];
-            $this->assertIsArray($document);
-        }, self::SCHEMA_READY_TIMEOUT, self::SCHEMA_POLL_INTERVAL);
+        $document = $response['body']['data']['databasesCreateDocument'];
+        $this->assertIsArray($document);
 
         return $document;
     }
