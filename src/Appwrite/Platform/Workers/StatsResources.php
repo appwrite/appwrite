@@ -84,7 +84,7 @@ class StatsResources extends Action
             try {
                 $this->writeGauges($getLogsDB, $project, $statsResources->gauges);
             } catch (Throwable $th) {
-                call_user_func($this->logError, $th);
+                call_user_func_array($this->logError, [$th, "StatsResources", "write_gauges_{$project->getId()}"]);
             }
 
             return;
