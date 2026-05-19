@@ -10,7 +10,6 @@ use Appwrite\Event\Message\Usage;
 use Appwrite\Event\Publisher\Delete as DeletePublisher;
 use Appwrite\Event\Publisher\Usage as UsagePublisher;
 use Appwrite\Extend\Exception;
-use Appwrite\Migration\Migration;
 use Appwrite\Usage\Context as UsageContext;
 use Executor\Executor;
 use Throwable;
