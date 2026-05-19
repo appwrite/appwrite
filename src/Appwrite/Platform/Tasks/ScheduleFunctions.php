@@ -42,6 +42,7 @@ class ScheduleFunctions extends ScheduleBase
         $timerStart = \microtime(true);
         $time = DateTime::now();
 
+        // $enqueueDiff = actual elapsed - expected interval = positive drift (ran late)
         $enqueueDiff = $this->lastEnqueueUpdate === null ? 0 : max(0, ($timerStart - $this->lastEnqueueUpdate) - static::ENQUEUE_TIMER);
         $timeFrame = DateTime::addSeconds(new \DateTime(), static::ENQUEUE_TIMER - $enqueueDiff);
         Console::log("Enqueue tick: started at: $time (with diff $enqueueDiff)");
