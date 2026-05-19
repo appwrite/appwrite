@@ -81,7 +81,12 @@ class StatsResources extends Action
         $this->documents = [];
 
         if ($statsResources->gauges !== []) {
-            $this->writeGauges($getLogsDB, $project, $statsResources->gauges);
+            try {
+                $this->writeGauges($getLogsDB, $project, $statsResources->gauges);
+            } catch (Throwable $th) {
+                call_user_func($this->logError, $th);
+            }
+
             return;
         }
 
