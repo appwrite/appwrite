@@ -119,7 +119,14 @@ class XList extends Action
 
             $documentId = $cursor->getValue();
 
-            $cursorDocument = $authorization->skip(fn () => $dbForDatabases->getDocument('database_' . $database->getSequence() . '_collection_' . $collection->getSequence(), $documentId));
+            try {
+                $cursorDocument = $authorization->skip(fn () => $dbForDatabases->getDocument('database_' . $database->getSequence() . '_collection_' . $collection->getSequence(), $documentId));
+            } catch (NotFoundException) {
+                // The collection metadata document exists but the backing store (e.g. a
+                // dedicated DocumentsDB shard) has no table for it. Treat this as a
+                // not-found on the collection so the caller sees a 404 instead of a 500.
+                throw new Exception($this->getParentNotFoundException(), params: [$collectionId]);
+            }
 
             if ($cursorDocument->isEmpty()) {
                 $type = ucfirst($this->getContext());
