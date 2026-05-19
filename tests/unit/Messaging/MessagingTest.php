@@ -1025,4 +1025,105 @@ class MessagingTest extends TestCase
             $this->assertArrayHasKey(1, $realtime->getSubscribers($event), "plain `documents` should match {$action} event");
         }
     }
+
+    public function testFromPayloadPresenceChannels(): void
+    {
+        $presenceId = ID::custom('presence123');
+
+        $result = Realtime::fromPayload(
+            event: 'presences.' . $presenceId . '.upsert',
+            payload: new Document([
+                '$id' => $presenceId,
+                '$permissions' => [
+                    Permission::read(Role::any()),
+                    Permission::update(Role::users()),
+                    Permission::delete(Role::users()),
+                ],
+            ]),
+        );
+
+        $this->assertContains('presences', $result['channels']);
+        $this->assertContains('presences.' . $presenceId, $result['channels']);
+        $this->assertContains(Role::any()->toString(), $result['roles']);
+    }
+
+    public function testExtractDeletedPresenceIdReturnsIdForDeleteEvent(): void
+    {
+        $event = [
+            'project' => 'proj',
+            'data' => [
+                'events' => [
+                    'presences.abc.delete',
+                    'presences.*.delete',
+                    'presences.abc',
+                ],
+                'payload' => ['$id' => 'abc'],
+            ],
+        ];
+
+        $this->assertSame('abc', Realtime::extractDeletedPresenceId($event));
+    }
+
+    public function testExtractDeletedPresenceIdRejectsNonDeleteEvents(): void
+    {
+        $this->assertNull(Realtime::extractDeletedPresenceId([
+            'data' => [
+                'events' => ['presences.abc.upsert'],
+                'payload' => ['$id' => 'abc'],
+            ],
+        ]));
+
+        // Unrelated resource that happens to end with `.delete` must not trigger.
+        $this->assertNull(Realtime::extractDeletedPresenceId([
+            'data' => [
+                'events' => ['documents.abc.delete'],
+                'payload' => ['$id' => 'abc'],
+            ],
+        ]));
+
+        // Missing payload ID — the event names look right but we have nothing to remove.
+        $this->assertNull(Realtime::extractDeletedPresenceId([
+            'data' => [
+                'events' => ['presences.abc.delete'],
+                'payload' => [],
+            ],
+        ]));
+    }
+
+    public function testRemovePresenceFromConnectionsScopedToProject(): void
+    {
+        $realtime = new Realtime();
+
+        // Two connections in different projects both holding the same presence ID; only
+        // the matching project should be touched.
+        $realtime->connections[1] = [
+            'projectId' => 'proj-a',
+            'presences' => ['p1' => new Document(['$id' => 'p1']), 'p2' => new Document(['$id' => 'p2'])],
+        ];
+        $realtime->connections[2] = [
+            'projectId' => 'proj-b',
+            'presences' => ['p1' => new Document(['$id' => 'p1'])],
+        ];
+
+        $removed = $realtime->removePresenceFromConnections('proj-a', 'p1');
+
+        $this->assertSame(1, $removed);
+        $this->assertArrayNotHasKey('p1', $realtime->connections[1]['presences']);
+        $this->assertArrayHasKey('p2', $realtime->connections[1]['presences']);
+        $this->assertArrayHasKey('p1', $realtime->connections[2]['presences']);
+    }
+
+    public function testRemovePresenceFromConnectionsNoMatchIsNoOp(): void
+    {
+        $realtime = new Realtime();
+        $realtime->connections[1] = [
+            'projectId' => 'proj-a',
+            'presences' => ['p1' => new Document(['$id' => 'p1'])],
+        ];
+
+        $this->assertSame(0, $realtime->removePresenceFromConnections('proj-a', 'missing'));
+        $this->assertSame(0, $realtime->removePresenceFromConnections('', 'p1'));
+        $this->assertSame(0, $realtime->removePresenceFromConnections('proj-a', ''));
+        $this->assertArrayHasKey('p1', $realtime->connections[1]['presences']);
+    }
 }

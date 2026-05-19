@@ -725,6 +725,18 @@ return [
         'code' => 404,
     ],
 
+    /** Presence */
+    Exception::PRESENCE_NOT_FOUND => [
+        'name' => Exception::PRESENCE_NOT_FOUND,
+        'description' => 'Presence with the requested ID could not be found.',
+        'code' => 404,
+    ],
+    Exception::PRESENCE_ALREADY_EXISTS => [
+        'name' => Exception::PRESENCE_ALREADY_EXISTS,
+        'description' => 'Presence with the requested ID \'%s\' already exists. Try again with a different ID or use ID.unique() to generate a unique ID.',
+        'code' => 409,
+    ],
+
     /** Databases */
     Exception::DATABASE_NOT_FOUND => [
         'name' => Exception::DATABASE_NOT_FOUND,

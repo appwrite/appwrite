@@ -239,7 +239,7 @@ class RealtimeCustomClientTest extends Scope
         $this->assertEquals('error', $response['type']);
         $this->assertNotEmpty($response['data']);
         $this->assertEquals(1003, $response['data']['code']);
-        $this->assertEquals('Payload is not valid.', $response['data']['message']);
+        $this->assertEquals('Payload is not valid. Session is required', $response['data']['message']);
 
         $client->send(\json_encode([
             'type' => 'unknown',
