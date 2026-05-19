@@ -10,6 +10,7 @@ use Appwrite\Event\Message\Usage;
 use Appwrite\Event\Publisher\Delete as DeletePublisher;
 use Appwrite\Event\Publisher\Usage as UsagePublisher;
 use Appwrite\Extend\Exception;
+use Appwrite\Migration\Migration;
 use Appwrite\Usage\Context as UsageContext;
 use Executor\Executor;
 use Throwable;
@@ -223,6 +224,7 @@ class Deletes extends Action
                 $this->deleteExpiredTransactions($project, $getProjectDB);
                 $this->deleteExpiredPresences($project, $getProjectDB, $publisherForUsage);
                 $this->deleteOldDeployments($publisherForDeletes, $project, $getProjectDB);
+                $this->updateProcessingMigrations($project, $getProjectDB);
                 break;
             case DELETE_TYPE_REPORT:
                 $this->deleteReport($dbForPlatform, $project, $document);
@@ -396,6 +398,40 @@ class Deletes extends Action
     private function deleteSessionTargets(Document $project, callable $getProjectDB, Document $session): void
     {
         Targets::delete($getProjectDB($project), Query::equal('sessionInternalId', [$session->getSequence()]));
+    }
+
+    private function updateProcessingMigrations(Document $project, callable $getProjectDB){
+        /** @var Database $dbForProject */
+        $dbForProject = $getProjectDB($project);
+
+        $days = 3;
+        $date = DateTime::addSeconds(new \DateTime(), -1 * ($days * 24 * 60 * 60)); // 3 days
+
+        $queries = [
+            Query::select($this->selects),
+            Query::equal('status', ['processing']),
+            Query::lessThan('$updatedAt', $date),
+        ];
+
+        $this->listByGroup(
+            'migrations',
+            $queries,
+            $dbForProject,
+            function (Document $migration) use ($dbForProject, $project) {
+                try {
+                    $dbForProject->updateDocument(
+                        'migrations',
+                        $migration->getId(),
+                        new Document([
+                                'status' => 'failed'
+                            ]
+                        )
+                    );
+                } catch (Throwable $th) {
+                    Console::error("Failed to update processing migrations for project {$project->getId()}: " . $th->getMessage());
+                }
+            }
+        );
     }
 
     private function deleteOldDeployments(DeletePublisher $publisherForDeletes, Document $project, callable $getProjectDB): void
