@@ -34,16 +34,17 @@ import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { sdk } from '@/lib/appwrite/sdk'
 import {
   Dependencies,
+  fetchBucket,
   getCachedBucketListsFromQueryClient,
   pickNextBucketIdAfterDelete,
 } from '@/lib/react-query/hooks'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
 import {
   buildConsoleUrl,
+  copyResourceAsJson,
   copyToClipboard,
   openInNewTab,
   openInNewWindow,
-  toPrettyJson,
 } from '@/lib/utils/context-menu'
 import { ContextMenuIcon } from '@/components/global/shared/ContextMenuIcon'
 
@@ -173,12 +174,8 @@ export function BucketContextMenu({
               </ContextMenuItem>
               <ContextMenuItem
                 onSelect={() =>
-                  copyToClipboard(
-                    'JSON',
-                    toPrettyJson({
-                      id: bucket.id,
-                      name: bucket.name ?? null,
-                    }),
+                  void copyResourceAsJson(() =>
+                    fetchBucket(projectId, bucket.id),
                   )
                 }
               >

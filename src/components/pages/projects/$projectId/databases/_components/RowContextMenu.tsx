@@ -29,9 +29,11 @@ import {
 } from 'lucide-react'
 import { toast } from 'sonner'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
+import { copyResourceAsJson } from '@/lib/utils/context-menu'
 import {
   deleteProjectTableRow,
   createProjectTableRow,
+  fetchProjectTableRow,
 } from '@/lib/react-query/hooks'
 
 /** Minimal row shape for context menu (matches RowData from View) */
@@ -63,13 +65,6 @@ const rowsPath = (
 ) => {
   const path = `${window.location.origin}/projects/${projectId}/databases/${databaseId}/tables/${tableId}/rows`
   return rowId ? `${path}#row-${rowId}` : path
-}
-
-const rowJsonPayload = (row: RowContextMenuRow): Record<string, unknown> => {
-  const payload: Record<string, unknown> = { $id: row.$id, ...row.data }
-  if (row.$createdAt) payload.$createdAt = row.$createdAt
-  if (row.$updatedAt) payload.$updatedAt = row.$updatedAt
-  return payload
 }
 
 function formatCellValueForCopy(value: unknown): string {
@@ -146,14 +141,10 @@ export function RowContextMenu({
   }
 
   const handleCopyAsJson = async () => {
-    try {
-      await navigator.clipboard.writeText(
-        JSON.stringify(rowJsonPayload(row), null, 2),
-      )
-      toast.success('JSON copied to clipboard')
-    } catch {
-      toast.error('Failed to copy')
-    }
+    await copyResourceAsJson(
+      () => fetchProjectTableRow(projectId, databaseId, tableId, row.$id),
+      { fallback: row },
+    )
   }
 
   const handleOpenInNewTab = () => {

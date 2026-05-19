@@ -110,6 +110,7 @@ import { useAuth } from '@/components/global/auth/RequireAuth'
 import {
   STORAGE_FILES_LIST_COLUMN_WIDTH_KEYS,
   STORAGE_FILES_LIST_DATA_COLUMN_MIN_WIDTH_PX,
+  STORAGE_FILES_LIST_RESIZABLE_COLUMN_WIDTH_KEYS,
   clampStorageFilesListDataColumnWidthPx,
   getStorageFilesListColumnWidthsFromPrefs,
   mergeStorageFilesListColumnWidthsIntoPrefs,
@@ -117,6 +118,7 @@ import {
   hasStorageFilesTablePaneWidthPref,
   parseStorageFilesTablePaneWidthPx,
   type StorageFilesListColumnWidthKey,
+  type StorageFilesListResizableColumnWidthKey,
   type UserPrefs,
 } from '@/lib/user-prefs-keys'
 
@@ -990,7 +992,7 @@ export function View() {
   })
 
   const [resizingFileColumnKey, setResizingFileColumnKey] =
-    useState<StorageFilesListColumnWidthKey | null>(null)
+    useState<StorageFilesListResizableColumnWidthKey | null>(null)
 
   const fileListColumnWidthsRef = useRef(fileListColumnWidths)
   if (resizingFileColumnKey == null) {
@@ -1016,7 +1018,7 @@ export function View() {
     new Map<StorageFilesListColumnWidthKey, HTMLTableCellElement>(),
   )
   const fileColumnRailRefs = useRef(
-    new Map<StorageFilesListColumnWidthKey, HTMLButtonElement>(),
+    new Map<StorageFilesListResizableColumnWidthKey, HTMLButtonElement>(),
   )
 
   const setFileColumnHeaderThRef = useCallback(
@@ -1032,7 +1034,7 @@ export function View() {
     const layer = filesTableLayerRef.current
     if (!layer) return
     const layerRect = layer.getBoundingClientRect()
-    for (const col of STORAGE_FILES_LIST_COLUMN_WIDTH_KEYS) {
+    for (const col of STORAGE_FILES_LIST_RESIZABLE_COLUMN_WIDTH_KEYS) {
       const th = fileColumnHeaderThRefs.current.get(col)
       const rail = fileColumnRailRefs.current.get(col)
       if (!th || !rail) continue
@@ -1148,7 +1150,7 @@ export function View() {
   ])
 
   const handleFileColumnResizePointerDown = useCallback(
-    (columnKey: StorageFilesListColumnWidthKey) =>
+    (columnKey: StorageFilesListResizableColumnWidthKey) =>
       (e: ReactPointerEvent<HTMLButtonElement>) => {
         if (!splitFilesTable) return
         e.preventDefault()
@@ -1512,13 +1514,11 @@ export function View() {
                             )}
                             style={
                               splitFilesTable
-                                ? resizingFileColumnKey === '$id'
-                                  ? undefined
-                                  : {
-                                      width: fileListColumnWidths.$id,
-                                      minWidth:
-                                        STORAGE_FILES_LIST_DATA_COLUMN_MIN_WIDTH_PX,
-                                    }
+                                ? {
+                                    width: fileListColumnWidths.$id,
+                                    minWidth:
+                                      STORAGE_FILES_LIST_DATA_COLUMN_MIN_WIDTH_PX,
+                                  }
                                 : undefined
                             }
                           >
@@ -2026,7 +2026,7 @@ export function View() {
                       </tbody>
                     </table>
                     {splitFilesTable
-                      ? STORAGE_FILES_LIST_COLUMN_WIDTH_KEYS.map((col) => (
+                      ? STORAGE_FILES_LIST_RESIZABLE_COLUMN_WIDTH_KEYS.map((col) => (
                           <button
                             key={`col-resize-rail-${col}`}
                             ref={(node) => {

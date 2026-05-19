@@ -250,6 +250,40 @@ export function BucketsSidebar() {
           </div>
         </div>
 
+        <div className="shrink-0 px-2 py-2">
+          {isCreateDisabled && noCreatePermission ? (
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <span className="block w-full">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="h-9 w-full gap-2 pl-6 pr-6 text-[13px] font-medium"
+                    type="button"
+                    disabled
+                  >
+                    <Plus className="h-4 w-4" />
+                    Create bucket
+                  </Button>
+                </span>
+              </TooltipTrigger>
+              <TooltipContent side="right">{createPermissionTooltip}</TooltipContent>
+            </Tooltip>
+          ) : (
+            <Button
+              variant="outline"
+              size="sm"
+              className="h-9 w-full gap-2 pl-6 pr-6 text-[13px] font-medium"
+              type="button"
+              disabled={isCreateDisabled}
+              onClick={() => setCreateOpen(true)}
+            >
+              <Plus className="h-4 w-4" />
+              Create bucket
+            </Button>
+          )}
+        </div>
+
         <div className="min-h-0 flex-1 overflow-y-auto">
           {isFetching && buckets.length === 0 ? (
             <div className="p-2 text-center text-[12px] text-muted-foreground">
@@ -340,40 +374,7 @@ export function BucketsSidebar() {
         </div>
 
         <div className="shrink-0 border-t border-border px-2 py-2">
-          <div className="flex flex-col gap-2">
-            {isCreateDisabled && noCreatePermission ? (
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <span className="block w-full">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="h-9 w-full gap-2 pl-6 pr-6 text-[13px] font-medium"
-                      type="button"
-                      disabled
-                    >
-                      <Plus className="h-4 w-4" />
-                      Create bucket
-                    </Button>
-                  </span>
-                </TooltipTrigger>
-                <TooltipContent side="right">{createPermissionTooltip}</TooltipContent>
-              </Tooltip>
-            ) : (
-              <Button
-                variant="outline"
-                size="sm"
-                className="h-9 w-full gap-2 pl-6 pr-6 text-[13px] font-medium"
-                type="button"
-                disabled={isCreateDisabled}
-                onClick={() => setCreateOpen(true)}
-              >
-                <Plus className="h-4 w-4" />
-                Create bucket
-              </Button>
-            )}
-            <S3ConnectionCard />
-          </div>
+          <S3ConnectionCard />
         </div>
       </div>
 

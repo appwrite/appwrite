@@ -21,16 +21,18 @@ import {
   Square,
   Trash2,
 } from 'lucide-react'
+import { fetchProxyRule } from '@/lib/react-query/hooks'
 import {
+  copyResourceAsJson,
   copyToClipboard,
   openInNewTab,
   openInNewWindow,
-  toPrettyJson,
 } from '@/lib/utils/context-menu'
 import { getApexDomain } from '@/lib/utils/proxy-domains'
 import { ContextMenuIcon } from '@/components/global/shared/ContextMenuIcon'
 
 interface ProxyRuleContextMenuProps {
+  projectId: string
   rule: Models.ProxyRule
   projectTeamId?: string
   apexToOrgDomainId: Map<string, string>
@@ -41,6 +43,7 @@ interface ProxyRuleContextMenuProps {
 }
 
 export function ProxyRuleContextMenu({
+  projectId,
   rule,
   projectTeamId,
   apexToOrgDomainId,
@@ -114,14 +117,8 @@ export function ProxyRuleContextMenu({
             </ContextMenuItem>
             <ContextMenuItem
               onSelect={() =>
-                copyToClipboard(
-                  'JSON',
-                  toPrettyJson({
-                    id: rule.$id,
-                    domain: rule.domain,
-                    status: rule.status,
-                    redirectUrl: rule.redirectUrl ?? null,
-                  }),
+                void copyResourceAsJson(() =>
+                  fetchProxyRule(projectId, rule.$id),
                 )
               }
             >

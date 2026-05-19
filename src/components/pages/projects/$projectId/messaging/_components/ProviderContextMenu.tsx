@@ -32,12 +32,13 @@ import { useNavigate } from '@tanstack/react-router'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { sdk } from '@/lib/appwrite/sdk'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
+import { fetchProvider } from '@/lib/react-query/hooks'
 import {
   buildConsoleUrl,
+  copyResourceAsJson,
   copyToClipboard,
   openInNewTab,
   openInNewWindow,
-  toPrettyJson,
 } from '@/lib/utils/context-menu'
 import { ContextMenuIcon } from '@/components/global/shared/ContextMenuIcon'
 
@@ -149,12 +150,8 @@ export function ProviderContextMenu({
               </ContextMenuItem>
               <ContextMenuItem
                 onSelect={() =>
-                  copyToClipboard(
-                    'JSON',
-                    toPrettyJson({
-                      id: provider.$id,
-                      name: provider.name ?? null,
-                    }),
+                  void copyResourceAsJson(() =>
+                    fetchProvider(projectId, provider.$id),
                   )
                 }
               >

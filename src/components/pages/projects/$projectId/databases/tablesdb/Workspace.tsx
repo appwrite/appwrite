@@ -995,7 +995,7 @@ export function Workspace({
           </div>
         </div>
 
-        {/* 2. Scrollable: search, tables list, create table (sticky above pagination), pagination */}
+        {/* 2. Scrollable: search, create table, tables list, pagination */}
         <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
           <div className="shrink-0 space-y-2 border-b border-border px-2 py-2">
             <div className="flex min-w-0 items-center gap-2">
@@ -1075,6 +1075,40 @@ export function Workspace({
               </DropdownMenu>
             </div>
           </div>
+          <div className="shrink-0 px-2 py-2">
+            {noCreateTablePermission ? (
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <span className="block w-full">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="h-9 w-full gap-2 pl-6 pr-6 text-[13px] font-medium"
+                      onClick={() => setCreateTableDialogOpen(true)}
+                      disabled
+                    >
+                      <Plus className="h-4 w-4" />
+                      {dbLabels.createContainer}
+                    </Button>
+                  </span>
+                </TooltipTrigger>
+                <TooltipContent side="right">
+                  {createPermissionTooltip}
+                </TooltipContent>
+              </Tooltip>
+            ) : (
+              <Button
+                variant="outline"
+                size="sm"
+                className="h-9 w-full gap-2 pl-6 pr-6 text-[13px] font-medium"
+                onClick={() => setCreateTableDialogOpen(true)}
+              >
+                <Plus className="h-4 w-4" />
+                {dbLabels.createContainer}
+              </Button>
+            )}
+          </div>
+
           <div className="min-h-0 flex-1 overflow-y-auto">
             {displayedSidebarTables.length === 0 && sidebarTablesLoading ? (
               <div className="p-2 text-center text-[12px] text-muted-foreground">
@@ -1202,39 +1236,6 @@ export function Workspace({
                 </Button>
               </div>
             </div>
-          </div>
-          <div className="shrink-0 border-t border-border px-2 py-2">
-            {noCreateTablePermission ? (
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <span className="block w-full">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="h-9 w-full gap-2 pl-6 pr-6 text-[13px] font-medium"
-                      onClick={() => setCreateTableDialogOpen(true)}
-                      disabled
-                    >
-                      <Plus className="h-4 w-4" />
-                      {dbLabels.createContainer}
-                    </Button>
-                  </span>
-                </TooltipTrigger>
-                <TooltipContent side="right">
-                  {createPermissionTooltip}
-                </TooltipContent>
-              </Tooltip>
-            ) : (
-              <Button
-                variant="outline"
-                size="sm"
-                className="h-9 w-full gap-2 pl-6 pr-6 text-[13px] font-medium"
-                onClick={() => setCreateTableDialogOpen(true)}
-              >
-                <Plus className="h-4 w-4" />
-                {dbLabels.createContainer}
-              </Button>
-            )}
           </div>
         </div>
 

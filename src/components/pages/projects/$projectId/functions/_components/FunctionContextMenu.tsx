@@ -34,6 +34,7 @@ import {
 import { Button } from '@/components/ui/button'
 import { useNavigate } from '@tanstack/react-router'
 import {
+  fetchProjectFunction,
   useDeleteFunction,
   useProject,
   useOrganizationScopes,
@@ -43,10 +44,10 @@ import { useConsoleProfile } from '@/hooks/use-console-profile'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
 import {
   buildConsoleUrl,
+  copyResourceAsJson,
   copyToClipboard,
   openInNewTab,
   openInNewWindow,
-  toPrettyJson,
 } from '@/lib/utils/context-menu'
 import { ContextMenuIcon } from '@/components/global/shared/ContextMenuIcon'
 
@@ -170,12 +171,8 @@ export function FunctionContextMenu({
               </ContextMenuItem>
               <ContextMenuItem
                 onSelect={() =>
-                  copyToClipboard(
-                    'JSON',
-                    toPrettyJson({
-                      id: func.$id,
-                      name: func.name ?? null,
-                    }),
+                  void copyResourceAsJson(() =>
+                    fetchProjectFunction(projectId, func.$id),
                   )
                 }
               >

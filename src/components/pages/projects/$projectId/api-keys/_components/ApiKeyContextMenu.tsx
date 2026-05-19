@@ -25,7 +25,8 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
-import { copyToClipboard, toPrettyJson } from '@/lib/utils/context-menu'
+import { fetchApiKey } from '@/lib/react-query/hooks'
+import { copyResourceAsJson, copyToClipboard } from '@/lib/utils/context-menu'
 import { ContextMenuIcon } from '@/components/global/shared/ContextMenuIcon'
 import { useDeleteApiKey } from '@/lib/react-query/hooks'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
@@ -117,14 +118,8 @@ export function ApiKeyContextMenu({
               )}
               <ContextMenuItem
                 onSelect={() =>
-                  copyToClipboard(
-                    'JSON',
-                    toPrettyJson({
-                      id: apiKey.id,
-                      name: apiKey.name ?? null,
-                      scopes: apiKey.scopes ?? [],
-                      expire: apiKey.expire ?? null,
-                    }),
+                  void copyResourceAsJson(() =>
+                    fetchApiKey(projectId, apiKey.id),
                   )
                 }
               >

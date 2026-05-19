@@ -30,13 +30,13 @@ import {
 import { Button } from '@/components/ui/button'
 import { useNavigate } from '@tanstack/react-router'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
-import { deleteProjectTeam } from '@/lib/react-query/hooks/users'
+import { deleteProjectTeam, fetchTeam } from '@/lib/react-query/hooks/users'
 import {
   buildConsoleUrl,
+  copyResourceAsJson,
   copyToClipboard,
   openInNewTab,
   openInNewWindow,
-  toPrettyJson,
 } from '@/lib/utils/context-menu'
 import { ContextMenuIcon } from '@/components/global/shared/ContextMenuIcon'
 
@@ -133,12 +133,8 @@ export function TeamContextMenu({
               </ContextMenuItem>
               <ContextMenuItem
                 onSelect={() =>
-                  copyToClipboard(
-                    'JSON',
-                    toPrettyJson({
-                      id: team.id,
-                      name: team.name ?? null,
-                    }),
+                  void copyResourceAsJson(() =>
+                    fetchTeam(projectId, team.id),
                   )
                 }
               >

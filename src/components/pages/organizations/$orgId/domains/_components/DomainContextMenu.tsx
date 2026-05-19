@@ -32,15 +32,16 @@ import {
   Trash2,
 } from 'lucide-react'
 import {
+  fetchDomain,
   useDeleteOrganizationDomain,
   useRetryDomainVerification,
 } from '@/lib/react-query/hooks'
 import {
   buildConsoleUrl,
+  copyResourceAsJson,
   copyToClipboard,
   openInNewTab,
   openInNewWindow,
-  toPrettyJson,
 } from '@/lib/utils/context-menu'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
 import { ContextMenuIcon } from '@/components/global/shared/ContextMenuIcon'
@@ -166,14 +167,7 @@ export function DomainContextMenu({
               </ContextMenuItem>
               <ContextMenuItem
                 onSelect={() =>
-                  copyToClipboard(
-                    'JSON',
-                    toPrettyJson({
-                      id: domain.$id,
-                      domain: domain.domain,
-                      nameservers: domain.nameservers ?? null,
-                    }),
-                  )
+                  void copyResourceAsJson(() => fetchDomain(domain.$id))
                 }
               >
                 <ContextMenuIcon icon={FileJson} />

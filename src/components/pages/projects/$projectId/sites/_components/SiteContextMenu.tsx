@@ -32,14 +32,14 @@ import {
 } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
 import { useNavigate } from '@tanstack/react-router'
-import { useDeleteSite } from '@/lib/react-query/hooks'
+import { fetchProjectSite, useDeleteSite } from '@/lib/react-query/hooks'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
 import {
   buildConsoleUrl,
+  copyResourceAsJson,
   copyToClipboard,
   openInNewTab,
   openInNewWindow,
-  toPrettyJson,
 } from '@/lib/utils/context-menu'
 import { ContextMenuIcon } from '@/components/global/shared/ContextMenuIcon'
 
@@ -148,12 +148,8 @@ export function SiteContextMenu({
               </ContextMenuItem>
               <ContextMenuItem
                 onSelect={() =>
-                  copyToClipboard(
-                    'JSON',
-                    toPrettyJson({
-                      id: site.$id,
-                      name: site.name ?? null,
-                    }),
+                  void copyResourceAsJson(() =>
+                    fetchProjectSite(projectId, site.$id),
                   )
                 }
               >

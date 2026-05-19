@@ -180,6 +180,7 @@ export function Domains({
                 {paginatedRules.map((rule) => (
                   <ProxyRuleContextMenu
                     key={rule.$id}
+                    projectId={projectId}
                     rule={rule}
                     projectTeamId={project?.teamId}
                     apexToOrgDomainId={apexToOrgDomainId}

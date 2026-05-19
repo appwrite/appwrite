@@ -1,5 +1,9 @@
 import { useState, useMemo, useEffect, useCallback } from 'react'
-import { useDeleteWebhook, useProjectWebhooks } from '@/lib/react-query/hooks'
+import {
+  fetchProjectWebhook,
+  useDeleteWebhook,
+  useProjectWebhooks,
+} from '@/lib/react-query/hooks'
 import { Button } from '@/components/ui/button'
 import {
   Table,
@@ -48,10 +52,10 @@ import { WebhookDrawer } from './webhooks/WebhookDrawer'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
 import {
   buildConsoleUrl,
+  copyResourceAsJson,
   copyToClipboard,
   openInNewTab,
   openInNewWindow,
-  toPrettyJson,
 } from '@/lib/utils/context-menu'
 import type { Models } from '@appwrite.io/console'
 
@@ -306,15 +310,11 @@ export function Webhooks({
                                 </DropdownMenuItem>
                                 <DropdownMenuItem
                                   onClick={() =>
-                                    copyToClipboard(
-                                      'JSON',
-                                      toPrettyJson({
-                                        id: webhook.$id,
-                                        name: webhook.name,
-                                        url: webhook.url,
-                                        enabled: webhook.enabled,
-                                        events: webhook.events || [],
-                                      }),
+                                    void copyResourceAsJson(() =>
+                                      fetchProjectWebhook(
+                                        projectId,
+                                        webhook.$id,
+                                      ),
                                     )
                                   }
                                 >

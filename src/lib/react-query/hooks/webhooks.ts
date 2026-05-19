@@ -39,6 +39,19 @@ export async function fetchProjectWebhooks(projectId: string) {
   }
 }
 
+/**
+ * Query function to fetch a single webhook by ID.
+ */
+export async function fetchProjectWebhook(
+  projectId: string,
+  webhookId: string,
+): Promise<Models.Webhook> {
+  if (!projectId || !webhookId) {
+    throw new Error('Project ID and Webhook ID are required')
+  }
+  return await sdk.forProject(projectId).webhooks.get({ webhookId })
+}
+
 // ============================================================================
 // QUERY OPTIONS
 // ============================================================================
@@ -98,12 +111,7 @@ export function useProjectWebhook(
 ) {
   const { data, isLoading, error, refetch } = useQuery({
     queryKey: ['webhook', 'project', projectId, webhookId],
-    queryFn: async () => {
-      if (!projectId || !webhookId) {
-        throw new Error('Project ID and Webhook ID are required')
-      }
-      return await sdk.forProject(projectId).webhooks.get({ webhookId })
-    },
+    queryFn: () => fetchProjectWebhook(projectId!, webhookId!),
     enabled: !!projectId && !!webhookId,
     staleTime: DEFAULT_STALE_TIME,
   })

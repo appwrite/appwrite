@@ -241,6 +241,24 @@ export async function fetchApiKeys(projectId: string) {
   return sdk.forProject(projectId).project.listKeys({ total: true })
 }
 
+/**
+ * Returns a single API key from listKeys (no dedicated get endpoint).
+ */
+export async function fetchApiKey(projectId: string, keyId: string) {
+  if (!projectId || !keyId) {
+    throw new Error('Project ID and API key ID are required')
+  }
+  const response = await fetchApiKeys(projectId)
+  const key = (response.keys ?? []).find((k) => {
+    const id = (k as { $id?: string; id?: string }).$id ?? (k as { id?: string }).id
+    return id === keyId
+  })
+  if (!key) {
+    throw new Error('API key not found')
+  }
+  return key
+}
+
 function apiKeyLastUsedFromRaw(accessedAt: unknown): string | null {
   if (accessedAt == null || typeof accessedAt !== 'string') return null
   const trimmed = accessedAt.trim()

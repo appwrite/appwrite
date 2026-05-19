@@ -304,7 +304,7 @@ Context menus should follow a consistent action pattern and ordering across reso
 - `Copy ID`
 - `Copy name` (if resource has a name)
 - `Copy link` (console route URL)
-- `Copy as JSON` (minimal resource payload)
+- `Copy as JSON` (full resource JSON from the API via `copyResourceAsJson`; fetch when a get endpoint exists)
 
 **Other rules:**
 

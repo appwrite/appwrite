@@ -256,6 +256,17 @@ export const STORAGE_FILES_LIST_COLUMN_WIDTH_KEYS = [
 export type StorageFilesListColumnWidthKey =
   (typeof STORAGE_FILES_LIST_COLUMN_WIDTH_KEYS)[number]
 
+/** File list columns that show a drag resize rail ($id is fixed width). */
+export type StorageFilesListResizableColumnWidthKey = Exclude<
+  StorageFilesListColumnWidthKey,
+  '$id'
+>
+
+export const STORAGE_FILES_LIST_RESIZABLE_COLUMN_WIDTH_KEYS =
+  STORAGE_FILES_LIST_COLUMN_WIDTH_KEYS.filter(
+    (k): k is StorageFilesListResizableColumnWidthKey => k !== '$id',
+  )
+
 export const STORAGE_FILES_LIST_COLUMN_DEFAULT_WIDTHS: Record<
   StorageFilesListColumnWidthKey,
   number
@@ -288,6 +299,7 @@ export function mergeStorageFilesListColumnWidthsWithDefaults(
   const out = { ...STORAGE_FILES_LIST_COLUMN_DEFAULT_WIDTHS }
   if (!stored) return out
   for (const k of STORAGE_FILES_LIST_COLUMN_WIDTH_KEYS) {
+    if (k === '$id') continue
     const v = stored[k]
     if (typeof v === 'number' && Number.isFinite(v)) {
       out[k] = clampStorageFilesListDataColumnWidthPx(v)

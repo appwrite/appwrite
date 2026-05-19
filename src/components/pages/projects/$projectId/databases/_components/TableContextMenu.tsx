@@ -35,7 +35,8 @@ import {
 } from 'lucide-react'
 import { toast } from 'sonner'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
-import { deleteProjectTable } from '@/lib/react-query/hooks'
+import { deleteProjectTable, fetchProjectTable } from '@/lib/react-query/hooks'
+import { copyResourceAsJson } from '@/lib/utils/context-menu'
 import {
   dbNavLink,
   type DatabaseRouteKind,
@@ -169,17 +170,11 @@ export function TableContextMenu({
     )
   }
 
-  const handleCopyJson = async () => {
-    try {
-      await navigator.clipboard.writeText(JSON.stringify(table, null, 2))
-      toast.success('JSON copied to clipboard')
-    } catch {
-      toast.error('Failed to copy')
-    }
-  }
-
   const handleCopyAsJson = async () => {
-    await handleCopyJson()
+    await copyResourceAsJson(
+      () => fetchProjectTable(projectId, databaseId, table.$id),
+      { fallback: table },
+    )
   }
 
   const handleGoToTab = (path: TableContextTabPath) => {

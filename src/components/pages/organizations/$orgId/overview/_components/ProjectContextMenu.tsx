@@ -36,14 +36,14 @@ import {
 import { Button } from '@/components/ui/button'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { useNavigate } from '@tanstack/react-router'
-import { deleteProject } from '@/lib/react-query/hooks'
+import { deleteProject, fetchProject } from '@/lib/react-query/hooks'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
 import {
   buildConsoleUrl,
+  copyResourceAsJson,
   copyToClipboard,
   openInNewTab,
   openInNewWindow,
-  toPrettyJson,
 } from '@/lib/utils/context-menu'
 import { ContextMenuIcon } from '@/components/global/shared/ContextMenuIcon'
 
@@ -220,15 +220,7 @@ export function ProjectContextMenu({
               </ContextMenuItem>
               <ContextMenuItem
                 onSelect={() =>
-                  copyToClipboard(
-                    'JSON',
-                    toPrettyJson({
-                      id: project.$id,
-                      name: project.name ?? null,
-                      teamId: project.teamId,
-                      region: project.region ?? null,
-                    }),
-                  )
+                  void copyResourceAsJson(() => fetchProject(project.$id))
                 }
               >
                 <ContextMenuIcon icon={FileJson} />

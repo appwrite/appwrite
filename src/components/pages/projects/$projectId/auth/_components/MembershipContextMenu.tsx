@@ -16,10 +16,10 @@ import { useDeleteTeamMembership } from '@/lib/react-query/hooks'
 import type { Models } from '@appwrite.io/console'
 import {
   buildConsoleUrl,
+  copyResourceAsJson,
   copyToClipboard,
   openInNewTab,
   openInNewWindow,
-  toPrettyJson,
 } from '@/lib/utils/context-menu'
 import { ContextMenuIcon } from '@/components/global/shared/ContextMenuIcon'
 import {
@@ -153,19 +153,7 @@ export function MembershipContextMenu({
               </ContextMenuItem>
               <ContextMenuItem
                 onSelect={() =>
-                  copyToClipboard(
-                    'JSON',
-                    toPrettyJson({
-                      id: membership.$id,
-                      userId: membership.userId,
-                      userName: membership.userName ?? null,
-                      userEmail: membership.userEmail ?? null,
-                      teamId: membership.teamId,
-                      teamName: membership.teamName ?? null,
-                      roles: membership.roles ?? [],
-                      confirm: membership.confirm,
-                    }),
-                  )
+                  void copyResourceAsJson(() => membership)
                 }
               >
                 <ContextMenuIcon icon={FileJson} />

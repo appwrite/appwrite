@@ -39,15 +39,17 @@ import { Button } from '@/components/ui/button'
 import { sdk } from '@/lib/appwrite/sdk'
 import {
   buildConsoleUrl,
+  copyResourceAsJson,
   copyToClipboard,
   openInNewTab,
   openInNewWindow,
-  toPrettyJson,
 } from '@/lib/utils/context-menu'
 import { ContextMenuIcon } from '@/components/global/shared/ContextMenuIcon'
 import {
   deleteFunctionDeployment,
   deleteSiteDeployment,
+  fetchFunctionDeployment,
+  fetchSiteDeployment,
   Dependencies,
 } from '@/lib/react-query/hooks'
 import {
@@ -111,13 +113,6 @@ export function DeploymentListRowContextMenu({
         },
       })
     }
-  }
-
-  const jsonPayload = {
-    $id: deployment.$id,
-    status: deployment.status ?? null,
-    type: deployment.type ?? null,
-    $createdAt: deployment.$createdAt,
   }
 
   const inProgress = isDeploymentInProgress(deployment.status)
@@ -265,7 +260,19 @@ export function DeploymentListRowContextMenu({
               </ContextMenuItem>
               <ContextMenuItem
                 onSelect={() =>
-                  copyToClipboard('JSON', toPrettyJson(jsonPayload))
+                  void copyResourceAsJson(() =>
+                    variant === 'function'
+                      ? fetchFunctionDeployment(
+                          projectId,
+                          resourceId,
+                          deployment.$id,
+                        )
+                      : fetchSiteDeployment(
+                          projectId,
+                          resourceId,
+                          deployment.$id,
+                        ),
+                  )
                 }
               >
                 <ContextMenuIcon icon={FileJson} />

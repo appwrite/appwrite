@@ -1,4 +1,5 @@
 import { toast } from 'sonner'
+import { getErrorMessage } from '@/lib/utils/error-formatting'
 
 export type CopyToClipboardOptions = {
   /** When false, skips the success toast (caller may show inline feedback). */
@@ -39,4 +40,25 @@ export function openInNewWindow(url: string) {
 
 export function toPrettyJson(value: unknown) {
   return JSON.stringify(value, null, 2)
+}
+
+/**
+ * Fetches a resource (or uses a provided value) and copies its full JSON to the clipboard.
+ */
+export async function copyResourceAsJson(
+  fetchResource: () => Promise<unknown> | unknown,
+  options?: { fallback?: unknown },
+): Promise<boolean> {
+  try {
+    const resource = await Promise.resolve(fetchResource())
+    const payload = resource ?? options?.fallback
+    if (payload == null) {
+      toast.error('Resource not found')
+      return false
+    }
+    return await copyToClipboard('JSON', toPrettyJson(payload))
+  } catch (error) {
+    toast.error(getErrorMessage(error) ?? 'Failed to copy JSON')
+    return false
+  }
 }

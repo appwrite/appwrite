@@ -32,12 +32,13 @@ import { useNavigate } from '@tanstack/react-router'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { sdk } from '@/lib/appwrite/sdk'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
+import { fetchMessage } from '@/lib/react-query/hooks'
 import {
   buildConsoleUrl,
+  copyResourceAsJson,
   copyToClipboard,
   openInNewTab,
   openInNewWindow,
-  toPrettyJson,
 } from '@/lib/utils/context-menu'
 import { ContextMenuIcon } from '@/components/global/shared/ContextMenuIcon'
 
@@ -146,7 +147,9 @@ export function MessageContextMenu({
               </ContextMenuItem>
               <ContextMenuItem
                 onSelect={() =>
-                  copyToClipboard('JSON', toPrettyJson({ id: message.$id }))
+                  void copyResourceAsJson(() =>
+                    fetchMessage(projectId, message.$id),
+                  )
                 }
               >
                 <ContextMenuIcon icon={FileJson} />

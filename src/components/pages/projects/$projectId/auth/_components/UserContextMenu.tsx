@@ -34,13 +34,13 @@ import {
 import { Button } from '@/components/ui/button'
 import { useNavigate } from '@tanstack/react-router'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
-import { deleteProjectUser } from '@/lib/react-query/hooks/users'
+import { deleteProjectUser, fetchUser } from '@/lib/react-query/hooks/users'
 import {
   buildConsoleUrl,
+  copyResourceAsJson,
   copyToClipboard,
   openInNewTab,
   openInNewWindow,
-  toPrettyJson,
 } from '@/lib/utils/context-menu'
 import { ContextMenuIcon } from '@/components/global/shared/ContextMenuIcon'
 
@@ -154,17 +154,8 @@ export function UserContextMenu({
               </ContextMenuItem>
               <ContextMenuItem
                 onSelect={() =>
-                  copyToClipboard(
-                    'JSON',
-                    toPrettyJson({
-                      id: user.$id,
-                      name: user.name ?? null,
-                      email: user.email ?? null,
-                      phone: user.phone ?? null,
-                      status: user.status ?? null,
-                      emailVerification: user.emailVerification ?? null,
-                      phoneVerification: user.phoneVerification ?? null,
-                    }),
+                  void copyResourceAsJson(() =>
+                    fetchUser(projectId, user.$id),
                   )
                 }
               >

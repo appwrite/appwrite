@@ -19,7 +19,8 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
-import { copyToClipboard, toPrettyJson } from '@/lib/utils/context-menu'
+import { sdk } from '@/lib/appwrite/sdk'
+import { copyResourceAsJson, copyToClipboard } from '@/lib/utils/context-menu'
 import { ContextMenuIcon } from '@/components/global/shared/ContextMenuIcon'
 import { useDeletePlatform } from '@/lib/react-query/hooks'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
@@ -110,14 +111,10 @@ export function PlatformContextMenu({
               )}
               <ContextMenuItem
                 onSelect={() =>
-                  copyToClipboard(
-                    'JSON',
-                    toPrettyJson({
-                      id: platform.$id,
-                      name: platform.name ?? null,
-                      type: platform.type ?? null,
-                      identifier: identifier || null,
-                    }),
+                  void copyResourceAsJson(() =>
+                    sdk
+                      .forProject(projectId)
+                      .project.getPlatform({ platformId: platform.$id }),
                   )
                 }
               >

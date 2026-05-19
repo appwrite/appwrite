@@ -24,12 +24,13 @@ import {
   Activity,
 } from 'lucide-react'
 import { useNavigate } from '@tanstack/react-router'
+import { fetchProjectDatabase } from '@/lib/react-query/hooks'
 import {
   buildConsoleUrl,
+  copyResourceAsJson,
   copyToClipboard,
   openInNewTab,
   openInNewWindow,
-  toPrettyJson,
 } from '@/lib/utils/context-menu'
 import { ContextMenuIcon } from '@/components/global/shared/ContextMenuIcon'
 
@@ -198,12 +199,8 @@ export function DatabaseContextMenu({
             </ContextMenuItem>
             <ContextMenuItem
               onSelect={() =>
-                copyToClipboard(
-                  'JSON',
-                  toPrettyJson({
-                    id: database.$id,
-                    name: database.name ?? null,
-                  }),
+                void copyResourceAsJson(() =>
+                  fetchProjectDatabase(projectId, database.$id),
                 )
               }
             >
