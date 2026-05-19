@@ -94,6 +94,8 @@ trait SitesBase
                 }
 
                 $this->assertEquals($deploymentId, $site['body']['deploymentId'], 'Deployment is not activated, deployment: ' . json_encode($site['body'], JSON_PRETTY_PRINT));
+                $this->assertEquals($deploymentId, $site['body']['latestDeploymentId'], 'Latest deployment is not updated, deployment: ' . json_encode($site['body'], JSON_PRETTY_PRINT));
+                $this->assertEquals('ready', $site['body']['latestDeploymentStatus'], 'Latest deployment status is not ready, deployment: ' . json_encode($site['body'], JSON_PRETTY_PRINT));
             }, 120000, 500);
         }
 

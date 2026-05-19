@@ -264,7 +264,7 @@ class Builds extends Action
             'status' => 'processing',
         ]));
 
-        if ($deployment->getSequence() === $resource->getAttribute('latestDeploymentInternalId', '')) {
+        if ($deployment->getSequence() !== null && (string) $deployment->getSequence() === (string) $resource->getAttribute('latestDeploymentInternalId', '')) {
             $resource = $dbForProject->updateDocument($resource->getCollection(), $resource->getId(), new Document(['latestDeploymentStatus' => $deployment->getAttribute('status', '')]));
         }
 
@@ -544,7 +544,7 @@ class Builds extends Action
                 'status' => 'building',
             ]));
 
-            if ($deployment->getSequence() === $resource->getAttribute('latestDeploymentInternalId', '')) {
+            if ($deployment->getSequence() !== null && (string) $deployment->getSequence() === (string) $resource->getAttribute('latestDeploymentInternalId', '')) {
                 $resource = $dbForProject->updateDocument($resource->getCollection(), $resource->getId(), new Document(['latestDeploymentStatus' => $deployment->getAttribute('status', '')]));
             }
 
@@ -945,7 +945,7 @@ class Builds extends Action
 
             Console::log('Status marked as ready');
 
-            if ($deployment->getSequence() === $resource->getAttribute('latestDeploymentInternalId', '')) {
+            if ($deployment->getSequence() !== null && (string) $deployment->getSequence() === (string) $resource->getAttribute('latestDeploymentInternalId', '')) {
                 $resource = $dbForProject->updateDocument($resource->getCollection(), $resource->getId(), new Document(['latestDeploymentStatus' => $deployment->getAttribute('status', '')]));
             }
 
@@ -1191,7 +1191,7 @@ class Builds extends Action
                 'buildLogs' => $message,
             ]));
 
-            if ($deployment->getSequence() === $resource->getAttribute('latestDeploymentInternalId', '')) {
+            if ($deployment->getSequence() !== null && (string) $deployment->getSequence() === (string) $resource->getAttribute('latestDeploymentInternalId', '')) {
                 $resource = $dbForProject->updateDocument($resource->getCollection(), $resource->getId(), new Document(['latestDeploymentStatus' => $deployment->getAttribute('status', '')]));
             }
 

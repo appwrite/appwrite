@@ -97,7 +97,7 @@ class Update extends Action
             'status' => 'canceled'
         ]));
 
-        if ($deployment->getSequence() === $function->getAttribute('latestDeploymentInternalId', '')) {
+        if ($deployment->getSequence() !== null && (string) $deployment->getSequence() === (string) $function->getAttribute('latestDeploymentInternalId', '')) {
             $function = $function->setAttribute('latestDeploymentStatus', $deployment->getAttribute('status', ''));
             $dbForProject->updateDocument('functions', $function->getId(), new Document([
                 'latestDeploymentStatus' => $function->getAttribute('latestDeploymentStatus'),

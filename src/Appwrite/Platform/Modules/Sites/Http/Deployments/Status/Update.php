@@ -95,7 +95,7 @@ class Update extends Action
             'status' => 'canceled'
         ]));
 
-        if ($deployment->getSequence() === $site->getAttribute('latestDeploymentInternalId', '')) {
+        if ($deployment->getSequence() !== null && (string) $deployment->getSequence() === (string) $site->getAttribute('latestDeploymentInternalId', '')) {
             $site = $site->setAttribute('latestDeploymentStatus', $deployment->getAttribute('status', ''));
             $dbForProject->updateDocument('sites', $site->getId(), new Document([
                 'latestDeploymentStatus' => $site->getAttribute('latestDeploymentStatus'),
