@@ -55,6 +55,9 @@ class Swagger2 extends Format
             ],
             'host' => \parse_url($this->getParam('endpoint', ''), PHP_URL_HOST),
             'x-host-docs' => \parse_url($this->getParam('endpoint.docs', ''), PHP_URL_HOST),
+            'x-appwrite' => [
+                'endpointDocs' => $this->getParam('endpoint.docs', ''),
+            ],
             'basePath' => \parse_url($this->getParam('endpoint', ''), PHP_URL_PATH),
             'schemes' => [\parse_url($this->getParam('endpoint', ''), PHP_URL_SCHEME)],
             'consumes' => ['application/json', 'multipart/form-data'],
@@ -731,7 +734,7 @@ class Swagger2 extends Format
                         break;
                 }
 
-                if ($parameter['emitDefault']) { // Param has default value
+                if ($parameter['emitDefault'] && $this->shouldEmitDefaultForSchema($param['default'], $node)) { // Param has default value
                     $node['default'] = $param['default'];
                 }
 
@@ -767,9 +770,12 @@ class Swagger2 extends Format
                     $body['schema']['properties'][$name] = [
                         'type' => $node['type'],
                         'description' => $node['description'],
-                        'default' => $node['default'] ?? null,
                         'x-example' => $node['x-example'] ?? null,
                     ];
+
+                    if (\array_key_exists('default', $node)) {
+                        $body['schema']['properties'][$name]['default'] = $node['default'];
+                    }
 
                     if (isset($node['format'])) {
                         $body['schema']['properties'][$name]['format'] = $node['format'];
