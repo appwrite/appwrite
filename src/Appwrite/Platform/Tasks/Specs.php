@@ -492,6 +492,47 @@ class Specs extends Action
         return $sdkPlatforms;
     }
 
+    /**
+     * @param array<string, array<string, mixed>> $keys
+     * @return array<string, mixed>
+     */
+    protected function getMergedPublicKeys(array $keys): array
+    {
+        return \array_replace(
+            $keys[APP_SDK_PLATFORM_CLIENT] ?? [],
+            $keys[APP_SDK_PLATFORM_SERVER] ?? [],
+        );
+    }
+
+    /**
+     * @param array<string, array<string, mixed>> $keys
+     * @return array<int, array{name: string, platform: string, targetPlatforms: array<string>, fileSuffix: string, keys: array<string, mixed>, authCount: int}>
+     */
+    protected function getSpecTargets(array $keys, array $authCounts): array
+    {
+        $targets = [
+            [
+                'name' => 'public',
+                'platform' => 'public',
+                'targetPlatforms' => [APP_SDK_PLATFORM_CLIENT, APP_SDK_PLATFORM_SERVER],
+                'fileSuffix' => '',
+                'keys' => $this->getMergedPublicKeys($keys),
+                'authCount' => 0,
+            ],
+        ];
+
+        $targets[] = [
+            'name' => APP_SDK_PLATFORM_CONSOLE,
+            'platform' => APP_SDK_PLATFORM_CONSOLE,
+            'targetPlatforms' => [APP_SDK_PLATFORM_CONSOLE],
+            'fileSuffix' => '-' . APP_SDK_PLATFORM_CONSOLE,
+            'keys' => $keys[APP_SDK_PLATFORM_CONSOLE],
+            'authCount' => $authCounts[APP_SDK_PLATFORM_CONSOLE] ?? 0,
+        ];
+
+        return $targets;
+    }
+
     public function action(string $version, string $mode, ?string $git, ?string $message, ?string $branch): void
     {
         if (\is_null($git)) {
@@ -525,9 +566,9 @@ class Specs extends Action
         $specsContainer->set('localeCodes', fn () => \array_map(fn ($locale) => $locale['code'], Config::getParam('locale-codes', [])));
         $specsContainer->set('plan', fn () => []);
 
-        $platforms = static::getPlatforms();
         $authCounts = $this->getAuthCounts();
         $keys = $this->getKeys();
+        $specTargets = $this->getSpecTargets($keys, $authCounts);
 
         $generatedFiles = [];
         $endpoint = System::getEnv('_APP_HOME', 'https://appwrite.io');
@@ -538,7 +579,9 @@ class Specs extends Action
             throw new Exception('Failed to create specs directory: ' . $specsDir);
         }
 
-        foreach ($platforms as $platform) {
+        foreach ($specTargets as $specTarget) {
+            $platform = $specTarget['platform'];
+            $targetPlatforms = $specTarget['targetPlatforms'];
             $routes = [];
             $models = [];
             $services = [];
@@ -559,7 +602,10 @@ class Specs extends Action
                         /** @var Method $sdk */
                         $hide = $sdk->isHidden();
 
-                        if ($hide === true || (\is_array($hide) && \in_array($platform, $hide))) {
+                        if (
+                            $hide === true
+                            || (\is_array($hide) && empty(\array_diff($targetPlatforms, $hide)))
+                        ) {
                             continue;
                         }
 
@@ -582,7 +628,7 @@ class Specs extends Action
                             continue;
                         }
 
-                        if (!\in_array($platform, $sdkPlatforms)) {
+                        if (empty(\array_intersect($targetPlatforms, $sdkPlatforms))) {
                             continue;
                         }
 
@@ -601,8 +647,8 @@ class Specs extends Action
                     continue;
                 }
 
-                // Check if current platform is included in service's platforms
-                if (!\in_array($platform, $service['platforms'] ?? [])) {
+                // Check if any target platform is included in service's platforms
+                if (empty(\array_intersect($targetPlatforms, $service['platforms'] ?? []))) {
                     continue;
                 }
 
@@ -615,7 +661,7 @@ class Specs extends Action
             $models = $response->getModels();
 
             foreach ($models as $key => $value) {
-                if ($platform !== APP_SDK_PLATFORM_CONSOLE && !$value->isPublic()) {
+                if (!\in_array(APP_SDK_PLATFORM_CONSOLE, $targetPlatforms, true) && !$value->isPublic()) {
                     unset($models[$key]);
                 }
             }
@@ -625,9 +671,12 @@ class Specs extends Action
                 $services,
                 $routes,
                 $models,
-                $keys[$platform],
-                $authCounts[$platform] ?? 0,
-                $platform
+                $specTarget['keys'],
+                $specTarget['authCount'],
+                $platform,
+                $targetPlatforms,
+                $authCounts,
+                $keys,
             ];
 
             foreach (['swagger2', 'open-api3'] as $format) {
@@ -652,14 +701,14 @@ class Specs extends Action
                     ->setParam('docs.url', $endpoint . '/docs');
 
                 $path = $mocks
-                    ? $specsDir . '/' . $format . '-mocks-' . $platform . '.json'
-                    : $specsDir . '/' . $format . '-' . $version . '-' . $platform . '.json';
+                    ? $specsDir . '/' . $format . '-mocks' . $specTarget['fileSuffix'] . '.json'
+                    : $specsDir . '/' . $format . '-' . $version . $specTarget['fileSuffix'] . '.json';
 
                 try {
                     $parsedSpecs = $specs->parse();
                     $this->verifyParsedSpec($parsedSpecs);
                 } catch (\RuntimeException $e) {
-                    throw new \RuntimeException("Spec generation failed for {$platform} ({$format}): " . $e->getMessage(), 0, $e);
+                    throw new \RuntimeException("Spec generation failed for {$specTarget['name']} ({$format}): " . $e->getMessage(), 0, $e);
                 }
 
                 $encodedSpecs = \json_encode($parsedSpecs, JSON_PRETTY_PRINT);
@@ -710,13 +759,20 @@ class Specs extends Action
 
             // Copy generated spec files into specs/{version}/ subdirectory
             $prPlatforms = static::getPlatformsForPR();
+            $knownPlatforms = static::getPlatforms();
             $prFiles = \array_filter(
                 $generatedFiles,
-                fn (string $file) => \in_array(
-                    \substr(\basename($file, '.json'), \strrpos(\basename($file, '.json'), '-') + 1),
-                    $prPlatforms,
-                    true
-                )
+                function (string $file) use ($prPlatforms, $knownPlatforms): bool {
+                    $name = \basename($file, '.json');
+                    $suffix = \substr($name, \strrpos($name, '-') + 1);
+
+                    if (\in_array($suffix, $knownPlatforms, true)) {
+                        return \in_array($suffix, $prPlatforms, true);
+                    }
+
+                    return \in_array(APP_SDK_PLATFORM_CLIENT, $prPlatforms, true)
+                        || \in_array(APP_SDK_PLATFORM_SERVER, $prPlatforms, true);
+                }
             );
 
             $specsSubDir = $mocks ? 'mocks' : $version;

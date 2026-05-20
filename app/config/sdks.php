@@ -19,6 +19,10 @@ return [
                 'dev' => false,
                 'hidden' => false,
                 'family' => APP_SDK_PLATFORM_CLIENT,
+                'platforms' => [
+                    APP_SDK_PLATFORM_CLIENT,
+                    APP_SDK_PLATFORM_SERVER,
+                ],
                 'prism' => 'javascript',
                 'source' => \realpath(__DIR__ . '/../sdks/client-web'),
                 'gitUrl' => 'git@github.com:appwrite/sdk-for-web.git',

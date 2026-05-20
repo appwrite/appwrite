@@ -3,7 +3,6 @@
 namespace Appwrite\SDK\Specification\Format;
 
 use Appwrite\Platform\Tasks\Specs;
-use Appwrite\SDK\AuthType;
 use Appwrite\SDK\ContentType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\MethodType;
@@ -106,9 +105,10 @@ class Swagger2 extends Format
             $additionalMethods = null;
             if (\is_array($sdk)) {
                 $additionalMethods = $sdk;
-                /** @var Method $sdk */
                 $sdk = $sdk[0];
             }
+
+            /** @var Method $sdk */
 
             $consumes = [];
             if (strtoupper($route->getMethod()) !== 'GET' && strtoupper($route->getMethod()) !== 'HEAD') {
@@ -149,7 +149,7 @@ class Swagger2 extends Format
                     'rate-time' => $route->getLabel('abuse-time', 3600),
                     'rate-key' => $route->getLabel('abuse-key', 'url:{url},ip:{ip}'),
                     'scope' => $route->getLabel('scope', ''),
-                    'platforms' => $sdkPlatforms,
+                    'platforms' => $this->getIncludedPlatforms($sdkPlatforms),
                     'packaging' => $sdk->isPackaging(),
                     'public' => $sdk->isPublic(),
                 ],
@@ -179,23 +179,16 @@ class Swagger2 extends Format
                     $methodSecurities = $methodObj->getAuth();
                     $methodSdkPlatforms = $specs->getSDKPlatformsForRouteSecurity($methodSecurities);
 
-                    if (!\in_array($this->platform, $methodSdkPlatforms)) {
+                    if (!$this->includesTargetPlatform($methodSdkPlatforms)) {
                         continue;
                     }
 
-                    $methodSecurities = ['Project' => []];
-                    foreach ($methodObj->getAuth() as $security) {
-                        /** @var AuthType $security */
-                        if (\array_key_exists($security->value, $this->keys)) {
-                            $methodSecurities[$security->value] = [];
-                        }
-                    }
+                    $methodSecurities = $this->getSecurityForPlatform($methodObj->getAuth(), $this->platform);
 
                     $additionalMethod = [
                         'name' => $methodObj->getMethodName(),
                         'namespace' => $methodObj->getNamespace(),
                         'desc' => $methodObj->getDesc(),
-                        'auth' => \array_slice($methodSecurities, 0, $this->authCount),
                         'parameters' => [],
                         'required' => [],
                         'responses' => [],
@@ -203,6 +196,13 @@ class Swagger2 extends Format
                         'demo' => \strtolower($namespace) . '/' . Template::fromCamelCaseToDash($methodObj->getMethodName()) . '.md',
                         'public' => $methodObj->isPublic(),
                     ];
+
+                    if ($this->isMultiPlatformSpec()) {
+                        $additionalMethod['platforms'] = $this->getIncludedPlatforms($methodSdkPlatforms);
+                        $additionalMethod['platformSecurity'] = $this->getPlatformSecurity($methodObj->getAuth(), $methodSdkPlatforms);
+                    } else {
+                        $additionalMethod['auth'] = $methodSecurities;
+                    }
 
                     // add deprecation only if method has it!
                     if ($methodObj->getDeprecated()) {
@@ -368,7 +368,11 @@ class Swagger2 extends Format
                     }
                 }
 
-                $temp['x-appwrite']['auth'] = \array_slice($securities, 0, $this->authCount);
+                if ($this->isMultiPlatformSpec()) {
+                    $temp['x-appwrite']['platformSecurity'] = $this->getPlatformSecurity($sdk->getAuth(), $sdkPlatforms);
+                } else {
+                    $temp['x-appwrite']['auth'] = \array_slice($securities, 0, $this->authCount);
+                }
                 $temp['security'][] = $securities;
             }
 
@@ -385,7 +389,7 @@ class Swagger2 extends Format
 
             $parameters = \array_merge(
                 $route->getParams(),
-                $sdk->getAdditionalParameters() ?? [],
+                $sdk->getAdditionalParameters(),
             );
 
             foreach ($parameters as $name => $param) { // Set params

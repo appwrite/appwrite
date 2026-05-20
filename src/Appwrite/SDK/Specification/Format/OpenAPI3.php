@@ -146,7 +146,7 @@ class OpenAPI3 extends Format
                     'rate-time' => $route->getLabel('abuse-time', 3600),
                     'rate-key' => $route->getLabel('abuse-key', 'url:{url},ip:{ip}'),
                     'scope' => $route->getLabel('scope', ''),
-                    'platforms' => $sdkPlatforms,
+                    'platforms' => $this->getIncludedPlatforms($sdkPlatforms),
                     'packaging' => $sdk->isPackaging(),
                     'public' => $sdk->isPublic(),
                 ],
@@ -172,22 +172,16 @@ class OpenAPI3 extends Format
                     $methodSecurities = $methodObj->getAuth();
                     $methodSdkPlatforms = $specs->getSDKPlatformsForRouteSecurity($methodSecurities);
 
-                    if (!\in_array($this->platform, $methodSdkPlatforms)) {
+                    if (!$this->includesTargetPlatform($methodSdkPlatforms)) {
                         continue;
                     }
 
-                    $methodSecurities = ['Project' => []];
-                    foreach ($methodObj->getAuth() as $security) {
-                        if (\array_key_exists($security->value, $this->keys)) {
-                            $methodSecurities[$security->value] = [];
-                        }
-                    }
+                    $methodSecurities = $this->getSecurityForPlatform($methodObj->getAuth(), $this->platform);
 
                     $additionalMethod = [
                         'name' => $methodObj->getMethodName(),
                         'namespace' => $methodObj->getNamespace(),
                         'desc' => $methodObj->getDesc(),
-                        'auth' => \array_slice($methodSecurities, 0, $this->authCount),
                         'parameters' => [],
                         'required' => [],
                         'responses' => [],
@@ -195,6 +189,13 @@ class OpenAPI3 extends Format
                         'demo' => \strtolower($namespace) . '/' . Template::fromCamelCaseToDash($methodObj->getMethodName()) . '.md',
                         'public' => $methodObj->isPublic(),
                     ];
+
+                    if ($this->isMultiPlatformSpec()) {
+                        $additionalMethod['platforms'] = $this->getIncludedPlatforms($methodSdkPlatforms);
+                        $additionalMethod['platformSecurity'] = $this->getPlatformSecurity($methodObj->getAuth(), $methodSdkPlatforms);
+                    } else {
+                        $additionalMethod['auth'] = $methodSecurities;
+                    }
 
                     // add deprecation only if method has it!
                     if ($methodObj->getDeprecated()) {
@@ -371,7 +372,11 @@ class OpenAPI3 extends Format
                     }
                 }
 
-                $temp['x-appwrite']['auth'] = array_slice($securities, 0, $this->authCount);
+                if ($this->isMultiPlatformSpec()) {
+                    $temp['x-appwrite']['platformSecurity'] = $this->getPlatformSecurity($sdk->getAuth(), $sdkPlatforms);
+                } else {
+                    $temp['x-appwrite']['auth'] = array_slice($securities, 0, $this->authCount);
+                }
                 $temp['security'][] = $securities;
             }
 

@@ -71,6 +71,89 @@ class SDKs extends Action
         ))));
     }
 
+    /**
+     * @param array<string> $platforms
+     */
+    protected function filterSpecForPlatforms(string $spec, array $platforms): string
+    {
+        $decoded = \json_decode($spec, true, flags: JSON_THROW_ON_ERROR);
+
+        foreach ($decoded['paths'] ?? [] as $path => $methods) {
+            foreach ($methods as $method => $operation) {
+                if (!\is_array($operation)) {
+                    continue;
+                }
+
+                $operationPlatforms = $operation['x-appwrite']['platforms'] ?? [];
+                if (empty(\array_intersect($platforms, $operationPlatforms))) {
+                    unset($decoded['paths'][$path][$method]);
+                    continue;
+                }
+
+                $decoded['paths'][$path][$method] = $this->applyPlatformSecurity($operation, $platforms);
+            }
+
+            if (empty($decoded['paths'][$path])) {
+                unset($decoded['paths'][$path]);
+            }
+        }
+
+        return \json_encode($decoded, JSON_PRETTY_PRINT | JSON_THROW_ON_ERROR);
+    }
+
+    /**
+     * @param array<string, mixed> $operation
+     * @param array<string> $platforms
+     * @return array<string, mixed>
+     */
+    protected function applyPlatformSecurity(array $operation, array $platforms): array
+    {
+        $platformSecurity = $operation['x-appwrite']['platformSecurity'] ?? [];
+        if (!empty($platformSecurity)) {
+            $operation['x-appwrite']['auth'] = $this->mergePlatformSecurity($platformSecurity, $platforms);
+        }
+
+        foreach ($operation['x-appwrite']['methods'] ?? [] as $index => $method) {
+            $methodPlatforms = $method['platforms'] ?? [];
+            if (!empty($methodPlatforms) && empty(\array_intersect($platforms, $methodPlatforms))) {
+                unset($operation['x-appwrite']['methods'][$index]);
+                continue;
+            }
+
+            $methodPlatformSecurity = $method['platformSecurity'] ?? [];
+            if (!empty($methodPlatformSecurity)) {
+                $method['auth'] = $this->mergePlatformSecurity($methodPlatformSecurity, $platforms);
+                $operation['x-appwrite']['methods'][$index] = $method;
+            }
+        }
+
+        if (isset($operation['x-appwrite']['methods'])) {
+            $operation['x-appwrite']['methods'] = \array_values($operation['x-appwrite']['methods']);
+        }
+
+        return $operation;
+    }
+
+    /**
+     * @param array<string, list<array<string, array>>> $platformSecurity
+     * @param array<string> $platforms
+     * @return array<string, array>
+     */
+    protected function mergePlatformSecurity(array $platformSecurity, array $platforms): array
+    {
+        $merged = [];
+
+        foreach ($platforms as $platform) {
+            foreach ($platformSecurity[$platform] ?? [] as $security) {
+                foreach ($security as $name => $scopes) {
+                    $merged[$name] = $scopes;
+                }
+            }
+        }
+
+        return $merged;
+    }
+
     public function __construct()
     {
         $this
@@ -308,13 +391,26 @@ class SDKs extends Action
                 } else {
                     Console::log('  Fetching API spec...');
 
-                    $specPath = __DIR__ . '/../../../../app/config/specs/swagger2-' . $version . '-' . $language['family'] . '.json';
+                    $specPlatforms = $language['platforms'] ?? $language['specPlatforms'] ?? null;
+                    if (!\is_array($specPlatforms) && \in_array($language['family'], [APP_SDK_PLATFORM_CLIENT, APP_SDK_PLATFORM_SERVER], true)) {
+                        $specPlatforms = [$language['family']];
+                    }
+
+                    $specPath = \is_array($specPlatforms)
+                        ? __DIR__ . '/../../../../app/config/specs/swagger2-' . $version . '.json'
+                        : __DIR__ . '/../../../../app/config/specs/swagger2-' . $version . '-' . $language['family'] . '.json';
 
                     if (!file_exists($specPath)) {
                         throw new \Exception('Spec file not found: ' . $specPath . '. Please run "docker compose exec appwrite specs --version=' . $version . '" first to generate the specs.');
                     }
 
                     $spec = file_get_contents($specPath);
+                    if ($spec === false) {
+                        throw new \Exception('Failed to read spec file: ' . $specPath);
+                    }
+                    if (\is_array($specPlatforms)) {
+                        $spec = $this->filterSpecForPlatforms($spec, $specPlatforms);
+                    }
                 }
 
                 $cover = 'https://github.com/appwrite/appwrite/raw/main/public/images/github.png';

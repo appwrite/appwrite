@@ -2,6 +2,7 @@
 
 namespace Appwrite\SDK\Specification;
 
+use Appwrite\SDK\AuthType;
 use Appwrite\Utopia\Response\Model;
 use Utopia\Config\Config;
 use Utopia\DI\Container;
@@ -25,6 +26,21 @@ abstract class Format
     protected array $keys;
     protected int $authCount;
     protected string $platform;
+
+    /**
+     * @var array<string>
+     */
+    protected array $targetPlatforms;
+
+    /**
+     * @var array<string, int>
+     */
+    protected array $authCountsByPlatform;
+
+    /**
+     * @var array<string, array<string, mixed>>
+     */
+    protected array $keysByPlatform;
     protected array $params = [
         'name' => '',
         'description' => '',
@@ -112,8 +128,18 @@ abstract class Format
 
     protected array $enumBlacklist = [];
 
-    public function __construct(Container $container, array $services, array $routes, array $models, array $keys, int $authCount, string $platform)
-    {
+    public function __construct(
+        Container $container,
+        array $services,
+        array $routes,
+        array $models,
+        array $keys,
+        int $authCount,
+        string $platform,
+        ?array $targetPlatforms = null,
+        array $authCountsByPlatform = [],
+        array $keysByPlatform = [],
+    ) {
         $this->container = $container;
         $this->services = $services;
         $this->routes = $routes;
@@ -121,6 +147,9 @@ abstract class Format
         $this->keys = $keys;
         $this->authCount = $authCount;
         $this->platform = $platform;
+        $this->targetPlatforms = $targetPlatforms ?? [$platform];
+        $this->authCountsByPlatform = $authCountsByPlatform;
+        $this->keysByPlatform = $keysByPlatform;
 
         $this->enumBlacklist = $this->buildEnumBlacklist();
     }
@@ -440,6 +469,68 @@ abstract class Format
             'x-propertyNames' => $allKeys,
             'x-mapping' => $compoundMapping,
         ]);
+    }
+
+    /**
+     * @param array<AuthType> $routeSecurity
+     * @param array<string> $routePlatforms
+     * @return array<string, list<array<string, array>>>
+     */
+    protected function getPlatformSecurity(array $routeSecurity, array $routePlatforms): array
+    {
+        $platformSecurity = [];
+
+        foreach ($this->targetPlatforms as $platform) {
+            if (!\in_array($platform, $routePlatforms, true)) {
+                continue;
+            }
+
+            $securities = $this->getSecurityForPlatform($routeSecurity, $platform);
+
+            if (!empty($securities)) {
+                $platformSecurity[$platform] = [$securities];
+            }
+        }
+
+        return $platformSecurity;
+    }
+
+    /**
+     * @param array<AuthType> $routeSecurity
+     * @return array<string, array>
+     */
+    protected function getSecurityForPlatform(array $routeSecurity, string $platform): array
+    {
+        $keys = $this->keysByPlatform[$platform] ?? $this->keys;
+        $authCount = $this->authCountsByPlatform[$platform] ?? $this->authCount;
+        $securities = ['Project' => []];
+
+        foreach ($routeSecurity as $security) {
+            if (\array_key_exists($security->value, $keys)) {
+                $securities[$security->value] = [];
+            }
+        }
+
+        return \array_slice($securities, 0, $authCount);
+    }
+
+    protected function includesTargetPlatform(array $platforms): bool
+    {
+        return !empty(\array_intersect($this->targetPlatforms, $platforms));
+    }
+
+    protected function isMultiPlatformSpec(): bool
+    {
+        return \count($this->targetPlatforms) > 1;
+    }
+
+    protected function getIncludedPlatforms(array $platforms): array
+    {
+        if (!$this->isMultiPlatformSpec()) {
+            return \array_values(\array_unique($platforms));
+        }
+
+        return \array_values(\array_intersect($this->targetPlatforms, $platforms));
     }
 
     protected function getRequestEnumName(string $service, string $method, string $param): ?string
