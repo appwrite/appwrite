@@ -146,7 +146,9 @@ class OpenAPI3 extends Format
                     'rate-time' => $route->getLabel('abuse-time', 3600),
                     'rate-key' => $route->getLabel('abuse-key', 'url:{url},ip:{ip}'),
                     'scope' => $route->getLabel('scope', ''),
-                    'platforms' => $this->getIncludedPlatforms($sdkPlatforms),
+                    'platforms' => \count($this->targetPlatforms) > 1
+                        ? \array_values(\array_intersect($this->targetPlatforms, $sdkPlatforms))
+                        : \array_values(\array_unique($sdkPlatforms)),
                     'packaging' => $sdk->isPackaging(),
                     'public' => $sdk->isPublic(),
                 ],
@@ -172,11 +174,9 @@ class OpenAPI3 extends Format
                     $methodSecurities = $methodObj->getAuth();
                     $methodSdkPlatforms = $specs->getSDKPlatformsForRouteSecurity($methodSecurities);
 
-                    if (!$this->includesTargetPlatform($methodSdkPlatforms)) {
+                    if (empty(\array_intersect($this->targetPlatforms, $methodSdkPlatforms))) {
                         continue;
                     }
-
-                    $methodSecurities = $this->getSecurityForPlatform($methodObj->getAuth(), $this->platform);
 
                     $additionalMethod = [
                         'name' => $methodObj->getMethodName(),
@@ -190,11 +190,11 @@ class OpenAPI3 extends Format
                         'public' => $methodObj->isPublic(),
                     ];
 
-                    if ($this->isMultiPlatformSpec()) {
-                        $additionalMethod['platforms'] = $this->getIncludedPlatforms($methodSdkPlatforms);
+                    if (\count($this->targetPlatforms) > 1) {
+                        $additionalMethod['platforms'] = \array_values(\array_intersect($this->targetPlatforms, $methodSdkPlatforms));
                         $additionalMethod['platformSecurity'] = $this->getPlatformSecurity($methodObj->getAuth(), $methodSdkPlatforms);
                     } else {
-                        $additionalMethod['auth'] = $methodSecurities;
+                        $additionalMethod['auth'] = $this->getSecurityForPlatform($methodObj->getAuth(), $this->platform);
                     }
 
                     // add deprecation only if method has it!
@@ -372,7 +372,7 @@ class OpenAPI3 extends Format
                     }
                 }
 
-                if ($this->isMultiPlatformSpec()) {
+                if (\count($this->targetPlatforms) > 1) {
                     $temp['x-appwrite']['platformSecurity'] = $this->getPlatformSecurity($sdk->getAuth(), $sdkPlatforms);
                 } else {
                     $temp['x-appwrite']['auth'] = array_slice($securities, 0, $this->authCount);

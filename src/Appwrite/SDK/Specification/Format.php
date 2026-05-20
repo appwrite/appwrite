@@ -514,25 +514,6 @@ abstract class Format
         return \array_slice($securities, 0, $authCount);
     }
 
-    protected function includesTargetPlatform(array $platforms): bool
-    {
-        return !empty(\array_intersect($this->targetPlatforms, $platforms));
-    }
-
-    protected function isMultiPlatformSpec(): bool
-    {
-        return \count($this->targetPlatforms) > 1;
-    }
-
-    protected function getIncludedPlatforms(array $platforms): array
-    {
-        if (!$this->isMultiPlatformSpec()) {
-            return \array_values(\array_unique($platforms));
-        }
-
-        return \array_values(\array_intersect($this->targetPlatforms, $platforms));
-    }
-
     protected function getRequestEnumName(string $service, string $method, string $param): ?string
     {
         /* `$service` is `$namespace` */
