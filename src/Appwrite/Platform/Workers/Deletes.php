@@ -426,14 +426,9 @@ class Deletes extends Action
             $dbForProject,
             function (Document $migration) use ($dbForProject, $project) {
                 try {
-                    $dbForProject->updateDocument(
-                        'migrations',
-                        $migration->getId(),
-                        new Document([
-                                'status' => 'failed'
-                            ]
-                        )
-                    );
+                    $dbForProject->updateDocument('migrations', $migration->getId(), new Document([
+                        'status' => 'failed'
+                    ]));
                 } catch (Throwable $th) {
                     Console::error("Failed to update processing migration {$migration->getId()} for project {$project->getId()}: " . $th->getMessage());
                 }
