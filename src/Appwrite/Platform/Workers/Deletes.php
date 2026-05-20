@@ -1583,6 +1583,11 @@ class Deletes extends Action
     ): void {
         $start = \microtime(true);
 
+        $message = 'collection:'.$database->getNamespace().'_'.$collection;
+        if($database->getSharedTables()){
+            $message .= ' Tenant:'.$database->getTenant();
+        }
+
         /**
          * deleteDocuments uses a cursor, we need to add a unique order by field or use default
          */
@@ -1593,13 +1598,13 @@ class Deletes extends Action
                 onNext: $callback
             );
         } catch (Throwable $th) {
-            $tenant = $database->getSharedTables() ? 'Tenant:' . $database->getTenant() : '';
-            Console::error("Failed to delete documents for collection:{$database->getNamespace()}_{$collection} {$tenant} :{$th->getMessage()}");
+            $tenant = $database->getSharedTables() ? 'Tenant:'. $database->getTenant() : '';
+            Console::error("Failed to delete documents for {$message} :{$th->getMessage()}");
             return;
         }
 
         $end = \microtime(true);
-        Console::info("Deleted {$count} documents by group in " . ($end - $start) . " seconds");
+        Console::info("Deleted {$count} documents by group in " . ($end - $start) . " seconds {$message}");
     }
 
     /**
@@ -1646,7 +1651,12 @@ class Deletes extends Action
 
         $end = \microtime(true);
 
-        Console::info("Listed {$count} documents by group in " . ($end - $start) . " seconds");
+        $message = 'collection:'.$database->getNamespace().'_'.$collection;
+        if($database->getSharedTables()){
+            $message .= ' Tenant:'.$database->getTenant();
+        }
+
+        Console::info("Listed {$count} documents by group in " . ($end - $start) . " seconds {$message}");
     }
 
     /**
