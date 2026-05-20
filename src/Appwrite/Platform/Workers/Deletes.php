@@ -402,7 +402,8 @@ class Deletes extends Action
         Targets::delete($getProjectDB($project), Query::equal('sessionInternalId', [$session->getSequence()]));
     }
 
-    private function updateProcessingMigrations(Document $project, callable $getProjectDB): void {
+    private function updateProcessingMigrations(Document $project, callable $getProjectDB): void
+    {
         if ($project->getId() === 'console') {
             return;
         }
@@ -620,7 +621,7 @@ class Deletes extends Action
             Query::orderDesc('time'),
             Query::orderDesc(),
         ], $dbForLogs);
-}
+    }
 
     /**
      * @param callable $getProjectDB
@@ -1029,7 +1030,7 @@ class Deletes extends Action
      */
     private function deleteExecutionLogs(Document $project, callable $getProjectDB, string $datetime, ?int $executionsRetentionCount = 0): void
     {
-        if($project->getId() === 'console') {
+        if ($project->getId() === 'console') {
             return;
         }
 
@@ -1579,7 +1580,7 @@ class Deletes extends Action
         $start = \microtime(true);
 
         $message = 'collection:'.$database->getNamespace().'_'.$collection;
-        if($database->getSharedTables()){
+        if ($database->getSharedTables()) {
             $message .= ' Tenant:'.$database->getTenant();
         }
 
@@ -1647,7 +1648,7 @@ class Deletes extends Action
         $end = \microtime(true);
 
         $message = 'collection:'.$database->getNamespace().'_'.$collection;
-        if($database->getSharedTables()){
+        if ($database->getSharedTables()) {
             $message .= ' Tenant:'.$database->getTenant();
         }
 
