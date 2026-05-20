@@ -3,8 +3,8 @@
  */
 
 import { useState, useMemo, useEffect } from 'react'
-import { useParams, useNavigate, Link } from '@tanstack/react-router'
-import { Database, Info, Zap } from 'lucide-react'
+import { useParams, useNavigate } from '@tanstack/react-router'
+import { ArrowRightLeft, Database, Info, Zap } from 'lucide-react'
 import { PUBLIC_ICON_MUTED_CLASSES } from '@/lib/public-icon-classes'
 import { WizardLayout } from '@/components/global/shared/WizardLayout'
 import { Button } from '@/components/ui/button'
@@ -67,6 +67,9 @@ const PROVIDERS_OTHER: ProviderOption[] = [
   { id: 'Firebase', label: 'Firebase', icon: '/icons/firebase.svg' },
   { id: 'NHost', label: 'NHost' },
 ]
+
+const TRANSFER_PROJECT_SETTINGS_HREF = (projectId: string) =>
+  `/projects/${projectId}/settings#card-transfer-project` as '/projects/$projectId/settings/'
 
 function getProviderOptions(isCloud: boolean): ProviderOption[] {
   const appwrite: ProviderOption[] = [
@@ -462,25 +465,9 @@ export function ImportWizardView() {
       {step === 1 && (
         <>
           <p className="text-[13px] text-muted-foreground">
-            Migrations copy users, databases, and storage from the source into
-            this project. Data is not deleted from the source. Choose the
-            platform you want to import from.
+            Migrations import users, databases, and storage from an external
+            platform into this project. Data is not deleted from the source.
           </p>
-          <div className="rounded-lg border border-border bg-muted/30 px-4 py-3">
-            <p className="text-[12px] text-muted-foreground">
-              Moving a project between two organizations you own? Use{' '}
-              <Link
-                to="/projects/$projectId/settings"
-                params={{ projectId: pid }}
-                className="font-medium text-foreground underline underline-offset-2 hover:no-underline"
-              >
-                project transfer
-              </Link>{' '}
-              in Settings → Overview instead of migration. Transfer completes
-              immediately and does not copy data, so it is the recommended
-              option when the project already exists in your account.
-            </p>
-          </div>
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             {providers.map((p) => (
               <button
@@ -510,6 +497,47 @@ export function ImportWizardView() {
                 </span>
               </button>
             ))}
+          </div>
+          <div className="relative py-2">
+            <div className="absolute inset-0 flex items-center" aria-hidden>
+              <div className="w-full border-t border-border" />
+            </div>
+            <div className="relative flex justify-center">
+              <span className="bg-background px-3 text-[12px] font-medium text-muted-foreground">
+                Or
+              </span>
+            </div>
+          </div>
+          <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
+            <div className="px-6 py-4">
+              <div className="flex items-start gap-3">
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-muted text-muted-foreground">
+                  <ArrowRightLeft className="h-5 w-5" />
+                </div>
+                <div className="min-w-0">
+                  <h3 className="text-[15px] font-semibold text-foreground">
+                    Transfer between organizations
+                  </h3>
+                  <p className="text-[13px] text-muted-foreground mt-2">
+                    Move this project to another organization in your account.
+                    Ownership updates immediately; no data is imported.
+                  </p>
+                </div>
+              </div>
+            </div>
+            <div className="border-t border-border" />
+            <div className="px-6 py-4 bg-muted/30">
+              <Button
+                type="button"
+                size="sm"
+                className="h-9 text-[13px]"
+                onClick={() =>
+                  navigate({ to: TRANSFER_PROJECT_SETTINGS_HREF(pid) })
+                }
+              >
+                Transfer project
+              </Button>
+            </div>
           </div>
         </>
       )}
