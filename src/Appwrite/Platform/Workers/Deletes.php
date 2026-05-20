@@ -401,6 +401,10 @@ class Deletes extends Action
     }
 
     private function updateProcessingMigrations(Document $project, callable $getProjectDB): void {
+        if ($project->getId() === 'console') {
+            return;
+        }
+
         /** @var Database $dbForProject */
         $dbForProject = $getProjectDB($project);
 
@@ -435,6 +439,10 @@ class Deletes extends Action
 
     private function deleteOldDeployments(DeletePublisher $publisherForDeletes, Document $project, callable $getProjectDB): void
     {
+        if ($project->getId() === 'console') {
+            return;
+        }
+
         /** @var Database $dbForProject */
         $dbForProject = $getProjectDB($project);
 
@@ -1796,6 +1804,10 @@ class Deletes extends Action
 
     private function deleteExpiredPresences(Document $project, callable $getProjectDB, UsagePublisher $publisherForUsage): void
     {
+        if ($project->getId() === 'console') {
+            return;
+        }
+
         $dbForProject = $getProjectDB($project);
 
         $now = DateTime::format(new \DateTime());
