@@ -14,7 +14,6 @@ use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Validator\Boolean;
-use Utopia\Validator\Nullable;
 use Utopia\Validator\Text;
 
 class Update extends Base
@@ -88,7 +87,7 @@ class Update extends Base
         $providerLabel = static::getProviderLabel();
 
         $this
-            ->setHttpMethod(Action::HTTP_REQUEST_METHOD_PATCH)
+            ->setHttpMethod(Action::HTTP_REQUEST_METHOD_PATCH) // Behaves as PUT
             ->setHttpPath('/v1/project/oauth2/' . $providerId)
             ->desc('Update project OAuth2 ' . $providerLabel)
             ->groups(['api', 'project'])
@@ -109,11 +108,11 @@ class Update extends Base
                     )
                 ],
             ))
-            ->param(static::getClientIdParamName(), null, new Nullable(new Text(256, 0)), static::getClientIdDescription(), optional: true)
-            ->param(static::getClientSecretParamName(), null, new Nullable(new Text(512, 0)), static::getClientSecretDescription(), optional: true)
-            ->param('endpoint', null, new Nullable(new Text(256, 0)), 'Domain of Keycloak instance. For example: keycloak.example.com', optional: true)
-            ->param('realmName', null, new Nullable(new Text(256, 0)), 'Keycloak realm name. For example: appwrite-realm', optional: true)
-            ->param('enabled', null, new Nullable(new Boolean()), 'OAuth2 sign-in method status. Set to true to enable new session creation. Setting to true will trigger end-to-end credentials validation, and will throw if the credentials are invalid.', true)
+            ->param(static::getClientIdParamName(), null, new Text(256, 0), static::getClientIdDescription())
+            ->param(static::getClientSecretParamName(), null, new Text(512, 0), static::getClientSecretDescription())
+            ->param('endpoint', null, new Text(256, 0), 'Domain of Keycloak instance. For example: keycloak.example.com')
+            ->param('realmName', null, new Text(256, 0), 'Keycloak realm name. For example: appwrite-realm')
+            ->param('enabled', false, new Boolean(), 'OAuth2 sign-in method status. Set to true to enable new session creation. Setting to true will trigger end-to-end credentials validation, and will throw if the credentials are invalid.')
             ->inject('response')
             ->inject('dbForPlatform')
             ->inject('project')
@@ -145,11 +144,11 @@ class Update extends Base
      * Base::action().
      */
     public function handle(
-        ?string $clientId,
-        ?string $clientSecret,
-        ?string $endpoint,
-        ?string $realmName,
-        ?bool $enabled,
+        string $clientId,
+        string $clientSecret,
+        string $endpoint,
+        string $realmName,
+        bool $enabled,
         Response $response,
         Database $dbForPlatform,
         Document $project,
@@ -159,19 +158,10 @@ class Update extends Base
         $providerId = static::getProviderId();
         $queueForEvents->setParam('providerId', $providerId);
 
-        // The secret is stored as JSON `{"clientSecret": "...", "keycloakDomain": "...", "keycloakRealm": "..."}`
-        // to match the shape Keycloak's OAuth2 adapter expects (getKeycloakDomain(), getKeycloakRealm()).
-        // The `endpoint` and `realmName` params are optional; if omitted, existing stored values are preserved.
-        // `clientSecret` is optional; if omitted, the existing stored secret is preserved.
-        $storedRaw = $project->getAttribute('oAuthProviders', [])[$providerId . 'Secret'] ?? '';
-        $existing = [];
-        if (!empty($storedRaw)) {
-            $existing = \json_decode($storedRaw, true) ?: [];
-        }
         $encodedSecret = \json_encode([
-            'clientSecret' => $clientSecret ?? ($existing['clientSecret'] ?? ''),
-            'keycloakDomain' => $endpoint ?? ($existing['keycloakDomain'] ?? ''),
-            'keycloakRealm' => $realmName ?? ($existing['keycloakRealm'] ?? ''),
+            'clientSecret' => $clientSecret,
+            'keycloakDomain' => $endpoint,
+            'keycloakRealm' => $realmName,
         ]);
 
         $project = $this->persistCredentials($project, $dbForPlatform, $authorization, $clientId, $encodedSecret, $enabled);

@@ -15,7 +15,6 @@ use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Validator\Boolean;
-use Utopia\Validator\Nullable;
 use Utopia\Validator\Text;
 use Utopia\Validator\URL;
 
@@ -102,7 +101,7 @@ class Update extends Base
         $providerLabel = static::getProviderLabel();
 
         $this
-            ->setHttpMethod(Action::HTTP_REQUEST_METHOD_PATCH)
+            ->setHttpMethod(Action::HTTP_REQUEST_METHOD_PATCH) // Behaves as PUT
             ->setHttpPath('/v1/project/oauth2/' . $providerId)
             ->desc('Update project OAuth2 ' . $providerLabel)
             ->groups(['api', 'project'])
@@ -123,13 +122,13 @@ class Update extends Base
                     )
                 ],
             ))
-            ->param(static::getClientIdParamName(), null, new Nullable(new Text(256, 0)), static::getClientIdDescription(), optional: true)
-            ->param(static::getClientSecretParamName(), null, new Nullable(new Text(512, 0)), static::getClientSecretDescription(), optional: true)
-            ->param('wellKnownURL', null, new Nullable(new URL(allowEmpty: true)), 'OpenID Connect well-known configuration URL. When provided, authorization, token, and user info endpoints can be discovered automatically. For example: https://myoauth.com/.well-known/openid-configuration', optional: true)
-            ->param('authorizationURL', null, new Nullable(new URL(allowEmpty: true)), 'OpenID Connect authorization endpoint URL. Required when wellKnownURL is not provided. For example: https://myoauth.com/oauth2/authorize', optional: true)
-            ->param('tokenURL', null, new Nullable(new URL(allowEmpty: true)), 'OpenID Connect token endpoint URL. Required when wellKnownURL is not provided. For example: https://myoauth.com/oauth2/token', optional: true, aliases: ['tokenUrl'])
-            ->param('userInfoURL', null, new Nullable(new URL(allowEmpty: true)), 'OpenID Connect user info endpoint URL. Required when wellKnownURL is not provided. For example: https://myoauth.com/oauth2/userinfo', optional: true, aliases: ['userInfoUrl'])
-            ->param('enabled', null, new Nullable(new Boolean()), 'OAuth2 sign-in method status. Set to true to enable new session creation. Setting to true will trigger end-to-end credentials validation, and will throw if the credentials are invalid.', true)
+            ->param(static::getClientIdParamName(), null, new Text(256, 0), static::getClientIdDescription())
+            ->param(static::getClientSecretParamName(), null, new Text(512, 0), static::getClientSecretDescription())
+            ->param('wellKnownURL', null, new URL(allowEmpty: true), 'OpenID Connect well-known configuration URL. When provided, authorization, token, and user info endpoints can be discovered automatically. For example: https://myoauth.com/.well-known/openid-configuration')
+            ->param('authorizationURL', null, new URL(allowEmpty: true), 'OpenID Connect authorization endpoint URL. Required when wellKnownURL is not provided. For example: https://myoauth.com/oauth2/authorize')
+            ->param('tokenURL', null, new URL(allowEmpty: true), 'OpenID Connect token endpoint URL. Required when wellKnownURL is not provided. For example: https://myoauth.com/oauth2/token', aliases: ['tokenUrl'])
+            ->param('userInfoURL', null, new URL(allowEmpty: true), 'OpenID Connect user info endpoint URL. Required when wellKnownURL is not provided. For example: https://myoauth.com/oauth2/userinfo', aliases: ['userInfoUrl'])
+            ->param('enabled', false, new Boolean(), 'OAuth2 sign-in method status. Set to true to enable new session creation. Setting to true will trigger end-to-end credentials validation, and will throw if the credentials are invalid.')
             ->inject('response')
             ->inject('dbForPlatform')
             ->inject('project')
@@ -170,13 +169,13 @@ class Update extends Base
      * that were configured previously.
      */
     public function handle(
-        ?string $clientId,
-        ?string $clientSecret,
-        ?string $wellKnownURL,
-        ?string $authorizationURL,
-        ?string $tokenURL,
-        ?string $userInfoURL,
-        ?bool $enabled,
+        string $clientId,
+        string $clientSecret,
+        string $wellKnownURL,
+        string $authorizationURL,
+        string $tokenURL,
+        string $userInfoURL,
+        bool $enabled,
         Response $response,
         Database $dbForPlatform,
         Document $project,
@@ -186,40 +185,24 @@ class Update extends Base
         $providerId = static::getProviderId();
         $queueForEvents->setParam('providerId', $providerId);
 
-        // The secret is stored as JSON
-        // `{"clientSecret": "...", "wellKnownEndpoint": "...", "authorizationEndpoint": "...", "tokenEndpoint": "...", "userInfoEndpoint": "..."}`
-        // so that the OIDC OAuth2 adapter can extract each endpoint individually.
-        // Merge new values with what's already stored so that submitting only a
-        // subset of fields leaves the others untouched.
-        $storedRaw = $project->getAttribute('oAuthProviders', [])[$providerId . 'Secret'] ?? '';
-        $existing = [];
-        if (!empty($storedRaw)) {
-            $existing = \json_decode($storedRaw, true) ?: [];
-        }
+        $encodedSecret = \json_encode([
+            'clientSecret' => $clientSecret,
+            'wellKnownEndpoint' => $wellKnownURL,
+            'authorizationEndpoint' => $authorizationURL,
+            'tokenEndpoint' => $tokenURL,
+            'userInfoEndpoint' => $userInfoURL,
+        ]);
 
-        $merged = [
-            'clientSecret' => $clientSecret ?? ($existing['clientSecret'] ?? ''),
-            'wellKnownEndpoint' => $wellKnownURL ?? ($existing['wellKnownEndpoint'] ?? ''),
-            'authorizationEndpoint' => $authorizationURL ?? ($existing['authorizationEndpoint'] ?? ''),
-            'tokenEndpoint' => $tokenURL ?? ($existing['tokenEndpoint'] ?? ''),
-            'userInfoEndpoint' => $userInfoURL ?? ($existing['userInfoEndpoint'] ?? ''),
-        ];
-
-        // When enabling, require either wellKnownEndpoint alone, or all three
-        // discovery URLs (authorization, token, user info). Skip this check
-        // when disabling or when leaving the enabled flag unchanged.
         if ($enabled === true) {
-            $hasWellKnown = !empty($merged['wellKnownEndpoint']);
-            $hasAllDiscovery = !empty($merged['authorizationEndpoint'])
-                && !empty($merged['tokenEndpoint'])
-                && !empty($merged['userInfoEndpoint']);
+            $hasWellKnown = !empty($wellKnownURL);
+            $hasAllDiscovery = !empty($authorizationURL)
+                && !empty($tokenURL)
+                && !empty($userInfoURL);
 
             if (!$hasWellKnown && !$hasAllDiscovery) {
                 throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'Enabling OpenID Connect requires either wellKnownURL, or all of authorizationURL, tokenURL, and userInfoURL.');
             }
         }
-
-        $encodedSecret = \json_encode($merged);
 
         $project = $this->persistCredentials($project, $dbForPlatform, $authorization, $clientId, $encodedSecret, $enabled);
 

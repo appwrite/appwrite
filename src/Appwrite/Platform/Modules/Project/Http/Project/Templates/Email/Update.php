@@ -30,7 +30,7 @@ class Update extends Action
 
     public function __construct()
     {
-        $this->setHttpMethod(Action::HTTP_REQUEST_METHOD_PATCH) // Should be PUT
+        $this->setHttpMethod(Action::HTTP_REQUEST_METHOD_PATCH) // Behaves as PUT
             ->setHttpPath('/v1/project/templates/email')
             ->httpAlias('/v1/projects/:projectId/templates/email')
             ->httpAlias('/v1/projects/:projectId/templates/email/:templateId/:locale')

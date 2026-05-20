@@ -16,7 +16,6 @@ use Utopia\Database\Document;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Validator\ArrayList;
 use Utopia\Validator\Boolean;
-use Utopia\Validator\Nullable;
 use Utopia\Validator\Text;
 use Utopia\Validator\WhiteList;
 
@@ -85,7 +84,7 @@ class Update extends Base
         $providerLabel = static::getProviderLabel();
 
         $this
-            ->setHttpMethod(Action::HTTP_REQUEST_METHOD_PATCH)
+            ->setHttpMethod(Action::HTTP_REQUEST_METHOD_PATCH) // Behaves as PUT
             ->setHttpPath('/v1/project/oauth2/' . $providerId)
             ->desc('Update project OAuth2 ' . $providerLabel)
             ->groups(['api', 'project'])
@@ -106,10 +105,10 @@ class Update extends Base
                     )
                 ],
             ))
-            ->param(static::getClientIdParamName(), null, new Nullable(new Text(256, 0)), static::getClientIdDescription(), optional: true)
-            ->param(static::getClientSecretParamName(), null, new Nullable(new Text(512, 0)), static::getClientSecretDescription(), optional: true)
-            ->param('prompt', null, new Nullable(new ArrayList(new WhiteList(['none', 'consent', 'select_account'], true), 3)), 'Array of Google OAuth2 prompt values. If "none" is included, it must be the only element. "none" means: don\'t display any authentication or consent screens. Must not be specified with other values. "consent" means: prompt the user for consent. "select_account" means: prompt the user to select an account.', optional: true)
-            ->param('enabled', null, new Nullable(new Boolean()), 'OAuth2 sign-in method status. Set to true to enable new session creation. Setting to true will trigger end-to-end credentials validation, and will throw if the credentials are invalid.', true)
+            ->param(static::getClientIdParamName(), null, new Text(256, 0), static::getClientIdDescription())
+            ->param(static::getClientSecretParamName(), null, new Text(512, 0), static::getClientSecretDescription())
+            ->param('prompt', null, new ArrayList(new WhiteList(['none', 'consent', 'select_account'], true), 3), 'Array of Google OAuth2 prompt values. If "none" is included, it must be the only element. "none" means: don\'t display any authentication or consent screens. Must not be specified with other values. "consent" means: prompt the user for consent. "select_account" means: prompt the user to select an account.')
+            ->param('enabled', false, new Boolean(), 'OAuth2 sign-in method status. Set to true to enable new session creation. Setting to true will trigger end-to-end credentials validation, and will throw if the credentials are invalid.')
             ->inject('response')
             ->inject('dbForPlatform')
             ->inject('project')
@@ -139,10 +138,10 @@ class Update extends Base
      * differently to avoid an LSP-incompatible override of Base::action().
      */
     public function handle(
-        ?string $clientId,
-        ?string $clientSecret,
-        ?array $prompt,
-        ?bool $enabled,
+        string $clientId,
+        string $clientSecret,
+        array $prompt,
+        bool $enabled,
         Response $response,
         Database $dbForPlatform,
         Document $project,
@@ -152,28 +151,17 @@ class Update extends Base
         $providerId = static::getProviderId();
         $queueForEvents->setParam('providerId', $providerId);
 
-        if ($prompt !== null) {
-            if (empty($prompt)) {
-                throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'Prompt array cannot be empty.');
-            }
-
-            if (\in_array('none', $prompt) && \count($prompt) > 1) {
-                throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'When "none" is used as a prompt value, it must be the only element in the array.');
-            }
+        if (empty($prompt)) {
+            throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'Prompt array cannot be empty.');
         }
 
-        $storedRaw = $project->getAttribute('oAuthProviders', [])[$providerId . 'Secret'] ?? '';
-        $existing = $this->decodeStoredSecret($project);
-
-        // Backwards compatibility: secrets stored before the prompt feature
-        // were saved as plain strings. Treat the raw value as clientSecret.
-        if (!empty($storedRaw) && empty($existing)) {
-            $existing = ['clientSecret' => $storedRaw];
+        if (\in_array('none', $prompt) && \count($prompt) > 1) {
+            throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'When "none" is used as a prompt value, it must be the only element in the array.');
         }
 
         $encodedSecret = \json_encode([
-            'clientSecret' => $clientSecret ?? ($existing['clientSecret'] ?? ''),
-            'prompt' => $prompt ?? ($existing['prompt'] ?? ['consent']),
+            'clientSecret' => $clientSecret,
+            'prompt' => $prompt,
         ]);
 
         $project = $this->persistCredentials($project, $dbForPlatform, $authorization, $clientId, $encodedSecret, $enabled);

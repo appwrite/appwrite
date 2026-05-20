@@ -15,7 +15,6 @@ use Utopia\Database\Document;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Platform\Scope\HTTP;
 use Utopia\Validator\Boolean;
-use Utopia\Validator\Nullable;
 use Utopia\Validator\Text;
 
 abstract class Base extends Action
@@ -234,7 +233,7 @@ abstract class Base extends Action
         $providerLabel = static::getProviderLabel();
 
         $this
-            ->setHttpMethod(Action::HTTP_REQUEST_METHOD_PATCH)
+            ->setHttpMethod(Action::HTTP_REQUEST_METHOD_PATCH) // Behaves as PUT
             ->setHttpPath('/v1/project/oauth2/' . $providerId)
             ->desc('Update project OAuth2 ' . $providerLabel)
             ->groups(['api', 'project'])
@@ -255,9 +254,9 @@ abstract class Base extends Action
                     )
                 ],
             ))
-            ->param(static::getClientIdParamName(), null, new Nullable(new Text(256, 0)), static::getClientIdDescription(), optional: true)
-            ->param(static::getClientSecretParamName(), null, new Nullable(new Text(512, 0)), static::getClientSecretDescription(), optional: true)
-            ->param('enabled', null, new Nullable(new Boolean()), 'OAuth2 sign-in method status. Set to true to enable new session creation. Setting to true will trigger end-to-end credentials validation, and will throw if the credentials are invalid.', true)
+            ->param(static::getClientIdParamName(), null, new Text(256, 0), static::getClientIdDescription())
+            ->param(static::getClientSecretParamName(), null, new Text(512, 0), static::getClientSecretDescription())
+            ->param('enabled', false, new Boolean(), 'OAuth2 sign-in method status. Set to true to enable new session creation. Setting to true will trigger end-to-end credentials validation, and will throw if the credentials are invalid.')
             ->inject('response')
             ->inject('dbForPlatform')
             ->inject('project')
@@ -372,9 +371,9 @@ abstract class Base extends Action
         Document $project,
         Database $dbForPlatform,
         Authorization $authorization,
-        ?string $clientId,
-        ?string $clientSecret,
-        ?bool $enabled
+        string $clientId,
+        string $clientSecret,
+        bool $enabled
     ): Document {
         $providerId = static::getProviderId();
         if (!(\in_array($providerId, \array_keys(Config::getParam('oAuthProviders'))))) {
@@ -387,19 +386,11 @@ abstract class Base extends Action
         $appSecretKey = $providerId . 'Secret';
         $enabledKey = $providerId . 'Enabled';
 
-        if (!\is_null($clientId)) {
-            $oAuthProviders[$appIdKey] = $clientId;
-        }
+        $oAuthProviders[$appIdKey] = $clientId;
+        $oAuthProviders[$appSecretKey] = $clientSecret;
+        $oAuthProviders[$enabledKey] = $enabled;
 
-        if (!\is_null($clientSecret)) {
-            $oAuthProviders[$appSecretKey] = $clientSecret;
-        }
-
-        if (!\is_null($enabled)) {
-            $oAuthProviders[$enabledKey] = $enabled;
-        }
-
-        if ($enabled === true || \is_null($enabled)) {
+        if ($enabled === true) {
             try {
                 if (empty($oAuthProviders[$appIdKey]) || empty($oAuthProviders[$appSecretKey])) {
                     throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'Client ID and Client Secret are required when enabling OAuth2 provider.');
@@ -412,12 +403,8 @@ abstract class Base extends Action
                 if (\method_exists($providerInstance, 'verifyCredentials')) {
                     $providerInstance->verifyCredentials();
                 }
-
-                $oAuthProviders[$enabledKey] = true;
             } catch (\Throwable $err) {
-                if ($enabled === true) {
-                    throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'Could not enable OAuth2 provider: ' . $err->getMessage());
-                }
+                throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'Could not enable OAuth2 provider: ' . $err->getMessage());
             }
         }
 
@@ -429,9 +416,9 @@ abstract class Base extends Action
     }
 
     public function action(
-        ?string $clientId,
-        ?string $clientSecret,
-        ?bool $enabled,
+        string $clientId,
+        string $clientSecret,
+        bool $enabled,
         Response $response,
         Database $dbForPlatform,
         Document $project,

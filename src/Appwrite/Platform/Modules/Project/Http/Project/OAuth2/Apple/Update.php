@@ -14,7 +14,6 @@ use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Validator\Boolean;
-use Utopia\Validator\Nullable;
 use Utopia\Validator\Text;
 
 class Update extends Base
@@ -108,7 +107,7 @@ class Update extends Base
         $providerLabel = static::getProviderLabel();
 
         $this
-            ->setHttpMethod(Action::HTTP_REQUEST_METHOD_PATCH)
+            ->setHttpMethod(Action::HTTP_REQUEST_METHOD_PATCH) // Behaves as PUT
             ->setHttpPath('/v1/project/oauth2/' . $providerId)
             ->desc('Update project OAuth2 ' . $providerLabel)
             ->groups(['api', 'project'])
@@ -129,11 +128,11 @@ class Update extends Base
                     )
                 ],
             ))
-            ->param(static::getClientIdParamName(), null, new Nullable(new Text(256, 0)), static::getClientIdDescription(), optional: true)
-            ->param('keyId', null, new Nullable(new Text(256, 0)), '\'Key ID\' of Apple OAuth2 app. For example: P4000000N8', optional: true)
-            ->param('teamId', null, new Nullable(new Text(256, 0)), '\'Team ID\' of Apple OAuth2 app. For example: D4000000R6', optional: true)
-            ->param('p8File', null, new Nullable(new Text(4096, 0)), 'Contents of the Apple OAuth2 app .p8 private key file. The secret key wrapped by the PEM markers is 200 characters long. For example: -----BEGIN PRIVATE KEY-----MIGTAg...jy2Xbna-----END PRIVATE KEY-----', optional: true)
-            ->param('enabled', null, new Nullable(new Boolean()), 'OAuth2 sign-in method status. Set to true to enable new session creation. Setting to true will trigger end-to-end credentials validation, and will throw if the credentials are invalid.', true)
+            ->param(static::getClientIdParamName(), null, new Text(256, 0), static::getClientIdDescription())
+            ->param('keyId', null, new Text(256, 0), '\'Key ID\' of Apple OAuth2 app. For example: P4000000N8')
+            ->param('teamId', null, new Text(256, 0), '\'Team ID\' of Apple OAuth2 app. For example: D4000000R6')
+            ->param('p8File', null, new Text(4096, 0), 'Contents of the Apple OAuth2 app .p8 private key file. The secret key wrapped by the PEM markers is 200 characters long. For example: -----BEGIN PRIVATE KEY-----MIGTAg...jy2Xbna-----END PRIVATE KEY-----')
+            ->param('enabled', false, new Boolean(), 'OAuth2 sign-in method status. Set to true to enable new session creation. Setting to true will trigger end-to-end credentials validation, and will throw if the credentials are invalid.')
             ->inject('response')
             ->inject('dbForPlatform')
             ->inject('project')
@@ -166,11 +165,11 @@ class Update extends Base
      * avoid an LSP-incompatible override of Base::action().
      */
     public function handle(
-        ?string $serviceId,
-        ?string $keyId,
-        ?string $teamId,
-        ?string $p8File,
-        ?bool $enabled,
+        string $serviceId,
+        string $keyId,
+        string $teamId,
+        string $p8File,
+        bool $enabled,
         Response $response,
         Database $dbForPlatform,
         Document $project,
@@ -180,23 +179,11 @@ class Update extends Base
         $providerId = static::getProviderId();
         $queueForEvents->setParam('providerId', $providerId);
 
-        // The secret is stored as JSON `{"p8": "...", "keyID": "...", "teamID": "..."}`
-        // to match the shape Apple's OAuth2 adapter expects in getAppSecret().
-        // Merge new values with what's already stored so that submitting only
-        // some of the fields leaves the rest untouched.
-        $encodedSecret = null;
-        if (!\is_null($keyId) || !\is_null($teamId) || !\is_null($p8File)) {
-            $storedRaw = $project->getAttribute('oAuthProviders', [])[$providerId . 'Secret'] ?? '';
-            $existing = [];
-            if (!empty($storedRaw)) {
-                $existing = \json_decode($storedRaw, true) ?: [];
-            }
-            $encodedSecret = \json_encode([
-                'p8' => $p8File ?? ($existing['p8'] ?? ''),
-                'keyID' => $keyId ?? ($existing['keyID'] ?? ''),
-                'teamID' => $teamId ?? ($existing['teamID'] ?? ''),
-            ]);
-        }
+        $encodedSecret = \json_encode([
+            'p8' => $p8File,
+            'keyID' => $keyId,
+            'teamID' => $teamId,
+        ]);
 
         $project = $this->persistCredentials($project, $dbForPlatform, $authorization, $serviceId, $encodedSecret, $enabled);
 

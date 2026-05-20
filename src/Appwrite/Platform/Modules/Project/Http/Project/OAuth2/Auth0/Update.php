@@ -14,7 +14,6 @@ use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Validator\Boolean;
-use Utopia\Validator\Nullable;
 use Utopia\Validator\Text;
 
 class Update extends Base
@@ -82,7 +81,7 @@ class Update extends Base
         $providerLabel = static::getProviderLabel();
 
         $this
-            ->setHttpMethod(Action::HTTP_REQUEST_METHOD_PATCH)
+            ->setHttpMethod(Action::HTTP_REQUEST_METHOD_PATCH) // Behaves as PUT
             ->setHttpPath('/v1/project/oauth2/' . $providerId)
             ->desc('Update project OAuth2 ' . $providerLabel)
             ->groups(['api', 'project'])
@@ -103,10 +102,10 @@ class Update extends Base
                     )
                 ],
             ))
-            ->param(static::getClientIdParamName(), null, new Nullable(new Text(256, 0)), static::getClientIdDescription(), optional: true)
-            ->param(static::getClientSecretParamName(), null, new Nullable(new Text(512, 0)), static::getClientSecretDescription(), optional: true)
-            ->param('endpoint', null, new Nullable(new Text(256, 0)), 'Domain of Auth0 instance. For example: example.us.auth0.com', optional: true)
-            ->param('enabled', null, new Nullable(new Boolean()), 'OAuth2 sign-in method status. Set to true to enable new session creation. Setting to true will trigger end-to-end credentials validation, and will throw if the credentials are invalid.', true)
+            ->param(static::getClientIdParamName(), null, new Text(256, 0), static::getClientIdDescription())
+            ->param(static::getClientSecretParamName(), null, new Text(512, 0), static::getClientSecretDescription())
+            ->param('endpoint', null, new Text(256, 0), 'Domain of Auth0 instance. For example: example.us.auth0.com')
+            ->param('enabled', false, new Boolean(), 'OAuth2 sign-in method status. Set to true to enable new session creation. Setting to true will trigger end-to-end credentials validation, and will throw if the credentials are invalid.')
             ->inject('response')
             ->inject('dbForPlatform')
             ->inject('project')
@@ -136,10 +135,10 @@ class Update extends Base
      * differently to avoid an LSP-incompatible override of Base::action().
      */
     public function handle(
-        ?string $clientId,
-        ?string $clientSecret,
-        ?string $endpoint,
-        ?bool $enabled,
+        string $clientId,
+        string $clientSecret,
+        string $endpoint,
+        bool $enabled,
         Response $response,
         Database $dbForPlatform,
         Document $project,
@@ -149,22 +148,10 @@ class Update extends Base
         $providerId = static::getProviderId();
         $queueForEvents->setParam('providerId', $providerId);
 
-        // The secret is stored as JSON `{"clientSecret": "...", "auth0Domain": "..."}`
-        // to match the shape Auth0's OAuth2 adapter expects (getAuth0Domain()).
-        // Merge new values with existing storage so that submitting only one of
-        // `clientSecret`/`endpoint` leaves the other untouched.
-        $encodedSecret = null;
-        if (!\is_null($clientSecret) || !\is_null($endpoint)) {
-            $storedRaw = $project->getAttribute('oAuthProviders', [])[$providerId . 'Secret'] ?? '';
-            $existing = [];
-            if (!empty($storedRaw)) {
-                $existing = \json_decode($storedRaw, true) ?: [];
-            }
-            $encodedSecret = \json_encode([
-                'clientSecret' => $clientSecret ?? ($existing['clientSecret'] ?? ''),
-                'auth0Domain' => $endpoint ?? ($existing['auth0Domain'] ?? ''),
-            ]);
-        }
+        $encodedSecret = \json_encode([
+            'clientSecret' => $clientSecret,
+            'auth0Domain' => $endpoint,
+        ]);
 
         $project = $this->persistCredentials($project, $dbForPlatform, $authorization, $clientId, $encodedSecret, $enabled);
 

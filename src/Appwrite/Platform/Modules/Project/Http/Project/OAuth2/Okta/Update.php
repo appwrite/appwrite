@@ -16,7 +16,6 @@ use Utopia\Database\Document;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Validator\Boolean;
 use Utopia\Validator\Domain as ValidatorDomain;
-use Utopia\Validator\Nullable;
 use Utopia\Validator\Text;
 
 class Update extends Base
@@ -90,7 +89,7 @@ class Update extends Base
         $providerLabel = static::getProviderLabel();
 
         $this
-            ->setHttpMethod(Action::HTTP_REQUEST_METHOD_PATCH)
+            ->setHttpMethod(Action::HTTP_REQUEST_METHOD_PATCH) // Behaves as PUT
             ->setHttpPath('/v1/project/oauth2/' . $providerId)
             ->desc('Update project OAuth2 ' . $providerLabel)
             ->groups(['api', 'project'])
@@ -111,11 +110,11 @@ class Update extends Base
                     )
                 ],
             ))
-            ->param(static::getClientIdParamName(), null, new Nullable(new Text(256, 0)), static::getClientIdDescription(), optional: true)
-            ->param(static::getClientSecretParamName(), null, new Nullable(new Text(512, 0)), static::getClientSecretDescription(), optional: true)
-            ->param('domain', null, new Nullable(new ValidatorDomain(allowEmpty: true)), 'Okta company domain. Required when enabling the provider. For example: trial-6400025.okta.com. Example of wrong value: trial-6400025-admin.okta.com, or https://trial-6400025.okta.com/', optional: true)
-            ->param('authorizationServerId', null, new Nullable(new Text(256, 0)), 'Custom Authorization Servers. Optional, can be left empty or unconfigured. For example: aus000000000000000h7z', optional: true)
-            ->param('enabled', null, new Nullable(new Boolean()), 'OAuth2 sign-in method status. Set to true to enable new session creation. Setting to true will trigger end-to-end credentials validation, and will throw if the credentials are invalid.', true)
+            ->param(static::getClientIdParamName(), null, new Text(256, 0), static::getClientIdDescription())
+            ->param(static::getClientSecretParamName(), null, new Text(512, 0), static::getClientSecretDescription())
+            ->param('domain', null, new ValidatorDomain(allowEmpty: true), 'Okta company domain. Required when enabling the provider. For example: trial-6400025.okta.com. Example of wrong value: trial-6400025-admin.okta.com, or https://trial-6400025.okta.com/')
+            ->param('authorizationServerId', null, new Text(256, 0), 'Custom Authorization Servers. Optional, can be left empty or unconfigured. For example: aus000000000000000h7z')
+            ->param('enabled', false, new Boolean(), 'OAuth2 sign-in method status. Set to true to enable new session creation. Setting to true will trigger end-to-end credentials validation, and will throw if the credentials are invalid.')
             ->inject('response')
             ->inject('dbForPlatform')
             ->inject('project')
@@ -147,11 +146,11 @@ class Update extends Base
      * Base::action().
      */
     public function handle(
-        ?string $clientId,
-        ?string $clientSecret,
-        ?string $domain,
-        ?string $authorizationServerId,
-        ?bool $enabled,
+        string $clientId,
+        string $clientSecret,
+        string $domain,
+        string $authorizationServerId,
+        bool $enabled,
         Response $response,
         Database $dbForPlatform,
         Document $project,
@@ -161,32 +160,14 @@ class Update extends Base
         $providerId = static::getProviderId();
         $queueForEvents->setParam('providerId', $providerId);
 
-        // The secret is stored as JSON `{"clientSecret": "...", "oktaDomain": "...", "authorizationServerId": "..."}`
-        // to match the shape Okta's OAuth2 adapter expects.
-        // Merge new values with existing storage so that submitting only some of
-        // the parameters leaves the others untouched.
-        $storedRaw = $project->getAttribute('oAuthProviders', [])[$providerId . 'Secret'] ?? '';
-        $existing = [];
-        if (!empty($storedRaw)) {
-            $existing = \json_decode($storedRaw, true) ?: [];
-        }
+        $encodedSecret = \json_encode([
+            'clientSecret' => $clientSecret,
+            'oktaDomain' => $domain,
+            'authorizationServerId' => $authorizationServerId,
+        ]);
 
-        $encodedSecret = null;
-        if (!\is_null($clientSecret) || !\is_null($domain) || !\is_null($authorizationServerId)) {
-            $encodedSecret = \json_encode([
-                'clientSecret' => $clientSecret ?? ($existing['clientSecret'] ?? ''),
-                'oktaDomain' => $domain ?? ($existing['oktaDomain'] ?? ''),
-                'authorizationServerId' => $authorizationServerId ?? ($existing['authorizationServerId'] ?? ''),
-            ]);
-        }
-
-        // Domain is required when enabling the provider, since Okta builds its
-        // authorization, token and userinfo URLs from it.
-        if ($enabled === true) {
-            $effectiveDomain = $domain ?? ($existing['oktaDomain'] ?? '');
-            if (empty($effectiveDomain)) {
-                throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'Domain is required when enabling Okta OAuth2 provider.');
-            }
+        if ($enabled === true && empty($domain)) {
+            throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'Domain is required when enabling Okta OAuth2 provider.');
         }
 
         $project = $this->persistCredentials($project, $dbForPlatform, $authorization, $clientId, $encodedSecret, $enabled);
