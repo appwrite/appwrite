@@ -92,7 +92,6 @@ return function (Container $container): void {
                 $databaseConfig,
                 $projectDocument,
                 APP_DATABASE_TIMEOUT_MILLISECONDS_WORKER,
-                preserveDates: true,
             );
         };
     }, ['databaseFactory', 'project']);
