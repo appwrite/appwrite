@@ -26,7 +26,7 @@ class Update extends Action
     public function __construct()
     {
         $this
-            ->setHttpMethod(Action::HTTP_REQUEST_METHOD_PATCH)
+            ->setHttpMethod(Action::HTTP_REQUEST_METHOD_PATCH) // Should be PUT
             ->setHttpPath('/v1/project/policies/session-alert')
             ->httpAlias('/v1/projects/:projectId/auth/session-alerts')
             ->desc('Update session alert policy')
@@ -50,7 +50,7 @@ class Update extends Action
                     )
                 ],
             ))
-            ->param('enabled', null, new Boolean(), 'Toggle session alert policy. Set to true if you want users to receive email notifications when a sessions are created for their users, or false to not send email alerts.')
+            ->param('enabled', false, new Boolean(), 'Toggle session alert policy. Set to true if you want users to receive email notifications when a sessions are created for their users, or false to not send email alerts.')
             ->inject('response')
             ->inject('dbForPlatform')
             ->inject('project')

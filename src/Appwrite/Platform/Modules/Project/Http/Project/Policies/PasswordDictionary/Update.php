@@ -26,7 +26,7 @@ class Update extends Action
     public function __construct()
     {
         $this
-            ->setHttpMethod(Action::HTTP_REQUEST_METHOD_PATCH)
+            ->setHttpMethod(Action::HTTP_REQUEST_METHOD_PATCH) // Should be PUT
             ->setHttpPath('/v1/project/policies/password-dictionary')
             ->httpAlias('/v1/projects/:projectId/auth/password-dictionary')
             ->desc('Update password dictionary policy')
@@ -50,7 +50,7 @@ class Update extends Action
                     )
                 ],
             ))
-            ->param('enabled', null, new Boolean(), 'Toggle password dictionary policy. Set to true if you want password change to block passwords in the dictionary, or false to allow them. When changing this policy, existing passwords remain valid.')
+            ->param('enabled', false, new Boolean(), 'Toggle password dictionary policy. Set to true if you want password change to block passwords in the dictionary, or false to allow them. When changing this policy, existing passwords remain valid.')
             ->inject('response')
             ->inject('dbForPlatform')
             ->inject('project')

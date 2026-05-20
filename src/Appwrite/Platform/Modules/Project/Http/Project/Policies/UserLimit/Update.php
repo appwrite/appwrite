@@ -27,7 +27,7 @@ class Update extends Action
     public function __construct()
     {
         $this
-            ->setHttpMethod(Action::HTTP_REQUEST_METHOD_PATCH)
+            ->setHttpMethod(Action::HTTP_REQUEST_METHOD_PATCH) // Should be PUT
             ->setHttpPath('/v1/project/policies/user-limit')
             ->httpAlias('/v1/projects/:projectId/auth/limit')
             ->desc('Update user limit policy')

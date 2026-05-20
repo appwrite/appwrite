@@ -26,7 +26,7 @@ class Update extends Action
     public function __construct()
     {
         $this
-            ->setHttpMethod(Action::HTTP_REQUEST_METHOD_PATCH)
+            ->setHttpMethod(Action::HTTP_REQUEST_METHOD_PATCH) // Should be PUT
             ->setHttpPath('/v1/project/policies/password-personal-data')
             ->httpAlias('/v1/projects/:projectId/auth/personal-data')
             ->desc('Update password personal data policy')
@@ -51,7 +51,7 @@ class Update extends Action
                 ],
             ))
             // TODO: Split into more toggles, simiplar to membership privacy policy
-            ->param('enabled', null, new Boolean(), 'Toggle password personal data policy. Set to true if you want to block passwords including user\'s personal data, or false to allow it. When changing this policy, existing passwords remain valid.')
+            ->param('enabled', false, new Boolean(), 'Toggle password personal data policy. Set to true if you want to block passwords including user\'s personal data, or false to allow it. When changing this policy, existing passwords remain valid.')
             ->inject('response')
             ->inject('dbForPlatform')
             ->inject('project')

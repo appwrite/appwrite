@@ -26,7 +26,7 @@ class Update extends Action
     public function __construct()
     {
         $this
-            ->setHttpMethod(Action::HTTP_REQUEST_METHOD_PATCH)
+            ->setHttpMethod(Action::HTTP_REQUEST_METHOD_PATCH) // Should be PUT
             ->setHttpPath('/v1/project/policies/membership-privacy')
             ->httpAlias('/v1/projects/:projectId/auth/memberships-privacy')
             ->desc('Update membership privacy policy')
@@ -50,11 +50,11 @@ class Update extends Action
                     )
                 ],
             ))
-            ->param('userId', null, new Boolean(), 'Set to true if you want make user ID visible to all team members, or false to hide it.', optional: true)
-            ->param('userEmail', null, new Boolean(), 'Set to true if you want make user email visible to all team members, or false to hide it.', optional: true)
-            ->param('userPhone', null, new Boolean(), 'Set to true if you want make user phone number visible to all team members, or false to hide it.', optional: true)
-            ->param('userName', null, new Boolean(), 'Set to true if you want make user name visible to all team members, or false to hide it.', optional: true)
-            ->param('userMFA', null, new Boolean(), 'Set to true if you want make user MFA status visible to all team members, or false to hide it.', optional: true)
+            ->param('userId', false, new Boolean(), 'Set to true if you want make user ID visible to all team members, or false to hide it.')
+            ->param('userEmail', false, new Boolean(), 'Set to true if you want make user email visible to all team members, or false to hide it.')
+            ->param('userPhone', false, new Boolean(), 'Set to true if you want make user phone number visible to all team members, or false to hide it.')
+            ->param('userName', false, new Boolean(), 'Set to true if you want make user name visible to all team members, or false to hide it.')
+            ->param('userMFA', false, new Boolean(), 'Set to true if you want make user MFA status visible to all team members, or false to hide it.')
             ->inject('response')
             ->inject('dbForPlatform')
             ->inject('project')
@@ -64,11 +64,11 @@ class Update extends Action
     }
 
     public function action(
-        ?bool $userId,
-        ?bool $userEmail,
-        ?bool $userPhone,
-        ?bool $userName,
-        ?bool $userMFA,
+        bool $userId,
+        bool $userEmail,
+        bool $userPhone,
+        bool $userName,
+        bool $userMFA,
         Response $response,
         Database $dbForPlatform,
         Document $project,
@@ -77,21 +77,11 @@ class Update extends Action
     ): void {
         $auths = $project->getAttribute('auths', []);
 
-        if ($userId !== null) {
-            $auths['membershipsUserId'] = $userId;
-        }
-        if ($userEmail !== null) {
-            $auths['membershipsUserEmail'] = $userEmail;
-        }
-        if ($userPhone !== null) {
-            $auths['membershipsUserPhone'] = $userPhone;
-        }
-        if ($userName !== null) {
-            $auths['membershipsUserName'] = $userName;
-        }
-        if ($userMFA !== null) {
-            $auths['membershipsMfa'] = $userMFA;
-        }
+        $auths['membershipsUserId'] = $userId;
+        $auths['membershipsUserEmail'] = $userEmail;
+        $auths['membershipsUserPhone'] = $userPhone;
+        $auths['membershipsUserName'] = $userName;
+        $auths['membershipsMfa'] = $userMFA;
 
         $updates = new Document([
             'auths' => $auths,
