@@ -76,7 +76,7 @@
         "utopia-php/logger": "0.8.*",
         "utopia-php/messaging": "0.22.*",
         "utopia-php/migration": "1.*",
-        "utopia-php/platform": "1.0.0-rc2",
+        "utopia-php/platform": "dev-feat/action-param-meta",
         "utopia-php/pools": "1.*",
         "utopia-php/span": "1.1.*",
         "utopia-php/preloader": "0.2.*",

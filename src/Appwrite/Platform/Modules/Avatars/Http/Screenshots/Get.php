@@ -16,6 +16,7 @@ use Utopia\Domains\Domain;
 use Utopia\Fetch\Client;
 use Utopia\Image\Image;
 use Utopia\Platform\Action as UtopiaAction;
+use Utopia\Platform\Enum;
 use Utopia\Platform\Scope\HTTP;
 use Utopia\System\System;
 use Utopia\Validator\ArrayList;
@@ -77,12 +78,12 @@ class Get extends Action
             ->param('longitude', 0, new Range(-180, 180, Range::TYPE_FLOAT), 'Geolocation longitude. Pass a number between -180 to 180. Defaults to 0.', true, example: '-122.4194')
             ->param('accuracy', 0, new Range(0, 100000, Range::TYPE_FLOAT), 'Geolocation accuracy in meters. Pass a number between 0 to 100000. Defaults to 0.', true, example: '100')
             ->param('touch', false, new Boolean(true), 'Enable touch support. Pass 0 for no touch, or 1 for touch enabled. Defaults to 0.', true, example: 'true')
-            ->param('permissions', [], new ArrayList(new WhiteList(['geolocation', 'camera', 'microphone', 'notifications', 'midi', 'push', 'clipboard-read', 'clipboard-write', 'payment-handler', 'usb', 'bluetooth', 'accelerometer', 'gyroscope', 'magnetometer', 'ambient-light-sensor', 'background-sync', 'persistent-storage', 'screen-wake-lock', 'web-share', 'xr-spatial-tracking'])), 'Browser permissions to grant. Pass an array of permission names like ["geolocation", "camera", "microphone"]. Defaults to empty.', true, example: '["geolocation","notifications"]')
+            ->param('permissions', [], new ArrayList(new WhiteList(['geolocation', 'camera', 'microphone', 'notifications', 'midi', 'push', 'clipboard-read', 'clipboard-write', 'payment-handler', 'usb', 'bluetooth', 'accelerometer', 'gyroscope', 'magnetometer', 'ambient-light-sensor', 'background-sync', 'persistent-storage', 'screen-wake-lock', 'web-share', 'xr-spatial-tracking'])), 'Browser permissions to grant. Pass an array of permission names like ["geolocation", "camera", "microphone"]. Defaults to empty.', true, example: '["geolocation","notifications"]', enum: new Enum(name: 'BrowserPermission'))
             ->param('sleep', 0, new Range(0, 10), 'Wait time in seconds before taking the screenshot. Pass an integer between 0 to 10. Defaults to 0.', true, example: '3')
             ->param('width', 0, new Range(0, 2000), 'Output image width. Pass 0 to use original width, or an integer between 1 to 2000. Defaults to 0 (original width).', true, example: '800')
             ->param('height', 0, new Range(0, 2000), 'Output image height. Pass 0 to use original height, or an integer between 1 to 2000. Defaults to 0 (original height).', true, example: '600')
             ->param('quality', -1, new Range(-1, 100), 'Screenshot quality. Pass an integer between 0 to 100. Defaults to keep existing image quality.', true, example: '85')
-            ->param('output', '', new WhiteList(\array_keys(Config::getParam('storage-outputs')), true), 'Output format type (jpeg, jpg, png, gif and webp).', true, example: 'jpeg')
+            ->param('output', '', new WhiteList(\array_keys(Config::getParam('storage-outputs')), true), 'Output format type (jpeg, jpg, png, gif and webp).', true, example: 'jpeg', enum: new Enum(name: 'ImageFormat'))
             ->inject('response')
             ->inject('usage')
             ->callback($this->action(...));

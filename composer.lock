@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "b645c7da1728536497fe8186b158f9c6",
+    "content-hash": "87677413cb65fd4688a9a56a896dad08",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -4773,16 +4773,16 @@
         },
         {
             "name": "utopia-php/platform",
-            "version": "1.0.0-rc2",
+            "version": "dev-feat/action-param-meta",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/platform.git",
-                "reference": "a67e5037007ee7fdca5359ab4577b82917e55452"
+                "reference": "2e3d957f4f9f672edede820c1815c81976f6606b"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/platform/zipball/a67e5037007ee7fdca5359ab4577b82917e55452",
-                "reference": "a67e5037007ee7fdca5359ab4577b82917e55452",
+                "url": "https://api.github.com/repos/utopia-php/platform/zipball/2e3d957f4f9f672edede820c1815c81976f6606b",
+                "reference": "2e3d957f4f9f672edede820c1815c81976f6606b",
                 "shasum": ""
             },
             "require": {
@@ -4818,9 +4818,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/platform/issues",
-                "source": "https://github.com/utopia-php/platform/tree/1.0.0-rc2"
+                "source": "https://github.com/utopia-php/platform/tree/feat/action-param-meta"
             },
-            "time": "2026-05-15T06:19:20+00:00"
+            "time": "2026-05-20T11:39:39+00:00"
         },
         {
             "name": "utopia-php/pools",
@@ -8618,7 +8618,8 @@
     "aliases": [],
     "minimum-stability": "dev",
     "stability-flags": {
-        "utopia-php/http": 5
+        "utopia-php/http": 5,
+        "utopia-php/platform": 20
     },
     "prefer-stable": true,
     "prefer-lowest": false,
