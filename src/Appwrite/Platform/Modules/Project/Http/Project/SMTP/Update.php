@@ -128,7 +128,7 @@ class Update extends Action
             $mail->Host = $smtp['host'] ?? '';
             $mail->Port = $smtp['port'] ?? '';
             $mail->SMTPSecure = $smtp['secure'] ?? '';
-            $mail->setFrom($smtp['senderEmail'] ?? '', $smtp['senderName'] ?? '');
+            $mail->setFrom($smtp['senderEmail'], $smtp['senderName'] ?? '');
 
             if (!empty($smtp['username'] ?? '')) {
                 $mail->SMTPAuth = true;
