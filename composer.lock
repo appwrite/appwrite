@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "87677413cb65fd4688a9a56a896dad08",
+    "content-hash": "5e4279c99bb870892a68ecc99600e8bb",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -4777,12 +4777,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/platform.git",
-                "reference": "2e3d957f4f9f672edede820c1815c81976f6606b"
+                "reference": "c490c9aa38d8f0e04061b197fa99489450c2641a"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/platform/zipball/2e3d957f4f9f672edede820c1815c81976f6606b",
-                "reference": "2e3d957f4f9f672edede820c1815c81976f6606b",
+                "url": "https://api.github.com/repos/utopia-php/platform/zipball/c490c9aa38d8f0e04061b197fa99489450c2641a",
+                "reference": "c490c9aa38d8f0e04061b197fa99489450c2641a",
                 "shasum": ""
             },
             "require": {
@@ -4792,7 +4792,7 @@
                 "utopia-php/cli": "0.23.*",
                 "utopia-php/http": "^2.0@RC",
                 "utopia-php/queue": "0.18.*",
-                "utopia-php/servers": "0.4.*"
+                "utopia-php/servers": "dev-feat-param-enum-metadata as 0.4.0"
             },
             "require-dev": {
                 "laravel/pint": "1.2.*",
@@ -4820,7 +4820,7 @@
                 "issues": "https://github.com/utopia-php/platform/issues",
                 "source": "https://github.com/utopia-php/platform/tree/feat/action-param-meta"
             },
-            "time": "2026-05-20T11:39:39+00:00"
+            "time": "2026-05-20T12:10:54+00:00"
         },
         {
             "name": "utopia-php/pools",
@@ -5094,16 +5094,16 @@
         },
         {
             "name": "utopia-php/servers",
-            "version": "0.4.0",
+            "version": "dev-feat-param-enum-metadata",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/servers.git",
-                "reference": "7db346ef377503efe0acafe0791085270cd9ed70"
+                "reference": "333e93c5e5c629a1ae059003f570a48bc5a0eeb6"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/servers/zipball/7db346ef377503efe0acafe0791085270cd9ed70",
-                "reference": "7db346ef377503efe0acafe0791085270cd9ed70",
+                "url": "https://api.github.com/repos/utopia-php/servers/zipball/333e93c5e5c629a1ae059003f570a48bc5a0eeb6",
+                "reference": "333e93c5e5c629a1ae059003f570a48bc5a0eeb6",
                 "shasum": ""
             },
             "require": {
@@ -5142,9 +5142,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/servers/issues",
-                "source": "https://github.com/utopia-php/servers/tree/0.4.0"
+                "source": "https://github.com/utopia-php/servers/tree/feat-param-enum-metadata"
             },
-            "time": "2026-05-05T04:08:30+00:00"
+            "time": "2026-05-20T11:51:30+00:00"
         },
         {
             "name": "utopia-php/span",
@@ -8615,11 +8615,19 @@
             "time": "2024-11-07T12:36:22+00:00"
         }
     ],
-    "aliases": [],
+    "aliases": [
+        {
+            "package": "utopia-php/servers",
+            "version": "dev-feat-param-enum-metadata",
+            "alias": "0.4.0",
+            "alias_normalized": "0.4.0.0"
+        }
+    ],
     "minimum-stability": "dev",
     "stability-flags": {
         "utopia-php/http": 5,
-        "utopia-php/platform": 20
+        "utopia-php/platform": 20,
+        "utopia-php/servers": 20
     },
     "prefer-stable": true,
     "prefer-lowest": false,
