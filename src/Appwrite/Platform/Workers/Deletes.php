@@ -580,6 +580,10 @@ class Deletes extends Action
      */
     private function deleteUsageStats(Document $project, callable $getProjectDB, callable $getLogsDB, string $hourlyUsageRetentionDatetime): void
     {
+        if ($project->getId() === 'console') {
+            return;
+        }
+
         /** @var Database $dbForProject */
         $dbForProject = $getProjectDB($project);
 
@@ -594,20 +598,18 @@ class Deletes extends Action
             Query::orderDesc(),
         ], $dbForProject);
 
-        if ($project->getId() !== 'console') {
-            /** @var Database $dbForLogs */
-            $dbForLogs = call_user_func($getLogsDB, $project);
+        /** @var Database $dbForLogs */
+        $dbForLogs = call_user_func($getLogsDB, $project);
 
-            // Delete Usage stats from logsDB
-            $this->deleteByGroup('stats', [
-                Query::select($selects),
-                Query::equal('period', ['1h']),
-                Query::lessThan('time', $hourlyUsageRetentionDatetime),
-                Query::orderDesc('time'),
-                Query::orderDesc(),
-            ], $dbForLogs);
-        }
-    }
+        // Delete Usage stats from logsDB
+        $this->deleteByGroup('stats', [
+            Query::select($selects),
+            Query::equal('period', ['1h']),
+            Query::lessThan('time', $hourlyUsageRetentionDatetime),
+            Query::orderDesc('time'),
+            Query::orderDesc(),
+        ], $dbForLogs);
+}
 
     /**
      * @param callable $getProjectDB
@@ -1016,6 +1018,10 @@ class Deletes extends Action
      */
     private function deleteExecutionLogs(Document $project, callable $getProjectDB, string $datetime, ?int $executionsRetentionCount = 0): void
     {
+        if($project->getId() === 'console') {
+            return;
+        }
+
         /** @var Database $dbForProject */
         $dbForProject = $getProjectDB($project);
 
@@ -1047,7 +1053,7 @@ class Deletes extends Action
         ?string $resourceInternalId = null,
         ?string $resourceType = null
     ): void {
-        if ($executionsRetentionCount <= 0) {
+        if ($executionsRetentionCount <= 0 || $project->getId() === 'console') {
             return;
         }
 
