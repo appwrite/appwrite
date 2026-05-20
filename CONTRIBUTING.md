@@ -126,6 +126,21 @@ docker compose build
 docker compose up -d
 ```
 
+## Quick Development Checklist
+
+Before starting the local development environment, make sure you have:
+
+- Docker and Docker Compose installed
+- Git installed and configured
+- Node.js installed (if required for frontend tooling)
+- Available system resources for running multiple containers
+
+To verify Docker is running correctly:
+
+```bash
+docker --version
+docker compose version
+
 ### Code Autocompletion
 
 To get proper autocompletion for all the different functions and classes in the codebase, you'll need to install Appwrite dependencies on your local machine. You can easily do that with PHP's package manager, [Composer](https://getcomposer.org/). If you don't have Composer installed, you can use the Docker Hub image to get the same result:
