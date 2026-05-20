@@ -415,9 +415,9 @@ class Deletes extends Action
         $date = DateTime::addSeconds(new \DateTime(), -self::PROCESSING_STUCK_RETENTION_SECONDS);
 
         $queries = [
-            Query::select([...$this->selects, '$createdAt']),
+            Query::select($this->selects),
             Query::equal('status', ['processing']),
-            Query::lessThan('$createdAt', $date),
+            Query::lessThan('$updatedAt', $date),
         ];
 
         $this->listByGroup(
