@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "162b26a841e7884be23ca819c80ccb6f",
+    "content-hash": "a3917ca08f868f641edb6818768b4353",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -69,16 +69,16 @@
         },
         {
             "name": "appwrite/appwrite",
-            "version": "23.1.1",
+            "version": "24.1.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/appwrite/sdk-for-php.git",
-                "reference": "fd7c0f0bf5ddf334533534b20ed967cfb400f6ea"
+                "reference": "dcb3550a3332de1c1665a015a09e9c73ff515e4f"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/appwrite/sdk-for-php/zipball/fd7c0f0bf5ddf334533534b20ed967cfb400f6ea",
-                "reference": "fd7c0f0bf5ddf334533534b20ed967cfb400f6ea",
+                "url": "https://api.github.com/repos/appwrite/sdk-for-php/zipball/dcb3550a3332de1c1665a015a09e9c73ff515e4f",
+                "reference": "dcb3550a3332de1c1665a015a09e9c73ff515e4f",
                 "shasum": ""
             },
             "require": {
@@ -104,10 +104,10 @@
             "support": {
                 "email": "team@appwrite.io",
                 "issues": "https://github.com/appwrite/sdk-for-php/issues",
-                "source": "https://github.com/appwrite/sdk-for-php/tree/23.1.1",
+                "source": "https://github.com/appwrite/sdk-for-php/tree/24.1.0",
                 "url": "https://appwrite.io/support"
             },
-            "time": "2026-05-12T11:03:36+00:00"
+            "time": "2026-05-20T09:37:03+00:00"
         },
         {
             "name": "appwrite/php-clamav",
@@ -3359,20 +3359,20 @@
         },
         {
             "name": "utopia-php/abuse",
-            "version": "1.3.0",
+            "version": "dev-feat-bump-sdk-24",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/abuse.git",
-                "reference": "5d7efbe5c6b0cf7d06003114fd86e24ba785582f"
+                "reference": "5f1b5e2594636ac6c358b16c6dedd1ec6807f764"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/abuse/zipball/5d7efbe5c6b0cf7d06003114fd86e24ba785582f",
-                "reference": "5d7efbe5c6b0cf7d06003114fd86e24ba785582f",
+                "url": "https://api.github.com/repos/utopia-php/abuse/zipball/5f1b5e2594636ac6c358b16c6dedd1ec6807f764",
+                "reference": "5f1b5e2594636ac6c358b16c6dedd1ec6807f764",
                 "shasum": ""
             },
             "require": {
-                "appwrite/appwrite": "23.*",
+                "appwrite/appwrite": "24.*",
                 "ext-curl": "*",
                 "ext-pdo": "*",
                 "ext-redis": "*",
@@ -3391,23 +3391,41 @@
                     "Utopia\\Abuse\\": "src/Abuse"
                 }
             },
-            "notification-url": "https://packagist.org/downloads/",
+            "autoload-dev": {
+                "psr-4": {
+                    "Utopia\\Tests\\": "tests/Abuse"
+                }
+            },
+            "scripts": {
+                "check": [
+                    "./vendor/bin/phpstan analyse --level max --memory-limit=2G src tests"
+                ],
+                "lint": [
+                    "./vendor/bin/pint --test"
+                ],
+                "format": [
+                    "./vendor/bin/pint"
+                ],
+                "bench": [
+                    "vendor/bin/phpbench run --report=aggregate"
+                ]
+            },
             "license": [
                 "MIT"
             ],
             "description": "A simple abuse library to manage application usage limits",
             "keywords": [
-                "Abuse",
+                "abuse",
                 "framework",
                 "php",
                 "upf",
                 "utopia"
             ],
             "support": {
-                "issues": "https://github.com/utopia-php/abuse/issues",
-                "source": "https://github.com/utopia-php/abuse/tree/1.3.0"
+                "source": "https://github.com/utopia-php/abuse/tree/feat-bump-sdk-24",
+                "issues": "https://github.com/utopia-php/abuse/issues"
             },
-            "time": "2026-05-11T08:07:02+00:00"
+            "time": "2026-05-20T10:54:49+00:00"
         },
         {
             "name": "utopia-php/agents",
@@ -4606,20 +4624,20 @@
         },
         {
             "name": "utopia-php/migration",
-            "version": "dev-add-policies-migration",
+            "version": "dev-add-smtp-migration",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/migration.git",
-                "reference": "eab858e31f0f96c122333b17a441e9a46ff801fc"
+                "reference": "e5dc08619aae087c6d45768225ea8d1e55eff63e"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/migration/zipball/eab858e31f0f96c122333b17a441e9a46ff801fc",
-                "reference": "eab858e31f0f96c122333b17a441e9a46ff801fc",
+                "url": "https://api.github.com/repos/utopia-php/migration/zipball/e5dc08619aae087c6d45768225ea8d1e55eff63e",
+                "reference": "e5dc08619aae087c6d45768225ea8d1e55eff63e",
                 "shasum": ""
             },
             "require": {
-                "appwrite/appwrite": "23.*",
+                "appwrite/appwrite": "24.*",
                 "ext-curl": "*",
                 "ext-openssl": "*",
                 "halaxa/json-machine": "^1.2",
@@ -4672,10 +4690,10 @@
                 "utopia"
             ],
             "support": {
-                "source": "https://github.com/utopia-php/migration/tree/add-policies-migration",
+                "source": "https://github.com/utopia-php/migration/tree/add-smtp-migration",
                 "issues": "https://github.com/utopia-php/migration/issues"
             },
-            "time": "2026-05-18T15:37:59+00:00"
+            "time": "2026-05-20T13:27:52+00:00"
         },
         {
             "name": "utopia-php/mongo",
@@ -5159,16 +5177,16 @@
         },
         {
             "name": "utopia-php/storage",
-            "version": "2.0.2",
+            "version": "2.0.3",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/storage.git",
-                "reference": "64e132a3768e22243eda36fe4262da22fd204f3c"
+                "reference": "37129cf0bfcc03210172000e4388d4d3495ae013"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/storage/zipball/64e132a3768e22243eda36fe4262da22fd204f3c",
-                "reference": "64e132a3768e22243eda36fe4262da22fd204f3c",
+                "url": "https://api.github.com/repos/utopia-php/storage/zipball/37129cf0bfcc03210172000e4388d4d3495ae013",
+                "reference": "37129cf0bfcc03210172000e4388d4d3495ae013",
                 "shasum": ""
             },
             "require": {
@@ -5205,9 +5223,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/storage/issues",
-                "source": "https://github.com/utopia-php/storage/tree/2.0.2"
+                "source": "https://github.com/utopia-php/storage/tree/2.0.3"
             },
-            "time": "2026-05-01T15:06:16+00:00"
+            "time": "2026-05-15T09:42:32+00:00"
         },
         {
             "name": "utopia-php/system",
@@ -5322,16 +5340,16 @@
         },
         {
             "name": "utopia-php/validators",
-            "version": "0.2.2",
+            "version": "0.2.3",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/validators.git",
-                "reference": "5d7d494e64457cd4eb67fdcfd9481f2c89796aa6"
+                "reference": "9770269c8ed8e6909934965fa8722103c7434c23"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/validators/zipball/5d7d494e64457cd4eb67fdcfd9481f2c89796aa6",
-                "reference": "5d7d494e64457cd4eb67fdcfd9481f2c89796aa6",
+                "url": "https://api.github.com/repos/utopia-php/validators/zipball/9770269c8ed8e6909934965fa8722103c7434c23",
+                "reference": "9770269c8ed8e6909934965fa8722103c7434c23",
                 "shasum": ""
             },
             "require": {
@@ -5361,9 +5379,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/validators/issues",
-                "source": "https://github.com/utopia-php/validators/tree/0.2.2"
+                "source": "https://github.com/utopia-php/validators/tree/0.2.3"
             },
-            "time": "2026-04-27T16:30:24+00:00"
+            "time": "2026-05-14T08:05:44+00:00"
         },
         {
             "name": "utopia-php/vcs",
@@ -8584,14 +8602,21 @@
     ],
     "aliases": [
         {
+            "package": "utopia-php/abuse",
+            "version": "dev-feat-bump-sdk-24",
+            "alias": "1.3.0",
+            "alias_normalized": "1.3.0.0"
+        },
+        {
             "package": "utopia-php/migration",
-            "version": "dev-add-policies-migration",
+            "version": "dev-add-smtp-migration",
             "alias": "1.12.0",
             "alias_normalized": "1.12.0.0"
         }
     ],
     "minimum-stability": "dev",
     "stability-flags": {
+        "utopia-php/abuse": 20,
         "utopia-php/http": 5,
         "utopia-php/migration": 20,
         "utopia-php/platform": 5
