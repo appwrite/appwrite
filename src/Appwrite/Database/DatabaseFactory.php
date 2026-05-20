@@ -110,12 +110,15 @@ class DatabaseFactory
         $projectDsn = $this->dsn($project->getAttribute('database'));
         $databaseType = $databaseDocument->getAttribute('type', '');
 
-        $database = $this->newDatabase($this->adapter($databaseDsn->getHost()));
+        $database = $this->newDatabase(new DatabasePool($this->pools->get($databaseDsn->getHost())));
 
         $database
             ->setDatabase($this->database)
             ->setAuthorization($this->authorization);
 
+        // This flag is adapter-level mutable state. Tenant databases can share the same
+        // pool name while requiring different attribute support (for example TablesDB
+        // versus DocumentsDB), so this adapter must not be reused from the factory cache.
         $database->getAdapter()->setSupportForAttributes($databaseType !== DOCUMENTSDB);
 
         if ($preserveDates) {
