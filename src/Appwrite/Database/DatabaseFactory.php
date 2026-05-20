@@ -16,11 +16,6 @@ use Utopia\System\System;
 
 class DatabaseFactory
 {
-    /**
-     * @var array<string, DatabasePool>
-     */
-    protected array $adapters = [];
-
     public function __construct(
         protected Group $pools,
         protected Cache $cache,
@@ -110,15 +105,12 @@ class DatabaseFactory
         $projectDsn = $this->dsn($project->getAttribute('database'));
         $databaseType = $databaseDocument->getAttribute('type', '');
 
-        $database = $this->newDatabase(new DatabasePool($this->pools->get($databaseDsn->getHost())));
+        $database = $this->newDatabase($this->adapter($databaseDsn->getHost()));
 
         $database
             ->setDatabase($this->database)
             ->setAuthorization($this->authorization);
 
-        // This flag is adapter-level mutable state. Tenant databases can share the same
-        // pool name while requiring different attribute support (for example TablesDB
-        // versus DocumentsDB), so this adapter must not be reused from the factory cache.
         $database->getAdapter()->setSupportForAttributes($databaseType !== DOCUMENTSDB);
 
         if ($preserveDates) {
@@ -173,7 +165,7 @@ class DatabaseFactory
 
     protected function adapter(string $name): DatabasePool
     {
-        return $this->adapters[$name] ??= new DatabasePool($this->pools->get($name));
+        return new DatabasePool($this->pools->get($name));
     }
 
     protected function configureDocumentTypes(Database $database): Database
