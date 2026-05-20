@@ -120,16 +120,18 @@ class Update extends Action
         // Validate SMTP credentials
         // Validate when the caller is explicitly enabling or hasn't expressed a preference
         // (so a credentials-only PATCH can auto-enable). Skip only when the caller is
-        // explicitly keeping/turning SMTP off, or when senderEmail is not yet configured
-        // (no valid From address means no connection test is possible).
-        if ((\is_null($enabled) || $enabled === true) && !empty($smtp['senderEmail'] ?? '')) {
+        // explicitly keeping/turning SMTP off.
+        if (\is_null($enabled) || $enabled === true) {
             $mail = new PHPMailer(true);
             $mail->isSMTP();
 
             $mail->Host = $smtp['host'] ?? '';
             $mail->Port = $smtp['port'] ?? '';
             $mail->SMTPSecure = $smtp['secure'] ?? '';
-            $mail->setFrom($smtp['senderEmail'], $smtp['senderName'] ?? '');
+
+            if (!empty($smtp['senderEmail'] ?? '')) {
+                $mail->setFrom($smtp['senderEmail'], $smtp['senderName'] ?? '');
+            }
 
             if (!empty($smtp['username'] ?? '')) {
                 $mail->SMTPAuth = true;
