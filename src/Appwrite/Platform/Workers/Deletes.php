@@ -1764,6 +1764,10 @@ class Deletes extends Action
 
     private function deleteExpiredTransactions(Document $project, callable $getProjectDB): void
     {
+        if ($project->getId() === 'console') {
+            return;
+        }
+
         $dbForProject = $getProjectDB($project);
         $transactionInternalIds = [];
 
