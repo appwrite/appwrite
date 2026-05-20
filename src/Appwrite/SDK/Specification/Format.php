@@ -29,6 +29,7 @@ abstract class Format
         'name' => '',
         'description' => '',
         'endpoint' => 'https://localhost',
+        'endpoint.docs' => 'https://<REGION>.cloud.appwrite.io/v1',
         'version' => '1.0.0',
         'terms' => '',
         'support.email' => '',
@@ -1030,6 +1031,19 @@ abstract class Format
                 break;
         }
         return $values;
+    }
+
+    protected function shouldEmitDefaultForSchema(mixed $default, array $schema): bool
+    {
+        if (isset($schema['enum'])) {
+            return \in_array($default, $schema['enum'], true);
+        }
+
+        if (isset($schema['items']['enum'])) {
+            return \is_array($default) && empty(\array_diff($default, $schema['items']['enum']));
+        }
+
+        return true;
     }
 
     protected function getRequestParameterConfig(string $service, string $method, string $param, bool $optional, bool $nullable, mixed $default): array
