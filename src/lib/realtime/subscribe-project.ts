@@ -11,6 +11,7 @@
 
 import type { QueryClient } from '@tanstack/react-query'
 import type { RealtimeResponseEvent } from '@appwrite.io/console'
+import { refetchProjectTableRelatedQueries } from '@/lib/react-query/hooks/databases'
 import { PROJECT_CHANNELS, REALTIME_EVENTS } from './constants'
 import { registerConsoleRealtimeListener } from './console-hub'
 import { registerRegionalConsoleRealtimeListener } from './regional-console-hub'
@@ -107,6 +108,41 @@ function hasEvent(events: string[], name: string): boolean {
   )
     return true
   return false
+}
+
+/** Parse `databases.{databaseId}.tables.{tableId}.…` from realtime event names. */
+function extractDatabaseIdFromRealtimeEvents(events: string[]): string | undefined {
+  for (const event of events) {
+    const match = event.match(/^databases\.([^.]+)\.tables\./)
+    const id = match?.[1]
+    if (id && id !== '*') return id
+  }
+  return undefined
+}
+
+function extractTableIdFromRealtimeEvents(events: string[]): string | undefined {
+  for (const event of events) {
+    const match = event.match(/^databases\.[^.]+\.tables\.([^.]+)\./)
+    const id = match?.[1]
+    if (id && id !== '*') return id
+  }
+  return undefined
+}
+
+function tableScopeFromRealtime(
+  events: string[],
+  payload: Record<string, unknown> | null,
+): { databaseId?: string; tableId?: string } {
+  const databaseId =
+    (typeof payload?.databaseId === 'string' && payload.databaseId) ||
+    (typeof payload?.$databaseId === 'string' && payload.$databaseId) ||
+    extractDatabaseIdFromRealtimeEvents(events)
+  const tableId =
+    (typeof payload?.tableId === 'string' && payload.tableId) ||
+    (typeof payload?.$tableId === 'string' && payload.$tableId) ||
+    (typeof payload?.collectionId === 'string' && payload.collectionId) ||
+    extractTableIdFromRealtimeEvents(events)
+  return { databaseId, tableId }
 }
 
 function invalidateAssistantQueries(
@@ -238,19 +274,38 @@ function handleRealtimeEvent(
     hasEvent(events, REALTIME_EVENTS.DATABASES_TABLES_COLUMNS_UPDATE) ||
     hasEvent(events, REALTIME_EVENTS.DATABASES_TABLES_COLUMNS_DELETE)
   ) {
-    queryClient.invalidateQueries({
-      queryKey: ['columns', 'project', projectId],
-    })
-    queryClient.invalidateQueries({
-      queryKey: ['tables', 'project', projectId],
-    })
-    queryClient.invalidateQueries({ queryKey: ['table', 'project', projectId] })
+    const { databaseId, tableId } = tableScopeFromRealtime(events, payload)
+    if (databaseId && tableId) {
+      void refetchProjectTableRelatedQueries(
+        queryClient,
+        projectId,
+        databaseId,
+        tableId,
+      )
+    } else {
+      void queryClient.refetchQueries({
+        queryKey: ['columns', 'project', projectId],
+        type: 'all',
+      })
+      void queryClient.refetchQueries({
+        queryKey: ['tables', 'project', projectId],
+        type: 'active',
+      })
+      void queryClient.refetchQueries({
+        queryKey: ['table', 'project', projectId],
+        type: 'active',
+      })
+    }
   }
   if (hasEvent(events, REALTIME_EVENTS.DATABASES_TABLES_INDEXES_ANY)) {
-    queryClient.invalidateQueries({
+    void queryClient.refetchQueries({
       queryKey: ['indexes', 'project', projectId],
+      type: 'all',
     })
-    queryClient.invalidateQueries({ queryKey: ['table', 'project', projectId] })
+    void queryClient.refetchQueries({
+      queryKey: ['table', 'project', projectId],
+      type: 'active',
+    })
   }
   if (hasEvent(events, REALTIME_EVENTS.DATABASES_TABLES_COLUMNS_ANY)) {
     queryClient.invalidateQueries({

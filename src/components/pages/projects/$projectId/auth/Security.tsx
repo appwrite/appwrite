@@ -1,8 +1,11 @@
 import { useState, useEffect, useMemo, useRef } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { toast } from 'sonner'
+import {
+  DEFAULT_AUTH_SECURITY,
+  projectAuthSecurityQueryOptions,
+} from '@/lib/project-settings'
 import { X, RefreshCw, Plus, Copy, Check } from 'lucide-react'
-import { sdk } from '@/lib/appwrite/sdk'
 import {
   useUpdateAuthLimit,
   useUpdateAuthDuration,
@@ -16,6 +19,7 @@ import {
   useUpdateMembershipsPrivacy,
   useProject,
   useOrganizationPlan,
+  MAX_AUTH_POLICY_TOTAL,
 } from '@/lib/react-query/hooks'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -47,50 +51,29 @@ interface SecurityProps {
 }
 
 export function Security({ projectId }: SecurityProps) {
-  // Get raw project data
-  const { data: projectData, isLoading } = useQuery({
-    queryKey: ['project', projectId],
-    queryFn: async () => {
-      const response = await sdk.forConsole.projects.get({ projectId })
-      return response
-    },
-    enabled: !!projectId,
-    staleTime: 5 * 60 * 1000,
-  })
+  const { project } = useProject(projectId)
 
-  if (isLoading) {
-    return (
-      <div className="rounded-lg border border-border bg-card py-12 text-center">
-        <div className="text-muted-foreground">
-          Loading security settings...
-        </div>
-      </div>
-    )
-  }
+  const { data: projectData } = useQuery(
+    projectAuthSecurityQueryOptions(projectId, project?.region),
+  )
 
-  const authLimit = (projectData as unknown)?.authLimit ?? 0
-  // Parse authDuration as number (in seconds) - ensure it's a valid number
-  const authDuration =
-    typeof (projectData as unknown)?.authDuration === 'number'
-      ? (projectData as unknown).authDuration
-      : typeof (projectData as unknown)?.authDuration === 'string'
-        ? parseInt((projectData as unknown).authDuration, 10) || 0
-        : 0
-  const authSessionsLimit = (projectData as unknown)?.authSessionsLimit ?? 10
-  const passwordHistoryLimit =
-    (projectData as unknown)?.authPasswordHistory ?? 0
-  const passwordDictionary =
-    (projectData as unknown)?.authPasswordDictionary ?? false
-  const personalDataCheck =
-    (projectData as unknown)?.authPersonalDataCheck ?? false
-  const sessionAlerts = (projectData as unknown)?.authSessionAlerts ?? false
-  const sessionInvalidation =
-    (projectData as unknown)?.authInvalidateSessions ?? false
-  const mockNumbers = (projectData as unknown)?.authMockNumbers ?? []
-  const membershipsPrivacy = {
-    userName: (projectData as unknown)?.authMembershipsUserName ?? true,
-    userEmail: (projectData as unknown)?.authMembershipsUserEmail ?? true,
-    mfa: (projectData as unknown)?.authMembershipsMfa ?? true,
+  const security = projectData ?? DEFAULT_AUTH_SECURITY
+
+  const authLimit = security.authLimit ?? 0
+  const authDuration = security.authDuration ?? 0
+  const authSessionsLimit = security.authSessionsLimit ?? 10
+  const passwordHistoryLimit = security.authPasswordHistory ?? 0
+  const passwordDictionary = security.authPasswordDictionary ?? false
+  const personalDataCheck = security.authPersonalDataCheck ?? false
+  const sessionAlerts = security.authSessionAlerts ?? false
+  const sessionInvalidation = security.authInvalidateSessions ?? false
+  const mockNumbers = security.authMockNumbers ?? []
+  const membershipsPrivacy = security.membershipsPrivacy ?? {
+    userName: true,
+    userEmail: true,
+    mfa: true,
+    userId: true,
+    userPhone: true,
   }
 
   return (
@@ -232,11 +215,15 @@ function UsersLimitCard({
                 id="users-limit-value"
                 type="number"
                 min={1}
-                max={10000}
+                max={MAX_AUTH_POLICY_TOTAL}
                 value={limit}
                 onChange={(e) => {
                   const value = parseInt(e.target.value, 10)
-                  if (!isNaN(value) && value >= 1 && value <= 10000) {
+                  if (
+                    !isNaN(value) &&
+                    value >= 1 &&
+                    value <= MAX_AUTH_POLICY_TOTAL
+                  ) {
                     setLimit(value)
                   }
                 }}
@@ -244,7 +231,7 @@ function UsersLimitCard({
                 className="max-w-[200px]"
               />
               <p className="text-[12px] text-muted-foreground">
-                Between 1 and 10,000 users
+                Between 1 and {MAX_AUTH_POLICY_TOTAL.toLocaleString()} users
               </p>
             </div>
           )}
@@ -519,23 +506,51 @@ function SessionsLimitCard({
   projectId: string
   currentLimit: number
 }) {
-  const [limit, setLimit] = useState(currentLimit)
+  const [isUnlimited, setIsUnlimited] = useState(currentLimit === 0)
+  const [limit, setLimit] = useState(
+    currentLimit === 0 ? DEFAULT_AUTH_SECURITY.authSessionsLimit : currentLimit,
+  )
   const mutation = useUpdateAuthSessionsLimit(projectId)
+  const lastSubmittedValue = useRef<number | null>(null)
 
   useEffect(() => {
-    setLimit(currentLimit)
-  }, [currentLimit])
+    if (!mutation.isPending) {
+      if (
+        lastSubmittedValue.current === null ||
+        currentLimit === lastSubmittedValue.current
+      ) {
+        setIsUnlimited(currentLimit === 0)
+        setLimit(
+          currentLimit === 0
+            ? DEFAULT_AUTH_SECURITY.authSessionsLimit
+            : currentLimit,
+        )
+        if (
+          lastSubmittedValue.current !== null &&
+          currentLimit === lastSubmittedValue.current
+        ) {
+          lastSubmittedValue.current = null
+        }
+      }
+    }
+  }, [currentLimit, mutation.isPending])
 
-  const hasChanges = limit !== currentLimit
+  const hasChanges = useMemo(() => {
+    const newLimit = isUnlimited ? 0 : limit
+    return newLimit !== currentLimit
+  }, [isUnlimited, limit, currentLimit])
 
   const handleSubmit = () => {
-    mutation.mutate(limit, {
+    const newLimit = isUnlimited ? 0 : limit
+    lastSubmittedValue.current = newLimit
+    mutation.mutate(newLimit, {
       onSuccess: () => {
         toast.success('Sessions limit has been updated')
         // Track analytics: Submit.SessionsLimitUpdate
       },
       onError: (error: Error) => {
         toast.error(error.message || 'Failed to update sessions limit')
+        lastSubmittedValue.current = null
         // Track analytics: trackError(error, Submit.SessionsLimitUpdate)
       },
     })
@@ -557,27 +572,49 @@ function SessionsLimitCard({
       </div>
       <div className="border-t border-border" />
       <div className="px-6 py-4">
-        <div className="space-y-2 max-w-[200px]">
-          <Label htmlFor="sessions-limit-value" className="text-[13px]">
-            Limit
-          </Label>
-          <Input
-            id="sessions-limit-value"
-            type="number"
-            min={1}
-            max={100}
-            value={limit}
-            onChange={(e) => {
-              const value = parseInt(e.target.value, 10)
-              if (!isNaN(value) && value >= 1 && value <= 100) {
-                setLimit(value)
-              }
-            }}
-            disabled={mutation.isPending}
-          />
-          <p className="text-[12px] text-muted-foreground">
-            Between 1 and 100 sessions
-          </p>
+        <div className="space-y-4">
+          <div className="flex items-center gap-3">
+            <Switch
+              id="sessions-limit-unlimited"
+              checked={isUnlimited}
+              onCheckedChange={setIsUnlimited}
+              disabled={mutation.isPending}
+            />
+            <Label
+              htmlFor="sessions-limit-unlimited"
+              className="text-[13px] text-foreground cursor-pointer"
+            >
+              Unlimited
+            </Label>
+          </div>
+          {!isUnlimited && (
+            <div className="space-y-2 max-w-[200px]">
+              <Label htmlFor="sessions-limit-value" className="text-[13px]">
+                Limit
+              </Label>
+              <Input
+                id="sessions-limit-value"
+                type="number"
+                min={1}
+                max={MAX_AUTH_POLICY_TOTAL}
+                value={limit}
+                onChange={(e) => {
+                  const value = parseInt(e.target.value, 10)
+                  if (
+                    !isNaN(value) &&
+                    value >= 1 &&
+                    value <= MAX_AUTH_POLICY_TOTAL
+                  ) {
+                    setLimit(value)
+                  }
+                }}
+                disabled={mutation.isPending}
+              />
+              <p className="text-[12px] text-muted-foreground">
+                Between 1 and {MAX_AUTH_POLICY_TOTAL.toLocaleString()} sessions
+              </p>
+            </div>
+          )}
         </div>
       </div>
       <div className="px-6 py-4 border-t border-border bg-muted/30">
@@ -692,18 +729,22 @@ function PasswordHistoryCard({
                 id="password-history-limit"
                 type="number"
                 min={1}
-                max={20}
+                max={MAX_AUTH_POLICY_TOTAL}
                 value={limit}
                 onChange={(e) => {
                   const value = parseInt(e.target.value, 10)
-                  if (!isNaN(value) && value >= 1 && value <= 20) {
+                  if (
+                    !isNaN(value) &&
+                    value >= 1 &&
+                    value <= MAX_AUTH_POLICY_TOTAL
+                  ) {
                     setLimit(value)
                   }
                 }}
                 disabled={mutation.isPending}
               />
               <p className="text-[12px] text-muted-foreground">
-                Between 1 and 20 passwords
+                Between 1 and {MAX_AUTH_POLICY_TOTAL.toLocaleString()} passwords
               </p>
             </div>
           )}
@@ -1128,6 +1169,24 @@ function InvalidateSessionsCard({
   )
 }
 
+function serializeMockNumbers(
+  list: Array<{ phone: string; otp: string }>,
+): string {
+  return [...list]
+    .sort((a, b) => a.phone.localeCompare(b.phone))
+    .map((n) => `${n.phone}:${n.otp}`)
+    .join('|')
+}
+
+function mockNumbersFromCurrent(
+  currentNumbers: Array<{ phone: string; otp: string }>,
+): Array<{ phone: string; otp: string; id: string }> {
+  return currentNumbers.map((n) => ({
+    ...n,
+    id: n.phone,
+  }))
+}
+
 function MockPhoneNumbersCard({
   projectId,
   currentNumbers,
@@ -1135,19 +1194,15 @@ function MockPhoneNumbersCard({
   projectId: string
   currentNumbers: Array<{ phone: string; otp: string }>
 }) {
-  const [numbers, setNumbers] = useState<
-    Array<{ phone: string; otp: string; id: string }>
-  >(
-    currentNumbers.map((n, i) => ({
-      ...n,
-      id: `mock-${i}`,
-    })),
+  const [numbers, setNumbers] = useState(() =>
+    mockNumbersFromCurrent(currentNumbers),
   )
   const [copiedItem, setCopiedItem] = useState<{
     id: string
     type: 'phone' | 'otp'
   } | null>(null)
   const mutation = useUpdateMockNumbers(projectId)
+  const lastSubmittedSnapshot = useRef<string | null>(null)
 
   // Get project to access teamId (organization ID)
   const { project } = useProject(projectId)
@@ -1158,22 +1213,27 @@ function MockPhoneNumbersCard({
   const supportsMockNumbers = organizationPlan?.supportsMockNumbers ?? false
 
   useEffect(() => {
-    setNumbers(
-      currentNumbers.map((n, i) => ({
-        ...n,
-        id: `mock-${i}`,
-      })),
-    )
-  }, [currentNumbers])
+    if (mutation.isPending) return
+    const serverSnapshot = serializeMockNumbers(currentNumbers)
+    if (
+      lastSubmittedSnapshot.current === null ||
+      serverSnapshot === lastSubmittedSnapshot.current
+    ) {
+      setNumbers(mockNumbersFromCurrent(currentNumbers))
+      if (
+        lastSubmittedSnapshot.current !== null &&
+        serverSnapshot === lastSubmittedSnapshot.current
+      ) {
+        lastSubmittedSnapshot.current = null
+      }
+    }
+  }, [currentNumbers, mutation.isPending])
 
-  const hasChanges = useMemo(() => {
-    if (numbers.length !== currentNumbers.length) return true
-    return numbers.some(
-      (n, i) =>
-        n.phone !== currentNumbers[i]?.phone ||
-        n.otp !== currentNumbers[i]?.otp,
-    )
-  }, [numbers, currentNumbers])
+  const hasChanges = useMemo(
+    () =>
+      serializeMockNumbers(numbers) !== serializeMockNumbers(currentNumbers),
+    [numbers, currentNumbers],
+  )
 
   const generatePhoneNumber = () => {
     const areaCode = Math.floor(Math.random() * 800) + 200 // 200-999
@@ -1239,6 +1299,7 @@ function MockPhoneNumbersCard({
 
   const handleSubmit = () => {
     const numbersToSubmit = numbers.map(({ phone, otp }) => ({ phone, otp }))
+    lastSubmittedSnapshot.current = serializeMockNumbers(numbersToSubmit)
     mutation.mutate(numbersToSubmit, {
       onSuccess: () => {
         toast.success('Mock phone numbers have been updated')
@@ -1246,6 +1307,7 @@ function MockPhoneNumbersCard({
       },
       onError: (error: Error) => {
         toast.error(error.message || 'Failed to update mock phone numbers')
+        lastSubmittedSnapshot.current = null
         // Track analytics: trackError(error, Submit.AuthMockNumbersUpdate)
       },
     })
@@ -1403,7 +1465,7 @@ function MockPhoneNumbersCard({
                       variant="ghost"
                       onClick={() => handleDeleteNumber(number.id)}
                       disabled={mutation.isPending}
-                      className="h-9 w-9 p-0 text-destructive hover:text-destructive"
+                      className="h-9 w-9 p-0"
                     >
                       <X className="h-4 w-4" />
                     </Button>
@@ -1424,18 +1486,16 @@ function MockPhoneNumbersCard({
               </div>
             )}
           </div>
-          {numbers.length > 0 && (
-            <div className="px-6 py-4 border-t border-border bg-muted/30">
-              <Button
-                size="sm"
-                className="h-9 text-[13px]"
-                disabled={!hasChanges || mutation.isPending}
-                onClick={handleSubmit}
-              >
-                Update
-              </Button>
-            </div>
-          )}
+          <div className="px-6 py-4 border-t border-border bg-muted/30">
+            <Button
+              size="sm"
+              className="h-9 text-[13px]"
+              disabled={!hasChanges || mutation.isPending}
+              onClick={handleSubmit}
+            >
+              Update
+            </Button>
+          </div>
         </div>
       </UpgradeCurtain>
     </div>
@@ -1447,7 +1507,13 @@ function MembershipsPrivacyCard({
   currentPrivacy,
 }: {
   projectId: string
-  currentPrivacy: { userName: boolean; userEmail: boolean; mfa: boolean }
+  currentPrivacy: {
+    userName: boolean
+    userEmail: boolean
+    mfa: boolean
+    userId?: boolean
+    userPhone?: boolean
+  }
 }) {
   const [privacy, setPrivacy] = useState(currentPrivacy)
   const mutation = useUpdateMembershipsPrivacy(projectId)
@@ -1485,7 +1551,15 @@ function MembershipsPrivacyCard({
 
   const handleSubmit = () => {
     lastSubmittedValue.current = JSON.stringify(privacy)
-    mutation.mutate(privacy, {
+    mutation.mutate(
+      {
+        userName: privacy.userName,
+        userEmail: privacy.userEmail,
+        mfa: privacy.mfa,
+        userId: currentPrivacy.userId,
+        userPhone: currentPrivacy.userPhone,
+      },
+      {
       onSuccess: () => {
         toast.success('Updated memberships privacy')
         // Track analytics: Submit.AuthMembershipPrivacyUpdate

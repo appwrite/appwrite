@@ -12,6 +12,11 @@ import {
 } from '@/components/ui/dialog'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { AlertTriangle } from 'lucide-react'
+import { cn } from '@/lib/utils'
+import {
+  WIZARD_DIALOG_OVERLAY_Z,
+  wizardDialogContentClassName,
+} from '@/lib/wizard-portal-z'
 
 interface VariableEditorProps {
   open: boolean
@@ -25,6 +30,8 @@ interface VariableEditorProps {
   onCopy: () => void
   onDownload: () => void
   isSaving?: boolean
+  /** When true, dialog appears above fullscreen wizards */
+  elevatedForWizard?: boolean
 }
 
 export function VariableEditor({
@@ -39,11 +46,16 @@ export function VariableEditor({
   onCopy,
   onDownload,
   isSaving = false,
+  elevatedForWizard = false,
 }: VariableEditorProps) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
-        className="sm:max-w-3xl p-0 max-h-[90dvh] flex flex-col"
+        className={cn(
+          'sm:max-w-3xl p-0 max-h-[90dvh] flex flex-col',
+          elevatedForWizard && wizardDialogContentClassName(),
+        )}
+        overlayClassName={elevatedForWizard ? WIZARD_DIALOG_OVERLAY_Z : undefined}
         onEscapeKeyDown={(e) => e.stopPropagation()}
       >
         <DialogHeader className="px-6 pt-6 text-left">

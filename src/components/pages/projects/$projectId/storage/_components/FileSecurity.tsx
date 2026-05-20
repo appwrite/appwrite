@@ -42,12 +42,13 @@ import {
   Eye,
   Check,
   AlertCircle,
-  MoreHorizontal,
   Link2,
 } from 'lucide-react'
 import type { Models } from '@appwrite.io/console'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { useProject } from '@/lib/react-query/hooks'
+import { MenuItemContent, MenuItemIcon } from '@/components/global/shared/ContextMenuIcon'
+import { RowActionsMenuTrigger } from '@/components/global/shared/RowActionsMenuTrigger'
 import { cn } from '@/lib/utils'
 
 // Helper function to mask secret (compact hint of prefix / suffix)
@@ -587,15 +588,7 @@ export function FileSecurity({
             </Tooltip>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="icon"
-                  className="h-8 w-8 text-muted-foreground"
-                  aria-label="More"
-                >
-                  <MoreHorizontal className="h-4 w-4" />
-                </Button>
+                <RowActionsMenuTrigger aria-label="Token actions" />
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
                 <DropdownMenuItem
@@ -603,17 +596,7 @@ export function FileSecurity({
                     copyToClipboard(token.$id, `token-id-${token.$id}`)
                   }
                 >
-                  {copiedField === `token-id-${token.$id}` ? (
-                    <>
-                      <Check className="h-3.5 w-3.5 mr-1.5 text-emerald-500" />
-                      Copied
-                    </>
-                  ) : (
-                    <>
-                      <Copy className="h-3.5 w-3.5 mr-1.5" />
-                      Copy ID
-                    </>
-                  )}
+                  <MenuItemContent icon={copiedField === `token-id-${token.$id}` ? Check : Copy}>{copiedField === `token-id-${token.$id}` ? 'Copied' : 'Copy ID'}</MenuItemContent>
                 </DropdownMenuItem>
                 <DropdownMenuItem
                   onClick={() => {
@@ -621,8 +604,7 @@ export function FileSecurity({
                     setDeleteTokenDialogOpen(true)
                   }}
                 >
-                  <Trash2 className="h-3.5 w-3.5 mr-1.5" />
-                  Delete
+                  <MenuItemContent icon={Trash2}>Delete</MenuItemContent>
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>

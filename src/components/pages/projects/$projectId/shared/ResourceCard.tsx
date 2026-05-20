@@ -1,6 +1,7 @@
 import { Fragment } from 'react'
 import { cn } from '@/lib/utils'
-import { MoreHorizontal, type LucideIcon } from 'lucide-react'
+import type { LucideIcon } from 'lucide-react'
+import { RowActionsMenuTrigger } from '@/components/global/shared/RowActionsMenuTrigger'
 import { InitialsAvatar } from '@/components/global/shared/Avatar'
 import { CopyableId } from '@/components/global/shared/CopyableId'
 import { getStatusColor, type StatusType } from '@/lib/utils/status-badge'
@@ -136,15 +137,14 @@ export function ResourceCard({
 
         {/* Menu Button */}
         {onMenuClick && (
-          <button
+          <RowActionsMenuTrigger
+            compact
+            revealOnGroupHover
             onClick={(e) => {
               e.stopPropagation()
               onMenuClick(e)
             }}
-            className="flex h-7 w-7 shrink-0 items-center justify-center rounded text-muted-foreground opacity-0 transition-all hover:bg-accent hover:text-foreground group-hover:opacity-100"
-          >
-            <MoreHorizontal className="h-4 w-4" />
-          </button>
+          />
         )}
       </div>
 

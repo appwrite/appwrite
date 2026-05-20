@@ -1,5 +1,7 @@
 import { useState, Fragment } from 'react'
-import { Key, Eye, Copy, Check, MoreHorizontal } from 'lucide-react'
+import { Key, Eye, Copy, Check, Pencil, Trash2 } from 'lucide-react'
+import { MenuItemContent, MenuItemIcon } from '@/components/global/shared/ContextMenuIcon'
+import { RowActionsMenuTrigger } from '@/components/global/shared/RowActionsMenuTrigger'
 import { DateTooltip } from '@/components/global/shared/DateTooltip'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -236,25 +238,21 @@ export function ApiKeysList({
                   <div data-api-key-action onClick={(e) => e.stopPropagation()}>
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
-                        <button
-                          type="button"
-                          className="cursor-pointer rounded p-1.5 text-muted-foreground transition-colors hover:bg-accent hover:text-foreground shrink-0"
-                        >
-                          <MoreHorizontal className="h-4 w-4" />
-                        </button>
+                        <RowActionsMenuTrigger
+                          onClick={(e) => e.stopPropagation()}
+                        />
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
                         {onUpdate && (
                           <DropdownMenuItem onClick={() => onUpdate(apiKey.id)}>
-                            Update
+                            <MenuItemContent icon={Pencil}>Update</MenuItemContent>
                           </DropdownMenuItem>
                         )}
                         {onDelete && (
                           <DropdownMenuItem
                             onClick={() => onDelete(apiKey.id)}
-                            className="text-destructive focus:text-destructive"
                           >
-                            Delete
+                            <MenuItemContent icon={Trash2}>Delete</MenuItemContent>
                           </DropdownMenuItem>
                         )}
                       </DropdownMenuContent>

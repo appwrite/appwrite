@@ -1,14 +1,15 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
-import { useQueryClient } from '@tanstack/react-query'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
 import type { Models } from '@appwrite.io/console'
 import { getApiEndpoint } from '@/lib/appwrite/sdk'
 import {
-  useProject,
+  projectQueryOptions,
   useConsoleOAuth2Catalog,
   useProjectOAuth2Providers,
   useUpdateProjectOAuth2Provider,
 } from '@/lib/react-query/hooks'
+import type { AuthOAuth2SettingsInitialData } from '@/lib/react-query/hooks/oauth2-providers'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -30,7 +31,7 @@ import {
   getOAuth2ProviderIconPath,
   OAUTH2_POPULAR_PROVIDER_IDS,
 } from '@/lib/oauth2/provider-display'
-import { Loader2, Search } from 'lucide-react'
+import { Search } from 'lucide-react'
 
 type OAuth2ProviderRow = Models.ConsoleOAuth2Provider
 
@@ -55,17 +56,27 @@ function readStringField(
   return typeof v === 'string' ? v : ''
 }
 
-export function OAuth2ProvidersSection({ projectId }: { projectId: string }) {
+export function OAuth2ProvidersSection({
+  projectId,
+  initialData,
+}: {
+  projectId: string
+  initialData?: AuthOAuth2SettingsInitialData
+}) {
   const queryClient = useQueryClient()
-  const { project } = useProject(projectId)
+  const { data: projectData } = useQuery(projectQueryOptions(projectId))
   const projectEndpoint = useMemo(
-    () => getApiEndpoint(project?.region),
-    [project?.region],
+    () => getApiEndpoint(projectData?.region),
+    [projectData?.region],
   )
 
-  const { data: catalog, isLoading: catalogLoading } = useConsoleOAuth2Catalog()
-  const { data: providerList, isLoading: listLoading } =
-    useProjectOAuth2Providers(projectId)
+  const { data: catalog } = useConsoleOAuth2Catalog({
+    initialData: initialData?.catalog,
+  })
+  const { data: providerList } = useProjectOAuth2Providers(projectId, {
+    initialData: initialData?.providerList,
+  })
+  const resolvedProviderList = providerList ?? initialData?.providerList
   const updateMutation = useUpdateProjectOAuth2Provider(projectId)
 
   const [providerSearch, setProviderSearch] = useState('')
@@ -81,10 +92,11 @@ export function OAuth2ProvidersSection({ projectId }: { projectId: string }) {
   } | null>(null)
   const [providerError, setProviderError] = useState('')
 
-  const catalogEntries = useMemo(
-    () => catalog?.oAuth2Providers ?? [],
-    [catalog?.oAuth2Providers],
-  )
+  const catalogEntries = useMemo(() => {
+    const fromHook = catalog?.oAuth2Providers ?? []
+    if (fromHook.length > 0) return fromHook
+    return initialData?.catalog?.oAuth2Providers ?? []
+  }, [catalog?.oAuth2Providers, initialData?.catalog?.oAuth2Providers])
 
   const selectedCatalog = useMemo(() => {
     if (!selectedProviderId) return undefined
@@ -94,7 +106,7 @@ export function OAuth2ProvidersSection({ projectId }: { projectId: string }) {
   const openDrawerFor = useCallback(
     (providerId: string) => {
       const entry = catalogEntries.find((p) => p.$id === providerId)
-      const model = findProjectProviderModel(providerList, providerId)
+      const model = findProjectProviderModel(resolvedProviderList, providerId)
       if (!entry) return
 
       const fields: Record<string, string> = {}
@@ -110,7 +122,7 @@ export function OAuth2ProvidersSection({ projectId }: { projectId: string }) {
       setProviderError('')
       setDrawerOpen(true)
     },
-    [catalogEntries, providerList],
+    [catalogEntries, resolvedProviderList],
   )
 
   useEffect(() => {
@@ -150,8 +162,8 @@ export function OAuth2ProvidersSection({ projectId }: { projectId: string }) {
       else other.push(row)
     }
     const sortFn = (a: OAuth2ProviderRow, b: OAuth2ProviderRow) => {
-      const aModel = findProjectProviderModel(providerList, a.$id)
-      const bModel = findProjectProviderModel(providerList, b.$id)
+      const aModel = findProjectProviderModel(resolvedProviderList, a.$id)
+      const bModel = findProjectProviderModel(resolvedProviderList, b.$id)
       const aEn = Boolean(aModel?.enabled)
       const bEn = Boolean(bModel?.enabled)
       if (aEn !== bEn) return aEn ? -1 : 1
@@ -162,7 +174,7 @@ export function OAuth2ProvidersSection({ projectId }: { projectId: string }) {
     popular.sort(sortFn)
     other.sort(sortFn)
     return { popularRows: popular, otherRows: other }
-  }, [filteredEntries, providerList])
+  }, [filteredEntries, resolvedProviderList])
 
   const hasProviderChanges = useMemo(() => {
     if (!selectedCatalog || !initialSnapshot) return false
@@ -234,24 +246,6 @@ export function OAuth2ProvidersSection({ projectId }: { projectId: string }) {
     )
   }
 
-  const loading = catalogLoading || listLoading
-
-  if (loading && catalogEntries.length === 0) {
-    return (
-      <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
-        <div className="px-6 py-4">
-          <h3 className="text-[15px] font-semibold text-foreground">
-            OAuth2 providers
-          </h3>
-        </div>
-        <div className="border-t border-border" />
-        <div className="px-6 py-12 flex justify-center">
-          <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
-        </div>
-      </div>
-    )
-  }
-
   const selectedName = selectedProviderId
     ? getOAuth2ProviderDisplayName(selectedProviderId)
     : ''
@@ -259,7 +253,7 @@ export function OAuth2ProvidersSection({ projectId }: { projectId: string }) {
   const renderProviderGrid = (rows: OAuth2ProviderRow[]) => (
     <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
       {rows.map((row) => {
-        const model = findProjectProviderModel(providerList, row.$id)
+        const model = findProjectProviderModel(resolvedProviderList, row.$id)
         const enabled = Boolean(model?.enabled)
         return (
           <button

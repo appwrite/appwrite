@@ -93,7 +93,7 @@ export function BillingAlertsSection({ orgId }: BillingAlertsSectionProps) {
     }
   }
 
-  if (orgLoading) {
+  if (orgLoading && !organization) {
     return (
       <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
         <div className="px-6 py-4">

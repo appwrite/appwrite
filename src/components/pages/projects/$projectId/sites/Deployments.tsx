@@ -15,7 +15,6 @@ import {
 } from '@tanstack/react-router'
 import { useQueryClient, useMutation } from '@tanstack/react-query'
 import {
-  MoreHorizontal,
   Clock,
   Trash2,
   XCircle,
@@ -36,6 +35,8 @@ import {
   ExternalLink,
   ScrollText,
 } from 'lucide-react'
+import { MenuItemContent, MenuItemIcon } from '@/components/global/shared/ContextMenuIcon'
+import { RowActionsMenuTrigger } from '@/components/global/shared/RowActionsMenuTrigger'
 import {
   getDeploymentStatusBadge,
   isDeploymentCompleted,
@@ -1263,8 +1264,7 @@ export function View() {
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end" className="z-[200]">
                         <DropdownMenuItem onClick={handleDownloadSource}>
-                          <FileCode className="mr-2 h-4 w-4" />
-                          Source code
+                          <MenuItemContent icon={FileCode}>Source code</MenuItemContent>
                         </DropdownMenuItem>
                         <DropdownMenuItem
                           onClick={handleDownloadBuild}
@@ -1281,8 +1281,7 @@ export function View() {
                               : undefined
                           }
                         >
-                          <Package className="mr-2 h-4 w-4" />
-                          Build output
+                          <MenuItemContent icon={Package}>Build output</MenuItemContent>
                         </DropdownMenuItem>
                       </DropdownMenuContent>
                     </DropdownMenu>
@@ -1748,16 +1747,10 @@ export function View() {
                           >
                             <DropdownMenu>
                               <DropdownMenuTrigger asChild>
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  className="h-8 w-8 p-0"
+                                <RowActionsMenuTrigger
                                   onClick={(e) => e.stopPropagation()}
                                   onPointerDown={(e) => e.stopPropagation()}
-                                >
-                                  <MoreHorizontal className="h-4 w-4" />
-                                  <span className="sr-only">Open menu</span>
-                                </Button>
+                                />
                               </DropdownMenuTrigger>
                               <DropdownMenuContent
                                 align="end"
@@ -1808,8 +1801,7 @@ export function View() {
                                       }
                                     }}
                                   >
-                                    <Play className="mr-2 h-4 w-4" />
-                                    Activate
+                                    <MenuItemContent icon={Play}>Activate</MenuItemContent>
                                   </DropdownMenuItem>
                                 )}
                                 <DropdownMenuItem
@@ -1836,16 +1828,14 @@ export function View() {
                                     }
                                   }}
                                 >
-                                  <RefreshCw className="mr-2 h-4 w-4" />
-                                  Redeploy
+                                  <MenuItemContent icon={RefreshCw}>Redeploy</MenuItemContent>
                                 </DropdownMenuItem>
                                 <DropdownMenuSub>
                                   <DropdownMenuSubTrigger
                                     onClick={(e) => e.stopPropagation()}
                                     onPointerDown={(e) => e.stopPropagation()}
                                   >
-                                    <Download className="mr-2 h-4 w-4" />
-                                    Download
+                                    <MenuItemContent icon={Download}>Download</MenuItemContent>
                                   </DropdownMenuSubTrigger>
                                   <DropdownMenuSubContent className="z-[200]">
                                     <DropdownMenuItem
@@ -1877,8 +1867,7 @@ export function View() {
                                         }
                                       }}
                                     >
-                                      <FileCode className="mr-2 h-4 w-4" />
-                                      Source code
+                                      <MenuItemContent icon={FileCode}>Source code</MenuItemContent>
                                     </DropdownMenuItem>
                                     <DropdownMenuItem
                                       disabled={
@@ -1927,8 +1916,7 @@ export function View() {
                                         }
                                       }}
                                     >
-                                      <Package className="mr-2 h-4 w-4" />
-                                      Build output
+                                      <MenuItemContent icon={Package}>Build output</MenuItemContent>
                                     </DropdownMenuItem>
                                   </DropdownMenuSubContent>
                                 </DropdownMenuSub>
@@ -1971,8 +1959,7 @@ export function View() {
                                         }
                                       }}
                                     >
-                                      <Trash2 className="mr-2 h-4 w-4" />
-                                      Delete
+                                      <MenuItemContent icon={Trash2}>Delete</MenuItemContent>
                                     </DropdownMenuItem>
                                   )}
                                 {isDeploymentInProgress(
@@ -1987,8 +1974,7 @@ export function View() {
                                       setCancelBuildDialogOpen(true)
                                     }}
                                   >
-                                    <XCircle className="mr-2 h-4 w-4" />
-                                    Cancel
+                                    <MenuItemContent icon={XCircle}>Cancel</MenuItemContent>
                                   </DropdownMenuItem>
                                 )}
                               </DropdownMenuContent>

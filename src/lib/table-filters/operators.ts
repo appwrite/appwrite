@@ -20,6 +20,7 @@ export const FILTER_OPERATORS: FilterOperatorDef[] = [
     types: [
       'string',
       'integer',
+      'bigint',
       'double',
       'boolean',
       'datetime',
@@ -37,6 +38,7 @@ export const FILTER_OPERATORS: FilterOperatorDef[] = [
     types: [
       'string',
       'integer',
+      'bigint',
       'double',
       'boolean',
       'datetime',
@@ -70,6 +72,7 @@ export const FILTER_OPERATORS: FilterOperatorDef[] = [
     types: [
       'string',
       'integer',
+      'bigint',
       'double',
       'boolean',
       'datetime',
@@ -86,6 +89,7 @@ export const FILTER_OPERATORS: FilterOperatorDef[] = [
     types: [
       'string',
       'integer',
+      'bigint',
       'double',
       'boolean',
       'datetime',
@@ -110,32 +114,32 @@ export const FILTER_OPERATORS: FilterOperatorDef[] = [
   {
     key: 'greaterThan',
     label: 'greater than',
-    types: ['integer', 'double', 'datetime'],
+    types: ['integer', 'bigint', 'double', 'datetime'],
   },
   {
     key: 'greaterThanEqual',
     label: 'greater than or equal',
-    types: ['integer', 'double', 'datetime'],
+    types: ['integer', 'bigint', 'double', 'datetime'],
   },
   {
     key: 'lessThan',
     label: 'less than',
-    types: ['integer', 'double', 'datetime'],
+    types: ['integer', 'bigint', 'double', 'datetime'],
   },
   {
     key: 'lessThanEqual',
     label: 'less than or equal',
-    types: ['integer', 'double', 'datetime'],
+    types: ['integer', 'bigint', 'double', 'datetime'],
   },
   {
     key: 'between',
     label: 'between',
-    types: ['integer', 'double', 'datetime'],
+    types: ['integer', 'bigint', 'double', 'datetime'],
   },
   {
     key: 'notBetween',
     label: 'not between',
-    types: ['integer', 'double', 'datetime'],
+    types: ['integer', 'bigint', 'double', 'datetime'],
   },
   {
     key: 'isNull',
@@ -143,6 +147,7 @@ export const FILTER_OPERATORS: FilterOperatorDef[] = [
     types: [
       'string',
       'integer',
+      'bigint',
       'double',
       'boolean',
       'datetime',
@@ -158,6 +163,7 @@ export const FILTER_OPERATORS: FilterOperatorDef[] = [
     types: [
       'string',
       'integer',
+      'bigint',
       'double',
       'boolean',
       'datetime',
@@ -173,6 +179,7 @@ export const FILTER_OPERATORS: FilterOperatorDef[] = [
     types: [
       'string',
       'integer',
+      'bigint',
       'double',
       'boolean',
       'datetime',
@@ -187,6 +194,7 @@ export const FILTER_OPERATORS: FilterOperatorDef[] = [
     types: [
       'string',
       'integer',
+      'bigint',
       'double',
       'boolean',
       'datetime',

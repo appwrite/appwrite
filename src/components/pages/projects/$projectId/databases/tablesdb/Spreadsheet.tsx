@@ -1,15 +1,24 @@
 // Table spreadsheet UI (rows, columns, indexes, security, settings) for this database product.
 import { cn } from '@/lib/utils'
 import { getColumnIcon } from '@/lib/utils/column-icons'
-import { isTextType } from '@/lib/utils/database-columns'
+import {
+  columnTypeSupportsNumericRange,
+  formatColumnNumericDisplay,
+  formatColumnRangeDisplay,
+  getTableColumnStatusBadgeVariant,
+  isTableColumnStatusPending,
+  isTextType,
+  normalizeTableColumnStatus,
+} from '@/lib/utils/database-columns'
+import { NumericValueTooltip } from '@/components/global/shared/NumericValueTooltip'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
 import { copyToClipboard } from '@/lib/utils/context-menu'
 import {
   Plus,
   Key,
   Table2,
-  MoreHorizontal,
   CheckCircle2,
+  Trash2,
   ArrowUpDown,
   ArrowUp,
   ArrowDown,
@@ -74,6 +83,8 @@ import {
   createProjectTableColumn,
   updateProjectTableColumn,
   deleteProjectTableColumn,
+  patchProjectTableColumnsCache,
+  refetchProjectTableRelatedQueries,
   useProjectTables as useTablesForColumns,
   useProjectTable,
   updateProjectTable,
@@ -127,6 +138,8 @@ import {
 import { DateTooltip } from '@/components/global/shared/DateTooltip'
 import { DateTimePicker } from '@/components/global/shared/DateTimePicker'
 import { EmptyState } from '@/components/global/shared/EmptyState'
+import { MenuItemContent, MenuItemIcon } from '@/components/global/shared/ContextMenuIcon'
+import { RowActionsMenuTrigger } from '@/components/global/shared/RowActionsMenuTrigger'
 import { SampleDataModal } from './SampleData'
 import { generateSampleRows, type Column } from '@/lib/utils/sample-data'
 import { IdInput } from '@/components/ui/id-input'
@@ -221,6 +234,8 @@ const getColumnTypeColor = (type: string) => {
       'bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/20',
     integer:
       'bg-purple-500/10 text-purple-600 dark:text-purple-400 border-purple-500/20',
+    bigint:
+      'bg-violet-500/10 text-violet-600 dark:text-violet-400 border-violet-500/20',
     float:
       'bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border-indigo-500/20',
     boolean:
@@ -299,7 +314,7 @@ interface RowData {
   /** Server-provided sequence (stable); fallback to computed rowNumber when absent */
   $sequence?: number
   rowNumber: number
-  data: Record<string, string | number | boolean | unknown[] | null>
+  data: Record<string, string | number | bigint | boolean | unknown[] | null>
   $createdAt?: string
   $updatedAt?: string
   $permissions?: string[]
@@ -426,7 +441,7 @@ interface RowEditDrawerProps {
   columns?: unknown[]
   onSave: (
     rowId: string | null,
-    data: Record<string, string | number | boolean | unknown[] | null>,
+    data: Record<string, string | number | bigint | boolean | unknown[] | null>,
     customId?: string | undefined,
     permissions?: string[],
   ) => void
@@ -451,6 +466,16 @@ function parseCommaSeparatedToArray(
   if (type === 'integer' || type === 'int') {
     return parts.map((p) => (p === '' || p === 'null' ? null : parseInt(p, 10)))
   }
+  if (type === 'bigint') {
+    return parts.map((p) => {
+      if (p === '' || p === 'null') return null
+      try {
+        return BigInt(p)
+      } catch {
+        return null
+      }
+    })
+  }
   if (type === 'double' || type === 'float' || type === 'number') {
     return parts.map((p) => (p === '' || p === 'null' ? null : parseFloat(p)))
   }
@@ -466,7 +491,7 @@ function parseCommaSeparatedToArray(
 function normalizeValueForColumn(
   value: unknown,
   columnInfo?: unknown,
-): string | number | boolean | unknown[] | null {
+): string | number | bigint | boolean | unknown[] | null {
   if (value === null || value === undefined) return null
   const col = columnInfo as { array?: boolean; type?: string } | undefined
   if (!col?.array) return value as string | number | boolean | null
@@ -492,14 +517,14 @@ function getTableColumnKey(col: unknown): string | null {
 
 function defaultFormValueForColumn(
   col: unknown,
-): string | number | boolean | unknown[] | null {
+): string | number | bigint | boolean | unknown[] | null {
   const c = col as {
     default?: unknown
     type?: string
     array?: boolean
   }
   if (c.default !== undefined && c.default !== null) {
-    return c.default as string | number | boolean | unknown[] | null
+    return c.default as string | number | bigint | boolean | unknown[] | null
   }
   if (c.type === 'boolean') return false
   if (c.array) return []
@@ -780,7 +805,7 @@ function RowEditDrawer({
   }, [isCreateMode, row, columns])
 
   const [formData, setFormData] = useState<
-    Record<string, string | number | boolean | unknown[] | null>
+    Record<string, string | number | bigint | boolean | unknown[] | null>
   >({})
   const [customRowId, setCustomRowId] = useState<string | undefined>(undefined)
   const fieldRefs = useRef<
@@ -853,7 +878,7 @@ function RowEditDrawer({
       // Preserve null values explicitly; normalize array columns (e.g. comma-separated string → array)
       const initialData: Record<
         string,
-        string | number | boolean | unknown[] | null
+        string | number | bigint | boolean | unknown[] | null
       > = {}
       columns.forEach((column) => {
         const key = getTableColumnKey(column)
@@ -886,7 +911,7 @@ function RowEditDrawer({
       // Initialize form data from columns when creating a new row
       const initialData: Record<
         string,
-        string | number | boolean | unknown[] | null
+        string | number | bigint | boolean | unknown[] | null
       > = {}
       columns.forEach((col: unknown) => {
         const colKey = getTableColumnKey(col)
@@ -1001,7 +1026,7 @@ function RowEditDrawer({
 
   const handleFieldChange = (
     key: string,
-    value: string | number | boolean | unknown[] | null,
+    value: string | number | bigint | boolean | unknown[] | null,
   ) => {
     setFormData((prev) => ({ ...prev, [key]: value }))
   }
@@ -1260,7 +1285,7 @@ function RowEditDrawer({
       delete payload.$sequence
       onSave(
         idToSaveInline,
-        payload as Record<string, string | number | boolean | unknown[] | null>,
+        payload as Record<string, string | number | bigint | boolean | unknown[] | null>,
         customIdFromJson,
         permissionsInline,
       )
@@ -1290,7 +1315,7 @@ function RowEditDrawer({
       const currentValue = payload[fieldKey]
       const fieldType = getFieldType(
         fieldKey,
-        currentValue as string | number | boolean | unknown[] | null,
+        currentValue as string | number | bigint | boolean | unknown[] | null,
         columnInfo,
       )
       const required = isColumnRequired(columnInfo)
@@ -1342,7 +1367,7 @@ function RowEditDrawer({
 
   const getFieldType = (
     key: string,
-    value: string | number | boolean | unknown[] | null,
+    value: string | number | bigint | boolean | unknown[] | null,
     columnInfo?: unknown,
   ): string => {
     if (key === '$createdAt' || key === '$updatedAt') return 'datetime'
@@ -1677,7 +1702,7 @@ function RowEditDrawer({
                                 : value
                         const fieldType = getFieldType(
                           key,
-                          currentValue as string | number | boolean | unknown[] | null,
+                          currentValue as string | number | bigint | boolean | unknown[] | null,
                           columnInfo,
                         )
                         const shouldFocus = focusedField === key
@@ -1767,12 +1792,16 @@ function RowEditDrawer({
                                 </SelectContent>
                               </Select>
                             ) : fieldType === 'integer' ||
+                              fieldType === 'bigint' ||
                               fieldType === 'double' ||
                               fieldType === 'number' ? (
                               <div className="space-y-1.5">
                                 <Input
                                   id={key}
-                                  type="number"
+                                  type={
+                                    fieldType === 'bigint' ? 'text' : 'number'
+                                  }
+                                  inputMode="numeric"
                                   value={
                                     currentValue !== null &&
                                       currentValue !== undefined
@@ -1787,13 +1816,31 @@ function RowEditDrawer({
                                     const val =
                                       e.target.value === ''
                                         ? null
-                                        : fieldType === 'integer'
-                                          ? parseInt(e.target.value) || null
-                                          : parseFloat(e.target.value) || null
+                                        : fieldType === 'bigint'
+                                          ? (() => {
+                                              try {
+                                                return BigInt(e.target.value)
+                                              } catch {
+                                                return null
+                                              }
+                                            })()
+                                          : fieldType === 'integer'
+                                            ? parseInt(e.target.value, 10) ||
+                                              null
+                                            : parseFloat(e.target.value) ||
+                                              null
                                     handleFieldChange(key, val)
                                   }}
-                                  min={columnInfo?.min}
-                                  max={columnInfo?.max}
+                                  min={
+                                    fieldType === 'bigint'
+                                      ? undefined
+                                      : columnInfo?.min
+                                  }
+                                  max={
+                                    fieldType === 'bigint'
+                                      ? undefined
+                                      : columnInfo?.max
+                                  }
                                   step={fieldType === 'double' ? 0.1 : 1}
                                   placeholder={isRequired ? undefined : 'NULL'}
                                   className="h-9 text-[13px]"
@@ -1905,6 +1952,7 @@ function RowEditDrawer({
                                         const isNumericType =
                                           colType === 'integer' ||
                                           colType === 'int' ||
+                                          colType === 'bigint' ||
                                           colType === 'double' ||
                                           colType === 'float' ||
                                           colType === 'number'
@@ -1929,7 +1977,12 @@ function RowEditDrawer({
                                               <div className="min-w-0 flex-1">
                                                 {isNumericType ? (
                                                   <Input
-                                                    type="number"
+                                                    type={
+                                                      colType === 'bigint'
+                                                        ? 'text'
+                                                        : 'number'
+                                                    }
+                                                    inputMode="numeric"
                                                     value={
                                                       isNull
                                                         ? ''
@@ -1949,10 +2002,22 @@ function RowEditDrawer({
                                                         v === ''
                                                           ? null
                                                           : colType ===
-                                                            'integer' ||
-                                                            colType === 'int'
-                                                            ? parseInt(v, 10)
-                                                            : parseFloat(v),
+                                                              'bigint'
+                                                            ? (() => {
+                                                                try {
+                                                                  return BigInt(
+                                                                    v,
+                                                                  )
+                                                                } catch {
+                                                                  return null
+                                                                }
+                                                              })()
+                                                            : colType ===
+                                                                'integer' ||
+                                                                colType ===
+                                                                  'int'
+                                                              ? parseInt(v, 10)
+                                                              : parseFloat(v),
                                                       )
                                                     }}
                                                     step={
@@ -2603,7 +2668,7 @@ export function DocumentsRowCreateBridge({
       permissions,
     }: {
       rowId: string | null
-      data: Record<string, string | number | boolean | unknown[] | null>
+      data: Record<string, string | number | bigint | boolean | unknown[] | null>
       customId?: string | undefined
       permissions?: string[]
     }) => {
@@ -2648,7 +2713,7 @@ export function DocumentsRowCreateBridge({
 
   const handleSaveRow = (
     rowId: string | null,
-    data: Record<string, string | number | boolean | unknown[] | null>,
+    data: Record<string, string | number | bigint | boolean | unknown[] | null>,
     customId?: string | undefined,
     permissions?: string[],
   ) => {
@@ -3237,7 +3302,7 @@ export function RowsSpreadsheet({
   // Map API rows to RowData format (normalize array columns: comma-separated string → array)
   const rows: RowData[] = apiRows.map((row: unknown, index: number) => {
     const rowObj = row as Record<string, unknown>
-    const data: Record<string, string | number | boolean | unknown[] | null> =
+    const data: Record<string, string | number | bigint | boolean | unknown[] | null> =
       {}
     Object.keys(rowObj).forEach((key) => {
       if (!key.startsWith('$')) {
@@ -3815,7 +3880,7 @@ export function RowsSpreadsheet({
           const rowObj = apiRow as Record<string, unknown>
           const data: Record<
             string,
-            string | number | boolean | unknown[] | null
+            string | number | bigint | boolean | unknown[] | null
           > = {}
           Object.keys(rowObj).forEach((key) => {
             if (!key.startsWith('$')) {
@@ -3881,7 +3946,7 @@ export function RowsSpreadsheet({
       permissions,
     }: {
       rowId: string | null
-      data: Record<string, string | number | boolean | unknown[] | null>
+      data: Record<string, string | number | bigint | boolean | unknown[] | null>
       customId?: string | undefined
       permissions?: string[]
     }) => {
@@ -3922,7 +3987,7 @@ export function RowsSpreadsheet({
         setSelectedRowForEdit((prev) => {
           const data: Record<
             string,
-            string | number | boolean | unknown[] | null
+            string | number | bigint | boolean | unknown[] | null
           > = {}
           Object.keys(rowObj).forEach((key) => {
             if (!key.startsWith('$')) {
@@ -3973,7 +4038,7 @@ export function RowsSpreadsheet({
 
   const handleSaveRow = (
     rowId: string | null,
-    data: Record<string, string | number | boolean | unknown[] | null>,
+    data: Record<string, string | number | bigint | boolean | unknown[] | null>,
     customId?: string | undefined,
     permissions?: string[],
   ) => {
@@ -5208,16 +5273,9 @@ export function RowsSpreadsheet({
                     >
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
-                          <button
-                            type="button"
-                            className={cn(
-                              'rounded p-1 hover:bg-muted',
-                              useInlineDocumentPane && 'cursor-pointer',
-                            )}
+                          <RowActionsMenuTrigger
                             onClick={(e) => e.stopPropagation()}
-                          >
-                            <MoreHorizontal className="h-4 w-4 text-muted-foreground" />
-                          </button>
+                          />
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
                           <DropdownMenuItem
@@ -5229,7 +5287,7 @@ export function RowsSpreadsheet({
                               })
                             }}
                           >
-                            Update {dbLabels.recordSingular}
+                            <MenuItemContent icon={Pencil}>Update</MenuItemContent>
                           </DropdownMenuItem>
                           <DropdownMenuItem
                             onClick={(e) => {
@@ -5238,17 +5296,16 @@ export function RowsSpreadsheet({
                             }}
                             disabled={duplicateRowMutation.isPending}
                           >
-                            Duplicate
+                            <MenuItemContent icon={Copy}>Duplicate</MenuItemContent>
                           </DropdownMenuItem>
                           <DropdownMenuItem
-                            className="text-destructive"
                             onClick={(e) => {
                               e.stopPropagation()
                               setSelectedRows(new Set([row.$id]))
                               setDeleteDialogOpen(true)
                             }}
                           >
-                            Delete
+                            <MenuItemContent icon={Trash2}>Delete</MenuItemContent>
                           </DropdownMenuItem>
                         </DropdownMenuContent>
                       </DropdownMenu>
@@ -5636,12 +5693,22 @@ export function ColumnsSpreadsheet({
   const columnsLimit = columnsListParams.limit
   const columnsPageIndexed = Math.max(0, columnsPage - 1)
 
+  // Keep showing previous results while fetching new filter results (no empty state flash)
+  const lastDisplayColumnsRef = useRef<
+    Array<{
+      key: string
+      type: string
+      [key: string]: unknown
+    }>
+  >([])
+
   // Fetch columns from the project SDK (listColumns with optional filter queries, ordered by $createdAt asc, paginated)
   const {
     columns: apiColumns,
     total: columnsTotal,
     isLoading: columnsLoading,
     isFetching: columnsFetching,
+    refetch: refetchColumns,
   } = useProjectTableColumns(
     projectId,
     databaseId,
@@ -5650,6 +5717,24 @@ export function ColumnsSpreadsheet({
     columnsPageIndexed,
     columnsLimit,
   )
+
+  const hasPendingColumnStatuses = useMemo(
+    () =>
+      apiColumns.some((col) =>
+        isTableColumnStatusPending(
+          (col as { status?: string }).status,
+        ),
+      ),
+    [apiColumns],
+  )
+
+  useEffect(() => {
+    if (!hasPendingColumnStatuses) return
+    const intervalId = window.setInterval(() => {
+      void refetchColumns()
+    }, 2000)
+    return () => window.clearInterval(intervalId)
+  }, [hasPendingColumnStatuses, refetchColumns])
 
   const navigateColumnsList = (updates: { page?: number; limit?: number }) => {
     navigate({
@@ -5687,13 +5772,13 @@ export function ColumnsSpreadsheet({
         data,
       )
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({
-        queryKey: ['columns', 'project', projectId, databaseId, tableId],
-      })
-      queryClient.invalidateQueries({
-        queryKey: ['tables', 'project', projectId, databaseId],
-      })
+    onSuccess: async () => {
+      await refetchProjectTableRelatedQueries(
+        queryClient,
+        projectId,
+        databaseId,
+        tableId,
+      )
       setColumnDialogOpen(false)
       setSelectedColumn(null)
     },
@@ -5719,13 +5804,13 @@ export function ColumnsSpreadsheet({
         data,
       )
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({
-        queryKey: ['columns', 'project', projectId, databaseId, tableId],
-      })
-      queryClient.invalidateQueries({
-        queryKey: ['tables', 'project', projectId, databaseId],
-      })
+    onSuccess: async () => {
+      await refetchProjectTableRelatedQueries(
+        queryClient,
+        projectId,
+        databaseId,
+        tableId,
+      )
       setColumnDialogOpen(false)
       setSelectedColumn(null)
     },
@@ -5744,15 +5829,37 @@ export function ColumnsSpreadsheet({
         columnKey,
       )
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({
+    onMutate: async (columnKey: string) => {
+      lastDisplayColumnsRef.current = []
+      await queryClient.cancelQueries({
         queryKey: ['columns', 'project', projectId, databaseId, tableId],
       })
-      queryClient.invalidateQueries({
-        queryKey: ['tables', 'project', projectId, databaseId],
-      })
+      patchProjectTableColumnsCache(
+        queryClient,
+        projectId,
+        databaseId,
+        tableId,
+        (columns) =>
+          columns.map((col) => {
+            const c = col as Record<string, unknown>
+            const key = String(c.key ?? c.name ?? c.$id ?? '')
+            if (key === columnKey) {
+              return { ...c, status: 'deleting' }
+            }
+            return col
+          }),
+      )
+    },
+    onSuccess: async () => {
+      await refetchProjectTableRelatedQueries(
+        queryClient,
+        projectId,
+        databaseId,
+        tableId,
+      )
       setDeleteDialogOpen(false)
       setColumnToDelete(null)
+      toast.success('Column deleted')
     },
     onError: (error: Error) => {
       toast.error(error.message || 'Failed to delete column')
@@ -5999,6 +6106,10 @@ export function ColumnsSpreadsheet({
     array: col.array || false,
     default: col.default || null,
     xdefault: col.xdefault || col.default || null,
+    status: normalizeTableColumnStatus(
+      (col as { status?: string }).status,
+    ),
+    error: (col as { error?: string }).error || '',
     // Keep reference to original for debugging
     $id: col.$id,
   }))
@@ -6477,8 +6588,6 @@ export function ColumnsSpreadsheet({
         ? [...mockColumns, ...columns]
         : mockColumns
 
-  // Keep showing previous results while fetching new filter results (no empty state flash)
-  const lastDisplayColumnsRef = useRef<typeof displayColumns>([])
   useEffect(() => {
     if (!columnsFetching && displayColumns.length > 0) {
       lastDisplayColumnsRef.current = displayColumns
@@ -6558,12 +6667,32 @@ export function ColumnsSpreadsheet({
                   </th>
                   <th
                     className={cn(
+                      'w-[120px] min-w-[120px] px-3 py-2 text-left',
+                      headerCellBorderClass,
+                    )}
+                  >
+                    <span className="text-[12px] font-medium text-foreground">
+                      Status
+                    </span>
+                  </th>
+                  <th
+                    className={cn(
                       'min-w-[80px] px-3 py-2 text-left',
                       headerCellBorderClass,
                     )}
                   >
                     <span className="text-[12px] font-medium text-foreground">
                       Size
+                    </span>
+                  </th>
+                  <th
+                    className={cn(
+                      'min-w-[108px] px-3 py-2 text-left',
+                      headerCellBorderClass,
+                    )}
+                  >
+                    <span className="text-[12px] font-medium text-foreground">
+                      Range
                     </span>
                   </th>
                   <th
@@ -6619,6 +6748,15 @@ export function ColumnsSpreadsheet({
                   const Icon = getColumnIcon(col.type)
                   const isSystem = col.key ? col.key.startsWith('$') : false
                   const isSuggestion = col.isSuggestion
+                  const columnStatus = normalizeTableColumnStatus(col.status)
+                  const isStatusPending = isTableColumnStatusPending(columnStatus)
+                  const rangeDisplay =
+                    !isSuggestion && columnTypeSupportsNumericRange(col.type)
+                      ? formatColumnRangeDisplay(col.min, col.max, col.type)
+                      : null
+                  const defaultDisplay = !isSuggestion
+                    ? formatColumnNumericDisplay(col.default, col.type)
+                    : null
                   return (
                     <tr
                       key={col.key}
@@ -6627,6 +6765,7 @@ export function ColumnsSpreadsheet({
                         'group transition-colors hover:bg-muted/50',
                         isSystem && 'bg-muted/30',
                         isSuggestion && 'bg-amber-500/5',
+                        isStatusPending && 'opacity-80',
                       )}
                     >
                       <td className={cn('px-3 py-2', bodyCellBorderClass)}>
@@ -6710,6 +6849,38 @@ export function ColumnsSpreadsheet({
                       </td>
                       <td
                         className={cn(
+                          'w-[120px] min-w-[120px] px-3 py-2',
+                          bodyCellBorderClass,
+                        )}
+                      >
+                        {isSuggestion ? (
+                          <span className="text-[12px] text-muted-foreground">
+                            -
+                          </span>
+                        ) : (
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <span className="inline-flex w-full min-w-0">
+                                <Badge
+                                  variant={getTableColumnStatusBadgeVariant(
+                                    columnStatus,
+                                  )}
+                                  className="max-w-full truncate text-[11px] font-medium capitalize"
+                                >
+                                  {columnStatus}
+                                </Badge>
+                              </span>
+                            </TooltipTrigger>
+                            {col.error ? (
+                              <TooltipContent side="top" className="max-w-xs">
+                                <p className="text-[12px]">{col.error}</p>
+                              </TooltipContent>
+                            ) : null}
+                          </Tooltip>
+                        )}
+                      </td>
+                      <td
+                        className={cn(
                           'px-3 py-2 text-[12px] text-muted-foreground',
                           bodyCellBorderClass,
                         )}
@@ -6718,6 +6889,18 @@ export function ColumnsSpreadsheet({
                           (col.type === 'string' || col.type === 'varchar')
                           ? (col.size ?? '-')
                           : '-'}
+                      </td>
+                      <td
+                        className={cn(
+                          'px-3 py-2 text-[12px] text-muted-foreground',
+                          bodyCellBorderClass,
+                        )}
+                      >
+                        {rangeDisplay ? (
+                          <NumericValueTooltip display={rangeDisplay} />
+                        ) : (
+                          '-'
+                        )}
                       </td>
                       <td className={cn('px-3 py-2', bodyCellBorderClass)}>
                         {col.required ? (
@@ -6747,29 +6930,35 @@ export function ColumnsSpreadsheet({
                         )}
                       </td>
                       <td className={cn('px-3 py-2', bodyCellBorderClass)}>
-                        <code className="font-mono text-[11px] text-muted-foreground">
-                          {col.default ?? 'NULL'}
-                        </code>
+                        {defaultDisplay ? (
+                          <NumericValueTooltip
+                            display={defaultDisplay}
+                            className="text-muted-foreground"
+                          />
+                        ) : (
+                          <code className="font-mono text-[11px] text-muted-foreground">
+                            {col.default === null || col.default === undefined
+                              ? 'NULL'
+                              : String(col.default)}
+                          </code>
+                        )}
                       </td>
                       <td className={cn('px-2 py-2', lastCellBorderClass)}>
-                        {!isSuggestion && !isSystem && (
+                        {!isSuggestion && !isSystem && !isStatusPending && (
                           <DropdownMenu>
                             <DropdownMenuTrigger asChild>
-                              <button className="rounded p-1 opacity-0 transition-opacity hover:bg-muted group-hover:opacity-100">
-                                <MoreHorizontal className="h-4 w-4 text-muted-foreground" />
-                              </button>
+                              <RowActionsMenuTrigger />
                             </DropdownMenuTrigger>
                             <DropdownMenuContent align="end">
                               <DropdownMenuItem
                                 onClick={() => handleEditColumn(col)}
                               >
-                                Update Column
+                                <MenuItemContent icon={Pencil}>Update</MenuItemContent>
                               </DropdownMenuItem>
                               <DropdownMenuItem
-                                className="text-destructive"
                                 onClick={() => handleDeleteColumn(col.key)}
                               >
-                                Delete Column
+                                <MenuItemContent icon={Trash2}>Delete</MenuItemContent>
                               </DropdownMenuItem>
                             </DropdownMenuContent>
                           </DropdownMenu>
@@ -7725,16 +7914,13 @@ export function IndexesSpreadsheet({
                         {!isSystem && (
                           <DropdownMenu>
                             <DropdownMenuTrigger asChild>
-                              <button className="rounded p-1 opacity-0 transition-opacity hover:bg-muted group-hover:opacity-100">
-                                <MoreHorizontal className="h-4 w-4 text-muted-foreground" />
-                              </button>
+                              <RowActionsMenuTrigger />
                             </DropdownMenuTrigger>
                             <DropdownMenuContent align="end">
                               <DropdownMenuItem
-                                className="text-destructive"
                                 onClick={() => handleDeleteIndex(index.key)}
                               >
-                                Delete Index
+                                <MenuItemContent icon={Trash2}>Delete</MenuItemContent>
                               </DropdownMenuItem>
                             </DropdownMenuContent>
                           </DropdownMenu>

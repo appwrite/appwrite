@@ -14,6 +14,12 @@ export async function fetchProjectOAuth2Providers(
   return await sdk.forProject(projectId).project.listOAuth2Providers()
 }
 
+/** Loader → View initialData for auth settings OAuth2 section (prevents first-paint flash). */
+export type AuthOAuth2SettingsInitialData = {
+  catalog?: Models.ConsoleOAuth2ProviderList
+  providerList?: Models.OAuth2ProviderList
+}
+
 export function consoleOAuth2CatalogQueryOptions() {
   return queryOptions({
     queryKey: ['oauth2', 'console', 'catalog'],
@@ -40,12 +46,25 @@ export function projectOAuth2ProvidersQueryOptions(projectId: string | null | un
   })
 }
 
-export function useConsoleOAuth2Catalog() {
-  return useQuery(consoleOAuth2CatalogQueryOptions())
+export function useConsoleOAuth2Catalog(options?: {
+  initialData?: Models.ConsoleOAuth2ProviderList
+}) {
+  return useQuery({
+    ...consoleOAuth2CatalogQueryOptions(),
+    initialData: options?.initialData,
+    initialDataUpdatedAt: options?.initialData ? 1 : undefined,
+  })
 }
 
-export function useProjectOAuth2Providers(projectId: string | null | undefined) {
-  return useQuery(projectOAuth2ProvidersQueryOptions(projectId))
+export function useProjectOAuth2Providers(
+  projectId: string | null | undefined,
+  options?: { initialData?: Models.OAuth2ProviderList },
+) {
+  return useQuery({
+    ...projectOAuth2ProvidersQueryOptions(projectId),
+    initialData: options?.initialData,
+    initialDataUpdatedAt: options?.initialData ? 1 : undefined,
+  })
 }
 
 export function useUpdateProjectOAuth2Provider(projectId: string | null | undefined) {

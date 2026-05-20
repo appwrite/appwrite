@@ -24,6 +24,8 @@ import {
   AppwriteMigrationResource,
   SupabaseMigrationResource,
   FirebaseMigrationResource,
+  NHostMigrationResource,
+  OnDuplicate,
   type Models,
 } from '@appwrite.io/console'
 import { useConsoleProfile } from '@/hooks/use-console-profile'
@@ -31,6 +33,7 @@ import {
   useProject,
   APPWRITE_RESOURCES,
   SUPABASE_NHOST_RESOURCES,
+  NHOST_RESOURCES,
   FIREBASE_RESOURCES,
   fetchAppwriteReport,
   fetchSupabaseReport,
@@ -68,8 +71,6 @@ const PROVIDERS_OTHER: ProviderOption[] = [
   { id: 'NHost', label: 'NHost' },
 ]
 
-const TRANSFER_PROJECT_SETTINGS_HREF = (projectId: string) =>
-  `/projects/${projectId}/settings#card-transfer-project` as '/projects/$projectId/settings/'
 
 function getProviderOptions(isCloud: boolean): ProviderOption[] {
   const appwrite: ProviderOption[] = [
@@ -139,6 +140,7 @@ export function ImportWizardView() {
   const [resourceForm, setResourceForm] = useState<ResourceFormState>(() => ({
     ...INITIAL_RESOURCE_FORM,
   }))
+  const [onDuplicate, setOnDuplicate] = useState<OnDuplicate>(OnDuplicate.Fail)
 
   const [endpoint, setEndpoint] = useState('')
   const [projectID, setProjectID] = useState('')
@@ -246,7 +248,8 @@ export function ImportWizardView() {
           : SupabaseMigrationResource
       out.push(storageEnum.Bucket, storageEnum.File)
     }
-    return out.filter((r) => allowed.includes(r as (typeof allowed)[number]))
+    const allowedSet = new Set<string>(allowed as readonly string[])
+    return out.filter((r) => allowedSet.has(r))
   }
 
   const selectedResourcesList = useMemo(
@@ -411,18 +414,18 @@ export function ImportWizardView() {
       toast.error('Select at least one resource')
       return
     }
-    const resources = selectedResourcesList
     try {
       if (provider === 'AppwriteSelfHosted' || provider === 'AppwriteCloud') {
         await createAppwrite.mutateAsync({
-          resources,
+          resources: selectedResourcesList as AppwriteMigrationResource[],
           endpoint: endpoint.trim(),
           projectId: projectID.trim(),
           apiKey: apiKey.trim(),
+          onDuplicate,
         })
       } else if (provider === 'Supabase') {
         await createSupabase.mutateAsync({
-          resources,
+          resources: selectedResourcesList as SupabaseMigrationResource[],
           endpoint: supabaseEndpoint.trim(),
           apiKey: supabaseApiKey.trim(),
           databaseHost: databaseHost.trim(),
@@ -431,10 +434,17 @@ export function ImportWizardView() {
           port: parseInt(supabasePort, 10) || 5432,
         })
       } else if (provider === 'Firebase') {
-        await createFirebase.mutateAsync({ resources, serviceAccount })
+        await createFirebase.mutateAsync({
+          resources: selectedResourcesList as FirebaseMigrationResource[],
+          serviceAccount,
+        })
       } else if (provider === 'NHost') {
+        const nhostAllowed = new Set<string>(NHOST_RESOURCES)
+        const nhostResources = selectedResourcesList.filter((r) =>
+          nhostAllowed.has(r),
+        ) as unknown as NHostMigrationResource[]
         await createNHost.mutateAsync({
-          resources,
+          resources: nhostResources,
           subdomain: nhostSubdomain.trim(),
           region: nhostRegion.trim(),
           adminSecret: adminSecret.trim(),
@@ -532,7 +542,11 @@ export function ImportWizardView() {
                 size="sm"
                 className="h-9 text-[13px]"
                 onClick={() =>
-                  navigate({ to: TRANSFER_PROJECT_SETTINGS_HREF(pid) })
+                  navigate({
+                    to: '/projects/$projectId/settings',
+                    params: { projectId: pid },
+                    hash: 'card-transfer-project',
+                  })
                 }
               >
                 Transfer project
@@ -860,6 +874,34 @@ export function ImportWizardView() {
 
       {step === 3 && (
         <>
+          {(provider === 'AppwriteSelfHosted' || provider === 'AppwriteCloud') && (
+            <div className="rounded-lg border border-border bg-card/50 px-4 py-3 space-y-2">
+              <Label className="text-[13px] font-medium">Duplicate rows</Label>
+              <p className="text-[12px] text-muted-foreground">
+                When a row with an existing ID is encountered during import.
+              </p>
+              <div className="flex flex-wrap gap-2">
+                {(
+                  [
+                    [OnDuplicate.Fail, 'Fail'],
+                    [OnDuplicate.Skip, 'Skip'],
+                    [OnDuplicate.Overwrite, 'Overwrite'],
+                  ] as const
+                ).map(([value, label]) => (
+                  <Button
+                    key={value}
+                    type="button"
+                    size="sm"
+                    variant={onDuplicate === value ? 'default' : 'outline'}
+                    className="h-8 text-[13px]"
+                    onClick={() => setOnDuplicate(value)}
+                  >
+                    {label}
+                  </Button>
+                ))}
+              </div>
+            </div>
+          )}
           <p className="text-[13px] text-muted-foreground">
             Choose which resources to migrate. You do not need to keep the
             Console open; the migration continues in the background. After

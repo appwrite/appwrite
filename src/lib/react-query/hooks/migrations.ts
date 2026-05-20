@@ -14,11 +14,12 @@ import {
 import {
   Query,
   ID,
-  type Scopes,
+  ProjectKeyScopes,
   AppwriteMigrationResource,
   SupabaseMigrationResource,
   FirebaseMigrationResource,
   NHostMigrationResource,
+  OnDuplicate,
 } from '@appwrite.io/console'
 import type { Models } from '@appwrite.io/console'
 import { sdk } from '@/lib/appwrite/sdk'
@@ -244,7 +245,7 @@ export function useCreateMigrationKey(projectId: string | null | undefined) {
           'locale.read',
           'avatars.read',
           'health.read',
-        ] as Scopes[],
+        ] as ProjectKeyScopes[],
       })
     },
   })
@@ -425,6 +426,7 @@ export interface CreateCSVImportParams {
   fileId: string
   resourceId: string
   internalFile?: boolean
+  onDuplicate?: OnDuplicate
 }
 
 /**
@@ -441,6 +443,7 @@ export function useCreateCSVImport(projectId: string | null | undefined) {
         fileId: params.fileId,
         resourceId: params.resourceId,
         internalFile: params.internalFile ?? false,
+        onDuplicate: params.onDuplicate,
       })
     },
     onSuccess: () => {
@@ -470,7 +473,7 @@ export const APPWRITE_RESOURCES: AppwriteMigrationResource[] = [
   AppwriteMigrationResource.File,
 ]
 
-/** Resources supported by Supabase/NHost (no Row/Column/Table - use Document/Attribute/Collection). */
+/** Resources supported by Supabase migrations (Document/Attribute/Collection). */
 export const SUPABASE_NHOST_RESOURCES: SupabaseMigrationResource[] = [
   SupabaseMigrationResource.User,
   SupabaseMigrationResource.Database,
@@ -480,6 +483,18 @@ export const SUPABASE_NHOST_RESOURCES: SupabaseMigrationResource[] = [
   SupabaseMigrationResource.Document,
   SupabaseMigrationResource.Bucket,
   SupabaseMigrationResource.File,
+]
+
+/** Resources supported by NHost migrations (same shape as Supabase report). */
+export const NHOST_RESOURCES: NHostMigrationResource[] = [
+  NHostMigrationResource.User,
+  NHostMigrationResource.Database,
+  NHostMigrationResource.Collection,
+  NHostMigrationResource.Attribute,
+  NHostMigrationResource.Index,
+  NHostMigrationResource.Document,
+  NHostMigrationResource.Bucket,
+  NHostMigrationResource.File,
 ]
 
 /** Resources supported by Firebase (same as Supabase but no Index per prompt). */
@@ -572,7 +587,7 @@ export async function fetchNHostReport(
 ) {
   const projectSdk = sdk.forProject(projectId, region)
   return await projectSdk.migrations.getNHostReport({
-    resources: SUPABASE_NHOST_RESOURCES,
+    resources: NHOST_RESOURCES,
     subdomain: params.subdomain,
     region: params.region,
     adminSecret: params.adminSecret,
@@ -588,6 +603,7 @@ export interface CreateAppwriteMigrationParams {
   endpoint: string
   projectId: string
   apiKey: string
+  onDuplicate?: OnDuplicate
 }
 
 export function useCreateAppwriteMigration(
@@ -604,6 +620,7 @@ export function useCreateAppwriteMigration(
         endpoint: params.endpoint,
         projectId: params.projectId,
         apiKey: params.apiKey,
+        onDuplicate: params.onDuplicate,
       })
     },
     onSuccess: () => {

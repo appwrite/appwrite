@@ -10,7 +10,6 @@ import {
   Download,
   Upload,
   Plus,
-  MoreHorizontal,
   Lock,
   Trash2,
   Pencil,
@@ -18,7 +17,10 @@ import {
   List,
   Copy,
   Check,
+  MoreHorizontal,
 } from 'lucide-react'
+import { MenuItemContent, MenuItemIcon } from '@/components/global/shared/ContextMenuIcon'
+import { RowActionsMenuTrigger } from '@/components/global/shared/RowActionsMenuTrigger'
 import {
   useDomain,
   useDomainRecords,
@@ -1258,17 +1260,14 @@ export function View({ initialData }: ViewProps = {}) {
                     <DropdownMenuItem
                       onClick={() => setImportZoneDialogOpen(true)}
                     >
-                      <Upload className="h-4 w-4 mr-1.5" />
-                      Import zone file
+                      <MenuItemContent icon={Upload}>Import</MenuItemContent>
                     </DropdownMenuItem>
                     <DropdownMenuItem onClick={handleExportZone}>
-                      <Download className="h-4 w-4 mr-1.5" />
-                      Export
+                      <MenuItemContent icon={Download}>Export</MenuItemContent>
                     </DropdownMenuItem>
                     <DropdownMenuSub>
                       <DropdownMenuSubTrigger className="text-[13px]">
-                        <List className="h-4 w-4 mr-1.5" />
-                        Add preset
+                        <MenuItemContent icon={List}>Preset</MenuItemContent>
                       </DropdownMenuSubTrigger>
                       <DropdownMenuSubContent className="w-52">
                         <DropdownMenuItem
@@ -1558,13 +1557,7 @@ export function View({ initialData }: ViewProps = {}) {
                                   <div className="flex justify-end">
                                     <DropdownMenu>
                                       <DropdownMenuTrigger asChild>
-                                        <Button
-                                          variant="ghost"
-                                          size="sm"
-                                          className="h-8 w-8 p-0"
-                                        >
-                                          <MoreHorizontal className="h-4 w-4" />
-                                        </Button>
+                                        <RowActionsMenuTrigger />
                                       </DropdownMenuTrigger>
                                       <DropdownMenuContent align="end">
                                         <DropdownMenuItem
@@ -1573,18 +1566,15 @@ export function View({ initialData }: ViewProps = {}) {
                                             setUpdateRecordDialogOpen(true)
                                           }}
                                         >
-                                          <Pencil className="mr-1.5 h-4 w-4" />
-                                          Update
+                                          <MenuItemContent icon={Pencil}>Update</MenuItemContent>
                                         </DropdownMenuItem>
                                         <DropdownMenuItem
-                                          className="text-destructive"
                                           onClick={() => {
                                             setSelectedRecord(record)
                                             setDeleteRecordDialogOpen(true)
                                           }}
                                         >
-                                          <Trash2 className="mr-1.5 h-4 w-4" />
-                                          Delete
+                                          <MenuItemContent icon={Trash2}>Delete</MenuItemContent>
                                         </DropdownMenuItem>
                                       </DropdownMenuContent>
                                     </DropdownMenu>

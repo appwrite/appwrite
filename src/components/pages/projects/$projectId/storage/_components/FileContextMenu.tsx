@@ -20,6 +20,16 @@ import {
   ContextMenuSubTrigger,
   ContextMenuTrigger,
 } from '@/components/ui/context-menu'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuSub,
+  DropdownMenuSubContent,
+  DropdownMenuSubTrigger,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
 import { toast } from 'sonner'
 import {
   Dialog,
@@ -41,7 +51,11 @@ import {
   openInNewTab,
   openInNewWindow,
 } from '@/lib/utils/context-menu'
-import { ContextMenuIcon } from '@/components/global/shared/ContextMenuIcon'
+import {
+  ContextMenuIcon,
+  MenuItemContent,
+} from '@/components/global/shared/ContextMenuIcon'
+import { RowActionsMenuTrigger } from '@/components/global/shared/RowActionsMenuTrigger'
 
 export type FileContextMenuFile = {
   id: string
@@ -49,19 +63,11 @@ export type FileContextMenuFile = {
   pending?: boolean
 }
 
-interface FileContextMenuProps {
-  projectId: string
-  bucketId: string
-  file: FileContextMenuFile
-  children: React.ReactNode
-}
-
-export function FileContextMenu({
-  projectId,
-  bucketId,
-  file,
-  children,
-}: FileContextMenuProps) {
+function useFileActions(
+  projectId: string,
+  bucketId: string,
+  file: FileContextMenuFile,
+) {
   const navigate = useNavigate()
   const queryClient = useQueryClient()
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
@@ -103,11 +109,79 @@ export function FileContextMenu({
     `/projects/${projectId}/storage/${bucketId}?file=${encodeURIComponent(file.id)}`,
   )
 
-  const handleDeleteClick = () => {
-    setDeleteDialogOpen(true)
+  return {
+    hasName: !!file.name,
+    fileHref,
+    navigateToTab,
+    handleDeleteClick: () => setDeleteDialogOpen(true),
+    deleteDialogOpen,
+    setDeleteDialogOpen,
+    deleteMutation,
   }
+}
 
-  const hasName = !!file.name
+function FileDeleteDialog({
+  open,
+  onOpenChange,
+  deleteMutation,
+}: {
+  open: boolean
+  onOpenChange: (open: boolean) => void
+  deleteMutation: ReturnType<typeof useFileActions>['deleteMutation']
+}) {
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="sm:max-w-md p-0">
+        <DialogHeader className="px-6 pt-6 pb-4 text-left">
+          <DialogTitle>Delete file</DialogTitle>
+          <DialogDescription className="text-[13px] mt-2">
+            Are you sure you want to delete this file? This action cannot be
+            undone.
+          </DialogDescription>
+        </DialogHeader>
+        <div className="px-6 py-4 border-t border-border bg-muted/30 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+          <Button
+            variant="outline"
+            onClick={() => onOpenChange(false)}
+            disabled={deleteMutation.isPending}
+          >
+            Cancel
+          </Button>
+          <Button
+            variant="destructive"
+            onClick={() => deleteMutation.mutate()}
+            disabled={deleteMutation.isPending}
+          >
+            Delete
+          </Button>
+        </div>
+      </DialogContent>
+    </Dialog>
+  )
+}
+
+interface FileContextMenuProps {
+  projectId: string
+  bucketId: string
+  file: FileContextMenuFile
+  children: React.ReactNode
+}
+
+export function FileContextMenu({
+  projectId,
+  bucketId,
+  file,
+  children,
+}: FileContextMenuProps) {
+  const {
+    hasName,
+    fileHref,
+    navigateToTab,
+    handleDeleteClick,
+    deleteDialogOpen,
+    setDeleteDialogOpen,
+    deleteMutation,
+  } = useFileActions(projectId, bucketId, file)
 
   return (
     <>
@@ -180,33 +254,150 @@ export function FileContextMenu({
         </ContextMenuContent>
       </ContextMenu>
 
-      <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
-        <DialogContent className="sm:max-w-md p-0">
-          <DialogHeader className="px-6 pt-6 pb-4 text-left">
-            <DialogTitle>Delete file</DialogTitle>
-            <DialogDescription className="text-[13px] mt-2">
-              Are you sure you want to delete this file? This action cannot be
-              undone.
-            </DialogDescription>
-          </DialogHeader>
-          <div className="px-6 py-4 border-t border-border bg-muted/30 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
-            <Button
-              variant="outline"
-              onClick={() => setDeleteDialogOpen(false)}
-              disabled={deleteMutation.isPending}
-            >
-              Cancel
-            </Button>
-            <Button
-              variant="destructive"
-              onClick={() => deleteMutation.mutate()}
-              disabled={deleteMutation.isPending}
-            >
-              Delete
-            </Button>
-          </div>
-        </DialogContent>
-      </Dialog>
+      <FileDeleteDialog
+        open={deleteDialogOpen}
+        onOpenChange={setDeleteDialogOpen}
+        deleteMutation={deleteMutation}
+      />
+    </>
+  )
+}
+
+type FileRowActionsMenuProps = {
+  projectId: string
+  bucketId: string
+  file: FileContextMenuFile
+}
+
+/** Always-visible ⋯ menu for file rows in the bucket files table. */
+export function FileRowActionsMenu({
+  projectId,
+  bucketId,
+  file,
+}: FileRowActionsMenuProps) {
+  const {
+    hasName,
+    fileHref,
+    navigateToTab,
+    handleDeleteClick,
+    deleteDialogOpen,
+    setDeleteDialogOpen,
+    deleteMutation,
+  } = useFileActions(projectId, bucketId, file)
+
+  if (file.pending) {
+    return null
+  }
+
+  return (
+    <>
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <RowActionsMenuTrigger onClick={(e) => e.stopPropagation()} />
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="end" className="w-56">
+          <DropdownMenuItem
+            onClick={(e) => {
+              e.stopPropagation()
+              navigateToTab('overview')
+            }}
+          >
+            <MenuItemContent icon={LayoutList}>Overview</MenuItemContent>
+          </DropdownMenuItem>
+          <DropdownMenuItem
+            onClick={(e) => {
+              e.stopPropagation()
+              navigateToTab('permissions')
+            }}
+          >
+            <MenuItemContent icon={Shield}>Permissions</MenuItemContent>
+          </DropdownMenuItem>
+          <DropdownMenuItem
+            onClick={(e) => {
+              e.stopPropagation()
+              navigateToTab('tokens')
+            }}
+          >
+            <MenuItemContent icon={KeyRound}>Tokens</MenuItemContent>
+          </DropdownMenuItem>
+          <DropdownMenuSeparator />
+          <DropdownMenuSub>
+            <DropdownMenuSubTrigger>
+              <MenuItemContent icon={Copy}>Copy</MenuItemContent>
+            </DropdownMenuSubTrigger>
+            <DropdownMenuSubContent>
+              <DropdownMenuItem
+                onClick={(e) => {
+                  e.stopPropagation()
+                  copyToClipboard('ID', file.id)
+                }}
+              >
+                <MenuItemContent icon={Copy}>Copy ID</MenuItemContent>
+              </DropdownMenuItem>
+              {hasName && (
+                <DropdownMenuItem
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    copyToClipboard('Name', file.name)
+                  }}
+                >
+                  <MenuItemContent icon={Copy}>Copy name</MenuItemContent>
+                </DropdownMenuItem>
+              )}
+              <DropdownMenuItem
+                onClick={(e) => {
+                  e.stopPropagation()
+                  copyToClipboard('Link', fileHref)
+                }}
+              >
+                <MenuItemContent icon={Link2}>Copy link</MenuItemContent>
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                onClick={(e) => {
+                  e.stopPropagation()
+                  void copyResourceAsJson(() =>
+                    fetchFile(projectId, bucketId, file.id),
+                  )
+                }}
+              >
+                <MenuItemContent icon={FileJson}>Copy as JSON</MenuItemContent>
+              </DropdownMenuItem>
+            </DropdownMenuSubContent>
+          </DropdownMenuSub>
+          <DropdownMenuSeparator />
+          <DropdownMenuItem
+            onClick={(e) => {
+              e.stopPropagation()
+              openInNewTab(fileHref)
+            }}
+          >
+            <MenuItemContent icon={ExternalLink}>Open in new tab</MenuItemContent>
+          </DropdownMenuItem>
+          <DropdownMenuItem
+            onClick={(e) => {
+              e.stopPropagation()
+              openInNewWindow(fileHref)
+            }}
+          >
+            <MenuItemContent icon={Square}>Open in new window</MenuItemContent>
+          </DropdownMenuItem>
+          <DropdownMenuSeparator />
+          <DropdownMenuItem
+            onClick={(e) => {
+              e.stopPropagation()
+              handleDeleteClick()
+            }}
+          >
+            <MenuItemContent icon={Trash2}>Delete</MenuItemContent>
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
+
+      <FileDeleteDialog
+        open={deleteDialogOpen}
+        onOpenChange={setDeleteDialogOpen}
+        deleteMutation={deleteMutation}
+      />
     </>
   )
 }

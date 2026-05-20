@@ -8,11 +8,10 @@ import {
   mfaFactorsQueryOptions,
   paymentMethodsQueryOptions,
   billingAddressesQueryOptions,
+  organizationsFullQueryOptions,
   fetchCountries,
   fetchLocale,
 } from '@/lib/react-query/hooks'
-import { Query } from '@appwrite.io/console'
-import { sdk } from '@/lib/appwrite/sdk'
 import { pageTitle } from '@/lib/utils/page-title'
 
 // Valid account tabs
@@ -41,11 +40,6 @@ export const Route = createFileRoute('/_public/account/$tab')({
       : 'Overview'
     return { meta: [{ title: pageTitle(tabLabel, 'Account') }] }
   },
-  pendingComponent: () => (
-    <div className="flex h-full items-center justify-center">
-      <div className="text-muted-foreground">Loading account...</div>
-    </div>
-  ),
   loader: async ({ params, context }) => {
     // Redirect invalid tabs to overview
     const tab = params.tab as string | undefined
@@ -83,30 +77,19 @@ export const Route = createFileRoute('/_public/account/$tab')({
       // Fetch sessions - blocks navigation until ready
       await queryClient.ensureQueryData(accountSessionsQueryOptions())
     } else if (tab === 'payments') {
-      // Fetch payment data - blocks navigation until ready
       await Promise.all([
         queryClient.ensureQueryData(paymentMethodsQueryOptions()),
         queryClient.ensureQueryData(billingAddressesQueryOptions()),
-        // Prefetch supporting data (optional, doesn't block)
+        queryClient.ensureQueryData(organizationsFullQueryOptions()),
         queryClient.prefetchQuery({
           queryKey: ['countries', 'console'],
           queryFn: fetchCountries,
-          staleTime: 5 * 60 * 1000, // 5 minutes - countries don't change often
+          staleTime: 5 * 60 * 1000,
         }),
         queryClient.prefetchQuery({
           queryKey: ['locale', 'console'],
           queryFn: fetchLocale,
-          staleTime: 5 * 60 * 1000, // 5 minutes
-        }),
-        queryClient.prefetchQuery({
-          queryKey: ['organizations', 'console', 'full'],
-          queryFn: async () => {
-            const response = await sdk.forConsole.organizations.list({
-              queries: [Query.equal('platform', 'appwrite')],
-            })
-            return response.teams || []
-          },
-          staleTime: 30 * 1000,
+          staleTime: 5 * 60 * 1000,
         }),
       ])
     }

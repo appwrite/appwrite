@@ -17,6 +17,13 @@ import { PointEditor, LineEditor, PolygonEditor } from './spatial/index'
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
 import { Textarea } from '@/components/ui/textarea'
 import { Progress } from '@/components/ui/progress'
+import {
+  formatInt64Bound,
+  INT64_MAX,
+  INT64_MIN,
+  isValidInt64,
+  parseInt64Value,
+} from '@/lib/utils/database-columns'
 
 export type ColumnType =
   | 'text'
@@ -24,6 +31,7 @@ export type ColumnType =
   | 'longtext'
   | 'varchar'
   | 'integer'
+  | 'bigint'
   | 'double'
   | 'boolean'
   | 'datetime'
@@ -43,9 +51,9 @@ export interface ColumnFormData {
   // String
   size?: number
   encrypt?: boolean
-  // Integer/Float
-  min?: number
-  max?: number
+  // Integer/Float/Bigint
+  min?: number | bigint
+  max?: number | bigint
   // Enum
   elements?: string[]
   // Relationship
@@ -60,6 +68,7 @@ export interface ColumnFormData {
   xdefault?:
   | string
   | number
+  | bigint
   | boolean
   | [number, number]
   | number[][]
@@ -101,6 +110,7 @@ const COLUMN_TYPES: { value: ColumnType; label: string }[] = [
   { value: 'longtext', label: 'Longtext' },
   { value: 'varchar', label: 'Varchar' },
   { value: 'integer', label: 'Integer' },
+  { value: 'bigint', label: 'Bigint' },
   { value: 'double', label: 'Float' },
   { value: 'boolean', label: 'Boolean' },
   { value: 'datetime', label: 'Datetime' },
@@ -193,6 +203,9 @@ export function ColumnDrawer({
   const [enumElements, setEnumElements] = useState<string[]>([''])
   const [enumElementInput, setEnumElementInput] = useState('')
   const [errors, setErrors] = useState<Record<string, string>>({})
+  /** Text inputs for bigint min/max — avoids Number precision loss past MAX_SAFE_INTEGER. */
+  const [bigintMinText, setBigintMinText] = useState('')
+  const [bigintMaxText, setBigintMaxText] = useState('')
   // Ref to avoid stale state when user checks Encrypted then immediately submits (state may not have flushed)
   const encryptCheckedRef = useRef<boolean>(false)
 
@@ -219,7 +232,11 @@ export function ColumnDrawer({
         column.type === 'longtext'
       ) {
         data.encrypt = column.encrypt || false
-      } else if (column.type === 'integer' || column.type === 'double') {
+      } else if (
+        column.type === 'integer' ||
+        column.type === 'bigint' ||
+        column.type === 'double'
+      ) {
         data.min = column.min
         data.max = column.max
       } else if (column.type === 'enum') {
@@ -236,6 +253,13 @@ export function ColumnDrawer({
 
       setFormData(data)
       encryptCheckedRef.current = data.encrypt === true
+      if (column.type === 'bigint') {
+        setBigintMinText(formatInt64Bound(column.min))
+        setBigintMaxText(formatInt64Bound(column.max))
+      } else {
+        setBigintMinText('')
+        setBigintMaxText('')
+      }
     } else {
       // Reset form for create mode
       setFormData({
@@ -247,6 +271,8 @@ export function ColumnDrawer({
       setEnumElements([''])
       setEnumElementInput('')
       setErrors({})
+      setBigintMinText('')
+      setBigintMaxText('')
       encryptCheckedRef.current = false
     }
   }, [column, open])
@@ -302,6 +328,8 @@ export function ColumnDrawer({
         setEnumElements([''])
         setEnumElementInput('')
         setErrors({})
+        setBigintMinText('')
+        setBigintMaxText('')
       }
     }
   }
@@ -375,6 +403,35 @@ export function ColumnDrawer({
       if (formData.twoWay && !formData.twoWayKey) {
         newErrors.twoWayKey = 'Two-way key is required'
       }
+    } else if (formData.type === 'bigint') {
+      const minParsed = bigintMinText.trim()
+        ? parseInt64Value(bigintMinText)
+        : null
+      const maxParsed = bigintMaxText.trim()
+        ? parseInt64Value(bigintMaxText)
+        : null
+      const int64RangeHint =
+        'Must be a signed 64-bit integer between -9,223,372,036,854,775,808 and 9,223,372,036,854,775,807'
+
+      if (bigintMinText.trim() && minParsed === null) {
+        newErrors.min = int64RangeHint
+      } else if (minParsed !== null && !isValidInt64(minParsed)) {
+        newErrors.min = int64RangeHint
+      }
+
+      if (bigintMaxText.trim() && maxParsed === null) {
+        newErrors.max = int64RangeHint
+      } else if (maxParsed !== null && !isValidInt64(maxParsed)) {
+        newErrors.max = int64RangeHint
+      }
+
+      if (
+        minParsed !== null &&
+        maxParsed !== null &&
+        minParsed > maxParsed
+      ) {
+        newErrors.max = 'Max must be greater than or equal to min'
+      }
     }
 
     setErrors(newErrors)
@@ -410,6 +467,15 @@ export function ColumnDrawer({
       // Use ref so we get the latest checkbox value even if state hasn't flushed (e.g. user checks then immediately submits).
       if (TEXT_TYPES_WITH_ENCRYPT.includes(formData.type)) {
         submitData.encrypt = encryptCheckedRef.current === true
+      }
+
+      if (formData.type === 'bigint') {
+        submitData.min = bigintMinText.trim()
+          ? (parseInt64Value(bigintMinText) ?? undefined)
+          : undefined
+        submitData.max = bigintMaxText.trim()
+          ? (parseInt64Value(bigintMaxText) ?? undefined)
+          : undefined
       }
 
       await onSubmit(submitData)
@@ -528,6 +594,10 @@ export function ColumnDrawer({
                       ? (prev.encrypt ?? false)
                       : false
                     encryptCheckedRef.current = nextEncrypt
+                    if (newType !== 'bigint') {
+                      setBigintMinText('')
+                      setBigintMaxText('')
+                    }
                     return {
                       ...prev,
                       type: newType,
@@ -716,8 +786,10 @@ export function ColumnDrawer({
               </>
             )}
 
-            {/* Integer/Float-specific fields */}
-            {(formData.type === 'integer' || formData.type === 'double') && (
+            {/* Integer/Float/Bigint-specific fields */}
+            {(formData.type === 'integer' ||
+              formData.type === 'bigint' ||
+              formData.type === 'double') && (
               <>
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
@@ -727,21 +799,48 @@ export function ColumnDrawer({
                     >
                       Min
                     </Label>
-                    <Input
-                      id="column-min"
-                      type="number"
-                      value={formData.min ?? ''}
-                      onChange={(e) => {
-                        const min =
-                          e.target.value === ''
-                            ? undefined
-                            : parseFloat(e.target.value)
-                        setFormData((prev) => ({ ...prev, min }))
-                      }}
-                      placeholder="Enter min"
-                      step={formData.type === 'double' ? 0.1 : 1}
-                      disabled={isLoading}
-                    />
+                    {formData.type === 'bigint' ? (
+                      <Input
+                        id="column-min"
+                        type="text"
+                        inputMode="numeric"
+                        value={bigintMinText}
+                        onChange={(e) => {
+                          setBigintMinText(e.target.value)
+                          if (errors.min) {
+                            setErrors((prev) => {
+                              const next = { ...prev }
+                              delete next.min
+                              return next
+                            })
+                          }
+                        }}
+                        placeholder="Enter min"
+                        disabled={isLoading}
+                        aria-invalid={!!errors.min}
+                      />
+                    ) : (
+                      <Input
+                        id="column-min"
+                        type="number"
+                        value={formData.min ?? ''}
+                        onChange={(e) => {
+                          const min =
+                            e.target.value === ''
+                              ? undefined
+                              : formData.type === 'double'
+                                ? parseFloat(e.target.value)
+                                : parseInt(e.target.value, 10)
+                          setFormData((prev) => ({ ...prev, min }))
+                        }}
+                        placeholder="Enter min"
+                        step={formData.type === 'double' ? 0.1 : 1}
+                        disabled={isLoading}
+                      />
+                    )}
+                    {errors.min && (
+                      <p className="text-[11px] text-destructive">{errors.min}</p>
+                    )}
                   </div>
                   <div className="space-y-2">
                     <Label
@@ -750,23 +849,57 @@ export function ColumnDrawer({
                     >
                       Max
                     </Label>
-                    <Input
-                      id="column-max"
-                      type="number"
-                      value={formData.max ?? ''}
-                      onChange={(e) => {
-                        const max =
-                          e.target.value === ''
-                            ? undefined
-                            : parseFloat(e.target.value)
-                        setFormData((prev) => ({ ...prev, max }))
-                      }}
-                      placeholder="Enter max"
-                      step={formData.type === 'double' ? 0.1 : 1}
-                      disabled={isLoading}
-                    />
+                    {formData.type === 'bigint' ? (
+                      <Input
+                        id="column-max"
+                        type="text"
+                        inputMode="numeric"
+                        value={bigintMaxText}
+                        onChange={(e) => {
+                          setBigintMaxText(e.target.value)
+                          if (errors.max) {
+                            setErrors((prev) => {
+                              const next = { ...prev }
+                              delete next.max
+                              return next
+                            })
+                          }
+                        }}
+                        placeholder="Enter max"
+                        disabled={isLoading}
+                        aria-invalid={!!errors.max}
+                      />
+                    ) : (
+                      <Input
+                        id="column-max"
+                        type="number"
+                        value={formData.max ?? ''}
+                        onChange={(e) => {
+                          const max =
+                            e.target.value === ''
+                              ? undefined
+                              : formData.type === 'double'
+                                ? parseFloat(e.target.value)
+                                : parseInt(e.target.value, 10)
+                          setFormData((prev) => ({ ...prev, max }))
+                        }}
+                        placeholder="Enter max"
+                        step={formData.type === 'double' ? 0.1 : 1}
+                        disabled={isLoading}
+                      />
+                    )}
+                    {errors.max && (
+                      <p className="text-[11px] text-destructive">{errors.max}</p>
+                    )}
                   </div>
                 </div>
+                {formData.type === 'bigint' && (
+                  <p className="text-[11px] text-muted-foreground">
+                    Signed 64-bit range: {INT64_MIN.toString()} to{' '}
+                    {INT64_MAX.toString()}. Enter the full value (do not use the
+                    number input — large values lose precision in JavaScript).
+                  </p>
+                )}
               </>
             )}
 
@@ -1365,10 +1498,12 @@ export function ColumnDrawer({
                     </SelectContent>
                   </Select>
                 ) : formData.type === 'integer' ||
+                  formData.type === 'bigint' ||
                   formData.type === 'double' ? (
                   <Input
                     id="column-default"
-                    type="number"
+                    type={formData.type === 'bigint' ? 'text' : 'number'}
+                    inputMode="numeric"
                     value={
                       formData.xdefault !== null &&
                         formData.xdefault !== undefined
@@ -1379,13 +1514,25 @@ export function ColumnDrawer({
                       const value =
                         e.target.value === ''
                           ? null
-                          : formData.type === 'integer'
-                            ? parseInt(e.target.value)
-                            : parseFloat(e.target.value)
+                          : formData.type === 'bigint'
+                            ? (() => {
+                                try {
+                                  return BigInt(e.target.value)
+                                } catch {
+                                  return null
+                                }
+                              })()
+                            : formData.type === 'integer'
+                              ? parseInt(e.target.value, 10)
+                              : parseFloat(e.target.value)
                       setFormData((prev) => ({ ...prev, xdefault: value }))
                     }}
-                    min={formData.min}
-                    max={formData.max}
+                    min={
+                      formData.type === 'bigint' ? undefined : formData.min
+                    }
+                    max={
+                      formData.type === 'bigint' ? undefined : formData.max
+                    }
                     step={formData.type === 'double' ? 0.1 : 1}
                     placeholder="Enter value"
                     disabled={isLoading}

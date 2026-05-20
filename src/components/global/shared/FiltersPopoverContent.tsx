@@ -455,6 +455,8 @@ export function FiltersPopoverContent({
       } else if (valueType === 'integer') {
         const n = Number(val)
         val = Number.isNaN(n) ? String(val) : n
+      } else if (valueType === 'bigint') {
+        val = String(val)
       } else if (valueType === 'double') {
         const n = Number(val)
         val = Number.isNaN(n) ? String(val) : n
@@ -628,14 +630,16 @@ export function FiltersPopoverContent({
           </div>
         )
       }
-      if (vc.type === 'integer' || vc.type === 'double') {
+      if (vc.type === 'integer' || vc.type === 'bigint' || vc.type === 'double') {
         return (
           <div key="value-between-number" className="space-y-2">
             <div>
               <span className={subLabelClass}>Start</span>
               <Input
                 type="number"
-                step={vc.type === 'integer' ? 1 : 'any'}
+                step={
+                  vc.type === 'integer' || vc.type === 'bigint' ? 1 : 'any'
+                }
                 className={inputClass}
                 value={filterValue}
                 onChange={(e) => setFilterValue(e.target.value)}
@@ -646,7 +650,9 @@ export function FiltersPopoverContent({
               <span className={subLabelClass}>End</span>
               <Input
                 type="number"
-                step={vc.type === 'integer' ? 1 : 'any'}
+                step={
+                  vc.type === 'integer' || vc.type === 'bigint' ? 1 : 'any'
+                }
                 className={inputClass}
                 value={filterValueEnd}
                 onChange={(e) => setFilterValueEnd(e.target.value)}
@@ -729,13 +735,14 @@ export function FiltersPopoverContent({
         </div>
       )
     }
-    if (vc.type === 'integer') {
+    if (vc.type === 'integer' || vc.type === 'bigint') {
       return (
         <div key="value-int">
           {label}
           <Input
-            type="number"
-            step={1}
+            type={vc.type === 'bigint' ? 'text' : 'number'}
+            inputMode="numeric"
+            step={vc.type === 'bigint' ? undefined : 1}
             className={inputClass}
             value={filterValue}
             onChange={(e) => setFilterValue(e.target.value)}

@@ -1,5 +1,7 @@
 import { useState } from 'react'
-import { MapPin, MoreHorizontal, Pencil, Plus, Trash2 } from 'lucide-react'
+import { MapPin, Pencil, Plus, Trash2, ArrowLeftRight } from 'lucide-react'
+import { MenuItemContent, MenuItemIcon } from '@/components/global/shared/ContextMenuIcon'
+import { RowActionsMenuTrigger } from '@/components/global/shared/RowActionsMenuTrigger'
 import { Button } from '@/components/ui/button'
 import {
   Dialog,
@@ -63,7 +65,8 @@ export function BillingAddressSection({
   const setOrgAddressMutation = useSetOrganizationBillingAddress()
   const deleteOrgAddressMutation = useDeleteOrganizationBillingAddress()
 
-  const isLoading = orgLoading || addressLoading
+  const isLoading =
+    (orgLoading && !organization) || (addressLoading && !address)
 
   const handleLinkAddress = async (addressId: string) => {
     if (!orgId) return
@@ -259,30 +262,24 @@ export function BillingAddressSection({
           </div>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button
-                variant="ghost"
-                size="sm"
-                className="h-8 w-8 p-0 text-muted-foreground hover:text-foreground"
+              <RowActionsMenuTrigger
                 disabled={
                   setOrgAddressMutation.isPending ||
                   deleteOrgAddressMutation.isPending
                 }
-              >
-                <MoreHorizontal className="h-4 w-4" />
-              </Button>
+              />
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-52">
               <DropdownMenuItem
                 className="text-[13px]"
                 onClick={() => setEditModalOpen(true)}
               >
-                <Pencil className="h-4 w-4 mr-2 shrink-0" />
-                Update address
+                <MenuItemContent icon={Pencil}>Update</MenuItemContent>
               </DropdownMenuItem>
               <DropdownMenuSeparator />
               <DropdownMenuSub>
                 <DropdownMenuSubTrigger className="text-[13px]">
-                  Replace
+                  <MenuItemContent icon={ArrowLeftRight}>Replace</MenuItemContent>
                 </DropdownMenuSubTrigger>
                 <DropdownMenuSubContent className="w-52">
                   {(() => {
@@ -304,11 +301,12 @@ export function BillingAddressSection({
                                 className="text-[13px]"
                                 onClick={() => handleLinkAddress(addr.$id)}
                               >
-                                <MapPin className="h-4 w-4 mr-2 text-muted-foreground shrink-0" />
-                                <span className="truncate">
-                                  {addr.streetAddress || 'Address'}
-                                  {addr.city ? `, ${addr.city}` : ''}
-                                </span>
+                                <MenuItemContent icon={MapPin}>
+                                  <span className="truncate">
+                                    {addr.streetAddress || 'Address'}
+                                    {addr.city ? `, ${addr.city}` : ''}
+                                  </span>
+                                </MenuItemContent>
                               </DropdownMenuItem>
                             ))}
                             <DropdownMenuSeparator />
@@ -318,8 +316,7 @@ export function BillingAddressSection({
                           className="text-[13px]"
                           onClick={() => setCreateModalOpen(true)}
                         >
-                          <Plus className="h-4 w-4 mr-2 shrink-0" />
-                          Add new address
+                          <MenuItemContent icon={Plus}>Add</MenuItemContent>
                         </DropdownMenuItem>
                       </>
                     )
@@ -328,11 +325,10 @@ export function BillingAddressSection({
               </DropdownMenuSub>
               <DropdownMenuSeparator />
               <DropdownMenuItem
-                className="text-[13px] text-red-600 dark:text-red-400"
+                className="text-[13px]"
                 onClick={() => setRemoveConfirmOpen(true)}
               >
-                <Trash2 className="h-4 w-4 mr-2 shrink-0" />
-                Remove
+                <MenuItemContent icon={Trash2}>Remove</MenuItemContent>
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>

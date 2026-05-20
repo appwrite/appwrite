@@ -12,7 +12,7 @@ import {
   keepPreviousData,
 } from '@tanstack/react-query'
 import { useMemo } from 'react'
-import { Query, Runtimes, UseCases } from '@appwrite.io/console'
+import { Query, Runtimes, UseCases, ID } from '@appwrite.io/console'
 import type { Models } from '@appwrite.io/console'
 import { sdk } from '@/lib/appwrite/sdk'
 import {
@@ -1182,6 +1182,7 @@ export function useCreateFunctionVariable(
       const projectSdk = sdk.forProject(projectId)
       return await projectSdk.functions.createVariable({
         functionId,
+        variableId: ID.unique(),
         key: key.trim(),
         value,
         secret,

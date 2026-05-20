@@ -1,7 +1,6 @@
 import { useState } from 'react'
 import {
   Plus,
-  MoreHorizontal,
   ExternalLink,
   XCircle,
   Loader2,
@@ -18,6 +17,11 @@ import {
   useDeleteVcsInstallation,
 } from '@/lib/react-query/hooks/vcs'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
+import {
+  MenuItemContent,
+  menuItemRowClassName,
+} from '@/components/global/shared/ContextMenuIcon'
+import { RowActionsMenuTrigger } from '@/components/global/shared/RowActionsMenuTrigger'
 import { Button } from '@/components/ui/button'
 import { DateTooltip } from '@/components/global/shared/DateTooltip'
 import {
@@ -347,13 +351,7 @@ export function GitConfigurationCard({
                               <TableCell className="px-4 py-3">
                                 <DropdownMenu>
                                   <DropdownMenuTrigger asChild>
-                                    <Button
-                                      variant="ghost"
-                                      size="sm"
-                                      className="h-7 w-7 p-0"
-                                    >
-                                      <MoreHorizontal className="h-4 w-4" />
-                                    </Button>
+                                    <RowActionsMenuTrigger compact />
                                   </DropdownMenuTrigger>
                                   <DropdownMenuContent align="end">
                                     <DropdownMenuItem asChild>
@@ -361,20 +359,17 @@ export function GitConfigurationCard({
                                         href={getGitHubAuthUrl('update')}
                                         target="_blank"
                                         rel="noreferrer"
-                                        className="flex items-center"
+                                        className={menuItemRowClassName}
                                       >
-                                        <ExternalLink className="mr-2 h-4 w-4" />
-                                        Configure
+                                        <MenuItemContent icon={ExternalLink}>Configure</MenuItemContent>
                                       </a>
                                     </DropdownMenuItem>
                                     <DropdownMenuItem
                                       onClick={() =>
                                         handleOpenDisconnectModal(installation)
                                       }
-                                      className="text-destructive"
                                     >
-                                      <XCircle className="mr-2 h-4 w-4" />
-                                      Disconnect
+                                      <MenuItemContent icon={XCircle}>Disconnect</MenuItemContent>
                                     </DropdownMenuItem>
                                   </DropdownMenuContent>
                                 </DropdownMenu>

@@ -15,7 +15,6 @@ export type {
 // Shared components
 export { DomainInput } from './DomainInput'
 export { BuildSettings } from './BuildSettings'
-export { EnvironmentVariables } from './EnvironmentVariables'
 
 // View components
 export { CreateSiteView } from './CreateSiteView'

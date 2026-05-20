@@ -37,7 +37,7 @@ import {
 } from '@/lib/specifications'
 import { useFunctionWizard } from './WizardContext'
 import { FunctionDomainCard } from './_components/FunctionDomainCard'
-import { EnvironmentVariablesCard } from '@/components/global/shared/EnvironmentVariablesCard'
+import { VariablesSettingsCard } from '@/components/global/shared/VariablesSettingsCard'
 import type { FunctionWizardVariable } from './RepositoryConfigView'
 
 interface ManualCreateViewProps {
@@ -133,6 +133,7 @@ export function ManualCreateView({ runtimeFromSearch }: ManualCreateViewProps) {
         if (!v.key.trim()) continue
         await projectSdk.functions.createVariable({
           functionId: finalFunctionId,
+          variableId: ID.unique(),
           key: v.key.trim(),
           value: v.value,
           secret: v.secret,
@@ -371,7 +372,11 @@ export function ManualCreateView({ runtimeFromSearch }: ManualCreateViewProps) {
         </div>
       </div>
 
-      <EnvironmentVariablesCard variables={variables} onChange={setVariables} />
+      <VariablesSettingsCard
+        variant="wizard"
+        variables={variables}
+        onChange={setVariables}
+      />
     </WizardLayout>
   )
 }

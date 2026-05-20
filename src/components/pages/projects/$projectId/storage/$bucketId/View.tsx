@@ -64,7 +64,10 @@ import { BucketSettings } from '../_components/BucketSettings'
 import { BucketSecurity } from '../_components/BucketSecurity'
 import { useUploadQueue } from '@/lib/upload-queue/use-upload-queue'
 import type { Models } from '@appwrite.io/console'
-import { FileContextMenu } from '../_components/FileContextMenu'
+import {
+  FileContextMenu,
+  FileRowActionsMenu,
+} from '../_components/FileContextMenu'
 import { ROWS_DEFAULT_PAGE_SIZE } from '@/lib/react-query/hooks/constants'
 import {
   getSearch,
@@ -1465,6 +1468,21 @@ export function View() {
                             />
                           )
                         })}
+                        <col
+                          style={
+                            splitFilesTable
+                              ? {
+                                  width: STORAGE_FILES_TABLE_EDGE_COL_PX,
+                                  minWidth: STORAGE_FILES_TABLE_EDGE_COL_PX,
+                                  maxWidth: STORAGE_FILES_TABLE_EDGE_COL_PX,
+                                }
+                              : {
+                                  width: 40,
+                                  minWidth: 40,
+                                  maxWidth: 40,
+                                }
+                          }
+                        />
                       </colgroup>
                       <thead className={STORAGE_SPREADSHEET_STICKY_THEAD_CLASS}>
                         <tr className={STORAGE_FILES_SPLIT_HEADER_ROW_H_CLASS}>
@@ -1726,7 +1744,7 @@ export function View() {
                                 ? 'min-w-0 px-3 py-0 align-middle'
                                 : 'w-[180px] px-3 py-0 align-middle',
                               STORAGE_FILES_SPLIT_HEADER_ROW_H_CLASS,
-                              STORAGE_SPREADSHEET_HEADER_CELL_BORDER_SPLIT_TOP_LAST,
+                              STORAGE_SPREADSHEET_HEADER_CELL_BORDER_SPLIT_TOP,
                             )}
                             style={
                               splitFilesTable
@@ -1762,6 +1780,20 @@ export function View() {
                               </button>
                             </div>
                           </th>
+                          <th
+                            className={cn(
+                              'sticky right-0 z-30 bg-background p-0',
+                              STORAGE_FILES_SPLIT_HEADER_ROW_H_CLASS,
+                              splitFilesTable && 'shrink-0 box-border',
+                              STORAGE_SPREADSHEET_HEADER_CELL_BORDER_SPLIT_TOP_LAST,
+                              'shadow-[inset_1px_0_0_0_var(--border)]',
+                            )}
+                            style={{
+                              width: STORAGE_FILES_TABLE_EDGE_COL_PX,
+                              minWidth: STORAGE_FILES_TABLE_EDGE_COL_PX,
+                              maxWidth: STORAGE_FILES_TABLE_EDGE_COL_PX,
+                            }}
+                          />
                         </tr>
                       </thead>
                       <tbody>
@@ -1996,7 +2028,7 @@ export function View() {
                                     splitFilesTable
                                       ? 'min-w-0 px-3 py-1.5'
                                       : 'w-[180px] px-3 py-1.5',
-                                    STORAGE_SPREADSHEET_BODY_CELL_BORDER_LAST,
+                                    STORAGE_SPREADSHEET_BODY_CELL_BORDER,
                                   )}
                                   style={
                                     splitFilesTable
@@ -2018,6 +2050,41 @@ export function View() {
                                       N/A
                                     </span>
                                   )}
+                                </td>
+                                <td
+                                  className={cn(
+                                    'sticky right-0 border-b border-border p-0',
+                                    splitFilesTable && 'shrink-0 box-border',
+                                    'shadow-[inset_1px_0_0_0_var(--border)]',
+                                    !isPreviewRow
+                                      ? 'bg-background'
+                                      : 'bg-muted/25 group-hover:bg-muted/35',
+                                    !isPreviewRow &&
+                                      selectedFiles.has(file.$id) &&
+                                      'bg-muted',
+                                  )}
+                                  style={{
+                                    width: STORAGE_FILES_TABLE_EDGE_COL_PX,
+                                    minWidth: STORAGE_FILES_TABLE_EDGE_COL_PX,
+                                    maxWidth: STORAGE_FILES_TABLE_EDGE_COL_PX,
+                                  }}
+                                >
+                                  <div
+                                    className="flex h-full items-center justify-center py-1.5"
+                                    style={{
+                                      width: STORAGE_FILES_TABLE_EDGE_COL_PX,
+                                    }}
+                                  >
+                                    <FileRowActionsMenu
+                                      projectId={projectId!}
+                                      bucketId={bucketId!}
+                                      file={{
+                                        id: file.$id,
+                                        name: file.name,
+                                        pending,
+                                      }}
+                                    />
+                                  </div>
                                 </td>
                               </tr>
                             </FileContextMenu>

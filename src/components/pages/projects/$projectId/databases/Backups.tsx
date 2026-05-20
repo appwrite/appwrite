@@ -30,6 +30,8 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog'
+import { MenuItemContent, MenuItemIcon } from '@/components/global/shared/ContextMenuIcon'
+import { RowActionsMenuTrigger } from '@/components/global/shared/RowActionsMenuTrigger'
 import { DateTooltip } from '@/components/global/shared/DateTooltip'
 import { Pagination } from '@/components/global/shared/Pagination'
 import { CopyableId } from '@/components/global/shared/CopyableId'
@@ -41,7 +43,6 @@ import {
 } from '@/components/ui/tooltip'
 import {
   Plus,
-  MoreHorizontal,
   Archive,
   Trash2,
   RotateCcw,
@@ -591,13 +592,7 @@ export function BackupsView({ databaseId }: BackupsViewProps) {
                         </div>
                         <DropdownMenu>
                           <DropdownMenuTrigger asChild>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              className="h-8 w-8 p-0 shrink-0"
-                            >
-                              <MoreHorizontal className="h-4 w-4" />
-                            </Button>
+                            <RowActionsMenuTrigger />
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end">
                             <DropdownMenuItem
@@ -606,8 +601,7 @@ export function BackupsView({ databaseId }: BackupsViewProps) {
                                 setDeletePolicyDialogOpen(true)
                               }}
                             >
-                              <Trash2 className="mr-2 h-4 w-4" />
-                              Delete
+                              <MenuItemContent icon={Trash2}>Delete</MenuItemContent>
                             </DropdownMenuItem>
                           </DropdownMenuContent>
                         </DropdownMenu>
@@ -810,13 +804,7 @@ export function BackupsView({ databaseId }: BackupsViewProps) {
                               <div className="flex justify-end">
                                 <DropdownMenu>
                                   <DropdownMenuTrigger asChild>
-                                    <Button
-                                      variant="ghost"
-                                      size="sm"
-                                      className="h-8 w-8 p-0"
-                                    >
-                                      <MoreHorizontal className="h-4 w-4" />
-                                    </Button>
+                                    <RowActionsMenuTrigger />
                                   </DropdownMenuTrigger>
                                   <DropdownMenuContent align="end">
                                     {archive.status === 'completed' && (
@@ -826,8 +814,7 @@ export function BackupsView({ databaseId }: BackupsViewProps) {
                                           setRestoreDialogOpen(true)
                                         }}
                                       >
-                                        <RotateCcw className="mr-1.5 h-4 w-4" />
-                                        Restore
+                                        <MenuItemContent icon={RotateCcw}>Restore</MenuItemContent>
                                       </DropdownMenuItem>
                                     )}
                                     <DropdownMenuItem
@@ -840,18 +827,15 @@ export function BackupsView({ databaseId }: BackupsViewProps) {
                                         )
                                       }}
                                     >
-                                      <Copy className="mr-1.5 h-4 w-4" />
-                                      Copy ID
+                                      <MenuItemContent icon={Copy}>Copy ID</MenuItemContent>
                                     </DropdownMenuItem>
                                     <DropdownMenuItem
-                                      className="text-destructive"
                                       onClick={() => {
                                         setSelectedBackup(archive)
                                         setDeleteBackupDialogOpen(true)
                                       }}
                                     >
-                                      <Trash2 className="mr-1.5 h-4 w-4" />
-                                      Delete
+                                      <MenuItemContent icon={Trash2}>Delete</MenuItemContent>
                                     </DropdownMenuItem>
                                   </DropdownMenuContent>
                                 </DropdownMenu>

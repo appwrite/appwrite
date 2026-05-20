@@ -1734,7 +1734,7 @@ export function DeploymentDetailView({
               isDeploymentInProgress(deployment.status) &&
               onCancelBuild ? (
                 <Button
-                  variant="destructive"
+                  variant="outline"
                   size="sm"
                   onClick={() => setCancelBuildDialogOpen(true)}
                   disabled={cancelBuildMutation.isPending}
@@ -1753,7 +1753,7 @@ export function DeploymentDetailView({
                           size="sm"
                           onClick={() => setDeleteDialogOpen(true)}
                           disabled={isActiveDeployment}
-                          className="h-9 text-[13px] border-destructive/35 text-destructive hover:bg-destructive/10 hover:text-destructive hover:border-destructive/50"
+                          className="h-9 text-[13px]"
                         >
                           <Trash2 className="mr-1.5 h-4 w-4" />
                           Delete
@@ -1906,7 +1906,7 @@ export function DeploymentDetailView({
                     onCancelBuild && (
                       <Button
                         type="button"
-                        variant="destructive"
+                        variant="outline"
                         className="h-10 w-full justify-start text-[13px]"
                         onClick={() => {
                           setDeploymentActionsDrawerOpen(false)
@@ -1926,7 +1926,7 @@ export function DeploymentDetailView({
                     <Button
                       type="button"
                       variant="outline"
-                      className="h-10 w-full justify-start border-destructive/35 text-[13px] text-destructive hover:bg-destructive/10 hover:text-destructive hover:border-destructive/50"
+                      className="h-10 w-full justify-start text-[13px]"
                       onClick={() => {
                         setDeploymentActionsDrawerOpen(false)
                         setDeleteDialogOpen(true)

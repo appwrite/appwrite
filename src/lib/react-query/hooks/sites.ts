@@ -1388,6 +1388,7 @@ export function useCreateSiteVariable(
       const projectSdk = sdk.forProject(projectId)
       return await projectSdk.sites.createVariable({
         siteId,
+        variableId: ID.unique(),
         key: params.key.trim(),
         value: params.value,
         secret: params.secret,

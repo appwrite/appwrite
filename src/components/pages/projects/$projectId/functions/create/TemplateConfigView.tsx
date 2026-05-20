@@ -42,7 +42,7 @@ import {
 } from '@/lib/specifications'
 import { useFunctionWizard } from './WizardContext'
 import { FunctionDomainCard } from './_components/FunctionDomainCard'
-import { EnvironmentVariablesCard } from '@/components/global/shared/EnvironmentVariablesCard'
+import { VariablesSettingsCard } from '@/components/global/shared/VariablesSettingsCard'
 import {
   ConnectRepositorySection,
   type ConnectRepositoryValue,
@@ -294,6 +294,7 @@ export function TemplateConfigView({
         if (!v.key.trim()) continue
         await projectSdk.functions.createVariable({
           functionId: finalFunctionId,
+          variableId: ID.unique(),
           key: v.key.trim(),
           value: v.value,
           secret: v.secret,
@@ -794,7 +795,8 @@ export function TemplateConfigView({
           )
         })()
       ) : (
-        <EnvironmentVariablesCard
+        <VariablesSettingsCard
+          variant="wizard"
           variables={variables}
           onChange={setVariables}
         />

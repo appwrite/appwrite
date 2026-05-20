@@ -22,13 +22,14 @@ import { FrameworkIcon } from '@/components/global/shared/FrameworkIcon'
 import { Upload, File, X, GitBranch, LayoutTemplate } from 'lucide-react'
 import { useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
+import { ID } from '@appwrite.io/console'
 import { sdk } from '@/lib/appwrite/sdk'
 import { useCreateSite, useCreateSiteDomain } from '@/lib/react-query/hooks'
 import { cn } from '@/lib/utils'
 import { useWizard } from './WizardContext'
 import { DomainInput } from './DomainInput'
 import { BuildSettings } from './BuildSettings'
-import { EnvironmentVariables } from './EnvironmentVariables'
+import { VariablesSettingsCard } from '@/components/global/shared/VariablesSettingsCard'
 
 export function ManualUploadView() {
   const { projectId } = useParams({ strict: false })
@@ -171,6 +172,7 @@ export function ManualUploadView() {
           variables.map((v) =>
             projectSdk.sites.createVariable({
               siteId: site.$id,
+              variableId: ID.unique(),
               key: v.key,
               value: v.value,
               secret: v.secret,
@@ -436,7 +438,11 @@ export function ManualUploadView() {
       />
 
       {/* Environment variables */}
-      <EnvironmentVariables variables={variables} onChange={setVariables} />
+      <VariablesSettingsCard
+        variant="wizard"
+        variables={variables}
+        onChange={setVariables}
+      />
 
       {/* Domain section */}
       <div className="rounded-xl border border-border bg-card/50 overflow-hidden">

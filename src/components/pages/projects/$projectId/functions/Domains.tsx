@@ -6,7 +6,6 @@ import {
   useLocation,
 } from '@tanstack/react-router'
 import {
-  MoreHorizontal,
   Loader2,
   FileText,
   RefreshCw,
@@ -14,6 +13,8 @@ import {
   ExternalLink,
   Globe,
 } from 'lucide-react'
+import { MenuItemContent, MenuItemIcon } from '@/components/global/shared/ContextMenuIcon'
+import { RowActionsMenuTrigger } from '@/components/global/shared/RowActionsMenuTrigger'
 import { Button } from '@/components/ui/button'
 import { Pagination } from '@/components/global/shared/Pagination'
 import { DateTooltip } from '@/components/global/shared/DateTooltip'
@@ -271,21 +272,14 @@ export function View() {
                           <div className="flex justify-end">
                             <DropdownMenu>
                               <DropdownMenuTrigger asChild>
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  className="h-8 w-8 p-0"
-                                >
-                                  <MoreHorizontal className="h-4 w-4" />
-                                </Button>
+                                <RowActionsMenuTrigger />
                               </DropdownMenuTrigger>
                               <DropdownMenuContent align="end">
                                 {rule.status !== 'verified' && (
                                   <DropdownMenuItem
                                     onClick={() => handleViewLogs(rule)}
                                   >
-                                    <FileText className="mr-2 h-4 w-4" />
-                                    View logs
+                                    <MenuItemContent icon={FileText}>Logs</MenuItemContent>
                                   </DropdownMenuItem>
                                 )}
                                 {(rule.status === 'created' ||
@@ -293,8 +287,7 @@ export function View() {
                                   <DropdownMenuItem
                                     onClick={() => handleRetry(rule)}
                                   >
-                                    <RefreshCw className="mr-2 h-4 w-4" />
-                                    Retry
+                                    <MenuItemContent icon={RefreshCw}>Retry</MenuItemContent>
                                   </DropdownMenuItem>
                                 )}
                                 <DropdownMenuItem
@@ -325,14 +318,12 @@ export function View() {
                                     )
                                   }
                                 >
-                                  <FileText className="mr-2 h-4 w-4" />
-                                  DNS Records
+                                  <MenuItemContent icon={FileText}>Records</MenuItemContent>
                                 </DropdownMenuItem>
                                 <DropdownMenuItem
                                   onClick={() => handleDelete(rule)}
                                 >
-                                  <Trash2 className="mr-2 h-4 w-4" />
-                                  Delete
+                                  <MenuItemContent icon={Trash2}>Delete</MenuItemContent>
                                 </DropdownMenuItem>
                               </DropdownMenuContent>
                             </DropdownMenu>

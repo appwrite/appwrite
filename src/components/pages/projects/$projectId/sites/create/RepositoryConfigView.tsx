@@ -43,7 +43,7 @@ import {
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
 import { sdk } from '@/lib/appwrite/sdk'
-import { VCSDetectionType } from '@appwrite.io/console'
+import { VCSDetectionType, ID } from '@appwrite.io/console'
 import {
   useRepository,
   useCreateSite,
@@ -53,7 +53,7 @@ import {
 import { useWizard } from './WizardContext'
 import { DomainInput } from './DomainInput'
 import { BuildSettings } from './BuildSettings'
-import { EnvironmentVariables } from './EnvironmentVariables'
+import { VariablesSettingsCard } from '@/components/global/shared/VariablesSettingsCard'
 
 // GitHub Icon Component
 function GitHubIcon({ className }: { className?: string }) {
@@ -282,6 +282,7 @@ export function RepositoryConfigView({
           variables.map((v) =>
             projectSdk.sites.createVariable({
               siteId: site.$id,
+              variableId: ID.unique(),
               key: v.key,
               value: v.value,
               secret: v.secret,
@@ -701,7 +702,11 @@ export function RepositoryConfigView({
       />
 
       {/* Environment variables */}
-      <EnvironmentVariables variables={variables} onChange={setVariables} />
+      <VariablesSettingsCard
+        variant="wizard"
+        variables={variables}
+        onChange={setVariables}
+      />
     </WizardLayout>
   )
 }

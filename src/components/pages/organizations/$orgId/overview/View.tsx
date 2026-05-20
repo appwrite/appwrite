@@ -15,7 +15,6 @@ import {
   UserPlus,
   Users,
   Shield,
-  MoreHorizontal,
   FileText,
   ShieldCheck,
   Mail,
@@ -147,6 +146,8 @@ import { ConsoleLayout } from '@/components/global/layout/ConsoleLayout'
 import { CommandCenter } from '@/components/global/shared/CommandCenter'
 import { InitialsAvatar } from '@/components/global/shared/Avatar'
 import { cn } from '@/lib/utils'
+import { MenuItemContent, MenuItemIcon } from '@/components/global/shared/ContextMenuIcon'
+import { RowActionsMenuTrigger } from '@/components/global/shared/RowActionsMenuTrigger'
 import { getPlanBadgeColor, getPlanDisplayName } from '@/lib/utils/plan-badge'
 import {
   getPlanNameFromTier,
@@ -943,22 +944,18 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
     return pinnedIds
       .map((id) => byId.get(id))
       .filter((p): p is Models.Project => p != null)
-      .map((project) => {
-        const platforms = project.platforms || []
-        const keys = project.keys || []
-        return {
-          $id: project.$id,
-          name: project.name,
-          teamId: project.teamId,
-          region: project.region || 'unknown',
-          createdAt: project.$createdAt || new Date().toISOString(),
-          icon: project.name.charAt(0).toUpperCase(),
-          archived: project.status === 'archived',
-          paused: project.status === 'paused',
-          platformsCount: Array.isArray(platforms) ? platforms.length : 0,
-          apiKeysCount: Array.isArray(keys) ? keys.length : 0,
-        }
-      })
+      .map((project) => ({
+        $id: project.$id,
+        name: project.name,
+        teamId: project.teamId,
+        region: project.region || 'unknown',
+        createdAt: project.$createdAt || new Date().toISOString(),
+        icon: project.name.charAt(0).toUpperCase(),
+        archived: project.status === 'archived',
+        paused: project.status === 'paused',
+        platformsCount: 0,
+        apiKeysCount: 0,
+      }))
   }, [pinnedProjectsData, pinnedIds])
 
   const canPinProjectsResult = canPinProjects(access, features)
@@ -1096,22 +1093,18 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
   const activeProjects = useMemo(() => {
     if (!activeProjectsData?.projects) return []
 
-    return activeProjectsData.projects.map((project: Models.Project) => {
-      const platforms = project.platforms || []
-      const keys = project.keys || []
-      return {
-        $id: project.$id,
-        name: project.name,
-        teamId: project.teamId,
-        region: project.region || 'unknown',
-        createdAt: project.$createdAt || new Date().toISOString(),
-        icon: project.name.charAt(0).toUpperCase(),
-        archived: project.status === 'archived',
-        paused: project.status === 'paused',
-        platformsCount: Array.isArray(platforms) ? platforms.length : 0,
-        apiKeysCount: Array.isArray(keys) ? keys.length : 0,
-      }
-    })
+    return activeProjectsData.projects.map((project: Models.Project) => ({
+      $id: project.$id,
+      name: project.name,
+      teamId: project.teamId,
+      region: project.region || 'unknown',
+      createdAt: project.$createdAt || new Date().toISOString(),
+      icon: project.name.charAt(0).toUpperCase(),
+      archived: project.status === 'archived',
+      paused: project.status === 'paused',
+      platformsCount: 0,
+      apiKeysCount: 0,
+    }))
   }, [activeProjectsData])
 
   // Group active projects by team (non-pinned only)
@@ -2923,9 +2916,7 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                                                         <DropdownMenuTrigger
                                                           asChild
                                                         >
-                                                          <button className="rounded p-1.5 text-muted-foreground transition-colors hover:bg-accent hover:text-foreground">
-                                                            <MoreHorizontal className="h-4 w-4" />
-                                                          </button>
+                                                          <RowActionsMenuTrigger />
                                                         </DropdownMenuTrigger>
                                                         <DropdownMenuContent
                                                           align="end"
@@ -2966,10 +2957,11 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                                                               resendInviteMutation.isPending
                                                             }
                                                           >
-                                                            <Mail className="mr-2 h-4 w-4" />
-                                                            {resendInviteMutation.isPending
-                                                              ? 'Resending...'
-                                                              : 'Resend invitation'}
+                                                            <MenuItemContent icon={Mail}>
+                                                              {resendInviteMutation.isPending
+                                                                ? 'Resending...'
+                                                                : 'Resend'}
+                                                            </MenuItemContent>
                                                           </DropdownMenuItem>
                                                           <DropdownMenuSeparator />
                                                           <DropdownMenuItem
@@ -2981,10 +2973,8 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                                                                 true,
                                                               )
                                                             }}
-                                                            className="text-red-600 focus:text-red-600 dark:text-red-400 dark:focus:text-red-400"
                                                           >
-                                                            <Trash2 className="mr-2 h-4 w-4" />
-                                                            Remove from team
+                                                            <MenuItemContent icon={Trash2}>Remove</MenuItemContent>
                                                           </DropdownMenuItem>
                                                         </DropdownMenuContent>
                                                       </DropdownMenu>
@@ -2993,9 +2983,7 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                                                         <DropdownMenuTrigger
                                                           asChild
                                                         >
-                                                          <button className="rounded p-1.5 text-muted-foreground transition-colors hover:bg-accent hover:text-foreground">
-                                                            <MoreHorizontal className="h-4 w-4" />
-                                                          </button>
+                                                          <RowActionsMenuTrigger />
                                                         </DropdownMenuTrigger>
                                                         <DropdownMenuContent
                                                           align="end"
@@ -3026,8 +3014,7 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                                                                   )
                                                                 }}
                                                               >
-                                                                <UserCog className="mr-2 h-4 w-4" />
-                                                                Update role
+                                                                <MenuItemContent icon={UserCog}>Update</MenuItemContent>
                                                               </DropdownMenuItem>
                                                               <DropdownMenuSeparator />
                                                             </>
@@ -3045,10 +3032,8 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                                                                   true,
                                                                 )
                                                               }}
-                                                              className="text-red-600 focus:text-red-600 dark:text-red-400 dark:focus:text-red-400"
                                                             >
-                                                              <Trash2 className="mr-2 h-4 w-4" />
-                                                              Remove from team
+                                                              <MenuItemContent icon={Trash2}>Remove</MenuItemContent>
                                                             </DropdownMenuItem>
                                                           )}
                                                         </DropdownMenuContent>

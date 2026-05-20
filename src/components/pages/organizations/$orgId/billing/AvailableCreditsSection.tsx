@@ -52,7 +52,7 @@ export function AvailableCreditsSection({
 }: AvailableCreditsSectionProps) {
   const [requestedPage, setRequestedPage] = useState(0)
   const [displayedPage, setDisplayedPage] = useState(0)
-  const { isLoading: orgLoading } = useOrganizationById(orgId)
+  const { organization, isLoading: orgLoading } = useOrganizationById(orgId)
   const { plan, isLoading: planLoading } = useOrganizationPlan(orgId)
 
   // Fetch requested page (user intent)
@@ -94,7 +94,10 @@ export function AvailableCreditsSection({
   const isPageTransitioning =
     requestedPage !== displayedPage && requestedCreditsFetching
 
-  const isLoading = orgLoading || planLoading || displayedCreditsLoading
+  const isLoading =
+    (orgLoading && !organization) ||
+    (planLoading && !plan) ||
+    (displayedCreditsLoading && credits.length === 0)
 
   // Check if credits are supported
   const areCreditsSupported = plan?.supportsCredits === true

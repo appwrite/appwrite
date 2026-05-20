@@ -37,13 +37,14 @@ import {
   FileJson,
   Link2,
   Loader2,
-  MoreHorizontal,
   Pencil,
   Square,
   Trash2,
   Webhook as WebhookIcon,
 } from 'lucide-react'
 import { toast } from 'sonner'
+import { MenuItemContent, MenuItemIcon } from '@/components/global/shared/ContextMenuIcon'
+import { RowActionsMenuTrigger } from '@/components/global/shared/RowActionsMenuTrigger'
 import { CopyableId } from '@/components/global/shared/CopyableId'
 import { DateTooltip } from '@/components/global/shared/DateTooltip'
 import { EmptyState } from '@/components/global/shared/EmptyState'
@@ -257,28 +258,20 @@ export function Webhooks({
                       >
                         <DropdownMenu>
                           <DropdownMenuTrigger asChild>
-                            <Button
-                              type="button"
-                              variant="ghost"
-                              size="sm"
-                              className="h-8 w-8 p-0"
+                            <RowActionsMenuTrigger
                               aria-label={`Actions for ${webhook.name}`}
-                            >
-                              <MoreHorizontal className="h-4 w-4" />
-                            </Button>
+                            />
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end" className="w-56">
                             <DropdownMenuItem
                               onClick={() => handleUpdate(webhook)}
                             >
-                              <Pencil className="mr-1.5 h-4 w-4" />
-                              Update
+                              <MenuItemContent icon={Pencil}>Update</MenuItemContent>
                             </DropdownMenuItem>
                             <DropdownMenuSeparator />
                             <DropdownMenuSub>
                               <DropdownMenuSubTrigger>
-                                <Copy className="mr-1.5 h-4 w-4" />
-                                Copy
+                                <MenuItemContent icon={Copy}>Copy</MenuItemContent>
                               </DropdownMenuSubTrigger>
                               <DropdownMenuSubContent>
                                 <DropdownMenuItem
@@ -286,16 +279,14 @@ export function Webhooks({
                                     copyToClipboard('ID', webhook.$id)
                                   }
                                 >
-                                  <Copy className="mr-1.5 h-4 w-4" />
-                                  Copy ID
+                                  <MenuItemContent icon={Copy}>Copy ID</MenuItemContent>
                                 </DropdownMenuItem>
                                 <DropdownMenuItem
                                   onClick={() =>
                                     copyToClipboard('Name', webhook.name)
                                   }
                                 >
-                                  <Copy className="mr-1.5 h-4 w-4" />
-                                  Copy name
+                                  <MenuItemContent icon={Copy}>Copy name</MenuItemContent>
                                 </DropdownMenuItem>
                                 <DropdownMenuItem
                                   onClick={() =>
@@ -305,8 +296,7 @@ export function Webhooks({
                                     )
                                   }
                                 >
-                                  <Link2 className="mr-1.5 h-4 w-4" />
-                                  Copy link
+                                  <MenuItemContent icon={Link2}>Copy link</MenuItemContent>
                                 </DropdownMenuItem>
                                 <DropdownMenuItem
                                   onClick={() =>
@@ -318,8 +308,7 @@ export function Webhooks({
                                     )
                                   }
                                 >
-                                  <FileJson className="mr-1.5 h-4 w-4" />
-                                  Copy as JSON
+                                  <MenuItemContent icon={FileJson}>Copy as JSON</MenuItemContent>
                                 </DropdownMenuItem>
                               </DropdownMenuSubContent>
                             </DropdownMenuSub>
@@ -329,23 +318,20 @@ export function Webhooks({
                                 openInNewTab(getWebhookHref(webhook))
                               }
                             >
-                              <ExternalLink className="mr-1.5 h-4 w-4" />
-                              Open in new tab
+                              <MenuItemContent icon={ExternalLink}>Open in new tab</MenuItemContent>
                             </DropdownMenuItem>
                             <DropdownMenuItem
                               onClick={() =>
                                 openInNewWindow(getWebhookHref(webhook))
                               }
                             >
-                              <Square className="mr-1.5 h-4 w-4" />
-                              Open in new window
+                              <MenuItemContent icon={Square}>Open in new window</MenuItemContent>
                             </DropdownMenuItem>
                             <DropdownMenuSeparator />
                             <DropdownMenuItem
                               onClick={() => requestDelete(webhook)}
                             >
-                              <Trash2 className="mr-1.5 h-4 w-4" />
-                              Delete
+                              <MenuItemContent icon={Trash2}>Delete</MenuItemContent>
                             </DropdownMenuItem>
                           </DropdownMenuContent>
                         </DropdownMenu>

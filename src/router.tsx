@@ -5,6 +5,24 @@ import * as TanstackQuery from './integrations/tanstack-query/root-provider'
 // Import the generated route tree
 import { routeTree } from './routeTree.gen'
 import { ErrorComponent } from './components/error/Component'
+import { Link } from '@tanstack/react-router'
+
+function NotFoundComponent() {
+  return (
+    <div className="flex min-h-svh flex-col items-center justify-center gap-4 px-6 text-center">
+      <h1 className="text-[20px] font-semibold text-foreground">Page not found</h1>
+      <p className="max-w-md text-[13px] text-muted-foreground">
+        The page you are looking for does not exist or may have been moved.
+      </p>
+      <Link
+        to="/"
+        className="text-[13px] font-medium text-primary hover:underline"
+      >
+        Go to console home
+      </Link>
+    </div>
+  )
+}
 
 // No default pending component: the root FullscreenLoader (Appwrite logo) is the
 // single loader. Showing a router pending UI here caused a dual-loader flash on
@@ -19,6 +37,7 @@ export const getRouter = () => {
     context: { ...rqContext },
     defaultPreload: 'intent',
     defaultPendingComponent: () => null,
+    defaultNotFoundComponent: NotFoundComponent,
     defaultErrorComponent: ({ error, info, reset }) => (
       <ErrorComponent error={error} info={info} reset={reset} />
     ),

@@ -1,77 +1,65 @@
 import { useState, useEffect, useMemo, useRef } from 'react'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
-import { sdk } from '@/lib/appwrite/sdk'
-import { useProject, useUpdateAuthMethod } from '@/lib/react-query/hooks'
+import { ProjectAuthMethodId } from '@appwrite.io/console'
+import {
+  projectQueryOptions,
+  useUpdateAuthMethod,
+} from '@/lib/react-query/hooks'
+import { authMethodsRecordFromProject } from '@/lib/project-settings'
 import { Label } from '@/components/ui/label'
 import { Switch } from '@/components/ui/switch'
-import {
-  Loader2,
-  Mail,
-  Key,
-  Smartphone,
-  UserPlus,
-  Lock,
-} from 'lucide-react'
+import { Loader2, Mail, Key, Smartphone, UserPlus, Lock } from 'lucide-react'
 import { cn } from '@/lib/utils'
-import { MethodId } from '@appwrite.io/console'
 import { OAuth2ProvidersSection } from './_components/OAuth2ProvidersSection'
+import type { AuthOAuth2SettingsInitialData } from '@/lib/react-query/hooks/oauth2-providers'
 
 interface AuthSettingsProps {
   projectId: string
+  initialData?: AuthOAuth2SettingsInitialData
 }
 
 const AUTH_METHODS = [
   {
-    key: MethodId.Emailpassword,
+    key: ProjectAuthMethodId.Emailpassword,
     label: 'Email/Password',
     icon: Mail,
   },
   {
-    key: MethodId.Phone,
+    key: ProjectAuthMethodId.Phone,
     label: 'Phone',
     icon: Smartphone,
   },
   {
-    key: MethodId.Magicurl,
+    key: ProjectAuthMethodId.Magicurl,
     label: 'Magic URL',
     icon: Key,
   },
   {
-    key: MethodId.Emailotp,
+    key: ProjectAuthMethodId.Emailotp,
     label: 'Email OTP',
     icon: Mail,
   },
   {
-    key: MethodId.Anonymous,
+    key: ProjectAuthMethodId.Anonymous,
     label: 'Anonymous',
     icon: UserPlus,
   },
   {
-    key: MethodId.Invites,
+    key: ProjectAuthMethodId.Invites,
     label: 'Team Invites',
     icon: UserPlus,
   },
   {
-    key: MethodId.Jwt,
+    key: ProjectAuthMethodId.Jwt,
     label: 'JWT',
     icon: Lock,
   },
 ] as const
 
-export function AuthSettings({ projectId }: AuthSettingsProps) {
+export function AuthSettings({ projectId, initialData }: AuthSettingsProps) {
   const queryClient = useQueryClient()
-  const { isLoading: projectLoading } = useProject(projectId)
-
-  const { data: rawProjectData } = useQuery({
-    queryKey: ['project', projectId],
-    queryFn: async () => {
-      const response = await sdk.forConsole.projects.get({ projectId })
-      return response
-    },
-    enabled: !!projectId,
-    staleTime: 5 * 60 * 1000,
-  })
+  const { data: projectData } = useQuery(projectQueryOptions(projectId))
 
   const [optimisticAuthMethods, setOptimisticAuthMethods] = useState<
     Record<string, boolean>
@@ -81,29 +69,10 @@ export function AuthSettings({ projectId }: AuthSettingsProps) {
   )
   const lastSubmittedAuthMethods = useRef<Record<string, boolean>>({})
 
-  const baseAuthMethods = useMemo(() => {
-    if (!rawProjectData) {
-      return {
-        [MethodId.Emailpassword]: false,
-        [MethodId.Phone]: false,
-        [MethodId.Magicurl]: false,
-        [MethodId.Emailotp]: false,
-        [MethodId.Anonymous]: false,
-        [MethodId.Invites]: false,
-        [MethodId.Jwt]: false,
-      }
-    }
-    const projectData = rawProjectData as unknown as Record<string, boolean>
-    return {
-      [MethodId.Emailpassword]: projectData.authEmailPassword ?? false,
-      [MethodId.Phone]: projectData.authPhone ?? false,
-      [MethodId.Magicurl]: projectData.authUsersAuthMagicURL ?? false,
-      [MethodId.Emailotp]: projectData.authEmailOtp ?? false,
-      [MethodId.Anonymous]: projectData.authAnonymous ?? false,
-      [MethodId.Invites]: projectData.authInvites ?? false,
-      [MethodId.Jwt]: projectData.authJWT ?? false,
-    }
-  }, [rawProjectData])
+  const baseAuthMethods = useMemo(
+    () => authMethodsRecordFromProject(projectData),
+    [projectData],
+  )
 
   useEffect(() => {
     Object.keys(lastSubmittedAuthMethods.current).forEach((method) => {
@@ -162,14 +131,6 @@ export function AuthSettings({ projectId }: AuthSettingsProps) {
           delete lastSubmittedAuthMethods.current[method]
         },
       },
-    )
-  }
-
-  if (projectLoading) {
-    return (
-      <div className="flex h-full items-center justify-center">
-        <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
-      </div>
     )
   }
 
@@ -232,7 +193,7 @@ export function AuthSettings({ projectId }: AuthSettingsProps) {
         </div>
       </div>
 
-      <OAuth2ProvidersSection projectId={projectId} />
+      <OAuth2ProvidersSection projectId={projectId} initialData={initialData} />
     </div>
   )
 }

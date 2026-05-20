@@ -2,18 +2,21 @@ import { createFileRoute, redirect } from '@tanstack/react-router'
 import { View } from '@/components/pages/projects/$projectId/auth/View'
 import { fetchEmailTemplate, fetchLocaleCodes } from '@/lib/react-query/hooks'
 import { canAccessAuthSecuritySettings } from '@/lib/console-rbac-loader'
-import { EmailTemplateType, EmailTemplateLocale } from '@appwrite.io/console'
+import {
+  ProjectEmailTemplateId,
+  ProjectEmailTemplateLocale,
+} from '@appwrite.io/console'
 import { pageTitle } from '@/lib/utils/page-title'
 
 // All email template types that need to be prefetched
 const EMAIL_TEMPLATE_TYPES = [
-  EmailTemplateType.Verification,
-  EmailTemplateType.MagicSession,
-  EmailTemplateType.OtpSession,
-  EmailTemplateType.Recovery,
-  EmailTemplateType.Invitation,
-  EmailTemplateType.MfaChallenge,
-  EmailTemplateType.SessionAlert,
+  ProjectEmailTemplateId.Verification,
+  ProjectEmailTemplateId.MagicSession,
+  ProjectEmailTemplateId.OtpSession,
+  ProjectEmailTemplateId.Recovery,
+  ProjectEmailTemplateId.Invitation,
+  ProjectEmailTemplateId.MfaChallenge,
+  ProjectEmailTemplateId.SessionAlert,
 ]
 
 export const Route = createFileRoute(
@@ -58,13 +61,13 @@ export const Route = createFileRoute(
                 'emailTemplate',
                 projectId,
                 templateType,
-                EmailTemplateLocale.En,
+                ProjectEmailTemplateLocale.En,
               ],
               queryFn: () =>
                 fetchEmailTemplate(
                   projectId,
                   templateType,
-                  EmailTemplateLocale.En,
+                  ProjectEmailTemplateLocale.En,
                 ),
               staleTime: 30 * 1000, // 30 seconds
             }),

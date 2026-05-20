@@ -86,12 +86,10 @@ export function ProjectSelector({
   const projects = useMemo(() => {
     const list = data?.projects ?? []
     return list.map((p: Models.Project) => {
-      const keys = p.keys || []
-      const apiKeysCount = Array.isArray(keys) ? keys.length : 0
       return {
         $id: p.$id,
         name: p.name,
-        apiKeysCount,
+        apiKeysCount: 0,
         paused: p.status === 'paused',
       }
     })

@@ -53,7 +53,8 @@ export function BudgetCapSection({ orgId }: BudgetCapSectionProps) {
   }, [organization?.billingBudget])
 
   const enabled = (organization?.billingBudget || 0) > 0
-  const isLoading = orgLoading || planLoading
+  const isLoading =
+    (orgLoading && !organization) || (planLoading && !plan)
 
   // Check if plan supports budgeting
   const supportsBudgeting = plan?.budgeting !== false

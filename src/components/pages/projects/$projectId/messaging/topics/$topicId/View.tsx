@@ -1,6 +1,16 @@
 import { useState, useMemo, useEffect, useRef } from 'react'
 import { useParams, useNavigate, useLocation } from '@tanstack/react-router'
-import { ArrowLeft, Hash, Mail, Phone, Bell, MoreHorizontal } from 'lucide-react'
+import {
+  ArrowLeft,
+  Hash,
+  Mail,
+  Phone,
+  Bell,
+  ScrollText,
+  Trash2,
+} from 'lucide-react'
+import { MenuItemContent, MenuItemIcon } from '@/components/global/shared/ContextMenuIcon'
+import { RowActionsMenuTrigger } from '@/components/global/shared/RowActionsMenuTrigger'
 import {
   useTopic,
   useTopicSubscribers,
@@ -550,14 +560,7 @@ export function View({
                             <TableCell className="px-4 py-3 text-right">
                               <DropdownMenu>
                                 <DropdownMenuTrigger asChild>
-                                  <Button
-                                    variant="ghost"
-                                    size="sm"
-                                    className="h-8 w-8 p-0"
-                                    aria-label="Open subscriber menu"
-                                  >
-                                    <MoreHorizontal className="h-4 w-4" />
-                                  </Button>
+                                  <RowActionsMenuTrigger aria-label="Subscriber actions" />
                                 </DropdownMenuTrigger>
                                 <DropdownMenuContent align="end">
                                   <DropdownMenuItem
@@ -565,7 +568,7 @@ export function View({
                                       setSubscriberLogFor(subscriber)
                                     }
                                   >
-                                    Logs
+                                    <MenuItemContent icon={ScrollText}>Logs</MenuItemContent>
                                   </DropdownMenuItem>
                                   <DropdownMenuItem
                                     disabled={!canManageSubscribers}
@@ -574,7 +577,7 @@ export function View({
                                       setSubscriberPendingDelete(subscriber)
                                     }
                                   >
-                                    Remove subscriber
+                                    <MenuItemContent icon={Trash2}>Remove</MenuItemContent>
                                   </DropdownMenuItem>
                                 </DropdownMenuContent>
                               </DropdownMenu>

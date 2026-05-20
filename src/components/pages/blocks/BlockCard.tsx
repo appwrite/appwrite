@@ -1,5 +1,7 @@
 import { useMemo } from 'react'
-import { Clock, Infinity as InfinityIcon, MoreVertical, Trash2 } from 'lucide-react'
+import { Clock, Infinity as InfinityIcon, Trash2 } from 'lucide-react'
+import { MenuItemContent, MenuItemIcon } from '@/components/global/shared/ContextMenuIcon'
+import { RowActionsMenuTrigger } from '@/components/global/shared/RowActionsMenuTrigger'
 import { formatDistanceToNowStrict } from 'date-fns'
 import type { Models } from '@appwrite.io/console'
 import { Badge } from '@/components/ui/badge'
@@ -124,22 +126,14 @@ export function BlockCard({
 
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <button
-            type="button"
-            aria-label="Block actions"
-            className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md text-muted-foreground hover:bg-accent hover:text-foreground"
-          >
-            <MoreVertical className="h-4 w-4" />
-          </button>
+          <RowActionsMenuTrigger aria-label="Block actions" />
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end" className="w-40">
           <DropdownMenuItem
-            variant="destructive"
             onClick={onDelete}
-            className="cursor-pointer gap-2 text-[13px] dark:!text-destructive-foreground dark:focus:!text-destructive-foreground dark:[&_svg]:!text-destructive-foreground"
+            className="text-[13px]"
           >
-            <Trash2 className="h-3.5 w-3.5" />
-            Revoke block
+            <MenuItemContent icon={Trash2}>Revoke</MenuItemContent>
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>

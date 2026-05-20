@@ -8,11 +8,14 @@
 import { useMemo, useState } from 'react'
 import {
   CreditCard,
-  MoreHorizontal,
   Link as LinkIcon,
+  Pencil,
+  Trash2,
   Plus,
 } from 'lucide-react'
 import { Link } from '@tanstack/react-router'
+import { MenuItemContent, MenuItemIcon } from '@/components/global/shared/ContextMenuIcon'
+import { RowActionsMenuTrigger } from '@/components/global/shared/RowActionsMenuTrigger'
 import { Button } from '@/components/ui/button'
 import {
   DropdownMenu,
@@ -42,10 +45,9 @@ import {
   usePaymentMethods,
   useUpdatePaymentMethod,
   useDeletePaymentMethod,
+  organizationsFullQueryOptions,
 } from '@/lib/react-query/hooks'
 import { useQuery } from '@tanstack/react-query'
-import { Query } from '@appwrite.io/console'
-import { sdk } from '@/lib/appwrite/sdk'
 import type { Models } from '@appwrite.io/console'
 import { EditPaymentMethodModal } from './EditPaymentMethod'
 import { DeletePaymentMethodModal } from './DeletePaymentMethod'
@@ -62,17 +64,7 @@ export function AccountPaymentMethods({
   useUpdatePaymentMethod()
   useDeletePaymentMethod()
 
-  // Fetch organizations with full data (including paymentMethodId, backupPaymentMethodId)
-  const { data: organizationsData } = useQuery({
-    queryKey: ['organizations', 'console', 'full'],
-    queryFn: async () => {
-      const response = await sdk.forConsole.organizations.list({
-        queries: [Query.equal('platform', 'appwrite')],
-      })
-      return response.teams || []
-    },
-    staleTime: 30 * 1000,
-  })
+  const { data: organizationsData } = useQuery(organizationsFullQueryOptions())
 
   // eslint-disable-next-line react-hooks/exhaustive-deps
   const organizations = organizationsData || []
@@ -134,7 +126,7 @@ export function AccountPaymentMethods({
     setSelectedPaymentMethod(null)
   }
 
-  if (methodsLoading) {
+  if (methodsLoading && completedPaymentMethods.length === 0) {
     return (
       <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
         <div className="px-6 py-4">
@@ -374,27 +366,21 @@ export function AccountPaymentMethods({
                       <TableCell className="px-4 py-3 text-right">
                         <DropdownMenu>
                           <DropdownMenuTrigger asChild>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              className="h-8 w-8 p-0 text-muted-foreground hover:text-foreground"
-                            >
-                              <MoreHorizontal className="h-4 w-4" />
-                            </Button>
+                            <RowActionsMenuTrigger />
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end" className="w-40">
                             <DropdownMenuItem
                               className="text-[13px]"
                               onClick={() => handleEdit(method)}
                             >
-                              Update
+                              <MenuItemContent icon={Pencil}>Update</MenuItemContent>
                             </DropdownMenuItem>
                             <DropdownMenuSeparator />
                             <DropdownMenuItem
-                              className="text-[13px] text-red-600 dark:text-red-400 focus:text-red-600 dark:focus:text-red-400"
+                              className="text-[13px]"
                               onClick={() => handleDelete(method)}
                             >
-                              Delete
+                              <MenuItemContent icon={Trash2}>Delete</MenuItemContent>
                             </DropdownMenuItem>
                           </DropdownMenuContent>
                         </DropdownMenu>

@@ -97,6 +97,7 @@ import { Templates } from './Templates'
 import { toast } from 'sonner'
 import { UserContextMenu } from './_components/UserContextMenu'
 import { TeamContextMenu } from './_components/TeamContextMenu'
+import type { AuthOAuth2SettingsInitialData } from '@/lib/react-query/hooks/oauth2-providers'
 
 export type UsersListSearch = {
   search?: string
@@ -108,8 +109,10 @@ export type UsersListSearch = {
 
 export function View({
   usersListSearch,
+  authSettingsInitialData,
 }: {
   usersListSearch?: UsersListSearch
+  authSettingsInitialData?: AuthOAuth2SettingsInitialData
 } = {}) {
   const { projectId } = useParams({
     strict: false,
@@ -2192,7 +2195,10 @@ export function View({
         )}
 
         {activeTab === 'settings' && projectId && (
-          <AuthSettings projectId={projectId} />
+          <AuthSettings
+            projectId={projectId}
+            initialData={authSettingsInitialData}
+          />
         )}
       </div>
 

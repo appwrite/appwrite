@@ -1,5 +1,9 @@
 import { createFileRoute, Outlet } from '@tanstack/react-router'
 import { projectQueryOptions } from '@/lib/react-query/hooks'
+import {
+  consoleOAuth2CatalogQueryOptions,
+  projectOAuth2ProvidersQueryOptions,
+} from '@/lib/react-query/hooks/oauth2-providers'
 import { pageTitle } from '@/lib/utils/page-title'
 
 export const Route = createFileRoute('/_public/projects/$projectId/auth')({
@@ -11,7 +15,13 @@ export const Route = createFileRoute('/_public/projects/$projectId/auth')({
     const { queryClient } = context
 
     if (projectId) {
-      await queryClient.ensureQueryData(projectQueryOptions(projectId))
+      await Promise.all([
+        queryClient.ensureQueryData(projectQueryOptions(projectId)),
+        queryClient.ensureQueryData(consoleOAuth2CatalogQueryOptions()),
+        queryClient.ensureQueryData(
+          projectOAuth2ProvidersQueryOptions(projectId),
+        ),
+      ])
     }
   },
   component: AuthPage,

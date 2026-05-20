@@ -4,9 +4,8 @@ import {
   ShieldCheck,
   ShieldX,
   ShieldAlert,
-  MoreHorizontal,
   Plus,
-  Edit,
+  Pencil,
   Trash2,
   Copy,
   Check,
@@ -15,6 +14,8 @@ import {
   ArrowUp,
   ArrowDown,
 } from 'lucide-react'
+import { MenuItemContent, MenuItemIcon } from '@/components/global/shared/ContextMenuIcon'
+import { RowActionsMenuTrigger } from '@/components/global/shared/RowActionsMenuTrigger'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import {
@@ -539,54 +540,25 @@ export function RulesTab({ searchValue }: RulesTabProps) {
                   <TableCell className="px-4 py-3">
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          className="h-8 w-8 p-0"
-                        >
-                          <MoreHorizontal className="h-4 w-4" />
-                        </Button>
+                        <RowActionsMenuTrigger />
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
                         <DropdownMenuItem onClick={() => handleEditRule(rule)}>
-                          <Edit className="mr-1.5 h-3.5 w-3.5" />
-                          Update
+                          <MenuItemContent icon={Pencil}>Update</MenuItemContent>
                         </DropdownMenuItem>
                         <DropdownMenuItem
                           onClick={() => handleToggleEnabled(rule)}
                         >
-                          {rule.enabled ? (
-                            <>
-                              <XCircle className="mr-1.5 h-3.5 w-3.5" />
-                              Disable
-                            </>
-                          ) : (
-                            <>
-                              <CheckCircle2 className="mr-1.5 h-3.5 w-3.5" />
-                              Enable
-                            </>
-                          )}
+                          <MenuItemContent icon={rule.enabled ? XCircle : CheckCircle2}>{rule.enabled ? 'Disable' : 'Enable'}</MenuItemContent>
                         </DropdownMenuItem>
                         <DropdownMenuItem onClick={() => copyRuleId(rule.$id)}>
-                          {copiedRuleId === rule.$id ? (
-                            <>
-                              <Check className="mr-1.5 h-3.5 w-3.5 text-emerald-500" />
-                              Copied
-                            </>
-                          ) : (
-                            <>
-                              <Copy className="mr-1.5 h-3.5 w-3.5" />
-                              Copy ID
-                            </>
-                          )}
+                          <MenuItemContent icon={copiedRuleId === rule.$id ? Check : Copy}>{copiedRuleId === rule.$id ? 'Copied' : 'Copy ID'}</MenuItemContent>
                         </DropdownMenuItem>
                         <DropdownMenuSeparator />
                         <DropdownMenuItem
                           onClick={() => setDeletingRule(rule)}
-                          className="text-red-500 focus:text-red-500"
                         >
-                          <Trash2 className="mr-1.5 h-3.5 w-3.5" />
-                          Delete
+                          <MenuItemContent icon={Trash2}>Delete</MenuItemContent>
                         </DropdownMenuItem>
                       </DropdownMenuContent>
                     </DropdownMenu>

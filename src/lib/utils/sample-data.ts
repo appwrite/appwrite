@@ -192,6 +192,7 @@ function generateArrayValue(column: Column, baseType: string): unknown[] {
         generateStringValue(baseColumn),
       )
     case 'integer':
+    case 'bigint':
       return Array.from({ length: itemCount }, () =>
         generateIntegerValue(baseColumn),
       )
@@ -266,6 +267,7 @@ export function generateSampleRow(columns: Column[]): Record<string, unknown> {
           }
           break
         case 'integer':
+        case 'bigint':
           value = generateIntegerValue(column)
           break
         case 'float':

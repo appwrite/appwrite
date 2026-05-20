@@ -11,9 +11,10 @@ import {
   MousePointerClick,
   LayoutGrid,
   List,
-  MoreHorizontal,
   ExternalLink,
   Settings,
+  Trash2,
+  BarChart3,
   Smartphone,
   Monitor,
   Tablet,
@@ -24,6 +25,8 @@ import { ServiceHeader } from '../shared/ServiceHeader'
 import { DateTooltip } from '@/components/global/shared/DateTooltip'
 import { Pagination } from '@/components/global/shared/Pagination'
 import { EmptyState } from '@/components/global/shared/EmptyState'
+import { MenuItemContent, MenuItemIcon } from '@/components/global/shared/ContextMenuIcon'
+import { RowActionsMenuTrigger } from '@/components/global/shared/RowActionsMenuTrigger'
 import { Button } from '@/components/ui/button'
 import {
   Table,
@@ -410,27 +413,22 @@ export function View() {
                     </div>
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          className="h-7 w-7 p-0 opacity-0 group-hover:opacity-100"
+                        <RowActionsMenuTrigger
+                          compact
+                          revealOnGroupHover
                           onClick={(e) => e.stopPropagation()}
-                        >
-                          <MoreHorizontal className="h-4 w-4" />
-                        </Button>
+                        />
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
                         <DropdownMenuItem>
-                          <ExternalLink className="mr-2 h-4 w-4" />
-                          Visit Site
+                          <MenuItemContent icon={ExternalLink}>Visit</MenuItemContent>
                         </DropdownMenuItem>
                         <DropdownMenuItem>
-                          <Settings className="mr-2 h-4 w-4" />
-                          Settings
+                          <MenuItemContent icon={Settings}>Settings</MenuItemContent>
                         </DropdownMenuItem>
                         <DropdownMenuSeparator />
-                        <DropdownMenuItem className="text-destructive">
-                          Remove Website
+                        <DropdownMenuItem>
+                          <MenuItemContent icon={Trash2}>Remove</MenuItemContent>
                         </DropdownMenuItem>
                       </DropdownMenuContent>
                     </DropdownMenu>
@@ -693,22 +691,24 @@ export function View() {
                       <TableCell onClick={(e) => e.stopPropagation()}>
                         <DropdownMenu>
                           <DropdownMenuTrigger asChild>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              className="h-7 w-7 p-0"
+                            <RowActionsMenuTrigger
+                              compact
                               onClick={(e) => e.stopPropagation()}
-                            >
-                              <MoreHorizontal className="h-4 w-4" />
-                            </Button>
+                            />
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end">
-                            <DropdownMenuItem>View Analytics</DropdownMenuItem>
-                            <DropdownMenuItem>Visit Site</DropdownMenuItem>
-                            <DropdownMenuItem>Settings</DropdownMenuItem>
+                            <DropdownMenuItem>
+                              <MenuItemContent icon={BarChart3}>Analytics</MenuItemContent>
+                            </DropdownMenuItem>
+                            <DropdownMenuItem>
+                              <MenuItemContent icon={ExternalLink}>Visit</MenuItemContent>
+                            </DropdownMenuItem>
+                            <DropdownMenuItem>
+                              <MenuItemContent icon={Settings}>Settings</MenuItemContent>
+                            </DropdownMenuItem>
                             <DropdownMenuSeparator />
-                            <DropdownMenuItem className="text-destructive">
-                              Remove Website
+                            <DropdownMenuItem>
+                              <MenuItemContent icon={Trash2}>Remove</MenuItemContent>
                             </DropdownMenuItem>
                           </DropdownMenuContent>
                         </DropdownMenu>

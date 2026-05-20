@@ -272,6 +272,7 @@ function getTypeScriptType(col: ColumnSchema): string {
       baseType = 'string'
       break
     case 'integer':
+    case 'bigint':
     case 'double':
       baseType = 'number'
       break

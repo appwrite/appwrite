@@ -4,8 +4,11 @@ import {
   projectQueryOptions,
   apiKeysQueryOptions,
   mapApiKeysFromResponse,
+  fetchPlatforms,
 } from '@/lib/react-query/hooks'
 import { pageTitle } from '@/lib/utils/page-title'
+
+const STALE_TIME = 30 * 1000
 
 export const Route = createFileRoute('/_public/projects/$projectId/')({
   head: () => ({ meta: [{ title: pageTitle('Overview') }] }),
@@ -17,19 +20,26 @@ export const Route = createFileRoute('/_public/projects/$projectId/')({
 
     try {
       // Prefetch project (platforms/integrations) and API keys - blocks until ready
-      const [projectRaw, apiKeysRaw] = await Promise.all([
+      const [, apiKeysRaw] = await Promise.all([
         queryClient.ensureQueryData(projectQueryOptions(projectId)),
         queryClient
           .ensureQueryData(apiKeysQueryOptions(projectId))
           .catch(() => null),
       ])
       const apiKeys = mapApiKeysFromResponse(apiKeysRaw)
-      const project = projectRaw as {
-        platforms?: unknown[]
-        clients?: unknown[]
-      } | null
-      const platforms = project?.platforms ?? project?.clients ?? []
-      return { apiKeys, apiKeysRaw, platforms }
+      const platformsResponse = await queryClient
+        .ensureQueryData({
+          queryKey: ['platforms', projectId],
+          queryFn: () => fetchPlatforms(projectId),
+          staleTime: STALE_TIME,
+        })
+        .catch(() => null)
+
+      return {
+        apiKeys,
+        apiKeysRaw,
+        platforms: platformsResponse?.platforms ?? [],
+      }
     } catch (error) {
       console.warn('Failed to fetch overview data in loader:', error)
       return undefined

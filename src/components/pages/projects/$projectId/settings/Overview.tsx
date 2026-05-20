@@ -19,7 +19,7 @@ import {
   Shield,
   CreditCard,
 } from 'lucide-react'
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
 import { sdk } from '@/lib/appwrite/sdk'
 import {
@@ -59,7 +59,17 @@ import {
 } from '@/components/ui/tooltip'
 import { Separator } from '@/components/ui/separator'
 import { cn } from '@/lib/utils'
-import { ProtocolId, type Models, type ServiceId } from '@appwrite.io/console'
+import {
+  ProjectProtocolId,
+  ProjectServiceId,
+  type Models,
+} from '@appwrite.io/console'
+import {
+  protocolsRecordFromProject,
+  servicesRecordFromProject,
+  patchProjectProtocolsInCache,
+  patchProjectServicesInCache,
+} from '@/lib/project-settings'
 import { GitConfigurationCard } from './GitConfigurationCard'
 import { getApiEndpoint } from '@/lib/appwrite/sdk'
 import { useConsoleProfile } from '@/hooks/use-console-profile'
@@ -115,123 +125,53 @@ enum Dependencies {
 }
 
 type ProjectProtocol = {
-  id: ProtocolId
+  id: ProjectProtocolId
   label: string
   description: string
-  projectField: string
   icon: typeof Globe
 }
 
 type ProjectService = {
-  id: string
+  id: ProjectServiceId
   label: string
-  projectField: string
   icon: typeof User
 }
 
 const PROJECT_PROTOCOLS: ProjectProtocol[] = [
   {
-    id: ProtocolId.Rest,
+    id: ProjectProtocolId.Rest,
     label: 'REST',
     description: 'Standard HTTP API requests from client SDKs.',
-    projectField: 'protocolStatusForRest',
     icon: Globe,
   },
   {
-    id: ProtocolId.Graphql,
+    id: ProjectProtocolId.Graphql,
     label: 'GraphQL',
     description: 'GraphQL API access for queries and mutations.',
-    projectField: 'protocolStatusForGraphql',
     icon: Code,
   },
   {
-    id: ProtocolId.Websocket,
+    id: ProjectProtocolId.Websocket,
     label: 'WebSocket',
     description: 'Realtime subscriptions over WebSocket connections.',
-    projectField: 'protocolStatusForWebsocket',
     icon: MessageSquare,
   },
 ]
 
 const PROJECT_SERVICES: ProjectService[] = [
-  {
-    id: 'account',
-    label: 'Account',
-    projectField: 'serviceStatusForAccount',
-    icon: User,
-  },
-  {
-    id: 'avatars',
-    label: 'Avatars',
-    projectField: 'serviceStatusForAvatars',
-    icon: UserCircle,
-  },
-  {
-    id: 'databases',
-    label: 'Databases',
-    projectField: 'serviceStatusForDatabases',
-    icon: Database,
-  },
-  {
-    id: 'tablesdb',
-    label: 'TablesDB',
-    projectField: 'serviceStatusForTablesdb',
-    icon: Database,
-  },
-  {
-    id: 'functions',
-    label: 'Functions',
-    projectField: 'serviceStatusForFunctions',
-    icon: Zap,
-  },
-  {
-    id: 'locale',
-    label: 'Locale',
-    projectField: 'serviceStatusForLocale',
-    icon: Globe,
-  },
-  {
-    id: 'messaging',
-    label: 'Messaging',
-    projectField: 'serviceStatusForMessaging',
-    icon: MessageSquare,
-  },
-  {
-    id: 'migrations',
-    label: 'Migrations',
-    projectField: 'serviceStatusForMigrations',
-    icon: Upload,
-  },
-  {
-    id: 'project',
-    label: 'Project',
-    projectField: 'serviceStatusForProject',
-    icon: Folder,
-  },
-  {
-    id: 'storage',
-    label: 'Storage',
-    projectField: 'serviceStatusForStorage',
-    icon: Folder,
-  },
-  {
-    id: 'sites',
-    label: 'Sites',
-    projectField: 'serviceStatusForSites',
-    icon: Globe,
-  },
-  {
-    id: 'teams',
-    label: 'Teams',
-    projectField: 'serviceStatusForTeams',
-    icon: Building2,
-  },
-  {
-    id: 'users',
-    label: 'Users',
-    projectField: 'serviceStatusForUsers',
-    icon: Users,
-  },
+  { id: ProjectServiceId.Account, label: 'Account', icon: User },
+  { id: ProjectServiceId.Avatars, label: 'Avatars', icon: UserCircle },
+  { id: ProjectServiceId.Databases, label: 'Databases', icon: Database },
+  { id: ProjectServiceId.Tablesdb, label: 'TablesDB', icon: Database },
+  { id: ProjectServiceId.Functions, label: 'Functions', icon: Zap },
+  { id: ProjectServiceId.Locale, label: 'Locale', icon: Globe },
+  { id: ProjectServiceId.Messaging, label: 'Messaging', icon: MessageSquare },
+  { id: ProjectServiceId.Migrations, label: 'Migrations', icon: Upload },
+  { id: ProjectServiceId.Project, label: 'Project', icon: Folder },
+  { id: ProjectServiceId.Storage, label: 'Storage', icon: Folder },
+  { id: ProjectServiceId.Sites, label: 'Sites', icon: Globe },
+  { id: ProjectServiceId.Teams, label: 'Teams', icon: Building2 },
+  { id: ProjectServiceId.Users, label: 'Users', icon: Users },
 ]
 
 function removeAlertSearchParam(prev: unknown) {
@@ -257,19 +197,8 @@ export function ProjectSettingsOverview({
   const queryClient = useQueryClient()
   const search = useSearch({ from: '/_public/projects/$projectId/settings' })
 
-  // Get project data
   const { project, isLoading: projectLoading } = useProject(projectId)
-
-  // Get raw project data for services
-  const { data: rawProjectData } = useQuery({
-    queryKey: ['project', projectId],
-    queryFn: async () => {
-      const response = await sdk.forConsole.projects.get({ projectId })
-      return response
-    },
-    enabled: !!projectId,
-    staleTime: 5 * 60 * 1000,
-  })
+  const rawProjectData = project
 
   // Check permissions (assuming project has permissions info)
   // For now, we'll assume canWriteProjects is true if project exists
@@ -289,14 +218,16 @@ export function ProjectSettingsOverview({
   const [services, setServices] = useState<Record<string, boolean>>({})
 
   // State for protocols
-  const [updatingProtocols, setUpdatingProtocols] = useState<Set<ProtocolId>>(
-    new Set(),
+  const [updatingProtocols, setUpdatingProtocols] = useState<
+    Set<ProjectProtocolId>
+  >(new Set())
+  const [protocols, setProtocols] = useState<Record<ProjectProtocolId, boolean>>(
+    {
+      [ProjectProtocolId.Rest]: true,
+      [ProjectProtocolId.Graphql]: true,
+      [ProjectProtocolId.Websocket]: true,
+    },
   )
-  const [protocols, setProtocols] = useState<Record<ProtocolId, boolean>>({
-    [ProtocolId.Rest]: true,
-    [ProtocolId.Graphql]: true,
-    [ProtocolId.Websocket]: true,
-  })
   const [protocolDialogOpen, setProtocolDialogOpen] = useState(false)
   const [protocolBulkStatus, setProtocolBulkStatus] = useState<boolean | null>(
     null,
@@ -331,36 +262,15 @@ export function ProjectSettingsOverview({
     }
   }, [project])
 
-  // Initialize services from raw project data
   useEffect(() => {
     if (rawProjectData) {
-      const projectData = rawProjectData as Models.Project
-      const projectRecord = projectData as unknown as Record<string, unknown>
       setServices(
-        Object.fromEntries(
-          PROJECT_SERVICES.map((service) => [
-            service.id,
-            typeof projectRecord[service.projectField] === 'boolean'
-              ? (projectRecord[service.projectField] as boolean)
-              : true,
-          ]),
+        servicesRecordFromProject(
+          rawProjectData as Models.Project,
+          PROJECT_SERVICES.map((s) => s.id),
         ),
       )
-
-      setProtocols({
-        [ProtocolId.Rest]:
-          typeof projectRecord.protocolStatusForRest === 'boolean'
-            ? projectRecord.protocolStatusForRest
-            : true,
-        [ProtocolId.Graphql]:
-          typeof projectRecord.protocolStatusForGraphql === 'boolean'
-            ? projectRecord.protocolStatusForGraphql
-            : true,
-        [ProtocolId.Websocket]:
-          typeof projectRecord.protocolStatusForWebsocket === 'boolean'
-            ? projectRecord.protocolStatusForWebsocket
-            : true,
-      })
+      setProtocols(protocolsRecordFromProject(rawProjectData as Models.Project))
     }
   }, [rawProjectData])
 
@@ -395,19 +305,19 @@ export function ProjectSettingsOverview({
   )
 
   const updateProjectService = async (
-    serviceId: string,
+    serviceId: ProjectServiceId,
     enabled: boolean,
   ): Promise<Models.Project> => {
     return await sdk
       .forProject(projectId, projectRegion)
       .project.updateService({
-        serviceId: serviceId as ServiceId,
+        serviceId,
         enabled,
       })
   }
 
   const updateProjectProtocol = async (
-    protocolId: ProtocolId,
+    protocolId: ProjectProtocolId,
     enabled: boolean,
   ): Promise<Models.Project> => {
     return await sdk
@@ -418,11 +328,24 @@ export function ProjectSettingsOverview({
       })
   }
 
-  const patchCachedProject = (patch: Record<string, boolean>) => {
+  const patchCachedService = (serviceId: ProjectServiceId, enabled: boolean) => {
     queryClient.setQueryData<Models.Project | undefined>(
       ['project', projectId],
       (current) =>
-        current ? ({ ...current, ...patch } as Models.Project) : current,
+        current ? patchProjectServicesInCache(current, serviceId, enabled) : current,
+    )
+  }
+
+  const patchCachedProtocol = (
+    protocolId: ProjectProtocolId,
+    enabled: boolean,
+  ) => {
+    queryClient.setQueryData<Models.Project | undefined>(
+      ['project', projectId],
+      (current) =>
+        current
+          ? patchProjectProtocolsInCache(current, protocolId, enabled)
+          : current,
     )
   }
 
@@ -465,7 +388,7 @@ export function ProjectSettingsOverview({
       service,
       status,
     }: {
-      service: string
+      service: ProjectServiceId
       status: boolean
     }) => {
       const response = await updateProjectService(service, status)
@@ -473,22 +396,18 @@ export function ProjectSettingsOverview({
     },
     onSuccess: (data) => {
       const { service, status } = data
-      const serviceLabel = service.charAt(0).toUpperCase() + service.slice(1)
+      const serviceLabel =
+        PROJECT_SERVICES.find((item) => item.id === service)?.label ?? service
       toast.success(
         `${serviceLabel} service has been ${status ? 'enabled' : 'disabled'}`,
       )
 
-      const serviceProperty = PROJECT_SERVICES.find(
-        (item) => item.id === service,
-      )?.projectField
       setServices((prev) => ({
         ...prev,
         [service]: status,
       }))
 
-      if (serviceProperty) {
-        patchCachedProject({ [serviceProperty]: status })
-      }
+      patchCachedService(service, status)
 
       setUpdatingServices((prev) => {
         const next = new Set(prev)
@@ -534,10 +453,16 @@ export function ProjectSettingsOverview({
         ),
       )
 
-      patchCachedProject(
-        Object.fromEntries(
-          PROJECT_SERVICES.map((service) => [service.projectField, status]),
-        ),
+      queryClient.setQueryData<Models.Project | undefined>(
+        ['project', projectId],
+        (current) => {
+          if (!current) return current
+          let next = current
+          for (const service of PROJECT_SERVICES) {
+            next = patchProjectServicesInCache(next, service.id, status)
+          }
+          return next
+        },
       )
       // Track analytics: Submit.ProjectService
     },
@@ -552,7 +477,7 @@ export function ProjectSettingsOverview({
       protocol,
       status,
     }: {
-      protocol: ProtocolId
+      protocol: ProjectProtocolId
       status: boolean
     }) => {
       return await updateProjectProtocol(protocol, status)
@@ -567,7 +492,7 @@ export function ProjectSettingsOverview({
         [variables.protocol]: variables.status,
       }))
       if (protocolConfig) {
-        patchCachedProject({ [protocolConfig.projectField]: variables.status })
+        patchCachedProtocol(protocolConfig.id, variables.status)
       }
 
       toast.success(
@@ -604,15 +529,13 @@ export function ProjectSettingsOverview({
     },
     onSuccess: async (status) => {
       setProtocols({
-        [ProtocolId.Rest]: status,
-        [ProtocolId.Graphql]: status,
-        [ProtocolId.Websocket]: status,
+        [ProjectProtocolId.Rest]: status,
+        [ProjectProtocolId.Graphql]: status,
+        [ProjectProtocolId.Websocket]: status,
       })
-      patchCachedProject({
-        protocolStatusForRest: status,
-        protocolStatusForGraphql: status,
-        protocolStatusForWebsocket: status,
-      })
+      for (const protocol of PROJECT_PROTOCOLS) {
+        patchCachedProtocol(protocol.id, status)
+      }
       toast.success(
         `All protocols for ${project?.name || 'project'} have been ${
           status ? 'enabled.' : 'disabled.'
@@ -717,7 +640,7 @@ export function ProjectSettingsOverview({
   })
 
   // Handle service toggle
-  const handleServiceToggle = (service: string, checked: boolean) => {
+  const handleServiceToggle = (service: ProjectServiceId, checked: boolean) => {
     const nextChecked =
       services[service] === undefined ? checked : !services[service]
     // Optimistically update UI
@@ -745,7 +668,10 @@ export function ProjectSettingsOverview({
   }
 
   // Handle protocol toggle
-  const handleProtocolToggle = (protocol: ProtocolId, checked: boolean) => {
+  const handleProtocolToggle = (
+    protocol: ProjectProtocolId,
+    checked: boolean,
+  ) => {
     const nextChecked =
       protocols[protocol] === undefined ? checked : !protocols[protocol]
     setProtocols((prev) => ({ ...prev, [protocol]: nextChecked }))

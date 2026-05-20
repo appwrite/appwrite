@@ -1287,6 +1287,29 @@ export function organizationsQueryOptions() {
 }
 
 /**
+ * Organizations with billing fields (paymentMethodId, billingAddressId, etc.).
+ * Used on account payments tab to show linked orgs per card/address.
+ */
+export async function fetchOrganizationsWithBillingFields() {
+  const response = await sdk.forConsole.organizations.list({
+    queries: [Query.equal('platform', 'appwrite')],
+  })
+  return response.teams || []
+}
+
+export function organizationsFullQueryOptions() {
+  return queryOptions({
+    queryKey: ['organizations', 'console', 'full'],
+    queryFn: fetchOrganizationsWithBillingFields,
+    staleTime: 30 * 1000,
+    retry: false,
+    refetchOnMount: false,
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: false,
+  })
+}
+
+/**
  * Query options for fetching a single organization by ID
  *
  * This can be used in both route loaders and hooks to ensure consistent query configuration.

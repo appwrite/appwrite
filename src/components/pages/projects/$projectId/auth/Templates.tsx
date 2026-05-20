@@ -1,9 +1,9 @@
 import { useState, useEffect, useMemo } from 'react'
-import { useQueryClient } from '@tanstack/react-query'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
 import {
-  EmailTemplateType,
-  EmailTemplateLocale,
+  ProjectEmailTemplateId,
+  ProjectEmailTemplateLocale,
   type Models,
 } from '@appwrite.io/console'
 import {
@@ -11,8 +11,8 @@ import {
   useUpdateEmailTemplate,
   useDeleteEmailTemplate,
   useLocaleCodes,
-  useProject,
   fetchEmailTemplate,
+  projectQueryOptions,
 } from '@/lib/react-query/hooks'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -75,7 +75,7 @@ interface TemplatesProps {
 // Email template type configuration
 const EMAIL_TEMPLATE_TYPES = [
   {
-    type: EmailTemplateType.Verification,
+    type: ProjectEmailTemplateId.Verification,
     label: 'Verification',
     description:
       'Send a verification email to users that sign in with their email and password.',
@@ -86,7 +86,7 @@ const EMAIL_TEMPLATE_TYPES = [
     ],
   },
   {
-    type: EmailTemplateType.MagicSession,
+    type: ProjectEmailTemplateId.MagicSession,
     label: 'Magic URL',
     description: 'Send an email to users that sign in with a magic URL.',
     variables: [
@@ -99,7 +99,7 @@ const EMAIL_TEMPLATE_TYPES = [
     ],
   },
   {
-    type: EmailTemplateType.OtpSession,
+    type: ProjectEmailTemplateId.OtpSession,
     label: 'OTP Session',
     description: 'Send an email to users that sign in with an email OTP.',
     variables: [
@@ -112,7 +112,7 @@ const EMAIL_TEMPLATE_TYPES = [
     ],
   },
   {
-    type: EmailTemplateType.Recovery,
+    type: ProjectEmailTemplateId.Recovery,
     label: 'Reset Password',
     description: 'Send a recovery email to users that forget their password.',
     variables: [
@@ -122,7 +122,7 @@ const EMAIL_TEMPLATE_TYPES = [
     ],
   },
   {
-    type: EmailTemplateType.Invitation,
+    type: ProjectEmailTemplateId.Invitation,
     label: 'Invite User',
     description: 'Send an invitation email to become a member of your project.',
     variables: [
@@ -133,7 +133,7 @@ const EMAIL_TEMPLATE_TYPES = [
     ],
   },
   {
-    type: EmailTemplateType.MfaChallenge,
+    type: ProjectEmailTemplateId.MfaChallenge,
     label: '2FA Verification',
     description: 'Send a two-factor authentication email to a user.',
     variables: [
@@ -146,7 +146,7 @@ const EMAIL_TEMPLATE_TYPES = [
     ],
   },
   {
-    type: EmailTemplateType.SessionAlert,
+    type: ProjectEmailTemplateId.SessionAlert,
     label: 'Session Alert',
     description: 'Send an email to users when a new session is created.',
     variables: [
@@ -160,22 +160,23 @@ const EMAIL_TEMPLATE_TYPES = [
 ] as const
 
 export function Templates({ projectId }: TemplatesProps) {
-  const { project } = useProject(projectId)
+  const { data: projectData } = useQuery(projectQueryOptions(projectId))
   const { data: localeData } = useLocaleCodes()
   const queryClient = useQueryClient()
 
   const [selectedType, setSelectedType] = useState<string>(
-    EmailTemplateType.Verification,
+    ProjectEmailTemplateId.Verification,
   )
   const [selectedLocale, setSelectedLocale] = useState<string>(
-    EmailTemplateLocale.En,
+    ProjectEmailTemplateLocale.En,
   )
   const [resetDialogOpen, setResetDialogOpen] = useState(false)
   const [resetType, setResetType] = useState<string | null>(null)
   const [resetLocale, setResetLocale] = useState<string | null>(null)
   const [copiedVariable, setCopiedVariable] = useState<string | null>(null)
 
-  const isSmtpEnabled = (project as unknown)?.smtpEnabled ?? false
+  const isSmtpEnabled =
+    (projectData as { smtpEnabled?: boolean } | undefined)?.smtpEnabled ?? false
 
   // Prefetch all English templates when component mounts
   useEffect(() => {
@@ -189,13 +190,13 @@ export function Templates({ projectId }: TemplatesProps) {
           'emailTemplate',
           projectId,
           templateConfig.type,
-          EmailTemplateLocale.En,
+          ProjectEmailTemplateLocale.En,
         ],
         queryFn: () =>
           fetchEmailTemplate(
             projectId,
             templateConfig.type,
-            EmailTemplateLocale.En,
+            ProjectEmailTemplateLocale.En,
           ),
         staleTime: 30 * 1000, // 30 seconds
       }),
@@ -251,13 +252,13 @@ export function Templates({ projectId }: TemplatesProps) {
   const [formData, setFormData] = useState<{
     senderName: string
     senderEmail: string
-    replyTo: string
+    replyToEmail: string
     subject: string
     message: string
   }>({
     senderName: '',
     senderEmail: '',
-    replyTo: '',
+    replyToEmail: '',
     subject: '',
     message: '',
   })
@@ -268,7 +269,7 @@ export function Templates({ projectId }: TemplatesProps) {
       setFormData({
         senderName: displayTemplate.senderName || '',
         senderEmail: displayTemplate.senderEmail || '',
-        replyTo: displayTemplate.replyTo || '',
+        replyToEmail: displayTemplate.replyToEmail || '',
         subject: displayTemplate.subject || '',
         message: displayTemplate.message || '',
       })
@@ -293,7 +294,7 @@ export function Templates({ projectId }: TemplatesProps) {
     return (
       formData.senderName !== (baseTemplate.senderName || '') ||
       formData.senderEmail !== (baseTemplate.senderEmail || '') ||
-      formData.replyTo !== (baseTemplate.replyTo || '') ||
+      formData.replyToEmail !== (baseTemplate.replyToEmail || '') ||
       formData.subject !== (baseTemplate.subject || '') ||
       formData.message !== (baseTemplate.message || '')
     )
@@ -326,7 +327,7 @@ export function Templates({ projectId }: TemplatesProps) {
         message: formData.message || '',
         senderName: formData.senderName || undefined,
         senderEmail: formData.senderEmail || undefined,
-        replyTo: formData.replyTo || undefined,
+        replyToEmail: formData.replyToEmail || undefined,
       })
 
       const templateTypeLabel =
@@ -343,13 +344,15 @@ export function Templates({ projectId }: TemplatesProps) {
           ...displayTemplate,
           senderName: formData.senderName,
           senderEmail: formData.senderEmail,
-          replyTo: formData.replyTo,
+          replyToEmail: formData.replyToEmail,
           subject: formData.subject,
           message: formData.message,
         })
       }
     } catch (error: unknown) {
-      toast.error(error.message || 'Failed to update template')
+      toast.error(
+        error instanceof Error ? error.message : 'Failed to update template',
+      )
     }
   }
 
@@ -380,7 +383,9 @@ export function Templates({ projectId }: TemplatesProps) {
       setResetType(null)
       setResetLocale(null)
     } catch (error: unknown) {
-      toast.error(error.message || 'Failed to reset template')
+      toast.error(
+        error instanceof Error ? error.message : 'Failed to reset template',
+      )
     }
   }
 
@@ -527,7 +532,7 @@ interface TemplateEditorProps {
   formData: {
     senderName: string
     senderEmail: string
-    replyTo: string
+    replyToEmail: string
     subject: string
     message: string
   }
@@ -714,9 +719,9 @@ function TemplateEditor({
               id="reply-to"
               type="email"
               placeholder="noreply@appwrite.io"
-              value={localFormData.replyTo}
+              value={localFormData.replyToEmail}
               onChange={(e) =>
-                handleLocalFieldChange('replyTo', e.target.value)
+                handleLocalFieldChange('replyToEmail', e.target.value)
               }
               dir={isRTL ? 'rtl' : 'ltr'}
             />

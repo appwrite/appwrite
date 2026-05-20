@@ -51,7 +51,7 @@ import {
   ConnectRepositorySection,
   type ConnectRepositoryValue,
 } from '@/components/global/shared/ConnectRepositorySection'
-import { VCSDetectionType } from '@appwrite.io/console'
+import { VCSDetectionType, ID } from '@appwrite.io/console'
 
 // Fade-in image component
 function FadeImage({
@@ -305,6 +305,7 @@ export function TemplateConfigView({ templateParam }: TemplateConfigViewProps) {
             .map((v) =>
               projectSdk.sites.createVariable({
                 siteId: site.$id,
+                variableId: ID.unique(),
                 key: v.key,
                 value: v.value,
                 secret: v.secret,

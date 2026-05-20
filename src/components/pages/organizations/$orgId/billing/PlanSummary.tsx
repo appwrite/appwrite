@@ -504,7 +504,10 @@ export function PlanSummary({ onChangePlan, orgId }: PlanSummaryProps) {
   // API returns current page only; we show the displayed page's data (no layout shift until it's loaded)
   const displayedBreakdowns = projectBreakdowns
 
-  const isLoading = orgLoading || planLoading || aggLoading
+  const isLoading =
+    (orgLoading && !organization) ||
+    (planLoading && !plan) ||
+    (aggLoading && !aggregation && !!organization?.billingAggregationId)
 
   if (isLoading) {
     return (

@@ -28,6 +28,7 @@ export function getColumnIcon(type: string): LucideIcon {
     case 'longtext':
       return Type
     case 'integer':
+    case 'bigint':
     case 'float':
     case 'double':
       return Hash

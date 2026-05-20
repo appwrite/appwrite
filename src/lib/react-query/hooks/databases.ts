@@ -10,6 +10,7 @@ import {
   useQueryClient,
   queryOptions,
   keepPreviousData,
+  type QueryClient,
 } from '@tanstack/react-query'
 import { useMemo } from 'react'
 import { Query, ID, DatabaseType } from '@appwrite.io/console'
@@ -481,7 +482,7 @@ export async function fetchTableStructureForCopy(
       else if (type === 'string') def.size = 255
     }
     if (c.default !== undefined && c.default !== null) def.default = c.default
-    if (type === 'integer' || type === 'double') {
+    if (type === 'integer' || type === 'bigint' || type === 'double') {
       if (typeof c.min !== 'undefined') def.min = c.min
       if (typeof c.max !== 'undefined') def.max = c.max
     }
@@ -1193,6 +1194,7 @@ async function ensureDocumentOrVectorCreateDataPopulated(
       else if (
         type === 'integer' ||
         type === 'int' ||
+        type === 'bigint' ||
         type === 'double' ||
         type === 'float' ||
         type === 'number'
@@ -1602,6 +1604,17 @@ export async function createProjectTableColumn(
         xdefault,
         array,
       } as never)
+    case 'bigint':
+      return await projectSdk.tablesDB.createBigIntColumn({
+        databaseId,
+        tableId,
+        key: colKey,
+        required,
+        min,
+        max,
+        xdefault,
+        array,
+      } as never)
     case 'double':
     case 'float':
       return await projectSdk.tablesDB.createFloatColumn({
@@ -1800,6 +1813,17 @@ export async function updateProjectTableColumn(
       } as never)
     case 'integer':
       return await projectSdk.tablesDB.updateIntegerColumn({
+        databaseId,
+        tableId,
+        key: columnKey,
+        required,
+        min,
+        max,
+        xdefault,
+        newKey,
+      } as never)
+    case 'bigint':
+      return await projectSdk.tablesDB.updateBigIntColumn({
         databaseId,
         tableId,
         key: columnKey,
@@ -2368,6 +2392,87 @@ export function databaseQueryOptions(
     refetchOnReconnect: false, // Prevent refetch on network reconnect
     // Don't keep disabled queries in cache
     gcTime: projectId && databaseId ? 5 * 60 * 1000 : 0,
+  })
+}
+
+export type TableColumnsListCache = {
+  columns: unknown[]
+  total: number
+}
+
+/** Partial query key for all paginated/filtered column list queries for a table. */
+export function projectTableColumnsQueryKeyPrefix(
+  projectId: string,
+  databaseId: string,
+  tableId: string,
+) {
+  return ['columns', 'project', projectId, databaseId, tableId] as const
+}
+
+/**
+ * Patch every cached column list for a table (all pages/filters).
+ * Used for optimistic status updates after delete/create.
+ */
+export function patchProjectTableColumnsCache(
+  queryClient: QueryClient,
+  projectId: string,
+  databaseId: string,
+  tableId: string,
+  patch: (columns: unknown[]) => unknown[],
+) {
+  const prefix = projectTableColumnsQueryKeyPrefix(
+    projectId,
+    databaseId,
+    tableId,
+  )
+  queryClient.setQueriesData<TableColumnsListCache>(
+    { queryKey: prefix },
+    (old) => {
+      if (!old?.columns) return old
+      const nextColumns = patch(old.columns)
+      return { ...old, columns: nextColumns }
+    },
+  )
+}
+
+/** Refetch all column list queries for a table (active + inactive cache entries). */
+export async function refetchProjectTableColumnsQueries(
+  queryClient: QueryClient,
+  projectId: string,
+  databaseId: string,
+  tableId: string,
+) {
+  const prefix = projectTableColumnsQueryKeyPrefix(
+    projectId,
+    databaseId,
+    tableId,
+  )
+  await queryClient.refetchQueries({ queryKey: prefix, type: 'all' })
+}
+
+export async function refetchProjectTableRelatedQueries(
+  queryClient: QueryClient,
+  projectId: string,
+  databaseId: string,
+  tableId: string,
+) {
+  await refetchProjectTableColumnsQueries(
+    queryClient,
+    projectId,
+    databaseId,
+    tableId,
+  )
+  await queryClient.refetchQueries({
+    queryKey: ['indexes', 'project', projectId, databaseId, tableId],
+    type: 'all',
+  })
+  await queryClient.refetchQueries({
+    queryKey: ['table', 'project', projectId, databaseId, tableId],
+    type: 'active',
+  })
+  await queryClient.refetchQueries({
+    queryKey: ['tables', 'project', projectId, databaseId],
+    type: 'active',
   })
 }
 
@@ -3275,17 +3380,39 @@ export function useDeleteProjectTableColumn(
         columnKey,
       )
     },
+    onMutate: async (columnKey: string) => {
+      if (!projectId || !databaseId || !tableId) return
+      await queryClient.cancelQueries({
+        queryKey: projectTableColumnsQueryKeyPrefix(
+          projectId,
+          databaseId,
+          tableId,
+        ),
+      })
+      patchProjectTableColumnsCache(
+        queryClient,
+        projectId,
+        databaseId,
+        tableId,
+        (columns) =>
+          columns.map((col) => {
+            const c = col as Record<string, unknown>
+            const key = String(c.key ?? c.name ?? c.$id ?? '')
+            if (key === columnKey) {
+              return { ...c, status: 'deleting' }
+            }
+            return col
+          }),
+      )
+    },
     onSuccess: async () => {
-      // Refetch columns/tables list so the UI updates (list uses refetchOnMount: false)
-      await queryClient.refetchQueries({
-        queryKey: ['columns', 'project', projectId, databaseId, tableId],
-      })
-      await queryClient.refetchQueries({
-        queryKey: ['tables', 'project', projectId, databaseId],
-      })
-      await queryClient.refetchQueries({
-        queryKey: ['table', 'project', projectId, databaseId, tableId],
-      })
+      if (!projectId || !databaseId || !tableId) return
+      await refetchProjectTableRelatedQueries(
+        queryClient,
+        projectId,
+        databaseId,
+        tableId,
+      )
     },
   })
 }

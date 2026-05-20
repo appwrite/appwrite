@@ -12,7 +12,7 @@ import {
   queryOptions,
   type QueryClient,
 } from '@tanstack/react-query'
-import { MethodId } from '@appwrite.io/console'
+import { ProjectAuthMethodId } from '@appwrite.io/console'
 import { sdk } from '@/lib/appwrite/sdk'
 import { getConsoleAccountQueryRevision } from '@/lib/console-impersonation'
 import {
@@ -112,6 +112,34 @@ export function consoleAccountQueryOptions(options?: {
  *
  * @param projectId - The project ID
  */
+function invalidateProjectAuthQueries(
+  queryClient: ReturnType<typeof useQueryClient>,
+  projectId: string | null | undefined,
+) {
+  queryClient.invalidateQueries({ queryKey: ['project', projectId] })
+  queryClient.invalidateQueries({
+    queryKey: ['project-auth-security', projectId],
+  })
+}
+
+/**
+ * Appwrite project policies with `total`: 1–5000, or null (disabled/unlimited).
+ * UI represents unlimited/disabled as 0.
+ */
+export const MAX_AUTH_POLICY_TOTAL = 5000
+
+function assertAuthPolicyTotal(limit: number, featureLabel: string): void {
+  if (limit !== 0 && (limit < 1 || limit > MAX_AUTH_POLICY_TOTAL)) {
+    throw new Error(
+      `${featureLabel} must be disabled/unlimited or between 1 and ${MAX_AUTH_POLICY_TOTAL.toLocaleString()}`,
+    )
+  }
+}
+
+function authPolicyTotalForApi(limit: number): number | null {
+  return limit === 0 ? null : limit
+}
+
 export function useUpdateAuthLimit(projectId: string | null | undefined) {
   const queryClient = useQueryClient()
 
@@ -120,19 +148,14 @@ export function useUpdateAuthLimit(projectId: string | null | undefined) {
       if (!projectId) {
         throw new Error('Project ID is required')
       }
-      if (limit !== 0 && (limit < 1 || limit > 10000)) {
-        throw new Error('Limit must be 0 (unlimited) or between 1 and 10,000')
-      }
+      assertAuthPolicyTotal(limit, 'Users limit')
 
-      return await sdk.forConsole.projects.updateAuthLimit({
-        projectId,
-        limit,
+      return await sdk.forProject(projectId).project.updateUserLimitPolicy({
+        total: authPolicyTotalForApi(limit) as unknown as number,
       })
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({
-        queryKey: ['project', projectId],
-      })
+      invalidateProjectAuthQueries(queryClient, projectId)
     },
   })
 }
@@ -163,15 +186,12 @@ export function useUpdateAuthDuration(projectId: string | null | undefined) {
         Math.min(duration, MAX_DURATION_SECONDS),
       )
 
-      return await sdk.forConsole.projects.updateAuthDuration({
-        projectId,
-        duration: clampedDuration, // Duration in seconds
+      return await sdk.forProject(projectId).project.updateSessionDurationPolicy({
+        duration: clampedDuration,
       })
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({
-        queryKey: ['project', projectId],
-      })
+      invalidateProjectAuthQueries(queryClient, projectId)
     },
   })
 }
@@ -191,19 +211,14 @@ export function useUpdateAuthSessionsLimit(
       if (!projectId) {
         throw new Error('Project ID is required')
       }
-      if (limit < 1 || limit > 100) {
-        throw new Error('Limit must be between 1 and 100')
-      }
+      assertAuthPolicyTotal(limit, 'Sessions limit')
 
-      return await sdk.forConsole.projects.updateAuthSessionsLimit({
-        projectId,
-        limit,
+      return await sdk.forProject(projectId).project.updateSessionLimitPolicy({
+        total: authPolicyTotalForApi(limit) as unknown as number,
       })
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({
-        queryKey: ['project', projectId],
-      })
+      invalidateProjectAuthQueries(queryClient, projectId)
     },
   })
 }
@@ -223,19 +238,14 @@ export function useUpdateAuthPasswordHistory(
       if (!projectId) {
         throw new Error('Project ID is required')
       }
-      if (limit !== 0 && (limit < 1 || limit > 20)) {
-        throw new Error('Limit must be 0 (disabled) or between 1 and 20')
-      }
+      assertAuthPolicyTotal(limit, 'Password history')
 
-      return await sdk.forConsole.projects.updateAuthPasswordHistory({
-        projectId,
-        limit,
+      return await sdk.forProject(projectId).project.updatePasswordHistoryPolicy({
+        total: authPolicyTotalForApi(limit) as unknown as number,
       })
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({
-        queryKey: ['project', projectId],
-      })
+      invalidateProjectAuthQueries(queryClient, projectId)
     },
   })
 }
@@ -256,15 +266,12 @@ export function useUpdateAuthPasswordDictionary(
         throw new Error('Project ID is required')
       }
 
-      return await sdk.forConsole.projects.updateAuthPasswordDictionary({
-        projectId,
-        enabled,
-      })
+      return await sdk
+        .forProject(projectId)
+        .project.updatePasswordDictionaryPolicy({ enabled })
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({
-        queryKey: ['project', projectId],
-      })
+      invalidateProjectAuthQueries(queryClient, projectId)
     },
   })
 }
@@ -285,15 +292,12 @@ export function useUpdatePersonalDataCheck(
         throw new Error('Project ID is required')
       }
 
-      return await sdk.forConsole.projects.updatePersonalDataCheck({
-        projectId,
-        enabled,
-      })
+      return await sdk
+        .forProject(projectId)
+        .project.updatePasswordPersonalDataPolicy({ enabled })
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({
-        queryKey: ['project', projectId],
-      })
+      invalidateProjectAuthQueries(queryClient, projectId)
     },
   })
 }
@@ -312,15 +316,12 @@ export function useUpdateSessionAlerts(projectId: string | null | undefined) {
         throw new Error('Project ID is required')
       }
 
-      return await sdk.forConsole.projects.updateSessionAlerts({
-        projectId,
-        alerts,
+      return await sdk.forProject(projectId).project.updateSessionAlertPolicy({
+        enabled: alerts,
       })
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({
-        queryKey: ['project', projectId],
-      })
+      invalidateProjectAuthQueries(queryClient, projectId)
     },
   })
 }
@@ -341,15 +342,12 @@ export function useUpdateSessionInvalidation(
         throw new Error('Project ID is required')
       }
 
-      return await sdk.forConsole.projects.updateSessionInvalidation({
-        projectId,
-        enabled,
-      })
+      return await sdk
+        .forProject(projectId)
+        .project.updateSessionInvalidationPolicy({ enabled })
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({
-        queryKey: ['project', projectId],
-      })
+      invalidateProjectAuthQueries(queryClient, projectId)
     },
   })
 }
@@ -371,15 +369,35 @@ export function useUpdateMockNumbers(projectId: string | null | undefined) {
         throw new Error('Maximum 10 mock phone numbers allowed')
       }
 
-      return await sdk.forConsole.projects.updateMockNumbers({
-        projectId,
-        numbers,
-      })
+      const projectSdk = sdk.forProject(projectId)
+      const existing = await projectSdk.project.listMockPhones({ total: true })
+      const existingByNumber = new Map(
+        (existing.mockNumbers ?? []).map((n) => [n.number, n]),
+      )
+      const nextNumbers = new Set(numbers.map((n) => n.phone))
+
+      for (const mock of existing.mockNumbers ?? []) {
+        if (!nextNumbers.has(mock.number)) {
+          await projectSdk.project.deleteMockPhone({ number: mock.number })
+        }
+      }
+
+      for (const { phone, otp } of numbers) {
+        const prev = existingByNumber.get(phone)
+        if (prev) {
+          if (prev.otp !== otp) {
+            await projectSdk.project.updateMockPhone({ number: phone, otp })
+          }
+        } else {
+          await projectSdk.project.createMockPhone({ number: phone, otp })
+        }
+      }
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({
-        queryKey: ['project', projectId],
+    onSuccess: async () => {
+      await queryClient.refetchQueries({
+        queryKey: ['project-auth-security', projectId],
       })
+      invalidateProjectAuthQueries(queryClient, projectId)
     },
   })
 }
@@ -399,22 +417,23 @@ export function useUpdateMembershipsPrivacy(
       userName: boolean
       userEmail: boolean
       mfa: boolean
+      userId?: boolean
+      userPhone?: boolean
     }) => {
       if (!projectId) {
         throw new Error('Project ID is required')
       }
 
-      return await sdk.forConsole.projects.updateMembershipsPrivacy({
-        projectId,
+      return await sdk.forProject(projectId).project.updateMembershipPrivacyPolicy({
         userName: privacy.userName,
         userEmail: privacy.userEmail,
-        mfa: privacy.mfa,
+        userMFA: privacy.mfa,
+        userId: privacy.userId,
+        userPhone: privacy.userPhone,
       })
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({
-        queryKey: ['project', projectId],
-      })
+      invalidateProjectAuthQueries(queryClient, projectId)
     },
   })
 }
@@ -444,7 +463,7 @@ export function useUpdateAuthMethod(projectId: string | null | undefined) {
       }
 
       return await sdk.forProject(projectId).project.updateAuthMethod({
-        methodId: method as MethodId,
+        methodId: method as ProjectAuthMethodId,
         enabled: status,
       })
     },

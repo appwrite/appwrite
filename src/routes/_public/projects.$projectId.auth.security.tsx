@@ -1,7 +1,10 @@
 import { createFileRoute, redirect } from '@tanstack/react-router'
+import type { Models } from '@appwrite.io/console'
 import { View } from '@/components/pages/projects/$projectId/auth/View'
 import { pageTitle } from '@/lib/utils/page-title'
 import { canAccessAuthSecuritySettings } from '@/lib/console-rbac-loader'
+import { projectQueryOptions } from '@/lib/react-query/hooks'
+import { projectAuthSecurityQueryOptions } from '@/lib/project-settings'
 
 export const Route = createFileRoute(
   '/_public/projects/$projectId/auth/security',
@@ -23,6 +26,14 @@ export const Route = createFileRoute(
         replace: true,
       })
     }
+
+    await queryClient.ensureQueryData(projectQueryOptions(projectId))
+    const project = queryClient.getQueryData<Models.Project>(
+      projectQueryOptions(projectId).queryKey,
+    )
+    await queryClient.ensureQueryData(
+      projectAuthSecurityQueryOptions(projectId, project?.region),
+    )
   },
   component: AuthSecurityPage,
 })

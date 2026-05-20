@@ -23,6 +23,7 @@ import { FrameworkIcon } from '@/components/global/shared/FrameworkIcon'
 import { ExternalLink } from 'lucide-react'
 import { useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
+import { ID } from '@appwrite.io/console'
 import { sdk } from '@/lib/appwrite/sdk'
 import {
   useCreateSite,
@@ -32,7 +33,7 @@ import {
 import { useWizard } from './WizardContext'
 import { DomainInput } from './DomainInput'
 import { BuildSettings } from './BuildSettings'
-import { EnvironmentVariables } from './EnvironmentVariables'
+import { VariablesSettingsCard } from '@/components/global/shared/VariablesSettingsCard'
 import type { WizardVariable } from './WizardContext'
 
 // GitHub Icon Component
@@ -181,6 +182,7 @@ export function QuickDeployView({
           varsWithValues.map((v) =>
             projectSdk.sites.createVariable({
               siteId: site.$id,
+              variableId: ID.unique(),
               key: v.key,
               value: v.value,
               secret: v.secret,
@@ -466,7 +468,8 @@ export function QuickDeployView({
       />
 
       {/* Environment variables */}
-      <EnvironmentVariables
+      <VariablesSettingsCard
+        variant="wizard"
         variables={variables}
         onChange={setVariables}
         disabled={isDeploying}

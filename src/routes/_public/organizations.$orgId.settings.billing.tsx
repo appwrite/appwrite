@@ -5,6 +5,7 @@ import {
   organizationsQueryOptions,
   organizationInvoicesQueryOptions,
   organizationQueryOptions,
+  organizationPlanQueryOptions,
   organizationBillingAggregationQueryOptions,
   organizationCreditsQueryOptions,
   paymentMethodsQueryOptions,
@@ -70,6 +71,7 @@ export const Route = createFileRoute(
 
     await Promise.all([
       aggregationPromise,
+      queryClient.ensureQueryData(organizationPlanQueryOptions(orgId)),
       queryClient.ensureQueryData(
         organizationInvoicesQueryOptions(orgId, 0, INVOICES_PER_PAGE),
       ),

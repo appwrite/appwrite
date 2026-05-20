@@ -25,6 +25,8 @@ function mapAttributeTypeToFilterType(type?: string): FilterColumnType {
   switch (type) {
     case 'integer':
       return 'integer'
+    case 'bigint':
+      return 'bigint'
     case 'double':
     case 'float':
       return 'double'

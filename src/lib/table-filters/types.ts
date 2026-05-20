@@ -69,6 +69,7 @@ export interface FilterColumn {
 export type FilterColumnType =
   | 'string'
   | 'integer'
+  | 'bigint'
   | 'double'
   | 'boolean'
   | 'datetime'

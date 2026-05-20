@@ -1,4 +1,7 @@
-import { CreditCard, Plus, MoreHorizontal, Info } from '@/lib/icons'
+import { CreditCard, Plus, Info } from '@/lib/icons'
+import { Trash2, Star, ArrowLeftRight } from 'lucide-react'
+import { MenuItemContent, MenuItemIcon } from '@/components/global/shared/ContextMenuIcon'
+import { RowActionsMenuTrigger } from '@/components/global/shared/RowActionsMenuTrigger'
 import { Button } from '@/components/ui/button'
 import {
   DropdownMenu,
@@ -156,7 +159,7 @@ export function PaymentMethods({
     }
   }
 
-  if (methodsLoading) {
+  if (methodsLoading && completedPaymentMethods.length === 0) {
     return (
       <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
         <div className="px-6 py-4">
@@ -397,10 +400,11 @@ export function PaymentMethods({
                       className="text-[13px]"
                       onClick={() => handleSetBackup(availableMethod.$id)}
                     >
-                      <CreditCard className="h-4 w-4 mr-2 text-muted-foreground" />
-                      <span className="whitespace-nowrap">
-                        {availableMethod.brand} ••••{availableMethod.last4}
-                      </span>
+                      <MenuItemContent icon={CreditCard}>
+                        <span className="whitespace-nowrap">
+                          {availableMethod.brand} ••••{availableMethod.last4}
+                        </span>
+                      </MenuItemContent>
                     </DropdownMenuItem>
                   ))}
                   <DropdownMenuSeparator />
@@ -408,8 +412,7 @@ export function PaymentMethods({
                     className="text-[13px]"
                     onClick={() => onAddPaymentMethod?.(true)}
                   >
-                    <Plus className="h-4 w-4 mr-2" />
-                    Add new card
+                    <MenuItemContent icon={Plus}>Add</MenuItemContent>
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
@@ -515,13 +518,7 @@ function PaymentMethodCard({
 
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <Button
-            variant="ghost"
-            size="sm"
-            className="h-8 w-8 p-0 text-muted-foreground hover:text-foreground"
-          >
-            <MoreHorizontal className="h-4 w-4" />
-          </Button>
+          <RowActionsMenuTrigger />
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end" className="w-52">
           {!isPrimary && onSetPrimary && (
@@ -529,7 +526,7 @@ function PaymentMethodCard({
               className="text-[13px]"
               onClick={() => onSetPrimary(method.$id)}
             >
-              Set as primary
+              <MenuItemContent icon={Star}>Primary</MenuItemContent>
             </DropdownMenuItem>
           )}
           {((isPrimary && onReplacePrimary) ||
@@ -538,7 +535,7 @@ function PaymentMethodCard({
               {!isPrimary && onSetPrimary && <DropdownMenuSeparator />}
               <DropdownMenuSub>
                 <DropdownMenuSubTrigger className="text-[13px]">
-                  Replace
+                  <MenuItemContent icon={ArrowLeftRight}>Replace</MenuItemContent>
                 </DropdownMenuSubTrigger>
                 <DropdownMenuSubContent className="w-52">
                   {availableMethods.length > 0 && (
@@ -560,10 +557,11 @@ function PaymentMethodCard({
                             }
                           }}
                         >
-                          <CreditCard className="h-4 w-4 mr-2 text-muted-foreground shrink-0" />
-                          <span className="whitespace-nowrap">
-                            {availableMethod.brand} ••••{availableMethod.last4}
-                          </span>
+                          <MenuItemContent icon={CreditCard}>
+                            <span className="whitespace-nowrap">
+                              {availableMethod.brand} ••••{availableMethod.last4}
+                            </span>
+                          </MenuItemContent>
                         </DropdownMenuItem>
                       ))}
                       <DropdownMenuSeparator />
@@ -573,8 +571,7 @@ function PaymentMethodCard({
                     className="text-[13px]"
                     onClick={() => onAddPaymentMethod?.(!isPrimary)}
                   >
-                    <Plus className="h-4 w-4 mr-2 shrink-0" />
-                    Add new card
+                    <MenuItemContent icon={Plus}>Add</MenuItemContent>
                   </DropdownMenuItem>
                 </DropdownMenuSubContent>
               </DropdownMenuSub>
@@ -582,10 +579,10 @@ function PaymentMethodCard({
           )}
           <DropdownMenuSeparator />
           <DropdownMenuItem
-            className="text-[13px] text-red-600 dark:text-red-400"
+            className="text-[13px]"
             onClick={onRemove}
           >
-            Remove
+            <MenuItemContent icon={Trash2}>Remove</MenuItemContent>
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>

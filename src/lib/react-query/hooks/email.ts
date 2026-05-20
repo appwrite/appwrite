@@ -5,6 +5,10 @@
  */
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import {
+  ProjectEmailTemplateId,
+  ProjectEmailTemplateLocale,
+} from '@appwrite.io/console'
 import { sdk } from '@/lib/appwrite/sdk'
 import { DEFAULT_STALE_TIME } from './constants'
 
@@ -14,11 +18,6 @@ import { DEFAULT_STALE_TIME } from './constants'
 
 /**
  * Query function to fetch an email template
- *
- * @param projectId - The project ID
- * @param type - The email template type
- * @param locale - The email template locale
- * @returns Email template from the API
  */
 export async function fetchEmailTemplate(
   projectId: string,
@@ -29,26 +28,27 @@ export async function fetchEmailTemplate(
     throw new Error('Project ID is required')
   }
 
-  const response = await sdk.forConsole.projects.getEmailTemplate({
-    projectId,
-    type: type as unknown,
-    locale: locale as unknown,
+  return await sdk.forProject(projectId).project.getEmailTemplate({
+    templateId: type as ProjectEmailTemplateId,
+    locale: locale as ProjectEmailTemplateLocale,
   })
+}
 
-  return response
+async function deleteProjectEmailTemplate(
+  projectId: string,
+  templateId: ProjectEmailTemplateId,
+  locale: ProjectEmailTemplateLocale,
+) {
+  const { client } = sdk.forProject(projectId).project
+  const apiPath = '/project/templates/email'
+  const uri = new URL(client.config.endpoint + apiPath)
+  return client.call('delete', uri, {}, { templateId, locale })
 }
 
 // ============================================================================
 // HOOKS
 // ============================================================================
 
-/**
- * Hook to fetch an email template
- *
- * @param projectId - The project ID
- * @param type - The email template type
- * @param locale - The email template locale
- */
 export function useEmailTemplate(
   projectId: string | null | undefined,
   type: string | null | undefined,
@@ -61,16 +61,10 @@ export function useEmailTemplate(
     queryFn: () => fetchEmailTemplate(projectId!, type!, locale!),
     enabled: !!projectId && !!type && !!locale,
     staleTime: DEFAULT_STALE_TIME,
-    // Don't refetch on mount if data is fresh (within staleTime)
     refetchOnMount: false,
   })
 }
 
-/**
- * Hook to update an email template
- *
- * @param projectId - The project ID
- */
 export function useUpdateEmailTemplate(projectId: string | null | undefined) {
   const queryClient = useQueryClient()
 
@@ -82,7 +76,8 @@ export function useUpdateEmailTemplate(projectId: string | null | undefined) {
       message,
       senderName,
       senderEmail,
-      replyTo,
+      replyToEmail,
+      replyToName,
     }: {
       type: string
       locale: string
@@ -90,21 +85,22 @@ export function useUpdateEmailTemplate(projectId: string | null | undefined) {
       message: string
       senderName?: string
       senderEmail?: string
-      replyTo?: string
+      replyToEmail?: string
+      replyToName?: string
     }) => {
       if (!projectId) {
         throw new Error('Project ID is required')
       }
 
-      return await sdk.forConsole.projects.updateEmailTemplate({
-        projectId,
-        type: type as unknown,
-        locale: locale as unknown,
+      return await sdk.forProject(projectId).project.updateEmailTemplate({
+        templateId: type as ProjectEmailTemplateId,
+        locale: locale as ProjectEmailTemplateLocale,
         subject,
         message,
         senderName,
         senderEmail,
-        replyTo,
+        replyToEmail,
+        replyToName,
       })
     },
     onSuccess: (_, variables) => {
@@ -120,11 +116,6 @@ export function useUpdateEmailTemplate(projectId: string | null | undefined) {
   })
 }
 
-/**
- * Hook to delete (reset) an email template
- *
- * @param projectId - The project ID
- */
 export function useDeleteEmailTemplate(projectId: string | null | undefined) {
   const queryClient = useQueryClient()
 
@@ -134,11 +125,11 @@ export function useDeleteEmailTemplate(projectId: string | null | undefined) {
         throw new Error('Project ID is required')
       }
 
-      return await sdk.forConsole.projects.deleteEmailTemplate({
+      return await deleteProjectEmailTemplate(
         projectId,
-        type: type as unknown,
-        locale: locale as unknown,
-      })
+        type as ProjectEmailTemplateId,
+        locale as ProjectEmailTemplateLocale,
+      )
     },
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({

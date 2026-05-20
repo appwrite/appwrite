@@ -10,6 +10,7 @@ const COLUMN_TYPE_ELEMENTS = [
   { value: 'longtext', label: 'Longtext' },
   { value: 'varchar', label: 'Varchar' },
   { value: 'integer', label: 'Integer' },
+  { value: 'bigint', label: 'Bigint' },
   { value: 'double', label: 'Float' },
   { value: 'boolean', label: 'Boolean' },
   { value: 'datetime', label: 'Datetime' },

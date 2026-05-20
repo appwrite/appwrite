@@ -13,10 +13,17 @@ import {
   keepPreviousData,
 } from '@tanstack/react-query'
 import { useMemo } from 'react'
-import { Query, ID, Status, Region, type Scopes } from '@appwrite.io/console'
+import {
+  Query,
+  ID,
+  Status,
+  Region,
+  ProjectKeyScopes,
+} from '@appwrite.io/console'
 import type { Models } from '@appwrite.io/console'
 import type { Project } from '@/lib/utils/mock-data'
-import { sdk, setProjectRegion } from '@/lib/appwrite/sdk'
+import { sdk } from '@/lib/appwrite/sdk'
+import { fetchProjectById } from '@/lib/project-settings'
 import { getActiveProfileFeatures } from '@/lib/console-profiles'
 import {
   ensureFingerprintServerTimeSynced,
@@ -39,8 +46,6 @@ const PROJECT_LIST_SELECT = [
   'region',
   '$createdAt',
   'status',
-  'platforms',
-  'keys',
 ] as const
 
 function getProjectStatusQueries(): string[] {
@@ -85,14 +90,7 @@ function projectMatchesActiveListStatus(project: Models.Project): boolean {
  * @returns Project data from the API
  */
 export async function fetchProject(projectId: string) {
-  if (!projectId) {
-    throw new Error('Project ID is required')
-  }
-  const response = await sdk.forConsole.projects.get({ projectId })
-  if (response?.region) {
-    setProjectRegion(projectId, response.region)
-  }
-  return response
+  return fetchProjectById(projectId)
 }
 
 /**
@@ -141,9 +139,7 @@ export async function fetchActiveProjects(
   // Pasting a project ID never hits fulltext/labels, so resolve ID-shaped terms via get.
   if (trimmedSearch && isProbableConsoleProjectId(trimmedSearch)) {
     try {
-      const direct = await sdk.forConsole.projects.get({
-        projectId: trimmedSearch,
-      })
+      const direct = await fetchProjectById(trimmedSearch)
       if (
         !excludeIds.includes(direct.$id) &&
         direct.teamId === teamId &&
@@ -954,7 +950,7 @@ export function useCreateApiKey(projectId: string | null | undefined) {
       return await sdk.forProject(projectId).project.createKey({
         keyId: ID.unique(),
         name: name.trim(),
-        scopes: scopes as Scopes[] | undefined,
+        scopes: (scopes ?? []) as ProjectKeyScopes[],
         expire,
       })
     },
@@ -1002,7 +998,7 @@ export function useUpdateApiKey(projectId: string | null | undefined) {
       return await sdk.forProject(projectId).project.updateKey({
         keyId,
         name: name.trim(),
-        scopes: scopes as Scopes[] | undefined,
+        scopes: (scopes ?? []) as ProjectKeyScopes[],
         expire,
       })
     },

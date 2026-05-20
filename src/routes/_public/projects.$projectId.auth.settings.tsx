@@ -2,9 +2,11 @@ import { createFileRoute, redirect } from '@tanstack/react-router'
 import { View } from '@/components/pages/projects/$projectId/auth/View'
 import { pageTitle } from '@/lib/utils/page-title'
 import { canAccessAuthSecuritySettings } from '@/lib/console-rbac-loader'
+import { projectQueryOptions } from '@/lib/react-query/hooks'
 import {
   consoleOAuth2CatalogQueryOptions,
   projectOAuth2ProvidersQueryOptions,
+  type AuthOAuth2SettingsInitialData,
 } from '@/lib/react-query/hooks/oauth2-providers'
 
 export const Route = createFileRoute(
@@ -12,10 +14,10 @@ export const Route = createFileRoute(
 )({
   head: () => ({ meta: [{ title: pageTitle('Settings', 'Auth') }] }),
   loader: async ({ params, context }) => {
-    if (typeof window === 'undefined') return
+    if (typeof window === 'undefined') return undefined
     const { projectId } = params
     const { queryClient } = context
-    if (!projectId) return
+    if (!projectId) return undefined
     const canAccess = await canAccessAuthSecuritySettings(
       queryClient,
       projectId,
@@ -28,15 +30,26 @@ export const Route = createFileRoute(
       })
     }
 
-    await Promise.all([
+    const [, catalog, providerList] = await Promise.all([
+      queryClient.ensureQueryData(projectQueryOptions(projectId)),
       queryClient.ensureQueryData(consoleOAuth2CatalogQueryOptions()),
-      queryClient.ensureQueryData(projectOAuth2ProvidersQueryOptions(projectId)),
+      queryClient.ensureQueryData(
+        projectOAuth2ProvidersQueryOptions(projectId),
+      ),
     ])
+
+    return { catalog, providerList } satisfies AuthOAuth2SettingsInitialData
   },
   component: AuthSettingsPage,
 })
 
 function AuthSettingsPage() {
   const { projectId } = Route.useParams()
-  return <View key={`auth-${projectId}-settings`} />
+  const loaderData = Route.useLoaderData()
+  return (
+    <View
+      key={`auth-${projectId}-settings`}
+      authSettingsInitialData={loaderData}
+    />
+  )
 }

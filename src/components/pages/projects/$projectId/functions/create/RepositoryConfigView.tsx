@@ -25,7 +25,7 @@ import { DateTooltip } from '@/components/global/shared/DateTooltip'
 import { BranchSelector } from '@/components/global/shared/BranchSelector'
 import { RootDirectoryPicker } from '@/components/global/shared/RootDirectoryPicker'
 import { FunctionDomainCard } from './_components/FunctionDomainCard'
-import { EnvironmentVariablesCard } from '@/components/global/shared/EnvironmentVariablesCard'
+import { VariablesSettingsCard } from '@/components/global/shared/VariablesSettingsCard'
 import {
   Accordion,
   AccordionContent,
@@ -240,6 +240,7 @@ export function RepositoryConfigView({
         if (!v.key.trim()) continue
         await projectSdk.functions.createVariable({
           functionId: finalFunctionId,
+          variableId: ID.unique(),
           key: v.key.trim(),
           value: v.value,
           secret: v.secret,
@@ -653,7 +654,11 @@ export function RepositoryConfigView({
       </Accordion>
 
       {/* Environment variables – shared card */}
-      <EnvironmentVariablesCard variables={variables} onChange={setVariables} />
+      <VariablesSettingsCard
+        variant="wizard"
+        variables={variables}
+        onChange={setVariables}
+      />
     </WizardLayout>
   )
 }

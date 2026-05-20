@@ -23,7 +23,6 @@ import {
 import { Badge } from '@/components/ui/badge'
 import { getDomainStatusBadgeConfig } from '@/lib/utils/status-badge'
 import {
-  MoreHorizontal,
   ExternalLink,
   Loader2,
   FileText,
@@ -31,6 +30,8 @@ import {
   Trash2,
 } from 'lucide-react'
 import { toast } from 'sonner'
+import { MenuItemContent, MenuItemIcon } from '@/components/global/shared/ContextMenuIcon'
+import { RowActionsMenuTrigger } from '@/components/global/shared/RowActionsMenuTrigger'
 import { DateTooltip } from '@/components/global/shared/DateTooltip'
 import { EmptyState } from '@/components/global/shared/EmptyState'
 import { Pagination } from '@/components/global/shared/Pagination'
@@ -235,29 +236,21 @@ export function Domains({
                         <div className="flex justify-end">
                           <DropdownMenu>
                             <DropdownMenuTrigger asChild>
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                className="h-8 w-8 p-0"
-                              >
-                                <MoreHorizontal className="h-4 w-4" />
-                              </Button>
+                              <RowActionsMenuTrigger />
                             </DropdownMenuTrigger>
                             <DropdownMenuContent align="end">
                               {rule.status !== 'verified' && (
                                 <DropdownMenuItem
                                   onClick={() => handleViewLogs(rule)}
                                 >
-                                  <FileText className="mr-2 h-4 w-4" />
-                                  View logs
+                                  <MenuItemContent icon={FileText}>Logs</MenuItemContent>
                                 </DropdownMenuItem>
                               )}
                               {canRetry(rule.status) && (
                                 <DropdownMenuItem
                                   onClick={() => handleRetry(rule)}
                                 >
-                                  <RefreshCw className="mr-2 h-4 w-4" />
-                                  Retry
+                                  <MenuItemContent icon={RefreshCw}>Retry</MenuItemContent>
                                 </DropdownMenuItem>
                               )}
                               <DropdownMenuItem
@@ -285,14 +278,12 @@ export function Domains({
                                   )
                                 }
                               >
-                                <FileText className="mr-2 h-4 w-4" />
-                                DNS Records
+                                <MenuItemContent icon={FileText}>Records</MenuItemContent>
                               </DropdownMenuItem>
                               <DropdownMenuItem
                                 onClick={() => handleDelete(rule)}
                               >
-                                <Trash2 className="mr-2 h-4 w-4" />
-                                Delete
+                                <MenuItemContent icon={Trash2}>Delete</MenuItemContent>
                               </DropdownMenuItem>
                             </DropdownMenuContent>
                           </DropdownMenu>

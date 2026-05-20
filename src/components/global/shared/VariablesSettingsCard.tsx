@@ -1,11 +1,11 @@
 /**
- * Variables Settings Card
+ * Variables card — settings (API) and wizard (local state).
  *
- * Shared card for managing environment variables (project, function, site).
- * Provides create, update, delete, secret, editor, and import .env flows.
+ * - `variant="settings"` (default): project / function / site variables via mutations.
+ * - `variant="wizard"`: create flows; updates `onChange` only (never calls API).
  */
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { cn } from '@/lib/utils'
 import {
   Loader2,
@@ -15,7 +15,6 @@ import {
   Eye,
   EyeOff,
   XCircle,
-  MoreHorizontal,
   Copy,
   Check,
   Key,
@@ -30,6 +29,7 @@ import { Badge } from '@/components/ui/badge'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Pagination } from '@/components/global/shared/Pagination'
 import { EmptyState } from '@/components/global/shared/EmptyState'
+import { RowActionsMenuTrigger } from '@/components/global/shared/RowActionsMenuTrigger'
 import { VariableEditor } from '@/components/global/shared/VariableEditor'
 import {
   Dialog,
@@ -57,12 +57,32 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
+import {
+  WIZARD_DIALOG_OVERLAY_Z,
+  wizardDialogContentClassName,
+  wizardDropdownContentClassName,
+} from '@/lib/wizard-portal-z'
+
+/** Local variable for create wizards (no server id). */
+export interface EnvVariable {
+  key: string
+  value: string
+  secret: boolean
+}
 
 export interface VariableRecord {
   $id: string
   key: string
   value: string
   secret?: boolean
+}
+
+type VarLike = { key: string; value: string; secret?: boolean }
+
+function isWizardProps(
+  props: VariablesSettingsCardProps,
+): props is VariablesSettingsCardWizardProps {
+  return props.variant === 'wizard'
 }
 
 function parseEnvFile(content: string): Record<string, string> {
@@ -85,14 +105,14 @@ function parseEnvFile(content: string): Record<string, string> {
   return result
 }
 
-function variablesToEnv(vars: VariableRecord[]): string {
+function variablesToEnv(vars: VarLike[]): string {
   return vars
     .filter((v) => !v.secret)
     .map((v) => `${v.key}=${v.value}`)
     .join('\n')
 }
 
-function variablesToJson(vars: VariableRecord[]): string {
+function variablesToJson(vars: VarLike[]): string {
   const obj: Record<string, string> = {}
   vars
     .filter((v) => !v.secret)
@@ -157,8 +177,15 @@ function CopyableText({
   )
 }
 
-export interface VariablesSettingsCardProps {
-  title: string
+type VariablesCardSharedProps = {
+  title?: string
+  emptyTitle?: string
+  emptyDescription?: string
+  className?: string
+}
+
+export type VariablesSettingsCardSettingsProps = VariablesCardSharedProps & {
+  variant?: 'settings'
   description: string
   variables: VariableRecord[]
   total: number
@@ -197,32 +224,60 @@ export interface VariablesSettingsCardProps {
   projectVariableKeysForWarning?: Set<string>
   /** Tooltip for the duplicate project key warning; defaults to a message using `scopeLabel`. */
   duplicateProjectKeyTooltip?: string
-  emptyTitle?: string
-  emptyDescription?: string
 }
 
-export function VariablesSettingsCard({
-  title,
-  description,
-  variables,
-  total,
-  isLoading,
-  createMutation,
-  updateMutation,
-  deleteMutation,
-  scopeLabel,
-  page = 0,
-  limit = 10,
-  onPageChange,
-  onPageSizeChange,
-  itemLabel = 'variables',
-  isVariableEditable = () => true,
-  getVariableBadge,
-  projectVariableKeysForWarning,
-  duplicateProjectKeyTooltip,
-  emptyTitle = 'No environment variables yet',
-  emptyDescription = 'Add a variable above or import from a .env file.',
-}: VariablesSettingsCardProps) {
+export type VariablesSettingsCardWizardProps = VariablesCardSharedProps & {
+  variant: 'wizard'
+  variables: EnvVariable[]
+  onChange: (variables: EnvVariable[]) => void
+  disabled?: boolean
+}
+
+export type VariablesSettingsCardProps =
+  | VariablesSettingsCardSettingsProps
+  | VariablesSettingsCardWizardProps
+
+export function VariablesSettingsCard(props: VariablesSettingsCardProps) {
+  const isWizard = isWizardProps(props)
+  const {
+    emptyTitle = 'No environment variables yet',
+    emptyDescription = 'Add a variable above or import from a .env file.',
+    className,
+  } = props
+
+  const title = props.title ?? 'Environment variables'
+  const description = isWizard ? undefined : props.description
+  const wizardVariables = isWizard ? props.variables : []
+  const onWizardChange = isWizard ? props.onChange : undefined
+  const wizardDisabled = isWizard ? (props.disabled ?? false) : false
+
+  const variables = isWizard ? [] : props.variables
+  const total = isWizard ? wizardVariables.length : props.total
+  const isLoading = isWizard ? false : props.isLoading
+  const createMutation = isWizard ? undefined : props.createMutation
+  const updateMutation = isWizard ? undefined : props.updateMutation
+  const deleteMutation = isWizard ? undefined : props.deleteMutation
+  const scopeLabel = isWizard ? '' : props.scopeLabel
+  const page = isWizard ? 0 : (props.page ?? 0)
+  const limit = isWizard ? 0 : (props.limit ?? 10)
+  const onPageChange = isWizard ? undefined : props.onPageChange
+  const onPageSizeChange = isWizard ? undefined : props.onPageSizeChange
+  const itemLabel = isWizard ? 'variables' : (props.itemLabel ?? 'variables')
+  const isVariableEditable = isWizard
+    ? () => true
+    : (props.isVariableEditable ?? (() => true))
+  const getVariableBadge = isWizard ? undefined : props.getVariableBadge
+  const projectVariableKeysForWarning = isWizard
+    ? undefined
+    : props.projectVariableKeysForWarning
+  const duplicateProjectKeyTooltip = isWizard
+    ? undefined
+    : props.duplicateProjectKeyTooltip
+
+  const actionsDisabled = isWizard ? wizardDisabled : isLoading
+  const dialogContentClass = (extra?: string) =>
+    isWizard ? wizardDialogContentClassName(extra) : cn(extra)
+  const dialogOverlayClass = isWizard ? WIZARD_DIALOG_OVERLAY_Z : undefined
   const [showCreateModal, setShowCreateModal] = useState(false)
   const [showUpdateModal, setShowUpdateModal] = useState(false)
   const [showDeleteModal, setShowDeleteModal] = useState(false)
@@ -244,6 +299,23 @@ export function VariablesSettingsCard({
   const [editorFormat, setEditorFormat] = useState<'env' | 'json'>('env')
   const [editorError, setEditorError] = useState('')
   const [deleteError, setDeleteError] = useState('')
+  const [showSecrets, setShowSecrets] = useState<Set<string>>(new Set())
+  const fileInputRef = useRef<HTMLInputElement>(null)
+  const createKeyRefs = useRef<Map<number, HTMLInputElement>>(new Map())
+
+  const focusCreateKeyInput = (index: number) => {
+    requestAnimationFrame(() => {
+      createKeyRefs.current.get(index)?.focus()
+    })
+  }
+
+  const handleAddCreatePair = () => {
+    const newIndex = createPairs.length
+    setCreatePairs([...createPairs, { key: '', value: '' }])
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => focusCreateKeyInput(newIndex))
+    })
+  }
 
   const currentPage = page + 1
   const hasPagination = limit > 0 && !!onPageChange
@@ -260,19 +332,136 @@ export function VariablesSettingsCard({
   }
 
   useEffect(() => {
-    if (showEditorModal && variables.length > 0) {
+    if (!showEditorModal || isWizard) return
+    if (variables.length > 0) {
       const editableVars = variables.filter((v) => !v.secret)
       setEditorContent(
         editorFormat === 'env'
           ? variablesToEnv(editableVars)
           : variablesToJson(editableVars),
       )
-    } else if (showEditorModal) {
+    } else {
       setEditorContent(editorFormat === 'env' ? '' : '{}')
     }
-  }, [showEditorModal, editorFormat, variables])
+  }, [showEditorModal, editorFormat, variables, isWizard])
+
+  const handleWizardCreate = () => {
+    if (!onWizardChange) return
+    for (const pair of createPairs) {
+      if (!pair.key.trim()) {
+        toast.error('All variable keys are required')
+        return
+      }
+      if (wizardVariables.some((v) => v.key === pair.key.trim())) {
+        toast.error(`Variable ${pair.key.trim()} already exists`)
+        return
+      }
+      if (pair.value.length > 8192) {
+        toast.error(
+          `Variable ${pair.key.trim()} is longer than 8192 allowed characters`,
+        )
+        return
+      }
+    }
+    const newVars = createPairs
+      .filter((p) => p.key.trim())
+      .map((pair) => ({
+        key: pair.key.trim(),
+        value: pair.value,
+        secret: createSecret,
+      }))
+    if (newVars.length > 0) {
+      onWizardChange([...wizardVariables, ...newVars])
+    }
+    setShowCreateModal(false)
+    setCreatePairs([{ key: '', value: '' }])
+    setCreateSecret(false)
+  }
+
+  const handleWizardRemove = (index: number) => {
+    onWizardChange?.(wizardVariables.filter((_, i) => i !== index))
+  }
+
+  const handleWizardToggleSecret = (key: string) => {
+    const variable = wizardVariables.find((v) => v.key === key)
+    if (!variable || !onWizardChange) return
+    onWizardChange(
+      wizardVariables.map((v) =>
+        v.key === key ? { ...v, secret: !v.secret } : v,
+      ),
+    )
+  }
+
+  const handleWizardToggleShowSecret = (key: string) => {
+    setShowSecrets((prev) => {
+      const next = new Set(prev)
+      if (next.has(key)) next.delete(key)
+      else next.add(key)
+      return next
+    })
+  }
+
+  const handleWizardFileImport = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file || !onWizardChange) return
+    const reader = new FileReader()
+    reader.onload = (event) => {
+      const content = (event.target?.result as string) || ''
+      const parsed = parseEnvFile(content)
+      const newVars: EnvVariable[] = []
+      for (const [key, value] of Object.entries(parsed)) {
+        if (
+          !wizardVariables.some((v) => v.key === key) &&
+          !newVars.some((v) => v.key === key)
+        ) {
+          newVars.push({ key, value, secret: false })
+        }
+      }
+      if (newVars.length > 0) {
+        onWizardChange([...wizardVariables, ...newVars])
+      }
+    }
+    reader.readAsText(file)
+    if (fileInputRef.current) fileInputRef.current.value = ''
+  }
+
+  const handleWizardEditorSave = () => {
+    if (!onWizardChange) return
+    setEditorError('')
+    try {
+      const parsed: Record<string, string> =
+        editorFormat === 'env'
+          ? envToObject(editorContent)
+          : jsonToObject(editorContent)
+      const secretVars = wizardVariables.filter((v) => v.secret)
+      const newVars: EnvVariable[] = Object.entries(parsed).map(
+        ([key, value]) => ({ key, value, secret: false }),
+      )
+      onWizardChange([...secretVars, ...newVars])
+      setShowEditorModal(false)
+    } catch (error: unknown) {
+      setEditorError(getErrorMessage(error, 'Invalid format'))
+    }
+  }
+
+  const handleOpenEditor = () => {
+    const list = isWizard ? wizardVariables : variables
+    const nonSecret = list.filter((v) => !v.secret)
+    setEditorContent(
+      editorFormat === 'env'
+        ? variablesToEnv(nonSecret)
+        : variablesToJson(nonSecret),
+    )
+    setEditorError('')
+    setShowEditorModal(true)
+  }
 
   const handleCreate = async () => {
+    if (isWizard) {
+      handleWizardCreate()
+      return
+    }
+    if (!createMutation) return
     for (const pair of createPairs) {
       if (!pair.key.trim()) {
         toast.error('All variable keys are required')
@@ -308,7 +497,7 @@ export function VariablesSettingsCard({
   }
 
   const handleUpdate = async () => {
-    if (!selectedVar) return
+    if (isWizard || !updateMutation || !selectedVar) return
     if (updateValue.length > 8192) {
       toast.error(`Variable value is longer than 8192 allowed characters`)
       return
@@ -332,7 +521,7 @@ export function VariablesSettingsCard({
   }
 
   const handleDelete = async () => {
-    if (!selectedVar) return
+    if (isWizard || !deleteMutation || !selectedVar) return
     setDeleteError('')
     try {
       await deleteMutation.mutateAsync(selectedVar.$id)
@@ -345,7 +534,7 @@ export function VariablesSettingsCard({
   }
 
   const handleMarkSecret = async () => {
-    if (!selectedVar) return
+    if (isWizard || !updateMutation || !selectedVar) return
     try {
       await updateMutation.mutateAsync({
         variableId: selectedVar.$id,
@@ -362,6 +551,8 @@ export function VariablesSettingsCard({
   }
 
   const handleImport = async () => {
+    if (isWizard) return
+    if (!createMutation || !updateMutation) return
     if (!importFile) {
       setImportError('No file selected')
       return
@@ -389,7 +580,7 @@ export function VariablesSettingsCard({
       for (const [key, value] of Object.entries(parsed)) {
         if (existingKeys.has(key)) {
           const existing = variables.find((v) => v.key === key)
-          if (existing) {
+          if (existing?.$id) {
             promises.push(
               updateMutation.mutateAsync({
                 variableId: existing.$id,
@@ -421,6 +612,11 @@ export function VariablesSettingsCard({
   }
 
   const handleEditorSave = async () => {
+    if (isWizard) {
+      handleWizardEditorSave()
+      return
+    }
+    if (!createMutation || !updateMutation || !deleteMutation) return
     setEditorError('')
     try {
       const parsed: Record<string, string> =
@@ -446,6 +642,7 @@ export function VariablesSettingsCard({
       const deletePromises: Promise<unknown>[] = []
 
       for (const variable of editableVars) {
+        if (!variable.$id) continue
         if (parsed[variable.key] === undefined) {
           deletePromises.push(deleteMutation.mutateAsync(variable.$id))
         } else if (parsed[variable.key] !== variable.value) {
@@ -488,7 +685,9 @@ export function VariablesSettingsCard({
   }
 
   const handleDownload = () => {
-    const editableVars = variables.filter((v) => !v.secret)
+    const editableVars = (isWizard ? wizardVariables : variables).filter(
+      (v) => !v.secret,
+    )
     const content =
       editorFormat === 'env'
         ? variablesToEnv(editableVars)
@@ -528,7 +727,9 @@ export function VariablesSettingsCard({
       )
       setEditorFormat(format)
     } catch {
-      const editableVars = variables.filter((v) => !v.secret)
+      const editableVars = (isWizard ? wizardVariables : variables).filter(
+        (v) => !v.secret,
+      )
       setEditorContent(
         format === 'env'
           ? variablesToEnv(editableVars)
@@ -538,10 +739,14 @@ export function VariablesSettingsCard({
     }
   }
 
+  const isEmpty = isWizard ? wizardVariables.length === 0 : total === 0
+  const listVariables = isWizard ? wizardVariables : variables
+
   useEffect(() => {
     if (!showCreateModal) {
       setCreatePairs([{ key: '', value: '' }])
       setCreateSecret(false)
+      createKeyRefs.current.clear()
     }
   }, [showCreateModal])
 
@@ -584,25 +789,45 @@ export function VariablesSettingsCard({
 
   return (
     <>
-      <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
+      <div
+        className={cn(
+          'rounded-xl border border-border bg-card/50 overflow-hidden',
+          className,
+        )}
+      >
         <div className="px-6 py-4">
           <h3 className="text-[15px] font-semibold text-foreground">{title}</h3>
         </div>
         <div className="border-t border-border" />
-        <div className="px-6 py-4 @container">
-          <div className="flex gap-6 @[600px]:flex-row flex-col">
-            <div className="@[600px]:w-64 shrink-0">
-              <p className="text-[13px] text-muted-foreground">{description}</p>
-            </div>
+        <div className={cn('px-6 py-4', !isWizard && '@container')}>
+          <div
+            className={cn(!isWizard && 'flex gap-6 @[600px]:flex-row flex-col')}
+          >
+            {description ? (
+              <div className="@[600px]:w-64 shrink-0">
+                <p className="text-[13px] text-muted-foreground">
+                  {description}
+                </p>
+              </div>
+            ) : null}
             <div className="flex-1 min-w-0">
               <div className="flex items-center justify-between gap-2 mb-4">
                 <div className="flex items-center gap-2">
+                  {isWizard ? (
+                    <input
+                      ref={fileInputRef}
+                      type="file"
+                      accept=".env,.txt"
+                      onChange={handleWizardFileImport}
+                      className="hidden"
+                    />
+                  ) : null}
                   <Button
                     variant="outline"
                     size="sm"
                     className="h-9 text-[13px]"
-                    onClick={() => setShowEditorModal(true)}
-                    disabled={isLoading}
+                    onClick={handleOpenEditor}
+                    disabled={actionsDisabled}
                   >
                     <Code className="mr-1.5 h-4 w-4" />
                     Editor
@@ -611,8 +836,12 @@ export function VariablesSettingsCard({
                     variant="outline"
                     size="sm"
                     className="h-9 text-[13px]"
-                    onClick={() => setShowImportModal(true)}
-                    disabled={isLoading}
+                    onClick={() =>
+                      isWizard
+                        ? fileInputRef.current?.click()
+                        : setShowImportModal(true)
+                    }
+                    disabled={actionsDisabled}
                   >
                     <Upload className="mr-1.5 h-4 w-4" />
                     Import .env
@@ -623,18 +852,18 @@ export function VariablesSettingsCard({
                   size="sm"
                   className="h-9 text-[13px]"
                   onClick={() => setShowCreateModal(true)}
-                  disabled={isLoading}
+                  disabled={actionsDisabled}
                 >
                   <Plus className="mr-1.5 h-4 w-4" />
                   Create variable
                 </Button>
               </div>
 
-              {isLoading ? (
+              {!isWizard && isLoading ? (
                 <div className="flex items-center justify-center py-8">
                   <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
                 </div>
-              ) : total === 0 ? (
+              ) : isEmpty ? (
                 <EmptyState
                   icon={Key}
                   title={emptyTitle}
@@ -658,17 +887,118 @@ export function VariablesSettingsCard({
                         </TableRow>
                       </TableHeader>
                       <TableBody>
-                        {variables.map((variable) => {
-                          const editable = isVariableEditable(variable)
-                          const badge = getVariableBadge?.(variable)
+                        {listVariables.map((variable, index) => {
+                          if (isWizard) {
+                            const w = variable as EnvVariable
+                            return (
+                              <TableRow
+                                key={`${w.key}-${index}`}
+                                className="border-b border-border/50"
+                              >
+                                <TableCell className="px-4 py-3">
+                                  <code className="text-[12px] font-mono">
+                                    {w.key}
+                                  </code>
+                                </TableCell>
+                                <TableCell className="px-4 py-3">
+                                  {w.secret ? (
+                                    <div className="flex items-center gap-2">
+                                      {showSecrets.has(w.key) ? (
+                                        <>
+                                          <code className="text-[12px] font-mono text-muted-foreground">
+                                            {w.value || '(empty)'}
+                                          </code>
+                                          <Button
+                                            type="button"
+                                            variant="ghost"
+                                            size="sm"
+                                            onClick={() =>
+                                              handleWizardToggleShowSecret(
+                                                w.key,
+                                              )
+                                            }
+                                            className="h-6 w-6 p-0"
+                                          >
+                                            <EyeOff className="h-4 w-4" />
+                                          </Button>
+                                        </>
+                                      ) : (
+                                        <>
+                                          <Badge
+                                            variant="secondary"
+                                            className="text-[12px]"
+                                          >
+                                            Secret
+                                          </Badge>
+                                          <Button
+                                            type="button"
+                                            variant="ghost"
+                                            size="sm"
+                                            onClick={() =>
+                                              handleWizardToggleShowSecret(
+                                                w.key,
+                                              )
+                                            }
+                                            className="h-6 w-6 p-0"
+                                          >
+                                            <Eye className="h-4 w-4" />
+                                          </Button>
+                                        </>
+                                      )}
+                                    </div>
+                                  ) : (
+                                    <code className="text-[12px] font-mono text-muted-foreground">
+                                      {w.value || '(empty)'}
+                                    </code>
+                                  )}
+                                </TableCell>
+                                <TableCell className="px-4 py-3">
+                                  {!wizardDisabled && (
+                                    <DropdownMenu>
+                                      <DropdownMenuTrigger asChild>
+                                        <RowActionsMenuTrigger
+                                          compact
+                                          onClick={(e) => e.stopPropagation()}
+                                        />
+                                      </DropdownMenuTrigger>
+                                      <DropdownMenuContent
+                                        align="end"
+                                        className={wizardDropdownContentClassName()}
+                                      >
+                                        <DropdownMenuItem
+                                          onClick={() =>
+                                            handleWizardToggleSecret(w.key)
+                                          }
+                                        >
+                                          {w.secret ? 'Unmark secret' : 'Secret'}
+                                        </DropdownMenuItem>
+                                        <DropdownMenuItem
+                                          className="text-destructive"
+                                          onClick={() =>
+                                            handleWizardRemove(index)
+                                          }
+                                        >
+                                          Delete
+                                        </DropdownMenuItem>
+                                      </DropdownMenuContent>
+                                    </DropdownMenu>
+                                  )}
+                                </TableCell>
+                              </TableRow>
+                            )
+                          }
+
+                          const record = variable as VariableRecord
+                          const editable = isVariableEditable(record)
+                          const badge = getVariableBadge?.(record)
                           const showProjectKeyWarning =
-                            projectVariableKeysForWarning?.has(variable.key) ??
+                            projectVariableKeysForWarning?.has(record.key) ??
                             false
                           return (
-                            <TableRow key={variable.$id}>
+                            <TableRow key={record.$id}>
                               <TableCell className="px-4 py-3">
                                 <div className="flex items-center gap-2 min-w-0">
-                                  <CopyableText value={variable.key} />
+                                  <CopyableText value={record.key} />
                                   {showProjectKeyWarning && (
                                     <Tooltip>
                                       <TooltipTrigger asChild>
@@ -700,7 +1030,7 @@ export function VariablesSettingsCard({
                                 </div>
                               </TableCell>
                               <TableCell className="px-4 py-3">
-                                {variable.secret ? (
+                                {record.secret ? (
                                   <Badge
                                     variant="secondary"
                                     className="text-[12px]"
@@ -709,7 +1039,7 @@ export function VariablesSettingsCard({
                                   </Badge>
                                 ) : (
                                   <CopyableText
-                                    value={variable.value || ''}
+                                    value={record.value || ''}
                                     hideValue={true}
                                   />
                                 )}
@@ -718,28 +1048,24 @@ export function VariablesSettingsCard({
                                 {editable && (
                                   <DropdownMenu>
                                     <DropdownMenuTrigger asChild>
-                                      <Button
-                                        variant="ghost"
-                                        size="sm"
-                                        className="h-7 w-7 p-0"
+                                      <RowActionsMenuTrigger
+                                        compact
                                         onClick={(e) => e.stopPropagation()}
-                                      >
-                                        <MoreHorizontal className="h-4 w-4" />
-                                      </Button>
+                                      />
                                     </DropdownMenuTrigger>
                                     <DropdownMenuContent align="end">
                                       <DropdownMenuItem
                                         onClick={() => {
-                                          setSelectedVar(variable)
+                                          setSelectedVar(record)
                                           setShowUpdateModal(true)
                                         }}
                                       >
                                         Update
                                       </DropdownMenuItem>
-                                      {!variable.secret && (
+                                      {!record.secret && (
                                         <DropdownMenuItem
                                           onClick={() => {
-                                            setSelectedVar(variable)
+                                            setSelectedVar(record)
                                             setShowSecretModal(true)
                                           }}
                                         >
@@ -749,7 +1075,7 @@ export function VariablesSettingsCard({
                                       <DropdownMenuItem
                                         className="text-destructive"
                                         onClick={() => {
-                                          setSelectedVar(variable)
+                                          setSelectedVar(record)
                                           setShowDeleteModal(true)
                                         }}
                                       >
@@ -766,7 +1092,7 @@ export function VariablesSettingsCard({
                     </Table>
                   </div>
 
-                  {hasPagination && (
+                  {!isWizard && hasPagination && (
                     <div className="mt-4">
                       <Pagination
                         currentPage={currentPage}
@@ -789,7 +1115,14 @@ export function VariablesSettingsCard({
 
       {/* Create Variable Modal */}
       <Dialog open={showCreateModal} onOpenChange={setShowCreateModal}>
-        <DialogContent className="sm:max-w-2xl p-0">
+        <DialogContent
+          className={dialogContentClass('sm:max-w-2xl p-0')}
+          overlayClassName={dialogOverlayClass}
+          onOpenAutoFocus={(e) => {
+            e.preventDefault()
+            focusCreateKeyInput(0)
+          }}
+        >
           <DialogHeader className="px-6 pt-6 text-left">
             <DialogTitle>Create variable</DialogTitle>
             <DialogDescription className="text-[13px] mt-2">
@@ -834,6 +1167,10 @@ export function VariablesSettingsCard({
                     </Label>
                     <Input
                       id={`key-${index}`}
+                      ref={(el) => {
+                        if (el) createKeyRefs.current.set(index, el)
+                        else createKeyRefs.current.delete(index)
+                      }}
                       value={pair.key}
                       onChange={(e) => {
                         const newPairs = [...createPairs]
@@ -841,7 +1178,6 @@ export function VariablesSettingsCard({
                         setCreatePairs(newPairs)
                       }}
                       placeholder="ENTER_KEY"
-                      autoFocus={index === 0}
                       autoComplete="off"
                       className="font-mono text-[13px]"
                     />
@@ -870,13 +1206,11 @@ export function VariablesSettingsCard({
                 type="button"
                 variant="outline"
                 size="sm"
-                className="w-full h-9 text-[13px]"
-                onClick={() =>
-                  setCreatePairs([...createPairs, { key: '', value: '' }])
-                }
+                className="h-9 text-[13px]"
+                onClick={handleAddCreatePair}
                 disabled={!createPairs[createPairs.length - 1]?.key}
               >
-                <Plus className="mr-2 h-4 w-4" />
+                <Plus className="mr-1.5 h-4 w-4" />
                 Add variable
               </Button>
 
@@ -905,7 +1239,7 @@ export function VariablesSettingsCard({
               size="sm"
               className="h-9 text-[13px]"
               onClick={() => setShowCreateModal(false)}
-              disabled={createMutation.isPending}
+              disabled={createMutation?.isPending}
             >
               Cancel
             </Button>
@@ -914,7 +1248,7 @@ export function VariablesSettingsCard({
               className="h-9 text-[13px]"
               onClick={handleCreate}
               disabled={
-                createMutation.isPending ||
+                createMutation?.isPending ||
                 createPairs.some((p) => !p.key.trim()) ||
                 createPairs.some((p) => p.value.length > 8192)
               }
@@ -925,7 +1259,8 @@ export function VariablesSettingsCard({
         </DialogContent>
       </Dialog>
 
-      {/* Update Variable Modal */}
+      {/* Update Variable Modal (settings only) */}
+      {!isWizard && (
       <Dialog
         open={showUpdateModal}
         onOpenChange={(open) => {
@@ -991,7 +1326,7 @@ export function VariablesSettingsCard({
                 setShowUpdateModal(false)
                 setSelectedVar(null)
               }}
-              disabled={updateMutation.isPending}
+              disabled={updateMutation?.isPending}
             >
               Cancel
             </Button>
@@ -1000,7 +1335,7 @@ export function VariablesSettingsCard({
               className="h-9 text-[13px]"
               onClick={handleUpdate}
               disabled={
-                updateMutation.isPending ||
+                updateMutation?.isPending ||
                 !updateValue.trim() ||
                 updateValue.length > 8192
               }
@@ -1010,8 +1345,10 @@ export function VariablesSettingsCard({
           </div>
         </DialogContent>
       </Dialog>
+      )}
 
-      {/* Delete Variable Modal */}
+      {/* Delete Variable Modal (settings only) */}
+      {!isWizard && (
       <Dialog open={showDeleteModal} onOpenChange={setShowDeleteModal}>
         <DialogContent className="sm:max-w-md p-0">
           <DialogHeader className="px-6 pt-6 text-left">
@@ -1034,7 +1371,7 @@ export function VariablesSettingsCard({
               size="sm"
               className="h-9 text-[13px]"
               onClick={() => setShowDeleteModal(false)}
-              disabled={deleteMutation.isPending}
+              disabled={deleteMutation?.isPending}
             >
               Cancel
             </Button>
@@ -1043,15 +1380,17 @@ export function VariablesSettingsCard({
               size="sm"
               className="h-9 text-[13px]"
               onClick={handleDelete}
-              disabled={deleteMutation.isPending}
+              disabled={deleteMutation?.isPending}
             >
               Delete
             </Button>
           </div>
         </DialogContent>
       </Dialog>
+      )}
 
-      {/* Mark as Secret Modal */}
+      {/* Mark as Secret Modal (settings only) */}
+      {!isWizard && (
       <Dialog open={showSecretModal} onOpenChange={setShowSecretModal}>
         <DialogContent className="sm:max-w-md p-0">
           <DialogHeader className="px-6 pt-6 text-left">
@@ -1067,7 +1406,7 @@ export function VariablesSettingsCard({
               size="sm"
               className="h-9 text-[13px]"
               onClick={() => setShowSecretModal(false)}
-              disabled={updateMutation.isPending}
+              disabled={updateMutation?.isPending}
             >
               Cancel
             </Button>
@@ -1076,15 +1415,17 @@ export function VariablesSettingsCard({
               size="sm"
               className="h-9 text-[13px]"
               onClick={handleMarkSecret}
-              disabled={updateMutation.isPending}
+              disabled={updateMutation?.isPending}
             >
               Mark as secret
             </Button>
           </div>
         </DialogContent>
       </Dialog>
+      )}
 
-      {/* Import Modal */}
+      {/* Import Modal (settings only) */}
+      {!isWizard && (
       <Dialog open={showImportModal} onOpenChange={setShowImportModal}>
         <DialogContent className="sm:max-w-md p-0">
           <DialogHeader className="px-6 pt-6 text-left">
@@ -1138,7 +1479,9 @@ export function VariablesSettingsCard({
               size="sm"
               className="h-9 text-[13px]"
               onClick={() => setShowImportModal(false)}
-              disabled={createMutation.isPending || updateMutation.isPending}
+              disabled={
+                createMutation?.isPending || updateMutation?.isPending
+              }
             >
               Cancel
             </Button>
@@ -1148,8 +1491,8 @@ export function VariablesSettingsCard({
               onClick={handleImport}
               disabled={
                 !importFile ||
-                createMutation.isPending ||
-                updateMutation.isPending
+                createMutation?.isPending ||
+                updateMutation?.isPending
               }
             >
               Import
@@ -1157,6 +1500,7 @@ export function VariablesSettingsCard({
           </div>
         </DialogContent>
       </Dialog>
+      )}
 
       <VariableEditor
         open={showEditorModal}
@@ -1169,10 +1513,14 @@ export function VariablesSettingsCard({
         onSave={handleEditorSave}
         onCopy={handleCopy}
         onDownload={handleDownload}
+        elevatedForWizard={isWizard}
         isSaving={
-          createMutation.isPending ||
-          updateMutation.isPending ||
-          deleteMutation.isPending
+          !isWizard &&
+          !!(
+            createMutation?.isPending ||
+            updateMutation?.isPending ||
+            deleteMutation?.isPending
+          )
         }
       />
     </>

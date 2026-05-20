@@ -8,6 +8,7 @@ import {
 import { RequireAuth } from '@/components/global/auth/RequireAuth'
 import {
   organizationsQueryOptions,
+  organizationQueryOptions,
   organizationPlanQueryOptions,
   organizationFailedInvoicePresenceQueryOptions,
   organizationScopesQueryOptions,
@@ -44,6 +45,7 @@ export const Route = createFileRoute('/_public/organizations/$orgId')({
       try {
         const features = getActiveProfileFeatures()
         await queryClient.ensureQueryData(organizationsQueryOptions())
+        await queryClient.ensureQueryData(organizationQueryOptions(orgId))
         if (features.billing) {
           await queryClient.ensureQueryData(organizationPlanQueryOptions(orgId))
           await queryClient

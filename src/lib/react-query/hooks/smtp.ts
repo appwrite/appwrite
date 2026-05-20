@@ -5,6 +5,7 @@
  */
 
 import { useMutation, useQueryClient } from '@tanstack/react-query'
+import { ProjectSMTPSecure } from '@appwrite.io/console'
 import { sdk } from '@/lib/appwrite/sdk'
 import { Dependencies } from './dependencies'
 
@@ -35,20 +36,21 @@ export function useUpdateSMTP(projectId: string | null | undefined) {
       if (!projectId) {
         throw new Error('Project ID is required')
       }
-      return await sdk.forConsole.projects.updateSMTP({
-        projectId,
+      return await sdk.forProject(projectId).project.updateSMTP({
         enabled: data.enabled,
         senderName: data.enabled ? data.senderName : undefined,
         senderEmail: data.enabled ? data.senderEmail : undefined,
-        replyTo: data.enabled ? data.replyTo : undefined,
+        replyToEmail: data.enabled ? data.replyTo : undefined,
         host: data.enabled ? data.host : undefined,
         port: data.enabled ? data.port : undefined,
         username: data.enabled ? data.username : undefined,
         password: data.enabled ? data.password : undefined,
         secure: data.enabled
-          ? data.secure === ''
-            ? undefined
-            : data.secure
+          ? data.secure === 'tls'
+            ? ProjectSMTPSecure.Tls
+            : data.secure === 'ssl'
+              ? ProjectSMTPSecure.Ssl
+              : undefined
           : undefined,
       })
     },
