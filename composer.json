@@ -101,6 +101,7 @@
     "require-dev": {
         "ext-fileinfo": "*",
         "appwrite/sdk-generator": "*",
+        "twig/twig": "^3.26",
         "brianium/paratest": "7.*",
         "phpunit/phpunit": "12.*",
         "swoole/ide-helper": "6.*",
