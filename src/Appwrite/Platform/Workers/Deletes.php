@@ -392,11 +392,13 @@ class Deletes extends Action
      */
     private function deleteExpiredTargets(Document $project, callable $getProjectDB): void
     {
+        Console::info('Delete expired targets');
         Targets::delete($getProjectDB($project), Query::equal('expired', [true]));
     }
 
     private function deleteSessionTargets(Document $project, callable $getProjectDB, Document $session): void
     {
+        Console::info('Delete session targets');
         Targets::delete($getProjectDB($project), Query::equal('sessionInternalId', [$session->getSequence()]));
     }
 
@@ -404,6 +406,8 @@ class Deletes extends Action
         if ($project->getId() === 'console') {
             return;
         }
+
+        Console::info('Update processing migrations');
 
         /** @var Database $dbForProject */
         $dbForProject = $getProjectDB($project);
@@ -442,6 +446,8 @@ class Deletes extends Action
         if ($project->getId() === 'console') {
             return;
         }
+
+        Console::info('Delete old deployments');
 
         /** @var Database $dbForProject */
         $dbForProject = $getProjectDB($project);
@@ -591,6 +597,8 @@ class Deletes extends Action
         if ($project->getId() === 'console') {
             return;
         }
+
+        Console::info('Delete usage stats');
 
         /** @var Database $dbForProject */
         $dbForProject = $getProjectDB($project);
@@ -1030,6 +1038,8 @@ class Deletes extends Action
             return;
         }
 
+        Console::info('Delete execution logs');
+
         /** @var Database $dbForProject */
         $dbForProject = $getProjectDB($project);
 
@@ -1126,6 +1136,8 @@ class Deletes extends Action
      */
     private function deleteExpiredSessions(Document $project, callable $getProjectDB): void
     {
+        Console::info('Delete expired sessions');
+
         $dbForProject = $getProjectDB($project);
         $duration = $project->getAttribute('auths', [])['duration'] ?? TOKEN_EXPIRATION_LOGIN_LONG;
         $expired = DateTime::addSeconds(new \DateTime(), -1 * $duration);
@@ -1199,6 +1211,8 @@ class Deletes extends Action
      */
     private function deleteAuditLogs(Document $project, callable $getAudit, string $auditRetention): void
     {
+        Console::info('Delete audit logs');
+
         $projectId = $project->getId();
         /** @var Audit $audit */
         $audit = $getAudit($project);
@@ -1776,6 +1790,8 @@ class Deletes extends Action
             return;
         }
 
+        Console::info('Delete expired transactions');
+
         $dbForProject = $getProjectDB($project);
         $transactionInternalIds = [];
 
@@ -1807,6 +1823,8 @@ class Deletes extends Action
         if ($project->getId() === 'console') {
             return;
         }
+
+        Console::info('Delete expired presences');
 
         $dbForProject = $getProjectDB($project);
 
