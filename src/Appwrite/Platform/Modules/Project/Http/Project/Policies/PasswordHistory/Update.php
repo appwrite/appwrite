@@ -27,7 +27,7 @@ class Update extends Action
     public function __construct()
     {
         $this
-            ->setHttpMethod(Action::HTTP_REQUEST_METHOD_PATCH) // Should be PUT
+            ->setHttpMethod(Action::HTTP_REQUEST_METHOD_PATCH) // Behaves as PUT
             ->setHttpPath('/v1/project/policies/password-history')
             ->httpAlias('/v1/projects/:projectId/auth/password-history')
             ->desc('Update password history policy')

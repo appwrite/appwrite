@@ -26,7 +26,7 @@ class Update extends Action
     public function __construct()
     {
         $this
-            ->setHttpMethod(Action::HTTP_REQUEST_METHOD_PATCH) // Should be PUT
+            ->setHttpMethod(Action::HTTP_REQUEST_METHOD_PATCH) // Behaves as PUT
             ->setHttpPath('/v1/project/policies/session-invalidation')
             ->httpAlias('/v1/projects/:projectId/auth/session-invalidation')
             ->desc('Update session invalidation policy')
