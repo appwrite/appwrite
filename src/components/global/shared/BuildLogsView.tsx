@@ -421,7 +421,7 @@ export function BuildLogsView({
             } ${isClickable ? 'cursor-pointer' : ''}`}
             title={
               isClickable
-                ? `Toggle line ${originalLineNumber} (Shift-click adds a range)`
+                ? `Select line ${originalLineNumber} (Shift for range, ⌘/Ctrl to toggle)`
                 : undefined
             }
           >

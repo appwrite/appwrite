@@ -1425,7 +1425,7 @@ export function DeploymentDetailView({
     }
   }
 
-  // Line click: toggle line in selection; Shift+click adds every line in the anchor–click range.
+  // Line click: plain click selects one line; ⌘/Ctrl+click toggles; Shift+click adds a range.
   const handleLineClick = useCallback(
     (lineNumber: number, event: React.MouseEvent<HTMLDivElement>) => {
       const focusLogsPane = () => {
@@ -1448,10 +1448,21 @@ export function DeploymentDetailView({
         return
       }
 
-      const next = new Set(selectedLogLines)
-      if (next.has(lineNumber)) next.delete(lineNumber)
-      else next.add(lineNumber)
+      if (event.metaKey || event.ctrlKey) {
+        const next = new Set(selectedLogLines)
+        if (next.has(lineNumber)) next.delete(lineNumber)
+        else next.add(lineNumber)
+        lineAnchorRef.current = lineNumber
+        setSelectedLogLines(next)
+        syncLineSearchUrl(next)
+        focusLogsPane()
+        return
+      }
+
+      const isOnlySelectedLine =
+        selectedLogLines.size === 1 && selectedLogLines.has(lineNumber)
       lineAnchorRef.current = lineNumber
+      const next = isOnlySelectedLine ? new Set<number>() : new Set([lineNumber])
       setSelectedLogLines(next)
       syncLineSearchUrl(next)
       focusLogsPane()
