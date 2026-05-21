@@ -14,12 +14,13 @@ class PolicyList extends Model
                 'type' => self::TYPE_INTEGER,
                 'description' => 'Total number of policies in the given project.',
                 'default' => 0,
-                'example' => 9,
+                'example' => 10,
             ])
             ->addRule('policies', [
                 'type' => [
                     Response::MODEL_POLICY_PASSWORD_DICTIONARY,
                     Response::MODEL_POLICY_PASSWORD_HISTORY,
+                    Response::MODEL_POLICY_PASSWORD_POLICY,
                     Response::MODEL_POLICY_PASSWORD_PERSONAL_DATA,
                     Response::MODEL_POLICY_SESSION_ALERT,
                     Response::MODEL_POLICY_SESSION_DURATION,

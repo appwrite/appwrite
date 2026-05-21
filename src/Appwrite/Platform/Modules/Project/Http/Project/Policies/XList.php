@@ -82,6 +82,15 @@ class XList extends Action
                 '$id' => 'password-history',
                 'total' => $auths['passwordHistory'] ?? 0,
             ]),
+            new Document(\array_merge([
+                'minLength' => 8,
+                'requireUppercase' => false,
+                'requireLowercase' => false,
+                'requireNumber' => false,
+                'requireSpecialChar' => false,
+            ], $auths['passwordPolicy'] ?? [], [
+                '$id' => 'password-policy',
+            ])),
             new Document([
                 '$id' => 'password-personal-data',
                 'enabled' => $auths['personalDataCheck'] ?? false,
