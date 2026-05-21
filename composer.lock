@@ -8354,7 +8354,14 @@
             "time": "2026-05-30T17:09:26+00:00"
         }
     ],
-    "aliases": [],
+    "aliases": [
+        {
+            "package": "utopia-php/http",
+            "version": "dev-feat-safe-wildcards",
+            "alias": "2.0.x-dev",
+            "alias_normalized": "2.0.9999999.9999999-dev"
+        }
+    ],
     "minimum-stability": "dev",
     "stability-flags": {
         "utopia-php/http": 5,

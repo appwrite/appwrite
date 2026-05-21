@@ -786,6 +786,7 @@ Http::shutdown()
 Http::shutdown()
     ->groups(['api'])
     ->inject('route')
+    ->inject('request')
     ->inject('response')
     ->inject('project')
     ->inject('queueForEvents')
@@ -794,10 +795,10 @@ Http::shutdown()
     ->inject('queueForRealtime')
     ->inject('dbForProject')
     ->inject('eventProcessor')
-    ->action(function (Route $route, Response $response, Document $project, Event $queueForEvents, FunctionPublisher $publisherForFunctions, Event $queueForWebhooks, Realtime $queueForRealtime, Database $dbForProject, EventProcessor $eventProcessor) {
-        if (empty($queueForEvents->getEvent())) {
-            return;
-        }
+    ->inject('bus')
+    ->inject('apiKey')
+    ->inject('mode')
+    ->action(function (Route $route, Request $request, Response $response, Document $project, User $user, Event $queueForEvents, AuditContext $auditContext, Audit $publisherForAudits, Context $usage, UsagePublisher $publisherForUsage, FunctionPublisher $publisherForFunctions, Event $queueForWebhooks, Realtime $queueForRealtime, Database $dbForProject, Authorization $authorization, callable $timelimit, EventProcessor $eventProcessor, Bus $bus, ?Key $apiKey, string $mode) use ($parseLabel) {
 
         if (empty($queueForEvents->getPayload())) {
             $queueForEvents->setPayload($response->getPayload());
@@ -838,18 +839,7 @@ Http::shutdown()
             }
         }
 
-        // Only trigger webhooks if there are matching webhook events
-        if (! empty($webhooksEvents)) {
-            foreach ($generatedEvents as $event) {
-                if (isset($webhooksEvents[$event])) {
-                    $queueForWebhooks
-                        ->from($queueForEvents)
-                        ->trigger();
-                    break;
-                }
-            }
-        }
-    });
+        $requestParams = $route->getParamsValues();
 
 Http::shutdown()
     ->groups(['api'])
