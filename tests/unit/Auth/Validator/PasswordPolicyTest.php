@@ -31,6 +31,7 @@ class PasswordPolicyTest extends TestCase
         $this->assertFalse($validator->isValid('PasswordOnly!'));
         $this->assertFalse($validator->isValid('Password1234'));
         $this->assertTrue($validator->isValid('Password123!'));
+        $this->assertTrue($validator->isValid('Password123€'));
     }
 
     public function testAllowEmpty(): void

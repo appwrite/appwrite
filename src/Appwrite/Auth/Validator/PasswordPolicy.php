@@ -80,7 +80,7 @@ class PasswordPolicy extends Password
             return false;
         }
 
-        if ($this->requireSpecialChar && !\preg_match("/[!\"#$%&'()*+,\-.\/:;<=>?@[\\\\\]^_`{|}~]/", $value)) {
+        if ($this->requireSpecialChar && !\preg_match('/[^\p{L}\p{N}\s]/u', $value)) {
             return false;
         }
 
