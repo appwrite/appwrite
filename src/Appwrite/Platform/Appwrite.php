@@ -11,6 +11,7 @@ use Appwrite\Platform\Modules\Databases;
 use Appwrite\Platform\Modules\Functions;
 use Appwrite\Platform\Modules\Health;
 use Appwrite\Platform\Modules\Migrations;
+use Appwrite\Platform\Modules\Organization;
 use Appwrite\Platform\Modules\Presences;
 use Appwrite\Platform\Modules\Project;
 use Appwrite\Platform\Modules\Projects;
@@ -44,6 +45,7 @@ class Appwrite extends Platform
         $this->addModule(new VCS\Module());
         $this->addModule(new Webhooks\Module());
         $this->addModule(new Migrations\Module());
+        $this->addModule(new Organization\Module());
         $this->addModule(new Project\Module());
         $this->addModule(new Advisor\Module());
     }
