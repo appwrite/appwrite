@@ -10,6 +10,9 @@ use Appwrite\Utopia\Response;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Validator\UID;
+use Utopia\Detector\Detection\Rendering\SSR;
+use Utopia\Detector\Detection\Rendering\XStatic;
+use Utopia\Detector\Detector\Rendering;
 use Utopia\Http\Adapter\Swoole\Request;
 use Utopia\Platform\Action;
 use Utopia\Platform\Scope\HTTP;
@@ -80,9 +83,9 @@ class Update extends Action
         $metadata = ['content_type' => 'application/gzip'];
         $path = $deviceForBuilds->getPath($deploymentId . '.tar.gz');
         $uploaded = $deviceForBuilds->upload($tmp, $path, 1, 1, $metadata);
-        @\unlink($tmp);
 
         if ($uploaded < 1) {
+            @\unlink($tmp);
             throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Failed storing build artifact.');
         }
 
@@ -92,6 +95,9 @@ class Update extends Action
             'buildSize' => $size,
             'totalSize' => $deployment->getAttribute('sourceSize', 0) + $size,
         ])));
+
+        $deployment = $this->detectRendering($tmp, $dbForProject, $site, $deployment);
+        @\unlink($tmp);
 
         $publisherForBuilds->enqueue(new BuildMessage(
             project: $project,
@@ -113,5 +119,56 @@ class Update extends Action
                 'path' => $path,
                 'size' => $size,
             ]);
+    }
+
+    private function detectRendering(
+        string $artifact,
+        Database $dbForProject,
+        Document $site,
+        Document $deployment
+    ): Document {
+        $files = [];
+        \exec('tar -tzf ' . \escapeshellarg($artifact) . ' 2>/dev/null', $files, $result);
+        if ($result !== 0) {
+            return $deployment;
+        }
+
+        $detector = new Rendering($site->getAttribute('framework', ''));
+        foreach ($files as $file) {
+            $file = \trim($file);
+            $file = \str_starts_with($file, './') ? \substr($file, 2) : $file;
+            $file = \rtrim($file, '/');
+
+            if (!empty($file)) {
+                $detector->addInput($file);
+            }
+        }
+
+        $detector
+            ->addOption(new SSR())
+            ->addOption(new XStatic());
+        $detection = $detector->detect();
+
+        $adapter = $site->getAttribute('adapter', '');
+        if (empty($adapter)) {
+            $dbForProject->getAuthorization()->skip(fn () => $dbForProject->updateDocument('sites', $site->getId(), new Document([
+                'adapter' => $detection->getName(),
+                'fallbackFile' => $detection->getFallbackFile() ?? '',
+            ])));
+
+            return $dbForProject->getAuthorization()->skip(fn () => $dbForProject->updateDocument('deployments', $deployment->getId(), new Document([
+                'adapter' => $detection->getName(),
+                'fallbackFile' => $detection->getFallbackFile() ?? '',
+            ])));
+        }
+
+        if ($adapter === 'ssr' && $detection->getName() === 'static') {
+            return $dbForProject->getAuthorization()->skip(fn () => $dbForProject->updateDocument('deployments', $deployment->getId(), new Document([
+                'adapter' => $detection->getName(),
+                'fallbackFile' => $detection->getFallbackFile() ?? '',
+            ])));
+        }
+
+        return $deployment;
     }
 }
