@@ -29,6 +29,7 @@ abstract class Format
         'name' => '',
         'description' => '',
         'endpoint' => 'https://localhost',
+        'endpoint.docs' => 'https://<REGION>.cloud.appwrite.io/v1',
         'version' => '1.0.0',
         'terms' => '',
         'support.email' => '',
@@ -40,6 +41,9 @@ abstract class Format
         'license.url' => '',
     ];
 
+    /**
+     * @var list<array{namespace: string, methods: list<string>, parameter: string, excludeKeys?: list<string>, exclude?: bool}>
+     */
     private const array OAUTH_PROVIDER_BLACKLIST = [
         [
             'namespace' => 'account',
@@ -65,8 +69,22 @@ abstract class Format
                 'mock-unverified'
             ],
         ],
+        [
+            'namespace' => 'project',
+            'methods' => [
+                'getOAuth2Provider'
+            ],
+            'parameter' => 'providerId',
+            'excludeKeys' => [
+                'mock',
+                'mock-unverified'
+            ],
+        ],
     ];
 
+    /**
+     * @var list<array{namespace: string, methods: list<string>, parameter: string, excludeKeys?: list<string>, exclude?: bool}>
+     */
     private const array PROVIDER_USAGE_BLACKLIST = [
         [
             'namespace' => 'users',
@@ -78,6 +96,9 @@ abstract class Format
         ],
     ];
 
+    /**
+     * @var list<array{namespace: string, methods: list<string>, parameter: string, required?: bool, nullable?: bool}>
+     */
     private const array REQUEST_PARAMETER_OVERRIDES = [
         [
             'namespace' => 'project',
@@ -109,24 +130,7 @@ abstract class Format
     {
         $blacklist = [];
 
-        foreach (self::OAUTH_PROVIDER_BLACKLIST as $config) {
-            foreach ($config['methods'] as $method) {
-                $entry = [
-                    'namespace' => $config['namespace'],
-                    'method' => $method,
-                    'parameter' => $config['parameter'],
-                ];
-                if (isset($config['excludeKeys'])) {
-                    $entry['excludeKeys'] = $config['excludeKeys'];
-                }
-                if (isset($config['exclude'])) {
-                    $entry['exclude'] = $config['exclude'];
-                }
-                $blacklist[] = $entry;
-            }
-        }
-
-        foreach (self::PROVIDER_USAGE_BLACKLIST as $config) {
+        foreach ([...self::OAUTH_PROVIDER_BLACKLIST, ...self::PROVIDER_USAGE_BLACKLIST] as $config) {
             foreach ($config['methods'] as $method) {
                 $entry = [
                     'namespace' => $config['namespace'],
@@ -263,6 +267,182 @@ abstract class Format
         return $contents;
     }
 
+    /**
+     * @param array<Model> $models
+     * @return array<string, mixed>|null
+     */
+    protected function getDiscriminator(array $models, string $refPrefix): ?array
+    {
+        if (\count($models) < 2) {
+            return null;
+        }
+
+        $candidateKeys = \array_keys($models[0]->conditions);
+
+        foreach (\array_slice($models, 1) as $model) {
+            $candidateKeys = \array_values(\array_intersect($candidateKeys, \array_keys($model->conditions)));
+        }
+
+        if (empty($candidateKeys)) {
+            return null;
+        }
+
+        foreach ($candidateKeys as $key) {
+            $mapping = [];
+            $isValid = true;
+
+            foreach ($models as $model) {
+                $rules = $model->getRules();
+                $condition = $model->conditions[$key] ?? null;
+
+                if (!isset($rules[$key]) || ($rules[$key]['required'] ?? false) !== true) {
+                    $isValid = false;
+                    break;
+                }
+
+                if (!\is_array($condition)) {
+                    if (!\is_scalar($condition)) {
+                        $isValid = false;
+                        break;
+                    }
+
+                    $values = [$condition];
+                } else {
+                    if ($condition === []) {
+                        $isValid = false;
+                        break;
+                    }
+
+                    $values = $condition;
+                    $hasInvalidValue = false;
+
+                    foreach ($values as $value) {
+                        if (!\is_scalar($value)) {
+                            $hasInvalidValue = true;
+                            break;
+                        }
+                    }
+
+                    if ($hasInvalidValue) {
+                        $isValid = false;
+                        break;
+                    }
+                }
+
+                if (isset($rules[$key]['enum']) && \is_array($rules[$key]['enum'])) {
+                    $values = \array_values(\array_filter(
+                        $values,
+                        fn (mixed $value) => \in_array($value, $rules[$key]['enum'], true)
+                    ));
+                }
+
+                if ($values === []) {
+                    $isValid = false;
+                    break;
+                }
+
+                $ref = $refPrefix . $model->getType();
+
+                foreach ($values as $value) {
+                    $mappingKey = \is_bool($value) ? ($value ? 'true' : 'false') : (string) $value;
+
+                    if (isset($mapping[$mappingKey]) && $mapping[$mappingKey] !== $ref) {
+                        $isValid = false;
+                        break;
+                    }
+
+                    $mapping[$mappingKey] = $ref;
+                }
+
+                if (!$isValid) {
+                    break;
+                }
+            }
+
+            if (!$isValid || $mapping === []) {
+                continue;
+            }
+
+            return [
+                'propertyName' => $key,
+                'mapping' => $mapping,
+            ];
+        }
+
+        // Single-key failed — try compound discriminator
+        return $this->getCompoundDiscriminator($models, $refPrefix);
+    }
+
+    /**
+     * @param array<Model> $models
+     * @return array<string, mixed>|null
+     */
+    private function getCompoundDiscriminator(array $models, string $refPrefix): ?array
+    {
+        $allKeys = [];
+        foreach ($models as $model) {
+            foreach (\array_keys($model->conditions) as $key) {
+                if (!\in_array($key, $allKeys, true)) {
+                    $allKeys[] = $key;
+                }
+            }
+        }
+
+        if (\count($allKeys) < 2) {
+            return null;
+        }
+
+        $primaryKey = $allKeys[0];
+        $primaryMapping = [];
+        $compoundMapping = [];
+
+        foreach ($models as $model) {
+            $rules = $model->getRules();
+            $conditions = [];
+
+            foreach ($model->conditions as $key => $condition) {
+                if (!isset($rules[$key]) || ($rules[$key]['required'] ?? false) !== true) {
+                    return null;
+                }
+
+                if (!\is_scalar($condition)) {
+                    return null;
+                }
+
+                $conditions[$key] = \is_bool($condition) ? ($condition ? 'true' : 'false') : (string) $condition;
+            }
+
+            if (empty($conditions)) {
+                return null;
+            }
+
+            $ref = $refPrefix . $model->getType();
+            $compoundMapping[$ref] = $conditions;
+
+            // Best-effort single-key mapping — last model with this value wins (fallback)
+            if (isset($conditions[$primaryKey])) {
+                $primaryMapping[$conditions[$primaryKey]] = $ref;
+            }
+        }
+
+        // Verify compound uniqueness
+        $seen = [];
+        foreach ($compoundMapping as $conditions) {
+            $sig = \json_encode($conditions, JSON_THROW_ON_ERROR);
+            if (isset($seen[$sig])) {
+                return null;
+            }
+            $seen[$sig] = true;
+        }
+
+        return \array_filter([
+            'propertyName' => $primaryKey,
+            'mapping' => !empty($primaryMapping) ? $primaryMapping : null,
+            'x-propertyNames' => $allKeys,
+            'x-mapping' => $compoundMapping,
+        ]);
+    }
+
     protected function getRequestEnumName(string $service, string $method, string $param): ?string
     {
         /* `$service` is `$namespace` */
@@ -285,6 +465,14 @@ abstract class Format
                                 return 'ConsoleResourceType';
                             case 'value':
                                 return 'ConsoleResourceValue';
+                        }
+                        break;
+                    case 'getEmailTemplate':
+                        switch ($param) {
+                            case 'templateId':
+                                return 'ProjectEmailTemplateId';
+                            case 'locale':
+                                return 'ProjectEmailTemplateLocale';
                         }
                         break;
                 }
@@ -575,10 +763,70 @@ abstract class Format
                 break;
             case 'project':
                 switch ($method) {
+                    case 'updateAuthMethod':
+                        switch ($param) {
+                            case 'methodId':
+                                return 'ProjectAuthMethodId';
+                        }
+                        break;
+                    case 'getPolicy':
+                        switch ($param) {
+                            case 'policyId':
+                                return 'ProjectPolicyId';
+                        }
+                        break;
+                    case 'getOAuth2Provider':
+                        switch ($param) {
+                            case 'providerId':
+                                return 'ProjectOAuthProviderId';
+                        }
+                        break;
+                    case 'getEmailTemplate':
+                    case 'updateEmailTemplate':
+                        switch ($param) {
+                            case 'templateId':
+                                return 'ProjectEmailTemplateId';
+                            case 'locale':
+                                return 'ProjectEmailTemplateLocale';
+                        }
+                        break;
                     case 'getUsage':
                         switch ($param) {
                             case 'period':
                                 return 'ProjectUsageRange';
+                        }
+                        break;
+                    case 'updateProtocol':
+                        switch ($param) {
+                            case 'protocolId':
+                                return 'ProjectProtocolId';
+                        }
+                        break;
+                    case 'updateService':
+                        switch ($param) {
+                            case 'serviceId':
+                                return 'ProjectServiceId';
+                        }
+                        break;
+                    case 'updateSMTP':
+                    case 'createSMTPTest':
+                        switch ($param) {
+                            case 'secure':
+                                return 'ProjectSMTPSecure';
+                        }
+                        break;
+                    case 'updateOAuth2Google':
+                        switch ($param) {
+                            case 'prompt':
+                                return 'ProjectOAuth2GooglePrompt';
+                        }
+                        break;
+                    case 'createKey':
+                    case 'createEphemeralKey':
+                    case 'updateKey':
+                        switch ($param) {
+                            case 'scopes':
+                                return 'ProjectKeyScopes';
                         }
                         break;
                 }
@@ -587,22 +835,11 @@ abstract class Format
                 switch ($method) {
                     case 'getEmailTemplate':
                     case 'updateEmailTemplate':
-                    case 'deleteEmailTemplate':
                         switch ($param) {
                             case 'type':
                                 return 'EmailTemplateType';
                             case 'locale':
                                 return 'EmailTemplateLocale';
-                        }
-                        break;
-                    case 'getSmsTemplate':
-                    case 'updateSmsTemplate':
-                    case 'deleteSmsTemplate':
-                        switch ($param) {
-                            case 'type':
-                                return 'SmsTemplateType';
-                            case 'locale':
-                                return 'SmsTemplateLocale';
                         }
                         break;
                     case 'createPlatform':
@@ -683,6 +920,16 @@ abstract class Format
                         switch ($param) {
                             case 'passwordVersion':
                                 return 'PasswordHash';
+                        }
+                        break;
+                }
+                break;
+            case 'presences':
+                switch ($method) {
+                    case 'getUsage':
+                        switch ($param) {
+                            case 'range':
+                                return 'UsageRange';
                         }
                         break;
                 }
@@ -786,6 +1033,19 @@ abstract class Format
         return $values;
     }
 
+    protected function shouldEmitDefaultForSchema(mixed $default, array $schema): bool
+    {
+        if (isset($schema['enum'])) {
+            return \in_array($default, $schema['enum'], true);
+        }
+
+        if (isset($schema['items']['enum'])) {
+            return \is_array($default) && empty(\array_diff($default, $schema['items']['enum']));
+        }
+
+        return true;
+    }
+
     protected function getRequestParameterConfig(string $service, string $method, string $param, bool $optional, bool $nullable, mixed $default): array
     {
         $config = [
@@ -793,7 +1053,7 @@ abstract class Format
             'nullable' => $nullable,
         ];
 
-        foreach (self::REQUEST_PARAMETER_OVERRIDES as $override) {
+        foreach ($this->getRequestParameterOverrides() as $override) {
             if (
                 $override['namespace'] !== $service
                 || !\in_array($method, $override['methods'], true)
@@ -802,8 +1062,12 @@ abstract class Format
                 continue;
             }
 
-            $config['required'] = $override['required'] ?? $config['required'];
-            $config['nullable'] = $override['nullable'] ?? $config['nullable'];
+            if (isset($override['required'])) {
+                $config['required'] = $override['required'];
+            }
+            if (isset($override['nullable'])) {
+                $config['nullable'] = $override['nullable'];
+            }
             break;
         }
 
@@ -812,8 +1076,20 @@ abstract class Format
         return $config;
     }
 
-    public function getResponseEnumName(string $model, string $param): ?string
+    /**
+     * @return list<array{namespace: string, methods: list<string>, parameter: string, required?: bool, nullable?: bool}>
+     */
+    private function getRequestParameterOverrides(): array
     {
+        return self::REQUEST_PARAMETER_OVERRIDES;
+    }
+
+    public function getResponseEnumName(string $model, string $param, ?string $enumSDKName = null): ?string
+    {
+        if ($enumSDKName) {
+            return $enumSDKName;
+        }
+
         if ($param === 'type' && \str_starts_with($model, 'platform') && $model !== 'platformList') {
             return 'PlatformType';
         }

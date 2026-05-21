@@ -3,9 +3,11 @@
 namespace Appwrite\Platform\Modules\Functions\Http\Executions;
 
 use Ahc\Jwt\JWT;
-use Appwrite\Event\Delete as DeleteEvent;
 use Appwrite\Event\Event;
-use Appwrite\Event\Func;
+use Appwrite\Event\Message\Delete as DeleteMessage;
+use Appwrite\Event\Message\Func as FunctionMessage;
+use Appwrite\Event\Publisher\Delete as DeletePublisher;
+use Appwrite\Event\Publisher\Func as FunctionPublisher;
 use Appwrite\Extend\Exception;
 use Appwrite\Extend\Exception as AppwriteException;
 use Appwrite\Functions\Validator\Headers;
@@ -17,6 +19,7 @@ use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Usage\Context;
 use Appwrite\Utopia\Database\Documents\User;
 use Appwrite\Utopia\Response;
+use Executor\Exception\Timeout as ExecutorTimeout;
 use Executor\Executor;
 use MaxMind\Db\Reader;
 use Utopia\Auth\Proofs\Token;
@@ -60,7 +63,7 @@ class Create extends Base
             ->setHttpPath('/v1/functions/:functionId/executions')
             ->desc('Create execution')
             ->groups(['api', 'functions'])
-            ->label('scope', 'execution.write')
+            ->label('scope', ['executions.write', 'execution.write'])
             ->label('resourceType', RESOURCE_TYPE_FUNCTIONS)
             ->label('event', 'functions.[functionId].executions.[executionId].create')
             ->label('sdk', new Method(
@@ -94,14 +97,14 @@ class Create extends Base
             ->inject('user')
             ->inject('queueForEvents')
             ->inject('usage')
-            ->inject('queueForFunctions')
+            ->inject('publisherForFunctions')
             ->inject('geodb')
             ->inject('store')
             ->inject('proofForToken')
             ->inject('executor')
             ->inject('platform')
             ->inject('authorization')
-            ->inject('queueForDeletes')
+            ->inject('publisherForDeletes')
             ->inject('executionsRetentionCount')
             ->callback($this->action(...));
     }
@@ -122,14 +125,14 @@ class Create extends Base
         User $user,
         Event $queueForEvents,
         Context $usage,
-        Func $queueForFunctions,
+        FunctionPublisher $publisherForFunctions,
         Reader $geodb,
         Store $store,
         Token $proofForToken,
         Executor $executor,
         array $platform,
         Authorization $authorization,
-        DeleteEvent $queueForDeletes,
+        DeletePublisher $publisherForDeletes,
         int $executionsRetentionCount,
     ) {
         $async = \strval($async) === 'true' || \strval($async) === '1';
@@ -145,21 +148,8 @@ class Create extends Base
             }
         }
 
-        /**
-         * @var array<string, mixed> $headers
-         */
-        $assocParams = ['headers'];
-        foreach ($assocParams as $assocParam) {
-            if (!empty('headers') && !is_array($$assocParam)) {
-                $$assocParam = \json_decode($$assocParam, true);
-            }
-        }
-
-        $booleanParams = ['async'];
-        foreach ($booleanParams as $booleamParam) {
-            if (!empty($$booleamParam) && !is_bool($$booleamParam)) {
-                $$booleamParam = $$booleamParam === "true" ? true : false;
-            }
+        if (!is_array($headers)) {
+            $headers = \json_decode($headers, true);
         }
 
         // 'headers' validator
@@ -241,7 +231,7 @@ class Create extends Base
 
         $executionId = ID::unique();
         $headers['x-appwrite-execution-id'] = $executionId;
-        $headers['x-appwrite-key'] = API_KEY_DYNAMIC . '_' . $apiKey;
+        $headers['x-appwrite-key'] = API_KEY_EPHEMERAL . '_' . $apiKey;
         $headers['x-appwrite-trigger'] = 'http';
         $headers['x-appwrite-user-id'] = $user->getId();
         $headers['x-appwrite-user-jwt'] = $jwt;
@@ -306,20 +296,19 @@ class Create extends Base
         if ($async) {
             if (is_null($scheduledAt)) {
                 $execution = $authorization->skip(fn () => $dbForProject->createDocument('executions', $execution));
-                $queueForFunctions
-                    ->setType('http')
-                    ->setExecution($execution)
-                    ->setFunction($function)
-                    ->setBody($body)
-                    ->setHeaders($headers)
-                    ->setPath($path)
-                    ->setMethod($method)
-                    ->setJWT($jwt)
-                    ->setProject($project)
-                    ->setUser($user)
-                    ->setParam('functionId', $function->getId())
-                    ->setParam('executionId', $execution->getId())
-                    ->trigger();
+                $publisherForFunctions->enqueue(new FunctionMessage(
+                    project: $project,
+                    user: $user,
+                    function: $function,
+                    functionId: $function->getId(),
+                    execution: $execution,
+                    type: 'http',
+                    jwt: $jwt,
+                    body: $body,
+                    path: $path,
+                    headers: $headers,
+                    method: $method,
+                ));
             } else {
                 $data = [
                     'headers' => $headers,
@@ -350,12 +339,12 @@ class Create extends Base
             }
 
             if ($executionsRetentionCount > 0 && ENABLE_EXECUTIONS_LIMIT_ON_ROUTE) {
-                $queueForDeletes
-                    ->setProject($project)
-                    ->setResource($function->getSequence())
-                    ->setResourceType(RESOURCE_TYPE_FUNCTIONS)
-                    ->setType(DELETE_TYPE_EXECUTIONS_LIMIT)
-                    ->trigger();
+                $publisherForDeletes->enqueue(new DeleteMessage(
+                    project: $project,
+                    type: DELETE_TYPE_EXECUTIONS_LIMIT,
+                    resource: (string) $function->getSequence(),
+                    resourceType: RESOURCE_TYPE_FUNCTIONS,
+                ));
             }
 
             $response->setStatusCode(Response::STATUS_CODE_ACCEPTED);
@@ -370,10 +359,10 @@ class Create extends Base
         // V2 vars
         if ($version === 'v2') {
             $vars = \array_merge($vars, [
-                'APPWRITE_FUNCTION_TRIGGER' => $headers['x-appwrite-trigger'] ?? '',
+                'APPWRITE_FUNCTION_TRIGGER' => $headers['x-appwrite-trigger'],
                 'APPWRITE_FUNCTION_DATA' => $body,
-                'APPWRITE_FUNCTION_USER_ID' => $headers['x-appwrite-user-id'] ?? '',
-                'APPWRITE_FUNCTION_JWT' => $headers['x-appwrite-user-jwt'] ?? ''
+                'APPWRITE_FUNCTION_USER_ID' => $headers['x-appwrite-user-id'],
+                'APPWRITE_FUNCTION_JWT' => $headers['x-appwrite-user-jwt']
             ]);
         }
 
@@ -430,25 +419,29 @@ class Create extends Base
             $source = $deployment->getAttribute('buildPath', '');
             $extension = str_ends_with($source, '.tar') ? 'tar' : 'tar.gz';
             $command = $version === 'v2' ? '' : "cp /tmp/code.$extension /mnt/code/code.$extension && nohup helpers/start.sh \"$command\"";
-            $executionResponse = $executor->createExecution(
-                projectId: $project->getId(),
-                deploymentId: $deployment->getId(),
-                body: \strlen($body) > 0 ? $body : null,
-                variables: $vars,
-                timeout: $function->getAttribute('timeout', 0),
-                image: $runtime['image'],
-                source: $source,
-                entrypoint: $deployment->getAttribute('entrypoint', ''),
-                version: $version,
-                path: $path,
-                method: $method,
-                headers: $headers,
-                runtimeEntrypoint: $command,
-                cpus: $spec['cpus'] ?? APP_COMPUTE_CPUS_DEFAULT,
-                memory: $spec['memory'] ?? APP_COMPUTE_MEMORY_DEFAULT,
-                logging: $function->getAttribute('logging', true),
-                requestTimeout: 30
-            );
+            try {
+                $executionResponse = $executor->createExecution(
+                    projectId: $project->getId(),
+                    deploymentId: $deployment->getId(),
+                    body: \strlen($body) > 0 ? $body : null,
+                    variables: $vars,
+                    timeout: $function->getAttribute('timeout', 0),
+                    image: $runtime['image'],
+                    source: $source,
+                    entrypoint: $deployment->getAttribute('entrypoint', ''),
+                    version: $version,
+                    path: $path,
+                    method: $method,
+                    headers: $headers,
+                    runtimeEntrypoint: $command,
+                    cpus: $spec['cpus'] ?? APP_COMPUTE_CPUS_DEFAULT,
+                    memory: $spec['memory'] ?? APP_COMPUTE_MEMORY_DEFAULT,
+                    logging: $function->getAttribute('logging', true),
+                    requestTimeout: 30
+                );
+            } catch (ExecutorTimeout $th) {
+                throw new AppwriteException(AppwriteException::FUNCTION_SYNCHRONOUS_TIMEOUT, previous: $th);
+            }
 
             $headersFiltered = [];
             foreach ($executionResponse['headers'] as $key => $value) {
@@ -537,12 +530,12 @@ class Create extends Base
         }
 
         if ($executionsRetentionCount > 0 && ENABLE_EXECUTIONS_LIMIT_ON_ROUTE) {
-            $queueForDeletes
-                ->setProject($project)
-                ->setResource($function->getSequence())
-                ->setResourceType(RESOURCE_TYPE_FUNCTIONS)
-                ->setType(DELETE_TYPE_EXECUTIONS_LIMIT)
-                ->trigger();
+            $publisherForDeletes->enqueue(new DeleteMessage(
+                project: $project,
+                type: DELETE_TYPE_EXECUTIONS_LIMIT,
+                resource: (string) $function->getSequence(),
+                resourceType: RESOURCE_TYPE_FUNCTIONS,
+            ));
         }
 
         $response

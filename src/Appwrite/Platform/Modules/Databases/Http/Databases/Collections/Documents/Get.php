@@ -100,7 +100,7 @@ class Get extends Action
         }
 
         try {
-            $selects = Query::groupByType($queries)['selections'] ?? [];
+            $selects = Query::groupByType($queries)['selections'];
             $collectionTableId = 'database_' . $database->getSequence() . '_collection_' . $collection->getSequence();
             $collectionTableId = 'database_' . $database->getSequence() . '_collection_' . $collection->getSequence();
 

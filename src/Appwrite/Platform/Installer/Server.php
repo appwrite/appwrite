@@ -60,7 +60,7 @@ class Server
     {
         $this->initPaths();
 
-        $this->state = new State($this->paths);
+        $this->state = new State();
 
         if (PHP_SAPI === 'cli') {
             $this->runCli();
@@ -154,7 +154,7 @@ class Server
 
         $nativeServer = $adapter->getNativeServer();
 
-        $container = $adapter->getContainer();
+        $container = $adapter->resources();
         $container->set('installerState', fn () => $state);
         $container->set('installerConfig', fn () => $config);
         $container->set('installerPaths', fn () => $paths);

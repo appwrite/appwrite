@@ -3,6 +3,8 @@
 namespace Appwrite\Platform\Modules\Databases\Http\Databases\Collections\Documents;
 
 use Appwrite\Event\Event;
+use Appwrite\Event\Message\Func as FunctionMessage;
+use Appwrite\Event\Publisher\Func as FunctionPublisher;
 use Appwrite\Extend\Exception;
 use Appwrite\Functions\EventProcessor;
 use Appwrite\Platform\Modules\Databases\Http\Databases\Action as DatabasesAction;
@@ -14,10 +16,10 @@ use Utopia\Database\Validator\Authorization;
 abstract class Action extends DatabasesAction
 {
     /**
-     * @var string|null The current context (either 'row' or 'document')
+     * @var string The current context (either 'row' or 'document')
      */
-    private ?string $context = DOCUMENTS;
-    private ?string $databaseType = DATABASE_TYPE_LEGACY;
+    private string $context = DOCUMENTS;
+    private string $databaseType = DATABASE_TYPE_LEGACY;
 
     /**
      * Get the response model used in the SDK and HTTP responses.
@@ -421,7 +423,7 @@ abstract class Action extends DatabasesAction
      * @param Document[] $documents
      * @param Event $queueForEvents
      * @param Event $queueForRealtime
-     * @param Event $queueForFunctions
+     * @param FunctionPublisher $publisherForFunctions
      * @param Event $queueForWebhooks
      * @param Database $dbForProject
      * @param EventProcessor $eventProcessor
@@ -434,7 +436,7 @@ abstract class Action extends DatabasesAction
         array $documents,
         Event $queueForEvents,
         Event $queueForRealtime,
-        Event $queueForFunctions,
+        FunctionPublisher $publisherForFunctions,
         Event $queueForWebhooks,
         Database $dbForProject,
         EventProcessor $eventProcessor
@@ -472,9 +474,15 @@ abstract class Action extends DatabasesAction
             if (!empty($functionsEvents)) {
                 foreach ($generatedEvents as $event) {
                     if (isset($functionsEvents[$event])) {
-                        $queueForFunctions
-                            ->from($queueForEvents)
-                            ->trigger();
+                        $publisherForFunctions->enqueue(FunctionMessage::fromEvent(
+                            event: $queueForEvents->getEvent(),
+                            params: $queueForEvents->getParams(),
+                            project: $queueForEvents->getProject(),
+                            user: $queueForEvents->getUser(),
+                            userId: $queueForEvents->getUserId(),
+                            payload: $queueForEvents->getPayload(),
+                            platform: $queueForEvents->getPlatform(),
+                        ));
                         break;
                     }
                 }
@@ -494,7 +502,6 @@ abstract class Action extends DatabasesAction
 
         $queueForEvents->reset();
         $queueForRealtime->reset();
-        $queueForFunctions->reset();
         $queueForWebhooks->reset();
     }
 }

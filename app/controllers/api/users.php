@@ -11,8 +11,9 @@ use Appwrite\Auth\Validator\Phone;
 use Appwrite\Deletes\Identities as DeleteIdentities;
 use Appwrite\Deletes\Targets as DeleteTargets;
 use Appwrite\Detector\Detector;
-use Appwrite\Event\Delete;
 use Appwrite\Event\Event;
+use Appwrite\Event\Message\Delete as DeleteMessage;
+use Appwrite\Event\Publisher\Delete as DeletePublisher;
 use Appwrite\Extend\Exception;
 use Appwrite\Hooks\Hooks;
 use Appwrite\SDK\AuthType;
@@ -131,15 +132,15 @@ function createUser(Hash $hash, string $userId, ?string $email, ?string $passwor
         } catch (\Throwable) {
         }
 
-        if (($plan['supportsDisposableEmailValidation'] ?? false) && ($project->getAttribute('auths', [])['disposableEmails'] ?? false) && ($emailMetadata['emailIsDisposable'] ?? false)) {
+        if ((($project->getId() === 'console') || ($plan['supportsDisposableEmailValidation'] ?? false)) && ($project->getAttribute('auths', [])['disposableEmails'] ?? false) && ($emailMetadata['emailIsDisposable'] ?? false)) {
             throw new Exception(Exception::USER_EMAIL_DISPOSABLE);
         }
 
-        if (($plan['supportsCanonicalEmailValidation'] ?? false) && ($project->getAttribute('auths', [])['canonicalEmails'] ?? false) && ($emailMetadata['emailIsCanonical'] ?? true) === false) {
+        if ((($project->getId() === 'console') || ($plan['supportsCanonicalEmailValidation'] ?? false)) && ($project->getAttribute('auths', [])['canonicalEmails'] ?? false) && ($emailMetadata['emailIsCanonical'] ?? true) === false) {
             throw new Exception(Exception::USER_EMAIL_NOT_CANONICAL);
         }
 
-        if (($plan['supportsFreeEmailValidation'] ?? false) && ($project->getAttribute('auths', [])['freeEmails'] ?? false) && ($emailMetadata['emailIsFree'] ?? false)) {
+        if ((($project->getId() === 'console') || ($plan['supportsFreeEmailValidation'] ?? false)) && ($project->getAttribute('auths', [])['freeEmails'] ?? false) && ($emailMetadata['emailIsFree'] ?? false)) {
             throw new Exception(Exception::USER_EMAIL_FREE);
         }
 
@@ -856,7 +857,7 @@ Http::get('/v1/users/:userId/targets/:targetId')
 Http::get('/v1/users/:userId/sessions')
     ->desc('List user sessions')
     ->groups(['api', 'users'])
-    ->label('scope', 'users.read')
+    ->label('scope', ['users.read', 'sessions.read'])
     ->label('sdk', new Method(
         namespace: 'users',
         group: 'sessions',
@@ -1535,7 +1536,7 @@ Http::patch('/v1/users/:userId/email')
                 Query::equal('identifier', [$email]),
             ]);
 
-            if ($target instanceof Document && !$target->isEmpty()) {
+            if (!$target->isEmpty()) {
                 throw new Exception(Exception::USER_TARGET_ALREADY_EXISTS);
             }
         }
@@ -1563,15 +1564,15 @@ Http::patch('/v1/users/:userId/email')
         } catch (\Throwable) {
         }
 
-        if (($plan['supportsDisposableEmailValidation'] ?? false) && ($project->getAttribute('auths', [])['disposableEmails'] ?? false) && ($emailMetadata['emailIsDisposable'] ?? false)) {
+        if ((($project->getId() === 'console') || ($plan['supportsDisposableEmailValidation'] ?? false)) && ($project->getAttribute('auths', [])['disposableEmails'] ?? false) && ($emailMetadata['emailIsDisposable'] ?? false)) {
             throw new Exception(Exception::USER_EMAIL_DISPOSABLE);
         }
 
-        if (($plan['supportsCanonicalEmailValidation'] ?? false) && ($project->getAttribute('auths', [])['canonicalEmails'] ?? false) && ($emailMetadata['emailIsCanonical'] ?? true) === false) {
+        if ((($project->getId() === 'console') || ($plan['supportsCanonicalEmailValidation'] ?? false)) && ($project->getAttribute('auths', [])['canonicalEmails'] ?? false) && ($emailMetadata['emailIsCanonical'] ?? true) === false) {
             throw new Exception(Exception::USER_EMAIL_NOT_CANONICAL);
         }
 
-        if (($plan['supportsFreeEmailValidation'] ?? false) && ($project->getAttribute('auths', [])['freeEmails'] ?? false) && ($emailMetadata['emailIsFree'] ?? false)) {
+        if ((($project->getId() === 'console') || ($plan['supportsFreeEmailValidation'] ?? false)) && ($project->getAttribute('auths', [])['freeEmails'] ?? false) && ($emailMetadata['emailIsFree'] ?? false)) {
             throw new Exception(Exception::USER_EMAIL_FREE);
         }
 
@@ -1595,9 +1596,6 @@ Http::patch('/v1/users/:userId/email')
                 'emailIsDisposable' => $user->getAttribute('emailIsDisposable'),
                 'emailIsFree' => $user->getAttribute('emailIsFree'),
             ]));
-            /**
-             * @var Document $oldTarget
-             */
             $oldTarget = $user->find('identifier', $oldEmail, 'targets');
 
             if ($oldTarget instanceof Document && !$oldTarget->isEmpty()) {
@@ -1681,7 +1679,7 @@ Http::patch('/v1/users/:userId/phone')
                 Query::equal('identifier', [$number]),
             ]);
 
-            if ($target instanceof Document && !$target->isEmpty()) {
+            if (!$target->isEmpty()) {
                 throw new Exception(Exception::USER_TARGET_ALREADY_EXISTS);
             }
         }
@@ -1691,9 +1689,6 @@ Http::patch('/v1/users/:userId/phone')
                 'phone' => $phoneValue,
                 'phoneVerification' => $user->getAttribute('phoneVerification'),
             ]));
-            /**
-             * @var Document $oldTarget
-             */
             $oldTarget = $user->find('identifier', $oldPhone, 'targets');
 
             if ($oldTarget instanceof Document && !$oldTarget->isEmpty()) {
@@ -2252,8 +2247,8 @@ Http::delete('/v1/users/:userId/mfa/authenticators/:type')
     ->label('event', 'users.[userId].delete.mfa')
     ->label('scope', 'users.write')
     ->label('audits.event', 'user.update')
-    ->label('audits.resource', 'user/{response.$id}')
-    ->label('audits.userId', '{response.$id}')
+    ->label('audits.resource', 'user/{request.userId}')
+    ->label('audits.userId', '{request.userId}')
     ->label('usage.metric', 'users.{scope}.requests.update')
     ->label('sdk', [
         new Method(
@@ -2320,7 +2315,7 @@ Http::post('/v1/users/:userId/sessions')
     ->desc('Create session')
     ->groups(['api', 'users'])
     ->label('event', 'users.[userId].sessions.[sessionId].create')
-    ->label('scope', 'users.write')
+    ->label('scope', ['users.write', 'sessions.write'])
     ->label('audits.event', 'session.create')
     ->label('audits.resource', 'user/{request.userId}')
     ->label('usage.metric', 'sessions.{scope}.requests.create')
@@ -2476,7 +2471,7 @@ Http::delete('/v1/users/:userId/sessions/:sessionId')
     ->desc('Delete user session')
     ->groups(['api', 'users'])
     ->label('event', 'users.[userId].sessions.[sessionId].delete')
-    ->label('scope', 'users.write')
+    ->label('scope', ['users.write', 'sessions.write'])
     ->label('audits.event', 'session.delete')
     ->label('audits.resource', 'user/{request.userId}')
     ->label('sdk', new Method(
@@ -2527,7 +2522,7 @@ Http::delete('/v1/users/:userId/sessions')
     ->desc('Delete user sessions')
     ->groups(['api', 'users'])
     ->label('event', 'users.[userId].sessions.delete')
-    ->label('scope', 'users.write')
+    ->label('scope', ['users.write', 'sessions.write'])
     ->label('audits.event', 'session.delete')
     ->label('audits.resource', 'user/{user.$id}')
     ->label('sdk', new Method(
@@ -2598,8 +2593,8 @@ Http::delete('/v1/users/:userId')
     ->inject('response')
     ->inject('dbForProject')
     ->inject('queueForEvents')
-    ->inject('queueForDeletes')
-    ->action(function (string $userId, Response $response, Database $dbForProject, Event $queueForEvents, Delete $queueForDeletes) {
+    ->inject('publisherForDeletes')
+    ->action(function (string $userId, Response $response, Database $dbForProject, Event $queueForEvents, DeletePublisher $publisherForDeletes) {
 
         $user = $dbForProject->getDocument('users', $userId);
 
@@ -2614,9 +2609,11 @@ Http::delete('/v1/users/:userId')
         DeleteIdentities::delete($dbForProject, Query::equal('userInternalId', [$user->getSequence()]));
         DeleteTargets::delete($dbForProject, Query::equal('userInternalId', [$user->getSequence()]));
 
-        $queueForDeletes
-            ->setType(DELETE_TYPE_DOCUMENT)
-            ->setDocument($clone);
+        $publisherForDeletes->enqueue(new DeleteMessage(
+            project: $queueForEvents->getProject(),
+            type: DELETE_TYPE_DOCUMENT,
+            document: $clone,
+        ));
 
         $queueForEvents
             ->setParam('userId', $user->getId())
@@ -2649,10 +2646,10 @@ Http::delete('/v1/users/:userId/targets/:targetId')
     ->param('userId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'User ID.', false, ['dbForProject'])
     ->param('targetId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Target ID.', false, ['dbForProject'])
     ->inject('queueForEvents')
-    ->inject('queueForDeletes')
+    ->inject('publisherForDeletes')
     ->inject('response')
     ->inject('dbForProject')
-    ->action(function (string $userId, string $targetId, Event $queueForEvents, Delete $queueForDeletes, Response $response, Database $dbForProject) {
+    ->action(function (string $userId, string $targetId, Event $queueForEvents, DeletePublisher $publisherForDeletes, Response $response, Database $dbForProject) {
         $user = $dbForProject->getDocument('users', $userId);
 
         if ($user->isEmpty()) {
@@ -2672,9 +2669,11 @@ Http::delete('/v1/users/:userId/targets/:targetId')
         $dbForProject->deleteDocument('targets', $target->getId());
         $dbForProject->purgeCachedDocument('users', $user->getId());
 
-        $queueForDeletes
-            ->setType(DELETE_TYPE_TARGET)
-            ->setDocument($target);
+        $publisherForDeletes->enqueue(new DeleteMessage(
+            project: $queueForEvents->getProject(),
+            type: DELETE_TYPE_TARGET,
+            document: $target,
+        ));
 
         $queueForEvents
             ->setParam('userId', $user->getId())
@@ -2842,6 +2841,7 @@ Http::get('/v1/users/usage')
         $format = match ($days['period']) {
             '1h' => 'Y-m-d\TH:00:00.000P',
             '1d' => 'Y-m-d\T00:00:00.000P',
+            default => throw new \LogicException('Unsupported period: ' . $days['period']),
         };
 
         foreach ($metrics as $metric) {

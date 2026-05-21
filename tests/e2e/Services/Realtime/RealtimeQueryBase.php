@@ -101,7 +101,7 @@ trait RealtimeQueryBase
             $data = $client->receive();
             $this->fail('Expected TimeoutException - event should be filtered');
         } catch (TimeoutException $e) {
-            $this->assertTrue(true);
+            $this->addToAssertionCount(1);
         }
 
         $client->close();
@@ -206,7 +206,7 @@ trait RealtimeQueryBase
             $client->receive();
             $this->fail('Expected TimeoutException - event should be filtered');
         } catch (TimeoutException $e) {
-            $this->assertTrue(true);
+            $this->addToAssertionCount(1);
         }
 
         $client->close();
@@ -304,7 +304,7 @@ trait RealtimeQueryBase
             $client->receive();
             $this->fail('Expected TimeoutException - event should be filtered');
         } catch (TimeoutException $e) {
-            $this->assertTrue(true);
+            $this->addToAssertionCount(1);
         }
 
         $client->close();
@@ -398,7 +398,7 @@ trait RealtimeQueryBase
             $client->receive();
             $this->fail('Expected TimeoutException - event should be filtered');
         } catch (TimeoutException $e) {
-            $this->assertTrue(true);
+            $this->addToAssertionCount(1);
         }
 
         $client->close();
@@ -492,7 +492,7 @@ trait RealtimeQueryBase
             $client->receive();
             $this->fail('Expected TimeoutException - event should be filtered');
         } catch (TimeoutException $e) {
-            $this->assertTrue(true);
+            $this->addToAssertionCount(1);
         }
 
         $client->close();
@@ -604,7 +604,7 @@ trait RealtimeQueryBase
             $client->receive();
             $this->fail('Expected TimeoutException - event should be filtered');
         } catch (TimeoutException $e) {
-            $this->assertTrue(true);
+            $this->addToAssertionCount(1);
         }
 
         $client->close();
@@ -716,7 +716,7 @@ trait RealtimeQueryBase
             $client->receive();
             $this->fail('Expected TimeoutException - event should be filtered');
         } catch (TimeoutException $e) {
-            $this->assertTrue(true);
+            $this->addToAssertionCount(1);
         }
 
         $client->close();
@@ -810,7 +810,7 @@ trait RealtimeQueryBase
             $client->receive();
             $this->fail('Expected TimeoutException - event should be filtered');
         } catch (TimeoutException $e) {
-            $this->assertTrue(true);
+            $this->addToAssertionCount(1);
         }
 
         $client->close();
@@ -903,7 +903,7 @@ trait RealtimeQueryBase
             $client->receive();
             $this->fail('Expected TimeoutException - event should be filtered');
         } catch (TimeoutException $e) {
-            $this->assertTrue(true);
+            $this->addToAssertionCount(1);
         }
 
         $client->close();
@@ -1019,7 +1019,7 @@ trait RealtimeQueryBase
             $client->receive();
             $this->fail('Expected TimeoutException - event should be filtered');
         } catch (TimeoutException $e) {
-            $this->assertTrue(true);
+            $this->addToAssertionCount(1);
         }
 
         // Create document with priority > 5 but status != 'active' - should NOT receive event
@@ -1041,7 +1041,7 @@ trait RealtimeQueryBase
             $client->receive();
             $this->fail('Expected TimeoutException - event should be filtered');
         } catch (TimeoutException $e) {
-            $this->assertTrue(true);
+            $this->addToAssertionCount(1);
         }
 
         $client->close();
@@ -1157,7 +1157,7 @@ trait RealtimeQueryBase
             $client->receive();
             $this->fail('Expected TimeoutException - event should be filtered');
         } catch (TimeoutException $e) {
-            $this->assertTrue(true);
+            $this->addToAssertionCount(1);
         }
 
         $client->close();
@@ -1296,7 +1296,7 @@ trait RealtimeQueryBase
             $client->receive();
             $this->fail('Expected TimeoutException - event should be filtered');
         } catch (TimeoutException $e) {
-            $this->assertTrue(true);
+            $this->addToAssertionCount(1);
         }
 
         // Create document with score >= 80 but category != 'premium' or 'vip' - should NOT receive event
@@ -1318,7 +1318,7 @@ trait RealtimeQueryBase
             $client->receive();
             $this->fail('Expected TimeoutException - event should be filtered');
         } catch (TimeoutException $e) {
-            $this->assertTrue(true);
+            $this->addToAssertionCount(1);
         }
 
         $client->close();
@@ -1511,7 +1511,7 @@ trait RealtimeQueryBase
             $client->receive();
             $this->fail('Expected TimeoutException - event should be filtered for scoped channel query');
         } catch (TimeoutException $e) {
-            $this->assertTrue(true);
+            $this->addToAssertionCount(1);
         }
 
         $client->close();
@@ -1583,7 +1583,7 @@ trait RealtimeQueryBase
             $client->receive();
             $this->fail('Expected TimeoutException - event should be filtered');
         } catch (TimeoutException $e) {
-            $this->assertTrue(true);
+            $this->addToAssertionCount(1);
         }
 
         $client->close();
@@ -1692,7 +1692,7 @@ trait RealtimeQueryBase
             $client->receive();
             $this->fail('Expected TimeoutException - event should be filtered (neither query matches)');
         } catch (TimeoutException $e) {
-            $this->assertTrue(true);
+            $this->addToAssertionCount(1);
         }
 
         // Create document with matching ID but wrong status - should NOT receive event (only one query matches)
@@ -1713,7 +1713,7 @@ trait RealtimeQueryBase
             $client->receive();
             $this->fail('Expected TimeoutException - event should be filtered (ID matches but status does not)');
         } catch (TimeoutException $e) {
-            $this->assertTrue(true);
+            $this->addToAssertionCount(1);
         }
 
         $client->close();
@@ -1870,7 +1870,7 @@ trait RealtimeQueryBase
             $clientQ2->receive();
             $this->fail('Expected TimeoutException - event should be filtered for clientQ2 (active document)');
         } catch (TimeoutException $e) {
-            $this->assertTrue(true);
+            $this->addToAssertionCount(1);
         }
 
         // clientComplex: should receive event, subscriptions should not be empty (query matched)
@@ -1912,7 +1912,7 @@ trait RealtimeQueryBase
             $clientQ1->receive();
             $this->fail('Expected TimeoutException - event should be filtered for clientQ1 (pending document)');
         } catch (TimeoutException $e) {
-            $this->assertTrue(true);
+            $this->addToAssertionCount(1);
         }
 
         // clientQ2: should receive event, subscriptions should not be empty (query matched)
@@ -1929,7 +1929,7 @@ trait RealtimeQueryBase
             $clientComplex->receive();
             $this->fail('Expected TimeoutException - event should be filtered for complex subscription (pending document)');
         } catch (TimeoutException $e) {
-            $this->assertTrue(true);
+            $this->addToAssertionCount(1);
         }
 
         $clientAll->close();
@@ -2043,7 +2043,7 @@ trait RealtimeQueryBase
             $clientQ2->receive();
             $this->fail('Expected TimeoutException - clientQ2 should not receive active document');
         } catch (TimeoutException $e) {
-            $this->assertTrue(true);
+            $this->addToAssertionCount(1);
         }
 
         // 2) pending document -> only queryStatusPending subscription should see it
@@ -2073,7 +2073,7 @@ trait RealtimeQueryBase
             $clientQ1->receive();
             $this->fail('Expected TimeoutException - clientQ1 should not receive pending document');
         } catch (TimeoutException $e) {
-            $this->assertTrue(true);
+            $this->addToAssertionCount(1);
         }
 
         $clientQ1->close();
@@ -2252,7 +2252,7 @@ trait RealtimeQueryBase
             $data = $client->receive();
             $this->fail('Expected TimeoutException - document does not match query after permission change');
         } catch (TimeoutException $e) {
-            $this->assertTrue(true);
+            $this->addToAssertionCount(1);
         }
 
         // Create a NEW document with a different ID - should NOT receive event
@@ -2279,7 +2279,7 @@ trait RealtimeQueryBase
             $data = $client->receive();
             $this->fail('Expected TimeoutException - new document does not match original query after permission change');
         } catch (TimeoutException $e) {
-            $this->assertTrue(true);
+            $this->addToAssertionCount(1);
         }
 
         // Create a document with the ORIGINAL matching ID - should receive event
@@ -2439,11 +2439,478 @@ trait RealtimeQueryBase
             $clientWithNonMatchingQuery->receive();
             $this->fail('Expected TimeoutException - client with non-matching query should not receive event');
         } catch (TimeoutException $e) {
-            $this->assertTrue(true);
+            $this->addToAssertionCount(1);
         }
 
         $clientNoQuery->close();
         $clientWithMatchingQuery->close();
         $clientWithNonMatchingQuery->close();
+    }
+
+    /**
+     * Sets up a database + collection + 'name' string attribute, returning their IDs.
+     * Used by action-channel tests to avoid duplicating fixture code.
+     *
+     * @return array{databaseId: string, collectionId: string}
+     */
+    private function createActorsCollection(): array
+    {
+        $database = $this->client->call(Client::METHOD_POST, '/databases', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ]), [
+            'databaseId' => ID::unique(),
+            'name' => 'Action Channel DB',
+        ]);
+        $databaseId = $database['body']['$id'];
+
+        $collection = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ]), [
+            'collectionId' => ID::unique(),
+            'name' => 'Actors',
+            'permissions' => [
+                Permission::create(Role::user($this->getUser()['$id'])),
+            ],
+            'documentSecurity' => true,
+        ]);
+        $collectionId = $collection['body']['$id'];
+
+        $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $collectionId . '/attributes/string', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ]), [
+            'key' => 'name',
+            'size' => 256,
+            'required' => true,
+        ]);
+
+        $this->assertEventually(function () use ($databaseId, $collectionId) {
+            $response = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $collectionId . '/attributes/name', array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+                'x-appwrite-key' => $this->getProject()['apiKey'],
+            ]));
+            $this->assertEquals('available', $response['body']['status']);
+        }, 30000, 250);
+
+        return ['databaseId' => $databaseId, 'collectionId' => $collectionId];
+    }
+
+    /**
+     * Creates a document with the given ID and name. Returns the parsed body.
+     * Permissions allow Role::any() for all CRUD so any session can observe the events.
+     *
+     * @return array<string, mixed>
+     */
+    private function createActor(string $databaseId, string $collectionId, string $documentId, string $name): array
+    {
+        $document = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $collectionId . '/documents', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'documentId' => $documentId,
+            'data' => ['name' => $name],
+            'permissions' => [
+                Permission::read(Role::any()),
+                Permission::update(Role::any()),
+                Permission::delete(Role::any()),
+            ],
+        ]);
+
+        return $document['body'];
+    }
+
+    public function testChannelActionFilterReflectedInConnectedResponse(): void
+    {
+        $user = $this->getUser();
+        $session = $user['session'] ?? '';
+        $projectId = $this->getProject()['$id'];
+
+        $headers = [
+            'origin' => 'http://localhost',
+            'cookie' => 'a_session_' . $projectId . '=' . $session,
+        ];
+
+        // Subscribing with an action suffix should round-trip the original channel
+        // name on the connected response. Only meaningful in URL-subscribe mode —
+        // the message-based path consumes the connected response inside its
+        // getWebsocket helper before returning, so we can't observe it here.
+        $client = $this->getWebsocket([
+            'documents.create',
+            'documents.update',
+            'documents.upsert',
+            'documents',
+        ], $headers);
+
+        $connected = $this->assertConnectionStatusIfSupported($client);
+        if ($connected === null) {
+            $client->close();
+            $this->markTestSkipped('Connected-response channels are not surfaced through the message-based subscribe path.');
+        }
+
+        $this->assertContains('documents.create', $connected['data']['channels']);
+        $this->assertContains('documents.update', $connected['data']['channels']);
+        $this->assertContains('documents.upsert', $connected['data']['channels']);
+        $this->assertContains('documents', $connected['data']['channels']);
+
+        $client->close();
+    }
+
+    public function testChannelActionFilterDeliversOnlyMatchingActions(): void
+    {
+        $user = $this->getUser();
+        $session = $user['session'] ?? '';
+        $projectId = $this->getProject()['$id'];
+
+        $headers = [
+            'origin' => 'http://localhost',
+            'cookie' => 'a_session_' . $projectId . '=' . $session,
+        ];
+
+        ['databaseId' => $databaseId, 'collectionId' => $collectionId] = $this->createActorsCollection();
+
+        $createChannel = "databases.{$databaseId}.collections.{$collectionId}.documents.create";
+        $updateChannel = "databases.{$databaseId}.collections.{$collectionId}.documents.update";
+        $upsertChannel = "databases.{$databaseId}.collections.{$collectionId}.documents.upsert";
+
+        $clientCreate = $this->getWebsocket([$createChannel], $headers);
+        $clientUpdate = $this->getWebsocket([$updateChannel], $headers);
+        $clientUpsert = $this->getWebsocket([$upsertChannel], $headers);
+
+        $this->assertConnectionStatusIfSupported($clientCreate);
+        $this->assertConnectionStatusIfSupported($clientUpdate);
+        $this->assertConnectionStatusIfSupported($clientUpsert);
+
+        $documentId = ID::unique();
+        $this->createActor($databaseId, $collectionId, $documentId, 'Chris Evans');
+
+        // Create event delivers only to the .create subscriber.
+        $createEvent = json_decode($clientCreate->receive(), true);
+        $this->assertEquals('event', $createEvent['type']);
+        $this->assertContains(
+            "databases.{$databaseId}.collections.{$collectionId}.documents.{$documentId}.create",
+            $createEvent['data']['events']
+        );
+        $this->assertEquals('Chris Evans', $createEvent['data']['payload']['name']);
+
+        try {
+            $clientUpdate->receive();
+            $this->fail('Update subscriber should not receive a create event.');
+        } catch (TimeoutException $e) {
+            $this->addToAssertionCount(1);
+        }
+
+        try {
+            $clientUpsert->receive();
+            $this->fail('Upsert subscriber should not receive a create event.');
+        } catch (TimeoutException $e) {
+            $this->addToAssertionCount(1);
+        }
+
+        // Update fires update events; only the .update subscriber should hear them.
+        $this->client->call(Client::METHOD_PATCH, "/databases/{$databaseId}/collections/{$collectionId}/documents/{$documentId}", array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ], $this->getHeaders()), [
+            'data' => ['name' => 'Chris Evans 2'],
+        ]);
+
+        $updateEvent = json_decode($clientUpdate->receive(), true);
+        $this->assertEquals('event', $updateEvent['type']);
+        $this->assertContains(
+            "databases.{$databaseId}.collections.{$collectionId}.documents.{$documentId}.update",
+            $updateEvent['data']['events']
+        );
+        $this->assertEquals('Chris Evans 2', $updateEvent['data']['payload']['name']);
+
+        try {
+            $clientCreate->receive();
+            $this->fail('Create subscriber should not receive an update event.');
+        } catch (TimeoutException $e) {
+            $this->addToAssertionCount(1);
+        }
+
+        try {
+            $clientUpsert->receive();
+            $this->fail('Upsert subscriber should not receive an update event.');
+        } catch (TimeoutException $e) {
+            $this->addToAssertionCount(1);
+        }
+
+        // PUT bulk upsert fires upsert events; only the .upsert subscriber should hear them.
+        $this->client->call(Client::METHOD_PUT, "/databases/{$databaseId}/collections/{$collectionId}/documents", array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ]), [
+            'documents' => [
+                [
+                    '$id' => ID::unique(),
+                    'name' => 'Robert Downey Jr.',
+                    '$permissions' => [
+                        Permission::read(Role::any()),
+                        Permission::update(Role::any()),
+                        Permission::delete(Role::any()),
+                    ],
+                ],
+            ],
+        ]);
+
+        $upsertEvent = json_decode($clientUpsert->receive(), true);
+        $this->assertEquals('event', $upsertEvent['type']);
+        $this->assertContains(
+            "databases.{$databaseId}.collections.*.documents.*.upsert",
+            $upsertEvent['data']['events']
+        );
+
+        try {
+            $clientCreate->receive();
+            $this->fail('Create subscriber should not receive an upsert event.');
+        } catch (TimeoutException $e) {
+            $this->addToAssertionCount(1);
+        }
+
+        try {
+            $clientUpdate->receive();
+            $this->fail('Update subscriber should not receive an upsert event.');
+        } catch (TimeoutException $e) {
+            $this->addToAssertionCount(1);
+        }
+
+        $clientCreate->close();
+        $clientUpdate->close();
+        $clientUpsert->close();
+    }
+
+    public function testChannelActionFilterByDocumentId(): void
+    {
+        $user = $this->getUser();
+        $session = $user['session'] ?? '';
+        $projectId = $this->getProject()['$id'];
+
+        $headers = [
+            'origin' => 'http://localhost',
+            'cookie' => 'a_session_' . $projectId . '=' . $session,
+        ];
+
+        ['databaseId' => $databaseId, 'collectionId' => $collectionId] = $this->createActorsCollection();
+
+        // Use a known custom ID so the .id.action channel can be subscribed before the
+        // document exists. Without this the channel name can't be predicted.
+        $watchedId = 'actor-watched';
+        $idCreateChannel = "databases.{$databaseId}.collections.{$collectionId}.documents.{$watchedId}.create";
+
+        $clientWatched = $this->getWebsocket([$idCreateChannel], $headers);
+        $connected = $this->assertConnectionStatusIfSupported($clientWatched);
+        if ($connected !== null) {
+            $this->assertContains($idCreateChannel, $connected['data']['channels']);
+        }
+
+        // Creating a *different* document should not trigger the watched-id subscription.
+        $this->createActor($databaseId, $collectionId, ID::unique(), 'Other Actor');
+
+        try {
+            $clientWatched->receive();
+            $this->fail('Subscriber to .{id}.create should not receive events for a different document.');
+        } catch (TimeoutException $e) {
+            $this->addToAssertionCount(1);
+        }
+
+        // Creating the watched document delivers exactly one create event.
+        $this->createActor($databaseId, $collectionId, $watchedId, 'Watched Actor');
+
+        $event = json_decode($clientWatched->receive(), true);
+        $this->assertEquals('event', $event['type']);
+        $this->assertContains(
+            "databases.{$databaseId}.collections.{$collectionId}.documents.{$watchedId}.create",
+            $event['data']['events']
+        );
+        $this->assertEquals($watchedId, $event['data']['payload']['$id']);
+        $this->assertEquals('Watched Actor', $event['data']['payload']['name']);
+
+        // Updating the watched document does NOT match — action filter is `create` only.
+        $this->client->call(Client::METHOD_PATCH, "/databases/{$databaseId}/collections/{$collectionId}/documents/{$watchedId}", array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ], $this->getHeaders()), [
+            'data' => ['name' => 'Watched Actor v2'],
+        ]);
+
+        try {
+            $clientWatched->receive();
+            $this->fail('Subscriber to .{id}.create should not receive update events on the same document.');
+        } catch (TimeoutException $e) {
+            $this->addToAssertionCount(1);
+        }
+
+        $clientWatched->close();
+    }
+
+    public function testChannelActionFilterMultiChannelSubscription(): void
+    {
+        $user = $this->getUser();
+        $session = $user['session'] ?? '';
+        $projectId = $this->getProject()['$id'];
+
+        $headers = [
+            'origin' => 'http://localhost',
+            'cookie' => 'a_session_' . $projectId . '=' . $session,
+        ];
+
+        ['databaseId' => $databaseId, 'collectionId' => $collectionId] = $this->createActorsCollection();
+
+        $watchedId = 'actor-multi';
+        $idCreateChannel = "databases.{$databaseId}.collections.{$collectionId}.documents.{$watchedId}.create";
+        $rowsChannel = "databases.{$databaseId}.tables.{$collectionId}.rows";
+
+        // One subscription that listens on both:
+        //   1. `databases...documents.{watchedId}.create` — narrow, action-filtered
+        //   2. `databases...tables.{collectionId}.rows`   — broad, non-action (tablesdb mirror)
+        // A create on the watched document must reach this subscriber via *both* channels.
+        $clientMulti = $this->getWebsocket([$idCreateChannel, $rowsChannel], $headers);
+        $connected = $this->assertConnectionStatusIfSupported($clientMulti);
+        if ($connected !== null) {
+            $this->assertContains($idCreateChannel, $connected['data']['channels']);
+            $this->assertContains($rowsChannel, $connected['data']['channels']);
+        }
+
+        $this->createActor($databaseId, $collectionId, $watchedId, 'Multi Actor');
+
+        $event = json_decode($clientMulti->receive(), true);
+        $this->assertEquals('event', $event['type']);
+        // The event payload's channels list reports the underlying base channels that
+        // the published event carries. Both the broad rows channel and the document
+        // channel that the action filter is anchored on should be present.
+        $this->assertContains($rowsChannel, $event['data']['channels']);
+        $this->assertContains(
+            "databases.{$databaseId}.collections.{$collectionId}.documents.{$watchedId}",
+            $event['data']['channels']
+        );
+        $this->assertContains(
+            "databases.{$databaseId}.collections.{$collectionId}.documents.{$watchedId}.create",
+            $event['data']['events']
+        );
+        $this->assertEquals('Multi Actor', $event['data']['payload']['name']);
+
+        // Update on the same doc: the .{id}.create branch is filtered out, but the
+        // broad rows channel has no action filter — the subscription still receives
+        // the event via that branch (a single delivery, not two).
+        $this->client->call(Client::METHOD_PATCH, "/databases/{$databaseId}/collections/{$collectionId}/documents/{$watchedId}", array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ], $this->getHeaders()), [
+            'data' => ['name' => 'Multi Actor v2'],
+        ]);
+
+        $update = json_decode($clientMulti->receive(), true);
+        $this->assertEquals('event', $update['type']);
+        $this->assertContains($rowsChannel, $update['data']['channels']);
+        $this->assertContains(
+            "databases.{$databaseId}.collections.{$collectionId}.documents.{$watchedId}.update",
+            $update['data']['events']
+        );
+
+        // No second copy of the same update should arrive — getSubscribers folds
+        // multi-channel matches into a single connection delivery.
+        try {
+            $clientMulti->receive();
+            $this->fail('Multi-channel subscriber should receive a single delivery per event.');
+        } catch (TimeoutException $e) {
+            $this->addToAssertionCount(1);
+        }
+
+        $clientMulti->close();
+    }
+
+    public function testChannelActionFilterDeliversDeleteEvents(): void
+    {
+        $user = $this->getUser();
+        $session = $user['session'] ?? '';
+        $projectId = $this->getProject()['$id'];
+
+        $headers = [
+            'origin' => 'http://localhost',
+            'cookie' => 'a_session_' . $projectId . '=' . $session,
+        ];
+
+        ['databaseId' => $databaseId, 'collectionId' => $collectionId] = $this->createActorsCollection();
+
+        $deleteChannel = "databases.{$databaseId}.collections.{$collectionId}.documents.delete";
+        $clientDelete = $this->getWebsocket([$deleteChannel], $headers);
+        $connected = $this->assertConnectionStatusIfSupported($clientDelete);
+        if ($connected !== null) {
+            $this->assertContains($deleteChannel, $connected['data']['channels']);
+        }
+
+        $documentId = ID::unique();
+        $this->createActor($databaseId, $collectionId, $documentId, 'About To Be Deleted');
+
+        // Create event must not arrive — the action filter is `delete`.
+        try {
+            $clientDelete->receive();
+            $this->fail('Delete subscriber should not receive a create event.');
+        } catch (TimeoutException $e) {
+            $this->addToAssertionCount(1);
+        }
+
+        $this->client->call(Client::METHOD_DELETE, "/databases/{$databaseId}/collections/{$collectionId}/documents/{$documentId}", array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ], $this->getHeaders()));
+
+        $deleteEvent = json_decode($clientDelete->receive(), true);
+        $this->assertEquals('event', $deleteEvent['type']);
+        $this->assertContains(
+            "databases.{$databaseId}.collections.{$collectionId}.documents.{$documentId}.delete",
+            $deleteEvent['data']['events']
+        );
+        $this->assertEquals($documentId, $deleteEvent['data']['payload']['$id']);
+
+        $clientDelete->close();
+    }
+
+    public function testChannelActionFilterUnknownSuffixTreatedAsLiteral(): void
+    {
+        $user = $this->getUser();
+        $session = $user['session'] ?? '';
+        $projectId = $this->getProject()['$id'];
+
+        $headers = [
+            'origin' => 'http://localhost',
+            'cookie' => 'a_session_' . $projectId . '=' . $session,
+        ];
+
+        ['databaseId' => $databaseId, 'collectionId' => $collectionId] = $this->createActorsCollection();
+
+        // An unrecognised suffix is NOT in SUPPORTED_ACTIONS, so parseActionChannel
+        // leaves the channel name intact and treats it as a literal channel that no
+        // published event ever carries — the subscriber should receive nothing.
+        $client = $this->getWebsocket(['documents.bogus'], $headers);
+        $connected = $this->assertConnectionStatusIfSupported($client);
+        if ($connected !== null) {
+            $this->assertContains('documents.bogus', $connected['data']['channels']);
+        }
+
+        $documentId = ID::unique();
+        $this->createActor($databaseId, $collectionId, $documentId, 'No Bogus Listener');
+
+        $this->client->call(Client::METHOD_DELETE, "/databases/{$databaseId}/collections/{$collectionId}/documents/{$documentId}", array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ], $this->getHeaders()));
+
+        try {
+            $client->receive();
+            $this->fail('Unrecognised action suffix should not deliver any events.');
+        } catch (TimeoutException $e) {
+            $this->addToAssertionCount(1);
+        }
+
+        $client->close();
     }
 }

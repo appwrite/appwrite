@@ -659,7 +659,7 @@ class RuntimeQueryTest extends TestCase
         $query = Query::select(['*']);
         // Should not throw
         RuntimeQuery::validateSelectQuery($query);
-        $this->assertTrue(true);
+        $this->addToAssertionCount(1);
     }
 
     public function testValidateSelectQueryWithSpecificFields(): void
@@ -694,7 +694,7 @@ class RuntimeQueryTest extends TestCase
         $query = Query::equal('name', ['John']);
         // Should not throw for non-select queries
         RuntimeQuery::validateSelectQuery($query);
-        $this->assertTrue(true);
+        $this->addToAssertionCount(1);
     }
 
     // Filter tests with select("*")

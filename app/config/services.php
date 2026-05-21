@@ -286,7 +286,7 @@ return [
         'name' => 'Migrations',
         'subtitle' => 'The Migrations service allows you to migrate third-party data to your Appwrite project.',
         'description' => '/docs/services/migrations.md',
-        'controller' => 'api/migrations.php',
+        'controller' => '', // Uses modules
         'sdk' => true,
         'docs' => true,
         'docsUrl' => 'https://appwrite.io/docs/migrations',
@@ -308,5 +308,19 @@ return [
         'optional' => true,
         'icon' => '/images/services/messaging.png',
         'platforms' => ['client', 'server', 'console'],
-    ]
+    ],
+    'advisor' => [
+        'key' => 'advisor',
+        'name' => 'Advisor',
+        'subtitle' => 'The Advisor service surfaces actionable reports about your project resources, with CTA descriptors for one-click remediation in the console.',
+        'description' => '/docs/services/advisor.md',
+        'controller' => '', // Uses modules
+        'sdk' => true,
+        'docs' => true,
+        'docsUrl' => 'https://appwrite.io/docs/server/advisor',
+        'tests' => true,
+        'optional' => true,
+        'icon' => '/images/services/insights.png',
+        'platforms' => ['server', 'console'],
+    ],
 ];

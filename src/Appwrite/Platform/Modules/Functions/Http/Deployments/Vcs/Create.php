@@ -2,8 +2,8 @@
 
 namespace Appwrite\Platform\Modules\Functions\Http\Deployments\Vcs;
 
-use Appwrite\Event\Build;
 use Appwrite\Event\Event;
+use Appwrite\Event\Publisher\Build as BuildPublisher;
 use Appwrite\Extend\Exception;
 use Appwrite\Platform\Modules\Compute\Base;
 use Appwrite\SDK\AuthType;
@@ -70,8 +70,9 @@ class Create extends Base
             ->inject('dbForPlatform')
             ->inject('project')
             ->inject('queueForEvents')
-            ->inject('queueForBuilds')
+            ->inject('publisherForBuilds')
             ->inject('gitHub')
+            ->inject('platform')
             ->callback($this->action(...));
     }
 
@@ -86,8 +87,9 @@ class Create extends Base
         Database $dbForPlatform,
         Document $project,
         Event $queueForEvents,
-        Build $queueForBuilds,
+        BuildPublisher $publisherForBuilds,
         GitHub $github,
+        array $platform,
     ) {
         $function = $dbForProject->getDocument('functions', $functionId);
 
@@ -105,10 +107,11 @@ class Create extends Base
             project: $project,
             installation: $installation,
             dbForProject: $dbForProject,
-            queueForBuilds: $queueForBuilds,
+            publisherForBuilds: $publisherForBuilds,
             template: $template,
             github: $github,
             activate: $activate,
+            platform: $platform,
             reference: $reference,
             referenceType: $type
         );

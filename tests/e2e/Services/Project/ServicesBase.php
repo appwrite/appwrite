@@ -239,6 +239,34 @@ trait ServicesBase
         $this->assertSame(404, $response['headers']['status-code']);
     }
 
+    // Backwards compatibility
+
+    public function testUpdateServiceLegacyStatusPath(): void
+    {
+        $headers = array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-response-format' => '1.9.4',
+        ], $this->getHeaders());
+
+        // Disable via the legacy `/status` alias
+        $response = $this->client->call(Client::METHOD_PATCH, '/project/services/teams/status', $headers, [
+            'enabled' => false,
+        ]);
+
+        $this->assertSame(200, $response['headers']['status-code']);
+        $this->assertNotEmpty($response['body']['$id']);
+        $this->assertSame(false, $response['body']['serviceStatusForTeams']);
+
+        // Re-enable via the legacy `/status` alias
+        $response = $this->client->call(Client::METHOD_PATCH, '/project/services/teams/status', $headers, [
+            'enabled' => true,
+        ]);
+
+        $this->assertSame(200, $response['headers']['status-code']);
+        $this->assertSame(true, $response['body']['serviceStatusForTeams']);
+    }
+
     // Helpers
 
     protected function updateServiceStatus(string $serviceId, bool $enabled, bool $authenticated = true): mixed
@@ -249,10 +277,12 @@ trait ServicesBase
         ];
 
         if ($authenticated) {
-            $headers = array_merge($headers, $this->getHeaders());
+            $headers = array_merge($headers, $this->getHeaders(), [
+                'x-appwrite-response-format' => '1.9.4',
+            ]);
         }
 
-        return $this->client->call(Client::METHOD_PATCH, '/project/services/' . $serviceId . '/status', $headers, [
+        return $this->client->call(Client::METHOD_PATCH, '/project/services/' . $serviceId, $headers, [
             'enabled' => $enabled,
         ]);
     }

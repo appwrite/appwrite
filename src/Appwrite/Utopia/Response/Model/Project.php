@@ -12,6 +12,7 @@ class Project extends Model
     public function __construct()
     {
         $this
+            // Basic project information
             ->addRule('$id', [
                 'type' => self::TYPE_STRING,
                 'description' => 'Project ID.',
@@ -35,12 +36,6 @@ class Project extends Model
                 'description' => 'Project name.',
                 'default' => '',
                 'example' => 'New Project',
-            ])
-            ->addRule('description', [
-                'type' => self::TYPE_STRING,
-                'description' => 'Project description.',
-                'default' => '',
-                'example' => 'This is a new project.',
             ])
             ->addRule('teamId', [
                 'type' => self::TYPE_STRING,
@@ -251,13 +246,17 @@ class Project extends Model
                 'example' => new \stdClass(),
                 'array' => true,
             ])
+
+            // Resource: Dev Keys
             ->addRule('devKeys', [
                 'type' => Response::MODEL_DEV_KEY,
-                'description' => 'List of dev keys.',
+                'description' => 'Deprecated since 1.9.5: List of dev keys.',
                 'default' => [],
                 'example' => new \stdClass(),
                 'array' => true,
             ])
+
+            // Resource: SMTP
             ->addRule('smtpEnabled', [
                 'type' => self::TYPE_BOOLEAN,
                 'description' => 'Status for custom SMTP',
@@ -277,7 +276,13 @@ class Project extends Model
                 'default' => '',
                 'example' => 'john@appwrite.io',
             ])
-            ->addRule('smtpReplyTo', [
+            ->addRule('smtpReplyToName', [
+                'type' => self::TYPE_STRING,
+                'description' => 'SMTP reply to name',
+                'default' => '',
+                'example' => 'Support Team',
+            ])
+            ->addRule('smtpReplyToEmail', [
                 'type' => self::TYPE_STRING,
                 'description' => 'SMTP reply to email',
                 'default' => '',
@@ -303,9 +308,9 @@ class Project extends Model
             ])
             ->addRule('smtpPassword', [
                 'type' => self::TYPE_STRING,
-                'description' => 'SMTP server password',
+                'description' => 'SMTP server password. This property is write-only and always returned empty.',
                 'default' => '',
-                'example' => 'securepassword',
+                'example' => '',
             ])
             ->addRule('smtpSecure', [
                 'type' => self::TYPE_STRING,
@@ -313,6 +318,8 @@ class Project extends Model
                 'default' => '',
                 'example' => 'tls',
             ])
+
+            // Resource: Ping
             ->addRule('pingCount', [
                 'type' => self::TYPE_INTEGER,
                 'description' => 'Number of times the ping was received for this project.',
@@ -325,6 +332,8 @@ class Project extends Model
                 'default' => '',
                 'example' => self::TYPE_DATETIME_EXAMPLE,
             ])
+
+            // Resource: Labels
             ->addRule('labels', [
                 'type' => self::TYPE_STRING,
                 'description' => 'Labels for the project.',
@@ -332,32 +341,56 @@ class Project extends Model
                 'example' => ['vip'],
                 'array' => true,
             ])
+
+            // Resource: Billing
             ->addRule('status', [
                 'type' => self::TYPE_STRING,
                 'description' => 'Project status.',
                 'default' => 'active',
                 'example' => 'active',
             ])
+
+            // Resource: Auth methods
+            ->addRule('authMethods', [
+                'type' => Response::MODEL_PROJECT_AUTH_METHOD,
+                'description' => 'List of auth methods.',
+                'default' => [],
+                'example' => new \stdClass(),
+                'array' => true,
+            ])
+
+            // Resource: Services
+            ->addRule('services', [
+                'type' => Response::MODEL_PROJECT_SERVICE,
+                'description' => 'List of services.',
+                'default' => [],
+                'example' => new \stdClass(),
+                'array' => true,
+            ])
+
+            // Resource: Protocols
+            ->addRule('protocols', [
+                'type' => Response::MODEL_PROJECT_PROTOCOL,
+                'description' => 'List of protocols.',
+                'default' => [],
+                'example' => new \stdClass(),
+                'array' => true,
+            ])
         ;
 
-        $services = Config::getParam('services', []);
-        $auth = Config::getParam('auth', []);
-
-        foreach ($auth as $index => $method) {
+        foreach (Config::getParam('auth', []) as $method) {
             $name = $method['name'] ?? '';
             $key = $method['key'] ?? '';
 
-            $this
-                ->addRule('auth' . ucfirst($key), [
-                    'type' => self::TYPE_BOOLEAN,
-                    'description' => $name . ' auth method status',
-                    'example' => true,
-                    'default' => true,
-                ])
-            ;
+            $this->addRule('auth' . ucfirst($key), [
+                'type' => self::TYPE_BOOLEAN,
+                'description' => $name . ' auth method status',
+                'example' => true,
+                'default' => true,
+            ]);
         }
 
-        foreach ($services as $service) {
+        foreach (Config::getParam('services', []) as $service) {
             if (!$service['optional']) {
                 continue;
             }
@@ -365,30 +398,24 @@ class Project extends Model
             $name = $service['name'] ?? '';
             $key = $service['key'] ?? '';
 
-            $this
-                ->addRule('serviceStatusFor' . ucfirst($key), [
-                    'type' => self::TYPE_BOOLEAN,
-                    'description' => $name . ' service status',
-                    'example' => true,
-                    'default' => true,
-                ])
-            ;
+            $this->addRule('serviceStatusFor' . ucfirst($key), [
+                'type' => self::TYPE_BOOLEAN,
+                'description' => $name . ' service status',
+                'example' => true,
+                'default' => true,
+            ]);
         }
 
-        $apis = Config::getParam('protocols', []);
-
-        foreach ($apis as $api) {
+        foreach (Config::getParam('protocols', []) as $api) {
             $name = $api['name'] ?? '';
             $key = $api['key'] ?? '';
 
-            $this
-                ->addRule('protocolStatusFor' . ucfirst($key), [
-                    'type' => self::TYPE_BOOLEAN,
-                    'description' => $name . ' protocol status',
-                    'example' => true,
-                    'default' => true,
-                ])
-            ;
+            $this->addRule('protocolStatusFor' . ucfirst($key), [
+                'type' => self::TYPE_BOOLEAN,
+                'description' => $name . ' protocol status',
+                'example' => true,
+                'default' => true,
+            ]);
         }
     }
 
@@ -424,6 +451,9 @@ class Project extends Model
         $this->expandApiFields($document);
         $this->expandAuthFields($document);
         $this->expandOAuthProviders($document);
+        $this->expandServices($document);
+        $this->expandProtocols($document);
+        $this->expandAuthMethods($document);
 
         return $document;
     }
@@ -434,16 +464,17 @@ class Project extends Model
             return;
         }
 
-        // SMTP
         $smtp = $document->getAttribute('smtp', []);
+
         $document->setAttribute('smtpEnabled', $smtp['enabled'] ?? false);
         $document->setAttribute('smtpSenderEmail', $smtp['senderEmail'] ?? '');
         $document->setAttribute('smtpSenderName', $smtp['senderName'] ?? '');
-        $document->setAttribute('smtpReplyTo', $smtp['replyTo'] ?? '');
+        $document->setAttribute('smtpReplyToEmail', $smtp['replyToEmail'] ?? $smtp['replyTo'] ?? ''); // Includes backwards compatibility
+        $document->setAttribute('smtpReplyToName', $smtp['replyToName'] ?? '');
         $document->setAttribute('smtpHost', $smtp['host'] ?? '');
         $document->setAttribute('smtpPort', $smtp['port'] ?? '');
         $document->setAttribute('smtpUsername', $smtp['username'] ?? '');
-        $document->setAttribute('smtpPassword', $smtp['password'] ?? '');
+        $document->setAttribute('smtpPassword', ''); // Write-only: never expose the stored value
         $document->setAttribute('smtpSecure', $smtp['secure'] ?? '');
     }
 
@@ -454,12 +485,12 @@ class Project extends Model
         }
 
         $values = $document->getAttribute('services', []);
-        $services = Config::getParam('services', []);
 
-        foreach ($services as $service) {
+        foreach (Config::getParam('services', []) as $service) {
             if (!$service['optional']) {
                 continue;
             }
+
             $key = $service['key'] ?? '';
             $value = $values[$key] ?? true;
             $document->setAttribute('serviceStatusFor' . ucfirst($key), $value);
@@ -473,9 +504,8 @@ class Project extends Model
         }
 
         $values = $document->getAttribute('apis', []);
-        $apis = Config::getParam('protocols', []);
 
-        foreach ($apis as $api) {
+        foreach (Config::getParam('protocols', []) as $api) {
             $key = $api['key'] ?? '';
             $value = $values[$key] ?? true;
             $document->setAttribute('protocolStatusFor' . ucfirst($key), $value);
@@ -490,7 +520,6 @@ class Project extends Model
 
         $authValues = $document->getAttribute('auths', []);
         $passwordPolicy = $authValues['passwordPolicy'] ?? [];
-        $auth = Config::getParam('auth', []);
 
         $document->setAttribute('authLimit', $authValues['limit'] ?? 0);
         $document->setAttribute('authDuration', $authValues['duration'] ?? TOKEN_EXPIRATION_LOGIN_LONG);
@@ -513,7 +542,7 @@ class Project extends Model
         $document->setAttribute('authMembershipsMfa', $authValues['membershipsMfa'] ?? true);
         $document->setAttribute('authInvalidateSessions', $authValues['invalidateSessions'] ?? false);
 
-        foreach ($auth as $method) {
+        foreach (Config::getParam('auth', []) as $method) {
             $key = $method['key'];
             $value = $authValues[$key] ?? true;
             $document->setAttribute('auth' . ucfirst($key), $value);
@@ -532,7 +561,6 @@ class Project extends Model
 
         foreach ($providers as $key => $provider) {
             if (!$provider['enabled']) {
-                // Disabled by Appwrite configuration, exclude from response
                 continue;
             }
 
@@ -546,5 +574,54 @@ class Project extends Model
         }
 
         $document->setAttribute('oAuthProviders', $projectProviders);
+    }
+
+    private function expandServices(Document $document): void
+    {
+        $values = $document->getAttribute('services', []);
+        $services = [];
+
+        foreach (Config::getParam('services', []) as $id => $service) {
+            if (!$service['optional']) {
+                continue;
+            }
+
+            $services[] = new Document([
+                '$id' => $id,
+                'enabled' => $values[$service['key']] ?? true,
+            ]);
+        }
+
+        $document->setAttribute('services', $services);
+    }
+
+    private function expandProtocols(Document $document): void
+    {
+        $values = $document->getAttribute('apis', []);
+        $protocols = [];
+
+        foreach (Config::getParam('protocols', []) as $id => $api) {
+            $protocols[] = new Document([
+                '$id' => $id,
+                'enabled' => $values[$api['key']] ?? true,
+            ]);
+        }
+
+        $document->setAttribute('protocols', $protocols);
+    }
+
+    private function expandAuthMethods(Document $document): void
+    {
+        $values = $document->getAttribute('auths', []);
+        $authMethods = [];
+
+        foreach (Config::getParam('auth', []) as $id => $method) {
+            $authMethods[] = new Document([
+                '$id' => $id,
+                'enabled' => $values[$method['key']] ?? true
+            ]);
+        }
+
+        $document->setAttribute('authMethods', $authMethods);
     }
 }

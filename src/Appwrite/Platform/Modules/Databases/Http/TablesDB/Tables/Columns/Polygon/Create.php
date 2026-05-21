@@ -35,7 +35,7 @@ class Create extends PolygonCreate
             ->desc('Create polygon column')
             ->groups(['api', 'database', 'schema'])
             ->label('event', 'databases.[databaseId].tables.[tableId].columns.[columnId].create')
-            ->label('scope', ['tables.write', 'collections.write'])
+            ->label('scope', ['tables.write', 'collections.write', 'columns.write', 'attributes.write'])
             ->label('resourceType', RESOURCE_TYPE_DATABASES)
             ->label('audits.event', 'column.create')
             ->label('audits.resource', 'database/{request.databaseId}/table/{request.tableId}')
@@ -59,7 +59,7 @@ class Create extends PolygonCreate
             ->param('default', null, new Nullable(new Spatial(Database::VAR_POLYGON)), 'Default value for column when not provided, three-dimensional array where the outer array holds one or more linear rings, [[[longitude, latitude], …], …], the first ring is the exterior boundary, any additional rings are interior holes, and each ring must start and end with the same coordinate pair. Cannot be set when column is required.', true)
             ->inject('response')
             ->inject('dbForProject')
-            ->inject('queueForDatabase')
+            ->inject('publisherForDatabase')
             ->inject('queueForEvents')
             ->inject('authorization')
             ->callback($this->action(...));

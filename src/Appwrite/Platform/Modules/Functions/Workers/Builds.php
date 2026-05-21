@@ -4,17 +4,20 @@ namespace Appwrite\Platform\Modules\Functions\Workers;
 
 use Ahc\Jwt\JWT;
 use Appwrite\Event\Event;
-use Appwrite\Event\Func;
+use Appwrite\Event\Message\Func as FunctionMessage;
 use Appwrite\Event\Message\Usage as UsageMessage;
+use Appwrite\Event\Publisher\Func as FunctionPublisher;
+use Appwrite\Event\Publisher\Screenshot;
 use Appwrite\Event\Publisher\Usage as UsagePublisher;
 use Appwrite\Event\Realtime;
-use Appwrite\Event\Screenshot;
 use Appwrite\Event\Webhook;
+use Appwrite\Extend\Exception as AppwriteException;
 use Appwrite\Filter\BranchDomain as BranchDomainFilter;
 use Appwrite\Usage\Context;
 use Appwrite\Utopia\Response\Model\Deployment;
 use Appwrite\Vcs\Comment;
 use Exception;
+use Executor\Exception\Timeout as ExecutorTimeout;
 use Executor\Executor;
 use Swoole\Coroutine as Co;
 use Utopia\Cache\Cache;
@@ -34,6 +37,7 @@ use Utopia\Detector\Detector\Rendering;
 use Utopia\Logger\Log;
 use Utopia\Platform\Action;
 use Utopia\Queue\Message;
+use Utopia\Span\Span;
 use Utopia\Storage\Device;
 use Utopia\Storage\Device\Local;
 use Utopia\System\System;
@@ -58,9 +62,9 @@ class Builds extends Action
             ->inject('project')
             ->inject('dbForPlatform')
             ->inject('queueForEvents')
-            ->inject('queueForScreenshots')
+            ->inject('publisherForScreenshots')
             ->inject('queueForWebhooks')
-            ->inject('queueForFunctions')
+            ->inject('publisherForFunctions')
             ->inject('queueForRealtime')
             ->inject('usage')
             ->inject('publisherForUsage')
@@ -84,9 +88,9 @@ class Builds extends Action
         Document $project,
         Database $dbForPlatform,
         Event $queueForEvents,
-        Screenshot $queueForScreenshots,
+        Screenshot $publisherForScreenshots,
         Webhook $queueForWebhooks,
-        Func $queueForFunctions,
+        FunctionPublisher $publisherForFunctions,
         Realtime $queueForRealtime,
         Context $usage,
         UsagePublisher $publisherForUsage,
@@ -102,7 +106,7 @@ class Builds extends Action
     ): void {
         Console::log('Build action started');
 
-        $payload = $message->getPayload() ?? [];
+        $payload = $message->getPayload();
 
         if (empty($payload)) {
             throw new \Exception('Missing payload');
@@ -126,9 +130,9 @@ class Builds extends Action
                     $deviceForFunctions,
                     $deviceForSites,
                     $deviceForFiles,
-                    $queueForScreenshots,
+                    $publisherForScreenshots,
                     $queueForWebhooks,
-                    $queueForFunctions,
+                    $publisherForFunctions,
                     $queueForRealtime,
                     $queueForEvents,
                     $usage,
@@ -144,7 +148,8 @@ class Builds extends Action
                     $log,
                     $executor,
                     $plan,
-                    $platform
+                    $platform,
+                    (int) ($payload['timeout'] ?? System::getEnv('_APP_COMPUTE_BUILD_TIMEOUT', 900))
                 );
                 break;
 
@@ -161,9 +166,9 @@ class Builds extends Action
         Device $deviceForFunctions,
         Device $deviceForSites,
         Device $deviceForFiles,
-        Screenshot $queueForScreenshots,
+        Screenshot $publisherForScreenshots,
         Webhook $queueForWebhooks,
-        Func $queueForFunctions,
+        FunctionPublisher $publisherForFunctions,
         Realtime $queueForRealtime,
         Event $queueForEvents,
         Context $usage,
@@ -179,8 +184,15 @@ class Builds extends Action
         Log $log,
         Executor $executor,
         array $plan,
-        array $platform
+        array $platform,
+        int $timeout
     ): void {
+        Span::add('project.id', $project->getId());
+        Span::add('resource.id', $resource->getId());
+        Span::add('resource.type', $resource->getCollection());
+        Span::add('deployment.id', $deployment->getId());
+        Span::add('build.timeout', $timeout);
+
         Console::info('Deployment action started');
 
         $startTime = DateTime::now();
@@ -204,7 +216,7 @@ class Builds extends Action
             throw new \Exception('Resource not found');
         }
 
-        if ($isResourceBlocked($project, $resourceKey === 'functions' ? RESOURCE_TYPE_FUNCTIONS : RESOURCE_TYPE_SITES, $resource->getId())) {
+        if ($isResourceBlocked($project, $resource->getCollection() === 'functions' ? RESOURCE_TYPE_FUNCTIONS : RESOURCE_TYPE_SITES, $resource->getId())) {
             throw new \Exception('Resource is blocked');
         }
 
@@ -221,12 +233,12 @@ class Builds extends Action
 
         $version = $this->getVersion($resource);
         $runtime = $this->getRuntime($resource, $version);
+        Span::add('build.runtime', $resource->getAttribute($resource->getCollection() === 'sites' ? 'buildRuntime' : 'runtime', ''));
+        Span::add('build.version', $version);
 
         $spec = Config::getParam('specifications')[$resource->getAttribute('buildSpecification', APP_COMPUTE_SPECIFICATION_DEFAULT)];
-
-        if ($resource->getCollection() === 'functions' && \is_null($runtime)) {
-            throw new \Exception('Runtime "' . $resource->getAttribute('runtime', '') . '" is not supported');
-        }
+        Span::add('build.cpus', (float) ($spec['cpus'] ?? APP_COMPUTE_CPUS_DEFAULT));
+        Span::add('build.memory', (int) ($spec['memory'] ?? APP_COMPUTE_MEMORY_DEFAULT));
 
         // Realtime preparation
         $event = "{$resource->getCollection()}.[{$resourceKey}].deployments.[deploymentId].update";
@@ -559,9 +571,15 @@ class Builds extends Action
                 ->trigger();
 
             /** Trigger Functions */
-            $queueForFunctions
-                ->from($deploymentUpdate)
-                ->trigger();
+            $publisherForFunctions->enqueue(FunctionMessage::fromEvent(
+                event: $deploymentUpdate->getEvent(),
+                params: $deploymentUpdate->getParams(),
+                project: $deploymentUpdate->getProject(),
+                user: $deploymentUpdate->getUser(),
+                userId: $deploymentUpdate->getUserId(),
+                payload: $deploymentUpdate->getPayload(),
+                platform: $deploymentUpdate->getPlatform(),
+            ));
 
             /** Trigger Realtime Event */
             $queueForRealtime
@@ -592,10 +610,7 @@ class Builds extends Action
 
             $cpus = $spec['cpus'] ?? APP_COMPUTE_CPUS_DEFAULT;
             $memory = max($spec['memory'] ?? APP_COMPUTE_MEMORY_DEFAULT, $minMemory);
-            $timeout = (int) System::getEnv('_APP_COMPUTE_BUILD_TIMEOUT', 900);
-
-            $jwtExpiry = (int) System::getEnv('_APP_COMPUTE_BUILD_TIMEOUT', 900);
-            $jwtObj = new JWT(System::getEnv('_APP_OPENSSL_KEY_V1'), 'HS256', $jwtExpiry, 0);
+            $jwtObj = new JWT(System::getEnv('_APP_OPENSSL_KEY_V1'), 'HS256', $timeout, 0);
 
             $apiKey = $jwtObj->encode([
                 'projectId' => $project->getId(),
@@ -629,7 +644,7 @@ class Builds extends Action
                     $vars = [
                         ...$vars,
                         'APPWRITE_FUNCTION_API_ENDPOINT' => $endpoint,
-                        'APPWRITE_FUNCTION_API_KEY' => API_KEY_DYNAMIC . '_' . $apiKey,
+                        'APPWRITE_FUNCTION_API_KEY' => API_KEY_EPHEMERAL . '_' . $apiKey,
                         'APPWRITE_FUNCTION_ID' => $resource->getId(),
                         'APPWRITE_FUNCTION_NAME' => $resource->getAttribute('name'),
                         'APPWRITE_FUNCTION_DEPLOYMENT' => $deployment->getId(),
@@ -644,7 +659,7 @@ class Builds extends Action
                     $vars = [
                         ...$vars,
                         'APPWRITE_SITE_API_ENDPOINT' => $endpoint,
-                        'APPWRITE_SITE_API_KEY' => API_KEY_DYNAMIC . '_' . $apiKey,
+                        'APPWRITE_SITE_API_KEY' => API_KEY_EPHEMERAL . '_' . $apiKey,
                         'APPWRITE_SITE_ID' => $resource->getId(),
                         'APPWRITE_SITE_NAME' => $resource->getAttribute('name'),
                         'APPWRITE_SITE_DEPLOYMENT' => $deployment->getId(),
@@ -725,6 +740,9 @@ class Builds extends Action
                         );
 
                         Console::log('createRuntime finished');
+                    } catch (ExecutorTimeout $error) {
+                        Console::warning('createRuntime timed out');
+                        $err = new AppwriteException(AppwriteException::BUILD_TIMEOUT, previous: $error);
                     } catch (\Throwable $error) {
                         Console::warning('createRuntime failed');
                         $err = $error;
@@ -830,7 +848,8 @@ class Builds extends Action
 
             Console::log('Runtime creation finished');
 
-            if ($dbForProject->getDocument('deployments', $deploymentId)->getAttribute('status') === 'canceled') {
+            $latestDeployment = $dbForProject->getDocument('deployments', $deploymentId);
+            if ($latestDeployment->getAttribute('status') === 'canceled') {
                 $this->cancelDeployment($deployment->getId(), $dbForProject, $queueForRealtime);
 
                 return;
@@ -1120,10 +1139,10 @@ class Builds extends Action
 
             /** Screenshot site */
             if ($resource->getCollection() === 'sites') {
-                $queueForScreenshots
-                    ->setDeploymentId($deployment->getId())
-                    ->setProject($project)
-                    ->trigger();
+                $publisherForScreenshots->enqueue(new \Appwrite\Event\Message\Screenshot(
+                    project: $project,
+                    deploymentId: $deployment->getId(),
+                ));
 
                 Console::log('Site screenshot queued');
             }
@@ -1151,13 +1170,11 @@ class Builds extends Action
             $message = \str_replace('{APPWRITE_DETECTION_SEPARATOR_START}', '', $message);
             $message = \str_replace('{APPWRITE_DETECTION_SEPARATOR_END}', '', $message);
 
-            // Combine with previous logs if deployment got past build process
-            $previousLogs = '';
-            if (! is_null($deployment->getAttribute('buildSize', null))) {
-                $previousLogs = $deployment->getAttribute('buildLogs', '');
-                if (! empty($previousLogs)) {
-                    $message = $previousLogs . "\n" . $message;
-                }
+            // Append error to whatever build logs were already streamed
+            $deployment = $dbForProject->getDocument('deployments', $deploymentId);
+            $previousLogs = $deployment->getAttribute('buildLogs', '');
+            if (! empty($previousLogs)) {
+                $message = $previousLogs . "\n" . $message;
             }
 
             $endTime = DateTime::now();
@@ -1260,21 +1277,6 @@ class Builds extends Action
      */
     protected function afterBuildSuccess(Realtime $queueForRealtime, Database $dbForProject, Document &$deployment, array $runtime, ?string $adapter): void
     {
-        if (! ($queueForRealtime instanceof Realtime)) {
-            throw new Exception('queueForRealtime must be an instance of Realtime');
-        }
-        if (! ($dbForProject instanceof Database)) {
-            throw new Exception('dbForProject must be an instance of Database');
-        }
-        if (! ($deployment instanceof Document)) {
-            throw new Exception('deployment must be an instance of Document');
-        }
-        if (! is_array($runtime)) {
-            throw new Exception('runtime must be an array');
-        }
-        if (! is_string($adapter) && ! is_null($adapter)) {
-            throw new Exception('adapter must be a string or null');
-        }
     }
 
     /**
@@ -1284,13 +1286,6 @@ class Builds extends Action
         Document $project,
         Document $deployment,
     ): void {
-        if (! ($project instanceof Document)) {
-            throw new Exception('project must be an instance of Document');
-        }
-
-        if (! ($deployment instanceof Document)) {
-            throw new Exception('deployment must be an instance of Document');
-        }
     }
 
     protected function getRuntime(Document $resource, string $version): array
@@ -1314,6 +1309,7 @@ class Builds extends Action
         return match ($resource->getCollection()) {
             'functions' => $resource->getAttribute('version', 'v2'),
             'sites' => 'v5',
+            default => throw new \Exception('Unsupported resource type "' . $resource->getCollection() . '".'),
         };
     }
 
@@ -1446,11 +1442,10 @@ class Builds extends Action
                     ]);
 
                     $protocol = System::getEnv('_APP_OPTIONS_FORCE_HTTPS') == 'disabled' ? 'http' : 'https';
-                    $previewUrl = match ($resource->getCollection()) {
-                        'functions' => '',
-                        'sites' => !$rule->isEmpty() ? ("{$protocol}://" . $rule->getAttribute('domain', '')) : '',
-                        default => throw new \Exception('Invalid resource type')
-                    };
+                    $previewUrl = '';
+                    if ($resource->getCollection() === 'sites' && !$rule->isEmpty()) {
+                        $previewUrl = "{$protocol}://" . $rule->getAttribute('domain', '');
+                    }
 
                     $comment = new Comment($platform);
                     $comment->parseComment($github->getComment($owner, $repositoryName, $commentId));

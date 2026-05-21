@@ -199,7 +199,7 @@ class TeamsServerTest extends Scope
     public function testUpdateTeamPrefs()
     {
         $team = $this->setupTeamWithPrefs();
-        $this->assertIsArray($team);
+        $this->assertNotEmpty($team);
     }
 
     public function testGetTeamPreferences()

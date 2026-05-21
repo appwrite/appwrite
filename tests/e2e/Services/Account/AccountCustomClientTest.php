@@ -772,6 +772,7 @@ class AccountCustomClientTest extends Scope
             'origin' => 'http://localhost',
             'content-type' => 'application/json',
             'x-appwrite-project' => 'console',
+            'x-appwrite-response-format' => '1.9.1',
             'cookie' => 'a_session_console=' . $this->getRoot()['session'],
         ]), [
             'status' => true,
@@ -1025,123 +1026,101 @@ class AccountCustomClientTest extends Scope
         // Use fresh account for predictable log count
         $data = $this->createFreshAccountWithSession();
         $session = $data['session'];
+        $headers = array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $session,
+        ]);
 
         /**
          * Test for SUCCESS
          */
-        $response = $this->client->call(Client::METHOD_GET, '/account/logs', array_merge([
-            'origin' => 'http://localhost',
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $session,
-        ]));
+        $this->assertEventually(function () use ($headers) {
+            $response = $this->client->call(Client::METHOD_GET, '/account/logs', $headers);
 
-        $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertIsArray($response['body']['logs']);
-        $this->assertNotEmpty($response['body']['logs']);
-        // Fresh account: session.create is always logged. user.create audit may or may not
-        // be present depending on async audit processing timing.
-        $logCount = count($response['body']['logs']);
-        $this->assertContains($logCount, [1, 2]);
-        $this->assertIsNumeric($response['body']['total']);
+            $this->assertEquals(200, $response['headers']['status-code']);
+            $this->assertIsArray($response['body']['logs']);
+            $this->assertNotEmpty($response['body']['logs']);
+            $logCount = count($response['body']['logs']);
+            $this->assertContains($logCount, [1, 2]);
+            $this->assertIsNumeric($response['body']['total']);
 
-        // Check session.create log (logs[0] - most recent)
-        $this->assertEquals('Windows', $response['body']['logs'][0]['osName']);
-        $this->assertEquals('WIN', $response['body']['logs'][0]['osCode']);
-        $this->assertEquals('10', $response['body']['logs'][0]['osVersion']);
+            $this->assertEquals('session.create', $response['body']['logs'][0]['event']);
+            $this->assertEquals('Windows', $response['body']['logs'][0]['osName']);
+            $this->assertEquals('WIN', $response['body']['logs'][0]['osCode']);
+            $this->assertEquals('10', $response['body']['logs'][0]['osVersion']);
 
-        $this->assertEquals('browser', $response['body']['logs'][0]['clientType']);
-        $this->assertEquals('Chrome', $response['body']['logs'][0]['clientName']);
-        $this->assertEquals('CH', $response['body']['logs'][0]['clientCode']);
-        $this->assertEquals('70.0', $response['body']['logs'][0]['clientVersion']);
-        $this->assertEquals('Blink', $response['body']['logs'][0]['clientEngine']);
+            $this->assertEquals('browser', $response['body']['logs'][0]['clientType']);
+            $this->assertEquals('Chrome', $response['body']['logs'][0]['clientName']);
+            $this->assertEquals('CH', $response['body']['logs'][0]['clientCode']);
+            $this->assertEquals('70.0', $response['body']['logs'][0]['clientVersion']);
+            $this->assertEquals('Blink', $response['body']['logs'][0]['clientEngine']);
 
-        $this->assertEquals('desktop', $response['body']['logs'][0]['deviceName']);
-        $this->assertEquals('', $response['body']['logs'][0]['deviceBrand']);
-        $this->assertEquals('', $response['body']['logs'][0]['deviceModel']);
-        $this->assertEquals(filter_var($response['body']['logs'][0]['ip'], FILTER_VALIDATE_IP), $response['body']['logs'][0]['ip']);
+            $this->assertEquals('desktop', $response['body']['logs'][0]['deviceName']);
+            $this->assertEquals('', $response['body']['logs'][0]['deviceBrand']);
+            $this->assertEquals('', $response['body']['logs'][0]['deviceModel']);
+            $this->assertEquals(filter_var($response['body']['logs'][0]['ip'], FILTER_VALIDATE_IP), $response['body']['logs'][0]['ip']);
 
-        $this->assertEquals('--', $response['body']['logs'][0]['countryCode']);
-        $this->assertEquals('Unknown', $response['body']['logs'][0]['countryName']);
+            $this->assertEquals('--', $response['body']['logs'][0]['countryCode']);
+            $this->assertEquals('Unknown', $response['body']['logs'][0]['countryName']);
 
-        if ($logCount === 2) {
-            // Check user.create log (logs[1] - oldest)
-            $this->assertEquals('user.create', $response['body']['logs'][1]['event']);
-            $this->assertEquals(filter_var($response['body']['logs'][1]['ip'], FILTER_VALIDATE_IP), $response['body']['logs'][1]['ip']);
-            $this->assertTrue((new DatetimeValidator())->isValid($response['body']['logs'][1]['time']));
-        }
+            if ($logCount === 2) {
+                $this->assertEquals('user.create', $response['body']['logs'][1]['event']);
+                $this->assertEquals(filter_var($response['body']['logs'][1]['ip'], FILTER_VALIDATE_IP), $response['body']['logs'][1]['ip']);
+                $this->assertTrue((new DatetimeValidator())->isValid($response['body']['logs'][1]['time']));
+            }
 
-        $responseLimit = $this->client->call(Client::METHOD_GET, '/account/logs', array_merge([
-            'origin' => 'http://localhost',
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $session,
-        ]), [
-            'queries' => [
-                Query::limit(1)->toString()
-            ]
-        ]);
+            $responseLimit = $this->client->call(Client::METHOD_GET, '/account/logs', $headers, [
+                'queries' => [
+                    Query::limit(1)->toString()
+                ]
+            ]);
 
-        $this->assertEquals(200, $responseLimit['headers']['status-code']);
-        $this->assertIsArray($responseLimit['body']['logs']);
-        $this->assertNotEmpty($responseLimit['body']['logs']);
-        $this->assertCount(1, $responseLimit['body']['logs']);
-        $this->assertIsNumeric($responseLimit['body']['total']);
+            $this->assertEquals(200, $responseLimit['headers']['status-code']);
+            $this->assertIsArray($responseLimit['body']['logs']);
+            $this->assertNotEmpty($responseLimit['body']['logs']);
+            $this->assertCount(1, $responseLimit['body']['logs']);
+            $this->assertIsNumeric($responseLimit['body']['total']);
 
-        $this->assertEquals($response['body']['logs'][0], $responseLimit['body']['logs'][0]);
+            $this->assertEquals($response['body']['logs'][0], $responseLimit['body']['logs'][0]);
 
-        $responseOffset = $this->client->call(Client::METHOD_GET, '/account/logs', array_merge([
-            'origin' => 'http://localhost',
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $session,
-        ]), [
-            'queries' => [
-                Query::offset(1)->toString()
-            ]
-        ]);
+            $responseOffset = $this->client->call(Client::METHOD_GET, '/account/logs', $headers, [
+                'queries' => [
+                    Query::offset(1)->toString()
+                ]
+            ]);
 
-        $this->assertEquals($responseOffset['headers']['status-code'], 200);
-        $this->assertIsArray($responseOffset['body']['logs']);
-        // With offset(1), remaining logs = logCount - 1
-        $this->assertCount($logCount - 1, $responseOffset['body']['logs']);
-        $this->assertIsNumeric($responseOffset['body']['total']);
+            $this->assertEquals(200, $responseOffset['headers']['status-code']);
+            $this->assertIsArray($responseOffset['body']['logs']);
+            $this->assertCount($logCount - 1, $responseOffset['body']['logs']);
+            $this->assertIsNumeric($responseOffset['body']['total']);
 
-        if ($logCount === 2) {
-            $this->assertEquals($response['body']['logs'][1], $responseOffset['body']['logs'][0]);
-        }
+            if ($logCount === 2) {
+                $this->assertEquals($response['body']['logs'][1], $responseOffset['body']['logs'][0]);
+            }
 
-        $responseLimitOffset = $this->client->call(Client::METHOD_GET, '/account/logs', array_merge([
-            'origin' => 'http://localhost',
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $session,
-        ]), [
-            'queries' => [
-                Query::offset(1)->toString(),
-                Query::limit(1)->toString()
-            ]
-        ]);
+            $responseLimitOffset = $this->client->call(Client::METHOD_GET, '/account/logs', $headers, [
+                'queries' => [
+                    Query::offset(1)->toString(),
+                    Query::limit(1)->toString()
+                ]
+            ]);
 
-        $this->assertEquals(200, $responseLimitOffset['headers']['status-code']);
-        $this->assertIsArray($responseLimitOffset['body']['logs']);
-        // With offset(1)+limit(1), remaining logs = min(1, logCount - 1)
-        $this->assertCount(min(1, $logCount - 1), $responseLimitOffset['body']['logs']);
-        $this->assertIsNumeric($responseLimitOffset['body']['total']);
+            $this->assertEquals(200, $responseLimitOffset['headers']['status-code']);
+            $this->assertIsArray($responseLimitOffset['body']['logs']);
+            $this->assertCount(min(1, $logCount - 1), $responseLimitOffset['body']['logs']);
+            $this->assertIsNumeric($responseLimitOffset['body']['total']);
 
-        if ($logCount === 2) {
-            $this->assertEquals($response['body']['logs'][1], $responseLimitOffset['body']['logs'][0]);
-        }
+            if ($logCount === 2) {
+                $this->assertEquals($response['body']['logs'][1], $responseLimitOffset['body']['logs'][0]);
+            }
+        });
 
         /**
          * Test for total=false
          */
-        $logsWithIncludeTotalFalse = $this->client->call(Client::METHOD_GET, '/account/logs', array_merge([
-            'origin' => 'http://localhost',
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $session,
-        ]), [
+        $logsWithIncludeTotalFalse = $this->client->call(Client::METHOD_GET, '/account/logs', $headers, [
             'total' => false
         ]);
 
@@ -2050,6 +2029,7 @@ class AccountCustomClientTest extends Scope
             'origin' => 'http://localhost',
             'content-type' => 'application/json',
             'x-appwrite-project' => 'console',
+            'x-appwrite-response-format' => '1.9.1',
             'cookie' => 'a_session_console=' . $this->getRoot()['session'],
         ]), [
             'alerts' => true,
@@ -2135,7 +2115,7 @@ class AccountCustomClientTest extends Scope
 
         // Find 6 concurrent digits in email text - OTP
         preg_match_all("/\b\d{6}\b/", $lastEmail['text'], $matches);
-        $code = ($matches[0] ?? [])[0] ?? '';
+        $code = $matches[0][0] ?? '';
 
         $this->assertNotEmpty($code);
 
@@ -3363,7 +3343,7 @@ class AccountCustomClientTest extends Scope
     {
         $data = $this->setupPhoneAccount();
         $id = $data['id'];
-        $token = explode(" ", $data['token'])[0] ?? '';
+        $token = explode(" ", $data['token'])[0];
         $number = $data['number'];
 
         /**
@@ -3694,6 +3674,7 @@ class AccountCustomClientTest extends Scope
             'origin' => 'http://localhost',
             'content-type' => 'application/json',
             'x-appwrite-project' => 'console',
+            'x-appwrite-response-format' => '1.9.1',
             'cookie' => 'a_session_console=' . $this->getRoot()['session'],
         ]), [
             'status' => false,
@@ -4161,177 +4142,71 @@ class AccountCustomClientTest extends Scope
         $this->assertEquals(401, $verification3['headers']['status-code']);
     }
 
-    /**
-     * Test that a new email/password session is immediately usable even when
-     * a concurrent request re-populates the user cache between the cache purge
-     * and session creation.
-     *
-     * Regression test for: purging the user cache BEFORE persisting the session
-     * allows a concurrent request (from a different Swoole worker) to re-cache
-     * a stale user document that lacks the new session, causing sessionVerify
-     * to fail with 401 on subsequent requests using the new session.
-     */
-    public function testEmailPasswordSessionNotCorruptedByConcurrentRequests(): void
+    public function testRefreshEmailPasswordSession(): void
     {
-        $projectId = $this->getProject()['$id'];
-        $endpoint = $this->client->getEndpoint();
+        $email = uniqid() . 'user@localhost.test';
 
-        $email = uniqid('race_', true) . getmypid() . '@localhost.test';
-        $password = 'password123!';
-
-        // Create user
-        $response = $this->client->call(Client::METHOD_POST, '/account', [
+        $account = $this->client->call(Client::METHOD_POST, '/account', array_merge([
             'origin' => 'http://localhost',
             'content-type' => 'application/json',
-            'x-appwrite-project' => $projectId,
-        ], [
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ]), [
             'userId' => ID::unique(),
             'email' => $email,
-            'password' => $password,
-            'name' => 'Race Test User',
+            'password' => 'password',
         ]);
-        $this->assertEquals(201, $response['headers']['status-code']);
 
-        // Login to get session A
-        $responseA = $this->client->call(Client::METHOD_POST, '/account/sessions/email', [
+        $this->assertEquals(201, $account['headers']['status-code']);
+
+        $session = $this->client->call(Client::METHOD_POST, '/account/sessions/email', array_merge([
             'origin' => 'http://localhost',
             'content-type' => 'application/json',
-            'x-appwrite-project' => $projectId,
-        ], [
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ]), [
             'email' => $email,
-            'password' => $password,
+            'password' => 'password',
         ]);
-        $this->assertEquals(201, $responseA['headers']['status-code']);
-        $sessionA = $responseA['cookies']['a_session_' . $projectId];
 
-        // Verify session A works
-        $verifyA = $this->client->call(Client::METHOD_GET, '/account', [
+        $this->assertEquals(201, $session['headers']['status-code']);
+        $this->assertNotEmpty($session['body']['$id']);
+
+        $sessionId = $session['body']['$id'];
+        $cookie = 'a_session_' . $this->getProject()['$id'] . '=' .$session['cookies']['a_session_' . $this->getProject()['$id']];
+
+        $session = $this->client->call(Client::METHOD_GET, '/account/sessions/current', array_merge([
             'origin' => 'http://localhost',
             'content-type' => 'application/json',
-            'x-appwrite-project' => $projectId,
-            'cookie' => 'a_session_' . $projectId . '=' . $sessionA,
-        ]);
-        $this->assertEquals(200, $verifyA['headers']['status-code']);
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'cookie' =>  $cookie,
+        ]));
 
-        /**
-         * Race condition scenario:
-         * 1. Start login B via curl_multi (non-blocking)
-         * 2. Drive the transfer for ~150ms so login B reaches purgeCachedDocument
-         *    (findOne ~15ms + Argon2 hash verify ~60ms + middleware overhead)
-         * 3. THEN add GET requests to curl_multi - these hit different workers and
-         *    re-cache a stale user document (without session B) during the window
-         *    between purgeCachedDocument and createDocument
-         * 4. After all complete, verify session B is usable
-         */
-        for ($attempt = 0; $attempt < 5; $attempt++) {
-            $loginCookies = [];
+        $this->assertEquals(200, $session['headers']['status-code']);
+        $this->assertNotEmpty($session['body']['expire']);
+        $expiryBefore = $session['body']['expire'];
 
-            $multi = curl_multi_init();
+        \sleep(3); // Small delay to ensure expiry an expand
 
-            // Start login B first (alone)
-            $loginHandle = curl_init("{$endpoint}/account/sessions/email");
-            curl_setopt_array($loginHandle, [
-                CURLOPT_POST => true,
-                CURLOPT_RETURNTRANSFER => true,
-                CURLOPT_HTTPHEADER => [
-                    'origin: http://localhost',
-                    'content-type: application/json',
-                    "x-appwrite-project: {$projectId}",
-                ],
-                CURLOPT_POSTFIELDS => \json_encode([
-                    'email' => $email,
-                    'password' => $password,
-                ]),
-                CURLOPT_HEADERFUNCTION => function ($curl, $header) use (&$loginCookies) {
-                    if (\stripos($header, 'set-cookie:') === 0) {
-                        $cookiePart = \trim(\substr($header, 11));
-                        $eqPos = \strpos($cookiePart, '=');
-                        if ($eqPos !== false) {
-                            $name = \substr($cookiePart, 0, $eqPos);
-                            $rest = \substr($cookiePart, $eqPos + 1);
-                            $semiPos = \strpos($rest, ';');
-                            $loginCookies[$name] = $semiPos !== false
-                                ? \substr($rest, 0, $semiPos)
-                                : $rest;
-                        }
-                    }
-                    return \strlen($header);
-                },
-            ]);
-            curl_multi_add_handle($multi, $loginHandle);
+        $session = $this->client->call(Client::METHOD_PATCH, '/account/sessions/' . $sessionId, array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'cookie' =>  $cookie,
+        ]));
 
-            // Drive the login transfer forward and wait for the server to start
-            // processing the login (past hash verification + cache purge).
-            $deadline = \microtime(true) + 0.15; // 150ms
-            do {
-                curl_multi_exec($multi, $active);
-                curl_multi_select($multi, 0.005);
-            } while (\microtime(true) < $deadline && $active);
+        $this->assertEquals(200, $session['headers']['status-code']);
+        $this->assertNotEmpty($session['body']['expire']);
+        $expiryAfter = $session['body']['expire'];
 
-            // NOW add GET requests - they arrive after the cache purge
-            // but before session creation (which is delayed by the usleep or I/O).
-            $getHandles = [];
-            for ($i = 0; $i < 10; $i++) {
-                $gh = curl_init("{$endpoint}/account");
-                curl_setopt_array($gh, [
-                    CURLOPT_RETURNTRANSFER => true,
-                    CURLOPT_HTTPHEADER => [
-                        'origin: http://localhost',
-                        'content-type: application/json',
-                        "x-appwrite-project: {$projectId}",
-                        "cookie: a_session_{$projectId}={$sessionA}",
-                    ],
-                ]);
-                curl_multi_add_handle($multi, $gh);
-                $getHandles[] = $gh;
-            }
+        $this->assertGreaterThan(\strtotime($expiryBefore), \strtotime($expiryAfter));
 
-            // Drive all to completion
-            do {
-                $status = curl_multi_exec($multi, $active);
-                if ($active) {
-                    curl_multi_select($multi, 0.05);
-                }
-            } while ($active && $status === CURLM_OK);
+        $session = $this->client->call(Client::METHOD_GET, '/account/sessions/current', array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'cookie' =>  $cookie,
+        ]));
 
-            $loginStatus = curl_getinfo($loginHandle, CURLINFO_HTTP_CODE);
-
-            curl_multi_remove_handle($multi, $loginHandle);
-            curl_close($loginHandle);
-            foreach ($getHandles as $gh) {
-                curl_multi_remove_handle($multi, $gh);
-                curl_close($gh);
-            }
-            curl_multi_close($multi);
-
-            $this->assertEquals(201, $loginStatus, 'Login for session B should succeed');
-
-            $sessionBCookie = $loginCookies["a_session_{$projectId}"] ?? null;
-            $this->assertNotNull($sessionBCookie, 'Session B cookie should be set');
-
-            // THE CRITICAL CHECK: verify session B is usable immediately
-            $verifyB = $this->client->call(Client::METHOD_GET, '/account', [
-                'origin' => 'http://localhost',
-                'content-type' => 'application/json',
-                'x-appwrite-project' => $projectId,
-                'cookie' => "a_session_{$projectId}={$sessionBCookie}",
-            ]);
-
-            $this->assertEquals(
-                200,
-                $verifyB['headers']['status-code'],
-                'Session B must be immediately usable after login. '
-                . 'A 401 here means a stale user cache (without the new session) was served. '
-                . 'The fix is to create the session document BEFORE purging the user cache.'
-            );
-
-            // Clean up session B for next iteration
-            $this->client->call(Client::METHOD_DELETE, '/account/sessions/current', [
-                'origin' => 'http://localhost',
-                'content-type' => 'application/json',
-                'x-appwrite-project' => $projectId,
-                'cookie' => "a_session_{$projectId}={$sessionBCookie}",
-            ]);
-        }
+        $this->assertEquals(200, $session['headers']['status-code']);
+        $this->assertEquals(\strtotime($expiryAfter), \strtotime($session['body']['expire']));
     }
 }

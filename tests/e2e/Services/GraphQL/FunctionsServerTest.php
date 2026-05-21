@@ -55,10 +55,10 @@ class FunctionsServerTest extends Scope
 
         $query = '
             mutation createVariables($functionId: String!) {
-                var1: functionsCreateVariable(functionId: $functionId, key: "name", value: "John Doe") {
+                var1: functionsCreateVariable(functionId: $functionId, variableId: "unique()", key: "name", value: "John Doe") {
                     _id
                 }
-                var2: functionsCreateVariable(functionId: $functionId, key: "age", value: "42") {
+                var2: functionsCreateVariable(functionId: $functionId, variableId: "unique()", key: "age", value: "42") {
                     _id
                 }
             }
@@ -186,7 +186,7 @@ class FunctionsServerTest extends Scope
     public function testCreateFunction(): void
     {
         $function = $this->setupFunction();
-        $this->assertIsArray($function);
+        $this->assertNotEmpty($function);
     }
 
     /**
@@ -196,7 +196,7 @@ class FunctionsServerTest extends Scope
     public function testCreateDeployment(): void
     {
         $deployment = $this->setupDeployment();
-        $this->assertIsArray($deployment);
+        $this->assertNotEmpty($deployment);
     }
 
     /**
@@ -206,7 +206,7 @@ class FunctionsServerTest extends Scope
     public function testCreateExecution(): void
     {
         $execution = $this->setupExecution();
-        $this->assertIsArray($execution);
+        $this->assertNotEmpty($execution);
     }
 
     /**
