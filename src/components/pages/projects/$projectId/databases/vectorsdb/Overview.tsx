@@ -1339,7 +1339,7 @@ export function Overview({
                 <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
                   <div className="px-6 py-4">
                     <h3 className="text-[15px] font-semibold text-foreground">
-                      Database Analytics
+                      Database analytics
                     </h3>
                     <p className="text-[13px] text-muted-foreground mt-2">
                       View detailed metrics about your database performance
@@ -1357,7 +1357,7 @@ export function Overview({
                   <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
                     <div className="px-6 py-4">
                       <h3 className="text-[15px] font-semibold text-foreground">
-                        Query Performance
+                        Query performance
                       </h3>
                     </div>
                     <div className="border-t border-border" />
@@ -1369,7 +1369,7 @@ export function Overview({
                   <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
                     <div className="px-6 py-4">
                       <h3 className="text-[15px] font-semibold text-foreground">
-                        Usage Patterns
+                        Usage patterns
                       </h3>
                     </div>
                     <div className="border-t border-border" />
@@ -1629,7 +1629,7 @@ export function Overview({
               <div className="rounded-xl border border-destructive/50 bg-card/50 overflow-hidden">
                 <div className="px-6 py-4">
                   <h3 className="text-[15px] font-semibold text-foreground">
-                    Delete Database
+                    Delete database
                   </h3>
                 </div>
                 <div className="border-t border-destructive/20" />

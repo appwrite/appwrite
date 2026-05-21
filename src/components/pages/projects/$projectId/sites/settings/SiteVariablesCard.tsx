@@ -41,7 +41,7 @@ export function SiteVariablesCard({
 
   return (
     <VariablesSettingsCard
-      title="Environment Variables"
+      title="Environment variables"
       description="Configure environment variables for your site deployments. Site-specific variables override global project variables. Set the environment variables or secret keys that will be passed to this site during deployment."
       variables={siteVariables}
       total={total}

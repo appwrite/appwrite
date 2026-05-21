@@ -164,7 +164,7 @@ export function PaymentMethods({
       <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
         <div className="px-6 py-4">
           <h3 className="text-[15px] font-semibold text-foreground">
-            Payment Methods
+            Payment methods
           </h3>
         </div>
         <div className="border-t border-border px-6 py-12 text-center">
@@ -181,7 +181,7 @@ export function PaymentMethods({
       <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
         <div className="px-6 py-4 flex items-center justify-between gap-4">
           <h3 className="text-[15px] font-semibold text-foreground">
-            Payment Methods
+            Payment methods
           </h3>
           <Button
             variant="outline"
@@ -224,7 +224,7 @@ export function PaymentMethods({
       {/* Header */}
       <div className="px-6 py-4 flex items-center justify-between gap-4">
         <h3 className="text-[15px] font-semibold text-foreground">
-          Payment Methods
+          Payment methods
         </h3>
         {!primaryMethod && (
           <Button

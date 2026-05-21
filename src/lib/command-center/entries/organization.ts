@@ -4,6 +4,7 @@
  * To add an org-level destination, append an entry below.
  */
 
+import { SOC2_SETTINGS_KEYWORDS } from '@/lib/settings-search/org-settings-cards'
 import {
   AlertOctagon,
   Building2,
@@ -100,7 +101,15 @@ const ORG_NAV: CommandEntry[] = [
     description: 'DPA, BAA, SOC 2, HIPAA, GDPR',
     icon: ShieldCheck,
     shortcut: 'G C',
-    keywords: ['compliance', 'dpa', 'baa', 'soc2', 'hipaa', 'gdpr', 'legal'],
+    keywords: [
+      'compliance',
+      'dpa',
+      'baa',
+      'hipaa',
+      'gdpr',
+      'legal',
+      ...SOC2_SETTINGS_KEYWORDS,
+    ],
     available: (ctx) => canShowOrgComplianceNav(ctx.access, ctx.features),
     to: (ctx) => `/organizations/${ctx.orgId}/settings/compliance`,
   },

@@ -290,11 +290,11 @@ export function View({
             </div>
           </div>
 
-          {/* Delete Topic */}
+          {/* Delete topic */}
           <div className="rounded-xl border border-destructive/50 bg-card/50 overflow-hidden">
             <div className="px-6 py-4">
               <h3 className="text-[15px] font-semibold text-foreground">
-                Delete Topic
+                Delete topic
               </h3>
             </div>
             <div className="border-t border-destructive/20" />
@@ -354,7 +354,7 @@ export function View({
         <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
           <DialogContent className="sm:max-w-md p-0">
             <DialogHeader className="px-6 pt-6 text-left">
-              <DialogTitle>Delete Topic</DialogTitle>
+              <DialogTitle>Delete topic</DialogTitle>
               <DialogDescription className="text-[13px] mt-2">
                 Are you sure you want to delete this topic? This action cannot
                 be undone.

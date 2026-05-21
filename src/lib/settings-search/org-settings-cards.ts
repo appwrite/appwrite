@@ -1,5 +1,44 @@
 import type { SettingsCardIndexEntry } from '@/lib/settings-search'
 
+/** Shared keywords for SOC 2 / SOC II compliance search (settings sidebar + cards). */
+export const SOC2_SETTINGS_KEYWORDS: string[] = [
+  'soc',
+  'soc2',
+  'soc-2',
+  'soc 2',
+  'soc ii',
+  'soc-ii',
+  'soc2 type ii',
+  'soc 2 type ii',
+  'soc-2 type ii',
+  'soc2 type 2',
+  'soc 2 type 2',
+  'soc-2 type 2',
+  'type ii',
+  'type 2',
+  'type-ii',
+  'type-2',
+  'service organization control',
+  'service organisation control',
+  'trust services',
+  'trust services criteria',
+  'aicpa',
+  'audit',
+  'audit report',
+  'security audit',
+  'compliance report',
+  'security report',
+  'certified',
+  'certification',
+  'enterprise',
+  'security',
+  'security controls',
+  'auditing standard',
+  'vendor compliance',
+  'regulated',
+  'contact sales',
+]
+
 export const ORG_SETTINGS_CARD_INDEX: SettingsCardIndexEntry[] = [
   {
     sectionId: 'overview',
@@ -8,12 +47,12 @@ export const ORG_SETTINGS_CARD_INDEX: SettingsCardIndexEntry[] = [
   },
   {
     sectionId: 'overview',
-    title: 'Organization Name',
+    title: 'Organization name',
     keywords: ['rename', 'display name'],
   },
   {
     sectionId: 'overview',
-    title: 'Delete Organization',
+    title: 'Delete organization',
     keywords: ['delete', 'remove', 'destroy', 'danger'],
   },
   {
@@ -36,12 +75,12 @@ export const ORG_SETTINGS_CARD_INDEX: SettingsCardIndexEntry[] = [
   },
   {
     sectionId: 'billing',
-    title: 'Payment History',
+    title: 'Payment history',
     keywords: ['invoice', 'invoices', 'receipt', 'payment history', 'paid'],
   },
   {
     sectionId: 'billing',
-    title: 'Payment Methods',
+    title: 'Payment methods',
     keywords: [
       'card',
       'credit card',
@@ -53,7 +92,7 @@ export const ORG_SETTINGS_CARD_INDEX: SettingsCardIndexEntry[] = [
   },
   {
     sectionId: 'billing',
-    title: 'Billing Address',
+    title: 'Billing address',
     keywords: ['address', 'country', 'city', 'postal', 'zip', 'street'],
   },
   {
@@ -63,48 +102,48 @@ export const ORG_SETTINGS_CARD_INDEX: SettingsCardIndexEntry[] = [
   },
   {
     sectionId: 'billing',
-    title: 'Budget Cap',
+    title: 'Budget cap',
     keywords: ['budget', 'spending limit', 'cap', 'overage', 'usage limit'],
   },
   {
     sectionId: 'billing',
-    title: 'Billing Alerts',
+    title: 'Billing alerts',
     keywords: ['alerts', 'threshold', 'notification', 'usage', 'email alert'],
   },
   {
     sectionId: 'billing',
-    title: 'Available Credits',
+    title: 'Available credits',
     keywords: ['credits', 'balance', 'coupon', 'promo', 'prepaid'],
   },
   {
     sectionId: 'billing',
-    title: 'Payment Failed',
+    title: 'Payment failed',
     keywords: ['failed', 'retry', 'outstanding', 'read-only'],
   },
   {
     sectionId: 'billing',
-    title: 'Payment Method Failed',
+    title: 'Payment method failed',
     keywords: ['expired', 'declined', 'failed card'],
   },
   {
     sectionId: 'billing',
-    title: 'Plan Downgrade Scheduled',
+    title: 'Plan downgrade scheduled',
     keywords: ['downgrade', 'scheduled', 'end of period'],
   },
   {
     sectionId: 'compliance',
-    title: 'Data Processing Agreement (DPA)',
+    title: 'Data processing agreement (DPA)',
     keywords: ['dpa', 'gdpr', 'legal', 'data processing'],
   },
   {
     sectionId: 'compliance',
-    title: 'Business Associate Agreement (BAA)',
+    title: 'Business associate agreement (BAA)',
     keywords: ['baa', 'hipaa', 'phi', 'healthcare'],
   },
   {
     sectionId: 'compliance',
-    title: 'SOC 2 Type II Report',
-    keywords: ['soc2', 'audit', 'enterprise', 'security'],
+    title: 'SOC 2 type II report',
+    keywords: [...SOC2_SETTINGS_KEYWORDS],
   },
   {
     sectionId: 'api-keys',

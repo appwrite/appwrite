@@ -217,7 +217,7 @@ export function View({ initialData }: ViewProps = {}) {
   return (
     <div className="flex flex-col">
       <ServiceHeader
-        title="API Keys"
+        title="API keys"
         searchPlaceholder="Search API keys..."
         searchValue={searchValue}
         onSearchChange={handleSearchChange}

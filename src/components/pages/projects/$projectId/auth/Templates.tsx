@@ -412,7 +412,7 @@ export function Templates({ projectId }: TemplatesProps) {
           <div className="overflow-hidden rounded-lg border border-border bg-card">
             <div className="border-b border-border px-4 py-3">
               <h2 className="text-sm font-semibold text-foreground">
-                Email Templates
+                Email templates
               </h2>
               <p className="mt-1 text-xs text-muted-foreground">
                 {EMAIL_TEMPLATE_TYPES.length} templates

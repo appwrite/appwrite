@@ -132,7 +132,7 @@ export function BillingTab() {
         items.push({
           id: 'alert-failed-invoice',
           search: {
-            title: 'Payment Failed',
+            title: 'Payment failed',
             keywords: [
               'failed',
               'retry',
@@ -147,7 +147,7 @@ export function BillingTab() {
               <AlertTitle className="text-[13px] font-medium text-red-600 dark:text-red-400">
                 {orgBillingReadonly
                   ? 'Payment failed - organization in read-only mode'
-                  : 'Payment Failed'}
+                  : 'Payment failed'}
               </AlertTitle>
               <AlertDescription className="mt-2 text-[12px] text-red-600/80 dark:text-red-400/80">
                 {orgBillingReadonly && (
@@ -179,14 +179,14 @@ export function BillingTab() {
         items.push({
           id: 'alert-expired-payment-method',
           search: {
-            title: 'Payment Method Failed',
+            title: 'Payment method failed',
             keywords: ['expired', 'declined', 'failed card', 'backup'],
           },
           node: (
             <Alert variant="default" className="border-red-500/30 bg-red-500/5">
               <CreditCard className="h-4 w-4 text-red-500" />
               <AlertTitle className="text-[13px] font-medium text-red-600 dark:text-red-400">
-                Payment Method Failed
+                Payment method failed
               </AlertTitle>
               <AlertDescription className="mt-2 text-[12px] text-red-600/80 dark:text-red-400/80">
                 Your default payment method has failed and you don't have a
@@ -202,13 +202,13 @@ export function BillingTab() {
         items.push({
           id: 'alert-plan-downgrade',
           search: {
-            title: 'Plan Downgrade Scheduled',
+            title: 'Plan downgrade scheduled',
             keywords: ['downgrade', 'scheduled', 'end of period', 'plan'],
           },
           node: (
             <Alert>
               <AlertTriangle className="h-4 w-4" />
-              <AlertTitle>Plan Downgrade Scheduled</AlertTitle>
+              <AlertTitle>Plan downgrade scheduled</AlertTitle>
               <AlertDescription className="mt-2">
                 Your plan will change at the end of your current billing period.
                 You'll keep access to your current plan features until then.
@@ -244,7 +244,7 @@ export function BillingTab() {
       {
         id: 'payment-history',
         search: {
-          title: 'Payment History',
+          title: 'Payment history',
           keywords: ['invoice', 'invoices', 'receipt', 'payment history', 'paid'],
         },
         node: <PaymentHistory />,
@@ -252,7 +252,7 @@ export function BillingTab() {
       {
         id: 'payment-methods',
         search: {
-          title: 'Payment Methods',
+          title: 'Payment methods',
           keywords: [
             'card',
             'credit card',
@@ -273,7 +273,7 @@ export function BillingTab() {
       {
         id: 'billing-address',
         search: {
-          title: 'Billing Address',
+          title: 'Billing address',
           keywords: ['address', 'country', 'city', 'postal', 'zip', 'street'],
         },
         node: <BillingAddressSection orgId={orgId} />,
@@ -289,7 +289,7 @@ export function BillingTab() {
       {
         id: 'budget-cap',
         search: {
-          title: 'Budget Cap',
+          title: 'Budget cap',
           keywords: ['budget', 'spending limit', 'cap', 'overage', 'usage limit'],
         },
         node: <BudgetCapSection orgId={orgId} />,
@@ -297,7 +297,7 @@ export function BillingTab() {
       {
         id: 'billing-alerts',
         search: {
-          title: 'Billing Alerts',
+          title: 'Billing alerts',
           keywords: ['alerts', 'threshold', 'notification', 'usage', 'email'],
         },
         node: <BillingAlertsSection orgId={orgId} />,
@@ -305,7 +305,7 @@ export function BillingTab() {
       {
         id: 'available-credits',
         search: {
-          title: 'Available Credits',
+          title: 'Available credits',
           keywords: ['credits', 'balance', 'coupon', 'promo', 'prepaid', 'add credits'],
         },
         node: (

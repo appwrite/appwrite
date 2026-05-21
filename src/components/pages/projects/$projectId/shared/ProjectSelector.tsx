@@ -559,11 +559,11 @@ export function ProjectSelector({
             overlayClassName="z-[131]"
             showCloseButton={false}
           >
-            <DialogTitle className="sr-only">Select Project</DialogTitle>
+            <DialogTitle className="sr-only">Select project</DialogTitle>
             {/* Header */}
             <div className="flex items-center justify-between border-b border-border px-4 py-3">
               <h2 className="text-[15px] font-semibold text-foreground">
-                Select Project
+                Select project
               </h2>
               <button
                 onClick={() => setOpen(false)}

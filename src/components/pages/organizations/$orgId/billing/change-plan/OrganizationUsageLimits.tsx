@@ -78,7 +78,7 @@ export const OrganizationUsageLimits = forwardRef<
     <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
       <div className="px-6 py-4">
         <h3 className="text-[15px] font-semibold text-foreground">
-          Select Projects to Keep
+          Select projects to keep
         </h3>
         <p className="text-[13px] text-muted-foreground mt-2">
           You have {projects.length} projects, but the selected plan allows only{' '}

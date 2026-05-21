@@ -170,7 +170,10 @@ import {
   SettingsCardsList,
   type SettingsCardItem,
 } from '@/components/global/shared/settings-search/SettingsCardsList'
-import { ORG_SETTINGS_CARD_INDEX } from '@/lib/settings-search/org-settings-cards'
+import {
+  ORG_SETTINGS_CARD_INDEX,
+  SOC2_SETTINGS_KEYWORDS,
+} from '@/lib/settings-search/org-settings-cards'
 import { useDebugMode } from '@/components/global/providers/DebugMode'
 import { useDebugOverrides } from '@/lib/debug-overrides'
 import {
@@ -471,9 +474,9 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                 'compliance',
                 'dpa',
                 'baa',
-                'soc2',
                 'hipaa',
                 'gdpr',
+                ...SOC2_SETTINGS_KEYWORDS,
               ],
             },
           ]
@@ -3096,14 +3099,14 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                             {
                               id: 'org-name',
                               search: {
-                                title: 'Organization Name',
+                                title: 'Organization name',
                                 keywords: ['rename', 'display name'],
                               },
                               node: (
                                 <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
                                   <div className="px-6 py-4">
                                     <h3 className="text-[15px] font-semibold text-foreground">
-                                      Organization Name
+                                      Organization name
                                     </h3>
                                   </div>
                                   <div className="border-t border-border" />
@@ -3151,14 +3154,14 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                             {
                               id: 'delete-org',
                               search: {
-                                title: 'Delete Organization',
+                                title: 'Delete organization',
                                 keywords: ['delete', 'remove', 'destroy', 'danger'],
                               },
                               node: (
                                 <div className="rounded-xl border border-destructive/50 bg-card/50 overflow-hidden">
                                   <div className="px-6 py-4">
                                     <h3 className="text-[15px] font-semibold text-foreground">
-                                      Delete Organization
+                                      Delete organization
                                     </h3>
                                   </div>
                                   <div className="border-t border-destructive/20" />
@@ -3249,7 +3252,7 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                                       <DialogContent className="sm:max-w-md p-0">
                                         <DialogHeader className="px-6 pt-6 text-left">
                                           <DialogTitle>
-                                            Delete Organization
+                                            Delete organization
                                           </DialogTitle>
                                           <DialogDescription className="text-[13px] mt-2">
                                             Are you sure you want to delete{' '}

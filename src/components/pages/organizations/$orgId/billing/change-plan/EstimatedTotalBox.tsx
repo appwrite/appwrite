@@ -232,7 +232,7 @@ export function EstimatedTotalBox({
           <div className="pt-4 border-t border-border space-y-3">
             <div className="flex items-center justify-between">
               <Label htmlFor="budget-cap" className="text-[13px] font-medium">
-                Budget Cap
+                Budget cap
               </Label>
               <Switch
                 id="budget-cap"

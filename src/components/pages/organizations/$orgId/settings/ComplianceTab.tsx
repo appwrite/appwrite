@@ -4,6 +4,7 @@ import {
   SettingsCardsList,
   type SettingsCardItem,
 } from '@/components/global/shared/settings-search/SettingsCardsList'
+import { SOC2_SETTINGS_KEYWORDS } from '@/lib/settings-search/org-settings-cards'
 
 const COMPANY_NAME = import.meta.env.VITE_COMPANY_NAME || 'Appwrite'
 const CONTACT_SALES_URL =
@@ -16,14 +17,14 @@ export function ComplianceTab() {
     {
       id: 'dpa',
       search: {
-        title: 'Data Processing Agreement (DPA)',
+        title: 'Data processing agreement (DPA)',
         keywords: ['dpa', 'gdpr', 'legal', 'data processing'],
       },
       node: (
         <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
           <div className="px-6 py-4">
             <h3 className="text-[15px] font-semibold text-foreground">
-              Data Processing Agreement (DPA)
+              Data processing agreement (DPA)
             </h3>
           </div>
           <div className="border-t border-border" />
@@ -62,14 +63,14 @@ export function ComplianceTab() {
     {
       id: 'baa',
       search: {
-        title: 'Business Associate Agreement (BAA)',
+        title: 'Business associate agreement (BAA)',
         keywords: ['baa', 'hipaa', 'phi', 'healthcare'],
       },
       node: (
         <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
           <div className="px-6 py-4">
             <h3 className="text-[15px] font-semibold text-foreground">
-              Business Associate Agreement (BAA)
+              Business associate agreement (BAA)
             </h3>
           </div>
           <div className="border-t border-border" />
@@ -100,7 +101,7 @@ export function ComplianceTab() {
                 window.open(CONTACT_SALES_URL, '_blank', 'noopener,noreferrer')
               }}
             >
-              Contact Sales
+              Contact sales
             </Button>
           </div>
         </div>
@@ -109,15 +110,17 @@ export function ComplianceTab() {
     {
       id: 'soc2',
       search: {
-        title: 'SOC 2 Type II Report',
-        keywords: ['soc2', 'audit', 'enterprise', 'security'],
+        title: 'SOC 2 type II report',
+        description:
+          'SOC 2 Type II auditing standard for security, availability, and confidentiality. Enterprise plans.',
+        keywords: [...SOC2_SETTINGS_KEYWORDS],
       },
       node: (
         <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
           <div className="px-6 py-4">
             <div className="flex items-center gap-2">
               <h3 className="text-[15px] font-semibold text-foreground">
-                SOC 2 Type II Report
+                SOC 2 type II report
               </h3>
               <span className="rounded-full bg-muted px-2 py-0.5 text-[10px] font-medium text-muted-foreground">
                 Enterprise
@@ -153,7 +156,7 @@ export function ComplianceTab() {
                 window.open(CONTACT_SALES_URL, '_blank', 'noopener,noreferrer')
               }}
             >
-              Contact Sales
+              Contact sales
             </Button>
           </div>
         </div>

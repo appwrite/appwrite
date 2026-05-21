@@ -764,7 +764,7 @@ export function View({ projectId, initialData }: ViewProps) {
         <div className="mt-6">
           <div className="mb-4 flex items-center justify-between">
             <h2 className="text-[15px] font-semibold text-foreground">
-              API Keys
+              API keys
             </h2>
             <Button
               variant="brandCta"

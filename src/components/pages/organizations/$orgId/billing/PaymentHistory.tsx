@@ -235,7 +235,7 @@ export function PaymentHistory() {
       <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
         <div className="px-6 py-4">
           <h3 className="text-[15px] font-semibold text-foreground">
-            Payment History
+            Payment history
           </h3>
         </div>
         <div className="border-t border-border px-6 py-12 text-center">
@@ -252,7 +252,7 @@ export function PaymentHistory() {
       <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
         <div className="px-6 py-4">
           <h3 className="text-[15px] font-semibold text-foreground">
-            Payment History
+            Payment history
           </h3>
         </div>
         <div className="border-t border-border px-6 py-12 text-center">
@@ -272,7 +272,7 @@ export function PaymentHistory() {
       <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
         <div className="px-6 py-4">
           <h3 className="text-[15px] font-semibold text-foreground">
-            Payment History
+            Payment history
           </h3>
         </div>
         <div className="border-t border-border px-6 py-12 text-center">
@@ -289,7 +289,7 @@ export function PaymentHistory() {
     <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
       <div className="px-6 py-4 flex items-center justify-between">
         <h3 className="text-[15px] font-semibold text-foreground">
-          Payment History
+          Payment history
         </h3>
         {requestedPageError && requestedPage !== displayedPage && (
           <p className="text-[12px] text-red-600 dark:text-red-400">

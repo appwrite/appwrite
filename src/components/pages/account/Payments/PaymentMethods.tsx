@@ -133,7 +133,7 @@ export function AccountPaymentMethods({
           <div className="flex items-center justify-between">
             <div>
               <h3 className="text-[15px] font-semibold text-foreground">
-                Payment Methods
+                Payment methods
               </h3>
               <p className="text-[13px] text-muted-foreground mt-1">
                 Manage your payment methods and billing information.
@@ -158,7 +158,7 @@ export function AccountPaymentMethods({
           <div className="flex items-center justify-between">
             <div>
               <h3 className="text-[15px] font-semibold text-foreground">
-                Payment Methods
+                Payment methods
               </h3>
               <p className="text-[13px] text-muted-foreground mt-1">
                 Manage your payment methods and billing information.
@@ -199,7 +199,7 @@ export function AccountPaymentMethods({
           <div className="flex items-center justify-between">
             <div>
               <h3 className="text-[15px] font-semibold text-foreground">
-                Payment Methods
+                Payment methods
               </h3>
               <p className="text-[13px] text-muted-foreground mt-1">
                 Manage your payment methods and billing information.

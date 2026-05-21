@@ -206,7 +206,7 @@ export function PlanSelection({
     <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
       <div className="px-6 py-4">
         <h3 className="text-[15px] font-semibold text-foreground">
-          Select a Plan
+          Select a plan
         </h3>
         <p className="text-[13px] text-muted-foreground mt-2">
           Choose the plan that best fits your needs.

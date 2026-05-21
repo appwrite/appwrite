@@ -127,7 +127,7 @@ export function AccountBillingAddresses() {
           <div className="flex items-center justify-between">
             <div>
               <h3 className="text-[15px] font-semibold text-foreground">
-                Billing Addresses
+                Billing addresses
               </h3>
               <p className="text-[13px] text-muted-foreground mt-1">
                 Manage your billing addresses for invoices and payments.
@@ -152,7 +152,7 @@ export function AccountBillingAddresses() {
           <div className="flex items-center justify-between">
             <div>
               <h3 className="text-[15px] font-semibold text-foreground">
-                Billing Addresses
+                Billing addresses
               </h3>
               <p className="text-[13px] text-muted-foreground mt-1">
                 Manage your billing addresses for invoices and payments.
@@ -189,7 +189,7 @@ export function AccountBillingAddresses() {
           <div className="flex items-center justify-between">
             <div>
               <h3 className="text-[15px] font-semibold text-foreground">
-                Billing Addresses
+                Billing addresses
               </h3>
               <p className="text-[13px] text-muted-foreground mt-1">
                 Manage your billing addresses for invoices and payments.

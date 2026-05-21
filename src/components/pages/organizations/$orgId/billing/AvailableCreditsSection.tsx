@@ -167,7 +167,7 @@ export function AvailableCreditsSection({
       <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
         <div className="px-6 py-4">
           <h3 className="text-[15px] font-semibold text-foreground">
-            Available Credits
+            Available credits
           </h3>
         </div>
         <div className="border-t border-border px-6 py-12 text-center">
@@ -184,7 +184,7 @@ export function AvailableCreditsSection({
       <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
         <div className="px-6 py-4">
           <h3 className="text-[15px] font-semibold text-foreground">
-            Available Credits
+            Available credits
           </h3>
         </div>
         <div className="border-t border-border px-6 py-4">
@@ -206,7 +206,7 @@ export function AvailableCreditsSection({
       <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
         <div className="px-6 py-4">
           <h3 className="text-[15px] font-semibold text-foreground">
-            Available Credits
+            Available credits
           </h3>
         </div>
         <div className="border-t border-border px-6 py-12 text-center">
@@ -224,7 +224,7 @@ export function AvailableCreditsSection({
       <div className="px-6 py-4">
         <div className="flex items-center justify-between">
           <h3 className="text-[15px] font-semibold text-foreground">
-            Available Credits
+            Available credits
           </h3>
           {hasCredits && (
             <Badge

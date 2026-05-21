@@ -1342,7 +1342,7 @@ export function View({
                   <div className="border-b border-border px-4 py-2.5">
                     <div className="flex items-center justify-between">
                       <h3 className="text-[13px] font-semibold text-foreground">
-                        Traffic Sources
+                        Traffic sources
                       </h3>
                       <Tabs
                         value={sourcesView}

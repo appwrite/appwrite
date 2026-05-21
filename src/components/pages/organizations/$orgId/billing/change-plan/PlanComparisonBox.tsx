@@ -20,7 +20,7 @@ export function PlanComparisonBox({
     <div className="rounded-xl border border-border bg-card/50 overflow-hidden sticky top-6">
       <div className="px-6 py-4">
         <h3 className="text-[15px] font-semibold text-foreground">
-          Plan Comparison
+          Plan comparison
         </h3>
         <p className="text-[13px] text-muted-foreground mt-2">
           Compare features between plans
