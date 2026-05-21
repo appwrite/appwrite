@@ -1230,15 +1230,9 @@ services:
     networks:
       - appwrite
 
-  appwrite-orchestrator-sidecar:
-    container_name: appwrite-orchestrator-sidecar
-    image: chiragagg5k/job-sidecar:temp-appwrite-pr-4f081ed-20260521
-    command: ["-h"]
-    restart: "no"
-
   appwrite-orchestrator:
     container_name: appwrite-orchestrator
-    image: chiragagg5k/jobs-service:temp-appwrite-pr-4f081ed-20260521
+    image: chiragagg5k/jobs-service:temp-appwrite-pr-4f081ed-20260521-r2
     user: root
     restart: unless-stopped
     networks:
