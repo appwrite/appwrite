@@ -1513,9 +1513,9 @@ class Builds extends Action
                 return;
             }
 
-            if (empty($deployment->getAttribute('buildEndedAt', ''))) {
-                return;
-            }
+            $endTime = DateTime::now();
+            $startedAt = \strtotime($deployment->getAttribute('buildStartedAt', $deployment->getCreatedAt())) ?: \time();
+            $duration = \max(0, \time() - $startedAt);
 
             $this->completeOrchestratorDeployment(
                 queueForRealtime: $queueForRealtime,
@@ -1528,8 +1528,8 @@ class Builds extends Action
                 deployment: $deployment,
                 platform: $platform,
                 publisherForScreenshots: $publisherForScreenshots,
-                buildEndedAt: $deployment->getAttribute('buildEndedAt'),
-                buildDuration: $deployment->getAttribute('buildDuration', 0)
+                buildEndedAt: $endTime,
+                buildDuration: $duration
             );
 
             return;
@@ -1546,15 +1546,7 @@ class Builds extends Action
         $exitCode = (int) ($data['exitCode'] ?? -1);
         if ($exitCode === 0 && empty($deployment->getAttribute('buildPath', ''))) {
             $deployment = $this->waitForOrchestratorBuildPath($dbForProject, $deployment);
-            if ($deployment->isEmpty()) {
-                return;
-            }
-
-            if (empty($deployment->getAttribute('buildPath', ''))) {
-                $dbForProject->updateDocument('deployments', $deployment->getId(), new Document([
-                    'buildEndedAt' => DateTime::now(),
-                    'buildDuration' => (int) \ceil((float) ($data['durationSeconds'] ?? 0)),
-                ]));
+            if ($deployment->isEmpty() || empty($deployment->getAttribute('buildPath', ''))) {
                 return;
             }
         }
@@ -1637,11 +1629,6 @@ class Builds extends Action
         string $buildEndedAt,
         int $buildDuration
     ): void {
-        $deployment = $dbForProject->getDocument('deployments', $deployment->getId());
-        if ($deployment->isEmpty() || \in_array($deployment->getAttribute('status'), ['ready', 'failed', 'canceled'])) {
-            return;
-        }
-
         $runtime = $this->getRuntime($resource, $this->getVersion($resource));
         $adapter = $deployment->getAttribute('adapter', $resource->getAttribute('adapter', '')) ?: null;
 
@@ -1684,11 +1671,6 @@ class Builds extends Action
                 Console::log('Adapter detected');
             } elseif ($adapter === 'ssr' && $detection->getName() === 'static') {
                 $logs .= 'Adapter mismatch. Detected: ' . $detection->getName() . ' does not match with the set adapter: ' . $adapter . "\n";
-                $deployment = $dbForProject->getDocument('deployments', $deployment->getId());
-                if ($deployment->isEmpty() || \in_array($deployment->getAttribute('status'), ['ready', 'failed', 'canceled'])) {
-                    return;
-                }
-
                 $deployment = $dbForProject->updateDocument('deployments', $deployment->getId(), new Document([
                     'buildEndedAt' => $buildEndedAt,
                     'buildDuration' => $buildDuration,
@@ -1723,21 +1705,13 @@ class Builds extends Action
             $logs .= "\033[90m[$date] \033[90m[\033[0mappwrite\033[90m]\033[32m Deployment finished. \033[0m\n";
         }
 
-        $deploymentAdapter = $deployment->getAttribute('adapter');
-        $deploymentFallbackFile = $deployment->getAttribute('fallbackFile');
-
-        $deployment = $dbForProject->getDocument('deployments', $deployment->getId());
-        if ($deployment->isEmpty() || \in_array($deployment->getAttribute('status'), ['ready', 'failed', 'canceled'])) {
-            return;
-        }
-
         $deployment = $dbForProject->updateDocument('deployments', $deployment->getId(), new Document([
             'buildEndedAt' => $buildEndedAt,
             'buildDuration' => $buildDuration,
             'status' => 'ready',
             'buildLogs' => $logs,
-            'adapter' => $deploymentAdapter,
-            'fallbackFile' => $deploymentFallbackFile,
+            'adapter' => $deployment->getAttribute('adapter'),
+            'fallbackFile' => $deployment->getAttribute('fallbackFile'),
         ]));
 
         if ($deployment->getSequence() === $resource->getAttribute('latestDeploymentInternalId', '')) {
