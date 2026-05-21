@@ -1,5 +1,9 @@
 import { useParams } from '@tanstack/react-router'
 import { useProjectSite } from '@/lib/react-query/hooks'
+import {
+  SettingsCardsList,
+  type SettingsCardItem,
+} from '@/components/global/shared/settings-search/SettingsCardsList'
 import { SiteBuildFrameworkCard } from './SiteBuildFrameworkCard'
 import { SiteBuildCommandsCard } from './SiteBuildCommandsCard'
 import { SiteBuildSpecificationCard } from './SiteBuildSpecificationCard'
@@ -19,24 +23,51 @@ export function View() {
 
   if (!site) return null
 
-  return (
-    <>
-      <SiteBuildFrameworkCard
-        projectId={projectId}
-        siteId={siteId}
-        site={site}
-      />
-      <SiteBuildCommandsCard
-        projectId={projectId}
-        siteId={siteId}
-        site={site}
-      />
-      <SiteBuildSpecificationCard
-        projectId={projectId}
-        siteId={siteId}
-        site={site}
-        isCloud={isCloud}
-      />
-    </>
-  )
+  const cards: SettingsCardItem[] = [
+    {
+      id: 'framework',
+      search: {
+        title: 'Framework',
+        keywords: ['adapter', 'static', 'ssg', 'next', 'react'],
+      },
+      node: (
+        <SiteBuildFrameworkCard
+          projectId={projectId}
+          siteId={siteId}
+          site={site}
+        />
+      ),
+    },
+    {
+      id: 'commands',
+      search: {
+        title: 'Commands',
+        keywords: ['install', 'build', 'output', 'compile'],
+      },
+      node: (
+        <SiteBuildCommandsCard
+          projectId={projectId}
+          siteId={siteId}
+          site={site}
+        />
+      ),
+    },
+    {
+      id: 'specification',
+      search: {
+        title: 'Specification',
+        keywords: ['vcpu', 'memory', 'worker', 'profile'],
+      },
+      node: (
+        <SiteBuildSpecificationCard
+          projectId={projectId}
+          siteId={siteId}
+          site={site}
+          isCloud={isCloud}
+        />
+      ),
+    },
+  ]
+
+  return <SettingsCardsList cards={cards} />
 }

@@ -1,5 +1,9 @@
 import { useParams, useNavigate } from '@tanstack/react-router'
 import { useProjectSite } from '@/lib/react-query/hooks'
+import {
+  SettingsCardsList,
+  type SettingsCardItem,
+} from '@/components/global/shared/settings-search/SettingsCardsList'
 import { NameCard } from './NameCard'
 import { SiteDetailsCard } from './SiteDetailsCard'
 import { DangerZoneCard } from './DangerZoneCard'
@@ -29,16 +33,39 @@ export function View() {
 
   if (!site) return null
 
-  return (
-    <>
-      <SiteDetailsCard site={site} />
-      <NameCard projectId={projectId} siteId={siteId} site={site} />
-      <DangerZoneCard
-        projectId={projectId}
-        siteId={siteId}
-        site={site}
-        onDelete={handleDelete}
-      />
-    </>
-  )
+  const cards: SettingsCardItem[] = [
+    {
+      id: 'details',
+      search: {
+        title: 'Details',
+        keywords: ['id', 'created', 'updated', 'identifiers'],
+      },
+      node: <SiteDetailsCard site={site} />,
+    },
+    {
+      id: 'name',
+      search: {
+        title: 'Name',
+        keywords: ['rename', 'display', 'site name'],
+      },
+      node: <NameCard projectId={projectId} siteId={siteId} site={site} />,
+    },
+    {
+      id: 'delete',
+      search: {
+        title: 'Delete site',
+        keywords: ['delete', 'remove', 'destroy', 'danger'],
+      },
+      node: (
+        <DangerZoneCard
+          projectId={projectId}
+          siteId={siteId}
+          site={site}
+          onDelete={handleDelete}
+        />
+      ),
+    },
+  ]
+
+  return <SettingsCardsList cards={cards} />
 }

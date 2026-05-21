@@ -1,4 +1,8 @@
 import { useAuthSecuritySnapshot, PrivacyCard } from '../Security'
+import {
+  SettingsCardsList,
+  type SettingsCardItem,
+} from '@/components/global/shared/settings-search/SettingsCardsList'
 
 type MembershipsProps = {
   projectId: string
@@ -14,9 +18,21 @@ export function MembershipsPolicies({ projectId }: MembershipsProps) {
     userPhone: true,
   }
 
-  return (
-    <div className="space-y-6">
-      <PrivacyCard projectId={projectId} currentPrivacy={membershipsPrivacy} />
-    </div>
-  )
+  const cards: SettingsCardItem[] = [
+    {
+      id: 'privacy',
+      search: {
+        title: 'Privacy',
+        keywords: ['team', 'mfa', 'hidden', 'name', 'email'],
+      },
+      node: (
+        <PrivacyCard
+          projectId={projectId}
+          currentPrivacy={membershipsPrivacy}
+        />
+      ),
+    },
+  ]
+
+  return <SettingsCardsList cards={cards} emptyMessage="No matching policies" />
 }

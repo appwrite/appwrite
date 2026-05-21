@@ -14,6 +14,10 @@ import { SpecificationTableCard } from '../../shared/SpecificationTableCard'
 import { FunctionImageCard } from './FunctionImageCard'
 import { FunctionTimeoutCard } from './FunctionTimeoutCard'
 import { FunctionLoggingCard } from './FunctionLoggingCard'
+import {
+  SettingsCardsList,
+  type SettingsCardItem,
+} from '@/components/global/shared/settings-search/SettingsCardsList'
 
 const CONTACT_SALES_URL =
   import.meta.env.VITE_CONTACT_SALES_URL ||
@@ -86,65 +90,95 @@ export function View() {
 
   if (!func) return null
 
-  return (
-    <>
-      <FunctionImageCard
-        projectId={projectId}
-        functionId={functionId}
-        func={func}
-      />
-      <FunctionTimeoutCard
-        projectId={projectId}
-        functionId={functionId}
-        func={func}
-      />
-      <FunctionLoggingCard
-        projectId={projectId}
-        functionId={functionId}
-        func={func}
-      />
-
-      {specifications.length > 0 ? (
-        <SpecificationTableCard
-          title="Specification"
-          description="CPU and memory available to each function execution at runtime."
-          scope="runtime-function"
-          specs={specifications}
-          selectedSlug={runtimeSpecification}
-          onSelectedSlugChange={setRuntimeSpecification}
-          hasChanges={specDirty}
-          isSaving={updateFunctionMutation.isPending}
-          onSave={handleSaveSpecification}
-          footerNote={
-            hasUnavailableSpecifications(specifications) ? (
-              <div className="rounded-lg border border-border bg-muted/30 px-3 py-2.5">
-                <p className="text-[12px] text-muted-foreground">
-                  Need more resources?{' '}
-                  <a
-                    href="#"
-                    className="font-medium text-foreground underline hover:no-underline"
-                    onClick={(e) => {
-                      e.preventDefault()
-                    }}
-                  >
-                    Upgrade your plan
-                  </a>{' '}
-                  or{' '}
-                  <a
-                    href={CONTACT_SALES_URL}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="font-medium text-foreground underline hover:no-underline"
-                  >
-                    contact sales
-                  </a>{' '}
-                  to unlock additional specifications.
-                </p>
-              </div>
-            ) : undefined
-          }
+  const cards: SettingsCardItem[] = [
+    {
+      id: 'image',
+      search: { title: 'Image', keywords: ['runtime', 'docker', 'container'] },
+      node: (
+        <FunctionImageCard
+          projectId={projectId}
+          functionId={functionId}
+          func={func}
         />
-      ) : null}
-    </>
-  )
+      ),
+    },
+    {
+      id: 'timeout',
+      search: { title: 'Timeout', keywords: ['execute', 'seconds', 'limit'] },
+      node: (
+        <FunctionTimeoutCard
+          projectId={projectId}
+          functionId={functionId}
+          func={func}
+        />
+      ),
+    },
+    {
+      id: 'logging',
+      search: { title: 'Logging', keywords: ['logs', 'stdout', 'stderr'] },
+      node: (
+        <FunctionLoggingCard
+          projectId={projectId}
+          functionId={functionId}
+          func={func}
+        />
+      ),
+    },
+    ...(specifications.length > 0
+      ? [
+          {
+            id: 'specification',
+            search: {
+              title: 'Specification',
+              description:
+                'CPU and memory available to each function execution at runtime.',
+              keywords: ['vcpu', 'memory', 'cpu', 'resources'],
+            },
+            node: (
+              <SpecificationTableCard
+                title="Specification"
+                description="CPU and memory available to each function execution at runtime."
+                scope="runtime-function"
+                specs={specifications}
+                selectedSlug={runtimeSpecification}
+                onSelectedSlugChange={setRuntimeSpecification}
+                hasChanges={specDirty}
+                isSaving={updateFunctionMutation.isPending}
+                onSave={handleSaveSpecification}
+                footerNote={
+                  hasUnavailableSpecifications(specifications) ? (
+                    <div className="rounded-lg border border-border bg-muted/30 px-3 py-2.5">
+                      <p className="text-[12px] text-muted-foreground">
+                        Need more resources?{' '}
+                        <a
+                          href="#"
+                          className="font-medium text-foreground underline hover:no-underline"
+                          onClick={(e) => {
+                            e.preventDefault()
+                          }}
+                        >
+                          Upgrade your plan
+                        </a>{' '}
+                        or{' '}
+                        <a
+                          href={CONTACT_SALES_URL}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="font-medium text-foreground underline hover:no-underline"
+                        >
+                          contact sales
+                        </a>{' '}
+                        to unlock additional specifications.
+                      </p>
+                    </div>
+                  ) : undefined
+                }
+              />
+            ),
+          } satisfies SettingsCardItem,
+        ]
+      : []),
+  ]
+
+  return <SettingsCardsList cards={cards} />
 }

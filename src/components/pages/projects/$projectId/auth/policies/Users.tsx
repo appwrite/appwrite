@@ -1,4 +1,8 @@
 import { useAuthSecuritySnapshot, UsersLimitCard } from '../Security'
+import {
+  SettingsCardsList,
+  type SettingsCardItem,
+} from '@/components/global/shared/settings-search/SettingsCardsList'
 
 type UsersProps = {
   projectId: string
@@ -7,9 +11,21 @@ type UsersProps = {
 export function UsersPolicies({ projectId }: UsersProps) {
   const security = useAuthSecuritySnapshot(projectId)
 
-  return (
-    <div className="space-y-6">
-      <UsersLimitCard projectId={projectId} currentLimit={security.authLimit ?? 0} />
-    </div>
-  )
+  const cards: SettingsCardItem[] = [
+    {
+      id: 'users-limit',
+      search: {
+        title: 'Users limit',
+        keywords: ['signup', 'maximum', 'registration', 'unlimited'],
+      },
+      node: (
+        <UsersLimitCard
+          projectId={projectId}
+          currentLimit={security.authLimit ?? 0}
+        />
+      ),
+    },
+  ]
+
+  return <SettingsCardsList cards={cards} emptyMessage="No matching policies" />
 }

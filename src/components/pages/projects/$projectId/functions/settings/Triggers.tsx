@@ -14,6 +14,10 @@ import { EventEditorModal } from '@/components/global/shared/EventEditor'
 import { DOCS_LINK as EVENTS_DOCS_LINK } from '@/lib/events-editor'
 import { CronScheduleEditor } from '../CronScheduleEditor'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
+import {
+  SettingsCardsList,
+  type SettingsCardItem,
+} from '@/components/global/shared/settings-search/SettingsCardsList'
 
 export function View() {
   const { projectId, functionId } = useParams({ strict: false })
@@ -121,8 +125,15 @@ export function View() {
 
   if (!func) return null
 
-  return (
-    <>
+  const cards: SettingsCardItem[] = [
+    {
+      id: 'schedule',
+      search: {
+        title: 'Schedule',
+        description: 'Run this function on a schedule using cron expressions.',
+        keywords: ['cron', 'scheduled', 'recurring'],
+      },
+      node: (
       <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
         <div className="px-6 py-4">
           <h3 className="text-[15px] font-semibold text-foreground">Schedule</h3>
@@ -151,7 +162,16 @@ export function View() {
           </Button>
         </div>
       </div>
-
+      ),
+    },
+    {
+      id: 'events',
+      search: {
+        title: 'Events',
+        description: 'Events that trigger this function (maximum 100).',
+        keywords: ['webhook', 'trigger', 'invoke', 'async'],
+      },
+      node: (
       <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
         <div className="px-6 py-4">
           <h3 className="text-[15px] font-semibold text-foreground">Events</h3>
@@ -231,6 +251,9 @@ export function View() {
           </Button>
         </div>
       </div>
-    </>
-  )
+      ),
+    },
+  ]
+
+  return <SettingsCardsList cards={cards} />
 }

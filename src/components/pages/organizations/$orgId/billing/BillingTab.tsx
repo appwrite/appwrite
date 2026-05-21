@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import { useParams, useNavigate } from '@tanstack/react-router'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
@@ -18,6 +18,10 @@ import { BudgetCapSection } from './BudgetCapSection'
 import { BillingAlertsSection } from './BillingAlertsSection'
 import { AvailableCreditsSection } from './AvailableCreditsSection'
 import {
+  SettingsCardsList,
+  type SettingsCardItem,
+} from '@/components/global/shared/settings-search/SettingsCardsList'
+import {
   useOrganizationById,
   useOrganizationPaymentMethod,
   useRetryInvoicePayment,
@@ -26,38 +30,20 @@ import {
 } from '@/lib/react-query/hooks'
 import { toast } from 'sonner'
 
-/**
- * BillingTab Component
- *
- * Main container for the billing dashboard that orchestrates all billing sections:
- * 1. Alert Messages - Failed invoices, expired payment methods, plan downgrades
- * 2. Plan Summary - Current plan, charges breakdown, next payment
- * 3. Payment History - Invoice table with pagination
- * 4. Payment Methods - Primary and backup payment methods
- * 5. Billing Address - Stored billing address
- * 6. Tax ID - Tax identification information
- * 7. Budget Cap - Spending limit toggle and configuration
- * 8. Billing Alerts - Usage threshold notifications
- * 9. Available Credits - Credit balance and expiration
- */
-
 export function BillingTab() {
   const params = useParams({ strict: false })
   const navigate = useNavigate()
   const orgId = params.orgId as string | undefined
 
-  // Payment modal state
   const [paymentModalOpen, setPaymentModalOpen] = useState(false)
   const [isBackupPaymentMethod, setIsBackupPaymentMethod] = useState(false)
   const [addCreditsModalOpen, setAddCreditsModalOpen] = useState(false)
 
-  // Fetch organization data for alerts
   const { organization, isLoading: orgLoading } = useOrganizationById(orgId)
   const orgRefs = organization
     ? asOrganizationPaymentRefs(organization)
     : null
 
-  // Fetch payment methods for alert checking (org-scoped so all members see org cards)
   const primaryPaymentMethod = useOrganizationPaymentMethod(
     orgId,
     orgRefs?.paymentMethodId ?? undefined,
@@ -69,16 +55,13 @@ export function BillingTab() {
 
   const retryPaymentMutation = useRetryInvoicePayment()
 
-  // Check for failed subscription invoice only (domains/addons use other types)
   const failedInvoice = orgRefs?.failedInvoice
   const hasFailedInvoice = isSubscriptionFailedInvoiceWithError(failedInvoice)
 
-  // Check for expired payment method
   const primaryFailed = primaryPaymentMethod.paymentMethod?.failed === true
   const hasExpiredPaymentMethod =
     primaryFailed && !orgRefs?.backupPaymentMethodId
 
-  // Check for plan downgrade
   const hasPlanDowngrade = !!orgRefs?.billingPlanDowngrade
 
   const orgBillingReadonly = isOrganizationBillingReadonlyStatus(
@@ -115,7 +98,6 @@ export function BillingTab() {
     }
   }
 
-  // Modal handlers
   const handleChangePlan = () => {
     if (orgId) {
       navigate({
@@ -131,7 +113,6 @@ export function BillingTab() {
   }
 
   const handlePaymentModalSuccess = () => {
-    // Payment method will be automatically assigned if organizationId is provided
     setPaymentModalOpen(false)
   }
 
@@ -143,13 +124,24 @@ export function BillingTab() {
     setAddCreditsModalOpen(true)
   }
 
-  return (
-    <div className="space-y-6">
-      {/* Alert Messages */}
-      {!orgLoading && (
-        <>
-          {/* Failed Invoice Alert */}
-          {hasFailedInvoice && (
+  const cards = useMemo((): SettingsCardItem[] => {
+    const items: SettingsCardItem[] = []
+
+    if (!orgLoading) {
+      if (hasFailedInvoice) {
+        items.push({
+          id: 'alert-failed-invoice',
+          search: {
+            title: 'Payment Failed',
+            keywords: [
+              'failed',
+              'retry',
+              'outstanding',
+              'read-only',
+              'invoice',
+            ],
+          },
+          node: (
             <Alert variant="default" className="border-red-500/30 bg-red-500/5">
               <AlertTriangle className="h-4 w-4 text-red-500" />
               <AlertTitle className="text-[13px] font-medium text-red-600 dark:text-red-400">
@@ -179,10 +171,18 @@ export function BillingTab() {
                 </div>
               </AlertDescription>
             </Alert>
-          )}
+          ),
+        })
+      }
 
-          {/* Expired Payment Method Alert */}
-          {hasExpiredPaymentMethod && (
+      if (hasExpiredPaymentMethod) {
+        items.push({
+          id: 'alert-expired-payment-method',
+          search: {
+            title: 'Payment Method Failed',
+            keywords: ['expired', 'declined', 'failed card', 'backup'],
+          },
+          node: (
             <Alert variant="default" className="border-red-500/30 bg-red-500/5">
               <CreditCard className="h-4 w-4 text-red-500" />
               <AlertTitle className="text-[13px] font-medium text-red-600 dark:text-red-400">
@@ -194,10 +194,18 @@ export function BillingTab() {
                 our services.
               </AlertDescription>
             </Alert>
-          )}
+          ),
+        })
+      }
 
-          {/* Plan Downgrade Alert */}
-          {hasPlanDowngrade && (
+      if (hasPlanDowngrade) {
+        items.push({
+          id: 'alert-plan-downgrade',
+          search: {
+            title: 'Plan Downgrade Scheduled',
+            keywords: ['downgrade', 'scheduled', 'end of period', 'plan'],
+          },
+          node: (
             <Alert>
               <AlertTriangle className="h-4 w-4" />
               <AlertTitle>Plan Downgrade Scheduled</AlertTitle>
@@ -206,38 +214,125 @@ export function BillingTab() {
                 You'll keep access to your current plan features until then.
               </AlertDescription>
             </Alert>
-          )}
-        </>
-      )}
+          ),
+        })
+      }
+    }
 
-      {/* Plan Summary */}
-      <PlanSummary onChangePlan={handleChangePlan} orgId={orgId} />
+    items.push(
+      {
+        id: 'plan-summary',
+        search: {
+          title: 'Current plan',
+          keywords: [
+            'plan',
+            'subscription',
+            'tier',
+            'upgrade',
+            'downgrade',
+            'change plan',
+            'pro',
+            'scale',
+            'free',
+            'next payment',
+            'charges',
+            'billing cycle',
+          ],
+        },
+        node: <PlanSummary onChangePlan={handleChangePlan} orgId={orgId} />,
+      },
+      {
+        id: 'payment-history',
+        search: {
+          title: 'Payment History',
+          keywords: ['invoice', 'invoices', 'receipt', 'payment history', 'paid'],
+        },
+        node: <PaymentHistory />,
+      },
+      {
+        id: 'payment-methods',
+        search: {
+          title: 'Payment Methods',
+          keywords: [
+            'card',
+            'credit card',
+            'stripe',
+            'backup',
+            'default payment',
+            'payment method',
+            'add payment',
+          ],
+        },
+        node: (
+          <PaymentMethods
+            onAddPaymentMethod={handleAddPaymentMethod}
+            orgId={orgId}
+          />
+        ),
+      },
+      {
+        id: 'billing-address',
+        search: {
+          title: 'Billing Address',
+          keywords: ['address', 'country', 'city', 'postal', 'zip', 'street'],
+        },
+        node: <BillingAddressSection orgId={orgId} />,
+      },
+      {
+        id: 'tax-id',
+        search: {
+          title: 'Tax ID',
+          keywords: ['vat', 'tax', 'ein', 'gst', 'identification'],
+        },
+        node: <TaxIdSection onEditTaxId={handleEditTaxId} orgId={orgId} />,
+      },
+      {
+        id: 'budget-cap',
+        search: {
+          title: 'Budget Cap',
+          keywords: ['budget', 'spending limit', 'cap', 'overage', 'usage limit'],
+        },
+        node: <BudgetCapSection orgId={orgId} />,
+      },
+      {
+        id: 'billing-alerts',
+        search: {
+          title: 'Billing Alerts',
+          keywords: ['alerts', 'threshold', 'notification', 'usage', 'email'],
+        },
+        node: <BillingAlertsSection orgId={orgId} />,
+      },
+      {
+        id: 'available-credits',
+        search: {
+          title: 'Available Credits',
+          keywords: ['credits', 'balance', 'coupon', 'promo', 'prepaid', 'add credits'],
+        },
+        node: (
+          <AvailableCreditsSection
+            onAddCredits={handleAddCredits}
+            orgId={orgId}
+          />
+        ),
+      },
+    )
 
-      {/* Payment History */}
-      <PaymentHistory />
+    return items
+  }, [
+    orgLoading,
+    hasFailedInvoice,
+    hasExpiredPaymentMethod,
+    hasPlanDowngrade,
+    orgBillingReadonly,
+    failedInvoice,
+    retryPaymentMutation.isPending,
+    orgId,
+  ])
 
-      {/* Payment Methods */}
-      <PaymentMethods
-        onAddPaymentMethod={handleAddPaymentMethod}
-        orgId={orgId}
-      />
+  return (
+    <>
+      <SettingsCardsList cards={cards} />
 
-      {/* Billing Address */}
-      <BillingAddressSection orgId={orgId} />
-
-      {/* Tax ID */}
-      <TaxIdSection onEditTaxId={handleEditTaxId} orgId={orgId} />
-
-      {/* Budget Cap */}
-      <BudgetCapSection orgId={orgId} />
-
-      {/* Billing Alerts */}
-      <BillingAlertsSection orgId={orgId} />
-
-      {/* Available Credits */}
-      <AvailableCreditsSection onAddCredits={handleAddCredits} orgId={orgId} />
-
-      {/* Payment Modal */}
       <PaymentModal
         open={paymentModalOpen}
         onOpenChange={setPaymentModalOpen}
@@ -246,7 +341,6 @@ export function BillingTab() {
         onSuccess={handlePaymentModalSuccess}
       />
 
-      {/* Add Credits Modal */}
       {orgId && (
         <AddCreditsModal
           open={addCreditsModalOpen}
@@ -256,6 +350,6 @@ export function BillingTab() {
           onSuccess={() => setAddCreditsModalOpen(false)}
         />
       )}
-    </div>
+    </>
   )
 }

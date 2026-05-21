@@ -15,7 +15,6 @@ import {
   UserPlus,
   Users,
   Shield,
-  FileText,
   ShieldCheck,
   Mail,
   Trash2,
@@ -29,7 +28,6 @@ import {
   Eye,
   CreditCard,
   Settings,
-  X,
   KeyRound,
   Info,
   ExternalLink,
@@ -167,6 +165,12 @@ import { CreateOrganizationDialog } from './CreateOrganization'
 import { CreateProjectDialog } from './CreateProjectDialog'
 import { useCreateOrganization } from '@/lib/react-query/hooks'
 import { useConsoleProfile } from '@/hooks/use-console-profile'
+import { SettingsLayoutShell } from '@/components/global/shared/settings-search/SettingsLayoutShell'
+import {
+  SettingsCardsList,
+  type SettingsCardItem,
+} from '@/components/global/shared/settings-search/SettingsCardsList'
+import { ORG_SETTINGS_CARD_INDEX } from '@/lib/settings-search/org-settings-cards'
 import { useDebugMode } from '@/components/global/providers/DebugMode'
 import { useDebugOverrides } from '@/lib/debug-overrides'
 import {
@@ -423,6 +427,104 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
     }
     return 'overview'
   }, [location.pathname])
+
+  const orgSettingsNavItems = useMemo(() => {
+    const allNavItems = [
+      {
+        id: 'overview',
+        label: 'General',
+        to: '/organizations/$orgId/settings',
+        icon: Settings,
+        keywords: ['general', 'overview', 'name', 'delete'],
+      },
+      {
+        id: 'members',
+        label: 'Members',
+        to: '/organizations/$orgId/settings/members',
+        icon: Users,
+        keywords: ['members', 'team', 'invite', 'roles'],
+      },
+      ...(features.billing
+        ? [
+            {
+              id: 'billing',
+              label: 'Billing',
+              to: '/organizations/$orgId/settings/billing',
+              icon: CreditCard,
+              keywords: [
+                'billing',
+                'payment',
+                'invoice',
+                'subscription',
+              ],
+            },
+          ]
+        : []),
+      ...(features.compliance
+        ? [
+            {
+              id: 'compliance',
+              label: 'Compliance',
+              to: '/organizations/$orgId/settings/compliance',
+              icon: ShieldCheck,
+              keywords: [
+                'compliance',
+                'dpa',
+                'baa',
+                'soc2',
+                'hipaa',
+                'gdpr',
+              ],
+            },
+          ]
+        : []),
+      ...(features.oauthApps
+        ? [
+            {
+              id: 'oauth-apps',
+              label: 'OAuth apps',
+              to: '/organizations/$orgId/settings/oauth-apps',
+              icon: KeyRound,
+              keywords: ['oauth', 'sso', 'apps', 'login'],
+            },
+          ]
+        : []),
+      ...(features.orgApiKeys
+        ? [
+            {
+              id: 'api-keys',
+              label: 'API keys',
+              to: '/organizations/$orgId/settings/api-keys',
+              icon: Key,
+              keywords: ['api', 'keys', 'credentials'],
+            },
+          ]
+        : []),
+    ]
+
+    const filtered = features.orgRoles
+      ? allNavItems.filter((item) => {
+          if (item.id === 'overview')
+            return canAccessOrgSettingsOverview(access)
+          if (item.id === 'members')
+            return canAccessOrgSettingsMembers(access)
+          if (item.id === 'billing')
+            return canAccessOrgSettingsBilling(access)
+          if (item.id === 'compliance')
+            return canAccessOrgSettingsCompliance(access)
+          if (item.id === 'oauth-apps')
+            return canShowOrgOAuthAppsSettings(access, features)
+          if (item.id === 'api-keys')
+            return canShowOrgApiKeysSettings(access, features)
+          return true
+        })
+      : allNavItems
+
+    return filtered.map((item) => ({
+      ...item,
+      params: { orgId: orgId ?? '' },
+    }))
+  }, [features, access, orgId])
 
   // Top-level tab vs role: default index is "projects" in the URL, but hidden tabs (e.g. billing-only) must land on first allowed tab
   useEffect(() => {
@@ -2348,222 +2450,24 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                 )}
 
                 {activeTab === 'settings' && (
-                  <div className="flex flex-col gap-4 lg:flex-row lg:gap-8">
-                    {(() => {
-                      const allNavItems = [
-                        {
-                          id: 'overview',
-                          label: 'General',
-                          to: '/organizations/$orgId/settings',
-                          icon: Settings,
-                          keywords: ['general', 'overview', 'name', 'delete'],
-                        },
-                        {
-                          id: 'members' as const,
-                          label: 'Members',
-                          to: '/organizations/$orgId/settings/members' as const,
-                          icon: Users,
-                          keywords: ['members', 'team', 'invite', 'roles'],
-                        },
-                        ...(features.billing
-                          ? [
-                              {
-                                id: 'billing' as const,
-                                label: 'Billing',
-                                to: '/organizations/$orgId/settings/billing' as const,
-                                icon: CreditCard,
-                                keywords: [
-                                  'billing',
-                                  'payment',
-                                  'invoice',
-                                  'subscription',
-                                ],
-                              },
-                            ]
-                          : []),
-                        ...(features.compliance
-                          ? [
-                              {
-                                id: 'compliance' as const,
-                                label: 'Compliance',
-                                to: '/organizations/$orgId/settings/compliance' as const,
-                                icon: ShieldCheck,
-                                keywords: [
-                                  'compliance',
-                                  'dpa',
-                                  'baa',
-                                  'soc2',
-                                  'hipaa',
-                                  'gdpr',
-                                ],
-                              },
-                            ]
-                          : []),
-                        ...(features.oauthApps
-                          ? [
-                              {
-                                id: 'oauth-apps' as const,
-                                label: 'OAuth apps',
-                                to: '/organizations/$orgId/settings/oauth-apps' as const,
-                                icon: KeyRound,
-                                keywords: ['oauth', 'sso', 'apps', 'login'],
-                              },
-                            ]
-                          : []),
-                        ...(features.orgApiKeys
-                          ? [
-                              {
-                                id: 'api-keys' as const,
-                                label: 'API keys',
-                                to: '/organizations/$orgId/settings/api-keys' as const,
-                                icon: Key,
-                                keywords: ['api', 'keys', 'credentials'],
-                              },
-                            ]
-                          : []),
-                      ]
-                      const navItems = features.orgRoles
-                        ? allNavItems.filter((item) => {
-                            if (item.id === 'overview')
-                              return canAccessOrgSettingsOverview(access)
-                            if (item.id === 'members')
-                              return canAccessOrgSettingsMembers(access)
-                            if (item.id === 'billing')
-                              return canAccessOrgSettingsBilling(access)
-                            if (item.id === 'compliance')
-                              return canAccessOrgSettingsCompliance(access)
-                            if (item.id === 'oauth-apps')
-                              return canShowOrgOAuthAppsSettings(
-                                access,
-                                features,
-                              )
-                            if (item.id === 'api-keys')
-                              return canShowOrgApiKeysSettings(
-                                access,
-                                features,
-                              )
-                            return true
-                          })
-                        : allNavItems
-
-                      return (
-                        <>
-                          {/* Mobile: compact dropdown instead of second tab row */}
-                          <div
-                            className="lg:hidden"
-                            aria-label="Settings section"
-                          >
-                            <Select
-                              value={settingsSubTab}
-                              onValueChange={(value) => {
-                                const item = navItems.find(
-                                  (n) => n.id === value,
-                                )
-                                if (item) {
-                                  navigate({
-                                    to: item.to as unknown,
-                                    params: { orgId: orgId! } as unknown,
-                                  })
-                                }
-                              }}
-                            >
-                              <SelectTrigger
-                                size="sm"
-                                className="w-full h-9 text-[13px]"
-                              >
-                                <SelectValue />
-                              </SelectTrigger>
-                              <SelectContent>
-                                {navItems.map((item) => (
-                                  <SelectItem
-                                    key={item.id}
-                                    value={item.id}
-                                    className="text-[13px]"
-                                  >
-                                    <span className="flex items-center gap-2">
-                                      <item.icon className="h-4 w-4 shrink-0" />
-                                      {item.label}
-                                    </span>
-                                  </SelectItem>
-                                ))}
-                              </SelectContent>
-                            </Select>
-                          </div>
-
-                          {/* Desktop: vertical sidebar with search */}
-                          <nav
-                            className="hidden lg:flex sticky top-4 w-48 shrink-0 flex-col gap-2 self-start"
-                            aria-label="Settings navigation"
-                          >
-                            <div className="relative w-full mb-2">
-                              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground pointer-events-none" />
-                              <Input
-                                placeholder="Search settings..."
-                                value={settingsNavSearch}
-                                onChange={(e) =>
-                                  setSettingsNavSearch(e.target.value)
-                                }
-                                className={cn(
-                                  'h-9 w-full rounded-md border border-border bg-accent/50 pl-10 pr-4 text-[13px] text-foreground placeholder:text-muted-foreground outline-none transition-[color,box-shadow] focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50',
-                                  settingsNavSearch && 'pr-9',
-                                )}
-                              />
-                              {settingsNavSearch && (
-                                <button
-                                  type="button"
-                                  onClick={() => setSettingsNavSearch('')}
-                                  className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground rounded p-0.5"
-                                  aria-label="Clear search"
-                                >
-                                  <X className="h-3.5 w-3.5" />
-                                </button>
-                              )}
-                            </div>
-                            {(() => {
-                              const q = settingsNavSearch.trim().toLowerCase()
-                              const filtered = q
-                                ? navItems.filter((item) => {
-                                    const matchLabel = item.label
-                                      .toLowerCase()
-                                      .includes(q)
-                                    const matchKeyword = item.keywords.some(
-                                      (k) => k.includes(q),
-                                    )
-                                    return matchLabel || matchKeyword
-                                  })
-                                : navItems
-                              if (filtered.length === 0) {
-                                return (
-                                  <p className="px-3 py-2 text-[12px] text-muted-foreground">
-                                    No matching settings
-                                  </p>
-                                )
-                              }
-                              return filtered.map((item) => {
-                                const Icon = item.icon
-                                return (
-                                  <Link
-                                    key={item.id}
-                                    to={item.to as unknown}
-                                    params={{ orgId: orgId! } as unknown}
-                                    className={cn(
-                                      'flex items-center gap-2 rounded-md px-3 py-2 text-[13px] font-medium transition-colors',
-                                      settingsSubTab === item.id
-                                        ? 'bg-accent text-foreground'
-                                        : 'text-muted-foreground hover:bg-accent/50 hover:text-foreground',
-                                    )}
-                                  >
-                                    <Icon className="h-4 w-4 shrink-0" />
-                                    {item.label}
-                                  </Link>
-                                )
-                              })
-                            })()}
-                          </nav>
-                        </>
+                  <SettingsLayoutShell
+                    navItems={orgSettingsNavItems}
+                    activeSectionId={settingsSubTab}
+                    cardIndex={ORG_SETTINGS_CARD_INDEX}
+                    searchQuery={settingsNavSearch}
+                    onSearchQueryChange={setSettingsNavSearch}
+                    onNavigateToSection={(sectionId) => {
+                      const item = orgSettingsNavItems.find(
+                        (n) => n.id === sectionId,
                       )
-                    })()}
-                    <div className="min-w-0 flex-1">
+                      if (item && orgId) {
+                        navigate({
+                          to: item.to as '/',
+                          params: { orgId },
+                        })
+                      }
+                    }}
+                  >
                       {settingsSubTab === 'billing' ? (
                         <BillingTab />
                       ) : settingsSubTab === 'compliance' ? (
@@ -2571,7 +2475,23 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                       ) : settingsSubTab === 'oauth-apps' ? (
                         <ComingSoonView title="OAuth apps" comingSoon />
                       ) : settingsSubTab === 'api-keys' ? (
-                        <div className="mx-auto w-full max-w-7xl px-4 pb-4 sm:px-6 sm:pb-6">
+                        <SettingsCardsList
+                          className="mx-auto w-full max-w-7xl px-4 pb-4 sm:px-6 sm:pb-6"
+                          cards={[
+                            {
+                              id: 'api-key-types',
+                              search: {
+                                title: 'API key types',
+                                description:
+                                  'Keys apply at different levels. Each key has its own permissions (scopes) to control access.',
+                                keywords: [
+                                  'api',
+                                  'keys',
+                                  'scopes',
+                                  'credentials',
+                                ],
+                              },
+                              node: (
                           <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
                             <div className="px-6 py-4">
                               <h3 className="text-[15px] font-semibold text-foreground">
@@ -2582,10 +2502,21 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                                 own permissions (scopes) to control access.
                               </p>
                             </div>
-                            <div className="border-t border-border" />
-                            <div className="px-6 py-4">
-                              <div className="grid gap-4 sm:grid-cols-3">
-                                {/* Project keys */}
+                          </div>
+                              ),
+                            },
+                            {
+                              id: 'project-keys',
+                              search: {
+                                title: 'Project keys',
+                                keywords: [
+                                  'database',
+                                  'storage',
+                                  'functions',
+                                  'project',
+                                ],
+                              },
+                              node: (
                                 <div className="rounded-xl border border-border bg-card/50 overflow-hidden transition-colors hover:border-border/80">
                                   <div className="px-4 py-3">
                                     <h3 className="text-[13px] font-semibold text-foreground">
@@ -2625,7 +2556,15 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                                     )}
                                   </div>
                                 </div>
-                                {/* Account scope */}
+                              ),
+                            },
+                            {
+                              id: 'account-keys',
+                              search: {
+                                title: 'Account keys',
+                                keywords: ['cli', 'sessions', 'user', 'account'],
+                              },
+                              node: (
                                 <div className="rounded-xl border border-border bg-card/50 overflow-hidden transition-colors hover:border-border/80">
                                   <div className="px-4 py-3">
                                     <h3 className="text-[13px] font-semibold text-foreground">
@@ -2653,7 +2592,20 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                                     </Button>
                                   </div>
                                 </div>
-                                {/* Organization scope */}
+                              ),
+                            },
+                            {
+                              id: 'org-keys',
+                              search: {
+                                title: 'Org keys',
+                                keywords: [
+                                  'billing',
+                                  'team',
+                                  'organization',
+                                  'org',
+                                ],
+                              },
+                              node: (
                                 <div className="rounded-xl border border-border bg-card/50 overflow-hidden transition-colors hover:border-border/80">
                                   <div className="px-4 py-3">
                                     <h3 className="text-[13px] font-semibold text-foreground">
@@ -2683,18 +2635,31 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                                     </Button>
                                   </div>
                                 </div>
-                              </div>
-                              <div className="mt-4 rounded-lg border border-border bg-muted/20 px-4 py-3">
-                                <p className="text-[12px] text-muted-foreground">
-                                  <Info className="mb-0.5 mr-2 inline-block h-4 w-4 align-middle" />
-                                  Organization-level keys will be manageable
-                                  here once available. Meanwhile, use project
-                                  keys for server-side access.
-                                </p>
-                              </div>
-                            </div>
-                          </div>
-                        </div>
+                              ),
+                            },
+                            {
+                              id: 'api-keys-info',
+                              search: {
+                                title: 'API key types',
+                                keywords: [
+                                  'organization-level',
+                                  'server-side',
+                                  'manageable',
+                                ],
+                              },
+                              node: (
+                                <div className="rounded-lg border border-border bg-muted/20 px-4 py-3">
+                                  <p className="text-[12px] text-muted-foreground">
+                                    <Info className="mb-0.5 mr-2 inline-block h-4 w-4 align-middle" />
+                                    Organization-level keys will be manageable
+                                    here once available. Meanwhile, use project
+                                    keys for server-side access.
+                                  </p>
+                                </div>
+                              ),
+                            },
+                          ]}
+                        />
                       ) : settingsSubTab === 'members' ? (
                         <>
                           {/* Error State */}
@@ -3086,305 +3051,339 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                           )}
                         </>
                       ) : (
-                        <div className="space-y-6">
-                          {/* Organization ID */}
-                          {selectedOrg && (
-                            <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
-                              <div className="px-6 py-4">
-                                <h3 className="text-[15px] font-semibold text-foreground">
-                                  Organization ID
-                                </h3>
-                              </div>
-                              <div className="border-t border-border" />
-                              <div className="px-6 py-4">
-                                <p className="text-[13px] text-muted-foreground mb-3">
-                                  Use this ID when integrating with the Appwrite
-                                  API, webhooks, or SDKs. Support may also ask
-                                  for this ID when assisting with issues.
-                                </p>
-                                <CopyableId
-                                  id={selectedOrg.$id}
-                                  size="md"
-                                  maxWidth={240}
-                                />
-                              </div>
-                            </div>
-                          )}
-
-                          {/* Update Organization Name */}
-                          <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
-                            <div className="px-6 py-4">
-                              <h3 className="text-[15px] font-semibold text-foreground">
-                                Organization Name
-                              </h3>
-                            </div>
-                            <div className="border-t border-border" />
-                            <div className="px-6 py-4">
-                              <p className="text-[13px] text-muted-foreground">
-                                Update your organization's display name. This
-                                will be visible to all organization members.
-                              </p>
-                              <Input
-                                value={orgName}
-                                onChange={(e) => setOrgName(e.target.value)}
-                                placeholder="Organization name"
-                                className="mt-3 h-9 max-w-sm border-border bg-background text-[13px] text-foreground placeholder:text-muted-foreground focus:border-border focus:ring-0"
-                              />
-                            </div>
-                            <div className="px-6 py-4 border-t border-border bg-muted/30">
-                              <Button
-                                size="sm"
-                                className="h-9 text-[13px]"
-                                disabled={
-                                  !selectedOrg ||
-                                  orgName === selectedOrg.name ||
-                                  !orgName.trim() ||
-                                  updateOrgNameMutation.isPending
-                                }
-                                onClick={() => {
-                                  if (
-                                    selectedOrg &&
-                                    orgName.trim() &&
-                                    orgName !== selectedOrg.name
-                                  ) {
-                                    updateOrgNameMutation.mutate({
-                                      orgId: selectedOrg.$id,
-                                      name: orgName.trim(),
-                                    })
-                                  }
-                                }}
-                              >
-                                Update
-                              </Button>
-                            </div>
-                          </div>
-
-                          {/* Delete Organization */}
-                          <div className="rounded-xl border border-destructive/50 bg-card/50 overflow-hidden">
-                            <div className="px-6 py-4">
-                              <h3 className="text-[15px] font-semibold text-foreground">
-                                Delete Organization
-                              </h3>
-                            </div>
-                            <div className="border-t border-destructive/20" />
-                            <div className="px-6 py-4">
-                              <p className="text-[13px] text-muted-foreground">
-                                Permanently delete this organization and all
-                                associated data. This action cannot be undone.
-                              </p>
-
-                              {/* Organization Info Summary */}
-                              {selectedOrg && (
-                                <div className="flex items-center gap-3 mt-4">
-                                  <InitialsAvatar
-                                    name={selectedOrg.name}
-                                    size="md"
-                                  />
-                                  <div className="flex-1 min-w-0">
-                                    <p className="text-[14px] font-medium text-foreground truncate">
-                                      {selectedOrg.name}
-                                    </p>
-                                    <p className="text-[12px] text-muted-foreground">
-                                      {membershipsTotal} member
-                                      {membershipsTotal !== 1 ? 's' : ''} •{' '}
-                                      {totalOrgProjects} project
-                                      {totalOrgProjects !== 1 ? 's' : ''}
-                                    </p>
-                                  </div>
-
-                                  {memberships.length > 0 && (
-                                    <div className="flex items-center gap-2">
-                                      <Link
-                                        to="/organizations/$orgId/settings/members"
-                                        params={{ orgId: orgId! }}
-                                        className="flex -space-x-2 rounded-full focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 cursor-pointer hover:opacity-90 transition-opacity"
-                                        title="View members"
-                                        onClick={() =>
-                                          setDeleteOrgDialogOpen(false)
-                                        }
-                                      >
-                                        {memberships
-                                          .slice(0, 4)
-                                          .map(
-                                            (
-                                              member: TeamMember,
-                                              index: number,
-                                            ) => (
-                                              <div
-                                                key={member.$id}
-                                                className="relative rounded-full border-2 border-background"
-                                                style={{ zIndex: 4 - index }}
-                                                title={member.userName}
-                                              >
-                                                <InitialsAvatar
-                                                  name={member.userName}
-                                                  size="sm"
-                                                />
-                                              </div>
-                                            ),
-                                          )}
-                                        {membershipsTotal > 4 && (
-                                          <div
-                                            className="relative flex h-6 w-6 items-center justify-center rounded-full border-2 border-background bg-muted text-[10px] font-medium text-muted-foreground"
-                                            style={{ zIndex: 0 }}
-                                          >
-                                            +{membershipsTotal - 4}
-                                          </div>
-                                        )}
-                                      </Link>
-                                    </div>
-                                  )}
-                                </div>
-                              )}
-                            </div>
-
-                            <div className="px-6 py-4 border-t border-destructive/20 bg-destructive/5">
-                              <Dialog
-                                open={deleteOrgDialogOpen}
-                                onOpenChange={setDeleteOrgDialogOpen}
-                              >
-                                <DialogTrigger asChild>
-                                  <Button
-                                    variant="destructive"
-                                    size="sm"
-                                    className="h-9 text-[13px]"
-                                  >
-                                    Delete organization
-                                  </Button>
-                                </DialogTrigger>
-                                <DialogContent className="sm:max-w-md p-0">
-                                  <DialogHeader className="px-6 pt-6 text-left">
-                                    <DialogTitle>
-                                      Delete Organization
-                                    </DialogTitle>
-                                    <DialogDescription className="text-[13px] mt-2">
-                                      Are you sure you want to delete{' '}
-                                      {selectedOrg && (
-                                        <span className="font-medium text-foreground">
-                                          {selectedOrg.name}
-                                        </span>
-                                      )}{' '}
-                                      and all its projects, databases, and
-                                      files? This action cannot be undone.
-                                    </DialogDescription>
-                                  </DialogHeader>
-                                  <div className="border-t border-border" />
-                                  <div className="px-6 pb-4 pt-0">
-                                    <div className="rounded-lg border border-border bg-muted/50 p-3 mb-4 mt-2">
-                                      {selectedOrg && (
-                                        <div className="flex items-center gap-3">
-                                          <InitialsAvatar
-                                            name={selectedOrg.name}
-                                            size="sm"
-                                          />
-                                          <div>
-                                            <p className="text-[13px] font-medium text-foreground">
-                                              {selectedOrg.name}
-                                            </p>
-                                            <p className="text-[11px] text-muted-foreground">
-                                              {membershipsTotal} member
-                                              {membershipsTotal !== 1
-                                                ? 's'
-                                                : ''}{' '}
-                                              will lose access •{' '}
-                                              {activeProjectsTotal} project
-                                              {activeProjectsTotal !== 1
-                                                ? 's'
-                                                : ''}{' '}
-                                              will be deleted
-                                            </p>
-                                          </div>
+                        <SettingsCardsList
+                          cards={[
+                            ...(selectedOrg
+                              ? [
+                                  {
+                                    id: 'org-id',
+                                    search: {
+                                      title: 'Organization ID',
+                                      keywords: [
+                                        'id',
+                                        'api',
+                                        'webhook',
+                                        'sdk',
+                                        'copy',
+                                      ],
+                                    },
+                                    node: (
+                                      <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
+                                        <div className="px-6 py-4">
+                                          <h3 className="text-[15px] font-semibold text-foreground">
+                                            Organization ID
+                                          </h3>
                                         </div>
-                                      )}
-                                    </div>
-                                    {activeProjects.length > 0 && (
-                                      <div className="mb-4">
-                                        <p className="text-[12px] text-muted-foreground">
-                                          Projects that will be deleted:{' '}
-                                          {activeProjects
-                                            .slice(0, 5)
-                                            .map((project, index) => (
-                                              <span key={project.$id}>
-                                                {index > 0 && ', '}
-                                                <span className="font-medium text-foreground">
-                                                  {project.name}
-                                                </span>
-                                              </span>
-                                            ))}
-                                          {activeProjectsTotal > 5 && (
-                                            <span>
-                                              {' '}
-                                              and {activeProjectsTotal - 5} more
-                                            </span>
-                                          )}
-                                        </p>
+                                        <div className="border-t border-border" />
+                                        <div className="px-6 py-4">
+                                          <p className="text-[13px] text-muted-foreground mb-3">
+                                            Use this ID when integrating with the
+                                            Appwrite API, webhooks, or SDKs.
+                                            Support may also ask for this ID when
+                                            assisting with issues.
+                                          </p>
+                                          <CopyableId
+                                            id={selectedOrg.$id}
+                                            size="md"
+                                            maxWidth={240}
+                                          />
+                                        </div>
                                       </div>
-                                    )}
-
-                                    <label className="text-[13px] text-muted-foreground">
-                                      Type{' '}
-                                      {selectedOrg && (
-                                        <span className="font-mono font-medium text-foreground bg-muted px-1.5 py-0.5 rounded">
-                                          {selectedOrg.name}
-                                        </span>
-                                      )}{' '}
-                                      to confirm
-                                    </label>
+                                    ),
+                                  } satisfies SettingsCardItem,
+                                ]
+                              : []),
+                            {
+                              id: 'org-name',
+                              search: {
+                                title: 'Organization Name',
+                                keywords: ['rename', 'display name'],
+                              },
+                              node: (
+                                <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
+                                  <div className="px-6 py-4">
+                                    <h3 className="text-[15px] font-semibold text-foreground">
+                                      Organization Name
+                                    </h3>
+                                  </div>
+                                  <div className="border-t border-border" />
+                                  <div className="px-6 py-4">
+                                    <p className="text-[13px] text-muted-foreground">
+                                      Update your organization's display name. This
+                                      will be visible to all organization members.
+                                    </p>
                                     <Input
-                                      value={deleteOrgConfirmation}
-                                      onChange={(e) =>
-                                        setDeleteOrgConfirmation(e.target.value)
-                                      }
-                                      placeholder="Enter organization name"
-                                      className="mt-2 h-9 border-border bg-background text-[13px] text-foreground placeholder:text-muted-foreground focus:border-red-500/50 focus:ring-0"
+                                      value={orgName}
+                                      onChange={(e) => setOrgName(e.target.value)}
+                                      placeholder="Organization name"
+                                      className="mt-3 h-9 max-w-sm border-border bg-background text-[13px] text-foreground placeholder:text-muted-foreground focus:border-border focus:ring-0"
                                     />
                                   </div>
-
-                                  <div className="px-6 py-4 border-t border-border bg-muted/30 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+                                  <div className="px-6 py-4 border-t border-border bg-muted/30">
                                     <Button
-                                      variant="outline"
-                                      size="sm"
-                                      className="h-9 text-[13px]"
-                                      onClick={() => {
-                                        setDeleteOrgDialogOpen(false)
-                                        setDeleteOrgConfirmation('')
-                                      }}
-                                    >
-                                      Cancel
-                                    </Button>
-                                    <Button
-                                      variant="destructive"
                                       size="sm"
                                       className="h-9 text-[13px]"
                                       disabled={
                                         !selectedOrg ||
-                                        deleteOrgConfirmation !==
-                                          selectedOrg.name ||
-                                        deleteOrgMutation.isPending
+                                        orgName === selectedOrg.name ||
+                                        !orgName.trim() ||
+                                        updateOrgNameMutation.isPending
                                       }
                                       onClick={() => {
                                         if (
                                           selectedOrg &&
-                                          deleteOrgConfirmation ===
-                                            selectedOrg.name
+                                          orgName.trim() &&
+                                          orgName !== selectedOrg.name
                                         ) {
-                                          deleteOrgMutation.mutate(
-                                            selectedOrg.$id,
-                                          )
+                                          updateOrgNameMutation.mutate({
+                                            orgId: selectedOrg.$id,
+                                            name: orgName.trim(),
+                                          })
                                         }
                                       }}
                                     >
-                                      Delete
+                                      Update
                                     </Button>
                                   </div>
-                                </DialogContent>
-                              </Dialog>
-                            </div>
-                          </div>
-                        </div>
+                                </div>
+                              ),
+                            },
+                            {
+                              id: 'delete-org',
+                              search: {
+                                title: 'Delete Organization',
+                                keywords: ['delete', 'remove', 'destroy', 'danger'],
+                              },
+                              node: (
+                                <div className="rounded-xl border border-destructive/50 bg-card/50 overflow-hidden">
+                                  <div className="px-6 py-4">
+                                    <h3 className="text-[15px] font-semibold text-foreground">
+                                      Delete Organization
+                                    </h3>
+                                  </div>
+                                  <div className="border-t border-destructive/20" />
+                                  <div className="px-6 py-4">
+                                    <p className="text-[13px] text-muted-foreground">
+                                      Permanently delete this organization and all
+                                      associated data. This action cannot be undone.
+                                    </p>
+
+                                    {selectedOrg && (
+                                      <div className="flex items-center gap-3 mt-4">
+                                        <InitialsAvatar
+                                          name={selectedOrg.name}
+                                          size="md"
+                                        />
+                                        <div className="flex-1 min-w-0">
+                                          <p className="text-[14px] font-medium text-foreground truncate">
+                                            {selectedOrg.name}
+                                          </p>
+                                          <p className="text-[12px] text-muted-foreground">
+                                            {membershipsTotal} member
+                                            {membershipsTotal !== 1 ? 's' : ''} •{' '}
+                                            {totalOrgProjects} project
+                                            {totalOrgProjects !== 1 ? 's' : ''}
+                                          </p>
+                                        </div>
+
+                                        {memberships.length > 0 && (
+                                          <div className="flex items-center gap-2">
+                                            <Link
+                                              to="/organizations/$orgId/settings/members"
+                                              params={{ orgId: orgId! }}
+                                              className="flex -space-x-2 rounded-full focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 cursor-pointer hover:opacity-90 transition-opacity"
+                                              title="View members"
+                                              onClick={() =>
+                                                setDeleteOrgDialogOpen(false)
+                                              }
+                                            >
+                                              {memberships
+                                                .slice(0, 4)
+                                                .map(
+                                                  (
+                                                    member: TeamMember,
+                                                    index: number,
+                                                  ) => (
+                                                    <div
+                                                      key={member.$id}
+                                                      className="relative rounded-full border-2 border-background"
+                                                      style={{ zIndex: 4 - index }}
+                                                      title={member.userName}
+                                                    >
+                                                      <InitialsAvatar
+                                                        name={member.userName}
+                                                        size="sm"
+                                                      />
+                                                    </div>
+                                                  ),
+                                                )}
+                                              {membershipsTotal > 4 && (
+                                                <div
+                                                  className="relative flex h-6 w-6 items-center justify-center rounded-full border-2 border-background bg-muted text-[10px] font-medium text-muted-foreground"
+                                                  style={{ zIndex: 0 }}
+                                                >
+                                                  +{membershipsTotal - 4}
+                                                </div>
+                                              )}
+                                            </Link>
+                                          </div>
+                                        )}
+                                      </div>
+                                    )}
+                                  </div>
+
+                                  <div className="px-6 py-4 border-t border-destructive/20 bg-destructive/5">
+                                    <Dialog
+                                      open={deleteOrgDialogOpen}
+                                      onOpenChange={setDeleteOrgDialogOpen}
+                                    >
+                                      <DialogTrigger asChild>
+                                        <Button
+                                          variant="destructive"
+                                          size="sm"
+                                          className="h-9 text-[13px]"
+                                        >
+                                          Delete organization
+                                        </Button>
+                                      </DialogTrigger>
+                                      <DialogContent className="sm:max-w-md p-0">
+                                        <DialogHeader className="px-6 pt-6 text-left">
+                                          <DialogTitle>
+                                            Delete Organization
+                                          </DialogTitle>
+                                          <DialogDescription className="text-[13px] mt-2">
+                                            Are you sure you want to delete{' '}
+                                            {selectedOrg && (
+                                              <span className="font-medium text-foreground">
+                                                {selectedOrg.name}
+                                              </span>
+                                            )}{' '}
+                                            and all its projects, databases, and
+                                            files? This action cannot be undone.
+                                          </DialogDescription>
+                                        </DialogHeader>
+                                        <div className="border-t border-border" />
+                                        <div className="px-6 pb-4 pt-0">
+                                          <div className="rounded-lg border border-border bg-muted/50 p-3 mb-4 mt-2">
+                                            {selectedOrg && (
+                                              <div className="flex items-center gap-3">
+                                                <InitialsAvatar
+                                                  name={selectedOrg.name}
+                                                  size="sm"
+                                                />
+                                                <div>
+                                                  <p className="text-[13px] font-medium text-foreground">
+                                                    {selectedOrg.name}
+                                                  </p>
+                                                  <p className="text-[11px] text-muted-foreground">
+                                                    {membershipsTotal} member
+                                                    {membershipsTotal !== 1
+                                                      ? 's'
+                                                      : ''}{' '}
+                                                    will lose access •{' '}
+                                                    {activeProjectsTotal} project
+                                                    {activeProjectsTotal !== 1
+                                                      ? 's'
+                                                      : ''}{' '}
+                                                    will be deleted
+                                                  </p>
+                                                </div>
+                                              </div>
+                                            )}
+                                          </div>
+                                          {activeProjects.length > 0 && (
+                                            <div className="mb-4">
+                                              <p className="text-[12px] text-muted-foreground">
+                                                Projects that will be deleted:{' '}
+                                                {activeProjects
+                                                  .slice(0, 5)
+                                                  .map((project, index) => (
+                                                    <span key={project.$id}>
+                                                      {index > 0 && ', '}
+                                                      <span className="font-medium text-foreground">
+                                                        {project.name}
+                                                      </span>
+                                                    </span>
+                                                  ))}
+                                                {activeProjectsTotal > 5 && (
+                                                  <span>
+                                                    {' '}
+                                                    and {activeProjectsTotal - 5}{' '}
+                                                    more
+                                                  </span>
+                                                )}
+                                              </p>
+                                            </div>
+                                          )}
+
+                                          <label className="text-[13px] text-muted-foreground">
+                                            Type{' '}
+                                            {selectedOrg && (
+                                              <span className="font-mono font-medium text-foreground bg-muted px-1.5 py-0.5 rounded">
+                                                {selectedOrg.name}
+                                              </span>
+                                            )}{' '}
+                                            to confirm
+                                          </label>
+                                          <Input
+                                            value={deleteOrgConfirmation}
+                                            onChange={(e) =>
+                                              setDeleteOrgConfirmation(
+                                                e.target.value,
+                                              )
+                                            }
+                                            placeholder="Enter organization name"
+                                            className="mt-2 h-9 border-border bg-background text-[13px] text-foreground placeholder:text-muted-foreground focus:border-red-500/50 focus:ring-0"
+                                          />
+                                        </div>
+
+                                        <div className="px-6 py-4 border-t border-border bg-muted/30 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+                                          <Button
+                                            variant="outline"
+                                            size="sm"
+                                            className="h-9 text-[13px]"
+                                            onClick={() => {
+                                              setDeleteOrgDialogOpen(false)
+                                              setDeleteOrgConfirmation('')
+                                            }}
+                                          >
+                                            Cancel
+                                          </Button>
+                                          <Button
+                                            variant="destructive"
+                                            size="sm"
+                                            className="h-9 text-[13px]"
+                                            disabled={
+                                              !selectedOrg ||
+                                              deleteOrgConfirmation !==
+                                                selectedOrg.name ||
+                                              deleteOrgMutation.isPending
+                                            }
+                                            onClick={() => {
+                                              if (
+                                                selectedOrg &&
+                                                deleteOrgConfirmation ===
+                                                  selectedOrg.name
+                                              ) {
+                                                deleteOrgMutation.mutate(
+                                                  selectedOrg.$id,
+                                                )
+                                              }
+                                            }}
+                                          >
+                                            Delete
+                                          </Button>
+                                        </div>
+                                      </DialogContent>
+                                    </Dialog>
+                                  </div>
+                                </div>
+                              ),
+                            },
+                          ]}
+                        />
                       )}
-                    </div>
-                  </div>
+                  </SettingsLayoutShell>
                 )}
 
                 {activeTab === 'domains' && <DomainsView />}

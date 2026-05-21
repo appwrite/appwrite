@@ -26,6 +26,10 @@ import { CopyableId } from '@/components/global/shared/CopyableId'
 import { DateTooltip } from '@/components/global/shared/DateTooltip'
 import { RuntimeIcon } from '@/components/global/shared/RuntimeIcon'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
+import {
+  SettingsCardsList,
+  type SettingsCardItem,
+} from '@/components/global/shared/settings-search/SettingsCardsList'
 
 export function View() {
   const { projectId, functionId } = useParams({ strict: false })
@@ -138,8 +142,15 @@ export function View() {
 
   if (!func) return null
 
-  return (
-    <>
+  const cards: SettingsCardItem[] = [
+    {
+      id: 'details',
+      search: {
+        title: 'Details',
+        description: 'Identifiers and timestamps for this function.',
+        keywords: ['id', 'created', 'updated', 'identifiers'],
+      },
+      node: (
       <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
         <div className="px-6 py-4">
           <h3 className="text-[15px] font-semibold text-foreground">Details</h3>
@@ -173,7 +184,16 @@ export function View() {
           </p>
         </div>
       </div>
-
+      ),
+    },
+    {
+      id: 'name',
+      search: {
+        title: 'Name',
+        description: 'Function name used for identification',
+        keywords: ['rename', 'display'],
+      },
+      node: (
       <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
         <div className="px-6 py-4">
           <h3 className="text-[15px] font-semibold text-foreground">Name</h3>
@@ -205,7 +225,16 @@ export function View() {
           </Button>
         </div>
       </div>
-
+      ),
+    },
+    {
+      id: 'status',
+      search: {
+        title: 'Status',
+        description: 'Enable or disable this function without deleting it.',
+        keywords: ['enabled', 'disabled', 'toggle'],
+      },
+      node: (
       <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
         <div className="px-6 py-4">
           <h3 className="text-[15px] font-semibold text-foreground">Status</h3>
@@ -250,7 +279,15 @@ export function View() {
           </Button>
         </div>
       </div>
-
+      ),
+    },
+    {
+      id: 'delete',
+      search: {
+        title: 'Delete function',
+        keywords: ['delete', 'remove', 'destroy', 'danger'],
+      },
+      node: (
       <div className="rounded-xl border border-destructive/50 bg-card/50 overflow-hidden">
         <div className="px-6 py-4">
           <h3 className="text-[15px] font-semibold text-foreground">
@@ -325,6 +362,9 @@ export function View() {
           </Dialog>
         </div>
       </div>
-    </>
-  )
+      ),
+    },
+  ]
+
+  return <SettingsCardsList cards={cards} />
 }

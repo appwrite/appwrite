@@ -1,5 +1,9 @@
 import { useParams } from '@tanstack/react-router'
 import { useProjectSite } from '@/lib/react-query/hooks'
+import {
+  SettingsCardsList,
+  type SettingsCardItem,
+} from '@/components/global/shared/settings-search/SettingsCardsList'
 import { SiteRuntimeImageCard } from './SiteRuntimeImageCard'
 import { SiteRuntimeTimeoutCard } from './SiteRuntimeTimeoutCard'
 import { SiteRuntimeLoggingCard } from './SiteRuntimeLoggingCard'
@@ -8,7 +12,6 @@ import { SiteRuntimeSpecificationCard } from './SiteRuntimeSpecificationCard'
 export function View() {
   const { projectId, siteId } = useParams({ strict: false })
   const { data: site, isLoading } = useProjectSite(projectId, siteId)
-  // TODO: align with project/org settings (same as SiteSettingsView)
   const isCloud = true
 
   if (isLoading) {
@@ -21,25 +24,61 @@ export function View() {
 
   if (!site) return null
 
-  return (
-    <>
-      <SiteRuntimeImageCard projectId={projectId} siteId={siteId} site={site} />
-      <SiteRuntimeTimeoutCard
-        projectId={projectId}
-        siteId={siteId}
-        site={site}
-      />
-      <SiteRuntimeLoggingCard
-        projectId={projectId}
-        siteId={siteId}
-        site={site}
-      />
-      <SiteRuntimeSpecificationCard
-        projectId={projectId}
-        siteId={siteId}
-        site={site}
-        isCloud={isCloud}
-      />
-    </>
-  )
+  const cards: SettingsCardItem[] = [
+    {
+      id: 'image',
+      search: {
+        title: 'Image',
+        keywords: ['runtime', 'ssr', 'server'],
+      },
+      node: (
+        <SiteRuntimeImageCard projectId={projectId} siteId={siteId} site={site} />
+      ),
+    },
+    {
+      id: 'timeout',
+      search: {
+        title: 'Timeout',
+        keywords: ['execute', 'seconds'],
+      },
+      node: (
+        <SiteRuntimeTimeoutCard
+          projectId={projectId}
+          siteId={siteId}
+          site={site}
+        />
+      ),
+    },
+    {
+      id: 'logging',
+      search: {
+        title: 'Logging',
+        keywords: ['logs', 'stdout'],
+      },
+      node: (
+        <SiteRuntimeLoggingCard
+          projectId={projectId}
+          siteId={siteId}
+          site={site}
+        />
+      ),
+    },
+    {
+      id: 'specification',
+      search: {
+        title: 'Specification',
+        keywords: ['vcpu', 'memory', 'cpu'],
+      },
+      node: (
+        <SiteRuntimeSpecificationCard
+          projectId={projectId}
+          siteId={siteId}
+          site={site}
+          isCloud={isCloud}
+        />
+      ),
+    },
+  ]
+
+  return <SettingsCardsList cards={cards} />
 }
