@@ -3,9 +3,10 @@
 use Ahc\Jwt\JWT;
 use Appwrite\Auth\Validator\Phone;
 use Appwrite\Detector\Detector;
-use Appwrite\Event\Delete;
 use Appwrite\Event\Event;
+use Appwrite\Event\Message\Delete as DeleteMessage;
 use Appwrite\Event\Message\Messaging as MessagingMessage;
+use Appwrite\Event\Publisher\Delete as DeletePublisher;
 use Appwrite\Event\Publisher\Messaging as MessagingPublisher;
 use Appwrite\Extend\Exception;
 use Appwrite\Messaging\Status as MessageStatus;
@@ -2728,9 +2729,9 @@ Http::delete('/v1/messaging/topics/:topicId')
     ->param('topicId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Topic ID.', false, ['dbForProject'])
     ->inject('queueForEvents')
     ->inject('dbForProject')
-    ->inject('queueForDeletes')
+    ->inject('publisherForDeletes')
     ->inject('response')
-    ->action(function (string $topicId, Event $queueForEvents, Database $dbForProject, Delete $queueForDeletes, Response $response) {
+    ->action(function (string $topicId, Event $queueForEvents, Database $dbForProject, DeletePublisher $publisherForDeletes, Response $response) {
         $topic = $dbForProject->getDocument('topics', $topicId);
 
         if ($topic->isEmpty()) {
@@ -2739,9 +2740,11 @@ Http::delete('/v1/messaging/topics/:topicId')
 
         $dbForProject->deleteDocument('topics', $topicId);
 
-        $queueForDeletes
-            ->setType(DELETE_TYPE_TOPIC)
-            ->setDocument($topic);
+        $publisherForDeletes->enqueue(new DeleteMessage(
+            project: $queueForEvents->getProject(),
+            type: DELETE_TYPE_TOPIC,
+            document: $topic,
+        ));
 
         $queueForEvents
             ->setParam('topicId', $topic->getId());

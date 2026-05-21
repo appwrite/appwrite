@@ -2,8 +2,9 @@
 
 namespace Appwrite\Platform\Modules\Databases\Http\Databases\Collections\Indexes;
 
-use Appwrite\Event\Database as EventDatabase;
 use Appwrite\Event\Event;
+use Appwrite\Event\Message\Database as DatabaseMessage;
+use Appwrite\Event\Publisher\Database as DatabasePublisher;
 use Appwrite\Extend\Exception;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\ContentType;
@@ -78,13 +79,13 @@ class Create extends Action
             ->inject('response')
             ->inject('dbForProject')
             ->inject('getDatabasesDB')
-            ->inject('queueForDatabase')
+            ->inject('publisherForDatabase')
             ->inject('queueForEvents')
             ->inject('authorization')
             ->callback($this->action(...));
     }
 
-    public function action(string $databaseId, string $collectionId, string $key, string $type, array $attributes, array $orders, array $lengths, UtopiaResponse $response, Database $dbForProject, callable $getDatabasesDB, EventDatabase $queueForDatabase, Event $queueForEvents, Authorization $authorization): void
+    public function action(string $databaseId, string $collectionId, string $key, string $type, array $attributes, array $orders, array $lengths, UtopiaResponse $response, Database $dbForProject, callable $getDatabasesDB, DatabasePublisher $publisherForDatabase, Event $queueForEvents, Authorization $authorization): void
     {
         $db = $authorization->skip(fn () => $dbForProject->getDocument('databases', $databaseId));
 
@@ -228,20 +229,6 @@ class Create extends Action
 
         $dbForProject->purgeCachedDocument('database_' . $db->getSequence(), $collectionId);
 
-        $queueForDatabase
-            ->setType(DATABASE_TYPE_CREATE_INDEX)
-            ->setDatabase($db);
-
-        if ($this->isCollectionsAPI()) {
-            $queueForDatabase
-                ->setCollection($collection)
-                ->setDocument($index);
-        } else {
-            $queueForDatabase
-                ->setTable($collection)
-                ->setRow($index);
-        }
-
         $queueForEvents
             ->setContext('database', $db)
             ->setParam('databaseId', $databaseId)
@@ -249,6 +236,18 @@ class Create extends Action
             ->setParam('collectionId', $collection->getId())
             ->setParam('tableId', $collection->getId())
             ->setContext($this->getCollectionsEventsContext(), $collection);
+
+        $publisherForDatabase->enqueue(new DatabaseMessage(
+            project: $queueForEvents->getProject(),
+            user: $queueForEvents->getUser(),
+            type: DATABASE_TYPE_CREATE_INDEX,
+            database: $db,
+            collection: $this->isCollectionsAPI() ? $collection : null,
+            document: $this->isCollectionsAPI() ? $index : null,
+            table: $this->isCollectionsAPI() ? null : $collection,
+            row: $this->isCollectionsAPI() ? null : $index,
+            events: Event::generateEvents($queueForEvents->getEvent(), $queueForEvents->getParams()),
+        ));
 
         $response
             ->setStatusCode(SwooleResponse::STATUS_CODE_ACCEPTED)

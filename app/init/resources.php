@@ -4,6 +4,8 @@ use Appwrite\Event\Event;
 use Appwrite\Event\Publisher\Audit as AuditPublisher;
 use Appwrite\Event\Publisher\Build as BuildPublisher;
 use Appwrite\Event\Publisher\Certificate as CertificatePublisher;
+use Appwrite\Event\Publisher\Database as DatabasePublisher;
+use Appwrite\Event\Publisher\Delete as DeletePublisher;
 use Appwrite\Event\Publisher\Execution as ExecutionPublisher;
 use Appwrite\Event\Publisher\Func as FunctionPublisher;
 use Appwrite\Event\Publisher\Mail as MailPublisher;
@@ -27,6 +29,7 @@ use Utopia\Database\Document;
 use Utopia\Database\Validator\Authorization;
 use Utopia\DI\Container;
 use Utopia\DSN\DSN;
+use Utopia\Lock\Distributed;
 use Utopia\Pools\Group;
 use Utopia\Queue\Broker\Pool as BrokerPool;
 use Utopia\Queue\Publisher;
@@ -50,6 +53,93 @@ global $register;
 global $container;
 $container = new Container();
 
+$container->set('console', fn () => new Document(Config::getParam('console')), []);
+
+$container->set('executor', fn () => new Executor(), []);
+
+$container->set('telemetry', fn () => new NoTelemetry(), []);
+
+$container->set('publisher', fn (Group $pools) => new BrokerPool(publisher: $pools->get('publisher')), ['pools']);
+
+$container->set('publisherDatabases', fn (Publisher $publisher) => $publisher, ['publisher']);
+
+$container->set('publisherFunctions', fn (Publisher $publisher) => $publisher, ['publisher']);
+
+$container->set('publisherMigrations', fn (Publisher $publisher) => $publisher, ['publisher']);
+
+$container->set('publisherMails', fn (Publisher $publisher) => $publisher, ['publisher']);
+
+$container->set('publisherDeletes', fn (Publisher $publisher) => $publisher, ['publisher']);
+
+$container->set('publisherMessaging', fn (Publisher $publisher) => $publisher, ['publisher']);
+
+$container->set('publisherWebhooks', fn (Publisher $publisher) => $publisher, ['publisher']);
+
+$container->set('publisherForAudits', fn (Publisher $publisher) => new AuditPublisher(
+    $publisher,
+    new Queue(System::getEnv('_APP_AUDITS_QUEUE_NAME', Event::AUDITS_QUEUE_NAME))
+), ['publisher']);
+
+$container->set('publisherForCertificates', fn (Publisher $publisher) => new CertificatePublisher(
+    $publisher,
+    new Queue(System::getEnv('_APP_CERTIFICATES_QUEUE_NAME', Event::CERTIFICATES_QUEUE_NAME))
+), ['publisher']);
+
+$container->set('publisherForScreenshots', fn (Publisher $publisher) => new ScreenshotPublisher(
+    $publisher,
+    new Queue(System::getEnv('_APP_SCREENSHOTS_QUEUE_NAME', Event::SCREENSHOTS_QUEUE_NAME))
+), ['publisher']);
+
+$container->set('publisherForUsage', fn (Publisher $publisher) => new UsagePublisher(
+    $publisher,
+    new Queue(System::getEnv('_APP_STATS_USAGE_QUEUE_NAME', Event::STATS_USAGE_QUEUE_NAME))
+), ['publisher']);
+
+$container->set('publisherForExecutions', fn (Publisher $publisher) => new ExecutionPublisher(
+    $publisher,
+    new Queue(System::getEnv('_APP_EXECUTIONS_QUEUE_NAME', Event::EXECUTIONS_QUEUE_NAME))
+), ['publisher']);
+
+$container->set('publisherForFunctions', fn (Publisher $publisher) => new FunctionPublisher(
+    $publisher,
+    new Queue(System::getEnv('_APP_FUNCTIONS_QUEUE_NAME', Event::FUNCTIONS_QUEUE_NAME), 'utopia-queue', Event::FUNCTIONS_QUEUE_TTL)
+), ['publisher']);
+
+$container->set('publisherForMigrations', fn (Publisher $publisher) => new MigrationPublisher(
+    $publisher,
+    new Queue(System::getEnv('_APP_MIGRATIONS_QUEUE_NAME', Event::MIGRATIONS_QUEUE_NAME))
+), ['publisher']);
+
+$container->set('publisherForStatsResources', fn (Publisher $publisher) => new StatsResourcesPublisher(
+    $publisher,
+    new Queue(System::getEnv('_APP_STATS_RESOURCES_QUEUE_NAME', Event::STATS_RESOURCES_QUEUE_NAME))
+), ['publisher']);
+
+$container->set('publisherForBuilds', fn (Publisher $publisher) => new BuildPublisher(
+    $publisher,
+    new Queue(System::getEnv('_APP_BUILDS_QUEUE_NAME', Event::BUILDS_QUEUE_NAME))
+), ['publisher']);
+
+$container->set('publisherForDatabase', fn (Publisher $publisherDatabases) => new DatabasePublisher(
+    $publisherDatabases,
+    new Queue(System::getEnv('_APP_DATABASE_QUEUE_NAME', Event::DATABASE_QUEUE_NAME))
+), ['publisherDatabases']);
+
+$container->set('publisherForDeletes', fn (Publisher $publisher) => new DeletePublisher(
+    $publisher,
+    new Queue(System::getEnv('_APP_DELETE_QUEUE_NAME', Event::DELETE_QUEUE_NAME))
+), ['publisher']);
+
+$container->set('publisherForMails', fn (Publisher $publisher) => new MailPublisher(
+    $publisher,
+    new Queue(System::getEnv('_APP_MAILS_QUEUE_NAME', Event::MAILS_QUEUE_NAME))
+), ['publisher']);
+
+$container->set('publisherForMessaging', fn (Publisher $publisher) => new MessagingPublisher(
+    $publisher,
+    new Queue(System::getEnv('_APP_MESSAGING_QUEUE_NAME', Event::MESSAGING_QUEUE_NAME))
+), ['publisher']);
+
 $container->set('logger', function ($register) {
     return $register->get('logger');
 }, ['register']);
@@ -64,85 +154,12 @@ $container->set('localeCodes', function () {
     return array_map(fn ($locale) => $locale['code'], Config::getParam('locale-codes', []));
 });
 
-// Queues - shared infrastructure (stateless pool wrappers)
-$container->set('publisher', function (Group $pools) {
-    return new BrokerPool(publisher: $pools->get('publisher'));
-}, ['pools']);
-$container->set('publisherDatabases', function (Publisher $publisher) {
-    return $publisher;
-}, ['publisher']);
-$container->set('publisherFunctions', function (Publisher $publisher) {
-    return $publisher;
-}, ['publisher']);
-$container->set('publisherMigrations', function (Publisher $publisher) {
-    return $publisher;
-}, ['publisher']);
-$container->set('publisherMails', function (Publisher $publisher) {
-    return $publisher;
-}, ['publisher']);
-$container->set('publisherDeletes', function (Publisher $publisher) {
-    return $publisher;
-}, ['publisher']);
-$container->set('publisherMessaging', function (Publisher $publisher) {
-    return $publisher;
-}, ['publisher']);
-$container->set('publisherWebhooks', function (Publisher $publisher) {
-    return $publisher;
-}, ['publisher']);
-$container->set('publisherForAudits', fn (Publisher $publisher) => new AuditPublisher(
-    $publisher,
-    new Queue(System::getEnv('_APP_AUDITS_QUEUE_NAME', Event::AUDITS_QUEUE_NAME))
-), ['publisher']);
-$container->set('publisherForCertificates', fn (Publisher $publisher) => new CertificatePublisher(
-    $publisher,
-    new Queue(System::getEnv('_APP_CERTIFICATES_QUEUE_NAME', Event::CERTIFICATES_QUEUE_NAME))
-), ['publisher']);
-$container->set('publisherForScreenshots', fn (Publisher $publisher) => new ScreenshotPublisher(
-    $publisher,
-    new Queue(System::getEnv('_APP_SCREENSHOTS_QUEUE_NAME', Event::SCREENSHOTS_QUEUE_NAME))
-), ['publisher']);
-$container->set('publisherForUsage', fn (Publisher $publisher) => new UsagePublisher(
-    $publisher,
-    new Queue(System::getEnv('_APP_STATS_USAGE_QUEUE_NAME', Event::STATS_USAGE_QUEUE_NAME))
-), ['publisher']);
-$container->set('publisherForExecutions', fn (Publisher $publisher) => new ExecutionPublisher(
-    $publisher,
-    new Queue(System::getEnv('_APP_EXECUTIONS_QUEUE_NAME', Event::EXECUTIONS_QUEUE_NAME))
-), ['publisher']);
-$container->set('publisherForFunctions', fn (Publisher $publisher) => new FunctionPublisher(
-    $publisher,
-    new Queue(System::getEnv('_APP_FUNCTIONS_QUEUE_NAME', Event::FUNCTIONS_QUEUE_NAME), 'utopia-queue', Event::FUNCTIONS_QUEUE_TTL)
-), ['publisher']);
-$container->set('publisherForMigrations', fn (Publisher $publisher) => new MigrationPublisher(
-    $publisher,
-    new Queue(System::getEnv('_APP_MIGRATIONS_QUEUE_NAME', Event::MIGRATIONS_QUEUE_NAME))
-), ['publisher']);
-$container->set('publisherForStatsResources', fn (Publisher $publisher) => new StatsResourcesPublisher(
-    $publisher,
-    new Queue(System::getEnv('_APP_STATS_RESOURCES_QUEUE_NAME', Event::STATS_RESOURCES_QUEUE_NAME))
-), ['publisher']);
-$container->set('publisherForBuilds', fn (Publisher $publisher) => new BuildPublisher(
-    $publisher,
-    new Queue(System::getEnv('_APP_BUILDS_QUEUE_NAME', Event::BUILDS_QUEUE_NAME))
-), ['publisher']);
-$container->set('publisherForMails', fn (Publisher $publisher) => new MailPublisher(
-    $publisher,
-    new Queue(System::getEnv('_APP_MAILS_QUEUE_NAME', Event::MAILS_QUEUE_NAME))
-), ['publisher']);
-$container->set('publisherForMessaging', fn (Publisher $publisher) => new MessagingPublisher(
-    $publisher,
-    new Queue(System::getEnv('_APP_MESSAGING_QUEUE_NAME', Event::MESSAGING_QUEUE_NAME))
-), ['publisher']);
 
 /**
  * Platform configuration
  */
 $container->set('platform', function () {
     return Config::getParam('platform', []);
-}, []);
-
-$container->set('console', function () {
-    return new Document(Config::getParam('console'));
 }, []);
 
 $container->set('authorization', function () {
@@ -203,8 +220,6 @@ $container->set('getLogsDB', function (Group $pools, Cache $cache, Authorization
     };
 }, ['pools', 'cache', 'authorization']);
 
-$container->set('telemetry', fn () => new NoTelemetry());
-
 $container->set('cache', function (Group $pools, Telemetry $telemetry) {
     $list = Config::getParam('pools-cache', []);
     $adapters = [];
@@ -237,6 +252,16 @@ $container->set('redis', function () {
 
     return $redis;
 });
+
+$container->set('locks', function (Group $pools) {
+    return function (string $key, int $ttl, callable $callback, float $timeout = 0.0) use ($pools): mixed {
+        return $pools->get('lock')->use(function (\Redis $redis) use ($key, $ttl, $callback, $timeout) {
+            $lock = new Distributed($redis, $key, ttl: $ttl);
+
+            return $lock->withLock($callback, timeout: $timeout);
+        });
+    };
+}, ['pools']);
 
 $container->set('timelimit', function (\Redis $redis) {
     return function (string $key, int $limit, int $time) use ($redis) {
@@ -395,5 +420,3 @@ $container->set(
     'isResourceBlocked',
     fn () => fn (Document $project, string $resourceType, ?string $resourceId) => false
 );
-
-$container->set('executor', fn () => new Executor());

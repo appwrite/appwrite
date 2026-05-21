@@ -5,8 +5,12 @@ namespace Appwrite\Platform\Workers;
 use Appwrite\Certificates\Adapter as CertificatesAdapter;
 use Appwrite\Deletes\Identities;
 use Appwrite\Deletes\Targets;
-use Appwrite\Event\Delete as DeleteEvent;
+use Appwrite\Event\Message\Delete as DeleteMessage;
+use Appwrite\Event\Message\Usage;
+use Appwrite\Event\Publisher\Delete as DeletePublisher;
+use Appwrite\Event\Publisher\Usage as UsagePublisher;
 use Appwrite\Extend\Exception;
+use Appwrite\Usage\Context as UsageContext;
 use Executor\Executor;
 use Throwable;
 use Utopia\Abuse\Adapters\TimeLimit\Database as AbuseDatabase;
@@ -66,8 +70,9 @@ class Deletes extends Action
             ->inject('executionsRetentionCount')
             ->inject('auditRetention')
             ->inject('log')
-            ->inject('queueForDeletes')
+            ->inject('publisherForDeletes')
             ->inject('getAudit')
+            ->inject('publisherForUsage')
             ->callback($this->action(...));
     }
 
@@ -93,8 +98,9 @@ class Deletes extends Action
         int $executionsRetentionCount,
         string $auditRetention,
         Log $log,
-        DeleteEvent $queueForDeletes,
+        DeletePublisher $publisherForDeletes,
         callable $getAudit,
+        UsagePublisher $publisherForUsage,
     ): void {
         $payload = $message->getPayload();
 
@@ -102,12 +108,13 @@ class Deletes extends Action
             throw new Exception('Missing payload');
         }
 
-        $type = $payload['type'] ?? '';
-        $datetime = $payload['datetime'] ?? null;
-        $hourlyUsageRetentionDatetime = $payload['hourlyUsageRetentionDatetime'] ?? null;
-        $resource = $payload['resource'] ?? null;
-        $resourceType = $payload['resourceType'] ?? null;
-        $document = new Document($payload['document'] ?? []);
+        $deleteMessage = DeleteMessage::fromArray($payload);
+        $type = $deleteMessage->type;
+        $datetime = $deleteMessage->datetime;
+        $hourlyUsageRetentionDatetime = $deleteMessage->hourlyUsageRetentionDatetime;
+        $resource = $deleteMessage->resource;
+        $resourceType = $deleteMessage->resourceType;
+        $document = $deleteMessage->document ?? new Document();
 
         $log->addTag('projectId', $project->getId());
         $log->addTag('type', $type);
@@ -214,7 +221,8 @@ class Deletes extends Action
                 $this->deleteUsageStats($project, $getProjectDB, $getLogsDB, $hourlyUsageRetentionDatetime);
                 $this->deleteExpiredSessions($project, $getProjectDB);
                 $this->deleteExpiredTransactions($project, $getProjectDB);
-                $this->deleteOldDeployments($queueForDeletes, $project, $getProjectDB);
+                $this->deleteExpiredPresences($project, $getProjectDB, $publisherForUsage);
+                $this->deleteOldDeployments($publisherForDeletes, $project, $getProjectDB);
                 break;
             case DELETE_TYPE_REPORT:
                 $this->deleteReport($dbForPlatform, $project, $document);
@@ -390,12 +398,12 @@ class Deletes extends Action
         Targets::delete($getProjectDB($project), Query::equal('sessionInternalId', [$session->getSequence()]));
     }
 
-    private function deleteOldDeployments(DeleteEvent $queueForDeletes, Document $project, callable $getProjectDB): void
+    private function deleteOldDeployments(DeletePublisher $publisherForDeletes, Document $project, callable $getProjectDB): void
     {
         /** @var Database $dbForProject */
         $dbForProject = $getProjectDB($project);
 
-        $removalCallback = function (Document $resource) use ($dbForProject, $queueForDeletes, $project) {
+        $removalCallback = function (Document $resource) use ($dbForProject, $publisherForDeletes, $project) {
             $retention = $resource->getAttribute('deploymentRetention', 0);
 
             // 0 means unlimited - never delete
@@ -420,12 +428,12 @@ class Deletes extends Action
                 'deployments',
                 $queries,
                 $dbForProject,
-                function (Document $deployment) use ($queueForDeletes, $project) {
-                    $queueForDeletes
-                        ->setType(DELETE_TYPE_DOCUMENT)
-                        ->setDocument($deployment)
-                        ->setProject($project)
-                        ->trigger();
+                function (Document $deployment) use ($publisherForDeletes, $project) {
+                    $publisherForDeletes->enqueue(new DeleteMessage(
+                        project: $project,
+                        type: DELETE_TYPE_DOCUMENT,
+                        document: $deployment,
+                    ));
                 }
             );
         };
@@ -1019,6 +1027,7 @@ class Deletes extends Action
                 Query::equal('resourceInternalId', [$resourceInternalId]),
                 Query::equal('resourceType', [$resourceType]),
                 Query::orderDesc('$createdAt'),
+                Query::orderDesc(),
                 Query::offset($executionsRetentionCount),
             ]);
 
@@ -1738,5 +1747,26 @@ class Deletes extends Action
         ], onError: function (Throwable $th) {
             // Swallow errors to avoid breaking the cleanup process
         });
+    }
+
+    private function deleteExpiredPresences(Document $project, callable $getProjectDB, UsagePublisher $publisherForUsage): void
+    {
+        $dbForProject = $getProjectDB($project);
+
+        $now = DateTime::format(new \DateTime());
+
+        $deleted = $dbForProject->deleteDocuments('presenceLogs', [
+            Query::lessThan('expiresAt', $now),
+        ], onError: function (Throwable $th) {
+            // Swallow errors to avoid breaking the cleanup process
+        });
+
+        if ($deleted > 0) {
+            $usage = (new UsageContext())->addMetric(METRIC_USERS_PRESENCE, -$deleted);
+            $publisherForUsage->enqueue(new Usage(
+                project: $project,
+                metrics: $usage->getMetrics(),
+            ));
+        }
     }
 }

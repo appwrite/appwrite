@@ -62,7 +62,7 @@ class Create extends BigIntCreate
             ->param('array', false, new Boolean(), 'Is column an array?', true)
             ->inject('response')
             ->inject('dbForProject')
-            ->inject('queueForDatabase')
+            ->inject('publisherForDatabase')
             ->inject('queueForEvents')
             ->inject('authorization')
             ->callback($this->action(...));

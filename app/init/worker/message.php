@@ -1,9 +1,6 @@
 <?php
 
-use Appwrite\Event\Database as EventDatabase;
-use Appwrite\Event\Delete;
 use Appwrite\Event\Event;
-use Appwrite\Event\Publisher\Func as FunctionPublisher;
 use Appwrite\Event\Realtime;
 use Appwrite\Event\Webhook;
 use Appwrite\Usage\Context;
@@ -23,7 +20,6 @@ use Utopia\DSN\DSN;
 use Utopia\Logger\Log;
 use Utopia\Pools\Group;
 use Utopia\Queue\Publisher;
-use Utopia\Queue\Queue;
 use Utopia\Registry\Registry;
 use Utopia\Storage\Device\Telemetry as TelemetryDevice;
 use Utopia\System\System;
@@ -328,14 +324,6 @@ return function (Container $container): void {
         return DateTime::addSeconds(new \DateTime(), -1 * (int) System::getEnv('_APP_MAINTENANCE_RETENTION_EXECUTION', 1209600)); // 14 days
     }, []);
 
-    $container->set('queueForDatabase', function (Publisher $publisher) {
-        return new EventDatabase($publisher);
-    }, ['publisher']);
-
-    $container->set('queueForDeletes', function (Publisher $publisher) {
-        return new Delete($publisher);
-    }, ['publisher']);
-
     $container->set('queueForEvents', function (Publisher $publisher) {
         return new Event($publisher);
     }, ['publisher']);
@@ -343,11 +331,6 @@ return function (Container $container): void {
     $container->set('queueForWebhooks', function (Publisher $publisher) {
         return new Webhook($publisher);
     }, ['publisher']);
-
-    $container->set('publisherForFunctions', fn (Publisher $publisher) => new FunctionPublisher(
-        $publisher,
-        new Queue(System::getEnv('_APP_FUNCTIONS_QUEUE_NAME', Event::FUNCTIONS_QUEUE_NAME), 'utopia-queue', Event::FUNCTIONS_QUEUE_TTL)
-    ), ['publisher']);
 
     $container->set('queueForRealtime', function () {
         return new Realtime();
