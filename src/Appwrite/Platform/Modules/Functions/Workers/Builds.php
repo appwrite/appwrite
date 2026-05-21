@@ -1358,7 +1358,7 @@ class Builds extends Action
                 . " && if [ -d {$escapedOutputPath} ]; then cp -R {$escapedOutputPath}/. /tmp/build-output/;"
                 . ' elif [ -d /usr/code ]; then cp -R /usr/code/. /tmp/build-output/; fi';
         } else {
-            $escapedOutputDirectoryError = \escapeshellarg("Error: Output directory {$outputDirectory} is empty or does not exist.");
+            $escapedOutputDirectoryError = \escapeshellarg("Error: No such file or directory: output directory {$outputDirectory} is empty or does not exist.");
             $buildCommand .= " && if [ -d {$escapedOutputPath} ] && [ \"$(find {$escapedOutputPath} -mindepth 1 -print -quit)\" ]; then"
                 . " mkdir -p /tmp/build-output && cp -R {$escapedOutputPath}/. /tmp/build-output/;"
                 . " else echo {$escapedOutputDirectoryError} >&2; exit 1; fi";
