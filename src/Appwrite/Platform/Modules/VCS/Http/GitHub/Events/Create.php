@@ -133,7 +133,6 @@ class Create extends Action
         callable $getProjectDB,
         array $platform,
     ) {
-        $providerBranchCreated = $parsedPayload["branchCreated"] ?? false;
         $providerBranchDeleted = $parsedPayload["branchDeleted"] ?? false;
         $providerBranch = $parsedPayload["branch"] ?? '';
         $providerBranchUrl = $parsedPayload["branchUrl"] ?? '';
@@ -162,8 +161,8 @@ class Create extends Action
             Query::limit(100),
         ]));
 
-        // Create new deployment only on push (not committed by us) and not when branch is created or deleted
-        if ($providerCommitAuthorEmail !== APP_VCS_GITHUB_EMAIL && !$providerBranchCreated && !$providerBranchDeleted) {
+        // Create new deployment only on push (not committed by us) and not when branch is deleted
+        if ($providerCommitAuthorEmail !== APP_VCS_GITHUB_EMAIL && !$providerBranchDeleted) {
             $providerAffectedFiles = $parsedPayload['affectedFiles'] ?? [];
             $this->createGitDeployments($github, $providerInstallationId, $repositories, $providerBranch, $providerBranchUrl, $providerRepositoryName, $providerRepositoryUrl, $providerRepositoryOwner, $providerCommitHash, $providerCommitAuthorName, $providerCommitAuthorUrl, $providerCommitMessage, $providerCommitUrl, '', $providerAffectedFiles, false, $dbForPlatform, $authorization, $publisherForBuilds, $getProjectDB, $platform);
         }
