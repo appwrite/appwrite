@@ -1656,7 +1656,9 @@ class UsageTest extends Scope
     {
         $functionId = $data['functionId'];
         $executionTime = $data['executionTime'];
-        $executions = $data['executions'];
+        // METRIC_EXECUTIONS counts every ExecutionCompleted event regardless of status,
+        // so the assertion has to compare against successes + failures, not successes alone.
+        $executions = $data['executions'] + $data['failures'];
 
         $this->assertEventually(function () use ($functionId, $executions, $executionTime) {
             $response = $this->client->call(
