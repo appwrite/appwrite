@@ -2554,10 +2554,14 @@ trait MigrationsBase
             'x-appwrite-key' => $this->getDestinationProject()['apiKey'],
         ];
 
+        // Unique name so re-runs and parallel suites can't match a stale key
+        // left behind by a previous crashed run.
+        $keyName = 'Test API Key ' . ID::unique();
+
         // Create API key on source project
         $response = $this->client->call(Client::METHOD_POST, '/project/keys', $sourceHeaders, [
             'keyId' => ID::unique(),
-            'name' => 'Test API Key',
+            'name' => $keyName,
             'scopes' => ['databases.read', 'databases.write'],
             'expire' => null,
         ]);
@@ -2596,7 +2600,7 @@ trait MigrationsBase
         $foundKey = null;
 
         foreach ($response['body']['keys'] as $k) {
-            if ($k['name'] === 'Test API Key') {
+            if ($k['name'] === $keyName) {
                 $foundKey = $k;
 
                 break;
@@ -2604,7 +2608,7 @@ trait MigrationsBase
         }
 
         $this->assertNotNull($foundKey);
-        $this->assertEquals('Test API Key', $foundKey['name']);
+        $this->assertEquals($keyName, $foundKey['name']);
         $this->assertEqualsCanonicalizing(['databases.read', 'databases.write'], $foundKey['scopes']);
         $this->assertEmpty($foundKey['expire']);
         $this->assertNotEquals($apiKey['secret'], $foundKey['secret']);
