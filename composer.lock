@@ -4679,12 +4679,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/migration.git",
-                "reference": "9813afb2d7e0ddf8f00002fa30c0318d697e8d97"
+                "reference": "edcb0aa3285b44616e570e5fe092aaac97deb686"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/migration/zipball/9813afb2d7e0ddf8f00002fa30c0318d697e8d97",
-                "reference": "9813afb2d7e0ddf8f00002fa30c0318d697e8d97",
+                "url": "https://api.github.com/repos/utopia-php/migration/zipball/edcb0aa3285b44616e570e5fe092aaac97deb686",
+                "reference": "edcb0aa3285b44616e570e5fe092aaac97deb686",
                 "shasum": ""
             },
             "require": {
@@ -4744,7 +4744,7 @@
                 "source": "https://github.com/utopia-php/migration/tree/add-email-templates-migration",
                 "issues": "https://github.com/utopia-php/migration/issues"
             },
-            "time": "2026-05-21T15:55:26+00:00"
+            "time": "2026-05-21T16:14:58+00:00"
         },
         {
             "name": "utopia-php/mongo",

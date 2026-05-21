@@ -3126,17 +3126,20 @@ trait MigrationsBase
         $sourceProjectId = $this->getProject()['$id'];
         $destinationProjectId = $this->getDestinationProject()['$id'];
 
-        // The source SDK path requires custom SMTP enabled before a template can be saved.
-        $this->client->call(Client::METHOD_PATCH, '/projects/' . $sourceProjectId . '/smtp', $consoleHeaders, [
+        // The source SDK path requires custom SMTP enabled before a template can be
+        // saved — and the enable call validates the SMTP connection. `maildev` is the
+        // dev mailcatcher in the test cluster's docker-compose; it accepts unauthenticated
+        // connections on port 1025, so it's the only host that lets us pass validation.
+        $smtpHost = 'maildev';
+        $smtpPort = 1025;
+        $smtpUpdate = $this->client->call(Client::METHOD_PATCH, '/projects/' . $sourceProjectId . '/smtp', $consoleHeaders, [
             'enabled' => true,
             'senderName' => 'Test Sender',
             'senderEmail' => 'sender@example.com',
-            'host' => 'smtp.example.com',
-            'port' => 587,
-            'username' => 'test',
-            'password' => 'test',
-            'secure' => 'tls',
+            'host' => $smtpHost,
+            'port' => $smtpPort,
         ]);
+        $this->assertEquals(200, $smtpUpdate['headers']['status-code'], 'SMTP enable on source failed: ' . \json_encode($smtpUpdate['body']));
 
         $templateId = 'verification';
         $locale = 'en';
@@ -3181,11 +3184,8 @@ trait MigrationsBase
             'enabled' => true,
             'senderName' => 'Dest Sender',
             'senderEmail' => 'dest@example.com',
-            'host' => 'smtp.example.com',
-            'port' => 587,
-            'username' => 'test',
-            'password' => 'test',
-            'secure' => 'tls',
+            'host' => $smtpHost,
+            'port' => $smtpPort,
         ]);
 
         $fetched = $this->client->call(
