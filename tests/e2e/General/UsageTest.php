@@ -283,6 +283,9 @@ class UsageTest extends Scope
         $realtimeUser = $this->getUser(true);
         $requestsTotal += 2;
 
+        // Note: the assertEventually probe below calls /presences/usage via console headers;
+        // console/admin requests are not tracked in project usage, so no increment is needed.
+
         $realtime = new WebSocketClient(
             'ws://appwrite.test/v1/realtime?' . \http_build_query([
                 'project' => $projectId,
