@@ -9,6 +9,7 @@ import {
   PanelRight,
   Trash2,
   Wand2,
+  X,
 } from 'lucide-react'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
@@ -38,7 +39,7 @@ import {
 } from '@/components/global/shared/StorageFilePreviewThumb'
 import { formatBytes } from '@/lib/utils/mock-data'
 import {
-  STORAGE_FILES_SPLIT_HEADER_ROW_H_CLASS,
+  STORAGE_FILES_PREVIEW_HEADER_ROW_CLASS,
   STORAGE_FILES_SPLIT_PANE_BG_CLASS,
 } from './files-documents-layout'
 import { FileSecurity } from './FileSecurity'
@@ -77,6 +78,10 @@ export type FileInspectorPanelProps = {
   fileId: string | undefined
   /** URL `filePanel` - `security` is kept for older links and opens Permissions */
   panelTab?: 'overview' | 'permissions' | 'tokens' | 'security'
+  /** Inline stacked split: dismiss preview and clear `?file=` */
+  onClose?: () => void
+  /** `drawer` = bottom sheet on narrow viewports (close is on the drawer chrome). */
+  presentation?: 'inline' | 'drawer'
 }
 
 type InspectorTab = 'overview' | 'permissions' | 'tokens'
@@ -90,6 +95,8 @@ export function FileInspectorPanel({
   bucketId,
   fileId,
   panelTab,
+  onClose,
+  presentation = 'inline',
 }: FileInspectorPanelProps) {
   const navigate = useNavigate()
   const queryClient = useQueryClient()
@@ -288,6 +295,20 @@ export function FileInspectorPanel({
     )
   }
 
+  const closePreviewButton =
+    onClose && presentation === 'inline' ? (
+    <Button
+      type="button"
+      variant="ghost"
+      size="icon"
+      className="h-6 w-6"
+      onClick={onClose}
+      aria-label="Close file preview"
+    >
+      <X className="h-3.5 w-3.5" />
+    </Button>
+  ) : null
+
   if (!fileId) {
     return (
       <aside
@@ -296,12 +317,7 @@ export function FileInspectorPanel({
           STORAGE_FILES_SPLIT_PANE_BG_CLASS,
         )}
       >
-        <div
-          className={cn(
-            'flex shrink-0 items-center gap-2 border-b border-border px-3',
-            STORAGE_FILES_SPLIT_HEADER_ROW_H_CLASS,
-          )}
-        >
+        <div className={STORAGE_FILES_PREVIEW_HEADER_ROW_CLASS}>
           <PanelRight className="h-4 w-4 text-muted-foreground" />
           <span className="text-[12px] font-semibold uppercase tracking-wider text-muted-foreground">
             File
@@ -335,8 +351,8 @@ export function FileInspectorPanel({
       >
             <div
               className={cn(
-                'flex shrink-0 items-center justify-between gap-2 border-b border-border px-3',
-                STORAGE_FILES_SPLIT_HEADER_ROW_H_CLASS,
+                STORAGE_FILES_PREVIEW_HEADER_ROW_CLASS,
+                'justify-between',
               )}
             >
               <div className="flex items-center gap-2">
@@ -351,7 +367,7 @@ export function FileInspectorPanel({
                     type="button"
                     variant="ghost"
                     size="icon"
-                    className="h-8 w-8"
+                    className="h-6 w-6"
                     onClick={handleCopyFileViewUrl}
                     aria-label="Copy file view URL"
                   >
@@ -362,6 +378,7 @@ export function FileInspectorPanel({
                   Copy view URL
                 </TooltipContent>
               </Tooltip>
+              {closePreviewButton}
             </div>
             <div className="flex flex-1 items-center justify-center px-4">
               <p className="text-[12px] text-muted-foreground">
@@ -382,8 +399,8 @@ export function FileInspectorPanel({
       >
           <div
             className={cn(
-              'flex shrink-0 items-center justify-between gap-2 border-b border-border px-3',
-              STORAGE_FILES_SPLIT_HEADER_ROW_H_CLASS,
+              STORAGE_FILES_PREVIEW_HEADER_ROW_CLASS,
+              'justify-between',
             )}
           >
             <div className="flex items-center gap-2">
@@ -398,7 +415,7 @@ export function FileInspectorPanel({
                   type="button"
                   variant="ghost"
                   size="icon"
-                  className="h-8 w-8"
+                  className="h-6 w-6"
                   onClick={handleCopyFileViewUrl}
                   aria-label="Copy file view URL"
                 >
@@ -409,6 +426,7 @@ export function FileInspectorPanel({
                 Copy view URL
               </TooltipContent>
             </Tooltip>
+            {closePreviewButton}
           </div>
           <div className="flex flex-1 items-center justify-center px-4">
             <p className="text-[12px] text-muted-foreground">
@@ -436,7 +454,7 @@ export function FileInspectorPanel({
 
   /** Match tab strip: `TabsList` wrapper uses the same horizontal + vertical padding */
   const inspectorTabContentClass =
-    'space-y-4 px-3 pb-3 pt-3 sm:px-6 sm:pb-4 sm:pt-4'
+    'space-y-4 px-3 pb-6 pt-3 sm:px-6 sm:pb-8 sm:pt-4'
 
   const overviewBody = (
     <div className={inspectorTabContentClass}>
@@ -742,13 +760,13 @@ export function FileInspectorPanel({
       >
         <div
           className={cn(
-            'flex shrink-0 items-center justify-between gap-2 border-b border-border px-3',
-            STORAGE_FILES_SPLIT_HEADER_ROW_H_CLASS,
+            STORAGE_FILES_PREVIEW_HEADER_ROW_CLASS,
+            'justify-between gap-1',
           )}
         >
           <div className="flex min-w-0 flex-1 items-center gap-2">
             <PanelRight className="h-4 w-4 shrink-0 text-muted-foreground" />
-            <span className="truncate text-left text-[13px] font-semibold text-foreground">
+            <span className="truncate text-left text-[12px] font-medium leading-none text-foreground">
               {file.name}
             </span>
           </div>
@@ -759,7 +777,7 @@ export function FileInspectorPanel({
                   type="button"
                   variant="ghost"
                   size="icon"
-                  className="h-8 w-8"
+                  className="h-6 w-6"
                   onClick={handleCopyFileViewUrl}
                   aria-label="Copy file view URL"
                 >
@@ -778,8 +796,8 @@ export function FileInspectorPanel({
                       type="button"
                       variant="ghost"
                       size="icon"
-                      className="h-8 w-8"
-                      onClick={handleDownload}
+                  className="h-6 w-6"
+                  onClick={handleDownload}
                       aria-label="Download"
                     >
                       <Download className="h-3.5 w-3.5" />
@@ -795,8 +813,8 @@ export function FileInspectorPanel({
                       type="button"
                       variant="ghost"
                       size="icon"
-                      className="h-8 w-8"
-                      onClick={handlePreview}
+                  className="h-6 w-6"
+                  onClick={handlePreview}
                       aria-label="Open preview"
                     >
                       <ExternalLink className="h-3.5 w-3.5" />
@@ -808,6 +826,7 @@ export function FileInspectorPanel({
                 </Tooltip>
               </>
             ) : null}
+            {closePreviewButton}
           </div>
         </div>
 
@@ -847,29 +866,31 @@ export function FileInspectorPanel({
                 </TabsTrigger>
               </TabsList>
             </div>
-            <div className="min-h-0 flex-1 overflow-y-auto">
+            <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain">
               <TabsContent
                 value="overview"
-                className="m-0 mt-0 h-full outline-none data-[state=inactive]:hidden"
+                className="m-0 mt-0 block outline-none data-[state=inactive]:hidden"
               >
                 {overviewBody}
               </TabsContent>
               <TabsContent
                 value="permissions"
-                className="m-0 mt-0 h-full outline-none data-[state=inactive]:hidden"
+                className="m-0 mt-0 block outline-none data-[state=inactive]:hidden"
               >
                 {permissionsTabBody}
               </TabsContent>
               <TabsContent
                 value="tokens"
-                className="m-0 mt-0 h-full outline-none data-[state=inactive]:hidden"
+                className="m-0 mt-0 block outline-none data-[state=inactive]:hidden"
               >
                 {tokensTabBody}
               </TabsContent>
             </div>
           </Tabs>
         ) : (
-          <div className="min-h-0 flex-1 overflow-y-auto">{overviewBody}</div>
+          <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain">
+            {overviewBody}
+          </div>
         )}
       </aside>
     </TooltipProvider>

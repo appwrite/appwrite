@@ -22,13 +22,6 @@ export const STORAGE_FILES_PREVIEW_PANE_MIN_PX = 480
  */
 export const STORAGE_FILES_TABLE_PREVIEW_SPLIT_MIN_VIEWPORT_PX = 1024
 
-/**
- * Stacked layout (narrow viewport): max height for the file inspector so the
- * files table + pagination can use `flex-1` and take most of the vertical space.
- */
-export const STORAGE_FILES_STACKED_PREVIEW_MAX_H_CLASS =
-  'max-h-[min(40dvh,600px)]'
-
 /** Checkbox column width in `table-fixed` mode (matches documents rows grid). */
 export const STORAGE_FILES_TABLE_EDGE_COL_PX = 40
 
@@ -74,48 +67,74 @@ export function readStoredDocumentsTablePaneWidthPx(): number {
 /** Shared pane surface for the files table and inline file inspector split. */
 export const STORAGE_FILES_SPLIT_PANE_BG_CLASS = 'bg-background'
 
+/**
+ * Fixed height for the files table header row and preview toolbar (must stay in sync).
+ * Table `th` uses {@link STORAGE_FILES_TABLE_HEADER_TH_CLASS}; preview uses
+ * {@link STORAGE_FILES_PREVIEW_HEADER_ROW_CLASS}.
+ */
+export const STORAGE_FILES_TABLE_HEADER_ROW_HEIGHT_CLASS = 'h-[34px]'
+
+/** Apply to files grid header `th` cells (replaces `py-2`). */
+export const STORAGE_FILES_TABLE_HEADER_TH_CLASS = cn(
+  STORAGE_FILES_TABLE_HEADER_ROW_HEIGHT_CLASS,
+  'max-h-[34px] box-border py-0 align-middle',
+)
+
+/**
+ * File inspector toolbar — same height/inset rules as table header (no pane `border-t`).
+ */
+export const STORAGE_FILES_PREVIEW_HEADER_ROW_CLASS = cn(
+  'box-border flex shrink-0 items-center gap-2 px-3 py-0',
+  STORAGE_FILES_TABLE_HEADER_ROW_HEIGHT_CLASS,
+  'max-h-[34px]',
+  'shadow-[inset_0_1px_0_0_var(--border),inset_0_-1px_0_0_var(--border)]',
+)
+
+/** Bottom sheet height when the file inspector opens on narrow viewports. */
+export const STORAGE_FILES_INSPECTOR_DRAWER_HEIGHT_CLASS =
+  'h-[min(92dvh,920px)] max-h-[92dvh]'
+
+/** Side-by-side split: table + pagination left column, preview spans full height on the right. */
+export function storageFilesSplitGridStyle(tablePaneWidthPx: number): {
+  gridTemplateColumns: string
+  gridTemplateRows: string
+} {
+  return {
+    gridTemplateColumns: `${tablePaneWidthPx}px minmax(${STORAGE_FILES_PREVIEW_PANE_MIN_PX}px, 1fr)`,
+    gridTemplateRows: '1fr auto',
+  }
+}
+
+/** @deprecated Use {@link STORAGE_FILES_PREVIEW_HEADER_ROW_CLASS} */
+export const STORAGE_FILES_SPLIT_HEADER_ROW_H_CLASS =
+  STORAGE_FILES_PREVIEW_HEADER_ROW_CLASS
+
+/**
+ * Row grid styles — keep in sync with `tablesdb/Spreadsheet.tsx`
+ * (`stickyTheadClass`, `headerCellBorderClass`, `bodyCellBorderClass`).
+ */
 export const STORAGE_SPREADSHEET_STICKY_THEAD_CLASS =
   'sticky top-0 z-20 bg-background'
 
-/**
- * Fixed height for the table header row and the preview pane toolbar so their
- * bottom borders line up across the split (preview `h-8` actions fit inside).
- */
-export const STORAGE_FILES_SPLIT_HEADER_ROW_H_CLASS = 'h-10'
-
-/** Inset shadows use `var(--border)` so grid lines match `border-border` in all themes. */
 export const STORAGE_SPREADSHEET_HEADER_CELL_BORDER =
   'border-r border-border shadow-[inset_0_1px_0_0_var(--border),inset_0_-1px_0_0_var(--border)]'
-
-/**
- * Header cells when the files / preview split wrapper already draws `border-t`
- * (single continuous top rule across both panes).
- */
-export const STORAGE_SPREADSHEET_HEADER_CELL_BORDER_SPLIT_TOP =
-  'border-r border-border shadow-[inset_0_-1px_0_0_var(--border)]'
-
-/** Last header cell: no right border at the table edge. */
-export const STORAGE_SPREADSHEET_HEADER_CELL_BORDER_SPLIT_TOP_LAST =
-  'shadow-[inset_0_-1px_0_0_var(--border)]'
-
-/**
- * Sticky checkbox column header when split-top chrome is used.
- * Uses inset shadow for the vertical rule next to the first data column - no
- * `border-r` here (that would double the line with `inset_-1px_0_0_0`).
- */
-export const STORAGE_SPREADSHEET_HEADER_STICKY_CHECKBOX_SPLIT_TOP =
-  'shadow-[inset_0_-1px_0_0_var(--border),inset_-1px_0_0_0_var(--border)]'
-
-/** Checkbox body cell: bottom edge only; vertical rule is `inset_-1px_0_0_0` on the cell (not `border-r`). */
-export const STORAGE_SPREADSHEET_BODY_CHECKBOX_CELL_BORDER =
-  'border-b border-border'
 
 export const STORAGE_SPREADSHEET_BODY_CELL_BORDER =
   'border-b border-r border-border'
 
-/** Last body cell: no right border at the table edge. */
-export const STORAGE_SPREADSHEET_BODY_CELL_BORDER_LAST =
-  'border-b border-border'
+/** Sticky checkbox/actions cells — fixed surface; row hover/selection must not tint these. */
+export const STORAGE_SPREADSHEET_BODY_STICKY_EDGE_BG_CLASS = 'bg-background'
+
+export const STORAGE_SPREADSHEET_TABLE_LAYER_CLASS =
+  'relative inline-block min-w-full align-top'
+
+/** Sticky checkbox `th` — single shadow utility (do not stack multiple `shadow-[...]`). */
+export const STORAGE_SPREADSHEET_HEADER_STICKY_CHECKBOX_SHADOW =
+  'shadow-[inset_0_1px_0_0_var(--border),inset_0_-1px_0_0_var(--border),inset_-1px_0_0_0_var(--border)]'
+
+/** Sticky actions `th` — single shadow utility (do not stack multiple `shadow-[...]`). */
+export const STORAGE_SPREADSHEET_HEADER_STICKY_ACTIONS_SHADOW =
+  'shadow-[inset_0_1px_0_0_var(--border),inset_0_-1px_0_0_var(--border),inset_1px_0_0_0_var(--border)]'
 
 /**
  * Column resize rail (matches Tables DB `Spreadsheet` `DATA_COLUMN_RESIZE_RAIL_HANDLE_CLASS`).

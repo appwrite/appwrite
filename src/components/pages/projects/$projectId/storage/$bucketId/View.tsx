@@ -7,6 +7,7 @@ import {
   useRef,
   type CSSProperties,
   type DragEvent,
+  type MouseEvent,
   type PointerEvent as ReactPointerEvent,
 } from 'react'
 import { flushSync } from 'react-dom'
@@ -86,6 +87,7 @@ import {
 import type { CompactFilterKey } from '@/lib/table-filters'
 import { FiltersPopover } from '@/components/global/shared/FiltersPopover'
 import { FileInspectorPanel } from '../_components/FileInspectorPanel'
+import { FileInspectorDrawer } from '../_components/FileInspectorDrawer'
 import {
   clampSplitFirstPaneWidthPx,
   fitSplitFirstPaneWidthOnContainerResize,
@@ -93,19 +95,20 @@ import {
 import {
   STORAGE_FILES_PREVIEW_PANE_MIN_PX,
   STORAGE_FILES_TABLE_PREVIEW_SPLIT_MIN_VIEWPORT_PX,
-  STORAGE_FILES_STACKED_PREVIEW_MAX_H_CLASS,
   STORAGE_FILES_TABLE_EDGE_COL_PX,
   STORAGE_FILES_TABLE_PANE_MAX_PX,
   STORAGE_FILES_TABLE_PANE_MIN_PX,
-  STORAGE_FILES_SPLIT_HEADER_ROW_H_CLASS,
   STORAGE_FILES_SPLIT_PANE_BG_CLASS,
   defaultStorageFilesTablePaneWidthPx,
+  storageFilesSplitGridStyle,
   STORAGE_SPREADSHEET_BODY_CELL_BORDER,
-  STORAGE_SPREADSHEET_BODY_CELL_BORDER_LAST,
-  STORAGE_SPREADSHEET_HEADER_CELL_BORDER_SPLIT_TOP,
-  STORAGE_SPREADSHEET_HEADER_CELL_BORDER_SPLIT_TOP_LAST,
-  STORAGE_SPREADSHEET_HEADER_STICKY_CHECKBOX_SPLIT_TOP,
+  STORAGE_SPREADSHEET_BODY_STICKY_EDGE_BG_CLASS,
+  STORAGE_SPREADSHEET_TABLE_LAYER_CLASS,
+  STORAGE_SPREADSHEET_HEADER_CELL_BORDER,
+  STORAGE_SPREADSHEET_HEADER_STICKY_ACTIONS_SHADOW,
+  STORAGE_SPREADSHEET_HEADER_STICKY_CHECKBOX_SHADOW,
   STORAGE_SPREADSHEET_STICKY_THEAD_CLASS,
+  STORAGE_FILES_TABLE_HEADER_TH_CLASS,
   STORAGE_FILES_LIST_DATA_COLUMN_RESIZE_RAIL_HANDLE_CLASS,
 } from '../_components/files-documents-layout'
 import { useMediaMinWidth } from '@/hooks/use-media-min-width'
@@ -253,10 +256,35 @@ export function View() {
   const filterQueries =
     filterMap.size > 0 ? Array.from(filterMap.values()) : undefined
 
-  const inspectorFileId =
-    typeof search?.file === 'string' && search.file.trim().length > 0
-      ? search.file
-      : undefined
+  const inspectorFileId = useMemo(() => {
+    if (typeof search?.file === 'string' && search.file.trim().length > 0) {
+      return search.file.trim()
+    }
+    if (typeof window === 'undefined') return undefined
+    const file = new URLSearchParams(location.search).get('file')
+    return file?.trim() || undefined
+  }, [search?.file, location.search])
+
+  const wideEnoughForTablePreviewSplit = useMediaMinWidth(
+    STORAGE_FILES_TABLE_PREVIEW_SPLIT_MIN_VIEWPORT_PX,
+  )
+  const useInlineFilePreviewPane = true
+  const isFilesStackedLayout =
+    useInlineFilePreviewPane && !wideEnoughForTablePreviewSplit
+  const splitFilesTable =
+    useInlineFilePreviewPane && !isFilesStackedLayout
+
+  /** Opens the bottom drawer immediately on row tap before `?file=` search syncs. */
+  const [stackedDrawerFileId, setStackedDrawerFileId] = useState<
+    string | undefined
+  >()
+  const effectiveInspectorFileId = isFilesStackedLayout
+    ? inspectorFileId ?? stackedDrawerFileId
+    : inspectorFileId
+
+  useEffect(() => {
+    if (inspectorFileId) setStackedDrawerFileId(undefined)
+  }, [inspectorFileId])
 
   const queryClient = useQueryClient()
   const { account } = useAuth()
@@ -297,6 +325,10 @@ export function View() {
   const [filesSectionFileDragActive, setFilesSectionFileDragActive] =
     useState(false)
   const [selectedFiles, setSelectedFiles] = useState<Set<string>>(new Set())
+  const fileSelectionAnchorRef = useRef<string | null>(null)
+  const stackedRowTouchActivateRef = useRef(false)
+  const [fileMultiSelectModifierActive, setFileMultiSelectModifierActive] =
+    useState(false)
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
 
   useEffect(() => {
@@ -807,7 +839,141 @@ export function View() {
     } else {
       newSelected.add(fileId)
     }
+    fileSelectionAnchorRef.current = fileId
     setSelectedFiles(newSelected)
+  }
+
+  useEffect(() => {
+    const syncModifierActive = (event: KeyboardEvent) => {
+      setFileMultiSelectModifierActive(
+        event.shiftKey || event.ctrlKey || event.metaKey,
+      )
+    }
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (
+        event.key === 'Shift' ||
+        event.key === 'Control' ||
+        event.key === 'Meta'
+      ) {
+        setFileMultiSelectModifierActive(true)
+      }
+    }
+    const onBlur = () => setFileMultiSelectModifierActive(false)
+    window.addEventListener('keydown', onKeyDown)
+    window.addEventListener('keyup', syncModifierActive)
+    window.addEventListener('blur', onBlur)
+    return () => {
+      window.removeEventListener('keydown', onKeyDown)
+      window.removeEventListener('keyup', syncModifierActive)
+      window.removeEventListener('blur', onBlur)
+    }
+  }, [])
+
+  const isFileMultiSelectModifierClick = (event: MouseEvent) =>
+    event.shiftKey || event.ctrlKey || event.metaKey
+
+  const preventFileRowTextSelectionOnPointer = (event: MouseEvent) => {
+    if (isFileMultiSelectModifierClick(event)) {
+      event.preventDefault()
+    }
+  }
+
+  const selectableFiles = useMemo(
+    () => files.filter((f) => !isFilePending(f)),
+    [files],
+  )
+
+  const selectFilesWithShift = useCallback(
+    (fileId: string) => {
+      const anchorId =
+        fileSelectionAnchorRef.current ??
+        (selectedFiles.size > 0 ? Array.from(selectedFiles)[0] : fileId)
+      const anchorIndex = selectableFiles.findIndex((f) => f.$id === anchorId)
+      const clickIndex = selectableFiles.findIndex((f) => f.$id === fileId)
+      if (anchorIndex === -1 || clickIndex === -1) {
+        const next = new Set(selectedFiles)
+        if (next.has(fileId)) next.delete(fileId)
+        else next.add(fileId)
+        fileSelectionAnchorRef.current = fileId
+        setSelectedFiles(next)
+        return
+      }
+      const start = Math.min(anchorIndex, clickIndex)
+      const end = Math.max(anchorIndex, clickIndex)
+      const next = new Set(selectedFiles)
+      for (let i = start; i <= end; i++) {
+        next.add(selectableFiles[i].$id)
+      }
+      fileSelectionAnchorRef.current = fileId
+      setSelectedFiles(next)
+    },
+    [selectableFiles, selectedFiles],
+  )
+
+  const handleFileMultiSelectPointer = (fileId: string, event: MouseEvent) => {
+    if (!isFileMultiSelectModifierClick(event)) return false
+    event.preventDefault()
+    if (event.shiftKey) {
+      selectFilesWithShift(fileId)
+    } else {
+      toggleFile(fileId)
+    }
+    return true
+  }
+
+  const clearInspectorFile = useCallback(() => {
+    setStackedDrawerFileId(undefined)
+    if (!projectId || !bucketId) return
+    navigate({
+      to: '/projects/$projectId/storage/$bucketId',
+      params: { projectId, bucketId },
+      search: (prev: Record<string, unknown>) => {
+        const next = { ...prev }
+        delete next.file
+        delete next.filePanel
+        return next
+      },
+      replace: true,
+    })
+  }, [navigate, projectId, bucketId])
+
+  const handleFileRowClick = (file: Models.File, event: MouseEvent) => {
+    if (handleFileMultiSelectPointer(file.$id, event)) return
+    fileSelectionAnchorRef.current = file.$id
+
+    if (isFilesStackedLayout) {
+      setStackedDrawerFileId(file.$id)
+      navigate({
+        to: '/projects/$projectId/storage/$bucketId',
+        params: {
+          projectId: projectId!,
+          bucketId: bucketId!,
+        },
+        search: (prev: Record<string, unknown>) => {
+          const next = { ...prev } as Record<string, unknown>
+          next.file = file.$id
+          return next
+        },
+        replace: true,
+      })
+      return
+    }
+
+    const isActive = inspectorFileId === file.$id
+    navigate({
+      to: '/projects/$projectId/storage/$bucketId',
+      params: {
+        projectId: projectId!,
+        bucketId: bucketId!,
+      },
+      search: (prev: Record<string, unknown>) => {
+        const next = { ...prev } as Record<string, unknown>
+        if (isActive) delete next.file
+        else next.file = file.$id
+        return next
+      },
+      replace: true,
+    })
   }
 
   const toggleAllFiles = () => {
@@ -875,14 +1041,6 @@ export function View() {
     })
   }
 
-  const wideEnoughForTablePreviewSplit = useMediaMinWidth(
-    STORAGE_FILES_TABLE_PREVIEW_SPLIT_MIN_VIEWPORT_PX,
-  )
-  const useInlineFilePreviewPane = true
-  const isFilesStackedLayout =
-    useInlineFilePreviewPane && !wideEnoughForTablePreviewSplit
-  const splitFilesTable =
-    useInlineFilePreviewPane && !isFilesStackedLayout
   const filesTablePanePrefs = account?.prefs as UserPrefs | undefined
   const hasFilesTablePaneWidthPref = hasStorageFilesTablePaneWidthPref(
     filesTablePanePrefs,
@@ -1380,51 +1538,46 @@ export function View() {
                 </div>
               </div>
             ) : (
-              <>
+              <div className="flex min-h-0 flex-1 flex-col">
                 <div
                   ref={filesSplitContainerRef}
                   className={cn(
-                    'flex min-h-0 flex-1 overflow-hidden border-t border-border',
+                    'relative min-h-0 flex-1 overflow-hidden',
                     useInlineFilePreviewPane
                       ? isFilesStackedLayout
-                        ? 'flex-col'
-                        : 'flex-row'
-                      : 'flex-row',
-                    useInlineFilePreviewPane && 'relative',
+                        ? 'flex flex-col'
+                        : 'grid'
+                      : 'flex flex-row',
                   )}
+                  style={
+                    splitFilesTable
+                      ? storageFilesSplitGridStyle(fileTablePaneWidthPx)
+                      : undefined
+                  }
                 >
                   <div
-                    style={
-                      splitFilesTable
-                        ? {
-                            width: fileTablePaneWidthPx,
-                            minWidth: STORAGE_FILES_TABLE_PANE_MIN_PX,
-                          }
-                        : undefined
-                    }
+                    ref={filesTableScrollRef}
                     className={cn(
-                      'flex min-h-0 min-w-0 flex-col',
-                      useInlineFilePreviewPane
+                      'min-h-0 min-w-0 overflow-auto overscroll-contain',
+                      STORAGE_FILES_SPLIT_PANE_BG_CLASS,
+                      fileMultiSelectModifierActive && 'select-none',
+                      splitFilesTable
                         ? cn(
-                            'border-border',
-                            STORAGE_FILES_SPLIT_PANE_BG_CLASS,
-                            isFilesStackedLayout
-                              ? 'flex-1 min-h-0 w-full border-b border-border'
-                              : 'shrink-0 border-r border-border',
+                            'col-start-1 row-start-1 border-r border-border',
+                            files.length === 0 && 'border-t border-border',
                           )
-                        : 'min-w-0 flex-1',
+                        : cn(
+                            'border-border',
+                            isFilesStackedLayout
+                              ? 'min-h-0 w-full flex-1'
+                              : 'shrink-0 border-r',
+                            files.length === 0 && 'border-t border-border',
+                          ),
                     )}
                   >
-                    <div
-                      ref={filesTableScrollRef}
-                      className="min-h-0 flex-1 overflow-auto overscroll-contain"
-                    >
                       <div
                         ref={splitFilesTable ? filesTableLayerRef : undefined}
-                        className={cn(
-                          splitFilesTable &&
-                            'relative inline-block min-w-full align-top',
-                        )}
+                        className={STORAGE_SPREADSHEET_TABLE_LAYER_CLASS}
                       >
                     <table
                       className={cn(
@@ -1485,14 +1638,14 @@ export function View() {
                         />
                       </colgroup>
                       <thead className={STORAGE_SPREADSHEET_STICKY_THEAD_CLASS}>
-                        <tr className={STORAGE_FILES_SPLIT_HEADER_ROW_H_CLASS}>
+                        <tr>
                           <th
                             className={cn(
-                              'sticky left-0 z-40 bg-background px-2 py-0 align-middle text-center',
-                              STORAGE_FILES_SPLIT_HEADER_ROW_H_CLASS,
+                              'sticky left-0 z-40 w-10 bg-background px-2 text-center',
+                              STORAGE_FILES_TABLE_HEADER_TH_CLASS,
                               splitFilesTable &&
                                 'min-w-[40px] max-w-[40px] shrink-0 box-border',
-                              STORAGE_SPREADSHEET_HEADER_STICKY_CHECKBOX_SPLIT_TOP,
+                              STORAGE_SPREADSHEET_HEADER_STICKY_CHECKBOX_SHADOW,
                             )}
                             style={
                               splitFilesTable
@@ -1524,11 +1677,9 @@ export function View() {
                                 : undefined
                             }
                             className={cn(
-                              splitFilesTable
-                                ? 'min-w-0 px-3 py-0 align-middle'
-                                : 'w-[180px] px-3 py-0 align-middle',
-                              STORAGE_FILES_SPLIT_HEADER_ROW_H_CLASS,
-                              STORAGE_SPREADSHEET_HEADER_CELL_BORDER_SPLIT_TOP,
+                              splitFilesTable ? 'min-w-0 px-3' : 'w-[180px] px-3',
+                              STORAGE_FILES_TABLE_HEADER_TH_CLASS,
+                              STORAGE_SPREADSHEET_HEADER_CELL_BORDER,
                             )}
                             style={
                               splitFilesTable
@@ -1540,7 +1691,7 @@ export function View() {
                                 : undefined
                             }
                           >
-                            <div className="flex h-full min-w-0 items-center gap-2 pr-1.5">
+                            <div className="flex h-full items-center gap-2">
                               <Fingerprint className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
                               <span className="text-[12px] font-medium text-foreground">
                                 $id
@@ -1569,11 +1720,9 @@ export function View() {
                                 : undefined
                             }
                             className={cn(
-                              splitFilesTable
-                                ? 'min-w-0 px-3 py-0 align-middle'
-                                : 'min-w-[160px] px-3 py-0 align-middle',
-                              STORAGE_FILES_SPLIT_HEADER_ROW_H_CLASS,
-                              STORAGE_SPREADSHEET_HEADER_CELL_BORDER_SPLIT_TOP,
+                              'px-3',
+                              STORAGE_FILES_TABLE_HEADER_TH_CLASS,
+                              STORAGE_SPREADSHEET_HEADER_CELL_BORDER,
                             )}
                             style={
                               splitFilesTable
@@ -1616,11 +1765,9 @@ export function View() {
                                 : undefined
                             }
                             className={cn(
-                              splitFilesTable
-                                ? 'min-w-0 px-3 py-0 align-middle text-left text-[11px] font-medium uppercase tracking-wider text-muted-foreground'
-                                : 'min-w-[140px] px-3 py-0 align-middle text-left text-[11px] font-medium uppercase tracking-wider text-muted-foreground',
-                              STORAGE_FILES_SPLIT_HEADER_ROW_H_CLASS,
-                              STORAGE_SPREADSHEET_HEADER_CELL_BORDER_SPLIT_TOP,
+                              'px-3',
+                              STORAGE_FILES_TABLE_HEADER_TH_CLASS,
+                              STORAGE_SPREADSHEET_HEADER_CELL_BORDER,
                             )}
                             style={
                               splitFilesTable
@@ -1634,8 +1781,25 @@ export function View() {
                                 : undefined
                             }
                           >
-                            <div className="flex h-full min-w-0 items-center pr-1.5">
-                              <span className="truncate">MIME type</span>
+                            <div className="flex h-full min-w-0 items-center gap-2 pr-1.5">
+                              <span className="text-[12px] font-medium text-foreground">
+                                mimeType
+                              </span>
+                              <button
+                                type="button"
+                                onClick={() => handleFileColumnSort('mimeType')}
+                                className="ml-auto shrink-0 cursor-pointer rounded p-0.5 transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                              >
+                                {urlSortBy === 'mimeType' ? (
+                                  urlSortOrder === 'asc' ? (
+                                    <ArrowUp className="h-3 w-3 shrink-0 text-chart-brand" />
+                                  ) : (
+                                    <ArrowDown className="h-3 w-3 shrink-0 text-chart-brand" />
+                                  )
+                                ) : (
+                                  <ArrowUpDown className="h-3 w-3 shrink-0 text-muted-foreground" />
+                                )}
+                              </button>
                             </div>
                           </th>
                           <th
@@ -1645,11 +1809,9 @@ export function View() {
                                 : undefined
                             }
                             className={cn(
-                              splitFilesTable
-                                ? 'min-w-0 shrink-0 px-3 py-0 align-middle'
-                                : 'w-[120px] min-w-[120px] shrink-0 px-3 py-0 align-middle',
-                              STORAGE_FILES_SPLIT_HEADER_ROW_H_CLASS,
-                              STORAGE_SPREADSHEET_HEADER_CELL_BORDER_SPLIT_TOP,
+                              'px-3',
+                              STORAGE_FILES_TABLE_HEADER_TH_CLASS,
+                              STORAGE_SPREADSHEET_HEADER_CELL_BORDER,
                             )}
                             style={
                               splitFilesTable
@@ -1693,11 +1855,9 @@ export function View() {
                                 : undefined
                             }
                             className={cn(
-                              splitFilesTable
-                                ? 'min-w-0 px-3 py-0 align-middle'
-                                : 'w-[180px] px-3 py-0 align-middle',
-                              STORAGE_FILES_SPLIT_HEADER_ROW_H_CLASS,
-                              STORAGE_SPREADSHEET_HEADER_CELL_BORDER_SPLIT_TOP,
+                              splitFilesTable ? 'min-w-0 px-3' : 'w-[180px] px-3',
+                              STORAGE_FILES_TABLE_HEADER_TH_CLASS,
+                              STORAGE_SPREADSHEET_HEADER_CELL_BORDER,
                             )}
                             style={
                               splitFilesTable
@@ -1711,7 +1871,7 @@ export function View() {
                                 : undefined
                             }
                           >
-                            <div className="flex h-full min-w-0 items-center gap-2 pr-1.5">
+                            <div className="flex h-full items-center gap-2">
                               <Calendar className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
                               <span className="text-[12px] font-medium text-foreground">
                                 $createdAt
@@ -1740,11 +1900,9 @@ export function View() {
                                 : undefined
                             }
                             className={cn(
-                              splitFilesTable
-                                ? 'min-w-0 px-3 py-0 align-middle'
-                                : 'w-[180px] px-3 py-0 align-middle',
-                              STORAGE_FILES_SPLIT_HEADER_ROW_H_CLASS,
-                              STORAGE_SPREADSHEET_HEADER_CELL_BORDER_SPLIT_TOP,
+                              splitFilesTable ? 'min-w-0 px-3' : 'w-[180px] px-3',
+                              STORAGE_FILES_TABLE_HEADER_TH_CLASS,
+                              STORAGE_SPREADSHEET_HEADER_CELL_BORDER,
                             )}
                             style={
                               splitFilesTable
@@ -1758,7 +1916,7 @@ export function View() {
                                 : undefined
                             }
                           >
-                            <div className="flex h-full min-w-0 items-center gap-2 pr-1.5">
+                            <div className="flex h-full items-center gap-2">
                               <Calendar className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
                               <span className="text-[12px] font-medium text-foreground">
                                 $updatedAt
@@ -1783,10 +1941,9 @@ export function View() {
                           <th
                             className={cn(
                               'sticky right-0 z-30 bg-background p-0',
-                              STORAGE_FILES_SPLIT_HEADER_ROW_H_CLASS,
+                              STORAGE_FILES_TABLE_HEADER_TH_CLASS,
                               splitFilesTable && 'shrink-0 box-border',
-                              STORAGE_SPREADSHEET_HEADER_CELL_BORDER_SPLIT_TOP_LAST,
-                              'shadow-[inset_1px_0_0_0_var(--border)]',
+                              STORAGE_SPREADSHEET_HEADER_STICKY_ACTIONS_SHADOW,
                             )}
                             style={{
                               width: STORAGE_FILES_TABLE_EDGE_COL_PX,
@@ -1800,7 +1957,7 @@ export function View() {
                         {files.map((file) => {
                           const pending = isFilePending(file)
                           const isPreviewRow =
-                            !pending && inspectorFileId === file.$id
+                            !pending && effectiveInspectorFileId === file.$id
                           return (
                             <FileContextMenu
                               key={file.$id}
@@ -1816,22 +1973,29 @@ export function View() {
                                 className={cn(
                                   'group transition-colors',
                                   pending
-                                    ? 'cursor-default opacity-70 hover:bg-transparent'
+                                    ? 'cursor-default hover:bg-transparent'
                                     : 'cursor-pointer',
-                                  pending
-                                    ? null
-                                    : isPreviewRow
+                                  !pending &&
+                                    (isPreviewRow
                                       ? 'bg-muted/25 ring-1 ring-inset ring-border/20 hover:bg-muted/35'
                                       : selectedFiles.has(file.$id)
                                         ? 'bg-muted'
-                                        : 'hover:bg-muted/50',
+                                        : 'hover:bg-muted/50'),
                                 )}
+                                onMouseDown={preventFileRowTextSelectionOnPointer}
                                 onMouseEnter={() => {
                                   if (pending) return
                                   prefetchInspectorFileData(file.$id)
                                 }}
                                 onClick={(e) => {
                                   if (pending) return
+                                  if (
+                                    isFilesStackedLayout &&
+                                    stackedRowTouchActivateRef.current
+                                  ) {
+                                    stackedRowTouchActivateRef.current = false
+                                    return
+                                  }
                                   const target = e.target as HTMLElement
                                   if (
                                     target.closest('button') ||
@@ -1839,27 +2003,28 @@ export function View() {
                                   ) {
                                     return
                                   }
-                                  const isActive =
-                                    inspectorFileId === file.$id
-                                  navigate({
-                                    to: '/projects/$projectId/storage/$bucketId',
-                                    params: {
-                                      projectId: projectId!,
-                                      bucketId: bucketId!,
-                                    },
-                                    search: (
-                                      prev: Record<string, unknown>,
-                                    ) => {
-                                      const next = {
-                                        ...prev,
-                                      } as Record<string, unknown>
-                                      if (isActive) delete next.file
-                                      else next.file = file.$id
-                                      return next
-                                    },
-                                    replace: true,
-                                  })
+                                  handleFileRowClick(file, e)
                                 }}
+                                onPointerUp={
+                                  isFilesStackedLayout
+                                    ? (e) => {
+                                        if (pending || e.pointerType !== 'touch')
+                                          return
+                                        const target = e.target as HTMLElement
+                                        if (
+                                          target.closest('button') ||
+                                          target.closest('[role="checkbox"]')
+                                        ) {
+                                          return
+                                        }
+                                        stackedRowTouchActivateRef.current = true
+                                        handleFileRowClick(
+                                          file,
+                                          e as unknown as MouseEvent,
+                                        )
+                                      }
+                                    : undefined
+                                }
                               >
                                 <td
                                   className={cn(
@@ -1867,12 +2032,7 @@ export function View() {
                                     splitFilesTable &&
                                       'min-w-[40px] max-w-[40px] shrink-0 box-border',
                                     'shadow-[inset_-1px_0_0_0_var(--border)]',
-                                    !isPreviewRow
-                                      ? 'bg-background'
-                                      : 'bg-muted/25 group-hover:bg-muted/35',
-                                    !isPreviewRow &&
-                                      selectedFiles.has(file.$id) &&
-                                      'bg-muted',
+                                    STORAGE_SPREADSHEET_BODY_STICKY_EDGE_BG_CLASS,
                                   )}
                                   style={
                                     splitFilesTable
@@ -1891,10 +2051,15 @@ export function View() {
                                     <div className="flex justify-center">
                                       <Checkbox
                                         checked={selectedFiles.has(file.$id)}
-                                        onCheckedChange={() =>
+                                        onClick={(e) => {
+                                          e.stopPropagation()
+                                          if (e.shiftKey) {
+                                            e.preventDefault()
+                                            selectFilesWithShift(file.$id)
+                                            return
+                                          }
                                           toggleFile(file.$id)
-                                        }
-                                        onClick={(e) => e.stopPropagation()}
+                                        }}
                                       />
                                     </div>
                                   ) : null}
@@ -1905,7 +2070,9 @@ export function View() {
                                       ? 'min-w-0 px-3 py-1.5'
                                       : 'w-[180px] px-3 py-1.5',
                                     STORAGE_SPREADSHEET_BODY_CELL_BORDER,
+                                    pending && 'opacity-70',
                                   )}
+                                  data-column="$id"
                                   style={
                                     splitFilesTable
                                       ? {
@@ -1929,7 +2096,9 @@ export function View() {
                                     'max-w-0 px-3 py-1.5',
                                     splitFilesTable && 'min-w-0',
                                     STORAGE_SPREADSHEET_BODY_CELL_BORDER,
+                                    pending && 'opacity-70',
                                   )}
+                                  data-column="name"
                                   style={
                                     splitFilesTable
                                       ? {
@@ -1959,7 +2128,9 @@ export function View() {
                                     'px-3 py-1.5',
                                     splitFilesTable && 'min-w-0',
                                     STORAGE_SPREADSHEET_BODY_CELL_BORDER,
+                                    pending && 'opacity-70',
                                   )}
+                                  data-column="mimeType"
                                   style={
                                     splitFilesTable
                                       ? {
@@ -1980,7 +2151,9 @@ export function View() {
                                       ? 'min-w-0 shrink-0 whitespace-nowrap px-3 py-1.5 text-right tabular-nums'
                                       : 'w-[120px] min-w-[120px] shrink-0 whitespace-nowrap px-3 py-1.5 text-right tabular-nums',
                                     STORAGE_SPREADSHEET_BODY_CELL_BORDER,
+                                    pending && 'opacity-70',
                                   )}
+                                  data-column="sizeOriginal"
                                   style={
                                     splitFilesTable
                                       ? {
@@ -2001,7 +2174,9 @@ export function View() {
                                       ? 'min-w-0 px-3 py-1.5'
                                       : 'w-[180px] px-3 py-1.5',
                                     STORAGE_SPREADSHEET_BODY_CELL_BORDER,
+                                    pending && 'opacity-70',
                                   )}
+                                  data-column="$createdAt"
                                   style={
                                     splitFilesTable
                                       ? {
@@ -2029,7 +2204,9 @@ export function View() {
                                       ? 'min-w-0 px-3 py-1.5'
                                       : 'w-[180px] px-3 py-1.5',
                                     STORAGE_SPREADSHEET_BODY_CELL_BORDER,
+                                    pending && 'opacity-70',
                                   )}
+                                  data-column="$updatedAt"
                                   style={
                                     splitFilesTable
                                       ? {
@@ -2056,12 +2233,7 @@ export function View() {
                                     'sticky right-0 border-b border-border p-0',
                                     splitFilesTable && 'shrink-0 box-border',
                                     'shadow-[inset_1px_0_0_0_var(--border)]',
-                                    !isPreviewRow
-                                      ? 'bg-background'
-                                      : 'bg-muted/25 group-hover:bg-muted/35',
-                                    !isPreviewRow &&
-                                      selectedFiles.has(file.$id) &&
-                                      'bg-muted',
+                                    STORAGE_SPREADSHEET_BODY_STICKY_EDGE_BG_CLASS,
                                   )}
                                   style={{
                                     width: STORAGE_FILES_TABLE_EDGE_COL_PX,
@@ -2122,50 +2294,54 @@ export function View() {
                       : null}
                       </div>
                     </div>
-                    <div className="shrink-0 border-t border-border bg-background px-3 py-2">
-                      <Pagination
-                        currentPage={displayedPage}
-                        totalItems={filesTotal}
-                        pageSize={urlLimit}
-                        pageSizeOptions={[10, 25, 50, 100]}
-                        onPageChange={handlePageChange}
-                        onPageSizeChange={handlePageSizeChange}
-                        itemLabel="files"
-                        className="mt-0 min-h-0 border-0 py-0"
-                      />
-                    </div>
-                  </div>
                   <div
                     className={cn(
-                      'flex min-h-0 min-w-0 flex-col',
-                      STORAGE_FILES_SPLIT_PANE_BG_CLASS,
-                      isFilesStackedLayout
-                        ? cn(
-                            'flex-none overflow-y-auto overscroll-contain',
-                            STORAGE_FILES_STACKED_PREVIEW_MAX_H_CLASS,
-                          )
-                        : 'flex-1 border-l border-border',
+                      'h-[54px] shrink-0 border-t border-border bg-background',
+                      splitFilesTable
+                        ? 'col-start-1 row-start-2 border-r'
+                        : 'w-full',
                     )}
-                    style={
-                      !isFilesStackedLayout
-                        ? { minWidth: STORAGE_FILES_PREVIEW_PANE_MIN_PX }
-                        : undefined
-                    }
                   >
-                    <FileInspectorPanel
-                      projectId={projectId!}
-                      bucketId={bucketId!}
-                      fileId={inspectorFileId}
-                      panelTab={
-                        search?.filePanel === 'overview' ||
-                        search?.filePanel === 'permissions' ||
-                        search?.filePanel === 'tokens' ||
-                        search?.filePanel === 'security'
-                          ? search.filePanel
-                          : undefined
-                      }
-                    />
+                    <div className="@container flex h-full items-center px-4">
+                      <div className="flex-1 min-w-0">
+                        <Pagination
+                          currentPage={displayedPage}
+                          totalItems={filesTotal}
+                          pageSize={urlLimit}
+                          pageSizeOptions={[10, 25, 50, 100]}
+                          onPageChange={handlePageChange}
+                          onPageSizeChange={handlePageSizeChange}
+                          itemLabel="files"
+                          className="h-full min-h-0 border-0 mt-0 py-0"
+                        />
+                      </div>
+                    </div>
                   </div>
+                  {!isFilesStackedLayout ? (
+                    <div
+                      className={cn(
+                        'flex min-h-0 min-w-0 flex-col overflow-hidden',
+                        STORAGE_FILES_SPLIT_PANE_BG_CLASS,
+                        splitFilesTable
+                          ? 'col-start-2 row-span-2 row-start-1'
+                          : 'min-w-0 flex-1',
+                      )}
+                    >
+                      <FileInspectorPanel
+                        projectId={projectId!}
+                        bucketId={bucketId!}
+                        fileId={inspectorFileId}
+                        panelTab={
+                          search?.filePanel === 'overview' ||
+                          search?.filePanel === 'permissions' ||
+                          search?.filePanel === 'tokens' ||
+                          search?.filePanel === 'security'
+                            ? search.filePanel
+                            : undefined
+                        }
+                      />
+                    </div>
+                  ) : null}
                   {splitFilesTable ? (
                     <button
                       type="button"
@@ -2281,8 +2457,27 @@ export function View() {
                     </div>
                   </DialogContent>
                 </Dialog>
-              </>
+              </div>
             )}
+            {isFilesStackedLayout ? (
+              <FileInspectorDrawer
+                open={!!effectiveInspectorFileId}
+                onOpenChange={(open) => {
+                  if (!open) clearInspectorFile()
+                }}
+                projectId={projectId!}
+                bucketId={bucketId!}
+                fileId={effectiveInspectorFileId}
+                panelTab={
+                  search?.filePanel === 'overview' ||
+                  search?.filePanel === 'permissions' ||
+                  search?.filePanel === 'tokens' ||
+                  search?.filePanel === 'security'
+                    ? search.filePanel
+                    : undefined
+                }
+              />
+            ) : null}
           </div>
         )}
 
