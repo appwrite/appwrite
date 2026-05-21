@@ -696,6 +696,7 @@ class Builds extends Action
 
             $response = null;
             $err = null;
+            $outputDirectory = $deployment->getAttribute('buildOutput') ?? $resource->getAttribute('outputDirectory');
 
             if ($dbForProject->getDocument('deployments', $deploymentId)->getAttribute('status') === 'canceled') {
                 $this->cancelDeployment($deployment->getId(), $dbForProject, $queueForRealtime);
@@ -727,12 +728,11 @@ class Builds extends Action
             Console::log('Runtime creation started');
 
             Co::join([
-                Co\go(function () use ($executor, &$response, $project, $deployment, $source, $resource, $runtime, $vars, $command, $cpus, $memory, $timeout, &$err, $version) {
+                Co\go(function () use ($executor, &$response, $project, $deployment, $source, $resource, $runtime, $vars, $command, $cpus, $memory, $timeout, &$err, $version, $outputDirectory) {
                     try {
                         if ($version === 'v2') {
                             $command = 'tar -zxf /tmp/code.tar.gz -C /usr/code && cd /usr/local/src/ && ./build.sh';
                         } else {
-                            $outputDirectory = $deployment->getAttribute('buildOutput') ?? $resource->getAttribute('outputDirectory');
                             if ($resource->getCollection() === 'sites') {
                                 $listFilesCommand = '';
 
@@ -772,7 +772,7 @@ class Builds extends Action
                             destination: APP_STORAGE_BUILDS . "/app-{$project->getId()}",
                             variables: $vars,
                             command: $command,
-                            outputDirectory: $outputDirectory ?? ''
+                            outputDirectory: $outputDirectory
                         );
 
                         Console::log('createRuntime finished');
@@ -1549,15 +1549,6 @@ class Builds extends Action
 
         if ($deployment->getSequence() === $resource->getAttribute('latestDeploymentInternalId', '')) {
             $resource = $dbForProject->updateDocument($resource->getCollection(), $resource->getId(), new Document(['latestDeploymentStatus' => $deployment->getAttribute('status', '')]));
-        }
-
-        if ($status === 'ready' && $deployment->getAttribute('activate') === true && $resource->getCollection() === 'functions') {
-            $resource = $dbForProject->updateDocument('functions', $resource->getId(), new Document([
-                'live' => true,
-                'deploymentId' => $deployment->getId(),
-                'deploymentInternalId' => $deployment->getSequence(),
-                'deploymentCreatedAt' => $deployment->getCreatedAt(),
-            ]));
         }
 
         $queueForRealtime
