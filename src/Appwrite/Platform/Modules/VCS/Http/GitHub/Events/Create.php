@@ -215,6 +215,7 @@ class Create extends Action
             $prFiles = $github->getPullRequestFiles($providerRepositoryOwner, $providerRepositoryName, $providerPullRequestId);
             $providerAffectedFiles = [
                 ...array_column($prFiles, 'filename'),
+                // Only renamed files include previous_filename; skip missing values from other file changes.
                 ...array_filter(array_column($prFiles, 'previous_filename'))
             ];
 
