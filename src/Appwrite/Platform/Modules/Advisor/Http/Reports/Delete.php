@@ -2,8 +2,9 @@
 
 namespace Appwrite\Platform\Modules\Advisor\Http\Reports;
 
-use Appwrite\Event\Delete as DeleteEvent;
 use Appwrite\Event\Event;
+use Appwrite\Event\Message\Delete as DeleteMessage;
+use Appwrite\Event\Publisher\Delete as DeletePublisher;
 use Appwrite\Extend\Exception;
 use Appwrite\Platform\Action;
 use Appwrite\SDK\AuthType;
@@ -58,7 +59,7 @@ class Delete extends Action
             ->inject('response')
             ->inject('project')
             ->inject('dbForPlatform')
-            ->inject('queueForDeletes')
+            ->inject('publisherForDeletes')
             ->inject('queueForEvents')
             ->callback($this->action(...));
     }
@@ -68,7 +69,7 @@ class Delete extends Action
         Response $response,
         Document $project,
         Database $dbForPlatform,
-        DeleteEvent $queueForDeletes,
+        DeletePublisher $publisherForDeletes,
         Event $queueForEvents
     ): void {
         $report = $dbForPlatform->skipFilters(
@@ -84,9 +85,11 @@ class Delete extends Action
             throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Failed to remove report from DB');
         }
 
-        $queueForDeletes
-            ->setType(DELETE_TYPE_REPORT)
-            ->setDocument($report);
+        $publisherForDeletes->enqueue(new DeleteMessage(
+            project: $project,
+            type: DELETE_TYPE_REPORT,
+            document: $report,
+        ));
 
         $queueForEvents
             ->setParam('reportId', $report->getId())
