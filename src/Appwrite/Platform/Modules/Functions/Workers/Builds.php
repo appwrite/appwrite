@@ -1340,6 +1340,8 @@ class Builds extends Action
 
         $outputPath = '/usr/local/build' . (empty($outputDirectory) ? '' : '/' . \trim($outputDirectory, '/'));
         $escapedOutputPath = \escapeshellarg($outputPath);
+        $maxCpus = (float) System::getEnv('_APP_ORCHESTRATOR_MAX_CPUS', 0);
+        $jobCpus = $maxCpus > 0 ? \min($cpus, $maxCpus) : $cpus;
 
         $buildCommand .= ' && mkdir -p /tmp/build-output'
             . " && if [ -d {$escapedOutputPath} ]; then cp -R {$escapedOutputPath}/. /tmp/build-output/;"
@@ -1363,7 +1365,7 @@ class Builds extends Action
             ],
             'image' => $runtime['image'],
             'command' => $buildCommand,
-            'cpu' => $cpus,
+            'cpu' => $jobCpus,
             'memory' => $memory,
             'timeoutSeconds' => $timeout,
             'workspace' => '/tmp',
