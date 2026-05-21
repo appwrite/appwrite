@@ -29,6 +29,7 @@ abstract class Format
         'name' => '',
         'description' => '',
         'endpoint' => 'https://localhost',
+        'endpoint.docs' => 'https://<REGION>.cloud.appwrite.io/v1',
         'version' => '1.0.0',
         'terms' => '',
         'support.email' => '',
@@ -63,6 +64,17 @@ abstract class Format
                 'updateOAuth2'
             ],
             'parameter' => 'provider',
+            'excludeKeys' => [
+                'mock',
+                'mock-unverified'
+            ],
+        ],
+        [
+            'namespace' => 'project',
+            'methods' => [
+                'getOAuth2Provider'
+            ],
+            'parameter' => 'providerId',
             'excludeKeys' => [
                 'mock',
                 'mock-unverified'
@@ -455,6 +467,14 @@ abstract class Format
                                 return 'ConsoleResourceValue';
                         }
                         break;
+                    case 'getEmailTemplate':
+                        switch ($param) {
+                            case 'templateId':
+                                return 'ProjectEmailTemplateId';
+                            case 'locale':
+                                return 'ProjectEmailTemplateLocale';
+                        }
+                        break;
                 }
                 break;
             case 'account':
@@ -743,19 +763,70 @@ abstract class Format
                 break;
             case 'project':
                 switch ($method) {
+                    case 'updateAuthMethod':
+                        switch ($param) {
+                            case 'methodId':
+                                return 'ProjectAuthMethodId';
+                        }
+                        break;
+                    case 'getPolicy':
+                        switch ($param) {
+                            case 'policyId':
+                                return 'ProjectPolicyId';
+                        }
+                        break;
+                    case 'getOAuth2Provider':
+                        switch ($param) {
+                            case 'providerId':
+                                return 'ProjectOAuthProviderId';
+                        }
+                        break;
                     case 'getEmailTemplate':
                     case 'updateEmailTemplate':
                         switch ($param) {
                             case 'templateId':
-                                return 'EmailTemplateType';
+                                return 'ProjectEmailTemplateId';
                             case 'locale':
-                                return 'EmailTemplateLocale';
+                                return 'ProjectEmailTemplateLocale';
                         }
                         break;
                     case 'getUsage':
                         switch ($param) {
                             case 'period':
                                 return 'ProjectUsageRange';
+                        }
+                        break;
+                    case 'updateProtocol':
+                        switch ($param) {
+                            case 'protocolId':
+                                return 'ProjectProtocolId';
+                        }
+                        break;
+                    case 'updateService':
+                        switch ($param) {
+                            case 'serviceId':
+                                return 'ProjectServiceId';
+                        }
+                        break;
+                    case 'updateSMTP':
+                    case 'createSMTPTest':
+                        switch ($param) {
+                            case 'secure':
+                                return 'ProjectSMTPSecure';
+                        }
+                        break;
+                    case 'updateOAuth2Google':
+                        switch ($param) {
+                            case 'prompt':
+                                return 'ProjectOAuth2GooglePrompt';
+                        }
+                        break;
+                    case 'createKey':
+                    case 'createEphemeralKey':
+                    case 'updateKey':
+                        switch ($param) {
+                            case 'scopes':
+                                return 'ProjectKeyScopes';
                         }
                         break;
                 }
@@ -849,6 +920,16 @@ abstract class Format
                         switch ($param) {
                             case 'passwordVersion':
                                 return 'PasswordHash';
+                        }
+                        break;
+                }
+                break;
+            case 'presences':
+                switch ($method) {
+                    case 'getUsage':
+                        switch ($param) {
+                            case 'range':
+                                return 'UsageRange';
                         }
                         break;
                 }
@@ -952,6 +1033,19 @@ abstract class Format
         return $values;
     }
 
+    protected function shouldEmitDefaultForSchema(mixed $default, array $schema): bool
+    {
+        if (isset($schema['enum'])) {
+            return \in_array($default, $schema['enum'], true);
+        }
+
+        if (isset($schema['items']['enum'])) {
+            return \is_array($default) && empty(\array_diff($default, $schema['items']['enum']));
+        }
+
+        return true;
+    }
+
     protected function getRequestParameterConfig(string $service, string $method, string $param, bool $optional, bool $nullable, mixed $default): array
     {
         $config = [
@@ -990,8 +1084,12 @@ abstract class Format
         return self::REQUEST_PARAMETER_OVERRIDES;
     }
 
-    public function getResponseEnumName(string $model, string $param): ?string
+    public function getResponseEnumName(string $model, string $param, ?string $enumSDKName = null): ?string
     {
+        if ($enumSDKName) {
+            return $enumSDKName;
+        }
+
         if ($param === 'type' && \str_starts_with($model, 'platform') && $model !== 'platformList') {
             return 'PlatformType';
         }

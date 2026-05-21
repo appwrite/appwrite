@@ -3,7 +3,7 @@
 require_once __DIR__ . '/init.php';
 require_once __DIR__ . '/init/span.php';
 
-$registerRequestResources = require __DIR__ . '/init/resources/request.php';
+$setRequestContext = require __DIR__ . '/init/resources/request.php';
 
 use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
@@ -26,6 +26,7 @@ use Utopia\Database\Helpers\ID;
 use Utopia\Database\Helpers\Permission;
 use Utopia\Database\Helpers\Role;
 use Utopia\Database\Query;
+use Utopia\DI\Container;
 use Utopia\Http\Adapter\Swoole\Server;
 use Utopia\Http\Files;
 use Utopia\Http\Http;
@@ -57,7 +58,7 @@ $container->set('pools', function ($register) {
 $payloadSize = 12 * (1024 * 1024); // 12MB - adding slight buffer for headers and other data that might be sent with the payload - update later with valid testing
 $totalWorkers = intval(System::getEnv('_APP_CPU_NUM', swoole_cpu_num())) * intval(System::getEnv('_APP_WORKER_PER_CORE', 6));
 
-$swooleAdapter = new Server(
+$swoole = new Server(
     host: "0.0.0.0",
     port: System::getEnv('PORT', 80),
     settings: [
@@ -69,10 +70,10 @@ $swooleAdapter = new Server(
         Constant::OPTION_OUTPUT_BUFFER_SIZE => $payloadSize,
         Constant::OPTION_TASK_WORKER_NUM => 1, // required for the task to fetch domains background
     ],
-    container: $container,
+    resources: $container,
 );
 
-$http = $swooleAdapter->getServer();
+$http = $swoole->getServer();
 
 /**
  * Assigns HTTP requests to worker threads by analyzing its payload/content.
@@ -190,13 +191,11 @@ $http->on(Constant::EVENT_AFTER_RELOAD, function ($server) {
     Console::success('Reload completed...');
 });
 
-$container->set('bus', function ($register) use ($swooleAdapter) {
-    return $register->get('bus')->setResolver(fn (string $name) => $swooleAdapter->getContainer()->get($name));
-}, ['register']);
+$container->set('bus', fn ($register) => $register->get('bus')->setResolver(fn (string $name) => $swoole->context()->get($name)), ['register']);
 
 include __DIR__ . '/controllers/general.php';
 
-function createDatabase(Http $app, string $resourceKey, string $dbName, array $collections, mixed $pools, ?callable $extraSetup = null): void
+function createDatabase(Container $resources, string $resourceKey, string $dbName, array $collections, mixed $pools, ?callable $extraSetup = null): void
 {
     $max = 15;
     $sleep = 2;
@@ -205,7 +204,7 @@ function createDatabase(Http $app, string $resourceKey, string $dbName, array $c
     while (true) {
         try {
             $attempts++;
-            $resource = $app->getResource($resourceKey);
+            $resource = $resources->get($resourceKey);
             /* @var $database Database */
             $database = is_callable($resource) ? $resource() : $resource;
             break; // exit loop on success
@@ -288,23 +287,21 @@ function createDatabase(Http $app, string $resourceKey, string $dbName, array $c
     Span::current()?->finish();
 }
 
-$http->on(Constant::EVENT_START, function ($http) use ($payloadSize, $totalWorkers, $swooleAdapter) {
-    $app = new Http($swooleAdapter, 'UTC');
-
+$http->on(Constant::EVENT_START, function ($http) use ($payloadSize, $totalWorkers, $container) {
     /** @var \Utopia\Pools\Group $pools */
-    $pools = $app->getResource('pools');
+    $pools = $container->get('pools');
 
-    go(function () use ($app, $pools) {
+    go(function () use ($container, $pools) {
 
         /** @var array $collections */
         $collections = Config::getParam('collections', []);
 
         // create logs database first, `getLogsDB` is a callable.
-        createDatabase($app, 'getLogsDB', 'logs', $collections['logs'], $pools);
+        createDatabase($container, 'getLogsDB', 'logs', $collections['logs'], $pools);
 
         // create appwrite database, `dbForPlatform` is a direct access call.
-        createDatabase($app, 'dbForPlatform', 'appwrite', $collections['console'], $pools, function (Database $dbForPlatform) use ($collections, $app) {
-            $authorization = $app->getResource('authorization');
+        createDatabase($container, 'dbForPlatform', 'appwrite', $collections['console'], $pools, function (Database $dbForPlatform) use ($collections, $container) {
+            $authorization = $container->get('authorization');
 
             if ($dbForPlatform->getCollection(AuditAdapterSQL::COLLECTION)->isEmpty()) {
                 $adapter = new AdapterDatabase($dbForPlatform);
@@ -416,7 +413,7 @@ $http->on(Constant::EVENT_START, function ($http) use ($payloadSize, $totalWorke
         $documentsSharedTables = \explode(',', System::getEnv('_APP_DATABASE_DOCUMENTSDB_SHARED_TABLES', ''));
         $vectorSharedTables = \explode(',', System::getEnv('_APP_DATABASE_VECTORSDB_SHARED_TABLES', ''));
 
-        $cache = $app->getResource('cache');
+        $cache = $container->get('cache');
 
         // All shared tables pools that need project metadata collections
         $allSharedTables = \array_values(\array_unique(\array_filter([
@@ -502,7 +499,7 @@ $http->on(Constant::EVENT_START, function ($http) use ($payloadSize, $totalWorke
     });
 });
 
-$swooleAdapter->onRequest(function ($utopiaRequest, $utopiaResponse) use ($files, $swooleAdapter, $registerRequestResources) {
+$swoole->onRequest(function ($utopiaRequest, $utopiaResponse) use ($files, $swoole, $setRequestContext) {
     Span::init('http.request');
 
     $request = new Request($utopiaRequest->getSwooleRequest());
@@ -522,21 +519,18 @@ $swooleAdapter->onRequest(function ($utopiaRequest, $utopiaResponse) use ($files
         return;
     }
 
-    $requestContainer = $swooleAdapter->getContainer();
-    $requestContainer->set('container', fn () => $requestContainer);
-    $requestContainer->set('request', fn () => $request);
-    $requestContainer->set('response', fn () => $response);
+    $app = new Http($swoole, 'UTC');
+    $app->context()->set('request', fn () => $request);
+    $app->context()->set('response', fn () => $response);
+    $app->context()->set('utopia', fn () => $app);
 
-    $app = new Http($swooleAdapter, 'UTC');
-    $requestContainer->set('utopia', fn () => $app);
-
-    $registerRequestResources($requestContainer);
+    $setRequestContext($app->context());
 
     $app->setCompression(System::getEnv('_APP_COMPRESSION_ENABLED', 'enabled') === 'enabled');
     $app->setCompressionMinSize(intval(System::getEnv('_APP_COMPRESSION_MIN_SIZE_BYTES', '1024'))); // 1KB
 
     try {
-        $authorization = $app->getResource('authorization');
+        $authorization = $app->context()->get('authorization');
 
         $request->setAuthorization($authorization);
         $response->setAuthorization($authorization);
@@ -552,18 +546,18 @@ $swooleAdapter->onRequest(function ($utopiaRequest, $utopiaResponse) use ($files
 
         $version = System::getEnv('_APP_VERSION', 'UNKNOWN');
 
-        $logger = $app->getResource("logger");
+        $logger = $app->context()->get("logger");
         if ($logger) {
             try {
                 /** @var Utopia\Database\Document $user */
-                $user = $app->getResource('user');
+                $user = $app->context()->get('user');
             } catch (\Throwable $_th) {
                 // All good, user is optional information for logger
             }
 
             $route = $app->getRoute();
 
-            $log = $app->getResource("log");
+            $log = $app->context()->get("log");
 
             if (isset($user) && !$user->isEmpty()) {
                 $log->setUser(new User($user->getId()));
@@ -642,18 +636,16 @@ $swooleAdapter->onRequest(function ($utopiaRequest, $utopiaResponse) use ($files
 });
 
 // Fetch domains every `DOMAIN_SYNC_TIMER` seconds and update in the memory
-$http->on(Constant::EVENT_TASK, function () use ($swooleAdapter) {
+$http->on(Constant::EVENT_TASK, function () use ($container) {
     $lastSyncUpdate = null;
 
-    $app = new Http($swooleAdapter, 'UTC');
-
     /** @var Utopia\Database\Database $dbForPlatform */
-    $dbForPlatform = $app->getResource('dbForPlatform');
+    $dbForPlatform = $container->get('dbForPlatform');
 
     /** @var \Swoole\Table $riskyDomains */
-    $riskyDomains = $app->getResource('riskyDomains');
+    $riskyDomains = $container->get('riskyDomains');
 
-    Timer::tick(DOMAIN_SYNC_TIMER * 1000, function () use ($dbForPlatform, $riskyDomains, &$lastSyncUpdate, $app) {
+    Timer::tick(DOMAIN_SYNC_TIMER * 1000, function () use ($dbForPlatform, $riskyDomains, &$lastSyncUpdate, $container) {
         try {
             $time = DateTime::now();
             $limit = 1000;
@@ -670,7 +662,7 @@ $http->on(Constant::EVENT_TASK, function () use ($swooleAdapter) {
                 }
                 $results = [];
                 try {
-                    $authorization = $app->getResource('authorization');
+                    $authorization = $container->get('authorization');
                     $results = $authorization->skip(fn () =>  $dbForPlatform->find('rules', $queries));
                 } catch (Throwable $th) {
                     Console::error('rules ' . $th->getMessage());
@@ -720,4 +712,4 @@ $http->on(Constant::EVENT_TASK, function () use ($swooleAdapter) {
     });
 });
 
-$swooleAdapter->start();
+$swoole->start();

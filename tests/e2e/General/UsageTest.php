@@ -18,6 +18,7 @@ use Utopia\Database\Helpers\Permission;
 use Utopia\Database\Helpers\Role;
 use Utopia\Database\Validator\Datetime as DatetimeValidator;
 use Utopia\System\System;
+use WebSocket\Client as WebSocketClient;
 
 class UsageTest extends Scope
 {

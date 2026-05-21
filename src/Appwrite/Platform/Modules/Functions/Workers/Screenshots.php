@@ -109,9 +109,7 @@ class Screenshots extends Action
                 throw new \Exception("Rule for deployment not found");
             }
 
-            $client = new FetchClient();
-            $client->setTimeout(\intval($site->getAttribute('timeout', '15')) * 1000);
-            $client->addHeader('content-type', FetchClient::CONTENT_TYPE_APPLICATION_JSON);
+            $timeout = \intval($site->getAttribute('timeout', '15')) * 1000;
 
             $bucket = $dbForPlatform->getDocument('buckets', 'screenshots');
 
@@ -162,8 +160,8 @@ class Screenshots extends Action
             ]);
 
             $screenshotError = null;
-            $screenshots = batch(\array_map(function ($key) use ($configs, $apiKey, $site, $client, &$screenshotError) {
-                return function () use ($key, $configs, $apiKey, $site, $client, &$screenshotError) {
+            $screenshots = batch(\array_map(function ($key) use ($configs, $apiKey, $site, $timeout, &$screenshotError) {
+                return function () use ($key, $configs, $apiKey, $site, $timeout, &$screenshotError) {
                     try {
                         $config = $configs[$key];
 
@@ -179,6 +177,10 @@ class Screenshots extends Action
                         }
 
                         $browserEndpoint = System::getEnv('_APP_BROWSER_HOST', 'http://appwrite-browser:3000/v1');
+                        $client = new FetchClient();
+                        $client->setTimeout($timeout);
+                        $client->addHeader('content-type', FetchClient::CONTENT_TYPE_APPLICATION_JSON);
+
                         $fetchResponse = $client->fetch(
                             url: $browserEndpoint . '/screenshots',
                             method: 'POST',

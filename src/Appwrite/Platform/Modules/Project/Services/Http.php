@@ -5,6 +5,7 @@ namespace Appwrite\Platform\Modules\Project\Services;
 use Appwrite\Platform\Modules\Project\Http\Init;
 use Appwrite\Platform\Modules\Project\Http\Project\AuthMethods\Update as UpdateAuthMethod;
 use Appwrite\Platform\Modules\Project\Http\Project\Delete as DeleteProject;
+use Appwrite\Platform\Modules\Project\Http\Project\Get as GetProject;
 use Appwrite\Platform\Modules\Project\Http\Project\Keys\Create as CreateKey;
 use Appwrite\Platform\Modules\Project\Http\Project\Keys\Delete as DeleteKey;
 use Appwrite\Platform\Modules\Project\Http\Project\Keys\Ephemeral\Create as CreateEphemeralKey;
@@ -110,6 +111,7 @@ class Http extends Service
 
         // Project
         $this->addAction(DeleteProject::getName(), new DeleteProject());
+        $this->addAction(GetProject::getName(), new GetProject());
         $this->addAction(UpdateProjectLabels::getName(), new UpdateProjectLabels());
         $this->addAction(UpdateProjectProtocol::getName(), new UpdateProjectProtocol());
         $this->addAction(UpdateProjectService::getName(), new UpdateProjectService());
@@ -139,19 +141,19 @@ class Http extends Service
         $this->addAction(UpdateKey::getName(), new UpdateKey());
 
         // Platforms
-        $this->addAction(DeletePlatform::getName(), new DeletePlatform());
-        $this->addAction(UpdateWebPlatform::getName(), new UpdateWebPlatform());
-        $this->addAction(UpdateApplePlatform::getName(), new UpdateApplePlatform());
-        $this->addAction(UpdateAndroidPlatform::getName(), new UpdateAndroidPlatform());
-        $this->addAction(UpdateWindowsPlatform::getName(), new UpdateWindowsPlatform());
-        $this->addAction(UpdateLinuxPlatform::getName(), new UpdateLinuxPlatform());
+        $this->addAction(ListPlatforms::getName(), new ListPlatforms());
+        $this->addAction(GetPlatform::getName(), new GetPlatform());
         $this->addAction(CreateWebPlatform::getName(), new CreateWebPlatform());
         $this->addAction(CreateApplePlatform::getName(), new CreateApplePlatform());
         $this->addAction(CreateAndroidPlatform::getName(), new CreateAndroidPlatform());
         $this->addAction(CreateWindowsPlatform::getName(), new CreateWindowsPlatform());
         $this->addAction(CreateLinuxPlatform::getName(), new CreateLinuxPlatform());
-        $this->addAction(GetPlatform::getName(), new GetPlatform());
-        $this->addAction(ListPlatforms::getName(), new ListPlatforms());
+        $this->addAction(UpdateWebPlatform::getName(), new UpdateWebPlatform());
+        $this->addAction(UpdateApplePlatform::getName(), new UpdateApplePlatform());
+        $this->addAction(UpdateAndroidPlatform::getName(), new UpdateAndroidPlatform());
+        $this->addAction(UpdateWindowsPlatform::getName(), new UpdateWindowsPlatform());
+        $this->addAction(UpdateLinuxPlatform::getName(), new UpdateLinuxPlatform());
+        $this->addAction(DeletePlatform::getName(), new DeletePlatform());
 
         // Mock Phones
         $this->addAction(CreateMockPhone::getName(), new CreateMockPhone());

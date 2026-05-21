@@ -28,6 +28,7 @@ class OAuthGitHubIntegrationTest extends Scope
             'content-type' => 'application/json',
             'cookie' => 'a_session_console=' . $this->getRoot()['session'],
             'x-appwrite-project' => 'console',
+            'x-appwrite-response-format' => '1.9.4',
         ];
 
         // Step 1: Create new organization (team)

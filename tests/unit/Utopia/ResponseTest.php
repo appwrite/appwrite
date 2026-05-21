@@ -34,10 +34,11 @@ class ResponseTest extends TestCase
         $this->assertTrue($this->response->hasFilters());
         $this->assertCount(2, $this->response->getFilters());
 
-        $output = $this->response->applyFilters([
+        $content = [
             'initial' => true,
             'first' => false
-        ], 'test');
+        ];
+        $output = $this->response->applyFilters($content, 'test', raw: new Document($content));
 
         $this->assertArrayHasKey('initial', $output);
         $this->assertTrue($output['initial']);

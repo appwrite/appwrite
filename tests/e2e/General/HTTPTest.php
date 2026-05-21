@@ -101,7 +101,7 @@ class HTTPTest extends Scope
         $body = $response['body'];
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertIsString($body['server']);
-        $this->assertIsString($body['client-web']);
+        $this->assertIsString($body['server-web']);
         $this->assertIsString($body['client-flutter']);
         $this->assertIsString($body['console-web']);
         $this->assertIsString($body['server-nodejs']);

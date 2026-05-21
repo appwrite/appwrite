@@ -2,8 +2,8 @@
 
 namespace Appwrite\Platform\Modules\Functions\Http\Functions;
 
-use Appwrite\Event\Build;
 use Appwrite\Event\Event;
+use Appwrite\Event\Publisher\Build as BuildPublisher;
 use Appwrite\Event\Validator\FunctionEvent;
 use Appwrite\Extend\Exception;
 use Appwrite\Platform\Modules\Compute\Base;
@@ -105,11 +105,12 @@ class Update extends Base
             ->inject('dbForProject')
             ->inject('project')
             ->inject('queueForEvents')
-            ->inject('queueForBuilds')
+            ->inject('publisherForBuilds')
             ->inject('dbForPlatform')
             ->inject('gitHub')
             ->inject('executor')
             ->inject('authorization')
+            ->inject('platform')
             ->callback($this->action(...));
     }
 
@@ -139,11 +140,12 @@ class Update extends Base
         Database $dbForProject,
         Document $project,
         Event $queueForEvents,
-        Build $queueForBuilds,
+        BuildPublisher $publisherForBuilds,
         Database $dbForPlatform,
         GitHub $github,
         Executor $executor,
-        Authorization $authorization
+        Authorization $authorization,
+        array $platform
     ) {
         // TODO: If only branch changes, re-deploy
         $function = $dbForProject->getDocument('functions', $functionId);
@@ -281,11 +283,33 @@ class Update extends Base
 
         // Redeploy logic
         if (!$isConnected && !empty($providerRepositoryId)) {
-            $this->redeployVcsFunction($request, $function, $project, $installation, $dbForProject, $queueForBuilds, new Document(), $github, true);
+            $this->redeployVcsFunction($request, $function, $project, $installation, $dbForProject, $publisherForBuilds, new Document(), $github, true, $platform);
         }
 
         // Inform scheduler if function is still active
-        $schedule = $dbForPlatform->getDocument('schedules', $function->getAttribute('scheduleId'));
+        $schedule = $authorization->skip(fn () => $dbForPlatform->getDocument('schedules', $function->getAttribute('scheduleId')));
+
+        // Re-create schedule if missing
+        if ($schedule->isEmpty()) {
+            $schedule = $authorization->skip(
+                fn () => $dbForPlatform->createDocument('schedules', new Document([
+                    'region' => $project->getAttribute('region'),
+                    'resourceType' => SCHEDULE_RESOURCE_TYPE_FUNCTION,
+                    'resourceId' => $function->getId(),
+                    'resourceInternalId' => $function->getSequence(),
+                    'resourceUpdatedAt' => DateTime::now(),
+                    'projectId' => $project->getId(),
+                    'schedule'  => $function->getAttribute('schedule'),
+                    'active' => false,
+                ]))
+            );
+
+            $function = $dbForProject->updateDocument('functions', $function->getId(), new Document([
+                'scheduleId' => $schedule->getId(),
+                'scheduleInternalId' => $schedule->getSequence(),
+            ]));
+        }
+
         $schedule
             ->setAttribute('resourceUpdatedAt', DateTime::now())
             ->setAttribute('schedule', $function->getAttribute('schedule'))
