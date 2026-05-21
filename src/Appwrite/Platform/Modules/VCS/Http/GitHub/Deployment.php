@@ -8,7 +8,7 @@ use Appwrite\Event\Publisher\Build as BuildPublisher;
 use Appwrite\Extend\Exception;
 use Appwrite\Filter\BranchDomain as BranchDomainFilter;
 use Appwrite\Vcs\Comment;
-use Appwrite\Vcs\Validator\BuildTrigger;
+use Utopia\Validator\Globstar;
 use Utopia\Config\Config;
 use Utopia\Console;
 use Utopia\Database\Database;
@@ -106,7 +106,7 @@ trait Deployment
                 }
 
                 // Skip deployments when the branch or affected files do not match configured build triggers.
-                $branchTrigger = new BuildTrigger($resource->getAttribute('providerBranches', []));
+                $branchTrigger = new Globstar($resource->getAttribute('providerBranches', []));
                 if (!$branchTrigger->isValid($providerBranch)) {
                     Span::add("{$logBase}.build.skipped.reason", 'branch');
                     Span::add("{$logBase}.build.skipped", 'true');
@@ -115,7 +115,7 @@ trait Deployment
 
                 $providerPaths = $resource->getAttribute('providerPaths', []);
                 if (!empty($providerPaths) && !empty($providerAffectedFiles)) {
-                    $pathTrigger = new BuildTrigger($providerPaths);
+                    $pathTrigger = new Globstar($providerPaths);
                     $pathMatched = false;
                     foreach ($providerAffectedFiles as $file) {
                         if ($pathTrigger->isValid($file)) {
