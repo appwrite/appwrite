@@ -186,11 +186,6 @@ class Create extends Action
         $fileName = (\is_array($file['name']) && isset($file['name'][0])) ? $file['name'][0] : $file['name'];
         $fileTmpName = (\is_array($file['tmp_name']) && isset($file['tmp_name'][0])) ? $file['tmp_name'][0] : $file['tmp_name'];
         $fileSize = (\is_array($file['size']) && isset($file['size'][0])) ? $file['size'][0] : $file['size'];
-        $fileSize = \max((int) $fileSize, $deviceForLocal->getFileSize($fileTmpName));
-
-        if ($fileSize > APP_LIMIT_UPLOAD_CHUNK_SIZE) {
-            throw new Exception(Exception::STORAGE_INVALID_FILE_SIZE, 'File chunk size not allowed', Response::STATUS_CODE_REQUEST_ENTITY_TOO_LARGE);
-        }
 
         $contentRange = $request->getHeader('content-range');
         $fileId = $fileId === 'unique()' ? ID::unique() : $fileId;
@@ -238,6 +233,7 @@ class Create extends Action
         }
 
         // Save to storage
+        $fileSize ??= $deviceForLocal->getFileSize($fileTmpName);
         $path = $deviceForFiles->getPath($fileId . '.' . \pathinfo($fileName, PATHINFO_EXTENSION));
         $path = str_ireplace($deviceForFiles->getRoot(), $deviceForFiles->getRoot() . DIRECTORY_SEPARATOR . $bucket->getId(), $path); // Add bucket id to path after root
 

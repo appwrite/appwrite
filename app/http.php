@@ -57,7 +57,6 @@ $container->set('pools', function ($register) {
 
 $payloadSize = \max(
     12 * (1024 * 1024),
-    (int) System::getEnv('_APP_STORAGE_LIMIT', 0),
     (int) System::getEnv('_APP_COMPUTE_SIZE_LIMIT', 0)
 ) + (2 * 1024 * 1024); // Add a small buffer for multipart/request overhead.
 $totalWorkers = intval(System::getEnv('_APP_CPU_NUM', swoole_cpu_num())) * intval(System::getEnv('_APP_WORKER_PER_CORE', 6));
