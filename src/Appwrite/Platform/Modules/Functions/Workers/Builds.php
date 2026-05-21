@@ -129,6 +129,7 @@ class Builds extends Action
                     queueForRealtime: $queueForRealtime,
                     usage: $usage,
                     publisherForUsage: $publisherForUsage,
+                    publisherForScreenshots: $publisherForScreenshots,
                     dbForPlatform: $dbForPlatform,
                     dbForProject: $dbForProject,
                     project: $project,
@@ -1413,6 +1414,7 @@ class Builds extends Action
         Realtime $queueForRealtime,
         Context $usage,
         UsagePublisher $publisherForUsage,
+        Screenshot $publisherForScreenshots,
         Database $dbForPlatform,
         Database $dbForProject,
         Document $project,
@@ -1453,11 +1455,16 @@ class Builds extends Action
 
         if ($type === 'orchestrator.job.log') {
             $logs = $deployment->getAttribute('buildLogs', '');
+            $previousLogs = $logs;
             foreach (($data['lines'] ?? []) as $line) {
                 $logs .= $line;
                 if (!\str_ends_with($line, "\n")) {
                     $logs .= "\n";
                 }
+            }
+
+            if ($logs === $previousLogs) {
+                return;
             }
 
             $deployment = $dbForProject->updateDocument('deployments', $deployment->getId(), new Document([
@@ -1498,6 +1505,7 @@ class Builds extends Action
                 resource: $resource,
                 deployment: $deployment,
                 platform: $platform,
+                publisherForScreenshots: $publisherForScreenshots,
                 buildEndedAt: $endTime,
                 buildDuration: $duration
             );
@@ -1536,6 +1544,7 @@ class Builds extends Action
                 resource: $resource,
                 deployment: $deployment,
                 platform: $platform,
+                publisherForScreenshots: $publisherForScreenshots,
                 buildEndedAt: DateTime::now(),
                 buildDuration: $duration
             );
@@ -1594,6 +1603,7 @@ class Builds extends Action
         Document $resource,
         Document $deployment,
         array $platform,
+        Screenshot $publisherForScreenshots,
         string $buildEndedAt,
         int $buildDuration
     ): void {
@@ -1732,6 +1742,15 @@ class Builds extends Action
             usage: $usage,
             publisherForUsage: $publisherForUsage
         );
+
+        if ($resource->getCollection() === 'sites') {
+            $publisherForScreenshots->enqueue(new \Appwrite\Event\Message\Screenshot(
+                project: $project,
+                deploymentId: $deployment->getId(),
+            ));
+
+            Console::log('Site screenshot queued');
+        }
     }
 
     /**
