@@ -8,7 +8,6 @@ use Appwrite\Event\Publisher\Build as BuildPublisher;
 use Appwrite\Extend\Exception;
 use Appwrite\Filter\BranchDomain as BranchDomainFilter;
 use Appwrite\Vcs\Comment;
-use Utopia\Validator\Globstar;
 use Utopia\Config\Config;
 use Utopia\Console;
 use Utopia\Database\Database;
@@ -23,6 +22,7 @@ use Utopia\DSN\DSN;
 use Utopia\Span\Span;
 use Utopia\System\System;
 use Utopia\Validator\Contains;
+use Utopia\Validator\Globstar;
 use Utopia\VCS\Adapter\Git\GitHub;
 use Utopia\VCS\Exception\RepositoryNotFound;
 
