@@ -43,18 +43,6 @@ class Project extends Model
                 'default' => '',
                 'example' => '1592981250',
             ])
-            ->addRule('logo', [
-                'type' => self::TYPE_STRING,
-                'description' => 'Project logo file ID.',
-                'default' => '',
-                'example' => '5f5c451b403cb',
-            ])
-            ->addRule('url', [
-                'type' => self::TYPE_STRING,
-                'description' => 'Project website URL.',
-                'default' => '',
-                'example' => '5f5c451b403cb',
-            ])
             ->addRule('legalName', [
                 'type' => self::TYPE_STRING,
                 'description' => 'Company legal name.',
