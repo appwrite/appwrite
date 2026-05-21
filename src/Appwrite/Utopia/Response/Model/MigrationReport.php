@@ -119,6 +119,12 @@ class MigrationReport extends Model
                 'default' => 0,
                 'example' => 5,
             ])
+            ->addRule(Resource::TYPE_EMAIL_TEMPLATE, [
+                'type' => self::TYPE_INTEGER,
+                'description' => 'Number of custom email templates to be migrated (one per templateId × locale pair).',
+                'default' => 0,
+                'example' => 7,
+            ])
             ->addRule(Resource::TYPE_SITE, [
                 'type' => self::TYPE_INTEGER,
                 'description' => 'Number of sites to be migrated.',

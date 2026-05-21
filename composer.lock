@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "4d93c3da3ef7aa9fe898f609a6524431",
+    "content-hash": "575aa56a776213cb0c24063ec029441b",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -4675,16 +4675,16 @@
         },
         {
             "name": "utopia-php/migration",
-            "version": "dev-add-custom-domains-migration",
+            "version": "dev-add-email-templates-migration",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/migration.git",
-                "reference": "cc7d68aaadf2b37adcce7735b9e2f068cc78caf9"
+                "reference": "9813afb2d7e0ddf8f00002fa30c0318d697e8d97"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/migration/zipball/cc7d68aaadf2b37adcce7735b9e2f068cc78caf9",
-                "reference": "cc7d68aaadf2b37adcce7735b9e2f068cc78caf9",
+                "url": "https://api.github.com/repos/utopia-php/migration/zipball/9813afb2d7e0ddf8f00002fa30c0318d697e8d97",
+                "reference": "9813afb2d7e0ddf8f00002fa30c0318d697e8d97",
                 "shasum": ""
             },
             "require": {
@@ -4741,10 +4741,10 @@
                 "utopia"
             ],
             "support": {
-                "source": "https://github.com/utopia-php/migration/tree/add-custom-domains-migration",
+                "source": "https://github.com/utopia-php/migration/tree/add-email-templates-migration",
                 "issues": "https://github.com/utopia-php/migration/issues"
             },
-            "time": "2026-05-21T13:40:46+00:00"
+            "time": "2026-05-21T15:55:26+00:00"
         },
         {
             "name": "utopia-php/mongo",
@@ -8593,7 +8593,7 @@
         },
         {
             "package": "utopia-php/migration",
-            "version": "dev-add-custom-domains-migration",
+            "version": "dev-add-email-templates-migration",
             "alias": "1.12.0",
             "alias_normalized": "1.12.0.0"
         }
