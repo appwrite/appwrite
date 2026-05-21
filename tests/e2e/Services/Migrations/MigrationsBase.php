@@ -2968,6 +2968,82 @@ trait MigrationsBase
         $this->client->call(Client::METHOD_PATCH, '/project/policies/membership-privacy', $destinationProjectHeaders, ['userEmail' => true]);
     }
 
+    public function testAppwriteMigrationSMTP(): void
+    {
+        $consoleHeaders = [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => 'console',
+            'origin' => 'http://localhost',
+            'cookie' => 'a_session_console=' . $this->getRoot()['session'],
+        ];
+
+        $sourceProjectId = $this->getProject()['$id'];
+
+        // Configure SMTP on the source so the round-trip is observable.
+        // Password is intentionally not migrated (source API never exposes it),
+        // so the destination receives every other field.
+        $this->client->call(Client::METHOD_PATCH, '/projects/' . $sourceProjectId . '/smtp', $consoleHeaders, [
+            'enabled' => true,
+            'senderName' => 'Migration Sender',
+            'senderEmail' => 'sender@example.com',
+            'replyToName' => 'Migration Reply',
+            'replyToEmail' => 'reply@example.com',
+            'host' => 'smtp.example.com',
+            'port' => 587,
+            'username' => 'smtp-user',
+            'password' => 'smtp-pass',
+            'secure' => 'tls',
+        ]);
+
+        $result = $this->performMigrationSync([
+            'resources' => [
+                Resource::TYPE_SMTP,
+            ],
+            'endpoint' => $this->webEndpoint,
+            'projectId' => $sourceProjectId,
+            'apiKey' => $this->getProject()['apiKey'],
+        ]);
+
+        $this->assertEquals('completed', $result['status']);
+        $this->assertEquals([Resource::TYPE_SMTP], $result['resources']);
+        $this->assertArrayHasKey(Resource::TYPE_SMTP, $result['statusCounters']);
+        $this->assertEquals(0, $result['statusCounters'][Resource::TYPE_SMTP]['error']);
+        $this->assertEquals(0, $result['statusCounters'][Resource::TYPE_SMTP]['pending']);
+        $this->assertEquals(1, $result['statusCounters'][Resource::TYPE_SMTP]['success']);
+        $this->assertEquals(0, $result['statusCounters'][Resource::TYPE_SMTP]['processing']);
+        $this->assertEquals(0, $result['statusCounters'][Resource::TYPE_SMTP]['warning']);
+
+        $destinationProjectId = $this->getDestinationProject()['$id'];
+        $response = $this->client->call(Client::METHOD_GET, '/projects/' . $destinationProjectId, $consoleHeaders);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertTrue($response['body']['smtpEnabled'], 'smtpEnabled should be migrated as true');
+        $this->assertSame('Migration Sender', $response['body']['smtpSenderName']);
+        $this->assertSame('sender@example.com', $response['body']['smtpSenderEmail']);
+        $this->assertSame('Migration Reply', $response['body']['smtpReplyToName']);
+        $this->assertSame('reply@example.com', $response['body']['smtpReplyToEmail']);
+        $this->assertSame('smtp.example.com', $response['body']['smtpHost']);
+        $this->assertSame(587, $response['body']['smtpPort']);
+        $this->assertSame('smtp-user', $response['body']['smtpUsername']);
+        $this->assertSame('tls', $response['body']['smtpSecure']);
+
+        // Reset both projects so the test is idempotent.
+        $reset = [
+            'enabled' => false,
+            'senderName' => '',
+            'senderEmail' => '',
+            'replyToName' => '',
+            'replyToEmail' => '',
+            'host' => '',
+            'port' => 0,
+            'username' => '',
+            'password' => '',
+            'secure' => '',
+        ];
+        $this->client->call(Client::METHOD_PATCH, '/projects/' . $sourceProjectId . '/smtp', $consoleHeaders, $reset);
+        $this->client->call(Client::METHOD_PATCH, '/projects/' . $destinationProjectId . '/smtp', $consoleHeaders, $reset);
+    }
+
     /**
      * Import documents from a CSV file.
      */
