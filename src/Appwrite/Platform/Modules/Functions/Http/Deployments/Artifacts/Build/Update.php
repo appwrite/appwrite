@@ -3,10 +3,11 @@
 namespace Appwrite\Platform\Modules\Functions\Http\Deployments\Artifacts\Build;
 
 use Appwrite\Builds\OrchestratorToken;
-use Appwrite\Event\Message\Build as BuildMessage;
 use Appwrite\Event\Publisher\Build as BuildPublisher;
 use Appwrite\Extend\Exception;
+use Appwrite\Platform\Modules\Compute\Http\Deployments\Artifacts\Build\ChunkedBuildArtifact;
 use Appwrite\Utopia\Response;
+use Utopia\Cache\Cache;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Validator\UID;
@@ -19,6 +20,7 @@ use Utopia\Validator\Text;
 class Update extends Action
 {
     use HTTP;
+    use ChunkedBuildArtifact;
 
     public static function getName()
     {
@@ -43,6 +45,8 @@ class Update extends Action
             ->inject('project')
             ->inject('deviceForBuilds')
             ->inject('publisherForBuilds')
+            ->inject('cache')
+            ->inject('locks')
             ->callback($this->action(...));
     }
 
@@ -55,7 +59,9 @@ class Update extends Action
         Database $dbForProject,
         Document $project,
         Device $deviceForBuilds,
-        BuildPublisher $publisherForBuilds
+        BuildPublisher $publisherForBuilds,
+        Cache $cache,
+        callable $locks
     ) {
         $token = $token ?: $request->getQuery('token', '');
         OrchestratorToken::verify($token, $project->getId(), $functionId, $deploymentId, 'build');
@@ -70,48 +76,18 @@ class Update extends Action
             throw new Exception(Exception::DEPLOYMENT_NOT_FOUND);
         }
 
-        $tmp = \tempnam(\sys_get_temp_dir(), 'appwrite-build-');
-        if ($tmp === false) {
-            throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Failed creating temporary build artifact file.');
-        }
-
-        \file_put_contents($tmp, $request->getRawPayload());
-
-        $metadata = ['content_type' => 'application/gzip'];
-        $path = $deviceForBuilds->getPath($deploymentId . '.tar.gz');
-        $uploaded = $deviceForBuilds->upload($tmp, $path, 1, 1, $metadata);
-        @\unlink($tmp);
-
-        if ($uploaded < 1) {
-            throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Failed storing build artifact.');
-        }
-
-        $size = $deviceForBuilds->getFileSize($path);
-        $deployment = $dbForProject->getAuthorization()->skip(fn () => $dbForProject->updateDocument('deployments', $deploymentId, new Document([
-            'buildPath' => $path,
-            'buildSize' => $size,
-            'totalSize' => $deployment->getAttribute('sourceSize', 0) + $size,
-        ])));
-
-        $publisherForBuilds->enqueue(new BuildMessage(
+        $this->uploadBuildArtifact(
+            deploymentId: $deploymentId,
             project: $project,
             resource: $function,
             deployment: $deployment,
-            type: BUILD_TYPE_ORCHESTRATOR_EVENT,
-            event: [
-                'type' => 'orchestrator.job.artifact',
-                'data' => [
-                    'artifactId' => 'upload',
-                    'status' => 'success',
-                ],
-            ],
-        ));
-
-        $response
-            ->setStatusCode(Response::STATUS_CODE_ACCEPTED)
-            ->json([
-                'path' => $path,
-                'size' => $size,
-            ]);
+            request: $request,
+            response: $response,
+            dbForProject: $dbForProject,
+            deviceForBuilds: $deviceForBuilds,
+            publisherForBuilds: $publisherForBuilds,
+            cache: $cache,
+            locks: $locks
+        );
     }
 }
