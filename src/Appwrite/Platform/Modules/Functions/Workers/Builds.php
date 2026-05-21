@@ -1326,6 +1326,7 @@ class Builds extends Action
         $jobId = "{$project->getId()}-{$deploymentId}-build";
         $base = \rtrim(System::getEnv('_APP_ORCHESTRATOR_APPWRITE_ENDPOINT', 'http://appwrite/v1'), '/');
         $callbackBase = \rtrim(System::getEnv('_APP_ORCHESTRATOR_APPWRITE_CALLBACK_ENDPOINT', $base), '/');
+        $resourcePath = $resource->getCollection();
 
         $sourceToken = OrchestratorToken::create($project->getId(), $resourceId, $deploymentId, 'source', $timeout + 300);
         $buildToken = OrchestratorToken::create($project->getId(), $resourceId, $deploymentId, 'build', $timeout + 300);
@@ -1374,7 +1375,7 @@ class Builds extends Action
                 [
                     'id' => 'source',
                     'type' => 'download',
-                    'in' => "{$base}/functions/{$resourceId}/deployments/{$deploymentId}/artifacts/source?{$projectQuery}&token=" . \rawurlencode($sourceToken),
+                    'in' => "{$base}/{$resourcePath}/{$resourceId}/deployments/{$deploymentId}/artifacts/source?{$projectQuery}&token=" . \rawurlencode($sourceToken),
                     'out' => 'code.tar.gz',
                     'headers' => $appwriteProjectHeader,
                 ],
@@ -1390,13 +1391,13 @@ class Builds extends Action
                     'id' => 'upload',
                     'type' => 'upload',
                     'in' => 'build.tar.gz',
-                    'out' => "{$base}/functions/{$resourceId}/deployments/{$deploymentId}/artifacts/build?{$projectQuery}&token=" . \rawurlencode($buildToken),
+                    'out' => "{$base}/{$resourcePath}/{$resourceId}/deployments/{$deploymentId}/artifacts/build?{$projectQuery}&token=" . \rawurlencode($buildToken),
                     'depends' => 'build',
                     'headers' => $appwriteProjectHeader,
                 ],
             ],
             'callback' => [
-                'url' => "{$callbackBase}/functions/{$resourceId}/deployments/{$deploymentId}/events?{$projectQuery}",
+                'url' => "{$callbackBase}/{$resourcePath}/{$resourceId}/deployments/{$deploymentId}/events?{$projectQuery}",
                 'key' => System::getEnv('_APP_ORCHESTRATOR_CALLBACK_SECRET', System::getEnv('_APP_OPENSSL_KEY_V1', '')),
                 'headers' => $appwriteProjectHeader,
                 'events' => [
