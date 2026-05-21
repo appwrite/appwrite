@@ -736,15 +736,62 @@ trait UsersBase
         $this->assertNotEmpty($response['body']);
         $this->assertNotEmpty($response['body']['users']);
         $this->assertGreaterThanOrEqual($minUsers, count($response['body']['users']));
+        $this->assertGreaterThanOrEqual($minUsers, $response['body']['total']);
 
         // Find our users by ID instead of assuming position
         $userIds = array_column($response['body']['users'], '$id');
         $this->assertContains($data['userId'], $userIds);
         $this->assertContains('user1', $userIds);
 
+        $baseUsers = $response['body']['users'];
+        $totalUsers = $response['body']['total'];
+
+        $response = $this->client->call(Client::METHOD_GET, '/users', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'queries' => [
+                Query::limit(1)->toString()
+            ]
+        ]);
+
+        $this->assertEquals($response['headers']['status-code'], 200);
+        $this->assertNotEmpty($response['body']);
+        $this->assertCount(1, $response['body']['users']);
+        $this->assertEquals($totalUsers, $response['body']['total']);
+
+        $response = $this->client->call(Client::METHOD_GET, '/users', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'queries' => [
+                Query::offset(1)->toString()
+            ]
+        ]);
+
+        $this->assertEquals($response['headers']['status-code'], 200);
+        $this->assertNotEmpty($response['body']);
+        $this->assertNotEmpty($response['body']['users']);
+        $this->assertEquals($totalUsers, $response['body']['total']);
+
+        $response = $this->client->call(Client::METHOD_GET, '/users', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'queries' => [
+                Query::limit(1)->toString(),
+                Query::offset(1)->toString(),
+            ]
+        ]);
+
+        $this->assertEquals($response['headers']['status-code'], 200);
+        $this->assertNotEmpty($response['body']);
+        $this->assertCount(1, $response['body']['users']);
+        $this->assertEquals($totalUsers, $response['body']['total']);
+
         // Find user1 for later use in queries
         $user1 = null;
-        foreach ($response['body']['users'] as $user) {
+        foreach ($baseUsers as $user) {
             if ($user['$id'] === 'user1') {
                 $user1 = $user;
                 break;
@@ -934,6 +981,7 @@ trait UsersBase
         $this->assertNotEmpty($response['body']['users']);
         // CursorAfter should return results, count varies in parallel mode
         $this->assertGreaterThanOrEqual(1, count($response['body']['users']));
+        $this->assertEquals($totalUsers, $response['body']['total']);
         // First result after cursor should be user1 (created right after setupUser)
         $this->assertEquals($response['body']['users'][0]['$id'], 'user1');
 
