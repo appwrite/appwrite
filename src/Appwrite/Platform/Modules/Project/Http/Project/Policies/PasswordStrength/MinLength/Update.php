@@ -1,6 +1,6 @@
 <?php
 
-namespace Appwrite\Platform\Modules\Project\Http\Project\Policies\PasswordStrength;
+namespace Appwrite\Platform\Modules\Project\Http\Project\Policies\PasswordStrength\MinLength;
 
 use Appwrite\Event\Event;
 use Appwrite\Platform\Action;
@@ -12,7 +12,6 @@ use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Platform\Scope\HTTP;
-use Utopia\Validator\Boolean;
 use Utopia\Validator\Range;
 
 class Update extends Action
@@ -21,15 +20,15 @@ class Update extends Action
 
     public static function getName()
     {
-        return 'updateProjectPasswordStrength';
+        return 'updateProjectPasswordStrengthMinLength';
     }
 
     public function __construct()
     {
         $this
             ->setHttpMethod(Action::HTTP_REQUEST_METHOD_PATCH)
-            ->setHttpPath('/v1/project/policies/password-strength')
-            ->desc('Update password strength policy')
+            ->setHttpPath('/v1/project/policies/password-strength/min-length')
+            ->desc('Update password strength minimum length')
             ->groups(['api', 'project'])
             ->label('scope', ['policies.write', 'project.policies.write'])
             ->label('event', 'projects.[projectId].policies.[policy].update')
@@ -38,23 +37,19 @@ class Update extends Action
             ->label('sdk', new Method(
                 namespace: 'project',
                 group: 'policies',
-                name: 'updatePasswordStrength',
-                description: <<<EOT
-                Update password complexity requirements for users in the project.
+                name: 'updatePasswordStrengthMinLength',
+                description: <<<'EOT'
+                Update the minimum password length required for users in the project.
                 EOT,
                 auth: [AuthType::ADMIN, AuthType::KEY],
                 responses: [
                     new SDKResponse(
                         code: Response::STATUS_CODE_OK,
                         model: Response::MODEL_PROJECT,
-                    )
+                    ),
                 ],
             ))
-            ->param('minLength', null, new Range(8, 256), 'Minimum password length. Value must be between 8 and 256. Default is 8.', optional: true)
-            ->param('requireUppercase', null, new Boolean(), 'Whether passwords must include at least one uppercase letter.', optional: true)
-            ->param('requireLowercase', null, new Boolean(), 'Whether passwords must include at least one lowercase letter.', optional: true)
-            ->param('requireNumber', null, new Boolean(), 'Whether passwords must include at least one number.', optional: true)
-            ->param('requireSpecialChar', null, new Boolean(), 'Whether passwords must include at least one special character.', optional: true)
+            ->param('minLength', null, new Range(8, 256), 'Minimum password length. Value must be between 8 and 256. Default is 8.')
             ->inject('response')
             ->inject('dbForPlatform')
             ->inject('project')
@@ -64,11 +59,7 @@ class Update extends Action
     }
 
     public function action(
-        ?int $minLength,
-        ?bool $requireUppercase,
-        ?bool $requireLowercase,
-        ?bool $requireNumber,
-        ?bool $requireSpecialChar,
+        int $minLength,
         Response $response,
         Database $dbForPlatform,
         Document $project,
@@ -83,32 +74,15 @@ class Update extends Action
             'requireNumber' => false,
             'requireSpecialChar' => false,
         ], $auths['passwordStrength'] ?? []);
+        $auths['passwordStrength']['minLength'] = $minLength;
 
-        if ($minLength !== null) {
-            $auths['passwordStrength']['minLength'] = $minLength;
-        }
-        if ($requireUppercase !== null) {
-            $auths['passwordStrength']['requireUppercase'] = $requireUppercase;
-        }
-        if ($requireLowercase !== null) {
-            $auths['passwordStrength']['requireLowercase'] = $requireLowercase;
-        }
-        if ($requireNumber !== null) {
-            $auths['passwordStrength']['requireNumber'] = $requireNumber;
-        }
-        if ($requireSpecialChar !== null) {
-            $auths['passwordStrength']['requireSpecialChar'] = $requireSpecialChar;
-        }
-
-        $updates = new Document([
+        $project = $authorization->skip(fn () => $dbForPlatform->updateDocument('projects', $project->getId(), new Document([
             'auths' => $auths,
-        ]);
-
-        $project = $authorization->skip(fn () => $dbForPlatform->updateDocument('projects', $project->getId(), $updates));
+        ])));
 
         $queueForEvents
             ->setParam('projectId', $project->getId())
-            ->setParam('policy', 'password-strength');
+            ->setParam('policy', 'password-strength.min-length');
 
         $response->dynamic($project, Response::MODEL_PROJECT);
     }
