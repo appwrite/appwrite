@@ -1250,7 +1250,7 @@ services:
       - ARTIFACT_ENDPOINT=http://host.docker.internal:9080
       - EXTRA_HOSTS=appwrite.test:host-gateway
       - ORCHESTRATOR_NETWORK=appwrite
-      - DISPATCHER_WORKERS=1
+      - DISPATCHER_WORKERS=4
       - JOB_RETENTION=1m
       - MAINTENANCE_INTERVAL=30s
 
