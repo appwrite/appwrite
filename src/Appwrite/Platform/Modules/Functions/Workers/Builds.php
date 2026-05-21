@@ -309,6 +309,8 @@ class Builds extends Action
             $github->initializeVariables($providerInstallationId, $privateKey, $githubAppId);
         }
 
+        $orchestratorBuildSubmitted = false;
+
         try {
             if (! $isVcsEnabled) {
                 // Non-VCS + Template
@@ -722,6 +724,7 @@ class Builds extends Action
                     outputDirectory: $outputDirectory ?? ''
                 );
 
+                $orchestratorBuildSubmitted = true;
                 Console::log('Orchestrator build submitted');
                 return;
             }
@@ -1240,9 +1243,11 @@ class Builds extends Action
                 $this->runGitAction('failed', $github, $providerCommitHash, $owner, $repositoryName, $project, $resource, $deployment->getId(), $dbForProject, $dbForPlatform, $queueForRealtime, $platform);
             }
         } finally {
-            $queueForRealtime
-                ->setPayload($deployment->getArrayCopy())
-                ->trigger();
+            if (! $orchestratorBuildSubmitted) {
+                $queueForRealtime
+                    ->setPayload($deployment->getArrayCopy())
+                    ->trigger();
+            }
 
             if (\in_array($deployment->getAttribute('status'), ['ready', 'failed'])) {
                 $this->sendUsage(
