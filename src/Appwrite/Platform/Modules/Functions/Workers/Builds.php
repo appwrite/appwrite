@@ -1353,22 +1353,26 @@ class Builds extends Action
         $maxCpus = (float) System::getEnv('_APP_ORCHESTRATOR_MAX_CPUS', 0);
         $jobCpus = $maxCpus > 0 ? \min($cpus, $maxCpus) : $cpus;
 
-        if (empty($outputDirectory)) {
-            $buildCommand .= ' && mkdir -p /tmp/build-output'
-                . " && if [ -d {$escapedOutputPath} ]; then cp -R {$escapedOutputPath}/. /tmp/build-output/;"
-                . ' elif [ -d /usr/code ]; then cp -R /usr/code/. /tmp/build-output/; fi';
-        } else {
-            $escapedOutputDirectoryError = \escapeshellarg("Error: No such file or directory: output directory {$outputDirectory} is empty or does not exist.");
-            $buildCommand .= " && if [ -d {$escapedOutputPath} ] && [ \"$(find {$escapedOutputPath} -mindepth 1 -print -quit)\" ]; then"
-                . " mkdir -p /tmp/build-output && cp -R {$escapedOutputPath}/. /tmp/build-output/;"
-                . " else echo {$escapedOutputDirectoryError} >&2; exit 1; fi";
-        }
-
-        if ($resource->getCollection() === 'sites') {
+        if ($version === 'v2') {
+            if (empty($outputDirectory)) {
+                $buildCommand .= ' && mkdir -p /tmp/build-output'
+                    . " && if [ -d {$escapedOutputPath} ]; then cp -R {$escapedOutputPath}/. /tmp/build-output/;"
+                    . ' elif [ -d /usr/code ]; then cp -R /usr/code/. /tmp/build-output/; fi';
+            } else {
+                $escapedOutputDirectoryError = \escapeshellarg("Error: No such file or directory: output directory {$outputDirectory} is empty or does not exist.");
+                $buildCommand .= " && if [ -d {$escapedOutputPath} ] && [ \"$(find {$escapedOutputPath} -mindepth 1 -print -quit)\" ]; then"
+                    . " mkdir -p /tmp/build-output && cp -R {$escapedOutputPath}/. /tmp/build-output/;"
+                    . " else echo {$escapedOutputDirectoryError} >&2; exit 1; fi";
+            }
+        } elseif ($resource->getCollection() === 'sites') {
             $buildCommand .= ' && echo "{APPWRITE_DETECTION_SEPARATOR_START}"'
-                . ' && cd /tmp/build-output'
+                . " && cd {$escapedOutputPath}"
                 . ' && find . -name \'node_modules\' -prune -o -type f -print'
                 . ' && echo "{APPWRITE_DETECTION_SEPARATOR_END}"';
+        }
+
+        if ($version !== 'v2') {
+            $buildCommand .= ' && cp /mnt/code/code.tar.gz /tmp/build.tar.gz';
         }
 
         $environment = [];
@@ -1377,6 +1381,41 @@ class Builds extends Action
                 ? (string) $value
                 : \json_encode($value, JSON_THROW_ON_ERROR);
         }
+
+        if ($version !== 'v2' && !empty($outputDirectory)) {
+            $environment['OPEN_RUNTIMES_OUTPUT_DIRECTORY'] = $outputDirectory;
+        }
+
+        $artifacts = [
+            [
+                'id' => 'source',
+                'type' => 'download',
+                'in' => "{$base}/{$resourcePath}/{$resourceId}/deployments/{$deploymentId}/artifacts/source?{$projectQuery}&token=" . \rawurlencode($sourceToken),
+                'out' => 'code.tar.gz',
+                'headers' => $appwriteProjectHeader,
+            ],
+        ];
+
+        if ($version === 'v2') {
+            $artifacts[] = [
+                'id' => 'build',
+                'type' => 'archive',
+                'in' => 'build-output',
+                'out' => 'build.tar.gz',
+                'format' => 'tar.gz',
+                'depends' => 'job',
+            ];
+        }
+
+        $artifacts[] = [
+            'id' => 'upload',
+            'type' => 'upload',
+            'in' => 'build.tar.gz',
+            'out' => "{$base}/{$resourcePath}/{$resourceId}/deployments/{$deploymentId}/artifacts/build?{$projectQuery}&token=" . \rawurlencode($buildToken),
+            'depends' => $version === 'v2' ? 'build' : 'job',
+            'headers' => $appwriteProjectHeader,
+            'chunked' => true,
+        ];
 
         $client = new OrchestratorClient();
         $client->createJob([
@@ -1394,31 +1433,7 @@ class Builds extends Action
             'timeoutSeconds' => $timeout,
             'workspace' => '/tmp',
             'environment' => $environment,
-            'artifacts' => [
-                [
-                    'id' => 'source',
-                    'type' => 'download',
-                    'in' => "{$base}/{$resourcePath}/{$resourceId}/deployments/{$deploymentId}/artifacts/source?{$projectQuery}&token=" . \rawurlencode($sourceToken),
-                    'out' => 'code.tar.gz',
-                    'headers' => $appwriteProjectHeader,
-                ],
-                [
-                    'id' => 'build',
-                    'type' => 'archive',
-                    'in' => 'build-output',
-                    'out' => 'build.tar.gz',
-                    'format' => 'tar.gz',
-                    'depends' => 'job',
-                ],
-                [
-                    'id' => 'upload',
-                    'type' => 'upload',
-                    'in' => 'build.tar.gz',
-                    'out' => "{$base}/{$resourcePath}/{$resourceId}/deployments/{$deploymentId}/artifacts/build?{$projectQuery}&token=" . \rawurlencode($buildToken),
-                    'depends' => 'build',
-                    'headers' => $appwriteProjectHeader,
-                ],
-            ],
+            'artifacts' => $artifacts,
             'callback' => [
                 'url' => "{$callbackBase}/{$resourcePath}/{$resourceId}/deployments/{$deploymentId}/events?{$projectQuery}",
                 'key' => System::getEnv('_APP_ORCHESTRATOR_CALLBACK_SECRET', System::getEnv('_APP_OPENSSL_KEY_V1', '')),
@@ -1674,9 +1689,10 @@ class Builds extends Action
             $logs = $logsBefore . $logsAfter;
 
             $files = \explode("\n", $detectionLogs);
-            $files = \array_filter($files);
             $files = \array_map(fn ($file) => \trim($file), $files);
-            $files = \array_map(fn ($file) => \str_starts_with($file, './') ? \substr($file, 2) : $file, $files);
+            $files = \array_filter($files, fn ($file) => \str_starts_with($file, './'));
+            $files = \array_map(fn ($file) => \substr($file, 2), $files);
+            $files = \array_filter($files, fn ($file) => $file !== '.open-runtimes');
 
             $detector = new Rendering($resource->getAttribute('framework', ''));
             foreach ($files as $file) {
@@ -1790,6 +1806,22 @@ class Builds extends Action
         }
 
         $this->afterDeploymentSuccess($project, $deployment);
+
+        if ($resource->getCollection() === 'functions') {
+            $schedule = $dbForPlatform->getDocument('schedules', $resource->getAttribute('scheduleId'));
+            if (!$schedule->isEmpty()) {
+                $schedule
+                    ->setAttribute('resourceUpdatedAt', DateTime::now())
+                    ->setAttribute('schedule', $resource->getAttribute('schedule'))
+                    ->setAttribute('active', !empty($resource->getAttribute('schedule')) && !empty($resource->getAttribute('deploymentId')));
+
+                $dbForPlatform->updateDocument('schedules', $schedule->getId(), new Document([
+                    'resourceUpdatedAt' => $schedule->getAttribute('resourceUpdatedAt'),
+                    'schedule' => $schedule->getAttribute('schedule'),
+                    'active' => $schedule->getAttribute('active'),
+                ]));
+            }
+        }
 
         if ($resource->getCollection() === 'sites') {
             $branchName = $deployment->getAttribute('providerBranch');
