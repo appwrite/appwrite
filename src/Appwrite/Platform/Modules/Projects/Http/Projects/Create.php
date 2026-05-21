@@ -81,7 +81,7 @@ class Create extends Action
         $auth = Config::getParam('auth', []);
         $auths = [
             'limit' => 0,
-            'maxSessions' => APP_LIMIT_USER_SESSIONS_DEFAULT,
+            'maxSessions' => \APP_LIMIT_USER_SESSIONS_DEFAULT,
             'passwordPolicy' => [
                 'minLength' => 8,
                 'requireUppercase' => false,
