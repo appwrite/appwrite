@@ -4,11 +4,9 @@ import {
   projectQueryOptions,
   apiKeysQueryOptions,
   mapApiKeysFromResponse,
-  fetchPlatforms,
+  platformsQueryOptions,
 } from '@/lib/react-query/hooks'
 import { pageTitle } from '@/lib/utils/page-title'
-
-const STALE_TIME = 30 * 1000
 
 export const Route = createFileRoute('/_public/projects/$projectId/')({
   head: () => ({ meta: [{ title: pageTitle('Overview') }] }),
@@ -28,11 +26,7 @@ export const Route = createFileRoute('/_public/projects/$projectId/')({
       ])
       const apiKeys = mapApiKeysFromResponse(apiKeysRaw)
       const platformsResponse = await queryClient
-        .ensureQueryData({
-          queryKey: ['platforms', projectId],
-          queryFn: () => fetchPlatforms(projectId),
-          staleTime: STALE_TIME,
-        })
+        .ensureQueryData(platformsQueryOptions(projectId))
         .catch(() => null)
 
       return {

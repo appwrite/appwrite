@@ -22,9 +22,6 @@ import {
 import type { AddAppKind } from '@/lib/add-app-wizard/types'
 
 export type AppsInitialData = {
-  project?: Awaited<
-    ReturnType<typeof import('@/lib/react-query/hooks').fetchProject>
-  >
   platforms: ProjectPlatform[]
 }
 
@@ -50,12 +47,13 @@ export function View({ initialData }: ViewProps = {}) {
   const [selectedPlatform, setSelectedPlatform] =
     useState<ProjectPlatform | null>(null)
 
-  // Use initialData on first paint so no loading skeleton flash
   const { platforms: platformsFromHook, isLoading } = usePlatforms(projectId)
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  const platforms = platformsFromHook?.length
-    ? platformsFromHook
-    : (initialData?.platforms ?? [])
+  const platforms =
+    platformsFromHook.length > 0
+      ? platformsFromHook
+      : isLoading
+        ? (initialData?.platforms ?? [])
+        : platformsFromHook
   const showLoading = isLoading && platforms.length === 0 && !initialData
 
   const { project } = useProject(projectId)

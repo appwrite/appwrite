@@ -19,6 +19,7 @@ import { TopRequests } from './TopRequests'
 import { dashboardStats, formatNumber } from '@/lib/utils/mock-data'
 import {
   useProject,
+  usePlatforms,
   useApiKeys,
   useCreateApiKey,
   useUpdateApiKey,
@@ -137,8 +138,8 @@ export interface OverviewInitialData {
   apiKeys: ApiKey[]
   /** Raw listKeys response from loader; passed to useApiKeys to avoid duplicate fetch */
   apiKeysRaw?: { keys?: unknown[] } | null
-  /** Prefetched platforms from project; avoids empty-state flash in Apps section */
-  platforms?: unknown[]
+  /** Prefetched platforms from listPlatforms; avoids empty-state flash in Apps section */
+  platforms?: ProjectPlatform[]
 }
 
 interface ViewProps {
@@ -225,10 +226,14 @@ export function View({ projectId, initialData }: ViewProps) {
   // Delete mutation
   const deleteMutation = useDeleteApiKey(projectId)
 
-  // Build integrations list from project platforms; use initialData for first paint to avoid empty-state flash
-  const platformsForIntegrations = (currentProject?.platforms ??
-    initialData?.platforms ??
-    []) as ProjectPlatform[]
+  const { platforms: platformsFromHook, isLoading: isLoadingPlatforms } =
+    usePlatforms(projectId)
+  const platformsForIntegrations =
+    platformsFromHook.length > 0
+      ? platformsFromHook
+      : isLoadingPlatforms
+        ? (initialData?.platforms ?? [])
+        : platformsFromHook
   const integrations = useMemo(() => {
     if (platformsForIntegrations.length === 0) return []
 

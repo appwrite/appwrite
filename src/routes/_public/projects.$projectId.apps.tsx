@@ -1,10 +1,10 @@
 import { createFileRoute, Outlet, useMatches } from '@tanstack/react-router'
 import { View } from '@/components/pages/projects/$projectId/apps/View'
-import { fetchProject, fetchPlatforms } from '@/lib/react-query/hooks'
+import {
+  platformsQueryOptions,
+  projectQueryOptions,
+} from '@/lib/react-query/hooks'
 import { pageTitle } from '@/lib/utils/page-title'
-
-const STALE_TIME = 30 * 1000
-const PROJECT_STALE_TIME = 5 * 60 * 1000
 
 export const Route = createFileRoute('/_public/projects/$projectId/apps')({
   head: () => ({ meta: [{ title: pageTitle('Apps') }] }),
@@ -17,21 +17,12 @@ export const Route = createFileRoute('/_public/projects/$projectId/apps')({
     if (!projectId) return undefined
 
     // Fetch and populate cache (same keys as hooks). Return data for first paint (no flash).
-    const [project, platformsResponse] = await Promise.all([
-      queryClient.fetchQuery({
-        queryKey: ['project', projectId],
-        queryFn: () => fetchProject(projectId),
-        staleTime: PROJECT_STALE_TIME,
-      }),
-      queryClient.fetchQuery({
-        queryKey: ['platforms', projectId],
-        queryFn: () => fetchPlatforms(projectId),
-        staleTime: STALE_TIME,
-      }),
+    const [, platformsResponse] = await Promise.all([
+      queryClient.ensureQueryData(projectQueryOptions(projectId)),
+      queryClient.ensureQueryData(platformsQueryOptions(projectId)),
     ])
 
     return {
-      project,
       platforms: platformsResponse?.platforms ?? [],
     }
   },
@@ -58,7 +49,7 @@ function AppsPage() {
     <View
       initialData={
         loaderData
-          ? { project: loaderData.project, platforms: loaderData.platforms }
+          ? { platforms: loaderData.platforms }
           : undefined
       }
     />

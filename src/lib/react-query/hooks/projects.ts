@@ -572,16 +572,9 @@ export function useProject(projectId: string | undefined) {
     refetch,
   } = useQuery(projectQueryOptions(projectId))
 
-  // Map the API response to our Project type
+  // Map the API response to our Project type (platforms come from listPlatforms, not project.get)
   const project = useMemo(() => {
     if (!projectData) return null
-
-    // Include platforms/clients from the raw API response
-    const raw = projectData as Models.Project & {
-      platforms?: unknown[]
-      clients?: unknown[]
-    }
-    const platforms = raw.platforms || raw.clients || []
 
     return {
       $id: projectData.$id,
@@ -592,10 +585,9 @@ export function useProject(projectId: string | undefined) {
       icon: projectData.name.charAt(0).toUpperCase(),
       archived: projectData.status === 'archived',
       status: projectData.status,
-      platforms,
       pingCount: (projectData as { pingCount?: number }).pingCount,
       pingedAt: (projectData as { pingedAt?: string }).pingedAt,
-    } as Project & { status?: string; platforms: unknown[] }
+    } as Project & { status?: string }
   }, [projectData])
 
   return {
@@ -1063,6 +1055,11 @@ export function platformsQueryOptions(projectId: string | null | undefined) {
     queryFn: () => fetchPlatforms(projectId!),
     enabled: !!projectId,
     staleTime: LONG_STALE_TIME,
+    retry: false,
+    refetchOnMount: false,
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: false,
+    gcTime: projectId ? 5 * 60 * 1000 : 0,
   })
 }
 
