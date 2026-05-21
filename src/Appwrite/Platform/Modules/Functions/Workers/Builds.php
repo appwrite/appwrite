@@ -1676,6 +1676,10 @@ class Builds extends Action
             }
         }
 
+        $queueForRealtime
+            ->setPayload($deployment->getArrayCopy())
+            ->trigger();
+
         $this->afterBuildSuccess($queueForRealtime, $dbForProject, $deployment, $runtime, $adapter);
 
         $logs = $deployment->getAttribute('buildLogs', '');
@@ -1751,8 +1755,6 @@ class Builds extends Action
         }
 
         $deployment = $dbForProject->updateDocument('deployments', $deployment->getId(), new Document([
-            'buildEndedAt' => $buildEndedAt,
-            'buildDuration' => $buildDuration,
             'status' => 'ready',
             'buildLogs' => $logs,
             'adapter' => $deployment->getAttribute('adapter'),
@@ -1880,6 +1882,15 @@ class Builds extends Action
                 Console::log('Preview rule created');
             }
         }
+
+        $queueForRealtime
+            ->setPayload($deployment->getArrayCopy())
+            ->trigger();
+
+        $deployment = $dbForProject->updateDocument('deployments', $deployment->getId(), new Document([
+            'buildEndedAt' => $buildEndedAt,
+            'buildDuration' => $buildDuration,
+        ]));
 
         $queueForRealtime
             ->setPayload($deployment->getArrayCopy())
