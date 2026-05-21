@@ -1643,49 +1643,13 @@ class Builds extends Action
         }
 
         $runtime = $this->getRuntime($resource, $this->getVersion($resource));
-        $configuredAdapter = $resource->getAttribute('adapter', '');
-        $detectedAdapter = $deployment->getAttribute('adapter', '');
-        $adapter = ($configuredAdapter ?: $detectedAdapter) ?: null;
+        $adapter = $deployment->getAttribute('adapter', $resource->getAttribute('adapter', '')) ?: null;
 
         $this->afterBuildSuccess($queueForRealtime, $dbForProject, $deployment, $runtime, $adapter);
 
         $logs = $deployment->getAttribute('buildLogs', '');
-        if ($resource->getCollection() === 'sites' && $configuredAdapter === 'ssr' && $detectedAdapter === 'static') {
-            $logs .= 'Adapter mismatch. Detected: static does not match with the set adapter: ssr' . "\n";
-            $deployment = $dbForProject->getDocument('deployments', $deployment->getId());
-            if ($deployment->isEmpty() || \in_array($deployment->getAttribute('status'), ['ready', 'failed', 'canceled'])) {
-                return;
-            }
-
-            $deployment = $dbForProject->updateDocument('deployments', $deployment->getId(), new Document([
-                'buildEndedAt' => $buildEndedAt,
-                'buildDuration' => $buildDuration,
-                'status' => 'failed',
-                'buildLogs' => $logs,
-            ]));
-
-            if ($deployment->getSequence() === $resource->getAttribute('latestDeploymentInternalId', '')) {
-                $resource = $dbForProject->updateDocument($resource->getCollection(), $resource->getId(), new Document(['latestDeploymentStatus' => $deployment->getAttribute('status', '')]));
-            }
-
-            $queueForRealtime
-                ->setPayload($deployment->getArrayCopy())
-                ->trigger();
-
-            $this->sendUsage(
-                resource: $resource,
-                deployment: $deployment,
-                project: $project,
-                usage: $usage,
-                publisherForUsage: $publisherForUsage
-            );
-
-            return;
-        }
-
         if (
             $resource->getCollection() === 'sites'
-            && empty($detectedAdapter)
             && \str_contains($logs, '{APPWRITE_DETECTION_SEPARATOR_START}')
             && \str_contains($logs, '{APPWRITE_DETECTION_SEPARATOR_END}')
         ) {
