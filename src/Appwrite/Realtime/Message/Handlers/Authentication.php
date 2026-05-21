@@ -47,8 +47,13 @@ class Authentication extends Action
         $store = new Store();
         $store->decode($session);
 
+        $userId = $store->getProperty('id', '');
+        if ($userId !== '') {
+            $database->purgeCachedDocument('users', $userId);
+        }
+
         /** @var User $user */
-        $user = $database->getDocument('users', $store->getProperty('id', ''));
+        $user = $database->getDocument('users', $userId);
 
         // TODO: move proof construction to the DI container so there's one source of truth.
         $proofForToken = new Token();
