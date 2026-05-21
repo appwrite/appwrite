@@ -1,25 +1,11 @@
 import { useCallback } from 'react'
+import {
+  applyFaviconHref,
+  FAVICON_MAP,
+  type FaviconVariant,
+} from '@/lib/favicon'
 
-export type FaviconVariant =
-  | 'default'
-  | 'green'
-  | 'orange'
-  | 'red'
-  | 'theme'
-  | 'theme-green'
-  | 'theme-orange'
-  | 'theme-red'
-
-const FAVICON_MAP: Record<FaviconVariant, string> = {
-  default: '/logo.svg',
-  green: '/logo-green.svg',
-  orange: '/logo-orange.svg',
-  red: '/logo-red.svg',
-  theme: '/logo-theme.svg',
-  'theme-green': '/logo-theme-green.svg',
-  'theme-orange': '/logo-theme-orange.svg',
-  'theme-red': '/logo-theme-red.svg',
-}
+export type { FaviconVariant } from '@/lib/favicon'
 
 /**
  * Hook to change the favicon dynamically
@@ -35,21 +21,7 @@ export function useFavicon() {
       return
     }
 
-    // Browsers (Chrome especially) cache favicons aggressively and frequently
-    // ignore in-place `link.href` mutations - the new icon only shows up after
-    // an unrelated update like a tab title change. Removing all existing
-    // <link rel="icon"> elements and inserting a fresh one (with a cache-
-    // busting query string) reliably forces an immediate refresh.
-    const existing = document.querySelectorAll(
-      "link[rel='icon'], link[rel='shortcut icon']",
-    )
-    existing.forEach((node) => node.parentNode?.removeChild(node))
-
-    const link = document.createElement('link')
-    link.rel = 'icon'
-    link.type = 'image/svg+xml'
-    link.href = `${faviconPath}?v=${Date.now()}`
-    document.head.appendChild(link)
+    applyFaviconHref(faviconPath)
   }, [])
 
   const getCurrentFavicon = useCallback((): FaviconVariant | null => {
@@ -68,7 +40,6 @@ export function useFavicon() {
       pathname = currentPath
     }
 
-    // Find which variant matches the current path
     for (const [variant, path] of Object.entries(FAVICON_MAP)) {
       if (pathname.endsWith(path)) {
         return variant as FaviconVariant

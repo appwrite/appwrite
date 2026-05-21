@@ -32,6 +32,7 @@ import { Bell } from 'lucide-react'
 import type { RealtimeResponseEvent, Models } from '@appwrite.io/console'
 import { useAuth } from '@/components/global/auth/RequireAuth'
 import { useFavicon, type FaviconVariant } from '@/hooks/use-favicon'
+import { getDefaultFaviconVariant } from '@/lib/favicon'
 import { usesThemeAwareFaviconHost } from '@/lib/utils/theme-favicon-host'
 import { registerConsoleRealtimeListener } from '@/lib/realtime/console-hub'
 import { registerRegionalConsoleRealtimeListener } from '@/lib/realtime/regional-console-hub'
@@ -313,7 +314,7 @@ export function BuildNotificationsProvider({
     function captureOriginalFavicon(): void {
       if (originalFaviconRef.current) return
       const current = getCurrentFaviconRef.current()
-      originalFaviconRef.current = current ?? 'default'
+      originalFaviconRef.current = current ?? getDefaultFaviconVariant()
     }
 
     function clearResetTimer(): void {
@@ -335,7 +336,7 @@ export function BuildNotificationsProvider({
       // navigation effect below will paint when they come back.
       if (relevanceCtxRef.current.type === null) return
       if (target === null) {
-        const original = originalFaviconRef.current ?? 'default'
+        const original = originalFaviconRef.current ?? getDefaultFaviconVariant()
         setFaviconRef.current(original)
       } else {
         captureOriginalFavicon()
@@ -758,7 +759,7 @@ export function BuildNotificationsProvider({
     if (ctx.type !== null && hasRelevantActive) {
       if (!originalFaviconRef.current) {
         const current = getCurrentFaviconRef.current()
-        originalFaviconRef.current = current ?? 'default'
+        originalFaviconRef.current = current ?? getDefaultFaviconVariant()
       }
       setFaviconRef.current(buildInProgressFavicon())
     } else if (originalFaviconRef.current) {

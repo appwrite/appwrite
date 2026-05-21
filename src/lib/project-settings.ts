@@ -11,6 +11,13 @@ import { sdk, setProjectRegion } from '@/lib/appwrite/sdk'
 
 type ProjectPolicy = Models.PolicyList['policies'][number]
 
+/** Policy IDs for email validation (not yet on ProjectPolicyId in all SDK builds). */
+export const AuthEmailPolicyId = {
+  DenyFreeEmail: 'deny-free-email',
+  DenyAliasedEmail: 'deny-aliased-email',
+  DenyDisposableEmail: 'deny-disposable-email',
+} as const
+
 export type ProjectAuthSecuritySnapshot = {
   authLimit: number
   authDuration: number
@@ -20,6 +27,9 @@ export type ProjectAuthSecuritySnapshot = {
   authPersonalDataCheck: boolean
   authSessionAlerts: boolean
   authInvalidateSessions: boolean
+  authDenyFreeEmail: boolean
+  authDenyAliasedEmail: boolean
+  authDenyDisposableEmail: boolean
   authMockNumbers: Array<{ phone: string; otp: string }>
   membershipsPrivacy: {
     userName: boolean
@@ -39,6 +49,9 @@ const DEFAULT_AUTH_SECURITY: ProjectAuthSecuritySnapshot = {
   authPersonalDataCheck: false,
   authSessionAlerts: false,
   authInvalidateSessions: false,
+  authDenyFreeEmail: false,
+  authDenyAliasedEmail: false,
+  authDenyDisposableEmail: false,
   authMockNumbers: [],
   membershipsPrivacy: {
     userName: true,
@@ -51,9 +64,17 @@ const DEFAULT_AUTH_SECURITY: ProjectAuthSecuritySnapshot = {
 
 function policyById(
   policies: ProjectPolicy[] | undefined,
-  id: ProjectPolicyId,
+  id: ProjectPolicyId | (typeof AuthEmailPolicyId)[keyof typeof AuthEmailPolicyId],
 ): ProjectPolicy | undefined {
   return policies?.find((p) => p.$id === id)
+}
+
+function parsePolicyEnabled(
+  policy: ProjectPolicy | undefined,
+  defaultWhenMissing = false,
+): boolean {
+  if (!policy || !('enabled' in policy)) return defaultWhenMissing
+  return (policy as { enabled?: boolean }).enabled ?? defaultWhenMissing
 }
 
 /** Policies with `total`: API null/0 = disabled or unlimited; UI uses 0. */
@@ -98,6 +119,15 @@ export function parseProjectAuthSecurity(
     policies,
     ProjectPolicyId.Membershipprivacy,
   )
+  const denyFreeEmail = policyById(policies, AuthEmailPolicyId.DenyFreeEmail)
+  const denyAliasedEmail = policyById(
+    policies,
+    AuthEmailPolicyId.DenyAliasedEmail,
+  )
+  const denyDisposableEmail = policyById(
+    policies,
+    AuthEmailPolicyId.DenyDisposableEmail,
+  )
 
   return {
     authLimit: parsePolicyCountLimit(userLimit, 0),
@@ -123,6 +153,9 @@ export function parseProjectAuthSecurity(
       sessionInvalidation && 'enabled' in sessionInvalidation
         ? (sessionInvalidation.enabled ?? false)
         : false,
+    authDenyFreeEmail: parsePolicyEnabled(denyFreeEmail, false),
+    authDenyAliasedEmail: parsePolicyEnabled(denyAliasedEmail, false),
+    authDenyDisposableEmail: parsePolicyEnabled(denyDisposableEmail, false),
     authMockNumbers: (mockNumbers ?? []).map((n) => ({
       phone: n.number,
       otp: n.otp,
@@ -169,7 +202,7 @@ export async function fetchProjectAuthSecurity(
 
 /**
  * Query options for auth security settings (policies + mock phones).
- * Prefetch in the auth/security route loader so the tab renders without a loading flash.
+ * Prefetch in auth security/policies route loaders so tabs render without a loading flash.
  */
 export function projectAuthSecurityQueryOptions(
   projectId: string | null | undefined,

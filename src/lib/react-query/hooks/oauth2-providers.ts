@@ -1,4 +1,9 @@
-import { useMutation, useQuery, queryOptions } from '@tanstack/react-query'
+import {
+  useMutation,
+  useQuery,
+  useQueryClient,
+  queryOptions,
+} from '@tanstack/react-query'
 import type { Models } from '@appwrite.io/console'
 import { sdk, type ProjectSdk } from '@/lib/appwrite/sdk'
 import { updateProjectOAuth2Provider } from '@/lib/oauth2/update-project-oauth2'
@@ -68,6 +73,8 @@ export function useProjectOAuth2Providers(
 }
 
 export function useUpdateProjectOAuth2Provider(projectId: string | null | undefined) {
+  const queryClient = useQueryClient()
+
   return useMutation({
     mutationFn: async (input: {
       providerId: string
@@ -80,6 +87,15 @@ export function useUpdateProjectOAuth2Provider(projectId: string | null | undefi
         input.providerId,
         input.values,
       )
+    },
+    onSuccess: async () => {
+      if (!projectId) return
+      await queryClient.refetchQueries({
+        queryKey: ['oauth2', 'project', projectId, 'providers'],
+      })
+      await queryClient.refetchQueries({
+        queryKey: ['project', projectId],
+      })
     },
   })
 }

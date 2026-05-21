@@ -15,7 +15,6 @@ import {
   ChevronRight,
   CheckCircle2,
   AlertCircle,
-  Archive,
   BarChart3,
   Cpu,
 } from 'lucide-react'
@@ -56,6 +55,7 @@ import { CreateDatabase } from './CreateDatabase'
 import { CreateTable, createTableVariantForDbRoute } from './CreateTable'
 import { TableContextMenu } from './_components/TableContextMenu'
 import { DatabaseContextMenu } from './_components/DatabaseContextMenu'
+import { DatabaseBackupsNavLink } from './_components/DatabaseBackupsNavLink'
 
 
 
@@ -1451,14 +1451,14 @@ export function DatabaseDetailLayout({
             </>
           )}
           {features.databaseBackups && (
-            <Link
+            <DatabaseBackupsNavLink
+              projectId={projectId}
+              databaseId={databaseId}
               to="/projects/$projectId/databases/$dbKind/$databaseId/backups"
               params={{ projectId, dbKind: dbKind, databaseId }}
               className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-muted-foreground transition-colors hover:bg-accent/50 hover:text-foreground"
-            >
-              <Archive className="h-3.5 w-3.5 shrink-0" />
-              <span className="text-[13px]">Backups</span>
-            </Link>
+              labelClassName="flex-1 text-[13px]"
+            />
           )}
 
           {/* Settings Link */}
@@ -1672,14 +1672,14 @@ export function DatabaseEmptyState({ databaseId }: DatabaseEmptyStateProps) {
             </>
           )}
           {features.databaseBackups && (
-            <Link
+            <DatabaseBackupsNavLink
+              projectId={projectId}
+              databaseId={databaseId}
               to="/projects/$projectId/databases/$dbKind/$databaseId/backups"
               params={{ projectId, dbKind: dbKind, databaseId }}
               className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-muted-foreground transition-colors hover:bg-accent/50 hover:text-foreground"
-            >
-              <Archive className="h-3.5 w-3.5 shrink-0" />
-              <span className="text-[13px]">Backups</span>
-            </Link>
+              labelClassName="flex-1 text-[13px]"
+            />
           )}
 
           {/* Settings Link */}

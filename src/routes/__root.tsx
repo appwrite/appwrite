@@ -158,13 +158,17 @@ export const Route = createRootRouteWithContext<MyRouterContext>()({
       },
       {
         rel: 'icon',
-        href: '/logo.svg',
+        href: import.meta.env.DEV ? '/logo-theme.svg' : '/logo.svg',
         type: 'image/svg+xml',
       },
-      {
-        rel: 'shortcut icon',
-        href: '/favicon.ico',
-      },
+      ...(import.meta.env.DEV
+        ? []
+        : [
+            {
+              rel: 'shortcut icon' as const,
+              href: '/favicon.ico',
+            },
+          ]),
       {
         rel: 'apple-touch-icon',
         href: '/apple-touch-icon.png',

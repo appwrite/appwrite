@@ -438,6 +438,129 @@ export function useUpdateMembershipsPrivacy(
   })
 }
 
+type ProjectEmailPolicyService = {
+  updateDenyFreeEmailPolicy: (params: {
+    enabled: boolean
+  }) => Promise<unknown>
+  updateDenyAliasedEmailPolicy: (params: {
+    enabled: boolean
+  }) => Promise<unknown>
+  updateDenyDisposableEmailPolicy: (params: {
+    enabled: boolean
+  }) => Promise<unknown>
+}
+
+function projectEmailPolicyService(projectId: string): ProjectEmailPolicyService {
+  return sdk.forProject(projectId).project as ProjectEmailPolicyService
+}
+
+/**
+ * Hook to update the deny free email policy.
+ */
+export function useUpdateDenyFreeEmailPolicy(
+  projectId: string | null | undefined,
+) {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: async (enabled: boolean) => {
+      if (!projectId) {
+        throw new Error('Project ID is required')
+      }
+      return await projectEmailPolicyService(projectId).updateDenyFreeEmailPolicy(
+        { enabled },
+      )
+    },
+    onSuccess: () => {
+      invalidateProjectAuthQueries(queryClient, projectId)
+    },
+  })
+}
+
+/**
+ * Hook to update the deny aliased email policy.
+ */
+export function useUpdateDenyAliasedEmailPolicy(
+  projectId: string | null | undefined,
+) {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: async (enabled: boolean) => {
+      if (!projectId) {
+        throw new Error('Project ID is required')
+      }
+      return await projectEmailPolicyService(
+        projectId,
+      ).updateDenyAliasedEmailPolicy({ enabled })
+    },
+    onSuccess: () => {
+      invalidateProjectAuthQueries(queryClient, projectId)
+    },
+  })
+}
+
+/**
+ * Hook to update the deny disposable email policy.
+ */
+export function useUpdateDenyDisposableEmailPolicy(
+  projectId: string | null | undefined,
+) {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: async (enabled: boolean) => {
+      if (!projectId) {
+        throw new Error('Project ID is required')
+      }
+      return await projectEmailPolicyService(
+        projectId,
+      ).updateDenyDisposableEmailPolicy({ enabled })
+    },
+    onSuccess: () => {
+      invalidateProjectAuthQueries(queryClient, projectId)
+    },
+  })
+}
+
+export type AuthEmailPoliciesInput = {
+  denyFreeEmail: boolean
+  denyAliasedEmail: boolean
+  denyDisposableEmail: boolean
+}
+
+/**
+ * Updates all three email policies in one request (legacy combined mutation).
+ * Prefer the per-policy hooks in standalone cards.
+ */
+export function useUpdateAuthEmailPolicies(
+  projectId: string | null | undefined,
+) {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: async (policies: AuthEmailPoliciesInput) => {
+      if (!projectId) {
+        throw new Error('Project ID is required')
+      }
+
+      const service = projectEmailPolicyService(projectId)
+      await Promise.all([
+        service.updateDenyFreeEmailPolicy({ enabled: policies.denyFreeEmail }),
+        service.updateDenyAliasedEmailPolicy({
+          enabled: policies.denyAliasedEmail,
+        }),
+        service.updateDenyDisposableEmailPolicy({
+          enabled: policies.denyDisposableEmail,
+        }),
+      ])
+    },
+    onSuccess: () => {
+      invalidateProjectAuthQueries(queryClient, projectId)
+    },
+  })
+}
+
 // ============================================================================
 // AUTH METHODS & OAUTH PROVIDERS
 // ============================================================================

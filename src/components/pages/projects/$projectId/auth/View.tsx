@@ -91,9 +91,18 @@ import {
 import { FiltersPopover } from '@/components/global/shared/FiltersPopover'
 import { CreateUserDrawer } from './CreateUserDrawer'
 import { CreateTeamDrawer } from './CreateTeamDrawer'
-import { Security } from './Security'
 import { AuthSettings } from './Settings'
+import { SocialProviders } from './SocialProviders'
 import { Templates } from './Templates'
+import {
+  PoliciesLayout,
+  type PoliciesSubTab,
+} from './policies/Layout'
+import { UsersPolicies } from './policies/Users'
+import { SessionsPolicies } from './policies/Sessions'
+import { MembershipsPolicies } from './policies/Memberships'
+import { EmailsPolicies } from './policies/Emails'
+import { PasswordsPolicies } from './policies/Passwords'
 import { toast } from 'sonner'
 import { UserContextMenu } from './_components/UserContextMenu'
 import { TeamContextMenu } from './_components/TeamContextMenu'
@@ -109,10 +118,10 @@ export type UsersListSearch = {
 
 export function View({
   usersListSearch,
-  authSettingsInitialData,
+  authSocialProvidersInitialData,
 }: {
   usersListSearch?: UsersListSearch
-  authSettingsInitialData?: AuthOAuth2SettingsInitialData
+  authSocialProvidersInitialData?: AuthOAuth2SettingsInitialData
 } = {}) {
   const { projectId } = useParams({
     strict: false,
@@ -228,7 +237,13 @@ export function View({
       if (pathParts[authIndex + 1]) {
         const tabFromPath = pathParts[authIndex + 1]
         if (
-          ['teams', 'security', 'templates', 'settings'].includes(tabFromPath)
+          [
+            'teams',
+            'policies',
+            'social-providers',
+            'templates',
+            'settings',
+          ].includes(tabFromPath)
         ) {
           return tabFromPath
         }
@@ -237,6 +252,21 @@ export function View({
 
     // Default to users for index route (/projects/:projectId/auth or /projects/:projectId/auth/)
     return 'users'
+  }, [location.pathname])
+
+  const policiesSubTab = useMemo((): PoliciesSubTab => {
+    const pathParts = location.pathname.split('/').filter(Boolean)
+    const authIndex = pathParts.findIndex((part) => part === 'auth')
+    if (authIndex >= 0 && pathParts[authIndex + 1] === 'policies') {
+      const subTab = pathParts[authIndex + 2]
+      if (subTab === 'users') return 'users'
+      if (subTab === 'emails') return 'emails'
+      if (subTab === 'memberships') return 'memberships'
+      if (subTab === 'passwords') return 'passwords'
+      if (subTab === 'sessions') return 'sessions'
+      return 'sessions'
+    }
+    return 'sessions'
   }, [location.pathname])
 
   const { project } = useProject(projectId)
@@ -1078,9 +1108,15 @@ export function View({
       ...(showAuthSecuritySettings
         ? [
             {
-              id: 'security' as const,
-              label: 'Security',
-              to: '/projects/$projectId/auth/security',
+              id: 'policies' as const,
+              label: 'Policies',
+              to: '/projects/$projectId/auth/policies/sessions',
+              params: { projectId: projectId as string },
+            },
+            {
+              id: 'social-providers' as const,
+              label: 'Social providers',
+              to: '/projects/$projectId/auth/social-providers',
               params: { projectId: projectId as string },
             },
             {
@@ -1101,11 +1137,12 @@ export function View({
     [projectId, showAuthSecuritySettings],
   )
 
-  // Redirect from security/templates/settings when user lacks permission
+  // Redirect from policies/social-providers/templates/settings when user lacks permission
   useEffect(() => {
     if (showAuthSecuritySettings || !projectId) return
     if (
-      activeTab === 'security' ||
+      activeTab === 'policies' ||
+      activeTab === 'social-providers' ||
       activeTab === 'settings' ||
       activeTab === 'templates'
     ) {
@@ -1261,7 +1298,8 @@ export function View({
         tabs={tabs}
         activeTab={activeTab}
         searchPlaceholder={
-          activeTab === 'security' ||
+          activeTab === 'policies' ||
+          activeTab === 'social-providers' ||
           activeTab === 'settings' ||
           activeTab === 'templates'
             ? undefined
@@ -1383,7 +1421,8 @@ export function View({
       <div
         className={cn(
           'mx-auto w-full max-w-7xl flex-1 px-4 pb-4 sm:px-6 sm:pb-6',
-          (activeTab === 'security' ||
+          (activeTab === 'policies' ||
+            activeTab === 'social-providers' ||
             activeTab === 'templates' ||
             activeTab === 'settings') &&
             'pt-4 sm:pt-6',
@@ -2186,8 +2225,27 @@ export function View({
           </>
         )}
 
-        {activeTab === 'security' && projectId && (
-          <Security projectId={projectId} />
+        {activeTab === 'policies' && projectId && (
+          <PoliciesLayout projectId={projectId} activeSubTab={policiesSubTab}>
+            {policiesSubTab === 'users' ? (
+              <UsersPolicies projectId={projectId} />
+            ) : policiesSubTab === 'emails' ? (
+              <EmailsPolicies projectId={projectId} />
+            ) : policiesSubTab === 'memberships' ? (
+              <MembershipsPolicies projectId={projectId} />
+            ) : policiesSubTab === 'passwords' ? (
+              <PasswordsPolicies projectId={projectId} />
+            ) : (
+              <SessionsPolicies projectId={projectId} />
+            )}
+          </PoliciesLayout>
+        )}
+
+        {activeTab === 'social-providers' && projectId && (
+          <SocialProviders
+            projectId={projectId}
+            initialData={authSocialProvidersInitialData}
+          />
         )}
 
         {activeTab === 'templates' && projectId && (
@@ -2195,10 +2253,7 @@ export function View({
         )}
 
         {activeTab === 'settings' && projectId && (
-          <AuthSettings
-            projectId={projectId}
-            initialData={authSettingsInitialData}
-          />
+          <AuthSettings projectId={projectId} />
         )}
       </div>
 

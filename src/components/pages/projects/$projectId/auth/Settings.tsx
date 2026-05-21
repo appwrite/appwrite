@@ -11,12 +11,13 @@ import { Label } from '@/components/ui/label'
 import { Switch } from '@/components/ui/switch'
 import { Loader2, Mail, Key, Smartphone, UserPlus, Lock } from 'lucide-react'
 import { cn } from '@/lib/utils'
-import { OAuth2ProvidersSection } from './_components/OAuth2ProvidersSection'
-import type { AuthOAuth2SettingsInitialData } from '@/lib/react-query/hooks/oauth2-providers'
+import {
+  MockPhoneNumbersCard,
+  useAuthSecuritySnapshot,
+} from './Security'
 
 interface AuthSettingsProps {
   projectId: string
-  initialData?: AuthOAuth2SettingsInitialData
 }
 
 const AUTH_METHODS = [
@@ -57,9 +58,11 @@ const AUTH_METHODS = [
   },
 ] as const
 
-export function AuthSettings({ projectId, initialData }: AuthSettingsProps) {
+export function AuthSettings({ projectId }: AuthSettingsProps) {
   const queryClient = useQueryClient()
   const { data: projectData } = useQuery(projectQueryOptions(projectId))
+  const security = useAuthSecuritySnapshot(projectId)
+  const mockNumbers = security.authMockNumbers ?? []
 
   const [optimisticAuthMethods, setOptimisticAuthMethods] = useState<
     Record<string, boolean>
@@ -162,17 +165,17 @@ export function AuthSettings({ projectId, initialData }: AuthSettingsProps) {
                     !isUpdating && 'hover:bg-card',
                   )}
                 >
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <Icon className="h-4 w-4 text-muted-foreground" />
+                  <div className="flex items-center justify-between gap-2">
+                    <div className="flex items-center gap-2 min-w-0 flex-1">
+                      <Icon className="h-4 w-4 shrink-0 text-muted-foreground" />
                       <Label
                         htmlFor={method.key}
-                        className="text-[13px] font-medium text-foreground cursor-pointer"
+                        className="text-[13px] font-medium text-foreground cursor-pointer shrink-0"
                       >
                         {method.label}
                       </Label>
                     </div>
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-1.5 shrink-0">
                       {isUpdating && (
                         <Loader2 className="h-3.5 w-3.5 animate-spin text-muted-foreground" />
                       )}
@@ -193,7 +196,10 @@ export function AuthSettings({ projectId, initialData }: AuthSettingsProps) {
         </div>
       </div>
 
-      <OAuth2ProvidersSection projectId={projectId} initialData={initialData} />
+      <MockPhoneNumbersCard
+        projectId={projectId}
+        currentNumbers={mockNumbers}
+      />
     </div>
   )
 }

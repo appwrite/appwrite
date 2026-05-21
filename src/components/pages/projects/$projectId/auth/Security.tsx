@@ -46,78 +46,19 @@ import {
   type TimeUnitPair,
 } from '@/lib/utils/time-unit-converter'
 
-interface SecurityProps {
-  projectId: string
-}
-
-export function Security({ projectId }: SecurityProps) {
+export function useAuthSecuritySnapshot(projectId: string) {
   const { project } = useProject(projectId)
-
   const { data: projectData } = useQuery(
     projectAuthSecurityQueryOptions(projectId, project?.region),
   )
-
-  const security = projectData ?? DEFAULT_AUTH_SECURITY
-
-  const authLimit = security.authLimit ?? 0
-  const authDuration = security.authDuration ?? 0
-  const authSessionsLimit = security.authSessionsLimit ?? 10
-  const passwordHistoryLimit = security.authPasswordHistory ?? 0
-  const passwordDictionary = security.authPasswordDictionary ?? false
-  const personalDataCheck = security.authPersonalDataCheck ?? false
-  const sessionAlerts = security.authSessionAlerts ?? false
-  const sessionInvalidation = security.authInvalidateSessions ?? false
-  const mockNumbers = security.authMockNumbers ?? []
-  const membershipsPrivacy = security.membershipsPrivacy ?? {
-    userName: true,
-    userEmail: true,
-    mfa: true,
-    userId: true,
-    userPhone: true,
-  }
-
-  return (
-    <div className="space-y-6">
-      <UsersLimitCard projectId={projectId} currentLimit={authLimit} />
-      <SessionLengthCard projectId={projectId} currentDuration={authDuration} />
-      <SessionsLimitCard
-        projectId={projectId}
-        currentLimit={authSessionsLimit}
-      />
-      <PasswordHistoryCard
-        projectId={projectId}
-        currentLimit={passwordHistoryLimit}
-      />
-      <PasswordDictionaryCard
-        projectId={projectId}
-        currentEnabled={passwordDictionary}
-      />
-      <PersonalDataCard
-        projectId={projectId}
-        currentEnabled={personalDataCheck}
-      />
-      <SessionAlertsCard projectId={projectId} currentEnabled={sessionAlerts} />
-      <InvalidateSessionsCard
-        projectId={projectId}
-        currentEnabled={sessionInvalidation}
-      />
-      <MockPhoneNumbersCard
-        projectId={projectId}
-        currentNumbers={mockNumbers}
-      />
-      <MembershipsPrivacyCard
-        projectId={projectId}
-        currentPrivacy={membershipsPrivacy}
-      />
-    </div>
-  )
+  return projectData ?? DEFAULT_AUTH_SECURITY
 }
 
 // ============================================================================
 // INDIVIDUAL FEATURE CARDS
 // ============================================================================
 
-function UsersLimitCard({
+export function UsersLimitCard({
   projectId,
   currentLimit,
 }: {
@@ -203,7 +144,7 @@ function UsersLimitCard({
               htmlFor="users-limit-unlimited"
               className="text-[13px] text-foreground cursor-pointer"
             >
-              Unlimited (Recommended)
+              Allow unlimited users (Recommended)
             </Label>
           </div>
           {!isUnlimited && (
@@ -251,7 +192,7 @@ function UsersLimitCard({
   )
 }
 
-function SessionLengthCard({
+export function SessionLengthCard({
   projectId,
   currentDuration,
 }: {
@@ -499,7 +440,7 @@ function SessionLengthCard({
   )
 }
 
-function SessionsLimitCard({
+export function SessionsLimitCard({
   projectId,
   currentLimit,
 }: {
@@ -584,7 +525,7 @@ function SessionsLimitCard({
               htmlFor="sessions-limit-unlimited"
               className="text-[13px] text-foreground cursor-pointer"
             >
-              Unlimited
+              Allow unlimited sessions per user
             </Label>
           </div>
           {!isUnlimited && (
@@ -631,7 +572,7 @@ function SessionsLimitCard({
   )
 }
 
-function PasswordHistoryCard({
+export function PasswordHistoryCard({
   projectId,
   currentLimit,
 }: {
@@ -693,7 +634,7 @@ function PasswordHistoryCard({
         <div className="flex items-center gap-3">
           <div className="flex-1">
             <h3 className="text-[15px] font-semibold text-foreground">
-              Password history
+              History
             </h3>
             <p className="text-[13px] text-muted-foreground mt-1">
               Set the maximum number of passwords saved per user. Enabling this
@@ -717,7 +658,7 @@ function PasswordHistoryCard({
               htmlFor="password-history-enabled"
               className="text-[13px] text-foreground cursor-pointer"
             >
-              Password history
+              Deny password reuse
             </Label>
           </div>
           {enabled && (
@@ -764,7 +705,7 @@ function PasswordHistoryCard({
   )
 }
 
-function PasswordDictionaryCard({
+export function PasswordDictionaryCard({
   projectId,
   currentEnabled,
 }: {
@@ -820,7 +761,7 @@ function PasswordDictionaryCard({
         <div className="flex items-center gap-3">
           <div className="flex-1">
             <h3 className="text-[15px] font-semibold text-foreground">
-              Password dictionary
+              Dictionary
             </h3>
             <p className="text-[13px] text-muted-foreground mt-1">
               Enabling this option prevents users from setting insecure
@@ -851,7 +792,7 @@ function PasswordDictionaryCard({
             htmlFor="password-dictionary-enabled"
             className="text-[13px] text-foreground cursor-pointer"
           >
-            Password dictionary
+            Deny common passwords
           </Label>
         </div>
       </div>
@@ -869,7 +810,7 @@ function PasswordDictionaryCard({
   )
 }
 
-function PersonalDataCard({
+export function PersonalDataCard({
   projectId,
   currentEnabled,
 }: {
@@ -959,7 +900,7 @@ function PersonalDataCard({
             htmlFor="personal-data-enabled"
             className="text-[13px] text-foreground cursor-pointer"
           >
-            Disallow personal data
+            Deny personal data in passwords
           </Label>
         </div>
       </div>
@@ -977,7 +918,7 @@ function PersonalDataCard({
   )
 }
 
-function SessionAlertsCard({
+export function SessionAlertsCard({
   projectId,
   currentEnabled,
 }: {
@@ -1055,7 +996,7 @@ function SessionAlertsCard({
             htmlFor="session-alerts-enabled"
             className="text-[13px] text-foreground cursor-pointer"
           >
-            Session alerts
+            Allow session alerts
           </Label>
         </div>
       </div>
@@ -1073,7 +1014,7 @@ function SessionAlertsCard({
   )
 }
 
-function InvalidateSessionsCard({
+export function InvalidateSessionsCard({
   projectId,
   currentEnabled,
 }: {
@@ -1151,7 +1092,7 @@ function InvalidateSessionsCard({
             htmlFor="invalidate-sessions-enabled"
             className="text-[13px] text-foreground cursor-pointer"
           >
-            Invalidate sessions
+            Allow invalidation on password change
           </Label>
         </div>
       </div>
@@ -1187,7 +1128,7 @@ function mockNumbersFromCurrent(
   }))
 }
 
-function MockPhoneNumbersCard({
+export function MockPhoneNumbersCard({
   projectId,
   currentNumbers,
 }: {
@@ -1502,7 +1443,7 @@ function MockPhoneNumbersCard({
   )
 }
 
-function MembershipsPrivacyCard({
+export function PrivacyCard({
   projectId,
   currentPrivacy,
 }: {
@@ -1561,11 +1502,11 @@ function MembershipsPrivacyCard({
       },
       {
       onSuccess: () => {
-        toast.success('Updated memberships privacy')
+        toast.success('Updated privacy')
         // Track analytics: Submit.AuthMembershipPrivacyUpdate
       },
       onError: (error: Error) => {
-        toast.error(error.message || 'Failed to update memberships privacy')
+        toast.error(error.message || 'Failed to update privacy')
         // Revert on error
         lastSubmittedValue.current = null
         // Track analytics: trackError(error, Submit.AuthMembershipPrivacyUpdate)
@@ -1579,19 +1520,34 @@ function MembershipsPrivacyCard({
         <div className="flex items-center gap-3">
           <div className="flex-1">
             <h3 className="text-[15px] font-semibold text-foreground">
-              Memberships privacy
+              Privacy
             </h3>
             <p className="text-[13px] text-muted-foreground mt-1">
-              Set privacy preferences to manage which details organization
-              members can view about one another.
+              Choose which membership details stay private in team workflows.
+              Many apps do not need other members to see names, emails, or MFA
+              status - private fields stay hidden without affecting auth or team
+              features.{' '}
+              <a
+                href="https://appwrite.io/docs/products/auth/security#memberships-privacy"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-primary hover:underline"
+              >
+                Learn more
+              </a>
+              .
             </p>
           </div>
         </div>
       </div>
       <div className="border-t border-border" />
       <div className="px-6 py-4">
+        <p className="text-[12px] text-muted-foreground mb-4">
+          Checked fields are private and hidden from other team members unless
+          your app explicitly needs them.
+        </p>
         <div className="space-y-4">
-          <div className="flex items-center gap-3">
+          <div className="flex items-start gap-3">
             <Checkbox
               id="privacy-user-name"
               checked={privacy.userName}
@@ -1599,15 +1555,21 @@ function MembershipsPrivacyCard({
                 setPrivacy({ ...privacy, userName: checked === true })
               }
               disabled={mutation.isPending}
+              className="mt-0.5"
             />
-            <Label
-              htmlFor="privacy-user-name"
-              className="text-[13px] text-foreground cursor-pointer"
-            >
-              Name
-            </Label>
+            <div className="min-w-0 flex-1">
+              <Label
+                htmlFor="privacy-user-name"
+                className="text-[13px] font-medium text-foreground cursor-pointer"
+              >
+                Name
+              </Label>
+              <p className="text-[12px] text-muted-foreground mt-0.5">
+                Hide member display names in team and membership views.
+              </p>
+            </div>
           </div>
-          <div className="flex items-center gap-3">
+          <div className="flex items-start gap-3">
             <Checkbox
               id="privacy-user-email"
               checked={privacy.userEmail}
@@ -1615,15 +1577,22 @@ function MembershipsPrivacyCard({
                 setPrivacy({ ...privacy, userEmail: checked === true })
               }
               disabled={mutation.isPending}
+              className="mt-0.5"
             />
-            <Label
-              htmlFor="privacy-user-email"
-              className="text-[13px] text-foreground cursor-pointer"
-            >
-              Email
-            </Label>
+            <div className="min-w-0 flex-1">
+              <Label
+                htmlFor="privacy-user-email"
+                className="text-[13px] font-medium text-foreground cursor-pointer"
+              >
+                Email
+              </Label>
+              <p className="text-[12px] text-muted-foreground mt-0.5">
+                Hide email addresses so members cannot see each other&apos;s
+                contact details.
+              </p>
+            </div>
           </div>
-          <div className="flex items-center gap-3">
+          <div className="flex items-start gap-3">
             <Checkbox
               id="privacy-mfa"
               checked={privacy.mfa}
@@ -1631,13 +1600,19 @@ function MembershipsPrivacyCard({
                 setPrivacy({ ...privacy, mfa: checked === true })
               }
               disabled={mutation.isPending}
+              className="mt-0.5"
             />
-            <Label
-              htmlFor="privacy-mfa"
-              className="text-[13px] text-foreground cursor-pointer"
-            >
-              MFA status
-            </Label>
+            <div className="min-w-0 flex-1">
+              <Label
+                htmlFor="privacy-mfa"
+                className="text-[13px] font-medium text-foreground cursor-pointer"
+              >
+                MFA status
+              </Label>
+              <p className="text-[12px] text-muted-foreground mt-0.5">
+                Hide whether a member has multi-factor authentication enabled.
+              </p>
+            </div>
           </div>
         </div>
       </div>

@@ -11,7 +11,6 @@ import {
   ChevronRight,
   AlertCircle,
   ArrowUpDown,
-  Archive,
   BarChart3,
   Network,
   Download,
@@ -58,6 +57,7 @@ import {
 import { CreateDatabase } from '../CreateDatabase'
 import { CreateTable } from '../CreateTable'
 import { TableContextMenu } from '../_components/TableContextMenu'
+import { DatabaseBackupsNavLink } from '../_components/DatabaseBackupsNavLink'
 import { DatabaseSelector } from '../_components/DatabaseSelector'
 import { TableSelector } from '../_components/TableSelector'
 import {
@@ -1207,7 +1207,9 @@ export function Workspace({
             </Link>
           )}
           {features.databaseBackups && (
-            <Link
+            <DatabaseBackupsNavLink
+              projectId={projectId}
+              databaseId={databaseId}
               {...dbNav.backups(tableNavParams)}
               className={cn(
                 'flex w-full items-center gap-2.5 rounded-md px-2.5 py-1.5 text-left text-[13px] font-medium transition-colors duration-150',
@@ -1215,10 +1217,8 @@ export function Workspace({
                   ? 'bg-accent text-foreground'
                   : 'text-muted-foreground hover:bg-accent/50 hover:text-foreground',
               )}
-            >
-              <Archive className="h-3.5 w-3.5 shrink-0" />
-              <span>Backups</span>
-            </Link>
+              labelClassName="flex-1"
+            />
           )}
           <Link
             {...dbNav.exportImport(tableNavParams)}

@@ -1,5 +1,12 @@
-import { useCallback, useEffect, useMemo, useState } from 'react'
-import { useQuery, useQueryClient } from '@tanstack/react-query'
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useState,
+  type Dispatch,
+  type SetStateAction,
+} from 'react'
+import { useQuery } from '@tanstack/react-query'
 import { toast } from 'sonner'
 import type { Models } from '@appwrite.io/console'
 import { getApiEndpoint } from '@/lib/appwrite/sdk'
@@ -16,27 +23,290 @@ import { Label } from '@/components/ui/label'
 import { Switch } from '@/components/ui/switch'
 import { Badge } from '@/components/ui/badge'
 import { Textarea } from '@/components/ui/textarea'
-import {
-  Drawer,
-  DrawerContent,
-  DrawerDescription,
-  DrawerHeader,
-  DrawerTitle,
-} from '@/components/ui/drawer'
+import { BaseDrawer } from '@/components/global/shared/BaseDrawer'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { PUBLIC_ICON_MUTED_CLASSES } from '@/lib/public-icon-classes'
 import { cn } from '@/lib/utils'
+import {
+  getOAuth2ProviderFieldErrors,
+  hasOAuth2ProviderFieldErrors,
+  isOAuth2ParameterAlwaysOptional,
+  isOAuth2ParameterOptionalInForm,
+  isOAuth2ParameterRequiredWhenEnabling,
+  isOAuth2SecretParameter,
+  isOidcManualDiscoveryParam,
+  OIDC_MANUAL_DISCOVERY_PARAM_IDS,
+  OIDC_WELL_KNOWN_PARAM_ID,
+} from '@/lib/oauth2/provider-field-requirements'
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from '@/components/ui/collapsible'
+import { canUpdateProjectOAuth2Provider } from '@/lib/oauth2/update-project-oauth2'
 import {
   getOAuth2ProviderDisplayName,
   getOAuth2ProviderIconPath,
   OAUTH2_POPULAR_PROVIDER_IDS,
 } from '@/lib/oauth2/provider-display'
-import { Search } from 'lucide-react'
+import { Check, ChevronDown, Copy, Search } from 'lucide-react'
+import { copyToClipboard } from '@/lib/utils/context-menu'
 
 type OAuth2ProviderRow = Models.ConsoleOAuth2Provider
 
-function isSecretishParameter(paramId: string): boolean {
-  return /secret|p8|password|shared|apiSecret|privateKey|secretKey/i.test(paramId)
+/** Catalog example is one line; PEM placeholders should show real line breaks. */
+const APPLE_P8_FILE_PLACEHOLDER = `-----BEGIN PRIVATE KEY-----
+MIGTAg...jy2Xbna
+-----END PRIVATE KEY-----`
+
+const OIDC_WELL_KNOWN_HINT =
+  'URL of the OpenID Provider metadata document (/.well-known/openid-configuration). Appwrite loads authorization, token, and userinfo endpoints from the JSON response.'
+
+type CatalogParameter = OAuth2ProviderRow['parameters'][number]
+
+type OAuth2ParameterFieldProps = {
+  param: CatalogParameter
+  providerId: string
+  formFields: Record<string, string>
+  setFormFields: Dispatch<SetStateAction<Record<string, string>>>
+  initialEnabled: boolean
+  formEnabled: boolean
+  validationTouched: boolean
+  formFieldErrors: Record<string, string>
+  fieldsDisabled: boolean
+  hintOverride?: string
+}
+
+function OAuth2ParameterField({
+  param,
+  providerId,
+  formFields,
+  setFormFields,
+  initialEnabled,
+  formEnabled,
+  validationTouched,
+  formFieldErrors,
+  fieldsDisabled,
+  hintOverride,
+}: OAuth2ParameterFieldProps) {
+  const isP8 = param.$id === 'p8File'
+  const secretish = isOAuth2SecretParameter(param.$id)
+  const Control = isP8 ? Textarea : Input
+  const showOptional =
+    isOAuth2ParameterAlwaysOptional(param.$id) ||
+    isOAuth2ParameterOptionalInForm(providerId, param.$id)
+  const showRequired =
+    formEnabled &&
+    !showOptional &&
+    isOAuth2ParameterRequiredWhenEnabling(providerId, param.$id, initialEnabled)
+  const fieldError =
+    validationTouched && formFieldErrors[param.$id]
+      ? formFieldErrors[param.$id]
+      : undefined
+
+  return (
+    <div className="space-y-2">
+      <Label htmlFor={`oauth2-${param.$id}`} className="text-[12px] font-medium">
+        {param.name}
+        {showOptional ? (
+          <span className="font-normal text-muted-foreground"> (optional)</span>
+        ) : showRequired ? (
+          <span className="font-normal text-muted-foreground"> (required)</span>
+        ) : null}
+      </Label>
+      <Control
+        id={`oauth2-${param.$id}`}
+        value={formFields[param.$id] ?? ''}
+        onChange={(e) =>
+          setFormFields((prev) => ({
+            ...prev,
+            [param.$id]: e.target.value,
+          }))
+        }
+        placeholder={
+          isP8 ? APPLE_P8_FILE_PLACEHOLDER : param.example || undefined
+        }
+        className={cn(
+          'text-[13px]',
+          isP8 && 'font-mono min-h-[120px]',
+          fieldError && 'border-destructive',
+        )}
+        aria-invalid={fieldError ? true : undefined}
+        type={!isP8 && secretish ? 'password' : 'text'}
+        autoComplete="off"
+        disabled={fieldsDisabled}
+      />
+      {fieldError ? (
+        <p className="text-[12px] text-destructive">{fieldError}</p>
+      ) : hintOverride || param.hint ? (
+        <p className="text-[11px] text-muted-foreground">
+          {hintOverride ?? param.hint}
+        </p>
+      ) : null}
+    </div>
+  )
+}
+
+type OidcProviderFormFieldsProps = Omit<
+  OAuth2ParameterFieldProps,
+  'param' | 'providerId' | 'hintOverride'
+> & {
+  parameters: CatalogParameter[]
+  advancedOpen: boolean
+  onAdvancedOpenChange: (open: boolean) => void
+}
+
+function OidcProviderFormFields({
+  parameters,
+  advancedOpen,
+  onAdvancedOpenChange,
+  ...fieldProps
+}: OidcProviderFormFieldsProps) {
+  const wellKnownParam = parameters.find((p) => p.$id === OIDC_WELL_KNOWN_PARAM_ID)
+  const credentialParams = parameters.filter(
+    (p) => p.$id !== OIDC_WELL_KNOWN_PARAM_ID && !isOidcManualDiscoveryParam(p.$id),
+  )
+  const advancedParams = parameters.filter((p) =>
+    isOidcManualDiscoveryParam(p.$id),
+  )
+  const wellKnownFilled = Boolean(
+    fieldProps.formFields[OIDC_WELL_KNOWN_PARAM_ID]?.trim(),
+  )
+
+  return (
+    <>
+      {credentialParams.map((param) => (
+        <OAuth2ParameterField
+          key={param.$id}
+          param={param}
+          providerId="oidc"
+          {...fieldProps}
+        />
+      ))}
+      {wellKnownParam ? (
+        <OAuth2ParameterField
+          key={wellKnownParam.$id}
+          param={wellKnownParam}
+          providerId="oidc"
+          hintOverride={OIDC_WELL_KNOWN_HINT}
+          {...fieldProps}
+        />
+      ) : null}
+      {!wellKnownFilled && advancedParams.length > 0 ? (
+        <Collapsible open={advancedOpen} onOpenChange={onAdvancedOpenChange}>
+          <CollapsibleTrigger asChild>
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              className="h-9 gap-1.5 px-0 text-[13px] text-muted-foreground hover:text-foreground"
+            >
+              <ChevronDown
+                className={cn(
+                  'h-4 w-4 transition-transform duration-200',
+                  advancedOpen && '-rotate-180',
+                )}
+              />
+              Advanced configuration
+            </Button>
+          </CollapsibleTrigger>
+          <CollapsibleContent className="space-y-4 pt-1">
+            <p className="text-[12px] text-muted-foreground">
+              Set authorization, token, and user info URLs manually only when your
+              provider does not expose a well-known metadata URL.
+            </p>
+            {advancedParams.map((param) => (
+              <OAuth2ParameterField
+                key={param.$id}
+                param={param}
+                providerId="oidc"
+                {...fieldProps}
+              />
+            ))}
+          </CollapsibleContent>
+        </Collapsible>
+      ) : null}
+    </>
+  )
+}
+
+function OAuth2RedirectUriCard({
+  providerName,
+  redirectUri,
+}: {
+  providerName: string
+  redirectUri: string
+}) {
+  const [copied, setCopied] = useState(false)
+
+  const handleCopy = async () => {
+    const ok = await copyToClipboard('Redirect URI', redirectUri, {
+      showToast: true,
+    })
+    if (ok) {
+      setCopied(true)
+      setTimeout(() => setCopied(false), 2000)
+    }
+  }
+
+  return (
+    <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
+      <div className="px-6 py-4">
+        <h3 className="text-[15px] font-semibold text-foreground">Redirect URI</h3>
+        <p className="text-[13px] text-muted-foreground mt-2">
+          Register this callback URL in the {providerName} developer console so
+          OAuth sign-in can return to this project.
+        </p>
+      </div>
+      <div className="border-t border-border" />
+      <div className="px-6 py-4 space-y-4">
+        <ol className="text-[13px] text-muted-foreground space-y-2 list-decimal pl-4 [list-style-position:outside]">
+          <li>
+            Open your {providerName} application in the provider&apos;s
+            developer console.
+          </li>
+          <li>
+            Find the allowed redirect URIs, callback URLs, or equivalent
+            authorized redirect field.
+          </li>
+          <li>
+            Paste the URI below exactly and save. Mismatched URLs will cause
+            sign-in to fail.
+          </li>
+        </ol>
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+          <Input
+            id="oauth2-redirect-uri"
+            value={redirectUri}
+            readOnly
+            disabled
+            className="font-mono text-[13px] flex-1 cursor-default opacity-100 disabled:opacity-100"
+            aria-label="Redirect URI"
+          />
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            className="h-9 text-[13px] shrink-0"
+            onClick={() => void handleCopy()}
+            disabled={!redirectUri}
+          >
+            {copied ? (
+              <>
+                <Check className="mr-1.5 h-3.5 w-3.5 text-emerald-500" />
+                Copied
+              </>
+            ) : (
+              <>
+                <Copy className="mr-1.5 h-3.5 w-3.5" />
+                Copy
+              </>
+            )}
+          </Button>
+        </div>
+      </div>
+    </div>
+  )
 }
 
 function findProjectProviderModel(
@@ -59,11 +329,13 @@ function readStringField(
 export function OAuth2ProvidersSection({
   projectId,
   initialData,
+  bare = false,
 }: {
   projectId: string
   initialData?: AuthOAuth2SettingsInitialData
+  /** When true, render provider UI without the settings card wrapper. */
+  bare?: boolean
 }) {
-  const queryClient = useQueryClient()
   const { data: projectData } = useQuery(projectQueryOptions(projectId))
   const projectEndpoint = useMemo(
     () => getApiEndpoint(projectData?.region),
@@ -91,11 +363,16 @@ export function OAuth2ProvidersSection({
     fields: Record<string, string>
   } | null>(null)
   const [providerError, setProviderError] = useState('')
+  const [validationTouched, setValidationTouched] = useState(false)
+  const [oidcAdvancedOpen, setOidcAdvancedOpen] = useState(false)
 
   const catalogEntries = useMemo(() => {
     const fromHook = catalog?.oAuth2Providers ?? []
-    if (fromHook.length > 0) return fromHook
-    return initialData?.catalog?.oAuth2Providers ?? []
+    const raw =
+      fromHook.length > 0
+        ? fromHook
+        : (initialData?.catalog?.oAuth2Providers ?? [])
+    return raw.filter((p) => canUpdateProjectOAuth2Provider(p.$id))
   }, [catalog?.oAuth2Providers, initialData?.catalog?.oAuth2Providers])
 
   const selectedCatalog = useMemo(() => {
@@ -105,6 +382,13 @@ export function OAuth2ProvidersSection({
 
   const openDrawerFor = useCallback(
     (providerId: string) => {
+      if (!canUpdateProjectOAuth2Provider(providerId)) {
+        toast.error(
+          `${getOAuth2ProviderDisplayName(providerId)} is not available on this server.`,
+        )
+        return
+      }
+
       const entry = catalogEntries.find((p) => p.$id === providerId)
       const model = findProjectProviderModel(resolvedProviderList, providerId)
       if (!entry) return
@@ -120,6 +404,12 @@ export function OAuth2ProvidersSection({
       setFormFields(fields)
       setInitialSnapshot({ enabled, fields: { ...fields } })
       setProviderError('')
+      setValidationTouched(false)
+      const wellKnownSet = Boolean(fields[OIDC_WELL_KNOWN_PARAM_ID]?.trim())
+      const hasManualDiscovery = OIDC_MANUAL_DISCOVERY_PARAM_IDS.some((id) =>
+        Boolean(fields[id]?.trim()),
+      )
+      setOidcAdvancedOpen(!wellKnownSet && hasManualDiscovery)
       setDrawerOpen(true)
     },
     [catalogEntries, resolvedProviderList],
@@ -132,6 +422,8 @@ export function OAuth2ProvidersSection({
       setFormFields({})
       setInitialSnapshot(null)
       setProviderError('')
+      setValidationTouched(false)
+      setOidcAdvancedOpen(false)
     }
   }, [drawerOpen])
 
@@ -187,6 +479,28 @@ export function OAuth2ProvidersSection({
     return false
   }, [selectedCatalog, initialSnapshot, formEnabled, formFields])
 
+  const formFieldErrors = useMemo(() => {
+    if (!selectedProviderId || !selectedCatalog || !formEnabled) return {}
+    return getOAuth2ProviderFieldErrors({
+      providerId: selectedProviderId,
+      parameters: selectedCatalog.parameters,
+      formEnabled,
+      formFields,
+      initialEnabled: initialSnapshot?.enabled ?? false,
+      initialFields: initialSnapshot?.fields ?? {},
+    })
+  }, [
+    selectedProviderId,
+    selectedCatalog,
+    formEnabled,
+    formFields,
+    initialSnapshot,
+  ])
+
+  useEffect(() => {
+    setProviderError('')
+  }, [formEnabled, formFields, selectedProviderId])
+
   const validateAndSubmit = () => {
     if (!selectedProviderId || !selectedCatalog) return
 
@@ -198,20 +512,43 @@ export function OAuth2ProvidersSection({
       return
     }
 
-    for (const p of parameters) {
-      const raw = (formFields[p.$id] ?? '').trim()
-      if (raw) continue
-      if (wasEnabled && isSecretishParameter(p.$id)) continue
-      setProviderError(`${p.name} is required`)
+    const fieldErrors = getOAuth2ProviderFieldErrors({
+      providerId: selectedProviderId,
+      parameters,
+      formEnabled,
+      formFields,
+      initialEnabled: wasEnabled,
+      initialFields: initialSnapshot?.fields ?? {},
+    })
+    if (hasOAuth2ProviderFieldErrors(fieldErrors)) {
+      setValidationTouched(true)
+      if (
+        selectedProviderId === 'oidc' &&
+        OIDC_MANUAL_DISCOVERY_PARAM_IDS.some((id) => fieldErrors[id])
+      ) {
+        setOidcAdvancedOpen(true)
+      }
       return
     }
 
+    const wellKnownTrim =
+      selectedProviderId === 'oidc'
+        ? (formFields[OIDC_WELL_KNOWN_PARAM_ID] ?? '').trim()
+        : ''
+
     const values: Record<string, string | boolean> = { enabled: true }
     for (const p of parameters) {
+      if (
+        selectedProviderId === 'oidc' &&
+        wellKnownTrim &&
+        isOidcManualDiscoveryParam(p.$id)
+      ) {
+        continue
+      }
       const raw = (formFields[p.$id] ?? '').trim()
       if (raw) {
         values[p.$id] = raw
-      } else if (wasEnabled && isSecretishParameter(p.$id)) {
+      } else if (wasEnabled && isOAuth2SecretParameter(p.$id)) {
         // omit - server keeps existing secret
       }
     }
@@ -229,10 +566,6 @@ export function OAuth2ProvidersSection({
           toast.success(
             `${getOAuth2ProviderDisplayName(selectedProviderId)} has been updated`,
           )
-          void queryClient.invalidateQueries({
-            queryKey: ['oauth2', 'project', projectId, 'providers'],
-          })
-          void queryClient.invalidateQueries({ queryKey: ['project', projectId] })
           setDrawerOpen(false)
         },
         onError: (error: unknown) => {
@@ -295,174 +628,196 @@ export function OAuth2ProvidersSection({
     </div>
   )
 
-  return (
-    <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
-      <div className="px-6 py-4">
-        <h3 className="text-[15px] font-semibold text-foreground">
-          OAuth2 providers
-        </h3>
-      </div>
-      <div className="border-t border-border" />
-      <div className="px-6 py-4">
-        <p className="text-[13px] text-muted-foreground mb-4">
-          Configure OAuth2 providers for social login. Providers and fields come
-          from your Appwrite server.
-        </p>
+  const providersBody = (
+    <>
+      <p className="text-[13px] text-muted-foreground mb-4">
+        Enable OAuth 2 providers so users can sign in with external accounts.
+        Open a provider to set credentials, control availability for this
+        project, and copy the redirect URI for its developer console.
+      </p>
 
-        <div className="mb-6">
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input
-              type="text"
-              placeholder="Search providers..."
-              value={providerSearch}
-              onChange={(e) => setProviderSearch(e.target.value)}
-              className="pl-9 h-9 text-[13px]"
-            />
-          </div>
+      <div className="mb-6">
+        <div className="relative">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <Input
+            type="text"
+            placeholder="Search providers..."
+            value={providerSearch}
+            onChange={(e) => setProviderSearch(e.target.value)}
+            className="pl-9 h-9 text-[13px]"
+          />
         </div>
-
-        {popularRows.length > 0 && (
-          <div className="mb-6">
-            <h4 className="text-[13px] font-medium text-foreground mb-3">
-              Popular
-            </h4>
-            {renderProviderGrid(popularRows)}
-          </div>
-        )}
-
-        {otherRows.length > 0 && (
-          <div>
-            {popularRows.length > 0 && (
-              <div className="my-6 flex w-full items-center gap-3 text-[12px] text-muted-foreground">
-                <div className="h-px flex-1 bg-border" />
-                <span className="font-medium text-foreground/80">
-                  All providers
-                </span>
-                <div className="h-px flex-1 bg-border" />
-              </div>
-            )}
-            {renderProviderGrid(otherRows)}
-          </div>
-        )}
-
-        {filteredEntries.length === 0 && (
-          <div className="text-center py-8">
-            <p className="text-[13px] text-muted-foreground">
-              No providers match{' '}
-              <span className="font-medium text-foreground">{providerSearch}</span>
-            </p>
-          </div>
-        )}
       </div>
 
-      <Drawer open={drawerOpen} onOpenChange={setDrawerOpen} direction="right">
-        <DrawerContent className="h-full p-0 flex flex-col">
-          <DrawerHeader className="px-6 pt-6 text-left shrink-0">
-            <DrawerTitle className="text-[15px]">
-              {selectedName} OAuth2 settings
-            </DrawerTitle>
-            <DrawerDescription className="text-[13px] mt-2">
-              Use the parameter labels below as they appear in the provider
-              dashboard. Add this redirect URI to the provider configuration.
-            </DrawerDescription>
-          </DrawerHeader>
+      {popularRows.length > 0 && (
+        <div className="mb-6">
+          <h4 className="text-[13px] font-medium text-foreground mb-3">
+            Popular
+          </h4>
+          {renderProviderGrid(popularRows)}
+        </div>
+      )}
+
+      {otherRows.length > 0 && (
+        <div>
+          {popularRows.length > 0 && (
+            <div className="my-6 flex w-full items-center gap-3 text-[12px] text-muted-foreground">
+              <div className="h-px flex-1 bg-border" />
+              <span className="font-medium text-foreground/80">
+                All providers
+              </span>
+              <div className="h-px flex-1 bg-border" />
+            </div>
+          )}
+          {renderProviderGrid(otherRows)}
+        </div>
+      )}
+
+      {filteredEntries.length === 0 && (
+        <div className="text-center py-8">
+          <p className="text-[13px] text-muted-foreground">
+            No providers match{' '}
+            <span className="font-medium text-foreground">{providerSearch}</span>
+          </p>
+        </div>
+      )}
+    </>
+  )
+
+  return (
+    <>
+      {bare ? (
+        providersBody
+      ) : (
+        <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
+          <div className="px-6 py-4">
+            <h3 className="text-[15px] font-semibold text-foreground">
+              OAuth2 providers
+            </h3>
+          </div>
+          <div className="border-t border-border" />
+          <div className="px-6 py-4">{providersBody}</div>
+        </div>
+      )}
+
+      <BaseDrawer
+        open={drawerOpen}
+        onOpenChange={setDrawerOpen}
+        title={
+          selectedName ? `${selectedName} OAuth2 settings` : 'OAuth2 settings'
+        }
+        description="Configure OAuth2 provider credentials and redirect URI for this project."
+        maxWidth="sm:max-w-lg"
+        disableAutoFocus
+      >
+        <>
           <div className="border-t border-border shrink-0" />
-          <div className="px-6 pb-4 pt-4 overflow-y-auto flex-1 min-h-0 space-y-4">
-            <div className="rounded-lg border border-border bg-muted/30 p-4">
-              <div className="flex items-center justify-between">
-                <div className="space-y-0.5">
-                  <Label
-                    htmlFor="oauth2-provider-enabled"
-                    className="text-[13px] font-semibold text-foreground"
-                  >
-                    {formEnabled ? 'Enabled' : 'Disabled'}
-                  </Label>
-                  <p className="text-[12px] text-muted-foreground">
-                    {formEnabled
-                      ? 'This provider can be used for new sessions'
-                      : 'This provider is turned off for this project'}
-                  </p>
+
+          <div className="flex flex-1 flex-col min-h-0">
+            <div className="flex-1 overflow-y-auto">
+              <div className="px-6 py-6 space-y-5">
+                <p className="text-[13px] text-muted-foreground">
+                  {selectedProviderId === 'oidc'
+                    ? 'Enter the client ID and secret from your OpenID provider, then the well-known metadata URL. Manual endpoint URLs are only needed under Advanced configuration.'
+                    : 'Use the field labels below as they appear in the provider dashboard when entering client credentials.'}
+                </p>
+
+                <div className="rounded-lg border border-border bg-muted/30 p-4">
+                  <div className="flex items-center justify-between">
+                    <div className="space-y-0.5">
+                      <Label
+                        htmlFor="oauth2-provider-enabled"
+                        className="text-[13px] font-semibold text-foreground"
+                      >
+                        {formEnabled ? 'Enabled' : 'Disabled'}
+                      </Label>
+                      <p className="text-[12px] text-muted-foreground">
+                        {formEnabled
+                          ? 'This provider can be used for new sessions'
+                          : 'This provider is turned off for this project'}
+                      </p>
+                    </div>
+                    <Switch
+                      id="oauth2-provider-enabled"
+                      checked={formEnabled}
+                      onCheckedChange={setFormEnabled}
+                      disabled={updateMutation.isPending}
+                    />
+                  </div>
                 </div>
-                <Switch
-                  id="oauth2-provider-enabled"
-                  checked={formEnabled}
-                  onCheckedChange={setFormEnabled}
-                />
+
+                {formEnabled && selectedCatalog && selectedProviderId
+                  ? selectedProviderId === 'oidc' ? (
+                      <OidcProviderFormFields
+                        parameters={selectedCatalog.parameters}
+                        formFields={formFields}
+                        setFormFields={setFormFields}
+                        initialEnabled={initialSnapshot?.enabled ?? false}
+                        formEnabled={formEnabled}
+                        validationTouched={validationTouched}
+                        formFieldErrors={formFieldErrors}
+                        fieldsDisabled={updateMutation.isPending}
+                        advancedOpen={oidcAdvancedOpen}
+                        onAdvancedOpenChange={setOidcAdvancedOpen}
+                      />
+                    ) : (
+                      selectedCatalog.parameters.map((param) => (
+                        <OAuth2ParameterField
+                          key={param.$id}
+                          param={param}
+                          providerId={selectedProviderId}
+                          formFields={formFields}
+                          setFormFields={setFormFields}
+                          initialEnabled={initialSnapshot?.enabled ?? false}
+                          formEnabled={formEnabled}
+                          validationTouched={validationTouched}
+                          formFieldErrors={formFieldErrors}
+                          fieldsDisabled={updateMutation.isPending}
+                        />
+                      ))
+                    )
+                  : null}
+
+                {formEnabled && redirectUri && selectedName ? (
+                  <OAuth2RedirectUriCard
+                    providerName={selectedName}
+                    redirectUri={redirectUri}
+                  />
+                ) : null}
+
+                {providerError ? (
+                  <Alert variant="destructive">
+                    <AlertDescription className="text-[13px]">
+                      {providerError}
+                    </AlertDescription>
+                  </Alert>
+                ) : null}
               </div>
             </div>
 
-            {formEnabled &&
-              selectedCatalog?.parameters.map((param) => {
-                const isP8 = param.$id === 'p8File'
-                const secretish = isSecretishParameter(param.$id)
-                const Control = isP8 ? Textarea : Input
-                return (
-                  <div key={param.$id} className="space-y-2">
-                    <Label htmlFor={`oauth2-${param.$id}`} className="text-[12px]">
-                      {param.name}
-                    </Label>
-                    <Control
-                      id={`oauth2-${param.$id}`}
-                      value={formFields[param.$id] ?? ''}
-                      onChange={(e) =>
-                        setFormFields((prev) => ({
-                          ...prev,
-                          [param.$id]: e.target.value,
-                        }))
-                      }
-                      placeholder={param.example || undefined}
-                      className={cn('text-[13px]', isP8 && 'font-mono min-h-[120px]')}
-                      type={!isP8 && secretish ? 'password' : 'text'}
-                      autoComplete="off"
-                    />
-                    {param.hint ? (
-                      <p className="text-[11px] text-muted-foreground">{param.hint}</p>
-                    ) : null}
-                  </div>
-                )
-              })}
-
-            {formEnabled && (
-              <div className="space-y-2">
-                <Label className="text-[12px]">Redirect URI</Label>
-                <Input
-                  readOnly
-                  value={redirectUri}
-                  className="font-mono text-[13px]"
-                />
-              </div>
-            )}
-
-            {providerError ? (
-              <Alert variant="destructive">
-                <AlertDescription className="text-[13px]">
-                  {providerError}
-                </AlertDescription>
-              </Alert>
-            ) : null}
+            <div className="flex shrink-0 flex-col-reverse gap-2 border-t border-border bg-muted/30 px-6 py-4 sm:flex-row sm:justify-start">
+              <Button
+                size="sm"
+                className="h-9 text-[13px]"
+                onClick={validateAndSubmit}
+                disabled={updateMutation.isPending || !hasProviderChanges}
+              >
+                Update
+              </Button>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                className="h-9 text-[13px]"
+                onClick={() => setDrawerOpen(false)}
+                disabled={updateMutation.isPending}
+              >
+                Cancel
+              </Button>
+            </div>
           </div>
-          <div className="px-6 py-4 border-t border-border bg-muted/30 flex flex-col gap-2 sm:flex-row sm:justify-start shrink-0">
-            <Button
-              size="sm"
-              className="h-9 text-[13px]"
-              onClick={validateAndSubmit}
-              disabled={updateMutation.isPending || !hasProviderChanges}
-            >
-              Update
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              className="h-9 text-[13px]"
-              onClick={() => setDrawerOpen(false)}
-              disabled={updateMutation.isPending}
-            >
-              Cancel
-            </Button>
-          </div>
-        </DrawerContent>
-      </Drawer>
-    </div>
+        </>
+      </BaseDrawer>
+    </>
   )
 }

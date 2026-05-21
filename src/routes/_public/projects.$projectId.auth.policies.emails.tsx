@@ -7,14 +7,14 @@ import { projectQueryOptions } from '@/lib/react-query/hooks'
 import { projectAuthSecurityQueryOptions } from '@/lib/project-settings'
 
 export const Route = createFileRoute(
-  '/_public/projects/$projectId/auth/settings',
+  '/_public/projects/$projectId/auth/policies/emails',
 )({
-  head: () => ({ meta: [{ title: pageTitle('Settings', 'Auth') }] }),
+  head: () => ({ meta: [{ title: pageTitle('Emails', 'Policies') }] }),
   loader: async ({ params, context }) => {
-    if (typeof window === 'undefined') return undefined
+    if (typeof window === 'undefined') return
     const { projectId } = params
     const { queryClient } = context
-    if (!projectId) return undefined
+    if (!projectId) return
     const canAccess = await canAccessAuthSecuritySettings(
       queryClient,
       projectId,
@@ -28,7 +28,6 @@ export const Route = createFileRoute(
     }
 
     await queryClient.ensureQueryData(projectQueryOptions(projectId))
-
     const project = queryClient.getQueryData<Models.Project>(
       projectQueryOptions(projectId).queryKey,
     )
@@ -36,10 +35,10 @@ export const Route = createFileRoute(
       projectAuthSecurityQueryOptions(projectId, project?.region),
     )
   },
-  component: AuthSettingsPage,
+  component: AuthPoliciesEmailsPage,
 })
 
-function AuthSettingsPage() {
+function AuthPoliciesEmailsPage() {
   const { projectId } = Route.useParams()
-  return <View key={`auth-${projectId}-settings`} />
+  return <View key={`auth-${projectId}-policies-emails`} />
 }
