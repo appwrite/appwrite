@@ -2110,7 +2110,7 @@ export function View() {
                                   }
                                 >
                                   <div className="flex min-w-0 items-center gap-2">
-                                    <span className="min-w-0 flex-1 truncate text-[12px] font-medium text-foreground">
+                                    <span className="min-w-0 flex-1 truncate text-[12px] text-foreground">
                                       {file.name}
                                     </span>
                                     {pending ? (
