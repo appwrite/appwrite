@@ -7,7 +7,7 @@ namespace Appwrite\Auth\Validator;
  *
  * Validates user password string
  */
-class PasswordDictionary extends PasswordPolicy
+class PasswordDictionary extends PasswordStrength
 {
     protected array $dictionary;
     protected bool $enabled;

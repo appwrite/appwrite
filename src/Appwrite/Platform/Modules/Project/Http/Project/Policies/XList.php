@@ -88,8 +88,8 @@ class XList extends Action
                 'requireLowercase' => false,
                 'requireNumber' => false,
                 'requireSpecialChar' => false,
-            ], $auths['passwordPolicy'] ?? [], [
-                '$id' => 'password-policy',
+            ], $auths['passwordStrength'] ?? [], [
+                '$id' => 'password-strength',
             ])),
             new Document([
                 '$id' => 'password-personal-data',

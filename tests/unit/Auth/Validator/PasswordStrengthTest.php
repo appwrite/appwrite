@@ -2,14 +2,14 @@
 
 namespace Tests\Unit\Auth\Validator;
 
-use Appwrite\Auth\Validator\PasswordPolicy;
+use Appwrite\Auth\Validator\PasswordStrength;
 use PHPUnit\Framework\TestCase;
 
-class PasswordPolicyTest extends TestCase
+class PasswordStrengthTest extends TestCase
 {
     public function testDefaultPolicy(): void
     {
-        $validator = new PasswordPolicy();
+        $validator = new PasswordStrength();
 
         $this->assertFalse($validator->isValid('1234567'));
         $this->assertTrue($validator->isValid('password'));
@@ -17,7 +17,7 @@ class PasswordPolicyTest extends TestCase
 
     public function testConfiguredPolicy(): void
     {
-        $validator = new PasswordPolicy([
+        $validator = new PasswordStrength([
             'minLength' => 12,
             'requireUppercase' => true,
             'requireLowercase' => true,
@@ -36,7 +36,7 @@ class PasswordPolicyTest extends TestCase
 
     public function testAllowEmpty(): void
     {
-        $validator = new PasswordPolicy([
+        $validator = new PasswordStrength([
             'minLength' => 12,
             'requireUppercase' => true,
             'requireLowercase' => true,

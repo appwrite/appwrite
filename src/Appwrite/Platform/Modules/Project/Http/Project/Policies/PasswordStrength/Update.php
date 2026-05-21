@@ -1,6 +1,6 @@
 <?php
 
-namespace Appwrite\Platform\Modules\Project\Http\Project\Policies\PasswordPolicy;
+namespace Appwrite\Platform\Modules\Project\Http\Project\Policies\PasswordStrength;
 
 use Appwrite\Event\Event;
 use Appwrite\Platform\Action;
@@ -21,15 +21,15 @@ class Update extends Action
 
     public static function getName()
     {
-        return 'updateProjectPasswordPolicy';
+        return 'updateProjectPasswordStrength';
     }
 
     public function __construct()
     {
         $this
             ->setHttpMethod(Action::HTTP_REQUEST_METHOD_PATCH)
-            ->setHttpPath('/v1/project/policies/password-policy')
-            ->desc('Update password policy')
+            ->setHttpPath('/v1/project/policies/password-strength')
+            ->desc('Update password strength policy')
             ->groups(['api', 'project'])
             ->label('scope', ['policies.write', 'project.policies.write'])
             ->label('event', 'projects.[projectId].policies.[policy].update')
@@ -38,7 +38,7 @@ class Update extends Action
             ->label('sdk', new Method(
                 namespace: 'project',
                 group: 'policies',
-                name: 'updatePasswordPolicy',
+                name: 'updatePasswordStrength',
                 description: <<<EOT
                 Update password complexity requirements for users in the project.
                 EOT,
@@ -50,11 +50,11 @@ class Update extends Action
                     )
                 ],
             ))
-            ->param('minLength', 8, new Range(8, 256), 'Minimum password length. Value must be between 8 and 256. Default is 8.')
-            ->param('requireUppercase', false, new Boolean(), 'Whether passwords must include at least one uppercase letter.')
-            ->param('requireLowercase', false, new Boolean(), 'Whether passwords must include at least one lowercase letter.')
-            ->param('requireNumber', false, new Boolean(), 'Whether passwords must include at least one number.')
-            ->param('requireSpecialChar', false, new Boolean(), 'Whether passwords must include at least one special character.')
+            ->param('minLength', null, new Range(8, 256), 'Minimum password length. Value must be between 8 and 256. Default is 8.', optional: true)
+            ->param('requireUppercase', null, new Boolean(), 'Whether passwords must include at least one uppercase letter.', optional: true)
+            ->param('requireLowercase', null, new Boolean(), 'Whether passwords must include at least one lowercase letter.', optional: true)
+            ->param('requireNumber', null, new Boolean(), 'Whether passwords must include at least one number.', optional: true)
+            ->param('requireSpecialChar', null, new Boolean(), 'Whether passwords must include at least one special character.', optional: true)
             ->inject('response')
             ->inject('dbForPlatform')
             ->inject('project')
@@ -64,11 +64,11 @@ class Update extends Action
     }
 
     public function action(
-        int $minLength,
-        bool $requireUppercase,
-        bool $requireLowercase,
-        bool $requireNumber,
-        bool $requireSpecialChar,
+        ?int $minLength,
+        ?bool $requireUppercase,
+        ?bool $requireLowercase,
+        ?bool $requireNumber,
+        ?bool $requireSpecialChar,
         Response $response,
         Database $dbForPlatform,
         Document $project,
@@ -76,13 +76,29 @@ class Update extends Action
         Event $queueForEvents,
     ): void {
         $auths = $project->getAttribute('auths', []);
-        $auths['passwordPolicy'] = [
-            'minLength' => $minLength,
-            'requireUppercase' => $requireUppercase,
-            'requireLowercase' => $requireLowercase,
-            'requireNumber' => $requireNumber,
-            'requireSpecialChar' => $requireSpecialChar,
-        ];
+        $auths['passwordStrength'] = \array_merge([
+            'minLength' => 8,
+            'requireUppercase' => false,
+            'requireLowercase' => false,
+            'requireNumber' => false,
+            'requireSpecialChar' => false,
+        ], $auths['passwordStrength'] ?? []);
+
+        if ($minLength !== null) {
+            $auths['passwordStrength']['minLength'] = $minLength;
+        }
+        if ($requireUppercase !== null) {
+            $auths['passwordStrength']['requireUppercase'] = $requireUppercase;
+        }
+        if ($requireLowercase !== null) {
+            $auths['passwordStrength']['requireLowercase'] = $requireLowercase;
+        }
+        if ($requireNumber !== null) {
+            $auths['passwordStrength']['requireNumber'] = $requireNumber;
+        }
+        if ($requireSpecialChar !== null) {
+            $auths['passwordStrength']['requireSpecialChar'] = $requireSpecialChar;
+        }
 
         $updates = new Document([
             'auths' => $auths,
@@ -92,7 +108,7 @@ class Update extends Action
 
         $queueForEvents
             ->setParam('projectId', $project->getId())
-            ->setParam('policy', 'password-policy');
+            ->setParam('policy', 'password-strength');
 
         $response->dynamic($project, Response::MODEL_PROJECT);
     }

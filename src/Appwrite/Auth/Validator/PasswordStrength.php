@@ -3,11 +3,11 @@
 namespace Appwrite\Auth\Validator;
 
 /**
- * PasswordPolicy.
+ * PasswordStrength.
  *
  * Validates password complexity rules.
  */
-class PasswordPolicy extends Password
+class PasswordStrength extends Password
 {
     protected int $minLength;
     protected bool $requireUppercase;

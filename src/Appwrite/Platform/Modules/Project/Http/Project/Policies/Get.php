@@ -42,7 +42,7 @@ class Get extends Action
                         model: [
                             Response::MODEL_POLICY_PASSWORD_DICTIONARY,
                             Response::MODEL_POLICY_PASSWORD_HISTORY,
-                            Response::MODEL_POLICY_PASSWORD_POLICY,
+                            Response::MODEL_POLICY_PASSWORD_STRENGTH,
                             Response::MODEL_POLICY_PASSWORD_PERSONAL_DATA,
                             Response::MODEL_POLICY_SESSION_ALERT,
                             Response::MODEL_POLICY_SESSION_DURATION,
@@ -57,7 +57,7 @@ class Get extends Action
             ->param('policyId', '', new WhiteList([
                 'password-dictionary',
                 'password-history',
-                'password-policy',
+                'password-strength',
                 'password-personal-data',
                 'session-alert',
                 'session-duration',
@@ -65,7 +65,7 @@ class Get extends Action
                 'session-limit',
                 'user-limit',
                 'membership-privacy',
-            ], true), 'Policy ID. Can be one of: password-dictionary, password-history, password-policy, password-personal-data, session-alert, session-duration, session-invalidation, session-limit, user-limit, membership-privacy.')
+            ], true), 'Policy ID. Can be one of: password-dictionary, password-history, password-strength, password-personal-data, session-alert, session-duration, session-invalidation, session-limit, user-limit, membership-privacy.')
             ->inject('response')
             ->inject('project')
             ->callback($this->action(...));
@@ -93,17 +93,17 @@ class Get extends Action
                 ]),
                 Response::MODEL_POLICY_PASSWORD_HISTORY,
             ],
-            'password-policy' => [
+            'password-strength' => [
                 new Document(\array_merge([
                     'minLength' => 8,
                     'requireUppercase' => false,
                     'requireLowercase' => false,
                     'requireNumber' => false,
                     'requireSpecialChar' => false,
-                ], $auths['passwordPolicy'] ?? [], [
-                    '$id' => 'password-policy',
+                ], $auths['passwordStrength'] ?? [], [
+                    '$id' => 'password-strength',
                 ])),
-                Response::MODEL_POLICY_PASSWORD_POLICY,
+                Response::MODEL_POLICY_PASSWORD_STRENGTH,
             ],
             'password-personal-data' => [
                 new Document([

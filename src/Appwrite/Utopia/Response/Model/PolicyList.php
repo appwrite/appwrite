@@ -20,7 +20,7 @@ class PolicyList extends Model
                 'type' => [
                     Response::MODEL_POLICY_PASSWORD_DICTIONARY,
                     Response::MODEL_POLICY_PASSWORD_HISTORY,
-                    Response::MODEL_POLICY_PASSWORD_POLICY,
+                    Response::MODEL_POLICY_PASSWORD_STRENGTH,
                     Response::MODEL_POLICY_PASSWORD_PERSONAL_DATA,
                     Response::MODEL_POLICY_SESSION_ALERT,
                     Response::MODEL_POLICY_SESSION_DURATION,

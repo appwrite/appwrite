@@ -82,7 +82,7 @@ class Create extends Action
         $auths = [
             'limit' => 0,
             'maxSessions' => 0,
-            'passwordPolicy' => [
+            'passwordStrength' => [
                 'minLength' => 8,
                 'requireUppercase' => false,
                 'requireLowercase' => false,

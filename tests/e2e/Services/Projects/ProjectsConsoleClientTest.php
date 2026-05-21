@@ -2906,12 +2906,12 @@ class ProjectsConsoleClientTest extends Scope
         $this->assertEquals(0, $response['body']['authPasswordHistory']);
     }
 
-    public function testUpdateProjectAuthPasswordPolicy(): void
+    public function testUpdateProjectAuthPasswordStrength(): void
     {
         $data = $this->setupProjectData();
         $id = $data['projectId'];
 
-        $response = $this->client->call(Client::METHOD_PATCH, '/project/policies/password-policy', array_merge([
+        $response = $this->client->call(Client::METHOD_PATCH, '/project/policies/password-strength', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $id,
         ], $this->getHeaders()), [
@@ -2924,7 +2924,7 @@ class ProjectsConsoleClientTest extends Scope
 
         $this->assertEquals(400, $response['headers']['status-code']);
 
-        $response = $this->client->call(Client::METHOD_PATCH, '/project/policies/password-policy', array_merge([
+        $response = $this->client->call(Client::METHOD_PATCH, '/project/policies/password-strength', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $id,
         ], $this->getHeaders()), [
@@ -2936,11 +2936,11 @@ class ProjectsConsoleClientTest extends Scope
         ]);
 
         $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertEquals(12, $response['body']['authPasswordPolicyMinLength']);
-        $this->assertEquals(true, $response['body']['authPasswordPolicyRequireUppercase']);
-        $this->assertEquals(true, $response['body']['authPasswordPolicyRequireLowercase']);
-        $this->assertEquals(true, $response['body']['authPasswordPolicyRequireNumber']);
-        $this->assertEquals(true, $response['body']['authPasswordPolicyRequireSpecialChar']);
+        $this->assertEquals(12, $response['body']['authPasswordStrengthMinLength']);
+        $this->assertEquals(true, $response['body']['authPasswordStrengthRequireUppercase']);
+        $this->assertEquals(true, $response['body']['authPasswordStrengthRequireLowercase']);
+        $this->assertEquals(true, $response['body']['authPasswordStrengthRequireNumber']);
+        $this->assertEquals(true, $response['body']['authPasswordStrengthRequireSpecialChar']);
 
         $weakPassword = 'password123!';
         $validPassword = 'Password123!';
@@ -2980,7 +2980,7 @@ class ProjectsConsoleClientTest extends Scope
             'userId' => ID::unique(),
             'email' => $email,
             'password' => $validPassword,
-            'name' => 'Password Policy User',
+            'name' => 'Password Strength User',
         ]);
 
         $this->assertEquals(201, $response['headers']['status-code']);
@@ -3050,7 +3050,7 @@ class ProjectsConsoleClientTest extends Scope
 
         $this->assertEquals(400, $response['headers']['status-code']);
 
-        $response = $this->client->call(Client::METHOD_PATCH, '/project/policies/password-policy', array_merge([
+        $response = $this->client->call(Client::METHOD_PATCH, '/project/policies/password-strength', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $id,
         ], $this->getHeaders()), [
@@ -3062,11 +3062,11 @@ class ProjectsConsoleClientTest extends Scope
         ]);
 
         $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertEquals(8, $response['body']['authPasswordPolicyMinLength']);
-        $this->assertEquals(false, $response['body']['authPasswordPolicyRequireUppercase']);
-        $this->assertEquals(false, $response['body']['authPasswordPolicyRequireLowercase']);
-        $this->assertEquals(false, $response['body']['authPasswordPolicyRequireNumber']);
-        $this->assertEquals(false, $response['body']['authPasswordPolicyRequireSpecialChar']);
+        $this->assertEquals(8, $response['body']['authPasswordStrengthMinLength']);
+        $this->assertEquals(false, $response['body']['authPasswordStrengthRequireUppercase']);
+        $this->assertEquals(false, $response['body']['authPasswordStrengthRequireLowercase']);
+        $this->assertEquals(false, $response['body']['authPasswordStrengthRequireNumber']);
+        $this->assertEquals(false, $response['body']['authPasswordStrengthRequireSpecialChar']);
     }
 
     #[Group('smtpAndTemplates')]

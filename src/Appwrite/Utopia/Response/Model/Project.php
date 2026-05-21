@@ -115,31 +115,31 @@ class Project extends Model
                 'default' => 0,
                 'example' => 5,
             ])
-            ->addRule('authPasswordPolicyMinLength', [
+            ->addRule('authPasswordStrengthMinLength', [
                 'type' => self::TYPE_INTEGER,
                 'description' => 'Minimum password length required for user passwords.',
                 'default' => 8,
                 'example' => 12,
             ])
-            ->addRule('authPasswordPolicyRequireUppercase', [
+            ->addRule('authPasswordStrengthRequireUppercase', [
                 'type' => self::TYPE_BOOLEAN,
                 'description' => 'Whether or not passwords must include at least one uppercase letter.',
                 'default' => false,
                 'example' => true,
             ])
-            ->addRule('authPasswordPolicyRequireLowercase', [
+            ->addRule('authPasswordStrengthRequireLowercase', [
                 'type' => self::TYPE_BOOLEAN,
                 'description' => 'Whether or not passwords must include at least one lowercase letter.',
                 'default' => false,
                 'example' => true,
             ])
-            ->addRule('authPasswordPolicyRequireNumber', [
+            ->addRule('authPasswordStrengthRequireNumber', [
                 'type' => self::TYPE_BOOLEAN,
                 'description' => 'Whether or not passwords must include at least one number.',
                 'default' => false,
                 'example' => true,
             ])
-            ->addRule('authPasswordPolicyRequireSpecialChar', [
+            ->addRule('authPasswordStrengthRequireSpecialChar', [
                 'type' => self::TYPE_BOOLEAN,
                 'description' => 'Whether or not passwords must include at least one special character.',
                 'default' => false,
@@ -519,17 +519,17 @@ class Project extends Model
         }
 
         $authValues = $document->getAttribute('auths', []);
-        $passwordPolicy = $authValues['passwordPolicy'] ?? [];
+        $passwordStrength = $authValues['passwordStrength'] ?? [];
 
         $document->setAttribute('authLimit', $authValues['limit'] ?? 0);
         $document->setAttribute('authDuration', $authValues['duration'] ?? TOKEN_EXPIRATION_LOGIN_LONG);
         $document->setAttribute('authSessionsLimit', $authValues['maxSessions'] ?? 0);
         $document->setAttribute('authPasswordHistory', $authValues['passwordHistory'] ?? 0);
-        $document->setAttribute('authPasswordPolicyMinLength', $passwordPolicy['minLength'] ?? 8);
-        $document->setAttribute('authPasswordPolicyRequireUppercase', $passwordPolicy['requireUppercase'] ?? false);
-        $document->setAttribute('authPasswordPolicyRequireLowercase', $passwordPolicy['requireLowercase'] ?? false);
-        $document->setAttribute('authPasswordPolicyRequireNumber', $passwordPolicy['requireNumber'] ?? false);
-        $document->setAttribute('authPasswordPolicyRequireSpecialChar', $passwordPolicy['requireSpecialChar'] ?? false);
+        $document->setAttribute('authPasswordStrengthMinLength', $passwordStrength['minLength'] ?? 8);
+        $document->setAttribute('authPasswordStrengthRequireUppercase', $passwordStrength['requireUppercase'] ?? false);
+        $document->setAttribute('authPasswordStrengthRequireLowercase', $passwordStrength['requireLowercase'] ?? false);
+        $document->setAttribute('authPasswordStrengthRequireNumber', $passwordStrength['requireNumber'] ?? false);
+        $document->setAttribute('authPasswordStrengthRequireSpecialChar', $passwordStrength['requireSpecialChar'] ?? false);
         $document->setAttribute('authPasswordDictionary', $authValues['passwordDictionary'] ?? false);
         $document->setAttribute('authPersonalDataCheck', $authValues['personalDataCheck'] ?? false);
         $document->setAttribute('authDisposableEmails', $authValues['disposableEmails'] ?? false);

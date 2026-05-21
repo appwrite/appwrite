@@ -4,10 +4,10 @@ namespace Appwrite\Utopia\Response\Model;
 
 use Appwrite\Utopia\Response;
 
-class PolicyPasswordPolicy extends PolicyBase
+class PolicyPasswordStrength extends PolicyBase
 {
     public array $conditions = [
-        '$id' => 'password-policy',
+        '$id' => 'password-strength',
     ];
 
     public function __construct()
@@ -49,11 +49,11 @@ class PolicyPasswordPolicy extends PolicyBase
 
     public function getName(): string
     {
-        return 'Policy Password Policy';
+        return 'Policy Password Strength';
     }
 
     public function getType(): string
     {
-        return Response::MODEL_POLICY_PASSWORD_POLICY;
+        return Response::MODEL_POLICY_PASSWORD_STRENGTH;
     }
 }
