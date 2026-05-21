@@ -113,6 +113,12 @@ class MigrationReport extends Model
                 'default' => 0,
                 'example' => 1,
             ])
+            ->addRule(Resource::TYPE_RULE, [
+                'type' => self::TYPE_INTEGER,
+                'description' => 'Number of custom-domain proxy rules to be migrated. Auto-generated `.appwrite.network` rules are skipped — they are recreated by parent Function/Site migration.',
+                'default' => 0,
+                'example' => 5,
+            ])
             ->addRule(Resource::TYPE_SITE, [
                 'type' => self::TYPE_INTEGER,
                 'description' => 'Number of sites to be migrated.',

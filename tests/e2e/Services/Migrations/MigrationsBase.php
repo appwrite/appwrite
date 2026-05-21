@@ -3044,6 +3044,71 @@ trait MigrationsBase
         $this->client->call(Client::METHOD_PATCH, '/projects/' . $destinationProjectId . '/smtp', $consoleHeaders, $reset);
     }
 
+    public function testAppwriteMigrationCustomDomains(): void
+    {
+        $sourceHeaders = [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ];
+
+        $destinationHeaders = [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getDestinationProject()['$id'],
+            'x-appwrite-key' => $this->getDestinationProject()['apiKey'],
+        ];
+
+        // Unique domain so re-runs and parallel suites can't collide on the
+        // global domain uniqueness check.
+        $domain = \uniqid() . '-migration-api.myapp.com';
+
+        $createResp = $this->client->call(Client::METHOD_POST, '/proxy/rules/api', $sourceHeaders, [
+            'domain' => $domain,
+        ]);
+        $this->assertEquals(201, $createResp['headers']['status-code']);
+        $sourceRule = $createResp['body'];
+
+        $result = $this->performMigrationSync([
+            'resources' => [
+                Resource::TYPE_RULE,
+            ],
+            'endpoint' => $this->webEndpoint,
+            'projectId' => $this->getProject()['$id'],
+            'apiKey' => $this->getProject()['apiKey'],
+        ]);
+
+        $this->assertEquals('completed', $result['status']);
+        $this->assertEquals([Resource::TYPE_RULE], $result['resources']);
+        $this->assertArrayHasKey(Resource::TYPE_RULE, $result['statusCounters']);
+        $this->assertEquals(0, $result['statusCounters'][Resource::TYPE_RULE]['error']);
+        $this->assertEquals(0, $result['statusCounters'][Resource::TYPE_RULE]['pending']);
+        $this->assertGreaterThanOrEqual(1, $result['statusCounters'][Resource::TYPE_RULE]['success']);
+        $this->assertEquals(0, $result['statusCounters'][Resource::TYPE_RULE]['processing']);
+        $this->assertEquals(0, $result['statusCounters'][Resource::TYPE_RULE]['warning']);
+
+        $listResp = $this->client->call(Client::METHOD_GET, '/proxy/rules', $destinationHeaders);
+        $this->assertEquals(200, $listResp['headers']['status-code']);
+
+        $foundRule = null;
+        foreach ($listResp['body']['rules'] as $r) {
+            if ($r['domain'] === $domain) {
+                $foundRule = $r;
+                break;
+            }
+        }
+
+        $this->assertNotNull($foundRule, 'Migrated rule not found on destination');
+        $this->assertEquals($domain, $foundRule['domain']);
+        $this->assertEquals('api', $foundRule['type']);
+        $this->assertEquals('manual', $foundRule['trigger']);
+
+        // Cleanup on destination
+        $this->client->call(Client::METHOD_DELETE, '/proxy/rules/' . $foundRule['$id'], $destinationHeaders);
+
+        // Cleanup on source
+        $this->client->call(Client::METHOD_DELETE, '/proxy/rules/' . $sourceRule['$id'], $sourceHeaders);
+    }
+
     /**
      * Import documents from a CSV file.
      */

@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "5f35f305036e8fc0a208c3adf4c7c16b",
+    "content-hash": "4d93c3da3ef7aa9fe898f609a6524431",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -4675,16 +4675,16 @@
         },
         {
             "name": "utopia-php/migration",
-            "version": "dev-add-smtp-migration",
+            "version": "dev-add-custom-domains-migration",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/migration.git",
-                "reference": "e5dc08619aae087c6d45768225ea8d1e55eff63e"
+                "reference": "7af2ef5b766d3eb34fa8f83f2c43c84c853f499a"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/migration/zipball/e5dc08619aae087c6d45768225ea8d1e55eff63e",
-                "reference": "e5dc08619aae087c6d45768225ea8d1e55eff63e",
+                "url": "https://api.github.com/repos/utopia-php/migration/zipball/7af2ef5b766d3eb34fa8f83f2c43c84c853f499a",
+                "reference": "7af2ef5b766d3eb34fa8f83f2c43c84c853f499a",
                 "shasum": ""
             },
             "require": {
@@ -4741,10 +4741,10 @@
                 "utopia"
             ],
             "support": {
-                "source": "https://github.com/utopia-php/migration/tree/add-smtp-migration",
+                "source": "https://github.com/utopia-php/migration/tree/add-custom-domains-migration",
                 "issues": "https://github.com/utopia-php/migration/issues"
             },
-            "time": "2026-05-20T13:27:52+00:00"
+            "time": "2026-05-21T10:22:19+00:00"
         },
         {
             "name": "utopia-php/mongo",
@@ -8593,7 +8593,7 @@
         },
         {
             "package": "utopia-php/migration",
-            "version": "dev-add-smtp-migration",
+            "version": "dev-add-custom-domains-migration",
             "alias": "1.12.0",
             "alias_normalized": "1.12.0.0"
         }
