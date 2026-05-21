@@ -1,4 +1,4 @@
-import { useState, KeyboardEvent } from 'react'
+import { useState, type ClipboardEvent, type KeyboardEvent } from 'react'
 import { X } from 'lucide-react'
 import { Input } from './input'
 import { Badge } from './badge'
@@ -27,34 +27,66 @@ export function InputTags({
     return emailRegex.test(email)
   }
 
-  const handleKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === 'Enter' && inputValue.trim()) {
-      e.preventDefault()
-      handleAdd(inputValue.trim())
-    } else if (e.key === 'Backspace' && !inputValue && value.length > 0) {
-      // Remove last tag if input is empty and backspace is pressed
-      handleRemove(value[value.length - 1])
+  const splitTokens = (raw: string): string[] => {
+    if (!raw.trim()) return []
+    if (validateEmail) {
+      return raw
+        .split(/[,\s]+/)
+        .map((part) => part.trim())
+        .filter(Boolean)
     }
+    return [raw.trim()]
   }
 
-  const handleAdd = (tag: string) => {
-    if (!tag) return
+  const handleAddMany = (raw: string) => {
+    const tokens = splitTokens(raw)
+    if (tokens.length === 0) return
 
-    // Validate email if required
-    if (validateEmail && !validateEmailFormat(tag)) {
-      setError('Please enter a valid email address')
-      return
+    const next = [...value]
+    let added = false
+
+    for (const tag of tokens) {
+      if (validateEmail && !validateEmailFormat(tag)) {
+        setError('Please enter a valid email address')
+        return
+      }
+      if (next.includes(tag)) continue
+      next.push(tag)
+      added = true
     }
 
-    // Check for duplicates
-    if (value.includes(tag)) {
+    if (!added && tokens.length > 0) {
       setError('This email is already added')
       return
     }
 
-    onChange([...value, tag])
-    setInputValue('')
-    setError(null)
+    if (added) {
+      onChange(next)
+      setInputValue('')
+      setError(null)
+    }
+  }
+
+  const handleKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
+    const isCommitKey =
+      e.key === 'Enter' ||
+      (validateEmail && (e.key === ' ' || e.key === ','))
+
+    if (isCommitKey && inputValue.trim()) {
+      e.preventDefault()
+      handleAddMany(inputValue)
+    } else if (e.key === 'Backspace' && !inputValue && value.length > 0) {
+      handleRemove(value[value.length - 1])
+    }
+  }
+
+  const handlePaste = (e: ClipboardEvent<HTMLInputElement>) => {
+    if (!validateEmail) return
+    const text = e.clipboardData.getData('text')
+    if (!/[,\s]/.test(text)) return
+    e.preventDefault()
+    const combined = inputValue ? `${inputValue}${text}` : text
+    handleAddMany(combined)
   }
 
   const handleRemove = (tagToRemove: string) => {
@@ -64,8 +96,22 @@ export function InputTags({
 
   const handleBlur = () => {
     if (inputValue.trim()) {
-      handleAdd(inputValue.trim())
+      handleAddMany(inputValue)
     }
+  }
+
+  const handleInputChange = (next: string) => {
+    setError(null)
+    if (validateEmail && next.includes(',')) {
+      const parts = next.split(',')
+      const pending = parts.pop() ?? ''
+      if (parts.some((part) => part.trim())) {
+        handleAddMany(parts.join(','))
+      }
+      setInputValue(pending)
+      return
+    }
+    setInputValue(next)
   }
 
   return (
@@ -90,11 +136,9 @@ export function InputTags({
         <Input
           type="text"
           value={inputValue}
-          onChange={(e) => {
-            setInputValue(e.target.value)
-            setError(null)
-          }}
+          onChange={(e) => handleInputChange(e.target.value)}
           onKeyDown={handleKeyDown}
+          onPaste={handlePaste}
           onBlur={handleBlur}
           placeholder={value.length === 0 ? placeholder : ''}
           className="flex-1 min-w-[120px] h-6 border-0 p-0 focus-visible:ring-0 focus-visible:ring-offset-0 text-[13px]"

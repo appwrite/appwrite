@@ -1,9 +1,12 @@
 import { useState, useEffect, useMemo } from 'react'
+import { useQuery } from '@tanstack/react-query'
 import {
-  useProject,
+  projectQueryOptions,
   useUpdateSMTP,
   useOrganizationPlan,
 } from '@/lib/react-query/hooks'
+import { SendSMTPTestDialog } from './_components/SendSMTPTestDialog'
+import { useAuth } from '@/components/global/auth/RequireAuth'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -18,24 +21,29 @@ import {
 import { toast } from 'sonner'
 import { Loader2 } from 'lucide-react'
 import { UpgradeCurtain } from '@/components/ui/upgrade-curtain'
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from '@/components/ui/tooltip'
 
 interface SMTPProps {
   projectId: string
 }
 
+function secureFromProject(smtpSecure?: string): 'tls' | 'ssl' | 'none' {
+  if (smtpSecure === 'tls') return 'tls'
+  if (smtpSecure === 'ssl') return 'ssl'
+  return 'none'
+}
+
 export function SMTP({ projectId }: SMTPProps) {
-  const { project: projectData, isLoading } = useProject(projectId)
+  const { account } = useAuth()
+  const { data: project, isLoading } = useQuery(projectQueryOptions(projectId))
   const updateSMTPMutation = useUpdateSMTP(projectId)
+  const [testDialogOpen, setTestDialogOpen] = useState(false)
 
-  // Get raw project data for SMTP fields
-  const rawProject = useMemo(() => {
-    // We need to get the raw project data to access SMTP fields
-    // This would ideally come from a hook that returns the full Models.Project
-    return projectData as unknown
-  }, [projectData])
-
-  // Get project to access teamId (organization ID)
-  const orgId = projectData?.teamId
+  const orgId = project?.teamId
 
   // Get organization plan to check if custom SMTP is supported
   const { plan: organizationPlan } = useOrganizationPlan(orgId)
@@ -53,41 +61,30 @@ export function SMTP({ projectId }: SMTPProps) {
 
   // Initialize form from project data
   useEffect(() => {
-    if (rawProject) {
-      setEnabled(rawProject.smtpEnabled || false)
-      setSenderName(rawProject.smtpSenderName || '')
-      setSenderEmail(rawProject.smtpSenderEmail || '')
-      setReplyTo(rawProject.smtpReplyTo || '')
-      setHost(rawProject.smtpHost || '')
-      setPort(rawProject.smtpPort || 587)
-      setUsername(rawProject.smtpUsername || '')
+    if (project) {
+      setEnabled(project.smtpEnabled || false)
+      setSenderName(project.smtpSenderName || '')
+      setSenderEmail(project.smtpSenderEmail || '')
+      setReplyTo(project.smtpReplyToEmail || '')
+      setHost(project.smtpHost || '')
+      setPort(project.smtpPort || 587)
+      setUsername(project.smtpUsername || '')
       setPassword('') // Never show password
-      setSecure(
-        rawProject.smtpSecure === 'tls'
-          ? 'tls'
-          : rawProject.smtpSecure === 'ssl'
-            ? 'ssl'
-            : 'none',
-      )
+      setSecure(secureFromProject(project.smtpSecure))
     }
-  }, [rawProject])
+  }, [project])
 
   const hasChanges = useMemo(() => {
-    if (!rawProject) return false
+    if (!project) return false
     return (
-      enabled !== (rawProject.smtpEnabled || false) ||
-      senderName !== (rawProject.smtpSenderName || '') ||
-      senderEmail !== (rawProject.smtpSenderEmail || '') ||
-      replyTo !== (rawProject.smtpReplyTo || '') ||
-      host !== (rawProject.smtpHost || '') ||
-      port !== (rawProject.smtpPort || 587) ||
-      username !== (rawProject.smtpUsername || '') ||
-      secure !==
-        (rawProject.smtpSecure === 'tls'
-          ? 'tls'
-          : rawProject.smtpSecure === 'ssl'
-            ? 'ssl'
-            : 'none')
+      enabled !== (project.smtpEnabled || false) ||
+      senderName !== (project.smtpSenderName || '') ||
+      senderEmail !== (project.smtpSenderEmail || '') ||
+      replyTo !== (project.smtpReplyToEmail || '') ||
+      host !== (project.smtpHost || '') ||
+      port !== (project.smtpPort || 587) ||
+      username !== (project.smtpUsername || '') ||
+      secure !== secureFromProject(project.smtpSecure)
     )
   }, [
     enabled,
@@ -98,27 +95,65 @@ export function SMTP({ projectId }: SMTPProps) {
     port,
     username,
     secure,
-    rawProject,
+    project,
   ])
+
+  const smtpFormPayload = useMemo(
+    () => ({
+      enabled,
+      senderName: enabled ? senderName : undefined,
+      senderEmail: enabled ? senderEmail : undefined,
+      replyTo: enabled ? replyTo : undefined,
+      host: enabled ? host : undefined,
+      port: enabled ? port : undefined,
+      username: enabled ? username : undefined,
+      password: enabled && password ? password : undefined,
+      secure: enabled ? (secure === 'none' ? '' : secure) : undefined,
+    }),
+    [
+      enabled,
+      senderName,
+      senderEmail,
+      replyTo,
+      host,
+      port,
+      username,
+      password,
+      secure,
+    ],
+  )
 
   const handleUpdate = async () => {
     try {
-      await updateSMTPMutation.mutateAsync({
-        enabled,
-        senderName: enabled ? senderName : undefined,
-        senderEmail: enabled ? senderEmail : undefined,
-        replyTo: enabled ? replyTo : undefined,
-        host: enabled ? host : undefined,
-        port: enabled ? port : undefined,
-        username: enabled ? username : undefined,
-        password: enabled && password ? password : undefined,
-        secure: enabled ? (secure === 'none' ? '' : secure) : undefined,
-      })
+      await updateSMTPMutation.mutateAsync(smtpFormPayload)
+      setPassword('')
       toast.success(`SMTP server has been ${enabled ? 'enabled' : 'disabled'}.`)
     } catch (error: unknown) {
-      toast.error(error.message || 'Failed to update SMTP settings')
+      toast.error(
+        error instanceof Error ? error.message : 'Failed to update SMTP settings',
+      )
     }
   }
+
+  const hasSavedSmtpPassword = Boolean(project?.smtpHost)
+  const isFormReadyForTest =
+    enabled &&
+    senderName.trim() !== '' &&
+    senderEmail.trim() !== '' &&
+    host.trim() !== '' &&
+    port > 0 &&
+    (password.trim() !== '' || hasSavedSmtpPassword)
+
+  const testDisabledReason = !supportsCustomSmtp
+    ? 'Custom SMTP is available on Appwrite Cloud Pro and higher plans.'
+    : !enabled
+      ? 'Enable custom SMTP to send a test email.'
+      : !isFormReadyForTest
+        ? 'Fill in sender name, sender email, server host, port, and password (for new setups) before sending a test email.'
+        : undefined
+  const canSendTest = supportsCustomSmtp && isFormReadyForTest
+
+  const isSmtpBusy = updateSMTPMutation.isPending
 
   if (isLoading) {
     return (
@@ -173,7 +208,7 @@ export function SMTP({ projectId }: SMTPProps) {
                   id="smtp-enabled"
                   checked={enabled}
                   onCheckedChange={setEnabled}
-                  disabled={!supportsCustomSmtp || updateSMTPMutation.isPending}
+                  disabled={!supportsCustomSmtp || isSmtpBusy}
                 />
               </div>
 
@@ -200,7 +235,7 @@ export function SMTP({ projectId }: SMTPProps) {
                             placeholder="John Doe"
                             value={senderName}
                             onChange={(e) => setSenderName(e.target.value)}
-                            disabled={updateSMTPMutation.isPending}
+                            disabled={isSmtpBusy}
                             className="h-9 border-border bg-background text-[13px] text-foreground placeholder:text-muted-foreground focus:border-border focus:ring-0"
                           />
                         </div>
@@ -219,7 +254,7 @@ export function SMTP({ projectId }: SMTPProps) {
                             placeholder="noreply@example.com"
                             value={senderEmail}
                             onChange={(e) => setSenderEmail(e.target.value)}
-                            disabled={updateSMTPMutation.isPending}
+                            disabled={isSmtpBusy}
                             className="h-9 border-border bg-background text-[13px] text-foreground placeholder:text-muted-foreground focus:border-border focus:ring-0"
                           />
                         </div>
@@ -237,7 +272,7 @@ export function SMTP({ projectId }: SMTPProps) {
                             placeholder="support@example.com"
                             value={replyTo}
                             onChange={(e) => setReplyTo(e.target.value)}
-                            disabled={updateSMTPMutation.isPending}
+                            disabled={isSmtpBusy}
                             className="h-9 border-border bg-background text-[13px] text-foreground placeholder:text-muted-foreground focus:border-border focus:ring-0"
                           />
                           <p className="text-[11px] text-muted-foreground">
@@ -268,7 +303,7 @@ export function SMTP({ projectId }: SMTPProps) {
                             placeholder="smtp.example.com"
                             value={host}
                             onChange={(e) => setHost(e.target.value)}
-                            disabled={updateSMTPMutation.isPending}
+                            disabled={isSmtpBusy}
                             className="h-9 border-border bg-background text-[13px] text-foreground placeholder:text-muted-foreground focus:border-border focus:ring-0"
                           />
                         </div>
@@ -289,7 +324,7 @@ export function SMTP({ projectId }: SMTPProps) {
                             onChange={(e) =>
                               setPort(parseInt(e.target.value) || 587)
                             }
-                            disabled={updateSMTPMutation.isPending}
+                            disabled={isSmtpBusy}
                             className="h-9 border-border bg-background text-[13px] text-foreground placeholder:text-muted-foreground focus:border-border focus:ring-0"
                           />
                         </div>
@@ -306,7 +341,7 @@ export function SMTP({ projectId }: SMTPProps) {
                             onValueChange={(value) =>
                               setSecure(value as 'tls' | 'ssl' | 'none')
                             }
-                            disabled={updateSMTPMutation.isPending}
+                            disabled={isSmtpBusy}
                           >
                             <SelectTrigger
                               id="secure"
@@ -344,7 +379,7 @@ export function SMTP({ projectId }: SMTPProps) {
                             placeholder="smtp@example.com"
                             value={username}
                             onChange={(e) => setUsername(e.target.value)}
-                            disabled={updateSMTPMutation.isPending}
+                            disabled={isSmtpBusy}
                             className="h-9 border-border bg-background text-[13px] text-foreground placeholder:text-muted-foreground focus:border-border focus:ring-0"
                           />
                         </div>
@@ -362,7 +397,7 @@ export function SMTP({ projectId }: SMTPProps) {
                             placeholder="Enter password"
                             value={password}
                             onChange={(e) => setPassword(e.target.value)}
-                            disabled={updateSMTPMutation.isPending}
+                            disabled={isSmtpBusy}
                             className="h-9 border-border bg-background text-[13px] text-foreground placeholder:text-muted-foreground focus:border-border focus:ring-0"
                           />
                           <p className="text-[11px] text-muted-foreground">
@@ -376,24 +411,54 @@ export function SMTP({ projectId }: SMTPProps) {
               )}
             </div>
 
-            {/* Footer with Update Button */}
+            {/* Footer */}
             <div className="px-6 py-4 border-t border-border bg-muted/30">
-              <Button
-                size="sm"
-                className="h-9 text-[13px]"
-                onClick={handleUpdate}
-                disabled={
-                  !hasChanges ||
-                  !supportsCustomSmtp ||
-                  updateSMTPMutation.isPending
-                }
-              >
-                Update
-              </Button>
+              <div className="flex flex-wrap gap-2">
+                <Button
+                  size="sm"
+                  className="h-9 text-[13px]"
+                  onClick={handleUpdate}
+                  disabled={
+                    !hasChanges || !supportsCustomSmtp || isSmtpBusy
+                  }
+                >
+                  Update
+                </Button>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <span className="inline-flex">
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        className="h-9 text-[13px]"
+                        onClick={() => setTestDialogOpen(true)}
+                        disabled={!canSendTest || isSmtpBusy}
+                      >
+                        Send test email
+                      </Button>
+                    </span>
+                  </TooltipTrigger>
+                  {testDisabledReason ? (
+                    <TooltipContent className="max-w-xs text-[13px]">
+                      {testDisabledReason}
+                    </TooltipContent>
+                  ) : null}
+                </Tooltip>
+              </div>
             </div>
           </div>
         </UpgradeCurtain>
       </div>
+
+      <SendSMTPTestDialog
+        open={testDialogOpen}
+        onOpenChange={setTestDialogOpen}
+        projectId={projectId}
+        smtp={smtpFormPayload}
+        defaultRecipientEmail={account?.email}
+        onSent={() => setPassword('')}
+      />
     </div>
   )
 }
