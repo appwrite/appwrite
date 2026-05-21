@@ -55,8 +55,9 @@ $container->set('pools', function ($register) {
     return $register->get('pools');
 }, ['register']);
 
+$legacyPayloadSize = 12 * (1024 * 1024);
 $payloadSize = \max(
-    12 * (1024 * 1024),
+    $legacyPayloadSize,
     (int) System::getEnv('_APP_COMPUTE_SIZE_LIMIT', 0)
 ) + (2 * 1024 * 1024); // Add a small buffer for multipart/request overhead.
 $totalWorkers = intval(System::getEnv('_APP_CPU_NUM', swoole_cpu_num())) * intval(System::getEnv('_APP_WORKER_PER_CORE', 6));
@@ -502,13 +503,33 @@ $http->on(Constant::EVENT_START, function ($http) use ($payloadSize, $totalWorke
     });
 });
 
-$swoole->onRequest(function ($utopiaRequest, $utopiaResponse) use ($files, $swoole, $setRequestContext) {
+$swoole->onRequest(function ($utopiaRequest, $utopiaResponse) use ($files, $swoole, $setRequestContext, $legacyPayloadSize) {
     Span::init('http.request');
 
     $request = new Request($utopiaRequest->getSwooleRequest());
     $response = new Response($utopiaResponse->getSwooleResponse());
 
     Span::add('http.method', $request->getMethod());
+
+    $path = \parse_url($request->getURI(), PHP_URL_PATH) ?? '';
+    $isOrchestratorBuildArtifactUpload = $request->getMethod() === 'PUT'
+        && \preg_match('#^/v1/(functions|sites)/[^/]+/deployments/[^/]+/artifacts/build$#', $path) === 1;
+
+    if (!$isOrchestratorBuildArtifactUpload && (int)$request->getHeader('content-length', '0') > $legacyPayloadSize) {
+        $response
+            ->setStatusCode(Response::STATUS_CODE_REQUEST_ENTITY_TOO_LARGE)
+            ->json([
+                'message' => 'Request Entity Too Large',
+                'code' => Response::STATUS_CODE_REQUEST_ENTITY_TOO_LARGE,
+                'type' => 'general_query_limit_exceeded',
+                'version' => APP_VERSION_STABLE,
+            ]);
+
+        Span::add('http.response.code', $response->getStatusCode());
+        Span::current()?->finish();
+
+        return;
+    }
 
     if ($files->isFileLoaded($request->getURI())) {
         $time = (60 * 60 * 24 * 45); // 45 days cache
