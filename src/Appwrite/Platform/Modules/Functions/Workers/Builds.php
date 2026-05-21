@@ -1615,6 +1615,28 @@ class Builds extends Action
         return $deployment;
     }
 
+    protected function waitForOrchestratorSiteDetectionLogs(Database $dbForProject, Document $deployment): Document
+    {
+        for ($attempt = 0; $attempt < 40; $attempt++) {
+            $logs = $deployment->getAttribute('buildLogs', '');
+            if (
+                \str_contains($logs, '{APPWRITE_DETECTION_SEPARATOR_START}')
+                && \str_contains($logs, '{APPWRITE_DETECTION_SEPARATOR_END}')
+            ) {
+                return $deployment;
+            }
+
+            $deployment = $dbForProject->getDocument('deployments', $deployment->getId());
+            if ($deployment->isEmpty()) {
+                return $deployment;
+            }
+
+            \usleep(250_000);
+        }
+
+        return $deployment;
+    }
+
     protected function completeOrchestratorDeployment(
         Realtime $queueForRealtime,
         Context $usage,
@@ -1631,6 +1653,13 @@ class Builds extends Action
     ): void {
         $runtime = $this->getRuntime($resource, $this->getVersion($resource));
         $adapter = $deployment->getAttribute('adapter', $resource->getAttribute('adapter', '')) ?: null;
+
+        if ($resource->getCollection() === 'sites') {
+            $deployment = $this->waitForOrchestratorSiteDetectionLogs($dbForProject, $deployment);
+            if ($deployment->isEmpty()) {
+                return;
+            }
+        }
 
         $this->afterBuildSuccess($queueForRealtime, $dbForProject, $deployment, $runtime, $adapter);
 
