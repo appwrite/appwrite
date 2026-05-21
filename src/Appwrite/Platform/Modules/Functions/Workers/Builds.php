@@ -1479,7 +1479,7 @@ class Builds extends Action
                 return;
             }
 
-            $deployment = $dbForProject->getDocument('deployments', $deployment->getId());
+            $deployment = $this->waitForOrchestratorBuildPath($dbForProject, $deployment);
             if ($deployment->isEmpty() || empty($deployment->getAttribute('buildPath', ''))) {
                 return;
             }
@@ -1515,7 +1515,10 @@ class Builds extends Action
 
         $exitCode = (int) ($data['exitCode'] ?? -1);
         if ($exitCode === 0 && empty($deployment->getAttribute('buildPath', ''))) {
-            return;
+            $deployment = $this->waitForOrchestratorBuildPath($dbForProject, $deployment);
+            if ($deployment->isEmpty() || empty($deployment->getAttribute('buildPath', ''))) {
+                return;
+            }
         }
 
         $status = $exitCode === 0 && !empty($deployment->getAttribute('buildPath', '')) ? 'ready' : 'failed';
@@ -1565,6 +1568,20 @@ class Builds extends Action
             usage: $usage,
             publisherForUsage: $publisherForUsage
         );
+    }
+
+    protected function waitForOrchestratorBuildPath(Database $dbForProject, Document $deployment): Document
+    {
+        for ($attempt = 0; $attempt < 20; $attempt++) {
+            $deployment = $dbForProject->getDocument('deployments', $deployment->getId());
+            if ($deployment->isEmpty() || !empty($deployment->getAttribute('buildPath', ''))) {
+                return $deployment;
+            }
+
+            \usleep(250_000);
+        }
+
+        return $deployment;
     }
 
     protected function completeOrchestratorDeployment(
