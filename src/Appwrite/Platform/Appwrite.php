@@ -3,12 +3,16 @@
 namespace Appwrite\Platform;
 
 use Appwrite\Platform\Modules\Account;
+use Appwrite\Platform\Modules\Advisor;
 use Appwrite\Platform\Modules\Avatars;
 use Appwrite\Platform\Modules\Console;
 use Appwrite\Platform\Modules\Core;
 use Appwrite\Platform\Modules\Databases;
 use Appwrite\Platform\Modules\Functions;
 use Appwrite\Platform\Modules\Health;
+use Appwrite\Platform\Modules\Migrations;
+use Appwrite\Platform\Modules\Organization;
+use Appwrite\Platform\Modules\Presences;
 use Appwrite\Platform\Modules\Project;
 use Appwrite\Platform\Modules\Projects;
 use Appwrite\Platform\Modules\Proxy;
@@ -29,6 +33,7 @@ class Appwrite extends Platform
         $this->addModule(new Avatars\Module());
         $this->addModule(new Databases\Module());
         $this->addModule(new Projects\Module());
+        $this->addModule(new Presences\Module());
         $this->addModule(new Functions\Module());
         $this->addModule(new Health\Module());
         $this->addModule(new Sites\Module());
@@ -39,6 +44,9 @@ class Appwrite extends Platform
         $this->addModule(new Storage\Module());
         $this->addModule(new VCS\Module());
         $this->addModule(new Webhooks\Module());
+        $this->addModule(new Migrations\Module());
+        $this->addModule(new Organization\Module());
         $this->addModule(new Project\Module());
+        $this->addModule(new Advisor\Module());
     }
 }

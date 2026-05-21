@@ -16,6 +16,7 @@ use Utopia\Pools\Group;
 use Utopia\Queue\Adapter\Swoole;
 use Utopia\Queue\Broker\Pool as BrokerPool;
 use Utopia\Queue\Server;
+use Utopia\Span\Span;
 use Utopia\System\System;
 
 Runtime::enableCoroutine();
@@ -91,8 +92,13 @@ $adapter = new Swoole(
 $worker = new Server($adapter, $container);
 
 try {
-    $worker->init()->action(function () use ($worker, $registerWorkerMessageResources) {
+    $worker->init()->action(function () use ($worker, $registerWorkerMessageResources, $queueName) {
         $registerWorkerMessageResources($worker->getContainer());
+        Span::init("worker.{$queueName}");
+    });
+
+    $worker->shutdown()->action(function () {
+        Span::current()?->finish();
     });
 
     $container->set('bus', function ($register) use ($worker) {
@@ -120,6 +126,8 @@ $worker
     ->action(function (Throwable $error, ?Logger $logger, Log $log, Document $project, Authorization $authorization) use ($queueName) {
         $version = System::getEnv('_APP_VERSION', 'UNKNOWN');
 
+        Span::error($error);
+
         if ($logger) {
             $log->setNamespace('appwrite-worker');
             $log->setServer(System::getEnv('_APP_LOGGING_SERVICE_IDENTIFIER', \gethostname()));
@@ -129,7 +137,7 @@ $worker
             $log->setAction('appwrite-queue-' . $queueName);
             $log->addTag('verboseType', get_class($error));
             $log->addTag('code', $error->getCode());
-            $log->addTag('projectId', $project->getId() ?? 'n/a');
+            $log->addTag('projectId', $project->getId());
             $log->addExtra('file', $error->getFile());
             $log->addExtra('line', $error->getLine());
             $log->addExtra('trace', $error->getTraceAsString());

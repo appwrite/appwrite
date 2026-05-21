@@ -1,1 +1,0 @@
-Update the list of mock phone numbers for testing. Use these numbers to bypass SMS verification in development. 

@@ -2,9 +2,11 @@
 
 namespace Appwrite\Platform\Modules\Functions\Http\Functions;
 
-use Appwrite\Event\Build;
 use Appwrite\Event\Event;
-use Appwrite\Event\Func;
+use Appwrite\Event\Message\Build as BuildMessage;
+use Appwrite\Event\Message\Func as FunctionMessage;
+use Appwrite\Event\Publisher\Build as BuildPublisher;
+use Appwrite\Event\Publisher\Func as FunctionPublisher;
 use Appwrite\Event\Realtime;
 use Appwrite\Event\Validator\FunctionEvent;
 use Appwrite\Event\Webhook;
@@ -93,6 +95,8 @@ class Create extends Base
             ->param('providerBranch', '', new Text(128, 0), 'Production branch for the repo linked to the function.', true)
             ->param('providerSilentMode', false, new Boolean(), 'Is the VCS (Version Control System) connection in silent mode for the repo linked to the function? In silent mode, comments will not be made on commits and pull requests.', true)
             ->param('providerRootDirectory', '', new Text(128, 0), 'Path to function code in the linked repo.', true)
+            ->param('providerBranches', [], new ArrayList(new Text(128), APP_LIMIT_ARRAY_PARAMS_SIZE), 'List of branch name patterns to trigger automatic deployments. Supports wildcards. Leave empty to deploy on all branches.', true)
+            ->param('providerPaths', [], new ArrayList(new Text(128), APP_LIMIT_ARRAY_PARAMS_SIZE), 'List of file path patterns to trigger automatic deployments. Supports wildcards. Leave empty to deploy on all file changes.', true)
             ->param('buildSpecification', fn (array $plan) => $this->getDefaultSpecification($plan), fn (array $plan) => new Specification(
                 $plan,
                 Config::getParam('specifications', []),
@@ -115,10 +119,10 @@ class Create extends Base
             ->inject('timelimit')
             ->inject('project')
             ->inject('queueForEvents')
-            ->inject('queueForBuilds')
+            ->inject('publisherForBuilds')
             ->inject('queueForRealtime')
             ->inject('queueForWebhooks')
-            ->inject('queueForFunctions')
+            ->inject('publisherForFunctions')
             ->inject('dbForPlatform')
             ->inject('request')
             ->inject('gitHub')
@@ -145,6 +149,8 @@ class Create extends Base
         string $providerBranch,
         bool $providerSilentMode,
         string $providerRootDirectory,
+        array $providerBranches,
+        array $providerPaths,
         string $buildSpecification,
         string $runtimeSpecification,
         string $templateRepository,
@@ -157,10 +163,10 @@ class Create extends Base
         callable $timelimit,
         Document $project,
         Event $queueForEvents,
-        Build $queueForBuilds,
+        BuildPublisher $publisherForBuilds,
         Realtime $queueForRealtime,
         Webhook $queueForWebhooks,
-        Func $queueForFunctions,
+        FunctionPublisher $publisherForFunctions,
         Database $dbForPlatform,
         Request $request,
         GitHub $github,
@@ -246,6 +252,8 @@ class Create extends Base
                 'providerBranch' => $providerBranch,
                 'providerRootDirectory' => $providerRootDirectory,
                 'providerSilentMode' => $providerSilentMode,
+                'providerBranches' => $providerBranches,
+                'providerPaths' => $providerPaths,
                 'buildSpecification' => $buildSpecification,
                 'runtimeSpecification' => $runtimeSpecification,
             ]));
@@ -326,10 +334,11 @@ class Create extends Base
                     project: $project,
                     installation: $installation,
                     dbForProject: $dbForProject,
-                    queueForBuilds: $queueForBuilds,
+                    publisherForBuilds: $publisherForBuilds,
                     template: $template,
                     github: $github,
                     activate: true,
+                    platform: $platform,
                     reference: $providerBranch,
                     referenceType: 'branch'
                 );
@@ -367,15 +376,18 @@ class Create extends Base
                     'latestDeploymentStatus' => $deployment->getAttribute('status', ''),
                 ]));
 
-                $queueForBuilds
-                    ->setType(BUILD_TYPE_DEPLOYMENT)
-                    ->setResource($function)
-                    ->setDeployment($deployment)
-                    ->setTemplate($template);
+                $publisherForBuilds->enqueue(new BuildMessage(
+                    project: $project,
+                    resource: $function,
+                    deployment: $deployment,
+                    type: BUILD_TYPE_DEPLOYMENT,
+                    template: $template,
+                    platform: $platform,
+                ));
             }
 
             $functionsDomain = $platform['functionsDomain'];
-            if (!empty($functionsDomain)) {
+            if (!empty($functionsDomain) && isset($deployment) && !$deployment->isEmpty()) {
                 $routeSubdomain = ID::unique();
                 $domain = "{$routeSubdomain}.{$functionsDomain}";
                 // TODO: (@Meldiron) Remove after 1.7.x migration
@@ -391,8 +403,8 @@ class Create extends Base
                         'status' => 'verified',
                         'type' => 'deployment',
                         'trigger' => 'manual',
-                        'deploymentId' => !isset($deployment) || $deployment->isEmpty() ? '' : $deployment->getId(),
-                        'deploymentInternalId' => !isset($deployment) || $deployment->isEmpty() ? '' : $deployment->getSequence(),
+                        'deploymentId' => $deployment->getId(),
+                        'deploymentInternalId' => $deployment->getSequence(),
                         'deploymentResourceType' => 'function',
                         'deploymentResourceId' => $function->getId(),
                         'deploymentResourceInternalId' => $function->getSequence(),
@@ -418,9 +430,15 @@ class Create extends Base
                     ->trigger();
 
                 /** Trigger Functions */
-                $queueForFunctions
-                    ->from($ruleCreate)
-                    ->trigger();
+                $publisherForFunctions->enqueue(FunctionMessage::fromEvent(
+                    event: $ruleCreate->getEvent(),
+                    params: $ruleCreate->getParams(),
+                    project: $ruleCreate->getProject(),
+                    user: $ruleCreate->getUser(),
+                    userId: $ruleCreate->getUserId(),
+                    payload: $ruleCreate->getPayload(),
+                    platform: $ruleCreate->getPlatform(),
+                ));
 
                 /** Trigger Realtime Events */
                 $queueForRealtime

@@ -15,7 +15,7 @@ class Env
 
         foreach ($data as &$row) {
             $row = explode('=', $row, 2);
-            $key = (isset($row[0])) ? trim($row[0]) : null;
+            $key = trim($row[0]);
             $value = (isset($row[1])) ? (function (string $v): string {
                 $v = trim($v);
                 if (

@@ -33,10 +33,7 @@ class DNSTest extends TestCase
         $result = $validator->isValid('nonexistent-domain-' . \uniqid() . '.com');
 
         $this->assertEquals(false, $result);
-        $this->assertIsInt($validator->count);
-        $this->assertIsString($validator->value);
-        $this->assertIsArray($validator->records);
-        $this->assertIsString($validator->getDescription());
+        $this->assertNotEmpty($validator->getDescription());
     }
 
     public function testCoreDNSFailure(): void

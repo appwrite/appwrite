@@ -163,6 +163,12 @@ class Specs extends Action
                     'description' => 'Your secret dev API key',
                     'in' => 'header',
                 ],
+                'Cookie' => [
+                    'type' => 'apiKey',
+                    'name' => 'Cookie',
+                    'description' => 'The user cookie to authenticate with. Used by SDKs that forward an incoming Cookie header in server-side runtimes.',
+                    'in' => 'header',
+                ],
                 'ImpersonateUserId' => [
                     'type' => 'apiKey',
                     'name' => 'X-Appwrite-Impersonate-User-Id',
@@ -219,6 +225,18 @@ class Specs extends Action
                     'description' => 'The user agent string of the client that made the request',
                     'in' => 'header',
                 ],
+                'DevKey' => [
+                    'type' => 'apiKey',
+                    'name' => 'X-Appwrite-Dev-Key',
+                    'description' => 'Your secret dev API key',
+                    'in' => 'header',
+                ],
+                'Cookie' => [
+                    'type' => 'apiKey',
+                    'name' => 'Cookie',
+                    'description' => 'The user cookie to authenticate with. Used by SDKs that forward an incoming Cookie header in server-side runtimes.',
+                    'in' => 'header',
+                ],
                 'ImpersonateUserId' => [
                     'type' => 'apiKey',
                     'name' => 'X-Appwrite-Impersonate-User-Id',
@@ -272,7 +290,19 @@ class Specs extends Action
                 'Cookie' => [
                     'type' => 'apiKey',
                     'name' => 'Cookie',
-                    'description' => 'The user cookie to authenticate with',
+                    'description' => 'The user cookie to authenticate with. Used by SDKs that forward an incoming Cookie header in server-side runtimes.',
+                    'in' => 'header',
+                ],
+                'Session' => [
+                    'type' => 'apiKey',
+                    'name' => 'X-Appwrite-Session',
+                    'description' => 'The user session to authenticate with',
+                    'in' => 'header',
+                ],
+                'DevKey' => [
+                    'type' => 'apiKey',
+                    'name' => 'X-Appwrite-Dev-Key',
+                    'description' => 'Your secret dev API key',
                     'in' => 'header',
                 ],
                 'ImpersonateUserId' => [
@@ -295,6 +325,150 @@ class Specs extends Action
                 ],
             ],
         ];
+    }
+
+    protected function verifyParsedSpec(array $spec): void
+    {
+        $services = [];
+        foreach ($spec['tags'] ?? [] as $tag) {
+            if (!\is_array($tag)) {
+                continue;
+            }
+
+            $service = $tag['name'] ?? null;
+            if (!\is_string($service) || $service === '') {
+                continue;
+            }
+
+            $services[$this->normalizeSdkName($service)] = $service;
+        }
+
+        if (empty($services)) {
+            return;
+        }
+
+        $enums = [];
+        $this->collectSpecEnumNames($spec, $enums);
+
+        if (empty($enums)) {
+            return;
+        }
+
+        $overlaps = [];
+        foreach ($services as $normalized => $service) {
+            if (!isset($enums[$normalized])) {
+                continue;
+            }
+
+            foreach ($enums[$normalized] as $enum) {
+                $overlaps[] = "service '{$service}' with enum '{$enum}'";
+            }
+        }
+
+        if (!empty($overlaps)) {
+            throw new \RuntimeException(
+                'Spec service names must not overlap enum names. Overlaps: '
+                . \implode(', ', \array_unique($overlaps))
+            );
+        }
+    }
+
+    private function collectSpecEnumNames(array $node, array &$enums, ?string $fallbackName = null, bool $skipCurrentEnum = false): void
+    {
+        if (!$skipCurrentEnum && isset($node['enum']) && \is_array($node['enum'])) {
+            $enumName = $this->getExplicitSpecEnumName($node)
+                ?? $this->getFallbackSpecEnumName($node, $fallbackName);
+
+            if (!\is_null($enumName)) {
+                $this->addSpecEnumName($enums, $enumName);
+            }
+        }
+
+        $itemsEnumHandled = false;
+        if (
+            isset($node['items'])
+            && \is_array($node['items'])
+            && isset($node['items']['enum'])
+            && \is_array($node['items']['enum'])
+        ) {
+            $enumName = $this->getExplicitSpecEnumName($node['items'])
+                ?? $this->getExplicitSpecEnumName($node)
+                ?? $this->getFallbackSpecEnumName($node, $fallbackName);
+
+            if (!\is_null($enumName)) {
+                $this->addSpecEnumName($enums, $enumName);
+            }
+
+            $itemsEnumHandled = true;
+        }
+
+        $explicitEnumName = $this->getExplicitSpecEnumName($node);
+        if (!\is_null($explicitEnumName) && !isset($node['enum']) && !$itemsEnumHandled) {
+            $this->addSpecEnumName($enums, $explicitEnumName);
+        }
+
+        foreach ($node as $key => $value) {
+            if (!\is_array($value)) {
+                continue;
+            }
+
+            $this->collectSpecEnumNames(
+                $value,
+                $enums,
+                $this->getChildSpecEnumFallbackName($node, $key, $value, $fallbackName),
+                $key === 'items' && $itemsEnumHandled
+            );
+        }
+    }
+
+    private function addSpecEnumName(array &$enums, string $name): void
+    {
+        $enums[$this->normalizeSdkName($name)][] = $this->formatSdkName($name);
+    }
+
+    private function getExplicitSpecEnumName(array $node): ?string
+    {
+        $enumName = $node['x-enum-name'] ?? null;
+
+        return \is_string($enumName) && $enumName !== '' ? $enumName : null;
+    }
+
+    private function getFallbackSpecEnumName(array $node, ?string $fallbackName): ?string
+    {
+        $name = $node['name'] ?? $fallbackName;
+
+        return \is_string($name) && $name !== '' ? $name : null;
+    }
+
+    private function getChildSpecEnumFallbackName(
+        array $parent,
+        int|string $key,
+        array $child,
+        ?string $fallbackName
+    ): ?string {
+        if (isset($child['name']) && \is_string($child['name']) && $child['name'] !== '') {
+            return $child['name'];
+        }
+
+        if ($key === 'schema' || $key === 'items') {
+            return $this->getFallbackSpecEnumName($parent, $fallbackName);
+        }
+
+        if (\is_string($key) && !\in_array($key, ['components', 'content', 'definitions', 'delete', 'get', 'head', 'options', 'parameters', 'patch', 'paths', 'post', 'properties', 'put', 'responses'], true)) {
+            return $key;
+        }
+
+        return $fallbackName;
+    }
+
+    private function formatSdkName(string $name): string
+    {
+        return \str_replace(' ', '', \ucwords(\str_replace(['-', '_', '/'], ' ', $name)));
+    }
+
+    private function normalizeSdkName(string $name): string
+    {
+        return \strtolower((string) \preg_replace('/[^a-z0-9]/i', '', $name));
     }
 
     public function getSDKPlatformsForRouteSecurity(array $routeSecurity): array
@@ -483,6 +657,7 @@ class Specs extends Action
 
                 try {
                     $parsedSpecs = $specs->parse();
+                    $this->verifyParsedSpec($parsedSpecs);
                 } catch (\RuntimeException $e) {
                     throw new \RuntimeException("Spec generation failed for {$platform} ({$format}): " . $e->getMessage(), 0, $e);
                 }

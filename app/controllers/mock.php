@@ -251,7 +251,7 @@ Http::get('/v1/mock/github/callback')
         $privateKey = System::getEnv('_APP_VCS_GITHUB_PRIVATE_KEY');
         $githubAppId = System::getEnv('_APP_VCS_GITHUB_APP_ID');
         $github->initializeVariables($providerInstallationId, $privateKey, $githubAppId);
-        $owner = $github->getOwnerName($providerInstallationId) ?? '';
+        $owner = $github->getOwnerName($providerInstallationId);
 
         $projectInternalId = $project->getSequence();
 

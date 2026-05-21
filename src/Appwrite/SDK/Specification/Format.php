@@ -29,6 +29,7 @@ abstract class Format
         'name' => '',
         'description' => '',
         'endpoint' => 'https://localhost',
+        'endpoint.docs' => 'https://<REGION>.cloud.appwrite.io/v1',
         'version' => '1.0.0',
         'terms' => '',
         'support.email' => '',
@@ -40,6 +41,9 @@ abstract class Format
         'license.url' => '',
     ];
 
+    /**
+     * @var list<array{namespace: string, methods: list<string>, parameter: string, excludeKeys?: list<string>, exclude?: bool}>
+     */
     private const array OAUTH_PROVIDER_BLACKLIST = [
         [
             'namespace' => 'account',
@@ -65,8 +69,22 @@ abstract class Format
                 'mock-unverified'
             ],
         ],
+        [
+            'namespace' => 'project',
+            'methods' => [
+                'getOAuth2Provider'
+            ],
+            'parameter' => 'providerId',
+            'excludeKeys' => [
+                'mock',
+                'mock-unverified'
+            ],
+        ],
     ];
 
+    /**
+     * @var list<array{namespace: string, methods: list<string>, parameter: string, excludeKeys?: list<string>, exclude?: bool}>
+     */
     private const array PROVIDER_USAGE_BLACKLIST = [
         [
             'namespace' => 'users',
@@ -78,6 +96,9 @@ abstract class Format
         ],
     ];
 
+    /**
+     * @var list<array{namespace: string, methods: list<string>, parameter: string, required?: bool, nullable?: bool}>
+     */
     private const array REQUEST_PARAMETER_OVERRIDES = [
         [
             'namespace' => 'project',
@@ -109,24 +130,7 @@ abstract class Format
     {
         $blacklist = [];
 
-        foreach (self::OAUTH_PROVIDER_BLACKLIST as $config) {
-            foreach ($config['methods'] as $method) {
-                $entry = [
-                    'namespace' => $config['namespace'],
-                    'method' => $method,
-                    'parameter' => $config['parameter'],
-                ];
-                if (isset($config['excludeKeys'])) {
-                    $entry['excludeKeys'] = $config['excludeKeys'];
-                }
-                if (isset($config['exclude'])) {
-                    $entry['exclude'] = $config['exclude'];
-                }
-                $blacklist[] = $entry;
-            }
-        }
-
-        foreach (self::PROVIDER_USAGE_BLACKLIST as $config) {
+        foreach ([...self::OAUTH_PROVIDER_BLACKLIST, ...self::PROVIDER_USAGE_BLACKLIST] as $config) {
             foreach ($config['methods'] as $method) {
                 $entry = [
                     'namespace' => $config['namespace'],
@@ -463,6 +467,14 @@ abstract class Format
                                 return 'ConsoleResourceValue';
                         }
                         break;
+                    case 'getEmailTemplate':
+                        switch ($param) {
+                            case 'templateId':
+                                return 'ProjectEmailTemplateId';
+                            case 'locale':
+                                return 'ProjectEmailTemplateLocale';
+                        }
+                        break;
                 }
                 break;
             case 'account':
@@ -751,10 +763,70 @@ abstract class Format
                 break;
             case 'project':
                 switch ($method) {
+                    case 'updateAuthMethod':
+                        switch ($param) {
+                            case 'methodId':
+                                return 'ProjectAuthMethodId';
+                        }
+                        break;
+                    case 'getPolicy':
+                        switch ($param) {
+                            case 'policyId':
+                                return 'ProjectPolicyId';
+                        }
+                        break;
+                    case 'getOAuth2Provider':
+                        switch ($param) {
+                            case 'providerId':
+                                return 'ProjectOAuthProviderId';
+                        }
+                        break;
+                    case 'getEmailTemplate':
+                    case 'updateEmailTemplate':
+                        switch ($param) {
+                            case 'templateId':
+                                return 'ProjectEmailTemplateId';
+                            case 'locale':
+                                return 'ProjectEmailTemplateLocale';
+                        }
+                        break;
                     case 'getUsage':
                         switch ($param) {
                             case 'period':
                                 return 'ProjectUsageRange';
+                        }
+                        break;
+                    case 'updateProtocol':
+                        switch ($param) {
+                            case 'protocolId':
+                                return 'ProjectProtocolId';
+                        }
+                        break;
+                    case 'updateService':
+                        switch ($param) {
+                            case 'serviceId':
+                                return 'ProjectServiceId';
+                        }
+                        break;
+                    case 'updateSMTP':
+                    case 'createSMTPTest':
+                        switch ($param) {
+                            case 'secure':
+                                return 'ProjectSMTPSecure';
+                        }
+                        break;
+                    case 'updateOAuth2Google':
+                        switch ($param) {
+                            case 'prompt':
+                                return 'ProjectOAuth2GooglePrompt';
+                        }
+                        break;
+                    case 'createKey':
+                    case 'createEphemeralKey':
+                    case 'updateKey':
+                        switch ($param) {
+                            case 'scopes':
+                                return 'ProjectKeyScopes';
                         }
                         break;
                 }
@@ -763,7 +835,6 @@ abstract class Format
                 switch ($method) {
                     case 'getEmailTemplate':
                     case 'updateEmailTemplate':
-                    case 'deleteEmailTemplate':
                         switch ($param) {
                             case 'type':
                                 return 'EmailTemplateType';
@@ -849,6 +920,16 @@ abstract class Format
                         switch ($param) {
                             case 'passwordVersion':
                                 return 'PasswordHash';
+                        }
+                        break;
+                }
+                break;
+            case 'presences':
+                switch ($method) {
+                    case 'getUsage':
+                        switch ($param) {
+                            case 'range':
+                                return 'UsageRange';
                         }
                         break;
                 }
@@ -952,6 +1033,19 @@ abstract class Format
         return $values;
     }
 
+    protected function shouldEmitDefaultForSchema(mixed $default, array $schema): bool
+    {
+        if (isset($schema['enum'])) {
+            return \in_array($default, $schema['enum'], true);
+        }
+
+        if (isset($schema['items']['enum'])) {
+            return \is_array($default) && empty(\array_diff($default, $schema['items']['enum']));
+        }
+
+        return true;
+    }
+
     protected function getRequestParameterConfig(string $service, string $method, string $param, bool $optional, bool $nullable, mixed $default): array
     {
         $config = [
@@ -959,7 +1053,7 @@ abstract class Format
             'nullable' => $nullable,
         ];
 
-        foreach (self::REQUEST_PARAMETER_OVERRIDES as $override) {
+        foreach ($this->getRequestParameterOverrides() as $override) {
             if (
                 $override['namespace'] !== $service
                 || !\in_array($method, $override['methods'], true)
@@ -968,8 +1062,12 @@ abstract class Format
                 continue;
             }
 
-            $config['required'] = $override['required'] ?? $config['required'];
-            $config['nullable'] = $override['nullable'] ?? $config['nullable'];
+            if (isset($override['required'])) {
+                $config['required'] = $override['required'];
+            }
+            if (isset($override['nullable'])) {
+                $config['nullable'] = $override['nullable'];
+            }
             break;
         }
 
@@ -978,8 +1076,20 @@ abstract class Format
         return $config;
     }
 
-    public function getResponseEnumName(string $model, string $param): ?string
+    /**
+     * @return list<array{namespace: string, methods: list<string>, parameter: string, required?: bool, nullable?: bool}>
+     */
+    private function getRequestParameterOverrides(): array
     {
+        return self::REQUEST_PARAMETER_OVERRIDES;
+    }
+
+    public function getResponseEnumName(string $model, string $param, ?string $enumSDKName = null): ?string
+    {
+        if ($enumSDKName) {
+            return $enumSDKName;
+        }
+
         if ($param === 'type' && \str_starts_with($model, 'platform') && $model !== 'platformList') {
             return 'PlatformType';
         }
