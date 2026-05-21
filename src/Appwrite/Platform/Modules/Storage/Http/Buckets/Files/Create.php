@@ -187,6 +187,10 @@ class Create extends Action
         $fileTmpName = (\is_array($file['tmp_name']) && isset($file['tmp_name'][0])) ? $file['tmp_name'][0] : $file['tmp_name'];
         $fileSize = (\is_array($file['size']) && isset($file['size'][0])) ? $file['size'][0] : $file['size'];
 
+        if ($fileSize > APP_LIMIT_UPLOAD_CHUNK_SIZE) {
+            throw new Exception(Exception::STORAGE_INVALID_FILE_SIZE, 'File chunk size not allowed', Response::STATUS_CODE_REQUEST_ENTITY_TOO_LARGE);
+        }
+
         $contentRange = $request->getHeader('content-range');
         $fileId = $fileId === 'unique()' ? ID::unique() : $fileId;
         $chunk = 1;
