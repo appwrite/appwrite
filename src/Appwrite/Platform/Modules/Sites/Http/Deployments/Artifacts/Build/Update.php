@@ -3,6 +3,8 @@
 namespace Appwrite\Platform\Modules\Sites\Http\Deployments\Artifacts\Build;
 
 use Appwrite\Builds\OrchestratorToken;
+use Appwrite\Event\Message\Build as BuildMessage;
+use Appwrite\Event\Publisher\Build as BuildPublisher;
 use Appwrite\Extend\Exception;
 use Appwrite\Utopia\Response;
 use Utopia\Database\Database;
@@ -40,6 +42,7 @@ class Update extends Action
             ->inject('dbForProject')
             ->inject('project')
             ->inject('deviceForBuilds')
+            ->inject('publisherForBuilds')
             ->callback($this->action(...));
     }
 
@@ -51,7 +54,8 @@ class Update extends Action
         Request $request,
         Database $dbForProject,
         Document $project,
-        Device $deviceForBuilds
+        Device $deviceForBuilds,
+        BuildPublisher $publisherForBuilds
     ) {
         $token = $token ?: $request->getQuery('token', '');
         OrchestratorToken::verify($token, $project->getId(), $siteId, $deploymentId, 'build');
@@ -83,11 +87,25 @@ class Update extends Action
         }
 
         $size = $deviceForBuilds->getFileSize($path);
-        $dbForProject->getAuthorization()->skip(fn () => $dbForProject->updateDocument('deployments', $deploymentId, new Document([
+        $deployment = $dbForProject->getAuthorization()->skip(fn () => $dbForProject->updateDocument('deployments', $deploymentId, new Document([
             'buildPath' => $path,
             'buildSize' => $size,
             'totalSize' => $deployment->getAttribute('sourceSize', 0) + $size,
         ])));
+
+        $publisherForBuilds->enqueue(new BuildMessage(
+            project: $project,
+            resource: $site,
+            deployment: $deployment,
+            type: BUILD_TYPE_ORCHESTRATOR_EVENT,
+            event: [
+                'type' => 'orchestrator.job.artifact',
+                'data' => [
+                    'artifactId' => 'upload',
+                    'status' => 'success',
+                ],
+            ],
+        ));
 
         $response
             ->setStatusCode(Response::STATUS_CODE_ACCEPTED)
