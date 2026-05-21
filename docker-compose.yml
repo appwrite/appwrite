@@ -1230,7 +1230,7 @@ services:
 
   appwrite-orchestrator:
     container_name: appwrite-orchestrator
-    image: ko.local/jobs-service:latest
+    image: chiragagg5k/jobs-service:temp-appwrite-pr-4f081ed-20260521
     user: root
     restart: unless-stopped
     networks:
@@ -1244,7 +1244,7 @@ services:
       - ORCHESTRATOR_BACKEND=docker
       - PORT=8080
       - METRICS_PORT=9090
-      - SIDECAR_IMAGE=ko.local/job-sidecar:latest
+      - SIDECAR_IMAGE=chiragagg5k/job-sidecar:temp-appwrite-pr-4f081ed-20260521
       - ARTIFACT_ENDPOINT=http://host.docker.internal:9080
       - EXTRA_HOSTS=appwrite.test:host-gateway
       - ORCHESTRATOR_NETWORK=appwrite
