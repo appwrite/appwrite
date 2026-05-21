@@ -2,6 +2,7 @@
 
 namespace Appwrite\Platform\Modules\Sites\Http\Deployments\Status;
 
+use Appwrite\Builds\OrchestratorClient;
 use Appwrite\Event\Event;
 use Appwrite\Extend\Exception;
 use Appwrite\SDK\AuthType;
@@ -88,11 +89,17 @@ class Update extends Action
         $startTime = new \DateTime($deployment->getAttribute('buildStartedAt', 'now'));
         $endTime = new \DateTime('now');
         $duration = $endTime->getTimestamp() - $startTime->getTimestamp();
+        $logs = $deployment->getAttribute('buildLogs', '');
+        if (!\str_contains($logs, 'Build has been canceled.')) {
+            $date = \date('H:i:s');
+            $logs .= "\033[90m[$date] \033[90m[\033[0mappwrite\033[90m]\033[33m Build has been canceled. \033[0m\n";
+        }
 
         $deployment = $dbForProject->updateDocument('deployments', $deployment->getId(), new Document([
             'buildEndedAt' => DateTime::now(),
             'buildDuration' => $duration,
-            'status' => 'canceled'
+            'status' => 'canceled',
+            'buildLogs' => $logs,
         ]));
 
         if ($deployment->getSequence() === $site->getAttribute('latestDeploymentInternalId', '')) {
@@ -103,7 +110,11 @@ class Update extends Action
         }
 
         try {
-            $executor->deleteRuntime($project->getId(), $deploymentId . "-build");
+            if (\Utopia\System\System::getEnv('_APP_BUILDS_BACKEND', 'executor') === 'orchestrator') {
+                (new OrchestratorClient())->deleteJob($project->getId() . '-' . $deploymentId . '-build');
+            } else {
+                $executor->deleteRuntime($project->getId(), $deploymentId . "-build");
+            }
         } catch (\Throwable) {
             // Best-effort cleanup — deployment status is already 'canceled'
         }

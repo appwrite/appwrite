@@ -309,6 +309,7 @@ class Builds extends Action
             $github->initializeVariables($providerInstallationId, $privateKey, $githubAppId);
         }
 
+        $buildsBackend = System::getEnv('_APP_BUILDS_BACKEND', 'executor');
         $orchestratorBuildSubmitted = false;
 
         try {
@@ -602,9 +603,11 @@ class Builds extends Action
             ));
 
             /** Trigger Realtime Event */
-            $queueForRealtime
-                ->setPayload($deployment->getArrayCopy())
-                ->trigger();
+            if ($buildsBackend !== 'orchestrator') {
+                $queueForRealtime
+                    ->setPayload($deployment->getArrayCopy())
+                    ->trigger();
+            }
 
             $vars = [];
 
@@ -709,7 +712,7 @@ class Builds extends Action
 
             $isCanceled = false;
 
-            if (System::getEnv('_APP_BUILDS_BACKEND', 'executor') === 'orchestrator') {
+            if ($buildsBackend === 'orchestrator') {
                 $this->createOrchestratorBuild(
                     project: $project,
                     resource: $resource,
@@ -1350,9 +1353,23 @@ class Builds extends Action
         $maxCpus = (float) System::getEnv('_APP_ORCHESTRATOR_MAX_CPUS', 0);
         $jobCpus = $maxCpus > 0 ? \min($cpus, $maxCpus) : $cpus;
 
-        $buildCommand .= ' && mkdir -p /tmp/build-output'
-            . " && if [ -d {$escapedOutputPath} ]; then cp -R {$escapedOutputPath}/. /tmp/build-output/;"
-            . ' elif [ -d /usr/code ]; then cp -R /usr/code/. /tmp/build-output/; fi';
+        if (empty($outputDirectory)) {
+            $buildCommand .= ' && mkdir -p /tmp/build-output'
+                . " && if [ -d {$escapedOutputPath} ]; then cp -R {$escapedOutputPath}/. /tmp/build-output/;"
+                . ' elif [ -d /usr/code ]; then cp -R /usr/code/. /tmp/build-output/; fi';
+        } else {
+            $escapedOutputDirectoryError = \escapeshellarg("Error: Output directory {$outputDirectory} is empty or does not exist.");
+            $buildCommand .= " && if [ -d {$escapedOutputPath} ] && [ \"$(find {$escapedOutputPath} -mindepth 1 -print -quit)\" ]; then"
+                . " mkdir -p /tmp/build-output && cp -R {$escapedOutputPath}/. /tmp/build-output/;"
+                . " else echo {$escapedOutputDirectoryError} >&2; exit 1; fi";
+        }
+
+        if ($resource->getCollection() === 'sites') {
+            $buildCommand .= ' && echo "{APPWRITE_DETECTION_SEPARATOR_START}"'
+                . ' && cd /tmp/build-output'
+                . ' && find . -name \'node_modules\' -prune -o -type f -print'
+                . ' && echo "{APPWRITE_DETECTION_SEPARATOR_END}"';
+        }
 
         $environment = [];
         foreach ($vars as $key => $value) {
@@ -1618,6 +1635,71 @@ class Builds extends Action
         $this->afterBuildSuccess($queueForRealtime, $dbForProject, $deployment, $runtime, $adapter);
 
         $logs = $deployment->getAttribute('buildLogs', '');
+        if (
+            $resource->getCollection() === 'sites'
+            && \str_contains($logs, '{APPWRITE_DETECTION_SEPARATOR_START}')
+            && \str_contains($logs, '{APPWRITE_DETECTION_SEPARATOR_END}')
+        ) {
+            [$logsBefore, $detectionLogsStart] = \explode('{APPWRITE_DETECTION_SEPARATOR_START}', $logs, 2);
+            [$detectionLogs, $logsAfter] = \explode('{APPWRITE_DETECTION_SEPARATOR_END}', $detectionLogsStart, 2);
+            $logs = $logsBefore . $logsAfter;
+
+            $files = \explode("\n", $detectionLogs);
+            $files = \array_filter($files);
+            $files = \array_map(fn ($file) => \trim($file), $files);
+            $files = \array_map(fn ($file) => \str_starts_with($file, './') ? \substr($file, 2) : $file, $files);
+
+            $detector = new Rendering($resource->getAttribute('framework', ''));
+            foreach ($files as $file) {
+                $detector->addInput($file);
+            }
+            $detector
+                ->addOption(new SSR())
+                ->addOption(new XStatic());
+            $detection = $detector->detect();
+
+            $adapter = $resource->getAttribute('adapter', '');
+            if (empty($adapter)) {
+                $resource = $dbForProject->updateDocument('sites', $resource->getId(), new Document([
+                    'adapter' => $detection->getName(),
+                    'fallbackFile' => $detection->getFallbackFile() ?? '',
+                ]));
+
+                $deployment->setAttribute('adapter', $detection->getName());
+                $deployment->setAttribute('fallbackFile', $detection->getFallbackFile() ?? '');
+
+                Console::log('Adapter detected');
+            } elseif ($adapter === 'ssr' && $detection->getName() === 'static') {
+                $logs .= 'Adapter mismatch. Detected: ' . $detection->getName() . ' does not match with the set adapter: ' . $adapter . "\n";
+                $deployment = $dbForProject->updateDocument('deployments', $deployment->getId(), new Document([
+                    'buildEndedAt' => $buildEndedAt,
+                    'buildDuration' => $buildDuration,
+                    'status' => 'failed',
+                    'buildLogs' => $logs,
+                ]));
+
+                if ($deployment->getSequence() === $resource->getAttribute('latestDeploymentInternalId', '')) {
+                    $resource = $dbForProject->updateDocument($resource->getCollection(), $resource->getId(), new Document(['latestDeploymentStatus' => $deployment->getAttribute('status', '')]));
+                }
+
+                $queueForRealtime
+                    ->setPayload($deployment->getArrayCopy())
+                    ->trigger();
+
+                $this->sendUsage(
+                    resource: $resource,
+                    deployment: $deployment,
+                    project: $project,
+                    usage: $usage,
+                    publisherForUsage: $publisherForUsage
+                );
+
+                return;
+            }
+
+            $deployment->setAttribute('buildLogs', $logs);
+        }
+
         $date = \date('H:i:s');
         if (!\str_contains($logs, 'Deployment finished.')) {
             $logs .= "\033[90m[$date] \033[90m[\033[0mappwrite\033[90m]\033[32m Deployment finished. \033[0m\n";
@@ -1628,6 +1710,8 @@ class Builds extends Action
             'buildDuration' => $buildDuration,
             'status' => 'ready',
             'buildLogs' => $logs,
+            'adapter' => $deployment->getAttribute('adapter'),
+            'fallbackFile' => $deployment->getAttribute('fallbackFile'),
         ]));
 
         if ($deployment->getSequence() === $resource->getAttribute('latestDeploymentInternalId', '')) {

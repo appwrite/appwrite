@@ -91,11 +91,17 @@ class Update extends Action
         $startTime = new \DateTime($deployment->getAttribute('buildStartedAt', 'now'));
         $endTime = new \DateTime('now');
         $duration = $endTime->getTimestamp() - $startTime->getTimestamp();
+        $logs = $deployment->getAttribute('buildLogs', '');
+        if (!\str_contains($logs, 'Build has been canceled.')) {
+            $date = \date('H:i:s');
+            $logs .= "\033[90m[$date] \033[90m[\033[0mappwrite\033[90m]\033[33m Build has been canceled. \033[0m\n";
+        }
 
         $deployment = $dbForProject->updateDocument('deployments', $deployment->getId(), new Document([
             'buildEndedAt' => DateTime::now(),
             'buildDuration' => $duration,
-            'status' => 'canceled'
+            'status' => 'canceled',
+            'buildLogs' => $logs,
         ]));
 
         if ($deployment->getSequence() === $function->getAttribute('latestDeploymentInternalId', '')) {
