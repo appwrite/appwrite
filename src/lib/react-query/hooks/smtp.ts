@@ -1,13 +1,57 @@
 /**
  * React Query hooks for SMTP
  *
- * Handles SMTP settings updates.
+ * Handles SMTP settings updates and reading custom SMTP status via project-scoped APIs.
  */
 
-import { useMutation, useQueryClient } from '@tanstack/react-query'
-import { ProjectSMTPSecure } from '@appwrite.io/console'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { queryOptions } from '@tanstack/react-query'
+import { ProjectSMTPSecure, type Models } from '@appwrite.io/console'
 import { sdk } from '@/lib/appwrite/sdk'
+import { fetchProjectById } from '@/lib/project-settings'
 import { Dependencies } from './dependencies'
+import { LONG_STALE_TIME } from './constants'
+
+export function isCustomSmtpEnabled(
+  project: Models.Project | null | undefined,
+): boolean {
+  return Boolean(project?.smtpEnabled)
+}
+
+/**
+ * Fetch custom SMTP status via project-scoped `project.get()`.
+ */
+export async function fetchProjectSmtpStatus(projectId: string): Promise<boolean> {
+  const project = await fetchProjectById(projectId)
+  return isCustomSmtpEnabled(project)
+}
+
+/**
+ * Query options for custom SMTP enabled state (project-scoped `project.get()`).
+ */
+export function projectSmtpStatusQueryOptions(
+  projectId: string | null | undefined,
+) {
+  return queryOptions({
+    queryKey: ['project', projectId, 'smtp-status'],
+    queryFn: () => fetchProjectSmtpStatus(projectId!),
+    enabled: !!projectId,
+    staleTime: LONG_STALE_TIME,
+    retry: false,
+    refetchOnMount: true,
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: false,
+    gcTime: projectId ? 5 * 60 * 1000 : 0,
+  })
+}
+
+export function useProjectSmtpEnabled(projectId: string | undefined) {
+  const { data: isSmtpEnabled = false, isLoading } = useQuery(
+    projectSmtpStatusQueryOptions(projectId),
+  )
+
+  return { isSmtpEnabled, isLoading }
+}
 
 export type SmtpUpdateData = {
   enabled: boolean
@@ -59,6 +103,9 @@ function invalidateProjectSmtpQueries(
 ) {
   queryClient.invalidateQueries({
     queryKey: ['project', projectId],
+  })
+  queryClient.invalidateQueries({
+    queryKey: ['project', projectId, 'smtp-status'],
   })
   queryClient.invalidateQueries({
     queryKey: Dependencies.PROJECT,

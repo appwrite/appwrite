@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from 'react'
-import { useQuery, useQueryClient } from '@tanstack/react-query'
+import { useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
 import {
   ProjectEmailTemplateId,
@@ -12,7 +12,7 @@ import {
   useDeleteEmailTemplate,
   useLocaleCodes,
   fetchEmailTemplate,
-  projectQueryOptions,
+  useProjectSmtpEnabled,
 } from '@/lib/react-query/hooks'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -160,7 +160,7 @@ const EMAIL_TEMPLATE_TYPES = [
 ] as const
 
 export function Templates({ projectId }: TemplatesProps) {
-  const { data: projectData } = useQuery(projectQueryOptions(projectId))
+  const { isSmtpEnabled } = useProjectSmtpEnabled(projectId)
   const { data: localeData } = useLocaleCodes()
   const queryClient = useQueryClient()
 
@@ -174,9 +174,6 @@ export function Templates({ projectId }: TemplatesProps) {
   const [resetType, setResetType] = useState<string | null>(null)
   const [resetLocale, setResetLocale] = useState<string | null>(null)
   const [copiedVariable, setCopiedVariable] = useState<string | null>(null)
-
-  const isSmtpEnabled =
-    (projectData as { smtpEnabled?: boolean } | undefined)?.smtpEnabled ?? false
 
   // Prefetch all English templates when component mounts
   useEffect(() => {
@@ -246,7 +243,7 @@ export function Templates({ projectId }: TemplatesProps) {
   const showLoading = isTemplateLoading && !hasCachedData && !displayTemplate
 
   const updateMutation = useUpdateEmailTemplate(projectId)
-  const deleteMutation = useDeleteEmailTemplate(projectId)
+  const resetMutation = useDeleteEmailTemplate(projectId)
 
   // Local state for form fields
   const [formData, setFormData] = useState<{
@@ -367,7 +364,7 @@ export function Templates({ projectId }: TemplatesProps) {
     if (!resetType || !resetLocale) return
 
     try {
-      await deleteMutation.mutateAsync({
+      await resetMutation.mutateAsync({
         type: resetType,
         locale: resetLocale,
       })
@@ -477,7 +474,7 @@ export function Templates({ projectId }: TemplatesProps) {
               onUpdate={handleUpdate}
               onReset={() => handleResetClick(selectedType, selectedLocale)}
               isUpdating={updateMutation.isPending}
-              isResetting={deleteMutation.isPending}
+              isResetting={resetMutation.isPending}
               onCopyVariable={handleCopyVariable}
               copiedVariable={copiedVariable}
               variables={[...currentTemplateConfig.variables]}
@@ -501,14 +498,14 @@ export function Templates({ projectId }: TemplatesProps) {
             <Button
               variant="outline"
               onClick={() => setResetDialogOpen(false)}
-              disabled={deleteMutation.isPending}
+              disabled={resetMutation.isPending}
             >
               Cancel
             </Button>
             <Button
               variant="destructive"
               onClick={handleResetConfirm}
-              disabled={deleteMutation.isPending}
+              disabled={resetMutation.isPending}
             >
               Reset
             </Button>
@@ -839,14 +836,35 @@ function TemplateEditor({
       {/* Footer Actions */}
       <div className="border-t border-border bg-muted/30 px-4 py-3 @[500px]:px-6 @[500px]:py-4">
         <div className="flex flex-col-reverse gap-2 @[500px]:flex-row @[500px]:items-center @[500px]:justify-between">
-          <Button
-            variant="outline"
-            onClick={onReset}
-            disabled={!hasChanges || isResetting || isUpdating}
-            className="w-full @[500px]:w-auto"
-          >
-            Reset changes
-          </Button>
+          {!isSmtpEnabled ? (
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <span className="w-full @[500px]:w-auto">
+                    <Button
+                      variant="outline"
+                      disabled
+                      className="w-full pointer-events-none"
+                    >
+                      Reset to default
+                    </Button>
+                  </span>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>Set up SMTP to reset email templates</p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          ) : (
+            <Button
+              variant="outline"
+              onClick={onReset}
+              disabled={isResetting || isUpdating}
+              className="w-full @[500px]:w-auto"
+            >
+              Reset to default
+            </Button>
+          )}
           <Button
             onClick={onUpdate}
             disabled={!hasChanges || isUpdating || isResetting}

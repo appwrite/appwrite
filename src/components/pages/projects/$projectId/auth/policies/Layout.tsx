@@ -3,6 +3,7 @@ import { useNavigate } from '@tanstack/react-router'
 import { Clock, KeyRound, Mail, Users, UsersRound } from 'lucide-react'
 import { SettingsLayoutShell } from '@/components/global/shared/settings-search/SettingsLayoutShell'
 import { POLICIES_SETTINGS_CARD_INDEX } from '@/lib/settings-search/policies-settings-cards'
+import { usePoliciesSettingsSearch } from './PoliciesSettingsSearchContext'
 
 export type PoliciesSubTab =
   | 'users'
@@ -77,6 +78,8 @@ export function PoliciesLayout({
   children,
 }: PoliciesLayoutProps) {
   const navigate = useNavigate()
+  const { query: policiesSearchQuery, setQuery: setPoliciesSearchQuery } =
+    usePoliciesSettingsSearch()
 
   const navItems = useMemo(
     () =>
@@ -95,6 +98,8 @@ export function PoliciesLayout({
       navItems={navItems}
       activeSectionId={activeSubTab}
       cardIndex={POLICIES_SETTINGS_CARD_INDEX}
+      searchQuery={policiesSearchQuery}
+      onSearchQueryChange={setPoliciesSearchQuery}
       searchPlaceholder="Search policies..."
       mobileNavAriaLabel="Policies section"
       desktopNavAriaLabel="Policies navigation"

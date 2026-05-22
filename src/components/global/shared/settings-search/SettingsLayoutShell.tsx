@@ -1,9 +1,8 @@
-import { useEffect, useMemo, type ReactNode } from 'react'
+import { useEffect, useMemo, useRef, type ReactNode } from 'react'
 import { Link } from '@tanstack/react-router'
 import type { LucideIcon } from 'lucide-react'
 import { Search, X } from 'lucide-react'
 import {
-  firstSectionWithMatchingCards,
   matchesSettingsSearch,
   sectionHasMatchingCards,
   type SettingsCardIndexEntry,
@@ -113,14 +112,25 @@ function SettingsLayoutShellContent({
     )
   }, [q, navItems, cardIndex])
 
+  const onNavigateToSectionRef = useRef(onNavigateToSection)
+  onNavigateToSectionRef.current = onNavigateToSection
+
+  // Debounce auto-switch so typing does not navigate on every keystroke (which steals focus).
+  // Do not list onNavigateToSection in deps — parents often pass inline handlers that change every render.
   useEffect(() => {
     if (!q) return
-    if (sectionHasMatchingCards(q, activeSectionId, cardIndex)) return
-    const target = firstSectionWithMatchingCards(q, sectionIds, cardIndex)
-    if (target && target !== activeSectionId) {
-      onNavigateToSection(target)
-    }
-  }, [q, activeSectionId, cardIndex, sectionIds, onNavigateToSection])
+
+    if (navMatchBySection.get(activeSectionId)) return
+
+    const target = sectionIds.find((id) => navMatchBySection.get(id))
+    if (!target || target === activeSectionId) return
+
+    const timeoutId = window.setTimeout(() => {
+      onNavigateToSectionRef.current(target)
+    }, 400)
+
+    return () => window.clearTimeout(timeoutId)
+  }, [q, activeSectionId, sectionIds, navMatchBySection])
 
   const navLinkClassName = (itemId: string, isActive: boolean) =>
     cn(

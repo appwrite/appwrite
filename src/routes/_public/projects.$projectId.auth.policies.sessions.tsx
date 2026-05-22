@@ -1,6 +1,5 @@
 import { createFileRoute, redirect } from '@tanstack/react-router'
 import type { Models } from '@appwrite.io/console'
-import { View } from '@/components/pages/projects/$projectId/auth/View'
 import { pageTitle } from '@/lib/utils/page-title'
 import { canAccessAuthSecuritySettings } from '@/lib/console-rbac-loader'
 import { projectQueryOptions } from '@/lib/react-query/hooks'
@@ -35,10 +34,5 @@ export const Route = createFileRoute(
       projectAuthSecurityQueryOptions(projectId, project?.region),
     )
   },
-  component: AuthPoliciesSessionsPage,
+  component: () => null,
 })
-
-function AuthPoliciesSessionsPage() {
-  const { projectId } = Route.useParams()
-  return <View key={`auth-${projectId}-policies-sessions`} />
-}

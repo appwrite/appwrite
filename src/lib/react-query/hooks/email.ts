@@ -1,7 +1,7 @@
 /**
  * React Query hooks for Email Templates
  *
- * Handles email template fetching, updating, and deletion.
+ * Handles email template fetching, updating, and resetting to defaults.
  */
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
@@ -34,15 +34,39 @@ export async function fetchEmailTemplate(
   })
 }
 
-async function deleteProjectEmailTemplate(
-  projectId: string,
-  templateId: ProjectEmailTemplateId,
-  locale: ProjectEmailTemplateLocale,
+/**
+ * Fetch the built-in default email template (ignores project overrides).
+ */
+export async function fetchDefaultEmailTemplate(
+  type: string,
+  locale: string,
 ) {
-  const { client } = sdk.forProject(projectId).project
-  const apiPath = '/project/templates/email'
-  const uri = new URL(client.config.endpoint + apiPath)
-  return client.call('delete', uri, {}, { templateId, locale })
+  return await sdk.forConsole.console.getEmailTemplate({
+    templateId: type as ProjectEmailTemplateId,
+    locale: locale as ProjectEmailTemplateLocale,
+  })
+}
+
+/**
+ * Reset a project email template to the Appwrite default by saving default content.
+ */
+export async function resetProjectEmailTemplate(
+  projectId: string,
+  type: string,
+  locale: string,
+) {
+  const defaultTemplate = await fetchDefaultEmailTemplate(type, locale)
+
+  return await sdk.forProject(projectId).project.updateEmailTemplate({
+    templateId: type as ProjectEmailTemplateId,
+    locale: locale as ProjectEmailTemplateLocale,
+    subject: defaultTemplate.subject ?? '',
+    message: defaultTemplate.message ?? '',
+    senderName: defaultTemplate.senderName ?? '',
+    senderEmail: defaultTemplate.senderEmail ?? '',
+    replyToEmail: defaultTemplate.replyToEmail ?? '',
+    replyToName: defaultTemplate.replyToName ?? '',
+  })
 }
 
 // ============================================================================
@@ -116,7 +140,7 @@ export function useUpdateEmailTemplate(projectId: string | null | undefined) {
   })
 }
 
-export function useDeleteEmailTemplate(projectId: string | null | undefined) {
+export function useResetEmailTemplate(projectId: string | null | undefined) {
   const queryClient = useQueryClient()
 
   return useMutation({
@@ -125,11 +149,7 @@ export function useDeleteEmailTemplate(projectId: string | null | undefined) {
         throw new Error('Project ID is required')
       }
 
-      return await deleteProjectEmailTemplate(
-        projectId,
-        type as ProjectEmailTemplateId,
-        locale as ProjectEmailTemplateLocale,
-      )
+      return await resetProjectEmailTemplate(projectId, type, locale)
     },
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({
@@ -143,3 +163,6 @@ export function useDeleteEmailTemplate(projectId: string | null | undefined) {
     },
   })
 }
+
+/** @deprecated Use useResetEmailTemplate */
+export const useDeleteEmailTemplate = useResetEmailTemplate

@@ -1,5 +1,8 @@
 import { createFileRoute, Outlet } from '@tanstack/react-router'
-import { projectQueryOptions } from '@/lib/react-query/hooks'
+import {
+  projectQueryOptions,
+  projectSmtpStatusQueryOptions,
+} from '@/lib/react-query/hooks'
 import {
   consoleOAuth2CatalogQueryOptions,
   projectOAuth2ProvidersQueryOptions,
@@ -17,6 +20,7 @@ export const Route = createFileRoute('/_public/projects/$projectId/auth')({
     if (projectId) {
       await Promise.all([
         queryClient.ensureQueryData(projectQueryOptions(projectId)),
+        queryClient.ensureQueryData(projectSmtpStatusQueryOptions(projectId)),
         queryClient.ensureQueryData(consoleOAuth2CatalogQueryOptions()),
         queryClient.ensureQueryData(
           projectOAuth2ProvidersQueryOptions(projectId),

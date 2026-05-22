@@ -40,6 +40,7 @@ import {
   useCreateProjectUser,
   useCreateProjectTeam,
   useProject,
+  useProjectSmtpEnabled,
   useOrganizationScopes,
 } from '@/lib/react-query/hooks'
 import {
@@ -270,6 +271,7 @@ export function View({
   }, [location.pathname])
 
   const { project } = useProject(projectId)
+  const { isSmtpEnabled } = useProjectSmtpEnabled(projectId)
   const { features } = useConsoleProfile()
   const { access } = useOrganizationScopes(project?.teamId)
   const showAuthSecuritySettings = canShowAuthSecuritySettings(access, features)
@@ -1204,9 +1206,6 @@ export function View({
       setCreateTeamDialogOpen(true)
     }
   }
-
-  // Get project data for SMTP status (project, features, access already from above)
-  const isSmtpEnabled = (project as unknown)?.smtpEnabled ?? false
 
   const noCreatePermission =
     activeTab === 'users'
