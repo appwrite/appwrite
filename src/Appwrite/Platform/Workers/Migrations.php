@@ -207,25 +207,12 @@ class Migrations extends Action
 
             $this->sourceProject = $this->dbForPlatform->getDocument('projects', $credentials['projectId']);
 
-            $isLocalSource = false;
-            if (!$this->sourceProject->isEmpty()) {
-                if (!$isAppwriteToAppwrite) {
-                    $isLocalSource = true;
-                } else {
-                    // `secret` is encrypted at rest — load project keys and compare in memory.
-                    $projectKeys = $this->dbForPlatform->find('keys', [
-                        Query::equal('projectInternalId', [$this->sourceProject->getSequence()]),
-                    ]);
-                    $keyMatches = in_array(
-                        $credentials['apiKey'],
-                        array_map(fn (Document $k) => $k->getAttribute('secret'), $projectKeys),
-                        true
-                    );
-                    $sameRegion = $this->sourceProject->getAttribute('region', 'default')
-                        === $this->project->getAttribute('region', 'default');
-                    $isLocalSource = $keyMatches && $sameRegion;
-                }
-            }
+            // Same projectId on source and destination only means "local" when the source
+            // endpoint points at this installation — otherwise it's an external Appwrite
+            // that happens to share an id, and we must go over SDK/HTTP.
+            $isLocalSource = !$this->sourceProject->isEmpty()
+                && (!$isAppwriteToAppwrite
+                    || str_contains($credentials['endpoint'] ?? '', System::getEnv('_APP_DOMAIN', '_')));
 
             if ($isLocalSource) {
                 $projectDB = call_user_func($this->getProjectDB, $this->sourceProject);
