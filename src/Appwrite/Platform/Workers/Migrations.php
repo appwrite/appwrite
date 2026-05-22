@@ -212,20 +212,15 @@ class Migrations extends Action
                 if (!$isAppwriteToAppwrite) {
                     $isLocalSource = true;
                 } else {
-                    // For Appwrite -> Appwrite, require apiKey to actually belong to
-                    // the local project — a destination reusing the source's id
-                    // would otherwise collide. `secret` is encrypted at rest so it
-                    // can't be queried directly; read the project's keys and compare
-                    // in memory (typical project has <10 keys).
-                    $keyMatches = false;
-                    foreach ($this->dbForPlatform->find('keys', [
+                    // `secret` is encrypted at rest — load project keys and compare in memory.
+                    $projectKeys = $this->dbForPlatform->find('keys', [
                         Query::equal('projectInternalId', [$this->sourceProject->getSequence()]),
-                    ]) as $key) {
-                        if ($key->getAttribute('secret') === $credentials['apiKey']) {
-                            $keyMatches = true;
-                            break;
-                        }
-                    }
+                    ]);
+                    $keyMatches = in_array(
+                        $credentials['apiKey'],
+                        array_map(fn (Document $k) => $k->getAttribute('secret'), $projectKeys),
+                        true
+                    );
                     $sameRegion = $this->sourceProject->getAttribute('region', 'default')
                         === $this->project->getAttribute('region', 'default');
                     $isLocalSource = $keyMatches && $sameRegion;
