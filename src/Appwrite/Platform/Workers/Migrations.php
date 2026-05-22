@@ -205,10 +205,6 @@ class Migrations extends Action
             $isAppwriteToAppwrite = $source === SourceAppwrite::getName()
                 && $destination === DestinationAppwrite::getName();
 
-            if ($isAppwriteToAppwrite && (empty($credentials['endpoint']) || empty($credentials['apiKey']))) {
-                throw new Exception(Exception::MIGRATION_SOURCE_PROJECT_NOT_FOUND);
-            }
-
             $this->sourceProject = $this->dbForPlatform->getDocument('projects', $credentials['projectId']);
 
             $isLocalSource = false;
@@ -218,11 +214,18 @@ class Migrations extends Action
                 } else {
                     // For Appwrite -> Appwrite, require apiKey to actually belong to
                     // the local project — a destination reusing the source's id
-                    // would otherwise collide.
-                    $keyMatches = !$this->dbForPlatform->findOne('keys', [
-                        Query::equal('secret', [$credentials['apiKey']]),
+                    // would otherwise collide. `secret` is encrypted at rest so it
+                    // can't be queried directly; read the project's keys and compare
+                    // in memory (typical project has <10 keys).
+                    $keyMatches = false;
+                    foreach ($this->dbForPlatform->find('keys', [
                         Query::equal('projectInternalId', [$this->sourceProject->getSequence()]),
-                    ])->isEmpty();
+                    ]) as $key) {
+                        if ($key->getAttribute('secret') === $credentials['apiKey']) {
+                            $keyMatches = true;
+                            break;
+                        }
+                    }
                     $sameRegion = $this->sourceProject->getAttribute('region', 'default')
                         === $this->project->getAttribute('region', 'default');
                     $isLocalSource = $keyMatches && $sameRegion;
@@ -487,19 +490,14 @@ class Migrations extends Action
 
         try {
             $credentials = $migration->getAttribute('credentials', []);
-            $isAppwriteSource = $migration->getAttribute('source') === SourceAppwrite::getName();
-            $isAppwriteDestination = $migration->getAttribute('destination') === DestinationAppwrite::getName();
-            $isAppwriteToAppwrite = $isAppwriteSource && $isAppwriteDestination;
 
-            // Appwrite -> Appwrite requires explicit user-supplied source credentials;
-            // defaulting would silently self-call with the destination's own key.
-            if ($isAppwriteSource && !$isAppwriteToAppwrite) {
+            if ($migration->getAttribute('source') === SourceAppwrite::getName()) {
                 $credentials['projectId'] = $credentials['projectId'] ?? $project->getId();
                 $credentials['apiKey'] = $credentials['apiKey'] ?? $tempAPIKey;
                 $credentials['endpoint'] = $credentials['endpoint'] ?? $endpoint;
             }
 
-            if ($isAppwriteDestination) {
+            if ($migration->getAttribute('destination') === DestinationAppwrite::getName()) {
                 $credentials['destinationApiKey'] = $tempAPIKey;
                 $credentials['destinationEndpoint'] = $endpoint;
             }
