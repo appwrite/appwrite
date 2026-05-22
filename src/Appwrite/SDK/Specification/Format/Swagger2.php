@@ -4,6 +4,7 @@ namespace Appwrite\SDK\Specification\Format;
 
 use Appwrite\Platform\Tasks\Specs;
 use Appwrite\SDK\AuthType;
+use Appwrite\SDK\ContentType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\MethodType;
 use Appwrite\SDK\Response;
@@ -54,6 +55,9 @@ class Swagger2 extends Format
             ],
             'host' => \parse_url($this->getParam('endpoint', ''), PHP_URL_HOST),
             'x-host-docs' => \parse_url($this->getParam('endpoint.docs', ''), PHP_URL_HOST),
+            'x-appwrite' => [
+                'endpointDocs' => $this->getParam('endpoint.docs', ''),
+            ],
             'basePath' => \parse_url($this->getParam('endpoint', ''), PHP_URL_PATH),
             'schemes' => [\parse_url($this->getParam('endpoint', ''), PHP_URL_SCHEME)],
             'consumes' => ['application/json', 'multipart/form-data'],
@@ -298,6 +302,17 @@ class Swagger2 extends Format
                 }
 
                 if (!(\is_array($model)) &&  $model->isNone()) {
+                    if ($produces === ContentType::TEXT->value && !\in_array($response->getCode(), [204, 301, 302, 308], true)) {
+                        $temp['responses'][(string)$response->getCode()] = [
+                            'description' => 'Text',
+                            'schema' => [
+                                'type' => 'string',
+                            ],
+                        ];
+
+                        continue;
+                    }
+
                     $temp['responses'][(string)$response->getCode()] = [
                         'description' => in_array($produces, [
                             'image/*',
@@ -719,7 +734,7 @@ class Swagger2 extends Format
                         break;
                 }
 
-                if ($parameter['emitDefault']) { // Param has default value
+                if ($parameter['emitDefault'] && $this->shouldEmitDefaultForSchema($param['default'], $node)) { // Param has default value
                     $node['default'] = $param['default'];
                 }
 
@@ -755,9 +770,12 @@ class Swagger2 extends Format
                     $body['schema']['properties'][$name] = [
                         'type' => $node['type'],
                         'description' => $node['description'],
-                        'default' => $node['default'] ?? null,
                         'x-example' => $node['x-example'] ?? null,
                     ];
+
+                    if (\array_key_exists('default', $node)) {
+                        $body['schema']['properties'][$name]['default'] = $node['default'];
+                    }
 
                     if (isset($node['format'])) {
                         $body['schema']['properties'][$name]['format'] = $node['format'];
@@ -826,6 +844,13 @@ class Swagger2 extends Format
 
             if ($model->isAny()) {
                 $output['definitions'][$model->getType()]['additionalProperties'] = true;
+
+                $additionalKey = \method_exists($model, 'getAdditionalPropertiesKey')
+                    ? $model->getAdditionalPropertiesKey()
+                    : null;
+                if ($additionalKey !== null) {
+                    $output['definitions'][$model->getType()]['x-additional-properties-key'] = $additionalKey;
+                }
             }
 
             if (!empty($required)) {
@@ -975,13 +1000,13 @@ class Swagger2 extends Format
                 if ($rule['type'] === 'enum' && !empty($rule['enum'])) {
                     if ($rule['array']) {
                         $output['definitions'][$model->getType()]['properties'][$name]['items']['enum'] = \array_values($rule['enum']);
-                        $enumName = $this->getResponseEnumName($model->getType(), $name);
+                        $enumName = $this->getResponseEnumName($model->getType(), $name, $rule['enumSDKName'] ?? null);
                         if ($enumName) {
                             $output['definitions'][$model->getType()]['properties'][$name]['items']['x-enum-name'] = $enumName;
                         }
                     } else {
                         $output['definitions'][$model->getType()]['properties'][$name]['enum'] = \array_values($rule['enum']);
-                        $enumName = $this->getResponseEnumName($model->getType(), $name);
+                        $enumName = $this->getResponseEnumName($model->getType(), $name, $rule['enumSDKName'] ?? null);
                         if ($enumName) {
                             $output['definitions'][$model->getType()]['properties'][$name]['x-enum-name'] = $enumName;
                         }

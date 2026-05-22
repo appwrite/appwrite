@@ -87,6 +87,8 @@ class Update extends Base
             ->param('providerBranch', '', new Text(128, 0), 'Production branch for the repo linked to the function', true)
             ->param('providerSilentMode', false, new Boolean(), 'Is the VCS (Version Control System) connection in silent mode for the repo linked to the function? In silent mode, comments will not be made on commits and pull requests.', true)
             ->param('providerRootDirectory', '', new Text(128, 0), 'Path to function code in the linked repo.', true)
+            ->param('providerBranches', null, new Nullable(new ArrayList(new Text(128), APP_LIMIT_ARRAY_PARAMS_SIZE)), 'List of branch name patterns to trigger automatic deployments. Supports wildcards. Leave empty to deploy on all branches.', true)
+            ->param('providerPaths', null, new Nullable(new ArrayList(new Text(128), APP_LIMIT_ARRAY_PARAMS_SIZE)), 'List of file path patterns to trigger automatic deployments. Supports wildcards. Leave empty to deploy on all file changes.', true)
             ->param('buildSpecification', fn (array $plan) => $this->getDefaultSpecification($plan), fn (array $plan) => new Specification(
                 $plan,
                 Config::getParam('specifications', []),
@@ -132,6 +134,8 @@ class Update extends Base
         string $providerBranch,
         bool $providerSilentMode,
         string $providerRootDirectory,
+        ?array $providerBranches,
+        ?array $providerPaths,
         string $buildSpecification,
         string $runtimeSpecification,
         int $deploymentRetention,
@@ -276,6 +280,8 @@ class Update extends Base
             'providerBranch' => $providerBranch,
             'providerRootDirectory' => $providerRootDirectory,
             'providerSilentMode' => $providerSilentMode,
+            'providerBranches' => $providerBranches ?? $function->getAttribute('providerBranches', []),
+            'providerPaths' => $providerPaths ?? $function->getAttribute('providerPaths', []),
             'buildSpecification' => $buildSpecification,
             'runtimeSpecification' => $runtimeSpecification,
             'search' => implode(' ', [$functionId, $name, $runtime]),
@@ -287,7 +293,29 @@ class Update extends Base
         }
 
         // Inform scheduler if function is still active
-        $schedule = $dbForPlatform->getDocument('schedules', $function->getAttribute('scheduleId'));
+        $schedule = $authorization->skip(fn () => $dbForPlatform->getDocument('schedules', $function->getAttribute('scheduleId')));
+
+        // Re-create schedule if missing
+        if ($schedule->isEmpty()) {
+            $schedule = $authorization->skip(
+                fn () => $dbForPlatform->createDocument('schedules', new Document([
+                    'region' => $project->getAttribute('region'),
+                    'resourceType' => SCHEDULE_RESOURCE_TYPE_FUNCTION,
+                    'resourceId' => $function->getId(),
+                    'resourceInternalId' => $function->getSequence(),
+                    'resourceUpdatedAt' => DateTime::now(),
+                    'projectId' => $project->getId(),
+                    'schedule'  => $function->getAttribute('schedule'),
+                    'active' => false,
+                ]))
+            );
+
+            $function = $dbForProject->updateDocument('functions', $function->getId(), new Document([
+                'scheduleId' => $schedule->getId(),
+                'scheduleInternalId' => $schedule->getSequence(),
+            ]));
+        }
+
         $schedule
             ->setAttribute('resourceUpdatedAt', DateTime::now())
             ->setAttribute('schedule', $function->getAttribute('schedule'))

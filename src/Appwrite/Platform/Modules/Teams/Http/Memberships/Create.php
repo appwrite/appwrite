@@ -4,8 +4,10 @@ namespace Appwrite\Platform\Modules\Teams\Http\Memberships;
 
 use Appwrite\Auth\Validator\Phone;
 use Appwrite\Event\Event;
-use Appwrite\Event\Mail;
-use Appwrite\Event\Messaging;
+use Appwrite\Event\Message\Mail as MailMessage;
+use Appwrite\Event\Message\Messaging as MessagingMessage;
+use Appwrite\Event\Publisher\Mail as MailPublisher;
+use Appwrite\Event\Publisher\Messaging as MessagingPublisher;
 use Appwrite\Extend\Exception;
 use Appwrite\Platform\Action;
 use Appwrite\SDK\AuthType;
@@ -87,18 +89,19 @@ class Create extends Action
             ->inject('dbForProject')
             ->inject('authorization')
             ->inject('locale')
-            ->inject('queueForMails')
-            ->inject('queueForMessaging')
+            ->inject('publisherForMails')
+            ->inject('publisherForMessaging')
             ->inject('queueForEvents')
             ->inject('timelimit')
             ->inject('usage')
             ->inject('plan')
+            ->inject('platform')
             ->inject('proofForPassword')
             ->inject('proofForToken')
             ->callback($this->action(...));
     }
 
-    public function action(string $teamId, string $email, string $userId, string $phone, array $roles, string $url, string $name, Response $response, Document $project, User $user, Database $dbForProject, Authorization $authorization, Locale $locale, Mail $queueForMails, Messaging $queueForMessaging, Event $queueForEvents, callable $timelimit, Context $usage, array $plan, Password $proofForPassword, Token $proofForToken)
+    public function action(string $teamId, string $email, string $userId, string $phone, array $roles, string $url, string $name, Response $response, Document $project, User $user, Database $dbForProject, Authorization $authorization, Locale $locale, MailPublisher $publisherForMails, MessagingPublisher $publisherForMessaging, Event $queueForEvents, callable $timelimit, Context $usage, array $plan, array $platform, Password $proofForPassword, Token $proofForToken)
     {
         $isAppUser = $user->isApp($authorization->getRoles());
         $isPrivilegedUser = $user->isPrivileged($authorization->getRoles());
@@ -345,6 +348,7 @@ class Create extends Action
                 $senderName = System::getEnv('_APP_SYSTEM_EMAIL_NAME', APP_NAME . ' Server');
                 $replyToEmail = '';
                 $replyToName = '';
+                $smtpConfig = [];
 
                 if ($smtpEnabled) {
                     if (! empty($smtp['senderEmail'])) {
@@ -361,13 +365,6 @@ class Create extends Action
                     if (! empty($smtp['replyToName'])) {
                         $replyToName = $smtp['replyToName'];
                     }
-
-                    $queueForMails
-                        ->setSmtpHost($smtp['host'] ?? '')
-                        ->setSmtpPort($smtp['port'] ?? '')
-                        ->setSmtpUsername($smtp['username'] ?? '')
-                        ->setSmtpPassword($smtp['password'] ?? '')
-                        ->setSmtpSecure($smtp['secure'] ?? '');
 
                     if (! empty($customTemplate)) {
                         if (! empty($customTemplate['senderEmail'])) {
@@ -389,11 +386,17 @@ class Create extends Action
                         $subject = $customTemplate['subject'] ?? $subject;
                     }
 
-                    $queueForMails
-                        ->setSmtpReplyToEmail($replyToEmail)
-                        ->setSmtpReplyToName($replyToName)
-                        ->setSmtpSenderEmail($senderEmail)
-                        ->setSmtpSenderName($senderName);
+                    $smtpConfig = [
+                        'host' => $smtp['host'] ?? '',
+                        'port' => $smtp['port'] ?? '',
+                        'username' => $smtp['username'] ?? '',
+                        'password' => $smtp['password'] ?? '',
+                        'secure' => $smtp['secure'] ?? '',
+                        'replyToEmail' => $replyToEmail,
+                        'replyToName' => $replyToName,
+                        'senderEmail' => $senderEmail,
+                        'senderName' => $senderName,
+                    ];
                 }
 
                 $emailVariables = [
@@ -406,14 +409,17 @@ class Create extends Action
                     'project' => $projectName,
                 ];
 
-                $queueForMails
-                    ->setSubject($subject)
-                    ->setBody($body)
-                    ->setPreview($preview)
-                    ->setRecipient($invitee->getAttribute('email'))
-                    ->setName($invitee->getAttribute('name', ''))
-                    ->appendVariables($emailVariables)
-                    ->trigger();
+                $publisherForMails->enqueue(new MailMessage(
+                    project: $project,
+                    recipient: $invitee->getAttribute('email'),
+                    name: $invitee->getAttribute('name', ''),
+                    subject: $subject,
+                    body: $body,
+                    preview: $preview,
+                    smtp: $smtpConfig,
+                    variables: $emailVariables,
+                    platform: $platform,
+                ));
             } elseif (! empty($phone)) {
                 if (empty(System::getEnv('_APP_SMS_PROVIDER'))) {
                     throw new Exception(Exception::GENERAL_PHONE_DISABLED, 'Phone provider not configured');
@@ -431,11 +437,13 @@ class Create extends Action
                     ],
                 ]);
 
-                $queueForMessaging
-                    ->setType(MESSAGE_SEND_TYPE_INTERNAL)
-                    ->setMessage($messageDoc)
-                    ->setRecipients([$phone])
-                    ->setProviderType('SMS');
+                $publisherForMessaging->enqueue(new MessagingMessage(
+                    type: MESSAGE_SEND_TYPE_INTERNAL,
+                    project: $project,
+                    message: $messageDoc,
+                    recipients: [$phone],
+                    providerType: 'SMS',
+                ));
 
                 $helper = PhoneNumberUtil::getInstance();
                 try {

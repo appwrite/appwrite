@@ -2,13 +2,13 @@
 
 namespace Appwrite\Platform\Tasks;
 
-use Appwrite\Event\Func;
+use Appwrite\Event\Message\Func as FunctionMessage;
+use Appwrite\Event\Publisher\Func as FunctionPublisher;
 use Cron\CronExpression;
 use Utopia\Console;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Span\Span;
-use Utopia\System\System;
 
 /**
  * ScheduleFunctions
@@ -98,31 +98,29 @@ class ScheduleFunctions extends ScheduleBase
 
                     $this->updateProjectAccess($schedule['project'], $dbForPlatform);
 
-                    $queueForFunctions = new Func($this->publisherFunctions);
+                    $publisherForFunctions = new FunctionPublisher(
+                        $this->publisherFunctions,
+                        new \Utopia\Queue\Queue(\Utopia\System\System::getEnv('_APP_FUNCTIONS_QUEUE_NAME', \Appwrite\Event\Event::FUNCTIONS_QUEUE_NAME), 'utopia-queue', \Appwrite\Event\Event::FUNCTIONS_QUEUE_TTL)
+                    );
 
-                    $queueForFunctions
-                        ->setType('schedule')
-                        ->setFunction($schedule['resource'])
-                        ->setMethod('POST')
-                        ->setPath('/')
-                        ->setProject($schedule['project']);
+                    Span::init('schedule.functions.enqueue');
+                    try {
+                        Span::add('project.id', $schedule['project']->getId());
+                        Span::add('function.id', $schedule['resource']->getId());
+                        Span::add('schedule.id', $schedule['$id'] ?? '');
 
-                    $projectDoc = $schedule['project'];
-                    $functionDoc = $schedule['resource'];
-                    $traceProjectId = System::getEnv('_APP_TRACE_PROJECT_ID', '');
-                    $traceFunctionId = System::getEnv('_APP_TRACE_FUNCTION_ID', '');
-                    if ($traceProjectId !== '' && $traceFunctionId !== '' && $projectDoc->getId() === $traceProjectId && $functionDoc->getId() === $traceFunctionId) {
-                        Span::init('execution.trace.v1_functions_enqueue');
-                        Span::add('datetime', gmdate('c'));
-                        Span::add('projectId', $projectDoc->getId());
-                        Span::add('functionId', $functionDoc->getId());
-                        Span::add('scheduleId', $schedule['$id'] ?? '');
+                        $publisherForFunctions->enqueue(new FunctionMessage(
+                            project: $schedule['project'],
+                            function: $schedule['resource'],
+                            type: 'schedule',
+                            method: 'POST',
+                            path: '/',
+                        ));
+
+                        $this->recordEnqueueDelay($delayConfig['nextDate']);
+                    } finally {
                         Span::current()?->finish();
                     }
-
-                    $queueForFunctions->trigger();
-
-                    $this->recordEnqueueDelay($delayConfig['nextDate']);
                 }
             });
         }

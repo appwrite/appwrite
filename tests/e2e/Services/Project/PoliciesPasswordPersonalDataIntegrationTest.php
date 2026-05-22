@@ -21,6 +21,7 @@ class PoliciesPasswordPersonalDataIntegrationTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $projectId,
             'x-appwrite-key' => $apiKey,
+            'x-appwrite-response-format' => '1.9.4',
         ];
 
         $setPersonalData = function (bool $enabled) use ($serverHeaders): void {
