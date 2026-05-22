@@ -377,6 +377,13 @@ $platformCollections = [
                 'orders' => [Database::ORDER_ASC],
             ],
             [
+                '$id' => ID::custom('_key_status'),
+                'type' => Database::INDEX_KEY,
+                'attributes' => ['status'],
+                'lengths' => [],
+                'orders' => [],
+            ],
+            [
                 '$id' => ID::custom('_key_pingCount'),
                 'type' => Database::INDEX_KEY,
                 'attributes' => ['pingCount'],
