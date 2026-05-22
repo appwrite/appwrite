@@ -515,7 +515,7 @@ export function View({ projectId, plan = 'pro' }: ViewProps) {
   const activityFilterColumns = useMemo(() => {
     const countryElements = (countriesData?.countries ?? [])
       .map((country) => ({
-        value: country.name,
+        value: country.code,
         label: country.name,
       }))
       .sort((a, b) => a.label.localeCompare(b.label))

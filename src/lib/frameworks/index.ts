@@ -20,3 +20,12 @@ export type {
 } from './config'
 
 export { FRAMEWORK_ICON_MAP, getFrameworkIconFile } from './icons'
+
+export {
+  resolveFrameworkAdapter,
+  getFrameworkAdapterBuildFields,
+  getFrameworkAdapterDefaults,
+  getFrameworkCreateDefaults,
+} from './adapter-defaults'
+
+export type { FrameworkAdapterBuildFields } from './adapter-defaults'

@@ -18,11 +18,11 @@ import type { Models } from '@appwrite.io/console'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
 import { FrameworkIcon } from '@/components/global/shared/FrameworkIcon'
 import { getAdapterCopy, getAdapterDescriptionSegments } from '@/lib/frameworks'
+import { getFrameworkAdapterDefaults } from '@/lib/frameworks'
 import {
   buildSiteUpdateParams,
   useSiteFrameworks,
 } from '@/lib/react-query/hooks'
-import { BuildInputWithReset } from './_components/BuildInputWithReset'
 
 const codeClassName =
   'rounded bg-muted/80 px-1.5 py-0.5 font-mono text-[12px] text-foreground/90'
@@ -174,32 +174,19 @@ export function SiteBuildFrameworkCard({
     [frameworks, framework],
   )
 
-  const frameworkDefaults = useMemo(() => {
-    if (!currentFramework) {
-      return {
-        outputDirectory: '.output',
-      }
-    }
-    return {
-      outputDirectory: currentFramework.outputDirectory || '.output',
-    }
-  }, [currentFramework])
+  const adapterDefaults = useMemo(
+    () => getFrameworkAdapterDefaults(currentFramework, adapter),
+    [currentFramework, adapter],
+  )
 
   useEffect(() => {
     if (site) {
       setFramework(site.framework || '')
       setAdapter(site.adapter || '')
-      setOutputDirectory(site.outputDirectory || '')
+      setOutputDirectory(site.outputDirectory ?? '')
       setFallbackFile(site.fallbackFile || '')
     }
   }, [site])
-
-  useEffect(() => {
-    if (framework && !outputDirectory) {
-      setOutputDirectory(frameworkDefaults.outputDirectory)
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [framework, frameworkDefaults])
 
   const updateSiteMutation = useMutation({
     mutationFn: async (updates: Partial<Models.Site>) => {
@@ -238,11 +225,10 @@ export function SiteBuildFrameworkCard({
   const hasChanges =
     framework !== site?.framework ||
     adapter !== site?.adapter ||
-    outputDirectory !== site?.outputDirectory ||
-    fallbackFile !== site?.fallbackFile
+    outputDirectory !== (site?.outputDirectory ?? '') ||
+    fallbackFile !== (site?.fallbackFile ?? '')
 
   const isStaticAdapter = adapter === 'static'
-  const isOutputModified = outputDirectory !== frameworkDefaults.outputDirectory
 
   return (
     <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
@@ -286,15 +272,20 @@ export function SiteBuildFrameworkCard({
           />
         ) : null}
 
-        <BuildInputWithReset
-          id="output-directory"
-          label="Output directory"
-          value={outputDirectory}
-          placeholder={frameworkDefaults.outputDirectory}
-          onChange={setOutputDirectory}
-          onReset={() => setOutputDirectory(frameworkDefaults.outputDirectory)}
-          isModified={isOutputModified}
-        />
+        <div>
+          <Label htmlFor="output-directory" className="text-[13px]">
+            Output directory
+          </Label>
+          <Input
+            id="output-directory"
+            value={outputDirectory}
+            onChange={(e) => setOutputDirectory(e.target.value)}
+            placeholder={
+              adapterDefaults.outputDirectory || 'Enter output directory'
+            }
+            className="mt-2 h-9 font-mono text-[13px]"
+          />
+        </div>
 
         {isStaticAdapter ? (
           <div>

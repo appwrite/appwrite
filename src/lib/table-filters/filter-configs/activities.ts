@@ -54,8 +54,8 @@ const ACTIVITY_CORE_FILTER_COLUMNS: FilterColumn[] = [
 
 /**
  * Activity list filters. Country options come from `sdk.forConsole.locale.listCountries()`
- * (see `useCountries` / `countriesQueryOptions`). Filter uses `countryName` (human-readable
- * country on the event), not `countryCode` (ISO-3166-1 alpha-2 is a separate attribute).
+ * (see `useCountries` / `countriesQueryOptions`). Filter attribute is `country`
+ * (ISO-3166-1 alpha-2 code); labels use the human-readable country name.
  */
 export function getActivitiesFilterColumns(
   countryElements: Array<{ value: string; label: string }>,
@@ -63,7 +63,7 @@ export function getActivitiesFilterColumns(
   return [
     ...ACTIVITY_CORE_FILTER_COLUMNS,
     {
-      id: 'countryName',
+      id: 'country',
       title: 'Country',
       type: 'enum',
       format: 'enum',
