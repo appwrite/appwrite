@@ -202,20 +202,20 @@ class Migrations extends Action
         }
 
         if (! empty($credentials['projectId'])) {
+            $isAppwriteToAppwrite = $source === SourceAppwrite::getName()
+                && $destination === DestinationAppwrite::getName();
+
+            if ($isAppwriteToAppwrite && (empty($credentials['endpoint']) || empty($credentials['apiKey']))) {
+                throw new Exception(Exception::MIGRATION_SOURCE_PROJECT_NOT_FOUND);
+            }
+
             $this->sourceProject = $this->dbForPlatform->getDocument('projects', $credentials['projectId']);
 
-            // For Appwrite -> Appwrite, "project exists locally with this id" is not
-            // enough to take the DB fast path: a destination project deliberately
-            // created with the source's projectId (to preserve cross-references like
-            // createdBy/userId) would collide. Verify the user-supplied apiKey actually
-            // belongs to the local project — only then is it safe to read direct.
+            // Verify the apiKey belongs to the local project — a destination project
+            // deliberately reusing the source's projectId would otherwise be mistaken
+            // for the source and migrate zero rows.
             $isLocalSource = false;
-            if (
-                $source === SourceAppwrite::getName()
-                && $destination === DestinationAppwrite::getName()
-                && !$this->sourceProject->isEmpty()
-                && !empty($credentials['apiKey'])
-            ) {
+            if ($isAppwriteToAppwrite && !$this->sourceProject->isEmpty()) {
                 $keyDoc = $this->dbForPlatform->findOne('keys', [
                     Query::equal('secret', [$credentials['apiKey']]),
                     Query::equal('projectInternalId', [$this->sourceProject->getSequence()]),
@@ -225,8 +225,7 @@ class Migrations extends Action
 
             $sourceRegion = $this->sourceProject->getAttribute('region', 'default');
             $destinationRegion = $this->project->getAttribute('region', 'default');
-            $useAppwriteApiSource = $source === SourceAppwrite::getName()
-                && $destination === DestinationAppwrite::getName()
+            $useAppwriteApiSource = $isAppwriteToAppwrite
                 && (!$isLocalSource || $sourceRegion !== $destinationRegion);
 
             if (! $useAppwriteApiSource) {
@@ -234,13 +233,6 @@ class Migrations extends Action
                     throw new Exception(Exception::MIGRATION_SOURCE_PROJECT_NOT_FOUND);
                 }
                 $projectDB = call_user_func($this->getProjectDB, $this->sourceProject);
-            } elseif (!$isLocalSource) {
-                // External source — processMigration defaults missing endpoint/apiKey to this
-                // instance, which would silently self-call with the destination's key. Require
-                // explicit credentials so the failure mode is clear.
-                if (empty($credentials['endpoint']) || empty($credentials['apiKey'])) {
-                    throw new Exception(Exception::MIGRATION_SOURCE_PROJECT_NOT_FOUND);
-                }
             }
         }
         $getDatabasesDB = fn (Document $database): Database =>
