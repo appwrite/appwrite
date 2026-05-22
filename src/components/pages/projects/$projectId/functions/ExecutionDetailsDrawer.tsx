@@ -458,9 +458,9 @@ export function ExecutionDetailsDrawer({
                       onValueChange={(v) =>
                         setRequestTab(v as 'parameters' | 'headers')
                       }
-                      className="w-full"
+                      className="w-full gap-4"
                     >
-                      <TabsList className="w-full grid grid-cols-2 h-9 mb-4">
+                      <TabsList className="w-full grid grid-cols-2 h-9">
                         <TabsTrigger value="parameters" className="text-[13px]">
                           Parameters
                           {queryParams.length > 0 && (
@@ -481,7 +481,7 @@ export function ExecutionDetailsDrawer({
                       </TabsList>
 
                       <TabsContent value="parameters" className="mt-0">
-                        <div className="mt-4">
+                        <div>
                           {queryParams.length > 0 ? (
                             <div className="rounded-lg border border-border overflow-hidden">
                               <Table>
@@ -520,7 +520,7 @@ export function ExecutionDetailsDrawer({
                       </TabsContent>
 
                       <TabsContent value="headers" className="mt-0">
-                        <div className="mt-4">
+                        <div>
                           {execution.requestHeaders &&
                           execution.requestHeaders.length > 0 ? (
                             <>
@@ -593,9 +593,9 @@ export function ExecutionDetailsDrawer({
                           v as 'logs' | 'errors' | 'headers' | 'body',
                         )
                       }
-                      className="w-full"
+                      className="w-full gap-4"
                     >
-                      <TabsList className="w-full grid grid-cols-4 h-9 mb-4">
+                      <TabsList className="w-full grid grid-cols-4 h-9">
                         <TabsTrigger value="logs" className="text-[13px]">
                           Logs
                         </TabsTrigger>
@@ -617,7 +617,7 @@ export function ExecutionDetailsDrawer({
                       </TabsList>
 
                       <TabsContent value="logs" className="mt-0">
-                        <div className="mt-4">
+                        <div>
                           {func?.logging === false ? (
                             <div className="rounded-lg border border-amber-500/20 bg-amber-500/5 p-4">
                               <p className="text-[13px] text-foreground mb-2">
@@ -693,7 +693,7 @@ export function ExecutionDetailsDrawer({
                       </TabsContent>
 
                       <TabsContent value="errors" className="mt-0">
-                        <div className="mt-4">
+                        <div>
                           {func?.logging === false ? (
                             <div className="rounded-lg border border-amber-500/20 bg-amber-500/5 p-4">
                               <p className="text-[13px] text-foreground mb-2">
@@ -768,7 +768,7 @@ export function ExecutionDetailsDrawer({
                       </TabsContent>
 
                       <TabsContent value="headers" className="mt-0">
-                        <div className="mt-4">
+                        <div>
                           {execution.responseHeaders &&
                           execution.responseHeaders.length > 0 ? (
                             <>
@@ -824,7 +824,7 @@ export function ExecutionDetailsDrawer({
                       </TabsContent>
 
                       <TabsContent value="body" className="mt-0">
-                        <div className="mt-4">
+                        <div>
                           {execution.responseBody ? (
                             <div className="space-y-3">
                               <div className="relative -mx-1 px-1">
