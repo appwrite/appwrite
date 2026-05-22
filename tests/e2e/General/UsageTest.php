@@ -119,28 +119,6 @@ class UsageTest extends Scope
         return $this->getProject()['$id'] ?? 'default';
     }
 
-    protected function retryOnAuthFailure(
-        string $method,
-        string $path,
-        array $headers,
-        mixed $params = [],
-        int $maxRetries = 5,
-        int $intervalSeconds = 2
-    ): array {
-        $response = $this->client->call($method, $path, $headers, $params);
-        for ($attempt = 1; $attempt < $maxRetries; $attempt++) {
-            if (($response['headers']['status-code'] ?? 0) !== 401) {
-                return $response;
-            }
-            if (isset($headers['x-appwrite-key'])) {
-                $headers['x-appwrite-key'] = $this->getProject()['apiKey'];
-            }
-            sleep($intervalSeconds);
-            $response = $this->client->call($method, $path, $headers, $params);
-        }
-        return $response;
-    }
-
     /**
      * Eventually-consistent assertion that `/project/usage` reports at least as many
      * `network.requests` as we've tracked via $globalRequestsTotal. GTE is intentional:
@@ -1787,54 +1765,25 @@ class UsageTest extends Scope
             return self::$sitesStatsCache[$key];
         }
 
-        // Inline POST /sites with retry. Cannot use SitesBase::setupSite because its inline
-        // assertEquals(201) fails immediately on a transient 401 from a warming-up container.
-        $siteResponse = $this->retryOnAuthFailure(
-            Client::METHOD_POST,
-            '/sites',
-            [
-                'content-type' => 'application/json',
-                'x-appwrite-project' => $this->getProject()['$id'],
-                'x-appwrite-key' => $this->getProject()['apiKey'],
-            ],
-            [
-                'buildRuntime' => 'node-22',
-                'fallbackFile' => '',
-                'framework' => 'other',
-                'name' => 'Test Site',
-                'outputDirectory' => './',
-                'providerBranch' => 'main',
-                'providerRootDirectory' => './',
-                'siteId' => ID::unique(),
-            ]
-        );
-        $this->assertEquals(
-            201,
-            $siteResponse['headers']['status-code'],
-            'Setup site failed: ' . json_encode($siteResponse['body'], JSON_PRETTY_PRINT)
-        );
-        $siteId = $siteResponse['body']['$id'];
-
+        $siteId = $this->setupSite([
+            'buildRuntime' => 'node-22',
+            'fallbackFile' => '',
+            'framework' => 'other',
+            'name' => 'Test Site',
+            'outputDirectory' => './',
+            'providerBranch' => 'main',
+            'providerRootDirectory' => './',
+            'siteId' => ID::unique(),
+        ]);
 
         // Enqueue both deployments first, then wait for both to be ready concurrently.
         // The build worker processes them in parallel, so the wall-clock wait is bounded by
-        // the slower of the two builds instead of (build1 + build2). Both POSTs go through
-        // retryOnAuthFailure because the second one is just as cache-sensitive as the first.
-        $deploymentHeaders = array_merge([
-            'content-type' => 'multipart/form-data',
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders());
-
-        $deployment = $this->retryOnAuthFailure(
-            Client::METHOD_POST,
-            '/sites/' . $siteId . '/deployments',
-            $deploymentHeaders,
-            [
-                'siteId' => $siteId,
-                'code' => $this->packageSite('static'),
-                'activate' => true,
-            ]
-        );
+        // the slower of the two builds instead of (build1 + build2).
+        $deployment = $this->createDeploymentSite($siteId, [
+            'siteId' => $siteId,
+            'code' => $this->packageSite('static'),
+            'activate' => true,
+        ]);
 
         $this->assertEquals(202, $deployment['headers']['status-code']);
         $this->assertNotEmpty($deployment['body']['$id']);
@@ -1843,15 +1792,10 @@ class UsageTest extends Scope
 
         $deploymentIdActive = $deployment['body']['$id'] ?? '';
 
-        $deployment = $this->retryOnAuthFailure(
-            Client::METHOD_POST,
-            '/sites/' . $siteId . '/deployments',
-            $deploymentHeaders,
-            [
-                'code' => $this->packageSite('static'),
-                'activate' => 'false',
-            ]
-        );
+        $deployment = $this->createDeploymentSite($siteId, [
+            'code' => $this->packageSite('static'),
+            'activate' => 'false',
+        ]);
 
         $this->assertEquals(202, $deployment['headers']['status-code']);
         $this->assertNotEmpty($deployment['body']['$id']);
@@ -1960,13 +1904,12 @@ class UsageTest extends Scope
         });
     }
 
-    #[Retry(count: 1)]
     public function testCustomDomainsFunctionStats(): void
     {
         $data = $this->setupFunctionsStats();
         $functionId = $data['functionId'];
 
-        $response = $this->retryOnAuthFailure(
+        $response = $this->client->call(
             Client::METHOD_PUT,
             '/functions/' . $functionId,
             array_merge([
@@ -2083,7 +2026,7 @@ class UsageTest extends Scope
     {
         $callCount = 0;
         $this->assertEventually(function () use (&$callCount) {
-            $response = $this->retryOnAuthFailure(
+            $response = $this->client->call(
                 Client::METHOD_POST,
                 '/vectorsdb/embeddings/text',
                 array_merge([
@@ -2107,7 +2050,7 @@ class UsageTest extends Scope
 
         // Now run a couple more for stable per-call assertions.
         for ($i = 0; $i < 2; $i++) {
-            $response = $this->retryOnAuthFailure(
+            $response = $this->client->call(
                 Client::METHOD_POST,
                 '/vectorsdb/embeddings/text',
                 array_merge([
