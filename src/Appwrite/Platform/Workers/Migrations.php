@@ -214,6 +214,13 @@ class Migrations extends Action
                     throw new Exception(Exception::MIGRATION_SOURCE_PROJECT_NOT_FOUND);
                 }
                 $projectDB = call_user_func($this->getProjectDB, $this->sourceProject);
+            } elseif ($this->sourceProject->isEmpty()) {
+                // External source — processMigration defaults missing endpoint/apiKey to this
+                // instance, which would silently self-call with the destination's key. Require
+                // explicit credentials so the failure mode is clear.
+                if (empty($credentials['endpoint']) || empty($credentials['apiKey'])) {
+                    throw new Exception(Exception::MIGRATION_SOURCE_PROJECT_NOT_FOUND);
+                }
             }
         }
         $getDatabasesDB = fn (Document $database): Database =>
