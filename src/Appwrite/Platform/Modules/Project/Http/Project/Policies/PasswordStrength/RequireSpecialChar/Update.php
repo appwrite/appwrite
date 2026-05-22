@@ -49,7 +49,7 @@ class Update extends Action
                     ),
                 ],
             ))
-            ->param('enabled', null, new Boolean, 'Whether passwords must include at least one special character.')
+            ->param('enabled', null, new Boolean(), 'Whether passwords must include at least one special character.')
             ->inject('response')
             ->inject('dbForPlatform')
             ->inject('project')

@@ -49,7 +49,7 @@ class Update extends Action
                     ),
                 ],
             ))
-            ->param('enabled', null, new Boolean, 'Whether passwords must include at least one number.')
+            ->param('enabled', null, new Boolean(), 'Whether passwords must include at least one number.')
             ->inject('response')
             ->inject('dbForPlatform')
             ->inject('project')

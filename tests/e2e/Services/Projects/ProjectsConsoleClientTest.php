@@ -4472,7 +4472,7 @@ class ProjectsConsoleClientTest extends Scope
         $id = $data['projectId'];
 
         /** Create a second key with an expiry for query testing */
-        $expireDate = DateTime::addSeconds(new \DateTime, 3600);
+        $expireDate = DateTime::addSeconds(new \DateTime(), 3600);
         $response = $this->client->call(Client::METHOD_POST, '/projects/'.$id.'/keys', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
@@ -4545,7 +4545,7 @@ class ProjectsConsoleClientTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
             'queries' => [
-                Query::lessThan('expire', (new \DateTime)->format('Y-m-d H:i:s'))->toString(),
+                Query::lessThan('expire', (new \DateTime())->format('Y-m-d H:i:s'))->toString(),
             ],
         ]);
 
@@ -4558,7 +4558,7 @@ class ProjectsConsoleClientTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
             'queries' => [
-                Query::greaterThan('expire', (new \DateTime)->format('Y-m-d H:i:s'))->toString(),
+                Query::greaterThan('expire', (new \DateTime())->format('Y-m-d H:i:s'))->toString(),
             ],
         ]);
 
@@ -4648,7 +4648,7 @@ class ProjectsConsoleClientTest extends Scope
             'keyId' => ID::unique(),
             'name' => 'Key Test',
             'scopes' => ['users.write'],
-            'expire' => DateTime::addSeconds(new \DateTime, 3600),
+            'expire' => DateTime::addSeconds(new \DateTime(), 3600),
         ]);
 
         $response = $this->client->call(Client::METHOD_POST, '/users', [
@@ -4692,7 +4692,7 @@ class ProjectsConsoleClientTest extends Scope
             'keyId' => ID::unique(),
             'name' => 'Key Test',
             'scopes' => ['health.read'],
-            'expire' => DateTime::addSeconds(new \DateTime, -3600),
+            'expire' => DateTime::addSeconds(new \DateTime(), -3600),
         ]);
 
         $response = $this->client->call(Client::METHOD_GET, '/health', [
@@ -4734,7 +4734,7 @@ class ProjectsConsoleClientTest extends Scope
             'keyId' => ID::unique(),
             'name' => 'Key Test',
             'scopes' => ['teams.read'],
-            'expire' => DateTime::addSeconds(new \DateTime, 3600),
+            'expire' => DateTime::addSeconds(new \DateTime(), 3600),
         ]);
 
         $response = $this->client->call(Client::METHOD_GET, '/users', [
@@ -4768,7 +4768,7 @@ class ProjectsConsoleClientTest extends Scope
             'keyId' => ID::unique(),
             'name' => 'Key Test',
             'scopes' => ['health.read'],
-            'expire' => DateTime::addSeconds(new \DateTime, 3600),
+            'expire' => DateTime::addSeconds(new \DateTime(), 3600),
         ]);
 
         $response = $this->client->call(Client::METHOD_GET, '/health', [
@@ -4792,7 +4792,7 @@ class ProjectsConsoleClientTest extends Scope
         ], $this->getHeaders()), [
             'name' => 'Key Test Update',
             'scopes' => ['users.read', 'users.write', 'collections.read', 'tables.read'],
-            'expire' => DateTime::addSeconds(new \DateTime, 360),
+            'expire' => DateTime::addSeconds(new \DateTime(), 360),
         ]);
 
         $this->assertEquals(200, $response['headers']['status-code']);
@@ -6343,7 +6343,7 @@ class ProjectsConsoleClientTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
             'name' => 'Key Test',
-            'expire' => DateTime::addSeconds(new \DateTime, 36000),
+            'expire' => DateTime::addSeconds(new \DateTime(), 36000),
         ]);
 
         $this->assertEquals(201, $response['headers']['status-code']);
@@ -6359,7 +6359,7 @@ class ProjectsConsoleClientTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
             'name' => 'Dev Key Test',
-            'expire' => DateTime::addSeconds(new \DateTime, 36000),
+            'expire' => DateTime::addSeconds(new \DateTime(), 36000),
         ]);
 
         $this->assertEquals(201, $response['headers']['status-code']);
@@ -6400,14 +6400,14 @@ class ProjectsConsoleClientTest extends Scope
         $this->setupDevKey([
             'projectId' => $projectId,
             'name' => 'Key Test',
-            'expire' => DateTime::addSeconds(new \DateTime, 36000),
+            'expire' => DateTime::addSeconds(new \DateTime(), 36000),
         ]);
 
         /** Create devKey 2 */
         $this->setupDevKey([
             'projectId' => $projectId,
             'name' => 'Dev Key Test',
-            'expire' => DateTime::addSeconds(new \DateTime, 36000),
+            'expire' => DateTime::addSeconds(new \DateTime(), 36000),
         ]);
 
         /** List all dev keys */
@@ -6448,7 +6448,7 @@ class ProjectsConsoleClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'queries' => [Query::lessThan('expire', (new \DateTime)->format('Y-m-d H:i:s'))->toString()],
+            'queries' => [Query::lessThan('expire', (new \DateTime())->format('Y-m-d H:i:s'))->toString()],
         ]);
 
         $this->assertEquals(200, $response['headers']['status-code']);
@@ -6487,7 +6487,7 @@ class ProjectsConsoleClientTest extends Scope
         $devKey = $this->setupDevKey([
             'projectId' => $projectId,
             'name' => 'Dev Key Test',
-            'expire' => DateTime::addSeconds(new \DateTime, 36000),
+            'expire' => DateTime::addSeconds(new \DateTime(), 36000),
         ]);
 
         $response = $this->client->call(Client::METHOD_GET, '/projects/'.$projectId.'/dev-keys/'.$devKey['$id'], array_merge([
@@ -6529,7 +6529,7 @@ class ProjectsConsoleClientTest extends Scope
         $devKey = $this->setupDevKey([
             'projectId' => $projectId,
             'name' => 'Dev Key Test',
-            'expire' => DateTime::addSeconds(new \DateTime, 36000),
+            'expire' => DateTime::addSeconds(new \DateTime(), 36000),
         ]);
 
         /** Use dev key with python sdk */
@@ -6584,7 +6584,7 @@ class ProjectsConsoleClientTest extends Scope
         $devKey = $this->setupDevKey([
             'projectId' => $projectId,
             'name' => 'Dev Key Test',
-            'expire' => DateTime::addSeconds(new \DateTime, 36000),
+            'expire' => DateTime::addSeconds(new \DateTime(), 36000),
         ]);
 
         $provider = 'mock';
@@ -6628,7 +6628,7 @@ class ProjectsConsoleClientTest extends Scope
 
         $location = $response['headers']['location'];
 
-        $locationClient = new Client;
+        $locationClient = new Client();
         $locationClient->setEndpoint('');
         $locationClient->addHeader('x-appwrite-dev-key', $devKey['secret']);
 
@@ -6890,7 +6890,7 @@ class ProjectsConsoleClientTest extends Scope
         $devKey = $this->setupDevKey([
             'projectId' => $projectId,
             'name' => 'Dev Key Test',
-            'expire' => DateTime::addSeconds(new \DateTime, 36000),
+            'expire' => DateTime::addSeconds(new \DateTime(), 36000),
         ]);
 
         $origin = 'http://example.com';
@@ -7006,7 +7006,7 @@ class ProjectsConsoleClientTest extends Scope
         $devKey = $this->setupDevKey([
             'projectId' => $projectId,
             'name' => 'Dev Key Test',
-            'expire' => DateTime::addSeconds(new \DateTime, 36000),
+            'expire' => DateTime::addSeconds(new \DateTime(), 36000),
         ]);
 
         /**
@@ -7051,7 +7051,7 @@ class ProjectsConsoleClientTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
             'name' => 'Key Test',
-            'expire' => DateTime::addSeconds(new \DateTime, -3600),
+            'expire' => DateTime::addSeconds(new \DateTime(), -3600),
         ]);
 
         $response = $this->client->call(Client::METHOD_POST, '/account/sessions/email', [
@@ -7070,7 +7070,7 @@ class ProjectsConsoleClientTest extends Scope
         $devKey = $this->setupDevKey([
             'projectId' => $projectId,
             'name' => 'Dev Key Test Expire 5 seconds',
-            'expire' => DateTime::addSeconds(new \DateTime, 5),
+            'expire' => DateTime::addSeconds(new \DateTime(), 5),
         ]);
 
         $response = $this->client->call(Client::METHOD_POST, '/account/sessions/email', [
@@ -7108,7 +7108,7 @@ class ProjectsConsoleClientTest extends Scope
         $devKey = $this->setupDevKey([
             'projectId' => $projectId,
             'name' => 'Dev Key Test',
-            'expire' => DateTime::addSeconds(new \DateTime, 36000),
+            'expire' => DateTime::addSeconds(new \DateTime(), 36000),
         ]);
 
         $response = $this->client->call(Client::METHOD_PUT, '/projects/'.$projectId.'/dev-keys/'.$devKey['$id'], array_merge([
@@ -7116,7 +7116,7 @@ class ProjectsConsoleClientTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
             'name' => 'Key Test Update',
-            'expire' => DateTime::addSeconds(new \DateTime, 360),
+            'expire' => DateTime::addSeconds(new \DateTime(), 360),
         ]);
 
         $this->assertEquals(200, $response['headers']['status-code']);
@@ -7151,7 +7151,7 @@ class ProjectsConsoleClientTest extends Scope
         $devKey = $this->setupDevKey([
             'projectId' => $projectId,
             'name' => 'Dev Key Test',
-            'expire' => DateTime::addSeconds(new \DateTime, 36000),
+            'expire' => DateTime::addSeconds(new \DateTime(), 36000),
         ]);
 
         $response = $this->client->call(Client::METHOD_DELETE, '/projects/'.$projectId.'/dev-keys/'.$devKey['$id'], array_merge([
