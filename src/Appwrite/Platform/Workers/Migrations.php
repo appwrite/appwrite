@@ -203,16 +203,16 @@ class Migrations extends Action
 
         if (! empty($credentials['projectId'])) {
             $this->sourceProject = $this->dbForPlatform->getDocument('projects', $credentials['projectId']);
-            if ($this->sourceProject->isEmpty()) {
-                throw new Exception(Exception::MIGRATION_SOURCE_PROJECT_NOT_FOUND);
-            }
 
             $sourceRegion = $this->sourceProject->getAttribute('region', 'default');
             $destinationRegion = $this->project->getAttribute('region', 'default');
             $useAppwriteApiSource = $source === SourceAppwrite::getName()
                 && $destination === DestinationAppwrite::getName()
-                && $sourceRegion !== $destinationRegion;
+                && ($this->sourceProject->isEmpty() || $sourceRegion !== $destinationRegion);
             if (! $useAppwriteApiSource) {
+                if ($this->sourceProject->isEmpty()) {
+                    throw new Exception(Exception::MIGRATION_SOURCE_PROJECT_NOT_FOUND);
+                }
                 $projectDB = call_user_func($this->getProjectDB, $this->sourceProject);
             }
         }
