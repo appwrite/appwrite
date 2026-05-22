@@ -211,15 +211,23 @@ class Migrations extends Action
 
             $this->sourceProject = $this->dbForPlatform->getDocument('projects', $credentials['projectId']);
 
-            // For Appwrite -> Appwrite, require apiKey to actually belong to the local
-            // project — a destination reusing the source's id would otherwise collide.
-            $isLocalSource = !$this->sourceProject->isEmpty() && (!$isAppwriteToAppwrite || (
-                !$this->dbForPlatform->findOne('keys', [
-                    Query::equal('secret', [$credentials['apiKey']]),
-                    Query::equal('projectInternalId', [$this->sourceProject->getSequence()]),
-                ])->isEmpty()
-                && $this->sourceProject->getAttribute('region', 'default') === $this->project->getAttribute('region', 'default')
-            ));
+            $isLocalSource = false;
+            if (!$this->sourceProject->isEmpty()) {
+                if (!$isAppwriteToAppwrite) {
+                    $isLocalSource = true;
+                } else {
+                    // For Appwrite -> Appwrite, require apiKey to actually belong to
+                    // the local project — a destination reusing the source's id
+                    // would otherwise collide.
+                    $keyMatches = !$this->dbForPlatform->findOne('keys', [
+                        Query::equal('secret', [$credentials['apiKey']]),
+                        Query::equal('projectInternalId', [$this->sourceProject->getSequence()]),
+                    ])->isEmpty();
+                    $sameRegion = $this->sourceProject->getAttribute('region', 'default')
+                        === $this->project->getAttribute('region', 'default');
+                    $isLocalSource = $keyMatches && $sameRegion;
+                }
+            }
 
             if ($isLocalSource) {
                 $projectDB = call_user_func($this->getProjectDB, $this->sourceProject);
