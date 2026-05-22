@@ -208,11 +208,15 @@ class Migrations extends Action
             $this->sourceProject = $this->dbForPlatform->getDocument('projects', $credentials['projectId']);
 
             // Same projectId on source and destination only means "local" when the source
-            // endpoint points at this installation — otherwise it's an external Appwrite
+            // endpoint's host is this installation — otherwise it's an external Appwrite
             // that happens to share an id, and we must go over SDK/HTTP.
+            $sourceHost = parse_url($credentials['endpoint'] ?? '', PHP_URL_HOST);
+            $localDomain = System::getEnv('_APP_DOMAIN', '');
+            $isLocalEndpoint = is_string($sourceHost) && $localDomain !== ''
+                && ($sourceHost === $localDomain || str_ends_with($sourceHost, '.' . $localDomain));
+
             $isLocalSource = !$this->sourceProject->isEmpty()
-                && (!$isAppwriteToAppwrite
-                    || str_contains($credentials['endpoint'] ?? '', System::getEnv('_APP_DOMAIN', '_')));
+                && (!$isAppwriteToAppwrite || $isLocalEndpoint);
 
             if ($isLocalSource) {
                 $projectDB = call_user_func($this->getProjectDB, $this->sourceProject);
