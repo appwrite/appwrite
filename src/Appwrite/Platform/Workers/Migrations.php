@@ -211,28 +211,32 @@ class Migrations extends Action
 
             $this->sourceProject = $this->dbForPlatform->getDocument('projects', $credentials['projectId']);
 
-            // Verify the apiKey belongs to the local project — a destination project
-            // deliberately reusing the source's projectId would otherwise be mistaken
-            // for the source and migrate zero rows.
-            $isLocalSource = false;
-            if ($isAppwriteToAppwrite && !$this->sourceProject->isEmpty()) {
-                $keyDoc = $this->dbForPlatform->findOne('keys', [
-                    Query::equal('secret', [$credentials['apiKey']]),
-                    Query::equal('projectInternalId', [$this->sourceProject->getSequence()]),
-                ]);
-                $isLocalSource = $keyDoc !== false && !$keyDoc->isEmpty();
-            }
-
-            $sourceRegion = $this->sourceProject->getAttribute('region', 'default');
-            $destinationRegion = $this->project->getAttribute('region', 'default');
-            $useAppwriteApiSource = $isAppwriteToAppwrite
-                && (!$isLocalSource || $sourceRegion !== $destinationRegion);
-
-            if (! $useAppwriteApiSource) {
-                if ($this->sourceProject->isEmpty()) {
+            if ($this->sourceProject->isEmpty()) {
+                if (!$isAppwriteToAppwrite) {
                     throw new Exception(Exception::MIGRATION_SOURCE_PROJECT_NOT_FOUND);
                 }
-                $projectDB = call_user_func($this->getProjectDB, $this->sourceProject);
+                $useAppwriteApiSource = true;
+            } else {
+                // Verify the apiKey belongs to the local project — a destination project
+                // deliberately reusing the source's projectId would otherwise be mistaken
+                // for the source and migrate zero rows.
+                $isLocalSource = false;
+                if ($isAppwriteToAppwrite) {
+                    $keyDoc = $this->dbForPlatform->findOne('keys', [
+                        Query::equal('secret', [$credentials['apiKey']]),
+                        Query::equal('projectInternalId', [$this->sourceProject->getSequence()]),
+                    ]);
+                    $isLocalSource = $keyDoc !== false && !$keyDoc->isEmpty();
+                }
+
+                $sourceRegion = $this->sourceProject->getAttribute('region', 'default');
+                $destinationRegion = $this->project->getAttribute('region', 'default');
+                $useAppwriteApiSource = $isAppwriteToAppwrite
+                    && (!$isLocalSource || $sourceRegion !== $destinationRegion);
+
+                if (! $useAppwriteApiSource) {
+                    $projectDB = call_user_func($this->getProjectDB, $this->sourceProject);
+                }
             }
         }
         $getDatabasesDB = fn (Document $database): Database =>
