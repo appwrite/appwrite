@@ -14,6 +14,7 @@ import type { Models } from '@appwrite.io/console'
 import { toast } from 'sonner'
 import { hasUnavailableSpecifications } from '@/lib/specifications'
 import { SpecificationTableCard } from '../../shared/SpecificationTableCard'
+import { FunctionDeploymentRetentionCard } from './FunctionDeploymentRetentionCard'
 import {
   SettingsCardsList,
   type SettingsCardItem,
@@ -169,6 +170,29 @@ export function View() {
           </Button>
         </div>
       </div>
+      ),
+    },
+    {
+      id: 'deployment-retention',
+      search: {
+        title: 'Deployment retention',
+        description:
+          'Keep active deployments and choose when inactive deployments are deleted.',
+        keywords: [
+          'deployment',
+          'retention',
+          'delete',
+          'inactive',
+          'forever',
+          'cleanup',
+        ],
+      },
+      node: (
+        <FunctionDeploymentRetentionCard
+          projectId={projectId}
+          functionId={functionId}
+          func={func}
+        />
       ),
     },
     ...(specifications.length > 0

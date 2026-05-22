@@ -21,22 +21,10 @@ export type SpecificationTableRow = SpecificationWithPlan & {
   memory?: number
 }
 
-const PROFILES_STRIP_SUBCOPY: Record<
-  'build' | 'runtime-site' | 'runtime-function',
-  string
-> = {
-  build:
-    'Select one profile - applies to install and build phases on the build worker.',
-  'runtime-site':
-    'Select one profile - vCPU and memory allocated per request while your site serves traffic (SSR and dynamic routes).',
-  'runtime-function':
-    'Select one profile - vCPU and memory allocated for each function execution.',
-}
-
 type SpecificationTableCardProps = {
   title: string
   description: string
-  /** Drives the mono subcopy under “Compute profiles” */
+  /** Unique prefix for radio group names when multiple cards exist on one page */
   scope: 'build' | 'runtime-site' | 'runtime-function'
   specs: SpecificationTableRow[]
   selectedSlug: string
@@ -67,18 +55,10 @@ export function SpecificationTableCard({
     <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
       <div className="px-6 py-4">
         <h3 className="text-[15px] font-semibold text-foreground">{title}</h3>
-        <p className="text-[13px] text-muted-foreground mt-2">{description}</p>
+        <p className="text-[13px] text-muted-foreground mt-1">{description}</p>
       </div>
       <div className="border-t border-border" />
       <div className="px-0 py-0 sm:px-0">
-        <div className="border-b border-border bg-muted/20 px-4 py-2 sm:px-6">
-          <p className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
-            Compute profiles
-          </p>
-          <p className="text-[12px] text-muted-foreground mt-0.5 font-mono">
-            {PROFILES_STRIP_SUBCOPY[scope]}
-          </p>
-        </div>
         <Table withScrollContainer={false}>
           <TableHeader>
             <TableRow className="hover:bg-transparent border-b border-border">

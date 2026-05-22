@@ -67,6 +67,11 @@ export const SITE_SETTINGS_NAV: ResourceSettingsNavItem[] = [
       'compile',
       'static',
       'ssg',
+      'deployment',
+      'retention',
+      'cleanup',
+      'inactive',
+      'forever',
     ],
   },
   {

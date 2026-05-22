@@ -72,6 +72,11 @@ export const FUNCTION_SETTINGS_NAV: ResourceSettingsNavItem[] = [
       'vcpu',
       'memory',
       'worker',
+      'deployment',
+      'retention',
+      'cleanup',
+      'inactive',
+      'forever',
     ],
   },
   {

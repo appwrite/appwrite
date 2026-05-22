@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useParams } from '@tanstack/react-router'
 import { useAuth } from '@/components/global/auth/RequireAuth'
 import { Button } from '@/components/ui/button'
@@ -23,10 +23,6 @@ import {
   submitSupportTicket,
   getSupportHoursInLocalTime,
   getSupportAnalyticsEvent,
-  SUPPORT_TOPICS,
-  SEVERITY_OPTIONS,
-  type SupportCategory,
-  type SupportSeverity,
 } from '@/lib/support'
 import { toast } from 'sonner'
 import {
@@ -43,34 +39,9 @@ import { APPWRITE_SUPPORT_EMAIL } from '@/lib/utils/error-formatting'
 
 const SUBJECT_MAX = 128
 
-/** Subject placeholder by category (empty = generic) */
-function getSubjectPlaceholder(category: SupportCategory | ''): string {
-  switch (category) {
-    case 'technical':
-      return 'e.g. Auth login fails with 500, Storage upload timeout'
-    case 'billing':
-      return 'e.g. Invoice question, plan upgrade'
-    case 'general':
-      return 'e.g. Account access, region availability'
-    default:
-      return 'Brief summary of your issue'
-  }
-}
-
-/** Message placeholder with tips tailored to category */
-function getMessagePlaceholder(category: SupportCategory | ''): string {
-  switch (category) {
-    case 'technical':
-      return 'Describe your issue in detail. Include: SDK/language & version, environment (e.g. Node 20), steps to reproduce, and any error messages or logs.'
-    case 'billing':
-      return "Describe your billing question. Include: plan name, invoice or transaction details if relevant, and what you're trying to accomplish."
-    case 'general':
-      return 'Describe your question or request. Include any relevant context (e.g. account, project, region) so we can help faster.'
-    default:
-      return 'Describe your issue or question in detail'
-  }
-}
-
+const SUBJECT_PLACEHOLDER = 'Brief summary of your issue'
+const MESSAGE_PLACEHOLDER =
+  'Describe your issue or question in detail. Include any relevant context (e.g. project, SDK version, error messages) so we can help faster.'
 const CONTACT_SALES_URL =
   import.meta.env.VITE_CONTACT_SALES_URL ||
   'https://appwrite.io/contact-us/enterprise'
@@ -108,9 +79,6 @@ export function SupportWizardFullscreen() {
   const [supportHours, setSupportHours] = useState(() =>
     getSupportHoursInLocalTime(),
   )
-  const [category, setCategory] = useState<SupportCategory | ''>('')
-  const [topic, setTopic] = useState('')
-  const [severity, setSeverity] = useState<SupportSeverity | ''>('')
   const [projectId, setProjectId] = useState<string>(NO_PROJECT_VALUE)
   const [subject, setSubject] = useState('')
   const [message, setMessage] = useState('')
@@ -136,11 +104,6 @@ export function SupportWizardFullscreen() {
     submitErrorRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
   }, [submitError])
 
-  const topicOptions = useMemo(() => {
-    if (!category || category === '') return []
-    return SUPPORT_TOPICS[category as SupportCategory] ?? []
-  }, [category])
-
   const projectList = projects ?? []
 
   const email = account?.email ?? ''
@@ -150,9 +113,6 @@ export function SupportWizardFullscreen() {
   const canSubmit =
     !!orgId &&
     !!email &&
-    !!category &&
-    !!topic &&
-    !!severity &&
     subject.trim().length > 0 &&
     subject.length <= SUBJECT_MAX &&
     message.trim().length > 0 &&
@@ -205,9 +165,6 @@ export function SupportWizardFullscreen() {
         firstName,
         subject: subject.trim(),
         message: message.trim(),
-        category: category as SupportCategory,
-        topic,
-        severity: severity as SupportSeverity,
         organizationId: orgId,
         projectId:
           projectId && projectId !== NO_PROJECT_VALUE ? projectId : undefined,
@@ -529,90 +486,33 @@ export function SupportWizardFullscreen() {
         <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
           <div className="px-6 py-4">
             <h3 className="text-[15px] font-semibold text-foreground">
-              What do you need help with?
+              Details
             </h3>
             <p className="text-[13px] text-muted-foreground mt-2">
-              Choose a category and topic so we can route your ticket quickly.
+              Subject and message are required.
             </p>
           </div>
           <div className="border-t border-border px-6 py-4 space-y-4">
             <div>
               <Label
-                htmlFor="support-category"
+                htmlFor="support-subject"
                 className="text-[13px] font-medium"
               >
-                Category
+                Subject
               </Label>
-              <Select
-                value={category}
-                onValueChange={(v) => {
-                  setCategory(v as SupportCategory)
-                  setTopic('')
-                }}
-              >
-                <SelectTrigger
-                  id="support-category"
-                  className="mt-2 h-9 w-full"
-                >
-                  <SelectValue placeholder="Select category" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="general">General</SelectItem>
-                  <SelectItem value="billing">Billing</SelectItem>
-                  <SelectItem value="technical">Technical</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            {category && (
-              <div>
-                <Label
-                  htmlFor="support-topic"
-                  className="text-[13px] font-medium"
-                >
-                  Topic
-                </Label>
-                <Select value={topic} onValueChange={setTopic}>
-                  <SelectTrigger id="support-topic" className="mt-2 h-9 w-full">
-                    <SelectValue placeholder="Select topic" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {topicOptions.map((opt) => (
-                      <SelectItem key={opt.value} value={opt.value}>
-                        {opt.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-            )}
-            <div>
-              <Label
-                htmlFor="support-severity"
-                className="text-[13px] font-medium"
-              >
-                Severity
-              </Label>
-              <Select
-                value={severity}
-                onValueChange={(v) => setSeverity(v as SupportSeverity)}
-              >
-                <SelectTrigger
-                  id="support-severity"
-                  className="mt-2 h-9 w-full"
-                >
-                  <SelectValue placeholder="Select severity" />
-                </SelectTrigger>
-                <SelectContent>
-                  {SEVERITY_OPTIONS.map((opt) => (
-                    <SelectItem key={opt.value} value={opt.value}>
-                      <span className="font-medium">{opt.label}</span>
-                      <span className="text-muted-foreground ml-1.5 text-[12px]">
-                        - {opt.description}
-                      </span>
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <Input
+                id="support-subject"
+                value={subject}
+                onChange={(e) =>
+                  setSubject(e.target.value.slice(0, SUBJECT_MAX))
+                }
+                placeholder={SUBJECT_PLACEHOLDER}
+                className="mt-2 h-9"
+                maxLength={SUBJECT_MAX}
+              />
+              <p className="text-[11px] text-muted-foreground mt-1">
+                {subject.length}/{SUBJECT_MAX} characters
+              </p>
             </div>
             <div>
               <Label
@@ -635,40 +535,6 @@ export function SupportWizardFullscreen() {
                 </SelectContent>
               </Select>
             </div>
-          </div>
-        </div>
-
-        <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
-          <div className="px-6 py-4">
-            <h3 className="text-[15px] font-semibold text-foreground">
-              Details
-            </h3>
-            <p className="text-[13px] text-muted-foreground mt-2">
-              Subject and message are required.
-            </p>
-          </div>
-          <div className="border-t border-border px-6 py-4 space-y-4">
-            <div>
-              <Label
-                htmlFor="support-subject"
-                className="text-[13px] font-medium"
-              >
-                Subject
-              </Label>
-              <Input
-                id="support-subject"
-                value={subject}
-                onChange={(e) =>
-                  setSubject(e.target.value.slice(0, SUBJECT_MAX))
-                }
-                placeholder={getSubjectPlaceholder(category)}
-                className="mt-2 h-9"
-                maxLength={SUBJECT_MAX}
-              />
-              <p className="text-[11px] text-muted-foreground mt-1">
-                {subject.length}/{SUBJECT_MAX} characters
-              </p>
-            </div>
             <div>
               <Label
                 htmlFor="support-message"
@@ -682,7 +548,7 @@ export function SupportWizardFullscreen() {
                 onChange={(e) =>
                   setMessage(e.target.value.slice(0, MESSAGE_MAX))
                 }
-                placeholder={getMessagePlaceholder(category)}
+                placeholder={MESSAGE_PLACEHOLDER}
                 className="mt-2 min-h-[140px] resize-y"
                 maxLength={MESSAGE_MAX}
               />

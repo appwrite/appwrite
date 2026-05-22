@@ -2,6 +2,7 @@ import {
   useCallback,
   useEffect,
   useMemo,
+  useRef,
   useState,
   type Dispatch,
   type SetStateAction,
@@ -49,7 +50,16 @@ import {
   getOAuth2ProviderIconPath,
   OAUTH2_POPULAR_PROVIDER_IDS,
 } from '@/lib/oauth2/provider-display'
-import { Check, ChevronDown, Copy, Search } from 'lucide-react'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import {
+  Check,
+  ChevronDown,
+  Copy,
+  FileKey,
+  FileUp,
+  Search,
+  X,
+} from 'lucide-react'
 import { copyToClipboard } from '@/lib/utils/context-menu'
 
 type OAuth2ProviderRow = Models.ConsoleOAuth2Provider
@@ -58,6 +68,8 @@ type OAuth2ProviderRow = Models.ConsoleOAuth2Provider
 const APPLE_P8_FILE_PLACEHOLDER = `-----BEGIN PRIVATE KEY-----
 MIGTAg...jy2Xbna
 -----END PRIVATE KEY-----`
+
+const APPLE_P8_MAX_FILE_BYTES = 64 * 1024
 
 const OIDC_WELL_KNOWN_HINT =
   'URL of the OpenID Provider metadata document (/.well-known/openid-configuration). Appwrite loads authorization, token, and userinfo endpoints from the JSON response.'
@@ -75,6 +87,252 @@ type OAuth2ParameterFieldProps = {
   formFieldErrors: Record<string, string>
   fieldsDisabled: boolean
   hintOverride?: string
+}
+
+type AppleP8KeyFieldProps = {
+  param: CatalogParameter
+  value: string
+  onChange: (value: string) => void
+  showOptional: boolean
+  showRequired: boolean
+  fieldError?: string
+  disabled: boolean
+  hint?: string
+}
+
+function AppleP8KeyField({
+  param,
+  value,
+  onChange,
+  showOptional,
+  showRequired,
+  fieldError,
+  disabled,
+  hint,
+}: AppleP8KeyFieldProps) {
+  const fileInputRef = useRef<HTMLInputElement>(null)
+  const [uploadError, setUploadError] = useState('')
+  const [isDragging, setIsDragging] = useState(false)
+  const [uploadedFileName, setUploadedFileName] = useState<string | null>(null)
+  const [activeTab, setActiveTab] = useState<'upload' | 'paste'>('upload')
+
+  const hasContent = Boolean(value.trim())
+
+  const clearKey = () => {
+    onChange('')
+    setUploadedFileName(null)
+    setUploadError('')
+    if (fileInputRef.current) fileInputRef.current.value = ''
+  }
+
+  const processFile = async (file: File) => {
+    setUploadError('')
+    if (!file.name.toLowerCase().endsWith('.p8')) {
+      setUploadError('Select a .p8 file downloaded from Apple Developer.')
+      return
+    }
+    if (file.size > APPLE_P8_MAX_FILE_BYTES) {
+      setUploadError('File is too large. Private key files are typically under 4 KB.')
+      return
+    }
+    try {
+      const text = (await file.text()).trim()
+      if (!text.includes('BEGIN PRIVATE KEY')) {
+        setUploadError('File does not contain a valid PEM private key.')
+        return
+      }
+      onChange(text)
+      setUploadedFileName(file.name)
+      setActiveTab('upload')
+    } catch {
+      setUploadError('Failed to read file. Please try again.')
+    } finally {
+      if (fileInputRef.current) fileInputRef.current.value = ''
+    }
+  }
+
+  const handleFileInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (file) void processFile(file)
+  }
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault()
+    setIsDragging(false)
+    if (disabled) return
+    const file = e.dataTransfer.files?.[0]
+    if (file) void processFile(file)
+  }
+
+  const displayError = fieldError || uploadError
+
+  return (
+    <div className="space-y-2">
+      <Label htmlFor={`oauth2-${param.$id}`} className="text-[12px] font-medium">
+        {param.name}
+        {showOptional ? (
+          <span className="font-normal text-muted-foreground"> (optional)</span>
+        ) : showRequired ? (
+          <span className="font-normal text-muted-foreground"> (required)</span>
+        ) : null}
+      </Label>
+
+      <Tabs
+        value={activeTab}
+        onValueChange={(v) => setActiveTab(v as 'upload' | 'paste')}
+        className="gap-3"
+      >
+        <TabsList className="grid h-9 w-full grid-cols-2">
+          <TabsTrigger value="upload" className="text-[13px]" disabled={disabled}>
+            Upload file
+          </TabsTrigger>
+          <TabsTrigger value="paste" className="text-[13px]" disabled={disabled}>
+            Paste key
+          </TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="upload" className="mt-0">
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept=".p8"
+            className="sr-only"
+            id={`oauth2-${param.$id}-file`}
+            onChange={handleFileInputChange}
+            disabled={disabled}
+          />
+          {hasContent && uploadedFileName ? (
+            <div
+              className={cn(
+                'rounded-lg border border-border bg-muted/30 p-4',
+                displayError && 'border-destructive',
+              )}
+            >
+              <div className="flex items-start gap-3">
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-background border border-border">
+                  <FileKey className="h-5 w-5 text-muted-foreground" />
+                </div>
+                <div className="min-w-0 flex-1 space-y-1">
+                  <p className="text-[13px] font-medium text-foreground truncate">
+                    {uploadedFileName}
+                  </p>
+                  <p className="text-[12px] text-muted-foreground">
+                    Private key loaded. Upload another file or paste to replace.
+                  </p>
+                </div>
+                {!disabled ? (
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    className="h-8 w-8 shrink-0 p-0 text-muted-foreground"
+                    onClick={clearKey}
+                    aria-label="Remove private key"
+                  >
+                    <X className="h-4 w-4" />
+                  </Button>
+                ) : null}
+              </div>
+              {!disabled ? (
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  className="mt-3 h-9 text-[13px]"
+                  onClick={() => fileInputRef.current?.click()}
+                >
+                  Replace file
+                </Button>
+              ) : null}
+            </div>
+          ) : (
+            <div
+              onDragOver={(e) => {
+                e.preventDefault()
+                if (!disabled) setIsDragging(true)
+              }}
+              onDragLeave={() => setIsDragging(false)}
+              onDrop={handleDrop}
+              className={cn(
+                'rounded-lg border-2 border-dashed p-6 text-center transition-colors',
+                isDragging
+                  ? 'border-primary bg-primary/5'
+                  : 'border-border bg-muted/30',
+                displayError && 'border-destructive',
+                disabled && 'pointer-events-none opacity-60',
+              )}
+            >
+              <FileUp className="mx-auto h-8 w-8 text-muted-foreground" />
+              <p className="mt-3 text-[13px] font-medium text-foreground">
+                {hasContent
+                  ? 'Upload a new .p8 file to replace the current key'
+                  : 'Drop your AuthKey .p8 file here'}
+              </p>
+              <p className="mt-1 text-[12px] text-muted-foreground">
+                Download from Apple Developer → Keys → Download
+              </p>
+              {!disabled ? (
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  className="mt-4 h-9 text-[13px]"
+                  onClick={() => fileInputRef.current?.click()}
+                >
+                  Choose .p8 file
+                </Button>
+              ) : null}
+              {hasContent && !uploadedFileName ? (
+                <p className="mt-3 text-[12px] text-emerald-600 dark:text-emerald-400">
+                  A private key is configured. Upload a file or use Paste key to
+                  replace it.
+                </p>
+              ) : null}
+            </div>
+          )}
+        </TabsContent>
+
+        <TabsContent value="paste" className="mt-0 space-y-2">
+          <Textarea
+            id={`oauth2-${param.$id}`}
+            value={value}
+            onChange={(e) => {
+              onChange(e.target.value)
+              setUploadedFileName(null)
+              setUploadError('')
+            }}
+            placeholder={APPLE_P8_FILE_PLACEHOLDER}
+            className={cn(
+              'font-mono min-h-[140px] text-[13px]',
+              displayError && 'border-destructive',
+            )}
+            aria-invalid={displayError ? true : undefined}
+            autoComplete="off"
+            disabled={disabled}
+          />
+          {hasContent && !disabled ? (
+            <div className="flex justify-end">
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                className="h-8 text-[12px] text-muted-foreground"
+                onClick={clearKey}
+              >
+                Clear key
+              </Button>
+            </div>
+          ) : null}
+        </TabsContent>
+      </Tabs>
+
+      {displayError ? (
+        <p className="text-[12px] text-destructive">{displayError}</p>
+      ) : hint ? (
+        <p className="text-[11px] text-muted-foreground">{hint}</p>
+      ) : null}
+    </div>
+  )
 }
 
 function OAuth2ParameterField({
@@ -104,6 +362,26 @@ function OAuth2ParameterField({
       ? formFieldErrors[param.$id]
       : undefined
 
+  if (isP8) {
+    return (
+      <AppleP8KeyField
+        param={param}
+        value={formFields[param.$id] ?? ''}
+        onChange={(next) =>
+          setFormFields((prev) => ({
+            ...prev,
+            [param.$id]: next,
+          }))
+        }
+        showOptional={showOptional}
+        showRequired={showRequired}
+        fieldError={fieldError}
+        disabled={fieldsDisabled}
+        hint={hintOverride ?? param.hint}
+      />
+    )
+  }
+
   return (
     <div className="space-y-2">
       <Label htmlFor={`oauth2-${param.$id}`} className="text-[12px] font-medium">
@@ -123,16 +401,10 @@ function OAuth2ParameterField({
             [param.$id]: e.target.value,
           }))
         }
-        placeholder={
-          isP8 ? APPLE_P8_FILE_PLACEHOLDER : param.example || undefined
-        }
-        className={cn(
-          'text-[13px]',
-          isP8 && 'font-mono min-h-[120px]',
-          fieldError && 'border-destructive',
-        )}
+        placeholder={param.example || undefined}
+        className={cn('text-[13px]', fieldError && 'border-destructive')}
         aria-invalid={fieldError ? true : undefined}
-        type={!isP8 && secretish ? 'password' : 'text'}
+        type={secretish ? 'password' : 'text'}
         autoComplete="off"
         disabled={fieldsDisabled}
       />

@@ -127,6 +127,7 @@ export function buildFunctionUpdateParams(
     providerRootDirectory: func.providerRootDirectory,
     buildSpecification: func.buildSpecification,
     runtimeSpecification: func.runtimeSpecification,
+    deploymentRetention: func.deploymentRetention,
     ...updates,
   } as unknown as FunctionUpdateParams
 }

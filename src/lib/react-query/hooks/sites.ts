@@ -124,6 +124,7 @@ export function buildSiteUpdateParams(
     providerRootDirectory: site.providerRootDirectory,
     buildSpecification: site.buildSpecification,
     runtimeSpecification: site.runtimeSpecification,
+    deploymentRetention: site.deploymentRetention,
     ...updates,
   } as unknown as SiteUpdateParams
 }

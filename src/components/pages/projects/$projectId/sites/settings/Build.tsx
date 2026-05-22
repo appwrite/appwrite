@@ -7,6 +7,7 @@ import {
 import { SiteBuildFrameworkCard } from './SiteBuildFrameworkCard'
 import { SiteBuildCommandsCard } from './SiteBuildCommandsCard'
 import { SiteBuildSpecificationCard } from './SiteBuildSpecificationCard'
+import { SiteDeploymentRetentionCard } from './SiteDeploymentRetentionCard'
 
 export function View() {
   const { projectId, siteId } = useParams({ strict: false })
@@ -46,6 +47,29 @@ export function View() {
       },
       node: (
         <SiteBuildCommandsCard
+          projectId={projectId}
+          siteId={siteId}
+          site={site}
+        />
+      ),
+    },
+    {
+      id: 'deployment-retention',
+      search: {
+        title: 'Deployment retention',
+        description:
+          'Keep active deployments and choose when inactive deployments are deleted.',
+        keywords: [
+          'deployment',
+          'retention',
+          'delete',
+          'inactive',
+          'forever',
+          'cleanup',
+        ],
+      },
+      node: (
+        <SiteDeploymentRetentionCard
           projectId={projectId}
           siteId={siteId}
           site={site}
