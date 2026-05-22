@@ -190,7 +190,7 @@ export function AvailableCreditsSection({
         <div className="border-t border-border px-6 py-4">
           <Alert>
             <AlertDescription className="text-[13px]">
-              Upgrade to Pro to add credits.
+              Upgrade to add credits.
             </AlertDescription>
           </Alert>
         </div>

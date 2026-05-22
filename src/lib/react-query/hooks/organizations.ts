@@ -9,6 +9,7 @@ import {
   useMutation,
   useQueryClient,
   queryOptions,
+  type QueryClient,
 } from '@tanstack/react-query'
 import { useMemo } from 'react'
 import { Query, ID, type Models } from '@appwrite.io/console'
@@ -843,43 +844,52 @@ export async function updateOrganizationTaxId(params: {
  */
 export async function updateOrganizationPaymentMethod(params: {
   organizationId: string
-  paymentMethodId?: string
-  backupPaymentMethodId?: string
+  /** Set to a payment method id, or `null` to remove the org's primary method */
+  paymentMethodId?: string | null
+  /** Set to a payment method id, or `null` to remove the org's backup method */
+  backupPaymentMethodId?: string | null
 }) {
-  // Use dedicated SDK methods for setting payment methods
-  if (params.backupPaymentMethodId !== undefined) {
-    if (params.backupPaymentMethodId) {
-      // Set backup payment method
-      return await sdk.forConsole.organizations.setBackupPaymentMethod({
-        organizationId: params.organizationId,
-        paymentMethodId: params.backupPaymentMethodId,
-      })
-    } else {
-      // Remove backup payment method
-      return await sdk.forConsole.organizations.deleteBackupPaymentMethod({
-        organizationId: params.organizationId,
-      })
-    }
+  const updatePrimary = params.paymentMethodId !== undefined
+  const updateBackup = params.backupPaymentMethodId !== undefined
+
+  if (!updatePrimary && !updateBackup) {
+    throw new Error(
+      'Either paymentMethodId or backupPaymentMethodId must be provided',
+    )
   }
 
-  if (params.paymentMethodId !== undefined) {
+  let result: Awaited<
+    ReturnType<typeof sdk.forConsole.organizations.setDefaultPaymentMethod>
+  > | void
+
+  // Apply primary first so promoting a backup card does not clear it before reassignment
+  if (updatePrimary) {
     if (params.paymentMethodId) {
-      // Set default payment method
-      return await sdk.forConsole.organizations.setDefaultPaymentMethod({
+      result = await sdk.forConsole.organizations.setDefaultPaymentMethod({
         organizationId: params.organizationId,
         paymentMethodId: params.paymentMethodId,
       })
     } else {
-      // Remove default payment method
-      return await sdk.forConsole.organizations.deleteDefaultPaymentMethod({
+      result = await sdk.forConsole.organizations.deleteDefaultPaymentMethod({
         organizationId: params.organizationId,
       })
     }
   }
 
-  throw new Error(
-    'Either paymentMethodId or backupPaymentMethodId must be provided',
-  )
+  if (updateBackup) {
+    if (params.backupPaymentMethodId) {
+      result = await sdk.forConsole.organizations.setBackupPaymentMethod({
+        organizationId: params.organizationId,
+        paymentMethodId: params.backupPaymentMethodId,
+      })
+    } else {
+      result = await sdk.forConsole.organizations.deleteBackupPaymentMethod({
+        organizationId: params.organizationId,
+      })
+    }
+  }
+
+  return result
 }
 
 /**
@@ -1801,6 +1811,32 @@ export function organizationPaymentMethodQueryOptions(
 }
 
 /**
+ * Seeds org-scoped payment method cache from the account list so UI updates
+ * immediately after assign/replace (avoids empty state while org query refetches).
+ */
+export function seedOrganizationPaymentMethodFromAccountCache(
+  queryClient: QueryClient,
+  organizationId: string,
+  paymentMethodId: string | null | undefined,
+) {
+  if (!paymentMethodId) return
+
+  const accountData = queryClient.getQueryData<{
+    paymentMethods: Models.PaymentMethod[]
+  }>(paymentMethodsQueryOptions().queryKey)
+  const method = accountData?.paymentMethods?.find(
+    (pm) => pm.$id === paymentMethodId,
+  )
+  if (!method) return
+
+  queryClient.setQueryData(
+    organizationPaymentMethodQueryOptions(organizationId, paymentMethodId)
+      .queryKey,
+    method,
+  )
+}
+
+/**
  * Query options for fetching a specific billing address
  *
  * This can be used in both route loaders and hooks to ensure consistent query configuration.
@@ -2061,14 +2097,70 @@ export function useUpdateOrganizationPaymentMethod() {
 
   return useMutation({
     mutationFn: updateOrganizationPaymentMethod,
-    onSuccess: (_, variables) => {
-      // Invalidate organization query
-      queryClient.invalidateQueries({
-        queryKey: ['organization', variables.organizationId],
+    onMutate: async (variables) => {
+      const { organizationId } = variables
+      await queryClient.cancelQueries({
+        queryKey: ['organization', organizationId],
       })
-      queryClient.invalidateQueries({
-        queryKey: ['payment-method', 'organization', variables.organizationId],
-      })
+
+      const previousOrg = queryClient.getQueryData<OrganizationRecord>([
+        'organization',
+        organizationId,
+      ])
+
+      if (previousOrg) {
+        const nextOrg: OrganizationRecord = { ...previousOrg }
+        if (variables.paymentMethodId !== undefined) {
+          nextOrg.paymentMethodId = variables.paymentMethodId ?? undefined
+          seedOrganizationPaymentMethodFromAccountCache(
+            queryClient,
+            organizationId,
+            variables.paymentMethodId,
+          )
+        }
+        if (variables.backupPaymentMethodId !== undefined) {
+          nextOrg.backupPaymentMethodId =
+            variables.backupPaymentMethodId ?? undefined
+          seedOrganizationPaymentMethodFromAccountCache(
+            queryClient,
+            organizationId,
+            variables.backupPaymentMethodId,
+          )
+        }
+        queryClient.setQueryData(['organization', organizationId], nextOrg)
+      }
+
+      return { previousOrg }
+    },
+    onError: (_error, variables, context) => {
+      if (context?.previousOrg) {
+        queryClient.setQueryData(
+          ['organization', variables.organizationId],
+          context.previousOrg,
+        )
+      }
+    },
+    onSuccess: (data, variables) => {
+      const { organizationId } = variables
+
+      if (data && typeof data === 'object' && '$id' in data) {
+        queryClient.setQueryData(['organization', organizationId], data)
+      }
+
+      if (variables.paymentMethodId) {
+        seedOrganizationPaymentMethodFromAccountCache(
+          queryClient,
+          organizationId,
+          variables.paymentMethodId,
+        )
+      }
+      if (variables.backupPaymentMethodId) {
+        seedOrganizationPaymentMethodFromAccountCache(
+          queryClient,
+          organizationId,
+          variables.backupPaymentMethodId,
+        )
+      }
     },
   })
 }

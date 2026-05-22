@@ -1,3 +1,4 @@
+import { useMemo, useState } from 'react'
 import { CreditCard, Plus, Info } from '@/lib/icons'
 import { Trash2, Star, ArrowLeftRight } from 'lucide-react'
 import { MenuItemContent, MenuItemIcon } from '@/components/global/shared/ContextMenuIcon'
@@ -19,17 +20,19 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from '@/components/ui/tooltip'
-import { getPlanNameFromTier } from '@/lib/utils/plan-filter'
 import { formatCardExpiry, maskCardNumber } from './utils'
 import { cn } from '@/lib/utils'
 import {
   useOrganizationById,
   useOrganizationPaymentMethod,
+  useBillingPlans,
+  useOrganizationPlan,
   usePaymentMethods,
   useUpdateOrganizationPaymentMethod,
 } from '@/lib/react-query/hooks'
 import { toast } from 'sonner'
 import type { Models } from '@appwrite.io/console'
+import { CannotRemovePrimaryPaymentMethodModal } from './CannotRemovePrimaryPaymentMethodModal'
 
 /**
  * PaymentMethods Component
@@ -60,8 +63,20 @@ export function PaymentMethods({
   orgId,
 }: PaymentMethodsProps) {
   const { organization } = useOrganizationById(orgId)
+  const { plan } = useOrganizationPlan(orgId)
+  const { plans: billingPlans } = useBillingPlans()
   const { paymentMethods: allPaymentMethods, isLoading: methodsLoading } =
     usePaymentMethods()
+  const [cannotRemovePrimaryOpen, setCannotRemovePrimaryOpen] = useState(false)
+
+  const isPaidPlan = useMemo(() => {
+    if (plan) return (plan.price ?? 0) > 0
+    const tier = organization?.billingPlan
+    if (tier && billingPlans[tier]) {
+      return (billingPlans[tier].price ?? 0) > 0
+    }
+    return false
+  }, [plan, organization?.billingPlan, billingPlans])
   const primaryPaymentMethod = useOrganizationPaymentMethod(
     orgId,
     organization?.paymentMethodId,
@@ -77,9 +92,39 @@ export function PaymentMethods({
     (pm: Models.PaymentMethod) => pm.last4,
   )
 
-  // Get primary and backup methods
-  const primaryMethod = primaryPaymentMethod.paymentMethod
-  const backupMethod = backupPaymentMethod.paymentMethod
+  const primaryMethodId = organization?.paymentMethodId
+  const backupMethodId = organization?.backupPaymentMethodId
+
+  // Resolve from org hook first; fall back to account list for instant UI after replace
+  const primaryMethod = useMemo(() => {
+    if (primaryPaymentMethod.paymentMethod) {
+      return primaryPaymentMethod.paymentMethod
+    }
+    if (!primaryMethodId) return undefined
+    return completedPaymentMethods.find((pm) => pm.$id === primaryMethodId)
+  }, [
+    primaryPaymentMethod.paymentMethod,
+    primaryMethodId,
+    completedPaymentMethods,
+  ])
+
+  const backupMethod = useMemo(() => {
+    if (backupPaymentMethod.paymentMethod) {
+      return backupPaymentMethod.paymentMethod
+    }
+    if (!backupMethodId) return undefined
+    return completedPaymentMethods.find((pm) => pm.$id === backupMethodId)
+  }, [
+    backupPaymentMethod.paymentMethod,
+    backupMethodId,
+    completedPaymentMethods,
+  ])
+
+  const hasPrimaryAssigned = !!primaryMethodId
+  const isPrimaryResolving =
+    hasPrimaryAssigned &&
+    !primaryMethod &&
+    primaryPaymentMethod.isLoading
 
   // Get available payment methods (not assigned to org)
   const availableMethods = completedPaymentMethods.filter(
@@ -127,26 +172,36 @@ export function PaymentMethods({
   const handleRemove = async (isPrimary: boolean) => {
     if (!orgId) return
 
-    // Can't remove if it's the only method and not on free plan
-    const isFreePlan = getPlanNameFromTier(organization?.billingPlan) === 'free'
-    if (isPrimary && !organization?.backupPaymentMethodId && !isFreePlan) {
-      toast.error('Cannot remove the only payment method on a paid plan')
+    if (
+      isPrimary &&
+      !organization?.backupPaymentMethodId &&
+      isPaidPlan
+    ) {
+      setCannotRemovePrimaryOpen(true)
       return
     }
 
     try {
       if (isPrimary) {
-        // Remove primary, promote backup if exists
-        await updatePaymentMethodMutation.mutateAsync({
-          organizationId: orgId,
-          paymentMethodId: organization?.backupPaymentMethodId || undefined,
-          backupPaymentMethodId: undefined,
-        })
+        const backupId = organization?.backupPaymentMethodId
+        if (backupId) {
+          // Promote backup to primary and clear the backup slot
+          await updatePaymentMethodMutation.mutateAsync({
+            organizationId: orgId,
+            paymentMethodId: backupId,
+            backupPaymentMethodId: null,
+          })
+        } else {
+          // Remove primary (allowed on free plan only; guarded above)
+          await updatePaymentMethodMutation.mutateAsync({
+            organizationId: orgId,
+            paymentMethodId: null,
+          })
+        }
       } else {
-        // Remove backup
         await updatePaymentMethodMutation.mutateAsync({
           organizationId: orgId,
-          backupPaymentMethodId: undefined,
+          backupPaymentMethodId: null,
         })
       }
       toast.success('Payment method removed')
@@ -176,7 +231,7 @@ export function PaymentMethods({
     )
   }
 
-  if (!primaryMethod && completedPaymentMethods.length === 0) {
+  if (!hasPrimaryAssigned && completedPaymentMethods.length === 0) {
     return (
       <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
         <div className="px-6 py-4 flex items-center justify-between gap-4">
@@ -220,13 +275,14 @@ export function PaymentMethods({
   }
 
   return (
+    <>
     <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
       {/* Header */}
       <div className="px-6 py-4 flex items-center justify-between gap-4">
         <h3 className="text-[15px] font-semibold text-foreground">
           Payment methods
         </h3>
-        {!primaryMethod && (
+        {!hasPrimaryAssigned && (
           <Button
             variant="outline"
             size="sm"
@@ -240,7 +296,7 @@ export function PaymentMethods({
       </div>
 
       {/* No primary – use existing or add new */}
-      {!primaryMethod && (
+      {!hasPrimaryAssigned && (
         <div className="border-t border-border px-6 py-8">
           <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-muted">
             <CreditCard className="h-6 w-6 text-muted-foreground" />
@@ -319,17 +375,27 @@ export function PaymentMethods({
       )}
 
       {/* Primary Payment Method */}
-      {primaryMethod && (
+      {(primaryMethod || isPrimaryResolving) && (
         <div className="border-t border-border">
-          <PaymentMethodCard
-            method={primaryMethod}
-            isPrimary
-            orgId={orgId}
-            onReplacePrimary={handleSetPrimary}
-            onRemove={() => handleRemove(true)}
-            availableMethods={availableMethods}
-            onAddPaymentMethod={onAddPaymentMethod}
-          />
+          {primaryMethod ? (
+            <PaymentMethodCard
+              method={primaryMethod}
+              isPrimary
+              orgId={orgId}
+              onReplacePrimary={handleSetPrimary}
+              onRemove={() => handleRemove(true)}
+              availableMethods={availableMethods}
+              onAddPaymentMethod={onAddPaymentMethod}
+            />
+          ) : (
+            <div className="flex items-center gap-4 px-6 py-4">
+              <div className="h-10 w-10 shrink-0 animate-pulse rounded-lg bg-muted" />
+              <div className="min-w-0 flex-1 space-y-2">
+                <div className="h-4 w-40 animate-pulse rounded bg-muted" />
+                <div className="h-3 w-24 animate-pulse rounded bg-muted" />
+              </div>
+            </div>
+          )}
         </div>
       )}
 
@@ -431,6 +497,16 @@ export function PaymentMethods({
         </div>
       )}
     </div>
+
+    <CannotRemovePrimaryPaymentMethodModal
+      open={cannotRemovePrimaryOpen}
+      onOpenChange={setCannotRemovePrimaryOpen}
+      organizationName={organization?.name}
+      availableMethods={availableMethods}
+      onReplacePrimary={handleSetPrimary}
+      onAddNew={onAddPaymentMethod ? () => onAddPaymentMethod() : undefined}
+    />
+    </>
   )
 }
 
