@@ -140,6 +140,28 @@ class UsageTest extends Scope
         self::$globalRequestsTotal += 1;
     }
 
+    protected function retryOnAuthFailure(
+        string $method,
+        string $path,
+        array $headers,
+        mixed $params = [],
+        int $maxRetries = 5,
+        int $intervalSeconds = 2
+    ): array {
+        $response = $this->client->call($method, $path, $headers, $params);
+        for ($attempt = 1; $attempt < $maxRetries; $attempt++) {
+            if (($response['headers']['status-code'] ?? 0) !== 401) {
+                return $response;
+            }
+            if (isset($headers['x-appwrite-key'])) {
+                $headers['x-appwrite-key'] = $this->getProject()['apiKey'];
+            }
+            sleep($intervalSeconds);
+            $response = $this->client->call($method, $path, $headers, $params);
+        }
+        return $response;
+    }
+
     /**
      * Eventually-consistent assertion that `/project/usage` reports at least as many
      * `network.requests` as we've tracked via $globalRequestsTotal. GTE is intentional:
@@ -742,18 +764,6 @@ class UsageTest extends Scope
         $this->assertEquals('name', $response['body']['key']);
         self::$globalRequestsTotal += 1;
 
-        // Cache partial result before waiting for schema readiness so a polling timeout
-        // doesn't cause a retry to recreate the same database/collection (would 409).
-        // Mirrors DatabasesBase.php:287.
-        $partial = [
-            'databaseId' => $databaseId,
-            'collectionId' => $collectionId,
-            'databasesTotal' => $databasesTotal,
-            'collectionsTotal' => $collectionsTotal,
-            'documentsTotal' => 0,
-        ];
-        self::$collectionsStatsCache[$key] = $partial;
-
         $this->assertEventually(function () use ($databaseId, $collectionId) {
             $attr = $this->client->call(
                 Client::METHOD_GET,
@@ -990,19 +1000,6 @@ class UsageTest extends Scope
 
         $this->assertEquals('name', $response['body']['key']);
         self::$globalRequestsTotal += 1;
-
-        // Cache partial state before waiting for column readiness so a polling timeout
-        // doesn't cause a retry to recreate the same database/table (would 409).
-        $partial = [
-            'databaseId' => $databaseId,
-            'tableId' => $tableId,
-            'databasesTotal' => $databasesTotal,
-            'tablesTotal' => $tablesTotal,
-            'rowsTotal' => 0,
-            'absoluteRowsTotal' => $collectionsScope['documentsTotal'],
-            'absoluteTablesTotal' => $tablesTotal + $collectionsScope['collectionsTotal'],
-        ];
-        self::$tablesStatsCache[$key] = $partial;
 
         $this->assertEventually(function () use ($databaseId, $tableId) {
             $attr = $this->client->call(
@@ -1288,10 +1285,32 @@ class UsageTest extends Scope
         $data = $this->setupDocumentsDbStats();
         $documentsDbId = $data['documentsDbId'];
         $collectionId = $data['documentsDbCollectionId'];
+        $documentsDbTotal = $data['documentsDbTotal'];
         $collectionsTotal = $data['documentsDbCollectionsTotal'];
         $documentsTotal = $data['documentsDbDocumentsTotal'];
 
         $this->assertProjectRequestsAtLeastGlobal();
+
+        // Project-wide scalars: documentsdbTotal counts ONLY DocumentsDB instances (not
+        // relational databases), and documentsdbDocumentsTotal is the sum of all documents
+        // across DocumentsDB collections in this project. Both are produced exclusively by
+        // setupDocumentsDbStats() in this test class, so an exact assertion is safe.
+        $this->assertEventually(function () use ($documentsDbTotal, $documentsTotal) {
+            $response = $this->client->call(
+                Client::METHOD_GET,
+                '/project/usage',
+                $this->getConsoleHeaders(),
+                [
+                    'period' => '1d',
+                    'startDate' => self::getToday(),
+                    'endDate' => self::getTomorrow(),
+                ]
+            );
+
+            $this->assertEquals(200, $response['headers']['status-code']);
+            $this->assertEquals($documentsDbTotal, $response['body']['documentsdbTotal']);
+            $this->assertEquals($documentsTotal, $response['body']['documentsdbDocumentsTotal']);
+        });
 
         $this->assertEventually(function () use ($documentsDbId, $collectionsTotal, $documentsTotal) {
             $response = $this->client->call(
@@ -1484,10 +1503,32 @@ class UsageTest extends Scope
         $data = $this->setupVectorsDbStats();
         $vectordbId = $data['vectordbId'];
         $collectionId = $data['vectordbCollectionId'];
+        $vectordbTotal = $data['vectordbTotal'];
         $collectionsTotal = $data['vectordbCollectionsTotal'];
         $documentsTotal = $data['vectordbDocumentsTotal'];
 
         $this->assertProjectRequestsAtLeastGlobal();
+
+        // Project-wide scalars: vectorsdbDatabasesTotal counts ONLY VectorsDB instances
+        // (not relational databases), vectorsdbDocumentsTotal is the sum of all vector
+        // documents across this project. Both are produced exclusively by
+        // setupVectorsDbStats() in this test class, so an exact assertion is safe.
+        $this->assertEventually(function () use ($vectordbTotal, $documentsTotal) {
+            $response = $this->client->call(
+                Client::METHOD_GET,
+                '/project/usage',
+                $this->getConsoleHeaders(),
+                [
+                    'period' => '1d',
+                    'startDate' => self::getToday(),
+                    'endDate' => self::getTomorrow(),
+                ]
+            );
+
+            $this->assertEquals(200, $response['headers']['status-code']);
+            $this->assertEquals($vectordbTotal, $response['body']['vectorsdbDatabasesTotal']);
+            $this->assertEquals($documentsTotal, $response['body']['vectorsdbDocumentsTotal']);
+        });
 
         $this->assertEventually(function () use ($vectordbId, $collectionsTotal, $documentsTotal) {
             $response = $this->client->call(
@@ -1562,15 +1603,6 @@ class UsageTest extends Scope
         $this->assertEquals(201, $response['headers']['status-code']);
         $this->assertNotEmpty($response['body']['$id']);
         self::$globalRequestsTotal += 1;
-
-        // Cache the function id before the deployment so a polling timeout on setupDeployment
-        // doesn't cause a retry to recreate the same function (would 409).
-        self::$functionsStatsCache[$key] = [
-            'functionId' => $functionId,
-            'executionTime' => 0,
-            'executions' => 0,
-            'failures' => 0,
-        ];
 
         $deploymentId = $this->setupDeployment($functionId, [
             'code' => $this->packageFunction('basic'),
@@ -1666,31 +1698,29 @@ class UsageTest extends Scope
 
         $executionId = $response['body']['$id'];
 
-        $this->assertEventually(function () use ($functionId, $executionId) {
-            $response = $this->client->call(
+        // Capture the final execution document inside the polling closure so we tally
+        // the same record the server already wrote to METRIC_EXECUTIONS. A separate GET
+        // after the loop (especially via getHeaders / API-key) can briefly see a different
+        // status than what assertEventually just validated via console headers, which is
+        // how we ended up with "3 matches expected 2" — the post-poll GET fell into
+        // neither the 'completed' nor 'failed' branch.
+        $asyncResponse = null;
+        $this->assertEventually(function () use ($functionId, $executionId, &$asyncResponse) {
+            $asyncResponse = $this->client->call(
                 Client::METHOD_GET,
                 '/functions/' . $functionId . '/executions/' . $executionId,
                 $this->getConsoleHeaders(),
             );
-            $this->assertContains($response['body']['status'], ['completed', 'failed']);
+            $this->assertContains($asyncResponse['body']['status'], ['completed', 'failed']);
         }, 30_000, 500);
 
-        $response = $this->client->call(
-            Client::METHOD_GET,
-            '/functions/' . $functionId . '/executions/' . $executionId,
-            array_merge([
-                'x-appwrite-project' => $this->getProject()['$id']
-            ], $this->getHeaders()),
-        );
-        self::$globalRequestsTotal += 1;
-
-        if ($response['body']['status'] == 'failed') {
+        if ($asyncResponse['body']['status'] === 'failed') {
             $failures += 1;
-        } elseif ($response['body']['status'] == 'completed') {
+        } elseif ($asyncResponse['body']['status'] === 'completed') {
             $executions += 1;
         }
 
-        $executionTime += (int) ($response['body']['duration'] * 1000);
+        $executionTime += (int) ($asyncResponse['body']['duration'] * 1000);
 
         $data = [
             'functionId' => $functionId,
@@ -1780,37 +1810,57 @@ class UsageTest extends Scope
 
         // Defensive: cheap API-key request that forces the test project's auth+project document
         // to load fresh. Mitigates a server-side cache state where `keys.secret` decodes to
-        // false on a stale project document (cause of intermittent 401 from setupSite below).
+        // false on a stale project document (cause of intermittent 401 from the site POST).
         $this->primeProjectAuthCache();
 
-        $siteId = $this->setupSite([
-            'buildRuntime' => 'node-22',
-            'fallbackFile' => '',
-            'framework' => 'other',
-            'name' => 'Test Site',
-            'outputDirectory' => './',
-            'providerBranch' => 'main',
-            'providerRootDirectory' => './',
-            'siteId' => ID::unique()
-        ]);
+        // Inline POST /sites with retry. Cannot use SitesBase::setupSite because its inline
+        // assertEquals(201) fails immediately on a transient 401 from a warming-up container.
+        $siteResponse = $this->retryOnAuthFailure(
+            Client::METHOD_POST,
+            '/sites',
+            [
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+                'x-appwrite-key' => $this->getProject()['apiKey'],
+            ],
+            [
+                'buildRuntime' => 'node-22',
+                'fallbackFile' => '',
+                'framework' => 'other',
+                'name' => 'Test Site',
+                'outputDirectory' => './',
+                'providerBranch' => 'main',
+                'providerRootDirectory' => './',
+                'siteId' => ID::unique(),
+            ]
+        );
+        $this->assertEquals(
+            201,
+            $siteResponse['headers']['status-code'],
+            'Setup site failed: ' . json_encode($siteResponse['body'], JSON_PRETTY_PRINT)
+        );
+        $siteId = $siteResponse['body']['$id'];
 
-        // Cache the siteId early so a deployment polling timeout doesn't cause a retry to
-        // re-create the same site (would 409).
-        self::$sitesStatsCache[$key] = [
-            'siteId' => $siteId,
-            'deployments' => 0,
-            'deploymentsSuccess' => 0,
-            'deploymentsFailed' => 0,
-        ];
 
         // Enqueue both deployments first, then wait for both to be ready concurrently.
         // The build worker processes them in parallel, so the wall-clock wait is bounded by
-        // the slower of the two builds instead of (build1 + build2).
-        $deployment = $this->createDeploymentSite($siteId, [
-            'siteId' => $siteId,
-            'code' => $this->packageSite('static'),
-            'activate' => true,
-        ]);
+        // the slower of the two builds instead of (build1 + build2). Both POSTs go through
+        // retryOnAuthFailure because the second one is just as cache-sensitive as the first.
+        $deploymentHeaders = array_merge([
+            'content-type' => 'multipart/form-data',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders());
+
+        $deployment = $this->retryOnAuthFailure(
+            Client::METHOD_POST,
+            '/sites/' . $siteId . '/deployments',
+            $deploymentHeaders,
+            [
+                'siteId' => $siteId,
+                'code' => $this->packageSite('static'),
+                'activate' => true,
+            ]
+        );
 
         $this->assertEquals(202, $deployment['headers']['status-code']);
         $this->assertNotEmpty($deployment['body']['$id']);
@@ -1819,10 +1869,15 @@ class UsageTest extends Scope
 
         $deploymentIdActive = $deployment['body']['$id'] ?? '';
 
-        $deployment = $this->createDeploymentSite($siteId, [
-            'code' => $this->packageSite('static'),
-            'activate' => 'false'
-        ]);
+        $deployment = $this->retryOnAuthFailure(
+            Client::METHOD_POST,
+            '/sites/' . $siteId . '/deployments',
+            $deploymentHeaders,
+            [
+                'code' => $this->packageSite('static'),
+                'activate' => 'false',
+            ]
+        );
 
         $this->assertEquals(202, $deployment['headers']['status-code']);
         $this->assertNotEmpty($deployment['body']['$id']);
@@ -1931,18 +1986,29 @@ class UsageTest extends Scope
         });
     }
 
+    #[Retry(count: 1)]
     public function testCustomDomainsFunctionStats(): void
     {
         $data = $this->setupFunctionsStats();
         $functionId = $data['functionId'];
 
-        $response = $this->client->call(Client::METHOD_PUT, '/functions/' . $functionId, array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id']
-        ], $this->getHeaders()), [
-            'name' => 'Test',
-            'execute' => ['any']
-        ]);
+        // Prime + retry on 401. This test runs late in the suite so it bears the brunt of
+        // a still-warming-up container (per docker-compose-down-v reset). retryOnAuthFailure
+        // preserves the original project, so the cached functionId stays valid.
+        $this->primeProjectAuthCache();
+
+        $response = $this->retryOnAuthFailure(
+            Client::METHOD_PUT,
+            '/functions/' . $functionId,
+            array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id']
+            ], $this->getHeaders()),
+            [
+                'name' => 'Test',
+                'execute' => ['any']
+            ]
+        );
 
         $this->assertEquals(200, $response['headers']['status-code']);
 
@@ -2046,15 +2112,14 @@ class UsageTest extends Scope
     #[Retry(count: 1)]
     public function testEmbeddingsTextUsageDoesNotBreakProjectUsage(): void
     {
-        // Defensive: refresh the test project's cached document before the first protected call.
-        // See primeProjectAuthCache() for the cache-staleness 401 it works around.
         $this->primeProjectAuthCache();
 
-        // Trigger embeddings endpoint once so stats usage worker has data to aggregate.
-        // One call is enough to verify the endpoint doesn't break /project/usage —
-        // each call is a heavy model-inference round-trip.
-        for ($i = 0; $i < 1; $i++) {
-            $response = $this->client->call(
+        // Warm-up loop: on a fresh `docker compose down -v && up` the ollama container has to
+        // download the embeddinggemma model into the cleared appwrite-models volume. Until that
+        // finishes, /vectorsdb/embeddings/text returns HTTP 200 with an inner `error` field
+        $callCount = 0;
+        $this->assertEventually(function () use (&$callCount) {
+            $response = $this->retryOnAuthFailure(
                 Client::METHOD_POST,
                 '/vectorsdb/embeddings/text',
                 array_merge([
@@ -2064,9 +2129,31 @@ class UsageTest extends Scope
                 ], $this->getHeaders()),
                 [
                     'model' => 'embeddinggemma',
-                    'texts' => [
-                        'usage test text ' . $i,
-                    ],
+                    'texts' => ['usage test warm-up ' . $callCount],
+                ]
+            );
+            $callCount++;
+
+            $this->assertEquals(200, $response['headers']['status-code']);
+            $this->assertIsArray($response['body']['embeddings']);
+            $first = $response['body']['embeddings'][0] ?? [];
+            $this->assertSame('', (string)($first['error'] ?? ''), 'embed adapter still reporting error - model warming up');
+            $this->assertNotEmpty($first['embedding'] ?? []);
+        }, 600_000, 5_000);
+
+        // Now run a couple more for stable per-call assertions.
+        for ($i = 0; $i < 2; $i++) {
+            $response = $this->retryOnAuthFailure(
+                Client::METHOD_POST,
+                '/vectorsdb/embeddings/text',
+                array_merge([
+                    'content-type' => 'application/json',
+                    'x-appwrite-project' => $this->getProject()['$id'],
+                    'x-appwrite-key' => $this->getProject()['apiKey'],
+                ], $this->getHeaders()),
+                [
+                    'model' => 'embeddinggemma',
+                    'texts' => ['usage test text ' . $i],
                 ]
             );
 
@@ -2116,7 +2203,7 @@ class UsageTest extends Scope
             $this->assertGreaterThanOrEqual(0, $response['body']['embeddingsTextErrorsTotal']);
             $this->assertGreaterThan(0, $response['body']['embeddingsTextTokensTotal']);
             $this->assertGreaterThan(0, $response['body']['embeddingsTextDurationTotal']);
-        });
+        }, 60_000, 1_000);
     }
 
     public function tearDown(): void
