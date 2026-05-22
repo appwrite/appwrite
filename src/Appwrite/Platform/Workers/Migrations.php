@@ -226,7 +226,7 @@ class Migrations extends Action
                         Query::equal('secret', [$credentials['apiKey']]),
                         Query::equal('projectInternalId', [$this->sourceProject->getSequence()]),
                     ]);
-                    $isLocalSource = $keyDoc !== false && !$keyDoc->isEmpty();
+                    $isLocalSource = !$keyDoc->isEmpty();
                 }
 
                 $sourceRegion = $this->sourceProject->getAttribute('region', 'default');
