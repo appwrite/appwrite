@@ -487,17 +487,19 @@ class Migrations extends Action
 
         try {
             $credentials = $migration->getAttribute('credentials', []);
+            $isAppwriteSource = $migration->getAttribute('source') === SourceAppwrite::getName();
+            $isAppwriteDestination = $migration->getAttribute('destination') === DestinationAppwrite::getName();
+            $isAppwriteToAppwrite = $isAppwriteSource && $isAppwriteDestination;
 
             // Appwrite -> Appwrite requires explicit user-supplied source credentials;
             // defaulting would silently self-call with the destination's own key.
-            if ($migration->getAttribute('source') === SourceAppwrite::getName()
-                && $migration->getAttribute('destination') !== DestinationAppwrite::getName()) {
+            if ($isAppwriteSource && !$isAppwriteToAppwrite) {
                 $credentials['projectId'] = $credentials['projectId'] ?? $project->getId();
                 $credentials['apiKey'] = $credentials['apiKey'] ?? $tempAPIKey;
                 $credentials['endpoint'] = $credentials['endpoint'] ?? $endpoint;
             }
 
-            if ($migration->getAttribute('destination') === DestinationAppwrite::getName()) {
+            if ($isAppwriteDestination) {
                 $credentials['destinationApiKey'] = $tempAPIKey;
                 $credentials['destinationEndpoint'] = $endpoint;
             }
