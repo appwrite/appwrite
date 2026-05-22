@@ -15,6 +15,8 @@ export type ConsoleProfileFeatures = {
   billing: boolean
   /** Organization-level custom domains (DNS, verification, buy domain) */
   domains: boolean
+  /** Organization marketplace (browse and publish apps) */
+  marketplace: boolean
   /** Project usage statistics, charts, and project overview main chart */
   usageStats: boolean
   /** Activity logs and audit trail */
@@ -66,6 +68,7 @@ export const CONSOLE_PROFILE_FEATURE_LABELS: Record<
 > = {
   billing: 'Billing',
   domains: 'Domains',
+  marketplace: 'Marketplace',
   usageStats: 'Usage stats',
   activity: 'Activity',
   orgRoles: 'Org roles',
@@ -102,6 +105,7 @@ export const CONSOLE_PROFILES: Record<ConsoleProfileId, ConsoleProfile> = {
     features: {
       billing: true,
       domains: true,
+      marketplace: false,
       usageStats: true,
       activity: true,
       orgRoles: true,
@@ -130,6 +134,7 @@ export const CONSOLE_PROFILES: Record<ConsoleProfileId, ConsoleProfile> = {
     features: {
       billing: false,
       domains: false,
+      marketplace: false,
       usageStats: false,
       activity: false,
       orgRoles: false,
@@ -244,14 +249,30 @@ export function getActiveProfileId(): ConsoleProfileId {
  * Stored profile features are merged with the canonical profile for that id so new
  * feature keys added later get correct defaults (e.g. after localStorage was set).
  */
+function applyCloudOnlyFeatureGates(
+  profileId: ConsoleProfileId,
+  features: ConsoleProfileFeatures,
+): ConsoleProfileFeatures {
+  if (profileId === 'self-hosted') {
+    return { ...features, marketplace: false }
+  }
+  return features
+}
+
 export function getActiveProfile(): ConsoleProfile {
   const stored = getStoredProfile()
-  if (!stored) return CONSOLE_PROFILES[getProfileFromEnv()]
-  const canonical = CONSOLE_PROFILES[stored.id]
-  const mergedFeatures = {
+  const profileId = stored?.id ?? getProfileFromEnv()
+  const canonical = CONSOLE_PROFILES[profileId]
+  if (!stored) {
+    return {
+      ...canonical,
+      features: applyCloudOnlyFeatureGates(profileId, canonical.features),
+    }
+  }
+  const mergedFeatures = applyCloudOnlyFeatureGates(profileId, {
     ...canonical.features,
     ...stored.features,
-  } as ConsoleProfileFeatures
+  } as ConsoleProfileFeatures)
   return { ...stored, features: mergedFeatures }
 }
 

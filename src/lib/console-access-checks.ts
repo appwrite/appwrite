@@ -280,6 +280,16 @@ export function canShowOrgDomainsTab(
   )
 }
 
+/** Organization marketplace tab (cloud profile + feature flag; browse integrations). */
+export function canShowOrgMarketplaceTab(
+  access: ConsoleAccess,
+  features: AccessCheckFeatures,
+): boolean {
+  return !!(
+    features.marketplace && canSeeProjects(access, features)
+  )
+}
+
 export function canShowOrgSettingsTab(access: ConsoleAccess): boolean {
   return access.isOwner || access.canSeeBilling || access.canSeeTeams
 }
@@ -406,6 +416,9 @@ export function getFirstAllowedOrgOverviewPath(
   if (canSeeProjects(access, features)) {
     return '/organizations/$orgId'
   }
+  if (canShowOrgMarketplaceTab(access, features)) {
+    return '/organizations/$orgId/marketplace/'
+  }
   if (canShowOrgDomainsTab(access, features)) {
     return '/organizations/$orgId/domains/'
   }
@@ -423,9 +436,10 @@ export function getFirstAllowedOrgOverviewPath(
 export function canAccessOrgOverviewTab(
   access: ConsoleAccess,
   features: AccessCheckFeatures,
-  tab: 'projects' | 'domains' | 'settings',
+  tab: 'projects' | 'marketplace' | 'domains' | 'settings',
 ): boolean {
   if (tab === 'projects') return canSeeProjects(access, features)
+  if (tab === 'marketplace') return canShowOrgMarketplaceTab(access, features)
   if (tab === 'domains') return canShowOrgDomainsTab(access, features)
   return canShowOrgSettingsTab(access)
 }

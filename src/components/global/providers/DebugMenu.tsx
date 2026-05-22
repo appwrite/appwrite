@@ -632,6 +632,25 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
                 },
               },
               {
+                label: 'Organization marketplace',
+                description:
+                  profileId === 'cloud'
+                    ? 'Org Marketplace tab (browse and publish apps). Cloud profile only; off by default.'
+                    : 'Cloud profile only — switch to Cloud profile to preview.',
+                variant: 'switch' as const,
+                switchValue:
+                  profileId === 'cloud' ? features.marketplace : false,
+                disabled: profileId !== 'cloud',
+                switchOnChange: (checked: boolean) => {
+                  if (profileId !== 'cloud') return
+                  setTimeout(
+                    () =>
+                      setDebugProfileFeatureOverride('marketplace', checked),
+                    0,
+                  )
+                },
+              },
+              {
                 label: 'AI assistant',
                 description:
                   'In-app AI assistant chat panel and header button.',
@@ -689,7 +708,7 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
               {
                 label: 'Reset feature flags',
                 description:
-                  'Restore profile toggles on this list to canonical defaults and clear local switches (AI assistant, native app bar, success team card, functions local editor).',
+                  'Restore profile toggles on this list to canonical defaults and clear local switches (marketplace, AI assistant, native app bar, success team card, functions local editor).',
                 onClick: () => {
                   resetDebugProfileFeatureOverrides()
                   resetFeatureFlagsMenuDebugOverrides()
@@ -974,7 +993,10 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
                   item.variant === 'switch' ? (
                     <div
                       key={`submenu-${itemIndex}`}
-                      className="flex items-center justify-between gap-3 rounded-lg px-3 py-2.5 transition-colors hover:bg-[#9B87F5]/10"
+                      className={cn(
+                        'flex items-center justify-between gap-3 rounded-lg px-3 py-2.5 transition-colors hover:bg-[#9B87F5]/10',
+                        item.disabled && 'opacity-50',
+                      )}
                     >
                       <div className="flex-1 min-w-0">
                         <div className="text-[13px] font-medium text-[#E5DEFF]">
@@ -989,6 +1011,7 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
                       <Switch
                         checked={item.switchValue}
                         onCheckedChange={item.switchOnChange}
+                        disabled={item.disabled}
                         className="flex-shrink-0"
                       />
                     </div>
@@ -1059,6 +1082,7 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
                               <Switch
                                 checked={item.switchValue}
                                 onCheckedChange={item.switchOnChange}
+                                disabled={item.disabled}
                                 className="flex-shrink-0"
                               />
                             </div>

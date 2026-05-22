@@ -12,6 +12,7 @@ import {
   FolderOpen,
   Globe,
   Key,
+  Store,
   Plus,
   Settings,
   ShieldCheck,
@@ -27,6 +28,7 @@ import {
   canShowOrgBillingNav,
   canShowOrgComplianceNav,
   canShowOrgDomainsTab,
+  canShowOrgMarketplaceTab,
   canShowOrgOAuthAppsSettings,
   canShowOrgSettingsTab,
 } from '@/lib/console-access-checks'
@@ -44,6 +46,17 @@ const ORG_NAV: CommandEntry[] = [
     shortcut: 'G P',
     keywords: ['home', 'projects', 'list', 'main'],
     to: (ctx) => `/organizations/${ctx.orgId}`,
+  },
+  {
+    id: 'org.nav.marketplace',
+    scopes: ['organization'],
+    kind: 'navigation',
+    label: 'Marketplace',
+    description: 'Browse and publish Appwrite marketplace apps',
+    icon: Store,
+    keywords: ['apps', 'integrations', 'plugins', 'extensions', 'catalog'],
+    available: (ctx) => canShowOrgMarketplaceTab(ctx.access, ctx.features),
+    to: (ctx) => `/organizations/${ctx.orgId}/marketplace`,
   },
   {
     id: 'org.nav.domains',

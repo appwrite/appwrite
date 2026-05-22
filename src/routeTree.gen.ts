@@ -52,6 +52,7 @@ import { Route as PublicProjectsProjectIdActivityRouteImport } from './routes/_p
 import { Route as PublicOrganizationsOrgIdSupportRouteImport } from './routes/_public/organizations.$orgId.support'
 import { Route as PublicOrganizationsOrgIdSettingsRouteImport } from './routes/_public/organizations.$orgId.settings'
 import { Route as PublicOrganizationsOrgIdMembersRouteImport } from './routes/_public/organizations.$orgId.members'
+import { Route as PublicOrganizationsOrgIdMarketplaceRouteImport } from './routes/_public/organizations.$orgId.marketplace'
 import { Route as PublicOrganizationsOrgIdDomainsRouteImport } from './routes/_public/organizations.$orgId.domains'
 import { Route as PublicOrganizationsOrgIdChangePlanRouteImport } from './routes/_public/organizations.$orgId.change-plan'
 import { Route as PublicOrganizationsOrgIdBillingRouteImport } from './routes/_public/organizations.$orgId.billing'
@@ -63,6 +64,7 @@ import { Route as PublicProjectsProjectIdMessagingIndexRouteImport } from './rou
 import { Route as PublicProjectsProjectIdFunctionsIndexRouteImport } from './routes/_public/projects.$projectId.functions.index'
 import { Route as PublicProjectsProjectIdDatabasesIndexRouteImport } from './routes/_public/projects.$projectId.databases.index'
 import { Route as PublicProjectsProjectIdAuthIndexRouteImport } from './routes/_public/projects.$projectId.auth.index'
+import { Route as PublicOrganizationsOrgIdMarketplaceIndexRouteImport } from './routes/_public/organizations.$orgId.marketplace.index'
 import { Route as PublicOrganizationsOrgIdDomainsIndexRouteImport } from './routes/_public/organizations.$orgId.domains.index'
 import { Route as PublicProjectsProjectIdStorageBucketIdRouteImport } from './routes/_public/projects.$projectId.storage.$bucketId'
 import { Route as PublicProjectsProjectIdSitesUsageRouteImport } from './routes/_public/projects.$projectId.sites.usage'
@@ -462,6 +464,12 @@ const PublicOrganizationsOrgIdMembersRoute =
     path: '/members',
     getParentRoute: () => PublicOrganizationsOrgIdRoute,
   } as any)
+const PublicOrganizationsOrgIdMarketplaceRoute =
+  PublicOrganizationsOrgIdMarketplaceRouteImport.update({
+    id: '/marketplace',
+    path: '/marketplace',
+    getParentRoute: () => PublicOrganizationsOrgIdRoute,
+  } as any)
 const PublicOrganizationsOrgIdDomainsRoute =
   PublicOrganizationsOrgIdDomainsRouteImport.update({
     id: '/domains',
@@ -527,6 +535,12 @@ const PublicProjectsProjectIdAuthIndexRoute =
     id: '/',
     path: '/',
     getParentRoute: () => PublicProjectsProjectIdAuthRoute,
+  } as any)
+const PublicOrganizationsOrgIdMarketplaceIndexRoute =
+  PublicOrganizationsOrgIdMarketplaceIndexRouteImport.update({
+    id: '/',
+    path: '/',
+    getParentRoute: () => PublicOrganizationsOrgIdMarketplaceRoute,
   } as any)
 const PublicOrganizationsOrgIdDomainsIndexRoute =
   PublicOrganizationsOrgIdDomainsIndexRouteImport.update({
@@ -1646,6 +1660,7 @@ export interface FileRoutesByFullPath {
   '/organizations/$orgId/billing': typeof PublicOrganizationsOrgIdBillingRoute
   '/organizations/$orgId/change-plan': typeof PublicOrganizationsOrgIdChangePlanRoute
   '/organizations/$orgId/domains': typeof PublicOrganizationsOrgIdDomainsRouteWithChildren
+  '/organizations/$orgId/marketplace': typeof PublicOrganizationsOrgIdMarketplaceRouteWithChildren
   '/organizations/$orgId/members': typeof PublicOrganizationsOrgIdMembersRoute
   '/organizations/$orgId/settings': typeof PublicOrganizationsOrgIdSettingsRouteWithChildren
   '/organizations/$orgId/support': typeof PublicOrganizationsOrgIdSupportRoute
@@ -1704,6 +1719,7 @@ export interface FileRoutesByFullPath {
   '/projects/$projectId/sites/usage': typeof PublicProjectsProjectIdSitesUsageRoute
   '/projects/$projectId/storage/$bucketId': typeof PublicProjectsProjectIdStorageBucketIdRouteWithChildren
   '/organizations/$orgId/domains/': typeof PublicOrganizationsOrgIdDomainsIndexRoute
+  '/organizations/$orgId/marketplace/': typeof PublicOrganizationsOrgIdMarketplaceIndexRoute
   '/projects/$projectId/auth/': typeof PublicProjectsProjectIdAuthIndexRoute
   '/projects/$projectId/databases/': typeof PublicProjectsProjectIdDatabasesIndexRoute
   '/projects/$projectId/functions/': typeof PublicProjectsProjectIdFunctionsIndexRoute
@@ -1900,6 +1916,7 @@ export interface FileRoutesByTo {
   '/projects/$projectId/settings/webhooks': typeof PublicProjectsProjectIdSettingsWebhooksRoute
   '/projects/$projectId/sites/usage': typeof PublicProjectsProjectIdSitesUsageRoute
   '/organizations/$orgId/domains': typeof PublicOrganizationsOrgIdDomainsIndexRoute
+  '/organizations/$orgId/marketplace': typeof PublicOrganizationsOrgIdMarketplaceIndexRoute
   '/projects/$projectId/auth': typeof PublicProjectsProjectIdAuthIndexRoute
   '/projects/$projectId/databases': typeof PublicProjectsProjectIdDatabasesIndexRoute
   '/projects/$projectId/functions': typeof PublicProjectsProjectIdFunctionsIndexRoute
@@ -2050,6 +2067,7 @@ export interface FileRoutesById {
   '/_public/organizations/$orgId/billing': typeof PublicOrganizationsOrgIdBillingRoute
   '/_public/organizations/$orgId/change-plan': typeof PublicOrganizationsOrgIdChangePlanRoute
   '/_public/organizations/$orgId/domains': typeof PublicOrganizationsOrgIdDomainsRouteWithChildren
+  '/_public/organizations/$orgId/marketplace': typeof PublicOrganizationsOrgIdMarketplaceRouteWithChildren
   '/_public/organizations/$orgId/members': typeof PublicOrganizationsOrgIdMembersRoute
   '/_public/organizations/$orgId/settings': typeof PublicOrganizationsOrgIdSettingsRouteWithChildren
   '/_public/organizations/$orgId/support': typeof PublicOrganizationsOrgIdSupportRoute
@@ -2108,6 +2126,7 @@ export interface FileRoutesById {
   '/_public/projects/$projectId/sites/usage': typeof PublicProjectsProjectIdSitesUsageRoute
   '/_public/projects/$projectId/storage/$bucketId': typeof PublicProjectsProjectIdStorageBucketIdRouteWithChildren
   '/_public/organizations/$orgId/domains/': typeof PublicOrganizationsOrgIdDomainsIndexRoute
+  '/_public/organizations/$orgId/marketplace/': typeof PublicOrganizationsOrgIdMarketplaceIndexRoute
   '/_public/projects/$projectId/auth/': typeof PublicProjectsProjectIdAuthIndexRoute
   '/_public/projects/$projectId/databases/': typeof PublicProjectsProjectIdDatabasesIndexRoute
   '/_public/projects/$projectId/functions/': typeof PublicProjectsProjectIdFunctionsIndexRoute
@@ -2267,6 +2286,7 @@ export interface FileRouteTypes {
     | '/organizations/$orgId/billing'
     | '/organizations/$orgId/change-plan'
     | '/organizations/$orgId/domains'
+    | '/organizations/$orgId/marketplace'
     | '/organizations/$orgId/members'
     | '/organizations/$orgId/settings'
     | '/organizations/$orgId/support'
@@ -2325,6 +2345,7 @@ export interface FileRouteTypes {
     | '/projects/$projectId/sites/usage'
     | '/projects/$projectId/storage/$bucketId'
     | '/organizations/$orgId/domains/'
+    | '/organizations/$orgId/marketplace/'
     | '/projects/$projectId/auth/'
     | '/projects/$projectId/databases/'
     | '/projects/$projectId/functions/'
@@ -2521,6 +2542,7 @@ export interface FileRouteTypes {
     | '/projects/$projectId/settings/webhooks'
     | '/projects/$projectId/sites/usage'
     | '/organizations/$orgId/domains'
+    | '/organizations/$orgId/marketplace'
     | '/projects/$projectId/auth'
     | '/projects/$projectId/databases'
     | '/projects/$projectId/functions'
@@ -2670,6 +2692,7 @@ export interface FileRouteTypes {
     | '/_public/organizations/$orgId/billing'
     | '/_public/organizations/$orgId/change-plan'
     | '/_public/organizations/$orgId/domains'
+    | '/_public/organizations/$orgId/marketplace'
     | '/_public/organizations/$orgId/members'
     | '/_public/organizations/$orgId/settings'
     | '/_public/organizations/$orgId/support'
@@ -2728,6 +2751,7 @@ export interface FileRouteTypes {
     | '/_public/projects/$projectId/sites/usage'
     | '/_public/projects/$projectId/storage/$bucketId'
     | '/_public/organizations/$orgId/domains/'
+    | '/_public/organizations/$orgId/marketplace/'
     | '/_public/projects/$projectId/auth/'
     | '/_public/projects/$projectId/databases/'
     | '/_public/projects/$projectId/functions/'
@@ -3174,6 +3198,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PublicOrganizationsOrgIdMembersRouteImport
       parentRoute: typeof PublicOrganizationsOrgIdRoute
     }
+    '/_public/organizations/$orgId/marketplace': {
+      id: '/_public/organizations/$orgId/marketplace'
+      path: '/marketplace'
+      fullPath: '/organizations/$orgId/marketplace'
+      preLoaderRoute: typeof PublicOrganizationsOrgIdMarketplaceRouteImport
+      parentRoute: typeof PublicOrganizationsOrgIdRoute
+    }
     '/_public/organizations/$orgId/domains': {
       id: '/_public/organizations/$orgId/domains'
       path: '/domains'
@@ -3250,6 +3281,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/projects/$projectId/auth/'
       preLoaderRoute: typeof PublicProjectsProjectIdAuthIndexRouteImport
       parentRoute: typeof PublicProjectsProjectIdAuthRoute
+    }
+    '/_public/organizations/$orgId/marketplace/': {
+      id: '/_public/organizations/$orgId/marketplace/'
+      path: '/'
+      fullPath: '/organizations/$orgId/marketplace/'
+      preLoaderRoute: typeof PublicOrganizationsOrgIdMarketplaceIndexRouteImport
+      parentRoute: typeof PublicOrganizationsOrgIdMarketplaceRoute
     }
     '/_public/organizations/$orgId/domains/': {
       id: '/_public/organizations/$orgId/domains/'
@@ -4476,6 +4514,21 @@ const PublicOrganizationsOrgIdDomainsRouteWithChildren =
     PublicOrganizationsOrgIdDomainsRouteChildren,
   )
 
+interface PublicOrganizationsOrgIdMarketplaceRouteChildren {
+  PublicOrganizationsOrgIdMarketplaceIndexRoute: typeof PublicOrganizationsOrgIdMarketplaceIndexRoute
+}
+
+const PublicOrganizationsOrgIdMarketplaceRouteChildren: PublicOrganizationsOrgIdMarketplaceRouteChildren =
+  {
+    PublicOrganizationsOrgIdMarketplaceIndexRoute:
+      PublicOrganizationsOrgIdMarketplaceIndexRoute,
+  }
+
+const PublicOrganizationsOrgIdMarketplaceRouteWithChildren =
+  PublicOrganizationsOrgIdMarketplaceRoute._addFileChildren(
+    PublicOrganizationsOrgIdMarketplaceRouteChildren,
+  )
+
 interface PublicOrganizationsOrgIdSettingsRouteChildren {
   PublicOrganizationsOrgIdSettingsApiKeysRoute: typeof PublicOrganizationsOrgIdSettingsApiKeysRoute
   PublicOrganizationsOrgIdSettingsBillingRoute: typeof PublicOrganizationsOrgIdSettingsBillingRoute
@@ -4510,6 +4563,7 @@ interface PublicOrganizationsOrgIdRouteChildren {
   PublicOrganizationsOrgIdBillingRoute: typeof PublicOrganizationsOrgIdBillingRoute
   PublicOrganizationsOrgIdChangePlanRoute: typeof PublicOrganizationsOrgIdChangePlanRoute
   PublicOrganizationsOrgIdDomainsRoute: typeof PublicOrganizationsOrgIdDomainsRouteWithChildren
+  PublicOrganizationsOrgIdMarketplaceRoute: typeof PublicOrganizationsOrgIdMarketplaceRouteWithChildren
   PublicOrganizationsOrgIdMembersRoute: typeof PublicOrganizationsOrgIdMembersRoute
   PublicOrganizationsOrgIdSettingsRoute: typeof PublicOrganizationsOrgIdSettingsRouteWithChildren
   PublicOrganizationsOrgIdSupportRoute: typeof PublicOrganizationsOrgIdSupportRoute
@@ -4523,6 +4577,8 @@ const PublicOrganizationsOrgIdRouteChildren: PublicOrganizationsOrgIdRouteChildr
       PublicOrganizationsOrgIdChangePlanRoute,
     PublicOrganizationsOrgIdDomainsRoute:
       PublicOrganizationsOrgIdDomainsRouteWithChildren,
+    PublicOrganizationsOrgIdMarketplaceRoute:
+      PublicOrganizationsOrgIdMarketplaceRouteWithChildren,
     PublicOrganizationsOrgIdMembersRoute: PublicOrganizationsOrgIdMembersRoute,
     PublicOrganizationsOrgIdSettingsRoute:
       PublicOrganizationsOrgIdSettingsRouteWithChildren,

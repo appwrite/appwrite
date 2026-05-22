@@ -70,6 +70,7 @@ import {
   canSeeProjects,
   canShowProjectSettings,
   canShowOrgDomainsTab,
+  canShowOrgMarketplaceTab,
   canShowOrgSettingsTab,
   canAccessOrgSettingsOverview,
   canAccessOrgSettingsMembers,
@@ -155,6 +156,7 @@ import {
 import { BillingTab } from '../billing/BillingTab'
 import { ComplianceTab } from '../settings/ComplianceTab'
 import { View as DomainsView } from '../domains/View'
+import { View as MarketplaceView } from '../marketplace/View'
 import { EnterpriseSuccessManager } from '@/components/pages/projects/$projectId/shared/EnterpriseSuccessManager'
 import { Pagination } from '@/components/global/shared/Pagination'
 import { OrganizationFailedInvoiceHeaderBanner } from '@/components/global/shared/OrganizationFailedInvoiceHeaderBanner'
@@ -289,7 +291,7 @@ function ProjectCardFooter({
 import { ProjectSelector } from '@/components/global/shared/ProjectSelector'
 
 interface OrgOverviewProps {
-  tab?: 'projects' | 'domains' | 'settings'
+  tab?: 'projects' | 'marketplace' | 'domains' | 'settings'
   children?: React.ReactNode
 }
 
@@ -356,7 +358,7 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
     return false
   }, [matches, location.pathname])
 
-  // Check if we should render children (domains list) vs tab content
+  // Check if we should render children (domains / marketplace list) vs tab content
   const shouldRenderChildren = useMemo(() => {
     // If we're on a domain detail route, definitely don't render children
     // (though the organization layout should bypass OrgOverview entirely for detail routes)
@@ -369,6 +371,11 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
       (match) => match.routeId === '/_public/organizations/$orgId/domains/',
     )
 
+    const isMarketplaceIndexRoute = matches.some(
+      (match) =>
+        match.routeId === '/_public/organizations/$orgId/marketplace/',
+    )
+
     // Also check pathname as fallback (helps during navigation transitions)
     const pathParts = location.pathname.split('/').filter(Boolean)
     const orgIndex = pathParts.findIndex((part) => part === 'organizations')
@@ -377,9 +384,18 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
       pathParts[orgIndex + 2] === 'domains' &&
       !pathParts[orgIndex + 3] // No domainId means we're on the index route
 
-    // Only render children if we're on the domains index route
-    // The organization layout will handle detail routes by bypassing OrgOverview entirely
-    return isDomainsIndexRoute || isDomainsRouteByPath
+    const isMarketplaceRouteByPath =
+      orgIndex >= 0 &&
+      pathParts[orgIndex + 2] === 'marketplace' &&
+      !pathParts[orgIndex + 3]
+
+    // Only render children on list index routes; detail routes bypass OrgOverview
+    return (
+      isDomainsIndexRoute ||
+      isDomainsRouteByPath ||
+      isMarketplaceIndexRoute ||
+      isMarketplaceRouteByPath
+    )
   }, [matches, location.pathname, isDomainDetailRoute])
 
   // Derive active tab from pathname if prop is not provided
@@ -405,8 +421,8 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
         if (tabFromPath === 'settings') {
           return 'settings'
         }
-        if (['projects', 'domains'].includes(tabFromPath)) {
-          return tabFromPath as 'projects' | 'domains'
+        if (['projects', 'marketplace', 'domains'].includes(tabFromPath)) {
+          return tabFromPath as 'projects' | 'marketplace' | 'domains'
         }
       }
     }
@@ -542,6 +558,7 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
 
     const hasAnyTab =
       canSeeProjects(access, features) ||
+      canShowOrgMarketplaceTab(access, features) ||
       canShowOrgDomainsTab(access, features) ||
       canShowOrgSettingsTab(access)
 
@@ -1388,6 +1405,13 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
         to: '/organizations/$orgId',
       })
     }
+    if (canShowOrgMarketplaceTab(access, features)) {
+      tabs.push({
+        id: 'marketplace',
+        label: 'Marketplace',
+        to: '/organizations/$orgId/marketplace/',
+      })
+    }
     if (canShowOrgDomainsTab(access, features)) {
       tabs.push({
         id: 'domains',
@@ -1426,6 +1450,7 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
   const handleOrgNavigate = (tab: string) => {
     const tabRoutes: Record<string, string> = {
       projects: '/organizations/$orgId',
+      marketplace: '/organizations/$orgId/marketplace/',
       domains: '/organizations/$orgId/domains/',
       settings: '/organizations/$orgId/settings',
       'settings/members': '/organizations/$orgId/settings/members',
@@ -1449,6 +1474,7 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
     // Navigate to the new organization route, preserving the current tab
     const tabRoutes: Record<string, string> = {
       projects: '/organizations/$orgId',
+      marketplace: '/organizations/$orgId/marketplace/',
       domains: '/organizations/$orgId/domains/',
       settings: '/organizations/$orgId/settings',
     }
@@ -3390,6 +3416,8 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                 )}
 
                 {activeTab === 'domains' && <DomainsView />}
+
+                {activeTab === 'marketplace' && <MarketplaceView />}
               </>
             )}
           </div>

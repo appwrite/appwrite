@@ -12,6 +12,8 @@ export const RESOURCE_CARD_METADATA_DIVIDER_CLASSNAME =
 
 interface ResourceCardProps {
   title: string
+  /** Renders inline after the title (e.g. status badges). */
+  titleAccessory?: React.ReactNode
   subtitle?: string
   resourceId?: string
   icon?: LucideIcon
@@ -28,6 +30,7 @@ interface ResourceCardProps {
 
 export function ResourceCard({
   title,
+  titleAccessory,
   subtitle,
   resourceId,
   icon: Icon,
@@ -91,10 +94,15 @@ export function ResourceCard({
           ) : null}
 
           <div className="min-w-0 flex-1">
-            <div className="flex items-center gap-2">
+            <div className="flex min-w-0 flex-1 flex-wrap items-center gap-1.5">
               <h3 className="truncate text-[14px] font-medium text-foreground">
                 {title}
               </h3>
+              {titleAccessory ? (
+                <div className="flex shrink-0 items-center gap-1">
+                  {titleAccessory}
+                </div>
+              ) : null}
               {status && !statusLabel && (
                 <span
                   className={cn(
