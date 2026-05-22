@@ -209,21 +209,20 @@ class Migrations extends Action
                 throw new Exception(Exception::MIGRATION_SOURCE_PROJECT_NOT_FOUND);
             }
 
-            $candidate = $this->dbForPlatform->getDocument('projects', $credentials['projectId']);
+            $this->sourceProject = $this->dbForPlatform->getDocument('projects', $credentials['projectId']);
 
             // For Appwrite -> Appwrite, require apiKey to actually belong to the local
             // project — a destination reusing the source's id would otherwise collide.
-            $isLocalSource = !$candidate->isEmpty() && (!$isAppwriteToAppwrite || (
+            $isLocalSource = !$this->sourceProject->isEmpty() && (!$isAppwriteToAppwrite || (
                 !$this->dbForPlatform->findOne('keys', [
                     Query::equal('secret', [$credentials['apiKey']]),
-                    Query::equal('projectInternalId', [$candidate->getSequence()]),
+                    Query::equal('projectInternalId', [$this->sourceProject->getSequence()]),
                 ])->isEmpty()
-                && $candidate->getAttribute('region', 'default') === $this->project->getAttribute('region', 'default')
+                && $this->sourceProject->getAttribute('region', 'default') === $this->project->getAttribute('region', 'default')
             ));
 
             if ($isLocalSource) {
-                $this->sourceProject = $candidate;
-                $projectDB = call_user_func($this->getProjectDB, $candidate);
+                $projectDB = call_user_func($this->getProjectDB, $this->sourceProject);
             } elseif ($isAppwriteToAppwrite) {
                 $useAppwriteApiSource = true;
             } else {
