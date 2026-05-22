@@ -209,34 +209,15 @@ class Migrations extends Action
                 throw new Exception(Exception::MIGRATION_SOURCE_PROJECT_NOT_FOUND);
             }
 
-            $this->sourceProject = $this->dbForPlatform->getDocument('projects', $credentials['projectId']);
+            $candidate = $this->dbForPlatform->getDocument('projects', $credentials['projectId']);
 
-            if ($this->sourceProject->isEmpty()) {
-                if (!$isAppwriteToAppwrite) {
-                    throw new Exception(Exception::MIGRATION_SOURCE_PROJECT_NOT_FOUND);
-                }
+            if ($this->canReadSourceFromLocalDb($candidate, $credentials, $isAppwriteToAppwrite)) {
+                $this->sourceProject = $candidate;
+                $projectDB = call_user_func($this->getProjectDB, $candidate);
+            } elseif ($isAppwriteToAppwrite) {
                 $useAppwriteApiSource = true;
             } else {
-                // Verify the apiKey belongs to the local project — a destination project
-                // deliberately reusing the source's projectId would otherwise be mistaken
-                // for the source and migrate zero rows.
-                $isLocalSource = false;
-                if ($isAppwriteToAppwrite) {
-                    $keyDoc = $this->dbForPlatform->findOne('keys', [
-                        Query::equal('secret', [$credentials['apiKey']]),
-                        Query::equal('projectInternalId', [$this->sourceProject->getSequence()]),
-                    ]);
-                    $isLocalSource = !$keyDoc->isEmpty();
-                }
-
-                $sourceRegion = $this->sourceProject->getAttribute('region', 'default');
-                $destinationRegion = $this->project->getAttribute('region', 'default');
-                $useAppwriteApiSource = $isAppwriteToAppwrite
-                    && (!$isLocalSource || $sourceRegion !== $destinationRegion);
-
-                if (! $useAppwriteApiSource) {
-                    $projectDB = call_user_func($this->getProjectDB, $this->sourceProject);
-                }
+                throw new Exception(Exception::MIGRATION_SOURCE_PROJECT_NOT_FOUND);
             }
         }
         $getDatabasesDB = fn (Document $database): Database =>
@@ -297,6 +278,38 @@ class Migrations extends Action
         $this->sourceReport = $migrationSource->report($resources);
 
         return $migrationSource;
+    }
+
+    /**
+     * The local platform DB only holds the truth for the *destination* project. For
+     * SourceAppwrite -> DestinationAppwrite we may find a same-id project locally
+     * that isn't actually the source (a destination project deliberately created
+     * with the source's id to preserve cross-references). Verify the supplied apiKey
+     * belongs to that local project before trusting it; same-region match is the
+     * final gate before the direct-DB fast path.
+     */
+    private function canReadSourceFromLocalDb(Document $candidate, array $credentials, bool $isAppwriteToAppwrite): bool
+    {
+        if ($candidate->isEmpty()) {
+            return false;
+        }
+
+        // Source -> CSV/JSON/Backup always reads the local DB; no cross-cluster
+        // semantics, so a successful lookup is enough.
+        if (!$isAppwriteToAppwrite) {
+            return true;
+        }
+
+        $keyDoc = $this->dbForPlatform->findOne('keys', [
+            Query::equal('secret', [$credentials['apiKey']]),
+            Query::equal('projectInternalId', [$candidate->getSequence()]),
+        ]);
+        if ($keyDoc->isEmpty()) {
+            return false;
+        }
+
+        return $candidate->getAttribute('region', 'default')
+            === $this->project->getAttribute('region', 'default');
     }
 
     /**
