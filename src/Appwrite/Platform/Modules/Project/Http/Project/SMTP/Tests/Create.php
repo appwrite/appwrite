@@ -70,7 +70,6 @@ class Create extends Action
             ->inject('project')
             ->inject('publisherForMails')
             ->inject('platform')
-            ->inject('plan')
             ->callback($this->action(...));
     }
 
@@ -91,7 +90,6 @@ class Create extends Action
         Document $project,
         MailPublisher $publisherForMails,
         array $platform,
-        array $plan
     ): void {
         // Backwards compatibility: use inline params if provided, otherwise fall back to project SMTP config.
         // When inline params are provided they are treated as self-contained — project config is ignored
