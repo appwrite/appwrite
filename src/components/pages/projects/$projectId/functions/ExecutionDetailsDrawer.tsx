@@ -84,6 +84,24 @@ function capitalizeFirst(str: string): string {
   return str.charAt(0).toUpperCase() + str.slice(1)
 }
 
+function formatExecutionLogContent(
+  logs: Models.Execution['logs'],
+): string {
+  if (!logs) return ''
+  if (typeof logs === 'string') return logs
+  if (Array.isArray(logs)) return (logs as string[]).join('\n')
+  return JSON.stringify(logs, null, 2)
+}
+
+function filterLogLines(text: string, search: string): string {
+  if (!search.trim()) return text
+  const searchLower = search.toLowerCase()
+  return text
+    .split('\n')
+    .filter((line) => line.toLowerCase().includes(searchLower))
+    .join('\n')
+}
+
 export function ExecutionDetailsDrawer({
   open,
   onOpenChange,
@@ -95,6 +113,7 @@ export function ExecutionDetailsDrawer({
   useParams({ strict: false })
   const [copiedPath, setCopiedPath] = useState(false)
   const [copiedLink, setCopiedLink] = useState(false)
+  const [copiedLogs, setCopiedLogs] = useState(false)
   const [requestTab, setRequestTab] = useState<'parameters' | 'headers'>(
     'parameters',
   )
@@ -142,6 +161,7 @@ export function ExecutionDetailsDrawer({
     setLogsSearch('')
     setErrorsSearch('')
     setBodySearch('')
+    setCopiedLogs(false)
   }, [execution?.$id])
 
   const requestHeaderCount = execution?.requestHeaders?.length ?? 0
@@ -175,6 +195,16 @@ export function ExecutionDetailsDrawer({
 
     return () => clearInterval(interval)
   }, [execution?.$id, execution?.$createdAt, execution?.status])
+
+  const executionLogsText = useMemo(
+    () => formatExecutionLogContent(execution?.logs),
+    [execution?.logs],
+  )
+
+  const displayedLogsText = useMemo(
+    () => filterLogLines(executionLogsText, logsSearch),
+    [executionLogsText, logsSearch],
+  )
 
   if (!execution) return null
 
@@ -210,6 +240,13 @@ export function ExecutionDetailsDrawer({
     navigator.clipboard.writeText(url.toString())
     setCopiedLink(true)
     setTimeout(() => setCopiedLink(false), 2000)
+  }
+
+  const handleCopyLogs = () => {
+    if (!executionLogsText) return
+    navigator.clipboard.writeText(executionLogsText)
+    setCopiedLogs(true)
+    setTimeout(() => setCopiedLogs(false), 2000)
   }
 
   // Format duration
@@ -599,47 +636,47 @@ export function ExecutionDetailsDrawer({
                           ) : execution.logs ? (
                             <div className="rounded-lg border border-border bg-card p-4">
                               <div className="space-y-3">
-                                <div className="relative -mx-1 px-1">
-                                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                                  <Input
-                                    placeholder="Search logs..."
-                                    value={logsSearch}
-                                    onChange={(e) =>
-                                      setLogsSearch(e.target.value)
-                                    }
-                                    className="pl-9 h-9 text-[13px]"
-                                  />
+                                <div className="flex items-center gap-2">
+                                  <div className="relative flex-1 min-w-0 -mx-1 px-1">
+                                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                                    <Input
+                                      placeholder="Search logs..."
+                                      value={logsSearch}
+                                      onChange={(e) =>
+                                        setLogsSearch(e.target.value)
+                                      }
+                                      className="pl-9 h-9 text-[13px]"
+                                    />
+                                  </div>
+                                  <TooltipProvider>
+                                    <Tooltip>
+                                      <TooltipTrigger asChild>
+                                        <Button
+                                          type="button"
+                                          variant="outline"
+                                          size="sm"
+                                          onClick={handleCopyLogs}
+                                          disabled={!executionLogsText}
+                                          className="h-9 w-9 shrink-0 p-0"
+                                          aria-label="Copy logs"
+                                        >
+                                          {copiedLogs ? (
+                                            <Check className="h-4 w-4 text-emerald-500" />
+                                          ) : (
+                                            <Copy className="h-4 w-4" />
+                                          )}
+                                        </Button>
+                                      </TooltipTrigger>
+                                      <TooltipContent>
+                                        <p>Copy logs</p>
+                                      </TooltipContent>
+                                    </Tooltip>
+                                  </TooltipProvider>
                                 </div>
                                 <ScrollArea className="h-[400px] w-full rounded-lg border border-border">
                                   <div className="p-4 min-w-0">
                                     <pre className="text-[12px] font-mono text-foreground whitespace-pre-wrap break-all overflow-x-auto max-w-full min-w-0">
-                                      {(() => {
-                                        const logsText =
-                                          typeof execution.logs === 'string'
-                                            ? execution.logs
-                                            : Array.isArray(execution.logs)
-                                              ? (
-                                                  execution.logs as string[]
-                                                ).join('\n')
-                                              : JSON.stringify(
-                                                  execution.logs,
-                                                  null,
-                                                  2,
-                                                )
-
-                                        if (!logsSearch.trim()) return logsText
-
-                                        const searchLower =
-                                          logsSearch.toLowerCase()
-                                        const lines = logsText.split('\n')
-                                        return lines
-                                          .filter((line: string) =>
-                                            line
-                                              .toLowerCase()
-                                              .includes(searchLower),
-                                          )
-                                          .join('\n')
-                                      })()}
+                                      {displayedLogsText}
                                     </pre>
                                   </div>
                                 </ScrollArea>
