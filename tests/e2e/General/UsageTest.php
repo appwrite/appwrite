@@ -119,27 +119,6 @@ class UsageTest extends Scope
         return $this->getProject()['$id'] ?? 'default';
     }
 
-    /**
-     * Issue a cheap project-scoped request to force a fresh load of the project document.
-     *
-     * Why: intermittently the cached project doc returns `keys.secret => false` for every
-     * entry in `keys` (OpenSSL decrypt returning false), causing later API-key auth calls
-     * to 401 even though the same key worked moments earlier. A read here lets the request
-     * layer refresh the project document before the next protected call.
-     */
-    protected function primeProjectAuthCache(): void
-    {
-        $this->client->call(
-            Client::METHOD_GET,
-            '/health',
-            array_merge([
-                'content-type' => 'application/json',
-                'x-appwrite-project' => $this->getProject()['$id'],
-            ], $this->getHeaders())
-        );
-        self::$globalRequestsTotal += 1;
-    }
-
     protected function retryOnAuthFailure(
         string $method,
         string $path,
@@ -1808,11 +1787,6 @@ class UsageTest extends Scope
             return self::$sitesStatsCache[$key];
         }
 
-        // Defensive: cheap API-key request that forces the test project's auth+project document
-        // to load fresh. Mitigates a server-side cache state where `keys.secret` decodes to
-        // false on a stale project document (cause of intermittent 401 from the site POST).
-        $this->primeProjectAuthCache();
-
         // Inline POST /sites with retry. Cannot use SitesBase::setupSite because its inline
         // assertEquals(201) fails immediately on a transient 401 from a warming-up container.
         $siteResponse = $this->retryOnAuthFailure(
@@ -1992,11 +1966,6 @@ class UsageTest extends Scope
         $data = $this->setupFunctionsStats();
         $functionId = $data['functionId'];
 
-        // Prime + retry on 401. This test runs late in the suite so it bears the brunt of
-        // a still-warming-up container (per docker-compose-down-v reset). retryOnAuthFailure
-        // preserves the original project, so the cached functionId stays valid.
-        $this->primeProjectAuthCache();
-
         $response = $this->retryOnAuthFailure(
             Client::METHOD_PUT,
             '/functions/' . $functionId,
@@ -2112,11 +2081,6 @@ class UsageTest extends Scope
     #[Retry(count: 1)]
     public function testEmbeddingsTextUsageDoesNotBreakProjectUsage(): void
     {
-        $this->primeProjectAuthCache();
-
-        // Warm-up loop: on a fresh `docker compose down -v && up` the ollama container has to
-        // download the embeddinggemma model into the cleared appwrite-models volume. Until that
-        // finishes, /vectorsdb/embeddings/text returns HTTP 200 with an inner `error` field
         $callCount = 0;
         $this->assertEventually(function () use (&$callCount) {
             $response = $this->retryOnAuthFailure(
