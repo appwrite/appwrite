@@ -211,7 +211,17 @@ class Migrations extends Action
 
             $candidate = $this->dbForPlatform->getDocument('projects', $credentials['projectId']);
 
-            if ($this->canReadSourceFromLocalDb($candidate, $credentials, $isAppwriteToAppwrite)) {
+            // For Appwrite -> Appwrite, require apiKey to actually belong to the local
+            // project — a destination reusing the source's id would otherwise collide.
+            $isLocalSource = !$candidate->isEmpty() && (!$isAppwriteToAppwrite || (
+                !$this->dbForPlatform->findOne('keys', [
+                    Query::equal('secret', [$credentials['apiKey']]),
+                    Query::equal('projectInternalId', [$candidate->getSequence()]),
+                ])->isEmpty()
+                && $candidate->getAttribute('region', 'default') === $this->project->getAttribute('region', 'default')
+            ));
+
+            if ($isLocalSource) {
                 $this->sourceProject = $candidate;
                 $projectDB = call_user_func($this->getProjectDB, $candidate);
             } elseif ($isAppwriteToAppwrite) {
@@ -278,38 +288,6 @@ class Migrations extends Action
         $this->sourceReport = $migrationSource->report($resources);
 
         return $migrationSource;
-    }
-
-    /**
-     * The local platform DB only holds the truth for the *destination* project. For
-     * SourceAppwrite -> DestinationAppwrite we may find a same-id project locally
-     * that isn't actually the source (a destination project deliberately created
-     * with the source's id to preserve cross-references). Verify the supplied apiKey
-     * belongs to that local project before trusting it; same-region match is the
-     * final gate before the direct-DB fast path.
-     */
-    private function canReadSourceFromLocalDb(Document $candidate, array $credentials, bool $isAppwriteToAppwrite): bool
-    {
-        if ($candidate->isEmpty()) {
-            return false;
-        }
-
-        // Source -> CSV/JSON/Backup always reads the local DB; no cross-cluster
-        // semantics, so a successful lookup is enough.
-        if (!$isAppwriteToAppwrite) {
-            return true;
-        }
-
-        $keyDoc = $this->dbForPlatform->findOne('keys', [
-            Query::equal('secret', [$credentials['apiKey']]),
-            Query::equal('projectInternalId', [$candidate->getSequence()]),
-        ]);
-        if ($keyDoc->isEmpty()) {
-            return false;
-        }
-
-        return $candidate->getAttribute('region', 'default')
-            === $this->project->getAttribute('region', 'default');
     }
 
     /**
