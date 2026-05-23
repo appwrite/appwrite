@@ -18,6 +18,8 @@ export interface BaseDrawerProps {
   description?: string
   children: React.ReactNode
   headerActions?: React.ReactNode
+  /** Renders on the left side of the drawer header (e.g. primary header action with label). */
+  headerLeading?: React.ReactNode
   contentClassName?: string
   maxWidth?: string
   side?: 'right' | 'left' | 'top' | 'bottom'
@@ -31,6 +33,7 @@ export function BaseDrawer({
   description,
   children,
   headerActions,
+  headerLeading,
   contentClassName,
   maxWidth = 'sm:max-w-lg',
   side = 'right',
@@ -159,15 +162,17 @@ export function BaseDrawer({
       >
         <SheetHeader className="!p-0 !gap-0 shrink-0">
           <div className="flex items-center justify-between gap-4 w-full px-6 pt-4 pb-2">
-            {title && (
-              <SheetTitle className="text-[15px] m-0 leading-none font-semibold">
-                {title}
-              </SheetTitle>
-            )}
+            <div className="flex min-w-0 flex-1 items-center gap-2">
+              {headerLeading}
+              {title && (
+                <SheetTitle className="text-[15px] m-0 leading-none font-semibold">
+                  {title}
+                </SheetTitle>
+              )}
+            </div>
             <SheetDescription className="sr-only">
               {description || title || 'Drawer'}
             </SheetDescription>
-            {!title && <div className="flex-1" />}
             <div className="flex items-center gap-2 shrink-0">
               {headerActions}
               {headerActions && <div className="h-4 w-px bg-border mx-1" />}

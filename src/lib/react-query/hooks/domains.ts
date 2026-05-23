@@ -1000,9 +1000,17 @@ export function useUpdateDomainTeam(organizationId: string | null | undefined) {
     }) => {
       return await updateDomainTeam(domainId, teamId)
     },
-    onSuccess: () => {
+    onSuccess: async (_, { domainId, teamId }) => {
+      await Promise.all([
+        queryClient.refetchQueries({
+          queryKey: ['domains', 'organization', organizationId],
+        }),
+        queryClient.refetchQueries({
+          queryKey: ['domains', 'organization', teamId],
+        }),
+      ])
       queryClient.invalidateQueries({
-        queryKey: ['domains', 'organization', organizationId],
+        queryKey: ['domain', domainId],
       })
       queryClient.invalidateQueries({
         queryKey: Dependencies.DOMAINS,

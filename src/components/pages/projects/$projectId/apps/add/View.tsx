@@ -33,6 +33,7 @@ import { useConsoleProfile } from '@/hooks/use-console-profile'
 import {
   getAIChatIDEs,
   generateAIChatDeeplink,
+  openAIChatDeeplink,
   type IDEConfig,
 } from '@/lib/config/ide'
 import { registerConsoleRealtimeListener } from '@/lib/realtime/console-hub'
@@ -427,7 +428,7 @@ APPWRITE_ENDPOINT="${endpoint}"`
     if (!promptText) return
     const deeplink = generateAIChatDeeplink(ide, promptText)
     if (deeplink) {
-      window.open(deeplink, '_blank', 'noopener,noreferrer')
+      openAIChatDeeplink(deeplink)
     }
   }
 
@@ -830,7 +831,10 @@ APPWRITE_ENDPOINT="${endpoint}"`
                         className="h-4 w-4"
                       />
                       <span className="ml-2">Prompt {ide.name}</span>
-                      <ExternalLink className="ml-auto h-3.5 w-3.5 text-muted-foreground" />
+                      <ExternalLink
+                        className="ml-auto h-2.5 w-2.5 shrink-0 text-muted-foreground/30"
+                        strokeWidth={1.25}
+                      />
                     </DropdownMenuItem>
                   ))}
                 </DropdownMenuContent>

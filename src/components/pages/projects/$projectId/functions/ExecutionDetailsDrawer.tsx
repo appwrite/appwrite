@@ -13,6 +13,7 @@ import { Badge } from '@/components/ui/badge'
 import { Input } from '@/components/ui/input'
 import { CopyableId } from '@/components/global/shared/CopyableId'
 import { DateTooltip } from '@/components/global/shared/DateTooltip'
+import { FixWithAgentDropdown } from '@/components/global/shared/FixWithAgentDropdown'
 import { BaseDrawer } from '@/components/global/shared/BaseDrawer'
 import {
   Accordion,
@@ -43,6 +44,7 @@ import {
   fetchSiteLog,
 } from '@/lib/react-query/hooks'
 import { copyResourceAsJson } from '@/lib/utils/context-menu'
+import { generateExecutionAIFixPrompt } from '@/lib/execution-ai-fix-prompt'
 import type { ExecutionRowContextMenuVariant } from '@/components/global/shared/ExecutionRowContextMenu'
 
 interface ExecutionDetailsDrawerProps {
@@ -230,6 +232,23 @@ export function ExecutionDetailsDrawer({
     [executionErrorsText, errorsSearch],
   )
 
+  const showFixWithAgent = (execution?.responseStatusCode ?? 0) >= 400
+
+  const aiFixPrompt = useMemo(() => {
+    if (!execution || !showFixWithAgent) return ''
+    return generateExecutionAIFixPrompt(execution, {
+      resourceVariant,
+      resourceName: func?.name,
+      runtime: func?.runtime,
+    })
+  }, [
+    execution,
+    showFixWithAgent,
+    resourceVariant,
+    func?.name,
+    func?.runtime,
+  ])
+
   if (!execution) return null
 
   const statusBadge = getExecutionStatusBadge(execution.status)
@@ -340,6 +359,30 @@ export function ExecutionDetailsDrawer({
       maxWidth="sm:max-w-[700px]"
       contentClassName="overflow-hidden"
       disableAutoFocus={true}
+      headerLeading={
+        <div className="flex min-w-0 flex-wrap items-center gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            className="h-8 shrink-0 text-[13px]"
+            onClick={() => void handleCopyJson()}
+          >
+            {copiedJson ? (
+              <Check className="mr-1.5 h-4 w-4 text-emerald-500" />
+            ) : (
+              <FileJson className="mr-1.5 h-4 w-4" />
+            )}
+            Copy as JSON
+          </Button>
+          {showFixWithAgent && (
+            <FixWithAgentDropdown
+              prompt={aiFixPrompt}
+              align="start"
+              className="h-8 shrink-0 text-[13px]"
+            />
+          )}
+        </div>
+      }
       headerActions={
         <>
           <Button
@@ -378,26 +421,6 @@ export function ExecutionDetailsDrawer({
               </TooltipTrigger>
               <TooltipContent>
                 <p>{copiedLink ? 'Link copied!' : 'Copy link'}</p>
-              </TooltipContent>
-            </Tooltip>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="h-8 w-8 p-0 cursor-pointer"
-                  onClick={() => void handleCopyJson()}
-                  disabled={!execution}
-                >
-                  {copiedJson ? (
-                    <Check className="h-4 w-4 text-emerald-500" />
-                  ) : (
-                    <FileJson className="h-4 w-4" />
-                  )}
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent>
-                <p>{copiedJson ? 'JSON copied!' : 'Copy as JSON'}</p>
               </TooltipContent>
             </Tooltip>
           </TooltipProvider>
@@ -579,10 +602,10 @@ export function ExecutionDetailsDrawer({
                         <div>
                           {queryParams.length > 0 ? (
                             <div className="rounded-lg border border-border overflow-hidden">
-                              <Table>
+                              <Table className="table-fixed w-full">
                                 <TableHeader>
                                   <TableRow className="hover:bg-transparent border-b border-border">
-                                    <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider w-[200px]">
+                                    <TableHead className="w-[35%] px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">
                                       Key
                                     </TableHead>
                                     <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">
@@ -593,10 +616,10 @@ export function ExecutionDetailsDrawer({
                                 <TableBody>
                                   {queryParams.map((param, index) => (
                                     <TableRow key={index}>
-                                      <TableCell className="px-4 py-3 font-mono text-[13px]">
+                                      <TableCell className="px-4 py-3 align-top font-mono text-[13px] break-all whitespace-normal">
                                         {param.name}
                                       </TableCell>
-                                      <TableCell className="px-4 py-3 font-mono text-[13px]">
+                                      <TableCell className="min-w-0 px-4 py-3 align-top font-mono text-[13px] break-all whitespace-normal">
                                         {param.value}
                                       </TableCell>
                                     </TableRow>
@@ -620,10 +643,10 @@ export function ExecutionDetailsDrawer({
                           execution.requestHeaders.length > 0 ? (
                             <>
                               <div className="rounded-lg border border-border overflow-hidden">
-                                <Table>
+                                <Table className="table-fixed w-full">
                                   <TableHeader>
                                     <TableRow className="hover:bg-transparent border-b border-border">
-                                      <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider w-[200px]">
+                                      <TableHead className="w-[35%] px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">
                                         Key
                                       </TableHead>
                                       <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">
@@ -635,10 +658,10 @@ export function ExecutionDetailsDrawer({
                                     {execution.requestHeaders.map(
                                       (header, index) => (
                                         <TableRow key={index}>
-                                          <TableCell className="px-4 py-3 font-mono text-[13px]">
+                                          <TableCell className="px-4 py-3 align-top font-mono text-[13px] break-all whitespace-normal">
                                             {header.name}
                                           </TableCell>
-                                          <TableCell className="px-4 py-3 font-mono text-[13px]">
+                                          <TableCell className="min-w-0 px-4 py-3 align-top font-mono text-[13px] break-all whitespace-normal">
                                             {header.value}
                                           </TableCell>
                                         </TableRow>
@@ -869,7 +892,7 @@ export function ExecutionDetailsDrawer({
                           execution.responseHeaders.length > 0 ? (
                             <>
                               <div className="rounded-lg border border-border overflow-hidden">
-                                <Table>
+                                <Table className="table-fixed w-full">
                                   <TableHeader>
                                     <TableRow className="hover:bg-transparent border-b border-border">
                                       <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider w-[200px]">
@@ -884,10 +907,10 @@ export function ExecutionDetailsDrawer({
                                     {execution.responseHeaders.map(
                                       (header, index) => (
                                         <TableRow key={index}>
-                                          <TableCell className="px-4 py-3 font-mono text-[13px]">
+                                          <TableCell className="px-4 py-3 align-top font-mono text-[13px] break-all whitespace-normal">
                                             {header.name}
                                           </TableCell>
-                                          <TableCell className="px-4 py-3 font-mono text-[13px]">
+                                          <TableCell className="min-w-0 px-4 py-3 align-top font-mono text-[13px] break-all whitespace-normal">
                                             {header.value}
                                           </TableCell>
                                         </TableRow>

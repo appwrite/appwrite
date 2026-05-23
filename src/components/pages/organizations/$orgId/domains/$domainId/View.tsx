@@ -796,38 +796,32 @@ export function View({ initialData }: ViewProps = {}) {
     },
   })
 
-  const handleTransferDomain = () => {
+  const handleTransferDomain = async () => {
     if (!domainId || !selectedOrgId) return
-    transferDomainMutation.mutate(
-      { domainId, teamId: selectedOrgId },
-      {
-        onSuccess: () => {
-          const selectedOrg = organizations.find(
-            (org) => org.value === selectedOrgId,
-          )
-          toast.success(
-            `${domain?.domain || 'Domain'} has been transferred to ${selectedOrg?.label || 'the selected organization'}`,
-          )
+    const targetOrgId = selectedOrgId
+    try {
+      await transferDomainMutation.mutateAsync({
+        domainId,
+        teamId: targetOrgId,
+      })
 
-          // Invalidate domain query to refresh data
-          queryClient.invalidateQueries({
-            queryKey: ['domain', domainId],
-          })
+      const selectedOrg = organizations.find(
+        (org) => org.value === targetOrgId,
+      )
+      toast.success(
+        `${domain?.domain || 'Domain'} has been transferred to ${selectedOrg?.label || 'the selected organization'}`,
+      )
 
-          setTransferDialogOpen(false)
-          setSelectedOrgId('')
+      setTransferDialogOpen(false)
+      setSelectedOrgId('')
 
-          // Navigate to the new organization's domains page
-          navigate({
-            to: '/organizations/$orgId/domains',
-            params: { orgId: selectedOrgId },
-          })
-        },
-        onError: (error) => {
-          toast.error(getErrorMessage(error) || 'Failed to transfer domain')
-        },
-      },
-    )
+      navigate({
+        to: '/organizations/$orgId/domains',
+        params: { orgId: targetOrgId },
+      })
+    } catch (error) {
+      toast.error(getErrorMessage(error) || 'Failed to transfer domain')
+    }
   }
 
   // Delete domain mutation

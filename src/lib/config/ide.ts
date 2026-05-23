@@ -4,7 +4,7 @@
  * This file contains the configuration for all supported IDEs in the application.
  * Use this as the single source of truth for IDE-related features like:
  * - MCP server integrations
- * - "Fix with AI" deeplinks
+ * - "Fix with an Agent" deeplinks
  * - IDE selection dropdowns
  */
 
@@ -19,8 +19,8 @@ export interface IDEConfig {
   supportsAIChat: boolean
   /**
    * Deeplink format for opening AI chat with a prompt.
-   * Use {prompt} as placeholder for the URL-encoded prompt.
-   * Only applicable if supportsAIChat is true.
+   * Use `{prompt}` as the URL-encoded prompt placeholder.
+   * Codex uses `generateCodexNewThreadDeeplink` instead (see `generateAIChatDeeplink`).
    */
   aiChatDeeplink?: string
   /** URL to MCP documentation for this IDE (if available) */
@@ -31,6 +31,22 @@ export interface IDEConfig {
  * List of all supported IDEs and AI assistants
  */
 export const IDE_CONFIGS: IDEConfig[] = [
+  // Web-based AI assistants (listed first in Fix with an Agent)
+  {
+    id: 'claude',
+    name: 'Claude',
+    iconPath: '/icons/claude.svg',
+    supportsAIChat: true,
+    aiChatDeeplink: 'https://claude.ai/new?q={prompt}',
+  },
+  {
+    id: 'codex',
+    name: 'Codex',
+    iconPath: '/icons/chatgpt.svg',
+    supportsAIChat: true,
+    /** Handled by `generateCodexNewThreadDeeplink` — opens the Codex desktop app. */
+    aiChatDeeplink: 'codex://threads/new',
+  },
   // AI-powered IDEs (desktop apps with deeplinks)
   {
     id: 'cursor',
@@ -55,21 +71,6 @@ export const IDE_CONFIGS: IDEConfig[] = [
     supportsAIChat: true,
     aiChatDeeplink: 'vscode://GitHub.copilot-chat/chat?prompt={prompt}',
     mcpDocsUrl: 'https://appwrite.io/docs/tooling/mcp/vscode',
-  },
-  // Web-based AI assistants
-  {
-    id: 'chatgpt',
-    name: 'ChatGPT',
-    iconPath: '/icons/chatgpt.svg',
-    supportsAIChat: true,
-    aiChatDeeplink: 'https://chatgpt.com/?hints=search&q={prompt}',
-  },
-  {
-    id: 'claude',
-    name: 'Claude',
-    iconPath: '/icons/claude.svg',
-    supportsAIChat: true,
-    aiChatDeeplink: 'https://claude.ai/new?q={prompt}',
   },
   // MCP-only tools (no AI chat deeplink)
   {
@@ -116,18 +117,64 @@ export function getIDEById(id: string): IDEConfig | undefined {
   return IDE_CONFIGS.find((ide) => ide.id === id)
 }
 
+export type CodexNewThreadDeeplinkOptions = {
+  /** Absolute path to a local directory (Codex `path=` query param). */
+  workspacePath?: string
+  /** Git remote URL to match a workspace root (Codex `originUrl=` query param). */
+  originUrl?: string
+}
+
 /**
- * Generate a deeplink URL for opening AI chat in an IDE
- * @param ide - The IDE configuration
- * @param prompt - The prompt to pass to the AI chat
- * @returns The deeplink URL or null if not supported
+ * Opens a new local thread in the Codex desktop app with the composer prefilled.
+ * Does not auto-run the prompt. @see https://developers.openai.com/codex/app/commands#deeplinks
+ */
+export function generateCodexNewThreadDeeplink(
+  prompt: string,
+  options?: CodexNewThreadDeeplinkOptions,
+): string {
+  const params = new URLSearchParams()
+  const trimmedPrompt = prompt.trim()
+  if (trimmedPrompt) {
+    params.set('prompt', trimmedPrompt)
+  }
+  if (options?.workspacePath?.trim()) {
+    params.set('path', options.workspacePath.trim())
+  }
+  if (options?.originUrl?.trim()) {
+    params.set('originUrl', options.originUrl.trim())
+  }
+  const query = params.toString()
+  return query ? `codex://threads/new?${query}` : 'codex://threads/new'
+}
+
+/**
+ * Generate a deeplink URL for opening AI chat in an IDE or agent app.
  */
 export function generateAIChatDeeplink(
   ide: IDEConfig,
   prompt: string,
+  codexOptions?: CodexNewThreadDeeplinkOptions,
 ): string | null {
-  if (!ide.supportsAIChat || !ide.aiChatDeeplink) {
+  if (!ide.supportsAIChat) {
+    return null
+  }
+  if (ide.id === 'codex') {
+    return generateCodexNewThreadDeeplink(prompt, codexOptions)
+  }
+  if (!ide.aiChatDeeplink?.includes('{prompt}')) {
     return null
   }
   return ide.aiChatDeeplink.replace('{prompt}', encodeURIComponent(prompt))
+}
+
+/**
+ * Opens an agent deeplink. Native app schemes (codex://, cursor://, …) use
+ * `location.assign` so the OS protocol handler runs; https links open in a tab.
+ */
+export function openAIChatDeeplink(deeplink: string): void {
+  if (/^[a-z][a-z0-9+.-]*:/i.test(deeplink) && !/^https?:/i.test(deeplink)) {
+    window.location.assign(deeplink)
+    return
+  }
+  window.open(deeplink, '_blank', 'noopener,noreferrer')
 }

@@ -19,7 +19,6 @@ import {
   HelpCircle,
   FileCode,
   Package,
-  BrainCircuit,
   ExternalLink,
   RefreshCw,
   Sun,
@@ -33,11 +32,8 @@ import {
   isDeploymentTimeout,
 } from '@/lib/utils/deployment-status'
 import { getDeploymentRepositoryWebUrl } from '@/lib/utils/deployment-repository-url'
-import {
-  getAIChatIDEs,
-  generateAIChatDeeplink,
-  type IDEConfig,
-} from '@/lib/config/ide'
+import { FixWithAgentDropdown } from '@/components/global/shared/FixWithAgentDropdown'
+import { generateDeploymentAIFixPrompt } from '@/lib/deployment-ai-fix-prompt'
 import { WizardLayout } from '@/components/global/shared/WizardLayout'
 import {
   BuildLogsView,
@@ -315,74 +311,6 @@ function getBranchUrl(deployment: unknown): string | null {
   return null
 }
 
-/**
- * Generate the AI fix prompt for a failed deployment
- */
-function generateAIFixPrompt(
-  deployment: Models.Deployment,
-  runtime?: string,
-  resourceName?: string,
-  isSite?: boolean,
-): string {
-  const resourceType = isSite ? 'Site' : 'Function'
-  const buildLogs = deployment.buildLogs || ''
-
-  // Get the last 100 lines of logs to avoid overly long prompts
-  const logLines = buildLogs.split('\n')
-  const lastLogs = logLines.slice(-100).join('\n')
-
-  // Strip ANSI codes from logs for clean markdown
-  const cleanLogs = lastLogs.replace(/\x1b\[(\d+(?:;\d+)*)?m/g, '')
-
-  let prompt = `# Fix Appwrite ${resourceType} Deployment Failure
-
-## Context
-`
-
-  if (resourceName) {
-    prompt += `- **${resourceType} Name**: ${resourceName}\n`
-  }
-
-  prompt += `- **Deployment ID**: ${deployment.$id}\n`
-
-  if (runtime) {
-    prompt += `- **Runtime**: ${runtime}\n`
-  }
-
-  prompt += `- **Status**: Failed\n`
-  prompt += `- **Created**: ${new Date(deployment.$createdAt).toISOString()}\n`
-
-  if (deployment.providerBranch) {
-    prompt += `- **Branch**: ${deployment.providerBranch}\n`
-  }
-
-  if (deployment.providerCommitHash) {
-    prompt += `- **Commit**: ${deployment.providerCommitHash.slice(0, 7)}\n`
-  }
-
-  if (deployment.providerCommitMessage) {
-    prompt += `- **Commit Message**: ${deployment.providerCommitMessage}\n`
-  }
-
-  prompt += `
-## Build Logs (Last 100 lines)
-
-\`\`\`
-${cleanLogs || 'No build logs available'}
-\`\`\`
-
-## Task
-
-Please analyze the build logs above and help me fix the deployment failure. Identify:
-1. The root cause of the failure
-2. Specific code changes or configuration updates needed
-3. Any missing dependencies or incorrect settings
-
-Provide clear, actionable steps to resolve this issue.`
-
-  return prompt
-}
-
 export interface DeploymentDetailViewConfig {
   // Data
   projectId: string
@@ -633,7 +561,7 @@ export function DeploymentDetailView({
   // Generate AI fix prompt
   const aiFixPrompt = useMemo(() => {
     if (!deployment || !isDeploymentFailed) return ''
-    return generateAIFixPrompt(
+    return generateDeploymentAIFixPrompt(
       deployment,
       parentResource?.runtime,
       parentResource?.name,
@@ -646,28 +574,6 @@ export function DeploymentDetailView({
     parentResource?.name,
     isSiteDeployment,
   ])
-
-  // IDE configurations (only those that support AI chat)
-  const aiChatIDEs = useMemo(() => getAIChatIDEs(), [])
-
-  // Handle opening IDE with prompt
-  const handleOpenInIDE = (ide: IDEConfig) => {
-    const deeplink = generateAIChatDeeplink(ide, aiFixPrompt)
-    if (deeplink) {
-      window.open(deeplink, '_blank')
-      toast.success(`Opening ${ide.name}...`)
-    }
-  }
-
-  // Handle copy prompt as markdown
-  const handleCopyPrompt = async () => {
-    try {
-      await navigator.clipboard.writeText(aiFixPrompt)
-      toast.success('Prompt copied to clipboard')
-    } catch {
-      toast.error('Failed to copy prompt')
-    }
-  }
 
   // Get VCS provider info
   const vcsProvider = deployment ? getVcsProvider(deployment) : null
@@ -1656,50 +1562,13 @@ export function DeploymentDetailView({
                         {statusBadge.label}
                       </Badge>
                     )}
-                    {/* Fix with AI button - only shown for failed deployments */}
                     {isDeploymentFailed && (
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            className="h-6 text-[12px] px-2.5 gap-1"
-                          >
-                            <BrainCircuit className="h-3.5 w-3.5" />
-                            <span className="hidden sm:inline">
-                              Fix with AI
-                            </span>
-                            <ChevronDown className="h-3 w-3" />
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent
-                          align="end"
-                          className={cn(
-                            'min-w-[180px]',
-                            WIZARD_PORTAL_Z_DROPDOWN,
-                          )}
-                        >
-                          {aiChatIDEs.map((ide) => (
-                            <DropdownMenuItem
-                              key={ide.id}
-                              onClick={() => handleOpenInIDE(ide)}
-                            >
-                              <img
-                                src={ide.iconPath}
-                                alt={ide.name}
-                                className="h-4 w-4"
-                              />
-                              <span className="ml-2">Prompt {ide.name}</span>
-                              <ExternalLink className="ml-auto h-3.5 w-3.5 text-muted-foreground" />
-                            </DropdownMenuItem>
-                          ))}
-                          <div className="h-px bg-border my-1" />
-                          <DropdownMenuItem onClick={handleCopyPrompt}>
-                            <Copy className="h-4 w-4" />
-                            <span className="ml-2">Copy prompt</span>
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
+                      <FixWithAgentDropdown
+                        prompt={aiFixPrompt}
+                        align="end"
+                        className="h-6 px-2.5 text-[12px] [&_svg:first-child]:h-3.5 [&_svg:first-child]:w-3.5"
+                        hideLabelOnSmallScreens
+                      />
                     )}
                   </div>
                 )}
