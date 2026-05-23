@@ -1519,7 +1519,7 @@ class Builds extends Action
         $type = $event['type'] ?? '';
         $data = $event['data'] ?? [];
 
-        if ($type === 'orchestrator.job.log') {
+        if ($type === CallbackEvent::Log->value) {
             $logs = $deployment->getAttribute('buildLogs', '');
             $previousLogs = $logs;
             foreach (($data['lines'] ?? []) as $line) {
@@ -1544,7 +1544,7 @@ class Builds extends Action
         }
 
         if (
-            $type === 'orchestrator.job.artifact'
+            $type === CallbackEvent::Artifact->value
             && ($data['artifactId'] ?? '') === 'upload'
             && ($data['status'] ?? '') === 'success'
         ) {
@@ -1579,7 +1579,7 @@ class Builds extends Action
             return;
         }
 
-        if ($type !== 'orchestrator.job.exit') {
+        if ($type !== CallbackEvent::Exit->value) {
             return;
         }
 
