@@ -1185,7 +1185,7 @@ return function (Container $context): void {
     }, ['request', 'project', 'team', 'user']);
 
     $context->set('resourceToken', function ($project, $dbForProject, $request, Authorization $authorization) {
-        $tokenJWT = $request->getParam('token');
+        $tokenJWT = $request->getQuery('token');
 
         if (! empty($tokenJWT) && ! $project->isEmpty()) { // JWT authentication
             // Use a large but reasonable maxAge to avoid auto-exp when token has no expiry
