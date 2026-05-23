@@ -1,6 +1,5 @@
 import { createFileRoute, Outlet, redirect } from '@tanstack/react-router'
 import { View } from '@/components/pages/projects/$projectId/auth/View'
-import { PoliciesSettingsSearchProvider } from '@/components/pages/projects/$projectId/auth/policies/PoliciesSettingsSearchContext'
 
 function isPoliciesIndexPath(pathname: string): boolean {
   return /\/auth\/policies\/?$/.test(pathname)
@@ -25,9 +24,9 @@ function AuthPoliciesLayout() {
   const { projectId } = Route.useParams()
 
   return (
-    <PoliciesSettingsSearchProvider>
+    <>
       <View key={`auth-${projectId}-policies`} />
       <Outlet />
-    </PoliciesSettingsSearchProvider>
+    </>
   )
 }
