@@ -1106,7 +1106,6 @@ export function View({ projectId, plan = 'pro' }: ViewProps) {
                             size="md"
                             maxWidth={128}
                             className="max-w-full"
-                            tooltipSide="top"
                           />
                         ) : (
                           <span className="font-mono text-[12px] text-muted-foreground">

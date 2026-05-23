@@ -100,7 +100,7 @@ export function View() {
   const hasFilters = filterMap.size > 0
 
   return (
-    <div className="flex flex-1 min-h-0 flex-col">
+    <div className="flex min-h-0 min-w-0 flex-1 flex-col">
       <LogsListView
         executions={logs}
         total={total}

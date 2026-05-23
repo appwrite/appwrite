@@ -488,7 +488,6 @@ export function ActivityLogDrawer({
                         size="md"
                         maxWidth={360}
                         className="max-w-full"
-                        tooltipSide="bottom"
                       />
                     ) : (
                       <p className="font-mono text-[12px] text-foreground">-</p>

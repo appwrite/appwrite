@@ -1,14 +1,9 @@
 import { useState } from 'react'
 import { Copy, CheckCircle2 } from 'lucide-react'
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-  TooltipProvider,
-} from '@/components/ui/tooltip'
 import { cn } from '@/lib/utils'
 
 type CopyableIdSize = 'xs' | 'sm' | 'md'
+type CopyableIdVariant = 'badge' | 'inline'
 
 interface CopyableIdProps {
   id: string
@@ -18,12 +13,16 @@ interface CopyableIdProps {
    */
   displayText?: string
   className?: string
+  /** Visual style. Default: 'badge' */
+  variant?: CopyableIdVariant
   /** Size variant: 'xs' (10px), 'sm' (11px), 'md' (12px). Default: 'sm' */
   size?: CopyableIdSize
   /** Maximum width for truncation. Default: 140px */
   maxWidth?: number
-  /** Tooltip position. Default: 'top' */
-  tooltipSide?: 'top' | 'bottom' | 'left' | 'right'
+  /** When true, truncates to the parent width instead of a fixed pixel max. */
+  constrainToContainer?: boolean
+  /** When true, the copy icon is hidden until hover. Defaults to true for inline. */
+  showCopyOnHover?: boolean
 }
 
 const sizeStyles: Record<
@@ -51,13 +50,17 @@ export function CopyableId({
   id,
   displayText,
   className = '',
+  variant = 'badge',
   size = 'sm',
   maxWidth = 140,
-  tooltipSide = 'top',
+  constrainToContainer = false,
+  showCopyOnHover,
 }: CopyableIdProps) {
   const [copied, setCopied] = useState(false)
   const shown = displayText ?? id
-  const showFullInTooltip = Boolean(displayText && displayText !== id)
+  const copyOnHover = showCopyOnHover ?? variant === 'inline'
+  const nativeTitle =
+    displayText && displayText !== id ? id : undefined
 
   const handleCopy = (e: React.MouseEvent) => {
     e.stopPropagation()
@@ -68,49 +71,53 @@ export function CopyableId({
   }
 
   const styles = sizeStyles[size]
+  const shouldTruncate = !/\s/.test(shown)
 
   return (
-    <TooltipProvider delayDuration={0}>
-      <Tooltip>
-        <TooltipTrigger asChild>
-          <button
-            type="button"
-            onClick={handleCopy}
-            title={showFullInTooltip ? id : undefined}
-            className={cn(
-              'inline-flex items-center gap-1.5 rounded bg-muted font-mono text-muted-foreground transition-colors hover:bg-muted/80 hover:text-foreground cursor-pointer',
-              styles.text,
-              styles.padding,
-              className,
-            )}
-          >
-            <span className="truncate" style={{ maxWidth: `${maxWidth}px` }}>
-              {shown}
-            </span>
-            {copied ? (
-              <CheckCircle2
-                className={cn('shrink-0 text-emerald-500', styles.icon)}
-              />
-            ) : (
-              <Copy className={cn('shrink-0', styles.icon)} />
-            )}
-          </button>
-        </TooltipTrigger>
-        <TooltipContent side={tooltipSide}>
-          {copied ? (
-            <p>Copied!</p>
-          ) : showFullInTooltip ? (
-            <div className="max-w-xs space-y-1">
-              <p>Click to copy</p>
-              <p className="break-all font-mono text-[11px] text-muted-foreground">
-                {id}
-              </p>
-            </div>
-          ) : (
-            <p>Click to copy</p>
+    <button
+      type="button"
+      onClick={handleCopy}
+      title={nativeTitle}
+      className={cn(
+        'group/copyable inline-flex items-center cursor-pointer font-mono transition-colors',
+        variant === 'badge'
+          ? 'gap-1.5 rounded bg-muted text-muted-foreground hover:bg-muted/80 hover:text-foreground'
+          : 'gap-1.5 rounded-md border border-transparent bg-transparent text-foreground transition-[color,background-color,border-color] hover:border-border hover:bg-muted/40 hover:text-foreground',
+        styles.text,
+        styles.padding,
+        constrainToContainer && 'min-w-0 max-w-full flex-1',
+        className,
+      )}
+    >
+      <span
+        className={cn(
+          'min-w-0',
+          shouldTruncate
+            ? cn('truncate', constrainToContainer && 'max-w-full')
+            : 'break-words whitespace-normal',
+        )}
+        style={
+          shouldTruncate && !constrainToContainer
+            ? { maxWidth: `${maxWidth}px` }
+            : undefined
+        }
+      >
+        {shown}
+      </span>
+      {copied ? (
+        <CheckCircle2
+          className={cn('shrink-0 text-emerald-500', styles.icon)}
+        />
+      ) : (
+        <Copy
+          className={cn(
+            'shrink-0',
+            styles.icon,
+            copyOnHover &&
+              'opacity-0 transition-opacity group-hover/copyable:opacity-100',
           )}
-        </TooltipContent>
-      </Tooltip>
-    </TooltipProvider>
+        />
+      )}
+    </button>
   )
 }

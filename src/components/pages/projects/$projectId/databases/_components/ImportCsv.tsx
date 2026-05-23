@@ -497,7 +497,6 @@ export function ImportCsv({
                           id={displayedBucketId}
                           size="xs"
                           maxWidth={120}
-                          tooltipSide="bottom"
                         />
                       </div>
                       <div className="flex items-center gap-2">

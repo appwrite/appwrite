@@ -136,7 +136,6 @@ export function ResourceCard({
                   id={resourceId}
                   size="xs"
                   maxWidth={120}
-                  tooltipSide="bottom"
                 />
               </div>
             )}

@@ -290,7 +290,6 @@ export function StorageFileExplorerDialog({
                           id={displayedBucketId}
                           size="xs"
                           maxWidth={120}
-                          tooltipSide="bottom"
                         />
                       </div>
                       <div className="flex items-center gap-2">

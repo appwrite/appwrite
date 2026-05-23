@@ -1,6 +1,6 @@
-import { useState, useLayoutEffect, useRef, Fragment } from 'react'
+import { useLayoutEffect, useRef, Fragment } from 'react'
 import { useNavigate, useLocation } from '@tanstack/react-router'
-import { Zap, Clock, Copy, Check } from 'lucide-react'
+import { Zap, Clock } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { EmptyState } from '@/components/global/shared/EmptyState'
 import { Pagination } from '@/components/global/shared/Pagination'
@@ -15,14 +15,7 @@ import {
   TableRow,
 } from '@/components/ui/table'
 import { Badge } from '@/components/ui/badge'
-import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from '@/components/ui/tooltip'
 import { ExecutionDetailsDrawer } from '@/components/pages/projects/$projectId/functions/ExecutionDetailsDrawer'
 import {
   ExecutionRowContextMenu,
@@ -69,18 +62,20 @@ function getTriggerBadge(trigger: string) {
 function LogsTableColGroup() {
   return (
     <colgroup>
-      <col className="w-[12%]" />
-      <col className="w-[12%]" />
-      <col className="w-[9%]" />
-      <col className="w-[7%]" />
-      <col className="w-[8%]" />
-      <col className="w-[7%]" />
-      <col className="" />
-      <col className="w-[9%]" />
-      <col className="w-[10%]" />
+      <col className="w-[11rem]" />
+      <col className="w-[11rem]" />
+      <col className="w-[6.5rem]" />
+      <col className="w-[5.5rem]" />
+      <col className="w-[8.5rem]" />
+      <col className="w-[5rem]" />
+      <col />
+      <col className="w-[7rem]" />
+      <col className="w-[8rem]" />
     </colgroup>
   )
 }
+
+const logsTableClassName = 'w-full min-w-[77rem] table-fixed'
 
 function LogsTableHead() {
   return (
@@ -182,13 +177,13 @@ function LogsLoadingTable({ rowCount }: { rowCount: number }) {
   return (
     <>
       <div
-        className="relative min-h-0 flex-1 overflow-auto"
+        className="relative min-h-0 min-w-0 flex-1 overflow-auto"
         role="status"
         aria-live="polite"
         aria-busy="true"
         aria-label="Loading logs"
       >
-        <Table withScrollContainer={false} className="table-fixed w-full">
+        <Table withScrollContainer={false} className={logsTableClassName}>
           <LogsTableColGroup />
           <LogsTableHead />
           <TableBody>
@@ -280,21 +275,10 @@ export function LogsListView({
   const navigate = useNavigate()
   const location = useLocation()
   const scrollContainerRef = useRef<HTMLDivElement>(null)
-  const [copiedField, setCopiedField] = useState<string | null>(null)
 
   const selectedExecution =
     executions.find((e) => e.$id === selectedExecutionId) || null
   const drawerOpen = selectedExecutionId !== null
-
-  const handleCopy = async (text: string, fieldId: string) => {
-    try {
-      await navigator.clipboard.writeText(text)
-      setCopiedField(fieldId)
-      setTimeout(() => setCopiedField(null), 2000)
-    } catch {
-      // Ignore copy errors
-    }
-  }
 
   useLayoutEffect(() => {
     if (executions.length > 0 && currentPage !== undefined) {
@@ -333,21 +317,21 @@ export function LogsListView({
 
   if (isLoading || isFetching) {
     return (
-      <div className="flex min-h-0 flex-1 flex-col">
+      <div className="flex min-h-0 min-w-0 flex-1 flex-col">
         <LogsLoadingTable rowCount={pageSize} />
       </div>
     )
   }
 
   return (
-    <div className="flex min-h-0 flex-1 flex-col">
+    <div className="flex min-h-0 min-w-0 flex-1 flex-col">
       {executions.length > 0 ? (
         <>
           <div
             ref={scrollContainerRef}
-            className="relative min-h-0 flex-1 overflow-auto"
+            className="relative min-h-0 min-w-0 flex-1 overflow-auto"
           >
-            <Table withScrollContainer={false} className="table-fixed w-full">
+            <Table withScrollContainer={false} className={logsTableClassName}>
               <LogsTableColGroup />
               <LogsTableHead />
               <TableBody>
@@ -388,48 +372,19 @@ export function LogsListView({
                       }}
                     >
                       <TableCell className="min-w-0 px-4 py-3 pl-6 sm:pl-8">
-                        <div className="group/id flex items-center gap-2">
-                          <CopyableId id={executionId} size="sm" />
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            className="h-6 w-6 shrink-0 cursor-pointer p-0 opacity-0 transition-opacity group-hover/id:opacity-100"
-                            onClick={(e) => {
-                              e.stopPropagation()
-                              handleCopy(executionId, `id-${executionId}`)
-                            }}
-                          >
-                            {copiedField === `id-${executionId}` ? (
-                              <Check className="h-3 w-3 text-emerald-500" />
-                            ) : (
-                              <Copy className="h-3 w-3" />
-                            )}
-                          </Button>
-                        </div>
+                        <CopyableId
+                          id={executionId}
+                          size="sm"
+                          constrainToContainer
+                        />
                       </TableCell>
                       <TableCell className="min-w-0 px-4 py-3">
                         {deploymentId ? (
-                          <div className="group/deployment flex items-center gap-2">
-                            <CopyableId id={deploymentId} size="sm" />
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              className="h-6 w-6 shrink-0 cursor-pointer p-0 opacity-0 transition-opacity group-hover/deployment:opacity-100"
-                              onClick={(e) => {
-                                e.stopPropagation()
-                                handleCopy(
-                                  deploymentId,
-                                  `deployment-${executionId}`,
-                                )
-                              }}
-                            >
-                              {copiedField === `deployment-${executionId}` ? (
-                                <Check className="h-3 w-3 text-emerald-500" />
-                              ) : (
-                                <Copy className="h-3 w-3" />
-                              )}
-                            </Button>
-                          </div>
+                          <CopyableId
+                            id={deploymentId}
+                            size="sm"
+                            constrainToContainer
+                          />
                         ) : (
                           <span className="text-[12px] text-muted-foreground">
                             -
@@ -465,57 +420,18 @@ export function LogsListView({
                         </code>
                       </TableCell>
                       <TableCell className="min-w-0 px-4 py-3">
-                        <div className="group/path flex min-w-0 items-center gap-2">
-                          {path !== 'N/A' ? (
-                            <>
-                              {path.length > 40 ? (
-                                <TooltipProvider delayDuration={0}>
-                                  <Tooltip>
-                                    <TooltipTrigger asChild>
-                                      <code
-                                        className="block min-w-0 cursor-pointer truncate text-[12px] font-mono text-foreground"
-                                        onClick={(e) => e.stopPropagation()}
-                                      >
-                                        {path}
-                                      </code>
-                                    </TooltipTrigger>
-                                    <TooltipContent
-                                      side="top"
-                                      className="max-w-md"
-                                    >
-                                      <p className="whitespace-pre-wrap break-words font-mono text-[12px]">
-                                        {path}
-                                      </p>
-                                    </TooltipContent>
-                                  </Tooltip>
-                                </TooltipProvider>
-                              ) : (
-                                <code className="min-w-0 break-all text-[12px] font-mono text-foreground">
-                                  {path}
-                                </code>
-                              )}
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                className="h-6 w-6 shrink-0 cursor-pointer p-0 opacity-0 transition-opacity group-hover/path:opacity-100"
-                                onClick={(e) => {
-                                  e.stopPropagation()
-                                  handleCopy(path, `path-${executionId}`)
-                                }}
-                              >
-                                {copiedField === `path-${executionId}` ? (
-                                  <Check className="h-3 w-3 text-emerald-500" />
-                                ) : (
-                                  <Copy className="h-3 w-3" />
-                                )}
-                              </Button>
-                            </>
-                          ) : (
-                            <span className="text-[12px] text-muted-foreground">
-                              -
-                            </span>
-                          )}
-                        </div>
+                        {path !== 'N/A' ? (
+                          <CopyableId
+                            id={path}
+                            size="md"
+                            variant="inline"
+                            maxWidth={448}
+                          />
+                        ) : (
+                          <span className="text-[12px] text-muted-foreground">
+                            -
+                          </span>
+                        )}
                       </TableCell>
                       <TableCell className="min-w-0 px-4 py-3">
                         <div className="flex items-center gap-2">
