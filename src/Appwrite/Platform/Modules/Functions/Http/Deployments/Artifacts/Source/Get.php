@@ -2,7 +2,6 @@
 
 namespace Appwrite\Platform\Modules\Functions\Http\Deployments\Artifacts\Source;
 
-use Appwrite\Builds\OrchestratorToken;
 use Appwrite\Extend\Exception;
 use Appwrite\Utopia\Response;
 use Utopia\Database\Database;
@@ -37,6 +36,7 @@ class Get extends Action
             ->inject('response')
             ->inject('dbForProject')
             ->inject('project')
+            ->inject('resourceToken')
             ->inject('deviceForFunctions')
             ->callback($this->action(...));
     }
@@ -48,9 +48,10 @@ class Get extends Action
         Response $response,
         Database $dbForProject,
         Document $project,
+        Document $resourceToken,
         Device $deviceForFunctions
     ) {
-        OrchestratorToken::verify($token, $project->getId(), $functionId, $deploymentId, 'source');
+        $this->verifyArtifactToken($resourceToken, RESOURCE_TYPE_FUNCTIONS, $functionId, $deploymentId, 'source');
 
         $function = $dbForProject->getAuthorization()->skip(fn () => $dbForProject->getDocument('functions', $functionId));
         if ($function->isEmpty()) {
@@ -88,5 +89,21 @@ class Get extends Action
         }
 
         $response->send($deviceForFunctions->read($path));
+    }
+
+    private function verifyArtifactToken(Document $resourceToken, string $resourceType, string $resourceId, string $deploymentId, string $purpose): void
+    {
+        if ($resourceToken->isEmpty()) {
+            throw new Exception(Exception::USER_UNAUTHORIZED, 'Invalid build artifact token.');
+        }
+
+        if (
+            $resourceToken->getAttribute('resourceType') !== $resourceType ||
+            $resourceToken->getAttribute('resourceId') !== $resourceId ||
+            $resourceToken->getAttribute('deploymentId') !== $deploymentId ||
+            $resourceToken->getAttribute('purpose') !== $purpose
+        ) {
+            throw new Exception(Exception::USER_UNAUTHORIZED, 'Build artifact token mismatch.');
+        }
     }
 }

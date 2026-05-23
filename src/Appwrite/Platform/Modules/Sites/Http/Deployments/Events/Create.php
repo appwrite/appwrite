@@ -2,17 +2,18 @@
 
 namespace Appwrite\Platform\Modules\Sites\Http\Deployments\Events;
 
-use Appwrite\Builds\OrchestratorToken;
 use Appwrite\Event\Message\Build as BuildMessage;
 use Appwrite\Event\Publisher\Build as BuildPublisher;
 use Appwrite\Extend\Exception;
 use Appwrite\Utopia\Response;
+use OpenRuntimes\Orchestrator\Callback\Signature;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Validator\UID;
 use Utopia\Http\Adapter\Swoole\Request;
 use Utopia\Platform\Action;
 use Utopia\Platform\Scope\HTTP;
+use Utopia\System\System;
 
 class Create extends Action
 {
@@ -52,7 +53,10 @@ class Create extends Action
         BuildPublisher $publisherForBuilds
     ) {
         $body = $request->getRawPayload();
-        OrchestratorToken::verifySignature($body, $request->getHeader('x-signature-256', ''));
+        $secret = System::getEnv('_APP_ORCHESTRATOR_CALLBACK_SECRET', System::getEnv('_APP_OPENSSL_KEY_V1', ''));
+        if (! Signature::verify($body, $request->getHeader('x-signature-256', ''), $secret)) {
+            throw new Exception(Exception::USER_UNAUTHORIZED, 'Invalid orchestrator event signature.');
+        }
 
         $event = \json_decode($body, true);
         if (!\is_array($event)) {

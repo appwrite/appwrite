@@ -1243,6 +1243,31 @@ return function (Container $context): void {
                         'fileInternalId' => $sequences[1],
                     ]);
                 })(),
+                TOKENS_RESOURCE_TYPE_DEPLOYMENT_ARTIFACTS => (function () use ($token, $dbForProject, $authorization) {
+                    $sequences = explode(':', $token->getAttribute('resourceInternalId'));
+                    $ids = explode(':', $token->getAttribute('resourceId'));
+
+                    if (count($sequences) !== 2 || count($ids) !== 4) {
+                        return new Document([]);
+                    }
+
+                    $accessedAt = $token->getAttribute('accessedAt', 0);
+                    if (empty($accessedAt) || DatabaseDateTime::formatTz(DatabaseDateTime::addSeconds(new \DateTime(), -APP_RESOURCE_TOKEN_ACCESS)) > $accessedAt) {
+                        $token->setAttribute('accessedAt', DatabaseDateTime::now());
+                        $authorization->skip(fn () => $dbForProject->updateDocument('resourceTokens', $token->getId(), new Document([
+                            'accessedAt' => $token->getAttribute('accessedAt')
+                        ])));
+                    }
+
+                    return new Document([
+                        'resourceType' => $ids[0],
+                        'resourceId' => $ids[1],
+                        'deploymentId' => $ids[2],
+                        'purpose' => $ids[3],
+                        'resourceInternalId' => $sequences[0],
+                        'deploymentInternalId' => $sequences[1],
+                    ]);
+                })(),
 
                 default => throw new Exception(Exception::TOKEN_RESOURCE_TYPE_INVALID),
             };

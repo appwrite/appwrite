@@ -1230,12 +1230,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/open-runtimes/orchestrator-client-php.git",
-                "reference": "5b44ad8f056d180e63368f844d01d167f706b13e"
+                "reference": "85d933c3d56467b2fbc09eac7813de7c2b1c47b1"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/open-runtimes/orchestrator-client-php/zipball/5b44ad8f056d180e63368f844d01d167f706b13e",
-                "reference": "5b44ad8f056d180e63368f844d01d167f706b13e",
+                "url": "https://api.github.com/repos/open-runtimes/orchestrator-client-php/zipball/85d933c3d56467b2fbc09eac7813de7c2b1c47b1",
+                "reference": "85d933c3d56467b2fbc09eac7813de7c2b1c47b1",
                 "shasum": ""
             },
             "require": {
@@ -1294,7 +1294,7 @@
                 "source": "https://github.com/open-runtimes/orchestrator-client-php/tree/add-jobs-sdk",
                 "issues": "https://github.com/open-runtimes/orchestrator-client-php/issues"
             },
-            "time": "2026-05-22T18:46:15+00:00"
+            "time": "2026-05-23T03:41:55+00:00"
         },
         {
             "name": "open-telemetry/api",

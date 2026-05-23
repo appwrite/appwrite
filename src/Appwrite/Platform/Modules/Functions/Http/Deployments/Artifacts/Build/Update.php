@@ -2,7 +2,6 @@
 
 namespace Appwrite\Platform\Modules\Functions\Http\Deployments\Artifacts\Build;
 
-use Appwrite\Builds\OrchestratorToken;
 use Appwrite\Event\Publisher\Build as BuildPublisher;
 use Appwrite\Extend\Exception;
 use Appwrite\Platform\Modules\Compute\Http\Deployments\Artifacts\Build\ChunkedBuildArtifact;
@@ -43,6 +42,7 @@ class Update extends Action
             ->inject('request')
             ->inject('dbForProject')
             ->inject('project')
+            ->inject('resourceToken')
             ->inject('deviceForBuilds')
             ->inject('publisherForBuilds')
             ->inject('cache')
@@ -58,13 +58,13 @@ class Update extends Action
         Request $request,
         Database $dbForProject,
         Document $project,
+        Document $resourceToken,
         Device $deviceForBuilds,
         BuildPublisher $publisherForBuilds,
         Cache $cache,
         callable $locks
     ) {
-        $token = $token ?: $request->getQuery('token', '');
-        OrchestratorToken::verify($token, $project->getId(), $functionId, $deploymentId, 'build');
+        $this->verifyArtifactToken($resourceToken, RESOURCE_TYPE_FUNCTIONS, $functionId, $deploymentId, 'build');
 
         $function = $dbForProject->getAuthorization()->skip(fn () => $dbForProject->getDocument('functions', $functionId));
         if ($function->isEmpty()) {
@@ -89,5 +89,21 @@ class Update extends Action
             cache: $cache,
             locks: $locks
         );
+    }
+
+    private function verifyArtifactToken(Document $resourceToken, string $resourceType, string $resourceId, string $deploymentId, string $purpose): void
+    {
+        if ($resourceToken->isEmpty()) {
+            throw new Exception(Exception::USER_UNAUTHORIZED, 'Invalid build artifact token.');
+        }
+
+        if (
+            $resourceToken->getAttribute('resourceType') !== $resourceType ||
+            $resourceToken->getAttribute('resourceId') !== $resourceId ||
+            $resourceToken->getAttribute('deploymentId') !== $deploymentId ||
+            $resourceToken->getAttribute('purpose') !== $purpose
+        ) {
+            throw new Exception(Exception::USER_UNAUTHORIZED, 'Build artifact token mismatch.');
+        }
     }
 }

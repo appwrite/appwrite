@@ -485,6 +485,7 @@ const ADVISOR_REPORT_TYPES = [
 
 // Resource types for Tokens
 const TOKENS_RESOURCE_TYPE_FILES = 'files';
+const TOKENS_RESOURCE_TYPE_DEPLOYMENT_ARTIFACTS = 'deploymentArtifacts';
 const TOKENS_RESOURCE_TYPE_SITES = 'sites';
 const TOKENS_RESOURCE_TYPE_FUNCTIONS = 'functions';
 const TOKENS_RESOURCE_TYPE_DATABASES = 'databases';

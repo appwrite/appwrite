@@ -3,7 +3,6 @@
 namespace Appwrite\Platform\Modules\Functions\Workers;
 
 use Ahc\Jwt\JWT;
-use Appwrite\Builds\OrchestratorToken;
 use Appwrite\Event\Event;
 use Appwrite\Event\Message\Func as FunctionMessage;
 use Appwrite\Event\Message\Usage as UsageMessage;
@@ -16,6 +15,7 @@ use Appwrite\Extend\Exception as AppwriteException;
 use Appwrite\Filter\BranchDomain as BranchDomainFilter;
 use Appwrite\Usage\Context;
 use Appwrite\Utopia\Response\Model\Deployment;
+use Appwrite\Utopia\Response\Model\ResourceToken as ResourceTokenModel;
 use Appwrite\Vcs\Comment;
 use Exception;
 use Executor\Exception\Timeout as ExecutorTimeout;
@@ -29,6 +29,7 @@ use OpenRuntimes\Orchestrator\DTO\JobRequest;
 use OpenRuntimes\Orchestrator\Enum\CallbackEvent;
 use OpenRuntimes\Orchestrator\Exception\TimeoutException as OrchestratorTimeout;
 use Swoole\Coroutine as Co;
+use Utopia\Auth\Proofs\Token;
 use Utopia\Cache\Cache;
 use Utopia\Config\Config;
 use Utopia\Console;
@@ -39,6 +40,7 @@ use Utopia\Database\Exception\Conflict;
 use Utopia\Database\Exception\Duplicate;
 use Utopia\Database\Exception\Restricted;
 use Utopia\Database\Exception\Structure;
+use Utopia\Database\Helpers\ID;
 use Utopia\Database\Query;
 use Utopia\Detector\Detection\Rendering\SSR;
 use Utopia\Detector\Detection\Rendering\XStatic;
@@ -722,6 +724,7 @@ class Builds extends Action
             if ($buildsBackend === 'orchestrator') {
                 $this->createOrchestratorBuild(
                     project: $project,
+                    dbForProject: $dbForProject,
                     resource: $resource,
                     deployment: $deployment,
                     runtime: $runtime,
@@ -1326,6 +1329,7 @@ class Builds extends Action
 
     protected function createOrchestratorBuild(
         Document $project,
+        Database $dbForProject,
         Document $resource,
         Document $deployment,
         array $runtime,
@@ -1344,8 +1348,9 @@ class Builds extends Action
         $callbackBase = \rtrim(System::getEnv('_APP_ORCHESTRATOR_APPWRITE_CALLBACK_ENDPOINT', $base), '/');
         $resourcePath = $resource->getCollection();
 
-        $sourceToken = OrchestratorToken::create($project->getId(), $resourceId, $deploymentId, 'source', $timeout + 300);
-        $buildToken = OrchestratorToken::create($project->getId(), $resourceId, $deploymentId, 'build', $timeout + 300);
+        $callbackSecret = System::getEnv('_APP_ORCHESTRATOR_CALLBACK_SECRET', System::getEnv('_APP_OPENSSL_KEY_V1', ''));
+        $sourceToken = $this->createDeploymentArtifactToken($dbForProject, $resource, $deployment, 'source', $timeout + 300);
+        $buildToken = $this->createDeploymentArtifactToken($dbForProject, $resource, $deployment, 'build', $timeout + 300);
         $projectQuery = 'project=' . \rawurlencode($project->getId());
         $appwriteProjectHeader = ['X-Appwrite-Project' => $project->getId()];
 
@@ -1443,13 +1448,32 @@ class Builds extends Action
                         CallbackEvent::Artifact,
                         CallbackEvent::Exit,
                     ],
-                    key: System::getEnv('_APP_ORCHESTRATOR_CALLBACK_SECRET', System::getEnv('_APP_OPENSSL_KEY_V1', '')),
+                    key: $callbackSecret,
                     headers: $appwriteProjectHeader,
                 ),
             ), $timeout);
         } catch (OrchestratorTimeout $error) {
             throw new ExecutorTimeout($error->getMessage(), $error->timeoutSeconds, previous: $error);
         }
+    }
+
+    protected function createDeploymentArtifactToken(
+        Database $dbForProject,
+        Document $resource,
+        Document $deployment,
+        string $purpose,
+        int $duration
+    ): string {
+        $token = $dbForProject->getAuthorization()->skip(fn () => $dbForProject->createDocument('resourceTokens', new Document([
+            '$id' => ID::unique(),
+            'secret' => (new Token(128))->generate(),
+            'resourceId' => "{$resource->getCollection()}:{$resource->getId()}:{$deployment->getId()}:{$purpose}",
+            'resourceInternalId' => "{$resource->getSequence()}:{$deployment->getSequence()}",
+            'resourceType' => TOKENS_RESOURCE_TYPE_DEPLOYMENT_ARTIFACTS,
+            'expire' => DateTime::formatTz(DateTime::addSeconds(new \DateTime(), $duration)),
+        ])));
+
+        return (new ResourceTokenModel())->filter($token)->getAttribute('secret');
     }
 
     protected function applyOrchestratorEvent(
