@@ -58,7 +58,6 @@ class XList extends DocumentXList
             ->param('transactionId', null, fn (Database $dbForProject) => new Nullable(new UID($dbForProject->getAdapter()->getMaxUIDLength())), 'Transaction ID to read uncommitted changes within the transaction.', true, ['dbForProject'])
             ->param('total', true, new Boolean(true), 'When set to false, the total count returned will be 0 and will not be calculated.', true)
             ->param('ttl', 0, new Range(min: 0, max: 86400), 'TTL (seconds) for caching list responses. Responses are stored in an in-memory key-value cache, keyed per project, table, schema version (columns and indexes), caller authorization roles, and the exact query — so users with different permissions never share cached entries. Schema changes invalidate cached entries automatically; row writes do not, so choose a TTL you are comfortable serving as stale data. Set to 0 to disable caching. Must be between 0 and 86400 (24 hours).', true)
-            ->param('explain', false, new Boolean(true), 'When true, returns the captured vendor-native query plan for each physical read this listRows call would issue under the `explain` field on the response. Bypasses the cache so the plan always reflects a fresh execution; internal storage details are stripped.', true)
             ->inject('response')
             ->inject('dbForProject')
             ->inject('user')

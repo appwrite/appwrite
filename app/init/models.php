@@ -74,7 +74,6 @@ use Appwrite\Utopia\Response\Model\DetectionRuntime;
 use Appwrite\Utopia\Response\Model\DetectionVariable;
 use Appwrite\Utopia\Response\Model\DevKey;
 use Appwrite\Utopia\Response\Model\Document as ModelDocument;
-use Appwrite\Utopia\Response\Model\DocumentList;
 use Appwrite\Utopia\Response\Model\Embedding;
 use Appwrite\Utopia\Response\Model\EphemeralKey;
 use Appwrite\Utopia\Response\Model\Error;
@@ -190,7 +189,6 @@ use Appwrite\Utopia\Response\Model\QueryPlanEntry;
 use Appwrite\Utopia\Response\Model\Report;
 use Appwrite\Utopia\Response\Model\ResourceToken;
 use Appwrite\Utopia\Response\Model\Row;
-use Appwrite\Utopia\Response\Model\RowList;
 use Appwrite\Utopia\Response\Model\Rule;
 use Appwrite\Utopia\Response\Model\Runtime;
 use Appwrite\Utopia\Response\Model\Schedule;
@@ -239,15 +237,13 @@ Response::setModel(new Any());
 Response::setModel(new Error());
 Response::setModel(new ErrorDev());
 
-// Diagnostics — the entry model is reused as the nested type of the
-// `explain` field on RowList / DocumentList.
+// Diagnostics
 Response::setModel(new QueryPlanEntry());
+Response::setModel(new BaseList('Query Plan', Response::MODEL_QUERY_PLAN, 'queries', Response::MODEL_QUERY_PLAN_ENTRY, paging: false));
 
 // Lists
-// RowList / DocumentList are subclasses that add an optional `explain` field
-// populated when listRows/listDocuments is called with `explain: true`.
-Response::setModel(new RowList);
-Response::setModel(new DocumentList);
+Response::setModel(new BaseList('Rows List', Response::MODEL_ROW_LIST, 'rows', Response::MODEL_ROW));
+Response::setModel(new BaseList('Documents List', Response::MODEL_DOCUMENT_LIST, 'documents', Response::MODEL_DOCUMENT));
 Response::setModel(new BaseList('Presences List', Response::MODEL_PRESENCE_LIST, 'presences', Response::MODEL_PRESENCE));
 Response::setModel(new BaseList('Tables List', Response::MODEL_TABLE_LIST, 'tables', Response::MODEL_TABLE));
 Response::setModel(new BaseList('Collections List', Response::MODEL_COLLECTION_LIST, 'collections', Response::MODEL_COLLECTION));
