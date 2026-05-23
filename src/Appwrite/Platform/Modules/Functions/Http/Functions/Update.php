@@ -87,6 +87,8 @@ class Update extends Base
             ->param('providerBranch', '', new Text(128, 0), 'Production branch for the repo linked to the function', true)
             ->param('providerSilentMode', false, new Boolean(), 'Is the VCS (Version Control System) connection in silent mode for the repo linked to the function? In silent mode, comments will not be made on commits and pull requests.', true)
             ->param('providerRootDirectory', '', new Text(128, 0), 'Path to function code in the linked repo.', true)
+            ->param('providerBranches', null, new Nullable(new ArrayList(new Text(128), APP_LIMIT_ARRAY_PARAMS_SIZE)), 'List of branch name patterns to trigger automatic deployments. Supports wildcards. Leave empty to deploy on all branches.', true)
+            ->param('providerPaths', null, new Nullable(new ArrayList(new Text(128), APP_LIMIT_ARRAY_PARAMS_SIZE)), 'List of file path patterns to trigger automatic deployments. Supports wildcards. Leave empty to deploy on all file changes.', true)
             ->param('buildSpecification', fn (array $plan) => $this->getDefaultSpecification($plan), fn (array $plan) => new Specification(
                 $plan,
                 Config::getParam('specifications', []),
@@ -132,6 +134,8 @@ class Update extends Base
         string $providerBranch,
         bool $providerSilentMode,
         string $providerRootDirectory,
+        ?array $providerBranches,
+        ?array $providerPaths,
         string $buildSpecification,
         string $runtimeSpecification,
         int $deploymentRetention,
@@ -276,6 +280,8 @@ class Update extends Base
             'providerBranch' => $providerBranch,
             'providerRootDirectory' => $providerRootDirectory,
             'providerSilentMode' => $providerSilentMode,
+            'providerBranches' => $providerBranches ?? $function->getAttribute('providerBranches', []),
+            'providerPaths' => $providerPaths ?? $function->getAttribute('providerPaths', []),
             'buildSpecification' => $buildSpecification,
             'runtimeSpecification' => $runtimeSpecification,
             'search' => implode(' ', [$functionId, $name, $runtime]),

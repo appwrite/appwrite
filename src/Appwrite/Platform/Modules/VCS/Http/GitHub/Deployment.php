@@ -22,6 +22,7 @@ use Utopia\DSN\DSN;
 use Utopia\Span\Span;
 use Utopia\System\System;
 use Utopia\Validator\Contains;
+use Utopia\Validator\Globstar;
 use Utopia\VCS\Adapter\Git\GitHub;
 use Utopia\VCS\Exception\RepositoryNotFound;
 
@@ -42,6 +43,7 @@ trait Deployment
         string $providerCommitMessage,
         string $providerCommitUrl,
         string $providerPullRequestId,
+        array $providerAffectedFiles,
         bool $external,
         Database $dbForPlatform,
         Authorization $authorization,
@@ -101,6 +103,32 @@ trait Deployment
                     Span::add("{$logBase}.build.skipped.reason", $validator->getDescription());
                     Span::add("{$logBase}.build.skipped", 'true');
                     continue;
+                }
+
+                // Skip deployments when the branch or affected files do not match configured build triggers.
+                $branchTrigger = new Globstar($resource->getAttribute('providerBranches', []));
+                if (!$branchTrigger->isValid($providerBranch)) {
+                    Span::add("{$logBase}.build.skipped.reason", 'branch');
+                    Span::add("{$logBase}.build.skipped", 'true');
+                    continue;
+                }
+
+                $providerPaths = $resource->getAttribute('providerPaths', []);
+                if (!empty($providerPaths) && !empty($providerAffectedFiles)) {
+                    $pathTrigger = new Globstar($providerPaths);
+                    $pathMatched = false;
+                    foreach ($providerAffectedFiles as $file) {
+                        if ($pathTrigger->isValid($file)) {
+                            $pathMatched = true;
+                            break;
+                        }
+                    }
+
+                    if (!$pathMatched) {
+                        Span::add("{$logBase}.build.skipped.reason", 'path');
+                        Span::add("{$logBase}.build.skipped", 'true');
+                        continue;
+                    }
                 }
 
                 $deploymentId = ID::unique();

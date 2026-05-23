@@ -1,12 +1,14 @@
 <?php
 
-namespace Appwrite\Platform\Modules\Projects\Http\Projects;
+namespace Appwrite\Platform\Modules\Organization\Http\Projects;
 
 use Appwrite\Extend\Exception;
 use Appwrite\Hooks\Hooks;
+use Appwrite\SDK\AuthType;
+use Appwrite\SDK\ContentType;
+use Appwrite\SDK\Method;
+use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Database\Validator\ProjectId;
-use Appwrite\Utopia\Database\Validator\Queries\Projects;
-use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
 use Utopia\Audit\Adapter\Database as AdapterDatabase;
 use Utopia\Audit\Audit;
@@ -18,12 +20,10 @@ use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 use Utopia\Database\Exception\Duplicate;
 use Utopia\Database\Helpers\ID;
-use Utopia\Database\Validator\UID;
 use Utopia\DSN\DSN;
 use Utopia\Platform\Scope\HTTP;
 use Utopia\Pools\Group;
 use Utopia\System\System;
-use Utopia\Validator;
 use Utopia\Validator\Text;
 use Utopia\Validator\WhiteList;
 
@@ -33,45 +33,49 @@ class Create extends Action
 
     public static function getName()
     {
-        return 'createProject';
-    }
-
-    protected function getQueriesValidator(): Validator
-    {
-        return new Projects();
+        return 'createOrganizationProject';
     }
 
     public function __construct()
     {
         $this
             ->setHttpMethod(Action::HTTP_REQUEST_METHOD_POST)
-            ->setHttpPath('/v1/projects')
-            ->desc('Create project')
-            ->groups(['api', 'projects'])
+            ->setHttpPath('/v1/organization/projects')
+            ->desc('Create organization project')
+            ->groups(['api', 'organization'])
             ->label('audits.event', 'projects.create')
             ->label('audits.resource', 'project/{response.$id}')
             ->label('scope', 'projects.write')
+            ->label('sdk', new Method(
+                namespace: 'organization',
+                group: 'projects',
+                name: 'createProject',
+                description: <<<EOT
+                Create a new project.
+                EOT,
+                auth: [AuthType::ADMIN, AuthType::KEY],
+                responses: [
+                    new SDKResponse(
+                        code: Response::STATUS_CODE_CREATED,
+                        model: Response::MODEL_PROJECT,
+                    )
+                ],
+                contentType: ContentType::JSON
+            ))
             ->param('projectId', '', new ProjectId(), 'Unique Id. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, and hyphen. Can\'t start with a special char. Max length is 36 chars.')
             ->param('name', null, new Text(128), 'Project name. Max length: 128 chars.')
-            ->param('teamId', '', new UID(), 'Team unique ID.')
             ->param('region', System::getEnv('_APP_REGION', 'default'), new WhiteList(array_keys(array_filter(Config::getParam('regions'), fn ($config) => !$config['disabled']))), 'Project Region.', true)
-            ->inject('request')
             ->inject('response')
             ->inject('dbForPlatform')
             ->inject('cache')
             ->inject('pools')
             ->inject('hooks')
+            ->inject('team')
             ->callback($this->action(...));
     }
 
-    public function action(string $projectId, string $name, string $teamId, string $region, Request $request, Response $response, Database $dbForPlatform, Cache $cache, Group $pools, Hooks $hooks)
+    public function action(string $projectId, string $name, string $region, Response $response, Database $dbForPlatform, Cache $cache, Group $pools, Hooks $hooks, Document $team)
     {
-        $team = $dbForPlatform->getDocument('teams', $teamId);
-
-        if ($team->isEmpty()) {
-            throw new Exception(Exception::TEAM_NOT_FOUND);
-        }
-
         $allowList = \array_filter(\explode(',', System::getEnv('_APP_PROJECT_REGIONS', '')));
 
         if (!empty($allowList) && !\in_array($region, $allowList)) {
@@ -144,7 +148,7 @@ class Create extends Action
         try {
             $project = $dbForPlatform->createDocument('projects', new Document([
                 '$id' => $projectId,
-                '$permissions' => $this->getPermissions($teamId, $projectId),
+                '$permissions' => $this->getPermissions($team->getId(), $projectId),
                 'name' => $name,
                 'teamInternalId' => $team->getSequence(),
                 'teamId' => $team->getId(),

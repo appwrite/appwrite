@@ -342,7 +342,6 @@ class Resolvers
 
         $lock->acquire();
 
-        $original = $utopia->getRoute();
         try {
             $request = clone $request;
             $request->addHeader('x-appwrite-source', 'graphql');
@@ -363,10 +362,9 @@ class Resolvers
             $resolverResponse->setContentType(Response::CONTENT_TYPE_NULL);
             $resolverResponse->setSent(false);
 
-            $route = $utopia->match($request, fresh: true);
-            $request->setRoute($route);
+            $request->setRoute($utopia->match($request)?->route);
 
-            $utopia->execute($route, $request, $resolverResponse);
+            $utopia->execute($request, $resolverResponse);
 
             self::mergeResponseSideEffects($resolverResponse, $response);
 
@@ -385,10 +383,6 @@ class Resolvers
             $reject($e);
             return;
         } finally {
-            if ($original !== null) {
-                $utopia->setRoute($original);
-            }
-
             $lock->release();
             unset(self::$locks[\spl_object_hash($utopia)]);
         }
