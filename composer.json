@@ -96,7 +96,8 @@
         "spomky-labs/otphp": "11.*",
         "webonyx/graphql-php": "15.32.*",
         "league/csv": "9.14.*",
-        "enshrined/svg-sanitize": "0.22.*"
+        "enshrined/svg-sanitize": "0.22.*",
+        "open-runtimes/orchestrator-client-php": "dev-add-jobs-sdk"
     },
     "require-dev": {
         "ext-fileinfo": "*",
@@ -119,5 +120,10 @@
             "php-http/discovery": true,
             "tbachert/spi": true
         }
-    }
+    },
+    "repositories": [{
+        "name": "open-runtimes-orchestrator-client-php",
+        "type": "vcs",
+        "url": "https://github.com/open-runtimes/orchestrator-client-php"
+    }]
 }

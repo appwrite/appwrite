@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "597066d71be48add0c649828d820a505",
+    "content-hash": "585b14725484cb2786ecad186f6284da",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -1223,6 +1223,78 @@
                 }
             ],
             "time": "2023-11-08T09:30:43+00:00"
+        },
+        {
+            "name": "open-runtimes/orchestrator-client-php",
+            "version": "dev-add-jobs-sdk",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/open-runtimes/orchestrator-client-php.git",
+                "reference": "5b44ad8f056d180e63368f844d01d167f706b13e"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/open-runtimes/orchestrator-client-php/zipball/5b44ad8f056d180e63368f844d01d167f706b13e",
+                "reference": "5b44ad8f056d180e63368f844d01d167f706b13e",
+                "shasum": ""
+            },
+            "require": {
+                "ext-curl": "*",
+                "ext-json": "*",
+                "php": ">=8.3",
+                "utopia-php/fetch": "^1.1"
+            },
+            "require-dev": {
+                "laravel/pint": "^1.22",
+                "phpstan/phpstan": "^2.1",
+                "phpunit/phpunit": "^13.1",
+                "rector/rector": "^2.4"
+            },
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "OpenRuntimes\\Orchestrator\\": "src/"
+                }
+            },
+            "autoload-dev": {
+                "psr-4": {
+                    "OpenRuntimes\\Orchestrator\\Tests\\": "tests/"
+                }
+            },
+            "scripts": {
+                "format": [
+                    "vendor/bin/pint"
+                ],
+                "format:check": [
+                    "vendor/bin/pint --test"
+                ],
+                "analyze": [
+                    "vendor/bin/phpstan analyze --memory-limit=512M"
+                ],
+                "refactor": [
+                    "vendor/bin/rector process"
+                ],
+                "refactor:check": [
+                    "vendor/bin/rector process --dry-run"
+                ],
+                "test": [
+                    "vendor/bin/phpunit"
+                ],
+                "fix": [
+                    "@refactor",
+                    "@analyze",
+                    "@format"
+                ]
+            },
+            "license": [
+                "MIT"
+            ],
+            "description": "PHP SDK for the Open Runtimes orchestrator Jobs API.",
+            "support": {
+                "source": "https://github.com/open-runtimes/orchestrator-client-php/tree/add-jobs-sdk",
+                "issues": "https://github.com/open-runtimes/orchestrator-client-php/issues"
+            },
+            "time": "2026-05-22T18:46:15+00:00"
         },
         {
             "name": "open-telemetry/api",
@@ -8550,7 +8622,9 @@
     ],
     "aliases": [],
     "minimum-stability": "dev",
-    "stability-flags": {},
+    "stability-flags": {
+        "open-runtimes/orchestrator-client-php": 20
+    },
     "prefer-stable": true,
     "prefer-lowest": false,
     "platform": {

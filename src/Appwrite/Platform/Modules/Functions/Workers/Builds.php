@@ -21,6 +21,12 @@ use Appwrite\Vcs\Comment;
 use Exception;
 use Executor\Exception\Timeout as ExecutorTimeout;
 use Executor\Executor;
+use OpenRuntimes\Orchestrator\DTO\Artifact\ArchiveArtifact;
+use OpenRuntimes\Orchestrator\DTO\Artifact\DownloadArtifact;
+use OpenRuntimes\Orchestrator\DTO\Artifact\UploadArtifact;
+use OpenRuntimes\Orchestrator\DTO\Callback;
+use OpenRuntimes\Orchestrator\DTO\JobRequest;
+use OpenRuntimes\Orchestrator\Enum\CallbackEvent;
 use Swoole\Coroutine as Co;
 use Utopia\Cache\Cache;
 use Utopia\Config\Config;
@@ -1386,65 +1392,55 @@ class Builds extends Action
             $environment['OPEN_RUNTIMES_OUTPUT_DIRECTORY'] = $outputDirectory;
         }
 
+        $encodedSourceToken = \rawurlencode($sourceToken);
+        $sourceUrl = "{$base}/{$resourcePath}/{$resourceId}/deployments/{$deploymentId}/artifacts/source?{$projectQuery}&token={$encodedSourceToken}";
         $artifacts = [
-            [
-                'id' => 'source',
-                'type' => 'download',
-                'in' => "{$base}/{$resourcePath}/{$resourceId}/deployments/{$deploymentId}/artifacts/source?{$projectQuery}&token=" . \rawurlencode($sourceToken),
-                'out' => 'code.tar.gz',
-                'headers' => $appwriteProjectHeader,
-            ],
+            new DownloadArtifact('source', $sourceUrl, 'code.tar.gz', headers: $appwriteProjectHeader),
         ];
 
         if ($version === 'v2') {
-            $artifacts[] = [
-                'id' => 'build',
-                'type' => 'archive',
-                'in' => 'build-output',
-                'out' => 'build.tar.gz',
-                'format' => 'tar.gz',
-                'depends' => 'job',
-            ];
+            $artifacts[] = new ArchiveArtifact('build', 'build-output', 'build.tar.gz', depends: 'job');
         }
 
-        $artifacts[] = [
-            'id' => 'upload',
-            'type' => 'upload',
-            'in' => 'build.tar.gz',
-            'out' => "{$base}/{$resourcePath}/{$resourceId}/deployments/{$deploymentId}/artifacts/build?{$projectQuery}&token=" . \rawurlencode($buildToken),
-            'depends' => $version === 'v2' ? 'build' : 'job',
-            'headers' => $appwriteProjectHeader,
-            'chunked' => true,
-        ];
+        $encodedBuildToken = \rawurlencode($buildToken);
+        $buildUrl = "{$base}/{$resourcePath}/{$resourceId}/deployments/{$deploymentId}/artifacts/build?{$projectQuery}&token={$encodedBuildToken}";
+        $artifacts[] = new UploadArtifact(
+            'upload',
+            'build.tar.gz',
+            $buildUrl,
+            depends: $version === 'v2' ? 'build' : 'job',
+            headers: $appwriteProjectHeader,
+            chunked: true,
+        );
 
         $client = new OrchestratorClient();
-        $client->createJob([
-            'id' => $jobId,
-            'meta' => [
+        $client->createJob(new JobRequest(
+            id: $jobId,
+            meta: [
                 'projectId' => $project->getId(),
                 'resourceId' => $resourceId,
                 'resourceType' => $resource->getCollection(),
                 'deploymentId' => $deploymentId,
             ],
-            'image' => $runtime['image'],
-            'command' => $buildCommand,
-            'cpu' => $jobCpus,
-            'memory' => $memory,
-            'timeoutSeconds' => $timeout,
-            'workspace' => '/tmp',
-            'environment' => $environment,
-            'artifacts' => $artifacts,
-            'callback' => [
-                'url' => "{$callbackBase}/{$resourcePath}/{$resourceId}/deployments/{$deploymentId}/events?{$projectQuery}",
-                'key' => System::getEnv('_APP_ORCHESTRATOR_CALLBACK_SECRET', System::getEnv('_APP_OPENSSL_KEY_V1', '')),
-                'headers' => $appwriteProjectHeader,
-                'events' => [
-                    'orchestrator.job.log',
-                    'orchestrator.job.artifact',
-                    'orchestrator.job.exit',
+            image: (string) $runtime['image'],
+            command: $buildCommand,
+            cpu: $jobCpus,
+            memory: $memory,
+            timeoutSeconds: $timeout,
+            workspace: '/tmp',
+            environment: $environment,
+            artifacts: $artifacts,
+            callback: new Callback(
+                url: "{$callbackBase}/{$resourcePath}/{$resourceId}/deployments/{$deploymentId}/events?{$projectQuery}",
+                events: [
+                    CallbackEvent::Log,
+                    CallbackEvent::Artifact,
+                    CallbackEvent::Exit,
                 ],
-            ],
-        ], $timeout);
+                key: System::getEnv('_APP_ORCHESTRATOR_CALLBACK_SECRET', System::getEnv('_APP_OPENSSL_KEY_V1', '')),
+                headers: $appwriteProjectHeader,
+            ),
+        ), $timeout);
     }
 
     protected function applyOrchestratorEvent(
