@@ -211,7 +211,12 @@ class Migrations extends Action
             // path only when the source URL targets this cluster's public or internal host.
             $sourceHost = parse_url($credentials['endpoint'] ?? '', PHP_URL_HOST);
             $localDomain = System::getEnv('_APP_DOMAIN', '');
-            $migrationHost = System::getEnv('_APP_MIGRATION_HOST', '');
+            // _APP_MIGRATION_HOST may include a port (appwrite:8080); strip it the same
+            // way parse_url does for the source URL so the equality check stays correct.
+            $migrationHostEnv = System::getEnv('_APP_MIGRATION_HOST', '');
+            $migrationHost = $migrationHostEnv !== ''
+                ? (parse_url('http://' . $migrationHostEnv, PHP_URL_HOST) ?: $migrationHostEnv)
+                : '';
 
             $matchesDomain = $localDomain !== ''
                 && ($sourceHost === $localDomain || str_ends_with((string) $sourceHost, '.' . $localDomain));
