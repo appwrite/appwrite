@@ -64,7 +64,18 @@ class Update extends Action
         Cache $cache,
         callable $locks
     ) {
-        $this->verifyArtifactToken($resourceToken, RESOURCE_TYPE_SITES, $siteId, $deploymentId, 'build');
+        if ($resourceToken->isEmpty()) {
+            throw new Exception(Exception::USER_UNAUTHORIZED, 'Invalid build artifact token.');
+        }
+
+        if (
+            $resourceToken->getAttribute('resourceType') !== RESOURCE_TYPE_SITES ||
+            $resourceToken->getAttribute('resourceId') !== $siteId ||
+            $resourceToken->getAttribute('deploymentId') !== $deploymentId ||
+            $resourceToken->getAttribute('purpose') !== 'build'
+        ) {
+            throw new Exception(Exception::USER_UNAUTHORIZED, 'Build artifact token mismatch.');
+        }
 
         $site = $dbForProject->getAuthorization()->skip(fn () => $dbForProject->getDocument('sites', $siteId));
         if ($site->isEmpty()) {
@@ -91,19 +102,4 @@ class Update extends Action
         );
     }
 
-    private function verifyArtifactToken(Document $resourceToken, string $resourceType, string $resourceId, string $deploymentId, string $purpose): void
-    {
-        if ($resourceToken->isEmpty()) {
-            throw new Exception(Exception::USER_UNAUTHORIZED, 'Invalid build artifact token.');
-        }
-
-        if (
-            $resourceToken->getAttribute('resourceType') !== $resourceType ||
-            $resourceToken->getAttribute('resourceId') !== $resourceId ||
-            $resourceToken->getAttribute('deploymentId') !== $deploymentId ||
-            $resourceToken->getAttribute('purpose') !== $purpose
-        ) {
-            throw new Exception(Exception::USER_UNAUTHORIZED, 'Build artifact token mismatch.');
-        }
-    }
 }
