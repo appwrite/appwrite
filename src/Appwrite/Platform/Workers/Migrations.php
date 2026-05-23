@@ -216,8 +216,7 @@ class Migrations extends Action
             $matchesDomain = $localDomain !== ''
                 && ($sourceHost === $localDomain || str_ends_with((string) $sourceHost, '.' . $localDomain));
             $matchesInternal = $migrationHost !== '' && $sourceHost === $migrationHost;
-            // Empty endpoint is defaulted to the internal host by processMigration, so
-            // treat it as local up-front for callers that bypass that defaulting (tests).
+            // Empty endpoint: processMigration defaults it to the internal host before reaching here.
             $isLocalEndpoint = (is_string($sourceHost) && ($matchesDomain || $matchesInternal))
                 || (empty($credentials['endpoint']) && $migrationHost !== '');
 
@@ -241,9 +240,7 @@ class Migrations extends Action
 
         $sourceEndpoint = $credentials['endpoint'] ?? '';
         if ($source === SourceAppwrite::getName()) {
-            // Loopback URLs are unreachable from inside the worker container — rewrite
-            // them to the internal host on both DB and SDK paths so the SDK fallback /
-            // primary call resolves. SDK auth (apiKey) still gates access on the SDK path.
+            // Loopback isn't reachable from the worker container; rewrite to internal host.
             $sourceEndpoint = $this->resolveLocalEndpoint($sourceEndpoint);
         }
 
