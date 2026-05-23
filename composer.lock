@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "97170ad3c4cd281454345998b4937803",
+    "content-hash": "023afed644533aa1ddccdcbd44d0dc5a",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -1226,16 +1226,16 @@
         },
         {
             "name": "open-runtimes/orchestrator-client-php",
-            "version": "dev-add-jobs-sdk",
+            "version": "0.1.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/open-runtimes/orchestrator-client-php.git",
-                "reference": "b0b342505f32bd855928ab60dbd51e1978c1ca2b"
+                "reference": "b2124bbb460b1fb69788ef134933d3dea134909a"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/open-runtimes/orchestrator-client-php/zipball/b0b342505f32bd855928ab60dbd51e1978c1ca2b",
-                "reference": "b0b342505f32bd855928ab60dbd51e1978c1ca2b",
+                "url": "https://api.github.com/repos/open-runtimes/orchestrator-client-php/zipball/b2124bbb460b1fb69788ef134933d3dea134909a",
+                "reference": "b2124bbb460b1fb69788ef134933d3dea134909a",
                 "shasum": ""
             },
             "require": {
@@ -1291,10 +1291,10 @@
             ],
             "description": "PHP SDK for the Open Runtimes orchestrator Jobs API.",
             "support": {
-                "source": "https://github.com/open-runtimes/orchestrator-client-php/tree/add-jobs-sdk",
+                "source": "https://github.com/open-runtimes/orchestrator-client-php/tree/0.1.0",
                 "issues": "https://github.com/open-runtimes/orchestrator-client-php/issues"
             },
-            "time": "2026-05-23T12:47:52+00:00"
+            "time": "2026-05-23T12:54:36+00:00"
         },
         {
             "name": "open-telemetry/api",
@@ -8622,9 +8622,7 @@
     ],
     "aliases": [],
     "minimum-stability": "dev",
-    "stability-flags": {
-        "open-runtimes/orchestrator-client-php": 20
-    },
+    "stability-flags": {},
     "prefer-stable": true,
     "prefer-lowest": false,
     "platform": {

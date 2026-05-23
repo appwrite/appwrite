@@ -97,7 +97,7 @@
         "webonyx/graphql-php": "15.32.*",
         "league/csv": "9.14.*",
         "enshrined/svg-sanitize": "0.22.*",
-        "open-runtimes/orchestrator-client-php": "dev-add-jobs-sdk"
+        "open-runtimes/orchestrator-client-php": "^0.1"
     },
     "require-dev": {
         "ext-fileinfo": "*",
