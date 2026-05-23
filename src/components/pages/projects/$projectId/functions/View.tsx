@@ -448,15 +448,16 @@ export function View() {
           <Button
             variant="outline"
             size="sm"
-            className="h-9 gap-1.5 text-[13px]"
+            className="h-9 w-9 gap-0 p-0 text-[13px] @[640px]:w-auto @[640px]:gap-1.5 @[640px]:px-3"
             asChild
           >
             <Link
               to="/projects/$projectId/functions/editor"
               params={{ projectId: projectId as string }}
+              aria-label="Local editor"
             >
-              <FileCode className="h-4 w-4" />
-              Local editor
+              <FileCode className="h-4 w-4 shrink-0" />
+              <span className="hidden @[640px]:inline">Local editor</span>
             </Link>
           </Button>
         </TooltipTrigger>

@@ -411,12 +411,13 @@ export function View() {
             <Button
               variant="outline"
               size="sm"
-              className="h-9 text-[13px]"
+              className="h-9 w-9 p-0 text-[13px] @[640px]:w-auto @[640px]:px-3"
               onClick={() => setDeleteAllSessionsDialogOpen(true)}
               disabled={deleteAllSessions.isPending}
+              aria-label="Delete all sessions"
             >
-              <LogOut className="mr-1.5 h-4 w-4" />
-              Delete all sessions
+              <LogOut className="h-4 w-4 shrink-0 @[640px]:mr-1.5" />
+              <span className="hidden @[640px]:inline">Delete all sessions</span>
             </Button>
           ) : undefined
         }

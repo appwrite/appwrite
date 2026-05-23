@@ -30,6 +30,10 @@ import { getErrorMessage } from '@/lib/utils/error-formatting'
 import { toast } from 'sonner'
 import { buttonVariants } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
+import {
+  serviceHeaderIconOnlyButton,
+  serviceHeaderShowLabel,
+} from '@/components/pages/projects/$projectId/shared/service-header-container'
 
 type ActiveTab = 'messages' | 'topics' | 'providers'
 
@@ -175,11 +179,13 @@ export function MessagingCreateControls({
             <span
               className={cn(
                 buttonVariants({ variant: 'brandCta' }),
-                'inline-flex h-9 cursor-not-allowed items-center justify-center gap-2 px-4 text-[13px] font-medium opacity-50 pointer-events-none',
+                serviceHeaderIconOnlyButton,
+                'inline-flex cursor-not-allowed items-center justify-center text-[13px] font-medium opacity-50 pointer-events-none',
               )}
             >
-              <Plus className="h-4 w-4" />
-              {label}
+              <Plus className="h-4 w-4 shrink-0" />
+              <span className={serviceHeaderShowLabel}>{label}</span>
+              <span className="sr-only @[640px]:hidden">{label}</span>
             </span>
           </TooltipTrigger>
           <TooltipContent side="bottom">
@@ -195,11 +201,13 @@ export function MessagingCreateControls({
       <>
         <Button
           variant="brandCta"
-          className="h-9 gap-2 px-4 text-[13px] font-medium"
+          className={cn(serviceHeaderIconOnlyButton, 'text-[13px] font-medium')}
           onClick={() => setTopicDialogOpen(true)}
+          aria-label="Create topic"
         >
-          <Plus className="h-4 w-4" />
-          Create topic
+          <Plus className="h-4 w-4 shrink-0" />
+          <span className={serviceHeaderShowLabel}>Create topic</span>
+          <span className="sr-only @[640px]:hidden">Create topic</span>
         </Button>
         <Dialog open={topicDialogOpen} onOpenChange={setTopicDialogOpen}>
           <DialogContent className="sm:max-w-md p-0">
@@ -254,16 +262,18 @@ export function MessagingCreateControls({
     return (
       <Button
         variant="brandCta"
-        className="h-9 gap-2 px-4 text-[13px] font-medium"
+        className={cn(serviceHeaderIconOnlyButton, 'text-[13px] font-medium')}
         onClick={() =>
           navigate({
             to: '/projects/$projectId/messaging/providers/create',
             params: { projectId },
           })
         }
+        aria-label="Create provider"
       >
-        <Plus className="h-4 w-4" />
-        Create provider
+        <Plus className="h-4 w-4 shrink-0" />
+        <span className={serviceHeaderShowLabel}>Create provider</span>
+        <span className="sr-only @[640px]:hidden">Create provider</span>
       </Button>
     )
   }
@@ -273,12 +283,17 @@ export function MessagingCreateControls({
       <DropdownMenuTrigger asChild>
         <Button
           variant="brandCta"
-          className="h-9 gap-2 px-4 text-[13px] font-medium"
+          className={cn(
+            serviceHeaderIconOnlyButton,
+            'text-[13px] font-medium @[640px]:gap-1.5',
+          )}
           disabled={busy}
+          aria-label="Create message"
         >
-          <Plus className="h-4 w-4" />
-          Create message
-          <ChevronDown className="h-3.5 w-3.5 opacity-70" />
+          <Plus className="h-4 w-4 shrink-0" />
+          <span className={serviceHeaderShowLabel}>Create message</span>
+          <span className="sr-only @[640px]:hidden">Create message</span>
+          <ChevronDown className="h-3.5 w-3.5 shrink-0 opacity-70" />
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-48">

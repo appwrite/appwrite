@@ -4,6 +4,7 @@
  */
 
 import { Filter } from 'lucide-react'
+import { cn } from '@/lib/utils'
 import type {
   CompactFilterKey,
   FilterColumn,
@@ -17,6 +18,10 @@ import {
 import { Button } from '@/components/ui/button'
 import { FiltersPopoverContent } from './FiltersPopoverContent'
 import { ToolbarCountBadge } from './ToolbarCountBadge'
+import {
+  serviceHeaderFiltersButton,
+  serviceHeaderFiltersLabel,
+} from '@/components/pages/projects/$projectId/shared/service-header-container'
 
 export interface FiltersPopoverProps {
   open: boolean
@@ -76,10 +81,13 @@ export function FiltersPopover({
         <Button
           variant="outline"
           size="sm"
-          className="h-9 shrink-0 gap-1.5 text-[13px]"
+          className={cn(
+            'border-border bg-transparent text-[13px] text-muted-foreground hover:bg-accent hover:text-foreground',
+            serviceHeaderFiltersButton,
+          )}
         >
           <Filter className="h-3.5 w-3.5 shrink-0" />
-          Filters
+          <span className={serviceHeaderFiltersLabel}>Filters</span>
           {filterMap.size > 0 ? (
             <ToolbarCountBadge
               count={filterMap.size}

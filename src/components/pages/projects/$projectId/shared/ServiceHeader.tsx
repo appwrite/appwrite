@@ -18,6 +18,14 @@ import {
   TooltipTrigger,
 } from '@/components/ui/tooltip'
 import { Link } from '@tanstack/react-router'
+import {
+  SERVICE_HEADER_CONTAINER,
+  SERVICE_HEADER_TITLE_CONTAINER,
+  serviceHeaderFiltersButton,
+  serviceHeaderFiltersLabel,
+  serviceHeaderIconOnlyButton,
+  serviceHeaderShowLabel,
+} from './service-header-container'
 
 export interface Tab {
   id: string
@@ -97,6 +105,103 @@ interface ServiceHeaderProps {
   contentAfterBorder?: React.ReactNode
   /** Show a bottom border under the toolbar row (search/filters/actions) */
   showToolbarBottomBorder?: boolean
+}
+
+const createButtonClassName = cn(
+  serviceHeaderIconOnlyButton,
+  'text-[13px] font-medium',
+)
+
+function ServiceHeaderCreateButton({
+  createLabel,
+  createDisabled,
+  createDisabledTooltip,
+  createTo,
+  createParams,
+  onCreate,
+}: {
+  createLabel: string
+  createDisabled: boolean
+  createDisabledTooltip?: string
+  createTo?: string
+  createParams?: Record<string, string>
+  onCreate?: () => void
+}) {
+  const label = <span className={serviceHeaderShowLabel}>{createLabel}</span>
+
+  if (createDisabled) {
+    return (
+      <TooltipProvider delayDuration={0}>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <div>
+              {createTo && createParams ? (
+                <span
+                  className={cn(
+                    buttonVariants({ variant: 'brandCta' }),
+                    createButtonClassName,
+                    'inline-flex cursor-not-allowed items-center justify-center opacity-50 pointer-events-none',
+                  )}
+                  aria-disabled
+                >
+                  <Plus className="h-4 w-4 shrink-0" />
+                  {label}
+                  <span className="sr-only @[640px]:hidden">{createLabel}</span>
+                </span>
+              ) : (
+                <Button
+                  variant="brandCta"
+                  onClick={onCreate}
+                  disabled
+                  className={createButtonClassName}
+                  aria-label={createLabel}
+                >
+                  <Plus className="h-4 w-4 shrink-0" />
+                  {label}
+                  <span className="sr-only @[640px]:hidden">{createLabel}</span>
+                </Button>
+              )}
+            </div>
+          </TooltipTrigger>
+          <TooltipContent side="bottom">
+            <p>
+              {createDisabledTooltip ??
+                "You've reached the limit for this resource on your plan"}
+            </p>
+          </TooltipContent>
+        </Tooltip>
+      </TooltipProvider>
+    )
+  }
+
+  if (createTo && createParams) {
+    return (
+      <Button variant="brandCta" asChild className={createButtonClassName}>
+        <Link
+          to={createTo as unknown}
+          params={createParams}
+          aria-label={createLabel}
+        >
+          <Plus className="h-4 w-4 shrink-0" />
+          {label}
+          <span className="sr-only @[640px]:hidden">{createLabel}</span>
+        </Link>
+      </Button>
+    )
+  }
+
+  return (
+    <Button
+      variant="brandCta"
+      onClick={onCreate}
+      className={createButtonClassName}
+      aria-label={createLabel}
+    >
+      <Plus className="h-4 w-4 shrink-0" />
+      {label}
+      <span className="sr-only @[640px]:hidden">{createLabel}</span>
+    </Button>
+  )
 }
 
 export const ServiceHeader = forwardRef<ServiceHeaderRef, ServiceHeaderProps>(
@@ -251,7 +356,7 @@ export const ServiceHeader = forwardRef<ServiceHeaderRef, ServiceHeaderProps>(
     ) : null
 
     return (
-      <div className={cn(fullWidthBorder && 'w-full')}>
+      <div className={cn('min-w-0 w-full', fullWidthBorder && 'w-full')}>
         {/* Title Row - hidden when collapsed */}
         {!isCollapsed && !hideTitle && (
           <div
@@ -287,22 +392,15 @@ export const ServiceHeader = forwardRef<ServiceHeaderRef, ServiceHeaderProps>(
             )}
             <div
               className={cn(
-                'flex min-w-0 flex-row items-center justify-between gap-x-4',
-                titleRightContent
-                  ? 'flex-nowrap'
-                  : 'flex-wrap gap-y-3',
+                SERVICE_HEADER_TITLE_CONTAINER,
+                'flex min-w-0 flex-col gap-3 @[720px]:flex-row @[720px]:items-center @[720px]:justify-between @[720px]:gap-x-4',
               )}
             >
-              <h1
-                className={cn(
-                  'min-w-0 text-[17px] font-semibold text-foreground',
-                  titleRightContent && 'min-w-0 flex-1',
-                )}
-              >
+              <h1 className="min-w-0 text-[17px] font-semibold text-foreground @[720px]:flex-1">
                 {title}
               </h1>
               {titleRightContent ? (
-                <div className="flex min-w-0 shrink-0 flex-nowrap items-center justify-end gap-2 sm:gap-3">
+                <div className="flex min-w-0 max-w-full items-center justify-end gap-2 @[560px]:gap-3">
                   {titleRightContent}
                 </div>
               ) : null}
@@ -389,7 +487,8 @@ export const ServiceHeader = forwardRef<ServiceHeaderRef, ServiceHeaderProps>(
         {hasToolbar && (
           <div
             className={cn(
-              'flex min-w-0 flex-nowrap items-center gap-3 px-4 py-4 sm:px-6',
+              SERVICE_HEADER_CONTAINER,
+              'flex min-w-0 flex-nowrap items-center gap-2 px-4 py-4 @[640px]:gap-3 sm:px-6',
               fullWidthBorder && !fullWidth && 'mx-auto w-full max-w-7xl',
               fullWidthBorder && fullWidth && 'w-full',
               (isCollapsed || showToolbarBottomBorder) &&
@@ -398,7 +497,7 @@ export const ServiceHeader = forwardRef<ServiceHeaderRef, ServiceHeaderProps>(
           >
             {/* Search */}
             {onSearchChange && (
-              <div className="relative w-64 shrink-0">
+              <div className="relative min-w-0 flex-1 shrink @[520px]:w-64 @[520px]:flex-none @[520px]:shrink-0">
                 <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                 <input
                   ref={searchInputRef}
@@ -406,7 +505,7 @@ export const ServiceHeader = forwardRef<ServiceHeaderRef, ServiceHeaderProps>(
                   placeholder={searchPlaceholder}
                   value={searchValue}
                   onChange={(e) => onSearchChange(e.target.value)}
-                  className="h-9 w-full rounded-md border border-border bg-accent/50 pl-10 pr-4 text-[13px] text-foreground placeholder:text-muted-foreground outline-none transition-[color,box-shadow] focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50"
+                  className="h-9 w-full min-w-0 rounded-md border border-border bg-accent/50 pl-10 pr-4 text-[13px] text-foreground placeholder:text-muted-foreground outline-none transition-[color,box-shadow] focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50"
                 />
               </div>
             )}
@@ -418,19 +517,28 @@ export const ServiceHeader = forwardRef<ServiceHeaderRef, ServiceHeaderProps>(
                   variant="outline"
                   size="sm"
                   onClick={onFilterClick}
-                  className="h-9 gap-2 border-border bg-transparent text-[13px] text-muted-foreground hover:bg-accent hover:text-foreground"
+                  className={cn(
+                    'border-border bg-transparent text-[13px] text-muted-foreground hover:bg-accent hover:text-foreground',
+                    serviceHeaderFiltersButton,
+                  )}
                 >
-                  <Filter className="h-3.5 w-3.5" />
-                  Filters
+                  <Filter className="h-3.5 w-3.5 shrink-0" />
+                  <span className={serviceHeaderFiltersLabel}>Filters</span>
                 </Button>
               ))}
 
             {/* Right Content (e.g., view toggle) */}
-            {rightContent}
+            {rightContent ? (
+              <div className="hidden shrink-0 @[480px]:block">{rightContent}</div>
+            ) : null}
 
             {/* Action Buttons Group */}
-            <div className="ml-auto flex items-center gap-2">
-              {beforeRefreshButtons}
+            <div className="ml-auto flex min-w-0 shrink-0 items-center gap-1.5 @[640px]:gap-2">
+              {beforeRefreshButtons ? (
+                <div className="flex shrink-0 items-center gap-1.5 @[640px]:gap-2">
+                  {beforeRefreshButtons}
+                </div>
+              ) : null}
               <TooltipProvider delayDuration={0}>
                 {/* Refresh Button */}
                 {showRefresh && (
@@ -441,7 +549,7 @@ export const ServiceHeader = forwardRef<ServiceHeaderRef, ServiceHeaderProps>(
                         size="sm"
                         onClick={onRefresh}
                         disabled={isRefreshing}
-                        className="h-9 w-9 p-0 border-border bg-transparent text-muted-foreground hover:bg-accent hover:text-foreground disabled:opacity-50"
+                        className="h-9 w-9 shrink-0 p-0 border-border bg-transparent text-muted-foreground hover:bg-accent hover:text-foreground disabled:opacity-50"
                       >
                         <RefreshCw
                           className={cn(
@@ -466,7 +574,7 @@ export const ServiceHeader = forwardRef<ServiceHeaderRef, ServiceHeaderProps>(
                         size="sm"
                         onClick={onImport}
                         disabled={importDisabled}
-                        className="h-9 w-9 p-0 border-border bg-transparent text-muted-foreground hover:bg-accent hover:text-foreground disabled:opacity-50"
+                        className="h-9 w-9 shrink-0 p-0 border-border bg-transparent text-muted-foreground hover:bg-accent hover:text-foreground disabled:opacity-50"
                       >
                         <Upload className="h-4 w-4" />
                       </Button>
@@ -486,7 +594,7 @@ export const ServiceHeader = forwardRef<ServiceHeaderRef, ServiceHeaderProps>(
                         size="sm"
                         onClick={onExport}
                         disabled={exportDisabled}
-                        className="h-9 w-9 p-0 border-border bg-transparent text-muted-foreground hover:bg-accent hover:text-foreground disabled:opacity-50"
+                        className="h-9 w-9 shrink-0 p-0 border-border bg-transparent text-muted-foreground hover:bg-accent hover:text-foreground disabled:opacity-50"
                       >
                         <Download className="h-4 w-4" />
                       </Button>
@@ -499,76 +607,22 @@ export const ServiceHeader = forwardRef<ServiceHeaderRef, ServiceHeaderProps>(
               </TooltipProvider>
 
               {/* Before Create Buttons */}
-              {beforeCreateButtons}
+              {beforeCreateButtons ? (
+                <div className="flex shrink-0 items-center gap-1.5 @[640px]:gap-2">
+                  {beforeCreateButtons}
+                </div>
+              ) : null}
 
               {/* Create Button */}
               {createLabel && (onCreate || (createTo && createParams)) && (
-                <>
-                  {createDisabled ? (
-                    <TooltipProvider delayDuration={0}>
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <div>
-                            {createTo && createParams ? (
-                              <span
-                                className={cn(
-                                  buttonVariants({ variant: 'brandCta' }),
-                                  'inline-flex h-9 cursor-not-allowed items-center justify-center gap-2 px-4 text-[13px] font-medium opacity-50 pointer-events-none',
-                                )}
-                              >
-                                <Plus className="h-4 w-4" />
-                                {createLabel}
-                              </span>
-                            ) : (
-                              <Button
-                                variant="brandCta"
-                                onClick={onCreate}
-                                disabled
-                                className="h-9 gap-2 px-4 text-[13px] font-medium"
-                              >
-                                <Plus className="h-4 w-4" />
-                                {createLabel}
-                              </Button>
-                            )}
-                          </div>
-                        </TooltipTrigger>
-                        <TooltipContent side="bottom">
-                          <p>
-                            {createDisabledTooltip ??
-                              "You've reached the limit for this resource on your plan"}
-                          </p>
-                        </TooltipContent>
-                      </Tooltip>
-                    </TooltipProvider>
-                  ) : (
-                    <>
-                      {createTo && createParams ? (
-                        <Button
-                          variant="brandCta"
-                          asChild
-                          className="h-9 gap-2 px-4 text-[13px] font-medium"
-                        >
-                          <Link
-                            to={createTo as unknown}
-                            params={createParams}
-                          >
-                            <Plus className="h-4 w-4" />
-                            {createLabel}
-                          </Link>
-                        </Button>
-                      ) : (
-                        <Button
-                          variant="brandCta"
-                          onClick={onCreate}
-                          className="h-9 gap-2 px-4 text-[13px] font-medium"
-                        >
-                          <Plus className="h-4 w-4" />
-                          {createLabel}
-                        </Button>
-                      )}
-                    </>
-                  )}
-                </>
+                <ServiceHeaderCreateButton
+                  createLabel={createLabel}
+                  createDisabled={createDisabled}
+                  createDisabledTooltip={createDisabledTooltip}
+                  createTo={createTo}
+                  createParams={createParams}
+                  onCreate={onCreate}
+                />
               )}
 
               {/* Collapse Toggle Button */}

@@ -1566,10 +1566,10 @@ export function Workspace({
                         openSuggestColumnsDialogRef.current()
                       }
                     }}
-                    className="h-9"
+                    className="h-9 w-9 p-0 @[640px]:w-auto @[640px]:px-3"
                   >
-                    <Lightbulb className="h-3.5 w-3.5 shrink-0 sm:mr-1.5" />
-                    <span className="hidden sm:inline">
+                    <Lightbulb className="h-3.5 w-3.5 shrink-0 @[640px]:mr-1.5" />
+                    <span className="hidden @[640px]:inline">
                       Suggest {dbLabels.schemaPluralTitle.toLowerCase()}
                     </span>
                   </Button>
@@ -1591,10 +1591,10 @@ export function Workspace({
                         }
                       }}
                       disabled={!canCreateIndex}
-                      className="h-9"
+                      className="h-9 w-9 p-0 @[640px]:w-auto @[640px]:px-3"
                     >
-                      <Lightbulb className="h-3.5 w-3.5 shrink-0 sm:mr-1.5" />
-                      <span className="hidden sm:inline">Suggest indexes</span>
+                      <Lightbulb className="h-3.5 w-3.5 shrink-0 @[640px]:mr-1.5" />
+                      <span className="hidden @[640px]:inline">Suggest indexes</span>
                     </Button>
                   </span>
                 </TooltipTrigger>

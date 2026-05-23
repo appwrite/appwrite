@@ -65,7 +65,7 @@ export function DatabaseMonitorHeaderActions({
       databaseType !== ApiDatabaseType.Tablesdb)
 
   return (
-    <div className="flex min-w-0 max-w-full flex-nowrap items-center gap-2 overflow-x-auto sm:gap-3 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+    <div className="flex min-w-0 max-w-full flex-nowrap items-center gap-2 @[560px]:gap-3">
       <div className="flex shrink-0 flex-nowrap items-center gap-2">
         <Badge
           variant={serverless ? 'info' : 'success'}
@@ -73,11 +73,16 @@ export function DatabaseMonitorHeaderActions({
         >
           {serverless ? 'Serverless' : 'Dedicated'}
         </Badge>
-        <span className="max-w-[120px] truncate text-[12px] leading-none text-muted-foreground sm:max-w-[180px]">
+        <span className="hidden max-w-[180px] truncate text-[12px] leading-none text-muted-foreground @[480px]:inline">
           {specLabel}
         </span>
         {showUpgradeCta ? (
-          <Button variant="outline" size="sm" className="h-7 shrink-0 px-2 text-[12px]" asChild>
+          <Button
+            variant="outline"
+            size="sm"
+            className="hidden h-7 shrink-0 px-2 text-[12px] @[560px]:inline-flex"
+            asChild
+          >
             <Link
               to="/projects/$projectId/databases/$dbKind/$databaseId/settings"
               params={{ projectId, dbKind, databaseId }}
@@ -88,13 +93,16 @@ export function DatabaseMonitorHeaderActions({
         ) : null}
       </div>
 
-      <div className="hidden h-3 w-px shrink-0 self-center bg-border sm:block" aria-hidden />
+      <div
+        className="hidden h-3 w-px shrink-0 self-center bg-border @[560px]:block"
+        aria-hidden
+      />
 
-      <div className="flex shrink-0 items-center gap-2 sm:gap-3">
+      <div className="flex shrink-0 items-center gap-2 @[560px]:gap-3">
         <DateRangePicker
           dateRange={dateRange}
           onDateRangeChange={onDateRangeChange}
-          className="h-7 min-w-[140px] text-[12px] sm:min-w-[160px]"
+          className="h-7 min-w-[120px] text-[12px] @[560px]:min-w-[160px]"
         />
         <TooltipProvider delayDuration={0}>
           <Tooltip>
