@@ -247,8 +247,10 @@ class Migrations extends Action
         }
 
         $sourceEndpoint = $credentials['endpoint'] ?? '';
-        if ($source === SourceAppwrite::getName()) {
-            // Loopback isn't reachable from the worker container; rewrite to internal host.
+        if ($source === SourceAppwrite::getName() && !$useAppwriteApiSource) {
+            // Rewrite loopback only on the DB fast path. On the SDK path, the user-supplied
+            // endpoint is authoritative — silently redirecting it to the internal host would
+            // turn a misrouted external migration into a self-call against this cluster.
             $sourceEndpoint = $this->resolveLocalEndpoint($sourceEndpoint);
         }
 
