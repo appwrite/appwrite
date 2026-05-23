@@ -113,6 +113,7 @@ export function buildSiteUpdateParams(
     timeout: site.timeout,
     installCommand: site.installCommand,
     buildCommand: site.buildCommand,
+    startCommand: site.startCommand,
     outputDirectory: site.outputDirectory,
     buildRuntime: site.buildRuntime,
     adapter: site.adapter,
@@ -210,6 +211,22 @@ export async function fetchSiteLogs(
     logs: (response as unknown).executions || (response as unknown).logs || [],
     total: response.total || 0,
   }
+}
+
+/**
+ * Query function to fetch a single site log (execution)
+ */
+export async function fetchSiteLog(
+  projectId: string,
+  siteId: string,
+  logId: string,
+): Promise<Models.Execution> {
+  if (!projectId || !siteId || !logId) {
+    throw new Error('Project ID, Site ID, and Log ID are required')
+  }
+
+  const projectSdk = sdk.forProject(projectId)
+  return await projectSdk.sites.getLog({ siteId, logId })
 }
 
 /**
@@ -1312,6 +1329,7 @@ export interface CreateSiteParams {
   timeout?: number
   installCommand?: string
   buildCommand?: string
+  startCommand?: string
   outputDirectory?: string
   adapter?: string
   fallbackFile?: string

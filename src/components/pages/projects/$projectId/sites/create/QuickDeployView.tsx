@@ -30,6 +30,10 @@ import {
   useCreateSiteDomain,
   useCreateTemplateDeployment,
 } from '@/lib/react-query/hooks'
+import {
+  getFrameworkAdapterDefaults,
+  getStartCommandForSiteCreate,
+} from '@/lib/frameworks'
 import { useWizard } from './WizardContext'
 import { DomainInput } from './DomainInput'
 import { BuildSettings } from './BuildSettings'
@@ -58,6 +62,7 @@ interface QuickDeployViewProps {
   root?: string
   installCommand?: string
   buildCommand?: string
+  startCommand?: string
   outputDirectory?: string
   envKeys?: string
 }
@@ -70,6 +75,7 @@ export function QuickDeployView({
   root: initialRoot,
   installCommand: initialInstall,
   buildCommand: initialBuild,
+  startCommand: initialStart,
   outputDirectory: initialOutput,
   envKeys,
 }: QuickDeployViewProps) {
@@ -79,6 +85,7 @@ export function QuickDeployView({
   const {
     updateFormData,
     frameworks,
+    getFramework,
     getFrameworkDefaults,
     generateDomain,
     setCurrentPath,
@@ -103,6 +110,7 @@ export function QuickDeployView({
   const [installCommand, setInstallCommand] = useState(initialInstall || '')
   const [buildCommand, setBuildCommand] = useState(initialBuild || '')
   const [outputDirectory, setOutputDirectory] = useState(initialOutput || '')
+  const [startCommand, setStartCommand] = useState(initialStart || '')
   const [variables, setVariables] = useState<WizardVariable[]>(
     envKeysList.map((key) => ({ key, value: '', secret: false })),
   )
@@ -112,17 +120,30 @@ export function QuickDeployView({
 
   // Update build commands when framework changes
   useEffect(() => {
-    if (framework && !initialInstall && !initialBuild && !initialOutput) {
+    if (
+      framework &&
+      !initialInstall &&
+      !initialBuild &&
+      !initialStart &&
+      !initialOutput
+    ) {
       const defaults = getFrameworkDefaults(framework)
+      const ssrDefaults = getFrameworkAdapterDefaults(
+        getFramework(framework),
+        'ssr',
+      )
       setInstallCommand(defaults.installCommand)
       setBuildCommand(defaults.buildCommand)
       setOutputDirectory(defaults.outputDirectory)
+      setStartCommand(ssrDefaults.startCommand)
     }
   }, [
     framework,
+    getFramework,
     getFrameworkDefaults,
     initialInstall,
     initialBuild,
+    initialStart,
     initialOutput,
   ])
 
@@ -161,9 +182,15 @@ export function QuickDeployView({
         siteId: siteId || undefined,
         name: siteName,
         framework,
+        buildRuntime: defaults.buildRuntime,
         installCommand: installCommand || defaults.installCommand,
         buildCommand: buildCommand || defaults.buildCommand,
+        startCommand: getStartCommandForSiteCreate(
+          getFramework(framework),
+          startCommand,
+        ),
         outputDirectory: outputDirectory || defaults.outputDirectory,
+        adapter: defaults.adapter || undefined,
       })
 
       // 2. Create domain rule
@@ -407,9 +434,14 @@ export function QuickDeployView({
               onValueChange={(value) => {
                 setFramework(value)
                 const defaults = getFrameworkDefaults(value)
+                const ssrDefaults = getFrameworkAdapterDefaults(
+                  getFramework(value),
+                  'ssr',
+                )
                 setInstallCommand(defaults.installCommand)
                 setBuildCommand(defaults.buildCommand)
                 setOutputDirectory(defaults.outputDirectory)
+                setStartCommand(ssrDefaults.startCommand)
               }}
             >
               <SelectTrigger className="h-9 text-[13px]">
@@ -460,9 +492,11 @@ export function QuickDeployView({
         installCommand={installCommand}
         buildCommand={buildCommand}
         outputDirectory={outputDirectory}
+        startCommand={startCommand}
         onInstallCommandChange={setInstallCommand}
         onBuildCommandChange={setBuildCommand}
         onOutputDirectoryChange={setOutputDirectory}
+        onStartCommandChange={setStartCommand}
         frameworkKey={framework}
         defaultOpen={true}
       />

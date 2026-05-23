@@ -48,6 +48,24 @@ export function getFrameworkAdapterDefaults(
   )
 }
 
+/** Whether the framework supports SSR (has an `ssr` adapter). */
+export function frameworkHasSsrAdapter(
+  framework: Models.Framework | undefined,
+): boolean {
+  return framework?.adapters?.some((a) => a.key === 'ssr') ?? false
+}
+
+/** Start command for sites.create when the framework supports SSR. */
+export function getStartCommandForSiteCreate(
+  framework: Models.Framework | undefined,
+  startCommand: string,
+): string | undefined {
+  if (!frameworkHasSsrAdapter(framework)) return undefined
+  const value = startCommand.trim()
+  if (value) return value
+  return getFrameworkAdapterDefaults(framework, 'ssr').startCommand || undefined
+}
+
 /**
  * Defaults when creating a site (prefer static adapter when available).
  */

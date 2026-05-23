@@ -87,6 +87,8 @@ export const SITE_SETTINGS_NAV: ResourceSettingsNavItem[] = [
       'logging',
       'server',
       'render',
+      'start',
+      'image',
     ],
   },
 ]

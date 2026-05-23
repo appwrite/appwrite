@@ -29,7 +29,7 @@ export function View() {
       id: 'image',
       search: {
         title: 'Image',
-        keywords: ['runtime', 'ssr', 'server'],
+        keywords: ['runtime', 'ssr', 'server', 'start', 'image', 'node'],
       },
       node: (
         <SiteRuntimeImageCard projectId={projectId} siteId={siteId} site={site} />

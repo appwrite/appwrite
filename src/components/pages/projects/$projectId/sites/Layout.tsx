@@ -29,6 +29,7 @@ import { DeploymentInfo } from '@/components/global/shared/DeploymentInfo'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Info, ArrowLeft } from 'lucide-react'
 import { toast } from 'sonner'
+import { cn } from '@/lib/utils'
 import {
   RefreshProvider,
   useRefresh,
@@ -261,15 +262,27 @@ function SiteLayoutContent() {
     }
   }, [showSettingsTab, activeTab, projectId, siteId, navigate])
 
+  const isLogsTabLayout = activeTab === 'logs'
+
   return (
     <CreateDeploymentProvider
       onOpenGit={() => setGitDeployOpen(true)}
       onOpenCli={() => setCliDeployOpen(true)}
       onOpenManual={() => setManualDeployOpen(true)}
     >
-      <div className="flex flex-col">
-        <ServiceHeader
-          title={
+      <div
+        className={cn(
+          'flex min-h-0 flex-1 flex-col',
+          isLogsTabLayout && 'h-full',
+        )}
+      >
+        <div
+          className={cn(
+            isLogsTabLayout && 'sticky top-0 z-20 shrink-0 bg-background',
+          )}
+        >
+          <ServiceHeader
+            title={
             <div className="flex min-w-0 items-center gap-2">
               <Button
                 variant="ghost"
@@ -289,6 +302,8 @@ function SiteLayoutContent() {
           tabs={tabs}
           activeTab={activeTab}
           fullWidthBorder
+          fullWidth={activeTab === 'logs'}
+          showToolbarBottomBorder={isLogsTabLayout}
           showFilters={activeTab === 'logs' || activeTab === 'domains'}
           filterTrigger={
             activeTab === 'logs' || activeTab === 'domains' ? (
@@ -360,7 +375,10 @@ function SiteLayoutContent() {
             ) : undefined
           }
         />
-        <div className="flex-1 min-h-0">
+        </div>
+        <div
+          className={cn('flex-1 min-h-0', isLogsTabLayout && 'flex flex-col')}
+        >
           <DeploymentsToolbarContext.Provider
             value={
               activeTab === 'deployments' ? (
@@ -422,6 +440,7 @@ function SiteLayoutContent() {
                 framework: site.framework,
                 buildCommand: site.buildCommand,
                 installCommand: site.installCommand,
+                startCommand: site.startCommand,
                 outputDirectory: site.outputDirectory,
               }}
             />

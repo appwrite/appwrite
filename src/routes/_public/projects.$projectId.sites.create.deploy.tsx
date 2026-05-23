@@ -18,6 +18,7 @@ const searchSchema = z.object({
   root: z.string().optional(),
   installCommand: z.string().optional(),
   buildCommand: z.string().optional(),
+  startCommand: z.string().optional(),
   outputDirectory: z.string().optional(),
   envKeys: z.string().optional(), // Comma-separated list of env var keys
 })

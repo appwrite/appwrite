@@ -141,6 +141,9 @@ export function SiteLogsView() {
       onExecutionSelect={handleExecutionSelect}
       onExecutionDeselect={handleExecutionDeselect}
       func={null}
+      projectId={projectId}
+      resourceVariant="site"
+      resourceId={siteId}
       emptyStateTitle="No executions yet"
       emptyStateDescription="Executions will appear here when your site runs."
       itemLabel="logs"

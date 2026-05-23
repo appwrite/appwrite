@@ -49,6 +49,7 @@ export interface WizardFormData {
   buildRuntime: string | undefined
   installCommand: string
   buildCommand: string
+  startCommand: string
   outputDirectory: string
 
   // Environment variables
@@ -88,6 +89,7 @@ const defaultFormData: WizardFormData = {
   buildRuntime: undefined,
   installCommand: '',
   buildCommand: '',
+  startCommand: '',
   outputDirectory: '',
   variables: [],
   domain: '',
@@ -133,6 +135,7 @@ interface WizardContextValue {
   getFrameworkDefaults: (frameworkKey: string) => {
     installCommand: string
     buildCommand: string
+    startCommand: string
     outputDirectory: string
     buildRuntime: string
     adapter: string

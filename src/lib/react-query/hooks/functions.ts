@@ -424,6 +424,22 @@ export async function fetchFunctionExecutions(
 }
 
 /**
+ * Query function to fetch a single function execution
+ */
+export async function fetchFunctionExecution(
+  projectId: string,
+  functionId: string,
+  executionId: string,
+): Promise<Models.Execution> {
+  if (!projectId || !functionId || !executionId) {
+    throw new Error('Project ID, Function ID, and Execution ID are required')
+  }
+
+  const projectSdk = sdk.forProject(projectId)
+  return await projectSdk.functions.getExecution({ functionId, executionId })
+}
+
+/**
  * Query function to fetch all function variables (API is not paginated).
  * Sort by `$createdAt` descending; UI paginates via `useFunctionVariables`.
  */

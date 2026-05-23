@@ -116,5 +116,9 @@ function SiteLayoutPage() {
   }
 
   // For other routes, render Layout which provides tabs
-  return <Layout />
+  return (
+    <div className="flex h-full min-h-0 flex-1 flex-col">
+      <Layout />
+    </div>
+  )
 }

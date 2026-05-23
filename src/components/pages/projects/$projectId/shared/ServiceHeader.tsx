@@ -391,6 +391,7 @@ export const ServiceHeader = forwardRef<ServiceHeaderRef, ServiceHeaderProps>(
             className={cn(
               'flex min-w-0 flex-nowrap items-center gap-3 px-4 py-4 sm:px-6',
               fullWidthBorder && !fullWidth && 'mx-auto w-full max-w-7xl',
+              fullWidthBorder && fullWidth && 'w-full',
               (isCollapsed || showToolbarBottomBorder) &&
                 'border-b border-border',
             )}

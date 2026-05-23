@@ -148,7 +148,7 @@ export function View() {
   const hasFilters = filterMap.size > 0
 
   return (
-    <div className="flex flex-1 flex-col">
+    <div className="flex flex-1 min-h-0 flex-col">
       <LogsListView
         executions={logs}
         total={displayedTotal ?? total}
@@ -162,6 +162,9 @@ export function View() {
         onExecutionSelect={handleExecutionSelect}
         onExecutionDeselect={handleExecutionDeselect}
         func={null}
+        projectId={projectId}
+        resourceVariant="site"
+        resourceId={siteId}
         emptyStateTitle={hasFilters ? undefined : 'No logs yet'}
         emptyStateDescription={
           hasFilters ? undefined : 'Logs will appear here when your site runs.'

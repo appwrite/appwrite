@@ -242,15 +242,6 @@ function ProjectLayout() {
   const isFunctionsEditorView =
     activeSection === 'functions' && pathParts[4] === 'editor'
 
-  // Views that need overflow-hidden on main (they manage their own scrolling)
-  const isFixedLayoutView =
-    isDatabaseSpreadsheetView ||
-    isDatabaseVisualizerView ||
-    activeSection === 'usage' ||
-    activeSection === 'activity' ||
-    activeSection === 'storage' ||
-    isFunctionsEditorView
-
   // Check if we're on the function executions tab
   // Pattern: /projects/:projectId/functions/:functionId/executions
   const isFunctionExecutionsTab =
@@ -264,6 +255,17 @@ function ProjectLayout() {
     activeSection === 'sites' &&
     pathParts.length >= 6 &&
     pathParts[5] === 'logs'
+
+  // Views that need overflow-hidden on main (they manage their own scrolling)
+  const isFixedLayoutView =
+    isDatabaseSpreadsheetView ||
+    isDatabaseVisualizerView ||
+    activeSection === 'usage' ||
+    activeSection === 'activity' ||
+    activeSection === 'storage' ||
+    isFunctionsEditorView ||
+    isFunctionExecutionsTab ||
+    isSiteLogsTab
 
   // Hide footer for usage view, database spreadsheet / level tabs (incl. monitor, visualizer), function executions tab, site logs tab, functions editor, and storage workspace
   const hideFooter =

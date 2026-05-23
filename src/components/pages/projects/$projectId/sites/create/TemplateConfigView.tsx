@@ -45,6 +45,7 @@ import {
 } from '@/lib/react-query/hooks'
 import { sdk, getApiEndpoint } from '@/lib/appwrite/sdk'
 import { resolveTemplatePlaceholder } from '@/lib/template-placeholders'
+import { getStartCommandForSiteCreate } from '@/lib/frameworks'
 import { useWizard } from './WizardContext'
 import { DomainInput } from './DomainInput'
 import {
@@ -252,6 +253,7 @@ export function TemplateConfigView({ templateParam }: TemplateConfigViewProps) {
 
     try {
       // Use template framework when available, otherwise SDK framework defaults (buildRuntime, adapter, fallbackFile)
+      const sdkDefaults = getFrameworkDefaults(framework)
       const defaults = templateFramework
         ? {
             installCommand: templateFramework.installCommand,
@@ -260,8 +262,9 @@ export function TemplateConfigView({ templateParam }: TemplateConfigViewProps) {
             buildRuntime: templateFramework.buildRuntime,
             adapter: templateFramework.adapter,
             fallbackFile: templateFramework.fallbackFile,
+            startCommand: sdkDefaults.startCommand,
           }
-        : getFrameworkDefaults(framework)
+        : sdkDefaults
 
       const connectNow =
         gitConnection === 'now' &&
@@ -275,6 +278,10 @@ export function TemplateConfigView({ templateParam }: TemplateConfigViewProps) {
         framework,
         installCommand: defaults.installCommand,
         buildCommand: defaults.buildCommand,
+        startCommand: getStartCommandForSiteCreate(
+          frameworkInfo,
+          defaults.adapter === 'ssr' ? defaults.startCommand ?? '' : '',
+        ),
         outputDirectory: defaults.outputDirectory,
         buildRuntime: defaults.buildRuntime ?? 'node-22',
         adapter: defaults.adapter ?? '',

@@ -27,6 +27,7 @@ export interface SiteBuildConfig {
   framework?: string
   buildCommand?: string
   installCommand?: string
+  startCommand?: string
   outputDirectory?: string
 }
 
@@ -74,6 +75,7 @@ appwrite functions create-deployment ,
   const codePath = `./sites/${framework}`
   const buildCommand = siteBuildConfig?.buildCommand?.trim() || ''
   const installCommand = siteBuildConfig?.installCommand?.trim() || ''
+  const startCommand = siteBuildConfig?.startCommand?.trim() || ''
   const outputDirectory = siteBuildConfig?.outputDirectory?.trim() || ''
 
   const buildArgs: string[] = [
@@ -83,6 +85,7 @@ appwrite functions create-deployment ,
   ]
   if (buildCommand) buildArgs.push(`--build-command="${buildCommand}"`)
   if (installCommand) buildArgs.push(`--install-command="${installCommand}"`)
+  if (startCommand) buildArgs.push(`--start-command="${startCommand}"`)
   if (outputDirectory) buildArgs.push(`--output-directory="${outputDirectory}"`)
 
   const unixLines = [

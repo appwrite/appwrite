@@ -26,6 +26,10 @@ import { ID } from '@appwrite.io/console'
 import { sdk } from '@/lib/appwrite/sdk'
 import { useCreateSite, useCreateSiteDomain } from '@/lib/react-query/hooks'
 import { cn } from '@/lib/utils'
+import {
+  getFrameworkAdapterDefaults,
+  getStartCommandForSiteCreate,
+} from '@/lib/frameworks'
 import { useWizard } from './WizardContext'
 import { DomainInput } from './DomainInput'
 import { BuildSettings } from './BuildSettings'
@@ -40,6 +44,7 @@ export function ManualUploadView() {
     formData,
     updateFormData,
     frameworks,
+    getFramework,
     getFrameworkDefaults,
     generateDomain,
     setCurrentPath,
@@ -61,6 +66,9 @@ export function ManualUploadView() {
   const [outputDirectory, setOutputDirectory] = useState(
     formData.outputDirectory || '',
   )
+  const [startCommand, setStartCommand] = useState(
+    formData.startCommand || '',
+  )
   const [variables, setVariables] = useState(formData.variables || [])
   const [domain, setDomain] = useState(formData.domain || '')
   const [domainValid, setDomainValid] = useState(formData.domainValid || false)
@@ -74,9 +82,14 @@ export function ManualUploadView() {
   useEffect(() => {
     if (framework) {
       const defaults = getFrameworkDefaults(framework)
+      const ssrDefaults = getFrameworkAdapterDefaults(
+        getFramework(framework),
+        'ssr',
+      )
       if (!installCommand) setInstallCommand(defaults.installCommand)
       if (!buildCommand) setBuildCommand(defaults.buildCommand)
       if (!outputDirectory) setOutputDirectory(defaults.outputDirectory)
+      if (!startCommand) setStartCommand(ssrDefaults.startCommand)
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [framework, getFrameworkDefaults])
@@ -148,13 +161,21 @@ export function ManualUploadView() {
 
     try {
       // 1. Create the site
+      const defaults = getFrameworkDefaults(framework)
       const site = await createSiteMutation.mutateAsync({
         siteId: siteId || undefined,
         name: siteName,
         framework,
+        buildRuntime: defaults.buildRuntime,
         installCommand: installCommand || undefined,
         buildCommand: buildCommand || undefined,
+        startCommand: getStartCommandForSiteCreate(
+          getFramework(framework),
+          startCommand,
+        ),
         outputDirectory: outputDirectory || undefined,
+        adapter: defaults.adapter || undefined,
+        fallbackFile: defaults.fallbackFile || undefined,
       })
 
       // 2. Create domain rule
@@ -191,6 +212,7 @@ export function ManualUploadView() {
         installCommand,
         buildCommand,
         outputDirectory,
+        startCommand,
       })
 
       // Update form data
@@ -403,9 +425,14 @@ export function ManualUploadView() {
               onValueChange={(value) => {
                 setFramework(value)
                 const defaults = getFrameworkDefaults(value)
+                const ssrDefaults = getFrameworkAdapterDefaults(
+                  getFramework(value),
+                  'ssr',
+                )
                 setInstallCommand(defaults.installCommand)
                 setBuildCommand(defaults.buildCommand)
                 setOutputDirectory(defaults.outputDirectory)
+                setStartCommand(ssrDefaults.startCommand)
               }}
             >
               <SelectTrigger className="h-9 text-[13px]">
@@ -431,9 +458,11 @@ export function ManualUploadView() {
         installCommand={installCommand}
         buildCommand={buildCommand}
         outputDirectory={outputDirectory}
+        startCommand={startCommand}
         onInstallCommandChange={setInstallCommand}
         onBuildCommandChange={setBuildCommand}
         onOutputDirectoryChange={setOutputDirectory}
+        onStartCommandChange={setStartCommand}
         frameworkKey={framework}
       />
 

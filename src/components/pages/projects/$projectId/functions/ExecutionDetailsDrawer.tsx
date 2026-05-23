@@ -6,6 +6,7 @@ import {
   Check,
   Search,
   Link2,
+  FileJson,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -37,7 +38,12 @@ import {
 } from '@/components/ui/tooltip'
 import type { Models } from '@appwrite.io/console'
 import { getExecutionStatusBadge, getStatusCodeBadge } from './Executions'
-import { useParams } from '@tanstack/react-router'
+import {
+  fetchFunctionExecution,
+  fetchSiteLog,
+} from '@/lib/react-query/hooks'
+import { copyResourceAsJson } from '@/lib/utils/context-menu'
+import type { ExecutionRowContextMenuVariant } from '@/components/global/shared/ExecutionRowContextMenu'
 
 interface ExecutionDetailsDrawerProps {
   open: boolean
@@ -46,6 +52,9 @@ interface ExecutionDetailsDrawerProps {
   executions: Models.Execution[]
   func: Models.Function | null
   onNavigate: (executionId: string) => void
+  projectId?: string
+  resourceVariant?: ExecutionRowContextMenuVariant
+  resourceId?: string
 }
 
 function formatDuration(ms: number): string {
@@ -109,11 +118,15 @@ export function ExecutionDetailsDrawer({
   executions,
   func,
   onNavigate,
+  projectId,
+  resourceVariant,
+  resourceId,
 }: ExecutionDetailsDrawerProps) {
-  useParams({ strict: false })
   const [copiedPath, setCopiedPath] = useState(false)
   const [copiedLink, setCopiedLink] = useState(false)
+  const [copiedJson, setCopiedJson] = useState(false)
   const [copiedLogs, setCopiedLogs] = useState(false)
+  const [copiedErrors, setCopiedErrors] = useState(false)
   const [requestTab, setRequestTab] = useState<'parameters' | 'headers'>(
     'parameters',
   )
@@ -162,6 +175,7 @@ export function ExecutionDetailsDrawer({
     setErrorsSearch('')
     setBodySearch('')
     setCopiedLogs(false)
+    setCopiedErrors(false)
   }, [execution?.$id])
 
   const requestHeaderCount = execution?.requestHeaders?.length ?? 0
@@ -206,6 +220,16 @@ export function ExecutionDetailsDrawer({
     [executionLogsText, logsSearch],
   )
 
+  const executionErrorsText = useMemo(
+    () => formatExecutionLogContent(execution?.errors),
+    [execution?.errors],
+  )
+
+  const displayedErrorsText = useMemo(
+    () => filterLogLines(executionErrorsText, errorsSearch),
+    [executionErrorsText, errorsSearch],
+  )
+
   if (!execution) return null
 
   const statusBadge = getExecutionStatusBadge(execution.status)
@@ -242,11 +266,62 @@ export function ExecutionDetailsDrawer({
     setTimeout(() => setCopiedLink(false), 2000)
   }
 
+  const handleCopyJson = async () => {
+    if (!execution) return
+
+    const resolvedProjectId = projectId
+    const resolvedResourceId =
+      resourceId ?? (func ? func.$id : undefined)
+    const resolvedVariant =
+      resourceVariant ?? (func ? ('function' as const) : undefined)
+
+    const copied = await copyResourceAsJson(
+      () => {
+        if (
+          resolvedProjectId &&
+          resolvedResourceId &&
+          resolvedVariant === 'function'
+        ) {
+          return fetchFunctionExecution(
+            resolvedProjectId,
+            resolvedResourceId,
+            execution.$id,
+          )
+        }
+        if (
+          resolvedProjectId &&
+          resolvedResourceId &&
+          resolvedVariant === 'site'
+        ) {
+          return fetchSiteLog(
+            resolvedProjectId,
+            resolvedResourceId,
+            execution.$id,
+          )
+        }
+        return execution
+      },
+      { fallback: execution },
+    )
+
+    if (copied) {
+      setCopiedJson(true)
+      setTimeout(() => setCopiedJson(false), 2000)
+    }
+  }
+
   const handleCopyLogs = () => {
     if (!executionLogsText) return
     navigator.clipboard.writeText(executionLogsText)
     setCopiedLogs(true)
     setTimeout(() => setCopiedLogs(false), 2000)
+  }
+
+  const handleCopyErrors = () => {
+    if (!executionErrorsText) return
+    navigator.clipboard.writeText(executionErrorsText)
+    setCopiedErrors(true)
+    setTimeout(() => setCopiedErrors(false), 2000)
   }
 
   // Format duration
@@ -303,6 +378,26 @@ export function ExecutionDetailsDrawer({
               </TooltipTrigger>
               <TooltipContent>
                 <p>{copiedLink ? 'Link copied!' : 'Copy link'}</p>
+              </TooltipContent>
+            </Tooltip>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-8 w-8 p-0 cursor-pointer"
+                  onClick={() => void handleCopyJson()}
+                  disabled={!execution}
+                >
+                  {copiedJson ? (
+                    <Check className="h-4 w-4 text-emerald-500" />
+                  ) : (
+                    <FileJson className="h-4 w-4" />
+                  )}
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>{copiedJson ? 'JSON copied!' : 'Copy as JSON'}</p>
               </TooltipContent>
             </Tooltip>
           </TooltipProvider>
@@ -710,52 +805,53 @@ export function ExecutionDetailsDrawer({
                               </a>
                             </div>
                           ) : execution.errors ? (
-                            <div className="space-y-3">
-                              <div className="relative -mx-1 px-1">
-                                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                                <Input
-                                  placeholder="Search errors..."
-                                  value={errorsSearch}
-                                  onChange={(e) =>
-                                    setErrorsSearch(e.target.value)
-                                  }
-                                  className="pl-9 h-9 text-[13px]"
-                                />
-                              </div>
-                              <ScrollArea className="h-[400px] w-full rounded-lg border border-border bg-muted">
-                                <div className="p-4 min-w-0">
-                                  <pre className="text-[12px] font-mono text-foreground whitespace-pre-wrap break-all overflow-x-auto max-w-full min-w-0">
-                                    {(() => {
-                                      const errorsText =
-                                        typeof execution.errors === 'string'
-                                          ? execution.errors
-                                          : Array.isArray(execution.errors)
-                                            ? (
-                                                execution.errors as string[]
-                                              ).join('\n')
-                                            : JSON.stringify(
-                                                execution.errors,
-                                                null,
-                                                2,
-                                              )
-
-                                      if (!errorsSearch.trim())
-                                        return errorsText
-
-                                      const searchLower =
-                                        errorsSearch.toLowerCase()
-                                      const lines = errorsText.split('\n')
-                                      return lines
-                                        .filter((line: string) =>
-                                          line
-                                            .toLowerCase()
-                                            .includes(searchLower),
-                                        )
-                                        .join('\n')
-                                    })()}
-                                  </pre>
+                            <div className="rounded-lg border border-border bg-card p-4">
+                              <div className="space-y-3">
+                                <div className="flex items-center gap-2">
+                                  <div className="relative min-w-0 flex-1 -mx-1 px-1">
+                                    <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                                    <Input
+                                      placeholder="Search errors..."
+                                      value={errorsSearch}
+                                      onChange={(e) =>
+                                        setErrorsSearch(e.target.value)
+                                      }
+                                      className="h-9 pl-9 text-[13px]"
+                                    />
+                                  </div>
+                                  <TooltipProvider>
+                                    <Tooltip>
+                                      <TooltipTrigger asChild>
+                                        <Button
+                                          type="button"
+                                          variant="outline"
+                                          size="sm"
+                                          onClick={handleCopyErrors}
+                                          disabled={!executionErrorsText}
+                                          className="h-9 w-9 shrink-0 p-0"
+                                          aria-label="Copy errors"
+                                        >
+                                          {copiedErrors ? (
+                                            <Check className="h-4 w-4 text-emerald-500" />
+                                          ) : (
+                                            <Copy className="h-4 w-4" />
+                                          )}
+                                        </Button>
+                                      </TooltipTrigger>
+                                      <TooltipContent>
+                                        <p>Copy errors</p>
+                                      </TooltipContent>
+                                    </Tooltip>
+                                  </TooltipProvider>
                                 </div>
-                              </ScrollArea>
+                                <ScrollArea className="h-[400px] w-full rounded-lg border border-border bg-muted">
+                                  <div className="min-w-0 p-4">
+                                    <pre className="max-w-full min-w-0 overflow-x-auto whitespace-pre-wrap break-all font-mono text-[12px] text-foreground">
+                                      {displayedErrorsText}
+                                    </pre>
+                                  </div>
+                                </ScrollArea>
+                              </div>
                             </div>
                           ) : (
                             <div className="rounded-lg border border-border bg-card p-3">

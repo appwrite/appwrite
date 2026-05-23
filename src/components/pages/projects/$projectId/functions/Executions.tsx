@@ -24,6 +24,7 @@ export function getExecutionStatusBadge(status: string) {
     processing: { label: 'Processing', variant: 'processing' },
     failed: { label: 'Failed', variant: 'failed' },
     waiting: { label: 'Waiting', variant: 'pending' },
+    scheduled: { label: 'Scheduled', variant: 'pending' },
   }
   return statusMap[status] || { label: status, variant: 'outline' }
 }
@@ -197,7 +198,7 @@ export function View() {
   const hasFilters = filterMap.size > 0
 
   return (
-    <div className="flex flex-1 flex-col">
+    <div className="flex flex-1 min-h-0 flex-col">
       <LogsListView
         executions={executions}
         total={displayedTotal ?? total}
@@ -211,6 +212,9 @@ export function View() {
         onExecutionSelect={handleExecutionSelect}
         onExecutionDeselect={handleExecutionDeselect}
         func={func}
+        projectId={projectId}
+        resourceVariant="function"
+        resourceId={functionId}
         emptyStateTitle={hasFilters ? undefined : 'No executions yet'}
         emptyStateDescription={
           hasFilters
