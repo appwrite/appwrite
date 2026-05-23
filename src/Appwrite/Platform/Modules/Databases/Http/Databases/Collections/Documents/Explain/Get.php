@@ -21,6 +21,7 @@ use Utopia\Database\Validator\Query\Cursor;
 use Utopia\Database\Validator\UID;
 use Utopia\Http\Adapter\Swoole\Response as SwooleResponse;
 use Utopia\Validator\ArrayList;
+use Utopia\Validator\Boolean;
 use Utopia\Validator\Text;
 
 abstract class Get extends Action
@@ -61,6 +62,7 @@ abstract class Get extends Action
             ->param('databaseId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Database ID.', false, ['dbForProject'])
             ->param('collectionId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Collection ID.', false, ['dbForProject'])
             ->param('queries', [], new ArrayList(new Text(APP_LIMIT_ARRAY_ELEMENT_SIZE), APP_LIMIT_ARRAY_PARAMS_SIZE), 'Array of query strings generated using the Query class provided by the SDK. Same shape as listRows.', true)
+            ->param('total', true, new Boolean(true), 'When true, the explain captures the COUNT(*) call listRows fires for the total field as a second entry. Mirrors listRows default behavior.', true)
             ->inject('response')
             ->inject('dbForProject')
             ->inject('user')
@@ -76,6 +78,7 @@ abstract class Get extends Action
         string $databaseId,
         string $collectionId,
         array $queries,
+        bool $includeTotal,
         UtopiaResponse $response,
         Database $dbForProject,
         User $user,
@@ -131,8 +134,17 @@ abstract class Get extends Action
             ? fn () => $dbForDatabases->find($collectionTableId, $queries)
             : fn () => $dbForDatabases->skipRelationships(fn () => $dbForDatabases->find($collectionTableId, $queries));
 
+        // listRows fires both find() and count() when `total: true` (the default).
+        // Mirror that exactly so explain reflects real listRows read volume.
+        $scope = function () use ($find, $includeTotal, $dbForDatabases, $collectionTableId, $queries): void {
+            $find();
+            if ($includeTotal) {
+                $dbForDatabases->count($collectionTableId, $queries, APP_LIMIT_COUNT);
+            }
+        };
+
         try {
-            $plan = $dbForDatabases->withExplain($find);
+            $plan = $dbForDatabases->withExplain($scope);
         } catch (OrderException $e) {
             $documents = $this->isCollectionsAPI() ? 'documents' : 'rows';
             $attribute = $this->isCollectionsAPI() ? 'attribute' : 'column';

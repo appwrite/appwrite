@@ -11,6 +11,7 @@ use Appwrite\Utopia\Response as UtopiaResponse;
 use Utopia\Database\Validator\UID;
 use Utopia\Http\Adapter\Swoole\Response as SwooleResponse;
 use Utopia\Validator\ArrayList;
+use Utopia\Validator\Boolean;
 use Utopia\Validator\Text;
 
 class Get extends DocumentExplain
@@ -51,6 +52,7 @@ class Get extends DocumentExplain
             ->param('databaseId', '', new UID, 'Database ID.')
             ->param('collectionId', '', new UID, 'Collection ID.')
             ->param('queries', [], new ArrayList(new Text(APP_LIMIT_ARRAY_ELEMENT_SIZE), APP_LIMIT_ARRAY_PARAMS_SIZE), 'Array of query strings generated using the Query class provided by the SDK. Same shape as listDocuments.', true)
+            ->param('total', true, new Boolean(true), 'When true, the explain captures the COUNT(*) call listDocuments fires for the total field as a second entry. Mirrors listDocuments default behavior.', true)
             ->inject('response')
             ->inject('dbForProject')
             ->inject('user')

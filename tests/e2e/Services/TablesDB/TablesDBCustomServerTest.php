@@ -52,8 +52,38 @@ class TablesDBCustomServerTest extends Scope
         $this->assertArrayHasKey('plan', $first);
         $this->assertArrayHasKey('engine', $first['plan']);
 
-        $rawPlan = json_encode($first['plan']);
+        // listRows fires find() + count() (for total) by default — explain mirrors it.
+        $purposes = array_column($response['body']['queries'], 'purpose');
+        $this->assertContains('find', $purposes);
+        $this->assertContains('count', $purposes);
+
+        $rawPlan = json_encode($response['body']['queries']);
         $this->assertStringNotContainsString('_perms', $rawPlan);
         $this->assertStringNotContainsString('__metadata', $rawPlan);
+    }
+
+    public function test_explain_rows_skips_count_when_total_is_false(): void
+    {
+        $data = $this->setupDocuments();
+        $databaseId = $data['databaseId'];
+        $tableId = $data['moviesId'];
+
+        $response = $this->client->call(
+            Client::METHOD_GET,
+            $this->getRecordUrl($databaseId, $tableId).'/explain',
+            array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+            ], $this->getHeaders()),
+            [
+                'queries' => [Query::limit(10)->toString()],
+                'total' => false,
+            ]
+        );
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $purposes = array_column($response['body']['queries'], 'purpose');
+        $this->assertContains('find', $purposes);
+        $this->assertNotContains('count', $purposes);
     }
 }

@@ -12,6 +12,7 @@ use Utopia\Database\Database;
 use Utopia\Database\Validator\UID;
 use Utopia\Http\Adapter\Swoole\Response as SwooleResponse;
 use Utopia\Validator\ArrayList;
+use Utopia\Validator\Boolean;
 use Utopia\Validator\Text;
 
 class Get extends DocumentExplain
@@ -52,6 +53,7 @@ class Get extends DocumentExplain
             ->param('databaseId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Database ID.', false, ['dbForProject'])
             ->param('tableId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Table ID.', false, ['dbForProject'])
             ->param('queries', [], new ArrayList(new Text(APP_LIMIT_ARRAY_ELEMENT_SIZE), APP_LIMIT_ARRAY_PARAMS_SIZE), 'Array of query strings generated using the Query class provided by the SDK. Same shape as listRows.', true)
+            ->param('total', true, new Boolean(true), 'When true, the explain captures the COUNT(*) call listRows fires for the total field as a second entry. Mirrors listRows default behavior.', true)
             ->inject('response')
             ->inject('dbForProject')
             ->inject('user')
