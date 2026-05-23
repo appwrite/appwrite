@@ -460,28 +460,9 @@ export function LogsListView({
                         )}
                       </TableCell>
                       <TableCell className="min-w-0 px-4 py-3">
-                        <div className="group/method flex items-center gap-2">
-                          <code className="rounded bg-muted/50 px-1.5 py-0.5 text-[12px] font-mono text-foreground">
-                            {method}
-                          </code>
-                          {method !== 'N/A' && (
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              className="h-6 w-6 shrink-0 cursor-pointer p-0 opacity-0 transition-opacity group-hover/method:opacity-100"
-                              onClick={(e) => {
-                                e.stopPropagation()
-                                handleCopy(method, `method-${executionId}`)
-                              }}
-                            >
-                              {copiedField === `method-${executionId}` ? (
-                                <Check className="h-3 w-3 text-emerald-500" />
-                              ) : (
-                                <Copy className="h-3 w-3" />
-                              )}
-                            </Button>
-                          )}
-                        </div>
+                        <code className="rounded bg-muted/50 px-1.5 py-0.5 text-[12px] font-mono text-foreground">
+                          {method}
+                        </code>
                       </TableCell>
                       <TableCell className="min-w-0 px-4 py-3">
                         <div className="group/path flex min-w-0 items-center gap-2">
