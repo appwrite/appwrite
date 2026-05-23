@@ -33,7 +33,7 @@ import {
   X,
   ZoomIn,
   ZoomOut,
-  Lightbulb,
+  Bot,
   ExternalLink,
   Maximize2,
 } from 'lucide-react'
@@ -2102,7 +2102,7 @@ export function AIChatPanel() {
             {messages.length === 0 ? (
               <div className="flex h-full flex-col items-center justify-center">
                 <div className="mb-6 flex h-16 w-16 items-center justify-center rounded-2xl bg-primary/10 dark:bg-sidebar-accent">
-                  <Lightbulb className="h-8 w-8 text-primary dark:text-sidebar-foreground" />
+                  <Bot className="h-8 w-8 text-primary dark:text-sidebar-foreground" />
                 </div>
                 <h3 className="mb-2 text-lg font-semibold text-foreground">
                   How can I help you?

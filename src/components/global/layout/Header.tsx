@@ -13,7 +13,7 @@ import {
   Menu,
   Copy,
   Check,
-  Lightbulb,
+  Bot,
   Shield,
   Plus,
   Database,
@@ -666,7 +666,7 @@ export function ConsoleHeader({
                   onClick={toggleChat}
                   className="hidden h-9 w-9 shrink-0 cursor-pointer items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-accent hover:text-foreground @[1000px]:flex"
                 >
-                  <Lightbulb className="h-4 w-4" />
+                  <Bot className="h-4 w-4" />
                 </button>
               </TooltipTrigger>
               <TooltipContent>
