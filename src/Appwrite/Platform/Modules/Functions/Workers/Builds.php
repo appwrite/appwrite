@@ -115,8 +115,6 @@ class Builds extends Action
         Executor $executor,
         array $plan
     ): void {
-        Console::log('Build action started');
-
         $payload = $message->getPayload();
 
         if (empty($payload)) {
@@ -131,6 +129,12 @@ class Builds extends Action
 
         $log->addTag('projectId', $project->getId());
         $log->addTag('type', $type);
+
+        Span::add('project.id', $project->getId());
+        Span::add('resource.id', $resource->getId());
+        Span::add('resource.type', $resource->getCollection());
+        Span::add('deployment.id', $deployment->getId());
+        Span::add('build.type', $type);
 
         switch ($type) {
             case BUILD_TYPE_ORCHESTRATOR_EVENT:
@@ -214,10 +218,6 @@ class Builds extends Action
         array $platform,
         int $timeout
     ): void {
-        Span::add('project.id', $project->getId());
-        Span::add('resource.id', $resource->getId());
-        Span::add('resource.type', $resource->getCollection());
-        Span::add('deployment.id', $deployment->getId());
         Span::add('build.timeout', $timeout);
 
         Console::info('Deployment action started');
@@ -1628,6 +1628,15 @@ class Builds extends Action
             'buildLogs' => $logs,
         ]));
 
+        try {
+            $dbForProject->getAuthorization()->skip(fn () => $dbForProject->deleteDocuments('resourceTokens', [
+                Query::equal('resourceType', [TOKENS_RESOURCE_TYPE_DEPLOYMENT_ARTIFACTS]),
+                Query::equal('resourceInternalId', [$resource->getSequence() . ':' . $deployment->getSequence()]),
+            ]));
+        } catch (\Throwable $error) {
+            Console::warning('Failed deleting deployment artifact tokens: ' . $error->getMessage());
+        }
+
         if ($deployment->getSequence() === $resource->getAttribute('latestDeploymentInternalId', '')) {
             $resource = $dbForProject->updateDocument($resource->getCollection(), $resource->getId(), new Document(['latestDeploymentStatus' => $deployment->getAttribute('status', '')]));
         }
@@ -1758,6 +1767,15 @@ class Builds extends Action
 
                 if ($deployment->getSequence() === $resource->getAttribute('latestDeploymentInternalId', '')) {
                     $resource = $dbForProject->updateDocument($resource->getCollection(), $resource->getId(), new Document(['latestDeploymentStatus' => $deployment->getAttribute('status', '')]));
+                }
+
+                try {
+                    $dbForProject->getAuthorization()->skip(fn () => $dbForProject->deleteDocuments('resourceTokens', [
+                        Query::equal('resourceType', [TOKENS_RESOURCE_TYPE_DEPLOYMENT_ARTIFACTS]),
+                        Query::equal('resourceInternalId', [$resource->getSequence() . ':' . $deployment->getSequence()]),
+                    ]));
+                } catch (\Throwable $error) {
+                    Console::warning('Failed deleting deployment artifact tokens: ' . $error->getMessage());
                 }
 
                 $queueForRealtime
@@ -1920,6 +1938,15 @@ class Builds extends Action
             'buildEndedAt' => $buildEndedAt,
             'buildDuration' => $buildDuration,
         ]));
+
+        try {
+            $dbForProject->getAuthorization()->skip(fn () => $dbForProject->deleteDocuments('resourceTokens', [
+                Query::equal('resourceType', [TOKENS_RESOURCE_TYPE_DEPLOYMENT_ARTIFACTS]),
+                Query::equal('resourceInternalId', [$resource->getSequence() . ':' . $deployment->getSequence()]),
+            ]));
+        } catch (\Throwable $error) {
+            Console::warning('Failed deleting deployment artifact tokens: ' . $error->getMessage());
+        }
 
         $queueForRealtime
             ->setPayload($deployment->getArrayCopy())

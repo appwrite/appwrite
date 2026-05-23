@@ -13,6 +13,7 @@ use OpenRuntimes\Orchestrator\Client as OrchestratorClient;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
+use Utopia\Database\Query;
 use Utopia\Database\Validator\UID;
 use Utopia\Platform\Action;
 use Utopia\Platform\Scope\HTTP;
@@ -110,6 +111,15 @@ class Update extends Action
             $dbForProject->updateDocument('functions', $function->getId(), new Document([
                 'latestDeploymentStatus' => $function->getAttribute('latestDeploymentStatus'),
             ]));
+        }
+
+        try {
+            $dbForProject->getAuthorization()->skip(fn () => $dbForProject->deleteDocuments('resourceTokens', [
+                Query::equal('resourceType', [TOKENS_RESOURCE_TYPE_DEPLOYMENT_ARTIFACTS]),
+                Query::equal('resourceInternalId', [$function->getSequence() . ':' . $deployment->getSequence()]),
+            ]));
+        } catch (\Throwable) {
+            // Best-effort cleanup; deployment status is already 'canceled'.
         }
 
         try {
