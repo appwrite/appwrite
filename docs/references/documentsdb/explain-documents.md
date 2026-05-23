@@ -1,3 +1,0 @@
-Get a query plan for a `listDocuments` call without executing it. Useful for diagnosing slow reads and verifying that the indexes you created on a collection are actually being used.
-
-Takes the same parameters as `listDocuments`. Returns one plan entry per physical query Appwrite would have run — including the per-relationship fetches that `listDocuments` issues sequentially when your query selects related fields. Internal storage details (the permission companion table, the metadata system table, internal column names) are stripped from the output, so the response only references your collections and `$`-prefixed attributes.

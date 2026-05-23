@@ -56,6 +56,7 @@ class XList extends DocumentXList
             ->param('transactionId', null, new UID(), 'Transaction ID to read uncommitted changes within the transaction.', true)
             ->param('total', true, new Boolean(true), 'When set to false, the total count returned will be 0 and will not be calculated.', true)
             ->param('ttl', 0, new Range(min: 0, max: 86400), 'TTL (seconds) for cached responses when caching is enabled for select queries. Must be between 0 and 86400 (24 hours).', true)
+            ->param('explain', false, new Boolean(true), 'When true, returns the captured vendor-native query plan for each physical read this listDocuments call would issue under the `explain` field on the response. Bypasses the cache so the plan always reflects a fresh execution; internal storage details are stripped.', true)
             ->inject('response')
             ->inject('dbForProject')
             ->inject('user')

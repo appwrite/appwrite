@@ -75,6 +75,7 @@ class XList extends Action
             ->param('transactionId', null, fn (Database $dbForProject) => new Nullable(new UID($dbForProject->getAdapter()->getMaxUIDLength())), 'Transaction ID to read uncommitted changes within the transaction.', true, ['dbForProject'])
             ->param('total', true, new Boolean(true), 'When set to false, the total count returned will be 0 and will not be calculated.', true)
             ->param('ttl', 0, new Range(min: 0, max: 86400), 'TTL (seconds) for caching list responses. Responses are stored in an in-memory key-value cache, keyed per project, collection, schema version (attributes and indexes), caller authorization roles, and the exact query — so users with different permissions never share cached entries. Schema changes invalidate cached entries automatically; document writes do not, so choose a TTL you are comfortable serving as stale data. Set to 0 to disable caching. Must be between 0 and 86400 (24 hours).', true)
+            ->param('explain', false, new Boolean(true), 'When true, returns the captured vendor-native query plan for each physical read this call would issue under the `explain` field on the response. Bypasses the cache so the plan always reflects a fresh execution; internal storage details are stripped.', true)
             ->inject('response')
             ->inject('dbForProject')
             ->inject('user')
@@ -86,7 +87,7 @@ class XList extends Action
             ->callback($this->action(...));
     }
 
-    public function action(string $databaseId, string $collectionId, array $queries, ?string $transactionId, bool $includeTotal, int $ttl, UtopiaResponse $response, Database $dbForProject, User $user, callable $getDatabasesDB, Context $usage, TransactionState $transactionState, Authorization $authorization, ?Http $utopia = null): void
+    public function action(string $databaseId, string $collectionId, array $queries, ?string $transactionId, bool $includeTotal, int $ttl, bool $explain, UtopiaResponse $response, Database $dbForProject, User $user, callable $getDatabasesDB, Context $usage, TransactionState $transactionState, Authorization $authorization, ?Http $utopia = null): void
     {
         $isAPIKey = $user->isApp($authorization->getRoles());
         $isPrivilegedUser = $user->isPrivileged($authorization->getRoles());
@@ -147,8 +148,18 @@ class XList extends Action
                 ? fn () => $dbForDatabases->find($collectionTableId, $queries)
                 : fn () => $dbForDatabases->skipRelationships(fn () => $dbForDatabases->find($collectionTableId, $queries));
 
-            // Use transaction-aware document retrieval if transactionId is provided
-            if ($transactionId !== null) {
+            $explainEntries = [];
+
+            // Explain mode bypasses cache + transaction routing on purpose:
+            // debug calls should always reflect a fresh planner run, not a
+            // cached document set or an in-transaction snapshot.
+            if ($explain) {
+                $plan = $dbForDatabases->withExplain(function () use ($find, $includeTotal, $dbForDatabases, $collectionTableId, $queries, &$documents, &$total): void {
+                    $documents = $find();
+                    $total = $includeTotal ? $dbForDatabases->count($collectionTableId, $queries, APP_LIMIT_COUNT) : 0;
+                });
+                $explainEntries = $plan->getAttribute('queries', []);
+            } elseif ($transactionId !== null) {
                 $documents = $transactionState->listDocuments($database, $collectionTableId, $transactionId, $queries);
                 $total = $includeTotal ? $transactionState->countDocuments($database, $collectionTableId, $transactionId, $queries) : 0;
             } elseif ((int)$ttl > 0) {
@@ -247,6 +258,7 @@ class XList extends Action
             'total' => $total,
             // rows or documents
             $this->getSDKGroup() => $documents,
+            'explain' => $this->translatePlanCollections($explainEntries, $database, $collection, $dbForProject, $authorization),
         ]), $this->getResponseModel());
 
         try {
@@ -263,5 +275,77 @@ class XList extends Action
      */
     protected function afterQuery(float $dbDurationMs, Document $database, Document $collection, array $queries, ?Http $utopia): void
     {
+    }
+
+    /**
+     * Rewrite each captured plan entry's context.collection from the physical
+     * `database_<seq>_collection_<seq>` table id back to the user-facing
+     * collection / table ID. Relationship fanout produces entries for related
+     * collections, which we look up by sequence on demand.
+     *
+     * @param array<int, array<string, mixed>> $entries
+     * @return array<int, Document>
+     */
+    protected function translatePlanCollections(
+        array $entries,
+        Document $database,
+        Document $collection,
+        Database $dbForProject,
+        Authorization $authorization,
+    ): array {
+        if (empty($entries)) {
+            return [];
+        }
+
+        $databaseCollectionsTable = 'database_' . $database->getSequence();
+        $collectionResolver = $this->buildCollectionResolver($database, $collection, $dbForProject, $authorization);
+
+        $output = [];
+        foreach ($entries as $entry) {
+            $context = $entry['context'] ?? [];
+            $physicalCollection = $context['collection'] ?? null;
+
+            if (\is_string($physicalCollection) && \str_starts_with($physicalCollection, $databaseCollectionsTable . '_collection_')) {
+                $relatedSequence = \substr($physicalCollection, \strlen($databaseCollectionsTable . '_collection_'));
+                $context['collection'] = $collectionResolver($relatedSequence) ?? $physicalCollection;
+            }
+
+            $output[] = new Document([
+                'purpose' => $entry['purpose'] ?? 'find',
+                'context' => $context,
+                'plan' => $entry['plan'] ?? [],
+            ]);
+        }
+
+        return $output;
+    }
+
+    /**
+     * Closure that maps a collection sequence to its user-facing ID,
+     * memoizing lookups so a 10-fanout relationship doesn't issue 10 reads.
+     */
+    private function buildCollectionResolver(
+        Document $database,
+        Document $primary,
+        Database $dbForProject,
+        Authorization $authorization,
+    ): callable {
+        $cache = [
+            (string) $primary->getSequence() => $primary->getId(),
+        ];
+        $databaseCollectionsTable = 'database_' . $database->getSequence();
+
+        return function (string $sequence) use (&$cache, $databaseCollectionsTable, $dbForProject, $authorization): ?string {
+            if (\array_key_exists($sequence, $cache)) {
+                return $cache[$sequence];
+            }
+            $related = $authorization->skip(fn () => $dbForProject->findOne($databaseCollectionsTable, [
+                Query::equal('$sequence', [$sequence]),
+            ]));
+            $resolved = $related->isEmpty() ? null : $related->getId();
+            $cache[$sequence] = $resolved;
+
+            return $resolved;
+        };
     }
 }

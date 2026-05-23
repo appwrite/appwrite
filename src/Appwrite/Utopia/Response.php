@@ -115,8 +115,7 @@ class Response extends SwooleResponse
 
     public const MODEL_ROW_LIST = 'rowList';
 
-    public const MODEL_QUERY_PLAN = 'queryPlan';
-
+    // Query plan entries live under list responses (rowList.explain, documentList.explain) — no standalone list model needed.
     public const MODEL_QUERY_PLAN_ENTRY = 'queryPlanEntry';
 
     // Database Attributes
