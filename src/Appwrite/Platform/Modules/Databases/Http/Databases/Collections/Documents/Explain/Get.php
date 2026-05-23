@@ -17,7 +17,6 @@ use Utopia\Database\Exception\Query as QueryException;
 use Utopia\Database\Exception\Timeout;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
-use Utopia\Database\Validator\Query\Cursor;
 use Utopia\Database\Validator\UID;
 use Utopia\Http\Adapter\Swoole\Response as SwooleResponse;
 use Utopia\Validator\ArrayList;
@@ -85,54 +84,16 @@ abstract class Get extends Action
         callable $getDatabasesDB,
         Authorization $authorization,
     ): void {
-        $isAPIKey = $user->isApp($authorization->getRoles());
-        $isPrivilegedUser = $user->isPrivileged($authorization->getRoles());
-
-        $database = $authorization->skip(fn () => $dbForProject->getDocument('databases', $databaseId));
-        if ($database->isEmpty() || (! $database->getAttribute('enabled', false) && ! $isAPIKey && ! $isPrivilegedUser)) {
-            throw new Exception(Exception::DATABASE_NOT_FOUND, params: [$databaseId]);
-        }
-
-        $collection = $authorization->skip(fn () => $dbForProject->getDocument('database_'.$database->getSequence(), $collectionId));
-        if ($collection->isEmpty() || (! $collection->getAttribute('enabled', false) && ! $isAPIKey && ! $isPrivilegedUser)) {
-            throw new Exception($this->getParentNotFoundException(), params: [$collectionId]);
-        }
-
-        try {
-            $queries = Query::parseQueries($queries);
-        } catch (QueryException $e) {
-            throw new Exception(Exception::GENERAL_QUERY_INVALID, $e->getMessage());
-        }
-
-        $dbForDatabases = $getDatabasesDB($database);
-
-        $cursor = Query::getCursorQueries($queries, false);
-        $cursor = \reset($cursor);
-
-        if ($cursor !== false) {
-            $validator = new Cursor;
-            if (! $validator->isValid($cursor)) {
-                throw new Exception(Exception::GENERAL_QUERY_INVALID, $validator->getDescription());
-            }
-
-            $documentId = $cursor->getValue();
-
-            $cursorDocument = $authorization->skip(fn () => $dbForDatabases->getDocument('database_'.$database->getSequence().'_collection_'.$collection->getSequence(), $documentId));
-
-            if ($cursorDocument->isEmpty()) {
-                $type = ucfirst($this->getContext());
-                throw new Exception(Exception::GENERAL_CURSOR_NOT_FOUND, "$type '{$documentId}' for the 'cursor' value not found.");
-            }
-
-            $cursor->setValue($cursorDocument);
-        }
-
-        $collectionTableId = 'database_'.$database->getSequence().'_collection_'.$collection->getSequence();
-        $hasSelects = ! empty(Query::groupByType($queries)['selections']);
-
-        $find = $hasSelects
-            ? fn () => $dbForDatabases->find($collectionTableId, $queries)
-            : fn () => $dbForDatabases->skipRelationships(fn () => $dbForDatabases->find($collectionTableId, $queries));
+        // Reuses the same prep listRows runs (auth, lookups, query parse,
+        // cursor, find closure) so the explain endpoint stays byte-identical
+        // to the read it's explaining.
+        $context = $this->prepareListContext($databaseId, $collectionId, $queries, $dbForProject, $user, $getDatabasesDB, $authorization);
+        $database = $context['database'];
+        $collection = $context['collection'];
+        $dbForDatabases = $context['dbForDatabases'];
+        $queries = $context['queries'];
+        $collectionTableId = $context['collectionTableId'];
+        $find = $context['find'];
 
         // listRows fires both find() and count() when `total: true` (the default).
         // Mirror that exactly so explain reflects real listRows read volume.
