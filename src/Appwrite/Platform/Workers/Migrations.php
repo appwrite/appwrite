@@ -216,7 +216,10 @@ class Migrations extends Action
             $matchesDomain = $localDomain !== ''
                 && ($sourceHost === $localDomain || str_ends_with((string) $sourceHost, '.' . $localDomain));
             $matchesInternal = $migrationHost !== '' && $sourceHost === $migrationHost;
-            $isLocalEndpoint = is_string($sourceHost) && ($matchesDomain || $matchesInternal);
+            // Empty endpoint is defaulted to the internal host by processMigration, so
+            // treat it as local up-front for callers that bypass that defaulting (tests).
+            $isLocalEndpoint = (is_string($sourceHost) && ($matchesDomain || $matchesInternal))
+                || (empty($credentials['endpoint']) && $migrationHost !== '');
 
             $isLocalSource = !$this->sourceProject->isEmpty()
                 && (!$isAppwriteToAppwrite || $isLocalEndpoint);
@@ -234,6 +237,14 @@ class Migrations extends Action
         $queries = [];
         if ($source === SourceAppwrite::getName() && in_array($destination, [DestinationCSV::getName(), DestinationJSON::getName()])) {
             $queries = Query::parseQueries($migrationOptions['queries'] ?? []);
+        }
+
+        $sourceEndpoint = $credentials['endpoint'] ?? '';
+        if ($source === SourceAppwrite::getName()) {
+            // Loopback URLs are unreachable from inside the worker container — rewrite
+            // them to the internal host on both DB and SDK paths so the SDK fallback /
+            // primary call resolves. SDK auth (apiKey) still gates access on the SDK path.
+            $sourceEndpoint = $this->resolveLocalEndpoint($sourceEndpoint);
         }
 
         $migrationSource = match ($source) {
@@ -260,7 +271,7 @@ class Migrations extends Action
             ),
             SourceAppwrite::getName() => new SourceAppwrite(
                 $credentials['projectId'],
-                $credentials['endpoint'],
+                $sourceEndpoint,
                 $credentials['apiKey'],
                 $getDatabasesDB,
                 $useAppwriteApiSource ? SourceAppwrite::SOURCE_API : SourceAppwrite::SOURCE_DATABASE,
@@ -470,12 +481,7 @@ class Migrations extends Action
         $aggregatedResources = [];
         $caughtError = null;
 
-        $host = System::getEnv('_APP_MIGRATION_HOST');
-        if (empty($host)) {
-            throw new \Exception('_APP_MIGRATION_HOST is not set');
-        }
-
-        $endpoint = 'http://' . $host . '/v1';
+        $endpoint = $this->getMigrationEndpoint();
 
         try {
             $credentials = $migration->getAttribute('credentials', []);
@@ -680,6 +686,34 @@ class Migrations extends Action
         }
 
         return ($this->getDatabasesDB)($database);
+    }
+
+    private function resolveLocalEndpoint(string $endpoint): string
+    {
+        if ($endpoint === '') {
+            return $this->getMigrationEndpoint();
+        }
+
+        $host = parse_url($endpoint, PHP_URL_HOST);
+        if (!is_string($host)) {
+            return $endpoint;
+        }
+
+        if (!in_array(strtolower($host), ['localhost', '127.0.0.1', '0.0.0.0', '::1'], true)) {
+            return $endpoint;
+        }
+
+        return $this->getMigrationEndpoint();
+    }
+
+    private function getMigrationEndpoint(): string
+    {
+        $host = System::getEnv('_APP_MIGRATION_HOST');
+        if (empty($host)) {
+            throw new \Exception('_APP_MIGRATION_HOST is not set');
+        }
+
+        return 'http://' . $host . '/v1';
     }
 
     /**
