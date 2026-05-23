@@ -2,7 +2,6 @@
 
 namespace Appwrite\Platform\Modules\Sites\Http\Deployments\Status;
 
-use Appwrite\Builds\OrchestratorClient;
 use Appwrite\Event\Event;
 use Appwrite\Extend\Exception;
 use Appwrite\SDK\AuthType;
@@ -10,12 +9,14 @@ use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response;
 use Executor\Executor;
+use OpenRuntimes\Orchestrator\Client as OrchestratorClient;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 use Utopia\Database\Validator\UID;
 use Utopia\Platform\Action;
 use Utopia\Platform\Scope\HTTP;
+use Utopia\System\System;
 
 class Update extends Action
 {
@@ -110,8 +111,12 @@ class Update extends Action
         }
 
         try {
-            if (\Utopia\System\System::getEnv('_APP_BUILDS_BACKEND', 'executor') === 'orchestrator') {
-                (new OrchestratorClient())->deleteJob($project->getId() . '-' . $deploymentId . '-build');
+            if (System::getEnv('_APP_BUILDS_BACKEND', 'executor') === 'orchestrator') {
+                $client = new OrchestratorClient(
+                    endpoint: System::getEnv('_APP_ORCHESTRATOR_HOST', ''),
+                    apiKey: System::getEnv('_APP_ORCHESTRATOR_API_KEY', '') ?: null,
+                );
+                $client->jobs()->delete($project->getId() . '-' . $deploymentId . '-build');
             } else {
                 $executor->deleteRuntime($project->getId(), $deploymentId . "-build");
             }

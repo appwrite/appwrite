@@ -3,7 +3,6 @@
 namespace Appwrite\Platform\Modules\Functions\Workers;
 
 use Ahc\Jwt\JWT;
-use Appwrite\Builds\OrchestratorClient;
 use Appwrite\Builds\OrchestratorToken;
 use Appwrite\Event\Event;
 use Appwrite\Event\Message\Func as FunctionMessage;
@@ -21,12 +20,14 @@ use Appwrite\Vcs\Comment;
 use Exception;
 use Executor\Exception\Timeout as ExecutorTimeout;
 use Executor\Executor;
+use OpenRuntimes\Orchestrator\Client as OrchestratorClient;
 use OpenRuntimes\Orchestrator\DTO\Artifact\ArchiveArtifact;
 use OpenRuntimes\Orchestrator\DTO\Artifact\DownloadArtifact;
 use OpenRuntimes\Orchestrator\DTO\Artifact\UploadArtifact;
 use OpenRuntimes\Orchestrator\DTO\Callback;
 use OpenRuntimes\Orchestrator\DTO\JobRequest;
 use OpenRuntimes\Orchestrator\Enum\CallbackEvent;
+use OpenRuntimes\Orchestrator\Exception\TimeoutException as OrchestratorTimeout;
 use Swoole\Coroutine as Co;
 use Utopia\Cache\Cache;
 use Utopia\Config\Config;
@@ -1413,34 +1414,42 @@ class Builds extends Action
             chunked: true,
         );
 
-        $client = new OrchestratorClient();
-        $client->createJob(new JobRequest(
-            id: $jobId,
-            meta: [
-                'projectId' => $project->getId(),
-                'resourceId' => $resourceId,
-                'resourceType' => $resource->getCollection(),
-                'deploymentId' => $deploymentId,
-            ],
-            image: (string) $runtime['image'],
-            command: $buildCommand,
-            cpu: $jobCpus,
-            memory: $memory,
-            timeoutSeconds: $timeout,
-            workspace: '/tmp',
-            environment: $environment,
-            artifacts: $artifacts,
-            callback: new Callback(
-                url: "{$callbackBase}/{$resourcePath}/{$resourceId}/deployments/{$deploymentId}/events?{$projectQuery}",
-                events: [
-                    CallbackEvent::Log,
-                    CallbackEvent::Artifact,
-                    CallbackEvent::Exit,
+        $client = new OrchestratorClient(
+            endpoint: System::getEnv('_APP_ORCHESTRATOR_HOST', ''),
+            apiKey: System::getEnv('_APP_ORCHESTRATOR_API_KEY', '') ?: null,
+        );
+
+        try {
+            $client->jobs()->create(new JobRequest(
+                id: $jobId,
+                meta: [
+                    'projectId' => $project->getId(),
+                    'resourceId' => $resourceId,
+                    'resourceType' => $resource->getCollection(),
+                    'deploymentId' => $deploymentId,
                 ],
-                key: System::getEnv('_APP_ORCHESTRATOR_CALLBACK_SECRET', System::getEnv('_APP_OPENSSL_KEY_V1', '')),
-                headers: $appwriteProjectHeader,
-            ),
-        ), $timeout);
+                image: (string) $runtime['image'],
+                command: $buildCommand,
+                cpu: $jobCpus,
+                memory: $memory,
+                timeoutSeconds: $timeout,
+                workspace: '/tmp',
+                environment: $environment,
+                artifacts: $artifacts,
+                callback: new Callback(
+                    url: "{$callbackBase}/{$resourcePath}/{$resourceId}/deployments/{$deploymentId}/events?{$projectQuery}",
+                    events: [
+                        CallbackEvent::Log,
+                        CallbackEvent::Artifact,
+                        CallbackEvent::Exit,
+                    ],
+                    key: System::getEnv('_APP_ORCHESTRATOR_CALLBACK_SECRET', System::getEnv('_APP_OPENSSL_KEY_V1', '')),
+                    headers: $appwriteProjectHeader,
+                ),
+            ), $timeout);
+        } catch (OrchestratorTimeout $error) {
+            throw new ExecutorTimeout($error->getMessage(), $error->timeoutSeconds, previous: $error);
+        }
     }
 
     protected function applyOrchestratorEvent(
