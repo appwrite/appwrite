@@ -49,6 +49,7 @@ use Utopia\Platform\Action;
 use Utopia\Queue\Message;
 use Utopia\Storage\Device;
 use Utopia\System\System;
+use Utopia\Validator\Hostname;
 
 class Migrations extends Action
 {
@@ -209,20 +210,22 @@ class Migrations extends Action
 
             // Same projectId may collide with an external Appwrite — trust the DB fast
             // path only when the source URL targets this cluster's public or internal host.
+            // Env values are run through parse_url too so a port suffix (appwrite:8080)
+            // can't break equality with the port-stripped source host.
             $sourceHost = parse_url($credentials['endpoint'] ?? '', PHP_URL_HOST);
-            $localDomain = System::getEnv('_APP_DOMAIN', '');
-            // _APP_MIGRATION_HOST may include a port (appwrite:8080); strip it the same
-            // way parse_url does for the source URL so the equality check stays correct.
-            $migrationHostEnv = System::getEnv('_APP_MIGRATION_HOST', '');
-            $migrationHost = $migrationHostEnv !== ''
-                ? (parse_url('http://' . $migrationHostEnv, PHP_URL_HOST) ?: $migrationHostEnv)
-                : '';
+            $rawDomain = System::getEnv('_APP_DOMAIN', '');
+            $rawMigrationHost = System::getEnv('_APP_MIGRATION_HOST', '');
+            $localDomain = $rawDomain !== '' ? (parse_url('http://' . $rawDomain, PHP_URL_HOST) ?: '') : '';
+            $migrationHost = $rawMigrationHost !== '' ? (parse_url('http://' . $rawMigrationHost, PHP_URL_HOST) ?: '') : '';
 
-            $matchesDomain = $localDomain !== ''
-                && ($sourceHost === $localDomain || str_ends_with((string) $sourceHost, '.' . $localDomain));
-            $matchesInternal = $migrationHost !== '' && $sourceHost === $migrationHost;
+            $allowedHosts = array_filter([
+                $localDomain,
+                $localDomain !== '' ? '*.' . $localDomain : null,
+                $migrationHost,
+            ]);
+
             // Empty endpoint: processMigration defaults it to the internal host before reaching here.
-            $isLocalEndpoint = (is_string($sourceHost) && ($matchesDomain || $matchesInternal))
+            $isLocalEndpoint = (is_string($sourceHost) && !empty($allowedHosts) && (new Hostname($allowedHosts))->isValid($sourceHost))
                 || (empty($credentials['endpoint']) && $migrationHost !== '');
 
             $isLocalSource = !$this->sourceProject->isEmpty()
