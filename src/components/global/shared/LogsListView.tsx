@@ -1,6 +1,6 @@
 import { useState, useLayoutEffect, useRef, Fragment } from 'react'
 import { useNavigate, useLocation } from '@tanstack/react-router'
-import { Zap, Clock, Copy, Check, RefreshCw } from 'lucide-react'
+import { Zap, Clock, Copy, Check } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { EmptyState } from '@/components/global/shared/EmptyState'
 import { Pagination } from '@/components/global/shared/Pagination'
@@ -33,8 +33,6 @@ import {
   getStatusCodeBadge,
 } from '@/components/pages/projects/$projectId/functions/Executions'
 import type { Models } from '@appwrite.io/console'
-
-const LOGS_TABLE_SKELETON_ROWS_CAP = 14
 
 function formatDuration(ms: number): string {
   if (ms < 1000) return `${Math.round(ms)}ms`
@@ -181,7 +179,6 @@ function LogsPaginationSkeleton() {
 }
 
 function LogsLoadingTable({ rowCount }: { rowCount: number }) {
-  const rows = Math.min(rowCount, LOGS_TABLE_SKELETON_ROWS_CAP)
   return (
     <>
       <div
@@ -191,17 +188,11 @@ function LogsLoadingTable({ rowCount }: { rowCount: number }) {
         aria-busy="true"
         aria-label="Loading logs"
       >
-        <div
-          className="pointer-events-none absolute right-4 top-2.5 z-20 sm:right-6"
-          aria-hidden
-        >
-          <RefreshCw className="h-4 w-4 animate-spin text-muted-foreground transition-transform duration-500" />
-        </div>
         <Table withScrollContainer={false} className="table-fixed w-full">
           <LogsTableColGroup />
           <LogsTableHead />
           <TableBody>
-            <LogsSkeletonRows rowCount={rows} />
+            <LogsSkeletonRows rowCount={rowCount} />
           </TableBody>
         </Table>
       </div>
@@ -340,7 +331,7 @@ export function LogsListView({
     }
   }
 
-  if (isLoading && executions.length === 0 && !isFetching) {
+  if (isLoading || isFetching) {
     return (
       <div className="flex min-h-0 flex-1 flex-col">
         <LogsLoadingTable rowCount={pageSize} />
@@ -356,14 +347,6 @@ export function LogsListView({
             ref={scrollContainerRef}
             className="relative min-h-0 flex-1 overflow-auto"
           >
-            {isFetching && (
-              <div
-                className="pointer-events-none absolute right-4 top-2.5 z-20 sm:right-6"
-                aria-hidden
-              >
-                <RefreshCw className="h-4 w-4 animate-spin text-muted-foreground transition-transform duration-500" />
-              </div>
-            )}
             <Table withScrollContainer={false} className="table-fixed w-full">
               <LogsTableColGroup />
               <LogsTableHead />

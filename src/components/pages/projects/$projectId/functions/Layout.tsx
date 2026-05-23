@@ -5,7 +5,7 @@ import {
   Outlet,
   useNavigate,
 } from '@tanstack/react-router'
-import { useMutation, useQueryClient } from '@tanstack/react-query'
+import { useMutation, useQueryClient, useIsFetching } from '@tanstack/react-query'
 import { ServiceHeader, type Tab } from '../shared/ServiceHeader'
 import { CopyableId } from '@/components/global/shared/CopyableId'
 import { DeploymentInfo } from '@/components/global/shared/DeploymentInfo'
@@ -69,7 +69,11 @@ function FunctionLayoutContent() {
   const location = useLocation()
   const navigate = useNavigate()
   const queryClient = useQueryClient()
-  const { isRefreshing, triggerRefresh, hasRefreshHandler } = useRefresh()
+  const { triggerRefresh, hasRefreshHandler } = useRefresh()
+  const executionsListRefreshing =
+    useIsFetching({
+      queryKey: ['executions', 'function', projectId, functionId],
+    }) > 0
 
   const { data: func, isLoading } = useProjectFunction(projectId, functionId)
   const { data: activeDeployment } = useFunctionDeployment(
@@ -536,7 +540,7 @@ function FunctionLayoutContent() {
           }
           showRefresh={activeTab === 'executions' && hasRefreshHandler}
           onRefresh={activeTab === 'executions' ? triggerRefresh : undefined}
-          isRefreshing={isRefreshing}
+          isRefreshing={executionsListRefreshing}
           beforeCreateButtons={undefined}
           createLabel={
             activeTab === 'deployments'

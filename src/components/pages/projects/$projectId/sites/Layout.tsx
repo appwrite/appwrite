@@ -5,7 +5,7 @@ import {
   useNavigate,
   useLocation,
 } from '@tanstack/react-router'
-import { useQueryClient, useMutation } from '@tanstack/react-query'
+import { useQueryClient, useMutation, useIsFetching } from '@tanstack/react-query'
 import { ServiceHeader, type Tab } from '../shared/ServiceHeader'
 import { CopyableId } from '@/components/global/shared/CopyableId'
 import {
@@ -67,7 +67,11 @@ function SiteLayoutContent() {
   const location = useLocation()
   const navigate = useNavigate()
   const queryClient = useQueryClient()
-  const { isRefreshing, triggerRefresh, hasRefreshHandler } = useRefresh()
+  const { triggerRefresh, hasRefreshHandler } = useRefresh()
+  const siteLogsListRefreshing =
+    useIsFetching({
+      queryKey: ['logs', 'site', projectId, siteId],
+    }) > 0
   const { data: site } = useProjectSite(projectId, siteId)
   const { data: activeDeployment } = useSiteDeployment(
     projectId,
@@ -336,7 +340,7 @@ function SiteLayoutContent() {
           }
           showRefresh={activeTab === 'logs' && hasRefreshHandler}
           onRefresh={activeTab === 'logs' ? triggerRefresh : undefined}
-          isRefreshing={isRefreshing}
+          isRefreshing={siteLogsListRefreshing}
           createLabel={activeTab === 'domains' ? 'Add domain' : undefined}
           onCreate={
             activeTab === 'domains'

@@ -4,12 +4,9 @@ import { View } from '@/components/pages/projects/$projectId/functions/Execution
 import {
   projectQueryOptions,
   projectFunctionQueryOptions,
-  functionExecutionsQueryOptions,
 } from '@/lib/react-query/hooks'
 import { pageTitle } from '@/lib/utils/page-title'
 import { listSearchSchema } from '@/lib/table-filters'
-
-const EXECUTIONS_PER_PAGE = 25
 
 const searchSchema = listSearchSchema.extend({
   executionId: z.string().optional().catch(undefined),
@@ -26,7 +23,7 @@ export const Route = createFileRoute(
     ],
   }),
   validateSearch: searchSchema,
-  loader: async ({ params, context, location }) => {
+  loader: async ({ params, context }) => {
     // Only run on client side (SDK requires browser environment)
     if (typeof window === 'undefined') {
       return
@@ -38,30 +35,10 @@ export const Route = createFileRoute(
     // Fetch project first so setProjectRegion runs and project-scoped calls use the correct regional endpoint
     await queryClient.ensureQueryData(projectQueryOptions(projectId))
 
-    // Parse page from URL search params as fallback
-    const urlParams = new URLSearchParams(location.search)
-    const pageParam = urlParams.get('page')
-    const page = pageParam ? Math.max(1, parseInt(pageParam, 10)) : 1
-    const pageIndex = page - 1
-    const hasFilterQuery = !!urlParams.get('query')
-
-    const executionsPromise = hasFilterQuery
-      ? Promise.resolve(undefined)
-      : queryClient.ensureQueryData(
-          functionExecutionsQueryOptions(
-            projectId,
-            functionId,
-            pageIndex,
-            EXECUTIONS_PER_PAGE,
-          ),
-        )
-
-    await Promise.all([
-      queryClient.ensureQueryData(
-        projectFunctionQueryOptions(projectId, functionId),
-      ),
-      executionsPromise,
-    ])
+    // Function metadata only — executions load in the view with a skeleton (do not block navigation)
+    await queryClient.ensureQueryData(
+      projectFunctionQueryOptions(projectId, functionId),
+    )
     const fn = queryClient.getQueryData<{ name?: string }>(
       projectFunctionQueryOptions(projectId, functionId).queryKey,
     )

@@ -58,8 +58,6 @@ export function View() {
     [filterMap],
   )
 
-  const [displayedPage, setDisplayedPage] = useState(urlPage - 1)
-  const [requestedPage, setRequestedPage] = useState(urlPage - 1)
   const [pageSize, setPageSize] = useState(EXECUTIONS_PER_PAGE)
   const [selectedExecutionId, setSelectedExecutionId] = useState<string | null>(
     urlExecutionId || null,
@@ -67,20 +65,10 @@ export function View() {
 
   const refreshContext = useRefreshOptional()
 
-  const { data: func, isLoading: funcLoading } = useProjectFunction(
-    projectId,
-    functionId,
-  )
-
-  // Sync requested page with URL when it changes externally (e.g., browser back/forward)
-  useEffect(() => {
-    const newRequestedPage = urlPage - 1
-    if (newRequestedPage !== requestedPage) {
-      setRequestedPage(newRequestedPage)
-    }
-  }, [urlPage, requestedPage])
+  const { data: func } = useProjectFunction(projectId, functionId)
 
   const {
+    executions,
     total,
     isLoading: executionsLoading,
     isFetching: executionsFetching,
@@ -88,43 +76,10 @@ export function View() {
   } = useFunctionExecutions(
     projectId,
     functionId,
-    requestedPage,
+    urlPage - 1,
     pageSize,
     filterQueries,
   )
-
-  const { executions: displayedExecutions, total: displayedTotal } =
-    useFunctionExecutions(
-      projectId,
-      functionId,
-      displayedPage,
-      pageSize,
-      filterQueries,
-    )
-
-  // Update displayed page only when requested page data is ready (not fetching)
-  // This keeps the current page visible until the next page data is fully loaded
-  useEffect(() => {
-    if (
-      !executionsFetching &&
-      requestedPage !== displayedPage &&
-      !executionsLoading
-    ) {
-      setDisplayedPage(requestedPage)
-    }
-  }, [executionsFetching, executionsLoading, requestedPage, displayedPage])
-
-  // Keep showing previous results while fetching new filter results (no empty state flash)
-  const lastExecutionsRef = useRef<typeof displayedExecutions>([])
-  useEffect(() => {
-    if (!executionsFetching && displayedExecutions.length > 0) {
-      lastExecutionsRef.current = displayedExecutions
-    }
-  }, [executionsFetching, displayedExecutions])
-  const executions =
-    executionsFetching && lastExecutionsRef.current.length > 0
-      ? lastExecutionsRef.current
-      : displayedExecutions
 
   const refetchRef = useRef(refetch)
   refetchRef.current = refetch
@@ -142,31 +97,26 @@ export function View() {
   }, [refreshContext])
 
   const handlePageChange = (page: number) => {
-    // Update URL with new page (1-indexed)
     navigate({
       to: location.pathname,
       search: (prev) => ({
         ...prev,
-        page: page === 1 ? undefined : page, // Remove page param if it's page 1
+        page: page === 1 ? undefined : page,
       }),
-      replace: true, // Replace history to avoid cluttering back button
+      replace: true,
     })
-    // requestedPage will be updated via the useEffect that syncs with URL
   }
 
   const handlePageSizeChange = (size: number) => {
     setPageSize(size)
-    // Reset to page 1 when changing page size
     navigate({
       to: location.pathname,
       search: (prev) => ({
         ...prev,
-        page: undefined, // Remove page param to go to page 1
+        page: undefined,
       }),
       replace: true,
     })
-    setRequestedPage(0)
-    setDisplayedPage(0)
   }
 
   // Sync selectedExecutionId with URL parameter
@@ -174,7 +124,6 @@ export function View() {
     if (urlExecutionId && urlExecutionId !== selectedExecutionId) {
       setSelectedExecutionId(urlExecutionId)
     } else if (!urlExecutionId && selectedExecutionId) {
-      // Clear selection when URL doesn't have executionId (user closed drawer)
       setSelectedExecutionId(null)
     }
   }, [urlExecutionId, selectedExecutionId])
@@ -201,10 +150,10 @@ export function View() {
     <div className="flex flex-1 min-h-0 flex-col">
       <LogsListView
         executions={executions}
-        total={displayedTotal ?? total}
-        isLoading={funcLoading || executionsLoading}
+        total={total}
+        isLoading={executionsLoading}
         isFetching={executionsFetching}
-        currentPage={displayedPage + 1}
+        currentPage={urlPage}
         pageSize={pageSize}
         onPageChange={handlePageChange}
         onPageSizeChange={handlePageSizeChange}

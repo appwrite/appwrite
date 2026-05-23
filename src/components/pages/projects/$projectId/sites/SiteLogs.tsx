@@ -132,7 +132,7 @@ export function SiteLogsView() {
     <LogsListView
       executions={logs}
       total={total}
-      isLoading={siteLoading || logsLoading}
+      isLoading={logsLoading}
       currentPage={displayedPage + 1}
       pageSize={pageSize}
       onPageChange={handlePageChange}

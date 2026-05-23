@@ -3,12 +3,9 @@ import { z } from 'zod'
 import { View } from '@/components/pages/projects/$projectId/sites/Logs'
 import {
   siteQueryOptions,
-  siteLogsQueryOptions,
   projectQueryOptions,
 } from '@/lib/react-query/hooks'
 import { listSearchSchema } from '@/lib/table-filters'
-
-const LOGS_PER_PAGE = 25
 
 const searchSchema = listSearchSchema.extend({
   executionId: z.string().optional().catch(undefined),
@@ -18,7 +15,7 @@ export const Route = createFileRoute(
   '/_public/projects/$projectId/sites/$siteId/logs',
 )({
   validateSearch: searchSchema,
-  loader: async ({ params, context, location }) => {
+  loader: async ({ params, context }) => {
     // Only run on client side (SDK requires browser environment)
     if (typeof window === 'undefined') {
       return
@@ -30,23 +27,8 @@ export const Route = createFileRoute(
     // Fetch project first so setProjectRegion runs and project-scoped calls use the correct regional endpoint
     await queryClient.ensureQueryData(projectQueryOptions(projectId))
 
-    // Parse page from URL search params as fallback
-    const urlParams = new URLSearchParams(location.search)
-    const pageParam = urlParams.get('page')
-    const page = pageParam ? Math.max(1, parseInt(pageParam, 10)) : 1
-    const pageIndex = page - 1
-    const hasFilterQuery = !!urlParams.get('query')
-
-    const logsPromise = hasFilterQuery
-      ? Promise.resolve(undefined)
-      : queryClient.ensureQueryData(
-          siteLogsQueryOptions(projectId, siteId, pageIndex, LOGS_PER_PAGE),
-        )
-
-    await Promise.all([
-      queryClient.ensureQueryData(siteQueryOptions(projectId, siteId)),
-      logsPromise,
-    ])
+    // Site metadata only — logs load in the view with a skeleton (do not block navigation)
+    await queryClient.ensureQueryData(siteQueryOptions(projectId, siteId))
   },
   component: SiteLogsPage,
 })
