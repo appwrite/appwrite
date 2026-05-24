@@ -9,11 +9,19 @@ import {
 type SettingsSearchContextValue = {
   query: string
   setQuery: (value: string) => void
+  /**
+   * When true, matches live on another settings section and navigation is pending.
+   * Card lists should not filter or show an empty state until the switch completes.
+   */
+  deferEmptyResults: boolean
 }
 
-const SettingsSearchContext = createContext<SettingsSearchContextValue | null>(
-  null,
-)
+const SettingsSearchContext = createContext<Omit<
+  SettingsSearchContextValue,
+  'deferEmptyResults'
+> | null>(null)
+
+const DeferEmptyResultsContext = createContext(false)
 
 export function SettingsSearchProvider({
   query,
@@ -49,10 +57,25 @@ export function SettingsSearchProviderLocal({
   )
 }
 
+export function DeferEmptyResultsProvider({
+  deferEmptyResults,
+  children,
+}: {
+  deferEmptyResults: boolean
+  children: ReactNode
+}) {
+  return (
+    <DeferEmptyResultsContext.Provider value={deferEmptyResults}>
+      {children}
+    </DeferEmptyResultsContext.Provider>
+  )
+}
+
 export function useSettingsSearch(): SettingsSearchContextValue {
   const ctx = useContext(SettingsSearchContext)
+  const deferEmptyResults = useContext(DeferEmptyResultsContext)
   if (!ctx) {
     throw new Error('useSettingsSearch must be used within SettingsSearchProvider')
   }
-  return ctx
+  return { ...ctx, deferEmptyResults }
 }

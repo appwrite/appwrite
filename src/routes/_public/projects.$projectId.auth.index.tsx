@@ -1,6 +1,5 @@
 import { createFileRoute } from '@tanstack/react-router'
 import { z } from 'zod'
-import { View } from '@/components/pages/projects/$projectId/auth/View'
 import { projectQueryOptions, usersQueryOptions } from '@/lib/react-query/hooks'
 import { GRID_DEFAULT_PAGE_SIZE } from '@/lib/react-query/hooks/constants'
 import { pageTitle } from '@/lib/utils/page-title'
@@ -61,7 +60,6 @@ export const Route = createFileRoute('/_public/projects/$projectId/auth/')({
     const sortOrder = sort?.sortOrder ?? USERS_DEFAULT_SORT_ORDER
 
     await queryClient.ensureQueryData(projectQueryOptions(projectId))
-    // Prefetch users with exact URL params so the View reads from cache (no loading flash)
     await queryClient.ensureQueryData(
       usersQueryOptions(
         projectId,
@@ -74,26 +72,4 @@ export const Route = createFileRoute('/_public/projects/$projectId/auth/')({
       ),
     )
   },
-  component: AuthIndexPage,
 })
-
-function AuthIndexPage() {
-  const { projectId } = Route.useParams()
-  const search = Route.useSearch()
-  return (
-    <View
-      key={`auth-${projectId}-users-index`}
-      usersListSearch={
-        search && typeof search === 'object'
-          ? (search as {
-              search?: string
-              query?: string
-              page?: number
-              limit?: number
-              sort?: string
-            })
-          : undefined
-      }
-    />
-  )
-}

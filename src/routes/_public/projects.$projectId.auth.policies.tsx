@@ -1,5 +1,4 @@
 import { createFileRoute, Outlet, redirect } from '@tanstack/react-router'
-import { View } from '@/components/pages/projects/$projectId/auth/View'
 
 function isPoliciesIndexPath(pathname: string): boolean {
   return /\/auth\/policies\/?$/.test(pathname)
@@ -21,12 +20,5 @@ export const Route = createFileRoute(
 })
 
 function AuthPoliciesLayout() {
-  const { projectId } = Route.useParams()
-
-  return (
-    <>
-      <View key={`auth-${projectId}-policies`} />
-      <Outlet />
-    </>
-  )
+  return <Outlet />
 }

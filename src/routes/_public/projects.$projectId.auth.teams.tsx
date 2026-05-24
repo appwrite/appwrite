@@ -1,6 +1,5 @@
-import { createFileRoute, Outlet, useMatches } from '@tanstack/react-router'
+import { createFileRoute, Outlet } from '@tanstack/react-router'
 import { z } from 'zod'
-import { View } from '@/components/pages/projects/$projectId/auth/View'
 import { projectQueryOptions, teamsQueryOptions } from '@/lib/react-query/hooks'
 import { listSearchSchema, queryParamToMap } from '@/lib/table-filters'
 import { GRID_DEFAULT_PAGE_SIZE } from '@/lib/react-query/hooks/constants'
@@ -68,28 +67,10 @@ export const Route = createFileRoute('/_public/projects/$projectId/auth/teams')(
         ),
       )
     },
-    component: AuthTeamsPage,
+    component: AuthTeamsLayout,
   },
 )
 
-function AuthTeamsPage() {
-  const { projectId } = Route.useParams()
-  const matches = useMatches()
-
-  // Check if we're on a child route (team detail, etc.)
-  const isChildRoute = matches.some(
-    (match) =>
-      match.routeId.includes('/auth/teams/$teamId') ||
-      match.routeId.startsWith(
-        '/_public/projects/$projectId/auth/teams/$teamId',
-      ),
-  )
-
-  // If we're on a child route, render the outlet (child route component)
-  if (isChildRoute) {
-    return <Outlet />
-  }
-
-  // Otherwise, show the teams list view
-  return <View key={`auth-${projectId}-teams`} />
+function AuthTeamsLayout() {
+  return <Outlet />
 }

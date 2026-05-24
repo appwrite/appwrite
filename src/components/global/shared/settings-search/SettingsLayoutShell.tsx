@@ -19,6 +19,7 @@ import {
 import {
   SettingsSearchProvider,
   SettingsSearchProviderLocal,
+  DeferEmptyResultsProvider,
   useSettingsSearch,
 } from './SettingsSearchContext'
 
@@ -112,6 +113,12 @@ function SettingsLayoutShellContent({
     )
   }, [q, navItems, cardIndex])
 
+  const deferEmptyResults = Boolean(
+    q &&
+      !navMatchBySection.get(activeSectionId) &&
+      sectionIds.some((id) => navMatchBySection.get(id)),
+  )
+
   const onNavigateToSectionRef = useRef(onNavigateToSection)
   onNavigateToSectionRef.current = onNavigateToSection
 
@@ -203,7 +210,9 @@ function SettingsLayoutShellContent({
         })}
       </nav>
 
-      <div className="min-w-0 flex-1">{children}</div>
+      <DeferEmptyResultsProvider deferEmptyResults={deferEmptyResults}>
+        <div className="min-w-0 flex-1">{children}</div>
+      </DeferEmptyResultsProvider>
     </div>
   )
 }

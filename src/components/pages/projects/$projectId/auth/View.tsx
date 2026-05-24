@@ -108,6 +108,11 @@ import { toast } from 'sonner'
 import { UserContextMenu } from './_components/UserContextMenu'
 import { TeamContextMenu } from './_components/TeamContextMenu'
 import type { AuthOAuth2SettingsInitialData } from '@/lib/react-query/hooks/oauth2-providers'
+import {
+  isAuthTeamDetailPath,
+  isAuthUserDetailPath,
+  isAuthUsersIndexPath,
+} from '@/lib/auth-routes'
 
 export type UsersListSearch = {
   search?: string
@@ -141,8 +146,7 @@ export function View({
     teamsLimit?: number
   }
 
-  const isAuthUsersIndex =
-    location.pathname.replace(/\/$/, '') === `/projects/${projectId}/auth`
+  const isAuthUsersIndex = isAuthUsersIndexPath(location.pathname, projectId)
 
   // URL-backed list params for users tab. Prefer validated search from index route (usersListSearch) so tags and table update immediately after navigate; fallback to parsing location.
   const usersListParams = useMemo(() => {
@@ -205,27 +209,15 @@ export function View({
     search?.teamsLimit,
   ])
 
-  // Check if we're on a user detail route - if so, don't render this component
-  const isUserDetailRoute = useMemo(() => {
-    const pathParts = location.pathname.split('/').filter(Boolean)
-    const authIndex = pathParts.findIndex((part) => part === 'auth')
-    return (
-      authIndex >= 0 &&
-      pathParts[authIndex + 1] === 'users' &&
-      pathParts[authIndex + 2]
-    )
-  }, [location.pathname])
+  const isUserDetailRoute = useMemo(
+    () => isAuthUserDetailPath(location.pathname),
+    [location.pathname],
+  )
 
-  // Check if we're on a team detail route - if so, don't render this component
-  const isTeamDetailRoute = useMemo(() => {
-    const pathParts = location.pathname.split('/').filter(Boolean)
-    const authIndex = pathParts.findIndex((part) => part === 'auth')
-    return (
-      authIndex >= 0 &&
-      pathParts[authIndex + 1] === 'teams' &&
-      pathParts[authIndex + 2]
-    )
-  }, [location.pathname])
+  const isTeamDetailRoute = useMemo(
+    () => isAuthTeamDetailPath(location.pathname),
+    [location.pathname],
+  )
 
   // Derive active tab from pathname
   const activeTab = useMemo(() => {

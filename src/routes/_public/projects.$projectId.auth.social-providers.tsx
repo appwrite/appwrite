@@ -1,5 +1,4 @@
 import { createFileRoute, redirect } from '@tanstack/react-router'
-import { View } from '@/components/pages/projects/$projectId/auth/View'
 import { pageTitle } from '@/lib/utils/page-title'
 import { canAccessAuthSecuritySettings } from '@/lib/console-rbac-loader'
 import { projectQueryOptions } from '@/lib/react-query/hooks'
@@ -40,16 +39,4 @@ export const Route = createFileRoute(
 
     return { catalog, providerList } satisfies AuthOAuth2SettingsInitialData
   },
-  component: AuthSocialProvidersPage,
 })
-
-function AuthSocialProvidersPage() {
-  const { projectId } = Route.useParams()
-  const loaderData = Route.useLoaderData()
-  return (
-    <View
-      key={`auth-${projectId}-social-providers`}
-      authSocialProvidersInitialData={loaderData}
-    />
-  )
-}

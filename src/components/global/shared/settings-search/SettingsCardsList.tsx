@@ -18,15 +18,15 @@ export function SettingsCardsList({
   className?: string
   emptyMessage?: string
 }) {
-  const { query } = useSettingsSearch()
+  const { query, deferEmptyResults } = useSettingsSearch()
 
   const visible = useMemo(() => {
     const q = query.trim()
-    if (!q) return cards
+    if (!q || deferEmptyResults) return cards
     return cards.filter((card) => matchesSettingsSearch(q, card.search))
-  }, [cards, query])
+  }, [cards, query, deferEmptyResults])
 
-  if (visible.length === 0 && query.trim()) {
+  if (visible.length === 0 && query.trim() && !deferEmptyResults) {
     return (
       <p className="py-8 text-center text-[13px] text-muted-foreground">
         {emptyMessage}
