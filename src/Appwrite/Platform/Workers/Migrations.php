@@ -257,14 +257,6 @@ class Migrations extends Action
             $queries = Query::parseQueries($migrationOptions['queries'] ?? []);
         }
 
-        $sourceEndpoint = $credentials['endpoint'] ?? '';
-        if ($source === SourceAppwrite::getName() && !$useAppwriteApiSource) {
-            // Rewrite loopback only on the DB fast path. On the SDK path, the user-supplied
-            // endpoint is authoritative — silently redirecting it to the internal host would
-            // turn a misrouted external migration into a self-call against this cluster.
-            $sourceEndpoint = $this->resolveLocalEndpoint($sourceEndpoint);
-        }
-
         $migrationSource = match ($source) {
             Firebase::getName() => new Firebase(
                 json_decode($credentials['serviceAccount'], true),
@@ -289,7 +281,7 @@ class Migrations extends Action
             ),
             SourceAppwrite::getName() => new SourceAppwrite(
                 $credentials['projectId'],
-                $sourceEndpoint,
+                $credentials['endpoint'],
                 $credentials['apiKey'],
                 $getDatabasesDB,
                 $useAppwriteApiSource ? SourceAppwrite::SOURCE_API : SourceAppwrite::SOURCE_DATABASE,
@@ -499,7 +491,12 @@ class Migrations extends Action
         $aggregatedResources = [];
         $caughtError = null;
 
-        $endpoint = $this->getMigrationEndpoint();
+        $host = System::getEnv('_APP_MIGRATION_HOST');
+        if (empty($host)) {
+            throw new \Exception('_APP_MIGRATION_HOST is not set');
+        }
+
+        $endpoint = 'http://' . $host . '/v1';
 
         try {
             $credentials = $migration->getAttribute('credentials', []);
@@ -704,34 +701,6 @@ class Migrations extends Action
         }
 
         return ($this->getDatabasesDB)($database);
-    }
-
-    private function resolveLocalEndpoint(string $endpoint): string
-    {
-        if ($endpoint === '') {
-            return $this->getMigrationEndpoint();
-        }
-
-        $host = parse_url($endpoint, PHP_URL_HOST);
-        if (!is_string($host)) {
-            return $endpoint;
-        }
-
-        if (!in_array(strtolower($host), ['localhost', '127.0.0.1', '0.0.0.0', '::1'], true)) {
-            return $endpoint;
-        }
-
-        return $this->getMigrationEndpoint();
-    }
-
-    private function getMigrationEndpoint(): string
-    {
-        $host = System::getEnv('_APP_MIGRATION_HOST');
-        if (empty($host)) {
-            throw new \Exception('_APP_MIGRATION_HOST is not set');
-        }
-
-        return 'http://' . $host . '/v1';
     }
 
     /**
