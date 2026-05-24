@@ -20,6 +20,10 @@ import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import { toast } from 'sonner'
 import { isNavigatorReportedOffline } from '@/lib/network-connectivity'
+import {
+  isStaleChunkLoadError,
+  tryReloadForStaleChunk,
+} from '@/lib/stale-chunk-error'
 
 /**
  * Extracts resource IDs from URL pathname for error context
@@ -77,10 +81,21 @@ function extractRouteContext(pathname: string): {
   const documentMatch = pathname.match(/\/documents\/([^/]+)/)
   if (documentMatch) context.documentId = documentMatch[1]
 
-  // Extract user ID (auth section)
-  const userMatch = pathname.match(/\/auth\/([^/]+)/)
-  if (userMatch && userMatch[1] !== 'settings' && userMatch[1] !== 'teams')
-    context.userId = userMatch[1]
+  // Extract user ID (auth section) — exclude service tabs, not user detail routes
+  const authSegmentMatch = pathname.match(/\/auth\/([^/]+)/)
+  const authSegment = authSegmentMatch?.[1]
+  const authTabSegments = new Set([
+    'teams',
+    'policies',
+    'social-providers',
+    'templates',
+    'settings',
+    'security',
+    'users',
+  ])
+  if (authSegment && !authTabSegments.has(authSegment)) {
+    context.userId = authSegment
+  }
 
   // Extract site ID
   const siteMatch = pathname.match(/\/sites\/([^/]+)/)
@@ -163,6 +178,7 @@ export function ErrorComponent({
   // Broader heuristics (status 0, "failed to fetch", etc.) also match CORS and
   // other failures, which should show the regular error page with details.
   const isConnectivityError = isNavigatorReportedOffline()
+  const isStaleChunkError = isStaleChunkLoadError(error)
 
   // Use project-specific messages for project routes
   const formattedError = isProjectNotFound
@@ -186,7 +202,14 @@ export function ErrorComponent({
               'This page needs a connection to Appwrite. Reconnect to the internet, then try again - we can reload automatically when you are back online.',
             isUserFriendly: true,
           }
-        : formatError(error, 'An unexpected error occurred.')
+        : isStaleChunkError
+          ? {
+              title: 'Update available',
+              message:
+                'A newer version of the console was deployed while you had this tab open. Reload the page to continue.',
+              isUserFriendly: true,
+            }
+          : formatError(error, 'An unexpected error occurred.')
 
   const message = useMemo(
     () => ({
@@ -216,7 +239,8 @@ export function ErrorComponent({
   // Skip 401 Unauthorized - we redirect to login and don't want these in Sentry
   const isUnauthorized = errorCode === 401 || errorWithCode.status === 401
   useEffect(() => {
-    if (preview || isUnauthorized || isConnectivityError) return
+    if (preview || isUnauthorized || isConnectivityError || isStaleChunkError)
+      return
     captureExceptionWithContext(error, {
       // Route-based context
       ...routeContext,
@@ -259,8 +283,14 @@ export function ErrorComponent({
     isProjectNotFound,
     isProjectAccessDenied,
     isConnectivityError,
+    isStaleChunkError,
     routeContext,
   ])
+
+  useEffect(() => {
+    if (preview || !isStaleChunkError) return
+    tryReloadForStaleChunk(error)
+  }, [preview, isStaleChunkError, error])
 
   useEffect(() => {
     if (!isConnectivityError || preview) return
@@ -293,10 +323,20 @@ export function ErrorComponent({
     reset()
   }
 
+  const handleReload = () => {
+    window.location.reload()
+  }
+
   const showTechnicalDetails =
-    !isProjectNotFound && !isProjectAccessDenied && !isConnectivityError
+    !isProjectNotFound &&
+    !isProjectAccessDenied &&
+    !isConnectivityError &&
+    !isStaleChunkError
   const showSupportBlurb =
-    !isProjectNotFound && !isProjectAccessDenied && !isConnectivityError
+    !isProjectNotFound &&
+    !isProjectAccessDenied &&
+    !isConnectivityError &&
+    !isStaleChunkError
 
   // Copy error details
   const [copied, setCopied] = useState(false)
@@ -415,7 +455,19 @@ export function ErrorComponent({
           </div>
         ) : null}
 
-        {isConnectivityError ? (
+        {isStaleChunkError ? (
+          <div className="flex w-full flex-col gap-3">
+            <Button
+              variant="brandCta"
+              onClick={handleReload}
+              size="sm"
+              className="h-9 min-h-9 w-full shrink-0 gap-2 text-[13px] font-medium"
+            >
+              <RefreshCw className="h-4 w-4" />
+              Reload page
+            </Button>
+          </div>
+        ) : isConnectivityError ? (
           <div className="flex w-full flex-col gap-3">
             <Button
               variant="brandCta"

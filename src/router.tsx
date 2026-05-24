@@ -6,6 +6,11 @@ import * as TanstackQuery from './integrations/tanstack-query/root-provider'
 import { routeTree } from './routeTree.gen'
 import { ErrorComponent } from './components/error/Component'
 import { Link } from '@tanstack/react-router'
+import {
+  clearStaleChunkReloadGuard,
+  isStaleChunkLoadError,
+  tryReloadForStaleChunk,
+} from '@/lib/stale-chunk-error'
 
 function NotFoundComponent() {
   return (
@@ -53,6 +58,17 @@ export const getRouter = () => {
   // SSR is disabled - app runs as SPA (client-side only)
   // No need for SSR query integration
 
+  if (!router.isServer) {
+    clearStaleChunkReloadGuard()
+
+    const onUnhandledRejection = (event: PromiseRejectionEvent) => {
+      if (tryReloadForStaleChunk(event.reason)) {
+        event.preventDefault()
+      }
+    }
+    window.addEventListener('unhandledrejection', onUnhandledRejection)
+  }
+
   // Initialize Sentry on client side only when VITE_SENTRY_DSN is set
   if (!router.isServer && import.meta.env.VITE_SENTRY_DSN) {
     Sentry.init({
@@ -67,6 +83,7 @@ export const getRouter = () => {
           const status = (err as { status?: number }).status
           if (code === 401 || status === 401) return null
         }
+        if (isStaleChunkLoadError(err)) return null
         return event
       },
     })
