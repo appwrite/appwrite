@@ -49,6 +49,7 @@ use Utopia\Platform\Action;
 use Utopia\Queue\Message;
 use Utopia\Storage\Device;
 use Utopia\System\System;
+use Utopia\Validator\Hostname;
 
 class Migrations extends Action
 {
@@ -202,18 +203,55 @@ class Migrations extends Action
         }
 
         if (! empty($credentials['projectId'])) {
+            $isAppwriteSource = $source === SourceAppwrite::getName();
+            $isAppwriteToAppwrite = $isAppwriteSource
+                && $destination === DestinationAppwrite::getName();
+
             $this->sourceProject = $this->dbForPlatform->getDocument('projects', $credentials['projectId']);
-            if ($this->sourceProject->isEmpty()) {
-                throw new Exception(Exception::MIGRATION_SOURCE_PROJECT_NOT_FOUND);
+
+            // Same projectId may collide with an external Appwrite — trust the DB fast
+            // path only when the source URL targets this cluster's public or internal host.
+            $sourceHost = parse_url($credentials['endpoint'] ?? '', PHP_URL_HOST);
+            $rawDomain = System::getEnv('_APP_DOMAIN', '');
+            $rawMigrationHost = System::getEnv('_APP_MIGRATION_HOST', '');
+            $localDomain = $rawDomain !== '' ? (parse_url('http://' . $rawDomain, PHP_URL_HOST) ?: '') : '';
+            $migrationHost = $rawMigrationHost !== '' ? (parse_url('http://' . $rawMigrationHost, PHP_URL_HOST) ?: '') : '';
+
+            $allowedHosts = array_filter([
+                $localDomain,
+                $localDomain !== '' ? '*.' . $localDomain : null,
+                $migrationHost,
+            ]);
+
+            // Include the source project's custom API domain so customers using
+            // a configured custom domain still get the DB fast path.
+            if (is_string($sourceHost) && !$this->sourceProject->isEmpty()) {
+                $rule = $this->dbForPlatform->findOne('rules', [
+                    Query::equal('domain', [$sourceHost]),
+                    Query::equal('type', ['api']),
+                    Query::equal('projectInternalId', [$this->sourceProject->getSequence()]),
+                ]);
+                if (!$rule->isEmpty()) {
+                    $allowedHosts[] = $sourceHost;
+                }
             }
+
+            // Empty endpoint: processMigration defaults it to the internal host before reaching here.
+            $isLocalEndpoint = (is_string($sourceHost) && !empty($allowedHosts) && (new Hostname($allowedHosts))->isValid($sourceHost))
+                || (empty($credentials['endpoint']) && $migrationHost !== '');
 
             $sourceRegion = $this->sourceProject->getAttribute('region', 'default');
             $destinationRegion = $this->project->getAttribute('region', 'default');
-            $useAppwriteApiSource = $source === SourceAppwrite::getName()
-                && $destination === DestinationAppwrite::getName()
-                && $sourceRegion !== $destinationRegion;
-            if (! $useAppwriteApiSource) {
+
+            $isLocalSource = !$this->sourceProject->isEmpty()
+                && (!$isAppwriteSource || ($isLocalEndpoint && $sourceRegion === $destinationRegion));
+
+            if ($isLocalSource) {
                 $projectDB = call_user_func($this->getProjectDB, $this->sourceProject);
+            } elseif ($isAppwriteToAppwrite) {
+                $useAppwriteApiSource = true;
+            } else {
+                throw new Exception(Exception::MIGRATION_SOURCE_PROJECT_NOT_FOUND);
             }
         }
         $getDatabasesDB = fn (Document $database): Database =>
