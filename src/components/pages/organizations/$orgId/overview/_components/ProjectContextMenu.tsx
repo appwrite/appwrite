@@ -37,6 +37,7 @@ import { Button } from '@/components/ui/button'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { useNavigate } from '@tanstack/react-router'
 import { deleteProject, fetchProject } from '@/lib/react-query/hooks'
+import { getApiEndpoint } from '@/lib/appwrite/sdk'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
 import {
   buildConsoleUrl,
@@ -74,6 +75,7 @@ export function ProjectContextMenu({
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
 
   const projectHref = buildConsoleUrl(`/projects/${project.$id}`)
+  const projectEndpoint = getApiEndpoint(project.region ?? undefined)
   const hasName = !!project.name
 
   const navigateToTab = (
@@ -206,6 +208,12 @@ export function ProjectContextMenu({
               >
                 <ContextMenuIcon icon={Copy} />
                 Copy ID
+              </ContextMenuItem>
+              <ContextMenuItem
+                onSelect={() => copyToClipboard('Endpoint', projectEndpoint)}
+              >
+                <ContextMenuIcon icon={Link2} />
+                Copy endpoint
               </ContextMenuItem>
               {hasName && (
                 <ContextMenuItem
