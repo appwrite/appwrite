@@ -28,7 +28,7 @@ export const Route = createFileRoute('/_public/projects/$projectId/storage')({
 
     const bucketsOpts = storageSidebarBucketsQueryOptions(projectId)
 
-    const bucketsData = await queryClient.ensureQueryData(bucketsOpts)
+    await queryClient.ensureQueryData(bucketsOpts)
 
     await (projectData?.teamId
       ? queryClient.ensureQueryData(
@@ -49,7 +49,8 @@ export const Route = createFileRoute('/_public/projects/$projectId/storage')({
       !new URLSearchParams(location.search).get('create') &&
       isRealStorageNavigation(cause, preload)
     ) {
-      redirectStorageFirstBucketOrPlaceholder(projectId, bucketsData)
+      const freshBucketsData = await queryClient.fetchQuery(bucketsOpts)
+      redirectStorageFirstBucketOrPlaceholder(projectId, freshBucketsData)
     }
   },
   component: StorageLayout,

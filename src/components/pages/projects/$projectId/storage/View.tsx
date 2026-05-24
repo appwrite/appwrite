@@ -1,5 +1,9 @@
 import { useEffect, useState } from 'react'
 import { useNavigate, useParams, useLocation, useSearch } from '@tanstack/react-router'
+import {
+  isStoragePlaceholderBucketId,
+  storageSidebarBucketsQueryOptions,
+} from '@/lib/storage-routes'
 import { HardDrive } from 'lucide-react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
@@ -21,7 +25,7 @@ import { CreateBucket } from './_components/CreateBucket'
  * or creation when no bucket route is active.
  */
 export function View() {
-  const { projectId } = useParams({ strict: false })
+  const { projectId, bucketId } = useParams({ strict: false })
   const navigate = useNavigate()
   const location = useLocation()
   const search = useSearch({ strict: false }) as { create?: string }
@@ -32,6 +36,22 @@ export function View() {
     ...bucketsQueryOptions(projectId, 0, 1, ''),
     select: (d) => d.total ?? 0,
   })
+
+  const { data: sidebarBuckets } = useQuery({
+    ...storageSidebarBucketsQueryOptions(projectId!),
+    enabled: !!projectId && isStoragePlaceholderBucketId(bucketId),
+  })
+
+  useEffect(() => {
+    if (!projectId || !isStoragePlaceholderBucketId(bucketId)) return
+    const firstId = sidebarBuckets?.buckets?.[0]?.$id
+    if (!firstId) return
+    navigate({
+      to: '/projects/$projectId/storage/$bucketId',
+      params: { projectId, bucketId: firstId },
+      replace: true,
+    })
+  }, [bucketId, navigate, projectId, sidebarBuckets?.buckets])
 
   const { project } = useProject(projectId)
   const { plan: organizationPlan } = useOrganizationPlan(project?.teamId)

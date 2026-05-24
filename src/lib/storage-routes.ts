@@ -4,6 +4,12 @@ import { bucketsQueryOptions } from '@/lib/react-query/hooks'
 /** Placeholder bucket id (same pattern as database `tables/-/rows`). */
 export const STORAGE_PLACEHOLDER_BUCKET_ID = '-' as const
 
+export function isStoragePlaceholderBucketId(
+  bucketId: string | null | undefined,
+): boolean {
+  return bucketId === STORAGE_PLACEHOLDER_BUCKET_ID
+}
+
 /** First-page bucket list for sidebar + default-bucket redirect (name A→Z). */
 export const STORAGE_SIDEBAR_BUCKETS_PREFETCH = 100
 

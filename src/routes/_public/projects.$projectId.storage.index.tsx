@@ -29,7 +29,7 @@ export const Route = createFileRoute('/_public/projects/$projectId/storage/')({
       return
     }
 
-    const bucketsData = await queryClient.ensureQueryData(
+    const bucketsData = await queryClient.fetchQuery(
       storageSidebarBucketsQueryOptions(projectId),
     )
     redirectStorageFirstBucketOrPlaceholder(projectId, bucketsData)

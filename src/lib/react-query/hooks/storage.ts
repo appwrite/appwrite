@@ -10,6 +10,7 @@ import { useMemo } from 'react'
 import { Query } from '@appwrite.io/console'
 import type { Models } from '@appwrite.io/console'
 import { sdk } from '@/lib/appwrite/sdk'
+import { isStoragePlaceholderBucketId } from '@/lib/storage-routes'
 import {
   DEFAULT_STALE_TIME,
   DEFAULT_PAGE_SIZE,
@@ -139,7 +140,7 @@ export async function fetchBucket(
   projectId: string,
   bucketId: string,
 ): Promise<Models.Bucket> {
-  if (!projectId || !bucketId) {
+  if (!projectId || !bucketId || isStoragePlaceholderBucketId(bucketId)) {
     throw new Error('Project ID and Bucket ID are required')
   }
 
@@ -182,7 +183,7 @@ export async function fetchBucketFiles(
   sortBy: string = FILES_DEFAULT_SORT_BY,
   sortOrder: 'asc' | 'desc' = FILES_DEFAULT_SORT_ORDER,
 ): Promise<Models.FileList> {
-  if (!projectId || !bucketId) {
+  if (!projectId || !bucketId || isStoragePlaceholderBucketId(bucketId)) {
     return { files: [], total: 0 }
   }
 
@@ -303,7 +304,8 @@ export function bucketFilesQueryOptions(
         sortBy,
         sortOrder,
       ),
-    enabled: !!projectId && !!bucketId,
+    enabled:
+      !!projectId && !!bucketId && !isStoragePlaceholderBucketId(bucketId),
     staleTime: DEFAULT_STALE_TIME,
     retry: false,
     refetchOnMount: false,
@@ -326,7 +328,11 @@ export function fileQueryOptions(
   return queryOptions({
     queryKey: ['file', 'project', projectId, 'bucket', bucketId, fileId],
     queryFn: () => fetchFile(projectId!, bucketId!, fileId!),
-    enabled: !!projectId && !!bucketId && !!fileId,
+    enabled:
+      !!projectId &&
+      !!bucketId &&
+      !!fileId &&
+      !isStoragePlaceholderBucketId(bucketId),
     staleTime: DEFAULT_STALE_TIME,
     retry: false,
     refetchOnMount: false,
@@ -361,7 +367,11 @@ export function fileTokensQueryOptions(
     ],
     queryFn: () =>
       fetchFileTokens(projectId!, bucketId!, fileId!, page, limit),
-    enabled: !!projectId && !!bucketId && !!fileId,
+    enabled:
+      !!projectId &&
+      !!bucketId &&
+      !!fileId &&
+      !isStoragePlaceholderBucketId(bucketId),
     staleTime: DEFAULT_STALE_TIME,
     retry: false,
     refetchOnMount: false,
@@ -493,7 +503,10 @@ export function useBucket(
   return useQuery({
     queryKey: ['bucket', 'project', projectId, bucketId],
     queryFn: () => fetchBucket(projectId!, bucketId!),
-    enabled: !!projectId && !!bucketId,
+    enabled:
+      !!projectId &&
+      !!bucketId &&
+      !isStoragePlaceholderBucketId(bucketId),
     staleTime: DEFAULT_STALE_TIME,
   })
 }
