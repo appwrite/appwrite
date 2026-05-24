@@ -210,8 +210,6 @@ class Migrations extends Action
 
             // Same projectId may collide with an external Appwrite — trust the DB fast
             // path only when the source URL targets this cluster's public or internal host.
-            // Env values are run through parse_url too so a port suffix (appwrite:8080)
-            // can't break equality with the port-stripped source host.
             $sourceHost = parse_url($credentials['endpoint'] ?? '', PHP_URL_HOST);
             $rawDomain = System::getEnv('_APP_DOMAIN', '');
             $rawMigrationHost = System::getEnv('_APP_MIGRATION_HOST', '');
