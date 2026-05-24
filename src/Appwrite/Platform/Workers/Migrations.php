@@ -223,16 +223,22 @@ class Migrations extends Action
                 $migrationHost,
             ]);
 
-            // Empty endpoint: processMigration defaults it to the internal host before reaching here.
-            // Custom API domains are looked up directly in `rules` so customers using
+            // Include the source project's custom API domain so customers using
             // a configured custom domain still get the DB fast path.
-            $isLocalEndpoint = (is_string($sourceHost) && !empty($allowedHosts) && (new Hostname($allowedHosts))->isValid($sourceHost))
-                || (empty($credentials['endpoint']) && $migrationHost !== '')
-                || (is_string($sourceHost) && !$this->sourceProject->isEmpty() && !$this->dbForPlatform->findOne('rules', [
+            if (is_string($sourceHost) && !$this->sourceProject->isEmpty()) {
+                $rule = $this->dbForPlatform->findOne('rules', [
                     Query::equal('domain', [$sourceHost]),
                     Query::equal('type', ['api']),
                     Query::equal('projectInternalId', [$this->sourceProject->getSequence()]),
-                ])->isEmpty());
+                ]);
+                if (!$rule->isEmpty()) {
+                    $allowedHosts[] = $sourceHost;
+                }
+            }
+
+            // Empty endpoint: processMigration defaults it to the internal host before reaching here.
+            $isLocalEndpoint = (is_string($sourceHost) && !empty($allowedHosts) && (new Hostname($allowedHosts))->isValid($sourceHost))
+                || (empty($credentials['endpoint']) && $migrationHost !== '');
 
             $isLocalSource = !$this->sourceProject->isEmpty()
                 && (!$isAppwriteSource || $isLocalEndpoint);
