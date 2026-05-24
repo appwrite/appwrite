@@ -706,6 +706,20 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
                 },
               },
               {
+                label: 'Buy and transfer domains',
+                description:
+                  'Org domains list Buy domain / Transfer in buttons and /domains/buy, /domains/transfer-in.',
+                variant: 'switch' as const,
+                switchValue: overrides.showBuyTransferDomains,
+                switchOnChange: (checked: boolean) => {
+                  setOverrides((prev) => ({
+                    ...prev,
+                    showBuyTransferDomains: checked,
+                  }))
+                  setDebugOverride('showBuyTransferDomains', checked)
+                },
+              },
+              {
                 label: 'Reset feature flags',
                 description:
                   'Restore profile toggles on this list to canonical defaults and clear local switches (marketplace, AI assistant, native app bar, success team card, functions local editor).',
@@ -874,6 +888,7 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
     overrides.showSuccessTeamCard,
     overrides.showFullscreenLoader,
     overrides.showFunctionsLocalEditor,
+    overrides.showBuyTransferDomains,
     overrides.mockCloudStatusAlert,
     banners.length,
     actions,

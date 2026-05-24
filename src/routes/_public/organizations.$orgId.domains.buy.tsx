@@ -1,6 +1,7 @@
-import { createFileRoute } from '@tanstack/react-router'
+import { createFileRoute, redirect } from '@tanstack/react-router'
 import { z } from 'zod'
 import { BuyDomainWizard } from '@/components/pages/organizations/$orgId/domains/_components/BuyDomainWizard'
+import { loadDebugOverrides } from '@/lib/debug-overrides'
 import { pageTitle } from '@/lib/utils/page-title'
 
 export const buyDomainSearchSchema = z.object({
@@ -13,6 +14,16 @@ export type BuyDomainWizardSearch = z.infer<typeof buyDomainSearchSchema>
 export const Route = createFileRoute(
   '/_public/organizations/$orgId/domains/buy',
 )({
+  beforeLoad: ({ params }) => {
+    if (typeof window === 'undefined') return
+    if (!loadDebugOverrides().showBuyTransferDomains) {
+      throw redirect({
+        to: '/organizations/$orgId/domains',
+        params: { orgId: params.orgId },
+        replace: true,
+      })
+    }
+  },
   head: () => ({ meta: [{ title: pageTitle('Buy domain', 'Domains') }] }),
   validateSearch: buyDomainSearchSchema,
   component: BuyDomainWizardPage,

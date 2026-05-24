@@ -9,6 +9,7 @@ export const DEBUG_OVERRIDE_KEYS = {
   mockCloudStatusAlert: 'debug:mockCloudStatusAlert',
   showFullscreenLoader: 'debug:showFullscreenLoader',
   showFunctionsLocalEditor: 'debug:showFunctionsLocalEditor',
+  showBuyTransferDomains: 'debug:showBuyTransferDomains',
 } as const
 
 /** Overrides that are not persisted to localStorage (reset on reload). */
@@ -40,6 +41,11 @@ export type DebugOverrides = {
    * (Monaco + gzip deploy prep). Default false.
    */
   showFunctionsLocalEditor: boolean
+  /**
+   * When true, exposes Buy domain and Transfer in on the org domains list and
+   * /domains/buy and /domains/transfer-in routes. Default false.
+   */
+  showBuyTransferDomains: boolean
 }
 
 const isBrowser = typeof window !== 'undefined'
@@ -85,6 +91,10 @@ export function loadDebugOverrides(): DebugOverrides {
       DEBUG_OVERRIDE_KEYS.showFunctionsLocalEditor,
       false,
     ),
+    showBuyTransferDomains: readBooleanFromStorage(
+      DEBUG_OVERRIDE_KEYS.showBuyTransferDomains,
+      false,
+    ),
   }
 }
 
@@ -128,6 +138,7 @@ const FEATURE_FLAGS_MENU_DEBUG_KEYS: (keyof DebugOverrides)[] = [
   'showNativeAppBar',
   'showSuccessTeamCard',
   'showFunctionsLocalEditor',
+  'showBuyTransferDomains',
 ]
 
 /** Clear persisted debug overrides used by the Feature flags submenu only. */
