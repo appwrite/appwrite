@@ -335,11 +335,11 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
       [
         { label: 'Default', faviconValue: 'default' },
         { label: 'Green', faviconValue: 'green' },
-        { label: 'Orange', faviconValue: 'orange' },
+        { label: 'Blue', faviconValue: 'blue' },
         { label: 'Red', faviconValue: 'red' },
         { label: 'Theme', faviconValue: 'theme' },
         { label: 'Theme + Green', faviconValue: 'theme-green' },
-        { label: 'Theme + Orange', faviconValue: 'theme-orange' },
+        { label: 'Theme + Blue', faviconValue: 'theme-blue' },
         { label: 'Theme + Red', faviconValue: 'theme-red' },
       ] as const satisfies ReadonlyArray<{
         label: string

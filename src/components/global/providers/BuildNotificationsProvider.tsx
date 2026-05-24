@@ -3,7 +3,7 @@
  *
  * Surfaces ongoing site / function deployments outside the active tab:
  *
- * - Swaps the favicon to the orange (in-progress) variant while one or more builds
+ * - Swaps the favicon to the blue (in-progress) variant while one or more builds
  *   are still running, so users can see something is happening even when this tab
  *   is in the background. Favicon changes only happen when the user is on a
  *   build-relevant route (Sites or Functions); on other sections of the project
@@ -45,7 +45,7 @@ interface ActiveBuild {
   resourceId: string
   resourceType: DeploymentResource
   status: string
-  /** Used with `isDeploymentTimeout` so stale `building` rows do not keep the orange favicon */
+  /** Used with `isDeploymentTimeout` so stale `building` rows do not keep the blue favicon */
   createdAt?: string | null
 }
 
@@ -55,7 +55,7 @@ const TERMINAL_FAVICON_RESET_MS = 10_000
 /**
  * What the user is currently looking at, used to decide whether a deployment
  * event should affect the favicon / surface a permission prompt. We want to be
- * strict here so the favicon never flips orange because of a build for a
+ * strict here so the favicon never flips blue because of a build for a
  * resource the user can't see on the page they're on.
  *
  * Shape:
@@ -134,7 +134,7 @@ function isTerminalStatus(status: string): boolean {
 
 /** Match base favicon: theme variants in dev/local, flat logo colors in prod. */
 function buildInProgressFavicon(): FaviconVariant {
-  return usesThemeAwareFaviconHost() ? 'theme-orange' : 'orange'
+  return usesThemeAwareFaviconHost() ? 'theme-blue' : 'blue'
 }
 
 function buildSuccessFavicon(): FaviconVariant {
@@ -462,7 +462,7 @@ export function BuildNotificationsProvider({
         const isNew = !builds.has(update.deploymentId)
         // Strict relevance gate: a brand new build only counts if it belongs
         // to the resource the user is currently looking at. This prevents the
-        // favicon from going orange for builds the user can't see on screen
+        // favicon from going blue for builds the user can't see on screen
         // (e.g. Site B's build while they're on Site A, or any function build
         // while they're on the Sites overview). Builds we already started
         // tracking continue through to completion, so navigating away mid-
@@ -648,7 +648,7 @@ export function BuildNotificationsProvider({
           if (activeBuildsRef.current.has(depId)) continue
           // Same relevance gate as live events - only seed builds the user is
           // currently looking at, otherwise reloading mid-build on (e.g.) the
-          // Databases page would still flip the favicon orange.
+          // Databases page would still flip the favicon blue.
           if (
             !isUpdateRelevant(relevanceCtxRef.current, {
               resourceType,
@@ -737,7 +737,7 @@ export function BuildNotificationsProvider({
   // between specific resources within a section). Realtime tracking keeps
   // running globally for already-tracked builds, but the visible favicon swap
   // is gated to the resource the user is currently looking at - so navigating
-  // from Site A to Site B while A is building should drop A's orange icon,
+  // from Site A to Site B while A is building should drop A's blue icon,
   // and a build started on Site A should not show on Site B.
   useEffect(() => {
     if (typeof window === 'undefined') return

@@ -3,21 +3,21 @@ import { usesThemeAwareFaviconHost } from '@/lib/utils/theme-favicon-host'
 export type FaviconVariant =
   | 'default'
   | 'green'
-  | 'orange'
+  | 'blue'
   | 'red'
   | 'theme'
   | 'theme-green'
-  | 'theme-orange'
+  | 'theme-blue'
   | 'theme-red'
 
 export const FAVICON_MAP: Record<FaviconVariant, string> = {
   default: '/logo.svg',
   green: '/logo-green.svg',
-  orange: '/logo-orange.svg',
+  blue: '/logo-blue.svg',
   red: '/logo-red.svg',
   theme: '/logo-theme.svg',
   'theme-green': '/logo-theme-green.svg',
-  'theme-orange': '/logo-theme-orange.svg',
+  'theme-blue': '/logo-theme-blue.svg',
   'theme-red': '/logo-theme-red.svg',
 }
 
