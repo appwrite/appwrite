@@ -17,6 +17,7 @@ import {
   type RealtimeResponseEvent,
 } from '@appwrite.io/console'
 import { useDebugOverrides } from '@/lib/debug-overrides'
+import { useDebugMode } from '@/components/global/providers/DebugMode'
 import { toast } from 'sonner'
 import {
   Check,
@@ -33,10 +34,10 @@ import {
   X,
   ZoomIn,
   ZoomOut,
-  Bot,
   ExternalLink,
   Maximize2,
 } from 'lucide-react'
+import { ThinkingBubble } from '@/components/global/shared/ThinkingBubble'
 import { Button } from '@/components/ui/button'
 import {
   Popover,
@@ -1212,6 +1213,176 @@ const AssistantMessageRow = memo(
     prev.copied === next.copied,
 )
 
+const TYPING_IDLE_ACTIVITY = 0.15
+const THINKING_ACTIVITY = 0.55
+
+export type BubbleActivityDebugMode =
+  | 'auto'
+  | 'idle'
+  | 'slow'
+  | 'fast'
+  | 'thinking'
+  | 'max'
+
+const DEBUG_MODE_ACTIVITY: Record<
+  Exclude<BubbleActivityDebugMode, 'auto'>,
+  number
+> = {
+  idle: TYPING_IDLE_ACTIVITY,
+  slow: 0.42,
+  fast: 0.88,
+  thinking: THINKING_ACTIVITY,
+  max: 1.12,
+}
+
+function useTypingSpeedActivity(
+  isActive: boolean,
+  isThinking: boolean,
+  debugMode: BubbleActivityDebugMode = 'auto',
+) {
+  const activityRef = useRef(TYPING_IDLE_ACTIVITY)
+  const lastKeystrokeRef = useRef<number | null>(null)
+  /** Smoothed ms between keystrokes — lower means faster typing */
+  const emaIntervalRef = useRef(320)
+  const isThinkingRef = useRef(isThinking)
+  const isActiveRef = useRef(isActive)
+  const debugModeRef = useRef(debugMode)
+
+  useEffect(() => {
+    isThinkingRef.current = isThinking
+  }, [isThinking])
+
+  useEffect(() => {
+    isActiveRef.current = isActive
+  }, [isActive])
+
+  useEffect(() => {
+    debugModeRef.current = debugMode
+  }, [debugMode])
+
+  const registerKeystroke = useCallback(() => {
+    const now = performance.now()
+    const last = lastKeystrokeRef.current
+
+    if (last != null) {
+      const interval = Math.max(now - last, 25)
+      emaIntervalRef.current = emaIntervalRef.current * 0.3 + interval * 0.7
+    }
+
+    lastKeystrokeRef.current = now
+  }, [])
+
+  useEffect(() => {
+    if (!isActive) {
+      activityRef.current = TYPING_IDLE_ACTIVITY
+      lastKeystrokeRef.current = null
+      emaIntervalRef.current = 320
+      return
+    }
+
+    let raf = 0
+    let lastTime = performance.now()
+
+    const tick = (now: number) => {
+      if (!isActiveRef.current) return
+
+      const dt = Math.min(0.05, (now - lastTime) / 1000)
+      lastTime = now
+
+      const debugOverride = debugModeRef.current
+      if (debugOverride !== 'auto') {
+        const target = DEBUG_MODE_ACTIVITY[debugOverride]
+        const prev = activityRef.current
+        activityRef.current =
+          prev + (target - prev) * (1 - Math.exp(-12 * dt))
+        raf = requestAnimationFrame(tick)
+        return
+      }
+
+      const sinceLast =
+        lastKeystrokeRef.current != null
+          ? now - lastKeystrokeRef.current
+          : Number.POSITIVE_INFINITY
+
+      if (sinceLast > 90) {
+        const idleDrift = Math.min(1, (sinceLast - 90) / 500)
+        emaIntervalRef.current +=
+          (360 - emaIntervalRef.current) * 0.018 * idleDrift
+      }
+
+      const interval = Math.max(emaIntervalRef.current, 45)
+      const speedT = Math.min(1, Math.max(0, (260 - interval) / 165))
+      let target =
+        TYPING_IDLE_ACTIVITY + speedT * (1.05 - TYPING_IDLE_ACTIVITY)
+
+      if (sinceLast < 160) {
+        const activeBoost = 1 + (1 - sinceLast / 160) * 0.4
+        target = Math.min(1.12, target * activeBoost)
+      }
+
+      if (sinceLast > 900) {
+        target = TYPING_IDLE_ACTIVITY
+      } else if (isThinkingRef.current) {
+        target = Math.max(target, THINKING_ACTIVITY)
+      }
+
+      const prev = activityRef.current
+      const smoothRate = target >= prev ? 14 : 3.5
+      activityRef.current =
+        prev + (target - prev) * (1 - Math.exp(-smoothRate * dt))
+
+      raf = requestAnimationFrame(tick)
+    }
+
+    raf = requestAnimationFrame(tick)
+    return () => cancelAnimationFrame(raf)
+  }, [isActive])
+
+  return { activityRef, registerKeystroke }
+}
+
+const BUBBLE_DEBUG_MODES: Array<{
+  id: BubbleActivityDebugMode
+  label: string
+}> = [
+  { id: 'auto', label: 'Auto' },
+  { id: 'idle', label: 'Idle' },
+  { id: 'slow', label: 'Slow type' },
+  { id: 'fast', label: 'Fast type' },
+  { id: 'thinking', label: 'Thinking' },
+  { id: 'max', label: 'Max' },
+]
+
+function AssistantBubbleDebugControls({
+  mode,
+  onModeChange,
+}: {
+  mode: BubbleActivityDebugMode
+  onModeChange: (mode: BubbleActivityDebugMode) => void
+}) {
+  return (
+    <div className="flex flex-wrap justify-center gap-1.5">
+      {BUBBLE_DEBUG_MODES.map(({ id, label }) => (
+        <Button
+          key={id}
+          type="button"
+          size="sm"
+          variant="outline"
+          className={cn(
+            'h-7 px-2 text-[11px]',
+            mode === id
+              ? 'border-purple-600 bg-purple-600 text-white hover:bg-purple-600/90 dark:border-purple-500 dark:bg-purple-500 dark:hover:bg-purple-500/90'
+              : 'border-purple-500/40 text-purple-600 hover:bg-purple-500/10 hover:text-purple-700 dark:border-purple-400/40 dark:text-purple-400 dark:hover:bg-purple-500/15 dark:hover:text-purple-300',
+          )}
+          onClick={() => onModeChange(id)}
+        >
+          {label}
+        </Button>
+      ))}
+    </div>
+  )
+}
+
 export function AIChatPanel() {
   const overrides = useDebugOverrides()
   const { isOpen, closeChat, activeConversationId, setActiveConversationId } =
@@ -1227,6 +1398,9 @@ export function AIChatPanel() {
     [location.pathname],
   )
   const showPanel = overrides.showAIAssistant
+  const { isDebugModeOpen } = useDebugMode()
+  const [bubbleDebugMode, setBubbleDebugMode] =
+    useState<BubbleActivityDebugMode>('auto')
   const [input, setInput] = useState('')
   const [messagesLimit, setMessagesLimit] = useState(
     ASSISTANT_MESSAGES_PAGE_SIZE,
@@ -1446,6 +1620,14 @@ export function AIChatPanel() {
     createMessageMutation.isPending ||
     isLatestAssistantMessageRunning ||
     waitingForAssistantReply
+
+  const { activityRef: bubbleActivityRef, registerKeystroke: registerTypingKeystroke } =
+    useTypingSpeedActivity(
+      isOpen && showPanel && !isAssistantBlocked,
+      isThinking,
+      bubbleDebugMode,
+    )
+
   const hasUploadingAttachments = pendingAttachments.some(
     (attachment) => attachment.status === 'uploading',
   )
@@ -2101,9 +2283,19 @@ export function AIChatPanel() {
           >
             {messages.length === 0 ? (
               <div className="flex h-full flex-col items-center justify-center">
-                <div className="mb-6 flex h-16 w-16 items-center justify-center rounded-2xl bg-primary/10 dark:bg-sidebar-accent">
-                  <Bot className="h-8 w-8 text-primary dark:text-sidebar-foreground" />
-                </div>
+                <ThinkingBubble
+                  size={220}
+                  activityRef={bubbleActivityRef}
+                  className="mb-4"
+                />
+                {isDebugModeOpen ? (
+                  <div className="mb-6 w-full max-w-md">
+                    <AssistantBubbleDebugControls
+                      mode={bubbleDebugMode}
+                      onModeChange={setBubbleDebugMode}
+                    />
+                  </div>
+                ) : null}
                 <h3 className="mb-2 text-lg font-semibold text-foreground">
                   How can I help you?
                 </h3>
@@ -2177,8 +2369,11 @@ export function AIChatPanel() {
                 })}
                 {isThinking && (
                   <div className="flex">
-                    <div className="flex items-center gap-1.5 px-2.5 py-1.5 text-[13px] text-muted-foreground">
-                      <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                    <div className="flex items-center gap-2 px-2.5 py-1.5 text-[13px] text-muted-foreground">
+                      <ThinkingBubble
+                        size={72}
+                        activityRef={bubbleActivityRef}
+                      />
                       <span>Thinking...</span>
                     </div>
                   </div>
@@ -2189,6 +2384,14 @@ export function AIChatPanel() {
           </div>
 
           <div className="shrink-0 border-t border-border p-3">
+            {isDebugModeOpen && messages.length > 0 ? (
+              <div className="mb-3">
+                <AssistantBubbleDebugControls
+                  mode={bubbleDebugMode}
+                  onModeChange={setBubbleDebugMode}
+                />
+              </div>
+            ) : null}
             {editingMessageId ? (
               <div className="mb-2 flex items-center justify-between rounded-md border border-border bg-muted/20 px-2.5 py-1.5">
                 <p className="truncate text-[11px] text-muted-foreground">
@@ -2378,6 +2581,13 @@ export function AIChatPanel() {
               </div>
             ) : null}
             <div className="flex items-end gap-1.5 rounded-md border border-border bg-card p-1.5">
+              {messages.length > 0 ? (
+                <ThinkingBubble
+                  size={64}
+                  activityRef={bubbleActivityRef}
+                  className="mb-0.5 shrink-0"
+                />
+              ) : null}
               <input
                 ref={fileInputRef}
                 type="file"
@@ -2388,7 +2598,10 @@ export function AIChatPanel() {
               <textarea
                 ref={inputRef}
                 value={input}
-                onChange={(e) => setInput(e.target.value)}
+                onChange={(e) => {
+                  setInput(e.target.value)
+                  registerTypingKeystroke()
+                }}
                 onPaste={handleInputPaste}
                 onKeyDown={handleKeyDown}
                 placeholder={
