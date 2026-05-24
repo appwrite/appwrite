@@ -236,9 +236,7 @@ class Migrations extends Action
                 }
             }
 
-            // Empty endpoint: processMigration defaults it to the internal host before reaching here.
-            $isLocalEndpoint = (is_string($sourceHost) && !empty($allowedHosts) && (new Hostname($allowedHosts))->isValid($sourceHost))
-                || (empty($credentials['endpoint']) && $migrationHost !== '');
+            $isLocalEndpoint = is_string($sourceHost) && !empty($allowedHosts) && (new Hostname($allowedHosts))->isValid($sourceHost);
 
             $sourceRegion = $this->sourceProject->getAttribute('region', 'default');
             $destinationRegion = $this->project->getAttribute('region', 'default');
