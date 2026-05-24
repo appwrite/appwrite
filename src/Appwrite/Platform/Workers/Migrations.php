@@ -198,27 +198,26 @@ class Migrations extends Action
         /** @var Database|null $projectDB */
         $projectDB = null;
         $useAppwriteApiSource = false;
-        $isAppwriteSource = $source === SourceAppwrite::getName();
-        $isAppwriteToAppwrite = $isAppwriteSource
-            && $destination === DestinationAppwrite::getName();
-
-        if ($isAppwriteSource && empty($credentials['projectId'])) {
+        if ($source === SourceAppwrite::getName() && empty($credentials['projectId'])) {
             throw new Exception(Exception::MIGRATION_SOURCE_PROJECT_ID_REQUIRED);
         }
 
-        if ($isAppwriteSource) {
+        if (! empty($credentials['projectId'])) {
             $this->sourceProject = $this->dbForPlatform->getDocument('projects', $credentials['projectId']);
+            if ($this->sourceProject->isEmpty()) {
+                throw new Exception(Exception::MIGRATION_SOURCE_PROJECT_NOT_FOUND);
+            }
 
-            // Trust DB fast path only when the source URL targets this cluster's host
-            // (env-configured or this project's verified custom API domain).
             $sourceHost = parse_url($credentials['endpoint'] ?? '', PHP_URL_HOST);
-            $publicDomain = parse_url('http://' . System::getEnv('_APP_DOMAIN', ''), PHP_URL_HOST) ?: '';
-            $internalHost = parse_url('http://' . System::getEnv('_APP_MIGRATION_HOST', ''), PHP_URL_HOST) ?: '';
+            $rawDomain = System::getEnv('_APP_DOMAIN', '');
+            $rawMigrationHost = System::getEnv('_APP_MIGRATION_HOST', '');
+            $localDomain = $rawDomain !== '' ? (parse_url('http://' . $rawDomain, PHP_URL_HOST) ?: '') : '';
+            $migrationHost = $rawMigrationHost !== '' ? (parse_url('http://' . $rawMigrationHost, PHP_URL_HOST) ?: '') : '';
 
             $allowedHosts = array_filter([
-                $publicDomain,
-                $publicDomain !== '' ? '*.' . $publicDomain : null,
-                $internalHost,
+                $localDomain,
+                $localDomain !== '' ? '*.' . $localDomain : null,
+                $migrationHost,
             ]);
 
             if (is_string($sourceHost) && !$this->sourceProject->isEmpty()) {
@@ -233,16 +232,23 @@ class Migrations extends Action
                 }
             }
 
-            $isLocalEndpoint = is_string($sourceHost)
-                && !empty($allowedHosts)
-                && (new Hostname($allowedHosts))->isValid($sourceHost);
+            $isAppwriteToAppwrite = $source === SourceAppwrite::getName()
+                && $destination === DestinationAppwrite::getName();
 
             $sourceRegion = $this->sourceProject->getAttribute('region', 'default');
             $destinationRegion = $this->project->getAttribute('region', 'default');
+            $useAppwriteApiSource = $isAppwriteToAppwrite
+                && $sourceRegion !== $destinationRegion;
+
+            $isLoopback = is_string($sourceHost)
+                && in_array(strtolower($sourceHost), ['localhost', '127.0.0.1', '0.0.0.0', '::1'], true);
+
+            $isLocalEndpoint = $isLoopback
+                || (is_string($sourceHost) && !empty($allowedHosts) && (new Hostname($allowedHosts))->isValid($sourceHost))
+                || (empty($credentials['endpoint']) && $migrationHost !== '');
 
             $isLocalSource = !$this->sourceProject->isEmpty()
-                && $isLocalEndpoint
-                && (!$isAppwriteToAppwrite || $sourceRegion === $destinationRegion);
+                && (!$isAppwriteToAppwrite || $isLocalEndpoint);
 
             if ($isLocalSource) {
                 $projectDB = call_user_func($this->getProjectDB, $this->sourceProject);
@@ -257,6 +263,11 @@ class Migrations extends Action
         $queries = [];
         if ($source === SourceAppwrite::getName() && in_array($destination, [DestinationCSV::getName(), DestinationJSON::getName()])) {
             $queries = Query::parseQueries($migrationOptions['queries'] ?? []);
+        }
+
+        $sourceEndpoint = $credentials['endpoint'] ?? '';
+        if ($source === SourceAppwrite::getName() && !$useAppwriteApiSource) {
+            $sourceEndpoint = $this->resolveLocalEndpoint($sourceEndpoint);
         }
 
         $migrationSource = match ($source) {
@@ -283,7 +294,7 @@ class Migrations extends Action
             ),
             SourceAppwrite::getName() => new SourceAppwrite(
                 $credentials['projectId'],
-                $credentials['endpoint'],
+                $sourceEndpoint,
                 $credentials['apiKey'],
                 $getDatabasesDB,
                 $useAppwriteApiSource ? SourceAppwrite::SOURCE_API : SourceAppwrite::SOURCE_DATABASE,
@@ -425,8 +436,6 @@ class Migrations extends Action
             'targets.write',
             'webhooks.read',
             'webhooks.write',
-            'rules.read',
-            'rules.write',
             'project.read',
             'project.write',
             'keys.read',
@@ -495,12 +504,7 @@ class Migrations extends Action
         $aggregatedResources = [];
         $caughtError = null;
 
-        $host = System::getEnv('_APP_MIGRATION_HOST');
-        if (empty($host)) {
-            throw new \Exception('_APP_MIGRATION_HOST is not set');
-        }
-
-        $endpoint = 'http://' . $host . '/v1';
+        $endpoint = $this->getMigrationEndpoint();
 
         try {
             $credentials = $migration->getAttribute('credentials', []);
@@ -615,21 +619,11 @@ class Migrations extends Action
             }
 
             if ($publish) {
-                $extras = [
+                call_user_func($this->logError, $th, 'appwrite-worker', 'appwrite-queue-' . self::getName(), [
                     'migrationId' => $migration->getId(),
                     'source' => $migration->getAttribute('source') ?? '',
                     'destination' => $migration->getAttribute('destination') ?? '',
-                ];
-
-                // Include source identifiers for Appwrite sources to make Sentry events
-                // self-debuggable. Never include the apiKey or any other secret.
-                if ($migration->getAttribute('source') === SourceAppwrite::getName()) {
-                    $credentials = $migration->getAttribute('credentials', []) ?? [];
-                    $extras['sourceProjectId'] = $credentials['projectId'] ?? '';
-                    $extras['sourceEndpoint'] = $credentials['endpoint'] ?? '';
-                }
-
-                call_user_func($this->logError, $th, 'appwrite-worker', 'appwrite-queue-' . self::getName(), $extras);
+                ]);
             }
         } finally {
             try {
@@ -947,7 +941,6 @@ class Migrations extends Action
             recipient: $user->getAttribute('email'),
             name: $user->getAttribute('name', $user->getAttribute('email')),
             subject: $subject,
-            template: MAIL_TEMPLATE_DATA_EXPORT,
             bodyTemplate: __DIR__ . '/../../../../app/config/locale/templates/email-base-styled.tpl',
             body: $emailBody,
             preview: $preview,
@@ -1058,5 +1051,33 @@ class Migrations extends Action
         );
         $publisherForUsage->enqueue($message);
         $usage->reset();
+    }
+
+    private function resolveLocalEndpoint(string $endpoint): string
+    {
+        if ($endpoint === '') {
+            return $this->getMigrationEndpoint();
+        }
+
+        $host = parse_url($endpoint, PHP_URL_HOST);
+        if (!is_string($host)) {
+            return $endpoint;
+        }
+
+        if (!in_array(strtolower($host), ['localhost', '127.0.0.1', '0.0.0.0', '::1'], true)) {
+            return $endpoint;
+        }
+
+        return $this->getMigrationEndpoint();
+    }
+
+    private function getMigrationEndpoint(): string
+    {
+        $host = System::getEnv('_APP_MIGRATION_HOST');
+        if (empty($host)) {
+            throw new \Exception('_APP_MIGRATION_HOST is not set');
+        }
+
+        return 'http://' . $host . '/v1';
     }
 }
