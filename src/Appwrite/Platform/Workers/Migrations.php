@@ -240,8 +240,11 @@ class Migrations extends Action
             $isLocalEndpoint = (is_string($sourceHost) && !empty($allowedHosts) && (new Hostname($allowedHosts))->isValid($sourceHost))
                 || (empty($credentials['endpoint']) && $migrationHost !== '');
 
+            $sourceRegion = $this->sourceProject->getAttribute('region', 'default');
+            $destinationRegion = $this->project->getAttribute('region', 'default');
+
             $isLocalSource = !$this->sourceProject->isEmpty()
-                && (!$isAppwriteSource || $isLocalEndpoint);
+                && (!$isAppwriteSource || ($isLocalEndpoint && $sourceRegion === $destinationRegion));
 
             if ($isLocalSource) {
                 $projectDB = call_user_func($this->getProjectDB, $this->sourceProject);
