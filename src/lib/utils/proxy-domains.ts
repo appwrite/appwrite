@@ -3,6 +3,7 @@
  */
 
 import { parse } from 'tldts'
+import type { Models } from '@appwrite.io/console'
 
 /**
  * Check if a rule has logs available for viewing (string or array with content)
@@ -12,6 +13,24 @@ export function canViewRuleLogs(logs: unknown): boolean {
   if (typeof logs === 'string') return logs.length > 0
   if (Array.isArray(logs)) return logs.length > 0
   return false
+}
+
+/**
+ * Whether a deployment-type proxy rule routes to the resource's active deployment.
+ * Matches Domains tab "Active deployment" rules (not branch-pinned, not redirect).
+ */
+export function proxyRuleServesActiveDeployment(
+  rule: Models.ProxyRule,
+  activeDeploymentId: string | undefined,
+): boolean {
+  if (!activeDeploymentId || rule.type !== 'deployment') return false
+  if (rule.redirectUrl) return false
+
+  if (rule.deploymentVcsProviderBranch) {
+    return rule.deploymentId === activeDeploymentId
+  }
+
+  return true
 }
 
 import { Query } from '@appwrite.io/console'

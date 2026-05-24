@@ -88,6 +88,7 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
 import { Label } from '@/components/ui/label'
 import { RESOURCE_CARD_METADATA_DIVIDER_CLASSNAME } from '@/components/pages/projects/$projectId/shared/ResourceCard'
 import { cn } from '@/lib/utils'
+import { proxyRuleServesActiveDeployment } from '@/lib/utils/proxy-domains'
 import {
   useProjectFunction,
   useFunctionDeployments,
@@ -405,8 +406,8 @@ export function View() {
   // Filter domains for active deployment and sort by length (shortest first), limit to 3
   const activeDomains = useMemo(() => {
     const filtered =
-      domainsData?.rules?.filter(
-        (rule) => rule.deploymentId === activeDeployment?.$id,
+      domainsData?.rules?.filter((rule) =>
+        proxyRuleServesActiveDeployment(rule, activeDeployment?.$id),
       ) || []
     return filtered
       .sort((a, b) => a.domain.length - b.domain.length)
@@ -415,8 +416,8 @@ export function View() {
 
   // Check if there are more domains than displayed
   const totalActiveDomains =
-    domainsData?.rules?.filter(
-      (rule) => rule.deploymentId === activeDeployment?.$id,
+    domainsData?.rules?.filter((rule) =>
+      proxyRuleServesActiveDeployment(rule, activeDeployment?.$id),
     ).length || 0
   const hasMoreDomains = totalActiveDomains > activeDomains.length
 

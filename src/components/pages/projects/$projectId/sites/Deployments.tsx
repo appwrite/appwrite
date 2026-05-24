@@ -93,6 +93,7 @@ import { Badge } from '@/components/ui/badge'
 import { Checkbox } from '@/components/ui/checkbox'
 import { RESOURCE_CARD_METADATA_DIVIDER_CLASSNAME } from '@/components/pages/projects/$projectId/shared/ResourceCard'
 import { cn } from '@/lib/utils'
+import { proxyRuleServesActiveDeployment } from '@/lib/utils/proxy-domains'
 import {
   useProjectSite,
   useSiteDeployments,
@@ -465,10 +466,11 @@ export function View() {
   // Filter to rules that point to the active deployment (same data source as Domains tab)
   const activeDomains = useMemo(() => {
     const filtered =
-      siteDomainsRules?.filter(
-        (rule) =>
-          rule.type === 'deployment' &&
-          rule.deploymentId === activeDeploymentResolved?.$id,
+      siteDomainsRules?.filter((rule) =>
+        proxyRuleServesActiveDeployment(
+          rule,
+          activeDeploymentResolved?.$id,
+        ),
       ) || []
     return filtered
       .sort((a, b) => a.domain.length - b.domain.length)
@@ -477,10 +479,11 @@ export function View() {
 
   const totalActiveDomains = useMemo(
     () =>
-      siteDomainsRules?.filter(
-        (rule) =>
-          rule.type === 'deployment' &&
-          rule.deploymentId === activeDeploymentResolved?.$id,
+      siteDomainsRules?.filter((rule) =>
+        proxyRuleServesActiveDeployment(
+          rule,
+          activeDeploymentResolved?.$id,
+        ),
       ).length ?? 0,
     [siteDomainsRules, activeDeploymentResolved?.$id],
   )

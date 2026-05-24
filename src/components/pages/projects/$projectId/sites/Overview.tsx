@@ -19,6 +19,7 @@ import {
 import { Badge } from '@/components/ui/badge'
 import { RESOURCE_CARD_METADATA_DIVIDER_CLASSNAME } from '@/components/pages/projects/$projectId/shared/ResourceCard'
 import { cn } from '@/lib/utils'
+import { proxyRuleServesActiveDeployment } from '@/lib/utils/proxy-domains'
 import { Button } from '@/components/ui/button'
 import { DateTooltip } from '@/components/global/shared/DateTooltip'
 import { CopyableId } from '@/components/global/shared/CopyableId'
@@ -157,20 +158,19 @@ export function View() {
   // Filter to rules that point to the active deployment (same data source as Domains tab), show up to 3
   const activeDomains = useMemo(() => {
     const filtered =
-      siteDomainsRules?.filter(
-        (rule) =>
-          rule.type === 'deployment' &&
-          rule.deploymentId === activeDeploymentResolved?.$id,
+      siteDomainsRules?.filter((rule) =>
+        proxyRuleServesActiveDeployment(
+          rule,
+          activeDeploymentResolved?.$id,
+        ),
       ) || []
     return filtered
       .sort((a, b) => a.domain.length - b.domain.length)
       .slice(0, 3)
   }, [siteDomainsRules, activeDeploymentResolved?.$id])
   const totalActiveDomains =
-    siteDomainsRules?.filter(
-      (rule) =>
-        rule.type === 'deployment' &&
-        rule.deploymentId === activeDeploymentResolved?.$id,
+    siteDomainsRules?.filter((rule) =>
+      proxyRuleServesActiveDeployment(rule, activeDeploymentResolved?.$id),
     ).length ?? 0
   const hasMoreDomains = totalActiveDomains > activeDomains.length
 
