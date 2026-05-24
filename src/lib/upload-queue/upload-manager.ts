@@ -8,6 +8,7 @@
 import { ID, AppwriteException } from '@appwrite.io/console'
 import { sdk } from '@/lib/appwrite/sdk'
 import * as db from './indexeddb'
+import { isIndexedDBMutationError } from './indexeddb'
 import type {
   UploadItem,
   UploadProgress,
@@ -19,6 +20,8 @@ class UploadManager {
   private progressCallbacks = new Map<string, Set<UploadProgressCallback>>()
   private processingQueue = false
   private readonly maxConcurrentUploads = 3
+  /** In-memory queue when IndexedDB writes are unavailable (e.g. Firefox private browsing). */
+  private ephemeralItems = new Map<string, UploadItem>()
 
   /**
    * Register a progress callback for an upload
@@ -55,6 +58,34 @@ class UploadManager {
         }
       })
     }
+  }
+
+  private getEphemeralItems(
+    status?: UploadItem['status'],
+    projectId?: string,
+    bucketId?: string,
+  ): UploadItem[] {
+    return [...this.ephemeralItems.values()].filter((item) => {
+      if (status && item.status !== status) return false
+      if (projectId && item.projectId !== projectId) return false
+      if (bucketId && item.bucketId !== bucketId) return false
+      return true
+    })
+  }
+
+  private async updateUploadState(
+    item: UploadItem,
+    updates: Partial<UploadItem>,
+  ): Promise<void> {
+    const updated: UploadItem = {
+      ...item,
+      ...updates,
+      updatedAt: Date.now(),
+    }
+    if (this.ephemeralItems.has(item.id)) {
+      this.ephemeralItems.set(item.id, updated)
+    }
+    await db.saveUploadItem(updated)
   }
 
   /**
@@ -100,6 +131,9 @@ class UploadManager {
     }
 
     await db.saveUploadItem(uploadItem)
+    if (!db.isUploadPersistenceAvailable()) {
+      this.ephemeralItems.set(uploadId, uploadItem)
+    }
 
     // Start processing queue if not already processing
     this.processQueue()
@@ -118,8 +152,11 @@ class UploadManager {
     this.processingQueue = true
 
     try {
-      // Get pending uploads
-      const pendingUploads = await db.getUploadItems('pending')
+      // Get pending uploads (IndexedDB + in-memory fallback)
+      const pendingUploads = [
+        ...(await db.getUploadItems('pending')),
+        ...this.getEphemeralItems('pending'),
+      ]
 
       if (pendingUploads.length === 0) {
         return
@@ -150,7 +187,10 @@ class UploadManager {
       this.processingQueue = false
 
       // If new pending uploads were added or retries were queued, resume processing
-      const remainingPending = await db.getUploadItems('pending')
+      const remainingPending = [
+        ...(await db.getUploadItems('pending')),
+        ...this.getEphemeralItems('pending'),
+      ]
       if (remainingPending.length > 0) {
         setTimeout(() => {
           this.processQueue()
@@ -171,7 +211,7 @@ class UploadManager {
 
     try {
       // Update status to uploading
-      await db.updateUploadItem(item.id, {
+      await this.updateUploadState(item, {
         status: 'uploading',
         startedAt: Date.now(),
         progress: 0,
@@ -234,7 +274,9 @@ class UploadManager {
                 )
               : 0
 
-          db.updateUploadItem(item.id, { progress: uploadProgress })
+          void this.updateUploadState(item, { progress: uploadProgress }).catch(
+            () => {},
+          )
           this.emitProgress({
             id: item.id,
             status: 'uploading',
@@ -254,7 +296,7 @@ class UploadManager {
       ])
 
       // Update status to completed
-      await db.updateUploadItem(item.id, {
+      await this.updateUploadState(item, {
         status: 'completed',
         progress: 100,
         completedAt: Date.now(),
@@ -269,14 +311,15 @@ class UploadManager {
       // Keep completed item in DB so UI can show "View file" link (clean up after 5 min)
       setTimeout(
         () => {
-          db.deleteUploadItem(item.id)
+          void db.deleteUploadItem(item.id).catch(() => {})
+          this.ephemeralItems.delete(item.id)
         },
         5 * 60 * 1000,
       )
     } catch (error: unknown) {
       if (error.name === 'AbortError' || error.message?.includes('aborted')) {
         // Upload was cancelled
-        await db.updateUploadItem(item.id, {
+        await this.updateUploadState(item, {
           status: 'cancelled',
           completedAt: Date.now(),
         })
@@ -295,7 +338,7 @@ class UploadManager {
           // Retry with exponential backoff
           const delay = Math.min(1000 * Math.pow(2, retryCount), 30000) // Max 30 seconds
 
-          await db.updateUploadItem(item.id, {
+          await this.updateUploadState(item, {
             status: 'pending',
             retryCount: retryCount + 1,
             error: `Retrying... (${retryCount + 1}/${maxRetries})`,
@@ -328,7 +371,7 @@ class UploadManager {
             errorMessage = error.message
           }
 
-          await db.updateUploadItem(item.id, {
+          await this.updateUploadState(item, {
             status: 'failed',
             error: errorMessage,
             completedAt: Date.now(),
@@ -404,9 +447,10 @@ class UploadManager {
       abortController.abort()
     } else {
       // If not currently uploading, just update status
-      const item = await db.getUploadItem(id)
+      const item =
+        this.ephemeralItems.get(id) ?? (await db.getUploadItem(id))
       if (item && item.status === 'pending') {
-        await db.updateUploadItem(id, {
+        await this.updateUploadState(item, {
           status: 'cancelled',
           completedAt: Date.now(),
         })
@@ -418,7 +462,7 @@ class UploadManager {
    * Get upload status
    */
   async getUploadStatus(id: string): Promise<UploadItem | null> {
-    return db.getUploadItem(id)
+    return this.ephemeralItems.get(id) ?? (await db.getUploadItem(id))
   }
 
   /**
@@ -428,7 +472,9 @@ class UploadManager {
     projectId: string,
     bucketId: string,
   ): Promise<UploadItem[]> {
-    return db.getUploadItems(undefined, projectId, bucketId)
+    const persisted = await db.getUploadItems(undefined, projectId, bucketId)
+    const ephemeral = this.getEphemeralItems(undefined, projectId, bucketId)
+    return [...persisted, ...ephemeral]
   }
 
   /**
@@ -440,7 +486,14 @@ class UploadManager {
       db.getUploadItems('uploading'),
       db.getUploadItems('completed'),
     ])
-    return [...pending, ...uploading, ...completed]
+    return [
+      ...pending,
+      ...uploading,
+      ...completed,
+      ...this.getEphemeralItems('pending'),
+      ...this.getEphemeralItems('uploading'),
+      ...this.getEphemeralItems('completed'),
+    ]
   }
 
   /**
@@ -453,7 +506,7 @@ class UploadManager {
     // Reset uploading items back to pending (they were interrupted)
     // Don't reset retry count - preserve retry attempts
     for (const item of uploading) {
-      await db.updateUploadItem(item.id, {
+      await this.updateUploadState(item, {
         status: 'pending',
         progress: 0,
         // Keep retryCount as is - don't reset it
@@ -468,6 +521,7 @@ class UploadManager {
    * Remove a completed (or any) upload from the queue (e.g. when user dismisses the progress item)
    */
   async removeUploadItem(id: string): Promise<void> {
+    this.ephemeralItems.delete(id)
     await db.deleteUploadItem(id)
   }
 
@@ -486,13 +540,29 @@ export const uploadManager = new UploadManager()
 
 // Resume queue on page load
 if (typeof window !== 'undefined') {
-  uploadManager.resumeQueue()
+  void uploadManager.resumeQueue().catch((error) => {
+    if (!isIndexedDBMutationError(error)) {
+      console.warn('Failed to resume upload queue:', error)
+    }
+  })
 
   // Clear old uploads on load (once per day)
-  const lastClear = localStorage.getItem('upload-queue-last-clear')
-  const now = Date.now()
-  if (!lastClear || now - parseInt(lastClear, 10) > 24 * 60 * 60 * 1000) {
-    uploadManager.clearOldUploads()
-    localStorage.setItem('upload-queue-last-clear', now.toString())
+  try {
+    const lastClear = localStorage.getItem('upload-queue-last-clear')
+    const now = Date.now()
+    if (!lastClear || now - parseInt(lastClear, 10) > 24 * 60 * 60 * 1000) {
+      void uploadManager.clearOldUploads().catch((error) => {
+        if (!isIndexedDBMutationError(error)) {
+          console.warn('Failed to clear old uploads:', error)
+        }
+      })
+      try {
+        localStorage.setItem('upload-queue-last-clear', now.toString())
+      } catch {
+        // localStorage may be unavailable in private browsing
+      }
+    }
+  } catch {
+    // ignore storage access errors
   }
 }

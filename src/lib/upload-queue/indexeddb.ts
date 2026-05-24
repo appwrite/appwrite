@@ -11,6 +11,41 @@ const DB_VERSION = 1
 const STORE_NAME = 'uploads'
 
 let dbPromise: Promise<IDBDatabase> | null = null
+let persistenceDisabled = false
+
+/** Firefox private browsing / blocked storage can open IndexedDB read-only. */
+export function isIndexedDBMutationError(error: unknown): boolean {
+  if (error instanceof DOMException) {
+    if (error.name === 'InvalidStateError' || error.code === 11) return true
+  }
+  if (error instanceof Error) {
+    return /did not allow mutations/i.test(error.message)
+  }
+  return false
+}
+
+export function isUploadPersistenceAvailable(): boolean {
+  return !persistenceDisabled
+}
+
+function disablePersistence(error: unknown): void {
+  if (!isIndexedDBMutationError(error)) return
+  persistenceDisabled = true
+  dbPromise = null
+}
+
+async function runWrite<T>(operation: () => Promise<T>): Promise<T | undefined> {
+  if (persistenceDisabled) return undefined
+  try {
+    return await operation()
+  } catch (error) {
+    if (isIndexedDBMutationError(error)) {
+      disablePersistence(error)
+      return undefined
+    }
+    throw error
+  }
+}
 
 function openDatabase(): Promise<IDBDatabase> {
   if (dbPromise) {
@@ -51,11 +86,13 @@ async function getStore(
  * Add or update an upload item in the queue
  */
 export async function saveUploadItem(item: UploadItem): Promise<void> {
-  const store = await getStore('readwrite')
-  return new Promise((resolve, reject) => {
-    const request = store.put(item)
-    request.onsuccess = () => resolve()
-    request.onerror = () => reject(request.error)
+  await runWrite(async () => {
+    const store = await getStore('readwrite')
+    await new Promise<void>((resolve, reject) => {
+      const request = store.put(item)
+      request.onsuccess = () => resolve()
+      request.onerror = () => reject(request.error)
+    })
   })
 }
 
@@ -63,12 +100,21 @@ export async function saveUploadItem(item: UploadItem): Promise<void> {
  * Get an upload item by ID
  */
 export async function getUploadItem(id: string): Promise<UploadItem | null> {
-  const store = await getStore()
-  return new Promise((resolve, reject) => {
-    const request = store.get(id)
-    request.onsuccess = () => resolve(request.result || null)
-    request.onerror = () => reject(request.error)
-  })
+  if (persistenceDisabled) return null
+  try {
+    const store = await getStore()
+    return await new Promise((resolve, reject) => {
+      const request = store.get(id)
+      request.onsuccess = () => resolve(request.result || null)
+      request.onerror = () => reject(request.error)
+    })
+  } catch (error) {
+    if (isIndexedDBMutationError(error)) {
+      disablePersistence(error)
+      return null
+    }
+    throw error
+  }
 }
 
 /**
@@ -79,8 +125,10 @@ export async function getUploadItems(
   projectId?: string,
   bucketId?: string,
 ): Promise<UploadItem[]> {
-  const store = await getStore()
-  return new Promise((resolve, reject) => {
+  if (persistenceDisabled) return []
+  try {
+    const store = await getStore()
+    return await new Promise((resolve, reject) => {
     const items: UploadItem[] = []
     let request: IDBRequest
 
@@ -108,18 +156,27 @@ export async function getUploadItems(
     }
 
     request.onerror = () => reject(request.error)
-  })
+    })
+  } catch (error) {
+    if (isIndexedDBMutationError(error)) {
+      disablePersistence(error)
+      return []
+    }
+    throw error
+  }
 }
 
 /**
  * Delete an upload item from the queue
  */
 export async function deleteUploadItem(id: string): Promise<void> {
-  const store = await getStore('readwrite')
-  return new Promise((resolve, reject) => {
-    const request = store.delete(id)
-    request.onsuccess = () => resolve()
-    request.onerror = () => reject(request.error)
+  await runWrite(async () => {
+    const store = await getStore('readwrite')
+    await new Promise<void>((resolve, reject) => {
+      const request = store.delete(id)
+      request.onsuccess = () => resolve()
+      request.onerror = () => reject(request.error)
+    })
   })
 }
 
@@ -150,10 +207,11 @@ export async function updateUploadItem(
 export async function clearOldUploads(
   olderThanMs: number = 24 * 60 * 60 * 1000,
 ): Promise<void> {
-  const store = await getStore('readwrite')
-  const index = store.index('status')
+  await runWrite(async () => {
+    const store = await getStore('readwrite')
+    const index = store.index('status')
 
-  return new Promise((resolve, reject) => {
+    await new Promise<void>((resolve, reject) => {
     const cutoffTime = Date.now() - olderThanMs
     const statuses: UploadStatus[] = ['completed', 'failed', 'cancelled']
     let completed = 0
@@ -189,6 +247,7 @@ export async function clearOldUploads(
           reject(request.error)
         }
       }
+    })
     })
   })
 }

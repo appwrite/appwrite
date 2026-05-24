@@ -11,6 +11,7 @@ import {
   isStaleChunkLoadError,
   tryReloadForStaleChunk,
 } from '@/lib/stale-chunk-error'
+import { isIndexedDBMutationError } from '@/lib/upload-queue/indexeddb'
 
 function NotFoundComponent() {
   return (
@@ -84,6 +85,7 @@ export const getRouter = () => {
           if (code === 401 || status === 401) return null
         }
         if (isStaleChunkLoadError(err)) return null
+        if (isIndexedDBMutationError(err)) return null
         return event
       },
     })

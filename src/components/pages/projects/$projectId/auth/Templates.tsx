@@ -404,8 +404,16 @@ export function Templates({ projectId }: TemplatesProps) {
   return (
     <div className="@container w-full">
       <div className="flex h-full flex-col gap-4 @[640px]:flex-row @[640px]:gap-6">
-        {/* Sidebar - Template List */}
-        <div className="w-full shrink-0 @[640px]:w-64">
+        {/* Mobile - template picker */}
+        <div className="@[640px]:hidden">
+          <TemplateTypeSelector
+            selectedType={selectedType}
+            onTypeChange={setSelectedType}
+          />
+        </div>
+
+        {/* Sidebar - Template List (desktop) */}
+        <div className="hidden w-full shrink-0 @[640px]:block @[640px]:w-64">
           <div className="overflow-hidden rounded-lg border border-border bg-card">
             <div className="border-b border-border px-4 py-3">
               <h2 className="text-sm font-semibold text-foreground">
@@ -415,7 +423,7 @@ export function Templates({ projectId }: TemplatesProps) {
                 {EMAIL_TEMPLATE_TYPES.length} templates
               </p>
             </div>
-            <div className="divide-y divide-border max-h-[60dvh] overflow-y-auto @[640px]:max-h-none">
+            <div className="divide-y divide-border">
               {EMAIL_TEMPLATE_TYPES.map((templateConfig) => {
                 const isSelected = selectedType === templateConfig.type
                 return (
@@ -875,6 +883,87 @@ function TemplateEditor({
         </div>
       </div>
     </div>
+  )
+}
+
+interface TemplateTypeSelectorProps {
+  selectedType: string
+  onTypeChange: (type: string) => void
+}
+
+function TemplateTypeSelector({
+  selectedType,
+  onTypeChange,
+}: TemplateTypeSelectorProps) {
+  const [open, setOpen] = useState(false)
+  const selectedConfig = EMAIL_TEMPLATE_TYPES.find(
+    (t) => t.type === selectedType,
+  )
+
+  return (
+    <Popover open={open} onOpenChange={setOpen}>
+      <PopoverTrigger asChild>
+        <Button
+          variant="outline"
+          role="combobox"
+          aria-expanded={open}
+          className="h-auto w-full justify-between gap-2 py-3 text-left"
+        >
+          <div className="flex min-w-0 flex-1 items-start gap-3">
+            <Mail className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground" />
+            <div className="min-w-0 flex-1">
+              <span className="block truncate text-sm font-medium">
+                {selectedConfig?.label ?? 'Select template...'}
+              </span>
+              {selectedConfig?.description && (
+                <span className="mt-0.5 block truncate text-xs text-muted-foreground">
+                  {selectedConfig.description}
+                </span>
+              )}
+            </div>
+          </div>
+          <ChevronDown className="h-4 w-4 shrink-0 opacity-50" />
+        </Button>
+      </PopoverTrigger>
+      <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-0" align="start">
+        <Command>
+          <CommandInput placeholder="Search templates..." />
+          <CommandList>
+            <CommandEmpty>No template found.</CommandEmpty>
+            <CommandGroup>
+              {EMAIL_TEMPLATE_TYPES.map((templateConfig) => (
+                <CommandItem
+                  key={templateConfig.type}
+                  value={`${templateConfig.label} ${templateConfig.description}`}
+                  onSelect={() => {
+                    onTypeChange(templateConfig.type)
+                    setOpen(false)
+                  }}
+                  className="items-start py-2.5"
+                >
+                  <Check
+                    className={cn(
+                      'mr-2 mt-0.5 h-4 w-4 shrink-0',
+                      selectedType === templateConfig.type
+                        ? 'opacity-100'
+                        : 'opacity-0',
+                    )}
+                  />
+                  <div className="min-w-0 flex-1">
+                    <span className="text-sm font-medium">
+                      {templateConfig.label}
+                    </span>
+                    <p className="mt-0.5 text-xs text-muted-foreground line-clamp-2">
+                      {templateConfig.description}
+                    </p>
+                  </div>
+                </CommandItem>
+              ))}
+            </CommandGroup>
+          </CommandList>
+        </Command>
+      </PopoverContent>
+    </Popover>
   )
 }
 
