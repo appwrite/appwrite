@@ -224,8 +224,26 @@ class Migrations extends Action
                 $migrationHost,
             ]);
 
+            // Include the source project's custom API domains so customers using
+            // a configured custom domain still get the DB fast path.
+            if (!$this->sourceProject->isEmpty()) {
+                $rules = $this->dbForPlatform->find('rules', [
+                    Query::equal('projectInternalId', [$this->sourceProject->getSequence()]),
+                    Query::equal('type', ['api']),
+                    Query::limit(100),
+                ]);
+                foreach ($rules as $rule) {
+                    $allowedHosts[] = $rule->getAttribute('domain');
+                }
+            }
+
+            // Loopback addresses are always "this cluster" from a worker's perspective.
+            $isLoopback = is_string($sourceHost)
+                && in_array(strtolower($sourceHost), ['localhost', '127.0.0.1', '0.0.0.0', '::1'], true);
+
             // Empty endpoint: processMigration defaults it to the internal host before reaching here.
-            $isLocalEndpoint = (is_string($sourceHost) && !empty($allowedHosts) && (new Hostname($allowedHosts))->isValid($sourceHost))
+            $isLocalEndpoint = $isLoopback
+                || (is_string($sourceHost) && !empty($allowedHosts) && (new Hostname($allowedHosts))->isValid($sourceHost))
                 || (empty($credentials['endpoint']) && $migrationHost !== '');
 
             $isLocalSource = !$this->sourceProject->isEmpty()
