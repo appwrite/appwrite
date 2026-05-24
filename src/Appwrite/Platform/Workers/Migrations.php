@@ -203,7 +203,8 @@ class Migrations extends Action
         }
 
         if (! empty($credentials['projectId'])) {
-            $isAppwriteToAppwrite = $source === SourceAppwrite::getName()
+            $isAppwriteSource = $source === SourceAppwrite::getName();
+            $isAppwriteToAppwrite = $isAppwriteSource
                 && $destination === DestinationAppwrite::getName();
 
             $this->sourceProject = $this->dbForPlatform->getDocument('projects', $credentials['projectId']);
@@ -240,7 +241,7 @@ class Migrations extends Action
                 || (empty($credentials['endpoint']) && $migrationHost !== '');
 
             $isLocalSource = !$this->sourceProject->isEmpty()
-                && (!$isAppwriteToAppwrite || $isLocalEndpoint);
+                && (!$isAppwriteSource || $isLocalEndpoint);
 
             if ($isLocalSource) {
                 $projectDB = call_user_func($this->getProjectDB, $this->sourceProject);
