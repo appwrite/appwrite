@@ -236,7 +236,10 @@ class Migrations extends Action
                 }
             }
 
-            $isLocalEndpoint = is_string($sourceHost) && !empty($allowedHosts) && (new Hostname($allowedHosts))->isValid($sourceHost);
+            // Empty-string endpoint slips through processMigration's `??` defaulting (which only
+            // catches null/absent); treat it as targeting the internal migration host.
+            $isLocalEndpoint = (is_string($sourceHost) && !empty($allowedHosts) && (new Hostname($allowedHosts))->isValid($sourceHost))
+                || (empty($credentials['endpoint']) && $migrationHost !== '');
 
             $sourceRegion = $this->sourceProject->getAttribute('region', 'default');
             $destinationRegion = $this->project->getAttribute('region', 'default');
