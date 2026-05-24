@@ -228,9 +228,10 @@ class Migrations extends Action
             // a configured custom domain still get the DB fast path.
             $isLocalEndpoint = (is_string($sourceHost) && !empty($allowedHosts) && (new Hostname($allowedHosts))->isValid($sourceHost))
                 || (empty($credentials['endpoint']) && $migrationHost !== '')
-                || (is_string($sourceHost) && !$this->dbForPlatform->findOne('rules', [
+                || (is_string($sourceHost) && !$this->sourceProject->isEmpty() && !$this->dbForPlatform->findOne('rules', [
                     Query::equal('domain', [$sourceHost]),
                     Query::equal('type', ['api']),
+                    Query::equal('projectInternalId', [$this->sourceProject->getSequence()]),
                 ])->isEmpty());
 
             $isLocalSource = !$this->sourceProject->isEmpty()
