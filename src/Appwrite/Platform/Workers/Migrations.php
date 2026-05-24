@@ -242,7 +242,8 @@ class Migrations extends Action
             $destinationRegion = $this->project->getAttribute('region', 'default');
 
             $isLocalSource = !$this->sourceProject->isEmpty()
-                && (!$isAppwriteSource || ($isLocalEndpoint && $sourceRegion === $destinationRegion));
+                && (!$isAppwriteSource || $isLocalEndpoint)
+                && (!$isAppwriteToAppwrite || $sourceRegion === $destinationRegion);
 
             if ($isLocalSource) {
                 $projectDB = call_user_func($this->getProjectDB, $this->sourceProject);
