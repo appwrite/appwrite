@@ -237,13 +237,8 @@ class Migrations extends Action
                 }
             }
 
-            // Loopback addresses are always "this cluster" from a worker's perspective.
-            $isLoopback = is_string($sourceHost)
-                && in_array(strtolower($sourceHost), ['localhost', '127.0.0.1', '0.0.0.0', '::1'], true);
-
             // Empty endpoint: processMigration defaults it to the internal host before reaching here.
-            $isLocalEndpoint = $isLoopback
-                || (is_string($sourceHost) && !empty($allowedHosts) && (new Hostname($allowedHosts))->isValid($sourceHost))
+            $isLocalEndpoint = (is_string($sourceHost) && !empty($allowedHosts) && (new Hostname($allowedHosts))->isValid($sourceHost))
                 || (empty($credentials['endpoint']) && $migrationHost !== '');
 
             $isLocalSource = !$this->sourceProject->isEmpty()
