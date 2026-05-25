@@ -35,7 +35,9 @@ class XList extends Action
             default => DATABASE_TYPE_LEGACY,
         };
 
-        return parent::setHttpPath($path);
+        parent::setHttpPath($path);
+
+        return $this;
     }
 
     protected function getMetrics(): array
