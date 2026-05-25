@@ -1354,6 +1354,23 @@ class Builds extends Action
         $projectQuery = 'project=' . \rawurlencode($project->getId());
         $appwriteProjectHeader = ['X-Appwrite-Project' => $project->getId()];
 
+        if ($version !== 'v2' && $resource->getCollection() === 'sites') {
+            $listFilesCommand = '';
+            $listFilesCommand .= 'echo "{APPWRITE_DETECTION_SEPARATOR_START}" && cd /usr/local/build';
+
+            if (! empty($outputDirectory)) {
+                $listFilesCommand .= ' && cd ' . \escapeshellarg($outputDirectory);
+            }
+
+            $listFilesCommand .= ' && find . -name \'node_modules\' -prune -o -type f -print && echo "{APPWRITE_DETECTION_SEPARATOR_END}"';
+
+            if (empty($command)) {
+                $command = $listFilesCommand;
+            } else {
+                $command .= ' && ' . $listFilesCommand;
+            }
+        }
+
         if ($version === 'v2') {
             $buildCommand = 'tar -zxf /tmp/code.tar.gz -C /usr/code && cd /usr/local/src/ && ./build.sh';
         } else {
@@ -1376,11 +1393,6 @@ class Builds extends Action
                     . " mkdir -p /tmp/build-output && cp -R {$escapedOutputPath}/. /tmp/build-output/;"
                     . " else echo {$escapedOutputDirectoryError} >&2; exit 1; fi";
             }
-        } elseif ($resource->getCollection() === 'sites') {
-            $buildCommand .= ' && echo "{APPWRITE_DETECTION_SEPARATOR_START}"'
-                . " && cd {$escapedOutputPath}"
-                . ' && find . -name \'node_modules\' -prune -o -type f -print'
-                . ' && echo "{APPWRITE_DETECTION_SEPARATOR_END}"';
         }
 
         if ($version !== 'v2') {
