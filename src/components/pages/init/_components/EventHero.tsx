@@ -1,22 +1,24 @@
-import type { LaunchEvent } from '@/lib/init/types'
+import type { LaunchEvent, LaunchEventLiveBanner } from '@/lib/init/types'
 import type { ReactNode } from 'react'
 import { useEffect, useRef, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { consoleAccountQueryOptions } from '@/lib/react-query/hooks/auth'
 import { InitialsAvatar } from '@/components/global/shared/Avatar'
+import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
+import { ChevronRight } from 'lucide-react'
 import { EventCtaButton } from '../shared/EventCtas'
 import { InitHeroBackground } from './InitHeroBackground'
 
 const COLLAPSED_HEIGHT_PX = 56
-const LIVE_BANNER_HEIGHT_PX = 44
 
 interface EventHeroProps {
   event: LaunchEvent
   /** Optional content above the date label (e.g. variant badge on preview pages). */
   headerAddon?: ReactNode
-  /** When set, collapsed hero sticks below the live banner bar. */
-  hasLiveBanner?: boolean
+  /** Shown in the collapsed sticky bar when the user scrolls past the hero. */
+  liveBanner?: LaunchEventLiveBanner
 }
 
 function InitWordmark({
@@ -48,12 +50,12 @@ type MainBounds = {
 function CollapsedHeroBar({
   event,
   visible,
-  hasLiveBanner,
+  liveBanner,
   bounds,
 }: {
   event: LaunchEvent
   visible: boolean
-  hasLiveBanner: boolean
+  liveBanner?: LaunchEventLiveBanner
   bounds: MainBounds | null
 }) {
   const barRef = useRef<HTMLDivElement>(null)
@@ -69,30 +71,52 @@ function CollapsedHeroBar({
         visible ? 'translate-y-0 opacity-100' : 'pointer-events-none -translate-y-full opacity-0',
       )}
       style={{
-        top: bounds
-          ? bounds.top + (hasLiveBanner ? LIVE_BANNER_HEIGHT_PX : 0)
-          : hasLiveBanner
-            ? LIVE_BANNER_HEIGHT_PX
-            : 0,
+        top: bounds?.top ?? 0,
         left: bounds?.left ?? 0,
         width: bounds?.width ?? '100%',
         height: COLLAPSED_HEIGHT_PX,
       }}
     >
       <InitHeroBackground containerRef={barRef} compact />
-      <div className="pointer-events-none absolute inset-0 z-20 flex items-center">
+      <div
+        className={cn(
+          'absolute inset-0 z-20 flex items-center',
+          visible && 'pointer-events-auto',
+        )}
+      >
         <div className="mx-auto flex w-full max-w-7xl items-center gap-3 px-4 sm:gap-4 sm:px-6">
           <InitWordmark event={event} className="shrink-0 text-[22px] sm:text-[24px]" />
-          <span className="text-[10px] font-semibold uppercase tracking-[0.2em] text-muted-foreground">
-            {event.dateRangeLabel}
-          </span>
+          {liveBanner ? (
+            <>
+              <div className="flex min-w-0 flex-1 items-center gap-2">
+                <Badge variant="error" className="text-[10px] shrink-0">
+                  Live now
+                </Badge>
+                <span className="truncate text-[13px] font-medium text-foreground">
+                  {liveBanner.title}
+                </span>
+              </div>
+              {liveBanner.href ? (
+                <Button variant="outline" size="sm" className="h-7 shrink-0 text-[12px]" asChild>
+                  <a href={liveBanner.href} target="_blank" rel="noopener noreferrer">
+                    Watch
+                    <ChevronRight className="size-3.5" />
+                  </a>
+                </Button>
+              ) : null}
+            </>
+          ) : (
+            <span className="text-[10px] font-semibold uppercase tracking-[0.2em] text-muted-foreground">
+              {event.dateRangeLabel}
+            </span>
+          )}
         </div>
       </div>
     </div>
   )
 }
 
-export function EventHero({ event, headerAddon, hasLiveBanner = false }: EventHeroProps) {
+export function EventHero({ event, headerAddon, liveBanner }: EventHeroProps) {
   const { data: account } = useQuery(consoleAccountQueryOptions())
   const firstName = account?.name?.trim().split(/\s+/)[0]
   const heroRef = useRef<HTMLDivElement>(null)
@@ -171,7 +195,7 @@ export function EventHero({ event, headerAddon, hasLiveBanner = false }: EventHe
         <CollapsedHeroBar
           event={event}
           visible={isCollapsed}
-          hasLiveBanner={hasLiveBanner}
+          liveBanner={liveBanner}
           bounds={mainBounds}
         />
       ) : null}

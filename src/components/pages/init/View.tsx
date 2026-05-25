@@ -73,7 +73,7 @@ export function View() {
       >
         {event.liveBanner ? <LiveBannerBar liveBanner={event.liveBanner} /> : null}
 
-        <EventHero event={event} hasLiveBanner={!!event.liveBanner} />
+        <EventHero event={event} liveBanner={event.liveBanner} />
 
         <div className="mx-auto w-full max-w-7xl space-y-8 px-4 pb-8 pt-8 sm:px-6 sm:pb-10">
           <EventSchedule event={event} fullWidth />

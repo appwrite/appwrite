@@ -140,8 +140,7 @@ export function EventSchedulePanel({ event }: EventSchedulePanelProps) {
     <div
       className={cn(
         CARD_SHELL,
-        'lg:sticky lg:self-start',
-        event.liveBanner ? 'lg:top-32' : 'lg:top-20',
+        'lg:sticky lg:self-start lg:top-20',
       )}
     >
       <div className="px-6 py-4">

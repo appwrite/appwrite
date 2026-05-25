@@ -622,6 +622,7 @@ export function ConsoleHeader({
         <div className="flex shrink-0 items-center gap-1 @[640px]:gap-2 min-w-0">
           {showGuestHeader ? (
             <>
+              <ThemeToggle variant="header" />
               <Button asChild variant="outline" size="sm" className="h-9 text-[13px]">
                 <Link to="/sign-in" search={{ redirect: authRedirect }}>
                   Sign in
