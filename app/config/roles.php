@@ -150,7 +150,7 @@ return [
         'label' => 'Owner',
         'scopes' => \array_merge($member, $admins),
     ],
-    User::ROLE_APPS => [
+    User::ROLE_KEYS => [
         'label' => 'Applications',
         'scopes' => ['global', 'health.read', 'graphql'],
     ],

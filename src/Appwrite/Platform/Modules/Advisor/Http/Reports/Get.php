@@ -37,7 +37,7 @@ class Get extends Action
                 group: 'reports',
                 name: 'getReport',
                 description: '/docs/references/advisor/get-report.md',
-                auth: [AuthType::ADMIN, AuthType::SESSION, AuthType::KEY, AuthType::JWT],
+                auth: [AuthType::ADMIN, AuthType::KEY],
                 responses: [
                     new SDKResponse(
                         code: Response::STATUS_CODE_OK,
