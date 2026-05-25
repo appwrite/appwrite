@@ -3,6 +3,7 @@ import type { Models } from '@appwrite.io/console'
 import type { LucideIcon } from 'lucide-react'
 import {
   Users,
+  UsersRound,
   Database,
   Zap,
   Folder,
@@ -82,6 +83,7 @@ function inferAccordionCategoryFromScopeId(scopeId: string): string {
     return 'Messaging'
   }
   if (/^(sites|log)\./.test(id)) return 'Sites'
+  if (/^presences\./.test(id)) return 'Presences'
   if (
     /^(projects|platforms|keys|webhooks|mocks|templates|oauth2|events|policies)\./.test(
       id,
@@ -114,6 +116,7 @@ const KNOWN_CATEGORY_ORDER = [
   'Storage',
   'Messaging',
   'Sites',
+  'Presences',
   'Domains',
   'Project',
   'Advisor',
@@ -186,6 +189,9 @@ export function getScopeCategoryIcon(
   if (c.includes('site') || c.includes('log')) {
     return Globe
   }
+  if (c.includes('presence')) {
+    return UsersRound
+  }
   if (c.includes('advisor')) {
     return Sparkles
   }
@@ -218,6 +224,7 @@ export function getScopeCategoryIcon(
       return MessageSquare
     }
     if (/^(sites|log)\./.test(id)) return Globe
+    if (/^presences\./.test(id)) return UsersRound
     if (/^advisor\./.test(id)) return Sparkles
     if (/^proxy\./.test(id)) return Network
   }
