@@ -209,22 +209,18 @@ class Migrations extends Action
         if ($isAppwriteSource) {
             $this->sourceProject = $this->dbForPlatform->getDocument('projects', $credentials['projectId']);
 
-            // Same projectId may collide with an external Appwrite — trust the DB fast
-            // path only when the source URL targets this cluster's public or internal host.
+            // Trust DB fast path only when the source URL targets this cluster's host
+            // (env-configured or this project's verified custom API domain).
             $sourceHost = parse_url($credentials['endpoint'] ?? '', PHP_URL_HOST);
-            $rawDomain = System::getEnv('_APP_DOMAIN', '');
-            $rawMigrationHost = System::getEnv('_APP_MIGRATION_HOST', '');
-            $localDomain = $rawDomain !== '' ? (parse_url('http://' . $rawDomain, PHP_URL_HOST) ?: '') : '';
-            $migrationHost = $rawMigrationHost !== '' ? (parse_url('http://' . $rawMigrationHost, PHP_URL_HOST) ?: '') : '';
+            $publicDomain = parse_url('http://' . System::getEnv('_APP_DOMAIN', ''), PHP_URL_HOST) ?: '';
+            $internalHost = parse_url('http://' . System::getEnv('_APP_MIGRATION_HOST', ''), PHP_URL_HOST) ?: '';
 
             $allowedHosts = array_filter([
-                $localDomain,
-                $localDomain !== '' ? '*.' . $localDomain : null,
-                $migrationHost,
+                $publicDomain,
+                $publicDomain !== '' ? '*.' . $publicDomain : null,
+                $internalHost,
             ]);
 
-            // Include the source project's custom API domain so customers using
-            // a configured custom domain still get the DB fast path.
             if (is_string($sourceHost) && !$this->sourceProject->isEmpty()) {
                 $rule = $this->dbForPlatform->findOne('rules', [
                     Query::equal('domain', [$sourceHost]),
@@ -236,7 +232,9 @@ class Migrations extends Action
                 }
             }
 
-            $isLocalEndpoint = is_string($sourceHost) && !empty($allowedHosts) && (new Hostname($allowedHosts))->isValid($sourceHost);
+            $isLocalEndpoint = is_string($sourceHost)
+                && !empty($allowedHosts)
+                && (new Hostname($allowedHosts))->isValid($sourceHost);
 
             $sourceRegion = $this->sourceProject->getAttribute('region', 'default');
             $destinationRegion = $this->project->getAttribute('region', 'default');
