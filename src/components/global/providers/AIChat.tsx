@@ -44,8 +44,11 @@ import {
   SPHERE_PARTICLE_COUNT_MIN,
   SPHERE_PARTICLE_COUNT_MAX,
   SPHERE_PARTICLE_COUNT_STEP,
+  SPHERE_SIZE_SCALE_DEFAULT,
+  SPHERE_SIZE_SCALE_MIN,
+  SPHERE_SIZE_SCALE_MAX,
+  SPHERE_SIZE_SCALE_STEP,
   type SphereColorMode,
-  type SphereSizeMode,
 } from '@/components/global/shared/ThinkingBubble'
 import { Slider } from '@/components/ui/slider'
 import { Button } from '@/components/ui/button'
@@ -1364,14 +1367,8 @@ const BUBBLE_DEBUG_MODES: Array<{
   { id: 'max', label: 'Max' },
 ]
 
-const SPHERE_SIZE_DEBUG_MODES: Array<{
-  id: SphereSizeMode
-  label: string
-}> = [
-  { id: 'small', label: 'Small' },
-  { id: 'default', label: 'Default' },
-  { id: 'large', label: 'Large' },
-]
+const SPHERE_DEBUG_SLIDER_CLASS =
+  'py-1 [&_[data-slot=slider-range]]:bg-purple-600 [&_[data-slot=slider-thumb]]:border-purple-600 dark:[&_[data-slot=slider-range]]:bg-purple-500 dark:[&_[data-slot=slider-thumb]]:border-purple-500'
 
 const SPHERE_COLOR_DEBUG_MODES: Array<{
   id: SphereColorMode
@@ -1403,8 +1400,10 @@ function debugControlButtonClass(isActive: boolean) {
 function AssistantBubbleDebugControls({
   activityMode,
   onActivityModeChange,
-  sizeMode,
-  onSizeModeChange,
+  sizeScale,
+  sizeScaleOverride,
+  onSizeScaleChange,
+  onSizeScaleDefault,
   colorMode,
   onColorModeChange,
   particleCountOverride,
@@ -1414,8 +1413,10 @@ function AssistantBubbleDebugControls({
 }: {
   activityMode: BubbleActivityDebugMode
   onActivityModeChange: (mode: BubbleActivityDebugMode) => void
-  sizeMode: SphereSizeMode
-  onSizeModeChange: (mode: SphereSizeMode) => void
+  sizeScale: number
+  sizeScaleOverride: number | null
+  onSizeScaleChange: (scale: number) => void
+  onSizeScaleDefault: () => void
   colorMode: SphereColorMode
   onColorModeChange: (mode: SphereColorMode) => void
   particleCountOverride: number | null
@@ -1423,7 +1424,8 @@ function AssistantBubbleDebugControls({
   onParticleCountChange: (count: number) => void
   onParticleCountAuto: () => void
 }) {
-  const sliderValue = particleCountOverride ?? autoParticleCount
+  const particleSliderValue = particleCountOverride ?? autoParticleCount
+  const sizePercent = Math.round(sizeScale * 100)
 
   return (
     <div className="space-y-2 rounded-lg border border-purple-500/25 bg-purple-500/5 p-2.5">
@@ -1447,23 +1449,37 @@ function AssistantBubbleDebugControls({
         </div>
       </div>
       <div>
-        <p className="mb-1.5 text-center text-[10px] font-semibold uppercase tracking-wider text-purple-600/80 dark:text-purple-400/80">
-          Size
-        </p>
-        <div className="flex flex-wrap justify-center gap-1.5">
-          {SPHERE_SIZE_DEBUG_MODES.map(({ id, label }) => (
+        <div className="mb-1.5 flex items-center justify-between gap-2">
+          <p className="text-[10px] font-semibold uppercase tracking-wider text-purple-600/80 dark:text-purple-400/80">
+            Size
+          </p>
+          <div className="flex items-center gap-2">
+            <span className="text-[11px] tabular-nums text-purple-600 dark:text-purple-400">
+              {sizePercent}%
+              {sizeScaleOverride == null ? ' (default)' : ''}
+            </span>
             <Button
-              key={id}
               type="button"
               size="sm"
               variant="outline"
-              className={debugControlButtonClass(sizeMode === id)}
-              onClick={() => onSizeModeChange(id)}
+              className={debugControlButtonClass(sizeScaleOverride == null)}
+              onClick={onSizeScaleDefault}
             >
-              {label}
+              Default
             </Button>
-          ))}
+          </div>
         </div>
+        <Slider
+          min={SPHERE_SIZE_SCALE_MIN}
+          max={SPHERE_SIZE_SCALE_MAX}
+          step={SPHERE_SIZE_SCALE_STEP}
+          value={[sizeScale]}
+          onValueChange={(values) => {
+            const next = values[0]
+            if (next != null) onSizeScaleChange(next)
+          }}
+          className={SPHERE_DEBUG_SLIDER_CLASS}
+        />
       </div>
       <div>
         <p className="mb-1.5 text-center text-[10px] font-semibold uppercase tracking-wider text-purple-600/80 dark:text-purple-400/80">
@@ -1491,7 +1507,7 @@ function AssistantBubbleDebugControls({
           </p>
           <div className="flex items-center gap-2">
             <span className="text-[11px] tabular-nums text-purple-600 dark:text-purple-400">
-              {sliderValue.toLocaleString()}
+              {particleSliderValue.toLocaleString()}
               {particleCountOverride == null ? ' (auto)' : ''}
             </span>
             <Button
@@ -1509,12 +1525,12 @@ function AssistantBubbleDebugControls({
           min={SPHERE_PARTICLE_COUNT_MIN}
           max={SPHERE_PARTICLE_COUNT_MAX}
           step={SPHERE_PARTICLE_COUNT_STEP}
-          value={[sliderValue]}
+          value={[particleSliderValue]}
           onValueChange={(values) => {
             const next = values[0]
             if (next != null) onParticleCountChange(next)
           }}
-          className="py-1 [&_[data-slot=slider-range]]:bg-purple-600 [&_[data-slot=slider-thumb]]:border-purple-600 dark:[&_[data-slot=slider-range]]:bg-purple-500 dark:[&_[data-slot=slider-thumb]]:border-purple-500"
+          className={SPHERE_DEBUG_SLIDER_CLASS}
         />
       </div>
     </div>
@@ -1539,19 +1555,32 @@ export function AIChatPanel() {
   const { isDebugModeOpen } = useDebugMode()
   const [bubbleDebugMode, setBubbleDebugMode] =
     useState<BubbleActivityDebugMode>('auto')
-  const [sphereSizeMode, setSphereSizeMode] =
-    useState<SphereSizeMode>('default')
+  const [sphereSizeScaleOverride, setSphereSizeScaleOverride] =
+    useState<number | null>(null)
   const [sphereColorMode, setSphereColorMode] =
     useState<SphereColorMode>('brand')
   const [sphereParticleCountOverride, setSphereParticleCountOverride] =
     useState<number | null>(null)
+  const effectiveSphereSizeScale =
+    sphereSizeScaleOverride ?? SPHERE_SIZE_SCALE_DEFAULT
   const sphereAutoParticleCount = useMemo(
     () =>
       defaultParticleCountForSize(
-        scaleSphereSize(SPHERE_BASE_SIZES.empty, sphereSizeMode),
+        scaleSphereSize(SPHERE_BASE_SIZES.empty, effectiveSphereSizeScale),
       ),
-    [sphereSizeMode],
+    [effectiveSphereSizeScale],
   )
+  const getSphereRenderSize = useCallback(
+    (baseSize: number) =>
+      isDebugModeOpen
+        ? scaleSphereSize(baseSize, effectiveSphereSizeScale)
+        : baseSize,
+    [effectiveSphereSizeScale, isDebugModeOpen],
+  )
+  const effectiveSphereColorMode = isDebugModeOpen ? sphereColorMode : 'brand'
+  const effectiveSphereParticleCount = isDebugModeOpen
+    ? (sphereParticleCountOverride ?? undefined)
+    : undefined
   const [input, setInput] = useState('')
   const [messagesLimit, setMessagesLimit] = useState(
     ASSISTANT_MESSAGES_PAGE_SIZE,
@@ -2435,22 +2464,28 @@ export function AIChatPanel() {
             {messages.length === 0 ? (
               <div className="flex h-full flex-col items-center justify-center">
                 <ThinkingBubble
-                  size={scaleSphereSize(
-                    SPHERE_BASE_SIZES.empty,
-                    sphereSizeMode,
-                  )}
+                  size={getSphereRenderSize(SPHERE_BASE_SIZES.empty)}
                   activityRef={bubbleActivityRef}
-                  colorMode={sphereColorMode}
-                  particleCount={sphereParticleCountOverride ?? undefined}
+                  colorMode={effectiveSphereColorMode}
+                  particleCount={effectiveSphereParticleCount}
                   className="mb-4"
                 />
+                <h3 className="mb-2 text-center text-lg font-semibold text-foreground">
+                  How can I help you?
+                </h3>
+                <p className="mb-6 max-w-md text-center text-sm text-muted-foreground">
+                  I can inspect your project, explain issues, suggest next
+                  steps, and run approved actions.
+                </p>
                 {isDebugModeOpen ? (
                   <div className="mb-6 w-full max-w-md">
                     <AssistantBubbleDebugControls
                       activityMode={bubbleDebugMode}
                       onActivityModeChange={setBubbleDebugMode}
-                      sizeMode={sphereSizeMode}
-                      onSizeModeChange={setSphereSizeMode}
+                      sizeScale={effectiveSphereSizeScale}
+                      sizeScaleOverride={sphereSizeScaleOverride}
+                      onSizeScaleChange={setSphereSizeScaleOverride}
+                      onSizeScaleDefault={() => setSphereSizeScaleOverride(null)}
                       colorMode={sphereColorMode}
                       onColorModeChange={setSphereColorMode}
                       particleCountOverride={sphereParticleCountOverride}
@@ -2462,13 +2497,6 @@ export function AIChatPanel() {
                     />
                   </div>
                 ) : null}
-                <h3 className="mb-2 text-lg font-semibold text-foreground">
-                  How can I help you?
-                </h3>
-                <p className="mb-6 text-center text-sm text-muted-foreground">
-                  I can inspect your project, explain issues, suggest next
-                  steps, and run approved actions.
-                </p>
                 <div className="w-full max-w-md space-y-2">
                   {suggestedQuestions.map((question) => (
                     <button
@@ -2537,13 +2565,11 @@ export function AIChatPanel() {
                   <div className="flex">
                     <div className="flex items-center gap-2 px-2.5 py-1.5 text-[13px] text-muted-foreground">
                       <ThinkingBubble
-                        size={scaleSphereSize(
-                          SPHERE_BASE_SIZES.thinking,
-                          sphereSizeMode,
-                        )}
+                        size={getSphereRenderSize(SPHERE_BASE_SIZES.thinking)}
                         activityRef={bubbleActivityRef}
-                        colorMode={sphereColorMode}
-                        particleCount={sphereParticleCountOverride ?? undefined}
+                        colorMode={effectiveSphereColorMode}
+                        particleCount={effectiveSphereParticleCount}
+                        centered={false}
                       />
                       <span>Thinking...</span>
                     </div>
@@ -2560,8 +2586,10 @@ export function AIChatPanel() {
                 <AssistantBubbleDebugControls
                   activityMode={bubbleDebugMode}
                   onActivityModeChange={setBubbleDebugMode}
-                  sizeMode={sphereSizeMode}
-                  onSizeModeChange={setSphereSizeMode}
+                  sizeScale={effectiveSphereSizeScale}
+                  sizeScaleOverride={sphereSizeScaleOverride}
+                  onSizeScaleChange={setSphereSizeScaleOverride}
+                  onSizeScaleDefault={() => setSphereSizeScaleOverride(null)}
                   colorMode={sphereColorMode}
                   onColorModeChange={setSphereColorMode}
                   particleCountOverride={sphereParticleCountOverride}
@@ -2762,13 +2790,11 @@ export function AIChatPanel() {
             <div className="flex items-end gap-1.5 rounded-md border border-border bg-card p-1.5">
               {messages.length > 0 ? (
                 <ThinkingBubble
-                  size={scaleSphereSize(
-                    SPHERE_BASE_SIZES.composer,
-                    sphereSizeMode,
-                  )}
+                  size={getSphereRenderSize(SPHERE_BASE_SIZES.composer)}
                   activityRef={bubbleActivityRef}
-                  colorMode={sphereColorMode}
-                  particleCount={sphereParticleCountOverride ?? undefined}
+                  colorMode={effectiveSphereColorMode}
+                  particleCount={effectiveSphereParticleCount}
+                  centered={false}
                   className="mb-0.5 shrink-0"
                 />
               ) : null}

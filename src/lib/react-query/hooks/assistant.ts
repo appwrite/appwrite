@@ -5,7 +5,7 @@ import {
   useQuery,
   useQueryClient,
 } from '@tanstack/react-query'
-import { ID, Query } from '@appwrite.io/console'
+import { ContentType, ID, Query } from '@appwrite.io/console'
 import type { Models } from '@appwrite.io/console'
 import { getProjectRegion, sdk } from '@/lib/appwrite/sdk'
 import { getActiveProfileFeatures } from '@/lib/console-profiles'
@@ -139,7 +139,8 @@ export function useCreateAssistantConversation() {
       modelName?: string
       modelTemp?: number
     }) => {
-      return await sdk.forConsole.assistant.createConversation(params)
+      const { projectId: _projectId, ...conversationParams } = params
+      return await sdk.forConsole.assistant.createConversation(conversationParams)
     },
     onSuccess: async () => {
       await queryClient.invalidateQueries({
@@ -185,7 +186,7 @@ export function useCreateAssistantMessage() {
       return await sdk.forConsole.assistant.createMessage({
         conversationId: params.conversationId,
         contentText: params.contentText,
-        contentType: 'text',
+        contentType: ContentType.Text,
         contextTeamId: params.context?.contextTeamId,
         contextProjectId: params.context?.contextProjectId,
         contextOrganizationId: params.context?.contextOrganizationId,

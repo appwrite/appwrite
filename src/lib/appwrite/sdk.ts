@@ -35,7 +35,9 @@ import {
   DocumentsDB,
   VectorsDB,
   Domains,
+  Organization,
   Organizations,
+  Usage,
   Webhooks,
 } from '@appwrite.io/console'
 import {
@@ -178,7 +180,9 @@ function createConsoleSdkRaw(client: Client) {
     sites: new Sites(client),
     domains: new Domains(client),
     storage: new Storage(client),
+    organization: new Organization(client),
     organizations: new Organizations(client),
+    usage: new Usage(client),
     webhooks: new Webhooks(client),
   }
 }
@@ -416,6 +420,7 @@ const sdkForProjectRaw = {
   documentsDB: new DocumentsDB(clientProject),
   vectorsDB: new VectorsDB(clientProject),
   console: new Console(clientProject), // for suggestions API
+  usage: new Usage(clientProject),
   webhooks: new Webhooks(clientProject),
 }
 

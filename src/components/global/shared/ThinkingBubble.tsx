@@ -9,19 +9,20 @@ export type SphereColorMode =
   | 'amber'
   | 'cyan'
 
-export type SphereSizeMode = 'small' | 'default' | 'large'
-
-export const SPHERE_SIZE_SCALE: Record<SphereSizeMode, number> = {
-  small: 0.65,
-  default: 1,
-  large: 1.5,
-}
+export const SPHERE_SIZE_SCALE_DEFAULT = 1
+export const SPHERE_SIZE_SCALE_MIN = 0.5
+export const SPHERE_SIZE_SCALE_MAX = 2
+export const SPHERE_SIZE_SCALE_STEP = 0.05
 
 export function scaleSphereSize(
   baseSize: number,
-  sizeMode: SphereSizeMode,
+  scale: number = SPHERE_SIZE_SCALE_DEFAULT,
 ): number {
-  return Math.round(baseSize * SPHERE_SIZE_SCALE[sizeMode])
+  const clamped = Math.min(
+    SPHERE_SIZE_SCALE_MAX,
+    Math.max(SPHERE_SIZE_SCALE_MIN, scale),
+  )
+  return Math.round(baseSize * clamped)
 }
 
 type ColorPalette = {
@@ -44,6 +45,8 @@ type ThinkingBubbleProps = {
   colorMode?: SphereColorMode
   /** Explicit particle count; omit for size-based default */
   particleCount?: number | null
+  /** Center within the parent layout box (default true) */
+  centered?: boolean
 }
 
 type Rgb = [number, number, number]
@@ -207,6 +210,22 @@ function ensureParticlesUpTo(
   }
 }
 
+function syncCanvas(
+  ctx: CanvasRenderingContext2D,
+  canvas: HTMLCanvasElement,
+  renderSize: number,
+  dpr: number,
+) {
+  const pixelSize = Math.max(1, Math.ceil(renderSize * dpr))
+  if (canvas.width !== pixelSize || canvas.height !== pixelSize) {
+    canvas.width = pixelSize
+    canvas.height = pixelSize
+  }
+  canvas.style.width = `${renderSize}px`
+  canvas.style.height = `${renderSize}px`
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0)
+}
+
 function rotateY(x: number, y: number, z: number, angle: number) {
   const cos = Math.cos(angle)
   const sin = Math.sin(angle)
@@ -235,6 +254,7 @@ export const ThinkingBubble = memo(function ThinkingBubble({
   interactive = true,
   colorMode = 'brand',
   particleCount,
+  centered = true,
 }: ThinkingBubbleProps) {
   const containerRef = useRef<HTMLDivElement>(null)
   const canvasRef = useRef<HTMLCanvasElement>(null)
@@ -273,16 +293,15 @@ export const ThinkingBubble = memo(function ThinkingBubble({
     const canvas = canvasRef.current
     if (!container || !canvas) return
 
-    const initialSize = size
-    container.style.width = `${initialSize}px`
-    container.style.height = `${initialSize}px`
+    const ctx = canvas.getContext('2d', { alpha: true })
+    if (!ctx) return
 
     const dpr = Math.min(window.devicePixelRatio || 1, 2)
-    canvas.width = initialSize * dpr
-    canvas.height = initialSize * dpr
-    canvas.style.width = `${initialSize}px`
-    canvas.style.height = `${initialSize}px`
-  }, [])
+    const layoutSize = displaySizeRef.current
+    container.style.width = `${layoutSize}px`
+    container.style.height = `${layoutSize}px`
+    syncCanvas(ctx, canvas, layoutSize, dpr)
+  }, [size])
 
   useEffect(() => {
     targetSizeRef.current = size
@@ -331,6 +350,9 @@ export const ThinkingBubble = memo(function ThinkingBubble({
     if (!ctx) return
 
     const dpr = Math.min(window.devicePixelRatio || 1, 2)
+    syncCanvas(ctx, canvas, displaySizeRef.current, dpr)
+    container.style.width = `${displaySizeRef.current}px`
+    container.style.height = `${displaySizeRef.current}px`
 
     const handlePointerMove = (event: PointerEvent) => {
       if (!interactiveRef.current) return
@@ -395,15 +417,7 @@ export const ThinkingBubble = memo(function ThinkingBubble({
 
       container.style.width = `${renderSize}px`
       container.style.height = `${renderSize}px`
-
-      const canvasSize = Math.ceil(renderSize * dpr)
-      if (canvas.width !== canvasSize || canvas.height !== canvasSize) {
-        canvas.width = canvasSize
-        canvas.height = canvasSize
-        canvas.style.width = `${renderSize}px`
-        canvas.style.height = `${renderSize}px`
-        ctx.setTransform(dpr, 0, 0, dpr, 0, 0)
-      }
+      syncCanvas(ctx, canvas, renderSize, dpr)
 
       const targetActivity =
         externalActivityRef?.current ?? staticActivityRef.current
@@ -586,15 +600,20 @@ export const ThinkingBubble = memo(function ThinkingBubble({
 
   return (
     <div
-      ref={containerRef}
       className={cn(
-        'relative select-none',
-        interactive && 'cursor-pointer',
+        'relative flex shrink-0 items-center justify-center',
+        centered && 'mx-auto',
         className,
       )}
+      style={{ width: size, height: size }}
       aria-hidden
     >
-      <canvas ref={canvasRef} className="block" />
+      <div
+        ref={containerRef}
+        className={cn('relative select-none', interactive && 'cursor-pointer')}
+      >
+        <canvas ref={canvasRef} className="block size-full" />
+      </div>
     </div>
   )
 })

@@ -1,12 +1,23 @@
 import { createFileRoute } from '@tanstack/react-router'
+import { endOfDay, startOfDay, subDays } from 'date-fns'
 import { View } from '@/components/pages/projects/$projectId/overview/Overview'
 import {
-  projectQueryOptions,
   apiKeysQueryOptions,
   mapApiKeysFromResponse,
   platformsQueryOptions,
+  bandwidthChartOverviewQueryOptions,
+  bandwidthTopConsumersQueryOptions,
+  requestsChartOverviewQueryOptions,
 } from '@/lib/react-query/hooks'
+import { getActiveProfileFeatures } from '@/lib/console-profiles'
 import { pageTitle } from '@/lib/utils/page-title'
+
+function getDefaultDashboardChartRange() {
+  return {
+    from: startOfDay(subDays(new Date(), 29)),
+    to: endOfDay(new Date()),
+  }
+}
 
 export const Route = createFileRoute('/_public/projects/$projectId/')({
   head: () => ({ meta: [{ title: pageTitle('Overview') }] }),
@@ -17,22 +28,40 @@ export const Route = createFileRoute('/_public/projects/$projectId/')({
     if (!projectId) return undefined
 
     try {
-      // Prefetch project (platforms/integrations) and API keys - blocks until ready
-      const [, apiKeysRaw] = await Promise.all([
-        queryClient.ensureQueryData(projectQueryOptions(projectId)),
-        queryClient
-          .ensureQueryData(apiKeysQueryOptions(projectId))
-          .catch(() => null),
-      ])
-      const apiKeys = mapApiKeysFromResponse(apiKeysRaw)
-      const platformsResponse = await queryClient
-        .ensureQueryData(platformsQueryOptions(projectId))
+      // Only block on API keys — project is prefetched by the parent layout.
+      const apiKeysRaw = await queryClient
+        .ensureQueryData(apiKeysQueryOptions(projectId))
         .catch(() => null)
 
+      const defaultChartRange = getDefaultDashboardChartRange()
+      const usageStatsEnabled = getActiveProfileFeatures().usageStats
+
+      // Non-critical data: prefetch in the background so the page can render immediately.
+      void queryClient
+        .prefetchQuery(platformsQueryOptions(projectId))
+        .catch(() => undefined)
+
+      if (usageStatsEnabled) {
+        void queryClient
+          .prefetchQuery(
+            bandwidthChartOverviewQueryOptions(projectId, defaultChartRange),
+          )
+          .catch(() => undefined)
+        void queryClient
+          .prefetchQuery(
+            requestsChartOverviewQueryOptions(projectId, defaultChartRange),
+          )
+          .catch(() => undefined)
+        void queryClient
+          .prefetchQuery(
+            bandwidthTopConsumersQueryOptions(projectId, defaultChartRange, true),
+          )
+          .catch(() => undefined)
+      }
+
       return {
-        apiKeys,
+        apiKeys: mapApiKeysFromResponse(apiKeysRaw),
         apiKeysRaw,
-        platforms: platformsResponse?.platforms ?? [],
       }
     } catch (error) {
       console.warn('Failed to fetch overview data in loader:', error)
@@ -53,7 +82,6 @@ function ProjectOverviewPage() {
           ? {
               apiKeys: loaderData.apiKeys,
               apiKeysRaw: loaderData.apiKeysRaw,
-              platforms: loaderData.platforms,
             }
           : undefined
       }

@@ -23,6 +23,7 @@ import {
   RefreshCw,
   Sun,
   Moon,
+  CheckCircle2,
 } from 'lucide-react'
 import { useTheme } from 'next-themes'
 import {
@@ -1550,17 +1551,29 @@ export function DeploymentDetailView({
                         </span>
                       </div>
                     )}
-                    {statusBadge && (
-                      <Badge
-                        variant={statusBadge.badgeVariant}
-                        className="gap-1.5 text-[12px] font-medium shrink-0 h-6 px-2.5"
-                      >
-                        {(() => {
-                          const StatusIcon = statusBadge.icon
-                          return <StatusIcon className="h-3.5 w-3.5" />
-                        })()}
-                        {statusBadge.label}
-                      </Badge>
+                    {(isActiveDeployment || statusBadge) && (
+                      isActiveDeployment ? (
+                        <Badge
+                          variant="active"
+                          className="gap-1.5 text-[12px] font-medium shrink-0 h-6 px-2.5"
+                        >
+                          <CheckCircle2 className="h-3.5 w-3.5" />
+                          Active
+                        </Badge>
+                      ) : (
+                        statusBadge && (
+                          <Badge
+                            variant={statusBadge.badgeVariant}
+                            className="gap-1.5 text-[12px] font-medium shrink-0 h-6 px-2.5"
+                          >
+                            {(() => {
+                              const StatusIcon = statusBadge.icon
+                              return <StatusIcon className="h-3.5 w-3.5" />
+                            })()}
+                            {statusBadge.label}
+                          </Badge>
+                        )
+                      )
                     )}
                     {isDeploymentFailed && (
                       <FixWithAgentDropdown

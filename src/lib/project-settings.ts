@@ -7,6 +7,7 @@ import {
   type Models,
 } from '@appwrite.io/console'
 import { queryOptions } from '@tanstack/react-query'
+import { listConsoleProjects } from '@/lib/appwrite/console-projects'
 import { sdk, setProjectRegion } from '@/lib/appwrite/sdk'
 
 type ProjectPolicy = Models.PolicyList['policies'][number]
@@ -234,7 +235,7 @@ export async function fetchProjectById(projectId: string): Promise<Models.Projec
     }
     return response
   } catch (error) {
-    const list = await sdk.forConsole.projects.list({
+    const list = await listConsoleProjects({
       queries: [Query.equal('$id', projectId), Query.limit(1)],
       total: false,
     })

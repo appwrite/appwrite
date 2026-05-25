@@ -101,6 +101,68 @@ const PRESET_GROUPS: PresetGroup[] = [
   },
 ]
 
+const ALL_PRESETS = PRESET_GROUPS.flatMap((group) => group.presets)
+
+const MATCH_TOLERANCE_MS = 60_000
+
+function datesMatch(a: Date, b: Date, toleranceMs = MATCH_TOLERANCE_MS) {
+  return Math.abs(a.getTime() - b.getTime()) <= toleranceMs
+}
+
+function dateRangeMatchesPreset(
+  range: DateRange | undefined,
+  preset: DateRangePreset,
+): boolean {
+  if (!range?.from || !range?.to) return false
+
+  const presetRange = preset.getRange()
+
+  if (preset.value === 'today') {
+    return (
+      startOfDay(range.from).getTime() === startOfDay(presetRange.from).getTime() &&
+      endOfDay(range.to).getTime() === endOfDay(presetRange.to).getTime()
+    )
+  }
+
+  if (preset.value === '7d' || preset.value === '14d' || preset.value === '30d') {
+    return (
+      startOfDay(range.from).getTime() === startOfDay(presetRange.from).getTime() &&
+      endOfDay(range.to).getTime() === endOfDay(presetRange.to).getTime()
+    )
+  }
+
+  if (preset.value === '1h' || preset.value === '6h' || preset.value === '24h') {
+    const hours = preset.value === '1h' ? 1 : preset.value === '6h' ? 6 : 24
+    const expectedDuration = hours * 60 * 60 * 1000
+    const actualDuration = range.to.getTime() - range.from.getTime()
+    const toIsRecent = datesMatch(range.to, new Date())
+
+    return (
+      Math.abs(actualDuration - expectedDuration) <= MATCH_TOLERANCE_MS &&
+      toIsRecent
+    )
+  }
+
+  return (
+    datesMatch(range.from, presetRange.from) &&
+    datesMatch(range.to, presetRange.to)
+  )
+}
+
+function findMatchingPreset(
+  range: DateRange | undefined,
+): DateRangePreset | null {
+  if (!range?.from || !range?.to) return null
+
+  for (const preset of ALL_PRESETS) {
+    if (dateRangeMatchesPreset(range, preset)) {
+      return preset
+    }
+  }
+
+  return null
+}
+
 function isFullCalendarDay(from: Date, to: Date) {
   return (
     from.getTime() === startOfDay(from).getTime() &&
@@ -123,9 +185,19 @@ export function DateRangePicker({
   popoverContentAlign = 'end',
 }: DateRangePickerProps) {
   const [isOpen, setIsOpen] = React.useState(false)
+
+  const matchingPreset = React.useMemo(
+    () => findMatchingPreset(dateRange),
+    [dateRange],
+  )
+
   const [selectedPreset, setSelectedPreset] = React.useState<string | null>(
     null,
   )
+
+  React.useEffect(() => {
+    setSelectedPreset(matchingPreset?.value ?? null)
+  }, [matchingPreset?.value])
 
   const handlePresetSelect = (preset: DateRangePreset) => {
     const range = preset.getRange()
@@ -155,6 +227,8 @@ export function DateRangePicker({
     return `${format(range.from, 'MMM d, h:mm a')} - ${format(range.to, 'MMM d, h:mm a')}`
   }
 
+  const triggerLabel = matchingPreset?.label ?? formatDateRange(dateRange)
+
   return (
     <Popover open={isOpen} onOpenChange={setIsOpen}>
       <PopoverTrigger asChild>
@@ -169,7 +243,7 @@ export function DateRangePicker({
         >
           <CalendarIcon className="h-3.5 w-3.5 shrink-0" />
           <span className="flex-1 truncate text-left">
-            {formatDateRange(dateRange)}
+            {triggerLabel}
           </span>
           <ChevronDown className="h-3.5 w-3.5 opacity-50 shrink-0" />
         </Button>

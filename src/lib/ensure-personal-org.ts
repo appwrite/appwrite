@@ -13,6 +13,7 @@
  */
 
 import { ID } from '@appwrite.io/console'
+import { createConsoleProject } from '@/lib/appwrite/console-projects'
 import { sdk } from '@/lib/appwrite/sdk'
 import { createOrganization } from '@/lib/react-query/hooks/organizations'
 import { fetchOrganizations } from '@/lib/react-query/hooks/organizations'
@@ -33,15 +34,15 @@ export async function ensurePersonalOrgAndFirstProject(): Promise<string> {
     const org = await createOrganization({ name: PERSONAL_ORG_NAME })
     const orgId = org.$id
 
-    await sdk.forConsole.projects.create({
-      projectId: ID.unique(),
-      name: FIRST_PROJECT_NAME,
-      teamId: orgId,
-    })
-
     await updateAccountPrefs({
       ...prefs,
       organization: orgId,
+    })
+
+    await createConsoleProject({
+      projectId: ID.unique(),
+      name: FIRST_PROJECT_NAME,
+      teamId: orgId,
     })
     return orgId
   }
@@ -57,7 +58,7 @@ export async function ensurePersonalOrgAndFirstProject(): Promise<string> {
 
   const { total } = await fetchOrganizationProjects(orgId)
   if (total === 0) {
-    await sdk.forConsole.projects.create({
+    await createConsoleProject({
       projectId: ID.unique(),
       name: FIRST_PROJECT_NAME,
       teamId: orgId,

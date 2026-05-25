@@ -21,6 +21,7 @@ import {
 } from 'lucide-react'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
+import { updateConsoleProject } from '@/lib/appwrite/console-projects'
 import { sdk } from '@/lib/appwrite/sdk'
 import {
   deleteProject,
@@ -365,7 +366,7 @@ export function ProjectSettingsOverview({
       if (trimmedName.length < 1 || trimmedName.length > 128) {
         throw new Error('Name must be between 1 and 128 characters')
       }
-      await sdk.forConsole.projects.update({ projectId, name: trimmedName })
+      await updateConsoleProject({ projectId, name: trimmedName })
     },
     onSuccess: async () => {
       toast.success('Project name has been updated')

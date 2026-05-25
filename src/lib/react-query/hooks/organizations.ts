@@ -18,6 +18,7 @@ import {
   type BillingPlanTier as BillingPlanTierType,
 } from '@/lib/constants/billing-plan'
 import type { Organization } from '@/lib/utils/mock-data'
+import { listConsoleProjects } from '@/lib/appwrite/console-projects'
 import { sdk } from '@/lib/appwrite/sdk'
 import {
   DEFAULT_ROLES,
@@ -629,7 +630,7 @@ export async function fetchOrganizationProjects(organizationId: string) {
     return { projects: [] }
   }
   try {
-    const response = await sdk.forConsole.projects.list({
+    const response = await listConsoleProjects({
       queries: [Query.equal('teamId', organizationId), Query.limit(1000)],
     })
     return {

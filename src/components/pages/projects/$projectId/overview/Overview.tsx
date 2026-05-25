@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect } from 'react'
+import { useState, useMemo, useEffect, useLayoutEffect } from 'react'
 import { endOfDay, startOfDay, subDays } from 'date-fns'
 import type { DateRange } from 'react-day-picker'
 import {
@@ -25,7 +25,19 @@ import {
   useUpdateApiKey,
   useDeleteApiKey,
   fetchApiKeys,
+  useProjectBandwidthChartOverview,
+  useProjectBandwidthTopConsumers,
+  useProjectRequestsChartOverview,
+  useProjectRequestsTopEndpoints,
 } from '@/lib/react-query/hooks'
+import {
+  formatBandwidthTotal,
+  formatBandwidthValue,
+} from '@/lib/usage/bandwidth-events'
+import {
+  formatRequestsTotal,
+  formatRequestsValue,
+} from '@/lib/usage/requests-events'
 import { getApiEndpoint } from '@/lib/appwrite/sdk'
 import { Button } from '@/components/ui/button'
 import {
@@ -58,15 +70,24 @@ import {
 import type { Models } from '@appwrite.io/console'
 import { EmptyState } from '@/components/global/shared/EmptyState'
 import { DateRangePicker } from '../analytics/DateRangePicker'
+import {
+  OVERVIEW_METRIC_NOT_AVAILABLE,
+  OVERVIEW_REQUESTS_ERROR,
+  overviewChartColumnClass,
+  overviewChartContentRowClass,
+} from './chart-panel'
 
 interface OverviewTab {
   id: string
   value: string
   label: string
-  change: number
+  /** `null` renders N/A instead of a trend (e.g. when usage data failed to load). */
+  change: number | null
+  /** When true, the tab KPI shows a skeleton instead of value/change. */
+  isLoading?: boolean
 }
 
-const overviewTabs: OverviewTab[] = [
+const mockOverviewTabs: OverviewTab[] = [
   {
     id: 'bandwidth',
     value: `${dashboardStats.totalBandwidth}GB`,
@@ -158,6 +179,7 @@ function getDefaultDashboardChartRange(): DateRange {
 export function View({ projectId, initialData }: ViewProps) {
   const navigate = useNavigate()
   const [activeTab, setActiveTab] = useState('bandwidth')
+  const [chartShowSession, setChartShowSession] = useState(0)
   const [dashboardChartDateRange, setDashboardChartDateRange] = useState<
     DateRange | undefined
   >(() => getDefaultDashboardChartRange())
@@ -170,6 +192,121 @@ export function View({ projectId, initialData }: ViewProps) {
   const [selectedPlatform, setSelectedPlatform] =
     useState<ProjectPlatform | null>(null)
   const { features, isCloud } = useConsoleProfile()
+
+  useLayoutEffect(() => {
+    setChartShowSession(1)
+  }, [])
+
+  const handleOverviewTabChange = (tabId: string) => {
+    if (tabId !== activeTab) {
+      setChartShowSession((session) => session + 1)
+    }
+    setActiveTab(tabId)
+  }
+
+  const {
+    data: bandwidthData,
+    isLoading: isBandwidthChartLoading,
+    isError: isBandwidthChartError,
+    refetch: refetchBandwidthChart,
+  } = useProjectBandwidthChartOverview(projectId, dashboardChartDateRange)
+
+  const {
+    data: bandwidthTopData,
+    isLoading: isBandwidthTopLoading,
+    isError: isBandwidthTopError,
+    refetch: refetchBandwidthTop,
+  } = useProjectBandwidthTopConsumers(
+    projectId,
+    dashboardChartDateRange,
+    activeTab === 'bandwidth',
+  )
+
+  const {
+    data: requestsData,
+    isLoading: isRequestsChartLoading,
+    isError: isRequestsChartError,
+    refetch: refetchRequestsChart,
+  } = useProjectRequestsChartOverview(projectId, dashboardChartDateRange)
+
+  const {
+    data: requestsTopData,
+    isLoading: isRequestsTopLoading,
+    isError: isRequestsTopError,
+    refetch: refetchRequestsTop,
+  } = useProjectRequestsTopEndpoints(
+    projectId,
+    dashboardChartDateRange,
+    activeTab === 'requests',
+  )
+
+  const showBandwidthChartLoading =
+    isBandwidthChartLoading && !isBandwidthChartError && !bandwidthData
+
+  const showBandwidthTopLoading =
+    isBandwidthTopLoading && !isBandwidthTopError && !bandwidthTopData
+
+  const showRequestsChartLoading =
+    isRequestsChartLoading && !isRequestsChartError && !requestsData
+
+  const showRequestsTopLoading =
+    isRequestsTopLoading && !isRequestsTopError && !requestsTopData
+
+  const overviewTabs = useMemo(() => {
+    const bandwidthTab: OverviewTab = isBandwidthChartError
+      ? {
+          id: 'bandwidth',
+          value: OVERVIEW_METRIC_NOT_AVAILABLE,
+          label: 'Bandwidth',
+          change: null,
+        }
+      : showBandwidthChartLoading
+        ? {
+            id: 'bandwidth',
+            value: '',
+            label: 'Bandwidth',
+            change: null,
+            isLoading: true,
+          }
+        : {
+            id: 'bandwidth',
+            value: formatBandwidthTotal(bandwidthData?.totalBytes ?? 0),
+            label: 'Bandwidth',
+            change: bandwidthData?.changePercent ?? 0,
+          }
+
+    const requestsTab: OverviewTab = isRequestsChartError
+      ? {
+          id: 'requests',
+          value: OVERVIEW_METRIC_NOT_AVAILABLE,
+          label: 'Requests',
+          change: null,
+        }
+      : showRequestsChartLoading
+        ? {
+            id: 'requests',
+            value: '',
+            label: 'Requests',
+            change: null,
+            isLoading: true,
+          }
+        : {
+            id: 'requests',
+            value: formatRequestsTotal(requestsData?.totalRequests ?? 0),
+            label: 'Requests',
+            change: requestsData?.changePercent ?? 0,
+          }
+
+    return [bandwidthTab, requestsTab, ...mockOverviewTabs.slice(2)]
+  }, [
+    bandwidthData,
+    isBandwidthChartError,
+    requestsData,
+    isRequestsChartError,
+    showBandwidthChartLoading,
+    showRequestsChartLoading,
+  ])
+
   const goToAddAppWizard = (kind?: AddAppKind) => {
     navigate({
       to: '/projects/$projectId/apps/add',
@@ -474,8 +611,9 @@ export function View({ projectId, initialData }: ViewProps) {
                   <div className="flex min-w-max" role="tablist">
                     {overviewTabs.map((tab, index) => {
                       const isActive = activeTab === tab.id
-                      const isPositive = tab.change > 0
-                      const isNegative = tab.change < 0
+                      const showChange = tab.change !== null
+                      const isPositive = showChange && tab.change > 0
+                      const isNegative = showChange && tab.change < 0
 
                       return (
                         <div key={tab.id} className="flex">
@@ -488,7 +626,7 @@ export function View({ projectId, initialData }: ViewProps) {
                           <button
                             role="tab"
                             aria-selected={isActive}
-                            onClick={() => setActiveTab(tab.id)}
+                            onClick={() => handleOverviewTabChange(tab.id)}
                             className={cn(
                               'relative flex min-w-[150px] flex-col gap-0.5 px-4 py-3 text-left cursor-pointer focus:cursor-pointer focus-visible:cursor-pointer transition-colors first:pl-0 rounded-sm',
                               'focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset',
@@ -498,6 +636,13 @@ export function View({ projectId, initialData }: ViewProps) {
                             )}
                           >
                             <div className="flex items-baseline gap-2">
+                              {tab.isLoading ? (
+                                <>
+                                  <Skeleton className="h-6 w-[4.5rem] rounded-md" />
+                                  <Skeleton className="h-3 w-10 rounded-md" />
+                                </>
+                              ) : (
+                                <>
                               <span
                                 className={cn(
                                   'text-[18px] font-semibold tracking-tight sm:text-[20px]',
@@ -509,46 +654,63 @@ export function View({ projectId, initialData }: ViewProps) {
                                 {tab.value}
                               </span>
                               <div className="flex items-center gap-1">
-                                {isPositive && (
-                                  <TrendingUp
-                                    className={cn(
-                                      'h-3 w-3',
-                                      isActive
-                                        ? 'text-emerald-500'
-                                        : 'text-emerald-500/60',
+                                {showChange ? (
+                                  <>
+                                    {isPositive && (
+                                      <TrendingUp
+                                        className={cn(
+                                          'h-3 w-3',
+                                          isActive
+                                            ? 'text-emerald-500'
+                                            : 'text-emerald-500/60',
+                                        )}
+                                      />
                                     )}
-                                  />
-                                )}
-                                {isNegative && (
-                                  <TrendingDown
-                                    className={cn(
-                                      'h-3 w-3',
-                                      isActive
-                                        ? 'text-red-500'
-                                        : 'text-red-500/60',
+                                    {isNegative && (
+                                      <TrendingDown
+                                        className={cn(
+                                          'h-3 w-3',
+                                          isActive
+                                            ? 'text-red-500'
+                                            : 'text-red-500/60',
+                                        )}
+                                      />
                                     )}
-                                  />
+                                    <span
+                                      className={cn(
+                                        'text-[11px] font-medium',
+                                        isPositive &&
+                                          (isActive
+                                            ? 'text-emerald-500'
+                                            : 'text-emerald-500/60'),
+                                        isNegative &&
+                                          (isActive
+                                            ? 'text-red-500'
+                                            : 'text-red-500/60'),
+                                        !isPositive &&
+                                          !isNegative &&
+                                          'text-muted-foreground',
+                                      )}
+                                    >
+                                      {isPositive && '+'}
+                                      {tab.change}%
+                                    </span>
+                                  </>
+                                ) : (
+                                  <span
+                                    className={cn(
+                                      'text-[11px] font-medium',
+                                      isActive
+                                        ? 'text-muted-foreground'
+                                        : 'text-muted-foreground/70',
+                                    )}
+                                  >
+                                    {OVERVIEW_METRIC_NOT_AVAILABLE}
+                                  </span>
                                 )}
-                                <span
-                                  className={cn(
-                                    'text-[11px] font-medium',
-                                    isPositive &&
-                                      (isActive
-                                        ? 'text-emerald-500'
-                                        : 'text-emerald-500/60'),
-                                    isNegative &&
-                                      (isActive
-                                        ? 'text-red-500'
-                                        : 'text-red-500/60'),
-                                    !isPositive &&
-                                      !isNegative &&
-                                      'text-muted-foreground',
-                                  )}
-                                >
-                                  {isPositive && '+'}
-                                  {tab.change}%
-                                </span>
                               </div>
+                                </>
+                              )}
                             </div>
                             <span
                               className={cn(
@@ -581,69 +743,124 @@ export function View({ projectId, initialData }: ViewProps) {
               </div>
             </div>
 
-            {/* Chart content */}
-            {activeTab === 'bandwidth' && (
-              <div className="flex flex-col @[700px]:flex-row">
-                <div className="flex-1 border-b border-border p-5 @[700px]:border-b-0 @[700px]:border-r">
+            {/* Chart content — keep real-data panels mounted; hide inactive tabs so first reveal can animate */}
+            <div
+              className={cn(
+                overviewChartContentRowClass,
+                activeTab !== 'bandwidth' && 'hidden',
+              )}
+            >
+                <div className={overviewChartColumnClass}>
                   <RequestsChart
+                    className="@[700px]:min-h-0 @[700px]:flex-1"
+                    showSession={chartShowSession}
+                    isPanelVisible={activeTab === 'bandwidth'}
                     title="Bandwidth over time"
                     metric="bandwidth"
                     dateRange={dashboardChartDateRange}
+                    chartData={
+                      isBandwidthChartError ? [] : bandwidthData?.chartPoints
+                    }
+                    isLoading={showBandwidthChartLoading}
+                    isError={isBandwidthChartError}
+                    onRetry={() => void refetchBandwidthChart()}
+                    formatValue={formatBandwidthValue}
                   />
                 </div>
-                <div className="w-full p-5 @[700px]:w-[320px]">
+                <div className="flex min-h-0 w-full min-w-0 flex-col p-5 @[700px]:w-[320px] @[700px]:shrink-0">
                   <TopRequests
+                    className="min-h-0 flex-1"
                     title="Top bandwidth consumers"
                     metric="bandwidth"
+                    items={
+                      isBandwidthTopError ? [] : bandwidthTopData?.topConsumers
+                    }
+                    formatCount={formatBandwidthValue}
+                    isLoading={showBandwidthTopLoading}
+                    isError={isBandwidthTopError}
+                    onRetry={() => void refetchBandwidthTop()}
                   />
                 </div>
               </div>
-            )}
 
-            {activeTab === 'requests' && (
-              <div className="flex flex-col @[700px]:flex-row">
-                <div className="flex-1 border-b border-border p-5 @[700px]:border-b-0 @[700px]:border-r">
+            <div
+              className={cn(
+                overviewChartContentRowClass,
+                activeTab !== 'requests' && 'hidden',
+              )}
+            >
+                <div className={overviewChartColumnClass}>
                   <RequestsChart
+                    className="@[700px]:min-h-0 @[700px]:flex-1"
+                    showSession={chartShowSession}
+                    isPanelVisible={activeTab === 'requests'}
                     title="Requests over time"
                     metric="requests"
                     dateRange={dashboardChartDateRange}
+                    chartData={
+                      isRequestsChartError ? [] : requestsData?.chartPoints
+                    }
+                    isLoading={showRequestsChartLoading}
+                    isError={isRequestsChartError}
+                    onRetry={() => void refetchRequestsChart()}
+                    formatValue={formatRequestsValue}
+                    errorTitle={OVERVIEW_REQUESTS_ERROR.title}
+                    errorMessage={OVERVIEW_REQUESTS_ERROR.message}
                   />
                 </div>
-                <div className="w-full p-5 @[700px]:w-[320px]">
+                <div className="flex min-h-0 w-full min-w-0 flex-col p-5 @[700px]:w-[320px] @[700px]:shrink-0">
                   <TopRequests
+                    className="min-h-0 flex-1"
                     title="Top requested endpoints"
                     metric="requests"
+                    items={
+                      isRequestsTopError ? [] : requestsTopData?.topEndpoints
+                    }
+                    formatCount={formatRequestsValue}
+                    isLoading={showRequestsTopLoading}
+                    isError={isRequestsTopError}
+                    onRetry={() => void refetchRequestsTop()}
+                    errorTitle={OVERVIEW_REQUESTS_ERROR.title}
+                    errorMessage={OVERVIEW_REQUESTS_ERROR.message}
                   />
                 </div>
               </div>
-            )}
 
             {activeTab === 'storage' && (
-              <div className="flex flex-col @[700px]:flex-row">
-                <div className="flex-1 border-b border-border p-5 @[700px]:border-b-0 @[700px]:border-r">
+              <div className={overviewChartContentRowClass}>
+                <div className={overviewChartColumnClass}>
                   <RequestsChart
+                    className="@[700px]:min-h-0 @[700px]:flex-1"
+                    showSession={chartShowSession}
                     title="Storage usage over time"
                     metric="storage"
                     dateRange={dashboardChartDateRange}
                   />
                 </div>
-                <div className="w-full p-5 @[700px]:w-[320px]">
-                  <TopRequests title="Top storage buckets" metric="storage" />
+                <div className="flex min-h-0 w-full min-w-0 flex-col p-5 @[700px]:w-[320px] @[700px]:shrink-0">
+                  <TopRequests
+                    className="min-h-0 flex-1"
+                    title="Top storage buckets"
+                    metric="storage"
+                  />
                 </div>
               </div>
             )}
 
             {activeTab === 'executions' && (
-              <div className="flex flex-col @[700px]:flex-row">
-                <div className="flex-1 border-b border-border p-5 @[700px]:border-b-0 @[700px]:border-r">
+              <div className={overviewChartContentRowClass}>
+                <div className={overviewChartColumnClass}>
                   <RequestsChart
+                    className="@[700px]:min-h-0 @[700px]:flex-1"
+                    showSession={chartShowSession}
                     title="Executions over time"
                     metric="executions"
                     dateRange={dashboardChartDateRange}
                   />
                 </div>
-                <div className="w-full p-5 @[700px]:w-[320px]">
+                <div className="flex min-h-0 w-full min-w-0 flex-col p-5 @[700px]:w-[320px] @[700px]:shrink-0">
                   <TopRequests
+                    className="min-h-0 flex-1"
                     title="Top executed functions"
                     metric="executions"
                   />
@@ -652,16 +869,19 @@ export function View({ projectId, initialData }: ViewProps) {
             )}
 
             {activeTab === 'gbhours' && (
-              <div className="flex flex-col @[700px]:flex-row">
-                <div className="flex-1 border-b border-border p-5 @[700px]:border-b-0 @[700px]:border-r">
+              <div className={overviewChartContentRowClass}>
+                <div className={overviewChartColumnClass}>
                   <RequestsChart
+                    className="@[700px]:min-h-0 @[700px]:flex-1"
+                    showSession={chartShowSession}
                     title="GB-hours over time"
                     metric="gbhours"
                     dateRange={dashboardChartDateRange}
                   />
                 </div>
-                <div className="w-full p-5 @[700px]:w-[320px]">
+                <div className="flex min-h-0 w-full min-w-0 flex-col p-5 @[700px]:w-[320px] @[700px]:shrink-0">
                   <TopRequests
+                    className="min-h-0 flex-1"
                     title="Top GB-hours consumers"
                     metric="gbhours"
                   />

@@ -1,0 +1,32 @@
+import { AlertCircle } from 'lucide-react'
+import { Button } from '@/components/ui/button'
+import { overviewChartPanelErrorClass } from './chart-panel'
+
+interface OverviewChartPanelErrorProps {
+  title: string
+  message: string
+  onRetry?: () => void
+}
+
+export function OverviewChartPanelError({
+  title,
+  message,
+  onRetry,
+}: OverviewChartPanelErrorProps) {
+  return (
+    <div className={overviewChartPanelErrorClass}>
+      <AlertCircle className="h-8 w-8 shrink-0 text-destructive/80" />
+      <div className="max-w-sm">
+        <p className="text-[13px] font-medium text-foreground">{title}</p>
+        <p className="mt-1 text-[12px] leading-relaxed text-muted-foreground">
+          {message}
+        </p>
+      </div>
+      {onRetry ? (
+        <Button variant="outline" size="sm" onClick={onRetry}>
+          Try again
+        </Button>
+      ) : null}
+    </div>
+  )
+}

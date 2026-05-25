@@ -22,6 +22,10 @@ import {
 } from '@appwrite.io/console'
 import type { Models } from '@appwrite.io/console'
 import type { Project } from '@/lib/utils/mock-data'
+import {
+  createConsoleProject,
+  listConsoleProjects,
+} from '@/lib/appwrite/console-projects'
 import { sdk } from '@/lib/appwrite/sdk'
 import { fetchProjectById } from '@/lib/project-settings'
 import { getActiveProfileFeatures } from '@/lib/console-profiles'
@@ -169,7 +173,7 @@ export async function fetchActiveProjects(
         ]
       : baseQueries
 
-  const response = await sdk.forConsole.projects.list({
+  const response = await listConsoleProjects({
     queries,
     total: true,
   })
@@ -203,7 +207,7 @@ export async function fetchProjectsByIds(
       ? Query.equal('$id', validIds[0])
       : Query.or(validIds.map((id) => Query.equal('$id', id)))
 
-  const response = await sdk.forConsole.projects.list({
+  const response = await listConsoleProjects({
     queries: [
       Query.select([...PROJECT_LIST_SELECT]),
       Query.equal('teamId', teamId),
@@ -1444,7 +1448,7 @@ export function useCreateProject(teamId: string | null | undefined) {
 
       const finalProjectId = projectId || ID.unique()
 
-      return await sdk.forConsole.projects.create({
+      return await createConsoleProject({
         projectId: finalProjectId,
         name: name.trim(),
         teamId,
