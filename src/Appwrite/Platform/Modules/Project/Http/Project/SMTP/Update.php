@@ -121,7 +121,7 @@ class Update extends Action
         // Validate when the caller is explicitly enabling or hasn't expressed a preference
         // (so a credentials-only PATCH can auto-enable). Skip only when the caller is
         // explicitly keeping/turning SMTP off.
-        if (\is_null($enabled) || $enabled === true) {
+        if ((\is_null($enabled) || $enabled === true) && !empty($smtp['senderEmail'] ?? '')) {
             $mail = new PHPMailer(true);
             $mail->isSMTP();
 
