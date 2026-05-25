@@ -17,7 +17,7 @@ class User extends Document
     public const ROLE_ADMIN = 'admin';
     public const ROLE_DEVELOPER = 'developer';
     public const ROLE_OWNER = 'owner';
-    public const ROLE_APPS = 'apps';
+    public const ROLE_KEYS = 'keys';
     public const ROLE_SYSTEM = 'system';
 
     public function getEmail(): ?string
@@ -39,7 +39,7 @@ class User extends Document
     {
         $roles = [];
 
-        if (!$this->isApp($authorization->getRoles())) {
+        if (!$this->isKey($authorization->getRoles())) {
             if ($this->getId()) {
                 $roles[] = Role::user($this->getId())->toString();
                 $roles[] = Role::users()->toString();
@@ -115,15 +115,15 @@ class User extends Document
     }
 
     /**
-     * Is App User?
+     * Is Key User?
      *
      * @param array<string> $roles
      *
      * @return bool
      */
-    public function isApp(array $roles): bool
+    public function isKey(array $roles): bool
     {
-        if (in_array(self::ROLE_APPS, $roles)) {
+        if (in_array(self::ROLE_KEYS, $roles)) {
             return true;
         }
 

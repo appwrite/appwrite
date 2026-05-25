@@ -134,7 +134,7 @@ class XList extends Action
 
         $roles = $authorization->getRoles();
         $isPrivilegedUser = $user->isPrivileged($roles);
-        $isAppUser = $user->isApp($roles);
+        $isAppUser = $user->isKey($roles);
 
         $membershipsPrivacy = array_map(function ($privacy) use ($isPrivilegedUser, $isAppUser) {
             return $privacy || $isPrivilegedUser || $isAppUser;

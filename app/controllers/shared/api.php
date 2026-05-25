@@ -175,8 +175,8 @@ Http::init()
             $role = $apiKey->getRole();
             $scopes = $apiKey->getScopes();
 
-            // Handle special app role case
-            if ($apiKey->getRole() === User::ROLE_APPS) {
+            // Handle special key role case
+            if ($apiKey->getRole() === User::ROLE_KEYS) {
                 // Disable authorization checks for project API keys
                 // Dynamic supported for backwards compatibility
                 if (($apiKey->getType() === API_KEY_STANDARD || $apiKey->getType() === API_KEY_EPHEMERAL || $apiKey->getType() === 'dynamic') && $apiKey->getProjectId() === $project->getId()) {
@@ -186,7 +186,7 @@ Http::init()
                 $user = new User([
                     '$id' => '',
                     'status' => true,
-                    'type' => ACTIVITY_TYPE_KEY_PROJECT,
+                    'type' => ACTOR_TYPE_KEY_PROJECT,
                     'email' => 'app.' . $project->getId() . '@service.' . $request->getHostname(),
                     'password' => '',
                     'name' => $apiKey->getName(),
@@ -258,9 +258,9 @@ Http::init()
 
                 $userClone = clone $user;
                 $userClone->setAttribute('type', match ($apiKey->getType()) {
-                    API_KEY_STANDARD => ACTIVITY_TYPE_KEY_PROJECT,
-                    API_KEY_ACCOUNT => ACTIVITY_TYPE_KEY_ACCOUNT,
-                    default => ACTIVITY_TYPE_KEY_ORGANIZATION,
+                    API_KEY_STANDARD => ACTOR_TYPE_KEY_PROJECT,
+                    API_KEY_ACCOUNT => ACTOR_TYPE_KEY_ACCOUNT,
+                    default => ACTOR_TYPE_KEY_ORGANIZATION,
                 });
                 $auditContext->user = $userClone;
             }
@@ -425,7 +425,7 @@ Http::init()
             if (
                 array_key_exists($namespace, $project->getAttribute('services', []))
                 && ! $project->getAttribute('services', [])[$namespace]
-                && ! ($user->isPrivileged($authorization->getRoles()) || $user->isApp($authorization->getRoles()))
+                && ! ($user->isPrivileged($authorization->getRoles()) || $user->isKey($authorization->getRoles()))
             ) {
                 throw new Exception(Exception::GENERAL_SERVICE_DISABLED);
             }
@@ -435,7 +435,7 @@ Http::init()
         if (
             array_key_exists('rest', $project->getAttribute('apis', []))
             && ! $project->getAttribute('apis', [])['rest']
-            && ! ($user->isPrivileged($authorization->getRoles()) || $user->isApp($authorization->getRoles()))
+            && ! ($user->isPrivileged($authorization->getRoles()) || $user->isKey($authorization->getRoles()))
         ) {
             throw new AppwriteException(AppwriteException::GENERAL_API_DISABLED);
         }
@@ -488,7 +488,7 @@ Http::init()
 
         $roles = $authorization->getRoles();
         $shouldCheckAbuse = System::getEnv('_APP_OPTIONS_ABUSE', 'enabled') !== 'disabled'
-            && ! $user->isApp($roles)
+            && ! $user->isKey($roles)
             && ! $user->isPrivileged($roles)
             && $devKey->isEmpty();
 
@@ -602,7 +602,7 @@ Http::init()
             $userClone = clone $user;
             // $user doesn't support `type` and can cause unintended effects.
             if (empty($user->getAttribute('type'))) {
-                $userClone->setAttribute('type', $mode === APP_MODE_ADMIN ? ACTIVITY_TYPE_ADMIN : ACTIVITY_TYPE_USER);
+                $userClone->setAttribute('type', $mode === APP_MODE_ADMIN ? ACTOR_TYPE_ADMIN : ACTOR_TYPE_USER);
             }
             $auditContext->user = $userClone;
         }
@@ -611,7 +611,7 @@ Http::init()
         $storageCacheOperationsCounter = $telemetry->createCounter('storage.cache.operations.load');
         if ($useCache) {
             $roles = $authorization->getRoles();
-            $isAppUser = $user->isApp($roles);
+            $isAppUser = $user->isKey($roles);
             $isImageTransformation = $route->getPath() === '/v1/storage/buckets/:bucketId/files/:fileId/preview';
             $isDisabled = isset($plan['imageTransformations']) && $plan['imageTransformations'] === -1 && ! $user->isPrivileged($roles);
 
@@ -913,7 +913,7 @@ Http::shutdown()
             $userClone = clone $user;
             // $user doesn't support `type` and can cause unintended effects.
             if (empty($user->getAttribute('type'))) {
-                $userClone->setAttribute('type', $mode === APP_MODE_ADMIN ? ACTIVITY_TYPE_ADMIN : ACTIVITY_TYPE_USER);
+                $userClone->setAttribute('type', $mode === APP_MODE_ADMIN ? ACTOR_TYPE_ADMIN : ACTOR_TYPE_USER);
             }
             $auditContext->user = $userClone;
         } elseif ($auditContext->user === null || $auditContext->user->isEmpty()) {
@@ -928,7 +928,7 @@ Http::shutdown()
             $user = new User([
                 '$id' => '',
                 'status' => true,
-                'type' => ACTIVITY_TYPE_GUEST,
+                'type' => ACTOR_TYPE_GUEST,
                 'email' => 'guest.' . $project->getId() . '@service.' . $request->getHostname(),
                 'password' => '',
                 'name' => 'Guest',
