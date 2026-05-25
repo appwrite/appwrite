@@ -225,6 +225,7 @@ class Migrations extends Action
                 $rule = $this->dbForPlatform->findOne('rules', [
                     Query::equal('domain', [$sourceHost]),
                     Query::equal('type', ['api']),
+                    Query::equal('status', [RULE_STATUS_VERIFIED]),
                     Query::equal('projectInternalId', [$this->sourceProject->getSequence()]),
                 ]);
                 if (!$rule->isEmpty()) {
