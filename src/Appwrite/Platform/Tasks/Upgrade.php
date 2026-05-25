@@ -65,9 +65,6 @@ class Upgrade extends Install
         $database = null;
         $compose = new Compose($data);
         foreach ($compose->getServices() as $service) {
-            if (!$service) {
-                continue;
-            }
             $env = $service->getEnvironment()->list();
             if (isset($env['_APP_DB_ADAPTER'])) {
                 $database = $env['_APP_DB_ADAPTER'];

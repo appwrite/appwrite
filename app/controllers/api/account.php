@@ -11,10 +11,13 @@ use Appwrite\Auth\Validator\PersonalData;
 use Appwrite\Auth\Validator\Phone;
 use Appwrite\Bus\Events\SessionCreated;
 use Appwrite\Detector\Detector;
-use Appwrite\Event\Delete;
 use Appwrite\Event\Event;
-use Appwrite\Event\Mail;
-use Appwrite\Event\Messaging;
+use Appwrite\Event\Message\Delete as DeleteMessage;
+use Appwrite\Event\Message\Mail as MailMessage;
+use Appwrite\Event\Message\Messaging as MessagingMessage;
+use Appwrite\Event\Publisher\Delete as DeletePublisher;
+use Appwrite\Event\Publisher\Mail as MailPublisher;
+use Appwrite\Event\Publisher\Messaging as MessagingPublisher;
 use Appwrite\Extend\Exception;
 use Appwrite\Hooks\Hooks;
 use Appwrite\Network\Validator\Redirect;
@@ -133,9 +136,6 @@ $createSession = function (string $userId, string $secret, Request $request, Res
     });
 
     $provider = match ($verifiedToken->getAttribute('type')) {
-        TOKEN_TYPE_VERIFICATION,
-        TOKEN_TYPE_RECOVERY,
-        TOKEN_TYPE_INVITE => SESSION_PROVIDER_EMAIL,
         TOKEN_TYPE_MAGIC_URL => SESSION_PROVIDER_MAGIC_URL,
         TOKEN_TYPE_PHONE => SESSION_PROVIDER_PHONE,
         TOKEN_TYPE_OAUTH2 => $oauthProvider,
@@ -335,15 +335,15 @@ Http::post('/v1/account')
             throw new Exception(Exception::GENERAL_INVALID_EMAIL);
         }
 
-        if (($plan['supportsDisposableEmailValidation'] ?? false) && ($project->getAttribute('auths', [])['disposableEmails'] ?? false) && ($emailMetadata['emailIsDisposable'] ?? false)) {
+        if ((($project->getId() === 'console') || ($plan['supportsDisposableEmailValidation'] ?? false)) && ($project->getAttribute('auths', [])['disposableEmails'] ?? false) && $emailMetadata['emailIsDisposable']) {
             throw new Exception(Exception::USER_EMAIL_DISPOSABLE);
         }
 
-        if (($plan['supportsCanonicalEmailValidation'] ?? false) && ($project->getAttribute('auths', [])['canonicalEmails'] ?? false) && ($emailMetadata['emailIsCanonical'] ?? true) === false) {
+        if ((($project->getId() === 'console') || ($plan['supportsCanonicalEmailValidation'] ?? false)) && ($project->getAttribute('auths', [])['canonicalEmails'] ?? false) && $emailMetadata['emailIsCanonical'] === false) {
             throw new Exception(Exception::USER_EMAIL_NOT_CANONICAL);
         }
 
-        if (($plan['supportsFreeEmailValidation'] ?? false) && ($project->getAttribute('auths', [])['freeEmails'] ?? false) && ($emailMetadata['emailIsFree'] ?? false)) {
+        if ((($project->getId() === 'console') || ($plan['supportsFreeEmailValidation'] ?? false)) && ($project->getAttribute('auths', [])['freeEmails'] ?? false) && $emailMetadata['emailIsFree']) {
             throw new Exception(Exception::USER_EMAIL_FREE);
         }
 
@@ -453,7 +453,7 @@ Http::delete('/v1/account')
     ->groups(['api', 'account'])
     ->label('scope', 'account')
     ->label('audits.event', 'user.delete')
-    ->label('audits.resource', 'user/{response.$id}')
+    ->label('audits.resource', 'user/{user.$id}')
     ->label('sdk', new Method(
         namespace: 'account',
         group: 'account',
@@ -473,9 +473,9 @@ Http::delete('/v1/account')
     ->inject('response')
     ->inject('dbForProject')
     ->inject('queueForEvents')
-    ->inject('queueForDeletes')
+    ->inject('publisherForDeletes')
     ->inject('authorization')
-    ->action(function (Document $user, Document $project, Response $response, Database $dbForProject, Event $queueForEvents, Delete $queueForDeletes, Authorization $authorization) {
+    ->action(function (Document $user, Document $project, Response $response, Database $dbForProject, Event $queueForEvents, DeletePublisher $publisherForDeletes, Authorization $authorization) {
         if ($user->isEmpty()) {
             throw new Exception(Exception::USER_NOT_FOUND);
         }
@@ -499,9 +499,11 @@ Http::delete('/v1/account')
 
         $dbForProject->deleteDocument('users', $user->getId());
 
-        $queueForDeletes
-            ->setType(DELETE_TYPE_DOCUMENT)
-            ->setDocument($user);
+        $publisherForDeletes->enqueue(new DeleteMessage(
+            project: $project,
+            type: DELETE_TYPE_DOCUMENT,
+            document: $user,
+        ));
 
         $queueForEvents
             ->setParam('userId', $user->getId())
@@ -583,12 +585,12 @@ Http::delete('/v1/account/sessions')
     ->inject('dbForProject')
     ->inject('locale')
     ->inject('queueForEvents')
-    ->inject('queueForDeletes')
+    ->inject('publisherForDeletes')
     ->inject('store')
     ->inject('proofForToken')
     ->inject('domainVerification')
     ->inject('cookieDomain')
-    ->action(function (Request $request, Response $response, User $user, Database $dbForProject, Locale $locale, Event $queueForEvents, Delete $queueForDeletes, Store $store, ProofsToken $proofForToken, bool $domainVerification, ?string $cookieDomain) {
+    ->action(function (Request $request, Response $response, User $user, Database $dbForProject, Locale $locale, Event $queueForEvents, DeletePublisher $publisherForDeletes, Store $store, ProofsToken $proofForToken, bool $domainVerification, ?string $cookieDomain) {
 
         $protocol = $request->getProtocol();
         $sessions = $user->getAttribute('sessions', []);
@@ -618,10 +620,11 @@ Http::delete('/v1/account/sessions')
                 $queueForEvents
                     ->setPayload($response->output($session, Response::MODEL_SESSION));
 
-                $queueForDeletes
-                    ->setType(DELETE_TYPE_SESSION_TARGETS)
-                    ->setDocument($session)
-                    ->trigger();
+                $publisherForDeletes->enqueue(new DeleteMessage(
+                    project: $queueForEvents->getProject(),
+                    type: DELETE_TYPE_SESSION_TARGETS,
+                    document: $session,
+                ));
             }
         }
 
@@ -715,12 +718,12 @@ Http::delete('/v1/account/sessions/:sessionId')
     ->inject('dbForProject')
     ->inject('locale')
     ->inject('queueForEvents')
-    ->inject('queueForDeletes')
+    ->inject('publisherForDeletes')
     ->inject('store')
     ->inject('proofForToken')
     ->inject('domainVerification')
     ->inject('cookieDomain')
-    ->action(function (?string $sessionId, ?\DateTime $requestTimestamp, Request $request, Response $response, User $user, Database $dbForProject, Locale $locale, Event $queueForEvents, Delete $queueForDeletes, Store $store, ProofsToken $proofForToken, bool $domainVerification, ?string $cookieDomain) {
+    ->action(function (?string $sessionId, ?\DateTime $requestTimestamp, Request $request, Response $response, User $user, Database $dbForProject, Locale $locale, Event $queueForEvents, DeletePublisher $publisherForDeletes, Store $store, ProofsToken $proofForToken, bool $domainVerification, ?string $cookieDomain) {
 
         $protocol = $request->getProtocol();
         $sessionId = ($sessionId === 'current')
@@ -762,10 +765,11 @@ Http::delete('/v1/account/sessions/:sessionId')
                 ->setParam('sessionId', $session->getId())
                 ->setPayload($response->output($session, Response::MODEL_SESSION));
 
-            $queueForDeletes
-                ->setType(DELETE_TYPE_SESSION_TARGETS)
-                ->setDocument($session)
-                ->trigger();
+            $publisherForDeletes->enqueue(new DeleteMessage(
+                project: $queueForEvents->getProject(),
+                type: DELETE_TYPE_SESSION_TARGETS,
+                document: $session,
+            ));
 
             $response->noContent();
             return;
@@ -833,11 +837,11 @@ Http::patch('/v1/account/sessions/:sessionId')
         $refreshToken = $session->getAttribute('providerRefreshToken', '');
         $oAuthProviders = Config::getParam('oAuthProviders') ?? [];
         $className = $oAuthProviders[$provider]['class'] ?? null;
-        if (!empty($provider) && ($className === null || !\class_exists($className))) {
+        if (!empty($refreshToken) && ($className === null || !\class_exists($className))) {
             throw new Exception(Exception::PROJECT_PROVIDER_UNSUPPORTED);
         }
 
-        if (!empty($provider) && $className !== null && \class_exists($className)) {
+        if ($className !== null && \class_exists($className)) {
             $appId = $project->getAttribute('oAuthProviders', [])[$provider . 'Appid'] ?? '';
             $appSecret = $project->getAttribute('oAuthProviders', [])[$provider . 'Secret'] ?? '{}';
 
@@ -1235,7 +1239,6 @@ Http::get('/v1/account/sessions/oauth2/:provider')
             )
         ],
         contentType: ContentType::HTML,
-        hide: [APP_SDK_PLATFORM_SERVER],
     ))
     ->label('abuse-limit', 50)
     ->label('abuse-key', 'ip:{ip}')
@@ -1604,7 +1607,7 @@ Http::get('/v1/account/sessions/oauth2/:provider/redirect')
             }
         }
 
-        if ($user === false || $user->isEmpty()) { // No user logged in or with OAuth2 provider ID, create new one or connect with account with same email
+        if ($user->isEmpty()) { // No user logged in or with OAuth2 provider ID, create new one or connect with account with same email
             if (empty($email)) {
                 $failureRedirect(Exception::USER_UNAUTHORIZED, 'OAuth provider failed to return email.');
             }
@@ -1621,7 +1624,7 @@ Http::get('/v1/account/sessions/oauth2/:provider/redirect')
             }
 
             // If user is not found, check if there is a user with the same email
-            if ($user === false || $user->isEmpty()) {
+            if ($user->isEmpty()) {
                 $userWithEmail = $dbForProject->findOne('users', [
                     Query::equal('email', [$email]),
                 ]);
@@ -1634,7 +1637,7 @@ Http::get('/v1/account/sessions/oauth2/:provider/redirect')
             }
 
             // If user is not found, check if there is an identity with the same email
-            if ($user === false || $user->isEmpty()) {
+            if ($user->isEmpty()) {
                 $identityWithMatchingEmail = $dbForProject->findOne('identities', [
                     Query::equal('providerEmail', [$email]),
                 ]);
@@ -1646,7 +1649,7 @@ Http::get('/v1/account/sessions/oauth2/:provider/redirect')
                 }
             }
 
-            if ($user === false || $user->isEmpty()) { // Last option -> create the user
+            if ($user->isEmpty()) { // Last option -> create the user
                 $limit = $project->getAttribute('auths', [])['limit'] ?? 0;
 
                 if ($limit !== 0) {
@@ -1679,15 +1682,15 @@ Http::get('/v1/account/sessions/oauth2/:provider/redirect')
                     $failureRedirect(Exception::GENERAL_INVALID_EMAIL);
                 }
 
-                if (($plan['supportsDisposableEmailValidation'] ?? false) && ($project->getAttribute('auths', [])['disposableEmails'] ?? false) && ($emailMetadata['emailIsDisposable'] ?? false)) {
+                if ((($project->getId() === 'console') || ($plan['supportsDisposableEmailValidation'] ?? false)) && ($project->getAttribute('auths', [])['disposableEmails'] ?? false) && $emailMetadata['emailIsDisposable']) {
                     $failureRedirect(Exception::USER_EMAIL_DISPOSABLE);
                 }
 
-                if (($plan['supportsCanonicalEmailValidation'] ?? false) && ($project->getAttribute('auths', [])['canonicalEmails'] ?? false) && ($emailMetadata['emailIsCanonical'] ?? true) === false) {
+                if ((($project->getId() === 'console') || ($plan['supportsCanonicalEmailValidation'] ?? false)) && ($project->getAttribute('auths', [])['canonicalEmails'] ?? false) && $emailMetadata['emailIsCanonical'] === false) {
                     $failureRedirect(Exception::USER_EMAIL_NOT_CANONICAL);
                 }
 
-                if (($plan['supportsFreeEmailValidation'] ?? false) && ($project->getAttribute('auths', [])['freeEmails'] ?? false) && ($emailMetadata['emailIsFree'] ?? false)) {
+                if ((($project->getId() === 'console') || ($plan['supportsFreeEmailValidation'] ?? false)) && ($project->getAttribute('auths', [])['freeEmails'] ?? false) && $emailMetadata['emailIsFree']) {
                     $failureRedirect(Exception::USER_EMAIL_FREE);
                 }
 
@@ -1820,15 +1823,15 @@ Http::get('/v1/account/sessions/oauth2/:provider/redirect')
                 $failureRedirect(Exception::GENERAL_INVALID_EMAIL);
             }
 
-            if (($plan['supportsDisposableEmailValidation'] ?? false) && ($project->getAttribute('auths', [])['disposableEmails'] ?? false) && ($emailMetadata['emailIsDisposable'] ?? false)) {
+            if ((($project->getId() === 'console') || ($plan['supportsDisposableEmailValidation'] ?? false)) && ($project->getAttribute('auths', [])['disposableEmails'] ?? false) && $emailMetadata['emailIsDisposable']) {
                 $failureRedirect(Exception::USER_EMAIL_DISPOSABLE);
             }
 
-            if (($plan['supportsCanonicalEmailValidation'] ?? false) && ($project->getAttribute('auths', [])['canonicalEmails'] ?? false) && ($emailMetadata['emailIsCanonical'] ?? true) === false) {
+            if ((($project->getId() === 'console') || ($plan['supportsCanonicalEmailValidation'] ?? false)) && ($project->getAttribute('auths', [])['canonicalEmails'] ?? false) && $emailMetadata['emailIsCanonical'] === false) {
                 $failureRedirect(Exception::USER_EMAIL_NOT_CANONICAL);
             }
 
-            if (($plan['supportsFreeEmailValidation'] ?? false) && ($project->getAttribute('auths', [])['freeEmails'] ?? false) && ($emailMetadata['emailIsFree'] ?? false)) {
+            if ((($project->getId() === 'console') || ($plan['supportsFreeEmailValidation'] ?? false)) && ($project->getAttribute('auths', [])['freeEmails'] ?? false) && $emailMetadata['emailIsFree']) {
                 $failureRedirect(Exception::USER_EMAIL_FREE);
             }
 
@@ -1954,7 +1957,7 @@ Http::get('/v1/account/sessions/oauth2/:provider/redirect')
                 ->addCookie($store->getKey(), $encoded, (new \DateTime($expire))->getTimestamp(), '/', $cookieDomain, ('https' == $protocol), true, Config::getParam('cookieSamesite'));
         }
 
-        if (isset($sessionUpgrade) && $sessionUpgrade && isset($session)) {
+        if (isset($sessionUpgrade) && isset($session)) {
             foreach ($user->getAttribute('targets', []) as $target) {
                 if ($target->getAttribute('providerType') !== MESSAGE_TYPE_PUSH) {
                     continue;
@@ -2116,12 +2119,12 @@ Http::post('/v1/account/tokens/magic-url')
     ->inject('dbForProject')
     ->inject('locale')
     ->inject('queueForEvents')
-    ->inject('queueForMails')
+    ->inject('publisherForMails')
     ->inject('plan')
     ->inject('proofForPassword')
     ->inject('platform')
     ->inject('authorization')
-    ->action(function (string $userId, string $email, string $url, bool $phrase, Request $request, Response $response, Document $user, Document $project, Database $dbForProject, Locale $locale, Event $queueForEvents, Mail $queueForMails, array $plan, ProofsPassword $proofForPassword, array $platform, Authorization $authorization) {
+    ->action(function (string $userId, string $email, string $url, bool $phrase, Request $request, Response $response, Document $user, Document $project, Database $dbForProject, Locale $locale, Event $queueForEvents, MailPublisher $publisherForMails, array $plan, ProofsPassword $proofForPassword, array $platform, Authorization $authorization) {
         if (empty(System::getEnv('_APP_SMTP_HOST'))) {
             throw new Exception(Exception::GENERAL_SMTP_DISABLED, 'SMTP disabled');
         }
@@ -2178,15 +2181,15 @@ Http::post('/v1/account/tokens/magic-url')
                 throw new Exception(Exception::GENERAL_INVALID_EMAIL);
             }
 
-            if (($plan['supportsDisposableEmailValidation'] ?? false) && ($project->getAttribute('auths', [])['disposableEmails'] ?? false) && ($emailMetadata['emailIsDisposable'] ?? false)) {
+            if ((($project->getId() === 'console') || ($plan['supportsDisposableEmailValidation'] ?? false)) && ($project->getAttribute('auths', [])['disposableEmails'] ?? false) && $emailMetadata['emailIsDisposable']) {
                 throw new Exception(Exception::USER_EMAIL_DISPOSABLE);
             }
 
-            if (($plan['supportsCanonicalEmailValidation'] ?? false) && ($project->getAttribute('auths', [])['canonicalEmails'] ?? false) && ($emailMetadata['emailIsCanonical'] ?? true) === false) {
+            if ((($project->getId() === 'console') || ($plan['supportsCanonicalEmailValidation'] ?? false)) && ($project->getAttribute('auths', [])['canonicalEmails'] ?? false) && $emailMetadata['emailIsCanonical'] === false) {
                 throw new Exception(Exception::USER_EMAIL_NOT_CANONICAL);
             }
 
-            if (($plan['supportsFreeEmailValidation'] ?? false) && ($project->getAttribute('auths', [])['freeEmails'] ?? false) && ($emailMetadata['emailIsFree'] ?? false)) {
+            if ((($project->getId() === 'console') || ($plan['supportsFreeEmailValidation'] ?? false)) && ($project->getAttribute('auths', [])['freeEmails'] ?? false) && $emailMetadata['emailIsFree']) {
                 throw new Exception(Exception::USER_EMAIL_FREE);
             }
 
@@ -2305,8 +2308,9 @@ Http::post('/v1/account/tokens/magic-url')
 
         $senderEmail = System::getEnv('_APP_SYSTEM_EMAIL_ADDRESS', APP_EMAIL_TEAM);
         $senderName = System::getEnv('_APP_SYSTEM_EMAIL_NAME', APP_NAME . ' Server');
-
-        $replyTo = "";
+        $replyToEmail = '';
+        $replyToName = '';
+        $smtpConfig = [];
 
         if ($smtpEnabled) {
             if (!empty($smtp['senderEmail'])) {
@@ -2315,16 +2319,14 @@ Http::post('/v1/account/tokens/magic-url')
             if (!empty($smtp['senderName'])) {
                 $senderName = $smtp['senderName'];
             }
-            if (!empty($smtp['replyTo'])) {
-                $replyTo = $smtp['replyTo'];
+            // Includes backwards compatibility: fall back to legacy `replyTo` key
+            $smtpReplyToEmail = $smtp['replyToEmail'] ?? $smtp['replyTo'] ?? '';
+            if (!empty($smtpReplyToEmail)) {
+                $replyToEmail = $smtpReplyToEmail;
             }
-
-            $queueForMails
-                ->setSmtpHost($smtp['host'] ?? '')
-                ->setSmtpPort($smtp['port'] ?? '')
-                ->setSmtpUsername($smtp['username'] ?? '')
-                ->setSmtpPassword($smtp['password'] ?? '')
-                ->setSmtpSecure($smtp['secure'] ?? '');
+            if (!empty($smtp['replyToName'])) {
+                $replyToName = $smtp['replyToName'];
+            }
 
             if (!empty($customTemplate)) {
                 if (!empty($customTemplate['senderEmail'])) {
@@ -2333,18 +2335,30 @@ Http::post('/v1/account/tokens/magic-url')
                 if (!empty($customTemplate['senderName'])) {
                     $senderName = $customTemplate['senderName'];
                 }
-                if (!empty($customTemplate['replyTo'])) {
-                    $replyTo = $customTemplate['replyTo'];
+                // Includes backwards compatibility: fall back to legacy `replyTo` key
+                $customReplyToEmail = $customTemplate['replyToEmail'] ?? $customTemplate['replyTo'] ?? '';
+                if (!empty($customReplyToEmail)) {
+                    $replyToEmail = $customReplyToEmail;
+                }
+                if (!empty($customTemplate['replyToName'])) {
+                    $replyToName = $customTemplate['replyToName'];
                 }
 
                 $body = $customTemplate['message'] ?? '';
                 $subject = $customTemplate['subject'] ?? $subject;
             }
 
-            $queueForMails
-                ->setSmtpReplyTo($replyTo)
-                ->setSmtpSenderEmail($senderEmail)
-                ->setSmtpSenderName($senderName);
+            $smtpConfig = [
+                'host' => $smtp['host'] ?? '',
+                'port' => $smtp['port'] ?? '',
+                'username' => $smtp['username'] ?? '',
+                'password' => $smtp['password'] ?? '',
+                'secure' => $smtp['secure'] ?? '',
+                'replyToEmail' => $replyToEmail,
+                'replyToName' => $replyToName,
+                'senderEmail' => $senderEmail,
+                'senderName' => $senderName,
+            ];
         }
 
         $projectName = $project->getAttribute('name');
@@ -2366,18 +2380,17 @@ Http::post('/v1/account/tokens/magic-url')
             'team' => '',
         ];
 
-        $queueForMails
-            ->setSubject($subject)
-            ->setPreview($preview)
-            ->setBody($body)
-            ->appendVariables($emailVariables)
-            ->setRecipient($email);
-
-        if ($project->getId() === 'console') {
-            $queueForMails->setSenderName($platform['emailSenderName']);
-        }
-
-        $queueForMails->trigger();
+        $publisherForMails->enqueue(new MailMessage(
+            project: $project,
+            recipient: $email,
+            subject: $subject,
+            body: $body,
+            preview: $preview,
+            smtp: $smtpConfig,
+            variables: $emailVariables,
+            customMailOptions: $project->getId() === 'console' ? ['senderName' => $platform['emailSenderName']] : [],
+            platform: $platform,
+        ));
 
         $token->setAttribute('secret', $tokenSecret);
 
@@ -2428,12 +2441,12 @@ Http::post('/v1/account/tokens/email')
     ->inject('dbForProject')
     ->inject('locale')
     ->inject('queueForEvents')
-    ->inject('queueForMails')
+    ->inject('publisherForMails')
     ->inject('plan')
     ->inject('proofForPassword')
     ->inject('proofForCode')
     ->inject('authorization')
-    ->action(function (string $userId, string $email, bool $phrase, Request $request, Response $response, User $user, Document $project, array $platform, Database $dbForProject, Locale $locale, Event $queueForEvents, Mail $queueForMails, array $plan, ProofsPassword $proofForPassword, ProofsCode $proofForCode, Authorization $authorization) {
+    ->action(function (string $userId, string $email, bool $phrase, Request $request, Response $response, User $user, Document $project, array $platform, Database $dbForProject, Locale $locale, Event $queueForEvents, MailPublisher $publisherForMails, array $plan, ProofsPassword $proofForPassword, ProofsCode $proofForCode, Authorization $authorization) {
         if (empty(System::getEnv('_APP_SMTP_HOST'))) {
             throw new Exception(Exception::GENERAL_SMTP_DISABLED, 'SMTP disabled');
         }
@@ -2488,15 +2501,15 @@ Http::post('/v1/account/tokens/email')
                 throw new Exception(Exception::GENERAL_INVALID_EMAIL);
             }
 
-            if (($plan['supportsDisposableEmailValidation'] ?? false) && ($project->getAttribute('auths', [])['disposableEmails'] ?? false) && ($emailMetadata['emailIsDisposable'] ?? false)) {
+            if ((($project->getId() === 'console') || ($plan['supportsDisposableEmailValidation'] ?? false)) && ($project->getAttribute('auths', [])['disposableEmails'] ?? false) && $emailMetadata['emailIsDisposable']) {
                 throw new Exception(Exception::USER_EMAIL_DISPOSABLE);
             }
 
-            if (($plan['supportsCanonicalEmailValidation'] ?? false) && ($project->getAttribute('auths', [])['canonicalEmails'] ?? false) && ($emailMetadata['emailIsCanonical'] ?? true) === false) {
+            if ((($project->getId() === 'console') || ($plan['supportsCanonicalEmailValidation'] ?? false)) && ($project->getAttribute('auths', [])['canonicalEmails'] ?? false) && $emailMetadata['emailIsCanonical'] === false) {
                 throw new Exception(Exception::USER_EMAIL_NOT_CANONICAL);
             }
 
-            if (($plan['supportsFreeEmailValidation'] ?? false) && ($project->getAttribute('auths', [])['freeEmails'] ?? false) && ($emailMetadata['emailIsFree'] ?? false)) {
+            if ((($project->getId() === 'console') || ($plan['supportsFreeEmailValidation'] ?? false)) && ($project->getAttribute('auths', [])['freeEmails'] ?? false) && $emailMetadata['emailIsFree']) {
                 throw new Exception(Exception::USER_EMAIL_FREE);
             }
 
@@ -2623,7 +2636,9 @@ Http::post('/v1/account/tokens/email')
 
         $senderEmail = System::getEnv('_APP_SYSTEM_EMAIL_ADDRESS', APP_EMAIL_TEAM);
         $senderName = System::getEnv('_APP_SYSTEM_EMAIL_NAME', APP_NAME . ' Server');
-        $replyTo = "";
+        $replyToEmail = '';
+        $replyToName = '';
+        $smtpConfig = [];
 
         if ($smtpEnabled) {
             if (!empty($smtp['senderEmail'])) {
@@ -2632,16 +2647,14 @@ Http::post('/v1/account/tokens/email')
             if (!empty($smtp['senderName'])) {
                 $senderName = $smtp['senderName'];
             }
-            if (!empty($smtp['replyTo'])) {
-                $replyTo = $smtp['replyTo'];
+            // Includes backwards compatibility: fall back to legacy `replyTo` key
+            $smtpReplyToEmail = $smtp['replyToEmail'] ?? $smtp['replyTo'] ?? '';
+            if (!empty($smtpReplyToEmail)) {
+                $replyToEmail = $smtpReplyToEmail;
             }
-
-            $queueForMails
-                ->setSmtpHost($smtp['host'] ?? '')
-                ->setSmtpPort($smtp['port'] ?? '')
-                ->setSmtpUsername($smtp['username'] ?? '')
-                ->setSmtpPassword($smtp['password'] ?? '')
-                ->setSmtpSecure($smtp['secure'] ?? '');
+            if (!empty($smtp['replyToName'])) {
+                $replyToName = $smtp['replyToName'];
+            }
 
             if (!empty($customTemplate)) {
                 if (!empty($customTemplate['senderEmail'])) {
@@ -2650,18 +2663,30 @@ Http::post('/v1/account/tokens/email')
                 if (!empty($customTemplate['senderName'])) {
                     $senderName = $customTemplate['senderName'];
                 }
-                if (!empty($customTemplate['replyTo'])) {
-                    $replyTo = $customTemplate['replyTo'];
+                // Includes backwards compatibility: fall back to legacy `replyTo` key
+                $customReplyToEmail = $customTemplate['replyToEmail'] ?? $customTemplate['replyTo'] ?? '';
+                if (!empty($customReplyToEmail)) {
+                    $replyToEmail = $customReplyToEmail;
+                }
+                if (!empty($customTemplate['replyToName'])) {
+                    $replyToName = $customTemplate['replyToName'];
                 }
 
                 $body = $customTemplate['message'] ?? '';
                 $subject = $customTemplate['subject'] ?? $subject;
             }
 
-            $queueForMails
-                ->setSmtpReplyTo($replyTo)
-                ->setSmtpSenderEmail($senderEmail)
-                ->setSmtpSenderName($senderName);
+            $smtpConfig = [
+                'host' => $smtp['host'] ?? '',
+                'port' => $smtp['port'] ?? '',
+                'username' => $smtp['username'] ?? '',
+                'password' => $smtp['password'] ?? '',
+                'secure' => $smtp['secure'] ?? '',
+                'replyToEmail' => $replyToEmail,
+                'replyToName' => $replyToName,
+                'senderEmail' => $senderEmail,
+                'senderName' => $senderName,
+            ];
         }
 
         $projectName = $project->getAttribute('name');
@@ -2697,20 +2722,18 @@ Http::post('/v1/account/tokens/email')
             ]);
         }
 
-        $queueForMails
-            ->setSubject($subject)
-            ->setPreview($preview)
-            ->setBody($body)
-            ->setBodyTemplate($bodyTemplate)
-            ->appendVariables($emailVariables)
-            ->setRecipient($email);
-
-        // since this is console project, set email sender name!
-        if ($smtpBaseTemplate === APP_BRANDED_EMAIL_BASE_TEMPLATE) {
-            $queueForMails->setSenderName($platform['emailSenderName']);
-        }
-
-        $queueForMails->trigger();
+        $publisherForMails->enqueue(new MailMessage(
+            project: $project,
+            recipient: $email,
+            subject: $subject,
+            bodyTemplate: $bodyTemplate,
+            body: $body,
+            preview: $preview,
+            smtp: $smtpConfig,
+            variables: $emailVariables,
+            customMailOptions: $smtpBaseTemplate === APP_BRANDED_EMAIL_BASE_TEMPLATE ? ['senderName' => $platform['emailSenderName']] : [],
+            platform: $platform,
+        ));
 
         $token->setAttribute('secret', $tokenSecret);
 
@@ -2860,7 +2883,7 @@ Http::post('/v1/account/tokens/phone')
     ->inject('platform')
     ->inject('dbForProject')
     ->inject('queueForEvents')
-    ->inject('queueForMessaging')
+    ->inject('publisherForMessaging')
     ->inject('locale')
     ->inject('timelimit')
     ->inject('usage')
@@ -2868,7 +2891,7 @@ Http::post('/v1/account/tokens/phone')
     ->inject('store')
     ->inject('proofForCode')
     ->inject('authorization')
-    ->action(function (string $userId, string $phone, Request $request, Response $response, User $user, Document $project, array $platform, Database $dbForProject, Event $queueForEvents, Messaging $queueForMessaging, Locale $locale, callable $timelimit, Context $usage, array $plan, Store $store, ProofsCode $proofForCode, Authorization $authorization) {
+    ->action(function (string $userId, string $phone, Request $request, Response $response, User $user, Document $project, array $platform, Database $dbForProject, Event $queueForEvents, MessagingPublisher $publisherForMessaging, Locale $locale, callable $timelimit, Context $usage, array $plan, Store $store, ProofsCode $proofForCode, Authorization $authorization) {
         if (empty(System::getEnv('_APP_SMS_PROVIDER'))) {
             throw new Exception(Exception::GENERAL_PHONE_DISABLED, 'Phone provider not configured');
         }
@@ -3001,11 +3024,13 @@ Http::post('/v1/account/tokens/phone')
                 ],
             ]);
 
-            $queueForMessaging
-                ->setType(MESSAGE_SEND_TYPE_INTERNAL)
-                ->setMessage($messageDoc)
-                ->setRecipients([$phone])
-                ->setProviderType(MESSAGE_TYPE_SMS);
+            $publisherForMessaging->enqueue(new MessagingMessage(
+                type: MESSAGE_SEND_TYPE_INTERNAL,
+                project: $project,
+                message: $messageDoc,
+                recipients: [$phone],
+                providerType: MESSAGE_TYPE_SMS,
+            ));
 
             $helper = PhoneNumberUtil::getInstance();
             try {
@@ -3274,7 +3299,7 @@ Http::patch('/v1/account/password')
             }
 
             $history[] = $newPassword;
-            $history = array_slice($history, (count($history) - $historyLimit), $historyLimit);
+            $history = array_slice($history, -$historyLimit);
         }
 
         if ($project->getAttribute('auths', [])['personalDataCheck'] ?? false) {
@@ -3397,15 +3422,15 @@ Http::patch('/v1/account/email')
             throw new Exception(Exception::GENERAL_INVALID_EMAIL);
         }
 
-        if (($plan['supportsDisposableEmailValidation'] ?? false) && ($project->getAttribute('auths', [])['disposableEmails'] ?? false) && ($emailMetadata['emailIsDisposable'] ?? false)) {
+        if ((($project->getId() === 'console') || ($plan['supportsDisposableEmailValidation'] ?? false)) && ($project->getAttribute('auths', [])['disposableEmails'] ?? false) && $emailMetadata['emailIsDisposable']) {
             throw new Exception(Exception::USER_EMAIL_DISPOSABLE);
         }
 
-        if (($plan['supportsCanonicalEmailValidation'] ?? false) && ($project->getAttribute('auths', [])['canonicalEmails'] ?? false) && ($emailMetadata['emailIsCanonical'] ?? true) === false) {
+        if ((($project->getId() === 'console') || ($plan['supportsCanonicalEmailValidation'] ?? false)) && ($project->getAttribute('auths', [])['canonicalEmails'] ?? false) && $emailMetadata['emailIsCanonical'] === false) {
             throw new Exception(Exception::USER_EMAIL_NOT_CANONICAL);
         }
 
-        if (($plan['supportsFreeEmailValidation'] ?? false) && ($project->getAttribute('auths', [])['freeEmails'] ?? false) && ($emailMetadata['emailIsFree'] ?? false)) {
+        if ((($project->getId() === 'console') || ($plan['supportsFreeEmailValidation'] ?? false)) && ($project->getAttribute('auths', [])['freeEmails'] ?? false) && $emailMetadata['emailIsFree']) {
             throw new Exception(Exception::USER_EMAIL_FREE);
         }
 
@@ -3437,9 +3462,6 @@ Http::patch('/v1/account/email')
 
         try {
             $user = $dbForProject->updateDocument('users', $user->getId(), $user);
-            /**
-             * @var Document $oldTarget
-             */
             $oldTarget = $user->find('identifier', $oldEmail, 'targets');
 
             if ($oldTarget instanceof Document && !$oldTarget->isEmpty()) {
@@ -3526,9 +3548,6 @@ Http::patch('/v1/account/phone')
 
         try {
             $user = $dbForProject->updateDocument('users', $user->getId(), $user);
-            /**
-             * @var Document $oldTarget
-             */
             $oldTarget = $user->find('identifier', $oldPhone, 'targets');
 
             if ($oldTarget instanceof Document && !$oldTarget->isEmpty()) {
@@ -3667,11 +3686,11 @@ Http::post('/v1/account/recovery')
     ->inject('project')
     ->inject('platform')
     ->inject('locale')
-    ->inject('queueForMails')
+    ->inject('publisherForMails')
     ->inject('queueForEvents')
     ->inject('proofForToken')
     ->inject('authorization')
-    ->action(function (string $email, string $url, Request $request, Response $response, User $user, Database $dbForProject, Document $project, array $platform, Locale $locale, Mail $queueForMails, Event $queueForEvents, ProofsToken $proofForToken, Authorization $authorization) {
+    ->action(function (string $email, string $url, Request $request, Response $response, User $user, Database $dbForProject, Document $project, array $platform, Locale $locale, MailPublisher $publisherForMails, Event $queueForEvents, ProofsToken $proofForToken, Authorization $authorization) {
 
         if (empty(System::getEnv('_APP_SMTP_HOST'))) {
             throw new Exception(Exception::GENERAL_SMTP_DISABLED, 'SMTP Disabled');
@@ -3752,7 +3771,9 @@ Http::post('/v1/account/recovery')
 
         $senderEmail = System::getEnv('_APP_SYSTEM_EMAIL_ADDRESS', APP_EMAIL_TEAM);
         $senderName = System::getEnv('_APP_SYSTEM_EMAIL_NAME', APP_NAME . ' Server');
-        $replyTo = "";
+        $replyToEmail = '';
+        $replyToName = '';
+        $smtpConfig = [];
 
         if ($smtpEnabled) {
             if (!empty($smtp['senderEmail'])) {
@@ -3761,16 +3782,14 @@ Http::post('/v1/account/recovery')
             if (!empty($smtp['senderName'])) {
                 $senderName = $smtp['senderName'];
             }
-            if (!empty($smtp['replyTo'])) {
-                $replyTo = $smtp['replyTo'];
+            // Includes backwards compatibility: fall back to legacy `replyTo` key
+            $smtpReplyToEmail = $smtp['replyToEmail'] ?? $smtp['replyTo'] ?? '';
+            if (!empty($smtpReplyToEmail)) {
+                $replyToEmail = $smtpReplyToEmail;
             }
-
-            $queueForMails
-                ->setSmtpHost($smtp['host'] ?? '')
-                ->setSmtpPort($smtp['port'] ?? '')
-                ->setSmtpUsername($smtp['username'] ?? '')
-                ->setSmtpPassword($smtp['password'] ?? '')
-                ->setSmtpSecure($smtp['secure'] ?? '');
+            if (!empty($smtp['replyToName'])) {
+                $replyToName = $smtp['replyToName'];
+            }
 
             if (!empty($customTemplate)) {
                 if (!empty($customTemplate['senderEmail'])) {
@@ -3779,18 +3798,30 @@ Http::post('/v1/account/recovery')
                 if (!empty($customTemplate['senderName'])) {
                     $senderName = $customTemplate['senderName'];
                 }
-                if (!empty($customTemplate['replyTo'])) {
-                    $replyTo = $customTemplate['replyTo'];
+                // Includes backwards compatibility: fall back to legacy `replyTo` key
+                $customReplyToEmail = $customTemplate['replyToEmail'] ?? $customTemplate['replyTo'] ?? '';
+                if (!empty($customReplyToEmail)) {
+                    $replyToEmail = $customReplyToEmail;
+                }
+                if (!empty($customTemplate['replyToName'])) {
+                    $replyToName = $customTemplate['replyToName'];
                 }
 
                 $body = $customTemplate['message'] ?? '';
                 $subject = $customTemplate['subject'] ?? $subject;
             }
 
-            $queueForMails
-                ->setSmtpReplyTo($replyTo)
-                ->setSmtpSenderEmail($senderEmail)
-                ->setSmtpSenderName($senderName);
+            $smtpConfig = [
+                'host' => $smtp['host'] ?? '',
+                'port' => $smtp['port'] ?? '',
+                'username' => $smtp['username'] ?? '',
+                'password' => $smtp['password'] ?? '',
+                'secure' => $smtp['secure'] ?? '',
+                'replyToEmail' => $replyToEmail,
+                'replyToName' => $replyToName,
+                'senderEmail' => $senderEmail,
+                'senderName' => $senderName,
+            ];
         }
 
         $emailVariables = [
@@ -3803,19 +3834,18 @@ Http::post('/v1/account/recovery')
             'team' => ''
         ];
 
-        $queueForMails
-            ->setRecipient($profile->getAttribute('email', ''))
-            ->setName($profile->getAttribute('name', ''))
-            ->setBody($body)
-            ->appendVariables($emailVariables)
-            ->setSubject($subject)
-            ->setPreview($preview);
-
-        if ($project->getId() === 'console') {
-            $queueForMails->setSenderName($platform['emailSenderName']);
-        }
-
-        $queueForMails->trigger();
+        $publisherForMails->enqueue(new MailMessage(
+            project: $project,
+            recipient: $profile->getAttribute('email', ''),
+            name: $profile->getAttribute('name', ''),
+            subject: $subject,
+            body: $body,
+            preview: $preview,
+            smtp: $smtpConfig,
+            variables: $emailVariables,
+            customMailOptions: $project->getId() === 'console' ? ['senderName' => $platform['emailSenderName']] : [],
+            platform: $platform,
+        ));
 
         $recovery->setAttribute('secret', $secret);
 
@@ -3983,10 +4013,10 @@ Http::post('/v1/account/verifications/email')
     ->inject('dbForProject')
     ->inject('locale')
     ->inject('queueForEvents')
-    ->inject('queueForMails')
+    ->inject('publisherForMails')
     ->inject('proofForToken')
     ->inject('authorization')
-    ->action(function (string $url, Request $request, Response $response, Document $project, array $platform, User $user, Database $dbForProject, Locale $locale, Event $queueForEvents, Mail $queueForMails, ProofsToken $proofForToken, Authorization $authorization) {
+    ->action(function (string $url, Request $request, Response $response, Document $project, array $platform, User $user, Database $dbForProject, Locale $locale, Event $queueForEvents, MailPublisher $publisherForMails, ProofsToken $proofForToken, Authorization $authorization) {
 
         if (empty(System::getEnv('_APP_SMTP_HOST'))) {
             throw new Exception(Exception::GENERAL_SMTP_DISABLED, 'SMTP Disabled');
@@ -4071,7 +4101,9 @@ Http::post('/v1/account/verifications/email')
 
         $senderEmail = System::getEnv('_APP_SYSTEM_EMAIL_ADDRESS', APP_EMAIL_TEAM);
         $senderName = System::getEnv('_APP_SYSTEM_EMAIL_NAME', APP_NAME . ' Server');
-        $replyTo = "";
+        $replyToEmail = '';
+        $replyToName = '';
+        $smtpConfig = [];
 
         if ($smtpEnabled) {
             if (!empty($smtp['senderEmail'])) {
@@ -4080,16 +4112,14 @@ Http::post('/v1/account/verifications/email')
             if (!empty($smtp['senderName'])) {
                 $senderName = $smtp['senderName'];
             }
-            if (!empty($smtp['replyTo'])) {
-                $replyTo = $smtp['replyTo'];
+            // Includes backwards compatibility: fall back to legacy `replyTo` key
+            $smtpReplyToEmail = $smtp['replyToEmail'] ?? $smtp['replyTo'] ?? '';
+            if (!empty($smtpReplyToEmail)) {
+                $replyToEmail = $smtpReplyToEmail;
             }
-
-            $queueForMails
-                ->setSmtpHost($smtp['host'] ?? '')
-                ->setSmtpPort($smtp['port'] ?? '')
-                ->setSmtpUsername($smtp['username'] ?? '')
-                ->setSmtpPassword($smtp['password'] ?? '')
-                ->setSmtpSecure($smtp['secure'] ?? '');
+            if (!empty($smtp['replyToName'])) {
+                $replyToName = $smtp['replyToName'];
+            }
 
             if (!empty($customTemplate)) {
                 if (!empty($customTemplate['senderEmail'])) {
@@ -4098,18 +4128,30 @@ Http::post('/v1/account/verifications/email')
                 if (!empty($customTemplate['senderName'])) {
                     $senderName = $customTemplate['senderName'];
                 }
-                if (!empty($customTemplate['replyTo'])) {
-                    $replyTo = $customTemplate['replyTo'];
+                // Includes backwards compatibility: fall back to legacy `replyTo` key
+                $customReplyToEmail = $customTemplate['replyToEmail'] ?? $customTemplate['replyTo'] ?? '';
+                if (!empty($customReplyToEmail)) {
+                    $replyToEmail = $customReplyToEmail;
+                }
+                if (!empty($customTemplate['replyToName'])) {
+                    $replyToName = $customTemplate['replyToName'];
                 }
 
                 $body = $customTemplate['message'] ?? '';
                 $subject = $customTemplate['subject'] ?? $subject;
             }
 
-            $queueForMails
-                ->setSmtpReplyTo($replyTo)
-                ->setSmtpSenderEmail($senderEmail)
-                ->setSmtpSenderName($senderName);
+            $smtpConfig = [
+                'host' => $smtp['host'] ?? '',
+                'port' => $smtp['port'] ?? '',
+                'username' => $smtp['username'] ?? '',
+                'password' => $smtp['password'] ?? '',
+                'secure' => $smtp['secure'] ?? '',
+                'replyToEmail' => $replyToEmail,
+                'replyToName' => $replyToName,
+                'senderEmail' => $senderEmail,
+                'senderName' => $senderName,
+            ];
         }
 
         $emailVariables = [
@@ -4136,20 +4178,19 @@ Http::post('/v1/account/verifications/email')
             ]);
         }
 
-        $queueForMails
-            ->setSubject($subject)
-            ->setPreview($preview)
-            ->setBody($body)
-            ->setBodyTemplate($bodyTemplate)
-            ->appendVariables($emailVariables)
-            ->setRecipient($user->getAttribute('email'))
-            ->setName($user->getAttribute('name') ?? '');
-
-        if ($project->getId() === 'console') {
-            $queueForMails->setSenderName($platform['emailSenderName']);
-        }
-
-        $queueForMails->trigger();
+        $publisherForMails->enqueue(new MailMessage(
+            project: $project,
+            recipient: $user->getAttribute('email'),
+            name: $user->getAttribute('name') ?? '',
+            subject: $subject,
+            bodyTemplate: $bodyTemplate,
+            body: $body,
+            preview: $preview,
+            smtp: $smtpConfig,
+            variables: $emailVariables,
+            customMailOptions: $project->getId() === 'console' ? ['senderName' => $platform['emailSenderName']] : [],
+            platform: $platform,
+        ));
 
         $verification->setAttribute('secret', $verificationSecret);
 
@@ -4283,7 +4324,7 @@ Http::post('/v1/account/verifications/phone')
     ->inject('user')
     ->inject('dbForProject')
     ->inject('queueForEvents')
-    ->inject('queueForMessaging')
+    ->inject('publisherForMessaging')
     ->inject('project')
     ->inject('locale')
     ->inject('timelimit')
@@ -4291,7 +4332,7 @@ Http::post('/v1/account/verifications/phone')
     ->inject('plan')
     ->inject('proofForCode')
                 ->inject('authorization')
-    ->action(function (Request $request, Response $response, User $user, Database $dbForProject, Event $queueForEvents, Messaging $queueForMessaging, Document $project, Locale $locale, callable $timelimit, Context $usage, array $plan, ProofsCode $proofForCode, Authorization $authorization) {
+    ->action(function (Request $request, Response $response, User $user, Database $dbForProject, Event $queueForEvents, MessagingPublisher $publisherForMessaging, Document $project, Locale $locale, callable $timelimit, Context $usage, array $plan, ProofsCode $proofForCode, Authorization $authorization) {
         if (empty(System::getEnv('_APP_SMS_PROVIDER'))) {
             throw new Exception(Exception::GENERAL_PHONE_DISABLED, 'Phone provider not configured');
         }
@@ -4360,11 +4401,13 @@ Http::post('/v1/account/verifications/phone')
                 ],
             ]);
 
-            $queueForMessaging
-                ->setType(MESSAGE_SEND_TYPE_INTERNAL)
-                ->setMessage($messageDoc)
-                ->setRecipients([$user->getAttribute('phone')])
-                ->setProviderType(MESSAGE_TYPE_SMS);
+            $publisherForMessaging->enqueue(new MessagingMessage(
+                type: MESSAGE_SEND_TYPE_INTERNAL,
+                project: $project,
+                message: $messageDoc,
+                recipients: [$user->getAttribute('phone')],
+                providerType: MESSAGE_TYPE_SMS,
+            ));
 
             $helper = PhoneNumberUtil::getInstance();
             try {
@@ -4471,7 +4514,7 @@ Http::post('/v1/account/targets/push')
         group: 'pushTargets',
         name: 'createPushTarget',
         description: '/docs/references/account/create-push-target.md',
-        auth: [AuthType::ADMIN, AuthType::SESSION],
+        auth: [AuthType::ADMIN, AuthType::SESSION, AuthType::JWT],
         responses: [
             new SDKResponse(
                 code: Response::STATUS_CODE_CREATED,
@@ -4555,7 +4598,7 @@ Http::put('/v1/account/targets/:targetId/push')
         group: 'pushTargets',
         name: 'updatePushTarget',
         description: '/docs/references/account/update-push-target.md',
-        auth: [AuthType::ADMIN, AuthType::SESSION],
+        auth: [AuthType::ADMIN, AuthType::SESSION, AuthType::JWT],
         responses: [
             new SDKResponse(
                 code: Response::STATUS_CODE_OK,
@@ -4618,14 +4661,14 @@ Http::delete('/v1/account/targets/:targetId/push')
     ->groups(['api', 'account'])
     ->label('scope', 'targets.write')
     ->label('audits.event', 'target.delete')
-    ->label('audits.resource', 'target/response.$id')
+    ->label('audits.resource', 'target/{request.targetId}')
     ->label('event', 'users.[userId].targets.[targetId].delete')
     ->label('sdk', new Method(
         namespace: 'account',
         group: 'pushTargets',
         name: 'deletePushTarget',
         description: '/docs/references/account/delete-push-target.md',
-        auth: [AuthType::ADMIN, AuthType::SESSION],
+        auth: [AuthType::ADMIN, AuthType::SESSION, AuthType::JWT],
         responses: [
             new SDKResponse(
                 code: Response::STATUS_CODE_NOCONTENT,
@@ -4636,13 +4679,13 @@ Http::delete('/v1/account/targets/:targetId/push')
     ))
     ->param('targetId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Target ID.', false, ['dbForProject'])
     ->inject('queueForEvents')
-    ->inject('queueForDeletes')
+    ->inject('publisherForDeletes')
     ->inject('user')
     ->inject('request')
     ->inject('response')
     ->inject('dbForProject')
     ->inject('authorization')
-    ->action(function (string $targetId, Event $queueForEvents, Delete $queueForDeletes, Document $user, Request $request, Response $response, Database $dbForProject, Authorization $authorization) {
+    ->action(function (string $targetId, Event $queueForEvents, DeletePublisher $publisherForDeletes, Document $user, Request $request, Response $response, Database $dbForProject, Authorization $authorization) {
         $target = $authorization->skip(fn () => $dbForProject->getDocument('targets', $targetId));
 
         if ($target->isEmpty()) {
@@ -4657,9 +4700,11 @@ Http::delete('/v1/account/targets/:targetId/push')
 
         $dbForProject->purgeCachedDocument('users', $user->getId());
 
-        $queueForDeletes
-            ->setType(DELETE_TYPE_TARGET)
-            ->setDocument($target);
+        $publisherForDeletes->enqueue(new DeleteMessage(
+            project: $queueForEvents->getProject(),
+            type: DELETE_TYPE_TARGET,
+            document: $target,
+        ));
 
         $queueForEvents
             ->setParam('userId', $user->getId())

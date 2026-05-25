@@ -5,6 +5,8 @@ namespace Appwrite\Platform\Modules\Databases\Services\Registry;
 use Appwrite\Platform\Modules\Databases\Http\TablesDB\Create as CreateTablesDatabase;
 use Appwrite\Platform\Modules\Databases\Http\TablesDB\Delete as DeleteTablesDatabase;
 use Appwrite\Platform\Modules\Databases\Http\TablesDB\Get as GetTablesDatabase;
+use Appwrite\Platform\Modules\Databases\Http\TablesDB\Tables\Columns\BigInt\Create as CreateBigInt;
+use Appwrite\Platform\Modules\Databases\Http\TablesDB\Tables\Columns\BigInt\Update as UpdateBigInt;
 use Appwrite\Platform\Modules\Databases\Http\TablesDB\Tables\Columns\Boolean\Create as CreateBoolean;
 use Appwrite\Platform\Modules\Databases\Http\TablesDB\Tables\Columns\Boolean\Update as UpdateBoolean;
 use Appwrite\Platform\Modules\Databases\Http\TablesDB\Tables\Columns\Datetime\Create as CreateDatetime;
@@ -150,6 +152,10 @@ class TablesDB extends Base
         // Column: Integer
         $service->addAction(CreateInteger::getName(), new CreateInteger());
         $service->addAction(UpdateInteger::getName(), new UpdateInteger());
+
+        // Column: BigInt
+        $service->addAction(CreateBigInt::getName(), new CreateBigInt());
+        $service->addAction(UpdateBigInt::getName(), new UpdateBigInt());
 
         // Column: IP
         $service->addAction(CreateIP::getName(), new CreateIP());

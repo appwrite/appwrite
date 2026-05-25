@@ -113,11 +113,12 @@ Http::get('/v1/project/usage')
         $factor = match ($period) {
             '1h' => 3600,
             '1d' => 86400,
+            default => throw new \LogicException('Unsupported period: ' . $period),
         };
 
         $limit = match ($period) {
             '1h' => (new DateTime($startDate))->diff(new DateTime($endDate))->days * 24,
-            '1d' => (new DateTime($startDate))->diff(new DateTime($endDate))->days
+            '1d' => (new DateTime($startDate))->diff(new DateTime($endDate))->days,
         };
 
         $format = match ($period) {

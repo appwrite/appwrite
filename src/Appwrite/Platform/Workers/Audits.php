@@ -58,7 +58,7 @@ class Audits extends Action
      */
     public function action(Message $message, callable $getAudit): Commit|NoCommit
     {
-        $payload = $message->getPayload() ?? [];
+        $payload = $message->getPayload();
 
         if (empty($payload)) {
             throw new Exception('Missing payload');
@@ -91,7 +91,7 @@ class Audits extends Action
         $actorUserEmail = $impersonatorUserId
             ? $user->getAttribute('impersonatorUserEmail', '')
             : $user->getAttribute('email', '');
-        $userType = $user->getAttribute('type', ACTIVITY_TYPE_USER);
+        $userType = $user->getAttribute('type', ACTOR_TYPE_USER);
 
         // Create event data
         $eventData = [
@@ -100,7 +100,6 @@ class Audits extends Action
             'resource' => $resource,
             'userAgent' => $userAgent,
             'ip' => $ip,
-            'location' => '',
             'data' => [
                 'userId' => $actorUserId,
                 'userName' => $actorUserName,

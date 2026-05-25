@@ -165,6 +165,20 @@ class RealtimeCustomClientQueryTestWithMessage extends Scope
     }
 
     /**
+     * @param  array<int, array<string, mixed>>  $payloadEntries
+     * @return array<string, mixed>
+     */
+    private function sendUnsubscribeMessage(WebSocketClient $client, array $payloadEntries): array
+    {
+        $client->send(\json_encode([
+            'type' => 'unsubscribe',
+            'data' => $payloadEntries,
+        ]));
+
+        return \json_decode($client->receive(), true);
+    }
+
+    /**
      * subscriptionId: update with id from connected, create by omitting id, explicit new id,
      * duplicate id in one bulk (last wins), mixed bulk, idempotent repeat, empty queries → select-all.
      */
@@ -289,6 +303,282 @@ class RealtimeCustomClientQueryTestWithMessage extends Scope
         ]]);
         $this->assertCount(1, $rEmpty['data']['subscriptions']);
         $this->assertSame($initialSubscriptionId, $rEmpty['data']['subscriptions'][0]['subscriptionId']);
+
+        $client->close();
+    }
+
+    /**
+     * Update a subscription's queries/channels by reusing its subscriptionId.
+     * Verifies the update takes effect on live event filtering (not just the response echo),
+     * sibling subscriptions are untouched, unknown ids upsert as new, empty queries fall
+     * back to select-all, and a removed id can be recreated by subscribing again.
+     */
+    public function testUpdateSubscriptionAndEdgeCases(): void
+    {
+        $user = $this->getUser();
+        $userId = $user['$id'] ?? '';
+        $session = $user['session'] ?? '';
+        $projectId = $this->getProject()['$id'];
+        $headers = [
+            'origin' => 'http://localhost',
+            'cookie' => 'a_session_' . $projectId . '=' . $session,
+        ];
+
+        $queryString = \http_build_query(['project' => $projectId]);
+        $client = new WebSocketClient(
+            'ws://appwrite.test/v1/realtime?' . $queryString,
+            [
+                'headers' => $headers,
+                'timeout' => 10,
+            ]
+        );
+        $connected = \json_decode($client->receive(), true);
+        $this->assertEquals('connected', $connected['type'] ?? null);
+
+        $triggerAccountEvent = function () use ($projectId, $session): void {
+            $this->client->call(Client::METHOD_PATCH, '/account/name', \array_merge([
+                'origin' => 'http://localhost',
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $projectId,
+                'cookie' => 'a_session_' . $projectId . '=' . $session,
+            ]), ['name' => 'Update Sub Test ' . \uniqid()]);
+        };
+
+        // subA matches current user, subB never matches
+        $created = $this->sendSubscribeMessage($client, [
+            [
+                'channels' => ['account'],
+                'queries' => [Query::equal('$id', [$userId])->toString()],
+            ],
+            [
+                'channels' => ['account'],
+                'queries' => [Query::equal('$id', ['no-match-initial'])->toString()],
+            ],
+        ]);
+        $subA = $created['data']['subscriptions'][0]['subscriptionId'];
+        $subB = $created['data']['subscriptions'][1]['subscriptionId'];
+        $this->assertNotSame($subA, $subB);
+
+        $triggerAccountEvent();
+        $event = \json_decode($client->receive(), true);
+        $this->assertEquals('event', $event['type']);
+        $this->assertSame([$subA], $event['data']['subscriptions']);
+
+        // Swap: A -> non-matching, B -> matching. Same ids returned, server-side filter swaps.
+        $swap = $this->sendSubscribeMessage($client, [
+            [
+                'subscriptionId' => $subA,
+                'channels' => ['account'],
+                'queries' => [Query::equal('$id', ['no-match-swapped'])->toString()],
+            ],
+            [
+                'subscriptionId' => $subB,
+                'channels' => ['account'],
+                'queries' => [Query::equal('$id', [$userId])->toString()],
+            ],
+        ]);
+        $this->assertSame($subA, $swap['data']['subscriptions'][0]['subscriptionId']);
+        $this->assertSame($subB, $swap['data']['subscriptions'][1]['subscriptionId']);
+
+        $triggerAccountEvent();
+        $event = \json_decode($client->receive(), true);
+        $this->assertEquals('event', $event['type']);
+        $this->assertSame([$subB], $event['data']['subscriptions']);
+
+        // Sibling isolation: updating only subA must leave subB's matching filter intact.
+        $isolation = $this->sendSubscribeMessage($client, [[
+            'subscriptionId' => $subA,
+            'channels' => ['account'],
+            'queries' => [Query::equal('$id', [$userId])->toString()],
+        ]]);
+        $this->assertSame($subA, $isolation['data']['subscriptions'][0]['subscriptionId']);
+
+        $triggerAccountEvent();
+        $event = \json_decode($client->receive(), true);
+        $this->assertEquals('event', $event['type']);
+        $this->assertEqualsCanonicalizing([$subA, $subB], $event['data']['subscriptions']);
+
+        // Empty queries on update -> select-all; subA still matches every event on the channel.
+        $empty = $this->sendSubscribeMessage($client, [[
+            'subscriptionId' => $subA,
+            'channels' => ['account'],
+            'queries' => [],
+        ]]);
+        $this->assertSame($subA, $empty['data']['subscriptions'][0]['subscriptionId']);
+
+        $triggerAccountEvent();
+        $event = \json_decode($client->receive(), true);
+        $this->assertEquals('event', $event['type']);
+        $this->assertEqualsCanonicalizing([$subA, $subB], $event['data']['subscriptions']);
+
+        // Unknown subscriptionId upserts as a new subscription.
+        $ghostId = ID::unique();
+        $ghost = $this->sendSubscribeMessage($client, [[
+            'subscriptionId' => $ghostId,
+            'channels' => ['account'],
+            'queries' => [Query::equal('$id', [$userId])->toString()],
+        ]]);
+        $this->assertSame($ghostId, $ghost['data']['subscriptions'][0]['subscriptionId']);
+        $this->assertNotSame($subA, $ghostId);
+        $this->assertNotSame($subB, $ghostId);
+
+        $triggerAccountEvent();
+        $event = \json_decode($client->receive(), true);
+        $this->assertEquals('event', $event['type']);
+        $this->assertEqualsCanonicalizing([$subA, $subB, $ghostId], $event['data']['subscriptions']);
+
+        // Update after unsubscribe: subscribing with the removed id recreates it.
+        $unsub = $this->sendUnsubscribeMessage($client, [['subscriptionId' => $subA]]);
+        $this->assertTrue($unsub['data']['subscriptions'][0]['removed']);
+
+        $triggerAccountEvent();
+        $event = \json_decode($client->receive(), true);
+        $this->assertEquals('event', $event['type']);
+        $this->assertEqualsCanonicalizing([$subB, $ghostId], $event['data']['subscriptions']);
+
+        $recreated = $this->sendSubscribeMessage($client, [[
+            'subscriptionId' => $subA,
+            'channels' => ['account'],
+            'queries' => [Query::equal('$id', [$userId])->toString()],
+        ]]);
+        $this->assertSame($subA, $recreated['data']['subscriptions'][0]['subscriptionId']);
+
+        $triggerAccountEvent();
+        $event = \json_decode($client->receive(), true);
+        $this->assertEquals('event', $event['type']);
+        $this->assertEqualsCanonicalizing([$subA, $subB, $ghostId], $event['data']['subscriptions']);
+
+        $client->close();
+    }
+
+    public function testUnsubscribeRemovesOnlyMatchingSubscription(): void
+    {
+        $user = $this->getUser();
+        $userId = $user['$id'] ?? '';
+        $session = $user['session'] ?? '';
+        $projectId = $this->getProject()['$id'];
+        $headers = [
+            'origin' => 'http://localhost',
+            'cookie' => 'a_session_' . $projectId . '=' . $session,
+        ];
+
+        $queryString = \http_build_query(['project' => $projectId]);
+        $client = new WebSocketClient(
+            'ws://appwrite.test/v1/realtime?' . $queryString,
+            [
+                'headers' => $headers,
+                'timeout' => 10,
+            ]
+        );
+
+        $connected = \json_decode($client->receive(), true);
+        $this->assertEquals('connected', $connected['type'] ?? null);
+
+        // Two subscriptions on the `account` channel, both matching the current user
+        $r1 = $this->sendSubscribeMessage($client, [[
+            'channels' => ['account'],
+            'queries' => [Query::equal('$id', [$userId])->toString()],
+        ]]);
+        $subA = $r1['data']['subscriptions'][0]['subscriptionId'];
+
+        $r2 = $this->sendSubscribeMessage($client, [[
+            'channels' => ['account'],
+            'queries' => [Query::select(['*'])->toString()],
+        ]]);
+        $subB = $r2['data']['subscriptions'][0]['subscriptionId'];
+
+        $this->assertNotSame($subA, $subB);
+
+        // Trigger an event -- both subscriptions should match
+        $name = 'Unsubscribe Test ' . \uniqid();
+        $this->client->call(Client::METHOD_PATCH, '/account/name', \array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+            'cookie' => 'a_session_' . $projectId . '=' . $session,
+        ]), ['name' => $name]);
+
+        $event = \json_decode($client->receive(), true);
+        $this->assertEquals('event', $event['type']);
+        $this->assertEqualsCanonicalizing([$subA, $subB], $event['data']['subscriptions']);
+
+        // Unsubscribe subA only
+        $unsubA = $this->sendUnsubscribeMessage($client, [['subscriptionId' => $subA]]);
+        $this->assertEquals('response', $unsubA['type']);
+        $this->assertEquals('unsubscribe', $unsubA['data']['to']);
+        $this->assertTrue($unsubA['data']['success']);
+        $this->assertCount(1, $unsubA['data']['subscriptions']);
+        $this->assertSame($subA, $unsubA['data']['subscriptions'][0]['subscriptionId']);
+        $this->assertTrue($unsubA['data']['subscriptions'][0]['removed']);
+
+        // Trigger another event -- only subB should match now
+        $name = 'Unsubscribe Test ' . \uniqid();
+        $this->client->call(Client::METHOD_PATCH, '/account/name', \array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+            'cookie' => 'a_session_' . $projectId . '=' . $session,
+        ]), ['name' => $name]);
+
+        $event = \json_decode($client->receive(), true);
+        $this->assertEquals('event', $event['type']);
+        $this->assertSame([$subB], $event['data']['subscriptions']);
+
+        // Idempotent: unsubscribing subA again reports removed=false
+        $unsubAgain = $this->sendUnsubscribeMessage($client, [['subscriptionId' => $subA]]);
+        $this->assertTrue($unsubAgain['data']['success']);
+        $this->assertFalse($unsubAgain['data']['subscriptions'][0]['removed']);
+
+        // Connection is still alive -- ping still works
+        $client->send(\json_encode(['type' => 'ping']));
+        $pong = \json_decode($client->receive(), true);
+        $this->assertEquals('pong', $pong['type']);
+
+        // Invalid payloads are rejected
+        $errNonString = $this->sendUnsubscribeMessage($client, [['subscriptionId' => 123]]);
+        $this->assertEquals('error', $errNonString['type']);
+        $this->assertStringContainsString('subscriptionId', $errNonString['data']['message']);
+
+        $errEmpty = $this->sendUnsubscribeMessage($client, [['subscriptionId' => '']]);
+        $this->assertEquals('error', $errEmpty['type']);
+
+        $errMissing = $this->sendUnsubscribeMessage($client, [['channels' => ['foo']]]);
+        $this->assertEquals('error', $errMissing['type']);
+
+        $errNonList = $this->sendUnsubscribeMessage($client, ['subscriptionId' => $subB]);
+        $this->assertEquals('error', $errNonList['type']);
+
+        // A batch with a valid id followed by an invalid one must be rejected atomically:
+        // the valid id must remain subscribed, not be quietly removed before validation fails.
+        $partial = $this->sendUnsubscribeMessage($client, [
+            ['subscriptionId' => $subB],
+            ['subscriptionId' => 999],
+        ]);
+        $this->assertEquals('error', $partial['type']);
+
+        $name = 'Partial Rejection Test ' . \uniqid();
+        $this->client->call(Client::METHOD_PATCH, '/account/name', \array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+            'cookie' => 'a_session_' . $projectId . '=' . $session,
+        ]), ['name' => $name]);
+
+        $event = \json_decode($client->receive(), true);
+        $this->assertEquals('event', $event['type']);
+        $this->assertSame([$subB], $event['data']['subscriptions']);
+
+        // Bulk unsubscribe: remaining subB plus a never-existed id -- response mirrors input order
+        $bulk = $this->sendUnsubscribeMessage($client, [
+            ['subscriptionId' => $subB],
+            ['subscriptionId' => 'does-not-exist'],
+        ]);
+        $this->assertTrue($bulk['data']['success']);
+        $this->assertCount(2, $bulk['data']['subscriptions']);
+        $this->assertSame($subB, $bulk['data']['subscriptions'][0]['subscriptionId']);
+        $this->assertTrue($bulk['data']['subscriptions'][0]['removed']);
+        $this->assertSame('does-not-exist', $bulk['data']['subscriptions'][1]['subscriptionId']);
+        $this->assertFalse($bulk['data']['subscriptions'][1]['removed']);
 
         $client->close();
     }
@@ -513,7 +803,7 @@ class RealtimeCustomClientQueryTestWithMessage extends Scope
             $client->receive();
             $this->fail('Expected TimeoutException - event should be filtered by updated query');
         } catch (TimeoutException $e) {
-            $this->assertTrue(true);
+            $this->addToAssertionCount(1);
         }
 
         $client->close();

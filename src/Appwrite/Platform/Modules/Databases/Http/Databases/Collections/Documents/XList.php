@@ -14,6 +14,7 @@ use Appwrite\Utopia\Database\Documents\User;
 use Appwrite\Utopia\Response as UtopiaResponse;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
+use Utopia\Database\Exception\NotFound as NotFoundException;
 use Utopia\Database\Exception\Order as OrderException;
 use Utopia\Database\Exception\Query as QueryException;
 use Utopia\Database\Exception\Timeout;
@@ -22,6 +23,7 @@ use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\Query\Cursor;
 use Utopia\Database\Validator\UID;
 use Utopia\Http\Adapter\Swoole\Response as SwooleResponse;
+use Utopia\Http\Http;
 use Utopia\Validator\ArrayList;
 use Utopia\Validator\Boolean;
 use Utopia\Validator\Nullable;
@@ -80,12 +82,13 @@ class XList extends Action
             ->inject('usage')
             ->inject('transactionState')
             ->inject('authorization')
+            ->inject('utopia')
             ->callback($this->action(...));
     }
 
-    public function action(string $databaseId, string $collectionId, array $queries, ?string $transactionId, bool $includeTotal, int $ttl, UtopiaResponse $response, Database $dbForProject, User $user, callable $getDatabasesDB, Context $usage, TransactionState $transactionState, Authorization $authorization): void
+    public function action(string $databaseId, string $collectionId, array $queries, ?string $transactionId, bool $includeTotal, int $ttl, UtopiaResponse $response, Database $dbForProject, User $user, callable $getDatabasesDB, Context $usage, TransactionState $transactionState, Authorization $authorization, ?Http $utopia = null): void
     {
-        $isAPIKey = $user->isApp($authorization->getRoles());
+        $isAPIKey = $user->isKey($authorization->getRoles());
         $isPrivilegedUser = $user->isPrivileged($authorization->getRoles());
 
         $database = $authorization->skip(fn () => $dbForProject->getDocument('databases', $databaseId));
@@ -116,7 +119,14 @@ class XList extends Action
 
             $documentId = $cursor->getValue();
 
-            $cursorDocument = $authorization->skip(fn () => $dbForDatabases->getDocument('database_' . $database->getSequence() . '_collection_' . $collection->getSequence(), $documentId));
+            try {
+                $cursorDocument = $authorization->skip(fn () => $dbForDatabases->getDocument('database_' . $database->getSequence() . '_collection_' . $collection->getSequence(), $documentId));
+            } catch (NotFoundException) {
+                // The collection metadata document exists but the backing store (e.g. a
+                // dedicated DocumentsDB shard) has no table for it. Treat this as a
+                // not-found on the collection so the caller sees a 404 instead of a 500.
+                throw new Exception($this->getParentNotFoundException(), params: [$collectionId]);
+            }
 
             if ($cursorDocument->isEmpty()) {
                 $type = ucfirst($this->getContext());
@@ -126,8 +136,10 @@ class XList extends Action
             $cursor->setValue($cursorDocument);
         }
 
+        $dbStart = \microtime(true);
+
         try {
-            $hasSelects = ! empty(Query::groupByType($queries)['selections'] ?? []);
+            $hasSelects = ! empty(Query::groupByType($queries)['selections']);
             $collectionTableId = 'database_' . $database->getSequence() . '_collection_' . $collection->getSequence();
             // When there are no select queries, relationship loading is skipped on the
             // underlying find() to avoid pulling related documents the caller did not ask for.
@@ -178,7 +190,7 @@ class XList extends Action
                         $cachedTotal = null;
                     }
                     if ($cachedTotal !== null && $cachedTotal !== false) {
-                        $total = $cachedTotal;
+                        $total = (int) $cachedTotal;
                     } else {
                         $total = $dbForDatabases->count($collectionTableId, $queries, APP_LIMIT_COUNT);
                         try {
@@ -195,6 +207,11 @@ class XList extends Action
                 $documents = $find();
                 $total = $includeTotal ? $dbForDatabases->count($collectionTableId, $queries, APP_LIMIT_COUNT) : 0;
             }
+        } catch (NotFoundException) {
+            // The collection metadata document exists but the backing store (e.g. a
+            // dedicated DocumentsDB shard) has no table for it. Treat this as a
+            // not-found on the collection so the caller sees a 404 instead of a 500.
+            throw new Exception($this->getParentNotFoundException(), params: [$collectionId]);
         } catch (OrderException $e) {
             $documents = $this->isCollectionsAPI() ? 'documents' : 'rows';
             $attribute = $this->isCollectionsAPI() ? 'attribute' : 'column';
@@ -205,6 +222,8 @@ class XList extends Action
         } catch (Timeout) {
             throw new Exception(Exception::DATABASE_TIMEOUT);
         }
+
+        $dbDurationMs = (\microtime(true) - $dbStart) * 1000;
 
         $operations = 0;
         $collectionsCache = [];
@@ -229,5 +248,20 @@ class XList extends Action
             // rows or documents
             $this->getSDKGroup() => $documents,
         ]), $this->getResponseModel());
+
+        try {
+            $this->afterQuery($dbDurationMs, $database, $collection, $queries, $utopia);
+        } catch (\Throwable) {
+            // Observers must never break the response.
+        }
+    }
+
+    /**
+     * After query hook.
+     *
+     * @param array<Query> $queries
+     */
+    protected function afterQuery(float $dbDurationMs, Document $database, Document $collection, array $queries, ?Http $utopia): void
+    {
     }
 }

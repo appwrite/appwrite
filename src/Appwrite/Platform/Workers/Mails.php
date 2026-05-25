@@ -61,7 +61,7 @@ class Mails extends Action
     public function action(Message $message, Document $project, Registry $register, Log $log): void
     {
         Runtime::setHookFlags(SWOOLE_HOOK_ALL ^ SWOOLE_HOOK_TCP);
-        $payload = $message->getPayload() ?? [];
+        $payload = $message->getPayload();
 
         if (empty($payload)) {
             throw new Exception('Missing payload');
@@ -173,8 +173,10 @@ class Mails extends Action
             $replyTo = $customMailOptions['replyToEmail'] ?? $replyTo;
             $replyToName = $customMailOptions['replyToName'] ?? $replyToName;
         } elseif (!empty($smtp)) {
-            $replyTo = !empty($smtp['replyTo']) ? $smtp['replyTo'] : ($smtp['senderEmail'] ?? $replyTo);
-            $replyToName = $smtp['senderName'] ?? $replyToName;
+            // Includes backwards compatibility: fall back to legacy `replyTo` key
+            $smtpReplyToEmail = $smtp['replyToEmail'] ?? $smtp['replyTo'] ?? '';
+            $replyTo = !empty($smtpReplyToEmail) ? $smtpReplyToEmail : ($smtp['senderEmail'] ?? $replyTo);
+            $replyToName = !empty($smtp['replyToName']) ? $smtp['replyToName'] : ($smtp['senderName'] ?? $replyToName);
         }
 
         $attachments = null;

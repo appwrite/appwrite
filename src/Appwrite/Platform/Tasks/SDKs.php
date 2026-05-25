@@ -7,6 +7,7 @@ use Appwrite\SDK\Language\Android;
 use Appwrite\SDK\Language\Apple;
 use Appwrite\SDK\Language\ClaudePlugin;
 use Appwrite\SDK\Language\CLI;
+use Appwrite\SDK\Language\CodexPlugin;
 use Appwrite\SDK\Language\CursorPlugin;
 use Appwrite\SDK\Language\Dart;
 use Appwrite\SDK\Language\Deno;
@@ -182,7 +183,7 @@ class SDKs extends Action
 
                 Console::log('');
 
-                if ($createRelease && ! $examplesOnly) {
+                if ($createRelease) {
                     Console::info("━━━ {$language['name']} SDK ({$platform['name']}, {$language['version']}) ━━━");
                     $changelog = $language['changelog'] ?? '';
                     $changelog = ($changelog) ? \file_get_contents($changelog) : '# Change Log';
@@ -455,6 +456,9 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
                     case 'claude-plugin':
                         $config = new ClaudePlugin();
                         break;
+                    case 'codex-plugin':
+                        $config = new CodexPlugin();
+                        break;
                     default:
                         throw new \Exception('Language "' . $language['key'] . '" not supported');
                 }
@@ -489,7 +493,7 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
                     ->setGitRepo($language['gitUrl'])
                     ->setGitRepoName($language['gitRepoName'])
                     ->setGitUserName($language['gitUserName'])
-                    ->setLogo($cover)
+                    ->setCoverImage($cover)
                     ->setURL('https://appwrite.io')
                     ->setShareText('Appwrite is a backend as a service for building web or mobile apps')
                     ->setShareURL('http://appwrite.io')
@@ -1150,7 +1154,7 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
 
             if (! empty($prListOutput[0])) {
                 $parts = \explode(' ', trim($prListOutput[0]), 2);
-                $prNumber = $parts[0] ?? '';
+                $prNumber = $parts[0];
                 $prUrl = $parts[1] ?? '';
             }
         }

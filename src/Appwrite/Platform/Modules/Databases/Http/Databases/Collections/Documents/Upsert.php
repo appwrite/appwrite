@@ -108,7 +108,7 @@ class Upsert extends Action
             throw new Exception($this->getMissingPayloadException());
         }
 
-        $isAPIKey = $user->isApp($authorization->getRoles());
+        $isAPIKey = $user->isKey($authorization->getRoles());
         $isPrivilegedUser = $user->isPrivileged($authorization->getRoles());
 
         $database = $authorization->skip(fn () => $dbForProject->getDocument('databases', $databaseId));
@@ -353,12 +353,7 @@ class Upsert extends Action
         $collectionsCache = [];
 
         if (empty($upserted[0])) {
-            if ($transactionId !== null) {
-                // For transactions, get the document with transaction changes applied
-                $upserted[0] = $transactionState->getDocument($database, $collectionTableId, $documentId, $transactionId);
-            } else {
-                $upserted[0] = $dbForDatabases->getDocument($collectionTableId, $documentId);
-            }
+            $upserted[0] = $dbForDatabases->getDocument($collectionTableId, $documentId);
         }
 
         $document = $upserted[0];

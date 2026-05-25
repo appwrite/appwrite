@@ -2,8 +2,9 @@
 
 namespace Appwrite\Platform\Modules\Functions\Http\Deployments\Duplicate;
 
-use Appwrite\Event\Build;
 use Appwrite\Event\Event;
+use Appwrite\Event\Message\Build as BuildMessage;
+use Appwrite\Event\Publisher\Build as BuildPublisher;
 use Appwrite\Extend\Exception;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
@@ -61,8 +62,10 @@ class Create extends Action
             ->inject('response')
             ->inject('dbForProject')
             ->inject('queueForEvents')
-            ->inject('queueForBuilds')
+            ->inject('publisherForBuilds')
             ->inject('deviceForFunctions')
+            ->inject('project')
+            ->inject('platform')
             ->callback($this->action(...));
     }
 
@@ -73,8 +76,10 @@ class Create extends Action
         Response $response,
         Database $dbForProject,
         Event $queueForEvents,
-        Build $queueForBuilds,
-        Device $deviceForFunctions
+        BuildPublisher $publisherForBuilds,
+        Device $deviceForFunctions,
+        Document $project,
+        array $platform
     ) {
         $function = $dbForProject->getDocument('functions', $functionId);
 
@@ -127,10 +132,13 @@ class Create extends Action
             'latestDeploymentStatus' => $function->getAttribute('latestDeploymentStatus'),
         ]));
 
-        $queueForBuilds
-            ->setType(BUILD_TYPE_DEPLOYMENT)
-            ->setResource($function)
-            ->setDeployment($deployment);
+        $publisherForBuilds->enqueue(new BuildMessage(
+            project: $project,
+            resource: $function,
+            deployment: $deployment,
+            type: BUILD_TYPE_DEPLOYMENT,
+            platform: $platform,
+        ));
 
         $queueForEvents
             ->setParam('functionId', $function->getId())

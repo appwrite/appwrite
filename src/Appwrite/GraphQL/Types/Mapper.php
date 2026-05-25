@@ -91,26 +91,20 @@ class Mapper
             }
         }
 
-        $responses = $method->getResponses() ?? [];
+        $responses = $method->getResponses();
 
-        // If responses is an array, map each response to its model
-        if (\is_array($responses)) {
-            $models = [];
-            foreach ($responses as $response) {
-                $modelName = $response->getModel();
+        // Map each response to its model
+        $models = [];
+        foreach ($responses as $response) {
+            $modelName = $response->getModel();
 
-                if (\is_array($modelName)) {
-                    foreach ($modelName as $name) {
-                        $models[] = self::$models[$name];
-                    }
-                } else {
-                    $models[] = self::$models[$modelName];
+            if (\is_array($modelName)) {
+                foreach ($modelName as $name) {
+                    $models[] = self::$models[$name];
                 }
+            } else {
+                $models[] = self::$models[$modelName];
             }
-        } else {
-            // If single response, get its model and wrap in array
-            $modelName = $responses->getModel();
-            $models = [self::$models[$modelName]];
         }
 
         foreach ($models as $model) {
@@ -260,7 +254,7 @@ class Mapper
         array $injections
     ): Type {
         $validator = \is_callable($validator)
-            ? \call_user_func_array($validator, $utopia->getResources($injections))
+            ? \call_user_func_array($validator, \array_map($utopia->context()->get(...), $injections))
             : $validator;
 
         $isNullable = $validator instanceof Nullable;

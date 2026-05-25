@@ -54,14 +54,17 @@ class FunctionsCustomServerTest extends Scope
         $functionId = $function['body']['$id'] ?? '';
 
         $variable = $this->createVariable($functionId, [
+            'variableId' => 'unique()',
             'key' => 'funcKey1',
             'value' => 'funcValue1',
         ]);
         $variable2 = $this->createVariable($functionId, [
+            'variableId' => 'unique()',
             'key' => 'funcKey2',
             'value' => 'funcValue2',
         ]);
         $variable3 = $this->createVariable($functionId, [
+            'variableId' => 'unique()',
             'key' => 'funcKey3',
             'value' => 'funcValue3',
         ]);
@@ -110,6 +113,7 @@ class FunctionsCustomServerTest extends Scope
 
         // Create a variable for later tests
         $variable = $this->createVariable($functionId, [
+            'variableId' => 'unique()',
             'key' => 'GLOBAL_VARIABLE',
             'value' => 'Global Variable Value',
         ]);
@@ -279,14 +283,17 @@ class FunctionsCustomServerTest extends Scope
         $this->assertEquals(10, $function['body']['timeout']);
 
         $variable = $this->createVariable($functionId, [
+            'variableId' => 'unique()',
             'key' => 'funcKey1',
             'value' => 'funcValue1',
         ]);
         $variable2 = $this->createVariable($functionId, [
+            'variableId' => 'unique()',
             'key' => 'funcKey2',
             'value' => 'funcValue2',
         ]);
         $variable3 = $this->createVariable($functionId, [
+            'variableId' => 'unique()',
             'key' => 'funcKey3',
             'value' => 'funcValue3',
         ]);
@@ -522,6 +529,7 @@ class FunctionsCustomServerTest extends Scope
 
         // Create a variable for later tests
         $variable = $this->createVariable($functionId, [
+            'variableId' => 'unique()',
             'key' => 'GLOBAL_VARIABLE',
             'value' => 'Global Variable Value',
         ]);
@@ -566,6 +574,44 @@ class FunctionsCustomServerTest extends Scope
             $this->assertEquals('ready', $deployment['body']['status']);
             $this->assertEquals('cli', $deployment['body']['type']);
         }, 120000, 500);
+    }
+
+    public function testCreateDeploymentWithSingleContentRangeChunk(): void
+    {
+        $functionId = $this->setupFunction([
+            'functionId' => ID::unique(),
+            'name' => 'Test Single Chunk Range',
+            'execute' => [Role::user($this->getUser()['$id'])->toString()],
+            'runtime' => 'node-22',
+            'entrypoint' => 'index.js',
+            'timeout' => 10,
+        ]);
+
+        $code = $this->packageFunction('basic');
+        $size = \filesize($code->getFilename());
+
+        $deployment = $this->client->call(Client::METHOD_POST, '/functions/' . $functionId . '/deployments', array_merge([
+            'content-type' => 'multipart/form-data',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'content-range' => 'bytes 0-' . ($size - 1) . '/' . $size,
+        ], $this->getHeaders()), [
+            'code' => $code,
+            'activate' => true,
+        ]);
+
+        $this->assertEquals(202, $deployment['headers']['status-code']);
+        $this->assertNotEmpty($deployment['body']['$id']);
+
+        $deploymentId = $deployment['body']['$id'];
+
+        $this->assertEventually(function () use ($functionId, $deploymentId) {
+            $deployment = $this->getDeployment($functionId, $deploymentId);
+
+            $this->assertEquals(200, $deployment['headers']['status-code']);
+            $this->assertEquals('ready', $deployment['body']['status']);
+        }, 120000, 500);
+
+        $this->cleanupFunction($functionId);
     }
 
     public function testCreateFunctionAndDeploymentFromTemplate()
@@ -663,7 +709,7 @@ class FunctionsCustomServerTest extends Scope
         $this->assertEquals(200, $function['headers']['status-code']);
         $this->assertEquals($deploymentId, $function['body']['deploymentId']);
 
-        // Test starter code is used and that dynamic keys work
+        // Test starter code is used and that ephemeral keys work
         $execution = $this->createExecution($functionId, [
             'path' => '/ping',
         ]);
@@ -1048,6 +1094,256 @@ class FunctionsCustomServerTest extends Scope
             $this->assertEquals($deploymentSize, $deployment['body']['sourceSize']);
             $this->assertGreaterThan(1024 * 1024 * 10, $deployment['body']['buildSize']); // ~7MB video file + 10MB sample file
         }, 120000, 500);
+    }
+
+    public function testCreateDeploymentOutOfOrder(): void
+    {
+        $data = $this->setupTestFunction();
+        $functionId = $data['functionId'];
+
+        // Prepare a code file that spans at least 3 chunks
+        $folder = 'large';
+        $folderPath = realpath(__DIR__ . '/../../../resources/functions') . "/$folder";
+        $code = "$folderPath/code.tar.gz";
+
+
+
+        $totalSize = filesize($code);
+        $chunkSize = 5 * 1024 * 1024; // 5MB chunks
+        $mimeType = 'application/x-gzip';
+        $chunksTotal = (int) ceil($totalSize / $chunkSize);
+
+        // Read all chunks into memory
+        $handle = fopen($code, "rb");
+        $this->assertNotFalse($handle, "Could not open test resource: $code");
+        $chunks = [];
+        for ($i = 0; $i < $chunksTotal; $i++) {
+            $start = $i * $chunkSize;
+            $end = min($start + $chunkSize, $totalSize);
+            $length = $end - $start;
+            $chunkData = fread($handle, $length);
+            $chunks[] = [
+                'data' => $chunkData,
+                'start' => $start,
+                'end' => $end - 1,
+                'index' => $i,
+            ];
+        }
+        fclose($handle);
+
+        // We need at least 2 chunks for a meaningful out-of-order test
+        $this->assertGreaterThanOrEqual(2, count($chunks), 'Test file must span at least 2 chunks');
+
+        // Upload chunks in out-of-order sequence: last chunk first, then first, then second
+        $uploadOrder = [count($chunks) - 1, 0, 1];
+        $deploymentId = '';
+        $deployment = null;
+
+        foreach ($uploadOrder as $chunkIndex) {
+            $chunk = $chunks[$chunkIndex];
+            $curlFile = new \CURLFile(
+                'data://' . $mimeType . ';base64,' . base64_encode($chunk['data']),
+                $mimeType,
+                'large-fx.tar.gz'
+            );
+
+            $headers = [
+                'content-type' => 'multipart/form-data',
+                'x-appwrite-project' => $this->getProject()['$id'],
+                'content-range' => 'bytes ' . $chunk['start'] . '-' . $chunk['end'] . '/' . $totalSize,
+            ];
+
+            if (!empty($deploymentId)) {
+                $headers['x-appwrite-id'] = $deploymentId;
+            }
+
+            $deployment = $this->client->call(Client::METHOD_POST, '/functions/' . $functionId . '/deployments', array_merge($headers, $this->getHeaders()), [
+                'entrypoint' => 'index.js',
+                'code' => $curlFile,
+                'activate' => true,
+            ]);
+
+            $this->assertEquals(202, $deployment['headers']['status-code']);
+            $deploymentId = $deployment['body']['$id'];
+        }
+
+        // Upload remaining chunks in any order to complete the file
+        $remainingChunks = [];
+        for ($i = 2; $i < count($chunks) - 1; $i++) {
+            $remainingChunks[] = $i;
+        }
+        shuffle($remainingChunks);
+
+        foreach ($remainingChunks as $chunkIndex) {
+            $chunk = $chunks[$chunkIndex];
+            $curlFile = new \CURLFile(
+                'data://' . $mimeType . ';base64,' . base64_encode($chunk['data']),
+                $mimeType,
+                'large-fx.tar.gz'
+            );
+
+            $headers = [
+                'content-type' => 'multipart/form-data',
+                'x-appwrite-project' => $this->getProject()['$id'],
+                'content-range' => 'bytes ' . $chunk['start'] . '-' . $chunk['end'] . '/' . $totalSize,
+                'x-appwrite-id' => $deploymentId,
+            ];
+
+            $deployment = $this->client->call(Client::METHOD_POST, '/functions/' . $functionId . '/deployments', array_merge($headers, $this->getHeaders()), [
+                'entrypoint' => 'index.js',
+                'code' => $curlFile,
+                'activate' => true,
+            ]);
+
+            $this->assertEquals(202, $deployment['headers']['status-code']);
+        }
+
+
+
+        // Wait for build to complete
+        $this->assertEventually(function () use ($functionId, $deploymentId) {
+            $deployment = $this->getDeployment($functionId, $deploymentId);
+            $this->assertEquals(200, $deployment['headers']['status-code']);
+            $this->assertEquals('ready', $deployment['body']['status']);
+        }, 120000, 500);
+    }
+
+    public function testCreateDeploymentParallelChunksLargeFile(): void
+    {
+        $functionId = $this->setupFunction([
+            'functionId' => ID::unique(),
+            'name' => 'Test Parallel Chunk Deployment',
+            'execute' => [Role::user($this->getUser()['$id'])->toString()],
+            'runtime' => 'node-22',
+            'entrypoint' => 'index.js',
+            'timeout' => 10,
+        ]);
+
+        $deploymentId = ID::unique();
+        $tmpDirectory = sys_get_temp_dir() . DIRECTORY_SEPARATOR . 'appwrite-parallel-function-deployment-' . $deploymentId;
+
+        mkdir($tmpDirectory);
+
+        try {
+            copy(__DIR__ . '/../../../resources/functions/basic/index.js', $tmpDirectory . DIRECTORY_SEPARATOR . 'index.js');
+            file_put_contents($tmpDirectory . DIRECTORY_SEPARATOR . 'large.bin', random_bytes(20 * 1024 * 1024));
+
+            $source = $tmpDirectory . DIRECTORY_SEPARATOR . 'code.tar.gz';
+            Console::execute('cd ' . $tmpDirectory . ' && tar --exclude code.tar.gz -czf code.tar.gz .', '', $this->stdout, $this->stderr);
+
+            $totalSize = filesize($source);
+            $chunkSize = 5 * 1024 * 1024;
+            $chunksTotal = (int) ceil($totalSize / $chunkSize);
+
+            $this->assertGreaterThanOrEqual(4, $chunksTotal, 'Test deployment must span at least 4 chunks');
+
+            $requests = [];
+            $sourceHandle = fopen($source, 'rb');
+            $this->assertNotFalse($sourceHandle, 'Could not open deployment package');
+
+            try {
+                for ($i = 0; $i < $chunksTotal; $i++) {
+                    $start = $i * $chunkSize;
+                    $end = min($start + $chunkSize, $totalSize) - 1;
+                    $length = $end - $start + 1;
+                    $chunkPath = $tmpDirectory . DIRECTORY_SEPARATOR . 'chunk-' . $i . '.part';
+
+                    fseek($sourceHandle, $start);
+                    file_put_contents($chunkPath, fread($sourceHandle, $length));
+
+                    $requests[] = [
+                        'headers' => [
+                            'x-appwrite-project' => $this->getProject()['$id'],
+                            'x-appwrite-key' => $this->getProject()['apiKey'],
+                            'x-appwrite-id' => $deploymentId,
+                            'content-range' => 'bytes ' . $start . '-' . $end . '/' . $totalSize,
+                        ],
+                        'chunkPath' => $chunkPath,
+                    ];
+                }
+            } finally {
+                fclose($sourceHandle);
+            }
+
+            $responses = [];
+            $endpoint = parse_url($this->client->getEndpoint());
+            $scheme = $endpoint['scheme'] ?? 'http';
+            $host = $endpoint['host'] ?? 'appwrite';
+            $port = $endpoint['port'] ?? ($scheme === 'https' ? 443 : 80);
+            $basePath = rtrim($endpoint['path'] ?? '', '/');
+
+            \Swoole\Coroutine\run(function () use ($basePath, $functionId, $host, $port, $requests, $scheme, &$responses): void {
+                $wg = new \Swoole\Coroutine\WaitGroup();
+
+                foreach ($requests as $index => $request) {
+                    $wg->add();
+                    \Swoole\Coroutine::create(function () use ($basePath, $functionId, $host, $index, $port, $request, &$responses, $scheme, $wg): void {
+                        try {
+                            for ($attempt = 0; $attempt < 3; $attempt++) {
+                                $client = new \Swoole\Coroutine\Http\Client($host, (int) $port, $scheme === 'https');
+                                $client->set([
+                                    'timeout' => 300,
+                                    'ssl_verify_peer' => false,
+                                    'ssl_verify_host' => false,
+                                ]);
+                                $client->setHeaders($request['headers']);
+                                $client->setMethod(Client::METHOD_POST);
+                                $client->setData([
+                                    'entrypoint' => 'index.js',
+                                    'activate' => true,
+                                ]);
+                                $client->addFile($request['chunkPath'], 'code', 'application/x-gzip', 'code.tar.gz');
+                                $client->execute($basePath . '/functions/' . $functionId . '/deployments');
+
+                                $responses[$index] = [
+                                    'body' => $client->body,
+                                    'error' => $client->errMsg,
+                                    'headers' => $client->headers ?? [],
+                                    'statusCode' => $client->statusCode,
+                                ];
+
+                                $client->close();
+
+                                if ($responses[$index]['statusCode'] !== 429) {
+                                    break;
+                                }
+
+                                $retryAfter = (float) ($responses[$index]['headers']['retry-after'] ?? 0.1);
+                                \Swoole\Coroutine::sleep(max($retryAfter, 0.1));
+                            }
+                        } finally {
+                            $wg->done();
+                        }
+                    });
+                }
+
+                $wg->wait();
+            });
+
+            ksort($responses);
+
+            foreach ($responses as $response) {
+                $this->assertSame('', $response['error']);
+                $this->assertContains($response['statusCode'], [202], (string) $response['body']);
+            }
+
+            $this->assertEventually(function () use ($functionId, $deploymentId) {
+                $deployment = $this->getDeployment($functionId, $deploymentId);
+
+                $this->assertEquals(200, $deployment['headers']['status-code']);
+                $this->assertEquals('ready', $deployment['body']['status']);
+                $this->assertEquals($deploymentId, $deployment['body']['$id']);
+            }, 120000, 500);
+        } finally {
+            $this->cleanupFunction($functionId);
+
+            if (is_dir($tmpDirectory)) {
+                foreach (glob($tmpDirectory . DIRECTORY_SEPARATOR . '*') ?: [] as $file) {
+                    unlink($file);
+                }
+                rmdir($tmpDirectory);
+            }
+        }
     }
 
     public function testUpdateDeployment(): void
@@ -1870,6 +2166,7 @@ class FunctionsCustomServerTest extends Scope
         ]);
 
         $variable = $this->createVariable($functionId, [
+            'variableId' => 'unique()',
             'key' => 'CUSTOM_VARIABLE',
             'value' => 'variable'
         ]);
@@ -2100,7 +2397,7 @@ class FunctionsCustomServerTest extends Scope
         ]);
 
         $deploymentId = $this->setupDeployment($functionId, [
-            'code' => $this->packageFunction('dynamic-api-key'),
+            'code' => $this->packageFunction('ephemeral-api-key'),
             'activate' => true,
         ]);
 
@@ -2490,17 +2787,17 @@ class FunctionsCustomServerTest extends Scope
         $this->assertEmpty($executions['body']['executions'][0]['logs']);
         $this->assertEmpty($executions['body']['executions'][0]['errors']);
 
-        // Ensure executions count
-        $executions = $this->listExecutions($functionId);
+        $this->assertEventually(function () use ($functionId) {
+            $executions = $this->listExecutions($functionId);
 
-        $this->assertEquals(200, $executions['headers']['status-code']);
-        $this->assertCount(3, $executions['body']['executions']);
+            $this->assertEquals(200, $executions['headers']['status-code']);
+            $this->assertCount(3, $executions['body']['executions']);
 
-        // Double check logs and errors are empty
-        foreach ($executions['body']['executions'] as $execution) {
-            $this->assertEmpty($execution['logs']);
-            $this->assertEmpty($execution['errors']);
-        }
+            foreach ($executions['body']['executions'] as $execution) {
+                $this->assertEmpty($execution['logs']);
+                $this->assertEmpty($execution['errors']);
+            }
+        }, 10000, 500);
 
         $this->cleanupFunction($functionId);
     }

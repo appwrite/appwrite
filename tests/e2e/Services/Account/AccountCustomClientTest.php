@@ -772,6 +772,7 @@ class AccountCustomClientTest extends Scope
             'origin' => 'http://localhost',
             'content-type' => 'application/json',
             'x-appwrite-project' => 'console',
+            'x-appwrite-response-format' => '1.9.1',
             'cookie' => 'a_session_console=' . $this->getRoot()['session'],
         ]), [
             'status' => true,
@@ -1025,123 +1026,101 @@ class AccountCustomClientTest extends Scope
         // Use fresh account for predictable log count
         $data = $this->createFreshAccountWithSession();
         $session = $data['session'];
+        $headers = array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $session,
+        ]);
 
         /**
          * Test for SUCCESS
          */
-        $response = $this->client->call(Client::METHOD_GET, '/account/logs', array_merge([
-            'origin' => 'http://localhost',
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $session,
-        ]));
+        $this->assertEventually(function () use ($headers) {
+            $response = $this->client->call(Client::METHOD_GET, '/account/logs', $headers);
 
-        $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertIsArray($response['body']['logs']);
-        $this->assertNotEmpty($response['body']['logs']);
-        // Fresh account: session.create is always logged. user.create audit may or may not
-        // be present depending on async audit processing timing.
-        $logCount = count($response['body']['logs']);
-        $this->assertContains($logCount, [1, 2]);
-        $this->assertIsNumeric($response['body']['total']);
+            $this->assertEquals(200, $response['headers']['status-code']);
+            $this->assertIsArray($response['body']['logs']);
+            $this->assertNotEmpty($response['body']['logs']);
+            $logCount = count($response['body']['logs']);
+            $this->assertContains($logCount, [1, 2]);
+            $this->assertIsNumeric($response['body']['total']);
 
-        // Check session.create log (logs[0] - most recent)
-        $this->assertEquals('Windows', $response['body']['logs'][0]['osName']);
-        $this->assertEquals('WIN', $response['body']['logs'][0]['osCode']);
-        $this->assertEquals('10', $response['body']['logs'][0]['osVersion']);
+            $this->assertEquals('session.create', $response['body']['logs'][0]['event']);
+            $this->assertEquals('Windows', $response['body']['logs'][0]['osName']);
+            $this->assertEquals('WIN', $response['body']['logs'][0]['osCode']);
+            $this->assertEquals('10', $response['body']['logs'][0]['osVersion']);
 
-        $this->assertEquals('browser', $response['body']['logs'][0]['clientType']);
-        $this->assertEquals('Chrome', $response['body']['logs'][0]['clientName']);
-        $this->assertEquals('CH', $response['body']['logs'][0]['clientCode']);
-        $this->assertEquals('70.0', $response['body']['logs'][0]['clientVersion']);
-        $this->assertEquals('Blink', $response['body']['logs'][0]['clientEngine']);
+            $this->assertEquals('browser', $response['body']['logs'][0]['clientType']);
+            $this->assertEquals('Chrome', $response['body']['logs'][0]['clientName']);
+            $this->assertEquals('CH', $response['body']['logs'][0]['clientCode']);
+            $this->assertEquals('70.0', $response['body']['logs'][0]['clientVersion']);
+            $this->assertEquals('Blink', $response['body']['logs'][0]['clientEngine']);
 
-        $this->assertEquals('desktop', $response['body']['logs'][0]['deviceName']);
-        $this->assertEquals('', $response['body']['logs'][0]['deviceBrand']);
-        $this->assertEquals('', $response['body']['logs'][0]['deviceModel']);
-        $this->assertEquals(filter_var($response['body']['logs'][0]['ip'], FILTER_VALIDATE_IP), $response['body']['logs'][0]['ip']);
+            $this->assertEquals('desktop', $response['body']['logs'][0]['deviceName']);
+            $this->assertEquals('', $response['body']['logs'][0]['deviceBrand']);
+            $this->assertEquals('', $response['body']['logs'][0]['deviceModel']);
+            $this->assertEquals(filter_var($response['body']['logs'][0]['ip'], FILTER_VALIDATE_IP), $response['body']['logs'][0]['ip']);
 
-        $this->assertEquals('--', $response['body']['logs'][0]['countryCode']);
-        $this->assertEquals('Unknown', $response['body']['logs'][0]['countryName']);
+            $this->assertEquals('--', $response['body']['logs'][0]['countryCode']);
+            $this->assertEquals('Unknown', $response['body']['logs'][0]['countryName']);
 
-        if ($logCount === 2) {
-            // Check user.create log (logs[1] - oldest)
-            $this->assertEquals('user.create', $response['body']['logs'][1]['event']);
-            $this->assertEquals(filter_var($response['body']['logs'][1]['ip'], FILTER_VALIDATE_IP), $response['body']['logs'][1]['ip']);
-            $this->assertTrue((new DatetimeValidator())->isValid($response['body']['logs'][1]['time']));
-        }
+            if ($logCount === 2) {
+                $this->assertEquals('user.create', $response['body']['logs'][1]['event']);
+                $this->assertEquals(filter_var($response['body']['logs'][1]['ip'], FILTER_VALIDATE_IP), $response['body']['logs'][1]['ip']);
+                $this->assertTrue((new DatetimeValidator())->isValid($response['body']['logs'][1]['time']));
+            }
 
-        $responseLimit = $this->client->call(Client::METHOD_GET, '/account/logs', array_merge([
-            'origin' => 'http://localhost',
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $session,
-        ]), [
-            'queries' => [
-                Query::limit(1)->toString()
-            ]
-        ]);
+            $responseLimit = $this->client->call(Client::METHOD_GET, '/account/logs', $headers, [
+                'queries' => [
+                    Query::limit(1)->toString()
+                ]
+            ]);
 
-        $this->assertEquals(200, $responseLimit['headers']['status-code']);
-        $this->assertIsArray($responseLimit['body']['logs']);
-        $this->assertNotEmpty($responseLimit['body']['logs']);
-        $this->assertCount(1, $responseLimit['body']['logs']);
-        $this->assertIsNumeric($responseLimit['body']['total']);
+            $this->assertEquals(200, $responseLimit['headers']['status-code']);
+            $this->assertIsArray($responseLimit['body']['logs']);
+            $this->assertNotEmpty($responseLimit['body']['logs']);
+            $this->assertCount(1, $responseLimit['body']['logs']);
+            $this->assertIsNumeric($responseLimit['body']['total']);
 
-        $this->assertEquals($response['body']['logs'][0], $responseLimit['body']['logs'][0]);
+            $this->assertEquals($response['body']['logs'][0], $responseLimit['body']['logs'][0]);
 
-        $responseOffset = $this->client->call(Client::METHOD_GET, '/account/logs', array_merge([
-            'origin' => 'http://localhost',
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $session,
-        ]), [
-            'queries' => [
-                Query::offset(1)->toString()
-            ]
-        ]);
+            $responseOffset = $this->client->call(Client::METHOD_GET, '/account/logs', $headers, [
+                'queries' => [
+                    Query::offset(1)->toString()
+                ]
+            ]);
 
-        $this->assertEquals($responseOffset['headers']['status-code'], 200);
-        $this->assertIsArray($responseOffset['body']['logs']);
-        // With offset(1), remaining logs = logCount - 1
-        $this->assertCount($logCount - 1, $responseOffset['body']['logs']);
-        $this->assertIsNumeric($responseOffset['body']['total']);
+            $this->assertEquals(200, $responseOffset['headers']['status-code']);
+            $this->assertIsArray($responseOffset['body']['logs']);
+            $this->assertCount($logCount - 1, $responseOffset['body']['logs']);
+            $this->assertIsNumeric($responseOffset['body']['total']);
 
-        if ($logCount === 2) {
-            $this->assertEquals($response['body']['logs'][1], $responseOffset['body']['logs'][0]);
-        }
+            if ($logCount === 2) {
+                $this->assertEquals($response['body']['logs'][1], $responseOffset['body']['logs'][0]);
+            }
 
-        $responseLimitOffset = $this->client->call(Client::METHOD_GET, '/account/logs', array_merge([
-            'origin' => 'http://localhost',
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $session,
-        ]), [
-            'queries' => [
-                Query::offset(1)->toString(),
-                Query::limit(1)->toString()
-            ]
-        ]);
+            $responseLimitOffset = $this->client->call(Client::METHOD_GET, '/account/logs', $headers, [
+                'queries' => [
+                    Query::offset(1)->toString(),
+                    Query::limit(1)->toString()
+                ]
+            ]);
 
-        $this->assertEquals(200, $responseLimitOffset['headers']['status-code']);
-        $this->assertIsArray($responseLimitOffset['body']['logs']);
-        // With offset(1)+limit(1), remaining logs = min(1, logCount - 1)
-        $this->assertCount(min(1, $logCount - 1), $responseLimitOffset['body']['logs']);
-        $this->assertIsNumeric($responseLimitOffset['body']['total']);
+            $this->assertEquals(200, $responseLimitOffset['headers']['status-code']);
+            $this->assertIsArray($responseLimitOffset['body']['logs']);
+            $this->assertCount(min(1, $logCount - 1), $responseLimitOffset['body']['logs']);
+            $this->assertIsNumeric($responseLimitOffset['body']['total']);
 
-        if ($logCount === 2) {
-            $this->assertEquals($response['body']['logs'][1], $responseLimitOffset['body']['logs'][0]);
-        }
+            if ($logCount === 2) {
+                $this->assertEquals($response['body']['logs'][1], $responseLimitOffset['body']['logs'][0]);
+            }
+        });
 
         /**
          * Test for total=false
          */
-        $logsWithIncludeTotalFalse = $this->client->call(Client::METHOD_GET, '/account/logs', array_merge([
-            'origin' => 'http://localhost',
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $session,
-        ]), [
+        $logsWithIncludeTotalFalse = $this->client->call(Client::METHOD_GET, '/account/logs', $headers, [
             'total' => false
         ]);
 
@@ -2050,6 +2029,7 @@ class AccountCustomClientTest extends Scope
             'origin' => 'http://localhost',
             'content-type' => 'application/json',
             'x-appwrite-project' => 'console',
+            'x-appwrite-response-format' => '1.9.1',
             'cookie' => 'a_session_console=' . $this->getRoot()['session'],
         ]), [
             'alerts' => true,
@@ -2135,7 +2115,7 @@ class AccountCustomClientTest extends Scope
 
         // Find 6 concurrent digits in email text - OTP
         preg_match_all("/\b\d{6}\b/", $lastEmail['text'], $matches);
-        $code = ($matches[0] ?? [])[0] ?? '';
+        $code = $matches[0][0] ?? '';
 
         $this->assertNotEmpty($code);
 
@@ -3363,7 +3343,7 @@ class AccountCustomClientTest extends Scope
     {
         $data = $this->setupPhoneAccount();
         $id = $data['id'];
-        $token = explode(" ", $data['token'])[0] ?? '';
+        $token = explode(" ", $data['token'])[0];
         $number = $data['number'];
 
         /**
@@ -3694,6 +3674,7 @@ class AccountCustomClientTest extends Scope
             'origin' => 'http://localhost',
             'content-type' => 'application/json',
             'x-appwrite-project' => 'console',
+            'x-appwrite-response-format' => '1.9.1',
             'cookie' => 'a_session_console=' . $this->getRoot()['session'],
         ]), [
             'status' => false,
@@ -4159,5 +4140,73 @@ class AccountCustomClientTest extends Scope
         ]);
 
         $this->assertEquals(401, $verification3['headers']['status-code']);
+    }
+
+    public function testRefreshEmailPasswordSession(): void
+    {
+        $email = uniqid() . 'user@localhost.test';
+
+        $account = $this->client->call(Client::METHOD_POST, '/account', array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ]), [
+            'userId' => ID::unique(),
+            'email' => $email,
+            'password' => 'password',
+        ]);
+
+        $this->assertEquals(201, $account['headers']['status-code']);
+
+        $session = $this->client->call(Client::METHOD_POST, '/account/sessions/email', array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ]), [
+            'email' => $email,
+            'password' => 'password',
+        ]);
+
+        $this->assertEquals(201, $session['headers']['status-code']);
+        $this->assertNotEmpty($session['body']['$id']);
+
+        $sessionId = $session['body']['$id'];
+        $cookie = 'a_session_' . $this->getProject()['$id'] . '=' .$session['cookies']['a_session_' . $this->getProject()['$id']];
+
+        $session = $this->client->call(Client::METHOD_GET, '/account/sessions/current', array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'cookie' =>  $cookie,
+        ]));
+
+        $this->assertEquals(200, $session['headers']['status-code']);
+        $this->assertNotEmpty($session['body']['expire']);
+        $expiryBefore = $session['body']['expire'];
+
+        \sleep(3); // Small delay to ensure expiry an expand
+
+        $session = $this->client->call(Client::METHOD_PATCH, '/account/sessions/' . $sessionId, array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'cookie' =>  $cookie,
+        ]));
+
+        $this->assertEquals(200, $session['headers']['status-code']);
+        $this->assertNotEmpty($session['body']['expire']);
+        $expiryAfter = $session['body']['expire'];
+
+        $this->assertGreaterThan(\strtotime($expiryBefore), \strtotime($expiryAfter));
+
+        $session = $this->client->call(Client::METHOD_GET, '/account/sessions/current', array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'cookie' =>  $cookie,
+        ]));
+
+        $this->assertEquals(200, $session['headers']['status-code']);
+        $this->assertEquals(\strtotime($expiryAfter), \strtotime($session['body']['expire']));
     }
 }

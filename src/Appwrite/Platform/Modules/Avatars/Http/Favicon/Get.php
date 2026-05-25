@@ -94,11 +94,14 @@ class Get extends Action
             throw new Exception(Exception::AVATAR_REMOTE_URL_FAILED);
         }
 
+        $body = $res->getBody();
         $doc = new DOMDocument();
         $doc->strictErrorChecking = false;
-        @$doc->loadHTML($res->getBody());
+        if (!empty($body)) {
+            @$doc->loadHTML($body);
+        }
 
-        $links = $doc->getElementsByTagName('link') ?? [];
+        $links = $doc->getElementsByTagName('link');
         $outputHref = '';
         $outputExt = '';
         $space = 0;
@@ -128,7 +131,7 @@ class Get extends Action
                         case 'jpeg':
                             $size = \explode('x', \strtolower($sizes));
 
-                            $sizeWidth = (int) ($size[0] ?? 0);
+                            $sizeWidth = (int) $size[0];
                             $sizeHeight = (int) ($size[1] ?? 0);
 
                             if (($sizeWidth * $sizeHeight) >= $space) {

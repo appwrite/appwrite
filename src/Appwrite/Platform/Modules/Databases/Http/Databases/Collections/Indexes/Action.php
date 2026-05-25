@@ -10,7 +10,7 @@ abstract class Action extends UtopiaAction
     /**
      * The current API context (either 'columnIndex' or 'index').
      */
-    private ?string $context = INDEX;
+    private string $context = INDEX;
 
     /**
      * Get the response model used in the SDK and HTTP responses.

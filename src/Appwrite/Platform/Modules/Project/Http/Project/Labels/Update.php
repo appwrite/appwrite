@@ -9,6 +9,7 @@ use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
+use Utopia\Database\Validator\Authorization;
 use Utopia\Platform\Scope\HTTP;
 use Utopia\Validator\ArrayList;
 use Utopia\Validator\Text;
@@ -31,7 +32,7 @@ class Update extends Action
             ->desc('Update project labels')
             ->groups(['api', 'project'])
             ->label('scope', 'project.write')
-            ->label('event', 'labels.*.update')
+            // ->label('event', 'project.labels.update')
             ->label('audits.event', 'project.labels.update')
             ->label('audits.resource', 'project.labels/{response.$id}')
             ->label('sdk', new Method(
@@ -53,6 +54,7 @@ class Update extends Action
             ->inject('response')
             ->inject('dbForPlatform')
             ->inject('project')
+            ->inject('authorization')
             ->callback($this->action(...));
     }
 
@@ -63,11 +65,12 @@ class Update extends Action
         array $labels,
         Response $response,
         Database $dbForPlatform,
-        Document $project
+        Document $project,
+        Authorization $authorization
     ): void {
         $labels = (array) \array_values(\array_unique($labels));
 
-        $project = $dbForPlatform->updateDocument('projects', $project->getId(), new Document(['labels' => $labels]));
+        $project = $authorization->skip(fn () => $dbForPlatform->updateDocument('projects', $project->getId(), new Document(['labels' => $labels])));
 
         $response->dynamic($project, Response::MODEL_PROJECT);
     }
