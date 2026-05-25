@@ -88,7 +88,6 @@ class Builds extends Action
             ->inject('log')
             ->inject('executor')
             ->inject('plan')
-            ->inject('locks')
             ->callback($this->action(...));
     }
 
@@ -114,8 +113,7 @@ class Builds extends Action
         Device $deviceForFiles,
         Log $log,
         Executor $executor,
-        array $plan,
-        callable $locks
+        array $plan
     ): void {
         $payload = $message->getPayload();
 
@@ -154,7 +152,6 @@ class Builds extends Action
                     deployment: $deployment,
                     platform: $platform,
                     event: $payload['event'] ?? [],
-                    locks: $locks,
                 );
                 break;
 
@@ -1496,8 +1493,7 @@ class Builds extends Action
         Document $resource,
         Document $deployment,
         array $platform,
-        array $event,
-        callable $locks
+        array $event
     ): void {
         if (empty($event)) {
             throw new \Exception('Missing orchestrator event payload');
@@ -1530,39 +1526,22 @@ class Builds extends Action
         $data = $event['data'] ?? [];
 
         if ($type === CallbackEvent::Log->value) {
-            $lines = $data['lines'] ?? [];
-            if (empty($lines)) {
+            $logs = $deployment->getAttribute('buildLogs', '');
+            $previousLogs = $logs;
+            foreach (($data['lines'] ?? []) as $line) {
+                $logs .= $line;
+                if (!\str_ends_with($line, "\n")) {
+                    $logs .= "\n";
+                }
+            }
+
+            if ($logs === $previousLogs) {
                 return;
             }
 
-            $locks(
-                'builds:logs:' . $project->getId() . ':' . $deployment->getId(),
-                60,
-                function () use ($dbForProject, &$deployment, $lines): void {
-                    $deployment = $dbForProject->getDocument('deployments', $deployment->getId());
-                    if ($deployment->isEmpty()) {
-                        throw new \Exception('Deployment not found');
-                    }
-
-                    $logs = $deployment->getAttribute('buildLogs', '');
-                    $previousLogs = $logs;
-                    foreach ($lines as $line) {
-                        $logs .= $line;
-                        if (!\str_ends_with($line, "\n")) {
-                            $logs .= "\n";
-                        }
-                    }
-
-                    if ($logs === $previousLogs) {
-                        return;
-                    }
-
-                    $deployment = $dbForProject->updateDocument('deployments', $deployment->getId(), new Document([
-                        'buildLogs' => $logs,
-                    ]));
-                },
-                timeout: 30.0
-            );
+            $deployment = $dbForProject->updateDocument('deployments', $deployment->getId(), new Document([
+                'buildLogs' => $logs,
+            ]));
 
             $queueForRealtime
                 ->setPayload($deployment->getArrayCopy())
