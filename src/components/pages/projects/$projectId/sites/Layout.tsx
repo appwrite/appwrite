@@ -7,7 +7,7 @@ import {
 } from '@tanstack/react-router'
 import { useQueryClient, useMutation, useIsFetching } from '@tanstack/react-query'
 import { ServiceHeader, type Tab } from '../shared/ServiceHeader'
-import { CopyableId } from '@/components/global/shared/CopyableId'
+import { DetailResourceHeaderTitle } from '../shared/ResourceTitleSwitcher'
 import {
   useProjectSite,
   useSiteDeployment,
@@ -27,7 +27,7 @@ import {
 } from '@/components/ui/dialog'
 import { DeploymentInfo } from '@/components/global/shared/DeploymentInfo'
 import { Alert, AlertDescription } from '@/components/ui/alert'
-import { Info, ArrowLeft } from 'lucide-react'
+import { Info } from 'lucide-react'
 import { toast } from 'sonner'
 import { cn } from '@/lib/utils'
 import {
@@ -287,21 +287,16 @@ function SiteLayoutContent() {
         >
           <ServiceHeader
             title={
-            <div className="flex min-w-0 items-center gap-2">
-              <Button
-                variant="ghost"
-                size="sm"
-                className="h-7 w-7 p-0"
-                onClick={handleBack}
-                aria-label="Back to sites"
-              >
-                <ArrowLeft className="h-4 w-4" />
-              </Button>
-              <span className="truncate">{site?.name || 'Site'}</span>
-              {site?.$id ? (
-                <CopyableId id={site.$id} size="xs" className="shrink-0" />
-              ) : null}
-            </div>
+            <DetailResourceHeaderTitle
+              kind="site"
+              label={site?.name || 'Site'}
+              resourceId={site?.$id ?? ''}
+              projectId={projectId}
+              back={{
+                onClick: handleBack,
+                'aria-label': 'Back to sites',
+              }}
+            />
           }
           tabs={tabs}
           activeTab={activeTab}

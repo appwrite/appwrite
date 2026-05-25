@@ -13,7 +13,6 @@ import {
   Lock,
   Trash2,
   Pencil,
-  ArrowLeft,
   List,
   Copy,
   Check,
@@ -29,7 +28,7 @@ import {
   DNS_RECORDS_DEFAULT_SORT_ORDER,
 } from '@/lib/react-query/hooks'
 import { ServiceHeader } from '@/components/pages/projects/$projectId/shared/ServiceHeader'
-import { CopyableId } from '@/components/global/shared/CopyableId'
+import { DetailResourceHeaderTitle } from '@/components/global/shared/ResourceTitleSwitcher'
 import { InitialsAvatar } from '@/components/global/shared/Avatar'
 import {
   Tooltip,
@@ -924,22 +923,18 @@ export function View({ initialData }: ViewProps = {}) {
         containerClassName="domain-detail-layout-container"
       >
         <ServiceHeader
-          title={
-            <div className="flex min-w-0 items-center gap-2">
-              <Button
-                variant="ghost"
-                size="sm"
-                className="h-7 w-7 p-0 cursor-pointer"
-                onClick={handleBack}
-              >
-                <ArrowLeft className="h-4 w-4" />
-              </Button>
-              <span className="truncate">{domain?.domain}</span>
-              {domain?.$id ? (
-                <CopyableId id={domain.$id} size="xs" className="shrink-0" />
-              ) : null}
-            </div>
-          }
+        title={
+          <DetailResourceHeaderTitle
+            kind="domain"
+            label={domain?.domain ?? 'Domain'}
+            resourceId={domain?.$id ?? ''}
+            organizationId={orgId}
+            back={{
+              onClick: handleBack,
+              'aria-label': 'Back to domains',
+            }}
+          />
+        }
           tabs={tabs}
           activeTab={activeTab}
           fullWidthBorder

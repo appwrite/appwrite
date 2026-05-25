@@ -11,6 +11,7 @@ import { useConsoleProfile } from '@/hooks/use-console-profile'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { ServiceHeader, type Tab } from '../shared/ServiceHeader'
 import { CopyableId } from '@/components/global/shared/CopyableId'
+import { DetailResourceHeaderTitle } from '../shared/ResourceTitleSwitcher'
 import { DateTooltip } from '@/components/global/shared/DateTooltip'
 import { Button } from '@/components/ui/button'
 import {
@@ -183,18 +184,16 @@ export function View({
     <div className="flex flex-col">
       <ServiceHeader
         title={
-          <div className="flex min-w-0 items-center gap-2">
-            <Button
-              variant="ghost"
-              size="sm"
-              className="h-7 w-7 p-0"
-              onClick={handleBack}
-            >
-              <ArrowLeft className="h-4 w-4" />
-            </Button>
-            <span className="truncate">{topic.name}</span>
-            <CopyableId id={topic.$id} size="xs" className="shrink-0" />
-          </div>
+          <DetailResourceHeaderTitle
+            kind="topic"
+            label={topic.name}
+            resourceId={topic.$id}
+            projectId={projectId}
+            back={{
+              onClick: handleBack,
+              'aria-label': 'Back to topics',
+            }}
+          />
         }
         tabs={tabs}
         activeTab={activeTab}

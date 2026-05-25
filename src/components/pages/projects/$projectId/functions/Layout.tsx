@@ -7,7 +7,7 @@ import {
 } from '@tanstack/react-router'
 import { useMutation, useQueryClient, useIsFetching } from '@tanstack/react-query'
 import { ServiceHeader, type Tab } from '../shared/ServiceHeader'
-import { CopyableId } from '@/components/global/shared/CopyableId'
+import { DetailResourceHeaderTitle } from '../shared/ResourceTitleSwitcher'
 import { DeploymentInfo } from '@/components/global/shared/DeploymentInfo'
 import {
   useProjectFunction,
@@ -18,7 +18,7 @@ import {
 import { sdk } from '@/lib/appwrite/sdk'
 import { canShowFunctionSecuritySettings } from '@/lib/console-access-checks'
 import { useConsoleProfile } from '@/hooks/use-console-profile'
-import { ArrowLeft, AlertCircle } from 'lucide-react'
+import { AlertCircle } from 'lucide-react'
 import { Link } from '@tanstack/react-router'
 import { Button } from '@/components/ui/button'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
@@ -475,24 +475,17 @@ function FunctionLayoutContent() {
         >
           <ServiceHeader
             title={
-            <div className="flex min-w-0 items-center gap-2">
-              <Button
-                variant="ghost"
-                size="sm"
-                asChild
-                className="h-7 w-7 p-0"
-                aria-label="Back to functions"
-              >
-                <Link
-                  to="/projects/$projectId/functions"
-                  params={{ projectId: projectId! }}
-                >
-                  <ArrowLeft className="h-4 w-4" />
-                </Link>
-              </Button>
-              <span className="truncate">{func.name || 'Unnamed Function'}</span>
-              <CopyableId id={func.$id} size="xs" className="shrink-0" />
-            </div>
+            <DetailResourceHeaderTitle
+              kind="function"
+              label={func.name || 'Unnamed Function'}
+              resourceId={func.$id}
+              projectId={projectId}
+              back={{
+                to: '/projects/$projectId/functions',
+                params: { projectId: projectId! },
+                'aria-label': 'Back to functions',
+              }}
+            />
           }
           tabs={tabs}
           activeTab={activeTab}

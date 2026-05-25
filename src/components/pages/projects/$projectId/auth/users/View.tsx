@@ -37,6 +37,7 @@ import { toast } from 'sonner'
 import { ServiceHeader, type Tab } from '../../shared/ServiceHeader'
 import { DateTooltip } from '@/components/global/shared/DateTooltip'
 import { CopyableId } from '@/components/global/shared/CopyableId'
+import { DetailResourceHeaderTitle } from '../../shared/ResourceTitleSwitcher'
 import { InitialsAvatar } from '@/components/global/shared/Avatar'
 import { EmptyState } from '@/components/global/shared/EmptyState'
 import { SearchableSelect } from '@/components/global/shared/SearchableSelect'
@@ -387,18 +388,16 @@ export function View() {
     <div className="flex flex-col">
       <ServiceHeader
         title={
-          <div className="flex items-center gap-2">
-            <Button
-              variant="ghost"
-              size="sm"
-              className="h-7 w-7 p-0"
-              onClick={handleBack}
-            >
-              <ArrowLeft className="h-4 w-4" />
-            </Button>
-            <span>{userName}</span>
-            <CopyableId id={user.$id} size="xs" />
-          </div>
+          <DetailResourceHeaderTitle
+            kind="user"
+            label={userName}
+            resourceId={user.$id}
+            projectId={projectId}
+            back={{
+              onClick: handleBack,
+              'aria-label': 'Back to users',
+            }}
+          />
         }
         tabs={tabs}
         activeTab={activeTab}

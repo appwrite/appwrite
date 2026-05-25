@@ -1,12 +1,12 @@
 import { useMemo, useState } from 'react'
 import { useParams, useLocation, useNavigate } from '@tanstack/react-router'
 import { cn } from '@/lib/utils'
-import { ArrowLeft, Loader2 } from 'lucide-react'
+import { Loader2 } from 'lucide-react'
 import { ServiceHeader, type Tab } from '../../shared/ServiceHeader'
 import { TeamOverview } from './Overview'
 import { TeamMembers } from './Members'
 import { useTeam } from '@/lib/react-query/hooks'
-import { CopyableId } from '@/components/global/shared/CopyableId'
+import { DetailResourceHeaderTitle } from '../../shared/ResourceTitleSwitcher'
 import { Button } from '@/components/ui/button'
 
 export function View() {
@@ -143,18 +143,16 @@ export function View() {
     <div className="flex flex-col">
       <ServiceHeader
         title={
-          <div className="flex items-center gap-2">
-            <Button
-              variant="ghost"
-              size="sm"
-              className="h-7 w-7 p-0"
-              onClick={handleBack}
-            >
-              <ArrowLeft className="h-4 w-4" />
-            </Button>
-            <span>{teamName}</span>
-            <CopyableId id={team.$id} size="xs" />
-          </div>
+          <DetailResourceHeaderTitle
+            kind="team"
+            label={teamName}
+            resourceId={team.$id}
+            projectId={projectId}
+            back={{
+              onClick: handleBack,
+              'aria-label': 'Back to teams',
+            }}
+          />
         }
         tabs={tabs}
         activeTab={activeTab}

@@ -1348,7 +1348,7 @@ export function Workspace({
                 dbLabels.containerPluralTitle
               )
             ) : (
-              <div className="flex items-center gap-2 min-w-0">
+              <div className="flex min-w-0 items-center gap-2">
                 <span className="truncate">{selectedTable!.name}</span>
                 <CopyableId
                   id={selectedTable!.$id}

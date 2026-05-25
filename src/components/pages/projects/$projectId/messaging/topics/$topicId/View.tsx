@@ -1,7 +1,6 @@
 import { useState, useMemo, useEffect, useRef } from 'react'
 import { useParams, useNavigate, useLocation } from '@tanstack/react-router'
 import {
-  ArrowLeft,
   Hash,
   Mail,
   Phone,
@@ -27,6 +26,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { subscriberLogsQueryOptions } from '@/lib/react-query/hooks/messaging'
 import { ServiceHeader, type Tab } from '../../../shared/ServiceHeader'
 import { CopyableId } from '@/components/global/shared/CopyableId'
+import { DetailResourceHeaderTitle } from '../../shared/ResourceTitleSwitcher'
 import { DateTooltip } from '@/components/global/shared/DateTooltip'
 import { EmptyState } from '@/components/global/shared/EmptyState'
 import { Pagination } from '@/components/global/shared/Pagination'
@@ -424,18 +424,16 @@ export function View({
     <div className="flex flex-col">
       <ServiceHeader
         title={
-          <div className="flex min-w-0 items-center gap-2">
-            <Button
-              variant="ghost"
-              size="sm"
-              className="h-7 w-7 p-0"
-              onClick={handleBack}
-            >
-              <ArrowLeft className="h-4 w-4" />
-            </Button>
-            <span className="truncate">{topicResolved.name}</span>
-            <CopyableId id={topicResolved.$id} size="xs" className="shrink-0" />
-          </div>
+          <DetailResourceHeaderTitle
+            kind="topic"
+            label={topicResolved.name}
+            resourceId={topicResolved.$id}
+            projectId={projectId}
+            back={{
+              onClick: handleBack,
+              'aria-label': 'Back to topics',
+            }}
+          />
         }
         tabs={tabs}
         activeTab={activeTab}
