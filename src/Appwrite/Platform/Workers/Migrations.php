@@ -198,15 +198,15 @@ class Migrations extends Action
         /** @var Database|null $projectDB */
         $projectDB = null;
         $useAppwriteApiSource = false;
-        if ($source === SourceAppwrite::getName() && empty($credentials['projectId'])) {
+        $isAppwriteSource = $source === SourceAppwrite::getName();
+        $isAppwriteToAppwrite = $isAppwriteSource
+            && $destination === DestinationAppwrite::getName();
+
+        if ($isAppwriteSource && empty($credentials['projectId'])) {
             throw new Exception(Exception::MIGRATION_SOURCE_PROJECT_ID_REQUIRED);
         }
 
-        if (! empty($credentials['projectId'])) {
-            $isAppwriteSource = $source === SourceAppwrite::getName();
-            $isAppwriteToAppwrite = $isAppwriteSource
-                && $destination === DestinationAppwrite::getName();
-
+        if ($isAppwriteSource) {
             $this->sourceProject = $this->dbForPlatform->getDocument('projects', $credentials['projectId']);
 
             // Same projectId may collide with an external Appwrite — trust the DB fast
@@ -242,7 +242,7 @@ class Migrations extends Action
             $destinationRegion = $this->project->getAttribute('region', 'default');
 
             $isLocalSource = !$this->sourceProject->isEmpty()
-                && (!$isAppwriteSource || $isLocalEndpoint)
+                && $isLocalEndpoint
                 && (!$isAppwriteToAppwrite || $sourceRegion === $destinationRegion);
 
             if ($isLocalSource) {
