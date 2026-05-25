@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "597066d71be48add0c649828d820a505",
+    "content-hash": "b092fffec11494aea10b0c823b7837b8",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -161,16 +161,16 @@
         },
         {
             "name": "appwrite/php-runtimes",
-            "version": "0.20.0",
+            "version": "0.20.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/appwrite/runtimes.git",
-                "reference": "7d9b7f4eef5c0a142a60907b06de2219d025c5c3"
+                "reference": "e9213dfe9fff1b67de77aa61dbcae5f4ca10b6d6"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/appwrite/runtimes/zipball/7d9b7f4eef5c0a142a60907b06de2219d025c5c3",
-                "reference": "7d9b7f4eef5c0a142a60907b06de2219d025c5c3",
+                "url": "https://api.github.com/repos/appwrite/runtimes/zipball/e9213dfe9fff1b67de77aa61dbcae5f4ca10b6d6",
+                "reference": "e9213dfe9fff1b67de77aa61dbcae5f4ca10b6d6",
                 "shasum": ""
             },
             "require": {
@@ -210,9 +210,9 @@
             ],
             "support": {
                 "issues": "https://github.com/appwrite/runtimes/issues",
-                "source": "https://github.com/appwrite/runtimes/tree/0.20.0"
+                "source": "https://github.com/appwrite/runtimes/tree/0.20.1"
             },
-            "time": "2026-05-01T07:47:07+00:00"
+            "time": "2026-05-24T03:00:39+00:00"
         },
         {
             "name": "brick/math",
@@ -3510,16 +3510,16 @@
         },
         {
             "name": "utopia-php/audit",
-            "version": "2.3.2",
+            "version": "2.4.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/audit.git",
-                "reference": "e7b4049fc2ee9be34bcc18771fa593db3b0e9fe3"
+                "reference": "eddd79d93f23ed2851c0df2b1e2e2dfb25ba06c6"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/audit/zipball/e7b4049fc2ee9be34bcc18771fa593db3b0e9fe3",
-                "reference": "e7b4049fc2ee9be34bcc18771fa593db3b0e9fe3",
+                "url": "https://api.github.com/repos/utopia-php/audit/zipball/eddd79d93f23ed2851c0df2b1e2e2dfb25ba06c6",
+                "reference": "eddd79d93f23ed2851c0df2b1e2e2dfb25ba06c6",
                 "shasum": ""
             },
             "require": {
@@ -3554,9 +3554,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/audit/issues",
-                "source": "https://github.com/utopia-php/audit/tree/2.3.2"
+                "source": "https://github.com/utopia-php/audit/tree/2.4.1"
             },
-            "time": "2026-05-14T04:00:37+00:00"
+            "time": "2026-05-20T06:25:45+00:00"
         },
         {
             "name": "utopia-php/auth",
@@ -4346,16 +4346,16 @@
         },
         {
             "name": "utopia-php/http",
-            "version": "2.0.0-rc1",
+            "version": "2.0.0-rc2",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/http.git",
-                "reference": "3e3b431d443844c6bf810120dee735f45880856f"
+                "reference": "17f3d5e966ada8a5c041717436f069f269aef2b3"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/http/zipball/3e3b431d443844c6bf810120dee735f45880856f",
-                "reference": "3e3b431d443844c6bf810120dee735f45880856f",
+                "url": "https://api.github.com/repos/utopia-php/http/zipball/17f3d5e966ada8a5c041717436f069f269aef2b3",
+                "reference": "17f3d5e966ada8a5c041717436f069f269aef2b3",
                 "shasum": ""
             },
             "require": {
@@ -4396,9 +4396,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/http/issues",
-                "source": "https://github.com/utopia-php/http/tree/2.0.0-rc1"
+                "source": "https://github.com/utopia-php/http/tree/2.0.0-rc2"
             },
-            "time": "2026-05-05T15:00:03+00:00"
+            "time": "2026-05-20T11:13:49+00:00"
         },
         {
             "name": "utopia-php/image",
