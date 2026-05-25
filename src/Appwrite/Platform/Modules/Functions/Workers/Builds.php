@@ -733,11 +733,8 @@ class Builds extends Action
                 );
 
                 $orchestratorBuildSubmitted = true;
-                Console::log('Orchestrator build submitted');
                 return;
             }
-
-            Console::log('Runtime creation started');
 
             Co::join([
                 Co\go(function () use ($executor, &$response, $project, $deployment, $source, $resource, $runtime, $vars, $command, $cpus, $memory, $timeout, &$err, $version, $outputDirectory, $span) {
@@ -1766,7 +1763,6 @@ class Builds extends Action
                 $deployment->setAttribute('adapter', $detection->getName());
                 $deployment->setAttribute('fallbackFile', $detection->getFallbackFile() ?? '');
 
-                Console::log('Adapter detected');
             } elseif ($adapter === 'ssr' && $detection->getName() === 'static') {
                 $logs .= 'Adapter mismatch. Detected: ' . $detection->getName() . ' does not match with the set adapter: ' . $adapter . "\n";
                 $deployment = $dbForProject->updateDocument('deployments', $deployment->getId(), new Document([
@@ -1861,8 +1857,6 @@ class Builds extends Action
                     'deploymentInternalId' => $deployment->getSequence(),
                 ]));
             }, $queries);
-
-            Console::log('Deployment activated');
         }
 
         $this->afterDeploymentSuccess($project, $deployment);
@@ -1936,8 +1930,6 @@ class Builds extends Action
                         'deploymentInternalId' => $deployment->getSequence(),
                     ]));
                 }, $queries);
-
-                Console::log('Preview rule created');
             }
         }
 
