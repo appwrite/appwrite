@@ -577,11 +577,21 @@ class Migrations extends Action
             }
 
             if ($publish) {
-                call_user_func($this->logError, $th, 'appwrite-worker', 'appwrite-queue-' . self::getName(), [
+                $extras = [
                     'migrationId' => $migration->getId(),
                     'source' => $migration->getAttribute('source') ?? '',
                     'destination' => $migration->getAttribute('destination') ?? '',
-                ]);
+                ];
+
+                // Include source identifiers for Appwrite sources to make Sentry events
+                // self-debuggable. Never include the apiKey or any other secret.
+                if ($migration->getAttribute('source') === SourceAppwrite::getName()) {
+                    $credentials = $migration->getAttribute('credentials', []) ?? [];
+                    $extras['sourceProjectId'] = $credentials['projectId'] ?? '';
+                    $extras['sourceEndpoint'] = $credentials['endpoint'] ?? '';
+                }
+
+                call_user_func($this->logError, $th, 'appwrite-worker', 'appwrite-queue-' . self::getName(), $extras);
             }
         } finally {
             try {
