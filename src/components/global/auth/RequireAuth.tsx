@@ -30,6 +30,11 @@ function isAuthPage(pathname: string): boolean {
   )
 }
 
+/** Console routes that work without sign-in; account is optional. */
+export function isOptionalAuthPage(pathname: string): boolean {
+  return pathname === '/init'
+}
+
 // Helper function to extract redirect from search params
 function extractRedirectFromSearch(
   search: string | URLSearchParams | undefined,
@@ -241,8 +246,7 @@ export function RequireAuth({
 
         // Handle 401 Unauthorized - redirect to sign-in with current location as redirect
         // But don't redirect if we're already on an auth page (prevents loops)
-        if (isAuthPage(location.pathname)) {
-          // Already on auth page, just throw the error without redirecting
+        if (isAuthPage(location.pathname) || isOptionalAuthPage(location.pathname)) {
           throw err
         }
 
@@ -295,7 +299,7 @@ export function RequireAuth({
   const navigateRef = useRef(navigate)
   navigateRef.current = navigate
   useEffect(() => {
-    if (!is401 || isAuthPage(location.pathname)) return
+    if (!is401 || isAuthPage(location.pathname) || isOptionalAuthPage(location.pathname)) return
     const redirectUrl = getRelativeRedirectUrl(location as unknown)
     if (redirectUrl && isValidRelativeRedirect(redirectUrl)) {
       navigateRef.current({ to: '/sign-in', search: { redirect: redirectUrl } })
@@ -383,8 +387,7 @@ export function useAuth(): AuthData {
 
         // Handle 401 Unauthorized - redirect to sign-in with current location as redirect
         // But don't redirect if we're already on an auth page (prevents loops)
-        if (isAuthPage(location.pathname)) {
-          // Already on auth page, just throw the error without redirecting
+        if (isAuthPage(location.pathname) || isOptionalAuthPage(location.pathname)) {
           throw err
         }
 

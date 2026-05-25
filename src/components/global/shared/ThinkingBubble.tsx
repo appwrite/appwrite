@@ -9,6 +9,14 @@ export type SphereColorMode =
   | 'amber'
   | 'cyan'
 
+export type SphereShapeMode =
+  | 'sphere'
+  | 'torus'
+  | 'disc'
+  | 'ring'
+  | 'cube'
+  | 'helix'
+
 export const SPHERE_SIZE_SCALE_DEFAULT = 1
 export const SPHERE_SIZE_SCALE_MIN = 0.125
 export const SPHERE_SIZE_SCALE_MAX = 2
@@ -43,6 +51,8 @@ type ThinkingBubbleProps = {
   interactive?: boolean
   /** Particle color palette */
   colorMode?: SphereColorMode
+  /** Particle layout shape */
+  shapeMode?: SphereShapeMode
   /** Explicit particle count; omit for size-based default */
   particleCount?: number | null
   /** Center within the parent layout box (default true) */
@@ -167,15 +177,142 @@ function pickParticleColor(palette: ColorPalette): Rgb {
   return mixRgb(palette.primary, palette.dark, 0.4 + Math.random() * 0.35)
 }
 
+function createParticleLayout(shapeMode: SphereShapeMode): Pick<
+  Particle,
+  'theta' | 'phi' | 'radiusFactor'
+> {
+  switch (shapeMode) {
+    case 'torus':
+      return {
+        theta: Math.random() * Math.PI * 2,
+        phi: Math.random() * Math.PI * 2,
+        radiusFactor: 1,
+      }
+    case 'disc':
+      return {
+        theta: Math.random() * Math.PI * 2,
+        phi: (Math.random() - 0.5) * 0.35,
+        radiusFactor: Math.sqrt(Math.random()),
+      }
+    case 'ring':
+      return {
+        theta: Math.random() * Math.PI * 2,
+        phi: (Math.random() - 0.5) * 0.4,
+        radiusFactor: Math.random(),
+      }
+    case 'cube':
+      return {
+        theta: Math.random() * 2 - 1,
+        phi: Math.random() * 2 - 1,
+        radiusFactor: Math.random() * 2 - 1,
+      }
+    case 'helix':
+      return {
+        theta: Math.random(),
+        phi: Math.random() * Math.PI * 2,
+        radiusFactor: 0.55 + Math.random() * 0.45,
+      }
+    case 'sphere':
+    default:
+      return {
+        theta: Math.random() * Math.PI * 2,
+        phi: Math.acos(2 * Math.random() - 1),
+        radiusFactor: Math.cbrt(Math.random()),
+      }
+  }
+}
+
+function particleLocalPosition(
+  particle: Particle,
+  shapeMode: SphereShapeMode,
+  radius: number,
+  jitter: number,
+): { x: number; y: number; z: number } {
+  const angle = particle.theta + jitter
+
+  switch (shapeMode) {
+    case 'torus': {
+      const major = radius * 0.58
+      const minor = radius * 0.26
+      const tube = minor * Math.cos(particle.phi)
+      return {
+        x: (major + tube) * Math.cos(angle),
+        y: (major + tube) * Math.sin(angle),
+        z: minor * Math.sin(particle.phi),
+      }
+    }
+    case 'disc': {
+      const r = radius * particle.radiusFactor
+      return {
+        x: r * Math.cos(angle),
+        y: r * Math.sin(angle),
+        z: radius * particle.phi * 0.35,
+      }
+    }
+    case 'ring': {
+      const inner = radius * 0.62
+      const outer = radius * 0.98
+      const r = inner + particle.radiusFactor * (outer - inner)
+      return {
+        x: r * Math.cos(angle),
+        y: r * Math.sin(angle),
+        z: radius * particle.phi * 0.3,
+      }
+    }
+    case 'cube':
+      return {
+        x: radius * particle.theta,
+        y: radius * particle.phi,
+        z: radius * particle.radiusFactor,
+      }
+    case 'helix': {
+      const turns = 2.75
+      const helixAngle = particle.theta * turns * Math.PI * 2
+      const core = radius * 0.34
+      const tube = radius * 0.11 * particle.radiusFactor
+      const radial = core + tube * Math.cos(particle.phi)
+      return {
+        x: radial * Math.cos(helixAngle),
+        y: (particle.theta * 2 - 1) * radius * 1.05,
+        z: radial * Math.sin(helixAngle) + tube * Math.sin(particle.phi) * 0.35,
+      }
+    }
+    case 'sphere':
+    default: {
+      const r = radius * particle.radiusFactor
+      return {
+        x: r * Math.sin(particle.phi) * Math.cos(angle),
+        y: r * Math.sin(particle.phi) * Math.sin(angle),
+        z: r * Math.cos(particle.phi),
+      }
+    }
+  }
+}
+
+function remapParticleLayouts(
+  particles: Particle[],
+  shapeMode: SphereShapeMode,
+) {
+  for (const particle of particles) {
+    const layout = createParticleLayout(shapeMode)
+    particle.theta = layout.theta
+    particle.phi = layout.phi
+    particle.radiusFactor = layout.radiusFactor
+  }
+}
+
 /** Uniform distribution throughout a solid sphere volume */
-function createParticles(count: number, colorMode: SphereColorMode): Particle[] {
+function createParticles(
+  count: number,
+  colorMode: SphereColorMode,
+  shapeMode: SphereShapeMode,
+): Particle[] {
   const palette = COLOR_PALETTES[colorMode]
   return Array.from({ length: count }, () => {
     const color = pickParticleColor(palette)
+    const layout = createParticleLayout(shapeMode)
     return {
-      theta: Math.random() * Math.PI * 2,
-      phi: Math.acos(2 * Math.random() - 1),
-      radiusFactor: Math.cbrt(Math.random()),
+      ...layout,
       brightness: 0.35 + Math.random() * 0.65,
       phase: Math.random() * Math.PI * 2,
       color,
@@ -188,6 +325,7 @@ function ensureParticlesUpTo(
   particles: Particle[],
   targetCount: number,
   colorMode: SphereColorMode,
+  shapeMode: SphereShapeMode,
 ) {
   const neededCount = Math.min(
     SPHERE_PARTICLE_COUNT_MAX,
@@ -199,9 +337,7 @@ function ensureParticlesUpTo(
   while (particles.length < neededCount) {
     const color = pickParticleColor(palette)
     particles.push({
-      theta: Math.random() * Math.PI * 2,
-      phi: Math.acos(2 * Math.random() - 1),
-      radiusFactor: Math.cbrt(Math.random()),
+      ...createParticleLayout(shapeMode),
       brightness: 0.35 + Math.random() * 0.65,
       phase: Math.random() * Math.PI * 2,
       color,
@@ -253,6 +389,7 @@ export const ThinkingBubble = memo(function ThinkingBubble({
   activityRef,
   interactive = true,
   colorMode = 'brand',
+  shapeMode = 'sphere',
   particleCount,
   centered = true,
 }: ThinkingBubbleProps) {
@@ -260,7 +397,7 @@ export const ThinkingBubble = memo(function ThinkingBubble({
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const initialParticleCount = resolveParticleCount(size, particleCount)
   const particlesRef = useRef<Particle[]>(
-    createParticles(initialParticleCount, colorMode),
+    createParticles(initialParticleCount, colorMode, shapeMode),
   )
   const frameRef = useRef<number | null>(null)
   const reducedMotionRef = useRef(false)
@@ -271,6 +408,7 @@ export const ThinkingBubble = memo(function ThinkingBubble({
   const targetSizeRef = useRef(size)
   const displaySizeRef = useRef(size)
   const colorModeRef = useRef(colorMode)
+  const shapeModeRef = useRef(shapeMode)
   const particleCountRef = useRef<number | null | undefined>(particleCount)
   const targetParticleCountRef = useRef(initialParticleCount)
   const displayParticleCountRef = useRef(initialParticleCount)
@@ -313,6 +451,7 @@ export const ThinkingBubble = memo(function ThinkingBubble({
       particlesRef.current,
       targetParticleCountRef.current,
       colorModeRef.current,
+      shapeModeRef.current,
     )
   }, [size])
 
@@ -326,6 +465,7 @@ export const ThinkingBubble = memo(function ThinkingBubble({
       particlesRef.current,
       targetParticleCountRef.current,
       colorModeRef.current,
+      shapeModeRef.current,
     )
   }, [particleCount])
 
@@ -336,6 +476,11 @@ export const ThinkingBubble = memo(function ThinkingBubble({
       particle.targetColor = pickParticleColor(palette)
     }
   }, [colorMode])
+
+  useEffect(() => {
+    shapeModeRef.current = shapeMode
+    remapParticleLayouts(particlesRef.current, shapeMode)
+  }, [shapeMode])
 
   useEffect(() => {
     reducedMotionRef.current = window.matchMedia(
@@ -466,6 +611,7 @@ export const ThinkingBubble = memo(function ThinkingBubble({
         particlesRef.current,
         Math.max(activeParticleCount, targetParticleCount),
         colorModeRef.current,
+        shapeModeRef.current,
       )
 
       const colorLerp = reducedMotionRef.current ? 1 : 1 - Math.exp(-8 * dt)
@@ -521,13 +667,13 @@ export const ThinkingBubble = memo(function ThinkingBubble({
           Math.sin(elapsed * 2.4 * motionScale + particle.phase) *
           sphereRadius *
           0.004
-        const radius = sphereRadius * particle.radiusFactor * pulse
-
-        const localX =
-          radius * Math.sin(particle.phi) * Math.cos(particle.theta + jitter)
-        const localY =
-          radius * Math.sin(particle.phi) * Math.sin(particle.theta + jitter)
-        const localZ = radius * Math.cos(particle.phi)
+        const radius = sphereRadius * pulse
+        const { x: localX, y: localY, z: localZ } = particleLocalPosition(
+          particle,
+          shapeModeRef.current,
+          radius,
+          jitter,
+        )
 
         const afterY = rotateY(localX, localY, localZ, rotY)
         const afterX = rotateX(afterY.x, afterY.y, afterY.z, rotX)

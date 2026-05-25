@@ -49,6 +49,7 @@ import {
   SPHERE_SIZE_SCALE_MAX,
   SPHERE_SIZE_SCALE_STEP,
   type SphereColorMode,
+  type SphereShapeMode,
 } from '@/components/global/shared/ThinkingBubble'
 import { Slider } from '@/components/ui/slider'
 import { Button } from '@/components/ui/button'
@@ -1382,6 +1383,18 @@ const SPHERE_COLOR_DEBUG_MODES: Array<{
   { id: 'cyan', label: 'Cyan' },
 ]
 
+const SPHERE_SHAPE_DEBUG_MODES: Array<{
+  id: SphereShapeMode
+  label: string
+}> = [
+  { id: 'sphere', label: 'Sphere' },
+  { id: 'torus', label: 'Torus' },
+  { id: 'disc', label: 'Disc' },
+  { id: 'ring', label: 'Ring' },
+  { id: 'cube', label: 'Cube' },
+  { id: 'helix', label: 'Helix' },
+]
+
 const SPHERE_BASE_SIZES = {
   empty: 220,
   thinking: 72,
@@ -1406,6 +1419,8 @@ function AssistantBubbleDebugControls({
   onSizeScaleDefault,
   colorMode,
   onColorModeChange,
+  shapeMode,
+  onShapeModeChange,
   particleCountOverride,
   autoParticleCount,
   onParticleCountChange,
@@ -1419,6 +1434,8 @@ function AssistantBubbleDebugControls({
   onSizeScaleDefault: () => void
   colorMode: SphereColorMode
   onColorModeChange: (mode: SphereColorMode) => void
+  shapeMode: SphereShapeMode
+  onShapeModeChange: (mode: SphereShapeMode) => void
   particleCountOverride: number | null
   autoParticleCount: number
   onParticleCountChange: (count: number) => void
@@ -1501,6 +1518,25 @@ function AssistantBubbleDebugControls({
         </div>
       </div>
       <div>
+        <p className="mb-1.5 text-center text-[10px] font-semibold uppercase tracking-wider text-purple-600/80 dark:text-purple-400/80">
+          Shape
+        </p>
+        <div className="flex flex-wrap justify-center gap-1.5">
+          {SPHERE_SHAPE_DEBUG_MODES.map(({ id, label }) => (
+            <Button
+              key={id}
+              type="button"
+              size="sm"
+              variant="outline"
+              className={debugControlButtonClass(shapeMode === id)}
+              onClick={() => onShapeModeChange(id)}
+            >
+              {label}
+            </Button>
+          ))}
+        </div>
+      </div>
+      <div>
         <div className="mb-1.5 flex items-center justify-between gap-2">
           <p className="text-[10px] font-semibold uppercase tracking-wider text-purple-600/80 dark:text-purple-400/80">
             Particles
@@ -1559,6 +1595,8 @@ export function AIChatPanel() {
     useState<number | null>(null)
   const [sphereColorMode, setSphereColorMode] =
     useState<SphereColorMode>('brand')
+  const [sphereShapeMode, setSphereShapeMode] =
+    useState<SphereShapeMode>('sphere')
   const [sphereParticleCountOverride, setSphereParticleCountOverride] =
     useState<number | null>(null)
   const effectiveSphereSizeScale =
@@ -1578,6 +1616,7 @@ export function AIChatPanel() {
     [effectiveSphereSizeScale, isDebugModeOpen],
   )
   const effectiveSphereColorMode = isDebugModeOpen ? sphereColorMode : 'brand'
+  const effectiveSphereShapeMode = isDebugModeOpen ? sphereShapeMode : 'sphere'
   const effectiveSphereParticleCount = isDebugModeOpen
     ? (sphereParticleCountOverride ?? undefined)
     : undefined
@@ -2467,6 +2506,7 @@ export function AIChatPanel() {
                   size={getSphereRenderSize(SPHERE_BASE_SIZES.empty)}
                   activityRef={bubbleActivityRef}
                   colorMode={effectiveSphereColorMode}
+                  shapeMode={effectiveSphereShapeMode}
                   particleCount={effectiveSphereParticleCount}
                   className="mb-4"
                 />
@@ -2488,6 +2528,8 @@ export function AIChatPanel() {
                       onSizeScaleDefault={() => setSphereSizeScaleOverride(null)}
                       colorMode={sphereColorMode}
                       onColorModeChange={setSphereColorMode}
+                      shapeMode={sphereShapeMode}
+                      onShapeModeChange={setSphereShapeMode}
                       particleCountOverride={sphereParticleCountOverride}
                       autoParticleCount={sphereAutoParticleCount}
                       onParticleCountChange={setSphereParticleCountOverride}
@@ -2568,6 +2610,7 @@ export function AIChatPanel() {
                         size={getSphereRenderSize(SPHERE_BASE_SIZES.thinking)}
                         activityRef={bubbleActivityRef}
                         colorMode={effectiveSphereColorMode}
+                        shapeMode={effectiveSphereShapeMode}
                         particleCount={effectiveSphereParticleCount}
                         centered={false}
                       />
@@ -2592,6 +2635,8 @@ export function AIChatPanel() {
                   onSizeScaleDefault={() => setSphereSizeScaleOverride(null)}
                   colorMode={sphereColorMode}
                   onColorModeChange={setSphereColorMode}
+                  shapeMode={sphereShapeMode}
+                  onShapeModeChange={setSphereShapeMode}
                   particleCountOverride={sphereParticleCountOverride}
                   autoParticleCount={sphereAutoParticleCount}
                   onParticleCountChange={setSphereParticleCountOverride}
@@ -2793,6 +2838,7 @@ export function AIChatPanel() {
                   size={getSphereRenderSize(SPHERE_BASE_SIZES.composer)}
                   activityRef={bubbleActivityRef}
                   colorMode={effectiveSphereColorMode}
+                  shapeMode={effectiveSphereShapeMode}
                   particleCount={effectiveSphereParticleCount}
                   centered={false}
                   className="mb-0.5 shrink-0"

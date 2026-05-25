@@ -26,6 +26,14 @@ interface ConsoleLayoutProps {
     onMenuClick: () => void
   }
 
+  /** Optional left sidebar before main content (e.g. init online participants panel) */
+  leftSidebar?: {
+    mobileOpen: boolean
+    onMobileClose: () => void
+    onMenuClick: () => void
+    content: ReactNode
+  }
+
   /** ConsoleHeader props */
   header?: {
     projectId?: string
@@ -87,6 +95,7 @@ interface ConsoleLayoutProps {
 export function ConsoleLayout({
   children,
   sidebar,
+  leftSidebar,
   header,
   headerBanner,
   showFooter = true,
@@ -94,9 +103,12 @@ export function ConsoleLayout({
   containerClassName,
 }: ConsoleLayoutProps) {
   const hasSidebar = !!sidebar
+  const hasLeftSidebar = !!leftSidebar
   const layoutContainerClass =
     containerClassName ||
-    (hasSidebar ? 'project-layout-container' : 'org-layout-container')
+    (hasSidebar || hasLeftSidebar
+      ? 'project-layout-container'
+      : 'org-layout-container')
 
   const [overrides, setOverrides] = useState(loadDebugOverrides)
   useEffect(() => {
@@ -117,7 +129,7 @@ export function ConsoleLayout({
         <ConsoleImpersonationBanner />
         {headerBanner}
         <ConsoleHeader
-          onMenuClick={sidebar?.onMenuClick}
+          onMenuClick={sidebar?.onMenuClick ?? leftSidebar?.onMenuClick}
           projectId={header?.projectId}
           onCommandCenterOpen={header?.onCommandCenterOpen}
           onCreateOrganization={header?.onCreateOrganization}
@@ -128,10 +140,13 @@ export function ConsoleLayout({
       <SkipToContent />
 
       {/* Mobile sidebar overlay */}
-      {sidebar?.mobileOpen && (
+      {(sidebar?.mobileOpen || leftSidebar?.mobileOpen) && (
         <div
           className="fixed inset-0 z-[120] h-[100dvh] max-h-[100dvh] w-full bg-black/60"
-          onClick={sidebar.onMobileClose}
+          onClick={() => {
+            if (sidebar?.mobileOpen) sidebar.onMobileClose()
+            else leftSidebar?.onMobileClose()
+          }}
         />
       )}
 
@@ -146,6 +161,8 @@ export function ConsoleLayout({
             onMobileClose={sidebar.onMobileClose}
           />
         )}
+
+        {leftSidebar?.content}
 
         {/* Main content area */}
         <main

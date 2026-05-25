@@ -1,0 +1,340 @@
+import {
+  FileKey,
+  Image,
+  Key,
+  Megaphone,
+  Smartphone,
+} from 'lucide-react'
+import type { LaunchEventDay, LaunchEventScheduleItem } from './types'
+
+export const INIT_MAY_2026_DAYS: LaunchEventDay[] = [
+  {
+    day: 1,
+    dateLabel: 'MAY 19',
+    weekdayLabel: 'MONDAY, MAY 19',
+    title: 'Keynote',
+    description: 'Announcing the new Appwrite.',
+    longDescription:
+      'Join us for the opening keynote where we unveil the next chapter of Appwrite — new products, a refreshed platform experience, and the roadmap for the rest of Init week.',
+    icon: Megaphone,
+    isLive: true,
+    sessionCount: 2,
+    announcementVideo: {
+      id: 'day1-announcement',
+      label: 'Announcement video',
+      href: 'https://www.youtube.com/appwrite',
+    },
+    resources: [
+      {
+        id: 'day1-blog',
+        typeLabel: 'Blog',
+        title: 'Announcing the new Appwrite',
+        href: 'https://appwrite.io/blog',
+        actionLabel: 'Read article',
+      },
+      {
+        id: 'day1-docs',
+        typeLabel: 'Docs',
+        title: 'Init week overview',
+        href: 'https://appwrite.io/docs',
+        actionLabel: 'Visit docs',
+      },
+    ],
+    footerVideos: [
+      {
+        id: 'day1-demo',
+        label: 'Product demo',
+        href: 'https://www.youtube.com/appwrite',
+      },
+      {
+        id: 'day1-live',
+        label: 'YouTube live',
+        href: 'https://www.youtube.com/appwrite',
+      },
+    ],
+  },
+  {
+    day: 2,
+    dateLabel: 'MAY 20',
+    weekdayLabel: 'TUESDAY, MAY 20',
+    title: 'Flutter Web',
+    description: 'Deploy Flutter Web apps with zero config.',
+    longDescription:
+      'Ship Flutter Web to Appwrite Sites with zero configuration. Learn how teams deploy production apps with custom domains, preview URLs, and automatic builds from Git.',
+    icon: Smartphone,
+    sessionCount: 1,
+    announcementVideo: {
+      id: 'day2-announcement',
+      label: 'Announcement video',
+      href: 'https://www.youtube.com/appwrite',
+    },
+    resources: [
+      {
+        id: 'day2-blog',
+        typeLabel: 'Blog',
+        title: 'Flutter Web on Appwrite Sites',
+        href: 'https://appwrite.io/blog',
+        actionLabel: 'Read article',
+      },
+      {
+        id: 'day2-docs',
+        typeLabel: 'Docs',
+        title: 'Deploy Flutter Web',
+        href: 'https://appwrite.io/docs/products/sites',
+        actionLabel: 'Visit docs',
+      },
+    ],
+    footerVideos: [
+      {
+        id: 'day2-demo',
+        label: 'Product demo',
+        href: 'https://www.youtube.com/appwrite',
+      },
+      {
+        id: 'day2-live',
+        label: 'YouTube live',
+        href: 'https://www.youtube.com/appwrite',
+      },
+    ],
+  },
+  {
+    day: 3,
+    dateLabel: 'MAY 21',
+    weekdayLabel: 'WEDNESDAY, MAY 21',
+    title: 'Dev Keys',
+    description: 'Secure API keys for local development.',
+    longDescription:
+      'Dev Keys give developers scoped, rotatable credentials for local environments — without exposing production secrets. See how to create, audit, and revoke keys from the console.',
+    icon: Key,
+    sessionCount: 2,
+    announcementVideo: {
+      id: 'day3-announcement',
+      label: 'Announcement video',
+      href: 'https://www.youtube.com/appwrite',
+    },
+    resources: [
+      {
+        id: 'day3-blog',
+        typeLabel: 'Blog',
+        title: 'Introducing Dev Keys',
+        href: 'https://appwrite.io/blog',
+        actionLabel: 'Read article',
+      },
+      {
+        id: 'day3-docs',
+        typeLabel: 'Docs',
+        title: 'Dev Keys reference',
+        href: 'https://appwrite.io/docs',
+        actionLabel: 'Visit docs',
+      },
+    ],
+    footerVideos: [
+      {
+        id: 'day3-demo',
+        label: 'Product demo',
+        href: 'https://www.youtube.com/appwrite',
+      },
+      {
+        id: 'day3-live',
+        label: 'YouTube live',
+        href: 'https://www.youtube.com/appwrite',
+      },
+    ],
+  },
+  {
+    day: 4,
+    dateLabel: 'MAY 22',
+    weekdayLabel: 'THURSDAY, MAY 22',
+    title: 'Image Formats',
+    description: 'Next-gen image processing and delivery.',
+    longDescription:
+      'Modern image formats, on-the-fly transforms, and faster delivery through Appwrite Storage. Build media-heavy apps without managing your own image pipeline.',
+    icon: Image,
+    sessionCount: 1,
+    announcementVideo: {
+      id: 'day4-announcement',
+      label: 'Announcement video',
+      href: 'https://www.youtube.com/appwrite',
+    },
+    resources: [
+      {
+        id: 'day4-blog',
+        typeLabel: 'Blog',
+        title: 'Next-gen image processing',
+        href: 'https://appwrite.io/blog',
+        actionLabel: 'Read article',
+      },
+      {
+        id: 'day4-docs',
+        typeLabel: 'Docs',
+        title: 'Image transformations',
+        href: 'https://appwrite.io/docs/products/storage',
+        actionLabel: 'Visit docs',
+      },
+    ],
+    footerVideos: [
+      {
+        id: 'day4-demo',
+        label: 'Product demo',
+        href: 'https://www.youtube.com/appwrite',
+      },
+      {
+        id: 'day4-live',
+        label: 'YouTube live',
+        href: 'https://www.youtube.com/appwrite',
+      },
+    ],
+  },
+  {
+    day: 5,
+    dateLabel: 'MAY 23',
+    weekdayLabel: 'FRIDAY, MAY 23',
+    title: 'File Tokens',
+    description: 'Temporary, scoped access to storage files.',
+    longDescription:
+      'File Tokens provide time-limited, scoped URLs for secure file sharing. Perfect for downloads, previews, and partner integrations without opening your buckets publicly.',
+    icon: FileKey,
+    sessionCount: 2,
+    announcementVideo: {
+      id: 'day5-announcement',
+      label: 'Announcement video',
+      href: 'https://www.youtube.com/appwrite',
+    },
+    resources: [
+      {
+        id: 'day5-blog',
+        typeLabel: 'Blog',
+        title: 'Secure file sharing with File Tokens',
+        href: 'https://appwrite.io/blog',
+        actionLabel: 'Read article',
+      },
+      {
+        id: 'day5-docs',
+        typeLabel: 'Docs',
+        title: 'File Tokens guide',
+        href: 'https://appwrite.io/docs/products/storage',
+        actionLabel: 'Visit docs',
+      },
+    ],
+    footerVideos: [
+      {
+        id: 'day5-demo',
+        label: 'Product demo',
+        href: 'https://www.youtube.com/appwrite',
+      },
+      {
+        id: 'day5-live',
+        label: 'YouTube live',
+        href: 'https://www.youtube.com/appwrite',
+      },
+    ],
+  },
+]
+
+export const INIT_MAY_2026_SCHEDULE: LaunchEventScheduleItem[] = [
+  {
+    id: 'sched-keynote',
+    day: 1,
+    platform: 'youtube',
+    title: 'Product launch keynote',
+    timeLabel: 'Live now',
+    isLive: true,
+    href: 'https://www.youtube.com/appwrite',
+  },
+  {
+    id: 'sched-discord-kickoff',
+    day: 1,
+    platform: 'discord',
+    title: 'Init kickoff lounge',
+    timeLabel: '11:00 AM',
+    href: 'https://appwrite.io/discord',
+  },
+  {
+    id: 'sched-reddit-ama',
+    day: 1,
+    platform: 'reddit',
+    title: 'r/appwrite launch AMA',
+    timeLabel: '2:00 PM',
+    href: 'https://reddit.com/r/appwrite',
+  },
+  {
+    id: 'sched-yt-flutter',
+    day: 2,
+    platform: 'youtube',
+    title: 'Flutter Web deep dive',
+    timeLabel: '10:00 AM',
+    href: 'https://www.youtube.com/appwrite',
+  },
+  {
+    id: 'sched-discord-flutter',
+    day: 2,
+    platform: 'discord',
+    title: 'Flutter office hours',
+    timeLabel: '3:00 PM',
+    href: 'https://appwrite.io/discord',
+  },
+  {
+    id: 'sched-yt-devkeys',
+    day: 3,
+    platform: 'youtube',
+    title: 'Dev Keys walkthrough',
+    timeLabel: '10:00 AM',
+    href: 'https://www.youtube.com/appwrite',
+  },
+  {
+    id: 'sched-discord-devkeys',
+    day: 3,
+    platform: 'discord',
+    title: 'Dev Keys Q&A',
+    timeLabel: '4:00 PM',
+    href: 'https://appwrite.io/discord',
+  },
+  {
+    id: 'sched-reddit-devkeys',
+    day: 3,
+    platform: 'reddit',
+    title: 'Dev Keys feedback thread',
+    timeLabel: '6:00 PM',
+    href: 'https://reddit.com/r/appwrite',
+  },
+  {
+    id: 'sched-yt-images',
+    day: 4,
+    platform: 'youtube',
+    title: 'Image formats launch stream',
+    timeLabel: '10:00 AM',
+    href: 'https://www.youtube.com/appwrite',
+  },
+  {
+    id: 'sched-discord-images',
+    day: 4,
+    platform: 'discord',
+    title: 'Storage community hangout',
+    timeLabel: '2:00 PM',
+    href: 'https://appwrite.io/discord',
+  },
+  {
+    id: 'sched-yt-tokens',
+    day: 5,
+    platform: 'youtube',
+    title: 'File Tokens launch stream',
+    timeLabel: '10:00 AM',
+    href: 'https://www.youtube.com/appwrite',
+  },
+  {
+    id: 'sched-discord-closing',
+    day: 5,
+    platform: 'discord',
+    title: 'Init closing party',
+    timeLabel: '5:00 PM',
+    href: 'https://appwrite.io/discord',
+  },
+  {
+    id: 'sched-reddit-recap',
+    day: 5,
+    platform: 'reddit',
+    title: 'Init week recap discussion',
+    timeLabel: '7:00 PM',
+    href: 'https://reddit.com/r/appwrite',
+  },
+]

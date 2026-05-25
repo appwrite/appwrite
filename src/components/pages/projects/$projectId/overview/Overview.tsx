@@ -964,11 +964,17 @@ export function View({ projectId, initialData }: ViewProps) {
                       {integration.icon}
                     </div>
                     <div className="min-w-0 flex-1">
-                      <p className="text-[14px] font-medium text-foreground">
+                      <p
+                        className="truncate text-[14px] font-medium text-foreground"
+                        title={integration.name}
+                      >
                         {integration.name}
                       </p>
                       {integration.identifier && (
-                        <p className="text-[12px] text-muted-foreground">
+                        <p
+                          className="truncate text-[12px] text-muted-foreground"
+                          title={integration.identifier}
+                        >
                           {integration.identifier}
                         </p>
                       )}

@@ -1,0 +1,287 @@
+import {
+  Gift,
+  MessageCircle,
+  Ticket,
+} from 'lucide-react'
+import {
+  INIT_MAY_2026_DAYS,
+  INIT_MAY_2026_SCHEDULE,
+} from './day-details'
+import type { LaunchEvent, LaunchEventStatus } from './types'
+
+/** Add new launch-week events here; the page resolves the active one automatically. */
+export const LAUNCH_EVENTS: LaunchEvent[] = [
+  {
+    id: 'init-may-2026',
+    slug: 'init-may-2026',
+    name: 'init',
+    dateRangeLabel: 'MAY 19 – 23',
+    headline: 'Init is happening May 19 – 23',
+    description:
+      'Init is happening May 19 – 23. A week of exciting product launches, live sessions, and community events. Five days of launches, demos, and surprises.',
+    startDate: '2026-05-19',
+    endDate: '2026-05-23',
+    status: 'active',
+    featured: true,
+    primaryCta: { label: 'View event', href: 'https://appwrite.io/init' },
+    secondaryCta: { label: 'Claim your ticket', href: 'https://appwrite.io/init/ticket' },
+    liveBanner: {
+      title: 'Product launch keynote',
+      href: 'https://appwrite.io/init/keynote',
+    },
+    onlineCount: 312,
+    othersOnlineCount: 289,
+    days: INIT_MAY_2026_DAYS,
+    schedule: INIT_MAY_2026_SCHEDULE,
+    onlineUsers: [
+      {
+        id: '1',
+        name: 'Sarah Chen',
+        activity: 'Watching keynote',
+        isLive: true,
+      },
+      {
+        id: '2',
+        name: 'Marcus Johnson',
+        activity: 'Reading docs',
+      },
+      {
+        id: '3',
+        name: 'Elena Rodriguez',
+        activity: 'In Q&A',
+        isLive: true,
+      },
+      {
+        id: '4',
+        name: 'James Park',
+        activity: 'Exploring Sites',
+      },
+      {
+        id: '5',
+        name: 'Aisha Patel',
+        activity: 'Watching keynote',
+        isLive: true,
+      },
+      {
+        id: '6',
+        name: 'Tomás Müller',
+        activity: 'Building a demo',
+      },
+      {
+        id: '7',
+        name: 'Yuki Tanaka',
+        activity: 'In Discord lounge',
+      },
+      {
+        id: '8',
+        name: 'Priya Sharma',
+        activity: 'Reviewing Functions',
+        isLive: true,
+      },
+      {
+        id: '9',
+        name: 'Lucas Bernard',
+        activity: 'Browsing schedule',
+      },
+      {
+        id: '10',
+        name: 'Fatima Al-Hassan',
+        activity: 'Watching keynote',
+      },
+      {
+        id: '11',
+        name: 'Noah Williams',
+        activity: 'Testing Storage uploads',
+      },
+      {
+        id: '12',
+        name: 'Sofia Andersson',
+        activity: 'In community chat',
+      },
+      {
+        id: '13',
+        name: 'Daniel Okonkwo',
+        activity: 'Exploring Databases',
+      },
+      {
+        id: '14',
+        name: 'Emily Foster',
+        activity: 'Watching keynote',
+        isLive: true,
+      },
+      {
+        id: '15',
+        name: 'Rafael Costa',
+        activity: 'Reading release notes',
+      },
+    ],
+    recentlyOnlineUsers: [
+      {
+        id: 'r1',
+        name: 'Hannah Kim',
+        activity: 'Left 2m ago',
+      },
+      {
+        id: 'r2',
+        name: 'Oliver Schmidt',
+        activity: 'Left 8m ago',
+      },
+      {
+        id: 'r3',
+        name: 'Maya Thompson',
+        activity: 'Left 15m ago',
+      },
+      {
+        id: 'r4',
+        name: 'Ibrahim Saleh',
+        activity: 'Left 22m ago',
+      },
+      {
+        id: 'r5',
+        name: 'Chloe Martin',
+        activity: 'Left 34m ago',
+      },
+      {
+        id: 'r6',
+        name: 'Viktor Petrov',
+        activity: 'Left 41m ago',
+      },
+      {
+        id: 'r7',
+        name: 'Grace Liu',
+        activity: 'Left 52m ago',
+      },
+      {
+        id: 'r8',
+        name: 'Amir Hassan',
+        activity: 'Left 1h ago',
+      },
+    ],
+    liveActivities: [
+      {
+        id: 'keynote',
+        title: 'Product launch keynote',
+        statusLabel: 'Live now',
+        status: 'live',
+      },
+      {
+        id: 'flutter',
+        title: 'Flutter Web deep dive',
+        statusLabel: 'Starting in 15m',
+        status: 'upcoming',
+      },
+      {
+        id: 'dev-keys',
+        title: 'Dev Keys Q&A',
+        statusLabel: 'Starting in 1h',
+        status: 'scheduled',
+      },
+    ],
+    getInvolved: [
+      {
+        id: 'ticket',
+        title: 'Claim your ticket',
+        description: 'Get access and unlock exclusive swag.',
+        icon: Ticket,
+        href: 'https://appwrite.io/init/ticket',
+      },
+      {
+        id: 'community',
+        title: 'Join the conversation',
+        description: 'Share feedback and connect with the community.',
+        icon: MessageCircle,
+        href: 'https://appwrite.io/discord',
+      },
+      {
+        id: 'swag',
+        title: 'Earn launch rewards',
+        description: 'Complete challenges during the week to win prizes.',
+        icon: Gift,
+        href: 'https://appwrite.io/init/rewards',
+      },
+    ],
+  },
+  {
+    id: 'init-sep-2026',
+    slug: 'init-sep-2026',
+    name: 'init',
+    dateRangeLabel: 'SEP 15 – 19',
+    headline: 'Init returns Sep 15 – 19',
+    description:
+      'Init returns Sep 15 – 19. Another week of launches, workshops, and community celebrations.',
+    startDate: '2026-09-15',
+    endDate: '2026-09-19',
+    status: 'upcoming',
+    primaryCta: { label: 'Save the date', href: 'https://appwrite.io/init' },
+    onlineCount: 0,
+    othersOnlineCount: 0,
+    days: [],
+    schedule: [],
+    onlineUsers: [],
+    recentlyOnlineUsers: [],
+    liveActivities: [],
+    getInvolved: [
+      {
+        id: 'notify',
+        title: 'Get notified',
+        description: 'Be the first to know when registration opens.',
+        icon: Ticket,
+        href: 'https://appwrite.io/init',
+      },
+    ],
+  },
+]
+
+function parseDateOnly(isoDate: string): Date {
+  const [year, month, day] = isoDate.split('-').map(Number)
+  return new Date(year, month - 1, day)
+}
+
+function deriveStatus(event: LaunchEvent, now = new Date()): LaunchEventStatus {
+  if (event.status !== 'upcoming' && event.status !== 'past') {
+    const start = parseDateOnly(event.startDate)
+    const end = parseDateOnly(event.endDate)
+    end.setHours(23, 59, 59, 999)
+
+    if (now < start) return 'upcoming'
+    if (now > end) return 'past'
+    return 'active'
+  }
+  return event.status
+}
+
+/** Prefer a featured event, then in-range dates, then next upcoming. */
+export function getActiveLaunchEvent(now = new Date()): LaunchEvent | undefined {
+  const featured = LAUNCH_EVENTS.find((event) => event.featured)
+  if (featured) {
+    return { ...featured, status: deriveStatus(featured, now) }
+  }
+
+  const withDerivedStatus = LAUNCH_EVENTS.map((event) => ({
+    ...event,
+    status: deriveStatus(event, now),
+  }))
+
+  const active = withDerivedStatus.find((event) => event.status === 'active')
+  if (active) return active
+
+  const upcoming = withDerivedStatus
+    .filter((event) => event.status === 'upcoming')
+    .sort(
+      (a, b) =>
+        parseDateOnly(a.startDate).getTime() - parseDateOnly(b.startDate).getTime(),
+    )
+  if (upcoming[0]) return upcoming[0]
+
+  const past = withDerivedStatus
+    .filter((event) => event.status === 'past')
+    .sort(
+      (a, b) =>
+        parseDateOnly(b.endDate).getTime() - parseDateOnly(a.endDate).getTime(),
+    )
+  return past[0]
+}
+
+export function getLaunchEventBySlug(slug: string): LaunchEvent | undefined {
+  return LAUNCH_EVENTS.find((event) => event.slug === slug)
+}

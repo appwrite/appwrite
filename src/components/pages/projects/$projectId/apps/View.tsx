@@ -207,11 +207,17 @@ export function View({ initialData }: ViewProps = {}) {
                       />
                     </div>
                     <div className="min-w-0 flex-1">
-                      <p className="text-[14px] font-medium text-foreground">
+                      <p
+                        className="truncate text-[14px] font-medium text-foreground"
+                        title={displayName}
+                      >
                         {displayName}
                       </p>
                       {identifier && (
-                        <p className="text-[12px] text-muted-foreground">
+                        <p
+                          className="truncate text-[12px] text-muted-foreground"
+                          title={identifier}
+                        >
                           {identifier}
                         </p>
                       )}

@@ -27,7 +27,7 @@ import {
   ArrowUpCircle,
   ArrowLeft,
 } from 'lucide-react'
-import { useAuth } from '@/components/global/auth/RequireAuth'
+import { useAuth, isOptionalAuthPage } from '@/components/global/auth/RequireAuth'
 import { ProjectSelector } from '@/components/pages/projects/$projectId/shared/ProjectSelector'
 import { InitialsAvatar } from '@/components/global/shared/Avatar'
 import { useLocation, useNavigate, useParams } from '@tanstack/react-router'
@@ -93,7 +93,7 @@ export function ConsoleHeader({
   const { openCommandCenter: contextOpenCommandCenter } =
     useKeyboardShortcutsContext()
   const { toggleChat } = useAIChat()
-  const { account, signOut } = useAuth()
+  const { account, signOut, isAuthenticated, isLoading } = useAuth()
   const location = useLocation()
   const navigate = useNavigate()
   const params = useParams({ strict: false })
@@ -178,6 +178,9 @@ export function ConsoleHeader({
   const hasSidebar = !isOrgOverview
   const isAccountScope = location.pathname.startsWith('/account')
   const logoColumnWidth = 60
+  const showGuestHeader =
+    isOptionalAuthPage(location.pathname) && !isLoading && !isAuthenticated
+  const authRedirect = location.pathname
 
   return (
     <div className="@container w-full overflow-visible">
@@ -191,14 +194,16 @@ export function ConsoleHeader({
         {/* Left: Menu + Logo (+ nav border when project) + Project Selector */}
         <div className="flex min-w-0 flex-1 items-center gap-1.5 overflow-visible @[640px]:gap-2">
           {/* Mobile menu button - only show when in project context and sidebar is hidden */}
-          {!isOrgOverview && (
+          {onMenuClick ? (
             <button
+              type="button"
               onClick={onMenuClick}
               className="flex h-8 w-8 shrink-0 cursor-pointer items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-accent hover:text-foreground @[1024px]:hidden"
+              aria-label="Open navigation"
             >
               <Menu className="h-5 w-5" />
             </button>
-          )}
+          ) : null}
 
           {/* Logo - 60px column matches collapsed nav; never shifts; optional spacer + border continues from nav */}
           {(() => {
@@ -615,6 +620,21 @@ export function ConsoleHeader({
 
         {/* Right: Actions */}
         <div className="flex shrink-0 items-center gap-1 @[640px]:gap-2 min-w-0">
+          {showGuestHeader ? (
+            <>
+              <Button asChild variant="outline" size="sm" className="h-9 text-[13px]">
+                <Link to="/sign-in" search={{ redirect: authRedirect }}>
+                  Sign in
+                </Link>
+              </Button>
+              <Button asChild size="sm" variant="brandCta" className="h-9 text-[13px]">
+                <Link to="/sign-up" search={{ redirect: authRedirect }}>
+                  Sign up
+                </Link>
+              </Button>
+            </>
+          ) : (
+            <>
           {/* Search - hidden on small containers or when hideSearch (e.g. native app bar) */}
           {!hideSearch && (
             <>
@@ -865,6 +885,8 @@ export function ConsoleHeader({
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
+            </>
+          )}
         </div>
       </header>
     </div>

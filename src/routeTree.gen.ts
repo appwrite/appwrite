@@ -14,6 +14,7 @@ import { Route as ProtectedRouteImport } from './routes/_protected'
 import { Route as AuthRouteImport } from './routes/_auth'
 import { Route as PublicIndexRouteImport } from './routes/_public/index'
 import { Route as PublicResetRouteImport } from './routes/_public/reset'
+import { Route as PublicInitRouteImport } from './routes/_public/init'
 import { Route as PublicCompsRouteImport } from './routes/_public/comps'
 import { Route as PublicBlocksRouteImport } from './routes/_public/blocks'
 import { Route as PublicAccountRouteImport } from './routes/_public/account'
@@ -248,6 +249,11 @@ const PublicIndexRoute = PublicIndexRouteImport.update({
 const PublicResetRoute = PublicResetRouteImport.update({
   id: '/reset',
   path: '/reset',
+  getParentRoute: () => PublicRoute,
+} as any)
+const PublicInitRoute = PublicInitRouteImport.update({
+  id: '/init',
+  path: '/init',
   getParentRoute: () => PublicRoute,
 } as any)
 const PublicCompsRoute = PublicCompsRouteImport.update({
@@ -1651,6 +1657,7 @@ export interface FileRoutesByFullPath {
   '/account': typeof PublicAccountRouteWithChildren
   '/blocks': typeof PublicBlocksRoute
   '/comps': typeof PublicCompsRoute
+  '/init': typeof PublicInitRoute
   '/reset': typeof PublicResetRoute
   '/': typeof PublicIndexRoute
   '/account/$tab': typeof PublicAccountTabRoute
@@ -1868,6 +1875,7 @@ export interface FileRoutesByTo {
   '/account': typeof PublicAccountRouteWithChildren
   '/blocks': typeof PublicBlocksRoute
   '/comps': typeof PublicCompsRoute
+  '/init': typeof PublicInitRoute
   '/reset': typeof PublicResetRoute
   '/': typeof PublicIndexRoute
   '/account/$tab': typeof PublicAccountTabRoute
@@ -2058,6 +2066,7 @@ export interface FileRoutesById {
   '/_public/account': typeof PublicAccountRouteWithChildren
   '/_public/blocks': typeof PublicBlocksRoute
   '/_public/comps': typeof PublicCompsRoute
+  '/_public/init': typeof PublicInitRoute
   '/_public/reset': typeof PublicResetRoute
   '/_public/': typeof PublicIndexRoute
   '/_public/account/$tab': typeof PublicAccountTabRoute
@@ -2277,6 +2286,7 @@ export interface FileRouteTypes {
     | '/account'
     | '/blocks'
     | '/comps'
+    | '/init'
     | '/reset'
     | '/'
     | '/account/$tab'
@@ -2494,6 +2504,7 @@ export interface FileRouteTypes {
     | '/account'
     | '/blocks'
     | '/comps'
+    | '/init'
     | '/reset'
     | '/'
     | '/account/$tab'
@@ -2683,6 +2694,7 @@ export interface FileRouteTypes {
     | '/_public/account'
     | '/_public/blocks'
     | '/_public/comps'
+    | '/_public/init'
     | '/_public/reset'
     | '/_public/'
     | '/_public/account/$tab'
@@ -2930,6 +2942,13 @@ declare module '@tanstack/react-router' {
       path: '/reset'
       fullPath: '/reset'
       preLoaderRoute: typeof PublicResetRouteImport
+      parentRoute: typeof PublicRoute
+    }
+    '/_public/init': {
+      id: '/_public/init'
+      path: '/init'
+      fullPath: '/init'
+      preLoaderRoute: typeof PublicInitRouteImport
       parentRoute: typeof PublicRoute
     }
     '/_public/comps': {
@@ -5534,6 +5553,7 @@ interface PublicRouteChildren {
   PublicAccountRoute: typeof PublicAccountRouteWithChildren
   PublicBlocksRoute: typeof PublicBlocksRoute
   PublicCompsRoute: typeof PublicCompsRoute
+  PublicInitRoute: typeof PublicInitRoute
   PublicResetRoute: typeof PublicResetRoute
   PublicIndexRoute: typeof PublicIndexRoute
   PublicDebugErrorPreviewRoute: typeof PublicDebugErrorPreviewRoute
@@ -5545,6 +5565,7 @@ const PublicRouteChildren: PublicRouteChildren = {
   PublicAccountRoute: PublicAccountRouteWithChildren,
   PublicBlocksRoute: PublicBlocksRoute,
   PublicCompsRoute: PublicCompsRoute,
+  PublicInitRoute: PublicInitRoute,
   PublicResetRoute: PublicResetRoute,
   PublicIndexRoute: PublicIndexRoute,
   PublicDebugErrorPreviewRoute: PublicDebugErrorPreviewRoute,
