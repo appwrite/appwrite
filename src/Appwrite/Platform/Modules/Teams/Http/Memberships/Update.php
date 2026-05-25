@@ -84,7 +84,7 @@ class Update extends Action
         }
 
         $isPrivilegedUser = $user->isPrivileged($authorization->getRoles());
-        $isAppUser = $user->isApp($authorization->getRoles());
+        $isAppUser = $user->isKey($authorization->getRoles());
         $isOwner = $authorization->hasRole('team:' . $team->getId() . '/owner');
 
         if ($project->getId() === 'console') {

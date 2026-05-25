@@ -179,11 +179,11 @@ class UserTest extends TestCase
         $this->assertEquals(true, $user->isPrivileged([User::ROLE_ADMIN]));
         $this->assertEquals(true, $user->isPrivileged([User::ROLE_DEVELOPER]));
         $this->assertEquals(true, $user->isPrivileged([User::ROLE_OWNER]));
-        $this->assertEquals(false, $user->isPrivileged([User::ROLE_APPS]));
+        $this->assertEquals(false, $user->isPrivileged([User::ROLE_KEYS]));
         $this->assertEquals(false, $user->isPrivileged([User::ROLE_SYSTEM]));
 
-        $this->assertEquals(false, $user->isPrivileged([User::ROLE_APPS, User::ROLE_APPS]));
-        $this->assertEquals(false, $user->isPrivileged([User::ROLE_APPS, Role::guests()->toString()]));
+        $this->assertEquals(false, $user->isPrivileged([User::ROLE_KEYS, User::ROLE_KEYS]));
+        $this->assertEquals(false, $user->isPrivileged([User::ROLE_KEYS, Role::guests()->toString()]));
         $this->assertEquals(true, $user->isPrivileged([User::ROLE_OWNER, Role::guests()->toString()]));
         $this->assertEquals(true, $user->isPrivileged([User::ROLE_OWNER, User::ROLE_ADMIN, User::ROLE_DEVELOPER]));
     }
@@ -192,19 +192,19 @@ class UserTest extends TestCase
     {
         $user = new User();
 
-        $this->assertEquals(false, $user->isApp([]));
-        $this->assertEquals(false, $user->isApp([Role::guests()->toString()]));
-        $this->assertEquals(false, $user->isApp([Role::users()->toString()]));
-        $this->assertEquals(false, $user->isApp([User::ROLE_ADMIN]));
-        $this->assertEquals(false, $user->isApp([User::ROLE_DEVELOPER]));
-        $this->assertEquals(false, $user->isApp([User::ROLE_OWNER]));
-        $this->assertEquals(true, $user->isApp([User::ROLE_APPS]));
-        $this->assertEquals(false, $user->isApp([User::ROLE_SYSTEM]));
+        $this->assertEquals(false, $user->isKey([]));
+        $this->assertEquals(false, $user->isKey([Role::guests()->toString()]));
+        $this->assertEquals(false, $user->isKey([Role::users()->toString()]));
+        $this->assertEquals(false, $user->isKey([User::ROLE_ADMIN]));
+        $this->assertEquals(false, $user->isKey([User::ROLE_DEVELOPER]));
+        $this->assertEquals(false, $user->isKey([User::ROLE_OWNER]));
+        $this->assertEquals(true, $user->isKey([User::ROLE_KEYS]));
+        $this->assertEquals(false, $user->isKey([User::ROLE_SYSTEM]));
 
-        $this->assertEquals(true, $user->isApp([User::ROLE_APPS, User::ROLE_APPS]));
-        $this->assertEquals(true, $user->isApp([User::ROLE_APPS, Role::guests()->toString()]));
-        $this->assertEquals(false, $user->isApp([User::ROLE_OWNER, Role::guests()->toString()]));
-        $this->assertEquals(false, $user->isApp([User::ROLE_OWNER, User::ROLE_ADMIN, User::ROLE_DEVELOPER]));
+        $this->assertEquals(true, $user->isKey([User::ROLE_KEYS, User::ROLE_KEYS]));
+        $this->assertEquals(true, $user->isKey([User::ROLE_KEYS, Role::guests()->toString()]));
+        $this->assertEquals(false, $user->isKey([User::ROLE_OWNER, Role::guests()->toString()]));
+        $this->assertEquals(false, $user->isKey([User::ROLE_OWNER, User::ROLE_ADMIN, User::ROLE_DEVELOPER]));
     }
 
     public function testGuestRoles(): void
@@ -327,7 +327,7 @@ class UserTest extends TestCase
 
     public function testAppUserRoles(): void
     {
-        $this->getAuthorization()->addRole(User::ROLE_APPS);
+        $this->getAuthorization()->addRole(User::ROLE_KEYS);
         $user  = new User([
             '$id' => ID::custom('123'),
             'memberships' => [

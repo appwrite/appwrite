@@ -4,9 +4,6 @@ namespace Appwrite\Platform\Modules\Projects\Http\Projects;
 
 use Appwrite\Extend\Exception;
 use Appwrite\Hooks\Hooks;
-use Appwrite\SDK\AuthType;
-use Appwrite\SDK\Method;
-use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Database\Validator\ProjectId;
 use Appwrite\Utopia\Database\Validator\Queries\Projects;
 use Appwrite\Utopia\Request;
@@ -54,19 +51,6 @@ class Create extends Action
             ->label('audits.event', 'projects.create')
             ->label('audits.resource', 'project/{response.$id}')
             ->label('scope', 'projects.write')
-            ->label('sdk', new Method(
-                namespace: 'projects',
-                group: 'projects',
-                name: 'create',
-                description: '/docs/references/projects/create.md',
-                auth: [AuthType::ADMIN],
-                responses: [
-                    new SDKResponse(
-                        code: Response::STATUS_CODE_CREATED,
-                        model: Response::MODEL_PROJECT,
-                    )
-                ]
-            ))
             ->param('projectId', '', new ProjectId(), 'Unique Id. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, and hyphen. Can\'t start with a special char. Max length is 36 chars.')
             ->param('name', null, new Text(128), 'Project name. Max length: 128 chars.')
             ->param('teamId', '', new UID(), 'Team unique ID.')
