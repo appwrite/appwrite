@@ -320,6 +320,7 @@ class Create extends Action
         }
 
         if ($completed) {
+            $queueForEvents->reset();
             return;
         }
 
@@ -336,6 +337,8 @@ class Create extends Action
                     if (empty($contentRange)) {
                         throw new Exception(Exception::STORAGE_FILE_ALREADY_EXISTS);
                     }
+
+                    $queueForEvents->reset();
 
                     $response
                         ->setStatusCode(Response::STATUS_CODE_OK)
