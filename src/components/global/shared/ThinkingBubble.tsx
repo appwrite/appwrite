@@ -10,7 +10,7 @@ export type SphereColorMode =
   | 'cyan'
 
 export const SPHERE_SIZE_SCALE_DEFAULT = 1
-export const SPHERE_SIZE_SCALE_MIN = 0.5
+export const SPHERE_SIZE_SCALE_MIN = 0.125
 export const SPHERE_SIZE_SCALE_MAX = 2
 export const SPHERE_SIZE_SCALE_STEP = 0.05
 
@@ -108,9 +108,9 @@ function particleCountForSize(size: number): number {
   return 2000
 }
 
-export const SPHERE_PARTICLE_COUNT_MIN = 200
+export const SPHERE_PARTICLE_COUNT_MIN = 50
 export const SPHERE_PARTICLE_COUNT_MAX = 4000
-export const SPHERE_PARTICLE_COUNT_STEP = 50
+export const SPHERE_PARTICLE_COUNT_STEP = 25
 
 export function defaultParticleCountForSize(size: number): number {
   return particleCountForSize(size)
