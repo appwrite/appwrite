@@ -1669,7 +1669,12 @@ class Builds extends Action
     protected function waitForOrchestratorBuildPath(Database $dbForProject, Document $deployment): Document
     {
         for ($attempt = 0; $attempt < 20; $attempt++) {
-            $deployment = $dbForProject->getDocument('deployments', $deployment->getId());
+            $deployments = $dbForProject->find('deployments', [
+                Query::equal('$id', [$deployment->getId()]),
+                Query::limit(1),
+            ]);
+            $deployment = $deployments[0] ?? new Document();
+
             if ($deployment->isEmpty() || !empty($deployment->getAttribute('buildPath', ''))) {
                 return $deployment;
             }
