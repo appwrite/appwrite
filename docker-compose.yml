@@ -1232,7 +1232,7 @@ services:
 
   appwrite-orchestrator:
     container_name: appwrite-orchestrator
-    image: chiragagg5k/jobs-service:temp-appwrite-pr-4f081ed-20260521-r4
+    image: chiragagg5k/jobs-service:temp-appwrite-pr-d148532-20260526-r1
     user: root
     restart: unless-stopped
     networks:

@@ -88,6 +88,7 @@ class Builds extends Action
             ->inject('log')
             ->inject('executor')
             ->inject('plan')
+            ->inject('locks')
             ->callback($this->action(...));
     }
 
@@ -113,7 +114,8 @@ class Builds extends Action
         Device $deviceForFiles,
         Log $log,
         Executor $executor,
-        array $plan
+        array $plan,
+        callable $locks
     ): void {
         $payload = $message->getPayload();
 
@@ -140,18 +142,24 @@ class Builds extends Action
 
         switch ($type) {
             case BUILD_TYPE_ORCHESTRATOR_EVENT:
-                $this->applyOrchestratorEvent(
-                    queueForRealtime: $queueForRealtime,
-                    usage: $usage,
-                    publisherForUsage: $publisherForUsage,
-                    publisherForScreenshots: $publisherForScreenshots,
-                    dbForPlatform: $dbForPlatform,
-                    dbForProject: $dbForProject,
-                    project: $project,
-                    resource: $resource,
-                    deployment: $deployment,
-                    platform: $platform,
-                    event: $payload['event'] ?? [],
+                $locks(
+                    'builds:orchestrator:' . $project->getId() . ':' . $deployment->getId(),
+                    600,
+                    fn () => $this->applyOrchestratorEvent(
+                        queueForRealtime: $queueForRealtime,
+                        usage: $usage,
+                        publisherForUsage: $publisherForUsage,
+                        publisherForScreenshots: $publisherForScreenshots,
+                        dbForPlatform: $dbForPlatform,
+                        dbForProject: $dbForProject,
+                        cache: $cache,
+                        project: $project,
+                        resource: $resource,
+                        deployment: $deployment,
+                        platform: $platform,
+                        event: $payload['event'] ?? [],
+                    ),
+                    timeout: 120.0
                 );
                 break;
 
@@ -1486,6 +1494,7 @@ class Builds extends Action
         Screenshot $publisherForScreenshots,
         Database $dbForPlatform,
         Database $dbForProject,
+        Cache $cache,
         Document $project,
         Document $resource,
         Document $deployment,
@@ -1521,28 +1530,93 @@ class Builds extends Action
 
         $type = $event['type'] ?? '';
         $data = $event['data'] ?? [];
+        $logStateKey = "builds:orchestrator:logs:{$project->getId()}:{$deployment->getId()}";
 
         if ($type === CallbackEvent::Log->value) {
-            $logs = $deployment->getAttribute('buildLogs', '');
-            $previousLogs = $logs;
-            foreach (($data['lines'] ?? []) as $line) {
-                $logs .= $line;
-                if (!\str_ends_with($line, "\n")) {
-                    $logs .= "\n";
+            $sequence = (int) ($data['sequence'] ?? 0);
+            $lines = $data['lines'] ?? [];
+            $affected = false;
+
+            if ($sequence <= 0) {
+                $logs = $deployment->getAttribute('buildLogs', '');
+                $previousLogs = $logs;
+                foreach ($lines as $line) {
+                    $logs .= $line;
+                    if (!\str_ends_with($line, "\n")) {
+                        $logs .= "\n";
+                    }
+                }
+
+                if ($logs !== $previousLogs) {
+                    $deployment = $dbForProject->updateDocument('deployments', $deployment->getId(), new Document([
+                        'buildLogs' => $logs,
+                    ]));
+                    $affected = true;
+                }
+            } else {
+                $state = $cache->load($logStateKey, 3600);
+                $state = \is_array($state) ? $state : [];
+                $applied = (int) ($state['applied'] ?? 0);
+
+                if ($sequence > $applied && !empty($lines)) {
+                    $chunks = \is_array($state['chunks'] ?? null) ? $state['chunks'] : [];
+                    $chunk = '';
+                    foreach ($lines as $line) {
+                        $chunk .= $line;
+                        if (!\str_ends_with($line, "\n")) {
+                            $chunk .= "\n";
+                        }
+                    }
+                    $chunks[(string) $sequence] = $chunk;
+
+                    $logs = $deployment->getAttribute('buildLogs', '');
+                    $previousLogs = $logs;
+                    while (isset($chunks[(string) ($applied + 1)])) {
+                        $applied++;
+                        $logs .= $chunks[(string) $applied];
+                        unset($chunks[(string) $applied]);
+                    }
+
+                    $state['applied'] = $applied;
+                    $state['chunks'] = $chunks;
+                    $cache->save($logStateKey, $state);
+
+                    if ($logs !== $previousLogs) {
+                        $deployment = $dbForProject->updateDocument('deployments', $deployment->getId(), new Document([
+                            'buildLogs' => $logs,
+                        ]));
+                        $affected = true;
+                    }
                 }
             }
 
-            if ($logs === $previousLogs) {
-                return;
+            if ($affected) {
+                $queueForRealtime
+                    ->setPayload($deployment->getArrayCopy())
+                    ->trigger();
             }
 
-            $deployment = $dbForProject->updateDocument('deployments', $deployment->getId(), new Document([
-                'buildLogs' => $logs,
-            ]));
+            $state = $cache->load($logStateKey, 3600);
+            $state = \is_array($state) ? $state : [];
+            $pendingExit = $state['pendingExit'] ?? null;
+            $finalLogSequence = \is_array($pendingExit) ? (int) ($pendingExit['finalLogSequence'] ?? 0) : 0;
+            if (\is_array($pendingExit) && ($finalLogSequence <= 0 || (int) ($state['applied'] ?? 0) >= $finalLogSequence)) {
+                $this->applyOrchestratorExit(
+                    queueForRealtime: $queueForRealtime,
+                    usage: $usage,
+                    publisherForUsage: $publisherForUsage,
+                    publisherForScreenshots: $publisherForScreenshots,
+                    dbForPlatform: $dbForPlatform,
+                    dbForProject: $dbForProject,
+                    cache: $cache,
+                    project: $project,
+                    resource: $resource,
+                    deployment: $deployment,
+                    platform: $platform,
+                    data: $pendingExit
+                );
+            }
 
-            $queueForRealtime
-                ->setPayload($deployment->getArrayCopy())
-                ->trigger();
             return;
         }
 
@@ -1560,10 +1634,102 @@ class Builds extends Action
                 return;
             }
 
-            $endTime = DateTime::now();
-            $startedAt = \strtotime($deployment->getAttribute('buildStartedAt', $deployment->getCreatedAt())) ?: \time();
-            $duration = \max(0, \time() - $startedAt);
+            $state = $cache->load($logStateKey, 3600);
+            $state = \is_array($state) ? $state : [];
+            $pendingExit = $state['pendingExit'] ?? null;
+            $finalLogSequence = \is_array($pendingExit) ? (int) ($pendingExit['finalLogSequence'] ?? 0) : 0;
+            if (!\is_array($pendingExit) || ($finalLogSequence > 0 && (int) ($state['applied'] ?? 0) < $finalLogSequence)) {
+                return;
+            }
 
+            $this->applyOrchestratorExit(
+                queueForRealtime: $queueForRealtime,
+                usage: $usage,
+                publisherForUsage: $publisherForUsage,
+                publisherForScreenshots: $publisherForScreenshots,
+                dbForPlatform: $dbForPlatform,
+                dbForProject: $dbForProject,
+                cache: $cache,
+                project: $project,
+                resource: $resource,
+                deployment: $deployment,
+                platform: $platform,
+                data: $pendingExit
+            );
+
+            return;
+        }
+
+        if ($type !== CallbackEvent::Exit->value) {
+            return;
+        }
+
+        if (\in_array($deployment->getAttribute('status'), ['ready', 'failed', 'canceled'])) {
+            return;
+        }
+
+        $state = $cache->load($logStateKey, 3600);
+        $state = \is_array($state) ? $state : [];
+        $finalLogSequence = (int) ($data['finalLogSequence'] ?? 0);
+        if ($finalLogSequence > 0 && (int) ($state['applied'] ?? 0) < $finalLogSequence) {
+            $state['pendingExit'] = $data;
+            $cache->save($logStateKey, $state);
+
+            return;
+        }
+
+        $this->applyOrchestratorExit(
+            queueForRealtime: $queueForRealtime,
+            usage: $usage,
+            publisherForUsage: $publisherForUsage,
+            publisherForScreenshots: $publisherForScreenshots,
+            dbForPlatform: $dbForPlatform,
+            dbForProject: $dbForProject,
+            cache: $cache,
+            project: $project,
+            resource: $resource,
+            deployment: $deployment,
+            platform: $platform,
+            data: $data
+        );
+    }
+
+    protected function applyOrchestratorExit(
+        Realtime $queueForRealtime,
+        Context $usage,
+        UsagePublisher $publisherForUsage,
+        Screenshot $publisherForScreenshots,
+        Database $dbForPlatform,
+        Database $dbForProject,
+        Cache $cache,
+        Document $project,
+        Document $resource,
+        Document $deployment,
+        array $platform,
+        array $data
+    ): void {
+        $logStateKey = "builds:orchestrator:logs:{$project->getId()}:{$deployment->getId()}";
+        $exitCode = (int) ($data['exitCode'] ?? -1);
+        if ($exitCode === 0 && empty($deployment->getAttribute('buildPath', ''))) {
+            $deployment = $this->waitForOrchestratorBuildPath($dbForProject, $deployment);
+            if ($deployment->isEmpty() || empty($deployment->getAttribute('buildPath', ''))) {
+                $state = $cache->load($logStateKey, 3600);
+                $state = \is_array($state) ? $state : [];
+                $state['pendingExit'] = $data;
+                $cache->save($logStateKey, $state);
+
+                return;
+            }
+        }
+
+        $status = $exitCode === 0 && !empty($deployment->getAttribute('buildPath', '')) ? 'ready' : 'failed';
+        $logs = $deployment->getAttribute('buildLogs', '');
+        $endTime = DateTime::now();
+        $startedAt = (int) \strtotime($deployment->getAttribute('buildStartedAt', ''));
+        $endedAt = (int) \strtotime($endTime);
+        $duration = \max(0, $endedAt - $startedAt);
+
+        if ($status === 'ready') {
             $this->completeOrchestratorDeployment(
                 queueForRealtime: $queueForRealtime,
                 usage: $usage,
@@ -1579,44 +1745,7 @@ class Builds extends Action
                 buildDuration: $duration
             );
 
-            return;
-        }
-
-        if ($type !== CallbackEvent::Exit->value) {
-            return;
-        }
-
-        if (\in_array($deployment->getAttribute('status'), ['ready', 'failed', 'canceled'])) {
-            return;
-        }
-
-        $exitCode = (int) ($data['exitCode'] ?? -1);
-        if ($exitCode === 0 && empty($deployment->getAttribute('buildPath', ''))) {
-            $deployment = $this->waitForOrchestratorBuildPath($dbForProject, $deployment);
-            if ($deployment->isEmpty() || empty($deployment->getAttribute('buildPath', ''))) {
-                return;
-            }
-        }
-
-        $status = $exitCode === 0 && !empty($deployment->getAttribute('buildPath', '')) ? 'ready' : 'failed';
-        $logs = $deployment->getAttribute('buildLogs', '');
-        $duration = (int) \ceil((float) ($data['durationSeconds'] ?? 0));
-
-        if ($status === 'ready') {
-            $this->completeOrchestratorDeployment(
-                queueForRealtime: $queueForRealtime,
-                usage: $usage,
-                publisherForUsage: $publisherForUsage,
-                dbForPlatform: $dbForPlatform,
-                dbForProject: $dbForProject,
-                project: $project,
-                resource: $resource,
-                deployment: $deployment,
-                platform: $platform,
-                publisherForScreenshots: $publisherForScreenshots,
-                buildEndedAt: DateTime::now(),
-                buildDuration: $duration
-            );
+            $cache->purge($logStateKey);
 
             return;
         } else {
@@ -1625,7 +1754,7 @@ class Builds extends Action
         }
 
         $deployment = $dbForProject->updateDocument('deployments', $deployment->getId(), new Document([
-            'buildEndedAt' => DateTime::now(),
+            'buildEndedAt' => $endTime,
             'buildDuration' => $duration,
             'status' => $status,
             'buildLogs' => $logs,
@@ -1655,6 +1784,8 @@ class Builds extends Action
             usage: $usage,
             publisherForUsage: $publisherForUsage
         );
+
+        $cache->purge($logStateKey);
     }
 
     protected function waitForOrchestratorBuildPath(Database $dbForProject, Document $deployment): Document
