@@ -32,7 +32,7 @@ class XList extends Action
         $this
             ->setHttpMethod(Action::HTTP_REQUEST_METHOD_GET)
             ->setHttpPath('/v1/project/oauth2')
-            ->desc('List project OAuth2 providers')
+            ->desc('List OAuth2 providers')
             ->groups(['api', 'project'])
             ->label('scope', 'oauth2.read')
             ->label('sdk', new Method(

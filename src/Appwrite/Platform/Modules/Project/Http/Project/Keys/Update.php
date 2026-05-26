@@ -38,7 +38,7 @@ class Update extends Base
         $this->setHttpMethod(Action::HTTP_REQUEST_METHOD_PUT)
             ->setHttpPath('/v1/project/keys/:keyId')
             ->httpAlias('/v1/projects/:projectId/keys/:keyId')
-            ->desc('Update project key')
+            ->desc('Update key')
             ->groups(['api', 'project'])
             ->label('scope', 'keys.write')
             ->label('event', 'keys.[keyId].update')

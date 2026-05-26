@@ -28,7 +28,7 @@ class Delete extends Action
         $this
             ->setHttpMethod(Action::HTTP_REQUEST_METHOD_DELETE)
             ->setHttpPath('/v1/migrations/:migrationId')
-            ->desc('Delete migration')
+            ->desc('Delete')
             ->groups(['api', 'migrations'])
             ->label('scope', 'migrations.write')
             ->label('event', 'migrations.[migrationId].delete')

@@ -104,7 +104,7 @@ class Update extends Base
         $this
             ->setHttpMethod(Action::HTTP_REQUEST_METHOD_PATCH)
             ->setHttpPath('/v1/project/oauth2/' . $providerId)
-            ->desc('Update project OAuth2 ' . $providerLabel)
+            ->desc('Update OAuth2 ' . $providerLabel)
             ->groups(['api', 'project'])
             ->label('scope', 'oauth2.write')
             ->label('event', 'oauth2.[providerId].update')

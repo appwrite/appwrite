@@ -30,7 +30,7 @@ class Get extends Action
             ->setHttpMethod(Action::HTTP_REQUEST_METHOD_GET)
             ->setHttpPath('/v1/project/platforms/:platformId')
             ->httpAlias('/v1/projects/:projectId/platforms/:platformId')
-            ->desc('Get project platform')
+            ->desc('Get platform')
             ->groups(['api', 'project'])
             ->label('scope', 'platforms.read')
             ->label('sdk', new Method(

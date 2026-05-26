@@ -38,7 +38,7 @@ class XList extends PlatformAction
         $this
             ->setHttpMethod(Action::HTTP_REQUEST_METHOD_GET)
             ->setHttpPath('/v1/presences')
-            ->desc('List presences')
+            ->desc('List')
             ->groups(['api', 'presences'])
             ->label('scope', 'presences.read')
             ->label('sdk', new Method(

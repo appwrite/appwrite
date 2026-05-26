@@ -26,7 +26,7 @@ class Get extends Action
         $this
             ->setHttpMethod(Action::HTTP_REQUEST_METHOD_GET)
             ->setHttpPath('/v1/project/mock-phones/:number')
-            ->desc('Get project mock phone')
+            ->desc('Get mock phone')
             ->groups(['api', 'project'])
             ->label('scope', 'mocks.read')
             ->label('sdk', new Method(

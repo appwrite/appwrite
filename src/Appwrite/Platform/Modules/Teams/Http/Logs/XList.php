@@ -37,7 +37,7 @@ class XList extends Action
         $this
             ->setHttpMethod(Action::HTTP_REQUEST_METHOD_GET)
             ->setHttpPath('/v1/teams/:teamId/logs')
-            ->desc('List team logs')
+            ->desc('List logs')
             ->groups(['api', 'teams'])
             ->label('scope', 'teams.read')
             ->label('sdk', new Method(

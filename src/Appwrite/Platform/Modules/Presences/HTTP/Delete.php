@@ -30,7 +30,7 @@ class Delete extends PlatformAction
         $this
             ->setHttpMethod(Action::HTTP_REQUEST_METHOD_DELETE)
             ->setHttpPath('/v1/presences/:presenceId')
-            ->desc('Delete presence')
+            ->desc('Delete')
             ->groups(['api', 'presences'])
             ->label('scope', 'presences.write')
             ->label('event', 'presences.[presenceId].delete')

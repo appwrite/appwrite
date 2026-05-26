@@ -40,7 +40,7 @@ class Upsert extends PlatformAction
         $this
             ->setHttpMethod(Action::HTTP_REQUEST_METHOD_PUT)
             ->setHttpPath('/v1/presences/:presenceId')
-            ->desc('Upsert presence')
+            ->desc('Upsert')
             ->groups(['api', 'presences'])
             ->label('scope', 'presences.write')
             ->label('event', 'presences.[presenceId].upsert')

@@ -39,7 +39,7 @@ class Update extends PlatformAction
         $this
             ->setHttpMethod(Action::HTTP_REQUEST_METHOD_PATCH)
             ->setHttpPath('/v1/presences/:presenceId')
-            ->desc('Update presence')
+            ->desc('Update')
             ->groups(['api', 'presences'])
             ->label('scope', 'presences.write')
             ->label('event', 'presences.[presenceId].update')

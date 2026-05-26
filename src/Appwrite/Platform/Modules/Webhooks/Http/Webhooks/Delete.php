@@ -32,7 +32,7 @@ class Delete extends Action
             ->setHttpMethod(Action::HTTP_REQUEST_METHOD_DELETE)
             ->setHttpPath('/v1/webhooks/:webhookId')
             ->httpAlias('/v1/projects/:projectId/webhooks/:webhookId')
-            ->desc('Delete webhook')
+            ->desc('Delete')
             ->groups(['api', 'webhooks'])
             ->label('scope', 'webhooks.write')
             ->label('event', 'webhooks.[webhookId].delete')

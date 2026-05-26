@@ -27,7 +27,7 @@ class Get extends Base
         $this
             ->setHttpMethod(Action::HTTP_REQUEST_METHOD_GET)
             ->setHttpPath('/v1/sites/:siteId')
-            ->desc('Get site')
+            ->desc('Get')
             ->groups(['api', 'sites'])
             ->label('scope', 'sites.read')
             ->label('resourceType', RESOURCE_TYPE_SITES)

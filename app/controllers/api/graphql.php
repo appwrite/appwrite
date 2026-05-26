@@ -46,7 +46,7 @@ Http::init()
     });
 
 Http::get('/v1/graphql')
-    ->desc('GraphQL endpoint')
+    ->desc('Endpoint')
     ->groups(['graphql'])
     ->label('scope', 'graphql')
     ->label('sdk', new Method(
@@ -93,7 +93,7 @@ Http::get('/v1/graphql')
     });
 
 Http::post('/v1/graphql/mutation')
-    ->desc('GraphQL endpoint')
+    ->desc('Endpoint')
     ->groups(['graphql'])
     ->label('scope', 'graphql')
     ->label('sdk', new Method(
@@ -144,7 +144,7 @@ Http::post('/v1/graphql/mutation')
     });
 
 Http::post('/v1/graphql')
-    ->desc('GraphQL endpoint')
+    ->desc('Endpoint')
     ->groups(['graphql'])
     ->label('scope', 'graphql')
     ->label('sdk', new Method(

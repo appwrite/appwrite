@@ -31,7 +31,7 @@ class Delete extends Base
         $this
             ->setHttpMethod(Action::HTTP_REQUEST_METHOD_DELETE)
             ->setHttpPath('/v1/sites/:siteId')
-            ->desc('Delete site')
+            ->desc('Delete')
             ->groups(['api', 'sites'])
             ->label('scope', 'sites.write')
             ->label('resourceType', RESOURCE_TYPE_SITES)

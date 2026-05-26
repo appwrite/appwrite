@@ -57,7 +57,7 @@ class Create extends Base
         $this
             ->setHttpMethod(Action::HTTP_REQUEST_METHOD_POST)
             ->setHttpPath('/v1/functions')
-            ->desc('Create function')
+            ->desc('Create')
             ->groups(['api', 'functions'])
             ->label('scope', 'functions.write')
             ->label('event', 'functions.[functionId].create')

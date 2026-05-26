@@ -33,7 +33,7 @@ class Update extends Base
             ->setHttpMethod(Action::HTTP_REQUEST_METHOD_PATCH)
             ->setHttpPath('/v1/functions/:functionId/deployment')
             ->httpAlias('/v1/functions/:functionId/deployments/:deploymentId')
-            ->desc('Update function\'s deployment')
+            ->desc('Update deployment')
             ->groups(['api', 'functions'])
             ->label('scope', 'functions.write')
             ->label('resourceType', RESOURCE_TYPE_FUNCTIONS)

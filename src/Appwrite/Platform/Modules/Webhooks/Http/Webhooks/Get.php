@@ -30,7 +30,7 @@ class Get extends Action
             ->setHttpMethod(Action::HTTP_REQUEST_METHOD_GET)
             ->setHttpPath('/v1/webhooks/:webhookId')
             ->httpAlias('/v1/projects/:projectId/webhooks/:webhookId')
-            ->desc('Get webhook')
+            ->desc('Get')
             ->groups(['api', 'webhooks'])
             ->label('scope', 'webhooks.read')
             ->label('sdk', new Method(

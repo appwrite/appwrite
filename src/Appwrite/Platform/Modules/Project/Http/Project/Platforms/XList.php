@@ -35,7 +35,7 @@ class XList extends Action
             ->setHttpMethod(Action::HTTP_REQUEST_METHOD_GET)
             ->setHttpPath('/v1/project/platforms')
             ->httpAlias('/v1/projects/:projectId/platforms')
-            ->desc('List project platforms')
+            ->desc('List platforms')
             ->groups(['api', 'project'])
             ->label('scope', 'platforms.read')
             ->label('sdk', new Method(

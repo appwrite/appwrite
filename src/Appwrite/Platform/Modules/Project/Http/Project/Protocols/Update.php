@@ -33,7 +33,7 @@ class Update extends Action
             ->setHttpPath('/v1/project/protocols/:protocolId')
             ->httpAlias('/v1/project/protocols/:protocolId/status')
             ->httpAlias('/v1/projects/:projectId/api')
-            ->desc('Update project protocol')
+            ->desc('Update protocol')
             ->groups(['api', 'project'])
             ->label('scope', 'project.write')
             ->label('event', 'protocols.[protocolId].update')

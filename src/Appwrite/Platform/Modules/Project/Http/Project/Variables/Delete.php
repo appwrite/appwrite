@@ -29,7 +29,7 @@ class Delete extends Action
         $this
             ->setHttpMethod(Action::HTTP_REQUEST_METHOD_DELETE)
             ->setHttpPath('/v1/project/variables/:variableId')
-            ->desc('Delete project variable')
+            ->desc('Delete variable')
             ->groups(['api', 'project'])
             ->label('scope', 'project.write')
             ->label('event', 'variables.[variableId].delete')

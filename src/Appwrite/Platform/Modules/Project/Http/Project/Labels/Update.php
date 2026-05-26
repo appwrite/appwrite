@@ -29,7 +29,7 @@ class Update extends Action
             ->setHttpMethod(Action::HTTP_REQUEST_METHOD_PUT)
             ->setHttpPath('/v1/project/labels')
             ->httpAlias('/v1/projects/:projectId/labels')
-            ->desc('Update project labels')
+            ->desc('Update labels')
             ->groups(['api', 'project'])
             ->label('scope', 'project.write')
             // ->label('event', 'project.labels.update')

@@ -31,7 +31,7 @@ class XList extends Action
         $this
             ->setHttpMethod(Action::HTTP_REQUEST_METHOD_GET)
             ->setHttpPath('/v1/project/mock-phones')
-            ->desc('List project mock phones')
+            ->desc('List mock phones')
             ->groups(['api', 'project'])
             ->label('scope', 'mocks.read')
             ->label('sdk', new Method(

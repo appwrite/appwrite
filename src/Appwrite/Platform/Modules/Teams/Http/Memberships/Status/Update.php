@@ -40,7 +40,7 @@ class Update extends Action
         $this
             ->setHttpMethod(Action::HTTP_REQUEST_METHOD_PATCH)
             ->setHttpPath('/v1/teams/:teamId/memberships/:membershipId/status')
-            ->desc('Update team membership status')
+            ->desc('Update membership status')
             ->groups(['api', 'teams'])
             ->label('event', 'teams.[teamId].memberships.[membershipId].update.status')
             ->label('scope', 'public')

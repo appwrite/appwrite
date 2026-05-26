@@ -31,7 +31,7 @@ class Delete extends Action
             ->setHttpMethod(Action::HTTP_REQUEST_METHOD_DELETE)
             ->setHttpPath('/v1/project/platforms/:platformId')
             ->httpAlias('/v1/projects/:projectId/platforms/:platformId')
-            ->desc('Delete project platform')
+            ->desc('Delete platform')
             ->groups(['api', 'project'])
             ->label('scope', 'platforms.write')
             ->label('event', 'platforms.[platformId].delete')

@@ -28,7 +28,7 @@ class Get extends Action
         $this
             ->setHttpMethod(Action::HTTP_REQUEST_METHOD_GET)
             ->setHttpPath('/v1/project/oauth2/:provider')
-            ->desc('Get project OAuth2 provider')
+            ->desc('Get OAuth2 provider')
             ->groups(['api', 'project'])
             ->label('scope', 'oauth2.read')
             ->label('sdk', new Method(

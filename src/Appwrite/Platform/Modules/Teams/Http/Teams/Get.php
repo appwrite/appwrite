@@ -26,7 +26,7 @@ class Get extends Action
         $this
             ->setHttpMethod(Action::HTTP_REQUEST_METHOD_GET)
             ->setHttpPath('/v1/teams/:teamId')
-            ->desc('Get team')
+            ->desc('Get')
             ->groups(['api', 'teams'])
             ->label('scope', 'teams.read')
             ->label('sdk', new Method(

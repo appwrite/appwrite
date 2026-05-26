@@ -25,7 +25,7 @@ class Create extends Action
         $this
             ->setHttpMethod(Action::HTTP_REQUEST_METHOD_POST)
             ->setHttpPath('/v1/console/assistant')
-            ->desc('Create assistant query')
+            ->desc('Create query')
             ->groups(['api', 'assistant'])
             ->label('scope', 'assistant.read')
             ->label('sdk', new Method(

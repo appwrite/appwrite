@@ -34,7 +34,7 @@ class XList extends Action
             ->setHttpMethod(Action::HTTP_REQUEST_METHOD_GET)
             ->setHttpPath('/v1/webhooks')
             ->httpAlias('/v1/projects/:projectId/webhooks')
-            ->desc('List webhooks')
+            ->desc('List')
             ->groups(['api', 'webhooks'])
             ->label('scope', 'webhooks.read')
             ->label('sdk', new Method(

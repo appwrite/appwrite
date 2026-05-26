@@ -31,7 +31,7 @@ class XList extends Action
         $this
             ->setHttpMethod(Action::HTTP_REQUEST_METHOD_GET)
             ->setHttpPath('/v1/project/policies')
-            ->desc('List project policies')
+            ->desc('List policies')
             ->groups(['api', 'project'])
             ->label('scope', ['policies.read', 'project.policies.read'])
             ->label('sdk', new Method(

@@ -34,7 +34,7 @@ class Delete extends Base
         $this
             ->setHttpMethod(Action::HTTP_REQUEST_METHOD_DELETE)
             ->setHttpPath('/v1/functions/:functionId')
-            ->desc('Delete function')
+            ->desc('Delete')
             ->groups(['api', 'functions'])
             ->label('scope', 'functions.write')
             ->label('resourceType', RESOURCE_TYPE_FUNCTIONS)

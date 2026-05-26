@@ -31,7 +31,7 @@ class Create extends Action
         $this
             ->setHttpMethod(Action::HTTP_REQUEST_METHOD_POST)
             ->setHttpPath('/v1/project/mock-phones')
-            ->desc('Create project mock phone')
+            ->desc('Create mock phone')
             ->groups(['api', 'project'])
             ->label('scope', 'mocks.write')
             ->label('event', 'mock-phones.[number].create')

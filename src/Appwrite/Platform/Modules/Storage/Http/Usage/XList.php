@@ -31,7 +31,7 @@ class XList extends Action
         $this
             ->setHttpMethod(Action::HTTP_REQUEST_METHOD_GET)
             ->setHttpPath('/v1/storage/usage')
-            ->desc('Get storage usage stats')
+            ->desc('Get usage stats')
             ->groups(['api', 'storage'])
             ->label('scope', 'files.read')
             ->label('resourceType', RESOURCE_TYPE_BUCKETS)
