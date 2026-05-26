@@ -130,7 +130,14 @@ class Update extends Action
         $providerCommitAuthor = $commitDetails["commitAuthor"] ?? '';
         $providerCommitAuthorUrl = $commitDetails["commitAuthorUrl"] ?? '';
 
-        $this->createGitDeployments($github, $providerInstallationId, $repositories, $providerBranch, $providerBranchUrl, $providerRepositoryName, $providerRepositoryUrl, $providerRepositoryOwner, $providerCommitHash, $providerCommitAuthor, $providerCommitAuthorUrl, $providerCommitMessage, $providerCommitUrl, $providerPullRequestId, true, $dbForPlatform, $authorization, $publisherForBuilds, $getProjectDB, $platform);
+        $prFiles = $github->getPullRequestFiles($owner, $providerRepositoryName, $providerPullRequestId);
+        $providerAffectedFiles = [
+            ...array_column($prFiles, 'filename'),
+            // Only renamed files include previous_filename; skip missing values from other file changes.
+            ...array_filter(array_column($prFiles, 'previous_filename'))
+        ];
+
+        $this->createGitDeployments($github, $providerInstallationId, $repositories, $providerBranch, $providerBranchUrl, $providerRepositoryName, $providerRepositoryUrl, $providerRepositoryOwner, $providerCommitHash, $providerCommitAuthor, $providerCommitAuthorUrl, $providerCommitMessage, $providerCommitUrl, $providerPullRequestId, $providerAffectedFiles, true, $dbForPlatform, $authorization, $publisherForBuilds, $getProjectDB, $platform);
 
         $response->noContent();
     }

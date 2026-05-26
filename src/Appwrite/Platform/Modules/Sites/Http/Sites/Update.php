@@ -20,9 +20,12 @@ use Utopia\Database\Query;
 use Utopia\Database\Validator\UID;
 use Utopia\Http\Adapter\Swoole\Request;
 use Utopia\Platform\Action;
+use Utopia\Platform\Enum;
 use Utopia\Platform\Scope\HTTP;
 use Utopia\System\System;
+use Utopia\Validator\ArrayList;
 use Utopia\Validator\Boolean;
+use Utopia\Validator\Nullable;
 use Utopia\Validator\Range;
 use Utopia\Validator\Text;
 use Utopia\Validator\WhiteList;
@@ -65,7 +68,7 @@ class Update extends Base
             ))
             ->param('siteId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Site ID.', false, ['dbForProject'])
             ->param('name', '', new Text(128), 'Site name. Max length: 128 chars.')
-            ->param('framework', '', new WhiteList(\array_keys(Config::getParam('frameworks')), true), 'Sites framework.')
+            ->param('framework', '', new WhiteList(\array_keys(Config::getParam('frameworks')), true), 'Sites framework.', enum: new Enum(name: 'SiteFramework'))
             ->param('enabled', true, new Boolean(), 'Is site enabled? When set to \'disabled\', users cannot access the site but Server SDKs with and API key can still access the site. No data is lost when this is toggled.', true)
             ->param('logging', true, new Boolean(), 'When disabled, request logs will exclude logs and errors, and site responses will be slightly faster.', true)
             ->param('timeout', 30, new Range(1, (int) System::getEnv('_APP_SITES_TIMEOUT', 30)), 'Maximum request time in seconds.', true)
@@ -73,14 +76,16 @@ class Update extends Base
             ->param('buildCommand', '', new Text(8192, 0), 'Build Command.', true)
             ->param('startCommand', '', new Text(8192, 0), 'Custom start command. Leave empty to use default.', true)
             ->param('outputDirectory', '', new Text(8192, 0), 'Output Directory for site.', true)
-            ->param('buildRuntime', '', new WhiteList(array_keys(Config::getParam('runtimes')), true), 'Runtime to use during build step.', true)
-            ->param('adapter', '', new WhiteList(['static', 'ssr']), 'Framework adapter defining rendering strategy. Allowed values are: static, ssr', true)
+            ->param('buildRuntime', '', new WhiteList(array_keys(Config::getParam('runtimes')), true), 'Runtime to use during build step.', true, enum: new Enum(name: 'SiteBuildRuntime'))
+            ->param('adapter', '', new WhiteList(['static', 'ssr']), 'Framework adapter defining rendering strategy. Allowed values are: static, ssr', true, enum: new Enum(name: 'SiteAdapter'))
             ->param('fallbackFile', '', new Text(255, 0), 'Fallback file for single page application sites.', true)
             ->param('installationId', '', new Text(128, 0), 'Appwrite Installation ID for VCS (Version Control System) deployment.', true)
             ->param('providerRepositoryId', '', new Text(128, 0), 'Repository ID of the repo linked to the site.', true)
             ->param('providerBranch', '', new Text(128, 0), 'Production branch for the repo linked to the site.', true)
             ->param('providerSilentMode', false, new Boolean(), 'Is the VCS (Version Control System) connection in silent mode for the repo linked to the site? In silent mode, comments will not be made on commits and pull requests.', true)
             ->param('providerRootDirectory', '', new Text(128, 0), 'Path to site code in the linked repo.', true)
+            ->param('providerBranches', null, new Nullable(new ArrayList(new Text(128), APP_LIMIT_ARRAY_PARAMS_SIZE)), 'List of branch name patterns to trigger automatic deployments. Supports wildcards. Leave empty to deploy on all branches.', true)
+            ->param('providerPaths', null, new Nullable(new ArrayList(new Text(128), APP_LIMIT_ARRAY_PARAMS_SIZE)), 'List of file path patterns to trigger automatic deployments. Supports wildcards. Leave empty to deploy on all file changes.', true)
             ->param('buildSpecification', fn (array $plan) => $this->getDefaultSpecification($plan), fn (array $plan) => new Specification(
                 $plan,
                 Config::getParam('specifications', []),
@@ -126,6 +131,8 @@ class Update extends Base
         string $providerBranch,
         bool $providerSilentMode,
         string $providerRootDirectory,
+        ?array $providerBranches,
+        ?array $providerPaths,
         string $buildSpecification,
         string $runtimeSpecification,
         int $deploymentRetention,
@@ -271,6 +278,8 @@ class Update extends Base
             'providerBranch' => $providerBranch,
             'providerRootDirectory' => $providerRootDirectory,
             'providerSilentMode' => $providerSilentMode,
+            'providerBranches' => $providerBranches ?? $site->getAttribute('providerBranches', []),
+            'providerPaths' => $providerPaths ?? $site->getAttribute('providerPaths', []),
             'buildSpecification' => $buildSpecification,
             'runtimeSpecification' => $runtimeSpecification,
             'search' => implode(' ', [$siteId, $name, $framework]),

@@ -1,1 +1,0 @@
-Get a project by its unique ID. This endpoint allows you to retrieve the project's details, including its name, description, team, region, and other metadata. 
