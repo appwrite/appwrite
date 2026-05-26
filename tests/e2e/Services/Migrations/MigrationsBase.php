@@ -224,6 +224,13 @@ trait MigrationsBase
         $this->assertEquals(Appwrite::getSupportedResources(), $response['resources']);
         $this->assertEquals('Appwrite', $response['source']);
         $this->assertEquals('Appwrite', $response['destination']);
+
+        // A fresh test project only intrinsically has its auth apiKey — every other
+        // supported resource type has zero data and gets pruned by Transfer::getStatusCounters.
+        // So apiKey should be the only entry, successfully migrated with no errors.
+        $this->assertEquals([Resource::TYPE_API_KEY], array_keys($response['statusCounters']));
+        $this->assertEquals(0, $response['statusCounters'][Resource::TYPE_API_KEY]['error']);
+        $this->assertGreaterThan(0, $response['statusCounters'][Resource::TYPE_API_KEY]['success']);
     }
 
     /**
