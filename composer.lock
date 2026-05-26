@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "b092fffec11494aea10b0c823b7837b8",
+    "content-hash": "fcb6edca555c2775694bee110b54a720",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -1223,6 +1223,78 @@
                 }
             ],
             "time": "2023-11-08T09:30:43+00:00"
+        },
+        {
+            "name": "open-runtimes/orchestrator-client-php",
+            "version": "0.1.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/open-runtimes/orchestrator-client-php.git",
+                "reference": "b2124bbb460b1fb69788ef134933d3dea134909a"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/open-runtimes/orchestrator-client-php/zipball/b2124bbb460b1fb69788ef134933d3dea134909a",
+                "reference": "b2124bbb460b1fb69788ef134933d3dea134909a",
+                "shasum": ""
+            },
+            "require": {
+                "ext-curl": "*",
+                "ext-json": "*",
+                "php": ">=8.3",
+                "utopia-php/fetch": "^1.1"
+            },
+            "require-dev": {
+                "laravel/pint": "^1.22",
+                "phpstan/phpstan": "^2.1",
+                "phpunit/phpunit": "^13.1",
+                "rector/rector": "^2.4"
+            },
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "OpenRuntimes\\Orchestrator\\": "src/"
+                }
+            },
+            "autoload-dev": {
+                "psr-4": {
+                    "OpenRuntimes\\Orchestrator\\Tests\\": "tests/"
+                }
+            },
+            "scripts": {
+                "format": [
+                    "vendor/bin/pint"
+                ],
+                "format:check": [
+                    "vendor/bin/pint --test"
+                ],
+                "analyze": [
+                    "vendor/bin/phpstan analyze --memory-limit=512M"
+                ],
+                "refactor": [
+                    "vendor/bin/rector process"
+                ],
+                "refactor:check": [
+                    "vendor/bin/rector process --dry-run"
+                ],
+                "test": [
+                    "vendor/bin/phpunit"
+                ],
+                "fix": [
+                    "@refactor",
+                    "@analyze",
+                    "@format"
+                ]
+            },
+            "license": [
+                "MIT"
+            ],
+            "description": "PHP SDK for the Open Runtimes orchestrator Jobs API.",
+            "support": {
+                "source": "https://github.com/open-runtimes/orchestrator-client-php/tree/0.1.0",
+                "issues": "https://github.com/open-runtimes/orchestrator-client-php/issues"
+            },
+            "time": "2026-05-23T12:54:36+00:00"
         },
         {
             "name": "open-telemetry/api",
@@ -3731,21 +3803,21 @@
         },
         {
             "name": "utopia-php/cli",
-            "version": "0.23.3",
+            "version": "0.23.4",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/cli.git",
-                "reference": "3c45ae5bcdcd3c7916e1909d74c60b8e771610db"
+                "reference": "59f66e72ec1f8350968d8b95c0039faaac7a6d6d"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/cli/zipball/3c45ae5bcdcd3c7916e1909d74c60b8e771610db",
-                "reference": "3c45ae5bcdcd3c7916e1909d74c60b8e771610db",
+                "url": "https://api.github.com/repos/utopia-php/cli/zipball/59f66e72ec1f8350968d8b95c0039faaac7a6d6d",
+                "reference": "59f66e72ec1f8350968d8b95c0039faaac7a6d6d",
                 "shasum": ""
             },
             "require": {
                 "php": ">=7.4",
-                "utopia-php/servers": "0.4.0"
+                "utopia-php/servers": "0.4.*"
             },
             "require-dev": {
                 "laravel/pint": "1.2.*",
@@ -3776,9 +3848,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/cli/issues",
-                "source": "https://github.com/utopia-php/cli/tree/0.23.3"
+                "source": "https://github.com/utopia-php/cli/tree/0.23.4"
             },
-            "time": "2026-05-05T04:38:59+00:00"
+            "time": "2026-05-21T14:42:15+00:00"
         },
         {
             "name": "utopia-php/compression",
@@ -4976,16 +5048,16 @@
         },
         {
             "name": "utopia-php/queue",
-            "version": "0.18.3",
+            "version": "0.18.4",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/queue.git",
-                "reference": "141aad162b90728353f3aa834684b1f2affed045"
+                "reference": "1323b52f39b899c580dbb7af8562fc53d4e13e62"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/queue/zipball/141aad162b90728353f3aa834684b1f2affed045",
-                "reference": "141aad162b90728353f3aa834684b1f2affed045",
+                "url": "https://api.github.com/repos/utopia-php/queue/zipball/1323b52f39b899c580dbb7af8562fc53d4e13e62",
+                "reference": "1323b52f39b899c580dbb7af8562fc53d4e13e62",
                 "shasum": ""
             },
             "require": {
@@ -4993,7 +5065,7 @@
                 "php-amqplib/php-amqplib": "^3.7",
                 "utopia-php/di": "0.3.*",
                 "utopia-php/pools": "1.*",
-                "utopia-php/servers": "0.4.0",
+                "utopia-php/servers": "0.4.*",
                 "utopia-php/telemetry": "0.2.*",
                 "utopia-php/validators": "0.2.*"
             },
@@ -5036,9 +5108,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/queue/issues",
-                "source": "https://github.com/utopia-php/queue/tree/0.18.3"
+                "source": "https://github.com/utopia-php/queue/tree/0.18.4"
             },
-            "time": "2026-05-14T08:53:35+00:00"
+            "time": "2026-05-21T14:43:24+00:00"
         },
         {
             "name": "utopia-php/registry",
@@ -5638,16 +5710,16 @@
     "packages-dev": [
         {
             "name": "appwrite/sdk-generator",
-            "version": "1.31.1",
+            "version": "1.31.5",
             "source": {
                 "type": "git",
                 "url": "https://github.com/appwrite/sdk-generator.git",
-                "reference": "5699f6da951aef9378fabdcf12f40a9a54fb3128"
+                "reference": "6397e6830ee7de2f8816217b4c8d8586af5e8f66"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/appwrite/sdk-generator/zipball/5699f6da951aef9378fabdcf12f40a9a54fb3128",
-                "reference": "5699f6da951aef9378fabdcf12f40a9a54fb3128",
+                "url": "https://api.github.com/repos/appwrite/sdk-generator/zipball/6397e6830ee7de2f8816217b4c8d8586af5e8f66",
+                "reference": "6397e6830ee7de2f8816217b4c8d8586af5e8f66",
                 "shasum": ""
             },
             "require": {
@@ -5683,9 +5755,9 @@
             "description": "Appwrite PHP library for generating API SDKs for multiple programming languages and platforms",
             "support": {
                 "issues": "https://github.com/appwrite/sdk-generator/issues",
-                "source": "https://github.com/appwrite/sdk-generator/tree/1.31.1"
+                "source": "https://github.com/appwrite/sdk-generator/tree/1.31.5"
             },
-            "time": "2026-05-20T22:22:59+00:00"
+            "time": "2026-05-21T17:30:24+00:00"
         },
         {
             "name": "brianium/paratest",
@@ -6792,16 +6864,16 @@
         },
         {
             "name": "phpunit/phpunit",
-            "version": "12.5.25",
+            "version": "12.5.26",
             "source": {
                 "type": "git",
                 "url": "https://github.com/sebastianbergmann/phpunit.git",
-                "reference": "792c2980442dfce319226b88fa845b8b6de3b333"
+                "reference": "e78c9ad74f73fd3642a23e65ace83746dc8df26d"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/sebastianbergmann/phpunit/zipball/792c2980442dfce319226b88fa845b8b6de3b333",
-                "reference": "792c2980442dfce319226b88fa845b8b6de3b333",
+                "url": "https://api.github.com/repos/sebastianbergmann/phpunit/zipball/e78c9ad74f73fd3642a23e65ace83746dc8df26d",
+                "reference": "e78c9ad74f73fd3642a23e65ace83746dc8df26d",
                 "shasum": ""
             },
             "require": {
@@ -6820,15 +6892,15 @@
                 "phpunit/php-invoker": "^6.0.0",
                 "phpunit/php-text-template": "^5.0.0",
                 "phpunit/php-timer": "^8.0.0",
-                "sebastian/cli-parser": "^4.2.0",
-                "sebastian/comparator": "^7.1.6",
+                "sebastian/cli-parser": "^4.2.1",
+                "sebastian/comparator": "^7.1.8",
                 "sebastian/diff": "^7.0.0",
-                "sebastian/environment": "^8.1.0",
-                "sebastian/exporter": "^7.0.2",
+                "sebastian/environment": "^8.1.1",
+                "sebastian/exporter": "^7.0.3",
                 "sebastian/global-state": "^8.0.2",
                 "sebastian/object-enumerator": "^7.0.0",
                 "sebastian/recursion-context": "^7.0.1",
-                "sebastian/type": "^6.0.3",
+                "sebastian/type": "^6.0.4",
                 "sebastian/version": "^6.0.0",
                 "staabm/side-effects-detector": "^1.0.5"
             },
@@ -6870,7 +6942,7 @@
             "support": {
                 "issues": "https://github.com/sebastianbergmann/phpunit/issues",
                 "security": "https://github.com/sebastianbergmann/phpunit/security/policy",
-                "source": "https://github.com/sebastianbergmann/phpunit/tree/12.5.25"
+                "source": "https://github.com/sebastianbergmann/phpunit/tree/12.5.26"
             },
             "funding": [
                 {
@@ -6878,7 +6950,7 @@
                     "type": "other"
                 }
             ],
-            "time": "2026-05-13T03:56:57+00:00"
+            "time": "2026-05-21T12:36:53+00:00"
         },
         {
             "name": "sebastian/cli-parser",
@@ -6951,16 +7023,16 @@
         },
         {
             "name": "sebastian/comparator",
-            "version": "7.1.6",
+            "version": "7.1.8",
             "source": {
                 "type": "git",
                 "url": "https://github.com/sebastianbergmann/comparator.git",
-                "reference": "c769009dee98f494e0edc3fd4f4087501688f11e"
+                "reference": "7c65c1e79836812819705b473a90c12399542485"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/sebastianbergmann/comparator/zipball/c769009dee98f494e0edc3fd4f4087501688f11e",
-                "reference": "c769009dee98f494e0edc3fd4f4087501688f11e",
+                "url": "https://api.github.com/repos/sebastianbergmann/comparator/zipball/7c65c1e79836812819705b473a90c12399542485",
+                "reference": "7c65c1e79836812819705b473a90c12399542485",
                 "shasum": ""
             },
             "require": {
@@ -6968,10 +7040,10 @@
                 "ext-mbstring": "*",
                 "php": ">=8.3",
                 "sebastian/diff": "^7.0",
-                "sebastian/exporter": "^7.0"
+                "sebastian/exporter": "^7.0.3"
             },
             "require-dev": {
-                "phpunit/phpunit": "^12.2"
+                "phpunit/phpunit": "^12.5.25"
             },
             "suggest": {
                 "ext-bcmath": "For comparing BcMath\\Number objects"
@@ -7019,7 +7091,7 @@
             "support": {
                 "issues": "https://github.com/sebastianbergmann/comparator/issues",
                 "security": "https://github.com/sebastianbergmann/comparator/security/policy",
-                "source": "https://github.com/sebastianbergmann/comparator/tree/7.1.6"
+                "source": "https://github.com/sebastianbergmann/comparator/tree/7.1.8"
             },
             "funding": [
                 {
@@ -7039,7 +7111,7 @@
                     "type": "tidelift"
                 }
             ],
-            "time": "2026-04-14T08:23:15+00:00"
+            "time": "2026-05-21T04:45:25+00:00"
         },
         {
             "name": "sebastian/complexity",
@@ -7168,23 +7240,23 @@
         },
         {
             "name": "sebastian/environment",
-            "version": "8.1.0",
+            "version": "8.1.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/sebastianbergmann/environment.git",
-                "reference": "b121608b28a13f721e76ffbbd386d08eff58f3f6"
+                "reference": "334bc42a97ec6fc44c59001dc3467e0d739a20e9"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/sebastianbergmann/environment/zipball/b121608b28a13f721e76ffbbd386d08eff58f3f6",
-                "reference": "b121608b28a13f721e76ffbbd386d08eff58f3f6",
+                "url": "https://api.github.com/repos/sebastianbergmann/environment/zipball/334bc42a97ec6fc44c59001dc3467e0d739a20e9",
+                "reference": "334bc42a97ec6fc44c59001dc3467e0d739a20e9",
                 "shasum": ""
             },
             "require": {
                 "php": ">=8.3"
             },
             "require-dev": {
-                "phpunit/phpunit": "^12.0"
+                "phpunit/phpunit": "^12.5.25"
             },
             "suggest": {
                 "ext-posix": "*"
@@ -7220,7 +7292,7 @@
             "support": {
                 "issues": "https://github.com/sebastianbergmann/environment/issues",
                 "security": "https://github.com/sebastianbergmann/environment/security/policy",
-                "source": "https://github.com/sebastianbergmann/environment/tree/8.1.0"
+                "source": "https://github.com/sebastianbergmann/environment/tree/8.1.1"
             },
             "funding": [
                 {
@@ -7240,7 +7312,7 @@
                     "type": "tidelift"
                 }
             ],
-            "time": "2026-04-15T12:13:01+00:00"
+            "time": "2026-05-21T08:45:32+00:00"
         },
         {
             "name": "sebastian/exporter",

@@ -13,6 +13,10 @@ $traceFunctionId = System::getEnv('_APP_TRACE_FUNCTION_ID', '');
 $traceEnabled = $traceProjectId !== '' || $traceFunctionId !== '';
 
 Span::addExporter(new Exporter\Pretty(), function (Span $span) use ($traceEnabled, $traceProjectId, $traceFunctionId): bool {
+    if ($span->getAction() === 'worker.v1-builds' && $span->get('build.type') === BUILD_TYPE_ORCHESTRATOR_EVENT) {
+        return $span->getError() !== null;
+    }
+
     if (\str_starts_with($span->getAction(), 'listener.')) {
         return $span->getError() !== null;
     }

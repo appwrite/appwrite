@@ -51,6 +51,7 @@
         "ext-sockets": "*",
         "appwrite/php-runtimes": "0.20.*",
         "appwrite/php-clamav": "2.0.*",
+        "open-runtimes/orchestrator-client-php": "^0.1",
         "utopia-php/abuse": "1.3.*",
         "utopia-php/agents": "1.2.*",
         "utopia-php/analytics": "0.15.*",
@@ -119,5 +120,10 @@
             "php-http/discovery": true,
             "tbachert/spi": true
         }
-    }
+    },
+    "repositories": [{
+        "name": "open-runtimes-orchestrator-client-php",
+        "type": "vcs",
+        "url": "https://github.com/open-runtimes/orchestrator-client-php"
+    }]
 }
