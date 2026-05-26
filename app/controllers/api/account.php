@@ -67,6 +67,7 @@ use Utopia\Emails\Email;
 use Utopia\Emails\Validator\Email as EmailValidator;
 use Utopia\Http\Http;
 use Utopia\Locale\Locale;
+use Utopia\Platform\Enum;
 use Utopia\Storage\Validator\FileName;
 use Utopia\System\System;
 use Utopia\Validator;
@@ -1239,10 +1240,11 @@ Http::get('/v1/account/sessions/oauth2/:provider')
             )
         ],
         contentType: ContentType::HTML,
+        hide: [APP_SDK_PLATFORM_SERVER],
     ))
     ->label('abuse-limit', 50)
     ->label('abuse-key', 'ip:{ip}')
-    ->param('provider', '', new WhiteList(\array_keys(Config::getParam('oAuthProviders')), true), 'OAuth2 Provider. Currently, supported providers are: ' . \implode(', ', \array_keys(\array_filter(Config::getParam('oAuthProviders'), fn ($node) => (!$node['mock'])))) . '.')
+    ->param('provider', '', new WhiteList(\array_keys(Config::getParam('oAuthProviders')), true), 'OAuth2 Provider. Currently, supported providers are: ' . \implode(', ', \array_keys(\array_filter(Config::getParam('oAuthProviders'), fn ($node) => (!$node['mock'])))) . '.', enum: new Enum(name: 'OAuthProvider', exclude: ['mock', 'mock-unverified']))
     ->param('success', '', fn ($redirectValidator) => $redirectValidator, 'URL to redirect back to your app after a successful login attempt.  Only URLs from hostnames in your project\'s platform list are allowed. This requirement helps to prevent an [open redirect](https://cheatsheetseries.owasp.org/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.html) attack against your project API.', true, ['redirectValidator'])
     ->param('failure', '', fn ($redirectValidator) => $redirectValidator, 'URL to redirect back to your app after a failed login attempt.  Only URLs from hostnames in your project\'s platform list are allowed. This requirement helps to prevent an [open redirect](https://cheatsheetseries.owasp.org/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.html) attack against your project API.', true, ['redirectValidator'])
     ->param('scopes', [], new ArrayList(new Text(APP_LIMIT_ARRAY_ELEMENT_SIZE), APP_LIMIT_ARRAY_PARAMS_SIZE), 'A list of custom OAuth2 scopes. Check each provider internal docs for a list of supported scopes. Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' scopes are allowed, each ' . APP_LIMIT_ARRAY_ELEMENT_SIZE . ' characters long.', true)
@@ -2008,7 +2010,7 @@ Http::get('/v1/account/tokens/oauth2/:provider')
     ))
     ->label('abuse-limit', 50)
     ->label('abuse-key', 'ip:{ip}')
-    ->param('provider', '', new WhiteList(\array_keys(Config::getParam('oAuthProviders')), true), 'OAuth2 Provider. Currently, supported providers are: ' . \implode(', ', \array_keys(\array_filter(Config::getParam('oAuthProviders'), fn ($node) => (!$node['mock'])))) . '.')
+    ->param('provider', '', new WhiteList(\array_keys(Config::getParam('oAuthProviders')), true), 'OAuth2 Provider. Currently, supported providers are: ' . \implode(', ', \array_keys(\array_filter(Config::getParam('oAuthProviders'), fn ($node) => (!$node['mock'])))) . '.', enum: new Enum(name: 'OAuthProvider', exclude: ['mock', 'mock-unverified']))
     ->param('success', '', fn ($redirectValidator) => $redirectValidator, 'URL to redirect back to your app after a successful login attempt.  Only URLs from hostnames in your project\'s platform list are allowed. This requirement helps to prevent an [open redirect](https://cheatsheetseries.owasp.org/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.html) attack against your project API.', true, ['redirectValidator'])
     ->param('failure', '', fn ($redirectValidator) => $redirectValidator, 'URL to redirect back to your app after a failed login attempt.  Only URLs from hostnames in your project\'s platform list are allowed. This requirement helps to prevent an [open redirect](https://cheatsheetseries.owasp.org/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.html) attack against your project API.', true, ['redirectValidator'])
     ->param('scopes', [], new ArrayList(new Text(APP_LIMIT_ARRAY_ELEMENT_SIZE), APP_LIMIT_ARRAY_PARAMS_SIZE), 'A list of custom OAuth2 scopes. Check each provider internal docs for a list of supported scopes. Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' scopes are allowed, each ' . APP_LIMIT_ARRAY_ELEMENT_SIZE . ' characters long.', true)
@@ -4514,7 +4516,7 @@ Http::post('/v1/account/targets/push')
         group: 'pushTargets',
         name: 'createPushTarget',
         description: '/docs/references/account/create-push-target.md',
-        auth: [AuthType::ADMIN, AuthType::SESSION, AuthType::JWT],
+        auth: [AuthType::ADMIN, AuthType::SESSION],
         responses: [
             new SDKResponse(
                 code: Response::STATUS_CODE_CREATED,
@@ -4598,7 +4600,7 @@ Http::put('/v1/account/targets/:targetId/push')
         group: 'pushTargets',
         name: 'updatePushTarget',
         description: '/docs/references/account/update-push-target.md',
-        auth: [AuthType::ADMIN, AuthType::SESSION, AuthType::JWT],
+        auth: [AuthType::ADMIN, AuthType::SESSION],
         responses: [
             new SDKResponse(
                 code: Response::STATUS_CODE_OK,
@@ -4668,7 +4670,7 @@ Http::delete('/v1/account/targets/:targetId/push')
         group: 'pushTargets',
         name: 'deletePushTarget',
         description: '/docs/references/account/delete-push-target.md',
-        auth: [AuthType::ADMIN, AuthType::SESSION, AuthType::JWT],
+        auth: [AuthType::ADMIN, AuthType::SESSION],
         responses: [
             new SDKResponse(
                 code: Response::STATUS_CODE_NOCONTENT,
