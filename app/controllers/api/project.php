@@ -32,7 +32,13 @@ Http::get('/v1/project/usage')
     ))
     ->param('startDate', '', new DateTimeValidator(), 'Starting date for the usage')
     ->param('endDate', '', new DateTimeValidator(), 'End date for the usage')
-    ->param('period', '1d', new WhiteList(['1h', '1d']), 'Period used', true, enum: new Enum(name: 'ProjectUsageRange'))
+    ->param('period', '1d', new WhiteList(['1h', '1d']), 'Period used', true, enum: new Enum(
+        name: 'ProjectUsageRange',
+        map: [
+            '1h' => 'OneHour',
+            '1d' => 'OneDay',
+        ]
+    ))
     ->inject('response')
     ->inject('project')
     ->inject('dbForProject')
