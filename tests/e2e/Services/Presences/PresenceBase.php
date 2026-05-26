@@ -127,7 +127,7 @@ trait PresenceBase
 
     public function testUpsertAndGetPresence(): void
     {
-        if ($this->getSide() === 'client') {
+        if ($this->getSide() === 'client' || $this->getSide() === 'console') {
             $userId = $this->getUser()['$id'];
 
             $upsert = $this->client->call(
@@ -183,7 +183,7 @@ trait PresenceBase
 
     public function testListPresences(): void
     {
-        if ($this->getSide() === 'client') {
+        if ($this->getSide() === 'client' || $this->getSide() === 'console') {
             $upsert = $this->client->call(
                 Client::METHOD_PUT,
                 '/presences/' . ID::unique(),
@@ -302,15 +302,9 @@ trait PresenceBase
 
     public function testClientPresenceCustomPermissionsForOtherUser(): void
     {
+        // Requires API key to create two concurrent presences for the same user with
+        // different ACLs. Server-only — also skipped on console (which has no API keys).
         if ($this->getSide() !== 'client') {
-            $this->expectNotToPerformAssertions();
-            return;
-        }
-
-        if ($this->getProject()['$id'] === 'console') {
-            // Requires two concurrent presences for the same user with different ACLs,
-            // which is only achievable via an API key (the upsert dedupes by userId for
-            // session callers). The console project has no API keys, so we skip.
             $this->expectNotToPerformAssertions();
             return;
         }
@@ -457,7 +451,7 @@ trait PresenceBase
 
     public function testUpdatePresenceSparseFields(): void
     {
-        if ($this->getSide() === 'client') {
+        if ($this->getSide() === 'client' || $this->getSide() === 'console') {
             $upsert = $this->client->call(
                 Client::METHOD_PUT,
                 '/presences/' . ID::unique(),
@@ -640,7 +634,7 @@ trait PresenceBase
 
     public function testDeletePresence(): void
     {
-        if ($this->getSide() === 'client') {
+        if ($this->getSide() === 'client' || $this->getSide() === 'console') {
             $upsert = $this->client->call(
                 Client::METHOD_PUT,
                 '/presences/' . ID::unique(),
@@ -919,7 +913,7 @@ trait PresenceBase
 
     public function testUpdateNotFound(): void
     {
-        if ($this->getSide() === 'client') {
+        if ($this->getSide() === 'client' || $this->getSide() === 'console') {
             $response = $this->client->call(
                 Client::METHOD_PATCH,
                 '/presences/' . ID::unique(),
@@ -982,7 +976,8 @@ trait PresenceBase
 
     public function testServerRequiresUserId(): void
     {
-        if ($this->getSide() === 'client') {
+        // Server-only behavior — also skipped on console (no API keys for the console project).
+        if ($this->getSide() === 'client' || $this->getSide() === 'console') {
             $this->expectNotToPerformAssertions();
             return;
         }
@@ -1004,7 +999,8 @@ trait PresenceBase
 
     public function testUpsertSameUserMaintainsSinglePresence(): void
     {
-        if ($this->getSide() === 'client') {
+        // Server-only behavior — also skipped on console (no API keys for the console project).
+        if ($this->getSide() === 'client' || $this->getSide() === 'console') {
             $this->expectNotToPerformAssertions();
             return;
         }
@@ -1076,7 +1072,7 @@ trait PresenceBase
      */
     public function testCrossUserUpsertDoesNotOverwriteForeignPresence(): void
     {
-        if ($this->getSide() !== 'client') {
+        if ($this->getSide() !== 'client' && $this->getSide() !== 'console') {
             $this->expectNotToPerformAssertions();
             return;
         }

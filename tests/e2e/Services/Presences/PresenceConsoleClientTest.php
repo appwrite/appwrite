@@ -32,12 +32,6 @@ class PresenceConsoleClientTest extends Scope
         ];
     }
 
-    // The console project has no API keys; route every PresenceBase test through the session path.
-    public function getSide()
-    {
-        return 'client';
-    }
-
     public function testGetPresenceUsage(): void
     {
         // Usage requires admin scope, which the console project rejects — run against a regular project.
