@@ -97,6 +97,9 @@ class XList extends Action
             $cursor->setValue($cursorDocument);
         }
 
+        $queries[] = Query::equal('resourceType', [RESOURCE_TYPE_USERS]);
+        $queries[] = Query::equal('resourceId', [$user->getId()]);
+
         $filterQueries = Query::groupByType($queries)['filters'];
 
         try {
