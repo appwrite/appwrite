@@ -10,6 +10,7 @@ use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\Datetime as DateTimeValidator;
 use Utopia\Http\Http;
+use Utopia\Platform\Enum;
 use Utopia\Validator\WhiteList;
 
 Http::get('/v1/project/usage')
@@ -31,7 +32,7 @@ Http::get('/v1/project/usage')
     ))
     ->param('startDate', '', new DateTimeValidator(), 'Starting date for the usage')
     ->param('endDate', '', new DateTimeValidator(), 'End date for the usage')
-    ->param('period', '1d', new WhiteList(['1h', '1d']), 'Period used', true)
+    ->param('period', '1d', new WhiteList(['1h', '1d']), 'Period used', true, enum: new Enum(name: 'ProjectUsageRange'))
     ->inject('response')
     ->inject('project')
     ->inject('dbForProject')
