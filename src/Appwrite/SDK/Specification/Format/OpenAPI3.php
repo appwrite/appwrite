@@ -69,9 +69,6 @@ class OpenAPI3 extends Format
                     ],
                 ],
             ],
-            'x-appwrite' => [
-                'endpointDocs' => $this->getParam('endpoint.docs', ''),
-            ],
             'paths' => [],
             'tags' => $this->services,
             'components' => [
@@ -150,7 +147,6 @@ class OpenAPI3 extends Format
                 'x-appwrite' => [ // Appwrite related metadata
                     'method' => $methodName,
                     'group' => $sdk->getGroup(),
-                    'weight' => $route->getOrder(),
                     'cookies' => $route->getLabel('sdk.cookies', false),
                     'type' => $sdk->getType()->value ?? '',
                     'demo' => \strtolower($namespace) . '/' . Template::fromCamelCaseToDash($methodName) . '.md',
@@ -655,7 +651,9 @@ class OpenAPI3 extends Format
                                     }
 
                                     $node['schema']['items']['enum'] = $enumValues;
-                                    $node['schema']['items']['x-enum-name'] = $enum->name;
+                                    if (!empty($enum->name)) {
+                                        $node['schema']['items']['x-enum-name'] = $enum->name;
+                                    }
                                     if (!empty($enumKeys)) {
                                         $node['schema']['items']['x-enum-keys'] = $enumKeys;
                                     }
@@ -694,7 +692,9 @@ class OpenAPI3 extends Format
                                     }
 
                                     $node['schema']['enum'] = $enumValues;
-                                    $node['schema']['x-enum-name'] = $enum->name;
+                                    if (!empty($enum->name)) {
+                                        $node['schema']['x-enum-name'] = $enum->name;
+                                    }
                                     if (!empty($enumKeys)) {
                                         $node['schema']['x-enum-keys'] = $enumKeys;
                                     }
@@ -778,8 +778,13 @@ class OpenAPI3 extends Format
                     $body['content'][$consumes[0]]['schema']['properties'][$name] = [
                         'type' => $node['schema']['type'],
                         'description' => $node['description'],
-                        'x-example' => $node['schema']['x-example'] ?? null
                     ];
+
+                    if (\array_key_exists('default', $node['schema'])) {
+                        $body['content'][$consumes[0]]['schema']['properties'][$name]['default'] = $node['schema']['default'];
+                    }
+
+                    $body['content'][$consumes[0]]['schema']['properties'][$name]['x-example'] = $node['schema']['x-example'] ?? null;
 
                     if (isset($node['schema']['format'])) {
                         $body['content'][$consumes[0]]['schema']['properties'][$name]['format'] = $node['schema']['format'];
