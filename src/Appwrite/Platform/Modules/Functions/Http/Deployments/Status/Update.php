@@ -133,7 +133,7 @@ class Update extends Action
                 $executor->deleteRuntime($project->getId(), $deploymentId . "-build");
             }
         } catch (\Throwable) {
-            // Best-effort cleanup — deployment status is already 'canceled'.
+            // Best-effort cleanup — deployment status is already 'canceled'
         }
 
         $queueForEvents
