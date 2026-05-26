@@ -6,6 +6,7 @@ use Appwrite\Event\Message\Build as BuildMessage;
 use Appwrite\Event\Publisher\Build as BuildPublisher;
 use Appwrite\Extend\Exception;
 use Appwrite\Utopia\Response;
+use OpenRuntimes\Orchestrator\Enum\CallbackEvent;
 use Utopia\Cache\Cache;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
@@ -171,7 +172,7 @@ abstract class Action extends UtopiaAction
                             deployment: $deployment,
                             type: BUILD_TYPE_ORCHESTRATOR_EVENT,
                             event: [
-                                'type' => 'orchestrator.job.artifact',
+                                'type' => CallbackEvent::Artifact->value,
                                 'data' => [
                                     'artifactId' => 'upload',
                                     'status' => 'success',

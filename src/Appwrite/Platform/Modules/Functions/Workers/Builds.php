@@ -158,6 +158,7 @@ class Builds extends Action
                         deployment: $deployment,
                         platform: $platform,
                         event: $payload['event'] ?? [],
+                        plan: $plan,
                     ),
                     timeout: 120.0
                 );
@@ -1498,7 +1499,8 @@ class Builds extends Action
         Document $resource,
         Document $deployment,
         array $platform,
-        array $event
+        array $event,
+        array $plan
     ): void {
         if (empty($event)) {
             throw new \Exception('Missing orchestrator event payload');
@@ -1612,7 +1614,8 @@ class Builds extends Action
                     resource: $resource,
                     deployment: $deployment,
                     platform: $platform,
-                    data: $pendingExit
+                    data: $pendingExit,
+                    plan: $plan
                 );
             }
 
@@ -1653,7 +1656,8 @@ class Builds extends Action
                 resource: $resource,
                 deployment: $deployment,
                 platform: $platform,
-                data: $pendingExit
+                data: $pendingExit,
+                plan: $plan
             );
 
             return;
@@ -1689,7 +1693,8 @@ class Builds extends Action
             resource: $resource,
             deployment: $deployment,
             platform: $platform,
-            data: $data
+            data: $data,
+            plan: $plan
         );
     }
 
@@ -1705,7 +1710,8 @@ class Builds extends Action
         Document $resource,
         Document $deployment,
         array $platform,
-        array $data
+        array $data,
+        array $plan
     ): void {
         $logStateKey = "builds:orchestrator:logs:{$project->getId()}:{$deployment->getId()}";
         $exitCode = (int) ($data['exitCode'] ?? -1);
@@ -1741,7 +1747,8 @@ class Builds extends Action
                 platform: $platform,
                 publisherForScreenshots: $publisherForScreenshots,
                 buildEndedAt: $endTime,
-                buildDuration: $duration
+                buildDuration: $duration,
+                plan: $plan
             );
 
             $cache->purge($logStateKey);
@@ -1840,7 +1847,8 @@ class Builds extends Action
         array $platform,
         Screenshot $publisherForScreenshots,
         string $buildEndedAt,
-        int $buildDuration
+        int $buildDuration,
+        array $plan
     ): void {
         $runtime = $this->getRuntime($resource, $this->getVersion($resource));
         $adapter = $deployment->getAttribute('adapter', $resource->getAttribute('adapter', '')) ?: null;
@@ -1850,6 +1858,50 @@ class Builds extends Action
             if ($deployment->isEmpty()) {
                 return;
             }
+        }
+
+        $buildSizeLimit = (int) System::getEnv('_APP_COMPUTE_BUILD_SIZE_LIMIT', '2000000000');
+        if (isset($plan['buildSize'])) {
+            $buildSizeLimit = $plan['buildSize'] * 1000 * 1000;
+        }
+
+        if ($deployment->getAttribute('buildSize', 0) > $buildSizeLimit && $buildSizeLimit !== 0) {
+            $logs = $deployment->getAttribute('buildLogs', '');
+            $logs .= "\033[31mBuild size should be less than " . \number_format($buildSizeLimit / (1000 * 1000), 2) . " MBs.\033[0m\n";
+
+            $deployment = $dbForProject->updateDocument('deployments', $deployment->getId(), new Document([
+                'buildEndedAt' => $buildEndedAt,
+                'buildDuration' => $buildDuration,
+                'status' => 'failed',
+                'buildLogs' => $logs,
+            ]));
+
+            try {
+                $dbForProject->getAuthorization()->skip(fn () => $dbForProject->deleteDocuments('resourceTokens', [
+                    Query::equal('resourceType', [TOKENS_RESOURCE_TYPE_DEPLOYMENT_ARTIFACTS]),
+                    Query::equal('resourceInternalId', [$resource->getSequence() . ':' . $deployment->getSequence()]),
+                ]));
+            } catch (\Throwable $error) {
+                Console::warning('Failed deleting deployment artifact tokens: ' . $error->getMessage());
+            }
+
+            if ($deployment->getSequence() === $resource->getAttribute('latestDeploymentInternalId', '')) {
+                $resource = $dbForProject->updateDocument($resource->getCollection(), $resource->getId(), new Document(['latestDeploymentStatus' => $deployment->getAttribute('status', '')]));
+            }
+
+            $queueForRealtime
+                ->setPayload($deployment->getArrayCopy())
+                ->trigger();
+
+            $this->sendUsage(
+                resource: $resource,
+                deployment: $deployment,
+                project: $project,
+                usage: $usage,
+                publisherForUsage: $publisherForUsage
+            );
+
+            return;
         }
 
         $queueForRealtime
