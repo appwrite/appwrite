@@ -227,10 +227,14 @@ trait MigrationsBase
 
         // A fresh test project only intrinsically has its auth apiKey — every other
         // supported resource type has zero data and gets pruned by Transfer::getStatusCounters.
-        // So apiKey should be the only entry, successfully migrated with no errors.
+        // The auth apiKey itself is name-matched against the destination's auth apiKey on
+        // import (createApiKey in the destination handler), so it ends up skipped rather
+        // than successfully created. Either outcome means the resource was processed; an
+        // error is not.
+        $counts = $response['statusCounters'][Resource::TYPE_API_KEY];
         $this->assertEquals([Resource::TYPE_API_KEY], array_keys($response['statusCounters']));
-        $this->assertEquals(0, $response['statusCounters'][Resource::TYPE_API_KEY]['error']);
-        $this->assertGreaterThan(0, $response['statusCounters'][Resource::TYPE_API_KEY]['success']);
+        $this->assertEquals(0, $counts['error']);
+        $this->assertGreaterThan(0, $counts['success'] + $counts['skip']);
     }
 
     /**
