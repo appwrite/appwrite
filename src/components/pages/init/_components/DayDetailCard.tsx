@@ -140,7 +140,7 @@ export function DayDetailCard({ day }: DayDetailCardProps) {
         </div>
       </header>
 
-      <div className="grid border-b border-border lg:grid-cols-2">
+      <div className="grid lg:grid-cols-2">
         <div className="space-y-5 border-b border-border px-6 py-6 lg:border-b-0 lg:border-r">
           <div>
             <DayTitle title={day.title} />
@@ -156,7 +156,7 @@ export function DayDetailCard({ day }: DayDetailCardProps) {
       </div>
 
       {day.resources.length > 0 ? (
-        <ul className="divide-y divide-border border-b border-border">
+        <ul className="divide-y divide-border border-t border-border">
           {day.resources.map((resource) => (
             <li key={resource.id}>
               <a
@@ -185,7 +185,7 @@ export function DayDetailCard({ day }: DayDetailCardProps) {
       ) : null}
 
       {(day.footerVideos?.length ?? 0) > 0 ? (
-        <div className="grid gap-6 px-6 py-6 sm:grid-cols-2">
+        <div className="grid gap-6 border-t border-border px-6 py-6 sm:grid-cols-2">
           {day.footerVideos.map((video) => (
             <VideoThumbnail
               key={video.id}

@@ -12,7 +12,7 @@ import {
   INIT_SEP_2026_TICKET_CONFIG,
 } from './ticket-config'
 import { parseDateOnly } from './dates'
-import type { LaunchEvent, LaunchEventStatus } from './types'
+import type { LaunchEvent, LaunchEventStatus, LaunchEventHeaderNavCta } from './types'
 
 /** Add new launch-week events here; the page resolves the active one automatically. */
 export const LAUNCH_EVENTS: LaunchEvent[] = [
@@ -32,6 +32,14 @@ export const LAUNCH_EVENTS: LaunchEvent[] = [
     tickets: INIT_JULY_2026_TICKET_CONFIG,
     primaryCta: { label: 'View event', href: 'https://appwrite.io/init' },
     secondaryCta: { label: 'Claim your ticket', href: 'https://appwrite.io/init/ticket' },
+    headerNavCta: {
+      beforeEvent: { label: 'Back to Appwrite', to: '/' },
+      duringAfterEvent: {
+        label: 'Try Appwrite 2.0',
+        href: 'https://appwrite.io',
+        external: true,
+      },
+    },
     liveBanner: {
       title: 'Appwrite 2.0 launch',
       href: 'https://appwrite.io/init/keynote',
@@ -174,4 +182,31 @@ export function getActiveLaunchEvent(now = new Date()): LaunchEvent | undefined 
 
 export function getLaunchEventBySlug(slug: string): LaunchEvent | undefined {
   return LAUNCH_EVENTS.find((event) => event.slug === slug)
+}
+
+const DEFAULT_INIT_HEADER_NAV_BEFORE: LaunchEventHeaderNavCta = {
+  label: 'Back to Appwrite',
+  to: '/',
+}
+
+const DEFAULT_INIT_HEADER_NAV_DURING_AFTER: LaunchEventHeaderNavCta = {
+  label: 'Try Appwrite 2.0',
+  href: 'https://appwrite.io',
+  external: true,
+}
+
+/** Header ghost button on `/init` — before event vs during/after. */
+export function resolveInitHeaderNavCta(
+  event?: LaunchEvent,
+  now = new Date(),
+): LaunchEventHeaderNavCta {
+  const activeEvent = event ?? getActiveLaunchEvent(now)
+  const status = activeEvent?.status ?? 'upcoming'
+  const overrides = activeEvent?.headerNavCta
+
+  if (status === 'upcoming') {
+    return { ...DEFAULT_INIT_HEADER_NAV_BEFORE, ...overrides?.beforeEvent }
+  }
+
+  return { ...DEFAULT_INIT_HEADER_NAV_DURING_AFTER, ...overrides?.duringAfterEvent }
 }

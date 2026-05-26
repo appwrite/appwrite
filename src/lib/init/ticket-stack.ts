@@ -1,4 +1,5 @@
 export type InitTicketStackId =
+  | 'appwrite'
   | 'react'
   | 'next'
   | 'vue'
@@ -31,6 +32,7 @@ export type InitTicketStackOption = {
 
 /** Technologies Appwrite supports — used for ticket stack picker. */
 export const INIT_TICKET_STACK_OPTIONS: InitTicketStackOption[] = [
+  { id: 'appwrite', label: 'Appwrite', iconKey: 'appwrite' },
   { id: 'react', label: 'React', iconKey: 'react' },
   { id: 'next', label: 'Next.js', iconKey: 'next' },
   { id: 'vue', label: 'Vue.js', iconKey: 'vue' },
@@ -61,6 +63,8 @@ export const INIT_TICKET_STACK_IDS = new Set(
 )
 
 export const INIT_TICKET_MAX_STACK = 6
+
+export const INIT_TICKET_DEFAULT_STACK: InitTicketStackId[] = ['appwrite']
 
 export function getInitTicketStackOption(
   id: string,

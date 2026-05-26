@@ -3,11 +3,7 @@ import { BaseDrawer } from '@/components/global/shared/BaseDrawer'
 import { FrameworkIcon } from '@/components/global/shared/FrameworkIcon'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import {
-  INIT_TICKET_ACCENT_OPTIONS,
-  INIT_TICKET_PASS_LABELS,
-  type InitTicketPrefs,
-} from '@/lib/init/ticket-prefs'
+import type { InitTicketPrefs } from '@/lib/init/ticket-prefs'
 import {
   INIT_TICKET_MAX_STACK,
   INIT_TICKET_STACK_OPTIONS,
@@ -22,6 +18,7 @@ interface InitTicketCustomizeDrawerProps {
   prefs: InitTicketPrefs
   updatePrefs: (patch: Partial<InitTicketPrefs>) => void
   account?: Models.User | null
+  defaultHolderTitle: string
 }
 
 export function InitTicketCustomizeDrawer({
@@ -30,6 +27,7 @@ export function InitTicketCustomizeDrawer({
   prefs,
   updatePrefs,
   account,
+  defaultHolderTitle,
 }: InitTicketCustomizeDrawerProps) {
   const accountName =
     account?.name?.trim() || account?.email?.split('@')[0] || undefined
@@ -71,56 +69,19 @@ export function InitTicketCustomizeDrawer({
         </div>
 
         <div className="space-y-2">
-          <p className="text-[13px] font-medium text-foreground">Accent</p>
-          <div className="flex flex-wrap gap-2">
-            {INIT_TICKET_ACCENT_OPTIONS.map((option) => {
-              const selected = prefs.accent === option.id
-              return (
-                <button
-                  key={option.id}
-                  type="button"
-                  onClick={() => updatePrefs({ accent: option.id })}
-                  className={cn(
-                    'inline-flex items-center gap-2 rounded-lg border px-3 py-1.5 text-[12px] font-medium transition-colors',
-                    selected
-                      ? 'border-foreground/30 bg-accent text-foreground'
-                      : 'border-border bg-background text-muted-foreground hover:bg-accent/50 hover:text-foreground',
-                  )}
-                >
-                  <span
-                    className="size-2.5 shrink-0 rounded-full"
-                    style={{ backgroundColor: option.color }}
-                    aria-hidden
-                  />
-                  {option.label}
-                </button>
-              )
-            })}
-          </div>
-        </div>
-
-        <div className="space-y-2">
-          <p className="text-[13px] font-medium text-foreground">Pass label</p>
-          <div className="flex flex-wrap gap-2">
-            {INIT_TICKET_PASS_LABELS.map((label) => {
-              const selected = prefs.passLabel === label
-              return (
-                <button
-                  key={label}
-                  type="button"
-                  onClick={() => updatePrefs({ passLabel: label })}
-                  className={cn(
-                    'rounded-lg border px-3 py-1.5 text-[12px] font-medium transition-colors',
-                    selected
-                      ? 'border-foreground/30 bg-accent text-foreground'
-                      : 'border-border bg-background text-muted-foreground hover:bg-accent/50 hover:text-foreground',
-                  )}
-                >
-                  {label}
-                </button>
-              )
-            })}
-          </div>
+          <Label htmlFor="init-ticket-holder-title" className="text-[13px]">
+            Title on ticket
+          </Label>
+          <Input
+            id="init-ticket-holder-title"
+            value={prefs.holderTitle ?? ''}
+            placeholder={defaultHolderTitle}
+            onChange={(e) => {
+              const value = e.target.value
+              updatePrefs({ holderTitle: value.trim() ? value : undefined })
+            }}
+            className="h-9 text-[13px]"
+          />
         </div>
 
         <div className="space-y-3">

@@ -71,6 +71,7 @@ import { openCreateOrganizationFlow } from '@/lib/open-create-organization-flow'
 import { useTheme } from 'next-themes'
 import { getConsoleHeaderLogoClass } from '@/lib/html-theme'
 import { ConsoleHeaderLogo } from '@/components/global/shared/ConsoleHeaderLogo'
+import { resolveInitHeaderNavCta } from '@/lib/init/events'
 
 interface ConsoleHeaderProps {
   onMenuClick?: () => void
@@ -177,6 +178,8 @@ export function ConsoleHeader({
 
   const hasSidebar = !isOrgOverview
   const isAccountScope = location.pathname.startsWith('/account')
+  const isInitScope = location.pathname === '/init'
+  const initHeaderNavCta = isInitScope ? resolveInitHeaderNavCta() : null
   const logoColumnWidth = 60
   const isOptionalAuth = isOptionalAuthPage(location.pathname)
   const showGuestHeader = isOptionalAuth && !isAuthenticated
@@ -277,6 +280,36 @@ export function ConsoleHeader({
               </Link>
             </Button>
           )}
+
+          {/* Init scope exit / try CTA */}
+          {initHeaderNavCta ? (
+            <Button
+              asChild
+              variant="ghost"
+              size="sm"
+              className="hidden h-9 shrink-0 gap-1.5 px-2.5 text-[13px] @[850px]:inline-flex"
+            >
+              {initHeaderNavCta.to ? (
+                <Link to={initHeaderNavCta.to}>
+                  <ArrowLeft className="h-4 w-4" />
+                  {initHeaderNavCta.label}
+                </Link>
+              ) : (
+                <a
+                  href={initHeaderNavCta.href}
+                  target={initHeaderNavCta.external !== false ? '_blank' : undefined}
+                  rel={
+                    initHeaderNavCta.external !== false
+                      ? 'noopener noreferrer'
+                      : undefined
+                  }
+                >
+                  <ArrowLeft className="h-4 w-4" />
+                  {initHeaderNavCta.label}
+                </a>
+              )}
+            </Button>
+          ) : null}
 
           {/* Project Selector - only show when in project context */}
           {!isOrgOverview && (

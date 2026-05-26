@@ -51,8 +51,10 @@ export interface InitTicketTypeDefinition {
   shadowClassNameDarkTheme?: string
   /** Base vertical offset (px) between ticket and drop shadow. */
   shadowOffsetY: number
-  /** Overrides the customizable pass label when set (e.g. gold team tickets). */
+  /** Pass tier label on the ticket stub (e.g. Appwrite VIP). */
   passLabel?: string
+  /** Role line under the holder name (e.g. Appwrite developer). */
+  holderTitle?: string
   /** Fixed accent for underscore and ticket ID. Standard uses theme variants. */
   accentColor?: string
   themeAccentColorLight?: string
@@ -75,7 +77,8 @@ export interface ResolvedInitTicketAppearance {
   usesDarkChrome: boolean
   shadowClassName: string
   shadowOffsetY: number
-  passLabel?: string
+  passLabel: string
+  holderTitle: string
   accentColor: string
 }
 
@@ -92,6 +95,8 @@ export const INIT_TICKET_TYPE_CATALOG: Record<
     shadowClassName: 'bg-black/8',
     shadowClassNameDarkTheme: 'bg-black/8',
     shadowOffsetY: 0,
+    passLabel: 'Init pass',
+    holderTitle: 'Appwrite developer',
   },
   silver: {
     id: 'silver',
@@ -101,6 +106,7 @@ export const INIT_TICKET_TYPE_CATALOG: Record<
     shadowClassName: 'bg-black/8',
     shadowOffsetY: 0,
     passLabel: 'Appwrite VIP',
+    holderTitle: 'Appwrite developer',
   },
   gold: {
     id: 'gold',
@@ -109,6 +115,7 @@ export const INIT_TICKET_TYPE_CATALOG: Record<
     accentColor: '#FBBF24',
     shadowOffsetY: 0,
     passLabel: 'Appwrite Official',
+    holderTitle: 'Contributor',
   },
 }
 
@@ -193,7 +200,8 @@ export function resolveInitTicketAppearance(
     usesDarkChrome,
     shadowClassName,
     shadowOffsetY: type.shadowOffsetY,
-    passLabel: type.passLabel,
+    passLabel: type.passLabel ?? 'Init pass',
+    holderTitle: type.holderTitle ?? 'Appwrite developer',
     accentColor,
   }
 }

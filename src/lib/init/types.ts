@@ -107,6 +107,21 @@ export interface LaunchEventCta {
   external?: boolean
 }
 
+/** Ghost nav button beside the logo on `/init` (before vs during/after the event). */
+export interface LaunchEventHeaderNavCta {
+  label: string
+  /** Internal TanStack Router path (e.g. `/`). */
+  to?: string
+  /** External URL when `to` is not set. */
+  href?: string
+  external?: boolean
+}
+
+export interface LaunchEventHeaderNavCtaConfig {
+  beforeEvent?: Partial<LaunchEventHeaderNavCta>
+  duringAfterEvent?: Partial<LaunchEventHeaderNavCta>
+}
+
 export interface LaunchEventLiveBanner {
   title: string
   href?: string
@@ -146,6 +161,8 @@ export interface LaunchEvent {
   liveBanner?: LaunchEventLiveBanner
   primaryCta: LaunchEventCta
   secondaryCta?: LaunchEventCta
+  /** Header back/exit CTA beside the logo on `/init`. */
+  headerNavCta?: LaunchEventHeaderNavCtaConfig
   giveaway?: LaunchEventGiveaway
   getInvolved: LaunchEventInvolvement[]
 }

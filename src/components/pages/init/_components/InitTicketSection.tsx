@@ -392,6 +392,7 @@ export function InitTicketSection({ event, account }: InitTicketSectionProps) {
         prefs={prefs}
         updatePrefs={updatePrefs}
         account={account}
+        defaultHolderTitle={ticketAppearance.holderTitle}
       />
     </section>
   )

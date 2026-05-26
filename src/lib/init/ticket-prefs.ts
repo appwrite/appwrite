@@ -1,43 +1,19 @@
 import {
+  INIT_TICKET_DEFAULT_STACK,
   parseInitTicketStack,
   type InitTicketStackId,
 } from '@/lib/init/ticket-stack'
 
 export const INIT_TICKET_PREFS_KEY_PREFIX = 'console.init.ticket'
 
-export type InitTicketAccent = 'brand' | 'rose' | 'cyan' | 'amber' | 'violet'
-
-export type InitTicketPassLabel = 'Init pass' | 'Launch crew' | 'Builder pass'
-
 export interface InitTicketPrefs {
-  accent: InitTicketAccent
-  passLabel: InitTicketPassLabel
   displayName?: string
+  holderTitle?: string
   stack: InitTicketStackId[]
 }
 
-export const INIT_TICKET_ACCENT_OPTIONS: {
-  id: InitTicketAccent
-  label: string
-  color: string
-}[] = [
-  { id: 'brand', label: 'Brand', color: 'var(--brand-cta)' },
-  { id: 'rose', label: 'Rose', color: '#ff6b9d' },
-  { id: 'cyan', label: 'Cyan', color: '#22d3ee' },
-  { id: 'amber', label: 'Amber', color: '#fbbf24' },
-  { id: 'violet', label: 'Violet', color: '#a78bfa' },
-]
-
-export const INIT_TICKET_PASS_LABELS: InitTicketPassLabel[] = [
-  'Init pass',
-  'Launch crew',
-  'Builder pass',
-]
-
 export const DEFAULT_INIT_TICKET_PREFS: InitTicketPrefs = {
-  accent: 'brand',
-  passLabel: 'Init pass',
-  stack: [],
+  stack: [...INIT_TICKET_DEFAULT_STACK],
 }
 
 export function getInitTicketPrefsAccountKey(eventId: string): string {
@@ -54,29 +30,23 @@ export function getInitTicketPrefsStorageKey(
 export function parseInitTicketPrefs(value: unknown): InitTicketPrefs | null {
   if (!value || typeof value !== 'object') return null
   const record = value as Record<string, unknown>
-  const accent = record.accent
-  const passLabel = record.passLabel
-  if (
-    typeof accent !== 'string' ||
-    !INIT_TICKET_ACCENT_OPTIONS.some((option) => option.id === accent)
-  ) {
-    return null
-  }
-  if (
-    typeof passLabel !== 'string' ||
-    !INIT_TICKET_PASS_LABELS.includes(passLabel as InitTicketPassLabel)
-  ) {
-    return null
-  }
   const displayName =
     typeof record.displayName === 'string' ? record.displayName.trim() : undefined
+  const holderTitle =
+    typeof record.holderTitle === 'string' ? record.holderTitle.trim() : undefined
   const stack = parseInitTicketStack(record.stack)
   return {
-    accent: accent as InitTicketAccent,
-    passLabel: passLabel as InitTicketPassLabel,
     stack,
     ...(displayName ? { displayName } : {}),
+    ...(holderTitle ? { holderTitle } : {}),
   }
+}
+
+export function getInitTicketHolderTitle(
+  prefs: InitTicketPrefs,
+  defaultTitle: string,
+): string {
+  return prefs.holderTitle?.trim() || defaultTitle
 }
 
 export function readInitTicketPrefsFromStorage(
@@ -136,13 +106,6 @@ export function mergeInitTicketPrefsIntoAccountPrefs(
     ...(existingPrefs ?? {}),
     [getInitTicketPrefsAccountKey(eventId)]: JSON.stringify(ticketPrefs),
   }
-}
-
-export function getInitTicketAccentColor(accent: InitTicketAccent): string {
-  return (
-    INIT_TICKET_ACCENT_OPTIONS.find((option) => option.id === accent)?.color ??
-    'var(--brand-cta)'
-  )
 }
 
 export function formatInitTicketNumber(userId?: string | null): string {

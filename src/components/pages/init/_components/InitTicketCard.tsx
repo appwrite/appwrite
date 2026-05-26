@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react'
 import {
   formatInitTicketNumber,
+  getInitTicketHolderTitle,
   type InitTicketPrefs,
 } from '@/lib/init/ticket-prefs'
 import {
@@ -46,6 +47,7 @@ interface TicketFaceSharedProps {
   ticketNumber: string
   prefs: InitTicketPrefs
   passLabel: string
+  holderTitle: string
   accentColor: string
   usesDarkImage: boolean
   ticketBgSrc: string
@@ -82,6 +84,17 @@ function TicketGitHubBadge({
   )
 }
 
+function getInitTicketStackIconSrc(
+  iconKey: string,
+  usesDarkImage: boolean,
+): string | null {
+  if (iconKey === 'appwrite') {
+    return `/icons/${usesDarkImage ? 'appwrite-white.svg' : 'appwrite.svg'}`
+  }
+  const iconFile = getFrameworkIconFile(iconKey)
+  return iconFile ? `/icons/${iconFile}` : null
+}
+
 function TicketStackIcons({
   stack,
   usesDarkImage,
@@ -96,18 +109,19 @@ function TicketStackIcons({
       {stack.map((id) => {
         const option = getInitTicketStackOption(id)
         if (!option) return null
-        const iconFile = getFrameworkIconFile(option.iconKey)
+        const iconSrc = getInitTicketStackIconSrc(option.iconKey, usesDarkImage)
 
         return (
           <span key={id} className="flex items-center justify-center" title={option.label}>
-            {iconFile ? (
+            {iconSrc ? (
               <img
-                src={`/icons/${iconFile}`}
+                src={iconSrc}
                 alt=""
                 aria-hidden
                 className={cn(
                   'size-5 object-contain',
-                  usesDarkImage ? 'brightness-0 invert' : 'brightness-0',
+                  option.iconKey !== 'appwrite' &&
+                    (usesDarkImage ? 'brightness-0 invert' : 'brightness-0'),
                 )}
               />
             ) : (
@@ -130,6 +144,7 @@ function TicketStubContent({
   eventName,
   ticketNumber,
   holderName,
+  holderTitle,
   passLabel,
   dateRangeLabel,
   accentColor,
@@ -138,6 +153,7 @@ function TicketStubContent({
   eventName: string
   ticketNumber: string
   holderName: string
+  holderTitle: string
   passLabel: string
   dateRangeLabel: string
   accentColor: string
@@ -175,6 +191,14 @@ function TicketStubContent({
             )}
           >
             {holderName}
+          </p>
+          <p
+            className={cn(
+              'max-w-[140px] truncate text-[clamp(7px,1.2vw,10px)] font-medium',
+              mutedClass,
+            )}
+          >
+            {holderTitle}
           </p>
           <p
             className={cn(
@@ -247,6 +271,7 @@ function TicketFrontFace(props: TicketFaceSharedProps) {
     ticketNumber,
     prefs,
     passLabel,
+    holderTitle,
     accentColor,
     usesDarkImage,
   } = props
@@ -288,6 +313,14 @@ function TicketFrontFace(props: TicketFaceSharedProps) {
               >
                 {holderName}
               </p>
+              <p
+                className={cn(
+                  'truncate text-[clamp(11px,2vw,14px)] font-medium leading-snug',
+                  usesDarkImage ? 'text-white/70' : 'text-neutral-600',
+                )}
+              >
+                {holderTitle}
+              </p>
               {githubUsername ? (
                 <TicketGitHubBadge
                   username={githubUsername}
@@ -316,6 +349,7 @@ function TicketFrontFace(props: TicketFaceSharedProps) {
           eventName={eventName}
           ticketNumber={ticketNumber}
           holderName={holderName}
+          holderTitle={holderTitle}
           passLabel={passLabel}
           dateRangeLabel={dateRangeLabel}
           accentColor={accentColor}
@@ -335,6 +369,7 @@ function TicketBackFace(props: TicketFaceSharedProps) {
     ticketNumber,
     prefs,
     passLabel,
+    holderTitle,
     accentColor,
     usesDarkImage,
   } = props
@@ -411,7 +446,23 @@ function TicketBackFace(props: TicketFaceSharedProps) {
                 usesDarkImage ? 'text-white/60' : 'text-neutral-500',
               )}
             >
-              {holderName} · {passLabel}
+              {holderName}
+            </p>
+            <p
+              className={cn(
+                'truncate text-[11px] font-medium',
+                usesDarkImage ? 'text-white/65' : 'text-neutral-500',
+              )}
+            >
+              {holderTitle}
+            </p>
+            <p
+              className={cn(
+                'text-[9px] font-semibold uppercase tracking-[0.2em]',
+                mutedClass,
+              )}
+            >
+              {passLabel}
             </p>
             {githubUsername ? (
               <TicketGitHubBadge
@@ -442,9 +493,9 @@ export function InitTicketCard({
   className,
 }: InitTicketCardProps) {
   const interactive = !blurred && !previewOnly
-  const { backgroundSrc: ticketBgSrc, usesDarkChrome: usesDarkImage, shadowClassName, shadowOffsetY, passLabel: typePassLabel, accentColor } =
+  const { backgroundSrc: ticketBgSrc, usesDarkChrome: usesDarkImage, shadowClassName, shadowOffsetY, passLabel, holderTitle: defaultHolderTitle, accentColor } =
     ticketAppearance
-  const passLabel = typePassLabel ?? prefs.passLabel
+  const holderTitle = getInitTicketHolderTitle(prefs, defaultHolderTitle)
 
   const sceneRef = useRef<HTMLDivElement>(null)
   const flipperRef = useRef<HTMLDivElement>(null)
@@ -471,6 +522,7 @@ export function InitTicketCard({
     ticketNumber,
     prefs,
     passLabel,
+    holderTitle,
     accentColor,
     usesDarkImage,
     ticketBgSrc,

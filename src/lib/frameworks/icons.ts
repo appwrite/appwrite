@@ -93,6 +93,8 @@ export const FRAMEWORK_ICON_MAP: Record<string, string> = {
   pnpm: 'pnpm.svg',
   npm: 'npm.svg',
 
+  appwrite: 'appwrite.svg',
+
   lynx: 'lynx.svg',
   lynxjs: 'lynx.svg',
   'lynx-js': 'lynx.svg',
