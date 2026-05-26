@@ -20,6 +20,8 @@ export function isStaleChunkLoadError(error: unknown): boolean {
   const lower = message.toLowerCase()
   return (
     message.includes("'text/html' is not a valid JavaScript MIME type") ||
+    lower.includes('mime type of "text/html"') ||
+    lower.includes('failed to load module script') ||
     lower.includes('failed to fetch dynamically imported module') ||
     lower.includes('importing a module script failed') ||
     lower.includes('error loading dynamically imported module') ||

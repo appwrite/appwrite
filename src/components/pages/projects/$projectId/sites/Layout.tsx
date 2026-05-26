@@ -7,7 +7,7 @@ import {
 } from '@tanstack/react-router'
 import { useQueryClient, useMutation, useIsFetching } from '@tanstack/react-query'
 import { ServiceHeader, type Tab } from '../shared/ServiceHeader'
-import { DetailResourceHeaderTitle } from '../shared/ResourceTitleSwitcher'
+import { DetailResourceHeaderTitle } from '@/components/global/shared/ResourceTitleSwitcher'
 import {
   useProjectSite,
   useSiteDeployment,

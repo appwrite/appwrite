@@ -83,7 +83,7 @@ import { ServiceHeader, type Tab } from '../../shared/ServiceHeader'
 import { sdk } from '@/lib/appwrite/sdk'
 import { Pagination } from '@/components/global/shared/Pagination'
 import { CopyableId } from '@/components/global/shared/CopyableId'
-import { DetailResourceHeaderTitle } from '../../shared/ResourceTitleSwitcher'
+import { DetailResourceHeaderTitle } from '@/components/global/shared/ResourceTitleSwitcher'
 
 
 import { DateTooltip } from '@/components/global/shared/DateTooltip'

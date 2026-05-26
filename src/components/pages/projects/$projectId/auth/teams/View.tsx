@@ -6,7 +6,7 @@ import { ServiceHeader, type Tab } from '../../shared/ServiceHeader'
 import { TeamOverview } from './Overview'
 import { TeamMembers } from './Members'
 import { useTeam } from '@/lib/react-query/hooks'
-import { DetailResourceHeaderTitle } from '../../shared/ResourceTitleSwitcher'
+import { DetailResourceHeaderTitle } from '@/components/global/shared/ResourceTitleSwitcher'
 import { Button } from '@/components/ui/button'
 
 export function View() {

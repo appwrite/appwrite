@@ -11,7 +11,7 @@ import { useConsoleProfile } from '@/hooks/use-console-profile'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { ServiceHeader, type Tab } from '../shared/ServiceHeader'
 import { CopyableId } from '@/components/global/shared/CopyableId'
-import { DetailResourceHeaderTitle } from '../shared/ResourceTitleSwitcher'
+import { DetailResourceHeaderTitle } from '@/components/global/shared/ResourceTitleSwitcher'
 import { DateTooltip } from '@/components/global/shared/DateTooltip'
 import { Button } from '@/components/ui/button'
 import {

@@ -67,7 +67,13 @@ export const getRouter = () => {
         event.preventDefault()
       }
     }
+    const onWindowError = (event: ErrorEvent) => {
+      if (tryReloadForStaleChunk(event.error ?? event.message)) {
+        event.preventDefault()
+      }
+    }
     window.addEventListener('unhandledrejection', onUnhandledRejection)
+    window.addEventListener('error', onWindowError)
   }
 
   // Initialize Sentry on client side only when VITE_SENTRY_DSN is set
