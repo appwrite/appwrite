@@ -224,7 +224,9 @@ trait MigrationsBase
         $this->assertEquals(Appwrite::getSupportedResources(), $response['resources']);
         $this->assertEquals('Appwrite', $response['source']);
         $this->assertEquals('Appwrite', $response['destination']);
-        $this->assertNotEmpty($response['statusCounters']);
+        $this->assertArrayHasKey(Resource::TYPE_API_KEY, $response['statusCounters']);
+        $this->assertGreaterThan(0, $response['statusCounters'][Resource::TYPE_API_KEY]['success']);
+        $this->assertEquals(0, $response['statusCounters'][Resource::TYPE_API_KEY]['error']);
     }
 
     /**
