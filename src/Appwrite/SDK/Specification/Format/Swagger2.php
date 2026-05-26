@@ -56,9 +56,6 @@ class Swagger2 extends Format
             ],
             'host' => \parse_url($this->getParam('endpoint', ''), PHP_URL_HOST),
             'x-host-docs' => \parse_url($this->getParam('endpoint.docs', ''), PHP_URL_HOST),
-            'x-appwrite' => [
-                'endpointDocs' => $this->getParam('endpoint.docs', ''),
-            ],
             'basePath' => \parse_url($this->getParam('endpoint', ''), PHP_URL_PATH),
             'schemes' => [\parse_url($this->getParam('endpoint', ''), PHP_URL_SCHEME)],
             'consumes' => ['application/json', 'multipart/form-data'],
@@ -146,7 +143,6 @@ class Swagger2 extends Format
                 'x-appwrite' => [ // Appwrite related metadata
                     'method' => $methodName,
                     'group' => $sdk->getGroup(),
-                    'weight' => $route->getOrder(),
                     'cookies' => $route->getLabel('sdk.cookies', false),
                     'type' => $sdk->getType()->value ?? '',
                     'demo' => \strtolower($namespace) . '/' . Template::fromCamelCaseToDash($methodName) . '.md',
@@ -622,7 +618,9 @@ class Swagger2 extends Format
                                     }
 
                                     $node['items']['enum'] = $enumValues;
-                                    $node['items']['x-enum-name'] = $enum->name;
+                                    if (!empty($enum->name)) {
+                                        $node['items']['x-enum-name'] = $enum->name;
+                                    }
                                     if (!empty($enumKeys)) {
                                         $node['items']['x-enum-keys'] = $enumKeys;
                                     }
@@ -661,7 +659,9 @@ class Swagger2 extends Format
                                     }
 
                                     $node['enum'] = $enumValues;
-                                    $node['x-enum-name'] = $enum->name;
+                                    if (!empty($enum->name)) {
+                                        $node['x-enum-name'] = $enum->name;
+                                    }
                                     if (!empty($enumKeys)) {
                                         $node['x-enum-keys'] = $enumKeys;
                                     }
@@ -753,12 +753,13 @@ class Swagger2 extends Format
                     $body['schema']['properties'][$name] = [
                         'type' => $node['type'],
                         'description' => $node['description'],
-                        'x-example' => $node['x-example'] ?? null,
                     ];
 
                     if (\array_key_exists('default', $node)) {
                         $body['schema']['properties'][$name]['default'] = $node['default'];
                     }
+
+                    $body['schema']['properties'][$name]['x-example'] = $node['x-example'] ?? null;
 
                     if (isset($node['format'])) {
                         $body['schema']['properties'][$name]['format'] = $node['format'];

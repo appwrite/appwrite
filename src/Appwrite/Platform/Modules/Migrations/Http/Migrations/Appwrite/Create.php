@@ -59,7 +59,7 @@ class Create extends Action
             ->param('endpoint', '', new URL(), 'Source Appwrite endpoint')
             ->param('projectId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Source Project ID', false, ['dbForProject'])
             ->param('apiKey', '', new Text(512), 'Source API Key')
-            ->param('onDuplicate', OnDuplicate::Fail->value, new WhiteList(OnDuplicate::values()), 'Behavior when a row with an existing $id is encountered. "fail" (default): abort on first conflict. "skip": silently ignore. "overwrite": replace existing row.', true)
+            ->param('onDuplicate', OnDuplicate::Fail->value, new WhiteList(OnDuplicate::values()), 'Behavior when a row with an existing $id is encountered. "fail" (default): abort on first conflict. "skip": silently ignore. "overwrite": replace existing row.', true, enum: new Enum(name: 'MigrationOnDuplicate'))
             ->inject('response')
             ->inject('dbForProject')
             ->inject('project')
