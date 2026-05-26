@@ -134,15 +134,13 @@ class Upsert extends PlatformAction
             throw new Exception(Exception::GENERAL_UNAUTHORIZED_SCOPE, "userId is not allowed for non-API key and non-privileged users");
         }
 
-        if (($isAPIKey || $isPrivilegedUser) && !$userId) {
-            throw new Exception(Exception::GENERAL_BAD_REQUEST, "userId is required for API key and privileged users");
+        // API keys have no associated session user — they must target one explicitly
+        if ($isAPIKey && !$userId) {
+            throw new Exception(Exception::GENERAL_BAD_REQUEST, "userId is required for API key authentication");
         }
         $userInternalId = null;
         $resolvedUserId = $userId;
-        if (!$isAPIKey && !$isPrivilegedUser) {
-            $userInternalId = $user->getSequence();
-            $resolvedUserId = $user->getId();
-        } else {
+        if ($userId) {
             $fetchedUser = $dbForProject->getDocument('users', $userId);
             if ($fetchedUser->isEmpty()) {
                 throw new Exception(Exception::USER_NOT_FOUND, params: [$userId]);
@@ -150,6 +148,9 @@ class Upsert extends PlatformAction
 
             $userInternalId = (string) $fetchedUser->getSequence();
             $resolvedUserId = $fetchedUser->getId();
+        } else {
+            $userInternalId = $user->getSequence();
+            $resolvedUserId = $user->getId();
         }
 
         if (empty($userInternalId)) {
