@@ -10,15 +10,43 @@ use Tests\E2E\Scopes\SideConsole;
 class PresenceConsoleClientTest extends Scope
 {
     use PresenceBase;
-    use ProjectCustom;
-    use SideConsole;
+    use ProjectCustom {
+        getProject as getCustomProject;
+    }
+    use SideConsole {
+        getHeaders as getAdminHeaders;
+    }
+
+    public function getProject(bool $fresh = false): array
+    {
+        return ['$id' => 'console'];
+    }
+
+    // `x-appwrite-mode: admin` is forbidden for the console project, so authenticate
+    // as a console session user instead — `getUser()` signs them up against project=console.
+    public function getHeaders(bool $devKey = true): array
+    {
+        return [
+            'origin' => 'http://localhost',
+            'cookie' => 'a_session_console=' . $this->getUser()['session'],
+        ];
+    }
+
+    // The console project has no API keys; route every PresenceBase test through the session path.
+    public function getSide()
+    {
+        return 'client';
+    }
 
     public function testGetPresenceUsage(): void
     {
+        // Usage requires admin scope, which the console project rejects — run against a regular project.
+        $projectId = $this->getCustomProject()['$id'];
+
         $response = $this->client->call(Client::METHOD_GET, '/presences/usage', array_merge([
             'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()), [
+            'x-appwrite-project' => $projectId,
+        ], $this->getAdminHeaders()), [
             'range' => '32h',
         ]);
 
@@ -26,8 +54,8 @@ class PresenceConsoleClientTest extends Scope
 
         $response = $this->client->call(Client::METHOD_GET, '/presences/usage', array_merge([
             'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()), [
+            'x-appwrite-project' => $projectId,
+        ], $this->getAdminHeaders()), [
             'range' => '24h',
         ]);
 
