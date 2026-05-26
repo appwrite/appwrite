@@ -30,7 +30,7 @@ export function resolveInitCurrentDay(
   const maxDay = dayNumbers[dayNumbers.length - 1] ?? minDay
 
   if (mockCurrentDay !== null) {
-    return Math.min(Math.max(mockCurrentDay, minDay), maxDay)
+    return Math.min(Math.max(mockCurrentDay, 0), maxDay + 1)
   }
 
   const start = parseDateOnly(event.startDate)

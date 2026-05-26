@@ -7,6 +7,10 @@ import {
   INIT_JULY_2026_DAYS,
   INIT_JULY_2026_SCHEDULE,
 } from './day-details'
+import {
+  INIT_JULY_2026_TICKET_CONFIG,
+  INIT_SEP_2026_TICKET_CONFIG,
+} from './ticket-config'
 import { parseDateOnly } from './dates'
 import type { LaunchEvent, LaunchEventStatus } from './types'
 
@@ -24,140 +28,20 @@ export const LAUNCH_EVENTS: LaunchEvent[] = [
     endDate: '2026-07-10',
     status: 'active',
     featured: true,
+    presenceEnabled: true,
+    tickets: INIT_JULY_2026_TICKET_CONFIG,
     primaryCta: { label: 'View event', href: 'https://appwrite.io/init' },
     secondaryCta: { label: 'Claim your ticket', href: 'https://appwrite.io/init/ticket' },
     liveBanner: {
       title: 'Appwrite 2.0 launch',
       href: 'https://appwrite.io/init/keynote',
     },
-    onlineCount: 312,
-    othersOnlineCount: 289,
+    onlineCount: 0,
+    othersOnlineCount: 0,
     days: INIT_JULY_2026_DAYS,
     schedule: INIT_JULY_2026_SCHEDULE,
-    onlineUsers: [
-      {
-        id: '1',
-        name: 'Sarah Chen',
-        activity: 'Watching keynote',
-        isLive: true,
-      },
-      {
-        id: '2',
-        name: 'Marcus Johnson',
-        activity: 'Reading docs',
-      },
-      {
-        id: '3',
-        name: 'Elena Rodriguez',
-        activity: 'In Q&A',
-        isLive: true,
-      },
-      {
-        id: '4',
-        name: 'James Park',
-        activity: 'Exploring Sites',
-      },
-      {
-        id: '5',
-        name: 'Aisha Patel',
-        activity: 'Watching keynote',
-        isLive: true,
-      },
-      {
-        id: '6',
-        name: 'Tomás Müller',
-        activity: 'Building a demo',
-      },
-      {
-        id: '7',
-        name: 'Yuki Tanaka',
-        activity: 'In Discord lounge',
-      },
-      {
-        id: '8',
-        name: 'Priya Sharma',
-        activity: 'Reviewing Functions',
-        isLive: true,
-      },
-      {
-        id: '9',
-        name: 'Lucas Bernard',
-        activity: 'Browsing schedule',
-      },
-      {
-        id: '10',
-        name: 'Fatima Al-Hassan',
-        activity: 'Watching keynote',
-      },
-      {
-        id: '11',
-        name: 'Noah Williams',
-        activity: 'Testing Storage uploads',
-      },
-      {
-        id: '12',
-        name: 'Sofia Andersson',
-        activity: 'In community chat',
-      },
-      {
-        id: '13',
-        name: 'Daniel Okonkwo',
-        activity: 'Exploring Databases',
-      },
-      {
-        id: '14',
-        name: 'Emily Foster',
-        activity: 'Watching keynote',
-        isLive: true,
-      },
-      {
-        id: '15',
-        name: 'Rafael Costa',
-        activity: 'Reading release notes',
-      },
-    ],
-    recentlyOnlineUsers: [
-      {
-        id: 'r1',
-        name: 'Hannah Kim',
-        activity: 'Left 2m ago',
-      },
-      {
-        id: 'r2',
-        name: 'Oliver Schmidt',
-        activity: 'Left 8m ago',
-      },
-      {
-        id: 'r3',
-        name: 'Maya Thompson',
-        activity: 'Left 15m ago',
-      },
-      {
-        id: 'r4',
-        name: 'Ibrahim Saleh',
-        activity: 'Left 22m ago',
-      },
-      {
-        id: 'r5',
-        name: 'Chloe Martin',
-        activity: 'Left 34m ago',
-      },
-      {
-        id: 'r6',
-        name: 'Viktor Petrov',
-        activity: 'Left 41m ago',
-      },
-      {
-        id: 'r7',
-        name: 'Grace Liu',
-        activity: 'Left 52m ago',
-      },
-      {
-        id: 'r8',
-        name: 'Amir Hassan',
-        activity: 'Left 1h ago',
-      },
-    ],
+    onlineUsers: [],
+    recentlyOnlineUsers: [],
     liveActivities: [
       {
         id: 'appwrite-2',
@@ -222,6 +106,7 @@ export const LAUNCH_EVENTS: LaunchEvent[] = [
     startDate: '2026-09-15',
     endDate: '2026-09-19',
     status: 'upcoming',
+    tickets: INIT_SEP_2026_TICKET_CONFIG,
     primaryCta: { label: 'Save the date', href: 'https://appwrite.io/init' },
     onlineCount: 0,
     othersOnlineCount: 0,

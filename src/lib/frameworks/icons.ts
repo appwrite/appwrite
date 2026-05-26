@@ -72,6 +72,9 @@ export const FRAMEWORK_ICON_MAP: Record<string, string> = {
 
   flutter: 'flutter.svg',
 
+  android: 'android.svg',
+  apple: 'apple.svg',
+
   python: 'python.svg',
   dart: 'dart.svg',
   php: 'php.svg',

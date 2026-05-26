@@ -2,10 +2,35 @@ import { useEffect, useState } from 'react'
 import { Switch } from '@/components/ui/switch'
 import { Slider } from '@/components/ui/slider'
 import {
+  formatInitMockCurrentDay,
+  getInitMockDayAfter,
+  INIT_LAUNCH_WEEK_DAY_COUNT,
+  INIT_MOCK_DAY_BEFORE,
+} from '@/lib/init/mock-current-day'
+import {
   loadDebugOverrides,
   setDebugOverride,
   subscribeToDebugOverrides,
 } from '@/lib/debug-overrides'
+
+const MOCK_DAY_MIN = INIT_MOCK_DAY_BEFORE
+const MOCK_DAY_MAX = getInitMockDayAfter()
+
+function mockDaySliderLabel(day: number): string {
+  if (day === INIT_MOCK_DAY_BEFORE) return 'Before'
+  if (day === MOCK_DAY_MAX) return 'After'
+  return `Day ${day}`
+}
+
+function mockDayPreviewCopy(day: number): string {
+  if (day === INIT_MOCK_DAY_BEFORE) {
+    return 'All five days stay locked; schedule and live banner are hidden.'
+  }
+  if (day === MOCK_DAY_MAX) {
+    return 'All five days are unlocked; nothing is marked live.'
+  }
+  return `Days after day ${day} stay locked; their titles, resources, and schedule entries are not rendered.`
+}
 
 export function DebugMenuInitDayPanel() {
   const [overrides, setOverrides] = useState(loadDebugOverrides)
@@ -21,7 +46,7 @@ export function DebugMenuInitDayPanel() {
           <p className="text-[13px] font-medium text-[#E5DEFF]">Mock current day</p>
           <p className="mt-0.5 text-[11px] text-[#9B87F5]/80">
             {mockEnabled
-              ? `Preview Init as day ${selectedDay} of 5`
+              ? formatInitMockCurrentDay(selectedDay)
               : 'Use the real calendar date on /init'}
           </p>
         </div>
@@ -37,23 +62,28 @@ export function DebugMenuInitDayPanel() {
       {mockEnabled ? (
         <div className="space-y-3 rounded-lg px-3 pb-3">
           <div className="flex items-center justify-between text-[11px] text-[#9B87F5]/80">
-            <span>Day 1</span>
-            <span className="font-medium text-[#E5DEFF]">Day {selectedDay}</span>
-            <span>Day 5</span>
+            <span>Before</span>
+            <span className="font-medium text-[#E5DEFF]">
+              {mockDaySliderLabel(selectedDay)}
+            </span>
+            <span>After</span>
           </div>
           <Slider
-            min={1}
-            max={5}
+            min={MOCK_DAY_MIN}
+            max={MOCK_DAY_MAX}
             step={1}
             value={[selectedDay]}
             onValueChange={([value]) => {
-              if (value) setDebugOverride('mockInitCurrentDay', value)
+              if (value !== undefined) setDebugOverride('mockInitCurrentDay', value)
             }}
             aria-label="Mock Init current day"
           />
+          <div className="flex justify-between text-[10px] text-[#9B87F5]/60">
+            <span>Day 1</span>
+            <span>Day {INIT_LAUNCH_WEEK_DAY_COUNT}</span>
+          </div>
           <p className="text-[11px] leading-relaxed text-[#9B87F5]/80">
-            Days after day {selectedDay} stay locked; their titles, resources, and
-            schedule entries are not rendered.
+            {mockDayPreviewCopy(selectedDay)}
           </p>
         </div>
       ) : null}

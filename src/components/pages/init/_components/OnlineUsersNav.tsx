@@ -18,6 +18,8 @@ interface OnlineUsersNavProps {
   event: LaunchEvent
   mobileOpen: boolean
   onMobileClose: () => void
+  /** When true, render the panel even if the user list is still loading or empty. */
+  showPanel?: boolean
 }
 
 type AvatarSize = 'sm' | 'md'
@@ -136,11 +138,30 @@ function OnlineUsersNavContent({
   event,
   collapsed,
   isMobile = false,
+  showPanel = false,
 }: {
   event: LaunchEvent
   collapsed: boolean
   isMobile?: boolean
+  showPanel?: boolean
 }) {
+  const hasUsers =
+    event.onlineUsers.length > 0 || event.recentlyOnlineUsers.length > 0
+
+  if (showPanel && !hasUsers) {
+    return (
+      <p
+        className={cn(
+          'px-2.5 text-[13px] text-muted-foreground',
+          isMobile && 'px-3',
+          collapsed && !isMobile && 'text-center text-[12px]',
+        )}
+      >
+        {collapsed && !isMobile ? '…' : 'No one else online yet. You are connected.'}
+      </p>
+    )
+  }
+
   return (
     <>
       <UserCategory
@@ -206,7 +227,13 @@ function OnlineUsersFooter({
   )
 }
 
-export function hasOnlineUsersNav(event: LaunchEvent) {
+export function hasOnlineUsersNav(
+  event: LaunchEvent,
+  options?: { presenceEnabled?: boolean; isAuthenticated?: boolean },
+) {
+  if (options?.presenceEnabled && options.isAuthenticated) {
+    return true
+  }
   return event.onlineUsers.length > 0 || event.recentlyOnlineUsers.length > 0
 }
 
@@ -214,10 +241,11 @@ export function OnlineUsersNav({
   event,
   mobileOpen,
   onMobileClose,
+  showPanel = false,
 }: OnlineUsersNavProps) {
   const [collapsed, setCollapsed] = useState(false)
 
-  if (!hasOnlineUsersNav(event)) return null
+  if (!showPanel && !hasOnlineUsersNav(event)) return null
 
   return (
     <TooltipProvider>
@@ -239,7 +267,7 @@ export function OnlineUsersNav({
             role="navigation"
             aria-label="Online participants"
           >
-            <OnlineUsersNavContent event={event} collapsed={collapsed} />
+            <OnlineUsersNavContent event={event} collapsed={collapsed} showPanel={showPanel} />
           </nav>
 
           <div className="flex h-[54px] w-full items-center border-t border-border px-3">
@@ -290,7 +318,12 @@ export function OnlineUsersNav({
           role="navigation"
           aria-label="Mobile online participants"
         >
-          <OnlineUsersNavContent event={event} collapsed={false} isMobile />
+          <OnlineUsersNavContent
+            event={event}
+            collapsed={false}
+            isMobile
+            showPanel={showPanel}
+          />
         </nav>
 
         <div className="border-t border-border px-4 py-3">

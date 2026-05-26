@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react'
+import { useQuery } from '@tanstack/react-query'
 import { ConsoleLayout } from '@/components/global/layout/ConsoleLayout'
 import { CommandCenter } from '@/components/global/shared/CommandCenter'
 import { useKeyboardShortcut } from '@/hooks/use-keyboard-shortcuts'
@@ -6,8 +7,11 @@ import { useDebugOverrides } from '@/lib/debug-overrides'
 import { getActiveLaunchEvent } from '@/lib/init/events'
 import { applyInitEventVisibility } from '@/lib/init/event-visibility'
 import { isLaunchEventDayLocked } from '@/lib/init/types'
+import { useInitOnlinePresence } from '@/lib/init/use-init-online-presence'
+import { consoleAccountQueryOptions } from '@/lib/react-query/hooks/auth'
 import { EventHero } from './_components/EventHero'
 import { EventSchedule } from './_components/EventSchedule'
+import { InitTicketSection } from './_components/InitTicketSection'
 import { GiveawayPromoCard } from './_components/GiveawayPromoCard'
 import { GetInvolvedCards } from './_components/GetInvolvedCards'
 import { LiveBannerBar } from './_components/LiveBannerBar'
@@ -20,11 +24,30 @@ export function View() {
   const [commandCenterOpen, setCommandCenterOpen] = useState(false)
   const [onlineNavOpen, setOnlineNavOpen] = useState(false)
   const { mockInitCurrentDay } = useDebugOverrides()
-  const event = useMemo(() => {
+  const baseEvent = useMemo(() => {
     const active = getActiveLaunchEvent()
     if (!active) return undefined
     return applyInitEventVisibility(active, { mockCurrentDay: mockInitCurrentDay })
   }, [mockInitCurrentDay])
+
+  const { data: account } = useQuery(consoleAccountQueryOptions())
+  const presence = useInitOnlinePresence(baseEvent?.id, {
+    enabled: Boolean(baseEvent?.presenceEnabled && account),
+  })
+
+  const event = useMemo(() => {
+    if (!baseEvent) return undefined
+    if (!baseEvent.presenceEnabled || !account) {
+      return baseEvent
+    }
+    return {
+      ...baseEvent,
+      onlineUsers: presence.onlineUsers,
+      recentlyOnlineUsers: presence.recentlyOnlineUsers,
+      onlineCount: presence.onlineCount,
+      othersOnlineCount: presence.othersOnlineCount,
+    }
+  }, [account, baseEvent, presence])
 
   useKeyboardShortcut('meta+k', () => setCommandCenterOpen(true))
   useKeyboardShortcut('control+k', () => setCommandCenterOpen(true))
@@ -55,7 +78,10 @@ export function View() {
     )
   }
 
-  const showOnlineNav = hasOnlineUsersNav(event)
+  const showOnlineNav = hasOnlineUsersNav(event, {
+    presenceEnabled: event.presenceEnabled,
+    isAuthenticated: Boolean(account),
+  })
 
   return (
     <>
@@ -72,6 +98,7 @@ export function View() {
                 content: (
                   <OnlineUsersNav
                     event={event}
+                    showPanel
                     mobileOpen={onlineNavOpen}
                     onMobileClose={() => setOnlineNavOpen(false)}
                   />
@@ -87,6 +114,18 @@ export function View() {
 
         <div className="mx-auto w-full max-w-7xl px-4 pb-8 pt-8 sm:px-6">
           <EventSchedule event={event} fullWidth />
+        </div>
+
+        <div className="border-t border-border" aria-hidden />
+
+        <div className="relative overflow-hidden bg-muted/40 dark:bg-background">
+          <div
+            className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle,var(--border)_1px,transparent_1px)] bg-[length:18px_18px]"
+            aria-hidden
+          />
+          <div className="relative z-10 mx-auto w-full max-w-7xl px-4 pb-4 pt-2 sm:px-6 sm:pb-6">
+            <InitTicketSection event={event} account={account} />
+          </div>
         </div>
 
         <div className="border-t border-border" aria-hidden />
@@ -111,6 +150,18 @@ export function View() {
           </div>
 
           <GetInvolvedCards event={event} />
+
+          <p className="text-center text-[12px] text-muted-foreground">
+            Hero particle animation by{' '}
+            <a
+              href="https://animejs.com/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="font-medium text-foreground underline-offset-4 hover:underline"
+            >
+              Anime.js
+            </a>
+          </p>
         </div>
       </ConsoleLayout>
 

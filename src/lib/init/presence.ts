@@ -1,0 +1,222 @@
+import { ID, Permission, Query, Role } from '@appwrite.io/console'
+import type { Models } from '@appwrite.io/console'
+import { sdk } from '@/lib/appwrite/sdk'
+import type { LaunchEventOnlineUser } from '@/lib/init/types'
+
+/** Heartbeat interval while the Init page is active. */
+export const INIT_PRESENCE_HEARTBEAT_MS = 30_000
+
+/** Presence TTL sent on each upsert (must exceed heartbeat interval). */
+export const INIT_PRESENCE_TTL_SECONDS = 90
+
+/** Bumped when presence permission/status shape changes (forces new presence rows). */
+const PRESENCE_ID_STORAGE_PREFIX = 'console.init.presenceId.v2.'
+
+export const INIT_PRESENCE_STATUS_ONLINE = 'online'
+export const INIT_PRESENCE_STATUS_AWAY = 'away'
+
+export function buildInitOnlineStatus(eventId: string): string {
+  return `init:${eventId}`
+}
+
+export function buildInitAwayStatus(eventId: string): string {
+  return `init:${eventId}:away`
+}
+
+export type InitPresenceMetadata = {
+  eventId: string
+  name: string
+  activity?: string
+  isLive?: boolean
+}
+
+export function initPresenceStorageKey(eventId: string): string {
+  return `${PRESENCE_ID_STORAGE_PREFIX}${eventId}`
+}
+
+export function readStoredInitPresenceId(eventId: string): string | null {
+  if (typeof window === 'undefined') return null
+  try {
+    return window.localStorage.getItem(initPresenceStorageKey(eventId))?.trim() || null
+  } catch {
+    return null
+  }
+}
+
+export function writeStoredInitPresenceId(eventId: string, presenceId: string): void {
+  if (typeof window === 'undefined') return
+  try {
+    window.localStorage.setItem(initPresenceStorageKey(eventId), presenceId)
+  } catch {
+    /* private mode */
+  }
+}
+
+export function clearStoredInitPresenceId(eventId: string): void {
+  if (typeof window === 'undefined') return
+  try {
+    window.localStorage.removeItem(initPresenceStorageKey(eventId))
+  } catch {
+    /* private mode */
+  }
+}
+
+export function resolveInitPresenceId(eventId: string): string {
+  return readStoredInitPresenceId(eventId) ?? ID.unique()
+}
+
+export function buildInitPresenceExpiresAt(
+  ttlSeconds = INIT_PRESENCE_TTL_SECONDS,
+): string {
+  return new Date(Date.now() + ttlSeconds * 1000).toISOString()
+}
+
+/** Any signed-in console user can read; only the owner can update/delete. */
+export function buildInitPresencePermissions(userId: string): string[] {
+  return [
+    Permission.read(Role.users()),
+    Permission.update(Role.user(userId)),
+    Permission.delete(Role.user(userId)),
+  ]
+}
+
+export function parseInitPresenceMetadata(
+  metadata: unknown,
+): InitPresenceMetadata | null {
+  if (typeof metadata === 'string') {
+    try {
+      metadata = JSON.parse(metadata) as unknown
+    } catch {
+      return null
+    }
+  }
+  if (!metadata || typeof metadata !== 'object') return null
+  const record = metadata as Record<string, unknown>
+  const eventId = typeof record.eventId === 'string' ? record.eventId.trim() : ''
+  if (!eventId) return null
+  const name = typeof record.name === 'string' ? record.name.trim() : ''
+  return {
+    eventId,
+    name,
+    activity: typeof record.activity === 'string' ? record.activity : undefined,
+    isLive: record.isLive === true,
+  }
+}
+
+type InitPresenceRecord = Models.DefaultPresence
+
+export function presenceMatchesInitEvent(
+  presence: InitPresenceRecord,
+  eventId: string,
+): boolean {
+  const metadata = parseInitPresenceMetadata(presence.metadata)
+  if (metadata?.eventId === eventId) return true
+
+  const status = presence.status
+  return (
+    status === buildInitOnlineStatus(eventId) ||
+    status === buildInitAwayStatus(eventId) ||
+    (status === INIT_PRESENCE_STATUS_ONLINE && metadata?.eventId === eventId) ||
+    (status === INIT_PRESENCE_STATUS_AWAY && metadata?.eventId === eventId)
+  )
+}
+
+export function presenceToOnlineUser(
+  presence: InitPresenceRecord,
+): LaunchEventOnlineUser {
+  const metadata = parseInitPresenceMetadata(presence.metadata)
+  return {
+    id: presence.userId,
+    name: metadata?.name || 'Console user',
+    activity: metadata?.activity ?? 'On Init',
+    isLive: metadata?.isLive,
+  }
+}
+
+export function sortOnlineUsers(users: LaunchEventOnlineUser[]): LaunchEventOnlineUser[] {
+  return [...users].sort((a, b) => {
+    const liveDelta = Number(Boolean(b.isLive)) - Number(Boolean(a.isLive))
+    if (liveDelta !== 0) return liveDelta
+    return a.name.localeCompare(b.name)
+  })
+}
+
+function enrichPresenceRecord(
+  presence: InitPresenceRecord,
+  params: {
+    status: string
+    metadata: InitPresenceMetadata
+  },
+): InitPresenceRecord {
+  return {
+    ...presence,
+    status: params.status,
+    metadata: params.metadata,
+  }
+}
+
+export async function listInitPresences(
+  eventId: string,
+  mode: 'online' | 'away',
+  limit = 50,
+): Promise<InitPresenceRecord[]> {
+  const status = mode === 'online' ? buildInitOnlineStatus(eventId) : buildInitAwayStatus(eventId)
+  const result = await sdk.forConsole.presences.list({
+    queries: [
+      Query.equal('status', [status]),
+      Query.limit(limit),
+      Query.orderDesc('$updatedAt'),
+    ],
+    total: false,
+  })
+  return (result.presences ?? []).filter((presence) =>
+    presenceMatchesInitEvent(presence, eventId),
+  )
+}
+
+export async function upsertInitPresence(params: {
+  presenceId: string
+  userId: string
+  status: string
+  metadata: InitPresenceMetadata
+}): Promise<InitPresenceRecord> {
+  const presence = await sdk.forConsole.presences.upsert({
+    presenceId: params.presenceId,
+    userId: params.userId,
+    status: params.status,
+    metadata: params.metadata,
+    permissions: buildInitPresencePermissions(params.userId),
+    expiresAt: buildInitPresenceExpiresAt(),
+  })
+
+  return enrichPresenceRecord(presence, {
+    status: params.status,
+    metadata: params.metadata,
+  })
+}
+
+export async function deleteInitPresence(presenceId: string): Promise<void> {
+  await sdk.forConsole.presences.delete({ presenceId })
+}
+
+export function buildPresenceMapForEvent(
+  presences: InitPresenceRecord[],
+  eventId: string,
+): Map<string, InitPresenceRecord> {
+  const map = new Map<string, InitPresenceRecord>()
+  for (const presence of presences) {
+    if (!presenceMatchesInitEvent(presence, eventId)) continue
+    map.set(presence.userId, presence)
+  }
+  return map
+}
+
+export function mapPresencesToOnlineUsers(
+  presences: Iterable<InitPresenceRecord>,
+): LaunchEventOnlineUser[] {
+  const users: LaunchEventOnlineUser[] = []
+  for (const presence of presences) {
+    users.push(presenceToOnlineUser(presence))
+  }
+  return sortOnlineUsers(users)
+}

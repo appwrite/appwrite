@@ -12,6 +12,8 @@ const PARTICLE_BRIGHTNESS = 0.8
 type InitHeroBackgroundProps = {
   containerRef: RefObject<HTMLElement | null>
   compact?: boolean
+  /** When false, timers pause (e.g. hidden collapsed header). */
+  active?: boolean
 }
 
 type ParticleTheme = ReturnType<typeof getParticleTheme>
@@ -25,6 +27,8 @@ type AnimationRuntime = {
   autoMove: ReturnType<typeof createTimeline>
   manualMovementTimeout: ReturnType<typeof createTimer>
   syncLayout: () => void
+  pause: () => void
+  resume: () => void
 }
 
 type ThemeState = {
@@ -68,10 +72,10 @@ function getParticleTheme(isDark: boolean): ParticleTheme {
   }
 
   return {
-    opacityRange: [dim(0.55), dim(0.15)] as [number, number],
-    lightnessRange: [dim(62), dim(42)] as [number, number],
-    shadowRange: [dim(4), dim(0.5)] as [number, number],
-    pulseOpacity: dim(0.7),
+    opacityRange: [0.95, 0.6] as [number, number],
+    lightnessRange: [72, 56] as [number, number],
+    shadowRange: [8, 2] as [number, number],
+    pulseOpacity: 1,
   }
 }
 
@@ -81,10 +85,14 @@ function applyParticleTheme(
     'particleEls' | 'scaleStagger' | 'grid' | 'from'
   >,
   particleTheme: ParticleTheme,
+  isDark: boolean,
 ) {
   const { particleEls, scaleStagger, grid, from } = runtime
   const brandPink = getBrandPink()
   const opacityStagger = stagger(particleTheme.opacityRange, { grid, from })
+  const shadowColor = isDark
+    ? dimBrandPink(brandPink)
+    : `color-mix(in srgb, ${brandPink} 90%, transparent)`
 
   utils.set(particleEls, {
     scale: scaleStagger,
@@ -97,7 +105,7 @@ function applyParticleTheme(
     boxShadow: stagger(particleTheme.shadowRange, {
       grid,
       from,
-      modifier: (v) => `0px 0px ${utils.round(v, 0)}em 0px ${dimBrandPink(brandPink)}`,
+      modifier: (v) => `0px 0px ${utils.round(v, 0)}em 0px ${shadowColor}`,
     }),
   })
 
@@ -107,15 +115,29 @@ function applyParticleTheme(
 export function InitHeroBackground({
   containerRef,
   compact = false,
+  active = true,
 }: InitHeroBackgroundProps) {
   const creatureRef = useRef<HTMLDivElement>(null)
   const runtimeRef = useRef<AnimationRuntime | null>(null)
   const themeStateRef = useRef<ThemeState | null>(null)
   const compactRef = useRef(compact)
+  const activeRef = useRef(active)
+  const canRunRef = useRef(true)
   const { resolvedTheme } = useTheme()
   const isDark = isDarkChrome(resolvedTheme)
 
   compactRef.current = compact
+  activeRef.current = active
+
+  useEffect(() => {
+    const runtime = runtimeRef.current
+    if (!runtime) return
+    if (active && canRunRef.current) {
+      runtime.resume()
+    } else {
+      runtime.pause()
+    }
+  }, [active])
 
   useEffect(() => {
     const container = containerRef.current
@@ -156,6 +178,7 @@ export function InitHeroBackground({
     const opacityStagger = applyParticleTheme(
       { particleEls, scaleStagger, grid, from },
       particleTheme,
+      darkChrome,
     )
     themeStateRef.current = { particleTheme, opacityStagger }
 
@@ -205,6 +228,8 @@ export function InitHeroBackground({
     const mainLoop = createTimer({
       frameRate: 15,
       onUpdate: () => {
+        if (!canRunRef.current || !activeRef.current) return
+
         animate(particleEls, {
           x: cursor.x,
           y: cursor.y,
@@ -246,10 +271,29 @@ export function InitHeroBackground({
 
     const manualMovementTimeout = createTimer({
       duration: 1500,
-      onComplete: () => autoMove.play(),
+      onComplete: () => {
+        if (canRunRef.current && activeRef.current) {
+          autoMove.play()
+        }
+      },
     })
 
+    const pause = () => {
+      mainLoop.pause()
+      autoMove.pause()
+      manualMovementTimeout.pause()
+    }
+
+    const resume = () => {
+      if (!canRunRef.current || !activeRef.current) return
+      if (document.visibilityState === 'hidden') return
+      mainLoop.play()
+      autoMove.play()
+    }
+
     const followPointer = (event: MouseEvent | TouchEvent) => {
+      if (!canRunRef.current || !activeRef.current) return
+
       const rect = container.getBoundingClientRect()
       const point =
         event.type === 'touchmove'
@@ -269,13 +313,39 @@ export function InitHeroBackground({
       syncLayout()
     }
 
+    const handleVisibility = () => {
+      if (document.visibilityState === 'hidden') {
+        pause()
+        return
+      }
+      if (canRunRef.current && activeRef.current) {
+        resume()
+      }
+    }
+
+    const intersectionObserver = new IntersectionObserver(
+      ([entry]) => {
+        canRunRef.current = entry?.isIntersecting ?? true
+        if (canRunRef.current && activeRef.current && document.visibilityState === 'visible') {
+          resume()
+        } else {
+          pause()
+        }
+      },
+      { threshold: 0.05 },
+    )
+
     const resizeObserver = new ResizeObserver(handleResize)
     resizeObserver.observe(container)
+    intersectionObserver.observe(container)
 
     container.addEventListener('mousemove', followPointer)
     container.addEventListener('touchmove', followPointer, { passive: true })
+    document.addEventListener('visibilitychange', handleVisibility)
 
-    autoMove.play()
+    if (activeRef.current) {
+      resume()
+    }
 
     runtimeRef.current = {
       particleEls,
@@ -286,15 +356,17 @@ export function InitHeroBackground({
       autoMove,
       manualMovementTimeout,
       syncLayout,
+      pause,
+      resume,
     }
 
     return () => {
       resizeObserver.disconnect()
+      intersectionObserver.disconnect()
       container.removeEventListener('mousemove', followPointer)
       container.removeEventListener('touchmove', followPointer)
-      mainLoop.pause()
-      autoMove.pause()
-      manualMovementTimeout.pause()
+      document.removeEventListener('visibilitychange', handleVisibility)
+      pause()
       creatureEl.replaceChildren()
       runtimeRef.current = null
       themeStateRef.current = null
@@ -318,7 +390,7 @@ export function InitHeroBackground({
 
         const darkChrome = isDarkChrome(resolvedTheme)
         const particleTheme = getParticleTheme(darkChrome)
-        const opacityStagger = applyParticleTheme(runtimeRef.current, particleTheme)
+        const opacityStagger = applyParticleTheme(runtimeRef.current, particleTheme, darkChrome)
         themeStateRef.current = { particleTheme, opacityStagger }
       })
     })
@@ -356,7 +428,7 @@ export function InitHeroBackground({
           className={
             isDark
               ? 'flex flex-wrap items-center justify-center [&>.init-hero-particle]:relative [&>.init-hero-particle]:m-[3em] [&>.init-hero-particle]:size-[4em] [&>.init-hero-particle]:rounded-[2em] [&>.init-hero-particle]:[mix-blend-mode:plus-lighter] [&>.init-hero-particle]:will-change-transform [&>.init-hero-particle]:[transform-style:preserve-3d]'
-              : 'flex flex-wrap items-center justify-center [&>.init-hero-particle]:relative [&>.init-hero-particle]:m-[3em] [&>.init-hero-particle]:size-[4em] [&>.init-hero-particle]:rounded-[2em] [&>.init-hero-particle]:mix-blend-multiply [&>.init-hero-particle]:will-change-transform [&>.init-hero-particle]:[transform-style:preserve-3d]'
+              : 'flex flex-wrap items-center justify-center [&>.init-hero-particle]:relative [&>.init-hero-particle]:m-[3em] [&>.init-hero-particle]:size-[4em] [&>.init-hero-particle]:rounded-[2em] [&>.init-hero-particle]:mix-blend-normal [&>.init-hero-particle]:will-change-transform [&>.init-hero-particle]:[transform-style:preserve-3d]'
           }
           style={{ width: '150em', height: '150em' }}
         />

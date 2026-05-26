@@ -251,7 +251,7 @@ const STATUS_PAGE_URL = 'https://status.appwrite.online'
 
 function RootDocument({ children }: { children: React.ReactNode }) {
   const queryClient = useQueryClient()
-  const { isLoading, isAuthRoute } = useInitialLoader()
+  const { isLoading, skipStaticLoader } = useInitialLoader()
   const [clientMounted, setClientMounted] = useState(false)
   const location = useLocation()
   const { isCloud, features } = useConsoleProfile()
@@ -311,7 +311,7 @@ function RootDocument({ children }: { children: React.ReactNode }) {
                 isVisible={isLoaderVisible}
                 statusBanner={statusBanner}
               />
-            ) : !isAuthRoute ? (
+            ) : !skipStaticLoader ? (
               <StaticFullscreenLoader />
             ) : null}
             <SentryContextProvider>

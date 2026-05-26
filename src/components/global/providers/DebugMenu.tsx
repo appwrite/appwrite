@@ -21,6 +21,7 @@ import {
   Columns2,
   Braces,
   CalendarDays,
+  Ticket,
 } from 'lucide-react'
 import {
   Popover,
@@ -44,6 +45,8 @@ import {
   type DebugOverrides,
   type MockCloudStatusAlert,
 } from '@/lib/debug-overrides'
+import { formatInitMockCurrentDay } from '@/lib/init/mock-current-day'
+import { formatInitMockTicketType } from '@/lib/init/ticket-types'
 import { useFavicon, type FaviconVariant } from '@/hooks/use-favicon'
 import { useConsoleProfile } from '@/hooks/use-console-profile'
 import {
@@ -67,6 +70,7 @@ import { cn } from '@/lib/utils'
 import type { ConsoleProfileFeatures } from '@/lib/console-profiles'
 import { DebugMenuPrefsPanel } from '@/components/global/providers/DebugMenuPrefsPanel'
 import { DebugMenuInitDayPanel } from '@/components/global/providers/DebugMenuInitDayPanel'
+import { DebugMenuInitTicketPanel } from '@/components/global/providers/DebugMenuInitTicketPanel'
 interface DebugAction {
   label: string
   onClick: () => void
@@ -90,7 +94,7 @@ interface MenuItem {
   description?: string
   submenu?: MenuItem[]
   /** Opens the profile comparison table instead of a submenu list. */
-  submenuVariant?: 'profileComparison' | 'prefsDebug' | 'initDayMock'
+  submenuVariant?: 'profileComparison' | 'prefsDebug' | 'initDayMock' | 'initTicketMock'
   /** Extra classes on submenu row buttons (e.g. separator above reset actions). */
   rowClassName?: string
 }
@@ -364,12 +368,15 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
         items: [
           {
             label: 'Mock current day',
-            description:
-              overrides.mockInitCurrentDay === null
-                ? 'Using real calendar date'
-                : `Previewing day ${overrides.mockInitCurrentDay} of 5`,
+            description: formatInitMockCurrentDay(overrides.mockInitCurrentDay),
             icon: <CalendarDays className="h-3 w-3" />,
             submenuVariant: 'initDayMock',
+          },
+          {
+            label: 'Mock ticket type',
+            description: formatInitMockTicketType(overrides.mockInitTicketType),
+            icon: <Ticket className="h-3 w-3" />,
+            submenuVariant: 'initTicketMock',
           },
         ],
       },
@@ -908,6 +915,7 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
     overrides.showBuyTransferDomains,
     overrides.mockCloudStatusAlert,
     overrides.mockInitCurrentDay,
+    overrides.mockInitTicketType,
     banners.length,
     actions,
     navigate,
@@ -947,6 +955,14 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
             items: [] as MenuItem[],
             parentSection: section.title,
             submenuVariant: 'initDayMock' as const,
+          }
+        }
+        if (item.submenuVariant === 'initTicketMock') {
+          return {
+            title: item.label,
+            items: [] as MenuItem[],
+            parentSection: section.title,
+            submenuVariant: 'initTicketMock' as const,
           }
         }
         if (item.submenu) {
@@ -994,7 +1010,8 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
             'z-[10060] max-h-[85dvh] overflow-hidden rounded-xl border border-[#9B87F5]/25 bg-[#1A1F2C] p-0 shadow-xl',
             currentSubmenu?.submenuVariant === 'profileComparison' ||
             currentSubmenu?.submenuVariant === 'prefsDebug' ||
-            currentSubmenu?.submenuVariant === 'initDayMock'
+            currentSubmenu?.submenuVariant === 'initDayMock' ||
+            currentSubmenu?.submenuVariant === 'initTicketMock'
               ? 'w-[min(92vw,720px)]'
               : 'w-80',
           )}
@@ -1031,6 +1048,8 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
                 <DebugMenuPrefsPanel />
               ) : currentSubmenu.submenuVariant === 'initDayMock' ? (
                 <DebugMenuInitDayPanel />
+              ) : currentSubmenu.submenuVariant === 'initTicketMock' ? (
+                <DebugMenuInitTicketPanel />
               ) : (
               <nav className="space-y-0.5" aria-label={currentSubmenu.title}>
                 {currentSubmenu.items.map((item, itemIndex) =>
@@ -1137,7 +1156,8 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
                           Boolean(item.submenu?.length) ||
                           item.submenuVariant === 'profileComparison' ||
                           item.submenuVariant === 'prefsDebug' ||
-                          item.submenuVariant === 'initDayMock'
+                          item.submenuVariant === 'initDayMock' ||
+                          item.submenuVariant === 'initTicketMock'
                         const itemKey = `${section.title}-${item.label}`
 
                         return (

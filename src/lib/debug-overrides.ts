@@ -1,4 +1,12 @@
 import { useState, useEffect } from 'react'
+import {
+  getInitMockDayAfter,
+  isValidInitMockCurrentDay,
+} from '@/lib/init/mock-current-day'
+import {
+  type InitTicketTypeId,
+  isInitTicketTypeId,
+} from '@/lib/init/ticket-types'
 
 const DEBUG_OVERRIDE_EVENT = 'debugOverridesChange'
 
@@ -11,6 +19,7 @@ export const DEBUG_OVERRIDE_KEYS = {
   showFunctionsLocalEditor: 'debug:showFunctionsLocalEditor',
   showBuyTransferDomains: 'debug:showBuyTransferDomains',
   mockInitCurrentDay: 'debug:mockInitCurrentDay',
+  mockInitTicketType: 'debug:mockInitTicketType',
 } as const
 
 /** Overrides that are not persisted to localStorage (reset on reload). */
@@ -48,9 +57,12 @@ export type DebugOverrides = {
    */
   showBuyTransferDomains: boolean
   /**
-   * Mock which Init launch day is "today" (1–5). Null uses the real calendar date.
+   * Mock which Init launch day is "today" (0 = before, 1–5 = during, 6 = after).
+   * Null uses the real calendar date.
    */
   mockInitCurrentDay: number | null
+  /** Mock Init ticket tier on /init. Null uses account rules (gold, silver, standard). */
+  mockInitTicketType: InitTicketTypeId | null
 }
 
 const isBrowser = typeof window !== 'undefined'
@@ -78,8 +90,15 @@ function readNullableInitDayFromStorage(key: string): number | null {
   const raw = localStorage.getItem(key)
   if (raw === null || raw === 'auto') return null
   const parsed = Number.parseInt(raw, 10)
-  if (Number.isNaN(parsed) || parsed < 1 || parsed > 5) return null
+  if (!isValidInitMockCurrentDay(parsed)) return null
   return parsed
+}
+
+function readNullableInitTicketTypeFromStorage(key: string): InitTicketTypeId | null {
+  if (!isBrowser) return null
+  const raw = localStorage.getItem(key)
+  if (raw === null || raw === 'auto') return null
+  return isInitTicketTypeId(raw) ? raw : null
 }
 
 export function loadDebugOverrides(): DebugOverrides {
@@ -111,6 +130,9 @@ export function loadDebugOverrides(): DebugOverrides {
     ),
     mockInitCurrentDay: readNullableInitDayFromStorage(
       DEBUG_OVERRIDE_KEYS.mockInitCurrentDay,
+    ),
+    mockInitTicketType: readNullableInitTicketTypeFromStorage(
+      DEBUG_OVERRIDE_KEYS.mockInitTicketType,
     ),
   }
 }

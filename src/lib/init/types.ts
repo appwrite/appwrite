@@ -1,4 +1,5 @@
 import type { LucideIcon } from 'lucide-react'
+import type { InitEventTicketConfig } from '@/lib/init/ticket-types'
 
 export type LaunchEventStatus = 'upcoming' | 'active' | 'past'
 
@@ -131,6 +132,10 @@ export interface LaunchEvent {
   status: LaunchEventStatus
   /** When set, this event is shown on `/init` regardless of date ordering. */
   featured?: boolean
+  /** When true, online sidebar and hero counts use the console Presences API. */
+  presenceEnabled?: boolean
+  /** Ticket type rules and matchers for this event's pass artwork. */
+  tickets: InitEventTicketConfig
   days: LaunchEventDay[]
   schedule: LaunchEventScheduleItem[]
   liveActivities: LaunchEventActivity[]

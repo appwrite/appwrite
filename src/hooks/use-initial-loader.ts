@@ -1,6 +1,7 @@
 import { useEffect, useState, useRef, useMemo, useReducer } from 'react'
 import { useIsFetching, useIsMutating, useQueryClient } from '@tanstack/react-query'
 import { useRouter, useLocation } from '@tanstack/react-router'
+import { isOptionalAuthPage } from '@/components/global/auth/RequireAuth'
 import { isHttpForbiddenError } from '@/lib/utils/error-formatting'
 
 /**
@@ -68,17 +69,24 @@ export function useInitialLoader() {
     [location.pathname],
   )
 
+  const isInstantPublicRoute = useMemo(
+    () => isOptionalAuthPage(location.pathname),
+    [location.pathname],
+  )
+
+  const skipStaticLoader = isAuthRoute || isInstantPublicRoute
+
   // Include "/" so the branded loader shows until redirect; don't count root as "first page"
   const shouldShowLoader = useMemo(
     () =>
-      !isAuthRoute &&
+      !skipStaticLoader &&
       (location.pathname === '/' ||
         location.pathname.startsWith('/protected') ||
         location.pathname.startsWith('/organizations') ||
         location.pathname.startsWith('/projects') ||
         location.pathname.startsWith('/console') ||
         location.pathname.startsWith('/account')),
-    [location.pathname, isAuthRoute],
+    [location.pathname, skipStaticLoader],
   )
 
   // Initialize loading state synchronously so the loader is visible on first paint
@@ -109,7 +117,7 @@ export function useInitialLoader() {
     if (!shouldShowLoader) {
       // Don't show loader on public/auth routes
       // Auth pages mark complete immediately; "/" is handled by shouldShowLoader so we don't land here for "/"
-      if (isAuthRoute) {
+      if (skipStaticLoader) {
         hasCompletedInitialLoadRef.current = true
       } else if (
         router.state.status === 'idle' &&
@@ -240,5 +248,5 @@ export function useInitialLoader() {
     isConsoleAccount403,
   ])
 
-  return { isLoading, isAuthRoute }
+  return { isLoading, isAuthRoute, skipStaticLoader }
 }

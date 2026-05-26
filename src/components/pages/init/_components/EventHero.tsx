@@ -85,7 +85,9 @@ function CollapsedHeroBar({
         height: INIT_COLLAPSED_HEADER_HEIGHT_PX,
       }}
     >
-      <InitHeroBackground containerRef={barRef} compact />
+      {visible ? (
+        <InitHeroBackground containerRef={barRef} compact active={visible} />
+      ) : null}
       <div
         className={cn(
           'absolute inset-0 z-20 flex items-center',
@@ -99,7 +101,7 @@ function CollapsedHeroBar({
                 event={event}
                 className="shrink-0 text-[20px] sm:text-[22px]"
               />
-              <span className="truncate text-[10px] font-semibold uppercase tracking-[0.2em] text-muted-foreground">
+              <span className="hidden truncate text-[10px] font-semibold uppercase tracking-[0.2em] text-muted-foreground sm:inline">
                 {event.dateRangeLabel}
               </span>
             </div>
@@ -164,7 +166,7 @@ function CollapsedHeroBar({
                 ) : null}
               </>
             ) : (
-              <span className="text-[10px] font-semibold uppercase tracking-[0.2em] text-muted-foreground">
+              <span className="hidden text-[10px] font-semibold uppercase tracking-[0.2em] text-muted-foreground sm:inline">
                 {event.dateRangeLabel}
               </span>
             )}

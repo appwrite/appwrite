@@ -37,6 +37,7 @@ import {
   Domains,
   Organization,
   Organizations,
+  Presences,
   Usage,
   Webhooks,
 } from '@appwrite.io/console'
@@ -182,6 +183,7 @@ function createConsoleSdkRaw(client: Client) {
     storage: new Storage(client),
     organization: new Organization(client),
     organizations: new Organizations(client),
+    presences: new Presences(client),
     usage: new Usage(client),
     webhooks: new Webhooks(client),
   }
