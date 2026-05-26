@@ -2,19 +2,29 @@ import { useMemo, useState } from 'react'
 import { ConsoleLayout } from '@/components/global/layout/ConsoleLayout'
 import { CommandCenter } from '@/components/global/shared/CommandCenter'
 import { useKeyboardShortcut } from '@/hooks/use-keyboard-shortcuts'
+import { useDebugOverrides } from '@/lib/debug-overrides'
 import { getActiveLaunchEvent } from '@/lib/init/events'
+import { applyInitEventVisibility } from '@/lib/init/event-visibility'
+import { isLaunchEventDayLocked } from '@/lib/init/types'
 import { EventHero } from './_components/EventHero'
 import { EventSchedule } from './_components/EventSchedule'
+import { GiveawayPromoCard } from './_components/GiveawayPromoCard'
 import { GetInvolvedCards } from './_components/GetInvolvedCards'
 import { LiveBannerBar } from './_components/LiveBannerBar'
 import { DayDetailCard } from './_components/DayDetailCard'
+import { LockedDayDetailCard } from './_components/LockedDayDetailCard'
 import { EventSchedulePanel } from './_components/EventSchedulePanel'
 import { OnlineUsersNav, hasOnlineUsersNav } from './_components/OnlineUsersNav'
 
 export function View() {
   const [commandCenterOpen, setCommandCenterOpen] = useState(false)
   const [onlineNavOpen, setOnlineNavOpen] = useState(false)
-  const event = useMemo(() => getActiveLaunchEvent(), [])
+  const { mockInitCurrentDay } = useDebugOverrides()
+  const event = useMemo(() => {
+    const active = getActiveLaunchEvent()
+    if (!active) return undefined
+    return applyInitEventVisibility(active, { mockCurrentDay: mockInitCurrentDay })
+  }, [mockInitCurrentDay])
 
   useKeyboardShortcut('meta+k', () => setCommandCenterOpen(true))
   useKeyboardShortcut('control+k', () => setCommandCenterOpen(true))
@@ -80,11 +90,20 @@ export function View() {
 
           <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_320px] xl:grid-cols-[minmax(0,1fr)_360px]">
             <div className="space-y-6">
-              {event.days.map((day) => (
-                <DayDetailCard key={day.day} day={day} />
-              ))}
+              {event.days.map((day) =>
+                isLaunchEventDayLocked(day) ? (
+                  <LockedDayDetailCard key={day.day} day={day} />
+                ) : (
+                  <DayDetailCard key={day.day} day={day} />
+                ),
+              )}
             </div>
-            <EventSchedulePanel event={event} />
+            <div className="flex flex-col gap-6 lg:sticky lg:top-20 lg:self-start">
+              <EventSchedulePanel event={event} embedded />
+              {event.giveaway ? (
+                <GiveawayPromoCard giveaway={event.giveaway} />
+              ) : null}
+            </div>
           </div>
 
           <GetInvolvedCards event={event} />

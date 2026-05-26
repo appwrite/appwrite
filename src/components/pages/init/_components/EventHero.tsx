@@ -118,7 +118,6 @@ function CollapsedHeroBar({
 
 export function EventHero({ event, headerAddon, liveBanner }: EventHeroProps) {
   const { data: account } = useQuery(consoleAccountQueryOptions())
-  const firstName = account?.name?.trim().split(/\s+/)[0]
   const heroRef = useRef<HTMLDivElement>(null)
   const sentinelRef = useRef<HTMLDivElement>(null)
   const [isCollapsed, setIsCollapsed] = useState(false)
@@ -223,15 +222,14 @@ export function EventHero({ event, headerAddon, liveBanner }: EventHeroProps) {
           <p className="mx-auto mt-4 max-w-xl text-[14px] leading-relaxed text-muted-foreground">
             {event.description}
           </p>
-          {firstName ? (
-            <p className="mt-2 text-[13px] text-muted-foreground">Welcome, {firstName}</p>
+          {!account ? (
+            <div className="mt-6 flex flex-wrap items-center justify-center gap-2">
+              <EventCtaButton cta={event.primaryCta} variant="brandCta" size="lg" />
+              {event.secondaryCta ? (
+                <EventCtaButton cta={event.secondaryCta} variant="outline" size="lg" />
+              ) : null}
+            </div>
           ) : null}
-          <div className="mt-6 flex flex-wrap items-center justify-center gap-2">
-            <EventCtaButton cta={event.primaryCta} variant="brandCta" size="lg" />
-            {event.secondaryCta ? (
-              <EventCtaButton cta={event.secondaryCta} variant="outline" size="lg" />
-            ) : null}
-          </div>
           {event.onlineCount > 0 ? (
             <div className="mt-8 flex items-center justify-center gap-3">
               <div className="flex -space-x-2">

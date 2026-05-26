@@ -10,6 +10,7 @@ export const DEBUG_OVERRIDE_KEYS = {
   showFullscreenLoader: 'debug:showFullscreenLoader',
   showFunctionsLocalEditor: 'debug:showFunctionsLocalEditor',
   showBuyTransferDomains: 'debug:showBuyTransferDomains',
+  mockInitCurrentDay: 'debug:mockInitCurrentDay',
 } as const
 
 /** Overrides that are not persisted to localStorage (reset on reload). */
@@ -46,6 +47,10 @@ export type DebugOverrides = {
    * /domains/buy and /domains/transfer-in routes. Default false.
    */
   showBuyTransferDomains: boolean
+  /**
+   * Mock which Init launch day is "today" (1–5). Null uses the real calendar date.
+   */
+  mockInitCurrentDay: number | null
 }
 
 const isBrowser = typeof window !== 'undefined'
@@ -66,6 +71,15 @@ function readStringFromStorage<T extends string>(
   const raw = localStorage.getItem(key)
   if (raw === null) return defaultValue
   return allowedValues.includes(raw as T) ? (raw as T) : defaultValue
+}
+
+function readNullableInitDayFromStorage(key: string): number | null {
+  if (!isBrowser) return null
+  const raw = localStorage.getItem(key)
+  if (raw === null || raw === 'auto') return null
+  const parsed = Number.parseInt(raw, 10)
+  if (Number.isNaN(parsed) || parsed < 1 || parsed > 5) return null
+  return parsed
 }
 
 export function loadDebugOverrides(): DebugOverrides {
@@ -95,6 +109,9 @@ export function loadDebugOverrides(): DebugOverrides {
       DEBUG_OVERRIDE_KEYS.showBuyTransferDomains,
       false,
     ),
+    mockInitCurrentDay: readNullableInitDayFromStorage(
+      DEBUG_OVERRIDE_KEYS.mockInitCurrentDay,
+    ),
   }
 }
 
@@ -113,6 +130,10 @@ export function setDebugOverride<K extends keyof DebugOverrides>(
     localStorage.setItem(storageKey, value ? 'true' : 'false')
   } else if (typeof value === 'string') {
     localStorage.setItem(storageKey, value)
+  } else if (value === null) {
+    localStorage.removeItem(storageKey)
+  } else if (typeof value === 'number') {
+    localStorage.setItem(storageKey, String(value))
   } else if (value) {
     localStorage.setItem(storageKey, 'true')
   } else {

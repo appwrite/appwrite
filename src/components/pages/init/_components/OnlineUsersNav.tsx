@@ -4,7 +4,6 @@ import type {
   LaunchEventUserPresence,
 } from '@/lib/init/types'
 import { InitialsAvatar } from '@/components/global/shared/Avatar'
-import { Badge } from '@/components/ui/badge'
 import {
   Tooltip,
   TooltipContent,
@@ -81,11 +80,6 @@ function renderUserRow(
               {user.activity}
             </p>
           </div>
-          {user.isLive ? (
-            <Badge variant="error" className="text-[10px] shrink-0">
-              Live
-            </Badge>
-          ) : null}
         </>
       )}
     </div>

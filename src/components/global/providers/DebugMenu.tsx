@@ -20,6 +20,7 @@ import {
   Minus,
   Columns2,
   Braces,
+  CalendarDays,
 } from 'lucide-react'
 import {
   Popover,
@@ -65,6 +66,7 @@ import { Branch as DismissableLayerBranch } from '@radix-ui/react-dismissable-la
 import { cn } from '@/lib/utils'
 import type { ConsoleProfileFeatures } from '@/lib/console-profiles'
 import { DebugMenuPrefsPanel } from '@/components/global/providers/DebugMenuPrefsPanel'
+import { DebugMenuInitDayPanel } from '@/components/global/providers/DebugMenuInitDayPanel'
 interface DebugAction {
   label: string
   onClick: () => void
@@ -88,7 +90,7 @@ interface MenuItem {
   description?: string
   submenu?: MenuItem[]
   /** Opens the profile comparison table instead of a submenu list. */
-  submenuVariant?: 'profileComparison' | 'prefsDebug'
+  submenuVariant?: 'profileComparison' | 'prefsDebug' | 'initDayMock'
   /** Extra classes on submenu row buttons (e.g. separator above reset actions). */
   rowClassName?: string
 }
@@ -356,6 +358,21 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
     }))
 
     return [
+      {
+        title: 'Init',
+        icon: <CalendarDays className="h-3.5 w-3.5" />,
+        items: [
+          {
+            label: 'Mock current day',
+            description:
+              overrides.mockInitCurrentDay === null
+                ? 'Using real calendar date'
+                : `Previewing day ${overrides.mockInitCurrentDay} of 5`,
+            icon: <CalendarDays className="h-3 w-3" />,
+            submenuVariant: 'initDayMock',
+          },
+        ],
+      },
       {
         title: 'Appearance',
         icon: <Palette className="h-3.5 w-3.5" />,
@@ -890,6 +907,7 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
     overrides.showFunctionsLocalEditor,
     overrides.showBuyTransferDomains,
     overrides.mockCloudStatusAlert,
+    overrides.mockInitCurrentDay,
     banners.length,
     actions,
     navigate,
@@ -921,6 +939,14 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
             items: [] as MenuItem[],
             parentSection: section.title,
             submenuVariant: 'prefsDebug' as const,
+          }
+        }
+        if (item.submenuVariant === 'initDayMock') {
+          return {
+            title: item.label,
+            items: [] as MenuItem[],
+            parentSection: section.title,
+            submenuVariant: 'initDayMock' as const,
           }
         }
         if (item.submenu) {
@@ -967,7 +993,8 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
           className={cn(
             'z-[10060] max-h-[85dvh] overflow-hidden rounded-xl border border-[#9B87F5]/25 bg-[#1A1F2C] p-0 shadow-xl',
             currentSubmenu?.submenuVariant === 'profileComparison' ||
-            currentSubmenu?.submenuVariant === 'prefsDebug'
+            currentSubmenu?.submenuVariant === 'prefsDebug' ||
+            currentSubmenu?.submenuVariant === 'initDayMock'
               ? 'w-[min(92vw,720px)]'
               : 'w-80',
           )}
@@ -1002,6 +1029,8 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
                 </div>
               ) : currentSubmenu.submenuVariant === 'prefsDebug' ? (
                 <DebugMenuPrefsPanel />
+              ) : currentSubmenu.submenuVariant === 'initDayMock' ? (
+                <DebugMenuInitDayPanel />
               ) : (
               <nav className="space-y-0.5" aria-label={currentSubmenu.title}>
                 {currentSubmenu.items.map((item, itemIndex) =>
@@ -1107,7 +1136,8 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
                         const hasSubmenu =
                           Boolean(item.submenu?.length) ||
                           item.submenuVariant === 'profileComparison' ||
-                          item.submenuVariant === 'prefsDebug'
+                          item.submenuVariant === 'prefsDebug' ||
+                          item.submenuVariant === 'initDayMock'
                         const itemKey = `${section.title}-${item.label}`
 
                         return (

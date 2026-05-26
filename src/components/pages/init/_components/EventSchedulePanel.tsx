@@ -1,9 +1,10 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import type {
-  LaunchEvent,
+  InitDisplayEvent,
   LaunchEventScheduleItem,
   LaunchSchedulePlatform,
 } from '@/lib/init/types'
+import { isLaunchEventDayLocked } from '@/lib/init/types'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { ArrowUpRight, ChevronLeft, ChevronRight } from 'lucide-react'
@@ -21,34 +22,10 @@ const PLATFORM_META: Record<
   reddit: { label: 'Reddit', icon: '/icons/reddit.svg' },
 }
 
-function parseDateOnly(isoDate: string): Date {
-  const [year, month, day] = isoDate.split('-').map(Number)
-  return new Date(year, month - 1, day)
-}
-
-function getDefaultScheduleDay(event: LaunchEvent): number {
-  const liveDay = event.days.find((day) => day.isLive)?.day
-  if (liveDay) return liveDay
-
-  const days = event.days.map((day) => day.day).sort((a, b) => a - b)
-  if (days.length === 0) return 1
-
-  const now = new Date()
-  const start = parseDateOnly(event.startDate)
-  const end = parseDateOnly(event.endDate)
-  end.setHours(23, 59, 59, 999)
-
-  if (now < start) return days[0]
-  if (now > end) return days[days.length - 1]
-
-  const dayIndex =
-    Math.floor((now.getTime() - start.getTime()) / (24 * 60 * 60 * 1000)) + 1
-  const maxDay = days[days.length - 1]
-  return Math.min(Math.max(dayIndex, days[0]), maxDay)
-}
-
 interface EventSchedulePanelProps {
-  event: LaunchEvent
+  event: InitDisplayEvent
+  /** When true, sticky positioning is handled by the parent column wrapper. */
+  embedded?: boolean
 }
 
 function ScheduleRow({ item }: { item: LaunchEventScheduleItem }) {
@@ -116,31 +93,52 @@ function ScheduleRow({ item }: { item: LaunchEventScheduleItem }) {
   )
 }
 
-export function EventSchedulePanel({ event }: EventSchedulePanelProps) {
-  const scheduleDays = useMemo(() => {
-    const fromDays = event.days.map((day) => day.day)
+export function EventSchedulePanel({
+  event,
+  embedded = false,
+}: EventSchedulePanelProps) {
+  const unlockedScheduleDays = useMemo(() => {
+    const fromDays = event.days
+      .filter((day) => !isLaunchEventDayLocked(day))
+      .map((day) => day.day)
     const fromSchedule = event.schedule.map((item) => item.day)
     return [...new Set([...fromDays, ...fromSchedule])].sort((a, b) => a - b)
   }, [event.days, event.schedule])
 
-  const [selectedDay, setSelectedDay] = useState(() =>
-    getDefaultScheduleDay(event),
-  )
+  const defaultDay =
+    event.currentDay > 0 &&
+    unlockedScheduleDays.includes(event.currentDay)
+      ? event.currentDay
+      : unlockedScheduleDays[unlockedScheduleDays.length - 1] ?? 1
+
+  const [selectedDay, setSelectedDay] = useState(defaultDay)
+
+  useEffect(() => {
+    setSelectedDay(defaultDay)
+  }, [defaultDay])
 
   const selectedDayInfo = event.days.find((day) => day.day === selectedDay)
   const dayEvents = event.schedule.filter((item) => item.day === selectedDay)
 
-  const selectedIndex = scheduleDays.indexOf(selectedDay)
+  const selectedIndex = unlockedScheduleDays.indexOf(selectedDay)
   const canGoPrevious = selectedIndex > 0
-  const canGoNext = selectedIndex >= 0 && selectedIndex < scheduleDays.length - 1
+  const canGoNext =
+    selectedIndex >= 0 && selectedIndex < unlockedScheduleDays.length - 1
 
-  if (event.schedule.length === 0 || scheduleDays.length === 0) return null
+  if (event.schedule.length === 0 || unlockedScheduleDays.length === 0) {
+    return null
+  }
+
+  const selectedTitle =
+    selectedDayInfo && !isLaunchEventDayLocked(selectedDayInfo)
+      ? selectedDayInfo.title
+      : null
 
   return (
     <div
       className={cn(
         CARD_SHELL,
-        'lg:sticky lg:self-start lg:top-20',
+        !embedded && 'lg:sticky lg:self-start lg:top-20',
       )}
     >
       <div className="px-6 py-4">
@@ -148,12 +146,14 @@ export function EventSchedulePanel({ event }: EventSchedulePanelProps) {
           <div className="min-w-0">
             <h3 className="text-[15px] font-semibold text-foreground">Schedule</h3>
             <p className="mt-1 text-[13px] text-muted-foreground">
-              {selectedDayInfo?.isLive
+              {selectedDayInfo &&
+              !isLaunchEventDayLocked(selectedDayInfo) &&
+              selectedDayInfo.isLive
                 ? "Today's sessions"
-                : 'YouTube, Discord, and Reddit sessions'}
+                : 'Discord and Reddit sessions'}
             </p>
           </div>
-          {scheduleDays.length > 1 ? (
+          {unlockedScheduleDays.length > 1 ? (
             <div className="flex shrink-0 items-center gap-0.5">
               <Button
                 type="button"
@@ -164,7 +164,7 @@ export function EventSchedulePanel({ event }: EventSchedulePanelProps) {
                 aria-label="Previous day"
                 onClick={() => {
                   if (!canGoPrevious) return
-                  setSelectedDay(scheduleDays[selectedIndex - 1])
+                  setSelectedDay(unlockedScheduleDays[selectedIndex - 1])
                 }}
               >
                 <ChevronLeft className="size-4" />
@@ -178,7 +178,7 @@ export function EventSchedulePanel({ event }: EventSchedulePanelProps) {
                 aria-label="Next day"
                 onClick={() => {
                   if (!canGoNext) return
-                  setSelectedDay(scheduleDays[selectedIndex + 1])
+                  setSelectedDay(unlockedScheduleDays[selectedIndex + 1])
                 }}
               >
                 <ChevronRight className="size-4" />
@@ -188,8 +188,10 @@ export function EventSchedulePanel({ event }: EventSchedulePanelProps) {
         </div>
         <p className="mt-3 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
           Day {selectedDay}
-          {selectedDayInfo?.dateLabel ? ` · ${selectedDayInfo.dateLabel}` : null}
-          {selectedDayInfo?.title ? ` · ${selectedDayInfo.title}` : null}
+          {selectedDayInfo && !isLaunchEventDayLocked(selectedDayInfo)
+            ? ` · ${selectedDayInfo.dateLabel}`
+            : null}
+          {selectedTitle ? ` · ${selectedTitle}` : null}
         </p>
       </div>
       <div className="border-t border-border" />

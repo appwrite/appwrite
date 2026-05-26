@@ -93,7 +93,7 @@ export function ConsoleHeader({
   const { openCommandCenter: contextOpenCommandCenter } =
     useKeyboardShortcutsContext()
   const { toggleChat } = useAIChat()
-  const { account, signOut, isAuthenticated, isLoading } = useAuth()
+  const { account, signOut, isAuthenticated } = useAuth()
   const location = useLocation()
   const navigate = useNavigate()
   const params = useParams({ strict: false })
@@ -178,8 +178,8 @@ export function ConsoleHeader({
   const hasSidebar = !isOrgOverview
   const isAccountScope = location.pathname.startsWith('/account')
   const logoColumnWidth = 60
-  const showGuestHeader =
-    isOptionalAuthPage(location.pathname) && !isLoading && !isAuthenticated
+  const isOptionalAuth = isOptionalAuthPage(location.pathname)
+  const showGuestHeader = isOptionalAuth && !isAuthenticated
   const authRedirect = location.pathname
 
   return (
@@ -210,10 +210,14 @@ export function ConsoleHeader({
             const linkOrgId =
               project?.teamId ||
               (account?.prefs?.organization as string | undefined)
+            const logoDestination = showGuestHeader
+              ? ({ to: '/init' } as const)
+              : linkOrgId
+                ? ({ to: '/organizations/$orgId', params: { orgId: linkOrgId } } as const)
+                : ({ to: '/' } as const)
             const logoLink = (childClassName?: string) => (
               <Link
-                to={linkOrgId ? '/organizations/$orgId' : '/'}
-                params={linkOrgId ? { orgId: linkOrgId } : undefined}
+                {...logoDestination}
                 aria-label="Appwrite"
                 className={cn(
                   'group inline-flex size-10 shrink-0 items-center justify-center rounded-lg transition-transform duration-150 ease-out active:scale-[0.94] active:bg-muted/40 motion-reduce:active:scale-100 motion-reduce:active:bg-transparent focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1 focus-visible:ring-offset-background',

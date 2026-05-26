@@ -20,6 +20,15 @@ export interface LaunchEventDayVideo {
   href?: string
 }
 
+export interface LaunchEventDayVisual {
+  imageAlt: string
+  imageSrcLight: string
+  imageSrcDark: string
+  /** Intrinsic pixel dimensions — used to preserve artwork aspect ratio in the card. */
+  aspectWidth: number
+  aspectHeight: number
+}
+
 export interface LaunchEventDay {
   day: number
   dateLabel: string
@@ -28,11 +37,33 @@ export interface LaunchEventDay {
   description: string
   longDescription: string
   icon: LucideIcon
+  visual?: LaunchEventDayVisual
   isLive?: boolean
   sessionCount: number
-  announcementVideo?: LaunchEventDayVideo
   resources: LaunchEventDayResource[]
-  footerVideos: LaunchEventDayVideo[]
+  footerVideos?: LaunchEventDayVideo[]
+}
+
+/** Public placeholder for a launch day that has not unlocked yet (no sensitive content). */
+export interface LaunchEventDayLocked {
+  day: number
+  dateLabel: string
+  weekdayLabel: string
+  isLocked: true
+}
+
+export type LaunchEventDayView = LaunchEventDay | LaunchEventDayLocked
+
+export function isLaunchEventDayLocked(
+  day: LaunchEventDayView,
+): day is LaunchEventDayLocked {
+  return 'isLocked' in day && day.isLocked === true
+}
+
+/** Launch event prepared for display with day-based visibility applied. */
+export type InitDisplayEvent = LaunchEvent & {
+  currentDay: number
+  days: LaunchEventDayView[]
 }
 
 export interface LaunchEventScheduleItem {
@@ -80,6 +111,14 @@ export interface LaunchEventLiveBanner {
   href?: string
 }
 
+export interface LaunchEventGiveaway {
+  title: string
+  description: string
+  imageAlt: string
+  imageSrcLight: string
+  imageSrcDark: string
+}
+
 export interface LaunchEvent {
   id: string
   slug: string
@@ -102,5 +141,6 @@ export interface LaunchEvent {
   liveBanner?: LaunchEventLiveBanner
   primaryCta: LaunchEventCta
   secondaryCta?: LaunchEventCta
+  giveaway?: LaunchEventGiveaway
   getInvolved: LaunchEventInvolvement[]
 }

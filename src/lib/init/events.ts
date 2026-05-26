@@ -4,35 +4,36 @@ import {
   Ticket,
 } from 'lucide-react'
 import {
-  INIT_MAY_2026_DAYS,
-  INIT_MAY_2026_SCHEDULE,
+  INIT_JULY_2026_DAYS,
+  INIT_JULY_2026_SCHEDULE,
 } from './day-details'
+import { parseDateOnly } from './dates'
 import type { LaunchEvent, LaunchEventStatus } from './types'
 
 /** Add new launch-week events here; the page resolves the active one automatically. */
 export const LAUNCH_EVENTS: LaunchEvent[] = [
   {
-    id: 'init-may-2026',
-    slug: 'init-may-2026',
+    id: 'init-july-2026',
+    slug: 'init-july-2026',
     name: 'init',
-    dateRangeLabel: 'MAY 19 – 23',
-    headline: 'Init is happening May 19 – 23',
+    dateRangeLabel: 'JULY 6 – 10',
+    headline: 'Init is happening July 6 – 10',
     description:
-      'Init is happening May 19 – 23. A week of exciting product launches, live sessions, and community events. Five days of launches, demos, and surprises.',
-    startDate: '2026-05-19',
-    endDate: '2026-05-23',
+      'Init is happening July 6 – 10. A week of exciting product launches, live sessions, and community events. Five days of launches, demos, and surprises.',
+    startDate: '2026-07-06',
+    endDate: '2026-07-10',
     status: 'active',
     featured: true,
     primaryCta: { label: 'View event', href: 'https://appwrite.io/init' },
     secondaryCta: { label: 'Claim your ticket', href: 'https://appwrite.io/init/ticket' },
     liveBanner: {
-      title: 'Product launch keynote',
+      title: 'Appwrite 2.0 launch',
       href: 'https://appwrite.io/init/keynote',
     },
     onlineCount: 312,
     othersOnlineCount: 289,
-    days: INIT_MAY_2026_DAYS,
-    schedule: INIT_MAY_2026_SCHEDULE,
+    days: INIT_JULY_2026_DAYS,
+    schedule: INIT_JULY_2026_SCHEDULE,
     onlineUsers: [
       {
         id: '1',
@@ -159,24 +160,33 @@ export const LAUNCH_EVENTS: LaunchEvent[] = [
     ],
     liveActivities: [
       {
-        id: 'keynote',
-        title: 'Product launch keynote',
+        id: 'appwrite-2',
+        title: 'Appwrite 2.0 launch',
         statusLabel: 'Live now',
         status: 'live',
       },
       {
-        id: 'flutter',
-        title: 'Flutter Web deep dive',
+        id: 'databases',
+        title: 'DocumentsDB & VectorsDB',
         statusLabel: 'Starting in 15m',
         status: 'upcoming',
       },
       {
-        id: 'dev-keys',
-        title: 'Dev Keys Q&A',
+        id: 'servers',
+        title: 'Dedicated DBs',
         statusLabel: 'Starting in 1h',
         status: 'scheduled',
       },
     ],
+    giveaway: {
+      title: 'Win exclusive Init swag',
+      description:
+        'Hoodies, caps, bottles, and more. Join our daily events, claim your Init ticket, and enter for a chance to take home Init swag.',
+      imageSrcLight: '/images/init/giveaway-swag-light.png',
+      imageSrcDark: '/images/init/giveaway-swag-dark.png',
+      imageAlt:
+        'Init giveaway merchandise including a black hoodie, cap, white water bottle, and folded tee',
+    },
     getInvolved: [
       {
         id: 'ticket',
@@ -231,11 +241,6 @@ export const LAUNCH_EVENTS: LaunchEvent[] = [
     ],
   },
 ]
-
-function parseDateOnly(isoDate: string): Date {
-  const [year, month, day] = isoDate.split('-').map(Number)
-  return new Date(year, month - 1, day)
-}
 
 function deriveStatus(event: LaunchEvent, now = new Date()): LaunchEventStatus {
   if (event.status !== 'upcoming' && event.status !== 'past') {

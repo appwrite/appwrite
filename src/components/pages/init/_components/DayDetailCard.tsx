@@ -1,4 +1,8 @@
 import type { LaunchEventDay } from '@/lib/init/types'
+import {
+  useInitThemeImageSrc,
+  useInitThemeUsesDarkImage,
+} from '@/lib/init/use-init-theme-image'
 import { Badge } from '@/components/ui/badge'
 import { ArrowUpRight, Play } from 'lucide-react'
 import { cn } from '@/lib/utils'
@@ -52,6 +56,34 @@ function VideoThumbnail({
 
 function DayVisual({ day }: { day: LaunchEventDay }) {
   const Icon = day.icon
+  const usesDarkImage = useInitThemeUsesDarkImage()
+  const visualSrc = useInitThemeImageSrc(
+    day.visual?.imageSrcLight ?? '',
+    day.visual?.imageSrcDark ?? '',
+  )
+
+  if (day.visual) {
+    const { aspectWidth, aspectHeight } = day.visual
+    return (
+      <div
+        className={cn(
+          'relative w-full overflow-hidden rounded-lg border border-border',
+          usesDarkImage ? 'bg-[#0a0a0a]' : 'bg-muted/30',
+        )}
+        style={{ aspectRatio: `${aspectWidth} / ${aspectHeight}` }}
+      >
+        <img
+          src={visualSrc}
+          alt={day.visual.imageAlt}
+          className="size-full object-contain object-center"
+          width={aspectWidth}
+          height={aspectHeight}
+          loading="lazy"
+          decoding="async"
+        />
+      </div>
+    )
+  }
 
   return (
     <div
@@ -68,50 +100,57 @@ function DayVisual({ day }: { day: LaunchEventDay }) {
   )
 }
 
+const TITLE_CLASS =
+  'font-aeonik-pro text-[clamp(32px,4.5vw,42px)] font-normal leading-none tracking-tight'
+
+function DayTitle({ title }: { title: string }) {
+  const lastSpace = title.lastIndexOf(' ')
+  const leading = lastSpace === -1 ? '' : title.slice(0, lastSpace + 1)
+  const lastWord = lastSpace === -1 ? title : title.slice(lastSpace + 1)
+
+  return (
+    <h3 className={cn(TITLE_CLASS, 'text-foreground')}>
+      {leading ? <span>{leading}</span> : null}
+      <span className="whitespace-nowrap">
+        {lastWord}
+        <span className="text-[var(--brand-cta)]">_</span>
+      </span>
+    </h3>
+  )
+}
+
 interface DayDetailCardProps {
   day: LaunchEventDay
 }
 
 export function DayDetailCard({ day }: DayDetailCardProps) {
   return (
-    <article id={`day-${day.day}`} className={CARD_SHELL}>
-      <header className="border-b border-border px-6 py-3 text-center">
-        <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-muted-foreground">
+    <article id={`day-${day.day}`} className={cn(CARD_SHELL, 'scroll-mt-28')}>
+      <header className="grid grid-cols-[1fr_auto_1fr] items-center border-b border-border px-6 py-3">
+        <span aria-hidden />
+        <p className="text-center text-[10px] font-semibold uppercase tracking-[0.2em] text-muted-foreground">
           Day {day.day} / {day.weekdayLabel}
         </p>
+        <div className="flex justify-end">
+          {day.isLive ? (
+            <Badge variant="error" className="text-[10px] shrink-0">
+              Live
+            </Badge>
+          ) : null}
+        </div>
       </header>
 
       <div className="grid border-b border-border lg:grid-cols-2">
         <div className="space-y-5 border-b border-border px-6 py-6 lg:border-b-0 lg:border-r">
           <div>
-            <div className="flex flex-wrap items-start gap-x-2 gap-y-1">
-              <h3 className="text-[clamp(28px,4vw,36px)] font-semibold leading-none tracking-tight text-foreground">
-                {day.title}
-              </h3>
-              <span className="text-[clamp(28px,4vw,36px)] font-semibold leading-none text-[var(--brand-cta)]">
-                _
-              </span>
-              {day.isLive ? (
-                <Badge variant="error" className="mt-1 text-[10px] shrink-0">
-                  Live
-                </Badge>
-              ) : null}
-            </div>
+            <DayTitle title={day.title} />
             <p className="mt-4 text-[13px] leading-relaxed text-muted-foreground">
               {day.longDescription}
             </p>
           </div>
-
-          {day.announcementVideo ? (
-            <VideoThumbnail
-              label={day.announcementVideo.label}
-              href={day.announcementVideo.href}
-              className="max-w-[220px]"
-            />
-          ) : null}
         </div>
 
-        <div className="flex p-6">
+        <div className="flex items-center p-6">
           <DayVisual day={day} />
         </div>
       </div>
@@ -145,7 +184,7 @@ export function DayDetailCard({ day }: DayDetailCardProps) {
         </ul>
       ) : null}
 
-      {day.footerVideos.length > 0 ? (
+      {(day.footerVideos?.length ?? 0) > 0 ? (
         <div className="grid gap-6 px-6 py-6 sm:grid-cols-2">
           {day.footerVideos.map((video) => (
             <VideoThumbnail
