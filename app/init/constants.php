@@ -159,15 +159,15 @@ const SESSION_PROVIDER_TOKEN = 'token';
 const SESSION_PROVIDER_SERVER = 'server';
 
 /**
- * Activity associated with user or the app.
+ * Actor that performed the request (user, admin, guest, or API key).
  */
-const ACTIVITY_TYPE_USER = 'user';
-const ACTIVITY_TYPE_ADMIN = 'admin';
-const ACTIVITY_TYPE_GUEST = 'guest';
-const ACTIVITY_TYPE_HIDDEN = 'hidden';
-const ACTIVITY_TYPE_KEY_PROJECT = 'keyProject';
-const ACTIVITY_TYPE_KEY_ACCOUNT = 'keyAccount';
-const ACTIVITY_TYPE_KEY_ORGANIZATION = 'keyOrganization';
+const ACTOR_TYPE_USER = 'user';
+const ACTOR_TYPE_ADMIN = 'admin';
+const ACTOR_TYPE_GUEST = 'guest';
+const ACTOR_TYPE_HIDDEN = 'hidden';
+const ACTOR_TYPE_KEY_PROJECT = 'keyProject';
+const ACTOR_TYPE_KEY_ACCOUNT = 'keyAccount';
+const ACTOR_TYPE_KEY_ORGANIZATION = 'keyOrganization';
 
 /**
  * MFA
@@ -402,6 +402,7 @@ const METRIC_NETWORK_OUTBOUND  = 'network.outbound';
 const METRIC_MAU = 'users.mau';
 const METRIC_DAU = 'users.dau';
 const METRIC_WAU = 'users.wau';
+const METRIC_USERS_PRESENCE = 'users.presence';
 const METRIC_WEBHOOKS = 'webhooks';
 const METRIC_PLATFORMS = 'platforms';
 const METRIC_PROVIDERS = 'providers';

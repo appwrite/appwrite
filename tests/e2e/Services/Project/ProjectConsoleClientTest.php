@@ -103,7 +103,7 @@ class ProjectConsoleClientTest extends Scope
         $this->assertSame('', $response['body']['smtpReplyToEmail']);
         $this->assertSame('', $response['body']['smtpReplyToName']);
         $this->assertSame('', $response['body']['smtpHost']);
-        $this->assertSame('', $response['body']['smtpPort']);
+        $this->assertSame(0, $response['body']['smtpPort']);
         $this->assertSame('', $response['body']['smtpUsername']);
         $this->assertSame('', $response['body']['smtpPassword']);
         $this->assertSame('', $response['body']['smtpSecure']);

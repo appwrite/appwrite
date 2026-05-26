@@ -443,7 +443,8 @@ jobs:
           Messaging,
           Notifications,
           Migrations,
-          Project
+          Project,
+          Presences
         ]
         include:
           - service: Databases

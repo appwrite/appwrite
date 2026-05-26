@@ -344,6 +344,7 @@ return function (Container $container): void {
         $publisher,
         new Queue(System::getEnv('_APP_FUNCTIONS_QUEUE_NAME', Event::FUNCTIONS_QUEUE_NAME), 'utopia-queue', Event::FUNCTIONS_QUEUE_TTL)
     ), ['publisher']);
+
     $container->set('queueForRealtime', function () {
         return new Realtime();
     }, []);

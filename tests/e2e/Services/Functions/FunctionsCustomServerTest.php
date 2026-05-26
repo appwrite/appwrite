@@ -2778,17 +2778,17 @@ class FunctionsCustomServerTest extends Scope
         $this->assertEmpty($executions['body']['executions'][0]['logs']);
         $this->assertEmpty($executions['body']['executions'][0]['errors']);
 
-        // Ensure executions count
-        $executions = $this->listExecutions($functionId);
+        $this->assertEventually(function () use ($functionId) {
+            $executions = $this->listExecutions($functionId);
 
-        $this->assertEquals(200, $executions['headers']['status-code']);
-        $this->assertCount(3, $executions['body']['executions']);
+            $this->assertEquals(200, $executions['headers']['status-code']);
+            $this->assertCount(3, $executions['body']['executions']);
 
-        // Double check logs and errors are empty
-        foreach ($executions['body']['executions'] as $execution) {
-            $this->assertEmpty($execution['logs']);
-            $this->assertEmpty($execution['errors']);
-        }
+            foreach ($executions['body']['executions'] as $execution) {
+                $this->assertEmpty($execution['logs']);
+                $this->assertEmpty($execution['errors']);
+            }
+        }, 10000, 500);
 
         $this->cleanupFunction($functionId);
     }

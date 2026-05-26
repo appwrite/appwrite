@@ -179,7 +179,7 @@ class Get extends Action
                 '$sequence' => $alert->getAttribute('resourceInternalId', ''),
                 'name' => '',
                 'email' => '',
-                'type' => ACTIVITY_TYPE_HIDDEN,
+                'type' => ACTOR_TYPE_HIDDEN,
             ]),
             resource: 'alert/' . $alert->getId(),
             mode: APP_MODE_DEFAULT,

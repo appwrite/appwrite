@@ -6,8 +6,11 @@ use Appwrite\Certificates\Adapter as CertificatesAdapter;
 use Appwrite\Deletes\Identities;
 use Appwrite\Deletes\Targets;
 use Appwrite\Event\Message\Delete as DeleteMessage;
+use Appwrite\Event\Message\Usage;
 use Appwrite\Event\Publisher\Delete as DeletePublisher;
+use Appwrite\Event\Publisher\Usage as UsagePublisher;
 use Appwrite\Extend\Exception;
+use Appwrite\Usage\Context as UsageContext;
 use Executor\Executor;
 use Throwable;
 use Utopia\Abuse\Adapters\TimeLimit\Database as AbuseDatabase;
@@ -69,6 +72,7 @@ class Deletes extends Action
             ->inject('log')
             ->inject('publisherForDeletes')
             ->inject('getAudit')
+            ->inject('publisherForUsage')
             ->callback($this->action(...));
     }
 
@@ -96,6 +100,7 @@ class Deletes extends Action
         Log $log,
         DeletePublisher $publisherForDeletes,
         callable $getAudit,
+        UsagePublisher $publisherForUsage,
     ): void {
         $payload = $message->getPayload();
 
@@ -216,6 +221,7 @@ class Deletes extends Action
                 $this->deleteUsageStats($project, $getProjectDB, $getLogsDB, $hourlyUsageRetentionDatetime);
                 $this->deleteExpiredSessions($project, $getProjectDB);
                 $this->deleteExpiredTransactions($project, $getProjectDB);
+                $this->deleteExpiredPresences($project, $getProjectDB, $publisherForUsage);
                 $this->deleteOldDeployments($publisherForDeletes, $project, $getProjectDB);
                 break;
             case DELETE_TYPE_REPORT:
@@ -1032,6 +1038,7 @@ class Deletes extends Action
                 Query::equal('resourceInternalId', [$resourceInternalId]),
                 Query::equal('resourceType', [$resourceType]),
                 Query::orderDesc('$createdAt'),
+                Query::orderDesc(),
                 Query::offset($executionsRetentionCount),
             ]);
 
@@ -1751,5 +1758,26 @@ class Deletes extends Action
         ], onError: function (Throwable $th) {
             // Swallow errors to avoid breaking the cleanup process
         });
+    }
+
+    private function deleteExpiredPresences(Document $project, callable $getProjectDB, UsagePublisher $publisherForUsage): void
+    {
+        $dbForProject = $getProjectDB($project);
+
+        $now = DateTime::format(new \DateTime());
+
+        $deleted = $dbForProject->deleteDocuments('presenceLogs', [
+            Query::lessThan('expiresAt', $now),
+        ], onError: function (Throwable $th) {
+            // Swallow errors to avoid breaking the cleanup process
+        });
+
+        if ($deleted > 0) {
+            $usage = (new UsageContext())->addMetric(METRIC_USERS_PRESENCE, -$deleted);
+            $publisherForUsage->enqueue(new Usage(
+                project: $project,
+                metrics: $usage->getMetrics(),
+            ));
+        }
     }
 }
