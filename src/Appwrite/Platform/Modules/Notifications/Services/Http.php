@@ -3,6 +3,8 @@
 namespace Appwrite\Platform\Modules\Notifications\Services;
 
 use Appwrite\Platform\Modules\Notifications\Http\Notifications\Logos\Appwrite\Get as GetAppwriteLogo;
+use Appwrite\Platform\Modules\Notifications\Http\Notifications\Update as UpdateNotification;
+use Appwrite\Platform\Modules\Notifications\Http\Notifications\XList as ListNotifications;
 use Utopia\Platform\Service;
 
 class Http extends Service
@@ -11,6 +13,9 @@ class Http extends Service
     {
         $this->type = Service::TYPE_HTTP;
 
-        $this->addAction(GetAppwriteLogo::getName(), new GetAppwriteLogo());
+        $this
+            ->addAction(ListNotifications::getName(), new ListNotifications())
+            ->addAction(UpdateNotification::getName(), new UpdateNotification())
+            ->addAction(GetAppwriteLogo::getName(), new GetAppwriteLogo());
     }
 }

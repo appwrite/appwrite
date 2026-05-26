@@ -1,12 +1,12 @@
 <?php
 
-namespace Appwrite\Platform\Modules\Account\Http\Alerts;
+namespace Appwrite\Platform\Modules\Notifications\Http\Notifications;
 
 use Appwrite\Extend\Exception;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
-use Appwrite\Utopia\Database\Validator\Queries\Alerts;
+use Appwrite\Utopia\Database\Validator\Queries\Notifications as NotificationQueries;
 use Appwrite\Utopia\Response;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
@@ -23,31 +23,31 @@ class XList extends Action
 
     public static function getName(): string
     {
-        return 'listAlerts';
+        return 'listNotifications';
     }
 
     public function __construct()
     {
         $this
             ->setHttpMethod(Action::HTTP_REQUEST_METHOD_GET)
-            ->setHttpPath('/v1/account/alerts')
-            ->desc('List alerts')
-            ->groups(['api', 'account'])
+            ->setHttpPath('/v1/notifications')
+            ->desc('List notifications')
+            ->groups(['api', 'notifications'])
             ->label('scope', 'account')
             ->label('sdk', new Method(
-                namespace: 'account',
-                group: 'alerts',
-                name: 'listAlerts',
-                description: '/docs/references/account/list-alerts.md',
+                namespace: 'notifications',
+                group: null,
+                name: 'list',
+                description: '/docs/references/notifications/list-notifications.md',
                 auth: [AuthType::SESSION, AuthType::JWT],
                 responses: [
                     new SDKResponse(
                         code: Response::STATUS_CODE_OK,
-                        model: Response::MODEL_ALERT_LIST,
+                        model: Response::MODEL_NOTIFICATION_LIST,
                     )
                 ]
             ))
-            ->param('queries', [], new Alerts(), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/queries). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' queries are allowed, each ' . APP_LIMIT_ARRAY_ELEMENT_SIZE . ' characters long. You may filter on the following attributes: ' . implode(', ', Alerts::ALLOWED_ATTRIBUTES), true)
+            ->param('queries', [], new NotificationQueries(), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/queries). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' queries are allowed, each ' . APP_LIMIT_ARRAY_ELEMENT_SIZE . ' characters long. You may filter on the following attributes: ' . implode(', ', NotificationQueries::ALLOWED_ATTRIBUTES), true)
             ->inject('response')
             ->inject('dbForPlatform')
             ->inject('project')
@@ -75,9 +75,6 @@ class XList extends Action
             throw new Exception(Exception::GENERAL_QUERY_INVALID, $e->getMessage());
         }
 
-        /**
-         * Get cursor document if there was a cursor query, we use array_filter and reset for reference $cursor to $queries
-         */
         $cursor = \array_filter($queries, function ($query) {
             return \in_array($query->getMethod(), [Query::TYPE_CURSOR_AFTER, Query::TYPE_CURSOR_BEFORE]);
         });
@@ -90,11 +87,11 @@ class XList extends Action
                 throw new Exception(Exception::GENERAL_QUERY_INVALID, $validator->getDescription());
             }
 
-            $alertId = $cursor->getValue();
-            $cursorDocument = $dbForPlatform->getDocument('alerts', $alertId);
+            $notificationId = $cursor->getValue();
+            $cursorDocument = $dbForPlatform->getDocument('alerts', $notificationId);
 
             if ($cursorDocument->isEmpty()) {
-                throw new Exception(Exception::GENERAL_CURSOR_NOT_FOUND, "Alert '{$alertId}' for the 'cursor' value not found.");
+                throw new Exception(Exception::GENERAL_CURSOR_NOT_FOUND, "Notification '{$notificationId}' for the 'cursor' value not found.");
             }
 
             $cursor->setValue($cursorDocument);
@@ -110,8 +107,8 @@ class XList extends Action
         }
 
         $response->dynamic(new Document([
-            'alerts' => $results,
+            'notifications' => $results,
             'total' => $total,
-        ]), Response::MODEL_ALERT_LIST);
+        ]), Response::MODEL_NOTIFICATION_LIST);
     }
 }

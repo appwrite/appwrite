@@ -1,6 +1,6 @@
 <?php
 
-namespace Appwrite\Platform\Modules\Account\Http\Alerts;
+namespace Appwrite\Platform\Modules\Notifications\Http\Notifications;
 
 use Appwrite\Extend\Exception;
 use Appwrite\SDK\AuthType;
@@ -21,32 +21,32 @@ class Update extends Action
 
     public static function getName(): string
     {
-        return 'updateAlert';
+        return 'updateNotification';
     }
 
     public function __construct()
     {
         $this
             ->setHttpMethod(Action::HTTP_REQUEST_METHOD_PATCH)
-            ->setHttpPath('/v1/account/alerts/:alertId')
-            ->desc('Update alert')
-            ->groups(['api', 'account'])
+            ->setHttpPath('/v1/notifications/:notificationId')
+            ->desc('Update notification')
+            ->groups(['api', 'notifications'])
             ->label('scope', 'account')
             ->label('sdk', new Method(
-                namespace: 'account',
-                group: 'alerts',
-                name: 'updateAlert',
-                description: '/docs/references/account/update-alert.md',
+                namespace: 'notifications',
+                group: null,
+                name: 'update',
+                description: '/docs/references/notifications/update-notification.md',
                 auth: [AuthType::SESSION, AuthType::JWT],
                 responses: [
                     new SDKResponse(
                         code: Response::STATUS_CODE_OK,
-                        model: Response::MODEL_ALERT,
+                        model: Response::MODEL_NOTIFICATION,
                     )
                 ]
             ))
-            ->param('alertId', '', new UID(), 'Alert ID.')
-            ->param('read', null, new Boolean(), 'Alert read status.')
+            ->param('notificationId', '', new UID(), 'Notification ID.')
+            ->param('read', null, new Boolean(), 'Notification read status.')
             ->inject('response')
             ->inject('dbForPlatform')
             ->inject('authorization')
@@ -56,7 +56,7 @@ class Update extends Action
     }
 
     public function action(
-        string $alertId,
+        string $notificationId,
         bool $read,
         Response $response,
         Database $dbForPlatform,
@@ -68,20 +68,20 @@ class Update extends Action
             throw new Exception(Exception::USER_UNAUTHORIZED);
         }
 
-        $alert = $dbForPlatform->getDocument('alerts', $alertId);
+        $notification = $dbForPlatform->getDocument('alerts', $notificationId);
 
-        if ($alert->isEmpty()) {
-            $exists = $authorization->skip(fn () => !$dbForPlatform->getDocument('alerts', $alertId)->isEmpty());
+        if ($notification->isEmpty()) {
+            $exists = $authorization->skip(fn () => !$dbForPlatform->getDocument('alerts', $notificationId)->isEmpty());
             if ($exists) {
                 throw new Exception(Exception::USER_UNAUTHORIZED);
             }
             throw new Exception(Exception::DOCUMENT_NOT_FOUND);
         }
 
-        $updated = $dbForPlatform->updateDocument('alerts', $alertId, new Document([
+        $updated = $dbForPlatform->updateDocument('alerts', $notificationId, new Document([
             'read' => $read,
         ]));
 
-        $response->dynamic($updated, Response::MODEL_ALERT);
+        $response->dynamic($updated, Response::MODEL_NOTIFICATION);
     }
 }

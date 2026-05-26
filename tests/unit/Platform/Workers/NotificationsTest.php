@@ -691,13 +691,13 @@ class NotificationsTest extends TestCase
         $this->registry->set('smtp', static fn () => $spy);
 
         // Force the cloud SMTP branch (project has no smtp config) and
-        // provide an OpenSSL key so injectTrackingLogo actually runs.
+        // provide the tracking secret so injectTrackingLogo actually runs.
         $previousSmtpHost = \getenv('_APP_SMTP_HOST');
-        $previousOpensslKey = \getenv('_APP_OPENSSL_KEY_V1');
+        $previousTrackingSecret = \getenv('_APP_NOTIFICATIONS_TRACKING_SECRET');
         $previousDomain = \getenv('_APP_DOMAIN');
         $previousConsoleDomain = \getenv('_APP_CONSOLE_DOMAIN');
         \putenv('_APP_SMTP_HOST=spy.smtp.test');
-        \putenv('_APP_OPENSSL_KEY_V1=test-key-32bytes-min-aaaaaaaaaaaaaa');
+        \putenv('_APP_NOTIFICATIONS_TRACKING_SECRET=test-key-32bytes-min-aaaaaaaaaaaaaa');
         \putenv('_APP_DOMAIN=api.example.test');
         \putenv('_APP_CONSOLE_DOMAIN=console.example.test');
 
@@ -717,7 +717,7 @@ class NotificationsTest extends TestCase
             $worker->action($this->buildMessage($payload), $this->project, $this->registry, $this->database, $this->log);
         } finally {
             \putenv($previousSmtpHost === false ? '_APP_SMTP_HOST' : '_APP_SMTP_HOST=' . $previousSmtpHost);
-            \putenv($previousOpensslKey === false ? '_APP_OPENSSL_KEY_V1' : '_APP_OPENSSL_KEY_V1=' . $previousOpensslKey);
+            \putenv($previousTrackingSecret === false ? '_APP_NOTIFICATIONS_TRACKING_SECRET' : '_APP_NOTIFICATIONS_TRACKING_SECRET=' . $previousTrackingSecret);
             \putenv($previousDomain === false ? '_APP_DOMAIN' : '_APP_DOMAIN=' . $previousDomain);
             \putenv($previousConsoleDomain === false ? '_APP_CONSOLE_DOMAIN' : '_APP_CONSOLE_DOMAIN=' . $previousConsoleDomain);
         }
@@ -737,7 +737,7 @@ class NotificationsTest extends TestCase
         \preg_match('/logos\/appwrite\?jwt=([^"&]+)/', \html_entity_decode($body), $matches);
         $this->assertNotEmpty($matches[1] ?? '');
 
-        $claims = (new JWT('test-key-32bytes-min-aaaaaaaaaaaaaa', 'HS256', ALERT_TRACKING_JWT_TTL, 0))
+        $claims = (new JWT('test-key-32bytes-min-aaaaaaaaaaaaaa', 'HS256', NOTIFICATION_TRACKING_JWT_TTL, 0))
             ->decode(\urldecode($matches[1]));
         $this->assertSame(\md5('logo-key'), $claims['messageId'] ?? null);
         $this->assertSame(NOTIFICATION_TYPE_EMAIL, $claims['channel'] ?? null);
@@ -750,7 +750,7 @@ class NotificationsTest extends TestCase
         ), $claims['recipientHash'] ?? null);
         $this->assertSame('project-x', $claims['projectId'] ?? null);
         $this->assertSame('project-internal-x', $claims['projectInternalId'] ?? null);
-        $this->assertSame('alert_track', $claims['purpose'] ?? null);
+        $this->assertSame('notification_track', $claims['purpose'] ?? null);
         $this->assertArrayNotHasKey('alertId', $claims);
 
         // The logo must sit BEFORE the last </body>.
@@ -759,6 +759,42 @@ class NotificationsTest extends TestCase
         $this->assertNotFalse($lastBodyClose, 'rendered email must include a closing </body>');
         $this->assertNotFalse($logoPosition);
         $this->assertLessThan($lastBodyClose, $logoPosition, 'logo must be spliced before the final </body>');
+    }
+
+    public function testTrackingLogoDoesNotUseOpenSslKeyFallback(): void
+    {
+        $spy = new SpyEmailAdapter();
+        $this->registry->set('smtp', static fn () => $spy);
+
+        $previousSmtpHost = \getenv('_APP_SMTP_HOST');
+        $previousTrackingSecret = \getenv('_APP_NOTIFICATIONS_TRACKING_SECRET');
+        $previousOpenSslKey = \getenv('_APP_OPENSSL_KEY_V1');
+        \putenv('_APP_SMTP_HOST=spy.smtp.test');
+        \putenv('_APP_NOTIFICATIONS_TRACKING_SECRET=');
+        \putenv('_APP_OPENSSL_KEY_V1=openssl-key-must-not-sign-tracking');
+
+        try {
+            $worker = new Notifications();
+
+            $payload = [
+                'project' => ['$id' => 'project-x'],
+                'recipients' => [
+                    $this->userRecipient('user@example.test', NOTIFICATION_TYPE_EMAIL, 'user-8'),
+                ],
+                'subject' => 'Heads up',
+                'body' => 'plain body',
+                'deduplicationKey' => 'logo-key-no-tracking-secret',
+            ];
+
+            $worker->action($this->buildMessage($payload), $this->project, $this->registry, $this->database, $this->log);
+        } finally {
+            \putenv($previousSmtpHost === false ? '_APP_SMTP_HOST' : '_APP_SMTP_HOST=' . $previousSmtpHost);
+            \putenv($previousTrackingSecret === false ? '_APP_NOTIFICATIONS_TRACKING_SECRET' : '_APP_NOTIFICATIONS_TRACKING_SECRET=' . $previousTrackingSecret);
+            \putenv($previousOpenSslKey === false ? '_APP_OPENSSL_KEY_V1' : '_APP_OPENSSL_KEY_V1=' . $previousOpenSslKey);
+        }
+
+        $this->assertNotNull($spy->captured, 'SpyEmailAdapter must capture exactly one EmailMessage');
+        $this->assertStringNotContainsString('/v1/notifications/logos/appwrite?jwt=', $spy->captured->getContent());
     }
 
     public function testPersistAlertReturnsExistingAlertIdOnDuplicate(): void
@@ -1041,9 +1077,9 @@ class NotificationsTest extends TestCase
         $this->registry->set('smtp', static fn () => $spy);
 
         $previousSmtpHost = \getenv('_APP_SMTP_HOST');
-        $previousOpensslKey = \getenv('_APP_OPENSSL_KEY_V1');
+        $previousTrackingSecret = \getenv('_APP_NOTIFICATIONS_TRACKING_SECRET');
         \putenv('_APP_SMTP_HOST=spy.smtp.test');
-        \putenv('_APP_OPENSSL_KEY_V1=test-key-32bytes-min-aaaaaaaaaaaaaa');
+        \putenv('_APP_NOTIFICATIONS_TRACKING_SECRET=test-key-32bytes-min-aaaaaaaaaaaaaa');
 
         try {
             $worker = new CountingPersistAlertNotifications();
@@ -1061,7 +1097,7 @@ class NotificationsTest extends TestCase
             $worker->action($this->buildMessage($payload), $this->project, $this->registry, $this->database, $this->log);
         } finally {
             \putenv($previousSmtpHost === false ? '_APP_SMTP_HOST' : '_APP_SMTP_HOST=' . $previousSmtpHost);
-            \putenv($previousOpensslKey === false ? '_APP_OPENSSL_KEY_V1' : '_APP_OPENSSL_KEY_V1=' . $previousOpensslKey);
+            \putenv($previousTrackingSecret === false ? '_APP_NOTIFICATIONS_TRACKING_SECRET' : '_APP_NOTIFICATIONS_TRACKING_SECRET=' . $previousTrackingSecret);
         }
 
         $this->assertSame(1, $spy->sendCount, 'SMTP send must be invoked exactly once');
@@ -1179,10 +1215,11 @@ class NotificationsTest extends TestCase
         $this->assertStringNotContainsString('<!DOCTYPE html>', $rows[0]->getAttribute('body'));
     }
 
-    public function testEmailChannelSkipsWhenSmtpIsNotConfigured(): void
+    public function testEmailChannelThrowsWhenSmtpIsNotConfigured(): void
     {
         $previousSmtpHost = \getenv('_APP_SMTP_HOST');
         \putenv('_APP_SMTP_HOST=');
+        $threw = false;
 
         try {
             $worker = new CountingPersistAlertNotifications();
@@ -1196,11 +1233,17 @@ class NotificationsTest extends TestCase
                 'deduplicationKey' => 'missing-smtp',
             ];
 
-            $worker->action($this->buildMessage($payload), $this->project, $this->registry, $this->database, $this->log);
+            try {
+                $worker->action($this->buildMessage($payload), $this->project, $this->registry, $this->database, $this->log);
+            } catch (\Exception $error) {
+                $this->assertStringContainsString('No SMTP configuration has been set', $error->getMessage());
+                $threw = true;
+            }
         } finally {
             \putenv($previousSmtpHost === false ? '_APP_SMTP_HOST' : '_APP_SMTP_HOST=' . $previousSmtpHost);
         }
 
+        $this->assertTrue($threw, 'missing SMTP must fail email delivery so the queue can retry');
         $this->assertSame(0, $worker->persistAlertCalls);
         $this->assertCount(0, $this->database->find('alerts'));
         $this->assertSame('no_smtp', $this->log->getTags()['email_skipped'] ?? null);

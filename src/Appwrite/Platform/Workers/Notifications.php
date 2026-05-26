@@ -206,11 +206,8 @@ class Notifications extends Action
         $smtp = $this->resolveSmtpConfig($project, $payload);
 
         if (empty($smtp) && empty(System::getEnv('_APP_SMTP_HOST'))) {
-            if (empty($payload['recipients']) && !empty($payload['recipient'] ?? '')) {
-                throw new Exception('Skipped mail processing. No SMTP configuration has been set.');
-            }
             $log->addTag('email_skipped', 'no_smtp');
-            return null;
+            throw new Exception('Skipped mail processing. No SMTP configuration has been set.');
         }
 
         $type = empty($smtp) ? 'cloud' : 'smtp';
@@ -275,9 +272,9 @@ class Notifications extends Action
         $subject = \strip_tags($subjectTemplate->render());
 
         $recipientHash = self::buildRecipientHash($recipient);
-        $opensslKey = System::getEnv('_APP_OPENSSL_KEY_V1');
-        if ($messageId !== '' && !empty($opensslKey)) {
-            $body = $this->injectTrackingLogo($body, $messageId, $recipient['channel'], $recipientHash, $project, $opensslKey);
+        $trackingSecret = System::getEnv('_APP_NOTIFICATIONS_TRACKING_SECRET');
+        if ($messageId !== '' && !empty($trackingSecret)) {
+            $body = $this->injectTrackingLogo($body, $messageId, $recipient['channel'], $recipientHash, $project, $trackingSecret);
         }
 
         /** @var EmailAdapter $adapter */
@@ -611,7 +608,7 @@ class Notifications extends Action
     {
         foreach (['resourceType', 'resourceId', 'resourceInternalId', 'parentResourceType', 'parentResourceId', 'parentResourceInternalId'] as $key) {
             if ($recipient[$key] === '') {
-                throw new Exception('Missing notification alert ' . $key);
+                throw new Exception('Missing notification ' . $key);
             }
         }
     }
@@ -632,20 +629,20 @@ class Notifications extends Action
     /**
      * Splice a visible tracking logo before the last `</body>` tag (or
      * append at the end if the body has no closing tag). The logo URL
-     * carries a signed JWT identifying the alert recipient, which the
+     * carries a signed JWT identifying the notification recipient, which the
      * `/v1/notifications/logos/appwrite` endpoint verifies before marking
-     * the alert as read and recording view timestamps.
+     * the notification as read and recording view timestamps.
      */
-    private function injectTrackingLogo(string $body, string $messageId, string $channel, string $recipientHash, Document $project, string $opensslKey): string
+    private function injectTrackingLogo(string $body, string $messageId, string $channel, string $recipientHash, Document $project, string $trackingSecret): string
     {
-        $jwt = (new JWT($opensslKey, 'HS256', ALERT_TRACKING_JWT_TTL, 0))
+        $jwt = (new JWT($trackingSecret, 'HS256', NOTIFICATION_TRACKING_JWT_TTL, 0))
             ->encode([
                 'messageId' => $messageId,
                 'channel' => $channel,
                 'recipientHash' => $recipientHash,
                 'projectId' => $project->getId(),
                 'projectInternalId' => $project->getSequence(),
-                'purpose' => 'alert_track',
+                'purpose' => 'notification_track',
             ]);
 
         $protocol = System::getEnv('_APP_OPTIONS_FORCE_HTTPS', 'disabled') === 'disabled' ? 'http' : 'https';

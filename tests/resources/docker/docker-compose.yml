@@ -66,6 +66,7 @@ services:
       - _APP_OPTIONS_FORCE_HTTPS
       - _APP_OPTIONS_ROUTER_FORCE_HTTPS
       - _APP_OPENSSL_KEY_V1
+      - _APP_NOTIFICATIONS_TRACKING_SECRET
       - _APP_DOMAIN
       - _APP_DOMAIN_FUNCTIONS
       - _APP_DOMAIN_TARGET
@@ -281,6 +282,7 @@ services:
       # - smtp
     environment:
       - _APP_ENV
+      - _APP_NOTIFICATIONS_TRACKING_SECRET
       - _APP_REDIS_HOST
       - _APP_REDIS_PORT
       - _APP_DB_HOST
@@ -302,6 +304,7 @@ services:
       - maildev
     environment:
       - _APP_ENV
+      - _APP_NOTIFICATIONS_TRACKING_SECRET
       - _APP_REDIS_HOST
       - _APP_REDIS_PORT
       - _APP_DB_HOST

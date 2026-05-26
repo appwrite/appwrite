@@ -2,7 +2,7 @@
 
 namespace Appwrite\Utopia\Database\Validator\Queries;
 
-class Alerts extends Base
+class Notifications extends Base
 {
     public const ALLOWED_ATTRIBUTES = [
         'read',
@@ -18,10 +18,6 @@ class Alerts extends Base
         'lastSeen',
     ];
 
-    /**
-     * Expression constructor
-     *
-     */
     public function __construct()
     {
         parent::__construct('alerts', self::ALLOWED_ATTRIBUTES);

@@ -9,7 +9,7 @@ use Utopia\System\System;
 
 /**
  * End-to-end coverage for the notifications queue health surface and the
- * account-alerts user-facing API.
+ * notifications user-facing API.
  *
  * The notification worker itself is exercised in unit tests with a pinned
  * queue payload; the server side cannot deterministically inject a
@@ -20,10 +20,10 @@ use Utopia\System\System;
  *   - the threshold guard returns 503 when the depth exceeds the budget
  *   - the failed-jobs surface accepts the notifications queue name
  *
- * The alerts portion exercises the full webhook-paused fanout end-to-end:
+ * The notifications portion exercises the full webhook-paused fanout end-to-end:
  *
- *   - GET /v1/account/alerts (empty + populated)
- *   - PATCH /v1/account/alerts/:alertId (happy + unauthorized)
+ *   - GET /v1/notifications (empty + populated)
+ *   - PATCH /v1/notifications/:notificationId (happy + unauthorized)
  *   - GET /v1/notifications/logos/appwrite (valid JWT + invalid JWT)
  *
  * Dedup, per-channel dispatch, and webhook signing are covered by:
@@ -66,23 +66,23 @@ trait NotificationsBase
         $this->assertIsInt($response['body']['size']);
     }
 
-    public function testListAccountAlertsEmpty(): void
+    public function testListNotificationsEmpty(): void
     {
-        // Always read alerts as the console-authenticated owner of the team.
-        // The /v1/account/alerts endpoint is platform-scoped (dbForPlatform) and
+        // Always read notifications as the console-authenticated owner of the team.
+        // The /v1/notifications endpoint is platform-scoped (dbForPlatform) and
         // requires a session; server-mode API keys do not satisfy it.
-        $response = $this->client->call(Client::METHOD_GET, '/account/alerts', $this->getConsoleAlertHeaders());
+        $response = $this->client->call(Client::METHOD_GET, '/notifications', $this->getConsoleAlertHeaders());
 
         $this->assertSame(200, $response['headers']['status-code']);
-        $this->assertArrayHasKey('alerts', $response['body']);
+        $this->assertArrayHasKey('notifications', $response['body']);
         $this->assertArrayHasKey('total', $response['body']);
-        $this->assertIsArray($response['body']['alerts']);
+        $this->assertIsArray($response['body']['notifications']);
         $this->assertIsInt($response['body']['total']);
 
-        // The shared root console user may carry alerts from prior tests in the
+        // The shared root console user may carry notifications from prior tests in the
         // same suite — assert only that the response shape is correct and that
         // counts agree.
-        $this->assertSame(\count($response['body']['alerts']), \min(\count($response['body']['alerts']), $response['body']['total']));
+        $this->assertSame(\count($response['body']['notifications']), \min(\count($response['body']['notifications']), $response['body']['total']));
     }
 
     public function testWebhookFailureCreatesConsoleAlert(): void
@@ -91,18 +91,18 @@ trait NotificationsBase
 
         $this->assertNotEmpty($alertId);
 
-        $list = $this->client->call(Client::METHOD_GET, '/account/alerts', $this->getConsoleAlertHeaders());
+        $list = $this->client->call(Client::METHOD_GET, '/notifications', $this->getConsoleAlertHeaders());
         $this->assertSame(200, $list['headers']['status-code']);
 
         $found = null;
-        foreach ($list['body']['alerts'] as $alert) {
+        foreach ($list['body']['notifications'] as $alert) {
             if ($alert['$id'] === $alertId) {
                 $found = $alert;
                 break;
             }
         }
 
-        $this->assertNotNull($found, 'Seeded alert not present in /account/alerts response.');
+        $this->assertNotNull($found, 'Seeded alert not present in /notifications response.');
         $this->assertSame('console', $found['channel']);
         $this->assertStringContainsStringIgnoringCase('webhook', $found['title']);
 
@@ -110,14 +110,14 @@ trait NotificationsBase
         self::$seededAlertId = $alertId;
     }
 
-    public function testMarkAlertReadTogglesFlag(): void
+    public function testMarkNotificationReadTogglesFlag(): void
     {
         $alertId = self::$seededAlertId ?? $this->seedWebhookFailureAlert();
         $this->assertNotEmpty($alertId);
 
         $patch = $this->client->call(
             Client::METHOD_PATCH,
-            '/account/alerts/' . $alertId,
+            '/notifications/' . $alertId,
             $this->getConsoleAlertHeaders(),
             ['read' => true]
         );
@@ -126,11 +126,11 @@ trait NotificationsBase
         $this->assertSame($alertId, $patch['body']['$id']);
         $this->assertTrue($patch['body']['read']);
 
-        $list = $this->client->call(Client::METHOD_GET, '/account/alerts', $this->getConsoleAlertHeaders());
+        $list = $this->client->call(Client::METHOD_GET, '/notifications', $this->getConsoleAlertHeaders());
         $this->assertSame(200, $list['headers']['status-code']);
 
         $found = null;
-        foreach ($list['body']['alerts'] as $alert) {
+        foreach ($list['body']['notifications'] as $alert) {
             if ($alert['$id'] === $alertId) {
                 $found = $alert;
                 break;
@@ -140,10 +140,10 @@ trait NotificationsBase
         $this->assertNotNull($found);
         $this->assertTrue($found['read']);
 
-        self::$seededAlertId = null; // alert is read — downstream tests will seed fresh
+        self::$seededAlertId = null; // notification is read, downstream tests will seed fresh
     }
 
-    public function testMarkAlertReadUnauthorized(): void
+    public function testMarkNotificationReadUnauthorized(): void
     {
         $alertId = $this->seedWebhookFailureAlert();
         $this->assertNotEmpty($alertId);
@@ -153,7 +153,7 @@ trait NotificationsBase
 
         $unauthorized = $this->client->call(
             Client::METHOD_PATCH,
-            '/account/alerts/' . $alertId,
+            '/notifications/' . $alertId,
             [
                 'origin' => 'http://localhost',
                 'content-type' => 'application/json',
@@ -167,11 +167,11 @@ trait NotificationsBase
         $this->assertSame('user_unauthorized', $unauthorized['body']['type'] ?? '');
 
         // Owner re-fetches — alert must still be unread.
-        $list = $this->client->call(Client::METHOD_GET, '/account/alerts', $this->getConsoleAlertHeaders());
+        $list = $this->client->call(Client::METHOD_GET, '/notifications', $this->getConsoleAlertHeaders());
         $this->assertSame(200, $list['headers']['status-code']);
 
         $found = null;
-        foreach ($list['body']['alerts'] as $alert) {
+        foreach ($list['body']['notifications'] as $alert) {
             if ($alert['$id'] === $alertId) {
                 $found = $alert;
                 break;
@@ -184,7 +184,7 @@ trait NotificationsBase
         self::$seededAlertId = $alertId;
     }
 
-    public function testProjectAccountCannotListPlatformAlertsWithCollidingUserId(): void
+    public function testProjectAccountCannotListPlatformNotificationsWithCollidingUserId(): void
     {
         $alertId = $this->seedWebhookFailureAlert();
         $this->assertNotEmpty($alertId);
@@ -219,7 +219,7 @@ trait NotificationsBase
         $this->assertSame(201, $session['headers']['status-code']);
         $this->assertNotEmpty($session['cookies']['a_session_' . $projectId] ?? '');
 
-        $response = $this->client->call(Client::METHOD_GET, '/account/alerts', [
+        $response = $this->client->call(Client::METHOD_GET, '/notifications', [
             'origin' => 'http://localhost',
             'content-type' => 'application/json',
             'cookie' => 'a_session_' . $projectId . '=' . $session['cookies']['a_session_' . $projectId],
@@ -241,18 +241,18 @@ trait NotificationsBase
         $this->assertEmpty($alert['firstSeen'] ?? null);
         $this->assertEmpty($alert['lastSeen'] ?? null);
 
-        $secret = System::getEnv('_APP_OPENSSL_KEY_V1');
-        $this->assertNotEmpty($secret, '_APP_OPENSSL_KEY_V1 must be set for notification logo test');
+        $secret = System::getEnv('_APP_NOTIFICATIONS_TRACKING_SECRET');
+        $this->assertNotEmpty($secret, '_APP_NOTIFICATIONS_TRACKING_SECRET must be set for notification logo test');
         $recipientHash = \substr($alertId, \strrpos($alertId, '_') + 1);
 
-        // Logo endpoint requires `purpose: 'alert_track'`. Other claim
+        // Logo endpoint requires `purpose: 'notification_track'`. Other claim
         // purposes are silently ignored, which the purpose-claim test covers.
-        $jwt = (new JWT($secret, 'HS256', ALERT_TRACKING_JWT_TTL, 0))->encode([
+        $jwt = (new JWT($secret, 'HS256', NOTIFICATION_TRACKING_JWT_TTL, 0))->encode([
             'messageId' => $alert['messageId'],
             'channel' => $alert['channel'],
             'recipientHash' => $recipientHash,
             'projectId' => $alert['projectId'],
-            'purpose' => 'alert_track',
+            'purpose' => 'notification_track',
         ]);
 
         $response = $this->client->call(
@@ -295,10 +295,10 @@ trait NotificationsBase
     }
 
     /**
-     * Reviewer M7: a tracking JWT without a `purpose: 'alert_track'` claim
+     * Reviewer M7: a tracking JWT without a `purpose: 'notification_track'` claim
      * must be silently rejected. Without the purpose check, any JWT minted
      * with the same secret (sessions, password reset, etc.) could be
-     * replayed against this endpoint to mark arbitrary alerts as read.
+     * replayed against this endpoint to mark arbitrary notifications as read.
      *
      * The endpoint always returns the SVG logo (200 image/svg+xml) — the only
      * observable difference is whether the alert flips to `read: true`.
@@ -309,12 +309,12 @@ trait NotificationsBase
         $this->assertNotEmpty($alertId);
         $alert = $this->findConsoleAlert($alertId);
 
-        $secret = System::getEnv('_APP_OPENSSL_KEY_V1');
-        $this->assertNotEmpty($secret, '_APP_OPENSSL_KEY_V1 must be set for the JWT purpose-claim test');
+        $secret = System::getEnv('_APP_NOTIFICATIONS_TRACKING_SECRET');
+        $this->assertNotEmpty($secret, '_APP_NOTIFICATIONS_TRACKING_SECRET must be set for the JWT purpose-claim test');
         $recipientHash = \substr($alertId, \strrpos($alertId, '_') + 1);
 
         // Mint a JWT with valid message/recipient claims but NO purpose claim.
-        $jwtNoPurpose = (new JWT($secret, 'HS256', ALERT_TRACKING_JWT_TTL, 0))->encode([
+        $jwtNoPurpose = (new JWT($secret, 'HS256', NOTIFICATION_TRACKING_JWT_TTL, 0))->encode([
             'messageId' => $alert['messageId'],
             'channel' => $alert['channel'],
             'recipientHash' => $recipientHash,
@@ -337,7 +337,7 @@ trait NotificationsBase
         $this->assertEmpty($found['lastSeen'] ?? null);
 
         // Mint a JWT with a wrong purpose value: same expectation, silently rejected.
-        $jwtWrongPurpose = (new JWT($secret, 'HS256', ALERT_TRACKING_JWT_TTL, 0))->encode([
+        $jwtWrongPurpose = (new JWT($secret, 'HS256', NOTIFICATION_TRACKING_JWT_TTL, 0))->encode([
             'messageId' => $alert['messageId'],
             'channel' => $alert['channel'],
             'recipientHash' => $recipientHash,
@@ -380,7 +380,7 @@ trait NotificationsBase
         $this->assertNotEmpty($response['body']);
         $this->assertStringStartsWith('<svg', $response['body']);
 
-        // Alert must remain unread — invalid JWT is silently ignored, no DB write.
+        // Notification must remain unread: invalid JWT is silently ignored, no DB write.
         $found = $this->findConsoleAlert($alertId);
         $this->assertFalse($found['read']);
         $this->assertEmpty($found['firstSeen'] ?? null);
@@ -397,7 +397,7 @@ trait NotificationsBase
 
     /**
      * Build the auth header set used to talk to the platform-scoped
-     * /v1/account/alerts endpoints. Always console session, regardless of
+     * /v1/notifications endpoints. Always console session, regardless of
      * the trait's host (server vs console) — the endpoint requires a session
      * and the root user owns the project team.
      *
@@ -418,16 +418,16 @@ trait NotificationsBase
      */
     protected function findConsoleAlert(string $alertId): array
     {
-        $list = $this->client->call(Client::METHOD_GET, '/account/alerts', $this->getConsoleAlertHeaders());
+        $list = $this->client->call(Client::METHOD_GET, '/notifications', $this->getConsoleAlertHeaders());
         $this->assertSame(200, $list['headers']['status-code']);
 
-        foreach ($list['body']['alerts'] as $alert) {
+        foreach ($list['body']['notifications'] as $alert) {
             if ($alert['$id'] === $alertId) {
                 return $alert;
             }
         }
 
-        $this->fail('Alert not present in /account/alerts response: ' . $alertId);
+        $this->fail('Alert not present in /notifications response: ' . $alertId);
     }
 
     /**
@@ -494,10 +494,10 @@ trait NotificationsBase
         // and webhook deliveries also queue up — give them generous time.
         $alertId = null;
         $this->assertEventually(function () use (&$alertId, $projectId, $webhookId, $webhookName) {
-            $list = $this->client->call(Client::METHOD_GET, '/account/alerts', $this->getConsoleAlertHeaders());
+            $list = $this->client->call(Client::METHOD_GET, '/notifications', $this->getConsoleAlertHeaders());
             $this->assertSame(200, $list['headers']['status-code']);
 
-            foreach ($list['body']['alerts'] as $alert) {
+            foreach ($list['body']['notifications'] as $alert) {
                 if (
                     ($alert['channel'] ?? '') === 'console'
                     && ($alert['projectId'] ?? '') === $projectId

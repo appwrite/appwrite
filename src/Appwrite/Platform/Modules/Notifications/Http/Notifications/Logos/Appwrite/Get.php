@@ -73,18 +73,18 @@ class Get extends Action
         Authorization $authorization,
         AuditPublisher $publisherForAudits,
     ): void {
-        $secret = System::getEnv('_APP_OPENSSL_KEY_V1');
+        $secret = System::getEnv('_APP_NOTIFICATIONS_TRACKING_SECRET');
 
         if (!empty($secret) && $jwt !== '') {
             try {
-                $decoder = new JWT($secret, 'HS256', ALERT_TRACKING_JWT_TTL, 0);
+                $decoder = new JWT($secret, 'HS256', NOTIFICATION_TRACKING_JWT_TTL, 0);
                 $decoded = $decoder->decode($jwt);
 
                 $result = $authorization->skip(fn () => $this->trackView($decoded, $dbForPlatform));
 
                 if ($result !== null) {
                     $this->logView(
-                        $result['alert'],
+                        $result['notification'],
                         $result['project'],
                         $result['seenAt'],
                         $request,
@@ -103,32 +103,32 @@ class Get extends Action
     }
 
     /**
-     * @return array{alert: Document, project: Document, seenAt: string}|null
+     * @return array{notification: Document, project: Document, seenAt: string}|null
      */
     private function trackView(array $decoded, Database $dbForPlatform): ?array
     {
         if (
             !isset($decoded['messageId'], $decoded['recipientHash'], $decoded['channel'], $decoded['projectId'], $decoded['purpose'])
-            || $decoded['purpose'] !== 'alert_track'
+            || $decoded['purpose'] !== 'notification_track'
         ) {
             return null;
         }
 
-        $alerts = $dbForPlatform->find('alerts', [
+        $notifications = $dbForPlatform->find('alerts', [
             Query::equal('messageId', [(string) $decoded['messageId']]),
             Query::equal('channel', [(string) $decoded['channel']]),
             Query::equal('recipientHash', [(string) $decoded['recipientHash']]),
             Query::limit(1),
         ]);
 
-        if (empty($alerts)) {
+        if (empty($notifications)) {
             return null;
         }
 
-        $alert = $alerts[0];
+        $notification = $notifications[0];
         if (
-            $alert->getAttribute('projectId') !== (string) $decoded['projectId']
-            || (isset($decoded['projectInternalId']) && $alert->getAttribute('projectInternalId') !== (string) $decoded['projectInternalId'])
+            $notification->getAttribute('projectId') !== (string) $decoded['projectId']
+            || (isset($decoded['projectInternalId']) && $notification->getAttribute('projectInternalId') !== (string) $decoded['projectInternalId'])
         ) {
             return null;
         }
@@ -139,12 +139,12 @@ class Get extends Action
             'lastSeen' => $seenAt,
         ];
 
-        if (empty($alert->getAttribute('firstSeen'))) {
+        if (empty($notification->getAttribute('firstSeen'))) {
             $updates['firstSeen'] = $seenAt;
         }
 
-        $updated = $dbForPlatform->updateDocument('alerts', $alert->getId(), new Document($updates));
-        $project = $dbForPlatform->getDocument('projects', $alert->getAttribute('projectId'));
+        $updated = $dbForPlatform->updateDocument('alerts', $notification->getId(), new Document($updates));
+        $project = $dbForPlatform->getDocument('projects', $notification->getAttribute('projectId'));
 
         if ($project->isEmpty()) {
             $project = new Document([
@@ -154,34 +154,34 @@ class Get extends Action
         }
 
         return [
-            'alert' => $updated,
+            'notification' => $updated,
             'project' => $project,
             'seenAt' => $seenAt,
         ];
     }
 
-    private function logView(Document $alert, Document $project, string $seenAt, Request $request, AuditPublisher $publisherForAudits): void
+    private function logView(Document $notification, Document $project, string $seenAt, Request $request, AuditPublisher $publisherForAudits): void
     {
         $publisherForAudits->enqueue(new AuditMessage(
-            event: 'alert.view',
+            event: 'notification.view',
             payload: [
-                'alertId' => $alert->getId(),
-                'messageId' => $alert->getAttribute('messageId', ''),
-                'channel' => $alert->getAttribute('channel', ''),
-                'projectId' => $alert->getAttribute('projectId', ''),
-                'firstSeen' => $alert->getAttribute('firstSeen'),
-                'lastSeen' => $alert->getAttribute('lastSeen'),
+                'notificationId' => $notification->getId(),
+                'messageId' => $notification->getAttribute('messageId', ''),
+                'channel' => $notification->getAttribute('channel', ''),
+                'projectId' => $notification->getAttribute('projectId', ''),
+                'firstSeen' => $notification->getAttribute('firstSeen'),
+                'lastSeen' => $notification->getAttribute('lastSeen'),
                 'seenAt' => $seenAt,
             ],
             project: $project,
             user: new Document([
-                '$id' => $alert->getAttribute('resourceId', ''),
-                '$sequence' => $alert->getAttribute('resourceInternalId', ''),
+                '$id' => $notification->getAttribute('resourceId', ''),
+                '$sequence' => $notification->getAttribute('resourceInternalId', ''),
                 'name' => '',
                 'email' => '',
                 'type' => ACTOR_TYPE_HIDDEN,
             ]),
-            resource: 'alert/' . $alert->getId(),
+            resource: 'notification/' . $notification->getId(),
             mode: APP_MODE_DEFAULT,
             ip: $request->getIP(),
             userAgent: $request->getUserAgent(''),

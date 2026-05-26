@@ -5,26 +5,26 @@ namespace Appwrite\Utopia\Response\Model;
 use Appwrite\Utopia\Response;
 use Appwrite\Utopia\Response\Model;
 
-class Alert extends Model
+class Notification extends Model
 {
     public function __construct()
     {
         $this
             ->addRule('$id', [
                 'type' => self::TYPE_STRING,
-                'description' => 'Alert ID.',
+                'description' => 'Notification ID.',
                 'default' => '',
                 'example' => '5e5ea5c16897e',
             ])
             ->addRule('$createdAt', [
                 'type' => self::TYPE_DATETIME,
-                'description' => 'Alert creation date in ISO 8601 format.',
+                'description' => 'Notification creation date in ISO 8601 format.',
                 'default' => '',
                 'example' => self::TYPE_DATETIME_EXAMPLE,
             ])
             ->addRule('$updatedAt', [
                 'type' => self::TYPE_DATETIME,
-                'description' => 'Alert update date in ISO 8601 format.',
+                'description' => 'Notification update date in ISO 8601 format.',
                 'default' => '',
                 'example' => self::TYPE_DATETIME_EXAMPLE,
             ])
@@ -37,7 +37,7 @@ class Alert extends Model
             ])
             ->addRule('type', [
                 'type' => self::TYPE_STRING,
-                'description' => 'Alert type: info, warning, error.',
+                'description' => 'Notification type: info, warning, error.',
                 'default' => 'info',
                 'example' => 'info',
             ])
@@ -49,64 +49,64 @@ class Alert extends Model
             ])
             ->addRule('resourceType', [
                 'type' => self::TYPE_STRING,
-                'description' => 'Resource type this alert is addressed to.',
+                'description' => 'Resource type this notification is addressed to.',
                 'default' => '',
                 'example' => 'users',
             ])
             ->addRule('resourceId', [
                 'type' => self::TYPE_STRING,
-                'description' => 'Resource ID this alert is addressed to.',
+                'description' => 'Resource ID this notification is addressed to.',
                 'default' => '',
                 'example' => '5e5bb8c16897e',
             ])
             ->addRule('parentResourceType', [
                 'type' => self::TYPE_STRING,
-                'description' => 'Parent resource type for the alert.',
+                'description' => 'Parent resource type for the notification.',
                 'default' => '',
                 'example' => 'projects',
             ])
             ->addRule('parentResourceId', [
                 'type' => self::TYPE_STRING,
-                'description' => 'Parent resource ID for the alert.',
+                'description' => 'Parent resource ID for the notification.',
                 'default' => '',
                 'example' => '5e5bb8c16897e',
             ])
             ->addRule('projectId', [
                 'type' => self::TYPE_STRING,
-                'description' => 'Project the alert pertains to.',
+                'description' => 'Project the notification pertains to.',
                 'default' => '',
                 'example' => '5e5bb8c16897e',
                 'required' => false,
             ])
             ->addRule('title', [
                 'type' => self::TYPE_STRING,
-                'description' => 'Alert title.',
+                'description' => 'Notification title.',
                 'default' => '',
                 'example' => 'New sign-in detected',
             ])
             ->addRule('body', [
                 'type' => self::TYPE_STRING,
-                'description' => 'Alert body.',
+                'description' => 'Notification body.',
                 'default' => '',
                 'example' => 'A new device signed in to your account.',
             ])
             ->addRule('read', [
                 'type' => self::TYPE_BOOLEAN,
-                'description' => 'Whether the alert has been read.',
+                'description' => 'Whether the notification has been read.',
                 'default' => false,
                 'example' => false,
                 'required' => false,
             ])
             ->addRule('firstSeen', [
                 'type' => self::TYPE_DATETIME,
-                'description' => 'First time the alert was viewed from a notification logo.',
+                'description' => 'First time the notification was viewed from a notification logo.',
                 'default' => null,
                 'example' => self::TYPE_DATETIME_EXAMPLE,
                 'required' => false,
             ])
             ->addRule('lastSeen', [
                 'type' => self::TYPE_DATETIME,
-                'description' => 'Most recent time the alert was viewed from a notification logo.',
+                'description' => 'Most recent time the notification was viewed from a notification logo.',
                 'default' => null,
                 'example' => self::TYPE_DATETIME_EXAMPLE,
                 'required' => false,
@@ -114,23 +114,13 @@ class Alert extends Model
         ;
     }
 
-    /**
-     * Get Name
-     *
-     * @return string
-     */
     public function getName(): string
     {
-        return 'Alert';
+        return 'Notification';
     }
 
-    /**
-     * Get Type
-     *
-     * @return string
-     */
     public function getType(): string
     {
-        return Response::MODEL_ALERT;
+        return Response::MODEL_NOTIFICATION;
     }
 }
