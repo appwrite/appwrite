@@ -224,18 +224,36 @@ trait PresenceBase
             // Client sessions must not be able to list presences belonging to a different user.
             $projectId = $this->getProject()['$id'];
             $originalUser = $this->getUser();
-            $otherUserId = $this->getUser(true)['$id'];
+            $otherUser = $this->getUser(true);
+            $otherUserId = $otherUser['$id'];
 
             // Important: don't let `getUser(true)` overwrite the cached user/session for the rest
-            // of this test run. We only need the other user's ID.
+            // of this test run.
             self::$user[$projectId] = $originalUser;
 
-            // Seed another presence for the other user (setup via API key, not the client session).
-            $this->setupPresence([
-                'userId' => $otherUserId,
-                'status' => 'online',
-                'metadata' => ['device' => 'other-user'],
-            ]);
+            if ($projectId === 'console') {
+                // The console project has no API keys; seed via the other user's own session.
+                $this->client->call(
+                    Client::METHOD_PUT,
+                    '/presences/' . ID::unique(),
+                    [
+                        'content-type' => 'application/json',
+                        'x-appwrite-project' => $projectId,
+                        'cookie' => 'a_session_' . $projectId . '=' . $otherUser['session'],
+                    ],
+                    [
+                        'status' => 'online',
+                        'metadata' => ['device' => 'other-user'],
+                    ]
+                );
+            } else {
+                // Seed another presence for the other user (setup via API key, not the client session).
+                $this->setupPresence([
+                    'userId' => $otherUserId,
+                    'status' => 'online',
+                    'metadata' => ['device' => 'other-user'],
+                ]);
+            }
 
             $otherList = $this->client->call(
                 Client::METHOD_GET,
@@ -285,6 +303,14 @@ trait PresenceBase
     public function testClientPresenceCustomPermissionsForOtherUser(): void
     {
         if ($this->getSide() !== 'client') {
+            $this->expectNotToPerformAssertions();
+            return;
+        }
+
+        if ($this->getProject()['$id'] === 'console') {
+            // Requires two concurrent presences for the same user with different ACLs,
+            // which is only achievable via an API key (the upsert dedupes by userId for
+            // session callers). The console project has no API keys, so we skip.
             $this->expectNotToPerformAssertions();
             return;
         }
@@ -1091,14 +1117,20 @@ trait PresenceBase
 
         // Verify User1's row is intact. Read via a presence-scoped API key to bypass
         // any read-permission ambiguity and inspect the persisted state directly.
-        $check = $this->client->call(
-            Client::METHOD_GET,
-            '/presences/' . $sharedPresenceId,
-            [
+        // The console project has no API keys, so fall back to user1's own session —
+        // if the bug ever resurfaces and user2 overwrote the row, user1 would lose
+        // read permission and this GET would return 404, still surfacing the failure.
+        $checkHeaders = $projectId === 'console'
+            ? $headersUser1
+            : [
                 'content-type' => 'application/json',
                 'x-appwrite-project' => $projectId,
                 'x-appwrite-key' => $this->getPresenceApiKey(),
-            ]
+            ];
+        $check = $this->client->call(
+            Client::METHOD_GET,
+            '/presences/' . $sharedPresenceId,
+            $checkHeaders
         );
         $this->assertEquals(200, $check['headers']['status-code']);
         $this->assertEquals($user1['$id'], $check['body']['userId']);
