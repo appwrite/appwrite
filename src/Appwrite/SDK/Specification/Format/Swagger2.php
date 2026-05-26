@@ -757,12 +757,13 @@ class Swagger2 extends Format
                     $body['schema']['properties'][$name] = [
                         'type' => $node['type'],
                         'description' => $node['description'],
-                        'x-example' => $node['x-example'] ?? null,
                     ];
 
                     if (\array_key_exists('default', $node)) {
                         $body['schema']['properties'][$name]['default'] = $node['default'];
                     }
+
+                    $body['schema']['properties'][$name]['x-example'] = $node['x-example'] ?? null;
 
                     if (isset($node['format'])) {
                         $body['schema']['properties'][$name]['format'] = $node['format'];
