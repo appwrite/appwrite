@@ -85,9 +85,13 @@ export function View() {
 
         <EventHero event={event} liveBanner={event.liveBanner} />
 
-        <div className="mx-auto w-full max-w-7xl space-y-8 px-4 pb-8 pt-8 sm:px-6 sm:pb-10">
+        <div className="mx-auto w-full max-w-7xl px-4 pb-8 pt-8 sm:px-6">
           <EventSchedule event={event} fullWidth />
+        </div>
 
+        <div className="border-t border-border" aria-hidden />
+
+        <div className="mx-auto w-full max-w-7xl space-y-8 px-4 pb-8 pt-8 sm:px-6 sm:pb-10">
           <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_320px] xl:grid-cols-[minmax(0,1fr)_360px]">
             <div className="space-y-6">
               {event.days.map((day) =>

@@ -1,20 +1,23 @@
-import type { LaunchEvent, LaunchEventLiveBanner } from '@/lib/init/types'
+import type { InitDisplayEvent, LaunchEventLiveBanner } from '@/lib/init/types'
 import type { ReactNode } from 'react'
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { consoleAccountQueryOptions } from '@/lib/react-query/hooks/auth'
+import {
+  INIT_COLLAPSED_HEADER_HEIGHT_PX,
+  useInitScrollSpyDay,
+} from '@/lib/init/use-init-scroll-spy-day'
 import { InitialsAvatar } from '@/components/global/shared/Avatar'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
 import { ChevronRight } from 'lucide-react'
 import { EventCtaButton } from '../shared/EventCtas'
+import { InitCollapsedDayNav } from './InitCollapsedDayNav'
 import { InitHeroBackground } from './InitHeroBackground'
 
-const COLLAPSED_HEIGHT_PX = 56
-
 interface EventHeroProps {
-  event: LaunchEvent
+  event: InitDisplayEvent
   /** Optional content above the date label (e.g. variant badge on preview pages). */
   headerAddon?: ReactNode
   /** Shown in the collapsed sticky bar when the user scrolls past the hero. */
@@ -25,7 +28,7 @@ function InitWordmark({
   event,
   className,
 }: {
-  event: LaunchEvent
+  event: InitDisplayEvent
   className?: string
 }) {
   return (
@@ -52,13 +55,18 @@ function CollapsedHeroBar({
   visible,
   liveBanner,
   bounds,
+  dayNumbers,
+  activeDay,
 }: {
-  event: LaunchEvent
+  event: InitDisplayEvent
   visible: boolean
   liveBanner?: LaunchEventLiveBanner
   bounds: MainBounds | null
+  dayNumbers: number[]
+  activeDay: number
 }) {
   const barRef = useRef<HTMLDivElement>(null)
+  const showDayNav = dayNumbers.length > 0
 
   return (
     <div
@@ -74,7 +82,7 @@ function CollapsedHeroBar({
         top: bounds?.top ?? 0,
         left: bounds?.left ?? 0,
         width: bounds?.width ?? '100%',
-        height: COLLAPSED_HEIGHT_PX,
+        height: INIT_COLLAPSED_HEADER_HEIGHT_PX,
       }}
     >
       <InitHeroBackground containerRef={barRef} compact />
@@ -84,33 +92,84 @@ function CollapsedHeroBar({
           visible && 'pointer-events-auto',
         )}
       >
-        <div className="mx-auto flex w-full max-w-7xl items-center gap-3 px-4 sm:gap-4 sm:px-6">
-          <InitWordmark event={event} className="shrink-0 text-[22px] sm:text-[24px]" />
-          {liveBanner ? (
-            <>
-              <div className="flex min-w-0 flex-1 items-center gap-2">
-                <Badge variant="error" className="text-[10px] shrink-0">
-                  Live now
-                </Badge>
-                <span className="truncate text-[13px] font-medium text-foreground">
-                  {liveBanner.title}
-                </span>
+        {showDayNav ? (
+          <div className="relative mx-auto flex w-full max-w-7xl items-center px-4 sm:px-6">
+            <div className="relative z-10 flex min-w-0 shrink-0 items-center gap-2 sm:gap-3">
+              <InitWordmark
+                event={event}
+                className="shrink-0 text-[20px] sm:text-[22px]"
+              />
+              <span className="truncate text-[10px] font-semibold uppercase tracking-[0.2em] text-muted-foreground">
+                {event.dateRangeLabel}
+              </span>
+            </div>
+
+            <div className="pointer-events-none absolute inset-0 flex items-center justify-center px-28 sm:px-36">
+              <div className="pointer-events-auto max-w-full">
+                <InitCollapsedDayNav days={dayNumbers} activeDay={activeDay} />
               </div>
-              {liveBanner.href ? (
-                <Button variant="outline" size="sm" className="h-7 shrink-0 text-[12px]" asChild>
-                  <a href={liveBanner.href} target="_blank" rel="noopener noreferrer">
-                    Watch
-                    <ChevronRight className="size-3.5" />
-                  </a>
-                </Button>
+            </div>
+
+            <div className="relative z-10 ml-auto flex shrink-0 justify-end">
+              {liveBanner ? (
+                <div className="flex items-center gap-1.5 sm:gap-2">
+                  <Badge variant="error" className="text-[10px] shrink-0">
+                    Live
+                  </Badge>
+                  {liveBanner.href ? (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="h-7 shrink-0 px-2 text-[12px] sm:px-3"
+                      asChild
+                    >
+                      <a
+                        href={liveBanner.href}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                      >
+                        Watch
+                        <ChevronRight className="size-3.5" />
+                      </a>
+                    </Button>
+                  ) : (
+                    <span className="hidden max-w-[120px] truncate text-[12px] font-medium text-foreground sm:inline">
+                      {liveBanner.title}
+                    </span>
+                  )}
+                </div>
               ) : null}
-            </>
-          ) : (
-            <span className="text-[10px] font-semibold uppercase tracking-[0.2em] text-muted-foreground">
-              {event.dateRangeLabel}
-            </span>
-          )}
-        </div>
+            </div>
+          </div>
+        ) : (
+          <div className="mx-auto flex w-full max-w-7xl items-center gap-3 px-4 sm:gap-4 sm:px-6">
+            <InitWordmark event={event} className="shrink-0 text-[22px] sm:text-[24px]" />
+            {liveBanner ? (
+              <>
+                <div className="flex min-w-0 flex-1 items-center gap-2">
+                  <Badge variant="error" className="text-[10px] shrink-0">
+                    Live now
+                  </Badge>
+                  <span className="truncate text-[13px] font-medium text-foreground">
+                    {liveBanner.title}
+                  </span>
+                </div>
+                {liveBanner.href ? (
+                  <Button variant="outline" size="sm" className="h-7 shrink-0 text-[12px]" asChild>
+                    <a href={liveBanner.href} target="_blank" rel="noopener noreferrer">
+                      Watch
+                      <ChevronRight className="size-3.5" />
+                    </a>
+                  </Button>
+                ) : null}
+              </>
+            ) : (
+              <span className="text-[10px] font-semibold uppercase tracking-[0.2em] text-muted-foreground">
+                {event.dateRangeLabel}
+              </span>
+            )}
+          </div>
+        )}
       </div>
     </div>
   )
@@ -123,6 +182,8 @@ export function EventHero({ event, headerAddon, liveBanner }: EventHeroProps) {
   const [isCollapsed, setIsCollapsed] = useState(false)
   const [collapseEnabled, setCollapseEnabled] = useState(true)
   const [mainBounds, setMainBounds] = useState<MainBounds | null>(null)
+  const dayNumbers = useMemo(() => event.days.map((day) => day.day), [event.days])
+  const activeDay = useInitScrollSpyDay(dayNumbers)
 
   useEffect(() => {
     const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
@@ -196,6 +257,8 @@ export function EventHero({ event, headerAddon, liveBanner }: EventHeroProps) {
           visible={isCollapsed}
           liveBanner={liveBanner}
           bounds={mainBounds}
+          dayNumbers={dayNumbers}
+          activeDay={activeDay}
         />
       ) : null}
 
