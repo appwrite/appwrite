@@ -24,7 +24,7 @@ use Utopia\System\System;
  *
  *   - GET /v1/account/alerts (empty + populated)
  *   - PATCH /v1/account/alerts/:alertId (happy + unauthorized)
- *   - GET /v1/account/alerts/:alertId/track (valid JWT + invalid JWT)
+ *   - GET /v1/notifications/logos/appwrite (valid JWT + invalid JWT)
  *
  * Dedup, per-channel dispatch, and webhook signing are covered by:
  *   - tests/unit/Platform/Workers/NotificationsTest.php
@@ -232,51 +232,64 @@ trait NotificationsBase
         self::$seededAlertId = $alertId;
     }
 
-    public function testTrackingPixelTogglesRead(): void
+    public function testNotificationLogoTracksViews(): void
     {
         $alertId = self::$seededAlertId ?? $this->seedWebhookFailureAlert();
         $this->assertNotEmpty($alertId);
+        $alert = $this->findConsoleAlert($alertId);
+        $this->assertFalse($alert['read']);
+        $this->assertEmpty($alert['firstSeen'] ?? null);
+        $this->assertEmpty($alert['lastSeen'] ?? null);
 
         $secret = System::getEnv('_APP_OPENSSL_KEY_V1');
-        $this->assertNotEmpty($secret, '_APP_OPENSSL_KEY_V1 must be set for tracking pixel test');
+        $this->assertNotEmpty($secret, '_APP_OPENSSL_KEY_V1 must be set for notification logo test');
         $recipientHash = \substr($alertId, \strrpos($alertId, '_') + 1);
 
-        // Track endpoint requires `purpose: 'alert_track'` — see C/M7 in
-        // PR #12195 review. Other claim purposes are silently ignored (which
-        // testTrackingPixelRejectsJwtWithoutPurposeClaim covers).
+        // Logo endpoint requires `purpose: 'alert_track'`. Other claim
+        // purposes are silently ignored, which the purpose-claim test covers.
         $jwt = (new JWT($secret, 'HS256', ALERT_TRACKING_JWT_TTL, 0))->encode([
-            'alertId' => $alertId,
+            'messageId' => $alert['messageId'],
+            'channel' => $alert['channel'],
             'recipientHash' => $recipientHash,
-            'projectId' => $this->getProject()['$id'],
+            'projectId' => $alert['projectId'],
             'purpose' => 'alert_track',
         ]);
 
         $response = $this->client->call(
             Client::METHOD_GET,
-            '/account/alerts/' . $alertId . '/track',
+            '/notifications/logos/appwrite',
+            ['x-appwrite-project' => 'console'],
+            [
+                'jwt' => $jwt,
+                'theme' => 'dark',
+            ]
+        );
+
+        $this->assertSame(200, $response['headers']['status-code']);
+        $this->assertStringContainsString('image/svg+xml', $response['headers']['content-type']);
+        $this->assertNotEmpty($response['body']);
+        $this->assertStringStartsWith('<svg', $response['body']);
+        $this->assertStringContainsString('Appwrite', $response['body']);
+
+        $tracked = $this->findConsoleAlert($alertId);
+        $this->assertTrue($tracked['read']);
+        $this->assertNotEmpty($tracked['firstSeen']);
+        $this->assertNotEmpty($tracked['lastSeen']);
+
+        \sleep(1);
+
+        $secondResponse = $this->client->call(
+            Client::METHOD_GET,
+            '/notifications/logos/appwrite',
             ['x-appwrite-project' => 'console'],
             ['jwt' => $jwt]
         );
 
-        $this->assertSame(200, $response['headers']['status-code']);
-        $this->assertStringContainsString('image/png', $response['headers']['content-type']);
-        $this->assertNotEmpty($response['body']);
-        $this->assertSame("\x89PNG\r\n\x1a\n", \substr($response['body'], 0, 8), 'Response body must be a PNG.');
+        $this->assertSame(200, $secondResponse['headers']['status-code']);
 
-        // Subsequent listing should report alert as read.
-        $list = $this->client->call(Client::METHOD_GET, '/account/alerts', $this->getConsoleAlertHeaders());
-        $this->assertSame(200, $list['headers']['status-code']);
-
-        $found = null;
-        foreach ($list['body']['alerts'] as $alert) {
-            if ($alert['$id'] === $alertId) {
-                $found = $alert;
-                break;
-            }
-        }
-
-        $this->assertNotNull($found);
-        $this->assertTrue($found['read']);
+        $viewedAgain = $this->findConsoleAlert($alertId);
+        $this->assertSame($tracked['firstSeen'], $viewedAgain['firstSeen']);
+        $this->assertNotSame($tracked['lastSeen'], $viewedAgain['lastSeen']);
 
         self::$seededAlertId = null;
     }
@@ -287,109 +300,91 @@ trait NotificationsBase
      * with the same secret (sessions, password reset, etc.) could be
      * replayed against this endpoint to mark arbitrary alerts as read.
      *
-     * The endpoint always returns the 1x1 PNG (200 image/png) — the only
+     * The endpoint always returns the SVG logo (200 image/svg+xml) — the only
      * observable difference is whether the alert flips to `read: true`.
      */
-    public function testTrackingPixelRejectsJwtWithoutPurposeClaim(): void
+    public function testNotificationLogoRejectsJwtWithoutPurposeClaim(): void
     {
         $alertId = $this->seedWebhookFailureAlert();
         $this->assertNotEmpty($alertId);
+        $alert = $this->findConsoleAlert($alertId);
 
         $secret = System::getEnv('_APP_OPENSSL_KEY_V1');
         $this->assertNotEmpty($secret, '_APP_OPENSSL_KEY_V1 must be set for the JWT purpose-claim test');
         $recipientHash = \substr($alertId, \strrpos($alertId, '_') + 1);
 
-        // Mint a JWT with valid alertId/recipientHash but NO purpose claim.
+        // Mint a JWT with valid message/recipient claims but NO purpose claim.
         $jwtNoPurpose = (new JWT($secret, 'HS256', ALERT_TRACKING_JWT_TTL, 0))->encode([
-            'alertId' => $alertId,
+            'messageId' => $alert['messageId'],
+            'channel' => $alert['channel'],
             'recipientHash' => $recipientHash,
-            'projectId' => $this->getProject()['$id'],
+            'projectId' => $alert['projectId'],
         ]);
 
         $response = $this->client->call(
             Client::METHOD_GET,
-            '/account/alerts/' . $alertId . '/track',
+            '/notifications/logos/appwrite',
             ['x-appwrite-project' => 'console'],
             ['jwt' => $jwtNoPurpose]
         );
 
         $this->assertSame(200, $response['headers']['status-code'], 'endpoint must always return 200');
-        $this->assertStringContainsString('image/png', $response['headers']['content-type']);
+        $this->assertStringContainsString('image/svg+xml', $response['headers']['content-type']);
 
-        $list = $this->client->call(Client::METHOD_GET, '/account/alerts', $this->getConsoleAlertHeaders());
-        $found = null;
-        foreach ($list['body']['alerts'] as $alert) {
-            if ($alert['$id'] === $alertId) {
-                $found = $alert;
-                break;
-            }
-        }
-        $this->assertNotNull($found);
+        $found = $this->findConsoleAlert($alertId);
         $this->assertFalse($found['read'], 'JWT without purpose claim must not flip the read flag');
+        $this->assertEmpty($found['firstSeen'] ?? null);
+        $this->assertEmpty($found['lastSeen'] ?? null);
 
         // Mint a JWT with a wrong purpose value: same expectation, silently rejected.
         $jwtWrongPurpose = (new JWT($secret, 'HS256', ALERT_TRACKING_JWT_TTL, 0))->encode([
-            'alertId' => $alertId,
+            'messageId' => $alert['messageId'],
+            'channel' => $alert['channel'],
             'recipientHash' => $recipientHash,
-            'projectId' => $this->getProject()['$id'],
+            'projectId' => $alert['projectId'],
             'purpose' => 'something_else',
         ]);
 
         $response = $this->client->call(
             Client::METHOD_GET,
-            '/account/alerts/' . $alertId . '/track',
+            '/notifications/logos/appwrite',
             ['x-appwrite-project' => 'console'],
             ['jwt' => $jwtWrongPurpose]
         );
 
         $this->assertSame(200, $response['headers']['status-code']);
-        $this->assertStringContainsString('image/png', $response['headers']['content-type']);
+        $this->assertStringContainsString('image/svg+xml', $response['headers']['content-type']);
 
-        $list = $this->client->call(Client::METHOD_GET, '/account/alerts', $this->getConsoleAlertHeaders());
-        $found = null;
-        foreach ($list['body']['alerts'] as $alert) {
-            if ($alert['$id'] === $alertId) {
-                $found = $alert;
-                break;
-            }
-        }
-        $this->assertNotNull($found);
+        $found = $this->findConsoleAlert($alertId);
         $this->assertFalse($found['read'], 'JWT with wrong purpose value must not flip the read flag');
+        $this->assertEmpty($found['firstSeen'] ?? null);
+        $this->assertEmpty($found['lastSeen'] ?? null);
 
         self::$seededAlertId = $alertId;
     }
 
-    public function testTrackingPixelInvalidTokenReturnsPng(): void
+    public function testNotificationLogoInvalidTokenReturnsSvg(): void
     {
         $alertId = $this->seedWebhookFailureAlert();
         $this->assertNotEmpty($alertId);
 
         $response = $this->client->call(
             Client::METHOD_GET,
-            '/account/alerts/' . $alertId . '/track',
+            '/notifications/logos/appwrite',
             ['x-appwrite-project' => 'console'],
             ['jwt' => 'tampered-or-empty']
         );
 
         $this->assertSame(200, $response['headers']['status-code']);
-        $this->assertStringContainsString('image/png', $response['headers']['content-type']);
+        $this->assertStringContainsString('image/svg+xml', $response['headers']['content-type']);
         $this->assertNotEmpty($response['body']);
-        $this->assertSame("\x89PNG\r\n\x1a\n", \substr($response['body'], 0, 8), 'Response body must be a PNG.');
+        $this->assertStringStartsWith('<svg', $response['body']);
 
         // Alert must remain unread — invalid JWT is silently ignored, no DB write.
-        $list = $this->client->call(Client::METHOD_GET, '/account/alerts', $this->getConsoleAlertHeaders());
-        $this->assertSame(200, $list['headers']['status-code']);
-
-        $found = null;
-        foreach ($list['body']['alerts'] as $alert) {
-            if ($alert['$id'] === $alertId) {
-                $found = $alert;
-                break;
-            }
-        }
-
-        $this->assertNotNull($found);
+        $found = $this->findConsoleAlert($alertId);
         $this->assertFalse($found['read']);
+        $this->assertEmpty($found['firstSeen'] ?? null);
+        $this->assertEmpty($found['lastSeen'] ?? null);
 
         self::$seededAlertId = $alertId;
     }
@@ -416,6 +411,24 @@ trait NotificationsBase
             'cookie' => 'a_session_console=' . $this->getRoot()['session'],
             'x-appwrite-project' => 'console',
         ];
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    protected function findConsoleAlert(string $alertId): array
+    {
+        $list = $this->client->call(Client::METHOD_GET, '/account/alerts', $this->getConsoleAlertHeaders());
+        $this->assertSame(200, $list['headers']['status-code']);
+
+        foreach ($list['body']['alerts'] as $alert) {
+            if ($alert['$id'] === $alertId) {
+                return $alert;
+            }
+        }
+
+        $this->fail('Alert not present in /account/alerts response: ' . $alertId);
+        return [];
     }
 
     /**

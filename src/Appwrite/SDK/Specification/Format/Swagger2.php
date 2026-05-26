@@ -316,6 +316,7 @@ class Swagger2 extends Format
                             'image/jpeg',
                             'image/gif',
                             'image/png',
+                            'image/svg+xml',
                             'image/webp',
                             'image/svg-x',
                             'image/x-icon',

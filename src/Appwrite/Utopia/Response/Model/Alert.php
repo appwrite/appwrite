@@ -97,6 +97,20 @@ class Alert extends Model
                 'example' => false,
                 'required' => false,
             ])
+            ->addRule('firstSeen', [
+                'type' => self::TYPE_DATETIME,
+                'description' => 'First time the alert was viewed from a notification logo.',
+                'default' => null,
+                'example' => self::TYPE_DATETIME_EXAMPLE,
+                'required' => false,
+            ])
+            ->addRule('lastSeen', [
+                'type' => self::TYPE_DATETIME,
+                'description' => 'Most recent time the alert was viewed from a notification logo.',
+                'default' => null,
+                'example' => self::TYPE_DATETIME_EXAMPLE,
+                'required' => false,
+            ])
         ;
     }
 

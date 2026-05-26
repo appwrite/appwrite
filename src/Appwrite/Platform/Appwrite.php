@@ -11,6 +11,7 @@ use Appwrite\Platform\Modules\Databases;
 use Appwrite\Platform\Modules\Functions;
 use Appwrite\Platform\Modules\Health;
 use Appwrite\Platform\Modules\Migrations;
+use Appwrite\Platform\Modules\Notifications;
 use Appwrite\Platform\Modules\Project;
 use Appwrite\Platform\Modules\Projects;
 use Appwrite\Platform\Modules\Proxy;
@@ -33,6 +34,7 @@ class Appwrite extends Platform
         $this->addModule(new Projects\Module());
         $this->addModule(new Functions\Module());
         $this->addModule(new Health\Module());
+        $this->addModule(new Notifications\Module());
         $this->addModule(new Sites\Module());
         $this->addModule(new Console\Module());
         $this->addModule(new Proxy\Module());

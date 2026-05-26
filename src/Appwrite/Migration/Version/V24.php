@@ -87,8 +87,10 @@ class V24 extends Migration
         };
 
         $collections = $this->collections[$collectionType];
+        $alertsCollectionExists = false;
 
         if ($collectionType === 'console') {
+            $alertsCollectionExists = !$this->dbForProject->getCollection('alerts')->isEmpty();
             $this->createCollection('alerts');
         }
 
@@ -165,6 +167,19 @@ class V24 extends Migration
                                 $this->createIndexFromCollection($this->dbForProject, $id, $index);
                             } catch (Throwable $th) {
                                 Console::warning("Failed to create index \"{$index}\" from {$id}: {$th->getMessage()}");
+                            }
+                        }
+                    }
+                    $this->dbForProject->purgeCachedCollection($id);
+                    break;
+
+                case 'alerts':
+                    if ($collectionType === 'console' && $alertsCollectionExists) {
+                        foreach (['firstSeen', 'lastSeen'] as $attribute) {
+                            try {
+                                $this->createAttributeFromCollection($this->dbForProject, $id, $attribute);
+                            } catch (Throwable $th) {
+                                Console::warning("Failed to create attribute \"{$attribute}\" in collection {$id}: {$th->getMessage()}");
                             }
                         }
                     }

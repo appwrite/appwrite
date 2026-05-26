@@ -48,6 +48,9 @@ class ConsoleTest extends TestCase
         $this->database->createAttribute('alerts', 'parentResourceInternalId', Database::VAR_ID, 0, true);
         $this->database->createAttribute('alerts', 'title', Database::VAR_STRING, 256, true);
         $this->database->createAttribute('alerts', 'body', Database::VAR_STRING, 16384, true);
+        $this->database->createAttribute('alerts', 'read', Database::VAR_BOOLEAN, 0, false, false);
+        $this->database->createAttribute('alerts', 'firstSeen', Database::VAR_DATETIME, 0, false);
+        $this->database->createAttribute('alerts', 'lastSeen', Database::VAR_DATETIME, 0, false);
     }
 
     protected function tearDown(): void
@@ -118,6 +121,9 @@ class ConsoleTest extends TestCase
         $this->assertSame('Hello', $stored->getAttribute('title'));
         $this->assertSame('World', $stored->getAttribute('body'));
         $this->assertSame('info', $stored->getAttribute('type'));
+        $this->assertFalse($stored->getAttribute('read'));
+        $this->assertNull($stored->getAttribute('firstSeen'));
+        $this->assertNull($stored->getAttribute('lastSeen'));
     }
 
     public function testUserPermissionsScopedToRecipient(): void

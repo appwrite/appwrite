@@ -191,6 +191,8 @@ class NotificationsTest extends TestCase
         $this->database->createAttribute('alerts', 'title', Database::VAR_STRING, 256, true);
         $this->database->createAttribute('alerts', 'body', Database::VAR_STRING, 16384, true);
         $this->database->createAttribute('alerts', 'read', Database::VAR_BOOLEAN, 0, false, false);
+        $this->database->createAttribute('alerts', 'firstSeen', Database::VAR_DATETIME, 0, false);
+        $this->database->createAttribute('alerts', 'lastSeen', Database::VAR_DATETIME, 0, false);
 
         // Mirror the production `_key_recipient` UNIQUE composite index so the
         // duplicate-handling branch in persistAlert (catch DuplicateException ->
@@ -683,13 +685,13 @@ class NotificationsTest extends TestCase
         $this->assertSame('project-internal-x', $rows[0]->getAttribute('parentResourceInternalId'));
     }
 
-    public function testTrackingPixelInjectedIntoEmailHtml(): void
+    public function testTrackingLogoInjectedIntoEmailHtml(): void
     {
         $spy = new SpyEmailAdapter();
         $this->registry->set('smtp', static fn () => $spy);
 
         // Force the cloud SMTP branch (project has no smtp config) and
-        // provide an OpenSSL key so injectTrackingPixel actually runs.
+        // provide an OpenSSL key so injectTrackingLogo actually runs.
         $previousSmtpHost = \getenv('_APP_SMTP_HOST');
         $previousOpensslKey = \getenv('_APP_OPENSSL_KEY_V1');
         $previousDomain = \getenv('_APP_DOMAIN');
@@ -709,7 +711,7 @@ class NotificationsTest extends TestCase
                 ],
                 'subject' => 'Heads up',
                 'body' => 'plain body',
-                'deduplicationKey' => 'pixel-key',
+                'deduplicationKey' => 'logo-key',
             ];
 
             $worker->action($this->buildMessage($payload), $this->project, $this->registry, $this->database, $this->log);
@@ -723,26 +725,40 @@ class NotificationsTest extends TestCase
         $this->assertNotNull($spy->captured, 'SpyEmailAdapter must capture exactly one EmailMessage');
 
         $body = $spy->captured->getContent();
-        $this->assertStringContainsString('<img src=', $body, 'tracking pixel <img> must be present');
-        $this->assertStringContainsString('/v1/account/alerts/', $body);
-        $this->assertStringContainsString('/track?jwt=', $body);
-        $this->assertStringContainsString('http://api.example.test/v1/account/alerts/', \html_entity_decode($body));
-        $this->assertStringNotContainsString('console.example.test/v1/account/alerts/', \html_entity_decode($body));
+        $this->assertStringContainsString('<img src=', $body, 'tracking logo <img> must be present');
+        $this->assertStringContainsString('/v1/notifications/logos/appwrite?jwt=', $body);
+        $this->assertStringContainsString('alt="Appwrite logo"', $body);
+        $this->assertStringContainsString('width="120"', $body);
+        $this->assertStringContainsString('height="28"', $body);
+        $this->assertStringNotContainsString('display:none', $body);
+        $this->assertStringContainsString('http://api.example.test/v1/notifications/logos/appwrite?jwt=', \html_entity_decode($body));
+        $this->assertStringNotContainsString('console.example.test/v1/notifications/logos/appwrite', \html_entity_decode($body));
 
-        \preg_match('/track\?jwt=([^"&]+)/', \html_entity_decode($body), $matches);
+        \preg_match('/logos\/appwrite\?jwt=([^"&]+)/', \html_entity_decode($body), $matches);
         $this->assertNotEmpty($matches[1] ?? '');
 
         $claims = (new JWT('test-key-32bytes-min-aaaaaaaaaaaaaa', 'HS256', ALERT_TRACKING_JWT_TTL, 0))
             ->decode(\urldecode($matches[1]));
+        $this->assertSame(\md5('logo-key'), $claims['messageId'] ?? null);
+        $this->assertSame(NOTIFICATION_TYPE_EMAIL, $claims['channel'] ?? null);
+        $this->assertSame($this->recipientHash(
+            NOTIFICATION_TYPE_EMAIL,
+            'user@example.test',
+            RESOURCE_TYPE_USERS,
+            'user-7',
+            'user-7-internal',
+        ), $claims['recipientHash'] ?? null);
         $this->assertSame('project-x', $claims['projectId'] ?? null);
         $this->assertSame('project-internal-x', $claims['projectInternalId'] ?? null);
+        $this->assertSame('alert_track', $claims['purpose'] ?? null);
+        $this->assertArrayNotHasKey('alertId', $claims);
 
-        // The pixel must sit BEFORE the last </body>.
+        // The logo must sit BEFORE the last </body>.
         $lastBodyClose = \strripos($body, '</body>');
-        $pixelPosition = \strripos($body, '<img src=');
+        $logoPosition = \strripos($body, '<img src=');
         $this->assertNotFalse($lastBodyClose, 'rendered email must include a closing </body>');
-        $this->assertNotFalse($pixelPosition);
-        $this->assertLessThan($lastBodyClose, $pixelPosition, 'pixel must be spliced before the final </body>');
+        $this->assertNotFalse($logoPosition);
+        $this->assertLessThan($lastBodyClose, $logoPosition, 'logo must be spliced before the final </body>');
     }
 
     public function testPersistAlertReturnsExistingAlertIdOnDuplicate(): void
@@ -1015,7 +1031,7 @@ class NotificationsTest extends TestCase
      * Worker happy-path: email channel.
      *
      * Asserts the SMTP adapter is invoked once with the expected
-     * to/subject/body, the rendered body carries the tracking pixel before
+     * to/subject/body, the rendered body carries the tracking logo before
      * `</body>`, and an alert row is persisted AFTER the send returns
      * successfully (see C1: persist-after-send invariant).
      */
@@ -1056,15 +1072,14 @@ class NotificationsTest extends TestCase
         $this->assertSame('Welcome aboard', $message->getSubject());
 
         $body = $message->getContent();
-        $this->assertStringContainsString('<img src=', $body, 'tracking pixel must be injected');
-        $this->assertStringContainsString('/v1/account/alerts/', $body);
-        $this->assertStringContainsString('/track?jwt=', $body);
+        $this->assertStringContainsString('<img src=', $body, 'tracking logo must be injected');
+        $this->assertStringContainsString('/v1/notifications/logos/appwrite?jwt=', $body);
 
         $closing = \strripos($body, '</body>');
-        $pixel = \strripos($body, '<img src=');
+        $logo = \strripos($body, '<img src=');
         $this->assertNotFalse($closing);
-        $this->assertNotFalse($pixel);
-        $this->assertLessThan($closing, $pixel, 'pixel must precede the closing </body>');
+        $this->assertNotFalse($logo);
+        $this->assertLessThan($closing, $logo, 'logo must precede the closing </body>');
 
         $this->assertSame(1, $worker->persistAlertCalls, 'email channel must persist exactly once after a successful send');
         $messageId = \md5('happy-email');
@@ -1077,8 +1092,7 @@ class NotificationsTest extends TestCase
         $this->assertSame(NOTIFICATION_TYPE_EMAIL, $row->getAttribute('channel'));
         $this->assertFalse($row->getAttribute('read'));
 
-        // dispatchEmail's returned alertId must match the row $id (used by the
-        // tracking pixel URL).
+        // dispatchEmail's returned alertId must match the row $id.
         $this->assertSame($worker->persistedIds[0], $row->getId());
         $this->assertLessThanOrEqual(36, \strlen($row->getId()), 'alert ids must pass the UID route validator');
     }

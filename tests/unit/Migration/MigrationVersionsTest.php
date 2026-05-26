@@ -70,6 +70,8 @@ class MigrationVersionsTest extends TestCase
         }
         $this->assertArrayHasKey('resourceInternalId', $attributes);
         $this->assertArrayHasKey('parentResourceInternalId', $attributes);
+        $this->assertArrayHasKey('firstSeen', $attributes);
+        $this->assertArrayHasKey('lastSeen', $attributes);
 
         $indexes = [];
         foreach ($collection->getAttribute('indexes', []) as $index) {
@@ -87,5 +89,45 @@ class MigrationVersionsTest extends TestCase
         $this->assertSame(['projectId', 'projectInternalId'], $indexes['_key_project']);
         $this->assertSame(['projectId', 'projectInternalId', 'resourceType', 'resourceId', 'resourceInternalId'], $indexes['_key_project_resource']);
         $this->assertSame(['projectId', 'projectInternalId', 'parentResourceType', 'parentResourceId', 'parentResourceInternalId'], $indexes['_key_project_parent_resource']);
+    }
+
+    public function testV24AddsSeenAttributesToExistingAlertsCollection(): void
+    {
+        require_once __DIR__ . '/../../../app/init.php';
+
+        $authorization = new Authorization();
+        $database = new Database(new Memory(), new Cache(new NoCache()));
+        $database
+            ->setAuthorization($authorization)
+            ->setDatabase('migrationV24ExistingAlerts')
+            ->setNamespace('migration_existing_alerts_' . \uniqid());
+        $database->create();
+        $database->createCollection('alerts');
+
+        $migration = new V24();
+        $migration->setProject(
+            new Document(['$id' => 'console', '$sequence' => 'console']),
+            $database,
+            $database,
+            $authorization,
+        );
+
+        $migrateCollections = new \ReflectionMethod($migration, 'migrateCollections');
+        \ob_start();
+        try {
+            $migrateCollections->invoke($migration);
+        } finally {
+            \ob_end_clean();
+        }
+
+        $collection = $database->getCollection('alerts');
+        $attributes = [];
+        foreach ($collection->getAttribute('attributes', []) as $attribute) {
+            $id = $attribute instanceof Document ? $attribute->getAttribute('$id') : ($attribute['$id'] ?? '');
+            $attributes[$id] = $attribute;
+        }
+
+        $this->assertArrayHasKey('firstSeen', $attributes);
+        $this->assertArrayHasKey('lastSeen', $attributes);
     }
 }

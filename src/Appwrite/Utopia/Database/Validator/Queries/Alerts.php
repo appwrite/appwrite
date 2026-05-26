@@ -14,6 +14,8 @@ class Alerts extends Base
         'resourceId',
         'parentResourceType',
         'parentResourceId',
+        'firstSeen',
+        'lastSeen',
     ];
 
     /**

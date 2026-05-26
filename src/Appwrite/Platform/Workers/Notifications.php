@@ -274,14 +274,10 @@ class Notifications extends Action
         }
         $subject = \strip_tags($subjectTemplate->render());
 
-        $deterministicAlertId = $messageId !== ''
-            ? self::buildAlertId($messageId, $recipient)
-            : null;
-
         $recipientHash = self::buildRecipientHash($recipient);
         $opensslKey = System::getEnv('_APP_OPENSSL_KEY_V1');
-        if ($deterministicAlertId !== null && !empty($opensslKey)) {
-            $body = $this->injectTrackingPixel($body, $deterministicAlertId, $recipientHash, $project, $opensslKey);
+        if ($messageId !== '' && !empty($opensslKey)) {
+            $body = $this->injectTrackingLogo($body, $messageId, $recipient['channel'], $recipientHash, $project, $opensslKey);
         }
 
         /** @var EmailAdapter $adapter */
@@ -459,8 +455,7 @@ class Notifications extends Action
     }
 
     /**
-     * Persist an alert row. Returns the alertId so callers can build a
-     * tracking-pixel URL or otherwise reference the row.
+     * Persist an alert row. Returns the alertId so callers can reference the row.
      *
      * Idempotent: on a duplicate composite-key violation the existing
      * row's id is returned.
@@ -518,9 +513,7 @@ class Notifications extends Action
 
     /**
      * Build the deterministic alertId composed of the messageId plus a
-     * recipient hash. Single source of truth used
-     * by both `persistAlert()` and `dispatchEmail()` so the tracking pixel
-     * URL matches the eventually-persisted row exactly.
+     * recipient hash.
      *
      * @param array{address: string, channel: string, signatureKey?: string, resourceType: string, resourceId: string, resourceInternalId: string, parentResourceType: string, parentResourceId: string, parentResourceInternalId: string} $recipient
      */
@@ -637,17 +630,18 @@ class Notifications extends Action
     }
 
     /**
-     * Splice a 1x1 tracking pixel before the last `</body>` tag (or
-     * append at the end if the body has no closing tag). The pixel
+     * Splice a visible tracking logo before the last `</body>` tag (or
+     * append at the end if the body has no closing tag). The logo URL
      * carries a signed JWT identifying the alert recipient, which the
-     * `/v1/account/alerts/:alertId/track` endpoint verifies before
-     * marking the alert as read.
+     * `/v1/notifications/logos/appwrite` endpoint verifies before marking
+     * the alert as read and recording view timestamps.
      */
-    private function injectTrackingPixel(string $body, string $alertId, string $recipientHash, Document $project, string $opensslKey): string
+    private function injectTrackingLogo(string $body, string $messageId, string $channel, string $recipientHash, Document $project, string $opensslKey): string
     {
         $jwt = (new JWT($opensslKey, 'HS256', ALERT_TRACKING_JWT_TTL, 0))
             ->encode([
-                'alertId' => $alertId,
+                'messageId' => $messageId,
+                'channel' => $channel,
                 'recipientHash' => $recipientHash,
                 'projectId' => $project->getId(),
                 'projectInternalId' => $project->getSequence(),
@@ -657,14 +651,14 @@ class Notifications extends Action
         $protocol = System::getEnv('_APP_OPTIONS_FORCE_HTTPS', 'disabled') === 'disabled' ? 'http' : 'https';
         $hostname = System::getEnv('_APP_DOMAIN', 'localhost');
 
-        $pixelUrl = $protocol . '://' . $hostname . '/v1/account/alerts/' . $alertId . '/track?jwt=' . \urlencode($jwt);
-        $pixel = '<img src="' . \htmlspecialchars($pixelUrl, ENT_QUOTES, 'UTF-8') . '" width="1" height="1" alt="" style="display:none" />';
+        $logoUrl = $protocol . '://' . $hostname . '/v1/notifications/logos/appwrite?jwt=' . \urlencode($jwt);
+        $logo = '<img src="' . \htmlspecialchars($logoUrl, ENT_QUOTES, 'UTF-8') . '" width="120" height="28" alt="Appwrite logo" style="display:block;border:0;margin-top:24px" />';
 
         // Case-insensitive splice before the LAST </body>.
         if (\preg_match('/<\/body\s*>(?!.*<\/body\s*>)/is', $body)) {
-            return \preg_replace('/<\/body\s*>(?!.*<\/body\s*>)/is', $pixel . '$0', $body, 1) ?? ($body . $pixel);
+            return \preg_replace('/<\/body\s*>(?!.*<\/body\s*>)/is', $logo . '$0', $body, 1) ?? ($body . $logo);
         }
 
-        return $body . $pixel;
+        return $body . $logo;
     }
 }

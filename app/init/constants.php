@@ -164,6 +164,7 @@ const SESSION_PROVIDER_SERVER = 'server';
 const ACTIVITY_TYPE_USER = 'user';
 const ACTIVITY_TYPE_ADMIN = 'admin';
 const ACTIVITY_TYPE_GUEST = 'guest';
+const ACTIVITY_TYPE_HIDDEN = 'hidden';
 const ACTIVITY_TYPE_KEY_PROJECT = 'keyProject';
 const ACTIVITY_TYPE_KEY_ACCOUNT = 'keyAccount';
 const ACTIVITY_TYPE_KEY_ORGANIZATION = 'keyOrganization';
