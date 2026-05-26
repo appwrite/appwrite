@@ -2608,8 +2608,15 @@ trait MigrationsBase
         $this->assertEmpty($foundKey['expire']);
         $this->assertNotEquals($apiKey['secret'], $foundKey['secret']);
 
-        // Cleanup on destination
-        $this->client->call(Client::METHOD_DELETE, '/project/keys/' . $foundKey['$id'], $destinationHeaders);
+        // Cleanup migrated keys on destination — delete anything that isn't the destination's own auth key,
+        // otherwise later tests inherit duplicated apiKeys and fail on conflict.
+        $destinationAuthSecret = $this->getDestinationProject()['apiKey'];
+        foreach ($response['body']['keys'] as $k) {
+            if ($k['secret'] === $destinationAuthSecret) {
+                continue;
+            }
+            $this->client->call(Client::METHOD_DELETE, '/project/keys/' . $k['$id'], $destinationHeaders);
+        }
 
         // Cleanup on source
         $this->client->call(Client::METHOD_DELETE, '/project/keys/' . $apiKey['$id'], $sourceHeaders);
