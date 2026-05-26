@@ -83,6 +83,12 @@ class MigrationReport extends Model
                 'default' => 0,
                 'example' => 1,
             ])
+            ->addRule(Resource::TYPE_OAUTH_PROVIDERS, [
+                'type' => self::TYPE_INTEGER,
+                'description' => 'Number of OAuth provider configs to be migrated (always 0 or 1 — the project-level provider map; secrets are not migrated).',
+                'default' => 0,
+                'example' => 1,
+            ])
             ->addRule(Resource::TYPE_PROTOCOLS, [
                 'type' => self::TYPE_INTEGER,
                 'description' => 'Number of protocol configs to be migrated (always 0 or 1 — the project-level REST/GraphQL/WebSocket flags).',
