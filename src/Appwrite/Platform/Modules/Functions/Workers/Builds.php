@@ -1345,7 +1345,6 @@ class Builds extends Action
         $jobId = "{$project->getId()}-{$deploymentId}-build";
         $base = \rtrim(System::getEnv('_APP_ORCHESTRATOR_APPWRITE_ENDPOINT', 'http://appwrite/v1'), '/');
         $callbackBase = \rtrim(System::getEnv('_APP_ORCHESTRATOR_APPWRITE_CALLBACK_ENDPOINT', $base), '/');
-        $resourcePath = $resource->getCollection();
 
         $callbackSecret = System::getEnv('_APP_ORCHESTRATOR_CALLBACK_SECRET', System::getEnv('_APP_OPENSSL_KEY_V1', ''));
         $sourceToken = $this->createDeploymentArtifactToken($dbForProject, $resource, $deployment, 'source', $timeout + 300);
@@ -1453,7 +1452,7 @@ class Builds extends Action
                 environment: $environment,
                 artifacts: $artifacts,
                 callback: new Callback(
-                    url: "{$callbackBase}/{$resourcePath}/{$resourceId}/deployments/{$deploymentId}/events?{$projectQuery}",
+                    url: "{$callbackBase}/deployments/{$deploymentId}/events?{$projectQuery}",
                     events: [
                         CallbackEvent::Log,
                         CallbackEvent::Artifact,

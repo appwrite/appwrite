@@ -4,6 +4,7 @@ namespace Appwrite\Platform\Modules\Deployments\Services;
 
 use Appwrite\Platform\Modules\Deployments\Http\Deployments\Artifacts\Build\Update as UpdateBuildArtifact;
 use Appwrite\Platform\Modules\Deployments\Http\Deployments\Artifacts\Source\Get as GetSourceArtifact;
+use Appwrite\Platform\Modules\Deployments\Http\Deployments\Events\Create as CreateDeploymentEvent;
 use Utopia\Platform\Service;
 
 class Http extends Service
@@ -15,5 +16,8 @@ class Http extends Service
         // Deployment artifacts
         $this->addAction(GetSourceArtifact::getName(), new GetSourceArtifact());
         $this->addAction(UpdateBuildArtifact::getName(), new UpdateBuildArtifact());
+
+        // Deployment events
+        $this->addAction(CreateDeploymentEvent::getName(), new CreateDeploymentEvent());
     }
 }

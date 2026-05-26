@@ -1,6 +1,6 @@
 <?php
 
-namespace Appwrite\Platform\Modules\Functions\Http\Deployments\Events;
+namespace Appwrite\Platform\Modules\Deployments\Http\Deployments\Events;
 
 use Appwrite\Event\Message\Build as BuildMessage;
 use Appwrite\Event\Publisher\Build as BuildPublisher;
@@ -28,12 +28,10 @@ class Create extends Action
     {
         $this
             ->setHttpMethod(Action::HTTP_REQUEST_METHOD_POST)
-            ->setHttpPath('/v1/functions/:functionId/deployments/:deploymentId/events')
-            ->groups(['api', 'functions'])
+            ->setHttpPath('/v1/deployments/:deploymentId/events')
+            ->groups(['api', 'deployments'])
             ->desc('Create deployment event')
             ->label('scope', 'public')
-            ->label('resourceType', RESOURCE_TYPE_FUNCTIONS)
-            ->param('functionId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Function ID.', false, ['dbForProject'])
             ->param('deploymentId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Deployment ID.', false, ['dbForProject'])
             ->inject('response')
             ->inject('request')
@@ -44,7 +42,6 @@ class Create extends Action
     }
 
     public function action(
-        string $functionId,
         string $deploymentId,
         Response $response,
         Request $request,
@@ -63,19 +60,35 @@ class Create extends Action
             throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'Invalid orchestrator event payload.');
         }
 
-        $function = $dbForProject->getAuthorization()->skip(fn () => $dbForProject->getDocument('functions', $functionId));
-        if ($function->isEmpty()) {
-            throw new Exception(Exception::FUNCTION_NOT_FOUND);
+        $deployment = $dbForProject->getAuthorization()->skip(fn () => $dbForProject->getDocument('deployments', $deploymentId));
+        if ($deployment->isEmpty()) {
+            throw new Exception(Exception::DEPLOYMENT_NOT_FOUND);
         }
 
-        $deployment = $dbForProject->getAuthorization()->skip(fn () => $dbForProject->getDocument('deployments', $deploymentId));
-        if ($deployment->isEmpty() || $deployment->getAttribute('resourceId') !== $function->getId()) {
+        $resourceType = $deployment->getAttribute('resourceType');
+        $resourceId = $deployment->getAttribute('resourceId');
+
+        if ($resourceType === RESOURCE_TYPE_FUNCTIONS) {
+            $resource = $dbForProject->getAuthorization()->skip(fn () => $dbForProject->getDocument('functions', $resourceId));
+            $notFound = Exception::FUNCTION_NOT_FOUND;
+        } elseif ($resourceType === RESOURCE_TYPE_SITES) {
+            $resource = $dbForProject->getAuthorization()->skip(fn () => $dbForProject->getDocument('sites', $resourceId));
+            $notFound = Exception::SITE_NOT_FOUND;
+        } else {
+            throw new Exception(Exception::DEPLOYMENT_NOT_FOUND);
+        }
+
+        if ($resource->isEmpty()) {
+            throw new Exception($notFound);
+        }
+
+        if ($deployment->getAttribute('resourceId') !== $resource->getId()) {
             throw new Exception(Exception::DEPLOYMENT_NOT_FOUND);
         }
 
         $publisherForBuilds->enqueue(new BuildMessage(
             project: $project,
-            resource: $function,
+            resource: $resource,
             deployment: $deployment,
             type: BUILD_TYPE_ORCHESTRATOR_EVENT,
             event: $event,

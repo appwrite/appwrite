@@ -6,7 +6,6 @@ use Appwrite\Platform\Modules\Functions\Http\Deployments\Create as CreateDeploym
 use Appwrite\Platform\Modules\Functions\Http\Deployments\Delete as DeleteDeployment;
 use Appwrite\Platform\Modules\Functions\Http\Deployments\Download\Get as DownloadDeployment;
 use Appwrite\Platform\Modules\Functions\Http\Deployments\Duplicate\Create as CreateDuplicateDeployment;
-use Appwrite\Platform\Modules\Functions\Http\Deployments\Events\Create as CreateDeploymentEvent;
 use Appwrite\Platform\Modules\Functions\Http\Deployments\Get as GetDeployment;
 use Appwrite\Platform\Modules\Functions\Http\Deployments\Status\Update as UpdateDeploymentStatus;
 use Appwrite\Platform\Modules\Functions\Http\Deployments\Template\Create as CreateTemplateDeployment;
@@ -65,7 +64,6 @@ class Http extends Service
         $this->addAction(DownloadDeployment::getName(), new DownloadDeployment());
         $this->addAction(CreateDuplicateDeployment::getName(), new CreateDuplicateDeployment());
         $this->addAction(UpdateDeploymentStatus::getName(), new UpdateDeploymentStatus());
-        $this->addAction(CreateDeploymentEvent::getName(), new CreateDeploymentEvent());
 
         // Executions
         $this->addAction(CreateExecution::getName(), new CreateExecution());
