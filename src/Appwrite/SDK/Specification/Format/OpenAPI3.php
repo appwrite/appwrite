@@ -655,7 +655,9 @@ class OpenAPI3 extends Format
                                     }
 
                                     $node['schema']['items']['enum'] = $enumValues;
-                                    $node['schema']['items']['x-enum-name'] = $enum->name;
+                                    if (!empty($enum->name)) {
+                                        $node['schema']['items']['x-enum-name'] = $enum->name;
+                                    }
                                     if (!empty($enumKeys)) {
                                         $node['schema']['items']['x-enum-keys'] = $enumKeys;
                                     }
@@ -694,7 +696,9 @@ class OpenAPI3 extends Format
                                     }
 
                                     $node['schema']['enum'] = $enumValues;
-                                    $node['schema']['x-enum-name'] = $enum->name;
+                                    if (!empty($enum->name)) {
+                                        $node['schema']['x-enum-name'] = $enum->name;
+                                    }
                                     if (!empty($enumKeys)) {
                                         $node['schema']['x-enum-keys'] = $enumKeys;
                                     }

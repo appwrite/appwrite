@@ -622,7 +622,9 @@ class Swagger2 extends Format
                                     }
 
                                     $node['items']['enum'] = $enumValues;
-                                    $node['items']['x-enum-name'] = $enum->name;
+                                    if (!empty($enum->name)) {
+                                        $node['items']['x-enum-name'] = $enum->name;
+                                    }
                                     if (!empty($enumKeys)) {
                                         $node['items']['x-enum-keys'] = $enumKeys;
                                     }
@@ -661,7 +663,9 @@ class Swagger2 extends Format
                                     }
 
                                     $node['enum'] = $enumValues;
-                                    $node['x-enum-name'] = $enum->name;
+                                    if (!empty($enum->name)) {
+                                        $node['x-enum-name'] = $enum->name;
+                                    }
                                     if (!empty($enumKeys)) {
                                         $node['x-enum-keys'] = $enumKeys;
                                     }
