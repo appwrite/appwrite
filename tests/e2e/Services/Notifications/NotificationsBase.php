@@ -428,7 +428,6 @@ trait NotificationsBase
         }
 
         $this->fail('Alert not present in /account/alerts response: ' . $alertId);
-        return [];
     }
 
     /**
