@@ -15,7 +15,7 @@ export const INIT_JULY_2026_DAYS: LaunchEventDay[] = [
     title: 'Announcing Appwrite 2.0',
     description: 'The next chapter of Appwrite is here.',
     longDescription:
-      'Meet Appwrite 2.0 — a refreshed platform experience, stronger foundations, and the start of everything we are shipping during Init week.',
+      'Meet Appwrite 2.0 - a refreshed platform experience, stronger foundations, and the start of everything we are shipping during Init week.',
     icon: Megaphone,
     visual: {
       imageSrcLight: '/images/init/appwrite-2-visual-light.jpg',
@@ -28,18 +28,26 @@ export const INIT_JULY_2026_DAYS: LaunchEventDay[] = [
     sessionCount: 2,
     resources: [
       {
-        id: 'day1-blog',
+        id: 'day1-announce',
         typeLabel: 'Blog',
-        title: 'Introducing Appwrite 2.0',
+        title: 'Announcing Appwrite 2.0',
         href: 'https://appwrite.io/blog',
         actionLabel: 'Read article',
       },
       {
-        id: 'day1-docs',
-        typeLabel: 'Docs',
-        title: 'Appwrite 2.0 overview',
-        href: 'https://appwrite.io/docs',
-        actionLabel: 'Visit docs',
+        id: 'day1-hyperloop',
+        typeLabel: 'Blog',
+        title:
+          'Hyperloop B - New engine behind Appwrite 2.0, up to 5x performance - In memory of Binyamin',
+        href: 'https://appwrite.io/blog',
+        actionLabel: 'Read article',
+      },
+      {
+        id: 'day1-console-iv',
+        typeLabel: 'Blog',
+        title: 'Console IV - Next-gen Appwrite console, rebuilt with TanStack',
+        href: 'https://appwrite.io/blog',
+        actionLabel: 'Read article',
       },
     ],
   },
@@ -50,7 +58,7 @@ export const INIT_JULY_2026_DAYS: LaunchEventDay[] = [
     title: 'DocumentsDB & VectorsDB',
     description: 'Documents and vectors in one database platform.',
     longDescription:
-      'DocumentsDB and VectorsDB bring document and vector workloads together — build app data, search, and RAG on a unified database stack.',
+      'DocumentsDB and VectorsDB bring document and vector workloads together - build app data, search, and RAG on a unified database stack.',
     icon: Database,
     visual: {
       imageSrcLight: '/images/init/databases-visual-light.jpg',
@@ -84,7 +92,7 @@ export const INIT_JULY_2026_DAYS: LaunchEventDay[] = [
     title: 'Dedicated DBs',
     description: 'Dedicated database compute at a fixed price.',
     longDescription:
-      'Get dedicated compute for your databases with predictable pricing — pay a fixed rate for CPU and memory, not just serverless bursts.',
+      'Get dedicated compute for your databases with predictable pricing - pay a fixed rate for CPU and memory, not just serverless bursts.',
     icon: Server,
     visual: {
       imageSrcLight: '/images/init/dedicated-dbs-visual-light.jpg',
@@ -118,7 +126,7 @@ export const INIT_JULY_2026_DAYS: LaunchEventDay[] = [
     title: 'S3 support for Storage',
     description: 'Connect Appwrite Storage to your S3 buckets.',
     longDescription:
-      'Appwrite Storage now supports S3 — use your own buckets, keep familiar workflows, and integrate object storage without rebuilding file pipelines.',
+      'Appwrite Storage now supports S3 - use your own buckets, keep familiar workflows, and integrate object storage without rebuilding file pipelines.',
     icon: Cloud,
     visual: {
       imageSrcLight: '/images/init/s3-visual-light.jpg',
@@ -152,7 +160,7 @@ export const INIT_JULY_2026_DAYS: LaunchEventDay[] = [
     title: 'Appwrite Firewall',
     description: 'Network protection for your Appwrite projects.',
     longDescription:
-      'Appwrite Firewall helps control what reaches your project — filter traffic, reduce abuse, and tighten what can access your APIs and services.',
+      'Appwrite Firewall helps control what reaches your project - filter traffic, reduce abuse, and tighten what can access your APIs and services.',
     icon: Shield,
     visual: {
       imageSrcLight: '/images/init/firewall-visual-light.jpg',
