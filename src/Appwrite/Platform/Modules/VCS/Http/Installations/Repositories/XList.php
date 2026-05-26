@@ -50,6 +50,7 @@ use Utopia\Detector\Detector\Framework;
 use Utopia\Detector\Detector\Packager;
 use Utopia\Detector\Detector\Runtime;
 use Utopia\Detector\Detector\Strategy;
+use Utopia\Platform\Enum;
 use Utopia\Platform\Scope\HTTP;
 use Utopia\System\System;
 use Utopia\Validator\Text;
@@ -94,7 +95,7 @@ class XList extends Action
                 ]
             ))
             ->param('installationId', '', new Text(256), 'Installation Id')
-            ->param('type', '', new WhiteList(['runtime', 'framework']), 'Detector type. Must be one of the following: runtime, framework')
+            ->param('type', '', new WhiteList(['runtime', 'framework']), 'Detector type. Must be one of the following: runtime, framework', enum: new Enum(name: 'VCSDetectionType'))
             ->param('search', '', new Text(256), 'Search term to filter your list results. Max length: 256 chars.', true)
             ->param('queries', [], new Queries([new Limit(), new Offset()]), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/queries). Only supported methods are limit and offset', true)
             ->inject('gitHub')

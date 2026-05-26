@@ -16,6 +16,7 @@ use Utopia\Database\Helpers\ID;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\UID;
 use Utopia\Logger\Log;
+use Utopia\Platform\Enum;
 use Utopia\Platform\Scope\HTTP;
 use Utopia\System\System;
 use Utopia\Validator\Domain as ValidatorDomain;
@@ -68,7 +69,13 @@ class Create extends Action
             ->param('url', null, new URL(), 'Target URL of redirection')
             ->param('statusCode', null, new WhiteList([301, 302, 307, 308]), 'Status code of redirection')
             ->param('resourceId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'ID of parent resource.', false, ['dbForProject'])
-            ->param('resourceType', '', new WhiteList(['site', 'function']), 'Type of parent resource.')
+            ->param('resourceType', '', new WhiteList(['site', 'function']), 'Type of parent resource.', enum: new Enum(
+                name: 'ProxyResourceType',
+                map: [
+                    'site' => 'Site',
+                    'function' => 'Function',
+                ]
+            ))
             ->inject('response')
             ->inject('project')
             ->inject('publisherForCertificates')
