@@ -48,7 +48,7 @@ class State
                 $permissions[] = (new Permission($permission, 'user', $ownerOverride))->toString();
             }
         } else {
-            $isAPIKey = $user->isApp($authorization->getRoles());
+            $isAPIKey = $user->isKey($authorization->getRoles());
             $isPrivilegedUser = $user->isPrivileged($authorization->getRoles());
 
             $permissions = Permission::aggregate($permissions, $allowedPermissions);
