@@ -69,7 +69,7 @@ class Get extends Action
             ->param('viewportWidth', 1280, new Range(1, 1920), 'Browser viewport width. Pass an integer between 1 to 1920. Defaults to 1280.', true, example: '1920')
             ->param('viewportHeight', 720, new Range(1, 1080), 'Browser viewport height. Pass an integer between 1 to 1080. Defaults to 720.', true, example: '1080')
             ->param('scale', 1, new Range(0.1, 3, Range::TYPE_FLOAT), 'Browser scale factor. Pass a number between 0.1 to 3. Defaults to 1.', true, example: '2')
-            ->param('theme', 'light', new WhiteList(['light', 'dark']), 'Browser theme. Pass "light" or "dark". Defaults to "light".', true, example: 'dark')
+            ->param('theme', 'light', new WhiteList(['light', 'dark']), 'Browser theme. Pass "light" or "dark". Defaults to "light".', true, example: 'dark', enum: new Enum(name: 'BrowserTheme'))
             ->param('userAgent', '', new Text(512), 'Custom user agent string. Defaults to browser default.', true, example: 'Mozilla/5.0 (iPhone; CPU iPhone OS 14_0 like Mac OS X) AppleWebKit/605.1.15')
             ->param('fullpage', false, new Boolean(true), 'Capture full page scroll. Pass 0 for viewport only, or 1 for full page. Defaults to 0.', true, example: 'true')
             ->param('locale', '', new Text(10), 'Browser locale (e.g., "en-US", "fr-FR"). Defaults to browser default.', true, example: 'en-US')

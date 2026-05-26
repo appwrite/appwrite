@@ -67,7 +67,7 @@ class Create extends Action
             ->label('abuse-time', 60)
             ->param('domain', null, new ValidatorDomain(), 'Domain name.')
             ->param('url', null, new URL(), 'Target URL of redirection')
-            ->param('statusCode', null, new WhiteList([301, 302, 307, 308]), 'Status code of redirection')
+            ->param('statusCode', null, new WhiteList([301, 302, 307, 308]), 'Status code of redirection', enum: new Enum(name: 'RedirectStatusCode'))
             ->param('resourceId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'ID of parent resource.', false, ['dbForProject'])
             ->param('resourceType', '', new WhiteList(['site', 'function']), 'Type of parent resource.', enum: new Enum(
                 name: 'ProxyResourceType',
