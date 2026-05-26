@@ -9,6 +9,7 @@ use Tests\E2E\Scopes\SideConsole;
 
 class PresenceConsoleClientTest extends Scope
 {
+    use PresenceBase;
     use ProjectCustom;
     use SideConsole;
 
