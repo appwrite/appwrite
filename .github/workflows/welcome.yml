@@ -18,14 +18,14 @@ jobs:
       ISSUE_WELCOME_MSG: |
         Welcome to the Appwrite repository! 🎉 Thank you for reporting your first issue.
         
-        Please make sure to review our contributing guidelines. Our team and the community will look into this issue shortly!
+        Please make sure to review our [contributing guidelines](https://github.com/appwrite/appwrite/blob/master/CONTRIBUTING.md). Our team and the community will look into this issue shortly!
       PR_WELCOME_MSG: |
         Welcome to the Appwrite repository! 🎉 Thank you for creating your first pull request.
         
-        Please make sure to check out our contributing guidelines. The maintainers will review your contribution soon!
+        Please make sure to check out our [contributing guidelines](https://github.com/appwrite/appwrite/blob/master/CONTRIBUTING.md). The maintainers will review your contribution soon!
     steps:
     - name: Run Welcome Script
-      uses: actions/github-script@v7
+      uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7
       with:
         github-token: ${{ github.token }}
         script: |
@@ -49,14 +49,12 @@ jobs:
             const { repository: { issues: { totalCount } } } = await github.graphql(query, variables);
             isFirstContribution = totalCount === 1;
           } else {
-            const pullsList = await github.rest.pulls.list({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              creator: sender,
-              state: 'all',
+            const query = `is:pr author:${sender} repo:${context.repo.owner}/${context.repo.repo}`;
+            const pullsList = await github.rest.search.issuesAndPullRequests({
+              q: query,
               per_page: 2
             });
-            isFirstContribution = pullsList.data.length === 1;
+            isFirstContribution = pullsList.data.total_count === 1;
           }
           
           if (!isFirstContribution) {
