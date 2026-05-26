@@ -225,11 +225,10 @@ trait MigrationsBase
         $this->assertEquals('Appwrite', $response['source']);
         $this->assertEquals('Appwrite', $response['destination']);
 
-        // Auth apiKey name-collides with destination's own and gets skipped — treat success or skip as processed.
         $counts = $response['statusCounters'][Resource::TYPE_API_KEY];
         $this->assertEquals([Resource::TYPE_API_KEY], array_keys($response['statusCounters']));
         $this->assertEquals(0, $counts['error']);
-        $this->assertGreaterThan(0, $counts['success'] + $counts['skip']);
+        $this->assertGreaterThan(0, $counts['success']);
     }
 
     /**
