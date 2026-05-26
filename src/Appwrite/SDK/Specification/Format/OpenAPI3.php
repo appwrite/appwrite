@@ -69,9 +69,6 @@ class OpenAPI3 extends Format
                     ],
                 ],
             ],
-            'x-appwrite' => [
-                'endpointDocs' => $this->getParam('endpoint.docs', ''),
-            ],
             'paths' => [],
             'tags' => $this->services,
             'components' => [
