@@ -1,6 +1,6 @@
 <?php
 
-namespace Appwrite\Platform\Modules\Compute\Http\Deployments\Artifacts\Build;
+namespace Appwrite\Platform\Modules\Deployments\Http\Deployments\Artifacts\Build;
 
 use Appwrite\Event\Message\Build as BuildMessage;
 use Appwrite\Event\Publisher\Build as BuildPublisher;
@@ -11,15 +11,15 @@ use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Http\Adapter\Swoole\Request;
 use Utopia\Lock\Exception\Contention as LockContention;
+use Utopia\Platform\Action as UtopiaAction;
 use Utopia\Storage\Device;
 
-trait ChunkedBuildArtifact
+abstract class Action extends UtopiaAction
 {
     protected function uploadBuildArtifact(
         string $deploymentId,
         Document $project,
         Document $resource,
-        Document $deployment,
         Request $request,
         Response $response,
         Database $dbForProject,
@@ -39,8 +39,7 @@ trait ChunkedBuildArtifact
             $end = $request->getContentRangeEnd();
             $fileSize = $request->getContentRangeSize();
 
-            // TODO make `end >= $fileSize` in next breaking version
-            if (\is_null($start) || \is_null($end) || \is_null($fileSize) || $end > $fileSize) {
+            if (\is_null($start) || \is_null($end) || \is_null($fileSize) || $end >= $fileSize) {
                 throw new Exception(Exception::STORAGE_INVALID_CONTENT_RANGE);
             }
 
@@ -86,7 +85,18 @@ trait ChunkedBuildArtifact
 
                     $stored = $cache->load($cacheKey, $cacheTtl);
                     if (\is_array($stored)) {
-                        $metadata = $this->mergeArtifactUploadMetadata($stored, $metadata);
+                        $metadata = \array_merge($stored, $metadata);
+                        if (isset($stored['parts']) || isset($metadata['parts'])) {
+                            $parts = $stored['parts'] ?? [];
+                            foreach (($metadata['parts'] ?? []) as $part => $value) {
+                                $parts[(int) $part] = $value;
+                            }
+                            \ksort($parts);
+
+                            $metadata['parts'] = $parts;
+                            $metadata['chunks'] = \count($parts);
+                        }
+
                         $chunks = (int) ($stored['chunksTotal'] ?? $chunks);
                     }
 
@@ -125,7 +135,18 @@ trait ChunkedBuildArtifact
 
                     $stored = $cache->load($cacheKey, $cacheTtl);
                     if (\is_array($stored)) {
-                        $metadata = $this->mergeArtifactUploadMetadata($stored, $metadata);
+                        $metadata = \array_merge($stored, $metadata);
+                        if (isset($stored['parts']) || isset($metadata['parts'])) {
+                            $parts = $stored['parts'] ?? [];
+                            foreach (($metadata['parts'] ?? []) as $part => $value) {
+                                $parts[(int) $part] = $value;
+                            }
+                            \ksort($parts);
+
+                            $metadata['parts'] = $parts;
+                            $metadata['chunks'] = \count($parts);
+                        }
+
                         $chunks = (int) ($stored['chunksTotal'] ?? $chunks);
                     }
 
@@ -187,28 +208,5 @@ trait ChunkedBuildArtifact
         } finally {
             @\unlink($tmp);
         }
-    }
-
-    /**
-     * @param array<string, mixed> $stored
-     * @param array<string, mixed> $current
-     * @return array<string, mixed>
-     */
-    private function mergeArtifactUploadMetadata(array $stored, array $current): array
-    {
-        $merged = \array_merge($stored, $current);
-
-        if (isset($stored['parts']) || isset($current['parts'])) {
-            $parts = $stored['parts'] ?? [];
-            foreach (($current['parts'] ?? []) as $part => $value) {
-                $parts[(int) $part] = $value;
-            }
-            \ksort($parts);
-
-            $merged['parts'] = $parts;
-            $merged['chunks'] = \count($parts);
-        }
-
-        return $merged;
     }
 }

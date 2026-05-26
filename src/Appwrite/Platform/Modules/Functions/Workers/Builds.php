@@ -1410,7 +1410,7 @@ class Builds extends Action
         }
 
         $encodedSourceToken = \rawurlencode($sourceToken);
-        $sourceUrl = "{$base}/{$resourcePath}/{$resourceId}/deployments/{$deploymentId}/artifacts/source?{$projectQuery}&token={$encodedSourceToken}";
+        $sourceUrl = "{$base}/deployments/{$deploymentId}/artifacts/source?{$projectQuery}&token={$encodedSourceToken}";
         $artifacts = [
             new DownloadArtifact('source', $sourceUrl, 'code.tar.gz', headers: $appwriteProjectHeader),
         ];
@@ -1420,7 +1420,7 @@ class Builds extends Action
         }
 
         $encodedBuildToken = \rawurlencode($buildToken);
-        $buildUrl = "{$base}/{$resourcePath}/{$resourceId}/deployments/{$deploymentId}/artifacts/build?{$projectQuery}&token={$encodedBuildToken}";
+        $buildUrl = "{$base}/deployments/{$deploymentId}/artifacts/build?{$projectQuery}&token={$encodedBuildToken}";
         $artifacts[] = new UploadArtifact(
             'upload',
             'build.tar.gz',
