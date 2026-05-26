@@ -14,6 +14,7 @@ use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Emails\Validator\Email;
+use Utopia\Platform\Enum;
 use Utopia\Platform\Scope\HTTP;
 use Utopia\Validator\Boolean;
 use Utopia\Validator\Hostname;
@@ -66,7 +67,7 @@ class Update extends Action
             ->param('senderName', null, new Nullable(new Text(256, 0)), 'Name shown in inbox as the sender of the email. Pass an empty string to clear a previously set value.', optional: true)
             ->param('replyToEmail', null, new Nullable(new Email(allowEmpty: true)), 'Email used when user replies to the email. Pass an empty string to clear a previously set value.', optional: true)
             ->param('replyToName', null, new Nullable(new Text(256, 0)), 'Name used when user replies to the email. Pass an empty string to clear a previously set value.', optional: true)
-            ->param('secure', null, new Nullable(new WhiteList(['tls', 'ssl'], true)), 'Configures if communication with SMTP server is encrypted. Allowed values are: tls, ssl. Leave empty for no encryption.', optional: true)
+            ->param('secure', null, new Nullable(new WhiteList(['tls', 'ssl'], true)), 'Configures if communication with SMTP server is encrypted. Allowed values are: tls, ssl. Leave empty for no encryption.', optional: true, enum: new Enum(name: 'ProjectSMTPSecure'))
             ->param('enabled', null, new Nullable(new Boolean()), 'Enable or disable custom SMTP. Custom SMTP is useful for branding purposes, but also allows use of custom email templates.', optional: true)
             ->inject('response')
             ->inject('dbForPlatform')

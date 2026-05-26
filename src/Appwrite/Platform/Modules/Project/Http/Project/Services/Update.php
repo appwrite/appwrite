@@ -12,6 +12,7 @@ use Utopia\Config\Config;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Validator\Authorization;
+use Utopia\Platform\Enum;
 use Utopia\Platform\Scope\HTTP;
 use Utopia\Validator\Boolean;
 use Utopia\Validator\WhiteList;
@@ -53,7 +54,7 @@ class Update extends Action
                     )
                 ],
             ))
-            ->param('serviceId', '', new WhiteList(array_keys(array_filter(Config::getParam('services'), fn ($element) => $element['optional'])), true), 'Service name. Can be one of: '.\implode(', ', array_keys(array_filter(Config::getParam('services'), fn ($element) => $element['optional']))))
+            ->param('serviceId', '', new WhiteList(array_keys(array_filter(Config::getParam('services'), fn ($element) => $element['optional'])), true), 'Service name. Can be one of: '.\implode(', ', array_keys(array_filter(Config::getParam('services'), fn ($element) => $element['optional']))), enum: new Enum(name: 'ProjectServiceId'))
             ->param('enabled', null, new Boolean(), 'Service status.')
             ->inject('response')
             ->inject('dbForPlatform')
