@@ -761,7 +761,9 @@ class Swagger2 extends Format
                         /// If the enum flag is Set, add the enum values to the body
                         $body['schema']['properties'][$name]['enum'] = $node['enum'];
                         $body['schema']['properties'][$name]['x-enum-name'] = $node['x-enum-name'] ?? null;
-                        $body['schema']['properties'][$name]['x-enum-keys'] = $node['x-enum-keys'];
+                        if (isset($node['x-enum-keys'])) {
+                            $body['schema']['properties'][$name]['x-enum-keys'] = $node['x-enum-keys'];
+                        }
                     }
 
                     if ($parameter['nullable']) {
