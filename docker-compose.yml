@@ -37,8 +37,25 @@ services:
     networks:
       - utopia
 
+  appwrite-embedding:
+    build:
+      context: https://github.com/appwrite/embedding.git#embedder
+      dockerfile: Dockerfile
+      args:
+        EMBEDDING_MODELS: "nomic"
+    container_name: appwrite-embedding
+    ports:
+      - "11430:11434"
+    restart: unless-stopped
+    # persistent for caching models across restarts and preloading
+    volumes:
+      - embedding_models:/home/embedder/models
+    networks:
+      - utopia
+
 volumes:
   ollama_models:
+  embedding_models:
 
 networks:
   utopia:

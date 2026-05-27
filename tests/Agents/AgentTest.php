@@ -105,8 +105,6 @@ class AgentTest extends TestCase
         $this->assertArrayHasKey('embedding', $result);
         $this->assertArrayHasKey('tokensProcessed', $result);
         $this->assertArrayHasKey('totalDuration', $result);
-        $this->assertArrayHasKey('modelLoadingDuration', $result);
-        $this->assertGreaterThan(0, $result['modelLoadingDuration']);
         $this->assertGreaterThan(0, $result['totalDuration']);
         $this->assertGreaterThan(0, $result['tokensProcessed']);
     }
@@ -128,8 +126,6 @@ class AgentTest extends TestCase
             $this->assertArrayHasKey('embedding', $result);
             $this->assertArrayHasKey('tokensProcessed', $result);
             $this->assertArrayHasKey('totalDuration', $result);
-            $this->assertArrayHasKey('modelLoadingDuration', $result);
-            $this->assertGreaterThan(0, $result['modelLoadingDuration']);
             $this->assertGreaterThan(0, $result['totalDuration']);
             $this->assertGreaterThan(0, $result['tokensProcessed']);
 
