@@ -15,10 +15,16 @@ export const INIT_TICKET_VIDEO_FALLBACK_FPS = 60
 /** Length of the exported video file. */
 export const INIT_TICKET_VIDEO_CLIP_DURATION_SEC = 10
 /**
- * Canvas fallback: gather snapshots over this wall-clock period, then compress
- * into {@link INIT_TICKET_VIDEO_CLIP_DURATION_SEC} on export (fast-forward).
+ * Wall-clock capture duration before time-compression into
+ * {@link INIT_TICKET_VIDEO_CLIP_DURATION_SEC}. Longer capture = more source
+ * frames / motion samples for smoother 60fps output.
  */
-export const INIT_TICKET_VIDEO_FALLBACK_CAPTURE_WALL_CLOCK_SEC = 32
+export const INIT_TICKET_VIDEO_CAPTURE_WALL_CLOCK_SEC = 40
+/** @deprecated Use {@link INIT_TICKET_VIDEO_CAPTURE_WALL_CLOCK_SEC}. */
+export const INIT_TICKET_VIDEO_FALLBACK_CAPTURE_WALL_CLOCK_SEC =
+  INIT_TICKET_VIDEO_CAPTURE_WALL_CLOCK_SEC
+/** Live capture phase weight in overall export progress (0–1). */
+export const INIT_TICKET_VIDEO_CAPTURE_PROGRESS_WEIGHT = 0.72
 /** Hero particle motion during export (< 1 = slower background drift). */
 export const INIT_TICKET_VIDEO_HERO_MOTION_SPEED = 0.38
 /** Tilt cycles over one exported clip (progress 0→1). */

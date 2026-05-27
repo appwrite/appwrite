@@ -50,6 +50,7 @@ export const InitTicketVideoCaptureStage = forwardRef<
 
         <div
           ref={viewportRef}
+          data-init-ticket-video-capture
           className={cn(
             'absolute inset-0 overflow-hidden rounded-2xl transition-[box-shadow] duration-200',
             showRecordingChrome &&
@@ -61,7 +62,7 @@ export const InitTicketVideoCaptureStage = forwardRef<
               <InitHeroBackground
                 containerRef={viewportRef}
                 compact={false}
-                active
+                active={showHeroAnimation}
                 bare
                 accentColor={ticketAccentColor}
                 particleIsDark={ticketUsesDarkChrome}

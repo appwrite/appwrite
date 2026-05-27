@@ -20,6 +20,7 @@ import { DayDetailCard } from './_components/DayDetailCard'
 import { LockedDayDetailCard } from './_components/LockedDayDetailCard'
 import { EventSchedulePanel } from './_components/EventSchedulePanel'
 import { OnlineUsersNav, hasOnlineUsersNav } from './_components/OnlineUsersNav'
+import { InitTicketVideoRecordingProvider } from '@/lib/init/init-ticket-video-recording-context'
 import {
   INIT_TICKET_VIDEO_DOT_PATTERN_CLASS,
   INIT_TICKET_VIDEO_SURFACE_CLASS,
@@ -113,64 +114,66 @@ export function View() {
         }
         showFooter
       >
-        {event.liveBanner ? <LiveBannerBar liveBanner={event.liveBanner} /> : null}
+        <InitTicketVideoRecordingProvider>
+          {event.liveBanner ? <LiveBannerBar liveBanner={event.liveBanner} /> : null}
 
-        <EventHero event={event} liveBanner={event.liveBanner} />
+          <EventHero event={event} liveBanner={event.liveBanner} />
 
-        <div className="mx-auto w-full max-w-7xl px-4 pb-8 pt-8 sm:px-6">
-          <EventSchedule event={event} fullWidth />
-        </div>
-
-        <div className="border-t border-border" aria-hidden />
-
-        <div className={cn('relative overflow-hidden', INIT_TICKET_VIDEO_SURFACE_CLASS)}>
-          <div
-            className={cn(
-              'pointer-events-none absolute inset-0',
-              INIT_TICKET_VIDEO_DOT_PATTERN_CLASS,
-            )}
-            aria-hidden
-          />
-          <div className="relative z-10 mx-auto w-full max-w-7xl px-4 pb-4 pt-2 sm:px-6 sm:pb-6">
-            <InitTicketSection event={event} account={account} />
+          <div className="mx-auto w-full max-w-7xl px-4 pb-8 pt-8 sm:px-6">
+            <EventSchedule event={event} fullWidth />
           </div>
-        </div>
 
-        <div className="border-t border-border" aria-hidden />
+          <div className="border-t border-border" aria-hidden />
 
-        <div className="mx-auto w-full max-w-7xl space-y-8 px-4 pb-8 pt-8 sm:px-6 sm:pb-10">
-          <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_320px] xl:grid-cols-[minmax(0,1fr)_360px]">
-            <div className="space-y-6">
-              {event.days.map((day) =>
-                isLaunchEventDayLocked(day) ? (
-                  <LockedDayDetailCard key={day.day} day={day} />
-                ) : (
-                  <DayDetailCard key={day.day} day={day} />
-                ),
+          <div className={cn('relative overflow-hidden', INIT_TICKET_VIDEO_SURFACE_CLASS)}>
+            <div
+              className={cn(
+                'pointer-events-none absolute inset-0',
+                INIT_TICKET_VIDEO_DOT_PATTERN_CLASS,
               )}
-            </div>
-            <div className="flex flex-col gap-6 lg:sticky lg:top-20 lg:self-start">
-              <EventSchedulePanel event={event} embedded />
-              {event.giveaway ? (
-                <GiveawayPromoCard giveaway={event.giveaway} />
-              ) : null}
+              aria-hidden
+            />
+            <div className="relative z-10 mx-auto w-full max-w-7xl px-4 pb-4 pt-2 sm:px-6 sm:pb-6">
+              <InitTicketSection event={event} account={account} />
             </div>
           </div>
 
-          <GetInvolvedCards event={event} />
+          <div className="border-t border-border" aria-hidden />
 
-          <p className="text-center text-[12px] text-muted-foreground">
-            Hero particle animation by{' '}
-            <a
-              href="https://animejs.com/"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="font-medium text-foreground underline-offset-4 hover:underline"
-            >
-              Anime.js
-            </a>
-          </p>
-        </div>
+          <div className="mx-auto w-full max-w-7xl space-y-8 px-4 pb-8 pt-8 sm:px-6 sm:pb-10">
+            <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_320px] xl:grid-cols-[minmax(0,1fr)_360px]">
+              <div className="space-y-6">
+                {event.days.map((day) =>
+                  isLaunchEventDayLocked(day) ? (
+                    <LockedDayDetailCard key={day.day} day={day} />
+                  ) : (
+                    <DayDetailCard key={day.day} day={day} />
+                  ),
+                )}
+              </div>
+              <div className="flex flex-col gap-6 lg:sticky lg:top-20 lg:self-start">
+                <EventSchedulePanel event={event} embedded />
+                {event.giveaway ? (
+                  <GiveawayPromoCard giveaway={event.giveaway} />
+                ) : null}
+              </div>
+            </div>
+
+            <GetInvolvedCards event={event} />
+
+            <p className="text-center text-[12px] text-muted-foreground">
+              Hero particle animation by{' '}
+              <a
+                href="https://animejs.com/"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="font-medium text-foreground underline-offset-4 hover:underline"
+              >
+                Anime.js
+              </a>
+            </p>
+          </div>
+        </InitTicketVideoRecordingProvider>
       </ConsoleLayout>
 
       <CommandCenter

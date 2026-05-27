@@ -116,6 +116,7 @@ export async function recordInitTicketVideo({
       mimeType: format.mimeType,
       fileExtension: format.fileExtension,
       ...tiltHandlers,
+      onVisibleCaptureComplete,
     })
   }
 

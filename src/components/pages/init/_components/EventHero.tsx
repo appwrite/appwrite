@@ -15,6 +15,7 @@ import { ChevronRight } from 'lucide-react'
 import { EventCtaButton } from '../shared/EventCtas'
 import { InitCollapsedDayNav } from './InitCollapsedDayNav'
 import { InitHeroBackground } from './InitHeroBackground'
+import { useInitTicketVideoRecording } from '@/lib/init/init-ticket-video-recording-context'
 import { InitWordmark } from './InitWordmark'
 
 interface EventHeroProps {
@@ -38,6 +39,7 @@ function CollapsedHeroBar({
   bounds,
   dayNumbers,
   activeDay,
+  particlesActive,
 }: {
   event: InitDisplayEvent
   visible: boolean
@@ -45,6 +47,7 @@ function CollapsedHeroBar({
   bounds: MainBounds | null
   dayNumbers: number[]
   activeDay: number
+  particlesActive: boolean
 }) {
   const barRef = useRef<HTMLDivElement>(null)
   const showDayNav = dayNumbers.length > 0
@@ -67,7 +70,7 @@ function CollapsedHeroBar({
       }}
     >
       {visible ? (
-        <InitHeroBackground containerRef={barRef} compact active={visible} />
+        <InitHeroBackground containerRef={barRef} compact active={particlesActive} />
       ) : null}
       <div
         className={cn(
@@ -171,6 +174,7 @@ export function EventHero({ event, headerAddon, liveBanner }: EventHeroProps) {
   const [mainBounds, setMainBounds] = useState<MainBounds | null>(null)
   const dayNumbers = useMemo(() => event.days.map((day) => day.day), [event.days])
   const activeDay = useInitScrollSpyDay(dayNumbers)
+  const { isCapturing: isTicketVideoCapturing } = useInitTicketVideoRecording()
 
   useEffect(() => {
     const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
@@ -212,7 +216,7 @@ export function EventHero({ event, headerAddon, liveBanner }: EventHeroProps) {
   }, [])
 
   useEffect(() => {
-    if (!collapseEnabled) return
+    if (!collapseEnabled || isTicketVideoCapturing) return
 
     const sentinel = sentinelRef.current
     const main = document.getElementById('main-content')
@@ -234,18 +238,19 @@ export function EventHero({ event, headerAddon, liveBanner }: EventHeroProps) {
 
     observer.observe(sentinel)
     return () => observer.disconnect()
-  }, [collapseEnabled])
+  }, [collapseEnabled, isTicketVideoCapturing])
 
   return (
     <>
       {collapseEnabled ? (
         <CollapsedHeroBar
           event={event}
-          visible={isCollapsed}
+          visible={isCollapsed && !isTicketVideoCapturing}
           liveBanner={liveBanner}
           bounds={mainBounds}
           dayNumbers={dayNumbers}
           activeDay={activeDay}
+          particlesActive={!isTicketVideoCapturing}
         />
       ) : null}
 
@@ -253,7 +258,10 @@ export function EventHero({ event, headerAddon, liveBanner }: EventHeroProps) {
         ref={heroRef}
         className="relative min-h-[420px] overflow-hidden border-b border-border bg-background sm:min-h-[480px]"
       >
-        <InitHeroBackground containerRef={heroRef} />
+        <InitHeroBackground
+          containerRef={heroRef}
+          active={!isTicketVideoCapturing}
+        />
 
         <div className="relative z-10 mx-auto flex min-h-[420px] w-full max-w-7xl flex-col items-center justify-center px-4 py-12 text-center sm:min-h-[480px] sm:px-6 sm:py-16">
           {headerAddon}

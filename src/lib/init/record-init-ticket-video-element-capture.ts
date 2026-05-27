@@ -1,11 +1,13 @@
 import '@/lib/init/init-ticket-video-element-capture.d'
 import {
-  INIT_TICKET_VIDEO_CLIP_DURATION_SEC,
+  INIT_TICKET_VIDEO_CAPTURE_PROGRESS_WEIGHT,
+  INIT_TICKET_VIDEO_CAPTURE_WALL_CLOCK_SEC,
   INIT_TICKET_VIDEO_EXPORT_FPS,
 } from '@/lib/init/ticket-video-capture'
 import type { InitTicketVideoRecording } from '@/lib/init/record-init-ticket-video'
+import { compressInitTicketRecordingToClip } from '@/lib/init/ticket-video-time-compress'
 
-const CLIP_DURATION_MS = INIT_TICKET_VIDEO_CLIP_DURATION_SEC * 1000
+const CAPTURE_WALL_CLOCK_MS = INIT_TICKET_VIDEO_CAPTURE_WALL_CLOCK_SEC * 1000
 /** ~6 Mbps per megapixel per second at 60fps — keeps edges clean on cropped stage. */
 const VIDEO_BITRATE = 35_000_000
 
@@ -35,6 +37,7 @@ type ElementCaptureRecordOptions = {
   resetTilt: () => void
   getTiltForProgress: (t: number) => { x: number; y: number }
   onProgress?: (progress: number) => void
+  onVisibleCaptureComplete?: () => void
 }
 
 function sleep(ms: number) {
@@ -53,19 +56,19 @@ async function apply60FpsVideoConstraints(track: MediaStreamTrack) {
   }
 }
 
-/**
- * Records the ticket stage at display refresh rate (target 60fps) via tab capture + crop.
- * This is the only approach that can faithfully record live DOM/CSS/anime.js animation.
- */
-export async function recordInitTicketVideoViaElementCapture({
+async function recordWallClockCapture({
   captureElement,
   mimeType,
-  fileExtension,
   setTilt,
-  resetTilt,
   getTiltForProgress,
   onProgress,
-}: ElementCaptureRecordOptions): Promise<InitTicketVideoRecording> {
+}: {
+  captureElement: HTMLElement
+  mimeType: string
+  setTilt: (x: number, y: number) => void
+  getTiltForProgress: (t: number) => { x: number; y: number }
+  onProgress?: (progress: number) => void
+}): Promise<Blob> {
   captureElement.scrollIntoView({ block: 'center', behavior: 'instant' })
   await sleep(80)
 
@@ -95,7 +98,7 @@ export async function recordInitTicketVideoViaElementCapture({
 
   const [videoTrack] = stream.getVideoTracks()
   if (!videoTrack?.cropTo) {
-    stream.getTracks().forEach((t) => t.stop())
+    stream.getTracks().forEach((track) => track.stop())
     throw new Error('Element crop is not supported in this browser')
   }
 
@@ -104,7 +107,7 @@ export async function recordInitTicketVideoViaElementCapture({
     await videoTrack.cropTo(cropTarget)
     await apply60FpsVideoConstraints(videoTrack)
   } catch (error) {
-    stream.getTracks().forEach((t) => t.stop())
+    stream.getTracks().forEach((track) => track.stop())
     throw error
   }
 
@@ -118,16 +121,13 @@ export async function recordInitTicketVideoViaElementCapture({
     if (event.data.size > 0) chunks.push(event.data)
   }
 
-  const recordingFinished = new Promise<InitTicketVideoRecording>((resolve, reject) => {
+  const recordingFinished = new Promise<Blob>((resolve, reject) => {
     recorder.onstop = () => {
-      stream.getTracks().forEach((t) => t.stop())
-      resolve({
-        blob: new Blob(chunks, { type: mimeType }),
-        fileExtension,
-      })
+      stream.getTracks().forEach((track) => track.stop())
+      resolve(new Blob(chunks, { type: mimeType }))
     }
     recorder.onerror = () => {
-      stream.getTracks().forEach((t) => t.stop())
+      stream.getTracks().forEach((track) => track.stop())
       reject(recorder.error ?? new Error('Recording failed'))
     }
   })
@@ -143,13 +143,13 @@ export async function recordInitTicketVideoViaElementCapture({
   await new Promise<void>((resolve) => {
     const tick = () => {
       const elapsed = performance.now() - startTime
-      if (elapsed >= CLIP_DURATION_MS) {
+      if (elapsed >= CAPTURE_WALL_CLOCK_MS) {
         resolve()
         return
       }
 
-      const progress = Math.min(1, elapsed / CLIP_DURATION_MS)
-      onProgress?.(progress)
+      const progress = Math.min(1, elapsed / CAPTURE_WALL_CLOCK_MS)
+      onProgress?.(progress * INIT_TICKET_VIDEO_CAPTURE_PROGRESS_WEIGHT)
       const { x, y } = getTiltForProgress(progress)
       setTilt(x, y)
       requestAnimationFrame(tick)
@@ -158,13 +158,44 @@ export async function recordInitTicketVideoViaElementCapture({
     requestAnimationFrame(tick)
   })
 
-  onProgress?.(1)
   await sleep(200)
 
   if (recorder.state !== 'inactive') {
     recorder.stop()
   }
 
-  resetTilt()
   return recordingFinished
+}
+
+/**
+ * Records the ticket stage at display refresh rate (target 60fps) via tab capture + crop,
+ * then time-compresses into a 10s export for denser motion sampling.
+ */
+export async function recordInitTicketVideoViaElementCapture({
+  captureElement,
+  mimeType,
+  fileExtension,
+  setTilt,
+  resetTilt,
+  getTiltForProgress,
+  onProgress,
+  onVisibleCaptureComplete,
+}: ElementCaptureRecordOptions): Promise<InitTicketVideoRecording> {
+  const rawBlob = await recordWallClockCapture({
+    captureElement,
+    mimeType,
+    setTilt,
+    getTiltForProgress,
+    onProgress,
+  })
+
+  onVisibleCaptureComplete?.()
+  resetTilt()
+
+  return compressInitTicketRecordingToClip({
+    blob: rawBlob,
+    mimeType,
+    fileExtension,
+    onProgress,
+  })
 }

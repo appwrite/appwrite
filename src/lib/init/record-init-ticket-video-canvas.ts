@@ -5,18 +5,18 @@ import {
   preloadInitTicketCaptureFonts,
 } from '@/lib/init/ticket-font-embed'
 import {
+  INIT_TICKET_VIDEO_CAPTURE_PROGRESS_WEIGHT,
+  INIT_TICKET_VIDEO_CAPTURE_WALL_CLOCK_SEC,
   INIT_TICKET_VIDEO_CLIP_DURATION_SEC,
-  INIT_TICKET_VIDEO_FALLBACK_CAPTURE_WALL_CLOCK_SEC,
   INIT_TICKET_VIDEO_FALLBACK_FPS,
 } from '@/lib/init/ticket-video-capture'
 import type { InitTicketVideoRecording } from '@/lib/init/record-init-ticket-video'
 
-const CAPTURE_WALL_CLOCK_MS = INIT_TICKET_VIDEO_FALLBACK_CAPTURE_WALL_CLOCK_SEC * 1000
+const CAPTURE_WALL_CLOCK_MS = INIT_TICKET_VIDEO_CAPTURE_WALL_CLOCK_SEC * 1000
 const FALLBACK_CAPTURE_PIXEL_RATIO = 1.5
 const VIDEO_BITRATE = 20_000_000
 const FRAME_PADDING_X_RATIO = 0.1
 const FRAME_PADDING_Y_RATIO = 0.015
-const CAPTURE_PROGRESS_WEIGHT = 0.72
 
 type CapturedSnapshot = {
   canvas: HTMLCanvasElement
@@ -176,7 +176,7 @@ async function gatherSnapshots({
     const elapsed = performance.now() - startTime
     if (elapsed >= CAPTURE_WALL_CLOCK_MS) return
     const progress = Math.min(1, elapsed / CAPTURE_WALL_CLOCK_MS)
-    onProgress?.(progress * CAPTURE_PROGRESS_WEIGHT)
+    onProgress?.(progress * INIT_TICKET_VIDEO_CAPTURE_PROGRESS_WEIGHT)
     const { x, y } = getTiltForProgress(progress)
     setTilt(x, y)
     requestAnimationFrame(runTiltLoop)
@@ -265,8 +265,8 @@ async function replaySnapshotsToStream({
     outputCtx.drawImage(snapshot, 0, 0, outputWidth, outputHeight)
 
     onProgress?.(
-      CAPTURE_PROGRESS_WEIGHT +
-        progress * (1 - CAPTURE_PROGRESS_WEIGHT),
+      INIT_TICKET_VIDEO_CAPTURE_PROGRESS_WEIGHT +
+        progress * (1 - INIT_TICKET_VIDEO_CAPTURE_PROGRESS_WEIGHT),
     )
 
     const targetTime = playbackStart + (frameIndex + 1) * frameIntervalMs

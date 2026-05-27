@@ -1,4 +1,4 @@
-import { useMemo, useRef, useState, type ReactNode } from 'react'
+import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import { Link } from '@tanstack/react-router'
 import { useQuery } from '@tanstack/react-query'
 import type { Models } from '@appwrite.io/console'
@@ -26,6 +26,7 @@ import {
   supportsInitTicket60FpsVideoCapture,
   waitForNextPaint,
 } from '@/lib/init/record-init-ticket-video'
+import { useInitTicketVideoRecording } from '@/lib/init/init-ticket-video-recording-context'
 import { INIT_TICKET_VIDEO_HERO_WARMUP_MS } from '@/lib/init/ticket-video-capture'
 import { InitTicketScaledFrame } from '@/components/pages/init/_components/InitTicketScaledFrame'
 import { InitTicketVideoCaptureStage } from '@/components/pages/init/_components/InitTicketVideoCaptureStage'
@@ -214,7 +215,13 @@ export function InitTicketSection({ event, account }: InitTicketSectionProps) {
     null,
   )
   const isVideoBusy = isCapturingVideo || isExportingVideo
+  const { setIsCapturing: setPageVideoCapturing } = useInitTicketVideoRecording()
   const ticketCardRef = useRef<InitTicketCardHandle>(null)
+
+  useEffect(() => {
+    setPageVideoCapturing(isCapturingVideo)
+    return () => setPageVideoCapturing(false)
+  }, [isCapturingVideo, setPageVideoCapturing])
   const videoCaptureStageRef = useRef<HTMLDivElement>(null)
   const canExportTicketVideo = isInitTicketVideoExportSupported()
   const canExport60FpsVideo = supportsInitTicket60FpsVideoCapture()
