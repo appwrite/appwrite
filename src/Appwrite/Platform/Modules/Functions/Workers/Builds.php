@@ -664,6 +664,15 @@ class Builds extends Action
                     break;
             }
 
+            $npmRegistry = System::getEnv('_APP_COMPUTE_NPM_REGISTRY', '');
+            $npmToken = $vars['NPM_TOKEN'] ?? '';
+            if (! empty($npmRegistry) && empty($npmToken)) {
+                if (! isset($vars['NPM_CONFIG_REGISTRY']) && ! isset($vars['NPM_CONFIG_REPLACE_REGISTRY_HOST'])) {
+                    $vars['NPM_CONFIG_REGISTRY'] = $npmRegistry;
+                    $vars['NPM_CONFIG_REPLACE_REGISTRY_HOST'] = 'npmjs';
+                }
+            }
+
             $command = $this->getCommand(
                 resource: $resource,
                 deployment: $deployment

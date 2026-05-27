@@ -1071,6 +1071,15 @@ return [
                 'filter' => ''
             ],
             [
+                'name' => '_APP_COMPUTE_NPM_REGISTRY',
+                'description' => 'The npm registry URL used by function and site build containers. Leave empty to use the runtime default npm registry.',
+                'introduction' => '1.9.0',
+                'default' => '',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
                 'name' => '_APP_DOCKER_HUB_USERNAME',
                 'description' => 'The username for hub.docker.com. This variable is used to pull images from hub.docker.com.',
                 'introduction' => '1.2.0',
