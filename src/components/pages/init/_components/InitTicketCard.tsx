@@ -191,7 +191,7 @@ function TicketStubContent({
           </p>
           <p
             className={cn(
-              'max-w-[160px] truncate text-[clamp(11px,2vw,16px)] font-semibold',
+              'font-aeonik-pro max-w-[160px] truncate text-[clamp(11px,2vw,16px)] font-normal',
               labelClass,
             )}
           >
@@ -312,7 +312,7 @@ function TicketFrontFace(props: TicketFaceSharedProps) {
             >
               <p
                 className={cn(
-                  'truncate text-[clamp(28px,6.5vw,48px)] font-semibold leading-[1.02] tracking-tight',
+                  'font-aeonik-pro truncate text-[clamp(28px,6.5vw,48px)] font-normal leading-[1.02] tracking-tight',
                   usesDarkImage ? 'text-white' : 'text-neutral-900',
                 )}
               >
@@ -447,7 +447,7 @@ function TicketBackFace(props: TicketFaceSharedProps) {
             </p>
             <p
               className={cn(
-                'truncate text-[clamp(11px,1.9vw,15px)] font-medium leading-tight',
+                'font-aeonik-pro truncate text-[clamp(11px,1.9vw,15px)] font-normal leading-tight',
                 usesDarkImage ? 'text-white/90' : 'text-neutral-800',
               )}
             >
