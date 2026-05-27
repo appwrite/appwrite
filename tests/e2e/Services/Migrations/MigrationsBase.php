@@ -224,7 +224,11 @@ trait MigrationsBase
         $this->assertEquals(Appwrite::getSupportedResources(), $response['resources']);
         $this->assertEquals('Appwrite', $response['source']);
         $this->assertEquals('Appwrite', $response['destination']);
-        $this->assertEmpty($response['statusCounters']);
+
+        $counts = $response['statusCounters'][Resource::TYPE_API_KEY];
+        $this->assertEquals([Resource::TYPE_API_KEY], array_keys($response['statusCounters']));
+        $this->assertEquals(0, $counts['error']);
+        $this->assertGreaterThan(0, $counts['success']);
     }
 
     /**
@@ -2609,8 +2613,15 @@ trait MigrationsBase
         $this->assertEmpty($foundKey['expire']);
         $this->assertNotEquals($apiKey['secret'], $foundKey['secret']);
 
-        // Cleanup on destination
-        $this->client->call(Client::METHOD_DELETE, '/project/keys/' . $foundKey['$id'], $destinationHeaders);
+        // Cleanup migrated keys on destination — delete anything that isn't the destination's own auth key,
+        // otherwise later tests inherit duplicated apiKeys and fail on conflict.
+        $destinationAuthSecret = $this->getDestinationProject()['apiKey'];
+        foreach ($response['body']['keys'] as $k) {
+            if ($k['secret'] === $destinationAuthSecret) {
+                continue;
+            }
+            $this->client->call(Client::METHOD_DELETE, '/project/keys/' . $k['$id'], $destinationHeaders);
+        }
 
         // Cleanup on source
         $this->client->call(Client::METHOD_DELETE, '/project/keys/' . $apiKey['$id'], $sourceHeaders);

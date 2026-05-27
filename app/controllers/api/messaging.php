@@ -3,9 +3,10 @@
 use Ahc\Jwt\JWT;
 use Appwrite\Auth\Validator\Phone;
 use Appwrite\Detector\Detector;
-use Appwrite\Event\Delete;
 use Appwrite\Event\Event;
+use Appwrite\Event\Message\Delete as DeleteMessage;
 use Appwrite\Event\Message\Messaging as MessagingMessage;
+use Appwrite\Event\Publisher\Delete as DeletePublisher;
 use Appwrite\Event\Publisher\Messaging as MessagingPublisher;
 use Appwrite\Extend\Exception;
 use Appwrite\Messaging\Status as MessageStatus;
@@ -46,6 +47,7 @@ use Utopia\Database\Validator\UID;
 use Utopia\Emails\Validator\Email;
 use Utopia\Http\Http;
 use Utopia\Locale\Locale;
+use Utopia\Platform\Enum;
 use Utopia\System\System;
 use Utopia\Validator\ArrayList;
 use Utopia\Validator\Boolean;
@@ -363,7 +365,7 @@ Http::post('/v1/messaging/providers/smtp')
     ->param('port', 587, new Range(1, 65535), 'The default SMTP server port.', true)
     ->param('username', '', new Text(0), 'Authentication username.', true)
     ->param('password', '', new Text(0), 'Authentication password.', true)
-    ->param('encryption', '', new WhiteList(['none', 'ssl', 'tls']), 'Encryption type. Can be omitted, \'ssl\', or \'tls\'', true)
+    ->param('encryption', '', new WhiteList(['none', 'ssl', 'tls']), 'Encryption type. Can be omitted, \'ssl\', or \'tls\'', true, enum: new Enum(name: 'SmtpEncryption'))
     ->param('autoTLS', true, new Boolean(), 'Enable SMTP AutoTLS feature.', true)
     ->param('mailer', '', new Text(0), 'The value to use for the X-Mailer header.', true)
     ->param('fromName', '', new Text(128, 0), 'Sender Name.', true)
@@ -1601,7 +1603,7 @@ Http::patch('/v1/messaging/providers/smtp/:providerId')
     ->param('port', null, new Nullable(new Range(1, 65535)), 'SMTP port.', true)
     ->param('username', '', new Text(0), 'Authentication username.', true)
     ->param('password', '', new Text(0), 'Authentication password.', true)
-    ->param('encryption', '', new WhiteList(['none', 'ssl', 'tls']), 'Encryption type. Can be \'ssl\' or \'tls\'', true)
+    ->param('encryption', '', new WhiteList(['none', 'ssl', 'tls']), 'Encryption type. Can be \'ssl\' or \'tls\'', true, enum: new Enum(name: 'SmtpEncryption'))
     ->param('autoTLS', null, new Nullable(new Boolean()), 'Enable SMTP AutoTLS feature.', true)
     ->param('mailer', '', new Text(0), 'The value to use for the X-Mailer header.', true)
     ->param('fromName', '', new Text(128), 'Sender Name.', true)
@@ -2728,9 +2730,9 @@ Http::delete('/v1/messaging/topics/:topicId')
     ->param('topicId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Topic ID.', false, ['dbForProject'])
     ->inject('queueForEvents')
     ->inject('dbForProject')
-    ->inject('queueForDeletes')
+    ->inject('publisherForDeletes')
     ->inject('response')
-    ->action(function (string $topicId, Event $queueForEvents, Database $dbForProject, Delete $queueForDeletes, Response $response) {
+    ->action(function (string $topicId, Event $queueForEvents, Database $dbForProject, DeletePublisher $publisherForDeletes, Response $response) {
         $topic = $dbForProject->getDocument('topics', $topicId);
 
         if ($topic->isEmpty()) {
@@ -2739,9 +2741,11 @@ Http::delete('/v1/messaging/topics/:topicId')
 
         $dbForProject->deleteDocument('topics', $topicId);
 
-        $queueForDeletes
-            ->setType(DELETE_TYPE_TOPIC)
-            ->setDocument($topic);
+        $publisherForDeletes->enqueue(new DeleteMessage(
+            project: $queueForEvents->getProject(),
+            type: DELETE_TYPE_TOPIC,
+            document: $topic,
+        ));
 
         $queueForEvents
             ->setParam('topicId', $topic->getId());
@@ -3498,7 +3502,7 @@ Http::post('/v1/messaging/messages/push')
     ->param('scheduledAt', null, new Nullable(new DatetimeValidator(requireDateInFuture: true)), 'Scheduled delivery time for message in [ISO 8601](https://www.iso.org/iso-8601-date-and-time-format.html) format. DateTime value must be in future.', true)
     ->param('contentAvailable', false, new Boolean(), 'If set to true, the notification will be delivered in the background. Available only for iOS Platform.', true)
     ->param('critical', false, new Boolean(), 'If set to true, the notification will be marked as critical. This requires the app to have the critical notification entitlement. Available only for iOS Platform.', true)
-    ->param('priority', 'high', new WhiteList(['normal', 'high']), 'Set the notification priority. "normal" will consider device state and may not deliver notifications immediately. "high" will always attempt to immediately deliver the notification.', true)
+    ->param('priority', 'high', new WhiteList(['normal', 'high']), 'Set the notification priority. "normal" will consider device state and may not deliver notifications immediately. "high" will always attempt to immediately deliver the notification.', true, enum: new Enum(name: 'MessagePriority'))
     ->inject('queueForEvents')
     ->inject('dbForProject')
     ->inject('dbForPlatform')
@@ -4385,7 +4389,7 @@ Http::patch('/v1/messaging/messages/push/:messageId')
     ->param('scheduledAt', null, new Nullable(new DatetimeValidator(requireDateInFuture: true)), 'Scheduled delivery time for message in [ISO 8601](https://www.iso.org/iso-8601-date-and-time-format.html) format. DateTime value must be in future.', true)
     ->param('contentAvailable', null, new Nullable(new Boolean()), 'If set to true, the notification will be delivered in the background. Available only for iOS Platform.', true)
     ->param('critical', null, new Nullable(new Boolean()), 'If set to true, the notification will be marked as critical. This requires the app to have the critical notification entitlement. Available only for iOS Platform.', true)
-    ->param('priority', null, new Nullable(new WhiteList(['normal', 'high'])), 'Set the notification priority. "normal" will consider device battery state and may send notifications later. "high" will always attempt to immediately deliver the notification.', true)
+    ->param('priority', null, new Nullable(new WhiteList(['normal', 'high'])), 'Set the notification priority. "normal" will consider device battery state and may send notifications later. "high" will always attempt to immediately deliver the notification.', true, enum: new Enum(name: 'MessagePriority'))
     ->inject('queueForEvents')
     ->inject('dbForProject')
     ->inject('dbForPlatform')

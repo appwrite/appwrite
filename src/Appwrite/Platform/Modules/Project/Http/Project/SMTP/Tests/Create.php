@@ -69,7 +69,7 @@ class Create extends Action
             ->inject('response')
             ->inject('project')
             ->inject('publisherForMails')
-            ->inject('plan')
+            ->inject('platform')
             ->callback($this->action(...));
     }
 
@@ -89,7 +89,7 @@ class Create extends Action
         Response $response,
         Document $project,
         MailPublisher $publisherForMails,
-        array $plan
+        array $platform,
     ): void {
         // Backwards compatibility: use inline params if provided, otherwise fall back to project SMTP config.
         // When inline params are provided they are treated as self-contained — project config is ignored
@@ -144,14 +144,7 @@ class Create extends Action
         $template = Template::fromFile(APP_CE_CONFIG_DIR . '/locale/templates/email-smtp-test.tpl');
         $template
             ->setParam('{{from}}', "{$senderName} ({$senderEmail})")
-            ->setParam('{{replyTo}}', "{$replyToNameDisplay} ({$replyToEmailDisplay})")
-            ->setParam('{{logoUrl}}', $plan['logoUrl'] ?? APP_EMAIL_LOGO_URL)
-            ->setParam('{{accentColor}}', $plan['accentColor'] ?? APP_EMAIL_ACCENT_COLOR)
-            ->setParam('{{twitterUrl}}', $plan['twitterUrl'] ?? APP_SOCIAL_TWITTER)
-            ->setParam('{{discordUrl}}', $plan['discordUrl'] ?? APP_SOCIAL_DISCORD)
-            ->setParam('{{githubUrl}}', $plan['githubUrl'] ?? APP_SOCIAL_GITHUB_APPWRITE)
-            ->setParam('{{termsUrl}}', $plan['termsUrl'] ?? APP_EMAIL_TERMS_URL)
-            ->setParam('{{privacyUrl}}', $plan['privacyUrl'] ?? APP_EMAIL_PRIVACY_URL);
+            ->setParam('{{replyTo}}', "{$replyToNameDisplay} ({$replyToEmailDisplay})");
 
         foreach ($emails as $email) {
             $publisherForMails->enqueue(new MailMessage(
@@ -171,6 +164,17 @@ class Create extends Action
                     'senderEmail' => $senderEmail,
                     'senderName' => $senderName,
                 ],
+                variables: [
+                    'platform' => $platform['platformName'] ?? APP_NAME,
+                    'logoUrl' => $platform['logoUrl'] ?? APP_EMAIL_LOGO_URL,
+                    'accentColor' => $platform['accentColor'] ?? APP_EMAIL_ACCENT_COLOR,
+                    'twitter' => $platform['twitterUrl'] ?? APP_SOCIAL_TWITTER,
+                    'discord' => $platform['discordUrl'] ?? APP_SOCIAL_DISCORD,
+                    'github' => $platform['githubUrl'] ?? APP_SOCIAL_GITHUB_APPWRITE,
+                    'terms' => $platform['termsUrl'] ?? APP_EMAIL_TERMS_URL,
+                    'privacy' => $platform['privacyUrl'] ?? APP_EMAIL_PRIVACY_URL,
+                ],
+                platform: $platform,
             ));
         }
 
