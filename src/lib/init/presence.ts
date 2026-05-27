@@ -1,4 +1,4 @@
-import { ID, Permission, Query, Role } from '@appwrite.io/console'
+import { Permission, Query, Role } from '@appwrite.io/console'
 import type { Models } from '@appwrite.io/console'
 import { sdk } from '@/lib/appwrite/sdk'
 import type { LaunchEventOnlineUser } from '@/lib/init/types'
@@ -9,8 +9,8 @@ export const INIT_PRESENCE_HEARTBEAT_MS = 30_000
 /** Presence TTL sent on each upsert (must exceed heartbeat interval). */
 export const INIT_PRESENCE_TTL_SECONDS = 90
 
-/** Bumped when presence permission/status shape changes (forces new presence rows). */
-const PRESENCE_ID_STORAGE_PREFIX = 'console.init.presenceId.v2.'
+/** Bumped when presence ID scheme changes — clears stale localStorage keys. */
+const LEGACY_PRESENCE_ID_STORAGE_PREFIX = 'console.init.presenceId.'
 
 export const INIT_PRESENCE_STATUS_ONLINE = 'online'
 export const INIT_PRESENCE_STATUS_AWAY = 'away'
@@ -30,39 +30,24 @@ export type InitPresenceMetadata = {
   isLive?: boolean
 }
 
-export function initPresenceStorageKey(eventId: string): string {
-  return `${PRESENCE_ID_STORAGE_PREFIX}${eventId}`
+/** Presence row ID is the signed-in console user ID (one log per user). */
+export function buildInitPresenceId(userId: string): string {
+  return userId
 }
 
-export function readStoredInitPresenceId(eventId: string): string | null {
-  if (typeof window === 'undefined') return null
-  try {
-    return window.localStorage.getItem(initPresenceStorageKey(eventId))?.trim() || null
-  } catch {
-    return null
-  }
-}
-
-export function writeStoredInitPresenceId(eventId: string, presenceId: string): void {
+/** Remove legacy per-event random presence IDs from localStorage. */
+export function clearLegacyInitPresenceStorage(): void {
   if (typeof window === 'undefined') return
   try {
-    window.localStorage.setItem(initPresenceStorageKey(eventId), presenceId)
+    for (let index = window.localStorage.length - 1; index >= 0; index -= 1) {
+      const key = window.localStorage.key(index)
+      if (key?.startsWith(LEGACY_PRESENCE_ID_STORAGE_PREFIX)) {
+        window.localStorage.removeItem(key)
+      }
+    }
   } catch {
     /* private mode */
   }
-}
-
-export function clearStoredInitPresenceId(eventId: string): void {
-  if (typeof window === 'undefined') return
-  try {
-    window.localStorage.removeItem(initPresenceStorageKey(eventId))
-  } catch {
-    /* private mode */
-  }
-}
-
-export function resolveInitPresenceId(eventId: string): string {
-  return readStoredInitPresenceId(eventId) ?? ID.unique()
 }
 
 export function buildInitPresenceExpiresAt(
@@ -175,14 +160,13 @@ export async function listInitPresences(
 }
 
 export async function upsertInitPresence(params: {
-  presenceId: string
   userId: string
   status: string
   metadata: InitPresenceMetadata
 }): Promise<InitPresenceRecord> {
+  const presenceId = buildInitPresenceId(params.userId)
   const presence = await sdk.forConsole.presences.upsert({
-    presenceId: params.presenceId,
-    userId: params.userId,
+    presenceId,
     status: params.status,
     metadata: params.metadata,
     permissions: buildInitPresencePermissions(params.userId),

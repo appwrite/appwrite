@@ -22,7 +22,7 @@ import {
   useQueryClient,
   type UseMutationOptions,
 } from '@tanstack/react-query'
-import type { Models, ResourceType } from '@appwrite.io/console'
+import type { Models, BlockResourceType } from '@appwrite.io/console'
 import { sdk } from '@/lib/appwrite/sdk'
 
 export type BlocksListResponse = Models.BlockList
@@ -64,7 +64,7 @@ export function useBlocks(
 
 export type CreateBlockParams = {
   projectId: string
-  resourceType: ResourceType
+  resourceType: BlockResourceType
   resourceId?: string
   reason?: string
   expiredAt?: string
@@ -97,7 +97,7 @@ export function useCreateBlock(
 
 export type DeleteBlockParams = {
   projectId: string
-  resourceType: ResourceType
+  resourceType: BlockResourceType
   resourceId?: string
 }
 

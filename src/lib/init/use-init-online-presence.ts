@@ -8,16 +8,15 @@ import {
   INIT_PRESENCE_HEARTBEAT_MS,
   buildInitAwayStatus,
   buildInitOnlineStatus,
+  buildInitPresenceId,
   buildInitPresencePermissions,
   buildPresenceMapForEvent,
-  clearStoredInitPresenceId,
+  clearLegacyInitPresenceStorage,
   deleteInitPresence,
   listInitPresences,
   mapPresencesToOnlineUsers,
   presenceMatchesInitEvent,
-  resolveInitPresenceId,
   upsertInitPresence,
-  writeStoredInitPresenceId,
   type InitPresenceMetadata,
 } from '@/lib/init/presence'
 import type { LaunchEventOnlineUser } from '@/lib/init/types'
@@ -123,22 +122,18 @@ export function useInitOnlinePresence(
       if (!metadata) return false
 
       const status = away ? buildInitAwayStatus(eventId) : buildInitOnlineStatus(eventId)
-
-      if (!presenceIdRef.current) {
-        presenceIdRef.current = resolveInitPresenceId(eventId)
-      }
+      const presenceId = buildInitPresenceId(accountUserId)
+      presenceIdRef.current = presenceId
 
       if (upsertingRef.current) return false
       upsertingRef.current = true
       try {
         const presence = await upsertInitPresence({
-          presenceId: presenceIdRef.current,
           userId: accountUserId,
           status,
           metadata,
         })
         presenceIdRef.current = presence.$id
-        writeStoredInitPresenceId(eventId, presence.$id)
 
         if (away) {
           setAwayMap((prev) => {
@@ -165,7 +160,7 @@ export function useInitOnlinePresence(
         }
 
         void sdk.getConsoleRealtime().upsertPresence({
-          presenceId: presence.$id,
+          presenceId,
           status,
           metadata,
           permissions: buildInitPresencePermissions(accountUserId),
@@ -196,6 +191,7 @@ export function useInitOnlinePresence(
     }
 
     let cancelled = false
+    clearLegacyInitPresenceStorage()
 
     const bootstrap = async () => {
       setIsReady(false)
@@ -311,21 +307,21 @@ export function useInitOnlinePresence(
   }, [accountUserId, enabled, eventId])
 
   useEffect(() => {
-    if (!enabled || !eventId) return
+    if (!enabled || !eventId || !accountUserId) return
+
+    const userId = accountUserId
 
     const onPageHide = () => {
       void publishPresence(true, { refresh: false })
-      const presenceId = presenceIdRef.current
-      if (!presenceId) return
+      const presenceId = presenceIdRef.current ?? buildInitPresenceId(userId)
       void deleteInitPresence(presenceId).catch(() => {})
-      clearStoredInitPresenceId(eventId)
     }
 
     window.addEventListener('pagehide', onPageHide)
     return () => {
       window.removeEventListener('pagehide', onPageHide)
     }
-  }, [enabled, eventId, publishPresence])
+  }, [accountUserId, enabled, eventId, publishPresence])
 
   return useMemo(() => {
     if (!enabled || !accountUserId) return EMPTY_STATE

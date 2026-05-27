@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { toast } from 'sonner'
 import { Loader2, ShieldAlert } from 'lucide-react'
-import { ResourceType } from '@appwrite.io/console'
+import { BlockResourceType } from '@appwrite.io/console'
 import { useBlocks, useCreateBlock } from '@/lib/react-query/hooks/manager'
 import { DateTimePicker } from '@/components/global/shared/DateTimePicker'
 import {
@@ -43,7 +43,7 @@ function expiryToIso(e: Expiry): string | undefined {
 }
 
 export function ComposeBlock({ projectId }: { projectId: string | null }) {
-  const [type, setType] = useState<ResourceType>(ResourceType.Projects)
+  const [type, setType] = useState<BlockResourceType>(BlockResourceType.Projects)
   const [resourceId, setResourceId] = useState('')
   const [reason, setReason] = useState('')
   const [expiry, setExpiry] = useState<Expiry>({ kind: 'never' })

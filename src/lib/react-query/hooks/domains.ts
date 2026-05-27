@@ -14,7 +14,7 @@ import {
   keepPreviousData,
 } from '@tanstack/react-query'
 import { useMemo } from 'react'
-import { Query, RegistrationType } from '@appwrite.io/console'
+import { Query, DomainRegistrationType } from '@appwrite.io/console'
 import type { Models } from '@appwrite.io/console'
 import { sdk } from '@/lib/appwrite/sdk'
 import { DEFAULT_STALE_TIME, DEFAULT_PAGE_SIZE } from './constants'
@@ -111,12 +111,12 @@ export async function fetchDomainPrice(
   const [registration, renewal] = await Promise.all([
     sdk.forConsole.domains.getPrice({
       ...params,
-      registrationType: RegistrationType.New,
+      registrationType: DomainRegistrationType.New,
     }),
     sdk.forConsole.domains
       .getPrice({
         ...params,
-        registrationType: RegistrationType.Renewal,
+        registrationType: DomainRegistrationType.Renewal,
       })
       .catch(() => null),
   ])
@@ -151,12 +151,12 @@ export async function fetchDomainTransferPriceQuote(
   const [transfer, renewal] = await Promise.all([
     sdk.forConsole.domains.getPrice({
       ...params,
-      registrationType: RegistrationType.Transfer,
+      registrationType: DomainRegistrationType.Transfer,
     }),
     sdk.forConsole.domains
       .getPrice({
         ...params,
-        registrationType: RegistrationType.Renewal,
+        registrationType: DomainRegistrationType.Renewal,
       })
       .catch(() => null),
   ])

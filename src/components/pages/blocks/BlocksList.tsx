@@ -8,7 +8,7 @@ import {
   ShieldOff,
   X,
 } from 'lucide-react'
-import type { Models, ResourceType } from '@appwrite.io/console'
+import type { Models, BlockResourceType } from '@appwrite.io/console'
 import { useBlocks, useDeleteBlock } from '@/lib/react-query/hooks/manager'
 import {
   Popover,
@@ -60,7 +60,7 @@ export function BlocksList({ projectId }: { projectId: string | null }) {
     deleteMutation.mutate(
       {
         projectId,
-        resourceType: b.resourceType as ResourceType,
+        resourceType: b.resourceType as BlockResourceType,
         resourceId: b.resourceId,
       },
       {

@@ -7,122 +7,92 @@ import {
   Inbox,
   Package,
   Radio,
-  Send,
   Users as UsersIcon,
-  Workflow,
   Zap,
   type LucideIcon,
 } from 'lucide-react'
-import { ResourceType } from '@appwrite.io/console'
+import { BlockResourceType } from '@appwrite.io/console'
 
 export type ResourceTypeMeta = {
-  value: ResourceType
+  value: BlockResourceType
   label: string
   icon: LucideIcon
   description: string
 }
 
-export const RESOURCE_TYPE_META: Record<ResourceType, ResourceTypeMeta> = {
-  [ResourceType.Projects]: {
-    value: ResourceType.Projects,
+export const RESOURCE_TYPE_META: Record<BlockResourceType, ResourceTypeMeta> = {
+  [BlockResourceType.Projects]: {
+    value: BlockResourceType.Projects,
     label: 'Projects',
     icon: FolderGit2,
     description: 'Entire projects',
   },
-  [ResourceType.Functions]: {
-    value: ResourceType.Functions,
+  [BlockResourceType.Functions]: {
+    value: BlockResourceType.Functions,
     label: 'Functions',
     icon: Zap,
     description: 'Function collection',
   },
-  [ResourceType.Function]: {
-    value: ResourceType.Function,
-    label: 'Function',
-    icon: Zap,
-    description: 'Single function',
-  },
-  [ResourceType.Execution]: {
-    value: ResourceType.Execution,
-    label: 'Execution',
-    icon: Workflow,
-    description: 'Function executions',
-  },
-  [ResourceType.Sites]: {
-    value: ResourceType.Sites,
+  [BlockResourceType.Sites]: {
+    value: BlockResourceType.Sites,
     label: 'Sites',
     icon: Globe,
     description: 'Hosted sites',
   },
-  [ResourceType.Databases]: {
-    value: ResourceType.Databases,
+  [BlockResourceType.Databases]: {
+    value: BlockResourceType.Databases,
     label: 'Databases',
     icon: Database,
     description: 'Database collections',
   },
-  [ResourceType.Buckets]: {
-    value: ResourceType.Buckets,
+  [BlockResourceType.Buckets]: {
+    value: BlockResourceType.Buckets,
     label: 'Buckets',
     icon: HardDrive,
     description: 'Storage buckets',
   },
-  [ResourceType.Providers]: {
-    value: ResourceType.Providers,
+  [BlockResourceType.Providers]: {
+    value: BlockResourceType.Providers,
     label: 'Providers',
     icon: Boxes,
     description: 'Messaging providers',
   },
-  [ResourceType.Topics]: {
-    value: ResourceType.Topics,
+  [BlockResourceType.Topics]: {
+    value: BlockResourceType.Topics,
     label: 'Topics',
     icon: Radio,
     description: 'Messaging topics',
   },
-  [ResourceType.Subscribers]: {
-    value: ResourceType.Subscribers,
+  [BlockResourceType.Subscribers]: {
+    value: BlockResourceType.Subscribers,
     label: 'Subscribers',
     icon: UsersIcon,
     description: 'Topic subscribers',
   },
-  [ResourceType.Messages]: {
-    value: ResourceType.Messages,
+  [BlockResourceType.Messages]: {
+    value: BlockResourceType.Messages,
     label: 'Messages',
     icon: Inbox,
     description: 'Messaging deliveries',
   },
-  [ResourceType.Message]: {
-    value: ResourceType.Message,
-    label: 'Message',
-    icon: Send,
-    description: 'Single message',
-  },
-  [ResourceType.Backup]: {
-    value: ResourceType.Backup,
-    label: 'Backup',
-    icon: Package,
-    description: 'Backup archives',
-  },
 }
 
-export const ORDERED_RESOURCE_TYPES: ResourceType[] = [
-  ResourceType.Projects,
-  ResourceType.Functions,
-  ResourceType.Function,
-  ResourceType.Execution,
-  ResourceType.Sites,
-  ResourceType.Databases,
-  ResourceType.Buckets,
-  ResourceType.Providers,
-  ResourceType.Topics,
-  ResourceType.Subscribers,
-  ResourceType.Messages,
-  ResourceType.Message,
-  ResourceType.Backup,
+export const ORDERED_RESOURCE_TYPES: BlockResourceType[] = [
+  BlockResourceType.Projects,
+  BlockResourceType.Functions,
+  BlockResourceType.Sites,
+  BlockResourceType.Databases,
+  BlockResourceType.Buckets,
+  BlockResourceType.Providers,
+  BlockResourceType.Topics,
+  BlockResourceType.Subscribers,
+  BlockResourceType.Messages,
 ]
 
 export function getResourceTypeMeta(value: string): ResourceTypeMeta {
   return (
-    RESOURCE_TYPE_META[value as ResourceType] ?? {
-      value: value as ResourceType,
+    RESOURCE_TYPE_META[value as BlockResourceType] ?? {
+      value: value as BlockResourceType,
       label: value,
       icon: Package,
       description: value,

@@ -23,7 +23,7 @@ import { WizardLayout } from '@/components/global/shared/WizardLayout'
 import { RuntimeIcon } from '@/components/global/shared/RuntimeIcon'
 import { useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
-import { ID, Runtime, TemplateReferenceType } from '@appwrite.io/console'
+import { ID, FunctionRuntime, TemplateReferenceType } from '@appwrite.io/console'
 import { sdk } from '@/lib/appwrite/sdk'
 import {
   useProjectRuntimes,
@@ -139,7 +139,7 @@ export function DeployFromUrlView({
       await projectSdk.functions.create({
         functionId: finalFunctionId,
         name: functionName.trim(),
-        runtime: runtime as Runtime,
+        runtime: runtime as FunctionRuntime,
         execute: isPublic ? ['any'] : [],
         entrypoint: entrypoint.trim() || undefined,
         commands: commands.trim() || undefined,

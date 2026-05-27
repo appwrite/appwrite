@@ -26,7 +26,7 @@ import { Loader2, Key, Tag, GitBranch } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
-import { ID, TemplateReferenceType, type Runtime } from '@appwrite.io/console'
+import { ID, TemplateReferenceType, type FunctionRuntime } from '@appwrite.io/console'
 import { sdk } from '@/lib/appwrite/sdk'
 import {
   useFunctionTemplate,
@@ -256,7 +256,7 @@ export function TemplateConfigView({
       await projectSdk.functions.create({
         functionId: finalFunctionId,
         name: functionName.trim(),
-        runtime: runtime as Runtime,
+        runtime: runtime as FunctionRuntime,
         execute: isPublic
           ? ['any']
           : template.permissions?.length
