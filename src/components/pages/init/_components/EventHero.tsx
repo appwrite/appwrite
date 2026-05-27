@@ -96,7 +96,7 @@ function CollapsedHeroBar({
       >
         {showDayNav ? (
           <div className="relative mx-auto flex w-full max-w-7xl items-center px-4 sm:px-6">
-            <div className="relative z-10 flex min-w-0 shrink-0 items-center gap-2 sm:gap-3">
+            <div className="relative z-10 hidden min-w-0 shrink-0 items-center gap-2 sm:flex sm:gap-3">
               <InitWordmark
                 event={event}
                 className="shrink-0 text-[20px] sm:text-[22px]"
@@ -106,8 +106,15 @@ function CollapsedHeroBar({
               </span>
             </div>
 
-            <div className="pointer-events-none absolute inset-0 flex items-center justify-center px-28 sm:px-36">
-              <div className="pointer-events-auto max-w-full">
+            <div
+              className={cn(
+                'pointer-events-none absolute inset-0 flex items-center justify-center px-4',
+                liveBanner
+                  ? 'pr-[5.75rem] sm:px-28 sm:pr-36 md:px-36'
+                  : 'sm:px-28 md:px-36',
+              )}
+            >
+              <div className="pointer-events-auto w-full max-w-full sm:max-w-none">
                 <InitCollapsedDayNav days={dayNumbers} activeDay={activeDay} />
               </div>
             </div>

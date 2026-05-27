@@ -10,6 +10,8 @@ export interface InitTicketPrefs {
   displayName?: string
   holderTitle?: string
   stack: InitTicketStackId[]
+  /** When true, the ticket section renders in the compact collapsed layout. */
+  sectionCollapsed?: boolean
 }
 
 export const DEFAULT_INIT_TICKET_PREFS: InitTicketPrefs = {
@@ -27,6 +29,10 @@ export function getInitTicketPrefsStorageKey(
   return `${INIT_TICKET_PREFS_KEY_PREFIX}.v1.${eventId}.${userId}`
 }
 
+export function getInitTicketGuestPrefsStorageKey(eventId: string): string {
+  return `${INIT_TICKET_PREFS_KEY_PREFIX}.v1.${eventId}.guest`
+}
+
 export function parseInitTicketPrefs(value: unknown): InitTicketPrefs | null {
   if (!value || typeof value !== 'object') return null
   const record = value as Record<string, unknown>
@@ -35,10 +41,13 @@ export function parseInitTicketPrefs(value: unknown): InitTicketPrefs | null {
   const holderTitle =
     typeof record.holderTitle === 'string' ? record.holderTitle.trim() : undefined
   const stack = parseInitTicketStack(record.stack)
+  const sectionCollapsed =
+    typeof record.sectionCollapsed === 'boolean' ? record.sectionCollapsed : undefined
   return {
     stack,
     ...(displayName ? { displayName } : {}),
     ...(holderTitle ? { holderTitle } : {}),
+    ...(sectionCollapsed !== undefined ? { sectionCollapsed } : {}),
   }
 }
 
@@ -47,6 +56,34 @@ export function getInitTicketHolderTitle(
   defaultTitle: string,
 ): string {
   return prefs.holderTitle?.trim() || defaultTitle
+}
+
+export function readInitTicketGuestPrefsFromStorage(
+  eventId: string,
+): InitTicketPrefs | null {
+  if (typeof window === 'undefined') return null
+  try {
+    const raw = window.localStorage.getItem(getInitTicketGuestPrefsStorageKey(eventId))
+    if (!raw) return null
+    return parseInitTicketPrefs(JSON.parse(raw))
+  } catch {
+    return null
+  }
+}
+
+export function writeInitTicketGuestPrefsToStorage(
+  eventId: string,
+  prefs: InitTicketPrefs,
+): void {
+  if (typeof window === 'undefined') return
+  try {
+    window.localStorage.setItem(
+      getInitTicketGuestPrefsStorageKey(eventId),
+      JSON.stringify(prefs),
+    )
+  } catch {
+    /* private mode */
+  }
 }
 
 export function readInitTicketPrefsFromStorage(

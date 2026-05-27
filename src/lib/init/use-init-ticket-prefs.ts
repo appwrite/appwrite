@@ -4,8 +4,10 @@ import { sdk } from '@/lib/appwrite/sdk'
 import {
   DEFAULT_INIT_TICKET_PREFS,
   mergeInitTicketPrefsIntoAccountPrefs,
+  readInitTicketGuestPrefsFromStorage,
   readInitTicketPrefsFromAccountPrefs,
   readInitTicketPrefsFromStorage,
+  writeInitTicketGuestPrefsToStorage,
   writeInitTicketPrefsToStorage,
   type InitTicketPrefs,
 } from '@/lib/init/ticket-prefs'
@@ -22,7 +24,9 @@ export function useInitTicketPrefs(
 
   useEffect(() => {
     if (!userId) {
-      setPrefs(DEFAULT_INIT_TICKET_PREFS)
+      setPrefs(
+        readInitTicketGuestPrefsFromStorage(eventId) ?? DEFAULT_INIT_TICKET_PREFS,
+      )
       return
     }
 
@@ -36,7 +40,10 @@ export function useInitTicketPrefs(
 
   const persistPrefs = useCallback(
     (next: InitTicketPrefs) => {
-      if (!userId) return
+      if (!userId) {
+        writeInitTicketGuestPrefsToStorage(eventId, next)
+        return
+      }
 
       writeInitTicketPrefsToStorage(eventId, userId, next)
 

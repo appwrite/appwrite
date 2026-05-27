@@ -18,12 +18,9 @@ import {
   getInitTicketNumberForUser,
   InitTicketCard,
 } from '@/components/pages/init/_components/InitTicketCard'
+import { InitTicketScaledFrame } from '@/components/pages/init/_components/InitTicketScaledFrame'
 import { InitTicketCustomizeDrawer } from '@/components/pages/init/_components/InitTicketCustomizeDrawer'
-import {
-  INIT_TICKET_COLLAPSED_WIDTH_PX,
-  INIT_TICKET_MAX_WIDTH_PX,
-  initTicketDisplayAspectRatio,
-} from '@/lib/init/ticket-layout'
+import { INIT_TICKET_COLLAPSED_WIDTH_PX } from '@/lib/init/ticket-layout'
 import { Button } from '@/components/ui/button'
 import {
   Popover,
@@ -54,11 +51,6 @@ function buildShareUrl(): string {
 
 const shareMenuItemClass =
   'flex w-full items-center gap-2 rounded-md px-2 py-2 text-left text-[13px] text-foreground transition-colors hover:bg-accent'
-
-const COLLAPSED_TICKET_SCALE =
-  INIT_TICKET_COLLAPSED_WIDTH_PX / INIT_TICKET_MAX_WIDTH_PX
-const COLLAPSED_TICKET_HEIGHT_PX =
-  INIT_TICKET_COLLAPSED_WIDTH_PX / initTicketDisplayAspectRatio()
 
 interface ShareActionsProps {
   compact?: boolean
@@ -198,7 +190,7 @@ export function InitTicketSection({ event, account }: InitTicketSectionProps) {
     enabled: isAuthenticated,
   })
   const { prefs, updatePrefs } = useInitTicketPrefs(event.id, account)
-  const [collapsed, setCollapsed] = useState(false)
+  const collapsed = prefs.sectionCollapsed ?? false
   const [shareOpen, setShareOpen] = useState(false)
   const [customizeOpen, setCustomizeOpen] = useState(false)
   const [isSharing, setIsSharing] = useState(false)
@@ -318,23 +310,12 @@ export function InitTicketSection({ event, account }: InitTicketSectionProps) {
   if (collapsed) {
     sectionBody = (
       <div className="flex items-center gap-3 py-1 pr-10 sm:gap-5 sm:py-2">
-        <div
-          className="relative shrink-0"
-          style={{
-            width: INIT_TICKET_COLLAPSED_WIDTH_PX,
-            height: COLLAPSED_TICKET_HEIGHT_PX,
-          }}
+        <InitTicketScaledFrame
+          widthPx={INIT_TICKET_COLLAPSED_WIDTH_PX}
+          pointerEventsNone
         >
-          <div
-            className="pointer-events-none absolute left-0 top-0 origin-top-left"
-            style={{
-              width: INIT_TICKET_MAX_WIDTH_PX,
-              transform: `scale(${COLLAPSED_TICKET_SCALE})`,
-            }}
-          >
-            <InitTicketCard {...ticketCardProps} previewOnly />
-          </div>
-        </div>
+          <InitTicketCard {...ticketCardProps} previewOnly />
+        </InitTicketScaledFrame>
         <div className="min-w-0 flex-1 space-y-2 text-left">
           <h2 className="text-[14px] font-semibold leading-tight tracking-tight text-foreground sm:text-[15px]">
             {sectionTitle}
@@ -349,9 +330,9 @@ export function InitTicketSection({ event, account }: InitTicketSectionProps) {
   } else {
     sectionBody = (
       <div className="mx-auto flex w-full max-w-[820px] flex-col items-center">
-        <div className="relative mx-auto w-full">
+        <InitTicketScaledFrame measureContainer className="w-full">
           <InitTicketCard {...ticketCardProps} />
-        </div>
+        </InitTicketScaledFrame>
 
         <div className="mt-1 flex w-full flex-col items-center gap-4 pb-8 text-center sm:mt-2 sm:pb-10">
           <div className="max-w-md space-y-2">
@@ -375,7 +356,7 @@ export function InitTicketSection({ event, account }: InitTicketSectionProps) {
         variant="outline"
         size="icon"
         className="absolute right-0 top-0 z-20 size-8 shrink-0"
-        onClick={() => setCollapsed((value) => !value)}
+        onClick={() => updatePrefs({ sectionCollapsed: !collapsed })}
         aria-expanded={!collapsed}
         aria-label={collapsed ? 'Expand ticket section' : 'Collapse ticket section'}
       >
