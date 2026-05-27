@@ -3152,7 +3152,6 @@ trait MigrationsBase
             'port' => $smtpPort,
             'username' => 'smtp-user',
             'password' => 'smtp-pass',
-            'secure' => '',
         ]);
         $this->assertEquals(200, $sourceSmtpUpdate['headers']['status-code'], 'Source SMTP PATCH must succeed (otherwise migration sees empty config)');
         $this->assertSame('Migration Sender', $sourceSmtpUpdate['body']['smtpSenderName']);
@@ -3188,21 +3187,10 @@ trait MigrationsBase
         $this->assertSame('smtp-user', $response['body']['smtpUsername']);
         $this->assertSame('', $response['body']['smtpSecure']);
 
-        // Reset both projects so the test is idempotent.
-        $reset = [
-            'enabled' => false,
-            'senderName' => '',
-            'senderEmail' => '',
-            'replyToName' => '',
-            'replyToEmail' => '',
-            'host' => '',
-            'port' => 0,
-            'username' => '',
-            'password' => '',
-            'secure' => '',
-        ];
-        $this->client->call(Client::METHOD_PATCH, '/project/smtp', $sourceAdminHeaders, $reset);
-        $this->client->call(Client::METHOD_PATCH, '/project/smtp', $destinationAdminHeaders, $reset);
+        // Reset both projects so the test is idempotent. Disabling skips the
+        // connection-validation branch in the SMTP update endpoint.
+        $this->client->call(Client::METHOD_PATCH, '/project/smtp', $sourceAdminHeaders, ['enabled' => false]);
+        $this->client->call(Client::METHOD_PATCH, '/project/smtp', $destinationAdminHeaders, ['enabled' => false]);
     }
 
     /**
