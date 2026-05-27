@@ -96,7 +96,7 @@ abstract class Adapter
      *     embedding: array<int, float>,
      *     tokensProcessed: int|null,
      *     totalDuration: int|null ,
-     *     modelLoadingDuration: int|null
+     *     modelLoadingDuration?: int|null
      * }
      */
     abstract public function embed(string $text): array;
