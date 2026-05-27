@@ -20,7 +20,7 @@ import { consoleAccountQueryOptions } from '@/lib/react-query/hooks/auth'
 import { cn } from '@/lib/utils'
 
 const ONLINE_USER_TOOLTIP_CLASS =
-  'max-w-[min(280px,calc(100dvw-5rem))] border border-border bg-popover px-3 py-2.5 text-popover-foreground shadow-md [&>svg]:hidden'
+  'max-w-[min(280px,calc(100dvw-5rem))] border border-border bg-popover px-3 py-2.5 text-popover-foreground shadow-md [&_svg]:!hidden'
 
 function StatusDot({ online, className }: { online: boolean; className?: string }) {
   return (
@@ -179,7 +179,7 @@ export function InitPresenceStatusControl({
             <p className="text-[13px] font-semibold text-foreground">
               {isOnline ? 'You are online' : 'You are offline'}
             </p>
-            <p className="text-[12px] leading-relaxed text-muted-foreground">
+            <p className="text-[12px] leading-relaxed text-muted-foreground/70">
               Click to change your Init visibility
             </p>
           </TooltipContent>

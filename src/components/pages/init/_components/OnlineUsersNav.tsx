@@ -32,7 +32,7 @@ const PRESENCE_ACTIVITY_TRANSITION = { duration: 0.16, ease: PRESENCE_LIST_EASE 
 
 /** Readable popover-style tooltip for collapsed sidebar rows (not inverted xs pills). */
 const ONLINE_USER_TOOLTIP_CLASS =
-  'max-w-[min(280px,calc(100dvw-5rem))] border border-border bg-popover px-3 py-2.5 text-popover-foreground shadow-md [&>svg]:hidden'
+  'max-w-[min(280px,calc(100dvw-5rem))] border border-border bg-popover px-3 py-2.5 text-popover-foreground shadow-md [&_svg]:!hidden'
 
 function OnlineUserTooltipDetails({
   name,
@@ -44,7 +44,7 @@ function OnlineUserTooltipDetails({
   return (
     <div className="space-y-1 text-left">
       <p className="text-[13px] font-semibold leading-snug text-foreground">{name}</p>
-      <p className="text-[12px] leading-relaxed text-muted-foreground">{activity}</p>
+      <p className="text-[12px] leading-relaxed text-muted-foreground/70">{activity}</p>
     </div>
   )
 }
