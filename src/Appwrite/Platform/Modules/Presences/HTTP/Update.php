@@ -128,7 +128,7 @@ class Update extends PlatformAction
         Event $queueForEvents
     ): void {
         $presenceState = new PresenceState();
-        $isAPIKey = $user->isApp($authorization->getRoles());
+        $isAPIKey = $user->isKey($authorization->getRoles());
         $isPrivilegedUser = $user->isPrivileged($authorization->getRoles());
 
         if ($userId && !$isAPIKey && !$isPrivilegedUser) {

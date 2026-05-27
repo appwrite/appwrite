@@ -535,7 +535,7 @@ return function (Container $context): void {
         // These endpoints moved from /v1/projects/:projectId/<resource> to /v1/<resource>
         // When accessed via the old alias path, extract projectId from the URI
         $deprecatedProjectPathPrefix = '/v1/projects/';
-        $route = $utopia->match($request);
+        $route = $utopia->match($request)?->route;
         if (!empty($route)) {
             $isDeprecatedAlias = \str_starts_with($request->getURI(), $deprecatedProjectPathPrefix) &&
                 !\str_starts_with($route->getPath(), $deprecatedProjectPathPrefix);
@@ -999,7 +999,7 @@ return function (Container $context): void {
         if ($project->getId() !== 'console') {
             $teamInternalId = $project->getAttribute('teamInternalId', '');
         } else {
-            $route = $utopia->match($request);
+            $route = $utopia->match($request)?->route;
             $path = ! empty($route) ? $route->getPath() : $request->getURI();
             $orgHeader = $request->getHeader('x-appwrite-organization', '');
             if (str_starts_with($path, '/v1/projects/:projectId')) {

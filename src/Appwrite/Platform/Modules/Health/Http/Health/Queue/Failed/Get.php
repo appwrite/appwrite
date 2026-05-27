@@ -24,6 +24,7 @@ use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response;
 use Utopia\Database\Document;
+use Utopia\Platform\Enum;
 use Utopia\System\System;
 use Utopia\Validator\Integer;
 use Utopia\Validator\WhiteList;
@@ -71,7 +72,7 @@ class Get extends Base
                 System::getEnv('_APP_SCREENSHOTS_QUEUE_NAME', Event::SCREENSHOTS_QUEUE_NAME),
                 System::getEnv('_APP_MESSAGING_QUEUE_NAME', Event::MESSAGING_QUEUE_NAME),
                 System::getEnv('_APP_MIGRATIONS_QUEUE_NAME', Event::MIGRATIONS_QUEUE_NAME),
-            ]), 'The name of the queue')
+            ]), 'The name of the queue', enum: new Enum(name: 'HealthQueueName'))
             ->param('threshold', 5000, new Integer(true), 'Queue size threshold. When hit (equal or higher), endpoint returns server error. Default value is 5000.', true)
             ->inject('response')
             ->inject('publisherForDatabase')
