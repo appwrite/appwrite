@@ -14,6 +14,10 @@ import {
   initTicketInsetStyle,
 } from '@/lib/init/ticket-layout'
 import type { ResolvedInitTicketAppearance } from '@/lib/init/ticket-types'
+import {
+  prefersInitTicketDeviceTilt,
+  useInitTicketDeviceTilt,
+} from '@/lib/init/use-init-ticket-device-tilt'
 import { getInitTicketStackOption } from '@/lib/init/ticket-stack'
 import { getFrameworkIconFile } from '@/lib/frameworks'
 import { Globe } from 'lucide-react'
@@ -24,6 +28,7 @@ const TILT_MAX_Y = 32
 const TILT_DURATION_MS = 140
 const FLIP_DURATION_MS = 720
 const RESET_DURATION_MS = 520
+const FLIP_DRAG_THRESHOLD_PX = 10
 
 interface InitTicketCardProps {
   eventName: string
@@ -501,12 +506,21 @@ export function InitTicketCard({
   const flipperRef = useRef<HTMLDivElement>(null)
   const shadowRef = useRef<HTMLDivElement>(null)
   const tiltRef = useRef({ x: 0, y: 0 })
+  const pointerTiltRef = useRef({ x: 0, y: 0 })
+  const deviceTiltRef = useRef({ x: 0, y: 0 })
+  const pointerTiltActiveRef = useRef(false)
   const flippedRef = useRef(false)
   const animatingRef = useRef(false)
   const tiltRafRef = useRef(0)
   const shadowOffsetYRef = useRef(shadowOffsetY)
+  const pointerStartRef = useRef<{ x: number; y: number } | null>(null)
+  const didDragRef = useRef(false)
+  const touchActiveRef = useRef(false)
   const [isFlipped, setIsFlipped] = useState(false)
   const [reducedMotion, setReducedMotion] = useState(false)
+
+  const deviceTiltEnabled =
+    interactive && !reducedMotion && prefersInitTicketDeviceTilt()
 
   useEffect(() => {
     shadowOffsetYRef.current = shadowOffsetY
@@ -566,9 +580,53 @@ export function InitTicketCard({
     [reducedMotion],
   )
 
-  const handlePointerMove = useCallback(
+  const scheduleTiltApply = useCallback(
+    (duration = TILT_DURATION_MS) => {
+      if (tiltRafRef.current) return
+      tiltRafRef.current = window.requestAnimationFrame(() => {
+        tiltRafRef.current = 0
+        applyTransform(duration)
+      })
+    },
+    [applyTransform],
+  )
+
+  const syncEffectiveTilt = useCallback(
+    (duration = TILT_DURATION_MS) => {
+      tiltRef.current = pointerTiltActiveRef.current
+        ? pointerTiltRef.current
+        : deviceTiltRef.current
+      scheduleTiltApply(duration)
+    },
+    [scheduleTiltApply],
+  )
+
+  const { startListening: startDeviceTilt, listening: deviceTiltListening } =
+    useInitTicketDeviceTilt({
+      enabled: deviceTiltEnabled,
+      maxTiltX: TILT_MAX_X,
+      maxTiltY: TILT_MAX_Y,
+      onTiltChange: (tilt) => {
+        deviceTiltRef.current = tilt
+        if (!pointerTiltActiveRef.current && !animatingRef.current) {
+          syncEffectiveTilt(TILT_DURATION_MS)
+        }
+      },
+    })
+
+  useEffect(() => {
+    if (!deviceTiltEnabled) return
+
+    const Orientation = DeviceOrientationEvent as typeof DeviceOrientationEvent & {
+      requestPermission?: () => Promise<PermissionState>
+    }
+    if (typeof Orientation.requestPermission !== 'function') {
+      void startDeviceTilt()
+    }
+  }, [deviceTiltEnabled, startDeviceTilt])
+
+  const updateTiltFromPointer = useCallback(
     (event: React.PointerEvent<HTMLDivElement>) => {
-      if (!interactive || reducedMotion || animatingRef.current) return
       const scene = sceneRef.current
       if (!scene) return
 
@@ -576,18 +634,54 @@ export function InitTicketCard({
       const px = (event.clientX - rect.left) / rect.width - 0.5
       const py = (event.clientY - rect.top) / rect.height - 0.5
 
-      tiltRef.current = {
+      pointerTiltActiveRef.current = true
+      pointerTiltRef.current = {
         x: -py * TILT_MAX_X,
         y: px * TILT_MAX_Y,
       }
 
-      if (tiltRafRef.current) return
-      tiltRafRef.current = window.requestAnimationFrame(() => {
-        tiltRafRef.current = 0
-        applyTransform(TILT_DURATION_MS)
-      })
+      syncEffectiveTilt(TILT_DURATION_MS)
     },
-    [applyTransform, interactive, reducedMotion],
+    [syncEffectiveTilt],
+  )
+
+  const releasePointerTilt = useCallback(() => {
+    pointerTiltActiveRef.current = false
+    syncEffectiveTilt(deviceTiltListening ? TILT_DURATION_MS : RESET_DURATION_MS)
+  }, [deviceTiltListening, syncEffectiveTilt])
+
+  const resetTilt = useCallback(() => {
+    pointerTiltActiveRef.current = false
+    pointerTiltRef.current = { x: 0, y: 0 }
+    if (deviceTiltListening) {
+      syncEffectiveTilt(RESET_DURATION_MS)
+      return
+    }
+    deviceTiltRef.current = { x: 0, y: 0 }
+    tiltRef.current = { x: 0, y: 0 }
+    applyTransform(RESET_DURATION_MS)
+  }, [applyTransform, deviceTiltListening, syncEffectiveTilt])
+
+  const handlePointerMove = useCallback(
+    (event: React.PointerEvent<HTMLDivElement>) => {
+      if (!interactive || reducedMotion || animatingRef.current) return
+
+      const isTouch = event.pointerType === 'touch'
+      const isMouseHover = event.pointerType === 'mouse' && event.buttons === 0
+
+      if (!isTouch && !isMouseHover && event.buttons === 0) return
+
+      if (pointerStartRef.current) {
+        const dx = event.clientX - pointerStartRef.current.x
+        const dy = event.clientY - pointerStartRef.current.y
+        if (Math.hypot(dx, dy) > FLIP_DRAG_THRESHOLD_PX) {
+          didDragRef.current = true
+        }
+      }
+
+      updateTiltFromPointer(event)
+    },
+    [interactive, reducedMotion, updateTiltFromPointer],
   )
 
   useEffect(() => {
@@ -598,11 +692,67 @@ export function InitTicketCard({
     }
   }, [])
 
-  const handlePointerLeave = useCallback(() => {
-    if (!interactive || reducedMotion) return
-    tiltRef.current = { x: 0, y: 0 }
-    applyTransform(RESET_DURATION_MS)
-  }, [applyTransform, interactive, reducedMotion])
+  const endTouchInteraction = useCallback(
+    (event: React.PointerEvent<HTMLDivElement>) => {
+      if (event.currentTarget.hasPointerCapture(event.pointerId)) {
+        event.currentTarget.releasePointerCapture(event.pointerId)
+      }
+      touchActiveRef.current = false
+      pointerStartRef.current = null
+      releasePointerTilt()
+    },
+    [releasePointerTilt],
+  )
+
+  const handlePointerDown = useCallback(
+    (event: React.PointerEvent<HTMLDivElement>) => {
+      if (!interactive || reducedMotion) return
+
+      if (deviceTiltEnabled) {
+        void startDeviceTilt()
+      }
+
+      pointerStartRef.current = { x: event.clientX, y: event.clientY }
+      didDragRef.current = false
+
+      if (event.pointerType === 'touch') {
+        touchActiveRef.current = true
+        event.currentTarget.setPointerCapture(event.pointerId)
+        updateTiltFromPointer(event)
+      }
+    },
+    [deviceTiltEnabled, interactive, reducedMotion, startDeviceTilt, updateTiltFromPointer],
+  )
+
+  const handlePointerUp = useCallback(
+    (event: React.PointerEvent<HTMLDivElement>) => {
+      if (!interactive || reducedMotion) return
+      if (event.pointerType === 'touch') {
+        endTouchInteraction(event)
+      }
+    },
+    [endTouchInteraction, interactive, reducedMotion],
+  )
+
+  const handlePointerCancel = useCallback(
+    (event: React.PointerEvent<HTMLDivElement>) => {
+      if (!interactive || reducedMotion) return
+      if (event.pointerType === 'touch') {
+        endTouchInteraction(event)
+      }
+    },
+    [endTouchInteraction, interactive, reducedMotion],
+  )
+
+  const handlePointerLeave = useCallback(
+    (event: React.PointerEvent<HTMLDivElement>) => {
+      if (!interactive || reducedMotion || touchActiveRef.current) return
+      if (event.pointerType !== 'mouse') return
+      pointerStartRef.current = null
+      releasePointerTilt()
+    },
+    [interactive, reducedMotion, releasePointerTilt],
+  )
 
   const handleFlip = useCallback(() => {
     if (!interactive || reducedMotion) return
@@ -616,6 +766,11 @@ export function InitTicketCard({
       animatingRef.current = false
     }, FLIP_DURATION_MS)
   }, [applyTransform, interactive, reducedMotion])
+
+  const handleClick = useCallback(() => {
+    if (!interactive || reducedMotion || didDragRef.current) return
+    handleFlip()
+  }, [handleFlip, interactive, reducedMotion])
 
   const handleKeyDown = useCallback(
     (event: React.KeyboardEvent<HTMLDivElement>) => {
@@ -654,15 +809,18 @@ export function InitTicketCard({
           ref={sceneRef}
           className={cn(
             'absolute inset-x-0 top-0 w-full [perspective:1000px]',
-            interactive && !reducedMotion && 'cursor-pointer',
+            interactive && !reducedMotion && 'cursor-pointer touch-none',
           )}
           style={{
             aspectRatio: INIT_TICKET_ASPECT_RATIO,
             clipPath: `inset(0 0 ${INIT_TICKET_BOTTOM_TRIM_PERCENT}% 0)`,
           }}
+          onPointerDown={interactive && !reducedMotion ? handlePointerDown : undefined}
           onPointerMove={interactive && !reducedMotion ? handlePointerMove : undefined}
+          onPointerUp={interactive && !reducedMotion ? handlePointerUp : undefined}
+          onPointerCancel={interactive && !reducedMotion ? handlePointerCancel : undefined}
           onPointerLeave={interactive && !reducedMotion ? handlePointerLeave : undefined}
-          onClick={interactive && !reducedMotion ? handleFlip : undefined}
+          onClick={interactive && !reducedMotion ? handleClick : undefined}
           onKeyDown={interactive && !reducedMotion ? handleKeyDown : undefined}
           role={interactive && !reducedMotion ? 'button' : undefined}
           tabIndex={interactive && !reducedMotion ? 0 : undefined}
