@@ -3125,11 +3125,21 @@ trait MigrationsBase
         ];
 
         $sourceProjectId = $this->getProject()['$id'];
+        $destinationProjectId = $this->getDestinationProject()['$id'];
+
+        $sourceAdminHeaders = \array_merge($consoleHeaders, [
+            'x-appwrite-project' => $sourceProjectId,
+            'x-appwrite-mode' => 'admin',
+        ]);
+        $destinationAdminHeaders = \array_merge($consoleHeaders, [
+            'x-appwrite-project' => $destinationProjectId,
+            'x-appwrite-mode' => 'admin',
+        ]);
 
         // Configure SMTP on the source so the round-trip is observable.
         // Password is intentionally not migrated (source API never exposes it),
         // so the destination receives every other field.
-        $this->client->call(Client::METHOD_PATCH, '/projects/' . $sourceProjectId . '/smtp', $consoleHeaders, [
+        $this->client->call(Client::METHOD_PATCH, '/project/smtp', $sourceAdminHeaders, [
             'enabled' => true,
             'senderName' => 'Migration Sender',
             'senderEmail' => 'sender@example.com',
@@ -3160,8 +3170,7 @@ trait MigrationsBase
         $this->assertEquals(0, $result['statusCounters'][Resource::TYPE_SMTP]['processing']);
         $this->assertEquals(0, $result['statusCounters'][Resource::TYPE_SMTP]['warning']);
 
-        $destinationProjectId = $this->getDestinationProject()['$id'];
-        $response = $this->client->call(Client::METHOD_GET, '/projects/' . $destinationProjectId, $consoleHeaders);
+        $response = $this->client->call(Client::METHOD_GET, '/project', $destinationAdminHeaders);
 
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertTrue($response['body']['smtpEnabled'], 'smtpEnabled should be migrated as true');
@@ -3187,8 +3196,8 @@ trait MigrationsBase
             'password' => '',
             'secure' => '',
         ];
-        $this->client->call(Client::METHOD_PATCH, '/projects/' . $sourceProjectId . '/smtp', $consoleHeaders, $reset);
-        $this->client->call(Client::METHOD_PATCH, '/projects/' . $destinationProjectId . '/smtp', $consoleHeaders, $reset);
+        $this->client->call(Client::METHOD_PATCH, '/project/smtp', $sourceAdminHeaders, $reset);
+        $this->client->call(Client::METHOD_PATCH, '/project/smtp', $destinationAdminHeaders, $reset);
     }
 
     /**
