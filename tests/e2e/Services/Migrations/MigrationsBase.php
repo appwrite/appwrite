@@ -2818,15 +2818,26 @@ trait MigrationsBase
             'cookie' => 'a_session_console=' . $this->getRoot()['session'],
         ];
 
+        $sourceProjectId = $this->getProject()['$id'];
+        $destinationProjectId = $this->getDestinationProject()['$id'];
+
+        $sourceAdminHeaders = \array_merge($consoleHeaders, [
+            'x-appwrite-project' => $sourceProjectId,
+            'x-appwrite-mode' => 'admin',
+        ]);
+        $destinationAdminHeaders = \array_merge($consoleHeaders, [
+            'x-appwrite-project' => $destinationProjectId,
+            'x-appwrite-mode' => 'admin',
+        ]);
+
         // Flip a couple of auth methods on the source so the round-trip is
         // observable. Settling on email-password OFF and JWT OFF — the
         // remaining flags stay on their server defaults.
-        $sourceProjectId = $this->getProject()['$id'];
-        $this->client->call(Client::METHOD_PATCH, '/projects/' . $sourceProjectId . '/auth/email-password', $consoleHeaders, [
-            'status' => false,
+        $this->client->call(Client::METHOD_PATCH, '/project/auth-methods/email-password', $sourceAdminHeaders, [
+            'enabled' => false,
         ]);
-        $this->client->call(Client::METHOD_PATCH, '/projects/' . $sourceProjectId . '/auth/jwt', $consoleHeaders, [
-            'status' => false,
+        $this->client->call(Client::METHOD_PATCH, '/project/auth-methods/jwt', $sourceAdminHeaders, [
+            'enabled' => false,
         ]);
 
         $result = $this->performMigrationSync([
@@ -2847,19 +2858,19 @@ trait MigrationsBase
         $this->assertEquals(0, $result['statusCounters'][Resource::TYPE_AUTH_METHODS]['processing']);
         $this->assertEquals(0, $result['statusCounters'][Resource::TYPE_AUTH_METHODS]['warning']);
 
-        $destinationProjectId = $this->getDestinationProject()['$id'];
-        $response = $this->client->call(Client::METHOD_GET, '/projects/' . $destinationProjectId, $consoleHeaders);
+        $response = $this->client->call(Client::METHOD_GET, '/project', $destinationAdminHeaders);
 
         $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertFalse($response['body']['authEmailPassword'], 'authEmailPassword should be migrated as false');
-        $this->assertFalse($response['body']['authJWT'], 'authJWT should be migrated as false');
+        $authMethods = \array_column($response['body']['authMethods'] ?? [], 'enabled', '$id');
+        $this->assertFalse($authMethods['email-password'] ?? null, 'email-password auth method should be migrated as false');
+        $this->assertFalse($authMethods['jwt'] ?? null, 'jwt auth method should be migrated as false');
 
         // Restore source so the test is idempotent.
-        $this->client->call(Client::METHOD_PATCH, '/projects/' . $sourceProjectId . '/auth/email-password', $consoleHeaders, ['status' => true]);
-        $this->client->call(Client::METHOD_PATCH, '/projects/' . $sourceProjectId . '/auth/jwt', $consoleHeaders, ['status' => true]);
+        $this->client->call(Client::METHOD_PATCH, '/project/auth-methods/email-password', $sourceAdminHeaders, ['enabled' => true]);
+        $this->client->call(Client::METHOD_PATCH, '/project/auth-methods/jwt', $sourceAdminHeaders, ['enabled' => true]);
         // Restore destination too.
-        $this->client->call(Client::METHOD_PATCH, '/projects/' . $destinationProjectId . '/auth/email-password', $consoleHeaders, ['status' => true]);
-        $this->client->call(Client::METHOD_PATCH, '/projects/' . $destinationProjectId . '/auth/jwt', $consoleHeaders, ['status' => true]);
+        $this->client->call(Client::METHOD_PATCH, '/project/auth-methods/email-password', $destinationAdminHeaders, ['enabled' => true]);
+        $this->client->call(Client::METHOD_PATCH, '/project/auth-methods/jwt', $destinationAdminHeaders, ['enabled' => true]);
     }
 
     public function testAppwriteMigrationProtocols(): void
@@ -2872,12 +2883,23 @@ trait MigrationsBase
         ];
 
         $sourceProjectId = $this->getProject()['$id'];
-        // Flip graphql + websocket off on source to make the round-trip observable.
-        $this->client->call(Client::METHOD_PATCH, '/projects/' . $sourceProjectId . '/api/graphql', $consoleHeaders, [
-            'status' => false,
+        $destinationProjectId = $this->getDestinationProject()['$id'];
+
+        $sourceAdminHeaders = \array_merge($consoleHeaders, [
+            'x-appwrite-project' => $sourceProjectId,
+            'x-appwrite-mode' => 'admin',
         ]);
-        $this->client->call(Client::METHOD_PATCH, '/projects/' . $sourceProjectId . '/api/websocket', $consoleHeaders, [
-            'status' => false,
+        $destinationAdminHeaders = \array_merge($consoleHeaders, [
+            'x-appwrite-project' => $destinationProjectId,
+            'x-appwrite-mode' => 'admin',
+        ]);
+
+        // Flip graphql + websocket off on source to make the round-trip observable.
+        $this->client->call(Client::METHOD_PATCH, '/project/protocols/graphql', $sourceAdminHeaders, [
+            'enabled' => false,
+        ]);
+        $this->client->call(Client::METHOD_PATCH, '/project/protocols/websocket', $sourceAdminHeaders, [
+            'enabled' => false,
         ]);
 
         $result = $this->performMigrationSync([
@@ -2898,18 +2920,18 @@ trait MigrationsBase
         $this->assertEquals(0, $result['statusCounters'][Resource::TYPE_PROTOCOLS]['processing']);
         $this->assertEquals(0, $result['statusCounters'][Resource::TYPE_PROTOCOLS]['warning']);
 
-        $destinationProjectId = $this->getDestinationProject()['$id'];
-        $response = $this->client->call(Client::METHOD_GET, '/projects/' . $destinationProjectId, $consoleHeaders);
+        $response = $this->client->call(Client::METHOD_GET, '/project', $destinationAdminHeaders);
 
         $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertFalse($response['body']['protocolStatusForGraphql'], 'GraphQL protocol should be migrated as disabled');
-        $this->assertFalse($response['body']['protocolStatusForWebsocket'], 'WebSocket protocol should be migrated as disabled');
+        $protocols = \array_column($response['body']['protocols'] ?? [], 'enabled', '$id');
+        $this->assertFalse($protocols['graphql'] ?? null, 'GraphQL protocol should be migrated as disabled');
+        $this->assertFalse($protocols['websocket'] ?? null, 'WebSocket protocol should be migrated as disabled');
 
         // Restore both projects so the test is idempotent.
-        $this->client->call(Client::METHOD_PATCH, '/projects/' . $sourceProjectId . '/api/graphql', $consoleHeaders, ['status' => true]);
-        $this->client->call(Client::METHOD_PATCH, '/projects/' . $sourceProjectId . '/api/websocket', $consoleHeaders, ['status' => true]);
-        $this->client->call(Client::METHOD_PATCH, '/projects/' . $destinationProjectId . '/api/graphql', $consoleHeaders, ['status' => true]);
-        $this->client->call(Client::METHOD_PATCH, '/projects/' . $destinationProjectId . '/api/websocket', $consoleHeaders, ['status' => true]);
+        $this->client->call(Client::METHOD_PATCH, '/project/protocols/graphql', $sourceAdminHeaders, ['enabled' => true]);
+        $this->client->call(Client::METHOD_PATCH, '/project/protocols/websocket', $sourceAdminHeaders, ['enabled' => true]);
+        $this->client->call(Client::METHOD_PATCH, '/project/protocols/graphql', $destinationAdminHeaders, ['enabled' => true]);
+        $this->client->call(Client::METHOD_PATCH, '/project/protocols/websocket', $destinationAdminHeaders, ['enabled' => true]);
     }
 
     public function testAppwriteMigrationLabels(): void
@@ -2924,11 +2946,20 @@ trait MigrationsBase
         $sourceProjectId = $this->getProject()['$id'];
         $destinationProjectId = $this->getDestinationProject()['$id'];
 
-        $labels = ['vip-' . \substr(ID::unique(), 0, 8), 'beta-' . \substr(ID::unique(), 0, 8)];
+        $sourceAdminHeaders = \array_merge($consoleHeaders, [
+            'x-appwrite-project' => $sourceProjectId,
+            'x-appwrite-mode' => 'admin',
+        ]);
+        $destinationAdminHeaders = \array_merge($consoleHeaders, [
+            'x-appwrite-project' => $destinationProjectId,
+            'x-appwrite-mode' => 'admin',
+        ]);
 
-        // Set labels on source.
-        $this->client->call(Client::METHOD_PATCH, '/projects/' . $sourceProjectId, $consoleHeaders, [
-            'name' => $this->getProject()['name'] ?? 'Test',
+        $labels = ['vip' . \substr(ID::unique(), 0, 8), 'beta' . \substr(ID::unique(), 0, 8)];
+
+        // Set labels on source. The labels endpoint is PUT /project/labels — the
+        // generic project update endpoint doesn't accept a labels param.
+        $this->client->call(Client::METHOD_PUT, '/project/labels', $sourceAdminHeaders, [
             'labels' => $labels,
         ]);
 
@@ -2950,19 +2981,13 @@ trait MigrationsBase
         $this->assertEquals(0, $result['statusCounters'][Resource::TYPE_LABELS]['processing']);
         $this->assertEquals(0, $result['statusCounters'][Resource::TYPE_LABELS]['warning']);
 
-        $response = $this->client->call(Client::METHOD_GET, '/projects/' . $destinationProjectId, $consoleHeaders);
+        $response = $this->client->call(Client::METHOD_GET, '/project', $destinationAdminHeaders);
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertEqualsCanonicalizing($labels, $response['body']['labels']);
 
         // Restore both projects.
-        $this->client->call(Client::METHOD_PATCH, '/projects/' . $sourceProjectId, $consoleHeaders, [
-            'name' => $this->getProject()['name'] ?? 'Test',
-            'labels' => [],
-        ]);
-        $this->client->call(Client::METHOD_PATCH, '/projects/' . $destinationProjectId, $consoleHeaders, [
-            'name' => $this->getDestinationProject()['name'] ?? 'Test',
-            'labels' => [],
-        ]);
+        $this->client->call(Client::METHOD_PUT, '/project/labels', $sourceAdminHeaders, ['labels' => []]);
+        $this->client->call(Client::METHOD_PUT, '/project/labels', $destinationAdminHeaders, ['labels' => []]);
     }
 
     public function testAppwriteMigrationServices(): void
@@ -2977,9 +3002,18 @@ trait MigrationsBase
         $sourceProjectId = $this->getProject()['$id'];
         $destinationProjectId = $this->getDestinationProject()['$id'];
 
+        $sourceAdminHeaders = \array_merge($consoleHeaders, [
+            'x-appwrite-project' => $sourceProjectId,
+            'x-appwrite-mode' => 'admin',
+        ]);
+        $destinationAdminHeaders = \array_merge($consoleHeaders, [
+            'x-appwrite-project' => $destinationProjectId,
+            'x-appwrite-mode' => 'admin',
+        ]);
+
         // Disable functions + graphql on source as observable changes.
-        $this->client->call(Client::METHOD_PATCH, '/projects/' . $sourceProjectId . '/service/functions', $consoleHeaders, ['status' => false]);
-        $this->client->call(Client::METHOD_PATCH, '/projects/' . $sourceProjectId . '/service/graphql', $consoleHeaders, ['status' => false]);
+        $this->client->call(Client::METHOD_PATCH, '/project/services/functions', $sourceAdminHeaders, ['enabled' => false]);
+        $this->client->call(Client::METHOD_PATCH, '/project/services/graphql', $sourceAdminHeaders, ['enabled' => false]);
 
         $result = $this->performMigrationSync([
             'resources' => [
@@ -2999,16 +3033,17 @@ trait MigrationsBase
         $this->assertEquals(0, $result['statusCounters'][Resource::TYPE_SERVICES]['processing']);
         $this->assertEquals(0, $result['statusCounters'][Resource::TYPE_SERVICES]['warning']);
 
-        $response = $this->client->call(Client::METHOD_GET, '/projects/' . $destinationProjectId, $consoleHeaders);
+        $response = $this->client->call(Client::METHOD_GET, '/project', $destinationAdminHeaders);
         $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertFalse($response['body']['serviceStatusForFunctions'], 'Functions service should be migrated as disabled');
-        $this->assertFalse($response['body']['serviceStatusForGraphql'], 'GraphQL service should be migrated as disabled');
+        $services = \array_column($response['body']['services'] ?? [], 'enabled', '$id');
+        $this->assertFalse($services['functions'] ?? null, 'Functions service should be migrated as disabled');
+        $this->assertFalse($services['graphql'] ?? null, 'GraphQL service should be migrated as disabled');
 
         // Restore both projects.
-        $this->client->call(Client::METHOD_PATCH, '/projects/' . $sourceProjectId . '/service/functions', $consoleHeaders, ['status' => true]);
-        $this->client->call(Client::METHOD_PATCH, '/projects/' . $sourceProjectId . '/service/graphql', $consoleHeaders, ['status' => true]);
-        $this->client->call(Client::METHOD_PATCH, '/projects/' . $destinationProjectId . '/service/functions', $consoleHeaders, ['status' => true]);
-        $this->client->call(Client::METHOD_PATCH, '/projects/' . $destinationProjectId . '/service/graphql', $consoleHeaders, ['status' => true]);
+        $this->client->call(Client::METHOD_PATCH, '/project/services/functions', $sourceAdminHeaders, ['enabled' => true]);
+        $this->client->call(Client::METHOD_PATCH, '/project/services/graphql', $sourceAdminHeaders, ['enabled' => true]);
+        $this->client->call(Client::METHOD_PATCH, '/project/services/functions', $destinationAdminHeaders, ['enabled' => true]);
+        $this->client->call(Client::METHOD_PATCH, '/project/services/graphql', $destinationAdminHeaders, ['enabled' => true]);
     }
 
     public function testAppwriteMigrationPolicies(): void
