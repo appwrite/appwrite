@@ -26,7 +26,7 @@ export function formatInitMockTicketType(
   }
   switch (mockTypeId) {
     case 'gold':
-      return 'Gold · Appwrite Official'
+      return 'Gold · Contributor'
     case 'silver':
       return 'Silver · Appwrite VIP'
     default:
@@ -114,8 +114,8 @@ export const INIT_TICKET_TYPE_CATALOG: Record<
     forceDarkChrome: true,
     accentColor: '#FBBF24',
     shadowOffsetY: 0,
-    passLabel: 'Appwrite Official',
-    holderTitle: 'Contributor',
+    passLabel: 'Contributor',
+    holderTitle: 'Appwrite developer',
   },
 }
 

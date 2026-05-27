@@ -28,8 +28,8 @@ const TICKET_TYPE_OPTIONS: {
   },
   {
     id: 'gold',
-    label: 'Gold official',
-    description: 'Verified @appwrite.io · Appwrite Official',
+    label: 'Gold contributor',
+    description: 'Verified @appwrite.io · Contributor pass',
   },
 ]
 

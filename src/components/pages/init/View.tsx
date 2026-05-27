@@ -9,6 +9,7 @@ import { applyInitEventVisibility } from '@/lib/init/event-visibility'
 import { isLaunchEventDayLocked } from '@/lib/init/types'
 import { useInitOnlinePresence } from '@/lib/init/use-init-online-presence'
 import { consoleAccountQueryOptions } from '@/lib/react-query/hooks/auth'
+import { cn } from '@/lib/utils'
 import { EventHero } from './_components/EventHero'
 import { EventSchedule } from './_components/EventSchedule'
 import { InitTicketSection } from './_components/InitTicketSection'
@@ -19,6 +20,10 @@ import { DayDetailCard } from './_components/DayDetailCard'
 import { LockedDayDetailCard } from './_components/LockedDayDetailCard'
 import { EventSchedulePanel } from './_components/EventSchedulePanel'
 import { OnlineUsersNav, hasOnlineUsersNav } from './_components/OnlineUsersNav'
+import {
+  INIT_TICKET_VIDEO_DOT_PATTERN_CLASS,
+  INIT_TICKET_VIDEO_SURFACE_CLASS,
+} from '@/lib/init/ticket-video-capture'
 
 export function View() {
   const [commandCenterOpen, setCommandCenterOpen] = useState(false)
@@ -118,9 +123,12 @@ export function View() {
 
         <div className="border-t border-border" aria-hidden />
 
-        <div className="relative overflow-hidden bg-muted/40 dark:bg-background">
+        <div className={cn('relative overflow-hidden', INIT_TICKET_VIDEO_SURFACE_CLASS)}>
           <div
-            className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle,var(--border)_1px,transparent_1px)] bg-[length:18px_18px]"
+            className={cn(
+              'pointer-events-none absolute inset-0',
+              INIT_TICKET_VIDEO_DOT_PATTERN_CLASS,
+            )}
             aria-hidden
           />
           <div className="relative z-10 mx-auto w-full max-w-7xl px-4 pb-4 pt-2 sm:px-6 sm:pb-6">

@@ -1,4 +1,9 @@
 import { isHtmlDarkChrome, isResolvedThemeDarkChrome } from '@/lib/html-theme'
+import {
+  accentHslToCss,
+  parseCssAccentToHsl,
+  type ParsedAccentHsl,
+} from '@/lib/init/parse-css-accent'
 import { useTheme } from 'next-themes'
 import { useEffect, useRef, type RefObject } from 'react'
 import { animate, createTimeline, createTimer, stagger, utils } from 'animejs'
@@ -14,6 +19,16 @@ type InitHeroBackgroundProps = {
   compact?: boolean
   /** When false, timers pause (e.g. hidden collapsed header). */
   active?: boolean
+  /**
+   * Particles only — no hero surface or dot grid (e.g. layered under a ticket capture stage).
+   */
+  bare?: boolean
+  /** Ticket underscore / ID color — tints hero particles (defaults to brand CTA). */
+  accentColor?: string
+  /** Overrides console theme for particle opacity curves (e.g. gold / silver tickets). */
+  particleIsDark?: boolean
+  /** 1 = default speed; lower values slow particle drift (e.g. ticket video export). */
+  particleMotionSpeed?: number
 }
 
 type ParticleTheme = ReturnType<typeof getParticleTheme>
@@ -34,6 +49,7 @@ type AnimationRuntime = {
 type ThemeState = {
   particleTheme: ParticleTheme
   opacityStagger: ReturnType<typeof stagger>
+  accent: ParsedAccentHsl
 }
 
 function getBrandPink() {
@@ -86,13 +102,14 @@ function applyParticleTheme(
   >,
   particleTheme: ParticleTheme,
   isDark: boolean,
+  accent: ParsedAccentHsl,
 ) {
   const { particleEls, scaleStagger, grid, from } = runtime
-  const brandPink = getBrandPink()
+  const accentCss = accentHslToCss(accent)
   const opacityStagger = stagger(particleTheme.opacityRange, { grid, from })
   const shadowColor = isDark
-    ? dimBrandPink(brandPink)
-    : `color-mix(in srgb, ${brandPink} 90%, transparent)`
+    ? dimBrandPink(accentCss)
+    : `color-mix(in srgb, ${accentCss} 90%, transparent)`
 
   utils.set(particleEls, {
     scale: scaleStagger,
@@ -100,7 +117,7 @@ function applyParticleTheme(
     background: stagger(particleTheme.lightnessRange, {
       grid,
       from,
-      modifier: (v) => `hsl(344, 98%, ${v}%)`,
+      modifier: (v) => `hsl(${accent.h}, ${accent.s}%, ${v}%)`,
     }),
     boxShadow: stagger(particleTheme.shadowRange, {
       grid,
@@ -109,13 +126,17 @@ function applyParticleTheme(
     }),
   })
 
-  return opacityStagger
+  return { opacityStagger, accent }
 }
 
 export function InitHeroBackground({
   containerRef,
   compact = false,
   active = true,
+  bare = false,
+  accentColor,
+  particleIsDark,
+  particleMotionSpeed = 1,
 }: InitHeroBackgroundProps) {
   const creatureRef = useRef<HTMLDivElement>(null)
   const runtimeRef = useRef<AnimationRuntime | null>(null)
@@ -124,10 +145,12 @@ export function InitHeroBackground({
   const activeRef = useRef(active)
   const canRunRef = useRef(true)
   const { resolvedTheme } = useTheme()
-  const isDark = isDarkChrome(resolvedTheme)
+  const isDark = particleIsDark ?? isDarkChrome(resolvedTheme)
+  const accentColorRef = useRef(accentColor)
 
   compactRef.current = compact
   activeRef.current = active
+  accentColorRef.current = accentColor
 
   useEffect(() => {
     const runtime = runtimeRef.current
@@ -149,9 +172,16 @@ export function InitHeroBackground({
 
     const grid = GRID
     const from = FROM
+    const motion = Math.max(0.12, Math.min(1, particleMotionSpeed))
+    const dur = (ms: number) => ms / motion
+    const timeScale = (factor: number) => factor * motion
     const scaleStagger = stagger([2, 5], { ease: 'inQuad', grid, from })
-    const darkChrome = isDarkChrome(resolvedTheme)
+    const darkChrome = particleIsDark ?? isDarkChrome(resolvedTheme)
     const particleTheme = getParticleTheme(darkChrome)
+    const accent = parseCssAccentToHsl(
+      accentColorRef.current ?? getBrandPink(),
+      container,
+    )
 
     for (let i = 0; i < ROWS * ROWS; i++) {
       const particle = document.createElement('div')
@@ -175,12 +205,17 @@ export function InitHeroBackground({
       height: `${ROWS * 10}em`,
     })
 
-    const opacityStagger = applyParticleTheme(
+    const { opacityStagger, accent: appliedAccent } = applyParticleTheme(
       { particleEls, scaleStagger, grid, from },
       particleTheme,
       darkChrome,
+      accent,
     )
-    themeStateRef.current = { particleTheme, opacityStagger }
+    themeStateRef.current = {
+      particleTheme,
+      opacityStagger,
+      accent: appliedAccent,
+    }
 
     utils.set(particleEls, {
       x: 0,
@@ -212,14 +247,14 @@ export function InitHeroBackground({
           {
             scale: 4,
             opacity: themeState.particleTheme.pulseOpacity,
-            delay: stagger(90, { start: 1650, grid, from }),
-            duration: 150,
+            delay: stagger(dur(90), { start: dur(1650), grid, from }),
+            duration: dur(150),
           },
           {
             scale: scaleStagger,
             opacity: themeState.opacityStagger,
             ease: 'inOutQuad',
-            duration: 600,
+            duration: dur(600),
           },
         ],
       })
@@ -233,8 +268,8 @@ export function InitHeroBackground({
         animate(particleEls, {
           x: cursor.x,
           y: cursor.y,
-          delay: stagger(40, { grid, from }),
-          duration: stagger(120, { start: 750, ease: 'inQuad', grid, from }),
+          delay: stagger(dur(40), { grid, from }),
+          duration: stagger(dur(120), { start: dur(750), ease: 'inQuad', grid, from }),
           ease: 'inOut',
           composition: 'blend',
         })
@@ -246,8 +281,9 @@ export function InitHeroBackground({
         cursor,
         {
           x: [-viewport.w * 0.45, viewport.w * 0.45],
-          modifier: (x) => x + Math.sin(mainLoop.currentTime * 0.0007) * viewport.w * 0.5,
-          duration: 3000,
+          modifier: (x) =>
+            x + Math.sin(mainLoop.currentTime * timeScale(0.0007)) * viewport.w * 0.5,
+          duration: dur(3000),
           ease: 'inOutExpo',
           alternate: true,
           loop: true,
@@ -260,8 +296,9 @@ export function InitHeroBackground({
         cursor,
         {
           y: [-viewport.h * 0.45, viewport.h * 0.45],
-          modifier: (y) => y + Math.cos(mainLoop.currentTime * 0.00012) * viewport.h * 0.5,
-          duration: 1000,
+          modifier: (y) =>
+            y + Math.cos(mainLoop.currentTime * timeScale(0.00012)) * viewport.h * 0.5,
+          duration: dur(1000),
           ease: 'inOutQuad',
           alternate: true,
           loop: true,
@@ -270,7 +307,7 @@ export function InitHeroBackground({
       )
 
     const manualMovementTimeout = createTimer({
-      duration: 1500,
+      duration: dur(1500),
       onComplete: () => {
         if (canRunRef.current && activeRef.current) {
           autoMove.play()
@@ -371,7 +408,7 @@ export function InitHeroBackground({
       runtimeRef.current = null
       themeStateRef.current = null
     }
-  }, [containerRef])
+  }, [containerRef, particleIsDark, particleMotionSpeed])
 
   useEffect(() => {
     runtimeRef.current?.syncLayout()
@@ -388,10 +425,24 @@ export function InitHeroBackground({
       innerFrame = requestAnimationFrame(() => {
         if (cancelled || !runtimeRef.current) return
 
-        const darkChrome = isDarkChrome(resolvedTheme)
+        const container = containerRef.current
+        const darkChrome = particleIsDark ?? isDarkChrome(resolvedTheme)
         const particleTheme = getParticleTheme(darkChrome)
-        const opacityStagger = applyParticleTheme(runtimeRef.current, particleTheme, darkChrome)
-        themeStateRef.current = { particleTheme, opacityStagger }
+        const accent = parseCssAccentToHsl(
+          accentColorRef.current ?? getBrandPink(),
+          container,
+        )
+        const { opacityStagger, accent: appliedAccent } = applyParticleTheme(
+          runtimeRef.current,
+          particleTheme,
+          darkChrome,
+          accent,
+        )
+        themeStateRef.current = {
+          particleTheme,
+          opacityStagger,
+          accent: appliedAccent,
+        }
       })
     })
 
@@ -400,22 +451,26 @@ export function InitHeroBackground({
       cancelAnimationFrame(outerFrame)
       cancelAnimationFrame(innerFrame)
     }
-  }, [resolvedTheme])
+  }, [resolvedTheme, accentColor, particleIsDark, containerRef])
 
   return (
     <>
-      <div
-        className={cn('absolute inset-0', compact ? 'bg-transparent' : 'bg-background')}
-        aria-hidden
-      />
+      {!bare ? (
+        <div
+          className={cn('absolute inset-0', compact ? 'bg-transparent' : 'bg-background')}
+          aria-hidden
+        />
+      ) : null}
 
-      <div
-        className={cn(
-          'absolute inset-0 bg-[radial-gradient(circle,var(--border)_1px,transparent_1px)] bg-[length:18px_18px] transition-opacity duration-500',
-          compact && 'opacity-0 [mask-image:linear-gradient(to_left,transparent,black_35%)]',
-        )}
-        aria-hidden
-      />
+      {!bare ? (
+        <div
+          className={cn(
+            'absolute inset-0 bg-[radial-gradient(circle,var(--border)_1px,transparent_1px)] bg-[length:18px_18px] transition-opacity duration-500',
+            compact && 'opacity-0 [mask-image:linear-gradient(to_left,transparent,black_35%)]',
+          )}
+          aria-hidden
+        />
+      ) : null}
       <div
         className={cn(
           'pointer-events-none absolute inset-0 flex overflow-hidden transition-[justify-content,padding] duration-500 ease-[cubic-bezier(0.4,0,0.2,1)]',

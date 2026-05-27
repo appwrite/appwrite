@@ -44,7 +44,6 @@ export function InitReactionsBar({ event }: InitReactionsBarProps) {
     >
       <div className="group/init-reactions relative mx-auto w-full max-w-7xl px-4 sm:px-6">
         <InitTicketPeek
-          eventName={event.name}
           dateRangeLabel={event.dateRangeLabel}
           account={account}
           ticketHref="https://appwrite.io/init/ticket"

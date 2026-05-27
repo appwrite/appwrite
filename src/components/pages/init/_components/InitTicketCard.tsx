@@ -1,4 +1,12 @@
-import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react'
+import {
+  forwardRef,
+  useCallback,
+  useEffect,
+  useImperativeHandle,
+  useRef,
+  useState,
+  type ReactNode,
+} from 'react'
 import {
   formatInitTicketNumber,
   getInitTicketHolderTitle,
@@ -18,6 +26,7 @@ import {
   prefersInitTicketDeviceTilt,
   useInitTicketDeviceTilt,
 } from '@/lib/init/use-init-ticket-device-tilt'
+import { InitWordmark } from '@/components/pages/init/_components/InitWordmark'
 import { getInitTicketStackOption } from '@/lib/init/ticket-stack'
 import { getFrameworkIconFile } from '@/lib/frameworks'
 import { Globe } from 'lucide-react'
@@ -31,7 +40,6 @@ const RESET_DURATION_MS = 520
 const FLIP_DRAG_THRESHOLD_PX = 10
 
 interface InitTicketCardProps {
-  eventName: string
   dateRangeLabel: string
   holderName: string
   githubUsername?: string
@@ -41,11 +49,18 @@ interface InitTicketCardProps {
   blurred?: boolean
   /** Disables flip/tilt (e.g. collapsed section preview). */
   previewOnly?: boolean
+  /** Disables interaction while a share video is being captured. */
+  captureMode?: boolean
   className?: string
 }
 
+export type InitTicketCardHandle = {
+  prepareForVideoCapture: () => void
+  setCaptureTilt: (x: number, y: number) => void
+  resetCaptureTilt: () => void
+}
+
 interface TicketFaceSharedProps {
-  eventName: string
   dateRangeLabel: string
   holderName: string
   githubUsername?: string
@@ -146,7 +161,6 @@ function TicketStackIcons({
 }
 
 function TicketStubContent({
-  eventName,
   ticketNumber,
   holderName,
   holderTitle,
@@ -155,7 +169,6 @@ function TicketStubContent({
   accentColor,
   usesDarkImage,
 }: {
-  eventName: string
   ticketNumber: string
   holderName: string
   holderTitle: string
@@ -179,10 +192,13 @@ function TicketStubContent({
         }}
       >
         <div className="flex origin-bottom-left -rotate-90 flex-col items-start gap-2 whitespace-nowrap text-left">
-          <p className="font-aeonik-pro text-[clamp(10px,1.8vw,14px)] font-bold italic leading-none">
-            {eventName}
-            <span style={{ color: accentColor }}>_</span>
-          </p>
+          <InitWordmark
+            accentColor={accentColor}
+            className={cn(
+              'text-[clamp(10px,1.8vw,14px)]',
+              usesDarkImage ? 'text-white' : 'text-neutral-900',
+            )}
+          />
           <p
             className="font-mono text-[clamp(9px,1.6vw,12px)] font-semibold tabular-nums tracking-wide"
             style={{ color: accentColor }}
@@ -191,7 +207,7 @@ function TicketStubContent({
           </p>
           <p
             className={cn(
-              'font-aeonik-pro max-w-[160px] truncate text-[clamp(11px,2vw,16px)] font-normal',
+              'max-w-[160px] truncate text-[clamp(11px,2vw,16px)] font-normal',
               labelClass,
             )}
           >
@@ -269,7 +285,6 @@ function TicketFaceShell({
 
 function TicketFrontFace(props: TicketFaceSharedProps) {
   const {
-    eventName,
     dateRangeLabel,
     holderName,
     githubUsername,
@@ -288,10 +303,13 @@ function TicketFrontFace(props: TicketFaceSharedProps) {
       <div className="grid h-full min-h-0 overflow-visible" style={contentGrid}>
         <div className="flex min-w-0 flex-col justify-between pe-[8%]">
           <div className="space-y-2">
-            <p className="font-aeonik-pro text-[clamp(24px,5vw,38px)] font-bold italic leading-none">
-              {eventName}
-              <span style={{ color: accentColor }}>_</span>
-            </p>
+            <InitWordmark
+              accentColor={accentColor}
+              className={cn(
+                'text-[clamp(24px,5vw,38px)]',
+                usesDarkImage ? 'text-white' : 'text-neutral-900',
+              )}
+            />
             <p
               className={cn(
                 'text-[clamp(10px,2vw,13px)] font-semibold uppercase tracking-[0.16em]',
@@ -312,7 +330,7 @@ function TicketFrontFace(props: TicketFaceSharedProps) {
             >
               <p
                 className={cn(
-                  'font-aeonik-pro truncate text-[clamp(28px,6.5vw,48px)] font-normal leading-[1.02] tracking-tight',
+                  'truncate text-[clamp(28px,6.5vw,48px)] font-normal leading-[1.02] tracking-tight',
                   usesDarkImage ? 'text-white' : 'text-neutral-900',
                 )}
               >
@@ -351,7 +369,6 @@ function TicketFrontFace(props: TicketFaceSharedProps) {
         </div>
 
         <TicketStubContent
-          eventName={eventName}
           ticketNumber={ticketNumber}
           holderName={holderName}
           holderTitle={holderTitle}
@@ -367,7 +384,6 @@ function TicketFrontFace(props: TicketFaceSharedProps) {
 
 function TicketBackFace(props: TicketFaceSharedProps) {
   const {
-    eventName,
     dateRangeLabel,
     holderName,
     githubUsername,
@@ -395,10 +411,13 @@ function TicketBackFace(props: TicketFaceSharedProps) {
           >
             Official pass
           </p>
-          <p className="font-aeonik-pro text-[clamp(22px,4.5vw,34px)] font-bold italic leading-none">
-            {eventName}
-            <span style={{ color: accentColor }}>_</span>
-          </p>
+          <InitWordmark
+            accentColor={accentColor}
+            className={cn(
+              'text-[clamp(22px,4.5vw,34px)]',
+              usesDarkImage ? 'text-white' : 'text-neutral-900',
+            )}
+          />
           <p
             className="font-mono text-[11px] font-semibold tabular-nums sm:text-[12px]"
             style={{ color: accentColor }}
@@ -447,7 +466,7 @@ function TicketBackFace(props: TicketFaceSharedProps) {
             </p>
             <p
               className={cn(
-                'font-aeonik-pro truncate text-[clamp(11px,1.9vw,15px)] font-normal leading-tight',
+                'truncate text-[clamp(11px,1.9vw,15px)] font-normal leading-tight',
                 usesDarkImage ? 'text-white/90' : 'text-neutral-800',
               )}
             >
@@ -485,19 +504,25 @@ function TicketBackFace(props: TicketFaceSharedProps) {
   )
 }
 
-export function InitTicketCard({
-  eventName,
-  dateRangeLabel,
-  holderName,
-  githubUsername,
-  ticketNumber,
-  prefs,
-  ticketAppearance,
-  blurred = false,
-  previewOnly = false,
-  className,
-}: InitTicketCardProps) {
-  const interactive = !blurred && !previewOnly
+export const InitTicketCard = forwardRef<InitTicketCardHandle, InitTicketCardProps>(
+  function InitTicketCard(
+    {
+      dateRangeLabel,
+      holderName,
+      githubUsername,
+      ticketNumber,
+      prefs,
+      ticketAppearance,
+      blurred = false,
+      previewOnly = false,
+      captureMode = false,
+      className,
+    },
+    ref,
+  ) {
+  const captureRootRef = useRef<HTMLDivElement>(null)
+  const ticketFrameRef = useRef<HTMLDivElement>(null)
+  const interactive = !blurred && !previewOnly && !captureMode
   const { backgroundSrc: ticketBgSrc, usesDarkChrome: usesDarkImage, shadowClassName, shadowOffsetY, passLabel, holderTitle: defaultHolderTitle, accentColor } =
     ticketAppearance
   const holderTitle = getInitTicketHolderTitle(prefs, defaultHolderTitle)
@@ -529,7 +554,6 @@ export function InitTicketCard({
   const inset = initTicketInsetStyle()
 
   const faceProps: TicketFaceSharedProps = {
-    eventName,
     dateRangeLabel,
     holderName,
     githubUsername,
@@ -557,15 +581,22 @@ export function InitTicketCard({
       const shadow = shadowRef.current
       if (!flipper || reducedMotion) return
 
-      const rotateY = (flippedRef.current ? 180 : 0) + tiltRef.current.y
-      const rotateX = tiltRef.current.x
+      let rotateY = (flippedRef.current ? 180 : 0) + tiltRef.current.y
+      let rotateX = tiltRef.current.x
+
+      if (captureMode && duration === 0) {
+        rotateY = Math.round(rotateY * 4) / 4
+        rotateX = Math.round(rotateX * 4) / 4
+      }
 
       const easing =
         duration >= FLIP_DURATION_MS
           ? 'cubic-bezier(0.16, 1, 0.3, 1)'
           : 'cubic-bezier(0.25, 0.46, 0.45, 0.94)'
 
-      flipper.style.transition = `transform ${duration}ms ${easing}`
+      const transition =
+        duration === 0 ? 'none' : `transform ${duration}ms ${easing}`
+      flipper.style.transition = transition
       flipper.style.transform = `rotateX(${rotateX}deg) rotateY(${rotateY}deg)`
 
       if (shadow) {
@@ -573,11 +604,11 @@ export function InitTicketCard({
         const translateY =
           shadowOffsetYRef.current + Math.abs(tiltRef.current.x) * 0.08
         const scale = 1 - Math.abs(tiltRef.current.x) * 0.008
-        shadow.style.transition = `transform ${duration}ms ${easing}`
+        shadow.style.transition = transition
         shadow.style.transform = `translate3d(${translateX}px, ${translateY}px, 0) scale(${scale})`
       }
     },
-    [reducedMotion],
+    [captureMode, reducedMotion],
   )
 
   const scheduleTiltApply = useCallback(
@@ -691,18 +722,6 @@ export function InitTicketCard({
   }, [deviceTiltEnabled, deviceTiltListening, scheduleTiltApply, syncEffectiveTilt])
 
   const releasePointerTilt = releaseMouseHoverTilt
-
-  const resetTilt = useCallback(() => {
-    pointerTiltActiveRef.current = false
-    pointerTiltRef.current = { x: 0, y: 0 }
-    if (deviceTiltListening) {
-      syncEffectiveTilt(RESET_DURATION_MS)
-      return
-    }
-    deviceTiltRef.current = { x: 0, y: 0 }
-    tiltRef.current = { x: 0, y: 0 }
-    applyTransform(RESET_DURATION_MS)
-  }, [applyTransform, deviceTiltListening, syncEffectiveTilt])
 
   const applyMouseHoverTiltRef = useRef(applyMouseHoverTilt)
   const releaseMouseHoverTiltRef = useRef(releaseMouseHoverTilt)
@@ -895,22 +914,52 @@ export function InitTicketCard({
     [handleFlip],
   )
 
+  useImperativeHandle(
+    ref,
+    () => ({
+      prepareForVideoCapture() {
+        flippedRef.current = false
+        setIsFlipped(false)
+        pointerTiltActiveRef.current = false
+        tiltRef.current = { x: 0, y: 0 }
+        applyTransform(0)
+      },
+      setCaptureTilt(x: number, y: number) {
+        pointerTiltActiveRef.current = false
+        tiltRef.current = { x, y }
+        applyTransform(0)
+      },
+      resetCaptureTilt() {
+        pointerTiltActiveRef.current = false
+        tiltRef.current = { x: 0, y: 0 }
+        applyTransform(0)
+      },
+    }),
+    [applyTransform],
+  )
+
   return (
     <div
+      ref={captureRootRef}
       className={cn(
         'relative mx-auto w-full',
         blurred && 'select-none blur-[6px]',
+        captureMode && 'pointer-events-none overflow-visible antialiased',
         className,
       )}
       style={{ maxWidth: INIT_TICKET_MAX_WIDTH_PX }}
       aria-hidden={blurred}
     >
       <div
-        className="relative w-full"
-        style={{ aspectRatio: initTicketDisplayAspectRatio() }}
+        ref={ticketFrameRef}
+        className={cn('relative w-full', captureMode && 'overflow-visible')}
+        style={{
+          aspectRatio: initTicketDisplayAspectRatio(),
+        }}
       >
         <div
           ref={shadowRef}
+          data-init-ticket-capture-exclude
           className={cn(
             'absolute inset-x-10 bottom-0 h-6 -translate-y-0.5 rounded-full blur-3xl',
             shadowClassName,
@@ -922,11 +971,16 @@ export function InitTicketCard({
           ref={sceneRef}
           className={cn(
             'absolute inset-x-0 top-0 w-full [perspective:1000px]',
+            captureMode && 'overflow-visible',
             interactive && !reducedMotion && 'cursor-pointer touch-none',
           )}
           style={{
             aspectRatio: INIT_TICKET_ASPECT_RATIO,
-            clipPath: `inset(0 0 ${INIT_TICKET_BOTTOM_TRIM_PERCENT}% 0)`,
+            ...(captureMode
+              ? {}
+              : {
+                  clipPath: `inset(0 0 ${INIT_TICKET_BOTTOM_TRIM_PERCENT}% 0)`,
+                }),
           }}
           onMouseMove={interactive && !reducedMotion ? handleSceneMouseMove : undefined}
           onMouseLeave={interactive && !reducedMotion ? handleSceneMouseLeave : undefined}
@@ -950,16 +1004,20 @@ export function InitTicketCard({
         >
           <div
             ref={flipperRef}
-            className="absolute inset-0 [transform-style:preserve-3d]"
+            className={cn(
+              'absolute inset-0 [transform-style:preserve-3d]',
+              captureMode && 'overflow-visible',
+            )}
           >
             <TicketFrontFace {...faceProps} />
-            <TicketBackFace {...faceProps} />
+            {!captureMode ? <TicketBackFace {...faceProps} /> : null}
           </div>
         </div>
       </div>
     </div>
   )
-}
+  },
+)
 
 export function getInitTicketHolderName(
   accountName: string | undefined,

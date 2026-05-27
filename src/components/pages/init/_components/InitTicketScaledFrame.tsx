@@ -19,16 +19,20 @@ type InitTicketScaledFrameProps = {
   /** Sizes to the parent width (capped at max ticket width). */
   measureContainer?: boolean
   pointerEventsNone?: boolean
+  /** Allow tilt/video capture to extend outside the layout box without clipping. */
+  overflowVisible?: boolean
 }
 
 function ScaledTicketShell({
   widthPx,
   pointerEventsNone,
+  overflowVisible,
   className,
   children,
 }: {
   widthPx: number
   pointerEventsNone?: boolean
+  overflowVisible?: boolean
   className?: string
   children: ReactNode
 }) {
@@ -36,7 +40,11 @@ function ScaledTicketShell({
 
   return (
     <div
-      className={cn('relative shrink-0 overflow-hidden', className)}
+      className={cn(
+        'relative shrink-0',
+        overflowVisible ? 'overflow-visible' : 'overflow-hidden',
+        className,
+      )}
       style={{ width: widthPx, height: heightPx }}
     >
       <div
@@ -61,6 +69,7 @@ export function InitTicketScaledFrame({
   widthPx: fixedWidthPx,
   measureContainer = false,
   pointerEventsNone = false,
+  overflowVisible = false,
 }: InitTicketScaledFrameProps) {
   const measureRef = useRef<HTMLDivElement>(null)
   const [measuredWidthPx, setMeasuredWidthPx] = useState(
@@ -100,6 +109,7 @@ export function InitTicketScaledFrame({
         <ScaledTicketShell
           widthPx={widthPx}
           pointerEventsNone={pointerEventsNone}
+          overflowVisible={overflowVisible}
           className="mx-auto"
         >
           {children}
@@ -112,6 +122,7 @@ export function InitTicketScaledFrame({
     <ScaledTicketShell
       widthPx={widthPx}
       pointerEventsNone={pointerEventsNone}
+      overflowVisible={overflowVisible}
       className={className}
     >
       {children}

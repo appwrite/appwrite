@@ -1,4 +1,4 @@
-import { useMemo, useState, type ReactNode } from 'react'
+import { useMemo, useRef, useState, type ReactNode } from 'react'
 import { Link } from '@tanstack/react-router'
 import { useQuery } from '@tanstack/react-query'
 import type { Models } from '@appwrite.io/console'
@@ -17,8 +17,18 @@ import {
   getInitTicketHolderName,
   getInitTicketNumberForUser,
   InitTicketCard,
+  type InitTicketCardHandle,
 } from '@/components/pages/init/_components/InitTicketCard'
+import {
+  downloadInitTicketVideo,
+  isInitTicketVideoExportSupported,
+  recordInitTicketVideo,
+  supportsInitTicket60FpsVideoCapture,
+  waitForNextPaint,
+} from '@/lib/init/record-init-ticket-video'
+import { INIT_TICKET_VIDEO_HERO_WARMUP_MS } from '@/lib/init/ticket-video-capture'
 import { InitTicketScaledFrame } from '@/components/pages/init/_components/InitTicketScaledFrame'
+import { InitTicketVideoCaptureStage } from '@/components/pages/init/_components/InitTicketVideoCaptureStage'
 import { InitTicketCustomizeDrawer } from '@/components/pages/init/_components/InitTicketCustomizeDrawer'
 import { INIT_TICKET_COLLAPSED_WIDTH_PX } from '@/lib/init/ticket-layout'
 import { Button } from '@/components/ui/button'
@@ -33,10 +43,12 @@ import {
   ChevronDown,
   Copy,
   Linkedin,
+  Loader2,
   Share2,
   SlidersHorizontal,
   Ticket,
   Trophy,
+  Video,
 } from 'lucide-react'
 
 interface InitTicketSectionProps {
@@ -83,7 +95,9 @@ function ShareActions({
 }: ShareActionsProps) {
   const buttonSizeClass = compact ? 'h-8 text-[12px]' : 'h-10 text-[13px]'
   const primaryButtonClass = cn(
-    compact ? 'h-8 min-w-[132px] text-[12px]' : 'h-10 min-w-[180px] text-[13px]',
+    compact
+      ? 'h-8 px-2.5 text-[12px] has-[>svg]:px-2'
+      : 'h-10 px-3 text-[13px] has-[>svg]:px-2.5',
   )
   const iconSizeClass = compact ? 'mr-1 size-3.5' : 'mr-1.5 size-4'
   const actionsAlignClass = compact ? 'justify-start' : 'justify-center'
@@ -194,6 +208,16 @@ export function InitTicketSection({ event, account }: InitTicketSectionProps) {
   const [shareOpen, setShareOpen] = useState(false)
   const [customizeOpen, setCustomizeOpen] = useState(false)
   const [isSharing, setIsSharing] = useState(false)
+  const [isCapturingVideo, setIsCapturingVideo] = useState(false)
+  const [isExportingVideo, setIsExportingVideo] = useState(false)
+  const [videoExportProgress, setVideoExportProgress] = useState<number | null>(
+    null,
+  )
+  const isVideoBusy = isCapturingVideo || isExportingVideo
+  const ticketCardRef = useRef<InitTicketCardHandle>(null)
+  const videoCaptureStageRef = useRef<HTMLDivElement>(null)
+  const canExportTicketVideo = isInitTicketVideoExportSupported()
+  const canExport60FpsVideo = supportsInitTicket60FpsVideoCapture()
 
   const accountName =
     account?.name?.trim() || account?.email?.split('@')[0] || undefined
@@ -270,6 +294,56 @@ export function InitTicketSection({ event, account }: InitTicketSectionProps) {
     }
   }
 
+  const handleDownloadTicketVideo = async () => {
+    const handle = ticketCardRef.current
+    const captureElement = videoCaptureStageRef.current
+    if (!handle || !captureElement) return
+
+    setIsCapturingVideo(true)
+    setIsExportingVideo(true)
+    setVideoExportProgress(0)
+    try {
+      await waitForNextPaint()
+      await waitForNextPaint()
+      await new Promise<void>((resolve) => {
+        window.setTimeout(resolve, INIT_TICKET_VIDEO_HERO_WARMUP_MS)
+      })
+      handle.prepareForVideoCapture()
+      await waitForNextPaint()
+
+      const { blob, fileExtension } = await recordInitTicketVideo({
+        captureElement,
+        setTilt: handle.setCaptureTilt,
+        resetTilt: handle.resetCaptureTilt,
+        onProgress: setVideoExportProgress,
+        onVisibleCaptureComplete: () => {
+          setIsCapturingVideo(false)
+          handle.resetCaptureTilt()
+        },
+      })
+      const slug = event.name
+        .trim()
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, '-')
+        .replace(/^-+|-+$/g, '')
+      downloadInitTicketVideo(
+        blob,
+        `${slug || 'init'}-ticket.${fileExtension}`,
+      )
+      toast.success('Ticket video downloaded')
+    } catch (error) {
+      if (error instanceof Error && error.message === 'Tab capture was cancelled') {
+        toast.error('Video capture was cancelled')
+      } else {
+        toast.error('Could not generate ticket video')
+      }
+    } finally {
+      setIsCapturingVideo(false)
+      setIsExportingVideo(false)
+      setVideoExportProgress(null)
+    }
+  }
+
   const shareActionsProps: ShareActionsProps = {
     compact: collapsed,
     isAuthenticated,
@@ -286,7 +360,6 @@ export function InitTicketSection({ event, account }: InitTicketSectionProps) {
   }
 
   const ticketCardProps = {
-    eventName: event.name,
     dateRangeLabel: event.dateRangeLabel,
     holderName,
     githubUsername,
@@ -329,12 +402,28 @@ export function InitTicketSection({ event, account }: InitTicketSectionProps) {
     )
   } else {
     sectionBody = (
-      <div className="mx-auto flex w-full max-w-[820px] flex-col items-center">
-        <InitTicketScaledFrame measureContainer className="w-full">
-          <InitTicketCard {...ticketCardProps} />
-        </InitTicketScaledFrame>
+      <div className="mx-auto flex w-full max-w-[820px] flex-col items-center pt-8">
+        <InitTicketVideoCaptureStage
+          ref={videoCaptureStageRef}
+          showRecordingChrome={isCapturingVideo}
+          showHeroAnimation={isCapturingVideo}
+          ticketAccentColor={ticketAppearance.accentColor}
+          ticketUsesDarkChrome={ticketAppearance.usesDarkChrome}
+        >
+          <InitTicketScaledFrame
+            measureContainer
+            className="w-full"
+            overflowVisible
+          >
+            <InitTicketCard
+              ref={ticketCardRef}
+              captureMode={isCapturingVideo}
+              {...ticketCardProps}
+            />
+          </InitTicketScaledFrame>
+        </InitTicketVideoCaptureStage>
 
-        <div className="mt-1 flex w-full flex-col items-center gap-4 pb-8 text-center sm:mt-2 sm:pb-10">
+        <div className="mt-0 flex w-full flex-col items-center gap-3 pb-5 text-center sm:pb-6">
           <div className="max-w-md space-y-2">
             <h2 className="text-[18px] font-semibold leading-tight tracking-tight text-foreground">
               {sectionTitle}
@@ -351,6 +440,39 @@ export function InitTicketSection({ event, account }: InitTicketSectionProps) {
 
   return (
     <section className="relative w-full" aria-label="Init ticket">
+      {!collapsed ? (
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          className="absolute left-0 top-0 z-20 shrink-0 text-[13px]"
+          disabled={!canExportTicketVideo || isVideoBusy}
+          title={
+            !canExportTicketVideo
+              ? 'Video export is not supported in this browser'
+              : isVideoBusy
+                ? undefined
+                : canExport60FpsVideo
+                  ? 'Records a ~10s 60fps clip via tab share (Chrome or Edge)'
+                  : 'Records a ~10s clip (use Chrome or Edge for 60fps)'
+          }
+          aria-busy={isVideoBusy}
+          onClick={() => void handleDownloadTicketVideo()}
+        >
+          {isVideoBusy ? (
+            <>
+              <Loader2 className="mr-1.5 size-4 animate-spin" />
+              {isCapturingVideo ? 'Recording' : 'Processing'}{' '}
+              {Math.round((videoExportProgress ?? 0) * 100)}%
+            </>
+          ) : (
+            <>
+              <Video className="mr-1.5 size-4" />
+              {canExport60FpsVideo ? 'Download 60fps video' : 'Download ticket video'}
+            </>
+          )}
+        </Button>
+      ) : null}
       <Button
         type="button"
         variant="outline"
@@ -361,7 +483,10 @@ export function InitTicketSection({ event, account }: InitTicketSectionProps) {
         aria-label={collapsed ? 'Expand ticket section' : 'Collapse ticket section'}
       >
         <ChevronDown
-          className={cn('size-4 transition-transform duration-200', collapsed && 'rotate-180')}
+          className={cn(
+            'size-4 transition-transform duration-200',
+            collapsed && 'rotate-180',
+          )}
         />
       </Button>
 

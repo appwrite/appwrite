@@ -15,6 +15,7 @@ import { ChevronRight } from 'lucide-react'
 import { EventCtaButton } from '../shared/EventCtas'
 import { InitCollapsedDayNav } from './InitCollapsedDayNav'
 import { InitHeroBackground } from './InitHeroBackground'
+import { InitWordmark } from './InitWordmark'
 
 interface EventHeroProps {
   event: InitDisplayEvent
@@ -22,26 +23,6 @@ interface EventHeroProps {
   headerAddon?: ReactNode
   /** Shown in the collapsed sticky bar when the user scrolls past the hero. */
   liveBanner?: LaunchEventLiveBanner
-}
-
-function InitWordmark({
-  event,
-  className,
-}: {
-  event: InitDisplayEvent
-  className?: string
-}) {
-  return (
-    <p
-      className={cn(
-        'font-aeonik-pro font-bold italic leading-none tracking-tight text-foreground',
-        className,
-      )}
-    >
-      {event.name}
-      <span className="text-[var(--brand-cta)]">_</span>
-    </p>
-  )
 }
 
 type MainBounds = {
@@ -97,10 +78,7 @@ function CollapsedHeroBar({
         {showDayNav ? (
           <div className="relative mx-auto flex w-full max-w-7xl items-center px-4 sm:px-6">
             <div className="relative z-10 hidden min-w-0 shrink-0 items-center gap-2 sm:flex sm:gap-3">
-              <InitWordmark
-                event={event}
-                className="shrink-0 text-[20px] sm:text-[22px]"
-              />
+              <InitWordmark className="shrink-0 text-[20px] text-foreground sm:text-[22px]" />
               <span className="hidden truncate text-[10px] font-semibold uppercase tracking-[0.2em] text-muted-foreground sm:inline">
                 {event.dateRangeLabel}
               </span>
@@ -152,7 +130,7 @@ function CollapsedHeroBar({
           </div>
         ) : (
           <div className="mx-auto flex w-full max-w-7xl items-center gap-3 px-4 sm:gap-4 sm:px-6">
-            <InitWordmark event={event} className="shrink-0 text-[22px] sm:text-[24px]" />
+            <InitWordmark className="shrink-0 text-[22px] text-foreground sm:text-[24px]" />
             {liveBanner ? (
               <>
                 <div className="flex min-w-0 flex-1 items-center gap-2">
@@ -287,10 +265,7 @@ export function EventHero({ event, headerAddon, liveBanner }: EventHeroProps) {
           >
             {event.dateRangeLabel}
           </p>
-          <InitWordmark
-            event={event}
-            className="mt-6 text-[clamp(48px,12vw,96px)]"
-          />
+          <InitWordmark className="mt-6 text-[clamp(48px,12vw,96px)] text-foreground" />
           <p className="mx-auto mt-4 max-w-xl text-[14px] leading-relaxed text-muted-foreground">
             {event.description}
           </p>

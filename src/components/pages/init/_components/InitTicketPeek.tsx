@@ -1,8 +1,8 @@
 import type { Models } from '@appwrite.io/console'
+import { InitWordmark } from '@/components/pages/init/_components/InitWordmark'
 import { cn } from '@/lib/utils'
 
 interface InitTicketPeekProps {
-  eventName: string
   dateRangeLabel: string
   account?: Models.User | null
   ticketHref?: string
@@ -10,7 +10,6 @@ interface InitTicketPeekProps {
 }
 
 export function InitTicketPeek({
-  eventName,
   dateRangeLabel,
   account,
   ticketHref = 'https://appwrite.io/init/ticket',
@@ -41,10 +40,7 @@ export function InitTicketPeek({
         )}
       >
         <div className="space-y-4">
-          <p className="font-aeonik-pro text-[60px] font-bold italic leading-none text-foreground">
-            {eventName}
-            <span className="text-[var(--brand-cta)]">_</span>
-          </p>
+          <InitWordmark className="text-[60px] text-foreground" />
           <p className="text-[40px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
             {dateRangeLabel}
           </p>
