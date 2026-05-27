@@ -21,6 +21,7 @@ import {
 } from '@/lib/init/presence'
 import {
   INIT_PRESENCE_ACTIVITY_LEFT,
+  INIT_PRESENCE_ACTIVITY_OFFLINE,
   INIT_PRESENCE_ACTIVITY_ON_INIT,
 } from '@/lib/init/init-presence-activity'
 import type { LaunchEventOnlineUser } from '@/lib/init/types'
@@ -28,6 +29,30 @@ import type { LaunchEventOnlineUser } from '@/lib/init/types'
 const SIDEBAR_USER_LIMIT = 16
 const AWAY_USER_LIMIT = 8
 const ACTIVITY_PUBLISH_DEBOUNCE_MS = 300
+const INIT_PARTICIPANT_ONLINE_SESSION_KEY = 'console.init.participantOnline'
+
+function readParticipantOnlinePreference(): boolean {
+  if (typeof window === 'undefined') return true
+  try {
+    return window.sessionStorage.getItem(INIT_PARTICIPANT_ONLINE_SESSION_KEY) !== 'false'
+  } catch {
+    return true
+  }
+}
+
+function writeParticipantOnlinePreference(online: boolean): void {
+  if (typeof window === 'undefined') return
+  try {
+    window.sessionStorage.setItem(
+      INIT_PARTICIPANT_ONLINE_SESSION_KEY,
+      online ? 'true' : 'false',
+    )
+  } catch {
+    /* private mode */
+  }
+}
+
+export type InitParticipantStatus = 'online' | 'offline'
 
 export type InitOnlinePresenceState = {
   onlineUsers: LaunchEventOnlineUser[]
@@ -35,6 +60,9 @@ export type InitOnlinePresenceState = {
   onlineCount: number
   othersOnlineCount: number
   isReady: boolean
+  participantStatus: InitParticipantStatus
+  isParticipantStatusUpdating: boolean
+  setParticipantStatus: (status: InitParticipantStatus) => Promise<void>
   setBaselineActivity: (activity: string) => void
   setTransientActivity: (activity: string | null) => void
   setPriorityActivity: (activity: string | null) => void
@@ -46,6 +74,9 @@ const EMPTY_STATE: InitOnlinePresenceState = {
   onlineCount: 0,
   othersOnlineCount: 0,
   isReady: false,
+  participantStatus: 'online',
+  isParticipantStatusUpdating: false,
+  setParticipantStatus: async () => undefined,
   setBaselineActivity: () => undefined,
   setTransientActivity: () => undefined,
   setPriorityActivity: () => undefined,
@@ -93,9 +124,14 @@ export function useInitOnlinePresence(
     () => new Map(),
   )
   const [isReady, setIsReady] = useState(false)
+  const [participantStatus, setParticipantStatusState] =
+    useState<InitParticipantStatus>('online')
+  const [isParticipantStatusUpdating, setIsParticipantStatusUpdating] =
+    useState(false)
 
   const presenceIdRef = useRef<string | null>(null)
   const upsertingRef = useRef(false)
+  const participantOnlineRef = useRef(true)
   const baselineActivityRef = useRef(INIT_PRESENCE_ACTIVITY_ON_INIT)
   const transientActivityRef = useRef<string | null>(null)
   const priorityActivityRef = useRef<string | null>(null)
@@ -107,7 +143,11 @@ export function useInitOnlinePresence(
   >(async () => false)
 
   const resolveActivity = useCallback((away: boolean): string => {
-    if (away) return INIT_PRESENCE_ACTIVITY_LEFT
+    if (away) {
+      return participantOnlineRef.current
+        ? INIT_PRESENCE_ACTIVITY_LEFT
+        : INIT_PRESENCE_ACTIVITY_OFFLINE
+    }
     if (transientActivityRef.current) return transientActivityRef.current
     if (priorityActivityRef.current) return priorityActivityRef.current
     return baselineActivityRef.current
@@ -142,7 +182,7 @@ export function useInitOnlinePresence(
       window.clearTimeout(publishDebounceRef.current)
     }
     publishDebounceRef.current = window.setTimeout(() => {
-      void publishPresenceRef.current(false, { refresh: false })
+      void publishPresenceRef.current(!participantOnlineRef.current, { refresh: false })
     }, ACTIVITY_PUBLISH_DEBOUNCE_MS)
   }, [])
 
@@ -245,6 +285,31 @@ export function useInitOnlinePresence(
 
   publishPresenceRef.current = publishPresence
 
+  const setParticipantStatus = useCallback(
+    async (status: InitParticipantStatus) => {
+      if (!enabled || !eventId || !accountUserId) return
+      const online = status === 'online'
+      if (participantOnlineRef.current === online) return
+
+      setIsParticipantStatusUpdating(true)
+      participantOnlineRef.current = online
+      setParticipantStatusState(status)
+      writeParticipantOnlinePreference(online)
+
+      if (!online) {
+        transientActivityRef.current = null
+        priorityActivityRef.current = null
+      }
+
+      try {
+        await publishPresence(!online)
+      } finally {
+        setIsParticipantStatusUpdating(false)
+      }
+    },
+    [accountUserId, enabled, eventId, publishPresence],
+  )
+
   useEffect(() => {
     if (!enabled || !eventId || !accountUserId) {
       setOnlineMap(new Map())
@@ -253,22 +318,28 @@ export function useInitOnlinePresence(
       baselineActivityRef.current = INIT_PRESENCE_ACTIVITY_ON_INIT
       transientActivityRef.current = null
       priorityActivityRef.current = null
+      participantOnlineRef.current = true
+      setParticipantStatusState('online')
       return
     }
+
+    const startOnline = readParticipantOnlinePreference()
+    participantOnlineRef.current = startOnline
+    setParticipantStatusState(startOnline ? 'online' : 'offline')
 
     let cancelled = false
     clearLegacyInitPresenceStorage()
 
     const bootstrap = async () => {
       setIsReady(false)
-      const published = await publishPresenceRef.current(false, { refresh: false })
+      const published = await publishPresenceRef.current(!startOnline, { refresh: false })
       if (cancelled) return
 
       try {
         await refreshLists(eventId)
       } catch {
         if (published && !cancelled) {
-          await publishPresenceRef.current(false, { refresh: false })
+          await publishPresenceRef.current(!startOnline, { refresh: false })
         }
       } finally {
         if (!cancelled) setIsReady(true)
@@ -289,15 +360,17 @@ export function useInitOnlinePresence(
     if (!enabled || !eventId || !accountUserId) return
 
     const heartbeat = window.setInterval(() => {
-      void publishPresence(false)
+      void publishPresence(!participantOnlineRef.current)
     }, INIT_PRESENCE_HEARTBEAT_MS)
 
     const onFocus = () => {
-      void publishPresence(false)
+      if (participantOnlineRef.current) {
+        void publishPresence(false)
+      }
     }
 
     const onVisibility = () => {
-      if (document.visibilityState === 'visible') {
+      if (document.visibilityState === 'visible' && participantOnlineRef.current) {
         void publishPresence(false)
       }
     }
@@ -412,6 +485,9 @@ export function useInitOnlinePresence(
       onlineCount,
       othersOnlineCount,
       isReady,
+      participantStatus,
+      isParticipantStatusUpdating,
+      setParticipantStatus,
       setBaselineActivity,
       setTransientActivity,
       setPriorityActivity,
@@ -421,8 +497,11 @@ export function useInitOnlinePresence(
     awayMap,
     enabled,
     isReady,
+    isParticipantStatusUpdating,
     onlineMap,
+    participantStatus,
     setBaselineActivity,
+    setParticipantStatus,
     setTransientActivity,
     setPriorityActivity,
   ])

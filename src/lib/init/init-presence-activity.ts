@@ -1,5 +1,6 @@
 export const INIT_PRESENCE_ACTIVITY_ON_INIT = 'On Init'
 export const INIT_PRESENCE_ACTIVITY_LEFT = 'Left Init'
+export const INIT_PRESENCE_ACTIVITY_OFFLINE = 'Offline'
 
 export function buildInitWaitingForDayActivity(day: number): string {
   return `Waiting for day ${day}`

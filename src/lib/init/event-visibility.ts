@@ -48,6 +48,9 @@ export function resolveInitCurrentDay(
 
 /**
  * Strip future-day content from the event so locked material is not present in the tree.
+ *
+ * When `mockCurrentDay` is set (debug), it drives which days unlock — schedule cards,
+ * detail cards, Discord sessions, and live banner all follow the same day.
  */
 export function applyInitEventVisibility(
   event: LaunchEvent,
@@ -55,6 +58,7 @@ export function applyInitEventVisibility(
 ): InitDisplayEvent {
   const now = options?.now ?? new Date()
   const mockCurrentDay = options?.mockCurrentDay ?? null
+
   const currentDay = resolveInitCurrentDay(event, now, mockCurrentDay)
 
   const days: LaunchEventDayView[] = event.days.map((day) => {

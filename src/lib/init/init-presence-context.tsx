@@ -6,6 +6,9 @@ import {
 } from 'react'
 import { useInitOnlinePresence } from '@/lib/init/use-init-online-presence'
 import type { InitOnlinePresenceState } from '@/lib/init/use-init-online-presence'
+import type { InitParticipantStatus } from '@/lib/init/use-init-online-presence'
+
+export type { InitParticipantStatus }
 
 export type InitPresenceActivityControls = {
   setBaselineActivity: (activity: string) => void
@@ -36,6 +39,9 @@ export function InitPresenceProvider({
       onlineCount: presence.onlineCount,
       othersOnlineCount: presence.othersOnlineCount,
       isReady: presence.isReady,
+      participantStatus: presence.participantStatus,
+      isParticipantStatusUpdating: presence.isParticipantStatusUpdating,
+      setParticipantStatus: presence.setParticipantStatus,
       setBaselineActivity: presence.setBaselineActivity,
       setTransientActivity: presence.setTransientActivity,
       setPriorityActivity: presence.setPriorityActivity,
@@ -57,6 +63,9 @@ export function useInitPresence(): InitPresenceContextValue {
       onlineCount: 0,
       othersOnlineCount: 0,
       isReady: false,
+      participantStatus: 'online',
+      isParticipantStatusUpdating: false,
+      setParticipantStatus: async () => undefined,
       setBaselineActivity: () => undefined,
       setTransientActivity: () => undefined,
       setPriorityActivity: () => undefined,
