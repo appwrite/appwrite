@@ -4661,12 +4661,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/migration.git",
-                "reference": "ab731ca82d5b9c15c81b4b7b0f2cf8dda1afdcf4"
+                "reference": "a351e83121d0241737d99102e4d63e15c75da5b0"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/migration/zipball/ab731ca82d5b9c15c81b4b7b0f2cf8dda1afdcf4",
-                "reference": "ab731ca82d5b9c15c81b4b7b0f2cf8dda1afdcf4",
+                "url": "https://api.github.com/repos/utopia-php/migration/zipball/a351e83121d0241737d99102e4d63e15c75da5b0",
+                "reference": "a351e83121d0241737d99102e4d63e15c75da5b0",
                 "shasum": ""
             },
             "require": {
@@ -4726,7 +4726,7 @@
                 "source": "https://github.com/utopia-php/migration/tree/add-webhook-migration",
                 "issues": "https://github.com/utopia-php/migration/issues"
             },
-            "time": "2026-05-14T22:04:01+00:00"
+            "time": "2026-05-27T20:34:30+00:00"
         },
         {
             "name": "utopia-php/mongo",
