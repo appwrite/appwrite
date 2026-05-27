@@ -81,6 +81,19 @@ trait OAuth2Base
         }
     }
 
+    public function testListOAuth2ProvidersSortedAlphabetically(): void
+    {
+        $response = $this->listOAuth2Providers();
+
+        $this->assertSame(200, $response['headers']['status-code']);
+
+        $ids = \array_column($response['body']['providers'], '$id');
+        $sorted = $ids;
+        \sort($sorted);
+
+        $this->assertSame($sorted, $ids);
+    }
+
     /**
      * Pin the exact set of registered providers — adding or removing a
      * provider must be a deliberate change to this assertion. Catches
