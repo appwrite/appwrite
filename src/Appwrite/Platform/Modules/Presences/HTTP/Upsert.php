@@ -54,7 +54,7 @@ class Upsert extends PlatformAction
                     name: 'upsert',
                     desc: 'Upsert presence',
                     description: '/docs/references/presences/upsert.md',
-                    auth: [AuthType::SESSION, AuthType::ADMIN, AuthType::JWT],
+                    auth: [AuthType::SESSION, AuthType::ADMIN],
                     responses: [
                         new SDKResponse(
                             code: Response::STATUS_CODE_OK,
@@ -76,7 +76,7 @@ class Upsert extends PlatformAction
                     name: 'upsert',
                     desc: 'Upsert presence',
                     description: '/docs/references/presences/upsert.md',
-                    auth: [AuthType::KEY],
+                    auth: [AuthType::KEY, AuthType::JWT],
                     responses: [
                         new SDKResponse(
                             code: Response::STATUS_CODE_OK,
