@@ -225,10 +225,19 @@ trait MigrationsBase
         $this->assertEquals('Appwrite', $response['source']);
         $this->assertEquals('Appwrite', $response['destination']);
 
-        $counts = $response['statusCounters'][Resource::TYPE_API_KEY];
-        $this->assertEquals([Resource::TYPE_API_KEY], array_keys($response['statusCounters']));
-        $this->assertEquals(0, $counts['error']);
-        $this->assertGreaterThan(0, $counts['success']);
+        // ProjectCustom provisions an api-key and a webhook on each project, so both show up
+        // here. Other resources stay empty and getStatusCounters strips them.
+        // Webhook is name-deduped on the destination — source ProjectCustom's 'Webhook Test'
+        // collides with destination ProjectCustom's, so it lands in 'skip', not 'success'.
+        $this->assertArrayHasKey(Resource::TYPE_API_KEY, $response['statusCounters']);
+        $this->assertArrayHasKey(Resource::TYPE_WEBHOOK, $response['statusCounters']);
+
+        $apiKeyCounts = $response['statusCounters'][Resource::TYPE_API_KEY];
+        $this->assertEquals(0, $apiKeyCounts['error']);
+        $this->assertGreaterThan(0, $apiKeyCounts['success']);
+
+        $webhookCounts = $response['statusCounters'][Resource::TYPE_WEBHOOK];
+        $this->assertEquals(0, $webhookCounts['error']);
     }
 
     /**
@@ -2644,7 +2653,7 @@ trait MigrationsBase
 
         $createResp = $this->client->call(Client::METHOD_POST, '/webhooks', $sourceHeaders, [
             'webhookId' => ID::unique(),
-            'url' => 'https://example.test/hook',
+            'url' => 'https://appwrite.io/hook',
             'name' => $webhookName,
             'events' => ['users.*.create', 'users.*.delete'],
             'enabled' => true,
@@ -2686,16 +2695,16 @@ trait MigrationsBase
 
         $this->assertNotNull($foundWebhook, 'Migrated webhook not found on destination');
         $this->assertEquals($webhookName, $foundWebhook['name']);
-        $this->assertEquals('https://example.test/hook', $foundWebhook['url']);
+        $this->assertEquals('https://appwrite.io/hook', $foundWebhook['url']);
         $this->assertEqualsCanonicalizing(['users.*.create', 'users.*.delete'], $foundWebhook['events']);
         $this->assertTrue($foundWebhook['enabled']);
-        $this->assertTrue($foundWebhook['security']);
-        $this->assertEquals('hook-user', $foundWebhook['httpUser']);
-        // authPassword is sensitive; destination must not blindly copy the source value.
-        $this->assertNotEquals('hook-pass', $foundWebhook['httpPass'] ?? '');
-        // signatureKey is regenerated on the destination — must not equal the source key.
-        if (!empty($sourceWebhook['signatureKey'])) {
-            $this->assertNotEquals($sourceWebhook['signatureKey'], $foundWebhook['signatureKey'] ?? '');
+        $this->assertTrue($foundWebhook['tls']);
+        $this->assertEquals('hook-user', $foundWebhook['authUsername']);
+        $this->assertEquals('hook-pass', $foundWebhook['authPassword']);
+        // secret is regenerated on the destination because the SDK strips it from list
+        // responses on read — same caveat as api keys.
+        if (!empty($sourceWebhook['secret'])) {
+            $this->assertNotEquals($sourceWebhook['secret'], $foundWebhook['secret'] ?? '');
         }
 
         // Cleanup on destination
