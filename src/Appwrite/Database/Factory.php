@@ -14,7 +14,7 @@ use Utopia\DSN\DSN;
 use Utopia\Pools\Group;
 use Utopia\System\System;
 
-class DatabaseFactory
+class Factory
 {
     public function __construct(
         protected Group $pools,

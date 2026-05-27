@@ -3,7 +3,7 @@
 use Ahc\Jwt\JWT;
 use Ahc\Jwt\JWTException;
 use Appwrite\Auth\Key;
-use Appwrite\Database\DatabaseFactory;
+use Appwrite\Database\Factory as DatabaseFactory;
 use Appwrite\Databases\TransactionState;
 use Appwrite\Event\Context\Audit as AuditContext;
 use Appwrite\Event\Event;

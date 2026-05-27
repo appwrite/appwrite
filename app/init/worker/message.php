@@ -1,6 +1,6 @@
 <?php
 
-use Appwrite\Database\DatabaseFactory;
+use Appwrite\Database\Factory as DatabaseFactory;
 use Appwrite\Event\Event;
 use Appwrite\Event\Realtime;
 use Appwrite\Event\Webhook;

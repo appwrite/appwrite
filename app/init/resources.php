@@ -1,6 +1,6 @@
 <?php
 
-use Appwrite\Database\DatabaseFactory;
+use Appwrite\Database\Factory as DatabaseFactory;
 use Appwrite\Event\Event;
 use Appwrite\Event\Publisher\Audit as AuditPublisher;
 use Appwrite\Event\Publisher\Build as BuildPublisher;
