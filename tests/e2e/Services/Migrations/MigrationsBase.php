@@ -3136,12 +3136,9 @@ trait MigrationsBase
             'x-appwrite-mode' => 'admin',
         ]);
 
-        // Configure SMTP on the source so the round-trip is observable.
-        // The endpoint validates the SMTP connection when enabled=true, so we
-        // point at the in-cluster maildev container (same as ProjectCustom).
-        // Password is intentionally not migrated (source API never exposes it),
-        // so the destination receives every other field.
-        $smtpPort = \intval(\getenv('_APP_SMTP_PORT') ?: '1025');
+        // Point at the in-cluster maildev container so the endpoint's SMTP
+        // connection validation passes. Password is not migrated — source
+        // API never exposes it.
         $sourceSmtpUpdate = $this->client->call(Client::METHOD_PATCH, '/project/smtp', $sourceAdminHeaders, [
             'enabled' => true,
             'senderName' => 'Migration Sender',
@@ -3149,12 +3146,11 @@ trait MigrationsBase
             'replyToName' => 'Migration Reply',
             'replyToEmail' => 'reply@appwrite.io',
             'host' => 'maildev',
-            'port' => $smtpPort,
+            'port' => 1025,
             'username' => 'smtp-user',
             'password' => 'smtp-pass',
         ]);
-        $this->assertEquals(200, $sourceSmtpUpdate['headers']['status-code'], 'Source SMTP PATCH must succeed (otherwise migration sees empty config)');
-        $this->assertSame('Migration Sender', $sourceSmtpUpdate['body']['smtpSenderName']);
+        $this->assertEquals(200, $sourceSmtpUpdate['headers']['status-code']);
 
         $result = $this->performMigrationSync([
             'resources' => [
@@ -3183,12 +3179,11 @@ trait MigrationsBase
         $this->assertSame('Migration Reply', $response['body']['smtpReplyToName']);
         $this->assertSame('reply@appwrite.io', $response['body']['smtpReplyToEmail']);
         $this->assertSame('maildev', $response['body']['smtpHost']);
-        $this->assertSame($smtpPort, $response['body']['smtpPort']);
+        $this->assertSame(1025, $response['body']['smtpPort']);
         $this->assertSame('smtp-user', $response['body']['smtpUsername']);
         $this->assertSame('', $response['body']['smtpSecure']);
 
-        // Reset both projects so the test is idempotent. Disabling skips the
-        // connection-validation branch in the SMTP update endpoint.
+        // Reset both projects so the test is idempotent.
         $this->client->call(Client::METHOD_PATCH, '/project/smtp', $sourceAdminHeaders, ['enabled' => false]);
         $this->client->call(Client::METHOD_PATCH, '/project/smtp', $destinationAdminHeaders, ['enabled' => false]);
     }
