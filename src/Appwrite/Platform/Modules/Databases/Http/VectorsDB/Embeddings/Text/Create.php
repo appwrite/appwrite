@@ -16,6 +16,7 @@ use Utopia\Database\Document;
 use Utopia\Http\Adapter\Swoole\Response as SwooleResponse;
 use Utopia\Logger\Log;
 use Utopia\Logger\Logger;
+use Utopia\Platform\Enum;
 use Utopia\System\System;
 use Utopia\Validator\ArrayList;
 use Utopia\Validator\Text;
@@ -74,7 +75,7 @@ class Create extends CreateDocumentAction
                 )
             ])
             ->param('texts', [], fn (array $plan) => new ArrayList(new Text(0), $plan['databasesMaxEmbeddingTexts'] ?? APP_LIMIT_DATABASE_BATCH), 'Array of text to generate embeddings.', false, ['plan'])
-            ->param('model', Ollama::MODEL_EMBEDDING_GEMMA, new WhiteList(Ollama::MODELS), 'The embedding model to use for generating vector embeddings.', true)
+            ->param('model', Ollama::MODEL_EMBEDDING_GEMMA, new WhiteList(Ollama::MODELS), 'The embedding model to use for generating vector embeddings.', true, enum: new Enum(name: 'EmbeddingModel'))
             ->inject('response')
             ->inject('project')
             ->inject('embeddingAgent')

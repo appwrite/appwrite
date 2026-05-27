@@ -2,6 +2,7 @@
 
 namespace Appwrite\Platform\Modules\Databases\Http\Databases\Usage;
 
+use Appwrite\Platform\Action;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\ContentType;
 use Appwrite\SDK\Deprecated;
@@ -14,7 +15,7 @@ use Utopia\Database\Document;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Http\Adapter\Swoole\Response as SwooleResponse;
-use Utopia\Platform\Action;
+use Utopia\Platform\Enum;
 use Utopia\Validator\WhiteList;
 
 class XList extends Action
@@ -34,7 +35,9 @@ class XList extends Action
             default => DATABASE_TYPE_LEGACY,
         };
 
-        return parent::setHttpPath($path);
+        parent::setHttpPath($path);
+
+        return $this;
     }
 
     protected function getMetrics(): array
@@ -90,7 +93,14 @@ class XList extends Action
                     )
                 ),
             ])
-            ->param('range', '30d', new WhiteList(['24h', '30d', '90d'], true), 'Date range.', true)
+            ->param('range', '30d', new WhiteList(['24h', '30d', '90d'], true), 'Date range.', true, enum: new Enum(
+                name: 'UsageRange',
+                map: [
+                    '24h' => 'Twenty Four Hours',
+                    '30d' => 'Thirty Days',
+                    '90d' => 'Ninety Days',
+                ]
+            ))
             ->inject('response')
             ->inject('dbForProject')
             ->inject('authorization')

@@ -43,6 +43,12 @@ class Project extends Model
                 'default' => '',
                 'example' => '1592981250',
             ])
+            ->addRule('region', [
+                'type' => self::TYPE_STRING,
+                'description' => 'Project region.',
+                'default' => 'default',
+                'example' => 'fra',
+            ])
 
             // Resource: Dev Keys
             ->addRule('devKeys', [
@@ -94,7 +100,7 @@ class Project extends Model
             ->addRule('smtpPort', [
                 'type' => self::TYPE_INTEGER,
                 'description' => 'SMTP server port',
-                'default' => '',
+                'default' => 0,
                 'example' => 25,
             ])
             ->addRule('smtpUsername', [
@@ -225,7 +231,7 @@ class Project extends Model
         $document->setAttribute('smtpReplyToEmail', $smtp['replyToEmail'] ?? $smtp['replyTo'] ?? ''); // Includes backwards compatibility
         $document->setAttribute('smtpReplyToName', $smtp['replyToName'] ?? '');
         $document->setAttribute('smtpHost', $smtp['host'] ?? '');
-        $document->setAttribute('smtpPort', $smtp['port'] ?? '');
+        $document->setAttribute('smtpPort', (int) ($smtp['port'] ?? 0));
         $document->setAttribute('smtpUsername', $smtp['username'] ?? '');
         $document->setAttribute('smtpPassword', ''); // Write-only: never expose the stored value
         $document->setAttribute('smtpSecure', $smtp['secure'] ?? '');

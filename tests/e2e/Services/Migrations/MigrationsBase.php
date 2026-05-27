@@ -224,7 +224,20 @@ trait MigrationsBase
         $this->assertEquals(Appwrite::getSupportedResources(), $response['resources']);
         $this->assertEquals('Appwrite', $response['source']);
         $this->assertEquals('Appwrite', $response['destination']);
-        $this->assertNotEmpty($response['statusCounters']);
+
+        // ProjectCustom provisions an api-key and a webhook on each project, so both show up
+        // here. Other resources stay empty and getStatusCounters strips them.
+        // Webhook is name-deduped on the destination — source ProjectCustom's 'Webhook Test'
+        // collides with destination ProjectCustom's, so it lands in 'skip', not 'success'.
+        $this->assertArrayHasKey(Resource::TYPE_API_KEY, $response['statusCounters']);
+        $this->assertArrayHasKey(Resource::TYPE_WEBHOOK, $response['statusCounters']);
+
+        $apiKeyCounts = $response['statusCounters'][Resource::TYPE_API_KEY];
+        $this->assertEquals(0, $apiKeyCounts['error']);
+        $this->assertGreaterThan(0, $apiKeyCounts['success']);
+
+        $webhookCounts = $response['statusCounters'][Resource::TYPE_WEBHOOK];
+        $this->assertEquals(0, $webhookCounts['error']);
     }
 
     /**
@@ -2554,14 +2567,10 @@ trait MigrationsBase
             'x-appwrite-key' => $this->getDestinationProject()['apiKey'],
         ];
 
-        // Unique name so re-runs and parallel suites can't match a stale key
-        // left behind by a previous crashed run.
-        $keyName = 'Test API Key ' . ID::unique();
-
         // Create API key on source project
         $response = $this->client->call(Client::METHOD_POST, '/project/keys', $sourceHeaders, [
             'keyId' => ID::unique(),
-            'name' => $keyName,
+            'name' => 'Test API Key',
             'scopes' => ['databases.read', 'databases.write'],
             'expire' => null,
         ]);
@@ -2600,7 +2609,7 @@ trait MigrationsBase
         $foundKey = null;
 
         foreach ($response['body']['keys'] as $k) {
-            if ($k['name'] === $keyName) {
+            if ($k['name'] === 'Test API Key') {
                 $foundKey = $k;
 
                 break;
@@ -2608,13 +2617,20 @@ trait MigrationsBase
         }
 
         $this->assertNotNull($foundKey);
-        $this->assertEquals($keyName, $foundKey['name']);
+        $this->assertEquals('Test API Key', $foundKey['name']);
         $this->assertEqualsCanonicalizing(['databases.read', 'databases.write'], $foundKey['scopes']);
         $this->assertEmpty($foundKey['expire']);
         $this->assertNotEquals($apiKey['secret'], $foundKey['secret']);
 
-        // Cleanup on destination
-        $this->client->call(Client::METHOD_DELETE, '/project/keys/' . $foundKey['$id'], $destinationHeaders);
+        // Cleanup migrated keys on destination — delete anything that isn't the destination's own auth key,
+        // otherwise later tests inherit duplicated apiKeys and fail on conflict.
+        $destinationAuthSecret = $this->getDestinationProject()['apiKey'];
+        foreach ($response['body']['keys'] as $k) {
+            if ($k['secret'] === $destinationAuthSecret) {
+                continue;
+            }
+            $this->client->call(Client::METHOD_DELETE, '/project/keys/' . $k['$id'], $destinationHeaders);
+        }
 
         // Cleanup on source
         $this->client->call(Client::METHOD_DELETE, '/project/keys/' . $apiKey['$id'], $sourceHeaders);
@@ -2640,7 +2656,7 @@ trait MigrationsBase
 
         $createResp = $this->client->call(Client::METHOD_POST, '/webhooks', $sourceHeaders, [
             'webhookId' => ID::unique(),
-            'url' => 'https://example.test/hook',
+            'url' => 'https://appwrite.io/hook',
             'name' => $webhookName,
             'events' => ['users.*.create', 'users.*.delete'],
             'enabled' => true,
@@ -2682,16 +2698,16 @@ trait MigrationsBase
 
         $this->assertNotNull($foundWebhook, 'Migrated webhook not found on destination');
         $this->assertEquals($webhookName, $foundWebhook['name']);
-        $this->assertEquals('https://example.test/hook', $foundWebhook['url']);
+        $this->assertEquals('https://appwrite.io/hook', $foundWebhook['url']);
         $this->assertEqualsCanonicalizing(['users.*.create', 'users.*.delete'], $foundWebhook['events']);
         $this->assertTrue($foundWebhook['enabled']);
-        $this->assertTrue($foundWebhook['security']);
-        $this->assertEquals('hook-user', $foundWebhook['httpUser']);
-        // authPassword is sensitive; destination must not blindly copy the source value.
-        $this->assertNotEquals('hook-pass', $foundWebhook['httpPass'] ?? '');
-        // signatureKey is regenerated on the destination — must not equal the source key.
-        if (!empty($sourceWebhook['signatureKey'])) {
-            $this->assertNotEquals($sourceWebhook['signatureKey'], $foundWebhook['signatureKey'] ?? '');
+        $this->assertTrue($foundWebhook['tls']);
+        $this->assertEquals('hook-user', $foundWebhook['authUsername']);
+        $this->assertEquals('hook-pass', $foundWebhook['authPassword']);
+        // secret is regenerated on the destination because the SDK strips it from list
+        // responses on read — same caveat as api keys.
+        if (!empty($sourceWebhook['secret'])) {
+            $this->assertNotEquals($sourceWebhook['secret'], $foundWebhook['secret'] ?? '');
         }
 
         // Cleanup on destination
@@ -2699,6 +2715,98 @@ trait MigrationsBase
 
         // Cleanup on source
         $this->client->call(Client::METHOD_DELETE, '/webhooks/' . $sourceWebhook['$id'], $sourceHeaders);
+    }
+
+    public function testAppwriteMigrationProjectVariable(): void
+    {
+        $sourceHeaders = [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ];
+
+        $destinationHeaders = [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getDestinationProject()['$id'],
+            'x-appwrite-key' => $this->getDestinationProject()['apiKey'],
+        ];
+
+        // Source-side variable IDs and keys are uniquified so re-runs and parallel suites
+        // can't trip the source-side findOne('variables', [key=...]) skip path.
+        $plainKey = 'TEST_PLAIN_' . \strtoupper(ID::unique());
+        $secretKey = 'TEST_SECRET_' . \strtoupper(ID::unique());
+
+        // Non-secret variable: value should round-trip exactly.
+        $plainResp = $this->client->call(Client::METHOD_POST, '/project/variables', $sourceHeaders, [
+            'variableId' => ID::unique(),
+            'key' => $plainKey,
+            'value' => 'plain-value',
+            'secret' => false,
+        ]);
+        $this->assertEquals(201, $plainResp['headers']['status-code']);
+        $plainVariable = $plainResp['body'];
+
+        // Secret variable: SDK strips `value` on subsequent reads, so the migration
+        // source sees empty and the destination writes empty. Test asserts that.
+        $secretResp = $this->client->call(Client::METHOD_POST, '/project/variables', $sourceHeaders, [
+            'variableId' => ID::unique(),
+            'key' => $secretKey,
+            'value' => 'real-secret-value',
+            'secret' => true,
+        ]);
+        $this->assertEquals(201, $secretResp['headers']['status-code']);
+        $secretVariable = $secretResp['body'];
+
+        $result = $this->performMigrationSync([
+            'resources' => [
+                Resource::TYPE_PROJECT_VARIABLE,
+            ],
+            'endpoint' => $this->webEndpoint,
+            'projectId' => $this->getProject()['$id'],
+            'apiKey' => $this->getProject()['apiKey'],
+        ]);
+
+        $this->assertEquals('completed', $result['status']);
+        $this->assertEquals([Resource::TYPE_PROJECT_VARIABLE], $result['resources']);
+        $this->assertArrayHasKey(Resource::TYPE_PROJECT_VARIABLE, $result['statusCounters']);
+        $this->assertEquals(0, $result['statusCounters'][Resource::TYPE_PROJECT_VARIABLE]['error']);
+        $this->assertEquals(0, $result['statusCounters'][Resource::TYPE_PROJECT_VARIABLE]['pending']);
+        $this->assertGreaterThanOrEqual(2, $result['statusCounters'][Resource::TYPE_PROJECT_VARIABLE]['success']);
+        $this->assertEquals(0, $result['statusCounters'][Resource::TYPE_PROJECT_VARIABLE]['processing']);
+        $this->assertEquals(0, $result['statusCounters'][Resource::TYPE_PROJECT_VARIABLE]['warning']);
+
+        $response = $this->client->call(Client::METHOD_GET, '/project/variables', $destinationHeaders);
+        $this->assertEquals(200, $response['headers']['status-code']);
+
+        $foundPlain = null;
+        $foundSecret = null;
+        foreach ($response['body']['variables'] as $v) {
+            if ($v['key'] === $plainKey) {
+                $foundPlain = $v;
+            } elseif ($v['key'] === $secretKey) {
+                $foundSecret = $v;
+            }
+        }
+
+        $this->assertNotNull($foundPlain, 'Plain variable not found on destination');
+        $this->assertEquals($plainKey, $foundPlain['key']);
+        $this->assertEquals('plain-value', $foundPlain['value']);
+        $this->assertFalse($foundPlain['secret']);
+
+        $this->assertNotNull($foundSecret, 'Secret variable not found on destination');
+        $this->assertEquals($secretKey, $foundSecret['key']);
+        // Secret variables: source SDK never returned the real value, so the destination
+        // also stores empty. The original 'real-secret-value' must not have leaked.
+        $this->assertNotEquals('real-secret-value', $foundSecret['value']);
+        $this->assertTrue($foundSecret['secret']);
+
+        // Cleanup on destination
+        $this->client->call(Client::METHOD_DELETE, '/project/variables/' . $foundPlain['$id'], $destinationHeaders);
+        $this->client->call(Client::METHOD_DELETE, '/project/variables/' . $foundSecret['$id'], $destinationHeaders);
+
+        // Cleanup on source
+        $this->client->call(Client::METHOD_DELETE, '/project/variables/' . $plainVariable['$id'], $sourceHeaders);
+        $this->client->call(Client::METHOD_DELETE, '/project/variables/' . $secretVariable['$id'], $sourceHeaders);
     }
 
     public function testAppwriteMigrationAuthMethods(): void

@@ -52,7 +52,7 @@ class XList extends Action
                 group: 'projects',
                 name: 'listProjects',
                 description: <<<EOT
-                Get a list of all projects. You can use the query params to filter your results. 
+                Get a list of all projects. You can use the query params to filter your results.
                 EOT,
                 auth: [AuthType::ADMIN, AuthType::KEY],
                 responses: [
