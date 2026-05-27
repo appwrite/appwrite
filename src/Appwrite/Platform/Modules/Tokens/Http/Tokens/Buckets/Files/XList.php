@@ -33,7 +33,7 @@ class XList extends Action
         $this
             ->setHttpMethod(Action::HTTP_REQUEST_METHOD_GET)
             ->setHttpPath('/v1/tokens/buckets/:bucketId/files/:fileId')
-            ->desc('List')
+            ->desc('List tokens')
             ->groups(['api', 'tokens'])
             ->label('scope', 'tokens.read')
             ->label('usage.metric', 'tokens.requests.read')

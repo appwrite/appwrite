@@ -32,7 +32,7 @@ class Delete extends Action
         $this
             ->setHttpMethod(Action::HTTP_REQUEST_METHOD_DELETE)
             ->setHttpPath('/v1/teams/:teamId')
-            ->desc('Delete')
+            ->desc('Delete team')
             ->groups(['api', 'teams'])
             ->label('event', 'teams.[teamId].delete')
             ->label('scope', 'teams.write')

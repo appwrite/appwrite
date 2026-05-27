@@ -37,7 +37,7 @@ class XList extends Action
         $this
             ->setHttpMethod(self::HTTP_REQUEST_METHOD_GET)
             ->setHttpPath('/v1/databases')
-            ->desc('List')
+            ->desc('List databases')
             ->groups(['api', 'database'])
             ->label('scope', 'databases.read')
             ->label('resourceType', RESOURCE_TYPE_DATABASES)

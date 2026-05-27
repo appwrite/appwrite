@@ -29,7 +29,7 @@ class Update extends Action
     {
         $this->setHttpMethod(Action::HTTP_REQUEST_METHOD_PATCH)
         ->setHttpPath('/v1/tokens/:tokenId')
-        ->desc('Update')
+        ->desc('Update token')
         ->groups(['api', 'tokens'])
         ->label('scope', 'tokens.write')
         ->label('event', 'tokens.[tokenId].update')

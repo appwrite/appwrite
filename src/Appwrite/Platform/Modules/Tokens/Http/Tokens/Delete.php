@@ -27,7 +27,7 @@ class Delete extends Action
     {
         $this->setHttpMethod(Action::HTTP_REQUEST_METHOD_DELETE)
         ->setHttpPath('/v1/tokens/:tokenId')
-        ->desc('Delete')
+        ->desc('Delete token')
         ->groups(['api', 'tokens'])
         ->label('scope', 'tokens.write')
         ->label('event', 'tokens.[tokenId].delete')

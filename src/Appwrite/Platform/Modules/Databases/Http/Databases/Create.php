@@ -140,7 +140,7 @@ class Create extends Action
         $this
             ->setHttpMethod(self::HTTP_REQUEST_METHOD_POST)
             ->setHttpPath('/v1/databases')
-            ->desc('Create')
+            ->desc('Create database')
             ->groups(['api', 'database'])
             ->label('event', 'databases.[databaseId].create')
             ->label('scope', 'databases.write')

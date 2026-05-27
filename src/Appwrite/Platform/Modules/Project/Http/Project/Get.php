@@ -27,7 +27,7 @@ class Get extends Action
             ->setHttpMethod(Action::HTTP_REQUEST_METHOD_GET)
             ->setHttpPath('/v1/project')
             ->httpAlias('/v1/projects/:projectId')
-            ->desc('Get')
+            ->desc('Get project')
             ->groups(['api', 'project'])
             ->label('scope', 'project.read')
             ->label('sdk', new Method(

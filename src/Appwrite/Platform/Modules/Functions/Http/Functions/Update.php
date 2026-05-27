@@ -49,7 +49,7 @@ class Update extends Base
     {
         $this->setHttpMethod(Action::HTTP_REQUEST_METHOD_PUT)
             ->setHttpPath('/v1/functions/:functionId')
-            ->desc('Update')
+            ->desc('Update function')
             ->groups(['api', 'functions'])
             ->label('scope', 'functions.write')
             ->label('event', 'functions.[functionId].update')

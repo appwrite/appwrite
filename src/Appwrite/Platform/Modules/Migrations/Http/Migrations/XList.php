@@ -33,7 +33,7 @@ class XList extends Action
         $this
             ->setHttpMethod(Action::HTTP_REQUEST_METHOD_GET)
             ->setHttpPath('/v1/migrations')
-            ->desc('List')
+            ->desc('List migrations')
             ->groups(['api', 'migrations'])
             ->label('scope', 'migrations.read')
             ->label('sdk', new Method(

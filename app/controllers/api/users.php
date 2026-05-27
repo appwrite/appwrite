@@ -259,7 +259,7 @@ function createUser(Hash $hash, string $userId, ?string $email, ?string $passwor
 }
 
 Http::post('/v1/users')
-    ->desc('Create')
+    ->desc('Create user')
     ->groups(['api', 'users'])
     ->label('scope', 'users.write')
     ->label('audits.event', 'user.create')
@@ -681,7 +681,7 @@ Http::post('/v1/users/:userId/targets')
     });
 
 Http::get('/v1/users')
-    ->desc('List')
+    ->desc('List users')
     ->groups(['api', 'users'])
     ->label('scope', 'users.read')
     ->label('sdk', new Method(
@@ -786,7 +786,7 @@ Http::get('/v1/users')
     });
 
 Http::get('/v1/users/:userId')
-    ->desc('Get')
+    ->desc('Get user')
     ->groups(['api', 'users'])
     ->label('scope', 'users.read')
     ->label('sdk', new Method(
@@ -2602,7 +2602,7 @@ Http::delete('/v1/users/:userId/sessions')
     });
 
 Http::delete('/v1/users/:userId')
-    ->desc('Delete')
+    ->desc('Delete user')
     ->groups(['api', 'users'])
     ->label('event', 'users.[userId].delete')
     ->label('scope', 'users.write')

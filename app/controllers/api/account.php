@@ -231,7 +231,7 @@ $createSession = function (string $userId, string $secret, Request $request, Res
 };
 
 Http::post('/v1/account')
-    ->desc('Create')
+    ->desc('Create account')
     ->groups(['api', 'account', 'auth'])
     ->label('scope', 'sessions.write')
     ->label('auth.type', 'email-password')
@@ -422,7 +422,7 @@ Http::post('/v1/account')
     });
 
 Http::get('/v1/account')
-    ->desc('Get')
+    ->desc('Get account')
     ->groups(['api', 'account'])
     ->label('scope', 'account')
     ->label('sdk', new Method(
@@ -450,7 +450,7 @@ Http::get('/v1/account')
     });
 
 Http::delete('/v1/account')
-    ->desc('Delete')
+    ->desc('Delete account')
     ->groups(['api', 'account'])
     ->label('scope', 'account')
     ->label('audits.event', 'user.delete')

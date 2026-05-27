@@ -40,7 +40,7 @@ class Create extends Action
             ->setHttpMethod(Action::HTTP_REQUEST_METHOD_POST)
             ->setHttpPath('/v1/webhooks')
             ->httpAlias('/v1/projects/:projectId/webhooks')
-            ->desc('Create')
+            ->desc('Create webhook')
             ->groups(['api', 'webhooks'])
             ->label('scope', 'webhooks.write')
             ->label('event', 'webhooks.[webhookId].create')

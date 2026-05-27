@@ -26,7 +26,7 @@ class Get extends Action
     {
         $this->setHttpMethod(Action::HTTP_REQUEST_METHOD_GET)
         ->setHttpPath('/v1/tokens/:tokenId')
-        ->desc('Get')
+        ->desc('Get token')
         ->groups(['api', 'tokens'])
         ->label('scope', 'tokens.read')
         ->label('usage.metric', 'tokens.{scope}.requests.read')

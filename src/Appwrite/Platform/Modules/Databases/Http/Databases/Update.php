@@ -29,7 +29,7 @@ class Update extends Action
         $this
             ->setHttpMethod(self::HTTP_REQUEST_METHOD_PUT)
             ->setHttpPath('/v1/databases/:databaseId')
-            ->desc('Update')
+            ->desc('Update database')
             ->groups(['api', 'database', 'schema'])
             ->label('scope', 'databases.write')
             ->label('resourceType', RESOURCE_TYPE_DATABASES)
