@@ -53,7 +53,7 @@ class Update extends PlatformAction
                     name: 'update',
                     desc: 'Update presence',
                     description: '/docs/references/presences/update.md',
-                    auth: [AuthType::SESSION],
+                    auth: [AuthType::SESSION, AuthType::ADMIN],
                     responses: [
                         new SDKResponse(
                             code: Response::STATUS_CODE_OK,
@@ -76,7 +76,7 @@ class Update extends PlatformAction
                     name: 'updatePresence',
                     desc: 'Update presence',
                     description: '/docs/references/presences/update.md',
-                    auth: [AuthType::KEY, AuthType::JWT, AuthType::ADMIN],
+                    auth: [AuthType::KEY, AuthType::JWT],
                     responses: [
                         new SDKResponse(
                             code: Response::STATUS_CODE_OK,
