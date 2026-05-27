@@ -4,8 +4,6 @@ use Appwrite\Auth\Key;
 use Appwrite\Auth\MFA\Type\TOTP;
 use Appwrite\Bus\Events\RequestCompleted;
 use Appwrite\Event\Context\Audit as AuditContext;
-use Appwrite\Event\Database as EventDatabase;
-use Appwrite\Event\Delete;
 use Appwrite\Event\Event;
 use Appwrite\Event\Message\Audit as AuditMessage;
 use Appwrite\Event\Message\Func as FunctionMessage;
@@ -39,6 +37,7 @@ use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\Authorization\Input;
 use Utopia\Database\Validator\Roles;
 use Utopia\Http\Http;
+use Utopia\Http\Route;
 use Utopia\Span\Span;
 use Utopia\System\System;
 use Utopia\Telemetry\Adapter as Telemetry;
@@ -87,7 +86,7 @@ $parseLabel = function (string $label, array $responsePayload, array $requestPar
 
 Http::init()
     ->groups(['api'])
-    ->inject('utopia')
+    ->inject('route')
     ->inject('request')
     ->inject('dbForPlatform')
     ->inject('dbForProject')
@@ -100,11 +99,7 @@ Http::init()
     ->inject('team')
     ->inject('apiKey')
     ->inject('authorization')
-    ->action(function (Http $utopia, Request $request, Database $dbForPlatform, Database $dbForProject, AuditContext $auditContext, Document $project, User $user, ?Document $session, array $servers, string $mode, Document $team, ?Key $apiKey, Authorization $authorization) {
-        $route = $utopia->getRoute();
-        if ($route === null) {
-            throw new AppwriteException(AppwriteException::GENERAL_ROUTE_NOT_FOUND);
-        }
+    ->action(function (Route $route, Request $request, Database $dbForPlatform, Database $dbForProject, AuditContext $auditContext, Document $project, User $user, ?Document $session, array $servers, string $mode, Document $team, ?Key $apiKey, Authorization $authorization) {
 
         /**
          * Handle user authentication and session validation.
@@ -180,8 +175,8 @@ Http::init()
             $role = $apiKey->getRole();
             $scopes = $apiKey->getScopes();
 
-            // Handle special app role case
-            if ($apiKey->getRole() === User::ROLE_APPS) {
+            // Handle special key role case
+            if ($apiKey->getRole() === User::ROLE_KEYS) {
                 // Disable authorization checks for project API keys
                 // Dynamic supported for backwards compatibility
                 if (($apiKey->getType() === API_KEY_STANDARD || $apiKey->getType() === API_KEY_EPHEMERAL || $apiKey->getType() === 'dynamic') && $apiKey->getProjectId() === $project->getId()) {
@@ -191,7 +186,7 @@ Http::init()
                 $user = new User([
                     '$id' => '',
                     'status' => true,
-                    'type' => ACTIVITY_TYPE_KEY_PROJECT,
+                    'type' => ACTOR_TYPE_KEY_PROJECT,
                     'email' => 'app.' . $project->getId() . '@service.' . $request->getHostname(),
                     'password' => '',
                     'name' => $apiKey->getName(),
@@ -263,9 +258,9 @@ Http::init()
 
                 $userClone = clone $user;
                 $userClone->setAttribute('type', match ($apiKey->getType()) {
-                    API_KEY_STANDARD => ACTIVITY_TYPE_KEY_PROJECT,
-                    API_KEY_ACCOUNT => ACTIVITY_TYPE_KEY_ACCOUNT,
-                    default => ACTIVITY_TYPE_KEY_ORGANIZATION,
+                    API_KEY_STANDARD => ACTOR_TYPE_KEY_PROJECT,
+                    API_KEY_ACCOUNT => ACTOR_TYPE_KEY_ACCOUNT,
+                    default => ACTOR_TYPE_KEY_ORGANIZATION,
                 });
                 $auditContext->user = $userClone;
             }
@@ -430,7 +425,7 @@ Http::init()
             if (
                 array_key_exists($namespace, $project->getAttribute('services', []))
                 && ! $project->getAttribute('services', [])[$namespace]
-                && ! ($user->isPrivileged($authorization->getRoles()) || $user->isApp($authorization->getRoles()))
+                && ! ($user->isPrivileged($authorization->getRoles()) || $user->isKey($authorization->getRoles()))
             ) {
                 throw new Exception(Exception::GENERAL_SERVICE_DISABLED);
             }
@@ -440,7 +435,7 @@ Http::init()
         if (
             array_key_exists('rest', $project->getAttribute('apis', []))
             && ! $project->getAttribute('apis', [])['rest']
-            && ! ($user->isPrivileged($authorization->getRoles()) || $user->isApp($authorization->getRoles()))
+            && ! ($user->isPrivileged($authorization->getRoles()) || $user->isKey($authorization->getRoles()))
         ) {
             throw new AppwriteException(AppwriteException::GENERAL_API_DISABLED);
         }
@@ -479,7 +474,7 @@ Http::init()
 
 Http::init()
     ->groups(['api'])
-    ->inject('utopia')
+    ->inject('route')
     ->inject('request')
     ->inject('response')
     ->inject('project')
@@ -487,20 +482,15 @@ Http::init()
     ->inject('timelimit')
     ->inject('devKey')
     ->inject('authorization')
-    ->action(function (Http $utopia, Request $request, Response $response, Document $project, User $user, callable $timelimit, Document $devKey, Authorization $authorization) {
+    ->action(function (Route $route, Request $request, Response $response, Document $project, User $user, callable $timelimit, Document $devKey, Authorization $authorization) {
         $response->setUser($user);
         $request->setUser($user);
 
         $roles = $authorization->getRoles();
         $shouldCheckAbuse = System::getEnv('_APP_OPTIONS_ABUSE', 'enabled') !== 'disabled'
-            && ! $user->isApp($roles)
+            && ! $user->isKey($roles)
             && ! $user->isPrivileged($roles)
             && $devKey->isEmpty();
-
-        $route = $utopia->getRoute();
-        if ($route === null) {
-            throw new AppwriteException(AppwriteException::GENERAL_ROUTE_NOT_FOUND);
-        }
 
         $abuseKeyLabel = $route->getLabel('abuse-key', 'url:{url},ip:{ip}');
         $abuseKeyLabel = (! is_array($abuseKeyLabel)) ? [$abuseKeyLabel] : $abuseKeyLabel;
@@ -558,15 +548,13 @@ Http::init()
 
 Http::init()
     ->groups(['api'])
-    ->inject('utopia')
+    ->inject('route')
     ->inject('request')
     ->inject('response')
     ->inject('project')
     ->inject('user')
     ->inject('queueForEvents')
     ->inject('auditContext')
-    ->inject('queueForDeletes')
-    ->inject('queueForDatabase')
     ->inject('usage')
     ->inject('publisherForFunctions')
     ->inject('dbForProject')
@@ -578,17 +566,12 @@ Http::init()
     ->inject('platform')
     ->inject('authorization')
     ->inject('cacheControlForStorage')
-    ->action(function (Http $utopia, Request $request, Response $response, Document $project, User $user, Event $queueForEvents, AuditContext $auditContext, Delete $queueForDeletes, EventDatabase $queueForDatabase, Context $usage, FunctionPublisher $publisherForFunctions, Database $dbForProject, Document $resourceToken, string $mode, ?Key $apiKey, array $plan, Telemetry $telemetry, array $platform, Authorization $authorization, callable $cacheControlForStorage) {
+    ->action(function (Route $route, Request $request, Response $response, Document $project, User $user, Event $queueForEvents, AuditContext $auditContext, Context $usage, FunctionPublisher $publisherForFunctions, Database $dbForProject, Document $resourceToken, string $mode, ?Key $apiKey, array $plan, Telemetry $telemetry, array $platform, Authorization $authorization, callable $cacheControlForStorage) {
 
         $response->setUser($user);
         $request->setUser($user);
 
-        $route = $utopia->getRoute();
-        if ($route === null) {
-            throw new AppwriteException(AppwriteException::GENERAL_ROUTE_NOT_FOUND);
-        }
-
-        $path = $route->getMatchedPath();
+        $path = $route->getPath();
         $databaseType = match (true) {
             str_contains($path, '/documentsdb') => DATABASE_TYPE_DOCUMENTSDB,
             str_contains($path, '/vectorsdb') => DATABASE_TYPE_VECTORSDB,
@@ -619,21 +602,16 @@ Http::init()
             $userClone = clone $user;
             // $user doesn't support `type` and can cause unintended effects.
             if (empty($user->getAttribute('type'))) {
-                $userClone->setAttribute('type', $mode === APP_MODE_ADMIN ? ACTIVITY_TYPE_ADMIN : ACTIVITY_TYPE_USER);
+                $userClone->setAttribute('type', $mode === APP_MODE_ADMIN ? ACTOR_TYPE_ADMIN : ACTOR_TYPE_USER);
             }
             $auditContext->user = $userClone;
         }
 
-        /* Auto-set projects */
-        $queueForDeletes->setProject($project);
-        $queueForDatabase->setProject($project);
-
         $useCache = $route->getLabel('cache', false);
         $storageCacheOperationsCounter = $telemetry->createCounter('storage.cache.operations.load');
         if ($useCache) {
-            $route = $utopia->match($request);
             $roles = $authorization->getRoles();
-            $isAppUser = $user->isApp($roles);
+            $isAppUser = $user->isKey($roles);
             $isImageTransformation = $route->getPath() === '/v1/storage/buckets/:bucketId/files/:fileId/preview';
             $isDisabled = isset($plan['imageTransformations']) && $plan['imageTransformations'] === -1 && ! $user->isPrivileged($roles);
 
@@ -769,12 +747,11 @@ Http::init()
  */
 Http::shutdown()
     ->groups(['session'])
-    ->inject('utopia')
     ->inject('request')
     ->inject('response')
     ->inject('project')
     ->inject('dbForProject')
-    ->action(function (Http $utopia, Request $request, Response $response, Document $project, Database $dbForProject) {
+    ->action(function (Request $request, Response $response, Document $project, Database $dbForProject) {
         $sessionLimit = $project->getAttribute('auths', [])['maxSessions'] ?? 0;
 
         if ($sessionLimit === 0) {
@@ -808,7 +785,7 @@ Http::shutdown()
 
 Http::shutdown()
     ->groups(['api'])
-    ->inject('utopia')
+    ->inject('route')
     ->inject('request')
     ->inject('response')
     ->inject('project')
@@ -818,8 +795,6 @@ Http::shutdown()
     ->inject('publisherForAudits')
     ->inject('usage')
     ->inject('publisherForUsage')
-    ->inject('queueForDeletes')
-    ->inject('queueForDatabase')
     ->inject('publisherForFunctions')
     ->inject('queueForWebhooks')
     ->inject('queueForRealtime')
@@ -830,7 +805,7 @@ Http::shutdown()
     ->inject('bus')
     ->inject('apiKey')
     ->inject('mode')
-    ->action(function (Http $utopia, Request $request, Response $response, Document $project, User $user, Event $queueForEvents, AuditContext $auditContext, Audit $publisherForAudits, Context $usage, UsagePublisher $publisherForUsage, Delete $queueForDeletes, EventDatabase $queueForDatabase, FunctionPublisher $publisherForFunctions, Event $queueForWebhooks, Realtime $queueForRealtime, Database $dbForProject, Authorization $authorization, callable $timelimit, EventProcessor $eventProcessor, Bus $bus, ?Key $apiKey, string $mode) use ($parseLabel) {
+    ->action(function (Route $route, Request $request, Response $response, Document $project, User $user, Event $queueForEvents, AuditContext $auditContext, Audit $publisherForAudits, Context $usage, UsagePublisher $publisherForUsage, FunctionPublisher $publisherForFunctions, Event $queueForWebhooks, Realtime $queueForRealtime, Database $dbForProject, Authorization $authorization, callable $timelimit, EventProcessor $eventProcessor, Bus $bus, ?Key $apiKey, string $mode) use ($parseLabel) {
 
         $responsePayload = $response->getPayload();
 
@@ -886,7 +861,6 @@ Http::shutdown()
             }
         }
 
-        $route = $utopia->getRoute();
         $requestParams = $route->getParamsValues();
 
         /**
@@ -939,7 +913,7 @@ Http::shutdown()
             $userClone = clone $user;
             // $user doesn't support `type` and can cause unintended effects.
             if (empty($user->getAttribute('type'))) {
-                $userClone->setAttribute('type', $mode === APP_MODE_ADMIN ? ACTIVITY_TYPE_ADMIN : ACTIVITY_TYPE_USER);
+                $userClone->setAttribute('type', $mode === APP_MODE_ADMIN ? ACTOR_TYPE_ADMIN : ACTOR_TYPE_USER);
             }
             $auditContext->user = $userClone;
         } elseif ($auditContext->user === null || $auditContext->user->isEmpty()) {
@@ -954,7 +928,7 @@ Http::shutdown()
             $user = new User([
                 '$id' => '',
                 'status' => true,
-                'type' => ACTIVITY_TYPE_GUEST,
+                'type' => ACTOR_TYPE_GUEST,
                 'email' => 'guest.' . $project->getId() . '@service.' . $request->getHostname(),
                 'password' => '',
                 'name' => 'Guest',
@@ -975,14 +949,6 @@ Http::shutdown()
             }
 
             $publisherForAudits->enqueue(AuditMessage::fromContext($auditContext));
-        }
-
-        if (! empty($queueForDeletes->getType())) {
-            $queueForDeletes->trigger();
-        }
-
-        if (! empty($queueForDatabase->getType())) {
-            $queueForDatabase->trigger();
         }
 
         // Cache label

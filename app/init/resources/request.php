@@ -5,8 +5,6 @@ use Ahc\Jwt\JWTException;
 use Appwrite\Auth\Key;
 use Appwrite\Databases\TransactionState;
 use Appwrite\Event\Context\Audit as AuditContext;
-use Appwrite\Event\Database as EventDatabase;
-use Appwrite\Event\Delete;
 use Appwrite\Event\Event;
 use Appwrite\Event\Message\Func as FunctionMessage;
 use Appwrite\Event\Publisher\Func as FunctionPublisher;
@@ -108,8 +106,6 @@ return function (Container $context): void {
     });
 
     // Per-request queue resources (stateful, accumulate event data during request)
-    $context->set('queueForDatabase', fn (Publisher $publisher) => new EventDatabase($publisher), ['publisher']);
-    $context->set('queueForDeletes', fn (Publisher $publisher) => new Delete($publisher), ['publisher']);
     $context->set('queueForEvents', fn (Publisher $publisher) => new Event($publisher), ['publisher']);
     $context->set('queueForWebhooks', fn (Publisher $publisher) => new Webhook($publisher), ['publisher']);
     $context->set('queueForRealtime', fn () => new Realtime(), []);
@@ -600,7 +596,7 @@ return function (Container $context): void {
         // These endpoints moved from /v1/projects/:projectId/<resource> to /v1/<resource>
         // When accessed via the old alias path, extract projectId from the URI
         $deprecatedProjectPathPrefix = '/v1/projects/';
-        $route = $utopia->match($request);
+        $route = $utopia->match($request)?->route;
         if (!empty($route)) {
             $isDeprecatedAlias = \str_starts_with($request->getURI(), $deprecatedProjectPathPrefix) &&
                 !\str_starts_with($route->getPath(), $deprecatedProjectPathPrefix);
@@ -1097,7 +1093,7 @@ return function (Container $context): void {
         if ($project->getId() !== 'console') {
             $teamInternalId = $project->getAttribute('teamInternalId', '');
         } else {
-            $route = $utopia->match($request);
+            $route = $utopia->match($request)?->route;
             $path = ! empty($route) ? $route->getPath() : $request->getURI();
             $orgHeader = $request->getHeader('x-appwrite-organization', '');
             if (str_starts_with($path, '/v1/projects/:projectId')) {
