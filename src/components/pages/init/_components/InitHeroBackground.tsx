@@ -29,6 +29,10 @@ type InitHeroBackgroundProps = {
   particleIsDark?: boolean
   /** 1 = default speed; lower values slow particle drift (e.g. ticket video export). */
   particleMotionSpeed?: number
+  /** Fired when the user moves the pointer over the particle field. */
+  onInteractionStart?: () => void
+  /** Fired when pointer interaction ends (leave or idle timeout). */
+  onInteractionEnd?: () => void
 }
 
 type ParticleTheme = ReturnType<typeof getParticleTheme>
@@ -137,6 +141,8 @@ export function InitHeroBackground({
   accentColor,
   particleIsDark,
   particleMotionSpeed = 1,
+  onInteractionStart,
+  onInteractionEnd,
 }: InitHeroBackgroundProps) {
   const creatureRef = useRef<HTMLDivElement>(null)
   const runtimeRef = useRef<AnimationRuntime | null>(null)
@@ -144,6 +150,8 @@ export function InitHeroBackground({
   const compactRef = useRef(compact)
   const activeRef = useRef(active)
   const canRunRef = useRef(true)
+  const onInteractionStartRef = useRef(onInteractionStart)
+  const onInteractionEndRef = useRef(onInteractionEnd)
   const { resolvedTheme } = useTheme()
   const isDark = particleIsDark ?? isDarkChrome(resolvedTheme)
   const accentColorRef = useRef(accentColor)
@@ -151,6 +159,8 @@ export function InitHeroBackground({
   compactRef.current = compact
   activeRef.current = active
   accentColorRef.current = accentColor
+  onInteractionStartRef.current = onInteractionStart
+  onInteractionEndRef.current = onInteractionEnd
 
   useEffect(() => {
     const runtime = runtimeRef.current
@@ -309,6 +319,7 @@ export function InitHeroBackground({
     const manualMovementTimeout = createTimer({
       duration: dur(1500),
       onComplete: () => {
+        onInteractionEndRef.current?.()
         if (canRunRef.current && activeRef.current) {
           autoMove.play()
         }
@@ -339,10 +350,15 @@ export function InitHeroBackground({
 
       if (!point) return
 
+      onInteractionStartRef.current?.()
       cursor.x = point.clientX - rect.left - viewport.w
       cursor.y = point.clientY - rect.top - viewport.h
       autoMove.pause()
       manualMovementTimeout.restart()
+    }
+
+    const endPointerInteraction = () => {
+      onInteractionEndRef.current?.()
     }
 
     const handleResize = () => {
@@ -378,6 +394,8 @@ export function InitHeroBackground({
 
     container.addEventListener('mousemove', followPointer)
     container.addEventListener('touchmove', followPointer, { passive: true })
+    container.addEventListener('mouseleave', endPointerInteraction)
+    container.addEventListener('touchend', endPointerInteraction)
     document.addEventListener('visibilitychange', handleVisibility)
 
     if (activeRef.current) {
@@ -402,6 +420,8 @@ export function InitHeroBackground({
       intersectionObserver.disconnect()
       container.removeEventListener('mousemove', followPointer)
       container.removeEventListener('touchmove', followPointer)
+      container.removeEventListener('mouseleave', endPointerInteraction)
+      container.removeEventListener('touchend', endPointerInteraction)
       document.removeEventListener('visibilitychange', handleVisibility)
       pause()
       creatureEl.replaceChildren()

@@ -1,6 +1,6 @@
 import type { InitDisplayEvent, LaunchEventLiveBanner } from '@/lib/init/types'
 import type { ReactNode } from 'react'
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { consoleAccountQueryOptions } from '@/lib/react-query/hooks/auth'
 import {
@@ -12,7 +12,10 @@ import {
   buildInitDayReadingActivity,
   findInitDayView,
 } from '@/lib/init/init-presence-day-activity'
-import { INIT_PRESENCE_ACTIVITY_ON_INIT } from '@/lib/init/init-presence-activity'
+import {
+  INIT_PRESENCE_ACTIVITY_ON_INIT,
+  buildInitPlayingWithJoolActivity,
+} from '@/lib/init/init-presence-activity'
 import { InitialsAvatar } from '@/components/global/shared/Avatar'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -59,6 +62,13 @@ function CollapsedHeroBar({
 }) {
   const barRef = useRef<HTMLDivElement>(null)
   const showDayNav = dayNumbers.length > 0
+  const { setTransientActivity } = useInitPresenceActivity()
+  const handleJoolInteractionStart = useCallback(() => {
+    setTransientActivity(buildInitPlayingWithJoolActivity())
+  }, [setTransientActivity])
+  const handleJoolInteractionEnd = useCallback(() => {
+    setTransientActivity(null)
+  }, [setTransientActivity])
 
   return (
     <div
@@ -78,7 +88,13 @@ function CollapsedHeroBar({
       }}
     >
       {visible ? (
-        <InitHeroBackground containerRef={barRef} compact active={particlesActive} />
+        <InitHeroBackground
+          containerRef={barRef}
+          compact
+          active={particlesActive}
+          onInteractionStart={handleJoolInteractionStart}
+          onInteractionEnd={handleJoolInteractionEnd}
+        />
       ) : null}
       <div
         className={cn(
@@ -183,7 +199,13 @@ export function EventHero({ event, headerAddon, liveBanner }: EventHeroProps) {
   const dayNumbers = useMemo(() => event.days.map((day) => day.day), [event.days])
   const activeDay = useInitScrollSpyDay(dayNumbers)
   const { isCapturing: isTicketVideoCapturing } = useInitTicketVideoRecording()
-  const { setBaselineActivity } = useInitPresenceActivity()
+  const { setBaselineActivity, setTransientActivity } = useInitPresenceActivity()
+  const handleJoolInteractionStart = useCallback(() => {
+    setTransientActivity(buildInitPlayingWithJoolActivity())
+  }, [setTransientActivity])
+  const handleJoolInteractionEnd = useCallback(() => {
+    setTransientActivity(null)
+  }, [setTransientActivity])
 
   useEffect(() => {
     const dayView = findInitDayView(event.days, activeDay)
@@ -280,6 +302,8 @@ export function EventHero({ event, headerAddon, liveBanner }: EventHeroProps) {
         <InitHeroBackground
           containerRef={heroRef}
           active={!isTicketVideoCapturing}
+          onInteractionStart={handleJoolInteractionStart}
+          onInteractionEnd={handleJoolInteractionEnd}
         />
 
         <div className="relative z-10 mx-auto flex min-h-[420px] w-full max-w-7xl flex-col items-center justify-center px-4 py-12 text-center sm:min-h-[480px] sm:px-6 sm:py-16">

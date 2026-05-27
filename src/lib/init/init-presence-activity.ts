@@ -45,6 +45,10 @@ export function buildInitCheckingScheduleActivity(day?: number): string {
   return 'Checking schedule'
 }
 
+export function buildInitPlayingWithJoolActivity(): string {
+  return 'Playing with Jool'
+}
+
 export function buildInitExploringActivity(label: string): string {
   return `Exploring ${label}`
 }
