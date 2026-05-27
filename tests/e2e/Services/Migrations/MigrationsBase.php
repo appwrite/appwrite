@@ -3142,7 +3142,7 @@ trait MigrationsBase
         // Password is intentionally not migrated (source API never exposes it),
         // so the destination receives every other field.
         $smtpPort = \intval(\getenv('_APP_SMTP_PORT') ?: '1025');
-        $this->client->call(Client::METHOD_PATCH, '/project/smtp', $sourceAdminHeaders, [
+        $sourceSmtpUpdate = $this->client->call(Client::METHOD_PATCH, '/project/smtp', $sourceAdminHeaders, [
             'enabled' => true,
             'senderName' => 'Migration Sender',
             'senderEmail' => 'sender@appwrite.io',
@@ -3154,6 +3154,8 @@ trait MigrationsBase
             'password' => 'smtp-pass',
             'secure' => '',
         ]);
+        $this->assertEquals(200, $sourceSmtpUpdate['headers']['status-code'], 'Source SMTP PATCH must succeed (otherwise migration sees empty config)');
+        $this->assertSame('Migration Sender', $sourceSmtpUpdate['body']['smtpSenderName']);
 
         $result = $this->performMigrationSync([
             'resources' => [
