@@ -225,10 +225,18 @@ trait MigrationsBase
         $this->assertEquals('Appwrite', $response['source']);
         $this->assertEquals('Appwrite', $response['destination']);
 
-        $counts = $response['statusCounters'][Resource::TYPE_API_KEY];
-        $this->assertEquals([Resource::TYPE_API_KEY], array_keys($response['statusCounters']));
-        $this->assertEquals(0, $counts['error']);
-        $this->assertGreaterThan(0, $counts['success']);
+        // ProjectCustom provisions an api-key and a webhook on each project, so both show up
+        // here. Other resources stay empty and getStatusCounters strips them.
+        $this->assertArrayHasKey(Resource::TYPE_API_KEY, $response['statusCounters']);
+        $this->assertArrayHasKey(Resource::TYPE_WEBHOOK, $response['statusCounters']);
+
+        $apiKeyCounts = $response['statusCounters'][Resource::TYPE_API_KEY];
+        $this->assertEquals(0, $apiKeyCounts['error']);
+        $this->assertGreaterThan(0, $apiKeyCounts['success']);
+
+        $webhookCounts = $response['statusCounters'][Resource::TYPE_WEBHOOK];
+        $this->assertEquals(0, $webhookCounts['error']);
+        $this->assertGreaterThan(0, $webhookCounts['success']);
     }
 
     /**
@@ -2647,7 +2655,7 @@ trait MigrationsBase
 
         $createResp = $this->client->call(Client::METHOD_POST, '/webhooks', $sourceHeaders, [
             'webhookId' => ID::unique(),
-            'url' => 'https://example.test/hook',
+            'url' => 'https://appwrite.io/hook',
             'name' => $webhookName,
             'events' => ['users.*.create', 'users.*.delete'],
             'enabled' => true,
@@ -2689,7 +2697,7 @@ trait MigrationsBase
 
         $this->assertNotNull($foundWebhook, 'Migrated webhook not found on destination');
         $this->assertEquals($webhookName, $foundWebhook['name']);
-        $this->assertEquals('https://example.test/hook', $foundWebhook['url']);
+        $this->assertEquals('https://appwrite.io/hook', $foundWebhook['url']);
         $this->assertEqualsCanonicalizing(['users.*.create', 'users.*.delete'], $foundWebhook['events']);
         $this->assertTrue($foundWebhook['enabled']);
         $this->assertTrue($foundWebhook['security']);
