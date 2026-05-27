@@ -198,13 +198,23 @@ class Migrations extends Action
         $projectDB = null;
         $useAppwriteApiSource = false;
         if ($source === SourceAppwrite::getName() && empty($credentials['projectId'])) {
-            throw new Exception(Exception::MIGRATION_SOURCE_PROJECT_ID_REQUIRED);
+            throw new MigrationException(
+                resourceName: '',
+                resourceGroup: '',
+                message: 'A source projectId is required for Appwrite migrations. Provide it in the migration credentials.',
+                code: MigrationException::CODE_VALIDATION,
+            );
         }
 
         if (! empty($credentials['projectId'])) {
             $this->sourceProject = $this->dbForPlatform->getDocument('projects', $credentials['projectId']);
             if ($this->sourceProject->isEmpty()) {
-                throw new Exception(Exception::MIGRATION_SOURCE_PROJECT_NOT_FOUND);
+                throw new MigrationException(
+                    resourceName: '',
+                    resourceGroup: '',
+                    message: 'Source project for the provided projectId could not be found.',
+                    code: MigrationException::CODE_NOT_FOUND,
+                );
             }
 
             $sourceRegion = $this->sourceProject->getAttribute('region', 'default');
@@ -267,7 +277,12 @@ class Migrations extends Action
                 $this->deviceForMigrations,
                 $this->dbForProject,
             ),
-            default => throw new Exception(Exception::MIGRATION_SOURCE_TYPE_INVALID),
+            default => throw new MigrationException(
+                resourceName: '',
+                resourceGroup: '',
+                message: 'The migration source type is invalid. Use one of the supported source types.',
+                code: MigrationException::CODE_VALIDATION,
+            ),
         };
 
         $resources = $migration->getAttribute('resources', []);
@@ -316,7 +331,12 @@ class Migrations extends Action
                 $options['filename'],
                 $options['columns'] ?? [],
             ),
-            default => throw new Exception(Exception::MIGRATION_DESTINATION_TYPE_INVALID),
+            default => throw new MigrationException(
+                resourceName: '',
+                resourceGroup: '',
+                message: 'The migration destination type is invalid. Use one of the supported destination types.',
+                code: MigrationException::CODE_VALIDATION,
+            ),
         };
     }
 
