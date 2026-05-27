@@ -36,7 +36,7 @@ function ScaledTicketShell({
 
   return (
     <div
-      className={cn('relative shrink-0', className)}
+      className={cn('relative shrink-0 overflow-hidden', className)}
       style={{ width: widthPx, height: heightPx }}
     >
       <div

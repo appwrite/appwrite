@@ -69,7 +69,7 @@ export function initTicketColumnSplit(): { main: number; stub: number } {
 
 /** Stub label padding inside the stub grid column (% of stub cell). */
 export const INIT_TICKET_STUB_LABEL_INSET = {
-  left: 64,
+  left: 70,
   right: 6,
   bottom: 6,
 } as const

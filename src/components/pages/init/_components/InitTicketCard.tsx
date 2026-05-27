@@ -110,7 +110,7 @@ function TicketStackIcons({
   if (!stack.length) return null
 
   return (
-    <div className="flex flex-wrap gap-2.5">
+    <div className="flex flex-wrap gap-x-3.5 gap-y-3">
       {stack.map((id) => {
         const option = getInitTicketStackOption(id)
         if (!option) return null
@@ -178,7 +178,7 @@ function TicketStubContent({
           bottom: `${bottom}%`,
         }}
       >
-        <div className="flex origin-bottom-left -rotate-90 flex-col items-start gap-1.5 whitespace-nowrap text-left">
+        <div className="flex origin-bottom-left -rotate-90 flex-col items-start gap-2 whitespace-nowrap text-left">
           <p className="font-aeonik-pro text-[clamp(10px,1.8vw,14px)] font-bold italic leading-none">
             {eventName}
             <span style={{ color: accentColor }}>_</span>
@@ -191,7 +191,7 @@ function TicketStubContent({
           </p>
           <p
             className={cn(
-              'max-w-[140px] truncate text-[clamp(8px,1.4vw,11px)] font-medium',
+              'max-w-[160px] truncate text-[clamp(11px,2vw,16px)] font-semibold',
               labelClass,
             )}
           >
@@ -302,25 +302,25 @@ function TicketFrontFace(props: TicketFaceSharedProps) {
             </p>
           </div>
 
-          <div className="space-y-3">
+          <div className="space-y-4">
             <TicketStackIcons stack={prefs.stack} usesDarkImage={usesDarkImage} />
             <div
               className={cn(
-                'space-y-1.5 border-t border-dashed pt-3',
+                'space-y-2.5 border-t border-dashed pt-4',
                 usesDarkImage ? 'border-white/20' : 'border-neutral-900/15',
               )}
             >
               <p
                 className={cn(
-                  'truncate text-[clamp(14px,2.8vw,20px)] font-medium leading-tight',
-                  usesDarkImage ? 'text-white/95' : 'text-neutral-900',
+                  'truncate text-[clamp(28px,6.5vw,48px)] font-semibold leading-[1.02] tracking-tight',
+                  usesDarkImage ? 'text-white' : 'text-neutral-900',
                 )}
               >
                 {holderName}
               </p>
               <p
                 className={cn(
-                  'truncate text-[clamp(11px,2vw,14px)] font-medium leading-snug',
+                  'truncate text-[clamp(12px,2.2vw,16px)] font-medium leading-relaxed',
                   usesDarkImage ? 'text-white/70' : 'text-neutral-600',
                 )}
               >
@@ -447,8 +447,8 @@ function TicketBackFace(props: TicketFaceSharedProps) {
             </p>
             <p
               className={cn(
-                'truncate text-[11px]',
-                usesDarkImage ? 'text-white/60' : 'text-neutral-500',
+                'truncate text-[clamp(11px,1.9vw,15px)] font-medium leading-tight',
+                usesDarkImage ? 'text-white/90' : 'text-neutral-800',
               )}
             >
               {holderName}
@@ -582,7 +582,9 @@ export function InitTicketCard({
 
   const scheduleTiltApply = useCallback(
     (duration = TILT_DURATION_MS) => {
-      if (tiltRafRef.current) return
+      if (tiltRafRef.current) {
+        cancelAnimationFrame(tiltRafRef.current)
+      }
       tiltRafRef.current = window.requestAnimationFrame(() => {
         tiltRafRef.current = 0
         applyTransform(duration)
@@ -625,30 +627,70 @@ export function InitTicketCard({
     }
   }, [deviceTiltEnabled, startDeviceTilt])
 
-  const updateTiltFromPointer = useCallback(
-    (event: React.PointerEvent<HTMLDivElement>) => {
-      const scene = sceneRef.current
-      if (!scene) return
+  const computeTiltAtClientCoords = useCallback((clientX: number, clientY: number) => {
+    const scene = sceneRef.current
+    if (!scene) return null
 
-      const rect = scene.getBoundingClientRect()
-      const px = (event.clientX - rect.left) / rect.width - 0.5
-      const py = (event.clientY - rect.top) / rect.height - 0.5
+    const rect = scene.getBoundingClientRect()
+    if (rect.width <= 0 || rect.height <= 0) return null
 
-      pointerTiltActiveRef.current = true
-      pointerTiltRef.current = {
-        x: -py * TILT_MAX_X,
-        y: px * TILT_MAX_Y,
-      }
+    const px = (clientX - rect.left) / rect.width - 0.5
+    const py = (clientY - rect.top) / rect.height - 0.5
 
-      syncEffectiveTilt(TILT_DURATION_MS)
+    return {
+      x: -py * TILT_MAX_X,
+      y: px * TILT_MAX_Y,
+    }
+  }, [])
+
+  const applyMouseHoverTilt = useCallback(
+    (clientX: number, clientY: number) => {
+      const tilt = computeTiltAtClientCoords(clientX, clientY)
+      if (!tilt) return
+
+      pointerTiltActiveRef.current = false
+      tiltRef.current = tilt
+      scheduleTiltApply(TILT_DURATION_MS)
     },
-    [syncEffectiveTilt],
+    [computeTiltAtClientCoords, scheduleTiltApply],
   )
 
-  const releasePointerTilt = useCallback(() => {
+  const applyPointerTilt = useCallback(
+    (clientX: number, clientY: number) => {
+      const tilt = computeTiltAtClientCoords(clientX, clientY)
+      if (!tilt) return
+
+      if (deviceTiltEnabled) {
+        pointerTiltActiveRef.current = true
+        pointerTiltRef.current = tilt
+        syncEffectiveTilt(TILT_DURATION_MS)
+        return
+      }
+
+      applyMouseHoverTilt(clientX, clientY)
+    },
+    [applyMouseHoverTilt, deviceTiltEnabled, syncEffectiveTilt],
+  )
+
+  const updateTiltFromPointer = useCallback(
+    (event: React.PointerEvent<HTMLDivElement>) => {
+      applyPointerTilt(event.clientX, event.clientY)
+    },
+    [applyPointerTilt],
+  )
+
+  const releaseMouseHoverTilt = useCallback(() => {
     pointerTiltActiveRef.current = false
-    syncEffectiveTilt(deviceTiltListening ? TILT_DURATION_MS : RESET_DURATION_MS)
-  }, [deviceTiltListening, syncEffectiveTilt])
+    pointerTiltRef.current = { x: 0, y: 0 }
+    if (deviceTiltEnabled && deviceTiltListening) {
+      syncEffectiveTilt(TILT_DURATION_MS)
+      return
+    }
+    tiltRef.current = { x: 0, y: 0 }
+    scheduleTiltApply(RESET_DURATION_MS)
+  }, [deviceTiltEnabled, deviceTiltListening, scheduleTiltApply, syncEffectiveTilt])
+
+  const releasePointerTilt = releaseMouseHoverTilt
 
   const resetTilt = useCallback(() => {
     pointerTiltActiveRef.current = false
@@ -662,14 +704,85 @@ export function InitTicketCard({
     applyTransform(RESET_DURATION_MS)
   }, [applyTransform, deviceTiltListening, syncEffectiveTilt])
 
+  const applyMouseHoverTiltRef = useRef(applyMouseHoverTilt)
+  const releaseMouseHoverTiltRef = useRef(releaseMouseHoverTilt)
+
+  useEffect(() => {
+    applyMouseHoverTiltRef.current = applyMouseHoverTilt
+  }, [applyMouseHoverTilt])
+
+  useEffect(() => {
+    releaseMouseHoverTiltRef.current = releaseMouseHoverTilt
+  }, [releaseMouseHoverTilt])
+
+  useEffect(() => {
+    if (!interactive || reducedMotion) return
+
+    let mouseHovering = false
+
+    const isPointerOverScene = (clientX: number, clientY: number) => {
+      const scene = sceneRef.current
+      if (!scene) return false
+
+      const target = document.elementFromPoint(clientX, clientY)
+      if (target && (target === scene || scene.contains(target))) return true
+
+      const rect = scene.getBoundingClientRect()
+      return (
+        clientX >= rect.left &&
+        clientX <= rect.right &&
+        clientY >= rect.top &&
+        clientY <= rect.bottom
+      )
+    }
+
+    const handleWindowMouseMove = (event: MouseEvent) => {
+      if (animatingRef.current || touchActiveRef.current) return
+
+      if (!isPointerOverScene(event.clientX, event.clientY)) {
+        if (mouseHovering) {
+          mouseHovering = false
+          pointerStartRef.current = null
+          releaseMouseHoverTiltRef.current()
+        }
+        return
+      }
+
+      mouseHovering = true
+      applyMouseHoverTiltRef.current(event.clientX, event.clientY)
+    }
+
+    window.addEventListener('mousemove', handleWindowMouseMove, { passive: true })
+    return () => window.removeEventListener('mousemove', handleWindowMouseMove)
+  }, [interactive, reducedMotion])
+
+  const handleSceneMouseMove = useCallback(
+    (event: React.MouseEvent<HTMLDivElement>) => {
+      if (!interactive || reducedMotion || animatingRef.current || touchActiveRef.current) {
+        return
+      }
+      applyMouseHoverTilt(event.clientX, event.clientY)
+    },
+    [applyMouseHoverTilt, interactive, reducedMotion],
+  )
+
+  const handleSceneMouseLeave = useCallback(() => {
+    if (!interactive || reducedMotion || touchActiveRef.current) return
+    pointerStartRef.current = null
+    releaseMouseHoverTilt()
+  }, [interactive, reducedMotion, releaseMouseHoverTilt])
+
   const handlePointerMove = useCallback(
     (event: React.PointerEvent<HTMLDivElement>) => {
       if (!interactive || reducedMotion || animatingRef.current) return
 
-      const isTouch = event.pointerType === 'touch'
-      const isMouseHover = event.pointerType === 'mouse' && event.buttons === 0
+      // Mouse hover uses onMouseMove + window mousemove (pointermove is unreliable on scaled cards).
+      if (event.pointerType === 'mouse') return
 
-      if (!isTouch && !isMouseHover && event.buttons === 0) return
+      const isTouch = event.pointerType === 'touch'
+      const isHoverPointer = event.pointerType !== 'touch' && event.buttons === 0
+
+      if (!isTouch && !isHoverPointer && event.buttons === 0) return
 
       if (pointerStartRef.current) {
         const dx = event.clientX - pointerStartRef.current.x
@@ -747,7 +860,7 @@ export function InitTicketCard({
   const handlePointerLeave = useCallback(
     (event: React.PointerEvent<HTMLDivElement>) => {
       if (!interactive || reducedMotion || touchActiveRef.current) return
-      if (event.pointerType !== 'mouse') return
+      if (event.pointerType === 'touch' || event.pointerType === 'mouse') return
       pointerStartRef.current = null
       releasePointerTilt()
     },
@@ -815,6 +928,8 @@ export function InitTicketCard({
             aspectRatio: INIT_TICKET_ASPECT_RATIO,
             clipPath: `inset(0 0 ${INIT_TICKET_BOTTOM_TRIM_PERCENT}% 0)`,
           }}
+          onMouseMove={interactive && !reducedMotion ? handleSceneMouseMove : undefined}
+          onMouseLeave={interactive && !reducedMotion ? handleSceneMouseLeave : undefined}
           onPointerDown={interactive && !reducedMotion ? handlePointerDown : undefined}
           onPointerMove={interactive && !reducedMotion ? handlePointerMove : undefined}
           onPointerUp={interactive && !reducedMotion ? handlePointerUp : undefined}

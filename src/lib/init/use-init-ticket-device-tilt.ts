@@ -15,12 +15,17 @@ export function isInitTicketDeviceTiltSupported(): boolean {
   return typeof window !== 'undefined' && 'DeviceOrientationEvent' in window
 }
 
+export function prefersFinePointer(): boolean {
+  if (typeof window === 'undefined') return true
+  return window.matchMedia('(pointer: fine)').matches
+}
+
 export function prefersInitTicketDeviceTilt(): boolean {
   if (typeof window === 'undefined') return false
+  if (prefersFinePointer()) return false
   return (
     window.matchMedia('(pointer: coarse)').matches ||
-    window.matchMedia('(hover: none)').matches ||
-    navigator.maxTouchPoints > 0
+    window.matchMedia('(hover: none)').matches
   )
 }
 
