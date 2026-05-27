@@ -3137,19 +3137,22 @@ trait MigrationsBase
         ]);
 
         // Configure SMTP on the source so the round-trip is observable.
+        // The endpoint validates the SMTP connection when enabled=true, so we
+        // point at the in-cluster maildev container (same as ProjectCustom).
         // Password is intentionally not migrated (source API never exposes it),
         // so the destination receives every other field.
+        $smtpPort = \intval(\getenv('_APP_SMTP_PORT') ?: '1025');
         $this->client->call(Client::METHOD_PATCH, '/project/smtp', $sourceAdminHeaders, [
             'enabled' => true,
             'senderName' => 'Migration Sender',
-            'senderEmail' => 'sender@example.com',
+            'senderEmail' => 'sender@appwrite.io',
             'replyToName' => 'Migration Reply',
-            'replyToEmail' => 'reply@example.com',
-            'host' => 'smtp.example.com',
-            'port' => 587,
+            'replyToEmail' => 'reply@appwrite.io',
+            'host' => 'maildev',
+            'port' => $smtpPort,
             'username' => 'smtp-user',
             'password' => 'smtp-pass',
-            'secure' => 'tls',
+            'secure' => '',
         ]);
 
         $result = $this->performMigrationSync([
@@ -3175,13 +3178,13 @@ trait MigrationsBase
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertTrue($response['body']['smtpEnabled'], 'smtpEnabled should be migrated as true');
         $this->assertSame('Migration Sender', $response['body']['smtpSenderName']);
-        $this->assertSame('sender@example.com', $response['body']['smtpSenderEmail']);
+        $this->assertSame('sender@appwrite.io', $response['body']['smtpSenderEmail']);
         $this->assertSame('Migration Reply', $response['body']['smtpReplyToName']);
-        $this->assertSame('reply@example.com', $response['body']['smtpReplyToEmail']);
-        $this->assertSame('smtp.example.com', $response['body']['smtpHost']);
-        $this->assertSame(587, $response['body']['smtpPort']);
+        $this->assertSame('reply@appwrite.io', $response['body']['smtpReplyToEmail']);
+        $this->assertSame('maildev', $response['body']['smtpHost']);
+        $this->assertSame($smtpPort, $response['body']['smtpPort']);
         $this->assertSame('smtp-user', $response['body']['smtpUsername']);
-        $this->assertSame('tls', $response['body']['smtpSecure']);
+        $this->assertSame('', $response['body']['smtpSecure']);
 
         // Reset both projects so the test is idempotent.
         $reset = [
