@@ -12,6 +12,7 @@ use Utopia\Config\Config;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Validator\Authorization;
+use Utopia\Platform\Enum;
 use Utopia\Platform\Scope\HTTP;
 use Utopia\Validator\Boolean;
 use Utopia\Validator\WhiteList;
@@ -53,7 +54,7 @@ class Update extends Action
                 ],
             ))
 
-            ->param('methodId', '', new WhiteList(\array_keys(Config::getParam('auth')), true), 'Auth Method ID. Possible values: ' . implode(',', \array_keys(Config::getParam('auth'))), false)
+            ->param('methodId', '', new WhiteList(\array_keys(Config::getParam('auth')), true), 'Auth Method ID. Possible values: ' . implode(',', \array_keys(Config::getParam('auth'))), false, enum: new Enum(name: 'ProjectAuthMethodId'))
             ->param('enabled', null, new Boolean(), 'Auth method status.')
             ->inject('response')
             ->inject('dbForPlatform')

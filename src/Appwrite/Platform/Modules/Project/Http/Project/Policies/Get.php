@@ -8,6 +8,7 @@ use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response;
 use Utopia\Database\Document;
 use Utopia\Platform\Action;
+use Utopia\Platform\Enum;
 use Utopia\Platform\Scope\HTTP;
 use Utopia\Validator\WhiteList;
 
@@ -63,7 +64,7 @@ class Get extends Action
                 'session-limit',
                 'user-limit',
                 'membership-privacy',
-            ], true), 'Policy ID. Can be one of: password-dictionary, password-history, password-personal-data, session-alert, session-duration, session-invalidation, session-limit, user-limit, membership-privacy.')
+            ], true), 'Policy ID. Can be one of: password-dictionary, password-history, password-personal-data, session-alert, session-duration, session-invalidation, session-limit, user-limit, membership-privacy.', enum: new Enum(name: 'ProjectPolicyId'))
             ->inject('response')
             ->inject('project')
             ->callback($this->action(...));
