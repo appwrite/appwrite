@@ -2797,7 +2797,7 @@ trait MigrationsBase
         $this->assertEquals($secretKey, $foundSecret['key']);
         // Secret variables: source SDK never returned the real value, so the destination
         // also stores empty. The original 'real-secret-value' must not have leaked.
-        $this->assertNotEquals('real-secret-value', $foundSecret['value']);
+        $this->assertEmpty($foundSecret['value']);
         $this->assertTrue($foundSecret['secret']);
 
         // Cleanup on destination
