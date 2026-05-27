@@ -2851,8 +2851,9 @@ trait MigrationsBase
         $response = $this->client->call(Client::METHOD_GET, '/projects/' . $destinationProjectId, $consoleHeaders);
 
         $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertFalse($response['body']['authEmailPassword'], 'authEmailPassword should be migrated as false');
-        $this->assertFalse($response['body']['authJWT'], 'authJWT should be migrated as false');
+        $authMethods = \array_column($response['body']['authMethods'] ?? [], 'enabled', '$id');
+        $this->assertFalse($authMethods['email-password'] ?? null, 'email-password auth method should be migrated as false');
+        $this->assertFalse($authMethods['jwt'] ?? null, 'jwt auth method should be migrated as false');
 
         // Restore source so the test is idempotent.
         $this->client->call(Client::METHOD_PATCH, '/projects/' . $sourceProjectId . '/auth/email-password', $consoleHeaders, ['status' => true]);
@@ -2902,8 +2903,9 @@ trait MigrationsBase
         $response = $this->client->call(Client::METHOD_GET, '/projects/' . $destinationProjectId, $consoleHeaders);
 
         $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertFalse($response['body']['protocolStatusForGraphql'], 'GraphQL protocol should be migrated as disabled');
-        $this->assertFalse($response['body']['protocolStatusForWebsocket'], 'WebSocket protocol should be migrated as disabled');
+        $protocols = \array_column($response['body']['protocols'] ?? [], 'enabled', '$id');
+        $this->assertFalse($protocols['graphql'] ?? null, 'GraphQL protocol should be migrated as disabled');
+        $this->assertFalse($protocols['websocket'] ?? null, 'WebSocket protocol should be migrated as disabled');
 
         // Restore both projects so the test is idempotent.
         $this->client->call(Client::METHOD_PATCH, '/projects/' . $sourceProjectId . '/api/graphql', $consoleHeaders, ['status' => true]);
@@ -3001,8 +3003,9 @@ trait MigrationsBase
 
         $response = $this->client->call(Client::METHOD_GET, '/projects/' . $destinationProjectId, $consoleHeaders);
         $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertFalse($response['body']['serviceStatusForFunctions'], 'Functions service should be migrated as disabled');
-        $this->assertFalse($response['body']['serviceStatusForGraphql'], 'GraphQL service should be migrated as disabled');
+        $services = \array_column($response['body']['services'] ?? [], 'enabled', '$id');
+        $this->assertFalse($services['functions'] ?? null, 'Functions service should be migrated as disabled');
+        $this->assertFalse($services['graphql'] ?? null, 'GraphQL service should be migrated as disabled');
 
         // Restore both projects.
         $this->client->call(Client::METHOD_PATCH, '/projects/' . $sourceProjectId . '/service/functions', $consoleHeaders, ['status' => true]);
