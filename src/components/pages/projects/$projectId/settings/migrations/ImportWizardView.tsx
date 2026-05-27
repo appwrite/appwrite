@@ -25,7 +25,7 @@ import {
   SupabaseMigrationResource,
   FirebaseMigrationResource,
   NHostMigrationResource,
-  OnDuplicate,
+  MigrationOnDuplicate,
   type Models,
 } from '@appwrite.io/console'
 import { useConsoleProfile } from '@/hooks/use-console-profile'
@@ -140,7 +140,9 @@ export function ImportWizardView() {
   const [resourceForm, setResourceForm] = useState<ResourceFormState>(() => ({
     ...INITIAL_RESOURCE_FORM,
   }))
-  const [onDuplicate, setOnDuplicate] = useState<OnDuplicate>(OnDuplicate.Fail)
+  const [onDuplicate, setOnDuplicate] = useState<MigrationOnDuplicate>(
+    MigrationOnDuplicate.Fail,
+  )
 
   const [endpoint, setEndpoint] = useState('')
   const [projectID, setProjectID] = useState('')
@@ -883,9 +885,9 @@ export function ImportWizardView() {
               <div className="flex flex-wrap gap-2">
                 {(
                   [
-                    [OnDuplicate.Fail, 'Fail'],
-                    [OnDuplicate.Skip, 'Skip'],
-                    [OnDuplicate.Overwrite, 'Overwrite'],
+                    [MigrationOnDuplicate.Fail, 'Fail'],
+                    [MigrationOnDuplicate.Skip, 'Skip'],
+                    [MigrationOnDuplicate.Overwrite, 'Overwrite'],
                   ] as const
                 ).map(([value, label]) => (
                   <Button

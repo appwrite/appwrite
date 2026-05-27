@@ -19,7 +19,7 @@ import {
   SupabaseMigrationResource,
   FirebaseMigrationResource,
   NHostMigrationResource,
-  OnDuplicate,
+  MigrationOnDuplicate,
 } from '@appwrite.io/console'
 import type { Models } from '@appwrite.io/console'
 import { sdk } from '@/lib/appwrite/sdk'
@@ -426,7 +426,7 @@ export interface CreateCSVImportParams {
   fileId: string
   resourceId: string
   internalFile?: boolean
-  onDuplicate?: OnDuplicate
+  onDuplicate?: MigrationOnDuplicate
 }
 
 /**
@@ -603,7 +603,7 @@ export interface CreateAppwriteMigrationParams {
   endpoint: string
   projectId: string
   apiKey: string
-  onDuplicate?: OnDuplicate
+  onDuplicate?: MigrationOnDuplicate
 }
 
 export function useCreateAppwriteMigration(
