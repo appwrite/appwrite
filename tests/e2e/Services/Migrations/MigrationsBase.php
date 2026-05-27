@@ -2858,7 +2858,7 @@ trait MigrationsBase
         $this->assertEquals(0, $result['statusCounters'][Resource::TYPE_AUTH_METHODS]['processing']);
         $this->assertEquals(0, $result['statusCounters'][Resource::TYPE_AUTH_METHODS]['warning']);
 
-        $response = $this->client->call(Client::METHOD_GET, '/projects/' . $destinationProjectId, $consoleHeaders);
+        $response = $this->client->call(Client::METHOD_GET, '/project', $destinationAdminHeaders);
 
         $this->assertEquals(200, $response['headers']['status-code']);
         $authMethods = \array_column($response['body']['authMethods'] ?? [], 'enabled', '$id');
@@ -2920,7 +2920,7 @@ trait MigrationsBase
         $this->assertEquals(0, $result['statusCounters'][Resource::TYPE_PROTOCOLS]['processing']);
         $this->assertEquals(0, $result['statusCounters'][Resource::TYPE_PROTOCOLS]['warning']);
 
-        $response = $this->client->call(Client::METHOD_GET, '/projects/' . $destinationProjectId, $consoleHeaders);
+        $response = $this->client->call(Client::METHOD_GET, '/project', $destinationAdminHeaders);
 
         $this->assertEquals(200, $response['headers']['status-code']);
         $protocols = \array_column($response['body']['protocols'] ?? [], 'enabled', '$id');
@@ -2981,7 +2981,7 @@ trait MigrationsBase
         $this->assertEquals(0, $result['statusCounters'][Resource::TYPE_LABELS]['processing']);
         $this->assertEquals(0, $result['statusCounters'][Resource::TYPE_LABELS]['warning']);
 
-        $response = $this->client->call(Client::METHOD_GET, '/projects/' . $destinationProjectId, $consoleHeaders);
+        $response = $this->client->call(Client::METHOD_GET, '/project', $destinationAdminHeaders);
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertEqualsCanonicalizing($labels, $response['body']['labels']);
 
@@ -3033,7 +3033,7 @@ trait MigrationsBase
         $this->assertEquals(0, $result['statusCounters'][Resource::TYPE_SERVICES]['processing']);
         $this->assertEquals(0, $result['statusCounters'][Resource::TYPE_SERVICES]['warning']);
 
-        $response = $this->client->call(Client::METHOD_GET, '/projects/' . $destinationProjectId, $consoleHeaders);
+        $response = $this->client->call(Client::METHOD_GET, '/project', $destinationAdminHeaders);
         $this->assertEquals(200, $response['headers']['status-code']);
         $services = \array_column($response['body']['services'] ?? [], 'enabled', '$id');
         $this->assertFalse($services['functions'] ?? null, 'Functions service should be migrated as disabled');
