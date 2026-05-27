@@ -29,6 +29,15 @@ type AvatarSize = 'sm' | 'md'
 const PRESENCE_LIST_EASE: [number, number, number, number] = [0.22, 1, 0.36, 1]
 const PRESENCE_LIST_TRANSITION = { duration: 0.22, ease: PRESENCE_LIST_EASE }
 const PRESENCE_ACTIVITY_TRANSITION = { duration: 0.16, ease: PRESENCE_LIST_EASE }
+const PRESENCE_RING_PULSE_TRANSITION = { duration: 0.42, ease: PRESENCE_LIST_EASE }
+const APPWRITE_PRESENCES_DOCS_URL = 'https://appwrite.io/docs/apis/realtime/presences'
+
+function buildPresenceStatusKey(
+  user: LaunchEventOnlineUser,
+  presence: LaunchEventUserPresence,
+): string {
+  return `${presence}:${user.isLive ? 'live' : 'idle'}:${user.activity}`
+}
 
 /** Readable popover-style tooltip for collapsed sidebar rows (not inverted xs pills). */
 const ONLINE_USER_TOOLTIP_CLASS =
@@ -58,6 +67,8 @@ function PresenceAvatar({
   presence: LaunchEventUserPresence
   size?: AvatarSize
 }) {
+  const reduceMotion = useReducedMotion()
+  const statusKey = buildPresenceStatusKey(user, presence)
   const ringClass =
     presence === 'online'
       ? user.isLive
@@ -66,8 +77,11 @@ function PresenceAvatar({
       : 'bg-gradient-to-tr from-muted-foreground/35 via-muted-foreground/20 to-muted-foreground/35'
 
   return (
-    <span
+    <motion.span
+      key={statusKey}
       className={cn('inline-flex shrink-0 rounded-full p-[2px]', ringClass)}
+      animate={reduceMotion ? undefined : { scale: [1, 1.14, 1] }}
+      transition={PRESENCE_RING_PULSE_TRANSITION}
       aria-hidden
     >
       <InitialsAvatar
@@ -75,7 +89,7 @@ function PresenceAvatar({
         size={size}
         className="rounded-full ring-2 ring-background"
       />
-    </span>
+    </motion.span>
   )
 }
 
@@ -265,6 +279,37 @@ function UserCategory({
   )
 }
 
+function OnlineUsersPresenceCredits({
+  collapsed,
+  isMobile = false,
+}: {
+  collapsed: boolean
+  isMobile?: boolean
+}) {
+  if (collapsed && !isMobile) return null
+
+  return (
+    <div
+      className={cn(
+        'shrink-0 border-t border-border bg-background px-3 py-2.5',
+        isMobile && 'px-4',
+      )}
+    >
+      <p className="text-center text-[10px] leading-relaxed text-muted-foreground/60">
+        Realtime powered by{' '}
+        <a
+          href={APPWRITE_PRESENCES_DOCS_URL}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="font-medium text-muted-foreground/75 underline-offset-4 transition-colors hover:text-muted-foreground hover:underline"
+        >
+          Appwrite Presences
+        </a>
+      </p>
+    </div>
+  )
+}
+
 function OnlineUsersNavContent({
   event,
   collapsed,
@@ -291,7 +336,7 @@ function OnlineUsersNavContent({
           transition={PRESENCE_LIST_TRANSITION}
           className={cn(
             'px-2.5 text-[13px] text-muted-foreground',
-            isMobile && 'px-3',
+            isMobile && 'px-0',
             collapsed && !isMobile && 'text-center text-[12px]',
           )}
         >
@@ -361,13 +406,19 @@ export function OnlineUsersNav({
             '[transform:translateZ(0)] [backface-visibility:hidden]',
           )}
         >
-          <nav
-            className="flex-1 overflow-y-auto px-3 py-4"
-            role="navigation"
-            aria-label="Online participants"
-          >
-            <OnlineUsersNavContent event={event} collapsed={collapsed} showPanel={showPanel} />
-          </nav>
+          <div className="flex min-h-0 flex-1 flex-col">
+            <nav
+              className="min-h-0 flex-1 overflow-y-auto px-3 py-4"
+              role="navigation"
+              aria-label="Online participants"
+            >
+              <OnlineUsersNavContent event={event} collapsed={collapsed} showPanel={showPanel} />
+            </nav>
+
+            {showPanel ? (
+              <OnlineUsersPresenceCredits collapsed={collapsed} />
+            ) : null}
+          </div>
 
           {showPanel ? (
             <div className="shrink-0 border-t border-border bg-muted/20">
@@ -414,18 +465,22 @@ export function OnlineUsersNav({
           </button>
         </div>
 
-        <nav
-          className="flex-1 overflow-y-auto px-4 py-4"
-          role="navigation"
-          aria-label="Mobile online participants"
-        >
-          <OnlineUsersNavContent
-            event={event}
-            collapsed={false}
-            isMobile
-            showPanel={showPanel}
-          />
-        </nav>
+        <div className="flex min-h-0 flex-1 flex-col">
+          <nav
+            className="min-h-0 flex-1 overflow-y-auto px-4 py-4"
+            role="navigation"
+            aria-label="Mobile online participants"
+          >
+            <OnlineUsersNavContent
+              event={event}
+              collapsed={false}
+              isMobile
+              showPanel={showPanel}
+            />
+          </nav>
+
+          {showPanel ? <OnlineUsersPresenceCredits isMobile /> : null}
+        </div>
 
         {showPanel ? (
           <div className="shrink-0 border-t border-border bg-muted/20 px-4 py-3">

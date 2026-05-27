@@ -18,18 +18,29 @@ import {
 } from '@/lib/init/init-presence-context'
 import { consoleAccountQueryOptions } from '@/lib/react-query/hooks/auth'
 import { cn } from '@/lib/utils'
+import { motion, useReducedMotion } from 'motion/react'
+
+const PRESENCE_STATUS_PULSE_TRANSITION = {
+  duration: 0.42,
+  ease: [0.22, 1, 0.36, 1] as [number, number, number, number],
+}
 
 const ONLINE_USER_TOOLTIP_CLASS =
   'max-w-[min(280px,calc(100dvw-5rem))] border border-border bg-popover px-3 py-2.5 text-popover-foreground shadow-md [&_svg]:!hidden'
 
 function StatusDot({ online, className }: { online: boolean; className?: string }) {
+  const reduceMotion = useReducedMotion()
+
   return (
-    <span
+    <motion.span
+      key={online ? 'online' : 'offline'}
       className={cn(
         'size-2 shrink-0 rounded-full',
         online ? 'bg-emerald-500 shadow-[0_0_0_2px_color-mix(in_srgb,var(--background)_70%,transparent)]' : 'bg-muted-foreground/45',
         className,
       )}
+      animate={reduceMotion ? undefined : { scale: [1, 1.25, 1] }}
+      transition={PRESENCE_STATUS_PULSE_TRANSITION}
       aria-hidden
     />
   )
@@ -132,6 +143,7 @@ export function InitPresenceStatusControl({
     isReady,
     setParticipantStatus,
   } = useInitPresence()
+  const reduceMotion = useReducedMotion()
 
   const name =
     account?.name?.trim() || account?.email?.split('@')[0]?.trim() || 'You'
@@ -161,11 +173,14 @@ export function InitPresenceStatusControl({
               >
                 <span className="relative">
                   <InitialsAvatar name={name} size="sm" className="rounded-full" />
-                  <span
+                  <motion.span
+                    key={isOnline ? 'online' : 'offline'}
                     className={cn(
                       'absolute -bottom-0.5 -right-0.5 size-2.5 rounded-full ring-2 ring-background',
                       isOnline ? 'bg-emerald-500' : 'bg-muted-foreground/50',
                     )}
+                    animate={reduceMotion ? undefined : { scale: [1, 1.25, 1] }}
+                    transition={PRESENCE_STATUS_PULSE_TRANSITION}
                     aria-hidden
                   />
                 </span>
