@@ -7,7 +7,7 @@ import { useDebugOverrides } from '@/lib/debug-overrides'
 import { getActiveLaunchEvent } from '@/lib/init/events'
 import { applyInitEventVisibility } from '@/lib/init/event-visibility'
 import { isLaunchEventDayLocked } from '@/lib/init/types'
-import { useInitOnlinePresence } from '@/lib/init/use-init-online-presence'
+import { InitPresenceProvider, useInitPresence } from '@/lib/init/init-presence-context'
 import { consoleAccountQueryOptions } from '@/lib/react-query/hooks/auth'
 import { cn } from '@/lib/utils'
 import { EventHero } from './_components/EventHero'
@@ -26,23 +26,21 @@ import {
   INIT_TICKET_VIDEO_SURFACE_CLASS,
 } from '@/lib/init/ticket-video-capture'
 
-export function View() {
+import type { Models } from '@appwrite.io/console'
+import type { InitDisplayEvent } from '@/lib/init/types'
+
+function InitPageContent({
+  baseEvent,
+  account,
+}: {
+  baseEvent: InitDisplayEvent
+  account?: Models.User | null
+}) {
   const [commandCenterOpen, setCommandCenterOpen] = useState(false)
   const [onlineNavOpen, setOnlineNavOpen] = useState(false)
-  const { mockInitCurrentDay } = useDebugOverrides()
-  const baseEvent = useMemo(() => {
-    const active = getActiveLaunchEvent()
-    if (!active) return undefined
-    return applyInitEventVisibility(active, { mockCurrentDay: mockInitCurrentDay })
-  }, [mockInitCurrentDay])
-
-  const { data: account } = useQuery(consoleAccountQueryOptions())
-  const presence = useInitOnlinePresence(baseEvent?.id, {
-    enabled: Boolean(baseEvent?.presenceEnabled && account),
-  })
+  const presence = useInitPresence()
 
   const event = useMemo(() => {
-    if (!baseEvent) return undefined
     if (!baseEvent.presenceEnabled || !account) {
       return baseEvent
     }
@@ -57,32 +55,6 @@ export function View() {
 
   useKeyboardShortcut('meta+k', () => setCommandCenterOpen(true))
   useKeyboardShortcut('control+k', () => setCommandCenterOpen(true))
-
-  if (!event) {
-    return (
-      <>
-        <ConsoleLayout
-          header={{ onCommandCenterOpen: () => setCommandCenterOpen(true) }}
-          showFooter
-        >
-          <div className="mx-auto flex w-full max-w-7xl flex-col items-center justify-center px-4 py-24 sm:px-6">
-            <p className="text-[15px] font-semibold text-foreground">
-              No launch events scheduled
-            </p>
-            <p className="mt-2 text-[13px] text-muted-foreground">
-              Check back soon for the next Appwrite product launch week.
-            </p>
-          </div>
-        </ConsoleLayout>
-
-        <CommandCenter
-          open={commandCenterOpen}
-          onOpenChange={setCommandCenterOpen}
-          context="account"
-        />
-      </>
-    )
-  }
 
   const showOnlineNav = hasOnlineUsersNav(event, {
     presenceEnabled: event.presenceEnabled,
@@ -174,6 +146,58 @@ export function View() {
             </p>
           </div>
         </InitTicketVideoRecordingProvider>
+      </ConsoleLayout>
+
+      <CommandCenter
+        open={commandCenterOpen}
+        onOpenChange={setCommandCenterOpen}
+        context="account"
+      />
+    </>
+  )
+}
+
+export function View() {
+  const { mockInitCurrentDay } = useDebugOverrides()
+  const baseEvent = useMemo(() => {
+    const active = getActiveLaunchEvent()
+    if (!active) return undefined
+    return applyInitEventVisibility(active, { mockCurrentDay: mockInitCurrentDay })
+  }, [mockInitCurrentDay])
+
+  const { data: account } = useQuery(consoleAccountQueryOptions())
+
+  if (!baseEvent) {
+    return <InitEmptyState />
+  }
+
+  return (
+    <InitPresenceProvider
+      eventId={baseEvent.id}
+      enabled={Boolean(baseEvent.presenceEnabled && account)}
+    >
+      <InitPageContent baseEvent={baseEvent} account={account} />
+    </InitPresenceProvider>
+  )
+}
+
+function InitEmptyState() {
+  const [commandCenterOpen, setCommandCenterOpen] = useState(false)
+
+  return (
+    <>
+      <ConsoleLayout
+        header={{ onCommandCenterOpen: () => setCommandCenterOpen(true) }}
+        showFooter
+      >
+        <div className="mx-auto flex w-full max-w-7xl flex-col items-center justify-center px-4 py-24 sm:px-6">
+          <p className="text-[15px] font-semibold text-foreground">
+            No launch events scheduled
+          </p>
+          <p className="mt-2 text-[13px] text-muted-foreground">
+            Check back soon for the next Appwrite product launch week.
+          </p>
+        </div>
       </ConsoleLayout>
 
       <CommandCenter

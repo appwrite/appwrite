@@ -27,6 +27,12 @@ import {
   waitForNextPaint,
 } from '@/lib/init/record-init-ticket-video'
 import { useInitTicketVideoRecording } from '@/lib/init/init-ticket-video-recording-context'
+import { useInitPresenceActivity } from '@/lib/init/init-presence-context'
+import {
+  buildInitCustomizingTicketActivity,
+  buildInitRecordingTicketActivity,
+  buildInitViewingTicketActivity,
+} from '@/lib/init/init-presence-activity'
 import { INIT_TICKET_VIDEO_HERO_WARMUP_MS } from '@/lib/init/ticket-video-capture'
 import { InitTicketScaledFrame } from '@/components/pages/init/_components/InitTicketScaledFrame'
 import { InitTicketVideoCaptureStage } from '@/components/pages/init/_components/InitTicketVideoCaptureStage'
@@ -216,12 +222,26 @@ export function InitTicketSection({ event, account }: InitTicketSectionProps) {
   )
   const isVideoBusy = isCapturingVideo || isExportingVideo
   const { setIsCapturing: setPageVideoCapturing } = useInitTicketVideoRecording()
+  const { setPriorityActivity, setTransientActivity } = useInitPresenceActivity()
   const ticketCardRef = useRef<InitTicketCardHandle>(null)
 
   useEffect(() => {
     setPageVideoCapturing(isCapturingVideo)
     return () => setPageVideoCapturing(false)
   }, [isCapturingVideo, setPageVideoCapturing])
+
+  useEffect(() => {
+    if (!isAuthenticated) return
+    if (isVideoBusy) {
+      setPriorityActivity(buildInitRecordingTicketActivity())
+      return
+    }
+    if (customizeOpen) {
+      setPriorityActivity(buildInitCustomizingTicketActivity())
+      return
+    }
+    setPriorityActivity(null)
+  }, [customizeOpen, isAuthenticated, isVideoBusy, setPriorityActivity])
   const videoCaptureStageRef = useRef<HTMLDivElement>(null)
   const canExportTicketVideo = isInitTicketVideoExportSupported()
   const canExport60FpsVideo = supportsInitTicket60FpsVideoCapture()
@@ -446,7 +466,15 @@ export function InitTicketSection({ event, account }: InitTicketSectionProps) {
   }
 
   return (
-    <section className="relative w-full" aria-label="Init ticket">
+    <section
+      className="relative w-full"
+      aria-label="Init ticket"
+      onMouseEnter={() => {
+        if (!isAuthenticated || customizeOpen || isVideoBusy) return
+        setTransientActivity(buildInitViewingTicketActivity())
+      }}
+      onMouseLeave={() => setTransientActivity(null)}
+    >
       {!collapsed ? (
         <Button
           type="button"

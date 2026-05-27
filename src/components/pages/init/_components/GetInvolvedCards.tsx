@@ -1,4 +1,6 @@
 import type { LaunchEvent } from '@/lib/init/types'
+import { useInitPresenceActivity } from '@/lib/init/init-presence-context'
+import { buildInitExploringActivity } from '@/lib/init/init-presence-activity'
 import { ChevronRight } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
@@ -7,6 +9,8 @@ interface GetInvolvedCardsProps {
 }
 
 export function GetInvolvedCards({ event }: GetInvolvedCardsProps) {
+  const { setTransientActivity } = useInitPresenceActivity()
+
   if (event.getInvolved.length === 0) return null
 
   return (
@@ -40,6 +44,12 @@ export function GetInvolvedCards({ event }: GetInvolvedCardsProps) {
             'group flex w-full items-center gap-3 rounded-xl border border-border bg-card/50 p-4 text-left transition-colors',
             item.href && 'hover:border-border hover:bg-accent/50',
           )
+          const presenceHandlers = {
+            onMouseEnter: () => setTransientActivity(buildInitExploringActivity(item.title)),
+            onMouseLeave: () => setTransientActivity(null),
+            onFocus: () => setTransientActivity(buildInitExploringActivity(item.title)),
+            onBlur: () => setTransientActivity(null),
+          }
 
           if (item.href) {
             return (
@@ -49,6 +59,7 @@ export function GetInvolvedCards({ event }: GetInvolvedCardsProps) {
                 target="_blank"
                 rel="noopener noreferrer"
                 className={className}
+                {...presenceHandlers}
               >
                 {inner}
               </a>
@@ -56,7 +67,7 @@ export function GetInvolvedCards({ event }: GetInvolvedCardsProps) {
           }
 
           return (
-            <div key={item.id} className={className}>
+            <div key={item.id} className={className} {...presenceHandlers}>
               {inner}
             </div>
           )

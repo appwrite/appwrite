@@ -1,4 +1,6 @@
 import type { LaunchEventDayLocked } from '@/lib/init/types'
+import { useInitPresenceActivity } from '@/lib/init/init-presence-context'
+import { buildInitDayPreviewActivity } from '@/lib/init/init-presence-day-activity'
 import { cn } from '@/lib/utils'
 import { Lock } from 'lucide-react'
 
@@ -10,11 +12,15 @@ interface LockedDayDetailCardProps {
 }
 
 export function LockedDayDetailCard({ day }: LockedDayDetailCardProps) {
+  const { setTransientActivity } = useInitPresenceActivity()
+
   return (
     <article
       id={`day-${day.day}`}
       className={cn(CARD_SHELL, 'scroll-mt-28')}
       aria-label={`Day ${day.day} locked`}
+      onMouseEnter={() => setTransientActivity(buildInitDayPreviewActivity(day))}
+      onMouseLeave={() => setTransientActivity(null)}
     >
       <header className="border-b border-border px-6 py-3 text-center">
         <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-muted-foreground">

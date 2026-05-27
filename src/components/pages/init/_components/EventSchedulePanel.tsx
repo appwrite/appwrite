@@ -5,6 +5,8 @@ import type {
   LaunchSchedulePlatform,
 } from '@/lib/init/types'
 import { isLaunchEventDayLocked } from '@/lib/init/types'
+import { useInitPresenceActivity } from '@/lib/init/init-presence-context'
+import { buildInitCheckingScheduleActivity } from '@/lib/init/init-presence-activity'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { ArrowUpRight, ChevronLeft, ChevronRight } from 'lucide-react'
@@ -30,6 +32,8 @@ interface EventSchedulePanelProps {
 
 function ScheduleRow({ item }: { item: LaunchEventScheduleItem }) {
   const meta = PLATFORM_META[item.platform]
+  const { setTransientActivity } = useInitPresenceActivity()
+  const sessionActivity = `Checking: ${item.title}`
   const content = (
     <>
       <span className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-muted">
@@ -74,6 +78,10 @@ function ScheduleRow({ item }: { item: LaunchEventScheduleItem }) {
             item.isLive &&
               'bg-[color-mix(in_srgb,var(--brand-cta)_5%,transparent)]',
           )}
+          onMouseEnter={() => setTransientActivity(sessionActivity)}
+          onMouseLeave={() => setTransientActivity(null)}
+          onFocus={() => setTransientActivity(sessionActivity)}
+          onBlur={() => setTransientActivity(null)}
         >
           {content}
         </a>
@@ -87,6 +95,8 @@ function ScheduleRow({ item }: { item: LaunchEventScheduleItem }) {
         'flex items-start gap-3 px-6 py-3.5',
         item.isLive && 'bg-[color-mix(in_srgb,var(--brand-cta)_5%,transparent)]',
       )}
+      onMouseEnter={() => setTransientActivity(sessionActivity)}
+      onMouseLeave={() => setTransientActivity(null)}
     >
       {content}
     </li>
@@ -112,6 +122,7 @@ export function EventSchedulePanel({
       : unlockedScheduleDays[unlockedScheduleDays.length - 1] ?? 1
 
   const [selectedDay, setSelectedDay] = useState(defaultDay)
+  const { setTransientActivity } = useInitPresenceActivity()
 
   useEffect(() => {
     setSelectedDay(defaultDay)
@@ -140,6 +151,10 @@ export function EventSchedulePanel({
         CARD_SHELL,
         !embedded && 'lg:sticky lg:self-start lg:top-20',
       )}
+      onMouseEnter={() =>
+        setTransientActivity(buildInitCheckingScheduleActivity(selectedDay))
+      }
+      onMouseLeave={() => setTransientActivity(null)}
     >
       <div className="px-6 py-4">
         <div className="flex items-start justify-between gap-3">

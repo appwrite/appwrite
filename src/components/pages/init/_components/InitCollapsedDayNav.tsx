@@ -1,13 +1,18 @@
 import { scrollToInitDayCard } from '@/lib/init/scroll-to-day-card'
+import type { LaunchEventDayView } from '@/lib/init/types'
+import { useInitPresenceActivity } from '@/lib/init/init-presence-context'
+import { buildInitDayPreviewActivity } from '@/lib/init/init-presence-day-activity'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
 
 interface InitCollapsedDayNavProps {
-  days: number[]
+  days: LaunchEventDayView[]
   activeDay: number
 }
 
 export function InitCollapsedDayNav({ days, activeDay }: InitCollapsedDayNavProps) {
+  const { setTransientActivity } = useInitPresenceActivity()
+
   if (days.length === 0) return null
 
   return (
@@ -16,10 +21,10 @@ export function InitCollapsedDayNav({ days, activeDay }: InitCollapsedDayNavProp
       aria-label="Init days"
     >
       {days.map((day) => {
-        const isActive = day === activeDay
+        const isActive = day.day === activeDay
         return (
           <Button
-            key={day}
+            key={day.day}
             type="button"
             variant="ghost"
             size="sm"
@@ -28,9 +33,13 @@ export function InitCollapsedDayNav({ days, activeDay }: InitCollapsedDayNavProp
               isActive && 'bg-accent text-foreground',
             )}
             aria-current={isActive ? 'true' : undefined}
-            onClick={() => scrollToInitDayCard(day)}
+            onClick={() => scrollToInitDayCard(day.day)}
+            onMouseEnter={() => setTransientActivity(buildInitDayPreviewActivity(day))}
+            onMouseLeave={() => setTransientActivity(null)}
+            onFocus={() => setTransientActivity(buildInitDayPreviewActivity(day))}
+            onBlur={() => setTransientActivity(null)}
           >
-            Day {day}
+            Day {day.day}
           </Button>
         )
       })}

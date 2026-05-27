@@ -1,4 +1,6 @@
 import type { LaunchEventDay } from '@/lib/init/types'
+import { useInitPresenceActivity } from '@/lib/init/init-presence-context'
+import { buildInitDayPreviewActivity } from '@/lib/init/init-presence-day-activity'
 import {
   useInitThemeImageSrc,
   useInitThemeUsesDarkImage,
@@ -124,8 +126,15 @@ interface DayDetailCardProps {
 }
 
 export function DayDetailCard({ day }: DayDetailCardProps) {
+  const { setTransientActivity } = useInitPresenceActivity()
+
   return (
-    <article id={`day-${day.day}`} className={cn(CARD_SHELL, 'scroll-mt-28')}>
+    <article
+      id={`day-${day.day}`}
+      className={cn(CARD_SHELL, 'scroll-mt-28')}
+      onMouseEnter={() => setTransientActivity(buildInitDayPreviewActivity(day))}
+      onMouseLeave={() => setTransientActivity(null)}
+    >
       <header className="grid grid-cols-[1fr_auto_1fr] items-center border-b border-border px-6 py-3">
         <span aria-hidden />
         <p className="text-center text-[10px] font-semibold uppercase tracking-[0.2em] text-muted-foreground">

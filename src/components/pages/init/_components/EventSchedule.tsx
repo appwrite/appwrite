@@ -1,6 +1,8 @@
 import type { InitDisplayEvent, LaunchEventDayView } from '@/lib/init/types'
 import { isLaunchEventDayLocked } from '@/lib/init/types'
 import { scrollToInitDayCard } from '@/lib/init/scroll-to-day-card'
+import { useInitPresenceActivity } from '@/lib/init/init-presence-context'
+import { buildInitDayPreviewActivity } from '@/lib/init/init-presence-day-activity'
 import { cn } from '@/lib/utils'
 import { Badge } from '@/components/ui/badge'
 import { Lock } from 'lucide-react'
@@ -20,10 +22,16 @@ function LockedScheduleDayCard({
   day: Extract<LaunchEventDayView, { isLocked: true }>
   fullWidth?: boolean
 }) {
+  const { setTransientActivity } = useInitPresenceActivity()
+
   return (
     <button
       type="button"
       onClick={() => scrollToInitDayCard(day.day)}
+      onMouseEnter={() => setTransientActivity(buildInitDayPreviewActivity(day))}
+      onMouseLeave={() => setTransientActivity(null)}
+      onFocus={() => setTransientActivity(buildInitDayPreviewActivity(day))}
+      onBlur={() => setTransientActivity(null)}
       className={cn(
         'flex flex-col rounded-xl border border-dashed border-border bg-muted/20 p-4 text-left transition-colors',
         'cursor-pointer hover:bg-muted/30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background',
@@ -51,10 +59,16 @@ function ScheduleDayCard({
   day: Extract<LaunchEventDayView, { isLocked?: false }>
   fullWidth?: boolean
 }) {
+  const { setTransientActivity } = useInitPresenceActivity()
+
   return (
     <button
       type="button"
       onClick={() => scrollToInitDayCard(day.day)}
+      onMouseEnter={() => setTransientActivity(buildInitDayPreviewActivity(day))}
+      onMouseLeave={() => setTransientActivity(null)}
+      onFocus={() => setTransientActivity(buildInitDayPreviewActivity(day))}
+      onBlur={() => setTransientActivity(null)}
       className={cn(
         'flex flex-col rounded-xl border bg-card/50 p-4 text-left transition-colors',
         'cursor-pointer hover:bg-accent/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background',

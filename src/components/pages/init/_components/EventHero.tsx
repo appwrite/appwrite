@@ -7,6 +7,12 @@ import {
   INIT_COLLAPSED_HEADER_HEIGHT_PX,
   useInitScrollSpyDay,
 } from '@/lib/init/use-init-scroll-spy-day'
+import { useInitPresenceActivity } from '@/lib/init/init-presence-context'
+import {
+  buildInitDayReadingActivity,
+  findInitDayView,
+} from '@/lib/init/init-presence-day-activity'
+import { INIT_PRESENCE_ACTIVITY_ON_INIT } from '@/lib/init/init-presence-activity'
 import { InitialsAvatar } from '@/components/global/shared/Avatar'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -40,6 +46,7 @@ function CollapsedHeroBar({
   dayNumbers,
   activeDay,
   particlesActive,
+  days,
 }: {
   event: InitDisplayEvent
   visible: boolean
@@ -48,6 +55,7 @@ function CollapsedHeroBar({
   dayNumbers: number[]
   activeDay: number
   particlesActive: boolean
+  days: InitDisplayEvent['days']
 }) {
   const barRef = useRef<HTMLDivElement>(null)
   const showDayNav = dayNumbers.length > 0
@@ -96,7 +104,7 @@ function CollapsedHeroBar({
               )}
             >
               <div className="pointer-events-auto w-full max-w-full sm:max-w-none">
-                <InitCollapsedDayNav days={dayNumbers} activeDay={activeDay} />
+                <InitCollapsedDayNav days={days} activeDay={activeDay} />
               </div>
             </div>
 
@@ -175,6 +183,16 @@ export function EventHero({ event, headerAddon, liveBanner }: EventHeroProps) {
   const dayNumbers = useMemo(() => event.days.map((day) => day.day), [event.days])
   const activeDay = useInitScrollSpyDay(dayNumbers)
   const { isCapturing: isTicketVideoCapturing } = useInitTicketVideoRecording()
+  const { setBaselineActivity } = useInitPresenceActivity()
+
+  useEffect(() => {
+    const dayView = findInitDayView(event.days, activeDay)
+    if (!dayView) {
+      setBaselineActivity(INIT_PRESENCE_ACTIVITY_ON_INIT)
+      return
+    }
+    setBaselineActivity(buildInitDayReadingActivity(dayView))
+  }, [activeDay, event.days, setBaselineActivity])
 
   useEffect(() => {
     const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
@@ -251,6 +269,7 @@ export function EventHero({ event, headerAddon, liveBanner }: EventHeroProps) {
           dayNumbers={dayNumbers}
           activeDay={activeDay}
           particlesActive={!isTicketVideoCapturing}
+          days={event.days}
         />
       ) : null}
 

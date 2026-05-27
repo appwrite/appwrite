@@ -19,10 +19,15 @@ import {
   upsertInitPresence,
   type InitPresenceMetadata,
 } from '@/lib/init/presence'
+import {
+  INIT_PRESENCE_ACTIVITY_LEFT,
+  INIT_PRESENCE_ACTIVITY_ON_INIT,
+} from '@/lib/init/init-presence-activity'
 import type { LaunchEventOnlineUser } from '@/lib/init/types'
 
 const SIDEBAR_USER_LIMIT = 16
 const AWAY_USER_LIMIT = 8
+const ACTIVITY_PUBLISH_DEBOUNCE_MS = 300
 
 export type InitOnlinePresenceState = {
   onlineUsers: LaunchEventOnlineUser[]
@@ -30,6 +35,9 @@ export type InitOnlinePresenceState = {
   onlineCount: number
   othersOnlineCount: number
   isReady: boolean
+  setBaselineActivity: (activity: string) => void
+  setTransientActivity: (activity: string | null) => void
+  setPriorityActivity: (activity: string | null) => void
 }
 
 const EMPTY_STATE: InitOnlinePresenceState = {
@@ -38,6 +46,9 @@ const EMPTY_STATE: InitOnlinePresenceState = {
   onlineCount: 0,
   othersOnlineCount: 0,
   isReady: false,
+  setBaselineActivity: () => undefined,
+  setTransientActivity: () => undefined,
+  setPriorityActivity: () => undefined,
 }
 
 function isPresenceDeleteEvent(events: string[]): boolean {
@@ -85,14 +96,37 @@ export function useInitOnlinePresence(
 
   const presenceIdRef = useRef<string | null>(null)
   const upsertingRef = useRef(false)
+  const baselineActivityRef = useRef(INIT_PRESENCE_ACTIVITY_ON_INIT)
+  const transientActivityRef = useRef<string | null>(null)
+  const priorityActivityRef = useRef<string | null>(null)
+  const publishDebounceRef = useRef<number | null>(null)
   const eventIdRef = useRef(eventId)
   eventIdRef.current = eventId
   const publishPresenceRef = useRef<
     (away: boolean, options?: { refresh?: boolean }) => Promise<boolean>
   >(async () => false)
 
+  const resolveActivity = useCallback((away: boolean): string => {
+    if (away) return INIT_PRESENCE_ACTIVITY_LEFT
+    if (transientActivityRef.current) return transientActivityRef.current
+    if (priorityActivityRef.current) return priorityActivityRef.current
+    return baselineActivityRef.current
+  }, [])
+
   const accountUserId = account?.$id
   const accountName = account?.name?.trim() || account?.email?.trim() || ''
+
+  const buildMetadata = useCallback(
+    (away: boolean): InitPresenceMetadata | null => {
+      if (!eventId || !accountName) return null
+      return {
+        eventId,
+        name: accountName,
+        activity: resolveActivity(away),
+      }
+    },
+    [accountName, eventId, resolveActivity],
+  )
 
   const refreshLists = useCallback(async (scopeEventId: string) => {
     const [online, away] = await Promise.all([
@@ -103,16 +137,45 @@ export function useInitOnlinePresence(
     setAwayMap(buildPresenceMapForEvent(away, scopeEventId))
   }, [])
 
-  const buildMetadata = useCallback(
-    (away: boolean): InitPresenceMetadata | null => {
-      if (!eventId || !accountName) return null
-      return {
-        eventId,
-        name: accountName,
-        activity: away ? 'Left Init' : 'On Init',
+  const schedulePresencePublish = useCallback(() => {
+    if (publishDebounceRef.current) {
+      window.clearTimeout(publishDebounceRef.current)
+    }
+    publishDebounceRef.current = window.setTimeout(() => {
+      void publishPresenceRef.current(false, { refresh: false })
+    }, ACTIVITY_PUBLISH_DEBOUNCE_MS)
+  }, [])
+
+  const setBaselineActivity = useCallback(
+    (activity: string) => {
+      const next = activity.trim()
+      if (!next || baselineActivityRef.current === next) return
+      baselineActivityRef.current = next
+      if (!transientActivityRef.current && !priorityActivityRef.current) {
+        schedulePresencePublish()
       }
     },
-    [accountName, eventId],
+    [schedulePresencePublish],
+  )
+
+  const setTransientActivity = useCallback(
+    (activity: string | null) => {
+      const next = activity?.trim() || null
+      if (transientActivityRef.current === next) return
+      transientActivityRef.current = next
+      schedulePresencePublish()
+    },
+    [schedulePresencePublish],
+  )
+
+  const setPriorityActivity = useCallback(
+    (activity: string | null) => {
+      const next = activity?.trim() || null
+      if (priorityActivityRef.current === next) return
+      priorityActivityRef.current = next
+      schedulePresencePublish()
+    },
+    [schedulePresencePublish],
   )
 
   const publishPresence = useCallback(
@@ -187,6 +250,9 @@ export function useInitOnlinePresence(
       setOnlineMap(new Map())
       setAwayMap(new Map())
       setIsReady(false)
+      baselineActivityRef.current = INIT_PRESENCE_ACTIVITY_ON_INIT
+      transientActivityRef.current = null
+      priorityActivityRef.current = null
       return
     }
 
@@ -213,6 +279,9 @@ export function useInitOnlinePresence(
 
     return () => {
       cancelled = true
+      if (publishDebounceRef.current) {
+        window.clearTimeout(publishDebounceRef.current)
+      }
     }
   }, [accountUserId, enabled, eventId, refreshLists])
 
@@ -343,6 +412,18 @@ export function useInitOnlinePresence(
       onlineCount,
       othersOnlineCount,
       isReady,
+      setBaselineActivity,
+      setTransientActivity,
+      setPriorityActivity,
     }
-  }, [accountUserId, awayMap, enabled, isReady, onlineMap])
+  }, [
+    accountUserId,
+    awayMap,
+    enabled,
+    isReady,
+    onlineMap,
+    setBaselineActivity,
+    setTransientActivity,
+    setPriorityActivity,
+  ])
 }
