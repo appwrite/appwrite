@@ -4679,12 +4679,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/migration.git",
-                "reference": "cc7d68aaadf2b37adcce7735b9e2f068cc78caf9"
+                "reference": "d95d888fa9555240a3bf5aac4a08c0bfdc8d1f61"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/migration/zipball/cc7d68aaadf2b37adcce7735b9e2f068cc78caf9",
-                "reference": "cc7d68aaadf2b37adcce7735b9e2f068cc78caf9",
+                "url": "https://api.github.com/repos/utopia-php/migration/zipball/d95d888fa9555240a3bf5aac4a08c0bfdc8d1f61",
+                "reference": "d95d888fa9555240a3bf5aac4a08c0bfdc8d1f61",
                 "shasum": ""
             },
             "require": {
@@ -4744,7 +4744,7 @@
                 "source": "https://github.com/utopia-php/migration/tree/add-custom-domains-migration",
                 "issues": "https://github.com/utopia-php/migration/issues"
             },
-            "time": "2026-05-21T13:40:46+00:00"
+            "time": "2026-05-27T20:37:04+00:00"
         },
         {
             "name": "utopia-php/mongo",
