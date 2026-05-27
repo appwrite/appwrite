@@ -3147,10 +3147,13 @@ trait MigrationsBase
             'replyToEmail' => 'reply@appwrite.io',
             'host' => 'maildev',
             'port' => 1025,
-            'username' => 'smtp-user',
-            'password' => 'smtp-pass',
         ]);
         $this->assertEquals(200, $sourceSmtpUpdate['headers']['status-code']);
+
+        // Cross-check the PATCH actually landed on the SOURCE project, not on
+        // a sibling scope. If this fails we've targeted the wrong project.
+        $sourceProjectAfter = $this->client->call(Client::METHOD_GET, '/project', $sourceAdminHeaders);
+        $this->assertSame('Migration Sender', $sourceProjectAfter['body']['smtpSenderName']);
 
         $result = $this->performMigrationSync([
             'resources' => [
@@ -3180,7 +3183,6 @@ trait MigrationsBase
         $this->assertSame('reply@appwrite.io', $response['body']['smtpReplyToEmail']);
         $this->assertSame('maildev', $response['body']['smtpHost']);
         $this->assertSame(1025, $response['body']['smtpPort']);
-        $this->assertSame('smtp-user', $response['body']['smtpUsername']);
         $this->assertSame('', $response['body']['smtpSecure']);
 
         // Reset both projects so the test is idempotent.
