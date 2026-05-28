@@ -170,7 +170,11 @@ class FetcherTest extends TestCase
 
     private function redirect(string $location): Response
     {
-        return new Response(302, '', ['location' => $location]);
+        // Mix the header key case on purpose. Fetcher must normalise per
+        // RFC 7230 §3.2; if it ever drops to a naive lowercase lookup the
+        // entire redirect-following suite fails — that's the regression
+        // signal we want.
+        return new Response(302, '', ['Location' => $location]);
     }
 
     private function ok(string $body): Response

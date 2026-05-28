@@ -54,7 +54,12 @@ class Fetcher
                 return $response;
             }
 
-            $location = $response->getHeaders()['location'] ?? '';
+            // RFC 7230 §3.2 — header names are case-insensitive. Utopia's
+            // current curl adapter already lowercases, but normalising here
+            // keeps Fetcher correct for any future Adapter implementation
+            // (and for test mocks that pass headers verbatim).
+            $headers = \array_change_key_case($response->getHeaders(), CASE_LOWER);
+            $location = $headers['location'] ?? '';
             if ($location === '') {
                 return $response;
             }
