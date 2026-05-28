@@ -103,11 +103,13 @@ class Webhooks extends Action
 
         $url = \rawurldecode($webhook->getAttribute('url'));
 
-        $host = \parse_url($url, PHP_URL_HOST) ?? '';
-        $hostnameValidator = new PublicHostname();
-        if (!$hostnameValidator->isValid($host)) {
-            $this->errors[] = 'Webhook target ' . $host . ' rejected: ' . $hostnameValidator->getDescription();
-            return;
+        if (System::getEnv('_APP_ENV', 'development') === 'production') {
+            $host = \parse_url($url, PHP_URL_HOST) ?? '';
+            $hostnameValidator = new PublicHostname();
+            if (!$hostnameValidator->isValid($host)) {
+                $this->errors[] = 'Webhook target ' . $host . ' rejected: ' . $hostnameValidator->getDescription();
+                return;
+            }
         }
 
         $signatureKey = $webhook->getAttribute('signatureKey');
