@@ -3,6 +3,7 @@
 namespace Appwrite\Platform\Modules\Avatars\Http\Favicon;
 
 use Appwrite\Extend\Exception;
+use Appwrite\Network\Validator\PublicHostname;
 use Appwrite\Platform\Modules\Avatars\Http\Action;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\ContentType;
@@ -16,6 +17,7 @@ use DOMElement;
 use enshrined\svgSanitize\Sanitizer as SvgSanitizer;
 use Utopia\Domains\Domain;
 use Utopia\Fetch\Client;
+use Utopia\Fetch\Response as FetchResponse;
 use Utopia\Image\Image;
 use Utopia\Platform\Action as UtopiaAction;
 use Utopia\Platform\Scope\HTTP;
@@ -25,6 +27,9 @@ use Utopia\Validator\URL;
 class Get extends Action
 {
     use HTTP;
+
+    private const ALLOWED_SCHEMES = ['http', 'https'];
+    private const MAX_REDIRECTS = 5;
 
     public static function getName(): string
     {
@@ -56,7 +61,7 @@ class Get extends Action
                 ],
                 contentType: ContentType::IMAGE
             ))
-            ->param('url', '', new URL(['http', 'https']), 'Website URL which you want to fetch the favicon from.')
+            ->param('url', '', new URL(self::ALLOWED_SCHEMES), 'Website URL which you want to fetch the favicon from.')
             ->inject('response')
             ->callback($this->action(...));
     }
@@ -67,34 +72,20 @@ class Get extends Action
         $height = 56;
         $quality = 80;
         $output = 'png';
-        $type = 'png';
 
         if (!\extension_loaded('imagick')) {
             throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Imagick extension is missing');
         }
 
-        $domain = new Domain(\parse_url($url, PHP_URL_HOST));
+        $userAgent = \sprintf(
+            APP_USERAGENT,
+            System::getEnv('_APP_VERSION', 'UNKNOWN'),
+            System::getEnv('_APP_EMAIL_SECURITY', System::getEnv('_APP_SYSTEM_SECURITY_EMAIL_ADDRESS', APP_EMAIL_SECURITY))
+        );
 
-        if (!$domain->isKnown()) {
-            throw new Exception(Exception::AVATAR_REMOTE_URL_FAILED);
-        }
+        $pageResponse = $this->safeFetch($url, $userAgent);
+        $body = $pageResponse->getBody();
 
-        $client = new Client();
-        try {
-            $res = $client
-                ->setAllowRedirects(true)
-                ->setMaxRedirects(5)
-                ->setUserAgent(\sprintf(
-                    APP_USERAGENT,
-                    System::getEnv('_APP_VERSION', 'UNKNOWN'),
-                    System::getEnv('_APP_EMAIL_SECURITY', System::getEnv('_APP_SYSTEM_SECURITY_EMAIL_ADDRESS', APP_EMAIL_SECURITY))
-                ))
-                ->fetch($url);
-        } catch (\Throwable) {
-            throw new Exception(Exception::AVATAR_REMOTE_URL_FAILED);
-        }
-
-        $body = $res->getBody();
         $doc = new DOMDocument();
         $doc->strictErrorChecking = false;
         if (!empty($body)) {
@@ -115,7 +106,6 @@ class Get extends Action
             switch (\strtolower($rel)) {
                 case 'icon':
                 case 'shortcut icon':
-                    //case 'apple-touch-icon':
                     $ext = \pathinfo(\parse_url($absolute, PHP_URL_PATH), PATHINFO_EXTENSION);
 
                     switch ($ext) {
@@ -154,27 +144,13 @@ class Get extends Action
             $outputExt = 'ico';
         }
 
-        $domain = new Domain(\parse_url($outputHref, PHP_URL_HOST));
+        $iconResponse = $this->safeFetch($outputHref, $userAgent);
 
-        if (!$domain->isKnown()) {
-            throw new Exception(Exception::AVATAR_REMOTE_URL_FAILED);
-        }
-
-        $client = new Client();
-        try {
-            $res = $client
-                ->setAllowRedirects(true)
-                ->setMaxRedirects(5)
-                ->fetch($outputHref);
-        } catch (\Throwable) {
-            throw new Exception(Exception::AVATAR_REMOTE_URL_FAILED);
-        }
-
-        if ($res->getStatusCode() !== 200) {
+        if ($iconResponse->getStatusCode() !== 200) {
             throw new Exception(Exception::AVATAR_ICON_NOT_FOUND);
         }
 
-        $data = $res->getBody();
+        $data = $iconResponse->getBody();
 
         if ('ico' === $outputExt) { // Skip crop, Imagick isn\'t supporting icon files
             if (
@@ -214,5 +190,105 @@ class Get extends Action
             ->setContentType('image/png')
             ->file($data);
         unset($image);
+    }
+
+    /**
+     * Fetches a URL with manual redirect handling.
+     *
+     * Every URL in the redirect chain — the initial request and each Location
+     * target — is re-validated for scheme, public-suffix membership, and
+     * publicly-routable resolution. This is what prevents an attacker-controlled
+     * page from bouncing the request to an internal IP such as 169.254.169.254.
+     */
+    private function safeFetch(string $url, string $userAgent): FetchResponse
+    {
+        for ($hop = 0; $hop <= self::MAX_REDIRECTS; $hop++) {
+            $this->assertUrlSafe($url);
+
+            try {
+                $response = (new Client())
+                    ->setAllowRedirects(false)
+                    ->setUserAgent($userAgent)
+                    ->fetch($url);
+            } catch (\Throwable) {
+                throw new Exception(Exception::AVATAR_REMOTE_URL_FAILED);
+            }
+
+            $status = $response->getStatusCode();
+            if ($status < 300 || $status >= 400) {
+                return $response;
+            }
+
+            $location = $response->getHeaders()['location'] ?? '';
+            if ($location === '') {
+                return $response;
+            }
+
+            $url = self::resolveLocation($url, $location);
+        }
+
+        throw new Exception(Exception::AVATAR_REMOTE_URL_FAILED);
+    }
+
+    private function assertUrlSafe(string $url): void
+    {
+        $parts = \parse_url($url);
+
+        $scheme = \strtolower($parts['scheme'] ?? '');
+        if (!\in_array($scheme, self::ALLOWED_SCHEMES, true)) {
+            throw new Exception(Exception::AVATAR_REMOTE_URL_FAILED);
+        }
+
+        $host = $parts['host'] ?? '';
+        if ($host === '') {
+            throw new Exception(Exception::AVATAR_REMOTE_URL_FAILED);
+        }
+
+        // PSL check rejects bare hostnames, made-up TLDs, and pure IP literals
+        // before we spend a DNS lookup on them.
+        $isIpLiteral = \filter_var(\trim($host, '[]'), FILTER_VALIDATE_IP) !== false;
+        if (!$isIpLiteral) {
+            try {
+                $domain = new Domain($host);
+            } catch (\Throwable) {
+                throw new Exception(Exception::AVATAR_REMOTE_URL_FAILED);
+            }
+
+            if (!$domain->isKnown()) {
+                throw new Exception(Exception::AVATAR_REMOTE_URL_FAILED);
+            }
+        }
+
+        if (!(new PublicHostname())->isValid($host)) {
+            throw new Exception(Exception::AVATAR_REMOTE_URL_FAILED);
+        }
+    }
+
+    private static function resolveLocation(string $base, string $location): string
+    {
+        $location = \trim($location);
+
+        if (\preg_match('#^[a-z][a-z0-9+.-]*:#i', $location) === 1) {
+            return $location;
+        }
+
+        $baseParts = \parse_url($base);
+        $scheme = $baseParts['scheme'] ?? 'http';
+        $host = $baseParts['host'] ?? '';
+        $port = isset($baseParts['port']) ? ':' . $baseParts['port'] : '';
+
+        if (\str_starts_with($location, '//')) {
+            return $scheme . ':' . $location;
+        }
+
+        if (\str_starts_with($location, '/')) {
+            return $scheme . '://' . $host . $port . $location;
+        }
+
+        $path = $baseParts['path'] ?? '/';
+        $slash = \strrpos($path, '/');
+        $path = $slash === false ? '/' : \substr($path, 0, $slash + 1);
+
+        return $scheme . '://' . $host . $port . $path . $location;
     }
 }
