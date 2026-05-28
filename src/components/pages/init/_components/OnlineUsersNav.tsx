@@ -30,7 +30,8 @@ type AvatarSize = 'sm' | 'md'
 
 const PRESENCE_LIST_EASE: [number, number, number, number] = [0.22, 1, 0.36, 1]
 const PRESENCE_LIST_TRANSITION = { duration: 0.22, ease: PRESENCE_LIST_EASE }
-const PRESENCE_ACTIVITY_TRANSITION = { duration: 0.16, ease: PRESENCE_LIST_EASE }
+const PRESENCE_ACTIVITY_ENTER_TRANSITION = { duration: 0.22, ease: PRESENCE_LIST_EASE }
+const PRESENCE_ACTIVITY_EXIT_TRANSITION = { duration: 0.14, ease: PRESENCE_LIST_EASE }
 const PRESENCE_RING_PULSE_TRANSITION = { duration: 0.42, ease: PRESENCE_LIST_EASE }
 const APPWRITE_PRESENCES_DOCS_URL = 'https://appwrite.io/docs/apis/realtime/presences'
 
@@ -55,7 +56,7 @@ function OnlineUserTooltipDetails({
   return (
     <div className="space-y-1 text-left">
       <p className="text-[13px] font-semibold leading-snug text-foreground">{name}</p>
-      <p className="text-[12px] leading-relaxed text-muted-foreground/70">{activity}</p>
+      <OnlineUserActivity activity={activity} className="text-muted-foreground/70" />
     </div>
   )
 }
@@ -95,30 +96,45 @@ function PresenceAvatar({
   )
 }
 
-function OnlineUserActivity({ activity }: { activity: string }) {
+const ONLINE_USER_ACTIVITY_CLASS =
+  'truncate text-[12px] font-normal leading-snug text-muted-foreground'
+
+function OnlineUserActivity({
+  activity,
+  className,
+}: {
+  activity: string
+  className?: string
+}) {
   const reduceMotion = useReducedMotion()
+  const textClassName = cn(ONLINE_USER_ACTIVITY_CLASS, className)
 
   if (reduceMotion) {
     return (
-      <p
-        className="truncate text-[12px] font-normal text-muted-foreground"
-        title={activity}
-      >
+      <p className={textClassName} title={activity}>
         {activity}
       </p>
     )
   }
 
   return (
-    <div className="relative min-h-[1lh] overflow-hidden">
-      <AnimatePresence initial={false} mode="wait">
+    <div
+      className="relative h-[1lh] overflow-hidden"
+      aria-live="polite"
+      aria-atomic="true"
+    >
+      <AnimatePresence initial={false}>
         <motion.p
           key={activity}
-          initial={{ opacity: 0, y: 2 }}
+          initial={{ opacity: 0, y: 5 }}
           animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: -2 }}
-          transition={PRESENCE_ACTIVITY_TRANSITION}
-          className="truncate text-[12px] font-normal text-muted-foreground"
+          exit={{
+            opacity: 0,
+            y: -5,
+            transition: PRESENCE_ACTIVITY_EXIT_TRANSITION,
+          }}
+          transition={PRESENCE_ACTIVITY_ENTER_TRANSITION}
+          className={cn('absolute inset-x-0 top-0', textClassName)}
           title={activity}
         >
           {activity}
@@ -216,7 +232,7 @@ function UserCategoryCount({ count }: { count: number }) {
       key={count}
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
-      transition={PRESENCE_ACTIVITY_TRANSITION}
+      transition={PRESENCE_ACTIVITY_ENTER_TRANSITION}
       className={countClassName}
     >
       {count}
