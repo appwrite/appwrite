@@ -167,7 +167,7 @@ abstract class Adapter extends TestCase
         $adapter->getEmbeddingDimension();
     }
 
-    public function testbulkEmbedEmptyArrayThrows(): void
+    public function testBulkEmbedEmptyArrayThrows(): void
     {
         $adapter = $this->createAdapter();
 

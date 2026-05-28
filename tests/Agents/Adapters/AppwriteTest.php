@@ -73,7 +73,7 @@ class AppwriteTest extends Adapter
         $this->assertIsFloat($result['embedding'][0]);
     }
 
-    public function testbulkEmbedReturnsVectorPerInput(): void
+    public function testBulkEmbedReturnsVectorPerInput(): void
     {
         $adapter = new Appwrite();
         $texts = ['hello world', 'goodbye world', 'embedding service test'];
@@ -88,7 +88,7 @@ class AppwriteTest extends Adapter
         }
     }
 
-    public function testbulkEmbedPreservesOrder(): void
+    public function testBulkEmbedPreservesOrder(): void
     {
         $adapter = new Appwrite();
 

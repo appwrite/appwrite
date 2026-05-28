@@ -235,6 +235,19 @@ class ConversationFakeAdapter extends Adapter
         throw new \Exception('Embeddings not supported');
     }
 
+    /**
+     * @param  array<int, string>  $texts
+     * @return array{
+     *     embeddings: array<int, array<int, float>>,
+     *     tokensProcessed: int|null,
+     *     totalDuration: int|null
+     * }
+     */
+    public function bulkEmbed(array $texts): array
+    {
+        throw new \Exception('Embeddings not supported');
+    }
+
     public function getEmbeddingDimension(): int
     {
         throw new \Exception('Embeddings not supported');
