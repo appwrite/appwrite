@@ -71,7 +71,7 @@ class Get extends Action
         }
 
         if ($membership->getAttribute('teamInternalId') !== $team->getSequence()) {
-            throw new Exception(Exception::MEMBERSHIP_NOT_FOUND);
+            throw new Exception(Exception::TEAM_MEMBERSHIP_MISMATCH);
         }
 
         // Default should be "false", but existing projects already rely on this being "true"

@@ -3932,6 +3932,8 @@ Http::put('/v1/account/recovery')
 
         $hooks->trigger('passwordValidator', [$dbForProject, $project, $password, &$user, true]);
 
+        $sessions = $profile->getAttribute('sessions', []);
+
         $profile = $dbForProject->updateDocument('users', $profile->getId(), new Document(
             [
                 'password' => $newPassword,
@@ -3946,7 +3948,7 @@ Http::put('/v1/account/recovery')
 
         $invalidate = $project->getAttribute('auths', default: [])['invalidateSessions'] ?? false;
         if ($invalidate) {
-            foreach ($profile->getAttribute('sessions', []) as $session) {
+            foreach ($sessions as $session) {
                 /** @var Document $session */
                 $dbForProject->deleteDocument('sessions', $session->getId());
             }
