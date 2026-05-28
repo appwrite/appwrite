@@ -92,6 +92,46 @@ class Ollama extends Adapter
     }
 
     /**
+     * Batch embedding for Ollama — its embed endpoint takes one input, so loop and aggregate.
+     *
+     * @param  array<int, string>  $texts
+     * @return array{
+     *     embeddings: array<int, array<int, float>>,
+     *     tokensProcessed: int|null,
+     *     totalDuration: int|null
+     * }
+     *
+     * @throws \Exception
+     */
+    public function bulkEmbed(array $texts): array
+    {
+        if ($texts === []) {
+            throw new \InvalidArgumentException('bulkEmbed requires at least one text');
+        }
+
+        $embeddings = [];
+        $tokens = null;
+        $duration = null;
+
+        foreach ($texts as $text) {
+            $result = $this->embed($text);
+            $embeddings[] = $result['embedding'];
+            if (isset($result['tokensProcessed'])) {
+                $tokens = ($tokens ?? 0) + $result['tokensProcessed'];
+            }
+            if (isset($result['totalDuration'])) {
+                $duration = ($duration ?? 0) + $result['totalDuration'];
+            }
+        }
+
+        return [
+            'embeddings' => $embeddings,
+            'tokensProcessed' => $tokens,
+            'totalDuration' => $duration,
+        ];
+    }
+
+    /**
      * Get available models for embeddings (for now, only embeddinggemma)
      *
      * @return array<string>

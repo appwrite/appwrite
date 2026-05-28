@@ -77,12 +77,39 @@ class Appwrite extends Adapter
      */
     public function embed(string $text): array
     {
+        $result = $this->bulkEmbed([$text]);
+
+        return [
+            'embedding' => $result['embeddings'][0],
+            'tokensProcessed' => $result['tokensProcessed'],
+            'totalDuration' => $result['totalDuration'],
+        ];
+    }
+
+    /**
+     * Bulk embedding generation — sends multiple texts in a single request.
+     *
+     * @param  array<int, string>  $texts
+     * @return array{
+     *     embeddings: array<int, array<int, float>>,
+     *     tokensProcessed: int|null,
+     *     totalDuration: int|null
+     * }
+     *
+     * @throws \Exception
+     */
+    public function bulkEmbed(array $texts): array
+    {
+        if ($texts === []) {
+            throw new \InvalidArgumentException('bulkEmbed requires at least one text');
+        }
+
         $client = new Client();
         $client->setTimeout($this->timeout);
         $client->addHeader('Content-Type', 'application/json');
         $payload = [
             'model' => $this->model,
-            'texts' => [$text],
+            'texts' => array_values($texts),
         ];
         $response = $client->fetch(
             $this->getEndpoint(),
@@ -100,13 +127,21 @@ class Appwrite extends Adapter
             throw new \Exception(is_string($json['error']) ? $json['error'] : 'Unknown error', $response->getStatusCode());
         }
 
-        // The service batches inputs; we send a single text and read the first embedding back.
-        $embeddings = isset($json['embeddings']) && is_array($json['embeddings']) ? $json['embeddings'] : [];
-        /** @var array<int, float> $firstEmbedding */
-        $firstEmbedding = isset($embeddings[0]) && is_array($embeddings[0]) ? $embeddings[0] : [];
+        if (! isset($json['embeddings']) || ! is_array($json['embeddings']) || count($json['embeddings']) !== count($texts)) {
+            throw new \Exception('Embedding response missing or count mismatch', $response->getStatusCode());
+        }
+
+        /** @var array<int, array<int, float>> $embeddings */
+        $embeddings = [];
+        foreach ($json['embeddings'] as $i => $vec) {
+            if (! is_array($vec) || $vec === []) {
+                throw new \Exception("Embedding row {$i} missing or empty", $response->getStatusCode());
+            }
+            $embeddings[] = $vec;
+        }
 
         return [
-            'embedding' => $firstEmbedding,
+            'embeddings' => $embeddings,
             'tokensProcessed' => isset($json['tokens']) && is_int($json['tokens']) ? $json['tokens'] : null,
             'totalDuration' => isset($json['total_duration']) && is_int($json['total_duration']) ? $json['total_duration'] : null,
         ];
