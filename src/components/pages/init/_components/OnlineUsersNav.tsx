@@ -43,7 +43,7 @@ function buildPresenceStatusKey(
   user: LaunchEventOnlineUser,
   presence: LaunchEventUserPresence,
 ): string {
-  return `${presence}:${user.isLive ? 'live' : 'idle'}:${user.activity}`
+  return `${presence}:${user.isLive ? 'live' : 'idle'}`
 }
 
 /** Readable popover-style tooltip for collapsed sidebar rows (not inverted xs pills). */
@@ -95,9 +95,11 @@ function OnlineUserName({
     : null
 
   return (
-    <p className="flex min-w-0 items-center gap-2 text-[13px] font-medium leading-snug text-foreground">
+    <p className="flex min-h-[18px] min-w-0 items-center gap-2 text-[13px] font-medium leading-snug text-foreground">
       <span className="min-w-0 flex-1 truncate">{name}</span>
-      <OnlineUserReactionBadgeSlot reaction={reaction} animationKey={animationKey} />
+      <span className="inline-flex size-5 shrink-0 items-center justify-center">
+        <OnlineUserReactionBadgeSlot reaction={reaction} animationKey={animationKey} />
+      </span>
     </p>
   )
 }
@@ -138,7 +140,7 @@ function PresenceAvatar({
 }
 
 const ONLINE_USER_ACTIVITY_CLASS =
-  'truncate text-[12px] font-normal leading-snug text-muted-foreground'
+  'truncate text-[12px] font-normal leading-[16px] text-muted-foreground'
 
 function OnlineUserActivity({
   activity,
@@ -153,7 +155,7 @@ function OnlineUserActivity({
 
   if (reduceMotion) {
     return (
-      <p className={textClassName} title={displayActivity}>
+      <p className={cn('h-4', textClassName)} title={displayActivity}>
         {displayActivity}
       </p>
     )
@@ -161,18 +163,17 @@ function OnlineUserActivity({
 
   return (
     <div
-      className="relative h-[1lh] overflow-hidden"
+      className="relative h-4 overflow-hidden"
       aria-live="polite"
       aria-atomic="true"
     >
       <AnimatePresence initial={false}>
         <motion.p
           key={displayActivity}
-          initial={{ opacity: 0, y: 5 }}
-          animate={{ opacity: 1, y: 0 }}
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
           exit={{
             opacity: 0,
-            y: -5,
             transition: PRESENCE_ACTIVITY_EXIT_TRANSITION,
           }}
           transition={PRESENCE_ACTIVITY_ENTER_TRANSITION}
@@ -232,7 +233,6 @@ function OnlineUserRow({
 
   const animatedRow = (
     <motion.div
-      layout={!reduceMotion}
       initial={reduceMotion ? false : { opacity: 0, y: -6 }}
       animate={{ opacity: 1, y: 0 }}
       exit={reduceMotion ? undefined : { opacity: 0, y: -6 }}

@@ -123,7 +123,7 @@ export function OnlineUserReactionBadgeSlot({
   animationKey: string | null
 }) {
   return (
-    <AnimatePresence initial={false} mode="popLayout">
+    <AnimatePresence initial={false}>
       {reaction && animationKey ? (
         <OnlineUserReactionBadge reaction={reaction} animationKey={animationKey} />
       ) : null}
