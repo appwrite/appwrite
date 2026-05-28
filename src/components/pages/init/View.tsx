@@ -15,6 +15,7 @@ import { EventSchedule } from './_components/EventSchedule'
 import { InitTicketSection } from './_components/InitTicketSection'
 import { GiveawayPromoCard } from './_components/GiveawayPromoCard'
 import { GetInvolvedCards } from './_components/GetInvolvedCards'
+import { InitPageCredits } from './_components/InitPageCredits'
 import { LiveBannerBar } from './_components/LiveBannerBar'
 import { DayDetailCard } from './_components/DayDetailCard'
 import { LockedDayDetailCard } from './_components/LockedDayDetailCard'
@@ -133,17 +134,9 @@ function InitPageContent({
 
             <GetInvolvedCards event={event} />
 
-            <p className="text-center text-[12px] text-muted-foreground">
-              Hero particle animation by{' '}
-              <a
-                href="https://animejs.com/"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="font-medium text-foreground underline-offset-4 hover:underline"
-              >
-                Anime.js
-              </a>
-            </p>
+            <InitPageCredits
+              showPresenceCredit={Boolean(event.presenceEnabled && account)}
+            />
           </div>
         </InitTicketVideoRecordingProvider>
       </ConsoleLayout>

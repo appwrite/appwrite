@@ -52,7 +52,3 @@ export function buildInitPlayingWithJoolActivity(): string {
 export function buildInitExploringActivity(label: string): string {
   return `Exploring ${label}`
 }
-
-export function buildInitReactingActivity(label: string): string {
-  return `Reacting: ${label}`
-}

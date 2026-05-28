@@ -43,6 +43,8 @@ export interface LaunchEventDay {
   sessionCount: number
   resources: LaunchEventDayResource[]
   footerVideos?: LaunchEventDayVideo[]
+  /** Header CTA beside the logo while this day is active during the event. */
+  headerNavCta?: LaunchEventCta
 }
 
 /** Public placeholder for a launch day that has not unlocked yet (no sensitive content). */

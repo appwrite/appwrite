@@ -12,6 +12,11 @@ import {
   INIT_SEP_2026_TICKET_CONFIG,
 } from './ticket-config'
 import { parseDateOnly } from './dates'
+import { resolveInitCurrentDay } from './event-visibility'
+import {
+  getInitMockDayAfter,
+  INIT_MOCK_DAY_BEFORE,
+} from './mock-current-day'
 import type { LaunchEvent, LaunchEventStatus, LaunchEventHeaderNavCta } from './types'
 
 /** Add new launch-week events here; the page resolves the active one automatically. */
@@ -33,9 +38,13 @@ export const LAUNCH_EVENTS: LaunchEvent[] = [
     primaryCta: { label: 'View event', href: 'https://appwrite.io/init' },
     secondaryCta: { label: 'Claim your ticket', href: 'https://appwrite.io/init/ticket' },
     headerNavCta: {
-      beforeEvent: { label: 'Back to Appwrite', to: '/' },
+      beforeEvent: {
+        label: 'Back to Appwrite',
+        href: 'https://appwrite.io',
+        external: false,
+      },
       duringAfterEvent: {
-        label: 'Try Appwrite 2.0',
+        label: 'Explore Appwrite',
         href: 'https://appwrite.io',
         external: true,
       },
@@ -186,26 +195,65 @@ export function getLaunchEventBySlug(slug: string): LaunchEvent | undefined {
 
 const DEFAULT_INIT_HEADER_NAV_BEFORE: LaunchEventHeaderNavCta = {
   label: 'Back to Appwrite',
-  to: '/',
+  href: 'https://appwrite.io',
+  external: false,
 }
 
 const DEFAULT_INIT_HEADER_NAV_DURING_AFTER: LaunchEventHeaderNavCta = {
-  label: 'Try Appwrite 2.0',
+  label: 'Explore Appwrite',
   href: 'https://appwrite.io',
   external: true,
 }
 
-/** Header ghost button on `/init` — before event vs during/after. */
-export function resolveInitHeaderNavCta(
-  event?: LaunchEvent,
-  now = new Date(),
+function dayHeaderNavCtaToHeaderNav(
+  dayCta: NonNullable<LaunchEvent['days'][number]['headerNavCta']>,
 ): LaunchEventHeaderNavCta {
-  const activeEvent = event ?? getActiveLaunchEvent(now)
-  const status = activeEvent?.status ?? 'upcoming'
-  const overrides = activeEvent?.headerNavCta
+  return {
+    label: dayCta.label,
+    href: dayCta.href,
+    external: dayCta.external ?? true,
+  }
+}
 
-  if (status === 'upcoming') {
+/** Match debug “mock current day” to header CTA phase (calendar may still be before the event). */
+function resolveInitHeaderNavPhase(
+  event: LaunchEvent | undefined,
+  calendarStatus: LaunchEventStatus,
+  mockCurrentDay: number | null,
+): LaunchEventStatus {
+  if (mockCurrentDay === null || !event) return calendarStatus
+
+  const maxDay = event.days.reduce((max, day) => Math.max(max, day.day), 0)
+  const mockAfterDay = getInitMockDayAfter(maxDay)
+
+  if (mockCurrentDay <= INIT_MOCK_DAY_BEFORE) return 'upcoming'
+  if (mockCurrentDay >= mockAfterDay) return 'past'
+  return 'active'
+}
+
+/** Header ghost button on `/init` — before event vs per-day during vs after. */
+export function resolveInitHeaderNavCta(options?: {
+  event?: LaunchEvent
+  now?: Date
+  mockCurrentDay?: number | null
+}): LaunchEventHeaderNavCta {
+  const now = options?.now ?? new Date()
+  const activeEvent = options?.event ?? getActiveLaunchEvent(now)
+  const overrides = activeEvent?.headerNavCta
+  const mockCurrentDay = options?.mockCurrentDay ?? null
+  const calendarStatus = activeEvent?.status ?? 'upcoming'
+  const phase = resolveInitHeaderNavPhase(activeEvent, calendarStatus, mockCurrentDay)
+
+  if (phase === 'upcoming') {
     return { ...DEFAULT_INIT_HEADER_NAV_BEFORE, ...overrides?.beforeEvent }
+  }
+
+  if (phase === 'active' && activeEvent) {
+    const currentDay = resolveInitCurrentDay(activeEvent, now, mockCurrentDay)
+    const day = activeEvent.days.find((entry) => entry.day === currentDay)
+    if (day?.headerNavCta) {
+      return dayHeaderNavCtaToHeaderNav(day.headerNavCta)
+    }
   }
 
   return { ...DEFAULT_INIT_HEADER_NAV_DURING_AFTER, ...overrides?.duringAfterEvent }

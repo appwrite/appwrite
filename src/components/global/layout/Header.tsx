@@ -179,7 +179,9 @@ export function ConsoleHeader({
   const hasSidebar = !isOrgOverview
   const isAccountScope = location.pathname.startsWith('/account')
   const isInitScope = location.pathname === '/init'
-  const initHeaderNavCta = isInitScope ? resolveInitHeaderNavCta() : null
+  const initHeaderNavCta = isInitScope
+    ? resolveInitHeaderNavCta({ mockCurrentDay: overrides.mockInitCurrentDay })
+    : null
   const logoColumnWidth = 60
   const isOptionalAuth = isOptionalAuthPage(location.pathname)
   const showGuestHeader = isOptionalAuth && !isAuthenticated
@@ -297,11 +299,9 @@ export function ConsoleHeader({
               ) : (
                 <a
                   href={initHeaderNavCta.href}
-                  target={initHeaderNavCta.external !== false ? '_blank' : undefined}
+                  target={initHeaderNavCta.external ? '_blank' : undefined}
                   rel={
-                    initHeaderNavCta.external !== false
-                      ? 'noopener noreferrer'
-                      : undefined
+                    initHeaderNavCta.external ? 'noopener noreferrer' : undefined
                   }
                 >
                   <ArrowLeft className="h-4 w-4" />

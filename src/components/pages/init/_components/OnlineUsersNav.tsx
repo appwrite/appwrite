@@ -12,11 +12,16 @@ import {
 } from '@/components/ui/tooltip'
 import { Skeleton } from '@/components/ui/skeleton'
 import { useInitPresence } from '@/lib/init/init-presence-context'
+import { parseInitReactingActivity, formatInitPresenceActivityDisplay } from '@/lib/init/reactions'
+import { consoleAccountQueryOptions } from '@/lib/react-query/hooks/auth'
 import { cn } from '@/lib/utils'
+import { useQuery } from '@tanstack/react-query'
 import { ChevronLeft, X } from 'lucide-react'
 import { AnimatePresence, motion, useReducedMotion } from 'motion/react'
 import { useState, type CSSProperties } from 'react'
+import { InitPresenceReactions } from './InitPresenceReactions'
 import { InitPresenceStatusControl } from './InitPresenceStatusControl'
+import { OnlineUserReactionBadgeSlot } from './OnlineUserReactionBadge'
 
 interface OnlineUsersNavProps {
   event: LaunchEvent
@@ -33,7 +38,6 @@ const PRESENCE_LIST_TRANSITION = { duration: 0.22, ease: PRESENCE_LIST_EASE }
 const PRESENCE_ACTIVITY_ENTER_TRANSITION = { duration: 0.22, ease: PRESENCE_LIST_EASE }
 const PRESENCE_ACTIVITY_EXIT_TRANSITION = { duration: 0.14, ease: PRESENCE_LIST_EASE }
 const PRESENCE_RING_PULSE_TRANSITION = { duration: 0.42, ease: PRESENCE_LIST_EASE }
-const APPWRITE_PRESENCES_DOCS_URL = 'https://appwrite.io/docs/apis/realtime/presences'
 
 function buildPresenceStatusKey(
   user: LaunchEventOnlineUser,
@@ -44,20 +48,57 @@ function buildPresenceStatusKey(
 
 /** Readable popover-style tooltip for collapsed sidebar rows (not inverted xs pills). */
 const ONLINE_USER_TOOLTIP_CLASS =
-  'max-w-[min(280px,calc(100dvw-5rem))] border border-border bg-popover px-3 py-2.5 text-popover-foreground shadow-md [&_svg]:!hidden'
+  'max-w-[min(280px,calc(100dvw-5rem))] border border-border bg-popover px-3 py-2.5 text-popover-foreground shadow-md [&_svg]:!hidden [&_.reaction-badge_svg]:!inline-block'
 
 function OnlineUserTooltipDetails({
   name,
   activity,
+  selfUserId,
+  userId,
+  reactionPulse,
 }: {
   name: string
   activity: string
+  selfUserId?: string
+  userId?: string
+  reactionPulse?: number
 }) {
   return (
     <div className="space-y-1 text-left">
-      <p className="text-[13px] font-semibold leading-snug text-foreground">{name}</p>
+      <OnlineUserName
+        name={name}
+        activity={activity}
+        reactionPulse={reactionPulse}
+        isSelf={Boolean(selfUserId && userId === selfUserId)}
+      />
       <OnlineUserActivity activity={activity} className="text-muted-foreground/70" />
     </div>
+  )
+}
+
+function OnlineUserName({
+  name,
+  activity,
+  reactionPulse,
+  isSelf = false,
+}: {
+  name: string
+  activity: string
+  reactionPulse?: number
+  isSelf?: boolean
+}) {
+  const reaction = parseInitReactingActivity(activity)
+  const animationKey = reaction
+    ? isSelf && reactionPulse !== undefined
+      ? `${reaction.id}-${reactionPulse}`
+      : reaction.id
+    : null
+
+  return (
+    <p className="flex min-w-0 items-center gap-2 text-[13px] font-medium leading-snug text-foreground">
+      <span className="min-w-0 flex-1 truncate">{name}</span>
+      <OnlineUserReactionBadgeSlot reaction={reaction} animationKey={animationKey} />
+    </p>
   )
 }
 
@@ -107,12 +148,13 @@ function OnlineUserActivity({
   className?: string
 }) {
   const reduceMotion = useReducedMotion()
+  const displayActivity = formatInitPresenceActivityDisplay(activity)
   const textClassName = cn(ONLINE_USER_ACTIVITY_CLASS, className)
 
   if (reduceMotion) {
     return (
-      <p className={textClassName} title={activity}>
-        {activity}
+      <p className={textClassName} title={displayActivity}>
+        {displayActivity}
       </p>
     )
   }
@@ -125,7 +167,7 @@ function OnlineUserActivity({
     >
       <AnimatePresence initial={false}>
         <motion.p
-          key={activity}
+          key={displayActivity}
           initial={{ opacity: 0, y: 5 }}
           animate={{ opacity: 1, y: 0 }}
           exit={{
@@ -135,9 +177,9 @@ function OnlineUserActivity({
           }}
           transition={PRESENCE_ACTIVITY_ENTER_TRANSITION}
           className={cn('absolute inset-x-0 top-0', textClassName)}
-          title={activity}
+          title={displayActivity}
         >
-          {activity}
+          {displayActivity}
         </motion.p>
       </AnimatePresence>
     </div>
@@ -149,14 +191,20 @@ function OnlineUserRow({
   presence,
   collapsed,
   isMobile = false,
+  selfUserId,
+  reactionPulse = 0,
 }: {
   user: LaunchEventOnlineUser
   presence: LaunchEventUserPresence
   collapsed: boolean
   isMobile?: boolean
+  selfUserId?: string
+  reactionPulse?: number
 }) {
   const reduceMotion = useReducedMotion()
   const avatarSize: AvatarSize = isMobile ? 'md' : 'sm'
+  const isSelf = Boolean(selfUserId && user.id === selfUserId)
+  const displayActivity = formatInitPresenceActivityDisplay(user.activity)
 
   const row = (
     <div
@@ -170,7 +218,12 @@ function OnlineUserRow({
       <PresenceAvatar user={user} presence={presence} size={avatarSize} />
       {(!collapsed || isMobile) && (
         <div className="min-w-0 flex-1 text-left">
-          <p className="truncate text-[13px] font-medium text-foreground">{user.name}</p>
+          <OnlineUserName
+            name={user.name}
+            activity={user.activity}
+            reactionPulse={reactionPulse}
+            isSelf={isSelf}
+          />
           <OnlineUserActivity activity={user.activity} />
         </div>
       )}
@@ -195,7 +248,7 @@ function OnlineUserRow({
                 'transition-colors duration-150 hover:bg-accent/50',
                 'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background',
               )}
-              aria-label={`${user.name}. ${user.activity}`}
+              aria-label={`${user.name}. ${displayActivity}`}
             >
               <PresenceAvatar user={user} presence={presence} size={avatarSize} />
             </button>
@@ -205,7 +258,13 @@ function OnlineUserRow({
             sideOffset={12}
             className={ONLINE_USER_TOOLTIP_CLASS}
           >
-            <OnlineUserTooltipDetails name={user.name} activity={user.activity} />
+            <OnlineUserTooltipDetails
+              name={user.name}
+              activity={user.activity}
+              userId={user.id}
+              selfUserId={selfUserId}
+              reactionPulse={reactionPulse}
+            />
           </TooltipContent>
         </Tooltip>
       ) : (
@@ -246,12 +305,16 @@ function UserCategory({
   presence,
   collapsed,
   isMobile = false,
+  selfUserId,
+  reactionPulse,
 }: {
   label: string
   users: LaunchEventOnlineUser[]
   presence: LaunchEventUserPresence
   collapsed: boolean
   isMobile?: boolean
+  selfUserId?: string
+  reactionPulse?: number
 }) {
   const reduceMotion = useReducedMotion()
 
@@ -288,6 +351,8 @@ function UserCategory({
                 presence={presence}
                 collapsed={collapsed}
                 isMobile={isMobile}
+                selfUserId={selfUserId}
+                reactionPulse={reactionPulse}
               />
             ))}
           </AnimatePresence>
@@ -469,49 +534,22 @@ function OnlineUsersListSkeletonView({
   )
 }
 
-function OnlineUsersPresenceCredits({
-  collapsed,
-  isMobile = false,
-}: {
-  collapsed: boolean
-  isMobile?: boolean
-}) {
-  if (collapsed && !isMobile) return null
-
-  return (
-    <div
-      className={cn(
-        'shrink-0 border-t border-border bg-background px-3 py-2.5',
-        isMobile && 'px-4',
-      )}
-    >
-      <p className="text-center text-[10px] leading-relaxed text-muted-foreground/60">
-        Realtime powered by{' '}
-        <a
-          href={APPWRITE_PRESENCES_DOCS_URL}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="font-medium text-muted-foreground/75 underline-offset-4 transition-colors hover:text-muted-foreground hover:underline"
-        >
-          Appwrite Presences
-        </a>
-      </p>
-    </div>
-  )
-}
-
 function OnlineUsersNavContent({
   event,
   collapsed,
   isMobile = false,
   showPanel = false,
   isLoading = false,
+  selfUserId,
+  reactionPulse,
 }: {
   event: LaunchEvent
   collapsed: boolean
   isMobile?: boolean
   showPanel?: boolean
   isLoading?: boolean
+  selfUserId?: string
+  reactionPulse?: number
 }) {
   const reduceMotion = useReducedMotion()
   const hasUsers =
@@ -551,6 +589,8 @@ function OnlineUsersNavContent({
             presence="online"
             collapsed={collapsed}
             isMobile={isMobile}
+            selfUserId={selfUserId}
+            reactionPulse={reactionPulse}
           />
           <UserCategory
             label="Recently online"
@@ -558,6 +598,8 @@ function OnlineUsersNavContent({
             presence="recent"
             collapsed={collapsed}
             isMobile={isMobile}
+            selfUserId={selfUserId}
+            reactionPulse={reactionPulse}
           />
         </motion.div>
       )}
@@ -582,8 +624,11 @@ export function OnlineUsersNav({
   showPanel = false,
 }: OnlineUsersNavProps) {
   const [collapsed, setCollapsed] = useState(false)
+  const [reactionPulse, setReactionPulse] = useState(0)
+  const { data: account } = useQuery(consoleAccountQueryOptions())
   const { isReady: isPresenceReady } = useInitPresence()
   const isLoadingPresence = showPanel && !isPresenceReady
+  const selfUserId = account?.$id
 
   if (!showPanel && !hasOnlineUsersNav(event)) return null
 
@@ -613,11 +658,17 @@ export function OnlineUsersNav({
                 collapsed={collapsed}
                 showPanel={showPanel}
                 isLoading={isLoadingPresence}
+                selfUserId={selfUserId}
+                reactionPulse={reactionPulse}
               />
             </nav>
 
             {showPanel ? (
-              <OnlineUsersPresenceCredits collapsed={collapsed} />
+              <InitPresenceReactions
+                eventId={event.id}
+                collapsed={collapsed}
+                onReactionPulse={() => setReactionPulse((count) => count + 1)}
+              />
             ) : null}
           </div>
 
@@ -678,10 +729,18 @@ export function OnlineUsersNav({
               isMobile
               showPanel={showPanel}
               isLoading={isLoadingPresence}
+              selfUserId={selfUserId}
+              reactionPulse={reactionPulse}
             />
           </nav>
 
-          {showPanel ? <OnlineUsersPresenceCredits isMobile /> : null}
+          {showPanel ? (
+            <InitPresenceReactions
+              eventId={event.id}
+              isMobile
+              onReactionPulse={() => setReactionPulse((count) => count + 1)}
+            />
+          ) : null}
         </div>
 
         {showPanel ? (

@@ -1,9 +1,7 @@
-import { useEffect, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { consoleAccountQueryOptions } from '@/lib/react-query/hooks/auth'
 import {
   INIT_REACTIONS,
-  readStoredInitReaction,
   writeStoredInitReaction,
 } from '@/lib/init/reactions'
 import type { InitDisplayEvent } from '@/lib/init/types'
@@ -22,16 +20,9 @@ interface InitReactionsBarProps {
 
 export function InitReactionsBar({ event }: InitReactionsBarProps) {
   const { data: account } = useQuery(consoleAccountQueryOptions())
-  const [activeReactionId, setActiveReactionId] = useState<string | null>(null)
-
-  useEffect(() => {
-    setActiveReactionId(readStoredInitReaction(event.id))
-  }, [event.id])
 
   const handleReaction = (reactionId: string) => {
-    const next = activeReactionId === reactionId ? null : reactionId
-    setActiveReactionId(next)
-    writeStoredInitReaction(event.id, next)
+    writeStoredInitReaction(event.id, reactionId)
   }
 
   return (
@@ -52,7 +43,7 @@ export function InitReactionsBar({ event }: InitReactionsBarProps) {
         <div className="relative flex min-h-14 items-center justify-center gap-0.5 py-2 sm:gap-1 sm:py-2.5">
           <p className="sr-only">React to Init</p>
           {INIT_REACTIONS.map((reaction) => {
-            const isActive = activeReactionId === reaction.id
+            const Icon = reaction.icon
             return (
               <Tooltip key={reaction.id}>
                 <TooltipTrigger asChild>
@@ -60,16 +51,11 @@ export function InitReactionsBar({ event }: InitReactionsBarProps) {
                     type="button"
                     variant="ghost"
                     size="icon"
-                    className={cn(
-                      'size-9 shrink-0 rounded-md text-[18px] leading-none sm:size-10 sm:text-[20px]',
-                      isActive &&
-                        'bg-[color-mix(in_srgb,var(--brand-cta)_12%,transparent)] ring-1 ring-[color-mix(in_srgb,var(--brand-cta)_35%,var(--border))]',
-                    )}
+                    className="size-9 shrink-0 rounded-md text-muted-foreground sm:size-10"
                     aria-label={reaction.label}
-                    aria-pressed={isActive}
                     onClick={() => handleReaction(reaction.id)}
                   >
-                    <span aria-hidden>{reaction.emoji}</span>
+                    <Icon className="size-[18px] sm:size-5" aria-hidden />
                   </Button>
                 </TooltipTrigger>
                 <TooltipContent side="top" className="text-[12px]">

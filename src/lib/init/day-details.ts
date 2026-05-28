@@ -26,6 +26,11 @@ export const INIT_JULY_2026_DAYS: LaunchEventDay[] = [
     },
     isLive: true,
     sessionCount: 2,
+    headerNavCta: {
+      label: 'Discover Appwrite 2.0',
+      href: 'https://appwrite.io',
+      external: true,
+    },
     resources: [
       {
         id: 'day1-announce',
@@ -68,6 +73,11 @@ export const INIT_JULY_2026_DAYS: LaunchEventDay[] = [
       aspectHeight: 682,
     },
     sessionCount: 1,
+    headerNavCta: {
+      label: 'Explore DocumentsDB & VectorsDB',
+      href: 'https://appwrite.io/docs/products/databases',
+      external: true,
+    },
     resources: [
       {
         id: 'day2-blog',
@@ -102,6 +112,11 @@ export const INIT_JULY_2026_DAYS: LaunchEventDay[] = [
       aspectHeight: 682,
     },
     sessionCount: 2,
+    headerNavCta: {
+      label: 'Spin up Dedicated DBs',
+      href: 'https://appwrite.io/docs/products/databases',
+      external: true,
+    },
     resources: [
       {
         id: 'day3-blog',
@@ -136,6 +151,11 @@ export const INIT_JULY_2026_DAYS: LaunchEventDay[] = [
       aspectHeight: 682,
     },
     sessionCount: 1,
+    headerNavCta: {
+      label: 'Try S3 for Storage',
+      href: 'https://appwrite.io/docs/products/storage',
+      external: true,
+    },
     resources: [
       {
         id: 'day4-blog',
@@ -170,6 +190,11 @@ export const INIT_JULY_2026_DAYS: LaunchEventDay[] = [
       aspectHeight: 682,
     },
     sessionCount: 2,
+    headerNavCta: {
+      label: 'Meet Appwrite Firewall',
+      href: 'https://appwrite.io/docs',
+      external: true,
+    },
     resources: [
       {
         id: 'day5-blog',
