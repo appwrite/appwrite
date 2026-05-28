@@ -165,7 +165,9 @@ export function View() {
     return applyInitEventVisibility(active, { mockCurrentDay: mockInitCurrentDay })
   }, [mockInitCurrentDay])
 
-  const { data: account } = useQuery(consoleAccountQueryOptions())
+  const { data: account, isSuccess: isAccountReady } = useQuery(
+    consoleAccountQueryOptions(),
+  )
 
   if (!baseEvent) {
     return <InitEmptyState />
@@ -174,7 +176,7 @@ export function View() {
   return (
     <InitPresenceProvider
       eventId={baseEvent.id}
-      enabled={Boolean(baseEvent.presenceEnabled && account)}
+      enabled={Boolean(baseEvent.presenceEnabled && isAccountReady && account)}
     >
       <InitPageContent baseEvent={baseEvent} account={account} />
     </InitPresenceProvider>

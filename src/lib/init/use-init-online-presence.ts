@@ -2,17 +2,14 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Channel, type Models, type RealtimeResponseEvent } from '@appwrite.io/console'
 import { useQuery } from '@tanstack/react-query'
 import { registerConsoleRealtimeListener } from '@/lib/realtime/console-hub'
-import { sdk } from '@/lib/appwrite/sdk'
 import { consoleAccountQueryOptions } from '@/lib/react-query/hooks/auth'
 import {
   INIT_PRESENCE_HEARTBEAT_MS,
   buildInitAwayStatus,
   buildInitOnlineStatus,
   buildInitPresenceId,
-  buildInitPresencePermissions,
   buildPresenceMapForEvent,
   clearLegacyInitPresenceStorage,
-  deleteInitPresence,
   listInitPresences,
   mapPresencesToOnlineUsers,
   presenceMatchesInitEvent,
@@ -155,6 +152,8 @@ export function useInitOnlinePresence(
 
   const accountUserId = account?.$id
   const accountName = account?.name?.trim() || account?.email?.trim() || ''
+  const accountUserIdRef = useRef(accountUserId)
+  accountUserIdRef.current = accountUserId
 
   const buildMetadata = useCallback(
     (away: boolean): InitPresenceMetadata | null => {
@@ -173,8 +172,42 @@ export function useInitOnlinePresence(
       listInitPresences(scopeEventId, 'online'),
       listInitPresences(scopeEventId, 'away', AWAY_USER_LIMIT),
     ])
-    setOnlineMap(buildPresenceMapForEvent(online, scopeEventId))
-    setAwayMap(buildPresenceMapForEvent(away, scopeEventId))
+
+    setOnlineMap((previousOnline) => {
+      const next = buildPresenceMapForEvent(online, scopeEventId)
+      const selfId = accountUserIdRef.current
+
+      if (
+        selfId &&
+        participantOnlineRef.current &&
+        !next.has(selfId)
+      ) {
+        const selfPresence = previousOnline.get(selfId)
+        if (selfPresence && presenceMatchesInitEvent(selfPresence, scopeEventId)) {
+          next.set(selfId, selfPresence)
+        }
+      }
+
+      return next
+    })
+
+    setAwayMap((previousAway) => {
+      const next = buildPresenceMapForEvent(away, scopeEventId)
+      const selfId = accountUserIdRef.current
+
+      if (
+        selfId &&
+        !participantOnlineRef.current &&
+        !next.has(selfId)
+      ) {
+        const selfPresence = previousAway.get(selfId)
+        if (selfPresence && presenceMatchesInitEvent(selfPresence, scopeEventId)) {
+          next.set(selfId, selfPresence)
+        }
+      }
+
+      return next
+    })
   }, [])
 
   const schedulePresencePublish = useCallback(() => {
@@ -262,13 +295,6 @@ export function useInitOnlinePresence(
           })
         }
 
-        void sdk.getConsoleRealtime().upsertPresence({
-          presenceId,
-          status,
-          metadata,
-          permissions: buildInitPresencePermissions(accountUserId),
-        })
-
         if (options?.refresh !== false) {
           await refreshLists(eventId)
         }
@@ -337,9 +363,19 @@ export function useInitOnlinePresence(
 
       try {
         await refreshLists(eventId)
+        if (!cancelled && published) {
+          // List queries can lag right after upsert; one follow-up fetch picks up everyone.
+          await new Promise<void>((resolve) => {
+            window.setTimeout(resolve, 500)
+          })
+          if (!cancelled) {
+            await refreshLists(eventId)
+          }
+        }
       } catch {
         if (published && !cancelled) {
           await publishPresenceRef.current(!startOnline, { refresh: false })
+          await refreshLists(eventId)
         }
       } finally {
         if (!cancelled) setIsReady(true)
@@ -360,18 +396,18 @@ export function useInitOnlinePresence(
     if (!enabled || !eventId || !accountUserId) return
 
     const heartbeat = window.setInterval(() => {
-      void publishPresence(!participantOnlineRef.current)
+      void publishPresence(!participantOnlineRef.current, { refresh: false })
     }, INIT_PRESENCE_HEARTBEAT_MS)
 
     const onFocus = () => {
       if (participantOnlineRef.current) {
-        void publishPresence(false)
+        void publishPresence(false, { refresh: false })
       }
     }
 
     const onVisibility = () => {
       if (document.visibilityState === 'visible' && participantOnlineRef.current) {
-        void publishPresence(false)
+        void publishPresence(false, { refresh: false })
       }
     }
 
@@ -385,13 +421,12 @@ export function useInitOnlinePresence(
     }
   }, [accountUserId, enabled, eventId, publishPresence])
 
+  const handlePresenceRealtimeRef = useRef(
+    (_event: RealtimeResponseEvent<unknown>) => undefined,
+  )
+
   useEffect(() => {
-    if (!enabled || !eventId || !accountUserId) return
-
-    let unregister: (() => Promise<void>) | undefined
-    let cancelled = false
-
-    const handler = (event: RealtimeResponseEvent<unknown>) => {
+    handlePresenceRealtimeRef.current = (event: RealtimeResponseEvent<unknown>) => {
       const scopeEventId = eventIdRef.current
       if (!scopeEventId) return
 
@@ -433,8 +468,17 @@ export function useInitOnlinePresence(
         return next
       })
     }
+  })
 
-    void registerConsoleRealtimeListener([Channel.presences()], handler).then((close) => {
+  useEffect(() => {
+    if (!enabled || !eventId) return
+
+    let unregister: (() => Promise<void>) | undefined
+    let cancelled = false
+
+    void registerConsoleRealtimeListener([Channel.presences()], (event) => {
+      handlePresenceRealtimeRef.current(event)
+    }).then((close) => {
       if (cancelled) {
         void close()
         return
@@ -446,17 +490,13 @@ export function useInitOnlinePresence(
       cancelled = true
       void unregister?.()
     }
-  }, [accountUserId, enabled, eventId])
+  }, [enabled, eventId])
 
   useEffect(() => {
     if (!enabled || !eventId || !accountUserId) return
 
-    const userId = accountUserId
-
     const onPageHide = () => {
       void publishPresence(true, { refresh: false })
-      const presenceId = presenceIdRef.current ?? buildInitPresenceId(userId)
-      void deleteInitPresence(presenceId).catch(() => {})
     }
 
     window.addEventListener('pagehide', onPageHide)

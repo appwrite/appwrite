@@ -6,6 +6,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from '@/components/ui/popover'
+import { Skeleton } from '@/components/ui/skeleton'
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group'
 import {
   Tooltip,
@@ -129,6 +130,47 @@ function PresenceStatusPanel({
   )
 }
 
+function InitPresenceStatusSkeleton({
+  collapsed = false,
+  isMobile = false,
+}: {
+  collapsed?: boolean
+  isMobile?: boolean
+}) {
+  if (collapsed && !isMobile) {
+    return (
+      <div
+        className="flex justify-center py-2"
+        aria-busy="true"
+        aria-label="Loading your status"
+      >
+        <Skeleton className="size-8 rounded-full bg-muted/80 dark:bg-muted/40" />
+      </div>
+    )
+  }
+
+  return (
+    <div
+      className={cn('space-y-3 px-2.5 py-3', isMobile && 'px-0 py-0')}
+      aria-busy="true"
+      aria-label="Loading your status"
+    >
+      <Skeleton className="h-2.5 w-14 bg-muted/80 dark:bg-muted/40" />
+      <div className="flex items-start gap-2.5">
+        <Skeleton className="mt-0.5 size-8 shrink-0 rounded-full bg-muted/80 dark:bg-muted/40" />
+        <div className="min-w-0 flex-1 space-y-2">
+          <Skeleton className="h-3.5 w-[58%] bg-muted/80 dark:bg-muted/40" />
+          <Skeleton className="h-8 w-full bg-muted/80 dark:bg-muted/40" />
+        </div>
+      </div>
+      <div className="grid grid-cols-2 gap-1.5">
+        <Skeleton className="h-8 rounded-md bg-muted/80 dark:bg-muted/40" />
+        <Skeleton className="h-8 rounded-md bg-muted/80 dark:bg-muted/40" />
+      </div>
+    </div>
+  )
+}
+
 export function InitPresenceStatusControl({
   collapsed = false,
   isMobile = false,
@@ -152,7 +194,10 @@ export function InitPresenceStatusControl({
     void setParticipantStatus(status)
   }
 
-  if (!account || !isReady) return null
+  if (!account) return null
+  if (!isReady) {
+    return <InitPresenceStatusSkeleton collapsed={collapsed} isMobile={isMobile} />
+  }
 
   if (collapsed && !isMobile) {
     const isOnline = participantStatus === 'online'

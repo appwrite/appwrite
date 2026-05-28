@@ -10,10 +10,12 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from '@/components/ui/tooltip'
+import { Skeleton } from '@/components/ui/skeleton'
+import { useInitPresence } from '@/lib/init/init-presence-context'
 import { cn } from '@/lib/utils'
 import { ChevronLeft, X } from 'lucide-react'
 import { AnimatePresence, motion, useReducedMotion } from 'motion/react'
-import { useState } from 'react'
+import { useState, type CSSProperties } from 'react'
 import { InitPresenceStatusControl } from './InitPresenceStatusControl'
 
 interface OnlineUsersNavProps {
@@ -279,6 +281,178 @@ function UserCategory({
   )
 }
 
+function SkeletonPulse({
+  className,
+  style,
+}: {
+  className?: string
+  style?: CSSProperties
+}) {
+  return (
+    <Skeleton
+      className={cn('bg-muted/80 dark:bg-muted/40', className)}
+      style={style}
+    />
+  )
+}
+
+function OnlineUserRowSkeleton({
+  collapsed,
+  isMobile = false,
+  nameWidth,
+  activityWidth,
+  index = 0,
+}: {
+  collapsed: boolean
+  isMobile?: boolean
+  nameWidth: string
+  activityWidth: string
+  index?: number
+}) {
+  const reduceMotion = useReducedMotion()
+  const avatarSize = isMobile ? 'size-10' : 'size-8'
+  const staggerMs = index * 55
+
+  const content =
+    collapsed && !isMobile ? (
+      <div className="flex justify-center py-1.5">
+        <SkeletonPulse
+          className={cn('rounded-full', avatarSize)}
+          style={reduceMotion ? undefined : { animationDelay: `${staggerMs}ms` }}
+        />
+      </div>
+    ) : (
+      <div
+        className={cn(
+          'flex items-center gap-2.5 rounded-md px-2.5 py-1.5',
+          isMobile && 'gap-3 px-3 py-2.5',
+        )}
+      >
+        <SkeletonPulse
+          className={cn('shrink-0 rounded-full ring-2 ring-background', avatarSize)}
+          style={reduceMotion ? undefined : { animationDelay: `${staggerMs}ms` }}
+        />
+        <div className="min-w-0 flex-1 space-y-1.5">
+          <SkeletonPulse
+            className={cn('h-3.5', nameWidth)}
+            style={
+              reduceMotion ? undefined : { animationDelay: `${staggerMs + 40}ms` }
+            }
+          />
+          <SkeletonPulse
+            className={cn('h-3', activityWidth)}
+            style={
+              reduceMotion ? undefined : { animationDelay: `${staggerMs + 80}ms` }
+            }
+          />
+        </div>
+      </div>
+    )
+
+  if (reduceMotion) return content
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 4 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.2, delay: index * 0.05, ease: PRESENCE_LIST_EASE }}
+    >
+      {content}
+    </motion.div>
+  )
+}
+
+function UserCategorySkeleton({
+  labelWidth,
+  rowCount,
+  collapsed,
+  isMobile = false,
+  rowOffset = 0,
+}: {
+  labelWidth: string
+  rowCount: number
+  collapsed: boolean
+  isMobile?: boolean
+  rowOffset?: number
+}) {
+  const nameWidths = ['w-[72%]', 'w-[58%]', 'w-[64%]', 'w-[52%]'] as const
+  const activityWidths = ['w-[88%]', 'w-[76%]', 'w-[82%]', 'w-[70%]'] as const
+
+  return (
+    <div className="space-y-0.5">
+      {(!collapsed || isMobile) && (
+        <div
+          className={cn(
+            'mb-1.5 flex items-center justify-between gap-2 px-2.5',
+            isMobile && 'px-3',
+          )}
+        >
+          <SkeletonPulse className={cn('h-2.5', labelWidth)} />
+          <SkeletonPulse className="h-2.5 w-4 shrink-0 rounded-sm" />
+        </div>
+      )}
+      {Array.from({ length: rowCount }, (_, index) => (
+        <OnlineUserRowSkeleton
+          key={index}
+          collapsed={collapsed}
+          isMobile={isMobile}
+          nameWidth={nameWidths[(rowOffset + index) % nameWidths.length]}
+          activityWidth={activityWidths[(rowOffset + index) % activityWidths.length]}
+          index={rowOffset + index}
+        />
+      ))}
+    </div>
+  )
+}
+
+function OnlineUsersListSkeletonView({
+  collapsed,
+  isMobile = false,
+}: {
+  collapsed: boolean
+  isMobile?: boolean
+}) {
+  const reduceMotion = useReducedMotion()
+
+  return (
+    <motion.div
+      key="loading"
+      initial={reduceMotion ? false : { opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={reduceMotion ? undefined : { opacity: 0 }}
+      transition={PRESENCE_LIST_TRANSITION}
+      aria-busy="true"
+      aria-label="Loading online participants"
+    >
+      {collapsed && !isMobile ? (
+        <div className="space-y-0.5">
+          {Array.from({ length: 5 }, (_, index) => (
+            <OnlineUserRowSkeleton key={index} collapsed index={index} />
+          ))}
+        </div>
+      ) : (
+        <div className="space-y-6">
+          <UserCategorySkeleton
+            labelWidth="w-16"
+            rowCount={4}
+            collapsed={collapsed}
+            isMobile={isMobile}
+            rowOffset={0}
+          />
+          <UserCategorySkeleton
+            labelWidth="w-24"
+            rowCount={2}
+            collapsed={collapsed}
+            isMobile={isMobile}
+            rowOffset={4}
+          />
+        </div>
+      )}
+      <span className="sr-only">Loading online participants</span>
+    </motion.div>
+  )
+}
+
 function OnlineUsersPresenceCredits({
   collapsed,
   isMobile = false,
@@ -315,11 +489,13 @@ function OnlineUsersNavContent({
   collapsed,
   isMobile = false,
   showPanel = false,
+  isLoading = false,
 }: {
   event: LaunchEvent
   collapsed: boolean
   isMobile?: boolean
   showPanel?: boolean
+  isLoading?: boolean
 }) {
   const reduceMotion = useReducedMotion()
   const hasUsers =
@@ -327,7 +503,9 @@ function OnlineUsersNavContent({
 
   return (
     <AnimatePresence initial={false} mode="wait">
-      {showPanel && !hasUsers ? (
+      {showPanel && isLoading ? (
+        <OnlineUsersListSkeletonView collapsed={collapsed} isMobile={isMobile} />
+      ) : showPanel && !hasUsers ? (
         <motion.p
           key="empty"
           initial={reduceMotion ? false : { opacity: 0 }}
@@ -388,6 +566,8 @@ export function OnlineUsersNav({
   showPanel = false,
 }: OnlineUsersNavProps) {
   const [collapsed, setCollapsed] = useState(false)
+  const { isReady: isPresenceReady } = useInitPresence()
+  const isLoadingPresence = showPanel && !isPresenceReady
 
   if (!showPanel && !hasOnlineUsersNav(event)) return null
 
@@ -412,7 +592,12 @@ export function OnlineUsersNav({
               role="navigation"
               aria-label="Online participants"
             >
-              <OnlineUsersNavContent event={event} collapsed={collapsed} showPanel={showPanel} />
+              <OnlineUsersNavContent
+                event={event}
+                collapsed={collapsed}
+                showPanel={showPanel}
+                isLoading={isLoadingPresence}
+              />
             </nav>
 
             {showPanel ? (
@@ -476,6 +661,7 @@ export function OnlineUsersNav({
               collapsed={false}
               isMobile
               showPanel={showPanel}
+              isLoading={isLoadingPresence}
             />
           </nav>
 
