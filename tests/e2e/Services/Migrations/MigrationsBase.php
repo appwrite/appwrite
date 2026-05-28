@@ -3097,29 +3097,24 @@ trait MigrationsBase
 
     public function testAppwriteMigrationSMTP(): void
     {
-        $consoleHeaders = [
-            'content-type' => 'application/json',
-            'x-appwrite-project' => 'console',
-            'origin' => 'http://localhost',
-            'cookie' => 'a_session_console=' . $this->getRoot()['session'],
-        ];
-
         $sourceProjectId = $this->getProject()['$id'];
         $destinationProjectId = $this->getDestinationProject()['$id'];
 
-        $sourceAdminHeaders = \array_merge($consoleHeaders, [
+        $sourceKeyHeaders = [
+            'content-type' => 'application/json',
             'x-appwrite-project' => $sourceProjectId,
-            'x-appwrite-mode' => 'admin',
-        ]);
-        $destinationAdminHeaders = \array_merge($consoleHeaders, [
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ];
+        $destinationKeyHeaders = [
+            'content-type' => 'application/json',
             'x-appwrite-project' => $destinationProjectId,
-            'x-appwrite-mode' => 'admin',
-        ]);
+            'x-appwrite-key' => $this->getDestinationProject()['apiKey'],
+        ];
 
         // Point at the in-cluster maildev container so the endpoint's SMTP
         // connection validation passes. Password is not migrated — source
         // API never exposes it.
-        $sourceSmtpUpdate = $this->client->call(Client::METHOD_PATCH, '/project/smtp', $sourceAdminHeaders, [
+        $sourceSmtpUpdate = $this->client->call(Client::METHOD_PATCH, '/project/smtp', $sourceKeyHeaders, [
             'enabled' => true,
             'senderName' => 'Migration Sender',
             'senderEmail' => 'sender@appwrite.io',
@@ -3132,7 +3127,7 @@ trait MigrationsBase
 
         // Cross-check the PATCH actually landed on the SOURCE project, not on
         // a sibling scope. If this fails we've targeted the wrong project.
-        $sourceProjectAfter = $this->client->call(Client::METHOD_GET, '/project', $sourceAdminHeaders);
+        $sourceProjectAfter = $this->client->call(Client::METHOD_GET, '/project', $sourceKeyHeaders);
         $this->assertSame('Migration Sender', $sourceProjectAfter['body']['smtpSenderName']);
 
         $result = $this->performMigrationSync([
@@ -3153,7 +3148,7 @@ trait MigrationsBase
         $this->assertEquals(0, $result['statusCounters'][Resource::TYPE_SMTP]['processing']);
         $this->assertEquals(0, $result['statusCounters'][Resource::TYPE_SMTP]['warning']);
 
-        $response = $this->client->call(Client::METHOD_GET, '/project', $destinationAdminHeaders);
+        $response = $this->client->call(Client::METHOD_GET, '/project', $destinationKeyHeaders);
 
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertTrue($response['body']['smtpEnabled'], 'smtpEnabled should be migrated as true');
@@ -3166,8 +3161,8 @@ trait MigrationsBase
         $this->assertSame('', $response['body']['smtpSecure']);
 
         // Reset both projects so the test is idempotent.
-        $this->client->call(Client::METHOD_PATCH, '/project/smtp', $sourceAdminHeaders, ['enabled' => false]);
-        $this->client->call(Client::METHOD_PATCH, '/project/smtp', $destinationAdminHeaders, ['enabled' => false]);
+        $this->client->call(Client::METHOD_PATCH, '/project/smtp', $sourceKeyHeaders, ['enabled' => false]);
+        $this->client->call(Client::METHOD_PATCH, '/project/smtp', $destinationKeyHeaders, ['enabled' => false]);
     }
 
     /**
