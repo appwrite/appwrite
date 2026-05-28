@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "0f60e85b461aa1a57d624e97be0614bd",
+    "content-hash": "09e4b8117db46cd892495878be34852b",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -3875,20 +3875,21 @@
         },
         {
             "name": "utopia-php/console",
-            "version": "0.1.1",
+            "version": "0.2.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/console.git",
-                "reference": "d298e43960780e6d76e66de1228c75dc81220e3e"
+                "reference": "97e3de44424ee9ea207c3129dfcc82f8df37c5b5"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/console/zipball/d298e43960780e6d76e66de1228c75dc81220e3e",
-                "reference": "d298e43960780e6d76e66de1228c75dc81220e3e",
+                "url": "https://api.github.com/repos/utopia-php/console/zipball/97e3de44424ee9ea207c3129dfcc82f8df37c5b5",
+                "reference": "97e3de44424ee9ea207c3129dfcc82f8df37c5b5",
                 "shasum": ""
             },
             "require": {
-                "php": ">=8.0"
+                "php": ">=8.0",
+                "utopia-php/validators": "^0.2.0"
             },
             "require-dev": {
                 "laravel/pint": "1.2.*",
@@ -3917,22 +3918,22 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/console/issues",
-                "source": "https://github.com/utopia-php/console/tree/0.1.1"
+                "source": "https://github.com/utopia-php/console/tree/0.2.1"
             },
-            "time": "2026-02-10T10:20:29+00:00"
+            "time": "2026-04-20T10:53:53+00:00"
         },
         {
             "name": "utopia-php/database",
-            "version": "5.9.0",
+            "version": "dev-chore-bump-console",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/database.git",
-                "reference": "477bae83e27631f78c159f45b0441c0c7dc69050"
+                "reference": "7dc74890bba40306dcaf36eeef5d64f740bee001"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/database/zipball/477bae83e27631f78c159f45b0441c0c7dc69050",
-                "reference": "477bae83e27631f78c159f45b0441c0c7dc69050",
+                "url": "https://api.github.com/repos/utopia-php/database/zipball/7dc74890bba40306dcaf36eeef5d64f740bee001",
+                "reference": "7dc74890bba40306dcaf36eeef5d64f740bee001",
                 "shasum": ""
             },
             "require": {
@@ -3942,7 +3943,7 @@
                 "ext-redis": "*",
                 "php": ">=8.4",
                 "utopia-php/cache": "^3.0",
-                "utopia-php/console": "0.1.*",
+                "utopia-php/console": "0.2.*",
                 "utopia-php/mongo": "1.*",
                 "utopia-php/pools": "1.*",
                 "utopia-php/validators": "0.2.*"
@@ -3977,9 +3978,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/database/issues",
-                "source": "https://github.com/utopia-php/database/tree/5.9.0"
+                "source": "https://github.com/utopia-php/database/tree/chore-bump-console"
             },
-            "time": "2026-05-17T15:57:21+00:00"
+            "time": "2026-05-28T15:23:00+00:00"
         },
         {
             "name": "utopia-php/detector",
@@ -8548,9 +8549,18 @@
             "time": "2026-05-27T13:05:51+00:00"
         }
     ],
-    "aliases": [],
+    "aliases": [
+        {
+            "package": "utopia-php/database",
+            "version": "dev-chore-bump-console",
+            "alias": "5.9.0",
+            "alias_normalized": "5.9.0.0"
+        }
+    ],
     "minimum-stability": "dev",
-    "stability-flags": {},
+    "stability-flags": {
+        "utopia-php/database": 20
+    },
     "prefer-stable": true,
     "prefer-lowest": false,
     "platform": {

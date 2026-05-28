@@ -9,6 +9,7 @@ use Tests\E2E\Client;
 use Tests\E2E\General\UsageTest;
 use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Services\Functions\FunctionsBase;
+use Utopia\Command;
 use Utopia\Console;
 use Utopia\Database\Database;
 use Utopia\Database\Helpers\ID;
@@ -2458,7 +2459,14 @@ trait MigrationsBase
         $folderPath = realpath(__DIR__ . '/../../../resources/sites') . "/$site";
         $tarPath = "$folderPath/code.tar.gz";
 
-        Console::execute("cd $folderPath && tar --exclude code.tar.gz --exclude node_modules -czf code.tar.gz .", '', $stdout, $stderr);
+        $packageSiteCommand = (new Command('tar'))
+            ->option('--exclude', 'code.tar.gz')
+            ->option('--exclude', 'node_modules')
+            ->flag('-czf')
+            ->argument($tarPath)
+            ->option('-C', $folderPath)
+            ->argument('.');
+        Console::execute($packageSiteCommand, '', $stdout, $stderr);
 
         return new CURLFile($tarPath, 'application/x-gzip', \basename($tarPath));
     }

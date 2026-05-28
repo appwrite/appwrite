@@ -8,6 +8,7 @@ use Tests\E2E\Client;
 use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\SideServer;
+use Utopia\Command;
 use Utopia\Console;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Helpers\Permission;
@@ -83,7 +84,15 @@ class WebhooksCustomServerTest extends Scope
         $stdout = '';
         $folder = 'timeout';
         $code = realpath(__DIR__ . '/../../../resources/functions') . "/{$folder}/code.tar.gz";
-        Console::execute('cd ' . realpath(__DIR__ . "/../../../resources/functions") . "/{$folder}  && tar --exclude code.tar.gz --exclude node_modules -czf code.tar.gz .", '', $stdout, $stderr);
+        $folderPath = realpath(__DIR__ . '/../../../resources/functions') . "/{$folder}";
+        $packageFunctionCommand = (new Command('tar'))
+            ->option('--exclude', 'code.tar.gz')
+            ->option('--exclude', 'node_modules')
+            ->flag('-czf')
+            ->argument($code)
+            ->option('-C', $folderPath)
+            ->argument('.');
+        Console::execute($packageFunctionCommand, '', $stdout, $stderr);
 
         // Create variable first
         $this->client->call(Client::METHOD_POST, '/functions/' . $functionId . '/variables', array_merge([
@@ -736,7 +745,15 @@ class WebhooksCustomServerTest extends Scope
         $stdout = '';
         $folder = 'timeout';
         $code = realpath(__DIR__ . '/../../../resources/functions') . "/{$folder}/code.tar.gz";
-        Console::execute('cd ' . realpath(__DIR__ . "/../../../resources/functions") . "/{$folder}  && tar --exclude code.tar.gz --exclude node_modules -czf code.tar.gz .", '', $stdout, $stderr);
+        $folderPath = realpath(__DIR__ . '/../../../resources/functions') . "/{$folder}";
+        $packageFunctionCommand = (new Command('tar'))
+            ->option('--exclude', 'code.tar.gz')
+            ->option('--exclude', 'node_modules')
+            ->flag('-czf')
+            ->argument($code)
+            ->option('-C', $folderPath)
+            ->argument('.');
+        Console::execute($packageFunctionCommand, '', $stdout, $stderr);
 
         $deployment = $this->client->call(Client::METHOD_POST, '/functions/' . $functionId . '/deployments', array_merge([
             'content-type' => 'multipart/form-data',
