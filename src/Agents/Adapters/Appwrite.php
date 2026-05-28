@@ -6,7 +6,7 @@ use Utopia\Agents\Adapter;
 use Utopia\Agents\Message;
 use Utopia\Fetch\Client;
 
-class AppwriteEmbeddingAdapter extends Adapter
+class Appwrite extends Adapter
 {
     /**
      * NomicEmbedTextV15 - default general purpose text embedding model
@@ -160,7 +160,7 @@ class AppwriteEmbeddingAdapter extends Adapter
      */
     public function send(array $messages, ?callable $listener = null): Message
     {
-        throw new \Exception('AppwriteEmbeddingAdapter does not support chat or messages. Use embed() instead.');
+        throw new \Exception('Appwrite does not support chat or messages. Use embed() instead.');
     }
 
     /**

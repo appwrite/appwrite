@@ -3,13 +3,13 @@
 namespace Utopia\Tests\Agents\Adapters;
 
 use Utopia\Agents\Adapter as AgentAdapter;
-use Utopia\Agents\Adapters\AppwriteEmbeddingAdapter;
+use Utopia\Agents\Adapters\Appwrite;
 
-class AppwriteEmbeddingAdapterTest extends Adapter
+class AppwriteTest extends Adapter
 {
     protected function createAdapter(): AgentAdapter
     {
-        return new AppwriteEmbeddingAdapter();
+        return new Appwrite();
     }
 
     protected function expectedName(): string
@@ -19,12 +19,12 @@ class AppwriteEmbeddingAdapterTest extends Adapter
 
     protected function expectedDefaultModel(): string
     {
-        return AppwriteEmbeddingAdapter::MODEL_NOMIC_EMBED_TEXT;
+        return Appwrite::MODEL_NOMIC_EMBED_TEXT;
     }
 
     protected function expectedModels(): array
     {
-        return AppwriteEmbeddingAdapter::MODELS;
+        return Appwrite::MODELS;
     }
 
     protected function expectsSchemaSupport(): bool
@@ -51,12 +51,12 @@ class AppwriteEmbeddingAdapterTest extends Adapter
     {
         $this->expectException(\InvalidArgumentException::class);
 
-        new AppwriteEmbeddingAdapter('invalid-model-name');
+        new Appwrite('invalid-model-name');
     }
 
     public function testSendIsNotSupported(): void
     {
-        $adapter = new AppwriteEmbeddingAdapter();
+        $adapter = new Appwrite();
 
         $this->expectException(\Exception::class);
         $adapter->send([]);
