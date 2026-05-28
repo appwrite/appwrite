@@ -152,7 +152,7 @@ class Kick extends OAuth2
      */
     public function isEmailVerified(string $accessToken): bool
     {
-        return !empty($this->getUserEmail($accessToken));
+        return false;
     }
 
     /**

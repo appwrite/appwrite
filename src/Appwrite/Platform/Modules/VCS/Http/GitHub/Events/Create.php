@@ -65,7 +65,7 @@ class Create extends Action
         $signature = $request->getHeader('x-hub-signature-256', '');
         $secretKey = System::getEnv('_APP_VCS_GITHUB_WEBHOOK_SECRET', '');
 
-        $valid = empty($secretKey) ? true : $github->validateWebhookEvent($payload, $signature, $secretKey);
+        $valid = !empty($secretKey) && $github->validateWebhookEvent($payload, $signature, $secretKey);
         Span::add('vcs.github.event.signature.valid', $valid);
 
         if (!$valid) {

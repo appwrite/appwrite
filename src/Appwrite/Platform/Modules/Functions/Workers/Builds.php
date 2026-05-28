@@ -297,9 +297,10 @@ class Builds extends Action
                 $templateReferenceValue = $template->getAttribute('referenceValue', '');
 
                 $templateRootDirectory = $template->getAttribute('rootDirectory', '');
-                $templateRootDirectory = \rtrim($templateRootDirectory, '/');
-                $templateRootDirectory = \ltrim($templateRootDirectory, '.');
-                $templateRootDirectory = \ltrim($templateRootDirectory, '/');
+                $templateRootDirectory = \trim($templateRootDirectory, '/');
+                if ($templateRootDirectory !== '' && \preg_match('#(^|/)\.\.(/|$)#', $templateRootDirectory)) {
+                    throw new \Exception('Invalid template root directory');
+                }
 
                 if (! empty($templateRepositoryName) && ! empty($templateOwnerName) && ! empty($templateReferenceType) && ! empty($templateReferenceValue)) {
                     $stdout = '';
@@ -362,9 +363,10 @@ class Builds extends Action
                 // VCS and VCS+Temaplte
                 $tmpDirectory = '/tmp/builds/' . $deploymentId . '/code';
                 $rootDirectory = $resource->getAttribute('providerRootDirectory', '');
-                $rootDirectory = \rtrim($rootDirectory, '/');
-                $rootDirectory = \ltrim($rootDirectory, '.');
-                $rootDirectory = \ltrim($rootDirectory, '/');
+                $rootDirectory = \trim($rootDirectory, '/');
+                if ($rootDirectory !== '' && \preg_match('#(^|/)\.\.(/|$)#', $rootDirectory)) {
+                    throw new \Exception('Invalid root directory');
+                }
 
                 $owner = $github->getOwnerName($providerInstallationId);
                 $repositoryName = $github->getRepositoryName($providerRepositoryId);
@@ -420,9 +422,10 @@ class Builds extends Action
                 $templateReferenceValue = $template->getAttribute('referenceValue', '');
 
                 $templateRootDirectory = $template->getAttribute('rootDirectory', '');
-                $templateRootDirectory = \rtrim($templateRootDirectory, '/');
-                $templateRootDirectory = \ltrim($templateRootDirectory, '.');
-                $templateRootDirectory = \ltrim($templateRootDirectory, '/');
+                $templateRootDirectory = \trim($templateRootDirectory, '/');
+                if ($templateRootDirectory !== '' && \preg_match('#(^|/)\.\.(/|$)#', $templateRootDirectory)) {
+                    throw new \Exception('Invalid template root directory');
+                }
 
                 if (! empty($templateRepositoryName) && ! empty($templateOwnerName) && ! empty($templateReferenceType) && ! empty($templateReferenceValue)) {
                     // Clone template repo
@@ -443,7 +446,8 @@ class Builds extends Action
                     Console::execute('rsync -av --exclude \'.git\' ' . \escapeshellarg($tmpTemplateDirectory . '/' . $templateRootDirectory . '/') . ' ' . \escapeshellarg($tmpDirectory . '/' . $rootDirectory), '', $stdout, $stderr);
 
                     // Commit and push
-                    $exit = Console::execute('git config --global user.email ' . \escapeshellarg(APP_VCS_GITHUB_EMAIL) . ' && git config --global user.name ' . \escapeshellarg(APP_VCS_GITHUB_USERNAME) . ' && cd ' . \escapeshellarg($tmpDirectory) . ' && git checkout -b ' . \escapeshellarg($branchName) . ' && git add . && git commit -m "Create ' . \escapeshellarg($resource->getAttribute('name', '')) . ' function" && git push origin ' . \escapeshellarg($branchName), '', $stdout, $stderr);
+                    $commitMessage = \escapeshellarg('Create ' . $resource->getAttribute('name', '') . ' function');
+                    $exit = Console::execute('git config --global user.email ' . \escapeshellarg(APP_VCS_GITHUB_EMAIL) . ' && git config --global user.name ' . \escapeshellarg(APP_VCS_GITHUB_USERNAME) . ' && cd ' . \escapeshellarg($tmpDirectory) . ' && git checkout -b ' . \escapeshellarg($branchName) . ' && git add . && git commit -m ' . $commitMessage . ' && git push origin ' . \escapeshellarg($branchName), '', $stdout, $stderr);
 
                     if ($exit !== 0) {
                         throw new \Exception('Unable to push code repository: ' . $stderr);

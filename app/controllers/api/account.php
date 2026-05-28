@@ -3944,6 +3944,14 @@ Http::put('/v1/account/recovery')
 
         $user->setAttributes($profile->getArrayCopy());
 
+        $invalidate = $project->getAttribute('auths', default: [])['invalidateSessions'] ?? false;
+        if ($invalidate) {
+            foreach ($profile->getAttribute('sessions', []) as $session) {
+                /** @var Document $session */
+                $dbForProject->deleteDocument('sessions', $session->getId());
+            }
+        }
+
         $recoveryDocument = $dbForProject->getDocument('tokens', $verifiedToken->getId());
 
         /**

@@ -131,9 +131,7 @@ class Slack extends OAuth2
      */
     public function isEmailVerified(string $accessToken): bool
     {
-        $email = $this->getUserEmail($accessToken);
-
-        return !empty($email);
+        return false;
     }
 
     /**
