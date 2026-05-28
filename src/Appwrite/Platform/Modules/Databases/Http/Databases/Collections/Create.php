@@ -371,7 +371,7 @@ class Create extends Action
                     $lengths[$i] = Database::MAX_ARRAY_INDEX_LENGTH;
                     $orders[$i] = null;
 
-                    if($dbForDatabases->getAdapter()->getSupportForAttributes()){
+                    if ($dbForDatabases->getAdapter()->getSupportForAttributes()) {
                         // Because of a bug in MySQL, we cannot create indexes on array attributes for now, otherwise queries break.
                         throw new Exception(Exception::INDEX_INVALID, 'Creating indexes on array attributes is not currently supported.');
                     }
