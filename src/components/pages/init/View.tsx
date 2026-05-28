@@ -18,7 +18,12 @@ import { GiveawayPromoCard } from './_components/GiveawayPromoCard'
 import { GetInvolvedCards } from './_components/GetInvolvedCards'
 import { InitPrizesSection } from './_components/InitPrizesSection'
 import { InitPageCredits } from './_components/InitPageCredits'
+import { InitGiveawayRaffleConfetti } from './_components/InitGiveawayRaffleConfetti'
 import { InitReactionConfetti } from './_components/InitReactionConfetti'
+import {
+  InitGiveawayRaffleProvider,
+  useInitGiveawayRaffleContext,
+} from './_components/init-giveaway-raffle-context'
 import { LiveBannerBar } from './_components/LiveBannerBar'
 import { InitRecapBanner } from './_components/InitRecapBanner'
 import { InitRecapIntro } from './_components/InitRecapIntro'
@@ -47,6 +52,7 @@ function InitPageContent({
   const [commandCenterOpen, setCommandCenterOpen] = useState(false)
   const [onlineNavOpen, setOnlineNavOpen] = useState(false)
   const presence = useInitPresence()
+  const raffle = useInitGiveawayRaffleContext()
 
   const event = useMemo(() => {
     if (!baseEvent.presenceEnabled || !account) {
@@ -173,7 +179,12 @@ function InitPageContent({
       </ConsoleLayout>
 
       {event.presenceEnabled && account && !event.isRecapMode ? (
-        <InitReactionConfetti onlineUsers={event.onlineUsers} />
+        <>
+          <InitReactionConfetti onlineUsers={event.onlineUsers} />
+          {raffle ? (
+            <InitGiveawayRaffleConfetti pulse={raffle.raffleWinnerPulse} />
+          ) : null}
+        </>
       ) : null}
 
       <CommandCenter
@@ -211,11 +222,13 @@ export function View() {
           account,
       )}
     >
-      <InitPageContent
-        baseEvent={baseEvent}
-        account={account}
-        isAccountLoading={isAccountLoading}
-      />
+      <InitGiveawayRaffleProvider event={baseEvent}>
+        <InitPageContent
+          baseEvent={baseEvent}
+          account={account}
+          isAccountLoading={isAccountLoading}
+        />
+      </InitGiveawayRaffleProvider>
     </InitPresenceProvider>
   )
 }

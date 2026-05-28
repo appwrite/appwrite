@@ -53,15 +53,30 @@ export function buildInitExploringActivity(label: string): string {
   return `Exploring ${label}`
 }
 
-export function buildInitViewingDailyPrizeActivity(
-  day: number,
-  prizeLabel: string,
-): string {
-  return `Viewing Day ${day} prize: ${prizeLabel}`
+const DAILY_PRIZE_PRESENCE_ACTIVITIES: Record<number, string> = {
+  1: 'Eyeing day 1 swag',
+  2: 'Keyboard envy',
+  3: 'Dark keyboard dreams',
+  4: 'Bottle and tee wishlist',
 }
 
-export function buildInitViewingGrandPrizeActivity(title: string): string {
-  return `Viewing grand prize: ${title}`
+export function buildInitViewingDailyPrizeActivity(
+  day: number,
+  _prizeLabel: string,
+): string {
+  return DAILY_PRIZE_PRESENCE_ACTIVITIES[day] ?? `Eyeing day ${day} swag`
+}
+
+export function buildInitViewingGrandPrizeActivity(_title: string): string {
+  return 'Dreaming of the grand prize'
+}
+
+export function buildInitRunningGiveawayRaffleActivity(day: number): string {
+  return `Drawing day ${day} swag`
+}
+
+export function buildInitSpinningGiveawayRaffleActivity(): string {
+  return 'Spinning the wheel'
 }
 
 export function buildInitSwitchingThemeActivity(theme: 'light' | 'dark'): string {

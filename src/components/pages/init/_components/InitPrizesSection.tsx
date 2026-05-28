@@ -12,6 +12,7 @@ import {
 } from '@/lib/init/init-presence-activity'
 import { cn } from '@/lib/utils'
 import { ArrowUpRight, Gift, Sparkles } from 'lucide-react'
+import { useEffect, useState } from 'react'
 import {
   PRIZE_CARD_BG,
   PRIZE_IMAGE_FRAME,
@@ -19,6 +20,8 @@ import {
   PRIZE_IMAGE_INSET,
   PRIZE_SWAG_IMAGE_OPACITY,
 } from './prize-image-styles'
+import { InitGiveawayRaffleBack } from './InitGiveawayRaffleBack'
+import { useInitGiveawayRaffleContext } from './init-giveaway-raffle-context'
 
 /** Compact ratio for the 2×2 daily cells. */
 const DAILY_IMAGE_ASPECT = 'aspect-[3/2]'
@@ -27,6 +30,9 @@ const DAILY_IMAGE_ASPECT = 'aspect-[3/2]'
 const GRAND_IMAGE_ASPECT = 'aspect-[4/3]'
 
 const PRIZE_LINE = 'min-w-0 truncate'
+
+const GRID_FLIP_TRANSITION =
+  'transition-transform duration-700 ease-in-out [transform-style:preserve-3d]'
 
 function usePrizePresenceHandlers(activity: string) {
   const { setTransientActivity } = useInitPresenceActivity()
@@ -251,11 +257,51 @@ function GrandPrizeCell({
   )
 }
 
+function PrizesGrid({ prizes }: { prizes: NonNullable<InitDisplayEvent['prizes']> }) {
+  return (
+    <div className={cn('overflow-hidden rounded-xl border border-border', PRIZE_CARD_BG)}>
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 lg:grid-rows-2 lg:items-stretch">
+        <GrandPrizeCell
+          grandPrize={prizes.grandPrize}
+          className="order-first border-b border-border sm:col-span-2 sm:row-start-1 lg:col-span-2 lg:col-start-3 lg:row-span-2 lg:row-start-1 lg:border-b-0 lg:border-l"
+        />
+
+        {prizes.dailyGiveaways.map((giveaway, index) => (
+          <DailyPrizeCell
+            key={giveaway.scheduleItemId}
+            giveaway={giveaway}
+            className={DAILY_PLACEMENT[index] ?? 'border-b border-border'}
+          />
+        ))}
+      </div>
+    </div>
+  )
+}
+
 export function InitPrizesSection({ event }: InitPrizesSectionProps) {
   const prizes = event.prizes
-  if (!prizes || event.isRecapMode) return null
+  const raffle = useInitGiveawayRaffleContext()
+
+  if (!prizes || event.isRecapMode || !raffle) return null
 
   const sectionTitle = prizes.sectionTitle ?? 'Prizes and giveaways'
+  const [isGridFlipped, setIsGridFlipped] = useState(false)
+
+  useEffect(() => {
+    if (raffle.activeGiveaway) {
+      let flipFrame = 0
+      const mountFrame = requestAnimationFrame(() => {
+        flipFrame = requestAnimationFrame(() => setIsGridFlipped(true))
+      })
+      return () => {
+        cancelAnimationFrame(mountFrame)
+        cancelAnimationFrame(flipFrame)
+      }
+    }
+
+    setIsGridFlipped(false)
+    return undefined
+  }, [raffle.activeGiveaway])
 
   return (
     <section
@@ -274,20 +320,33 @@ export function InitPrizesSection({ event }: InitPrizesSectionProps) {
         ) : null}
       </div>
 
-      <div className={cn('overflow-hidden rounded-xl border border-border', PRIZE_CARD_BG)}>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 lg:grid-rows-2 lg:items-stretch">
-          <GrandPrizeCell
-            grandPrize={prizes.grandPrize}
-            className="order-first border-b border-border sm:col-span-2 sm:row-start-1 lg:col-span-2 lg:col-start-3 lg:row-span-2 lg:row-start-1 lg:border-b-0 lg:border-l"
-          />
+      <div className="[perspective:1400px]">
+        <div
+          className={cn(
+            'relative',
+            GRID_FLIP_TRANSITION,
+            isGridFlipped && '[transform:rotateY(180deg)]',
+          )}
+        >
+          <div className="[backface-visibility:hidden]">
+            <PrizesGrid prizes={prizes} />
+          </div>
 
-          {prizes.dailyGiveaways.map((giveaway, index) => (
-            <DailyPrizeCell
-              key={giveaway.scheduleItemId}
-              giveaway={giveaway}
-              className={DAILY_PLACEMENT[index] ?? 'border-b border-border'}
-            />
-          ))}
+          {raffle.activeGiveaway ? (
+            <div
+              className={cn(
+                'absolute inset-0 min-h-full [backface-visibility:hidden] [transform:rotateY(180deg)]',
+              )}
+            >
+              <InitGiveawayRaffleBack
+                key={raffle.activeGiveaway.day}
+                giveaway={raffle.activeGiveaway}
+                participants={raffle.participants}
+                loadingParticipants={raffle.loadingParticipants}
+                onClose={raffle.close}
+              />
+            </div>
+          ) : null}
         </div>
       </div>
     </section>

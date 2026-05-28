@@ -18,7 +18,9 @@ import { cn } from '@/lib/utils'
 import { useQuery } from '@tanstack/react-query'
 import { ChevronLeft, X } from 'lucide-react'
 import { AnimatePresence, motion, useReducedMotion } from 'motion/react'
-import { useState, type CSSProperties } from 'react'
+import { useMemo, useState, type CSSProperties } from 'react'
+import { useInitGiveawayRaffleContext } from './init-giveaway-raffle-context'
+import { InitPresenceReactionSpark } from './InitPresenceReactionSpark'
 import { InitPresenceReactions } from './InitPresenceReactions'
 import { InitPresenceStatusControl } from './InitPresenceStatusControl'
 import { InitPresenceThemeBar } from './InitPresenceThemeBar'
@@ -52,6 +54,61 @@ const ONLINE_USER_TOOLTIP_CLASS =
   'max-w-[min(280px,calc(100dvw-5rem))] border border-border bg-popover px-3 py-2.5 text-popover-foreground shadow-md [&_svg]:!hidden [&_.reaction-badge_svg]:!inline-block'
 
 const ONLINE_USERS_LIST_CLASS = 'cursor-default select-none'
+
+const RAFFLE_WINNER_SURFACE_CLASS =
+  'bg-[color-mix(in_srgb,var(--brand-cta)_14%,var(--card))]'
+const RAFFLE_WINNER_AVATAR_CLASS =
+  'bg-[color-mix(in_srgb,var(--brand-cta)_14%,var(--card))] text-foreground'
+const PRESENCE_AVATAR_SHELL_CLASS =
+  'relative z-[1] inline-flex shrink-0 rounded-full [transform:translateZ(0)] [backface-visibility:hidden]'
+
+function sortUsersWithRaffleWinner(
+  users: LaunchEventOnlineUser[],
+  raffleWinnerId: string | null,
+) {
+  if (!raffleWinnerId) return users
+
+  const winner = users.find((user) => user.id === raffleWinnerId)
+  if (!winner) return users
+
+  return [winner, ...users.filter((user) => user.id !== raffleWinnerId)]
+}
+
+function RaffleWinnerSparkles() {
+  const reduceMotion = useReducedMotion()
+  const sparkAnchors = useMemo(
+    () => [
+      { id: 'a', left: '10%', top: '28%', sparkIndex: 0 },
+      { id: 'b', left: '24%', top: '68%', sparkIndex: 2 },
+      { id: 'c', left: '38%', top: '34%', sparkIndex: 4 },
+      { id: 'd', left: '52%', top: '62%', sparkIndex: 1 },
+      { id: 'e', left: '66%', top: '30%', sparkIndex: 3 },
+      { id: 'f', left: '80%', top: '70%', sparkIndex: 5 },
+      { id: 'g', left: '92%', top: '38%', sparkIndex: 0 },
+      { id: 'h', left: '46%', top: '48%', sparkIndex: 2 },
+    ],
+    [],
+  )
+
+  if (reduceMotion) return null
+
+  return (
+    <div className="pointer-events-none absolute inset-0 overflow-hidden rounded-md" aria-hidden>
+      {sparkAnchors.map((anchor) => (
+        <span
+          key={anchor.id}
+          className="absolute size-7 -translate-x-1/2 -translate-y-1/2"
+          style={{ left: anchor.left, top: anchor.top }}
+        >
+          <InitPresenceReactionSpark
+            index={anchor.sparkIndex}
+            animationKey={`winner-${anchor.id}`}
+          />
+        </span>
+      ))}
+    </div>
+  )
+}
 
 function OnlineUserTooltipDetails({
   name,
@@ -111,24 +168,20 @@ function PresenceAvatar({
   user,
   presence,
   size = 'sm',
+  isRaffleWinner = false,
 }: {
   user: LaunchEventOnlineUser
   presence: LaunchEventUserPresence
   size?: AvatarSize
+  isRaffleWinner?: boolean
 }) {
   const reduceMotion = useReducedMotion()
   const statusKey = buildPresenceStatusKey(user, presence)
-  const ringClass =
-    presence === 'online'
-      ? user.isLive
-        ? 'bg-gradient-to-tr from-[var(--brand-cta)] via-[#ff6b9d] to-[var(--brand-cta)]'
-        : 'bg-gradient-to-tr from-emerald-400 via-emerald-500 to-teal-400'
-      : 'bg-gradient-to-tr from-muted-foreground/35 via-muted-foreground/20 to-muted-foreground/35'
 
   return (
     <motion.span
-      key={statusKey}
-      className={cn('inline-flex shrink-0 rounded-full p-[2px]', ringClass)}
+      key={isRaffleWinner ? `winner-${statusKey}` : statusKey}
+      className={PRESENCE_AVATAR_SHELL_CLASS}
       animate={reduceMotion ? undefined : { scale: [1, 1.14, 1] }}
       transition={PRESENCE_RING_PULSE_TRANSITION}
       aria-hidden
@@ -136,7 +189,7 @@ function PresenceAvatar({
       <InitialsAvatar
         name={user.name}
         size={size}
-        className="rounded-full ring-2 ring-background"
+        className={cn('rounded-full', isRaffleWinner && RAFFLE_WINNER_AVATAR_CLASS)}
       />
     </motion.span>
   )
@@ -197,6 +250,7 @@ function OnlineUserRow({
   isMobile = false,
   selfUserId,
   reactionPulse = 0,
+  isRaffleWinner = false,
 }: {
   user: LaunchEventOnlineUser
   presence: LaunchEventUserPresence
@@ -204,6 +258,7 @@ function OnlineUserRow({
   isMobile?: boolean
   selfUserId?: string
   reactionPulse?: number
+  isRaffleWinner?: boolean
 }) {
   const reduceMotion = useReducedMotion()
   const avatarSize: AvatarSize = isMobile ? 'md' : 'sm'
@@ -213,23 +268,36 @@ function OnlineUserRow({
   const row = (
     <div
       className={cn(
-        'flex w-full items-center gap-2.5 rounded-md px-2.5 py-1.5 text-[13px] font-medium transition-colors duration-150',
+        'relative flex w-full items-center gap-2.5 rounded-md px-2.5 py-1.5 text-[13px] font-medium transition-colors duration-300',
         ONLINE_USERS_LIST_CLASS,
-        'text-muted-foreground hover:bg-accent/50 hover:text-foreground',
+        isRaffleWinner
+          ? cn(RAFFLE_WINNER_SURFACE_CLASS, 'text-foreground')
+          : 'text-muted-foreground hover:bg-accent/50 hover:text-foreground',
         collapsed && !isMobile && 'justify-center px-0',
         isMobile && 'gap-3 px-3 py-2.5 text-[14px]',
       )}
     >
-      <PresenceAvatar user={user} presence={presence} size={avatarSize} />
+      {isRaffleWinner ? <RaffleWinnerSparkles /> : null}
+      <PresenceAvatar
+        user={user}
+        presence={presence}
+        size={avatarSize}
+        isRaffleWinner={isRaffleWinner}
+      />
       {(!collapsed || isMobile) && (
-        <div className="min-w-0 flex-1 text-left">
+        <div className="relative z-[1] min-w-0 flex-1 text-left">
           <OnlineUserName
             name={user.name}
             activity={user.activity}
             reactionPulse={reactionPulse}
             isSelf={isSelf}
           />
-          <OnlineUserActivity activity={user.activity} />
+          <div className="min-w-0 flex-1">
+            <OnlineUserActivity
+              activity={isRaffleWinner ? 'Winner!' : user.activity}
+              className={isRaffleWinner ? 'text-muted-foreground' : undefined}
+            />
+          </div>
         </div>
       )}
     </div>
@@ -237,10 +305,16 @@ function OnlineUserRow({
 
   const animatedRow = (
     <motion.div
+      layout={!reduceMotion}
       initial={reduceMotion ? false : { opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={reduceMotion ? undefined : { opacity: 0 }}
-      transition={PRESENCE_LIST_TRANSITION}
+      transition={{
+        ...PRESENCE_LIST_TRANSITION,
+        layout: reduceMotion
+          ? undefined
+          : { type: 'spring', stiffness: 420, damping: 34, mass: 0.85 },
+      }}
     >
       {collapsed && !isMobile ? (
         <Tooltip delayDuration={200}>
@@ -248,13 +322,20 @@ function OnlineUserRow({
             <button
               type="button"
               className={cn(
-                'flex w-full cursor-default select-none items-center justify-center rounded-md px-0 py-1.5',
-                'transition-colors duration-150 hover:bg-accent/50',
+                'relative flex w-full cursor-default select-none items-center justify-center rounded-md px-0 py-1.5',
+                'transition-colors duration-300',
+                isRaffleWinner ? RAFFLE_WINNER_SURFACE_CLASS : 'hover:bg-accent/50',
                 'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background',
               )}
-              aria-label={`${user.name}. ${displayActivity}`}
+              aria-label={`${user.name}. ${isRaffleWinner ? 'Winner!' : displayActivity}`}
             >
-              <PresenceAvatar user={user} presence={presence} size={avatarSize} />
+              {isRaffleWinner ? <RaffleWinnerSparkles /> : null}
+              <PresenceAvatar
+        user={user}
+        presence={presence}
+        size={avatarSize}
+        isRaffleWinner={isRaffleWinner}
+      />
             </button>
           </TooltipTrigger>
           <TooltipContent
@@ -311,6 +392,7 @@ function UserCategory({
   isMobile = false,
   selfUserId,
   reactionPulse,
+  raffleWinnerId = null,
 }: {
   label: string
   users: LaunchEventOnlineUser[]
@@ -319,8 +401,13 @@ function UserCategory({
   isMobile?: boolean
   selfUserId?: string
   reactionPulse?: number
+  raffleWinnerId?: string | null
 }) {
   const reduceMotion = useReducedMotion()
+  const sortedUsers = useMemo(
+    () => sortUsersWithRaffleWinner(users, raffleWinnerId),
+    [raffleWinnerId, users],
+  )
 
   return (
     <AnimatePresence initial={false}>
@@ -347,7 +434,7 @@ function UserCategory({
             </div>
           )}
           <AnimatePresence initial={false} mode="popLayout">
-            {users.map((user) => (
+            {sortedUsers.map((user) => (
               <OnlineUserRow
                 key={user.id}
                 user={user}
@@ -356,6 +443,7 @@ function UserCategory({
                 isMobile={isMobile}
                 selfUserId={selfUserId}
                 reactionPulse={reactionPulse}
+                isRaffleWinner={Boolean(raffleWinnerId && user.id === raffleWinnerId)}
               />
             ))}
           </AnimatePresence>
@@ -532,6 +620,7 @@ function OnlineUsersNavContent({
   isLoading = false,
   selfUserId,
   reactionPulse,
+  raffleWinnerId = null,
 }: {
   event: LaunchEvent
   collapsed: boolean
@@ -540,6 +629,7 @@ function OnlineUsersNavContent({
   isLoading?: boolean
   selfUserId?: string
   reactionPulse?: number
+  raffleWinnerId?: string | null
 }) {
   const hasUsers =
     event.onlineUsers.length > 0 || event.recentlyOnlineUsers.length > 0
@@ -568,6 +658,7 @@ function OnlineUsersNavContent({
             isMobile={isMobile}
             selfUserId={selfUserId}
             reactionPulse={reactionPulse}
+            raffleWinnerId={raffleWinnerId}
           />
           <UserCategory
             label="Recently online"
@@ -604,6 +695,7 @@ export function OnlineUsersNav({
   const [reactionPulse, setReactionPulse] = useState(0)
   const { data: account } = useQuery(consoleAccountQueryOptions())
   const { isReady: isPresenceReady, onlineThemeCounts } = useInitPresence()
+  const raffle = useInitGiveawayRaffleContext()
   const isLoadingPresence = showPanel && !isPresenceReady
   const selfUserId = account?.$id
 
@@ -637,6 +729,7 @@ export function OnlineUsersNav({
                 isLoading={isLoadingPresence}
                 selfUserId={selfUserId}
                 reactionPulse={reactionPulse}
+                raffleWinnerId={raffle?.raffleWinnerId ?? null}
               />
             </nav>
 
@@ -717,6 +810,7 @@ export function OnlineUsersNav({
               isLoading={isLoadingPresence}
               selfUserId={selfUserId}
               reactionPulse={reactionPulse}
+              raffleWinnerId={raffle?.raffleWinnerId ?? null}
             />
           </nav>
 

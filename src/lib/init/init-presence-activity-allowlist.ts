@@ -8,6 +8,8 @@ import {
   buildInitPlayingWithJoolActivity,
   buildInitReadingDayActivity,
   buildInitRecordingTicketActivity,
+  buildInitRunningGiveawayRaffleActivity,
+  buildInitSpinningGiveawayRaffleActivity,
   buildInitSwitchingThemeActivity,
   buildInitViewingDayActivity,
   buildInitViewingDailyPrizeActivity,
@@ -48,8 +50,10 @@ export function buildInitPresenceActivityAllowlist(
       allowed.add(
         buildInitViewingDailyPrizeActivity(giveaway.day, giveaway.prizeDescription),
       )
+      allowed.add(buildInitRunningGiveawayRaffleActivity(giveaway.day))
     }
     allowed.add(buildInitViewingGrandPrizeActivity(event.prizes.grandPrize.title))
+    allowed.add(buildInitSpinningGiveawayRaffleActivity())
   }
 
   for (const day of event.days) {
