@@ -322,6 +322,8 @@ export function InitTicketSection({ event, account }: InitTicketSectionProps) {
   }
 
   const handleDownloadTicketVideo = async () => {
+    if (!isAuthenticated) return
+
     const handle = ticketCardRef.current
     const captureElement = videoCaptureStageRef.current
     if (!handle || !captureElement) return
@@ -475,7 +477,7 @@ export function InitTicketSection({ event, account }: InitTicketSectionProps) {
       }}
       onMouseLeave={() => setTransientActivity(null)}
     >
-      {!collapsed ? (
+      {!collapsed && isAuthenticated ? (
         <Button
           type="button"
           variant="outline"

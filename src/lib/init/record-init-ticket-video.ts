@@ -6,6 +6,10 @@ import {
   canRecordInitTicketViaCanvas,
   recordInitTicketVideoViaCanvas,
 } from '@/lib/init/record-init-ticket-video-canvas'
+import {
+  sleep,
+  withInitTicketCaptureWakeLock,
+} from '@/lib/init/ticket-video-wall-clock-loop'
 import { INIT_TICKET_VIDEO_MOTION_LOOP_CYCLES } from '@/lib/init/ticket-video-capture'
 import { preloadInitTicketCaptureFonts } from '@/lib/init/ticket-font-embed'
 
@@ -48,6 +52,10 @@ export function isInitTicketVideoExportSupported(): boolean {
 }
 
 export function waitForNextPaint() {
+  if (typeof document !== 'undefined' && document.visibilityState === 'hidden') {
+    return sleep(32)
+  }
+
   return new Promise<void>((resolve) => {
     requestAnimationFrame(() => {
       requestAnimationFrame(() => resolve())
@@ -110,27 +118,29 @@ export async function recordInitTicketVideo({
 
   await preloadInitTicketCaptureFonts()
 
-  if (canRecordInitTicketViaElementCapture()) {
-    return recordInitTicketVideoViaElementCapture({
-      captureElement,
-      mimeType: format.mimeType,
-      fileExtension: format.fileExtension,
-      ...tiltHandlers,
-      onVisibleCaptureComplete,
-    })
-  }
+  return withInitTicketCaptureWakeLock(async () => {
+    if (canRecordInitTicketViaElementCapture()) {
+      return recordInitTicketVideoViaElementCapture({
+        captureElement,
+        mimeType: format.mimeType,
+        fileExtension: format.fileExtension,
+        ...tiltHandlers,
+        onVisibleCaptureComplete,
+      })
+    }
 
-  if (canRecordInitTicketViaCanvas()) {
-    return recordInitTicketVideoViaCanvas({
-      captureElement,
-      mimeType: format.mimeType,
-      fileExtension: format.fileExtension,
-      exportWidthPx: EXPORT_WIDTH_PX,
-      backgroundColor,
-      ...tiltHandlers,
-      onVisibleCaptureComplete,
-    })
-  }
+    if (canRecordInitTicketViaCanvas()) {
+      return recordInitTicketVideoViaCanvas({
+        captureElement,
+        mimeType: format.mimeType,
+        fileExtension: format.fileExtension,
+        exportWidthPx: EXPORT_WIDTH_PX,
+        backgroundColor,
+        ...tiltHandlers,
+        onVisibleCaptureComplete,
+      })
+    }
 
-  throw new Error('Video recording is not supported in this browser')
+    throw new Error('Video recording is not supported in this browser')
+  })
 }

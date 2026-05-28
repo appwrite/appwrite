@@ -5,18 +5,35 @@ import {
   INIT_TICKET_VIDEO_EXPORT_FPS,
 } from '@/lib/init/ticket-video-capture'
 import type { InitTicketVideoRecording } from '@/lib/init/record-init-ticket-video'
+import { sleep } from '@/lib/init/ticket-video-wall-clock-loop'
 
 const VIDEO_BITRATE = 35_000_000
 
-function sleep(ms: number) {
-  return new Promise<void>((resolve) => {
-    window.setTimeout(resolve, ms)
+async function seekVideoTo(video: HTMLVideoElement, time: number) {
+  if (Math.abs(video.currentTime - time) < 0.001) return
+
+  await new Promise<void>((resolve, reject) => {
+    const onSeeked = () => {
+      cleanup()
+      resolve()
+    }
+    const onError = () => {
+      cleanup()
+      reject(new Error('Could not seek video'))
+    }
+    const cleanup = () => {
+      video.removeEventListener('seeked', onSeeked)
+      video.removeEventListener('error', onError)
+    }
+    video.addEventListener('seeked', onSeeked)
+    video.addEventListener('error', onError)
+    video.currentTime = time
   })
 }
 
 /**
  * Time-compresses a wall-clock tab recording into a fixed-length export clip.
- * Playing the source faster yields denser motion samples in the output file.
+ * Frame-by-frame seek encoding avoids rAF / playback pauses when the tab is hidden.
  */
 export async function compressInitTicketRecordingToClip({
   blob,
@@ -32,8 +49,9 @@ export async function compressInitTicketRecordingToClip({
   onProgress?: (progress: number) => void
 }): Promise<InitTicketVideoRecording> {
   const clipDurationSec = INIT_TICKET_VIDEO_CLIP_DURATION_SEC
-  const clipDurationMs = clipDurationSec * 1000
   const targetFps = INIT_TICKET_VIDEO_EXPORT_FPS
+  const totalFrames = Math.max(1, Math.round(clipDurationSec * targetFps))
+  const frameIntervalMs = 1000 / targetFps
 
   const video = document.createElement('video')
   video.muted = true
@@ -57,7 +75,6 @@ export async function compressInitTicketRecordingToClip({
       Number.isFinite(video.duration) && video.duration > 0
         ? video.duration
         : sourceDurationSec
-    const playbackRate = metadataDuration / clipDurationSec
 
     const canvas = document.createElement('canvas')
     canvas.width = video.videoWidth || 1920
@@ -90,36 +107,29 @@ export async function compressInitTicketRecordingToClip({
     })
 
     recorder.start(100)
-    video.playbackRate = playbackRate
-    video.currentTime = 0
-
-    try {
-      await video.play()
-    } catch {
-      throw new Error('Could not encode video')
-    }
 
     const encodeStart = performance.now()
-    await new Promise<void>((resolve) => {
-      const tick = () => {
-        const elapsed = performance.now() - encodeStart
-        if (elapsed >= clipDurationMs || video.ended || video.paused) {
-          resolve()
-          return
-        }
+    for (let frameIndex = 0; frameIndex < totalFrames; frameIndex += 1) {
+      const outputProgress = totalFrames <= 1 ? 1 : frameIndex / (totalFrames - 1)
+      const sourceTime = Math.min(
+        metadataDuration,
+        Math.max(0, outputProgress * metadataDuration),
+      )
 
-        ctx.drawImage(video, 0, 0, canvas.width, canvas.height)
-        const progress = Math.min(1, elapsed / clipDurationMs)
-        onProgress?.(
-          INIT_TICKET_VIDEO_CAPTURE_PROGRESS_WEIGHT +
-            progress * (1 - INIT_TICKET_VIDEO_CAPTURE_PROGRESS_WEIGHT),
-        )
-        requestAnimationFrame(tick)
+      await seekVideoTo(video, sourceTime)
+      ctx.drawImage(video, 0, 0, canvas.width, canvas.height)
+      onProgress?.(
+        INIT_TICKET_VIDEO_CAPTURE_PROGRESS_WEIGHT +
+          outputProgress * (1 - INIT_TICKET_VIDEO_CAPTURE_PROGRESS_WEIGHT),
+      )
+
+      const targetTime = encodeStart + (frameIndex + 1) * frameIntervalMs
+      const waitMs = Math.max(0, targetTime - performance.now())
+      if (waitMs > 0) {
+        await sleep(waitMs)
       }
-      requestAnimationFrame(tick)
-    })
+    }
 
-    video.pause()
     onProgress?.(1)
     await sleep(120)
 

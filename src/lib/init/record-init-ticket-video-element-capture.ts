@@ -6,6 +6,10 @@ import {
 } from '@/lib/init/ticket-video-capture'
 import type { InitTicketVideoRecording } from '@/lib/init/record-init-ticket-video'
 import { compressInitTicketRecordingToClip } from '@/lib/init/ticket-video-time-compress'
+import {
+  runVisibilityPausedWallClockLoop,
+  sleep,
+} from '@/lib/init/ticket-video-wall-clock-loop'
 
 const CAPTURE_WALL_CLOCK_MS = INIT_TICKET_VIDEO_CAPTURE_WALL_CLOCK_SEC * 1000
 /** ~6 Mbps per megapixel per second at 60fps — keeps edges clean on cropped stage. */
@@ -38,12 +42,6 @@ type ElementCaptureRecordOptions = {
   getTiltForProgress: (t: number) => { x: number; y: number }
   onProgress?: (progress: number) => void
   onVisibleCaptureComplete?: () => void
-}
-
-function sleep(ms: number) {
-  return new Promise<void>((resolve) => {
-    window.setTimeout(resolve, ms)
-  })
 }
 
 async function apply60FpsVideoConstraints(track: MediaStreamTrack) {
@@ -133,29 +131,31 @@ async function recordWallClockCapture({
   })
 
   setTilt(0, 0)
-  await new Promise<void>((resolve) => {
-    requestAnimationFrame(() => requestAnimationFrame(() => resolve()))
-  })
+  await sleep(32)
 
-  const startTime = performance.now()
   recorder.start(100)
 
-  await new Promise<void>((resolve) => {
-    const tick = () => {
-      const elapsed = performance.now() - startTime
-      if (elapsed >= CAPTURE_WALL_CLOCK_MS) {
-        resolve()
-        return
-      }
+  const pauseRecorder = () => {
+    if (recorder.state === 'recording') {
+      recorder.pause()
+    }
+  }
 
-      const progress = Math.min(1, elapsed / CAPTURE_WALL_CLOCK_MS)
+  const resumeRecorder = () => {
+    if (recorder.state === 'paused') {
+      recorder.resume()
+    }
+  }
+
+  await runVisibilityPausedWallClockLoop({
+    durationMs: CAPTURE_WALL_CLOCK_MS,
+    onPause: pauseRecorder,
+    onResume: resumeRecorder,
+    onTick: (progress) => {
       onProgress?.(progress * INIT_TICKET_VIDEO_CAPTURE_PROGRESS_WEIGHT)
       const { x, y } = getTiltForProgress(progress)
       setTilt(x, y)
-      requestAnimationFrame(tick)
-    }
-
-    requestAnimationFrame(tick)
+    },
   })
 
   await sleep(200)

@@ -33,6 +33,8 @@ type InitHeroBackgroundProps = {
   onInteractionStart?: () => void
   /** Fired when pointer interaction ends (leave or idle timeout). */
   onInteractionEnd?: () => void
+  /** Keep animating while the document is hidden (ticket video capture). */
+  keepAliveWhenHidden?: boolean
 }
 
 type ParticleTheme = ReturnType<typeof getParticleTheme>
@@ -143,6 +145,7 @@ export function InitHeroBackground({
   particleMotionSpeed = 1,
   onInteractionStart,
   onInteractionEnd,
+  keepAliveWhenHidden = false,
 }: InitHeroBackgroundProps) {
   const creatureRef = useRef<HTMLDivElement>(null)
   const runtimeRef = useRef<AnimationRuntime | null>(null)
@@ -150,6 +153,7 @@ export function InitHeroBackground({
   const compactRef = useRef(compact)
   const activeRef = useRef(active)
   const canRunRef = useRef(true)
+  const keepAliveWhenHiddenRef = useRef(keepAliveWhenHidden)
   const onInteractionStartRef = useRef(onInteractionStart)
   const onInteractionEndRef = useRef(onInteractionEnd)
   const { resolvedTheme } = useTheme()
@@ -159,6 +163,7 @@ export function InitHeroBackground({
   compactRef.current = compact
   activeRef.current = active
   accentColorRef.current = accentColor
+  keepAliveWhenHiddenRef.current = keepAliveWhenHidden
   onInteractionStartRef.current = onInteractionStart
   onInteractionEndRef.current = onInteractionEnd
 
@@ -334,7 +339,7 @@ export function InitHeroBackground({
 
     const resume = () => {
       if (!canRunRef.current || !activeRef.current) return
-      if (document.visibilityState === 'hidden') return
+      if (document.visibilityState === 'hidden' && !keepAliveWhenHiddenRef.current) return
       mainLoop.play()
       autoMove.play()
     }
@@ -368,6 +373,7 @@ export function InitHeroBackground({
 
     const handleVisibility = () => {
       if (document.visibilityState === 'hidden') {
+        if (keepAliveWhenHiddenRef.current) return
         pause()
         return
       }
@@ -379,9 +385,13 @@ export function InitHeroBackground({
     const intersectionObserver = new IntersectionObserver(
       ([entry]) => {
         canRunRef.current = entry?.isIntersecting ?? true
-        if (canRunRef.current && activeRef.current && document.visibilityState === 'visible') {
+        if (
+          canRunRef.current &&
+          activeRef.current &&
+          (document.visibilityState === 'visible' || keepAliveWhenHiddenRef.current)
+        ) {
           resume()
-        } else {
+        } else if (!keepAliveWhenHiddenRef.current) {
           pause()
         }
       },

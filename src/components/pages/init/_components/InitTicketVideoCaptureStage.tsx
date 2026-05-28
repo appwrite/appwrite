@@ -67,6 +67,7 @@ export const InitTicketVideoCaptureStage = forwardRef<
                 accentColor={ticketAccentColor}
                 particleIsDark={ticketUsesDarkChrome}
                 particleMotionSpeed={INIT_TICKET_VIDEO_HERO_MOTION_SPEED}
+                keepAliveWhenHidden={showHeroAnimation}
               />
             </div>
           ) : null}
@@ -125,7 +126,7 @@ function InitTicketRecordingChrome({ visible }: { visible: boolean }) {
           />
           <span className="relative inline-flex size-2 rounded-full bg-red-500" />
         </span>
-        <span>Recording</span>
+        <span>Capturing frames</span>
       </div>
     </div>
   )

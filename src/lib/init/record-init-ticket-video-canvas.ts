@@ -11,6 +11,7 @@ import {
   INIT_TICKET_VIDEO_FALLBACK_FPS,
 } from '@/lib/init/ticket-video-capture'
 import type { InitTicketVideoRecording } from '@/lib/init/record-init-ticket-video'
+import { runWallClockLoop, sleep } from '@/lib/init/ticket-video-wall-clock-loop'
 
 const CAPTURE_WALL_CLOCK_MS = INIT_TICKET_VIDEO_CAPTURE_WALL_CLOCK_SEC * 1000
 const FALLBACK_CAPTURE_PIXEL_RATIO = 1.5
@@ -111,14 +112,11 @@ async function warmUpFontCapture(
 }
 
 function waitForNextPaint() {
+  if (typeof document !== 'undefined' && document.visibilityState === 'hidden') {
+    return sleep(32)
+  }
   return new Promise<void>((resolve) => {
     requestAnimationFrame(() => requestAnimationFrame(() => resolve()))
-  })
-}
-
-function sleep(ms: number) {
-  return new Promise<void>((resolve) => {
-    window.setTimeout(resolve, ms)
   })
 }
 
@@ -171,16 +169,14 @@ async function gatherSnapshots({
   let stopped = false
   let captureChain: Promise<void> = Promise.resolve()
 
-  const runTiltLoop = () => {
-    if (stopped) return
-    const elapsed = performance.now() - startTime
-    if (elapsed >= CAPTURE_WALL_CLOCK_MS) return
-    const progress = Math.min(1, elapsed / CAPTURE_WALL_CLOCK_MS)
-    onProgress?.(progress * INIT_TICKET_VIDEO_CAPTURE_PROGRESS_WEIGHT)
-    const { x, y } = getTiltForProgress(progress)
-    setTilt(x, y)
-    requestAnimationFrame(runTiltLoop)
-  }
+  const wallClockLoop = runWallClockLoop({
+    durationMs: CAPTURE_WALL_CLOCK_MS,
+    onTick: (progress) => {
+      onProgress?.(progress * INIT_TICKET_VIDEO_CAPTURE_PROGRESS_WEIGHT)
+      const { x, y } = getTiltForProgress(progress)
+      setTilt(x, y)
+    },
+  })
 
   const runCaptureLoop = () => {
     if (stopped || performance.now() - startTime >= CAPTURE_WALL_CLOCK_MS) return
@@ -219,14 +215,13 @@ async function gatherSnapshots({
       .catch(() => undefined)
       .finally(() => {
         if (!stopped && performance.now() - startTime < CAPTURE_WALL_CLOCK_MS) {
-          runCaptureLoop()
+          window.setTimeout(runCaptureLoop, 0)
         }
       })
   }
 
-  requestAnimationFrame(runTiltLoop)
   runCaptureLoop()
-  await sleep(CAPTURE_WALL_CLOCK_MS + 80)
+  await wallClockLoop
   stopped = true
   await captureChain
 
