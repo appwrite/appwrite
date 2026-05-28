@@ -2,7 +2,7 @@
 
 namespace Tests\Unit\Network;
 
-use Appwrite\Network\UnsafeUrlException;
+use Appwrite\Extend\Exception;
 use Appwrite\Platform\Modules\Avatars\Http\Favicon\Get;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
@@ -25,8 +25,9 @@ class FetcherTest extends TestCase
     {
         try {
             TestableGet::assertSafe($url);
-            $this->fail("Expected UnsafeUrlException for {$url}");
-        } catch (UnsafeUrlException $e) {
+            $this->fail("Expected Exception for {$url}");
+        } catch (Exception $e) {
+            $this->assertSame(Exception::AVATAR_REMOTE_URL_FAILED, $e->getType());
             $this->assertStringContainsString(
                 $reasonFragment,
                 $e->getMessage(),
@@ -86,8 +87,9 @@ class FetcherTest extends TestCase
 
         try {
             $fetcher->fetchForTest('http://8.8.8.8/attacker-page', $adapter);
-            $this->fail('Expected UnsafeUrlException');
-        } catch (UnsafeUrlException $e) {
+            $this->fail('Expected Exception');
+        } catch (Exception $e) {
+            $this->assertSame(Exception::AVATAR_REMOTE_URL_FAILED, $e->getType());
             $this->assertStringContainsString('169.254.169.254', $e->getMessage());
             $this->assertSame(
                 1,
@@ -108,8 +110,9 @@ class FetcherTest extends TestCase
 
         try {
             $fetcher->fetchForTest('http://8.8.8.8/attacker-page', $adapter);
-            $this->fail('Expected UnsafeUrlException');
-        } catch (UnsafeUrlException $e) {
+            $this->fail('Expected Exception');
+        } catch (Exception $e) {
+            $this->assertSame(Exception::AVATAR_REMOTE_URL_FAILED, $e->getType());
             $this->assertStringContainsString('127.0.0.1', $e->getMessage());
             $this->assertSame(1, $adapter->callCount);
         }
@@ -161,8 +164,9 @@ class FetcherTest extends TestCase
 
         try {
             $fetcher->fetchForTest('http://8.8.8.8/page', $adapter);
-            $this->fail('Expected UnsafeUrlException');
-        } catch (UnsafeUrlException $e) {
+            $this->fail('Expected Exception');
+        } catch (Exception $e) {
+            $this->assertSame(Exception::AVATAR_REMOTE_URL_FAILED, $e->getType());
             $this->assertStringContainsString("Scheme 'file'", $e->getMessage());
             $this->assertSame(1, $adapter->callCount);
         }

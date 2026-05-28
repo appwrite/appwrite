@@ -3,7 +3,6 @@
 namespace Appwrite\Platform\Modules\Avatars\Http\Favicon;
 
 use Appwrite\Extend\Exception;
-use Appwrite\Network\UnsafeUrlException;
 use Appwrite\Network\Validator\PublicHostname;
 use Appwrite\Platform\Modules\Avatars\Http\Action;
 use Appwrite\SDK\AuthType;
@@ -204,23 +203,23 @@ class Get extends Action
     }
 
     /**
-     * @throws UnsafeUrlException
+     * @throws Exception
      */
     protected static function assertSafeUrl(string $url): void
     {
         $parts = \parse_url($url);
         if (!\is_array($parts)) {
-            throw new UnsafeUrlException('Malformed URL.');
+            throw new Exception(Exception::AVATAR_REMOTE_URL_FAILED, 'Malformed URL.');
         }
 
         $scheme = \strtolower($parts['scheme'] ?? '');
         if (!\in_array($scheme, self::ALLOWED_SCHEMES, true)) {
-            throw new UnsafeUrlException("Scheme '{$scheme}' is not allowed.");
+            throw new Exception(Exception::AVATAR_REMOTE_URL_FAILED, "Scheme '{$scheme}' is not allowed.");
         }
 
         $host = $parts['host'] ?? '';
         if ($host === '') {
-            throw new UnsafeUrlException('URL has no host.');
+            throw new Exception(Exception::AVATAR_REMOTE_URL_FAILED, 'URL has no host.');
         }
 
         $isIpLiteral = \filter_var(\trim($host, '[]'), FILTER_VALIDATE_IP) !== false;
@@ -228,22 +227,22 @@ class Get extends Action
             try {
                 $domain = new Domain($host);
             } catch (\Throwable) {
-                throw new UnsafeUrlException("Hostname '{$host}' is invalid.");
+                throw new Exception(Exception::AVATAR_REMOTE_URL_FAILED, "Hostname '{$host}' is invalid.");
             }
 
             if (!$domain->isKnown()) {
-                throw new UnsafeUrlException("Hostname '{$host}' is not a known public domain.");
+                throw new Exception(Exception::AVATAR_REMOTE_URL_FAILED, "Hostname '{$host}' is not a known public domain.");
             }
         }
 
         $validator = new PublicHostname();
         if (!$validator->isValid($host)) {
-            throw new UnsafeUrlException($validator->getDescription());
+            throw new Exception(Exception::AVATAR_REMOTE_URL_FAILED, $validator->getDescription());
         }
     }
 
     /**
-     * @throws UnsafeUrlException
+     * @throws Exception
      */
     protected function safeFetch(string $url, string $userAgent, ?Adapter $adapter = null): FetchResponse
     {
