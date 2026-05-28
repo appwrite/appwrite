@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
-import { Zap, Play, RotateCcw } from 'lucide-react'
+import { Play, RotateCcw, Trophy } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 type Entity = {
@@ -239,136 +239,159 @@ export function LightningCollectorGame() {
   }, [isOpen, status])
 
   return (
-    <div className="mb-4 rounded-xl border border-border bg-card p-4">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div>
-          <p className="text-sm font-medium text-foreground">
+    <div className="mb-4 overflow-hidden rounded-xl border border-border bg-card/50">
+      <div className="flex flex-wrap items-start justify-between gap-4 px-6 py-4">
+        <div className="min-w-0 flex-1 space-y-2">
+          <h3 className="text-[15px] font-semibold text-foreground">
             Lightning Collector
-          </p>
-          <p className="text-xs text-muted-foreground">
-            Dodge lightning, grab Appwrite logos, and rack up points. Inspired
-            by the Chrome dino run.
+          </h3>
+          <p className="text-[13px] text-muted-foreground leading-relaxed">
+            Collect Appwrite tokens and avoid lightning hazards. Endurance
+            mini-game for debug sessions.
           </p>
         </div>
-        <div className="flex items-center gap-2">
-          <Badge variant="outline" className="flex items-center gap-1">
-            <Zap className="h-3 w-3 text-amber-500" />
-            High score: {highScore}
-          </Badge>
+        <div className="flex shrink-0 flex-wrap items-center gap-2">
+          {highScore > 0 && (
+            <Badge variant="info" className="text-[10px] shrink-0 gap-1">
+              <Trophy className="h-3 w-3" />
+              Best {highScore}
+            </Badge>
+          )}
           <Button
-            variant="secondary"
+            variant="outline"
             size="sm"
+            className="h-9 text-[13px]"
             onClick={() => setIsOpen((prev) => !prev)}
-            className="flex items-center gap-2"
           >
-            <Play className="h-4 w-4" />
-            {isOpen ? 'Hide game' : 'Play game'}
+            {isOpen ? 'Collapse' : 'Open'}
           </Button>
         </div>
       </div>
 
       {isOpen && (
-        <div className="mt-4 space-y-3">
-          <div className="flex flex-wrap items-center justify-between gap-2 text-xs text-muted-foreground">
-            <div className="flex items-center gap-3">
-              <span className="font-medium text-foreground">
-                Score: {score}
-              </span>
-              <span>• Press Space / ↑ or click to jump</span>
-              <span>• Press R to restart</span>
-            </div>
-            <div className="flex items-center gap-2">
+        <>
+          <div className="border-t border-border" />
+          <div className="space-y-4 px-6 py-4">
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <dl className="flex flex-wrap items-center gap-x-6 gap-y-1 text-[13px]">
+                <div className="flex items-baseline gap-2">
+                  <dt className="text-muted-foreground">Score</dt>
+                  <dd className="font-medium tabular-nums text-foreground">
+                    {score}
+                  </dd>
+                </div>
+                <div className="hidden text-muted-foreground sm:block">
+                  <span className="text-border">|</span>
+                  <span className="ml-6">
+                    Space or ↑ to jump · R to restart · click arena to jump
+                  </span>
+                </div>
+              </dl>
               <Button
                 size="sm"
                 variant="outline"
                 onClick={resetGame}
-                className="h-8 gap-1"
+                className="h-9 gap-1.5 text-[13px]"
               >
                 <RotateCcw className="h-3.5 w-3.5" />
                 Restart
               </Button>
             </div>
-          </div>
 
-          <div
-            className={cn(
-              'relative overflow-hidden rounded-lg border border-border bg-gradient-to-b from-background to-muted/50 w-full',
-            )}
-            style={{ width: '100%', height: GAME_HEIGHT }}
-            onClick={handleJump}
-          >
-            {/* Ground */}
             <div
-              className="absolute inset-x-0 bg-border/60"
-              style={{ height: GROUND_HEIGHT, bottom: 0 }}
-            />
-
-            {/* Player */}
-            <div
-              className="absolute rounded-md bg-blue-500 transition-transform"
-              style={{
-                width: PLAYER_SIZE,
-                height: PLAYER_SIZE,
-                left: PLAYER_X,
-                bottom: GROUND_HEIGHT + playerRef.current.y,
-              }}
-            />
-
-            {/* Entities */}
-            {entitiesRef.current.map((entity) => (
+              className={cn(
+                'relative w-full overflow-hidden rounded-lg border border-border bg-muted/20',
+              )}
+              style={{ height: GAME_HEIGHT }}
+              onClick={handleJump}
+              role="application"
+              aria-label="Lightning Collector game arena"
+            >
               <div
-                key={entity.id}
-                className="absolute transition-transform"
+                className="pointer-events-none absolute inset-0 opacity-[0.35]"
                 style={{
-                  width: entity.width,
-                  height: entity.height,
-                  left: entity.x,
-                  bottom: GROUND_HEIGHT + entity.y,
                   backgroundImage:
-                    entity.type === 'hazard'
-                      ? `url("data:image/svg+xml;utf8,${LIGHTNING_SVG}")`
-                      : `url("${APPWRITE_LOGO_SRC}")`,
-                  backgroundRepeat: 'no-repeat',
-                  backgroundSize: 'contain',
-                  filter:
-                    entity.type === 'hazard'
-                      ? 'drop-shadow(0 4px 6px rgba(34, 197, 94, 0.35))'
-                      : 'drop-shadow(0 6px 10px rgba(236, 72, 153, 0.35))',
+                    'linear-gradient(to right, hsl(var(--border)) 1px, transparent 1px)',
+                  backgroundSize: '48px 100%',
                 }}
               />
-            ))}
 
-            {/* Status overlay */}
-            {status !== 'running' && (
-              <div className="absolute inset-0 flex items-center justify-center bg-background/70 backdrop-blur-sm">
-                <div className="text-center">
-                  <p className="text-sm font-semibold text-foreground">
-                    {status === 'gameover'
-                      ? 'You got BaaSted! Try again?'
-                      : 'Tap play and jump to start'}
-                  </p>
-                  <p className="text-xs text-muted-foreground">
-                    Use Space / ↑ or click to jump. Collect logos, avoid
-                    lightning.
-                  </p>
-                  <div className="mt-3 flex items-center justify-center gap-2">
-                    <Button size="sm" onClick={resetGame} className="gap-2">
-                      <Play className="h-4 w-4" />
-                      Start run
-                    </Button>
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      onClick={() => setIsOpen(false)}
-                    >
-                      Close
-                    </Button>
+              <div
+                className="absolute inset-x-0 border-t border-border/80 bg-muted/40"
+                style={{ height: GROUND_HEIGHT, bottom: 0 }}
+              />
+
+              <div
+                className="absolute rounded-sm border border-border bg-foreground shadow-sm"
+                style={{
+                  width: PLAYER_SIZE,
+                  height: PLAYER_SIZE,
+                  left: PLAYER_X,
+                  bottom: GROUND_HEIGHT + playerRef.current.y,
+                }}
+              />
+
+              {entitiesRef.current.map((entity) => (
+                <div
+                  key={entity.id}
+                  className="absolute"
+                  style={{
+                    width: entity.width,
+                    height: entity.height,
+                    left: entity.x,
+                    bottom: GROUND_HEIGHT + entity.y,
+                    backgroundImage:
+                      entity.type === 'hazard'
+                        ? `url("data:image/svg+xml;utf8,${LIGHTNING_SVG}")`
+                        : `url("${APPWRITE_LOGO_SRC}")`,
+                    backgroundRepeat: 'no-repeat',
+                    backgroundSize: 'contain',
+                    opacity: entity.type === 'hazard' ? 0.95 : 0.9,
+                  }}
+                />
+              ))}
+
+              {status !== 'running' && (
+                <div className="absolute inset-0 flex items-center justify-center bg-background/80 backdrop-blur-[2px]">
+                  <div className="max-w-xs px-6 text-center">
+                    <p className="text-[13px] font-semibold text-foreground">
+                      {status === 'gameover'
+                        ? 'Run ended'
+                        : 'Ready to start'}
+                    </p>
+                    <p className="mt-1.5 text-[12px] leading-relaxed text-muted-foreground">
+                      {status === 'gameover'
+                        ? `Final score: ${score}. Start another run to beat your best.`
+                        : 'Collect tokens and avoid lightning. Use Space, ↑, or click to jump.'}
+                    </p>
+                    <div className="mt-4 flex items-center justify-center gap-2">
+                      <Button
+                        size="sm"
+                        onClick={resetGame}
+                        className="h-9 gap-1.5 text-[13px]"
+                      >
+                        <Play className="h-3.5 w-3.5" />
+                        {status === 'gameover' ? 'Play again' : 'Start run'}
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="h-9 text-[13px]"
+                        onClick={() => setIsOpen(false)}
+                      >
+                        Collapse
+                      </Button>
+                    </div>
                   </div>
                 </div>
-              </div>
-            )}
+              )}
+            </div>
+
+            <p className="text-[12px] text-muted-foreground sm:hidden">
+              Space or ↑ to jump · R to restart · tap arena to jump
+            </p>
           </div>
-        </div>
+        </>
       )}
     </div>
   )
