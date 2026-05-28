@@ -156,6 +156,188 @@ function presenceUpdatedAt(presence: InitPresenceRecord): number {
   return new Date(presence.$updatedAt ?? 0).getTime()
 }
 
+export function normalizeInitPresenceRecord(
+  presence: InitPresenceRecord | undefined | null,
+): InitPresenceRecord | null {
+  if (!presence) return null
+  const userId = presence.userId?.trim() || presence.$id?.trim()
+  if (!userId) return null
+
+  let metadata = presence.metadata
+  if (typeof metadata === 'string') {
+    try {
+      metadata = JSON.parse(metadata) as InitPresenceRecord['metadata']
+    } catch {
+      /* keep raw */
+    }
+  }
+
+  return {
+    ...presence,
+    userId,
+    metadata,
+  }
+}
+
+function mergePresenceRecordUpdate(
+  previous: InitPresenceRecord | undefined,
+  incoming: InitPresenceRecord,
+): InitPresenceRecord {
+  if (!previous) return incoming
+  return {
+    ...previous,
+    ...incoming,
+    userId: incoming.userId,
+    status: incoming.status || previous.status,
+    metadata: incoming.metadata ?? previous.metadata,
+    expiresAt: incoming.expiresAt ?? previous.expiresAt,
+    $updatedAt: incoming.$updatedAt ?? previous.$updatedAt,
+  }
+}
+
+export function isPresenceDeleteEvent(events: string[]): boolean {
+  return events.some((event) => event.includes('presences.') && event.endsWith('.delete'))
+}
+
+export function isPresenceMutationEvent(events: string[]): boolean {
+  return events.some(
+    (event) =>
+      event.includes('presences.') &&
+      (event.endsWith('.upsert') || event.endsWith('.update')),
+  )
+}
+
+/** Apply a single realtime presence payload; primary path for live sidebar updates. */
+export function applyInitPresenceRealtimeRecord(
+  maps: {
+    online: Map<string, InitPresenceRecord>
+    away: Map<string, InitPresenceRecord>
+  },
+  rawPresence: InitPresenceRecord | undefined | null,
+  eventId: string,
+  options?: { deleted?: boolean },
+): {
+  online: Map<string, InitPresenceRecord>
+  away: Map<string, InitPresenceRecord>
+} {
+  const nextOnline = new Map(maps.online)
+  const nextAway = new Map(maps.away)
+
+  const normalizedDelete = normalizeInitPresenceRecord(rawPresence)
+  if (options?.deleted) {
+    const userId = normalizedDelete?.userId
+    if (userId) {
+      nextOnline.delete(userId)
+      nextAway.delete(userId)
+    }
+    return { online: nextOnline, away: nextAway }
+  }
+
+  const normalized = normalizeInitPresenceRecord(rawPresence)
+  if (!normalized) {
+    return { online: nextOnline, away: nextAway }
+  }
+
+  const previous = nextOnline.get(normalized.userId) ?? nextAway.get(normalized.userId)
+  const presence = mergePresenceRecordUpdate(previous, normalized)
+
+  if (!presenceMatchesInitEvent(presence, eventId)) {
+    nextOnline.delete(presence.userId)
+    nextAway.delete(presence.userId)
+    return { online: nextOnline, away: nextAway }
+  }
+
+  if (!isPresenceActive(presence)) {
+    nextOnline.delete(presence.userId)
+    nextAway.delete(presence.userId)
+    return { online: nextOnline, away: nextAway }
+  }
+
+  if (isInitAwayStatus(presence, eventId)) {
+    nextAway.set(presence.userId, presence)
+    nextOnline.delete(presence.userId)
+  } else if (isInitOnlineStatus(presence, eventId)) {
+    nextOnline.set(presence.userId, presence)
+    nextAway.delete(presence.userId)
+  }
+
+  return reconcileExclusivePresenceMaps(nextOnline, nextAway, eventId)
+}
+
+/** Overlay list API results onto existing maps without dropping realtime-only rows. */
+export function overlayInitPresenceListFetch(
+  previous: {
+    online: Map<string, InitPresenceRecord>
+    away: Map<string, InitPresenceRecord>
+  },
+  onlineFromApi: Map<string, InitPresenceRecord>,
+  awayFromApi: Map<string, InitPresenceRecord>,
+  eventId: string,
+): {
+  online: Map<string, InitPresenceRecord>
+  away: Map<string, InitPresenceRecord>
+} {
+  const nextOnline = new Map(previous.online)
+  const nextAway = new Map(previous.away)
+
+  for (const [userId, presence] of onlineFromApi) {
+    if (!isInitOnlineStatus(presence, eventId) || !isPresenceActive(presence)) {
+      continue
+    }
+    nextOnline.set(userId, presence)
+    nextAway.delete(userId)
+  }
+
+  for (const [userId, presence] of awayFromApi) {
+    if (!isInitAwayStatus(presence, eventId) || !isPresenceActive(presence)) {
+      continue
+    }
+    nextAway.set(userId, presence)
+    nextOnline.delete(userId)
+  }
+
+  for (const [userId, presence] of nextOnline) {
+    if (!isPresenceActive(presence)) {
+      nextOnline.delete(userId)
+    }
+  }
+
+  for (const [userId, presence] of nextAway) {
+    if (!isPresenceActive(presence)) {
+      nextAway.delete(userId)
+    }
+  }
+
+  return reconcileExclusivePresenceMaps(nextOnline, nextAway, eventId)
+}
+
+export function pruneExpiredPresenceMaps(
+  maps: {
+    online: Map<string, InitPresenceRecord>
+    away: Map<string, InitPresenceRecord>
+  },
+): {
+  online: Map<string, InitPresenceRecord>
+  away: Map<string, InitPresenceRecord>
+} {
+  const nextOnline = new Map(maps.online)
+  const nextAway = new Map(maps.away)
+
+  for (const [userId, presence] of nextOnline) {
+    if (!isPresenceActive(presence)) {
+      nextOnline.delete(userId)
+    }
+  }
+
+  for (const [userId, presence] of nextAway) {
+    if (!isPresenceActive(presence)) {
+      nextAway.delete(userId)
+    }
+  }
+
+  return { online: nextOnline, away: nextAway }
+}
+
 /** Each user belongs in at most one list; resolve index-lag duplicates by latest update. */
 export function reconcileExclusivePresenceMaps(
   online: Map<string, InitPresenceRecord>,
@@ -296,8 +478,9 @@ export function buildPresenceMapForEvent(
 ): Map<string, InitPresenceRecord> {
   const map = new Map<string, InitPresenceRecord>()
   for (const presence of presences) {
-    if (!presenceMatchesInitEvent(presence, eventId)) continue
-    map.set(presence.userId, presence)
+    const normalized = normalizeInitPresenceRecord(presence)
+    if (!normalized || !presenceMatchesInitEvent(normalized, eventId)) continue
+    map.set(normalized.userId, normalized)
   }
   return map
 }

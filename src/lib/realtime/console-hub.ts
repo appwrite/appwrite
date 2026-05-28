@@ -1,15 +1,12 @@
 /**
  * Single console Realtime WebSocket shared app-wide.
  *
- * The Appwrite SDK reconnects on every subscribe()/close() when slots or channels
- * change. Multiple features (project cache invalidation, assistant, etc.) must
- * not each call realtime.subscribe() - that stacks slots and forces reconnects.
- * This hub keeps one SDK subscription with the union of all requested channels
- * and dispatches events to every listener.
- *
- * Listener changes that grow the channel set while a socket already exists are
- * debounced so async-loaded deps (auth, project teamId, etc.) do not each open a
- * new WebSocket.
+ * The Appwrite SDK keeps one WebSocket per `Realtime` client and supports
+ * multiple independent `subscribe()` calls on that socket. Each hub listener
+ * gets its own SDK subscription with its own channels — do not merge channels
+ * into one subscription and reconnect on every listener change; that pattern
+ * drops channels (e.g. `presences`) during debounced resyncs and prevents
+ * events from reaching subscribers.
  */
 
 import type { RealtimeResponseEvent } from '@appwrite.io/console'
@@ -18,19 +15,13 @@ import { sdk } from '@/lib/appwrite/sdk'
 type HubListener = {
   channels: string[]
   handler: (event: RealtimeResponseEvent<unknown>) => void
+  subscription: { close: () => Promise<void> } | null
 }
 
 const listeners = new Map<symbol, HubListener>()
 
-let activeSubscription: { close: () => Promise<void> } | null = null
-let activeChannelSignature = ''
-
-/** Serialize listener mutations and immediate resyncs (debounced flushes enqueue here too). */
+/** Serialize listener attach/detach so subscribe/close calls do not overlap. */
 let opChain: Promise<void> = Promise.resolve()
-
-let debounceTimer: ReturnType<typeof setTimeout> | null = null
-
-const CHANNEL_STABILIZE_MS = 150
 
 function runExclusive(fn: () => Promise<void>): Promise<void> {
   const next = opChain.then(() => fn())
@@ -38,98 +29,37 @@ function runExclusive(fn: () => Promise<void>): Promise<void> {
   return next
 }
 
-function cancelDebounce(): void {
-  if (debounceTimer !== null) {
-    clearTimeout(debounceTimer)
-    debounceTimer = null
-  }
-}
+async function attachListener(id: symbol): Promise<void> {
+  const listener = listeners.get(id)
+  if (!listener) return
 
-function mergedChannels(): string[] {
-  const set = new Set<string>()
-  for (const { channels } of listeners.values()) {
-    for (const ch of channels) {
-      set.add(ch)
-    }
-  }
-  return [...set]
-}
-
-function signatureForChannels(channels: string[]): string {
-  return [...new Set(channels)].sort().join('\0')
-}
-
-function dispatchToListeners(
-  event: RealtimeResponseEvent<unknown>,
-): void {
-  for (const { handler } of listeners.values()) {
-    handler(event)
-  }
-}
-
-async function resyncSubscription(): Promise<void> {
-  const channels = mergedChannels()
-  if (channels.length === 0) {
-    if (activeSubscription) {
-      await activeSubscription.close()
-      activeSubscription = null
-    }
-    activeChannelSignature = ''
-    return
+  if (listener.subscription) {
+    await listener.subscription.close()
+    listener.subscription = null
   }
 
-  const nextSig = signatureForChannels(channels)
-  if (nextSig === activeChannelSignature && activeSubscription) {
-    return
-  }
-
-  if (activeSubscription) {
-    await activeSubscription.close()
-    activeSubscription = null
-  }
-
-  activeChannelSignature = nextSig
   const realtime = sdk.getConsoleRealtime()
-  activeSubscription = await realtime.subscribe(
-    channels,
-    dispatchToListeners as (event: {
-      events: string[]
-      channels: string[]
-      payload: unknown
-    }) => void,
-  )
+  listener.subscription = await realtime.subscribe(listener.channels, listener.handler)
 }
 
-/**
- * Apply current listener map to the socket. First connection and full teardown
- * run immediately; channel expansion while connected is debounced.
- */
-async function scheduleResyncFromCurrentState(): Promise<void> {
-  cancelDebounce()
+async function detachListener(id: symbol): Promise<void> {
+  const listener = listeners.get(id)
+  if (!listener) return
 
-  if (listeners.size === 0) {
-    await resyncSubscription()
-    return
+  if (listener.subscription) {
+    await listener.subscription.close()
+    listener.subscription = null
   }
 
-  if (!activeSubscription) {
-    await resyncSubscription()
-    return
-  }
-
-  debounceTimer = window.setTimeout(() => {
-    debounceTimer = null
-    void runExclusive(async () => {
-      await resyncSubscription()
-    })
-  }, CHANNEL_STABILIZE_MS)
+  listeners.delete(id)
 }
 
 export type ConsoleRealtimeHubUnregister = () => Promise<void>
 
 /**
- * Register for console realtime. The socket uses the union of all listeners'
- * channels; reconnects when that union changes (debounced when already online).
+ * Register for console realtime on the shared socket. Each listener owns a
+ * dedicated SDK subscription for its channels; the socket stays open while
+ * any subscription is active.
  */
 export async function registerConsoleRealtimeListener(
   channels: string[],
@@ -138,14 +68,13 @@ export async function registerConsoleRealtimeListener(
   const id = Symbol('console-realtime-listener')
 
   await runExclusive(async () => {
-    listeners.set(id, { channels: [...channels], handler })
-    await scheduleResyncFromCurrentState()
+    listeners.set(id, { channels: [...channels], handler, subscription: null })
+    await attachListener(id)
   })
 
   return async () => {
     await runExclusive(async () => {
-      listeners.delete(id)
-      await scheduleResyncFromCurrentState()
+      await detachListener(id)
     })
   }
 }

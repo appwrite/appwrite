@@ -5,6 +5,8 @@
  * region-routed events are received alongside the main `getBaseEndpoint()` console socket.
  * When regional and base URLs are the same (no cached region, self-hosted, etc.), registration
  * is a no-op to avoid duplicate sockets and duplicate events.
+ *
+ * Each listener gets its own SDK subscription (see console-hub for rationale).
  */
 
 import type { RealtimeResponseEvent, Realtime } from '@appwrite.io/console'
@@ -18,20 +20,16 @@ type RegionalHubListener = {
   projectId: string
   channels: string[]
   handler: (event: RealtimeResponseEvent<unknown>) => void
+  subscription: { close: () => Promise<void> } | null
 }
 
 type HubState = {
   listeners: Map<symbol, RegionalHubListener>
   realtime: Realtime | null
-  activeSubscription: { close: () => Promise<void> } | null
-  activeChannelSignature: string
   opChain: Promise<void>
-  debounceTimer: ReturnType<typeof setTimeout> | null
 }
 
 const hubStates = new Map<string, HubState>()
-
-const CHANNEL_STABILIZE_MS = 150
 
 function normalizeEndpoint(url: string): string {
   return url.replace(/\/$/, '').toLowerCase()
@@ -43,10 +41,7 @@ function getOrCreateHub(endpointKey: string): HubState {
     hub = {
       listeners: new Map(),
       realtime: null,
-      activeSubscription: null,
-      activeChannelSignature: '',
       opChain: Promise.resolve(),
-      debounceTimer: null,
     }
     hubStates.set(endpointKey, hub)
   }
@@ -59,112 +54,53 @@ function runExclusive(hub: HubState, fn: () => Promise<void>): Promise<void> {
   return next
 }
 
-function cancelDebounce(hub: HubState): void {
-  if (hub.debounceTimer !== null) {
-    clearTimeout(hub.debounceTimer)
-    hub.debounceTimer = null
-  }
-}
-
-function mergedChannels(listeners: Map<symbol, RegionalHubListener>): string[] {
-  const set = new Set<string>()
-  for (const { channels } of listeners.values()) {
-    for (const ch of channels) {
-      set.add(ch)
-    }
-  }
-  return [...set]
-}
-
-function signatureForChannels(channels: string[]): string {
-  return [...new Set(channels)].sort().join('\0')
-}
-
-function dispatchToHubListeners(
-  hub: HubState,
-  event: RealtimeResponseEvent<unknown>,
-): void {
-  for (const { handler } of hub.listeners.values()) {
-    handler(event)
-  }
-}
-
 function anchorProjectId(hub: HubState): string | null {
   const first = hub.listeners.values().next().value
   return first?.projectId ?? null
 }
 
-async function resyncSubscription(
+async function attachListener(
   endpointKey: string,
   hub: HubState,
+  id: symbol,
 ): Promise<void> {
-  const channels = mergedChannels(hub.listeners)
-  if (channels.length === 0) {
-    cancelDebounce(hub)
-    if (hub.activeSubscription) {
-      await hub.activeSubscription.close()
-      hub.activeSubscription = null
-    }
-    hub.activeChannelSignature = ''
-    hub.realtime = null
-    hubStates.delete(endpointKey)
-    return
+  const listener = hub.listeners.get(id)
+  if (!listener) return
+
+  if (listener.subscription) {
+    await listener.subscription.close()
+    listener.subscription = null
   }
 
   const projectId = anchorProjectId(hub)
-  if (!projectId) {
-    return
-  }
-
-  const nextSig = signatureForChannels(channels)
-  if (nextSig === hub.activeChannelSignature && hub.activeSubscription) {
-    return
-  }
-
-  if (hub.activeSubscription) {
-    await hub.activeSubscription.close()
-    hub.activeSubscription = null
-  }
+  if (!projectId) return
 
   if (!hub.realtime) {
     hub.realtime = createRegionalConsoleRealtime(projectId)
   }
 
-  hub.activeChannelSignature = nextSig
-  hub.activeSubscription = await hub.realtime.subscribe(
-    channels,
-    (event: {
-      events: string[]
-      channels: string[]
-      payload: unknown
-    }) => {
-      dispatchToHubListeners(hub, event as RealtimeResponseEvent<unknown>)
-    },
-  )
+  listener.subscription = await hub.realtime.subscribe(listener.channels, listener.handler)
 }
 
-async function scheduleResyncFromCurrentState(
+async function detachListener(
   endpointKey: string,
   hub: HubState,
+  id: symbol,
 ): Promise<void> {
-  cancelDebounce(hub)
+  const listener = hub.listeners.get(id)
+  if (!listener) return
+
+  if (listener.subscription) {
+    await listener.subscription.close()
+    listener.subscription = null
+  }
+
+  hub.listeners.delete(id)
 
   if (hub.listeners.size === 0) {
-    await resyncSubscription(endpointKey, hub)
-    return
+    hub.realtime = null
+    hubStates.delete(endpointKey)
   }
-
-  if (!hub.activeSubscription) {
-    await resyncSubscription(endpointKey, hub)
-    return
-  }
-
-  hub.debounceTimer = window.setTimeout(() => {
-    hub.debounceTimer = null
-    void runExclusive(hub, async () => {
-      await resyncSubscription(endpointKey, hub)
-    })
-  }, CHANNEL_STABILIZE_MS)
 }
 
 export type RegionalConsoleRealtimeHubUnregister = () => Promise<void>
@@ -193,14 +129,14 @@ export async function registerRegionalConsoleRealtimeListener(
       projectId,
       channels: [...channels],
       handler,
+      subscription: null,
     })
-    await scheduleResyncFromCurrentState(endpointKey, hub)
+    await attachListener(endpointKey, hub, id)
   })
 
   return async () => {
     await runExclusive(hub, async () => {
-      hub.listeners.delete(id)
-      await scheduleResyncFromCurrentState(endpointKey, hub)
+      await detachListener(endpointKey, hub, id)
     })
   }
 }

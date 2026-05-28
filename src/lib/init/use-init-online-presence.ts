@@ -1,10 +1,11 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { Channel, type Models, type RealtimeResponseEvent } from '@appwrite.io/console'
+import { type Models, type RealtimeResponseEvent } from '@appwrite.io/console'
 import { useQuery } from '@tanstack/react-query'
-import { registerConsoleRealtimeListener } from '@/lib/realtime/console-hub'
 import { consoleAccountQueryOptions } from '@/lib/react-query/hooks/auth'
+import { retainInitPresencesRealtimeListener } from '@/lib/init/init-presences-realtime'
 import {
   INIT_PRESENCE_HEARTBEAT_MS,
+  applyInitPresenceRealtimeRecord,
   buildInitAwayStatus,
   buildInitOnlineStatus,
   buildInitPresenceId,
@@ -12,10 +13,12 @@ import {
   clearLegacyInitPresenceStorage,
   isInitAwayStatus,
   isInitOnlineStatus,
+  isPresenceDeleteEvent,
+  isPresenceMutationEvent,
   listInitPresences,
   mapPresencesToOnlineUsers,
-  mergeInitPresenceMaps,
-  presenceMatchesInitEvent,
+  overlayInitPresenceListFetch,
+  pruneExpiredPresenceMaps,
   reconcileExclusivePresenceMaps,
   upsertInitPresence,
   type InitPresenceMetadata,
@@ -30,8 +33,8 @@ import type { LaunchEventOnlineUser } from '@/lib/init/types'
 const SIDEBAR_USER_LIMIT = 16
 const AWAY_USER_LIMIT = 8
 const ACTIVITY_PUBLISH_DEBOUNCE_MS = 300
-/** Periodic list sync so the sidebar stays aligned with the API. */
-const INIT_PRESENCE_LIST_REFRESH_MS = 60_000
+/** Safety-net list sync when realtime events are missed (reconnect, tab background). */
+const INIT_PRESENCE_LIST_REFRESH_MS = 5 * 60_000
 const INIT_PARTICIPANT_ONLINE_SESSION_KEY = 'console.init.participantOnline'
 
 function readParticipantOnlinePreference(): boolean {
@@ -83,10 +86,6 @@ const EMPTY_STATE: InitOnlinePresenceState = {
   setBaselineActivity: () => undefined,
   setTransientActivity: () => undefined,
   setPriorityActivity: () => undefined,
-}
-
-function isPresenceDeleteEvent(events: string[]): boolean {
-  return events.some((event) => event.includes('presences.') && event.endsWith('.delete'))
 }
 
 type PresenceMaps = {
@@ -174,17 +173,11 @@ export function useInitOnlinePresence(
       const onlineFromApi = buildPresenceMapForEvent(online, scopeEventId)
       const awayFromApi = buildPresenceMapForEvent(away, scopeEventId)
 
-      let nextOnline = mergeInitPresenceMaps(
-        previous.online,
+      let next = overlayInitPresenceListFetch(
+        previous,
         onlineFromApi,
-        scopeEventId,
-        'online',
-      )
-      let nextAway = mergeInitPresenceMaps(
-        previous.away,
         awayFromApi,
         scopeEventId,
-        'away',
       )
 
       const selfId = accountUserIdRef.current
@@ -192,26 +185,38 @@ export function useInitOnlinePresence(
       if (
         selfId &&
         participantOnlineRef.current &&
-        !nextOnline.has(selfId)
+        !next.online.has(selfId)
       ) {
         const selfPresence = previous.online.get(selfId)
         if (selfPresence && isInitOnlineStatus(selfPresence, scopeEventId)) {
-          nextOnline.set(selfId, selfPresence)
+          next = reconcileMapsForEvent(
+            {
+              online: new Map(next.online).set(selfId, selfPresence),
+              away: new Map(next.away),
+            },
+            scopeEventId,
+          )
         }
       }
 
       if (
         selfId &&
         !participantOnlineRef.current &&
-        !nextAway.has(selfId)
+        !next.away.has(selfId)
       ) {
         const selfPresence = previous.away.get(selfId)
         if (selfPresence && isInitAwayStatus(selfPresence, scopeEventId)) {
-          nextAway.set(selfId, selfPresence)
+          next = reconcileMapsForEvent(
+            {
+              online: new Map(next.online),
+              away: new Map(next.away).set(selfId, selfPresence),
+            },
+            scopeEventId,
+          )
         }
       }
 
-      return reconcileMapsForEvent({ online: nextOnline, away: nextAway }, scopeEventId)
+      return next
     })
   }, [])
 
@@ -395,6 +400,7 @@ export function useInitOnlinePresence(
 
     const heartbeat = window.setInterval(() => {
       void publishPresence(!participantOnlineRef.current, { refresh: false })
+      setPresenceMaps((previous) => pruneExpiredPresenceMaps(previous))
     }, INIT_PRESENCE_HEARTBEAT_MS)
 
     const listRefresh = window.setInterval(() => {
@@ -404,15 +410,14 @@ export function useInitOnlinePresence(
     const onFocus = () => {
       if (participantOnlineRef.current) {
         void publishPresence(false, { refresh: false })
-        void refreshLists(eventId)
       }
     }
 
     const onVisibility = () => {
-      if (document.visibilityState === 'visible' && participantOnlineRef.current) {
-        void publishPresence(false, { refresh: false })
-        void refreshLists(eventId)
-      }
+      if (document.visibilityState !== 'visible' || !participantOnlineRef.current) return
+      void publishPresence(false, { refresh: false })
+      // Catch up after a background tab may have missed websocket events.
+      void refreshLists(eventId)
     }
 
     window.addEventListener('focus', onFocus)
@@ -449,74 +454,27 @@ export function useInitOnlinePresence(
       if (!scopeEventId) return
 
       const payload = event.payload as Models.DefaultPresence | undefined
-      if (!payload?.userId) return
+      const isDelete = isPresenceDeleteEvent(event.events)
+      const isMutation = isPresenceMutationEvent(event.events)
 
-      if (isPresenceDeleteEvent(event.events)) {
-        setPresenceMaps((previous) => {
-          const nextOnline = new Map(previous.online)
-          nextOnline.delete(payload.userId)
-          const nextAway = new Map(previous.away)
-          nextAway.delete(payload.userId)
-          return { online: nextOnline, away: nextAway }
-        })
-        return
-      }
+      if (!isDelete && !isMutation) return
+      if (!isDelete && !payload) return
 
-      if (!presenceMatchesInitEvent(payload, scopeEventId)) {
-        setPresenceMaps((previous) => {
-          const nextOnline = new Map(previous.online)
-          nextOnline.delete(payload.userId)
-          const nextAway = new Map(previous.away)
-          nextAway.delete(payload.userId)
-          return { online: nextOnline, away: nextAway }
-        })
-        return
-      }
-
-      if (isInitAwayStatus(payload, scopeEventId)) {
-        setPresenceMaps((previous) => {
-          const nextOnline = new Map(previous.online)
-          nextOnline.delete(payload.userId)
-          const nextAway = new Map(previous.away)
-          nextAway.set(payload.userId, payload)
-          return reconcileMapsForEvent({ online: nextOnline, away: nextAway }, scopeEventId)
-        })
-        return
-      }
-
-      if (isInitOnlineStatus(payload, scopeEventId)) {
-        setPresenceMaps((previous) => {
-          const nextOnline = new Map(previous.online)
-          nextOnline.set(payload.userId, payload)
-          const nextAway = new Map(previous.away)
-          nextAway.delete(payload.userId)
-          return reconcileMapsForEvent({ online: nextOnline, away: nextAway }, scopeEventId)
-        })
-      }
+      setPresenceMaps((previous) =>
+        applyInitPresenceRealtimeRecord(previous, payload, scopeEventId, {
+          deleted: isDelete,
+        }),
+      )
     }
   })
 
   useEffect(() => {
-    if (!enabled || !eventId) return
+    if (!enabled || !eventId || !accountUserId) return
 
-    let unregister: (() => Promise<void>) | undefined
-    let cancelled = false
-
-    void registerConsoleRealtimeListener([Channel.presences()], (event) => {
+    return retainInitPresencesRealtimeListener((event) => {
       handlePresenceRealtimeRef.current(event)
-    }).then((close) => {
-      if (cancelled) {
-        void close()
-        return
-      }
-      unregister = close
     })
-
-    return () => {
-      cancelled = true
-      void unregister?.()
-    }
-  }, [enabled, eventId])
+  }, [accountUserId, enabled, eventId])
 
   return useMemo(() => {
     if (!enabled || !accountUserId) return EMPTY_STATE
