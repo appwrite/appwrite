@@ -83,19 +83,19 @@ class MigrationReport extends Model
                 'default' => 0,
                 'example' => 1,
             ])
-            ->addRule(Resource::TYPE_PROTOCOLS, [
+            ->addRule(Resource::TYPE_PROJECT_PROTOCOLS, [
                 'type' => self::TYPE_INTEGER,
                 'description' => 'Number of protocol configs to be migrated (always 0 or 1 — the project-level REST/GraphQL/WebSocket flags).',
                 'default' => 0,
                 'example' => 1,
             ])
-            ->addRule(Resource::TYPE_LABELS, [
+            ->addRule(Resource::TYPE_PROJECT_LABELS, [
                 'type' => self::TYPE_INTEGER,
                 'description' => 'Number of label sets to be migrated (always 0 or 1 — the project-level RBAC label array).',
                 'default' => 0,
                 'example' => 1,
             ])
-            ->addRule(Resource::TYPE_SERVICES, [
+            ->addRule(Resource::TYPE_PROJECT_SERVICES, [
                 'type' => self::TYPE_INTEGER,
                 'description' => 'Number of service configs to be migrated (always 0 or 1 — the project-level enable/disable flags for all 17 services).',
                 'default' => 0,
@@ -119,7 +119,7 @@ class MigrationReport extends Model
                 'default' => 0,
                 'example' => 5,
             ])
-            ->addRule(Resource::TYPE_EMAIL_TEMPLATE, [
+            ->addRule(Resource::TYPE_PROJECT_EMAIL_TEMPLATE, [
                 'type' => self::TYPE_INTEGER,
                 'description' => 'Number of custom email templates to be migrated (one per templateId × locale pair).',
                 'default' => 0,
