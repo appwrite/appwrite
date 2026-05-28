@@ -38,11 +38,9 @@ services:
       - utopia
 
   appwrite-embedding:
-    build:
-      context: https://github.com/appwrite/embedding.git#embedder
-      dockerfile: Dockerfile
-      args:
-        EMBEDDING_MODELS: "nomic"
+    image: appwrite/embedding
+    environment:
+      EMBEDDING_MODELS: "nomic"
     container_name: appwrite-embedding
     ports:
       - "11430:11434"
