@@ -2163,6 +2163,86 @@ trait MessagingBase
         ];
     }
 
+    public function testSendEmailWithSMTPIncludesToHeader(): void
+    {
+        $recipient = 'smtp-message-' . \uniqid() . '@appwrite.io';
+        $subject = 'SMTP recipient header ' . \uniqid();
+
+        $provider = $this->client->call(Client::METHOD_POST, '/messaging/providers/smtp', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            'providerId' => ID::unique(),
+            'name' => 'SMTP message provider',
+            'host' => 'maildev',
+            'port' => 1025,
+            'username' => 'user',
+            'password' => 'password',
+            'fromName' => 'SMTP Message Sender',
+            'fromEmail' => 'smtp-message@appwrite.io',
+            'enabled' => true,
+        ]);
+
+        $this->assertEquals(201, $provider['headers']['status-code']);
+
+        $user = $this->client->call(Client::METHOD_POST, '/users', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            'userId' => ID::unique(),
+            'email' => 'smtp-message-owner-' . \uniqid() . '@appwrite.io',
+            'password' => 'password',
+            'name' => 'SMTP Message User',
+        ]);
+
+        $this->assertEquals(201, $user['headers']['status-code']);
+
+        $target = $this->client->call(Client::METHOD_POST, '/users/' . $user['body']['$id'] . '/targets', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            'targetId' => ID::unique(),
+            'providerType' => 'email',
+            'providerId' => $provider['body']['$id'],
+            'identifier' => $recipient,
+        ]);
+
+        $this->assertEquals(201, $target['headers']['status-code']);
+
+        $email = $this->client->call(Client::METHOD_POST, '/messaging/messages/email', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            'messageId' => ID::unique(),
+            'targets' => [$target['body']['$id']],
+            'subject' => $subject,
+            'content' => 'SMTP messages should include the direct recipient in the To header.',
+        ]);
+
+        $this->assertEquals(201, $email['headers']['status-code']);
+
+        $emailMessageId = $email['body']['$id'];
+        $this->assertEventually(function () use ($emailMessageId) {
+            $response = $this->client->call(Client::METHOD_GET, '/messaging/messages/' . $emailMessageId, [
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+                'x-appwrite-key' => $this->getProject()['apiKey'],
+            ]);
+            $this->assertEquals(MessageStatus::SENT, $response['body']['status']);
+        }, 30000, 500);
+
+        $email = $this->getLastEmailByAddress($recipient, function ($email) use ($subject) {
+            $this->assertSame($subject, $email['subject']);
+        });
+
+        $this->assertSame($recipient, $email['to'][0]['address']);
+        $this->assertSame('smtp-message@appwrite.io', $email['from'][0]['address']);
+    }
+
     public function testUpdateEmail(): void
     {
         $params = $this->setupSentEmailData();
