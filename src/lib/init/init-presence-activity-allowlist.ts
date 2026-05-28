@@ -8,6 +8,7 @@ import {
   buildInitPlayingWithJoolActivity,
   buildInitReadingDayActivity,
   buildInitRecordingTicketActivity,
+  buildInitSwitchingThemeActivity,
   buildInitViewingDayActivity,
   buildInitViewingTicketActivity,
   buildInitWaitingForDayActivity,
@@ -28,6 +29,8 @@ export function buildInitPresenceActivityAllowlist(
     buildInitRecordingTicketActivity(),
     buildInitCheckingScheduleActivity(),
     buildInitPlayingWithJoolActivity(),
+    buildInitSwitchingThemeActivity('light'),
+    buildInitSwitchingThemeActivity('dark'),
   ])
 
   for (const reaction of INIT_REACTIONS) {

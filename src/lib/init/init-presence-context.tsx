@@ -46,6 +46,7 @@ export function InitPresenceProvider({
       setBaselineActivity: presence.setBaselineActivity,
       setTransientActivity: presence.setTransientActivity,
       setPriorityActivity: presence.setPriorityActivity,
+      syncPresenceTheme: presence.syncPresenceTheme,
     }),
     [presence],
   )
@@ -71,6 +72,7 @@ export function useInitPresence(): InitPresenceContextValue {
       setBaselineActivity: () => undefined,
       setTransientActivity: () => undefined,
       setPriorityActivity: () => undefined,
+      syncPresenceTheme: async () => undefined,
     }
   }
   return context

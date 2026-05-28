@@ -4,7 +4,8 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from '@/components/ui/tooltip'
-import { resolveInitPresenceTheme } from '@/lib/init/init-presence-theme'
+import { resolveInitPresenceTheme, type InitPresenceTheme } from '@/lib/init/init-presence-theme'
+import { useInitPresence } from '@/lib/init/init-presence-context'
 import { cn } from '@/lib/utils'
 import { Moon, Sun } from 'lucide-react'
 import { useTheme } from 'next-themes'
@@ -21,6 +22,7 @@ export function InitPresenceThemeBar({
   isMobile?: boolean
 }) {
   const { resolvedTheme, setTheme } = useTheme()
+  const { syncPresenceTheme } = useInitPresence()
   const total = light + dark
   if (collapsed && !isMobile) return null
   if (total === 0) return null
@@ -29,6 +31,11 @@ export function InitPresenceThemeBar({
   const darkPercent = 100 - lightPercent
   const scoreLabel = `${Math.round(lightPercent)}% light · ${Math.round(darkPercent)}% dark (${light} · ${dark})`
   const activeTheme = resolveInitPresenceTheme(resolvedTheme)
+
+  const handleThemeChange = (theme: InitPresenceTheme) => {
+    setTheme(theme)
+    void syncPresenceTheme(theme)
+  }
 
   return (
     <div
@@ -49,7 +56,7 @@ export function InitPresenceThemeBar({
             )}
             aria-label="Light theme"
             aria-pressed={activeTheme === 'light'}
-            onClick={() => setTheme('light')}
+            onClick={() => handleThemeChange('light')}
           >
             <Sun className="size-3" aria-hidden />
           </Button>
@@ -84,7 +91,7 @@ export function InitPresenceThemeBar({
             )}
             aria-label="Dark theme"
             aria-pressed={activeTheme === 'dark'}
-            onClick={() => setTheme('dark')}
+            onClick={() => handleThemeChange('dark')}
           >
             <Moon className="size-3" aria-hidden />
           </Button>

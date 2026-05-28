@@ -28,10 +28,13 @@ import {
   INIT_PRESENCE_ACTIVITY_LEFT,
   INIT_PRESENCE_ACTIVITY_OFFLINE,
   INIT_PRESENCE_ACTIVITY_ON_INIT,
+  buildInitSwitchingThemeActivity,
 } from '@/lib/init/init-presence-activity'
+import { INIT_REACTION_DURATION_MS } from '@/lib/init/reactions'
 import {
   countInitPresenceThemes,
   resolveInitPresenceTheme,
+  type InitPresenceTheme,
 } from '@/lib/init/init-presence-theme'
 import type { LaunchEvent, LaunchEventOnlineUser } from '@/lib/init/types'
 import { useTheme } from 'next-themes'
@@ -79,6 +82,7 @@ export type InitOnlinePresenceState = {
   setBaselineActivity: (activity: string) => void
   setTransientActivity: (activity: string | null) => void
   setPriorityActivity: (activity: string | null) => void
+  syncPresenceTheme: (theme?: InitPresenceTheme) => Promise<void>
 }
 
 const EMPTY_STATE: InitOnlinePresenceState = {
@@ -94,6 +98,7 @@ const EMPTY_STATE: InitOnlinePresenceState = {
   setBaselineActivity: () => undefined,
   setTransientActivity: () => undefined,
   setPriorityActivity: () => undefined,
+  syncPresenceTheme: async () => undefined,
 }
 
 type PresenceMaps = {
@@ -120,10 +125,12 @@ export function useInitOnlinePresence(
     [event],
   )
   const enabled = Boolean(eventId) && (options?.enabled ?? true)
-  const { resolvedTheme } = useTheme()
+  const { theme, resolvedTheme } = useTheme()
   const resolvedThemeRef = useRef(resolvedTheme)
   resolvedThemeRef.current = resolvedTheme
-  const isFirstThemeSyncRef = useRef(true)
+  const publishThemeRef = useRef<InitPresenceTheme | undefined>(undefined)
+  const lastPublishedThemeRef = useRef<InitPresenceTheme | null>(null)
+  const pendingThemePublishRef = useRef<InitPresenceTheme | null>(null)
   const { data: account } = useQuery({
     ...consoleAccountQueryOptions(),
     enabled,
@@ -146,6 +153,8 @@ export function useInitOnlinePresence(
   const transientActivityRef = useRef<string | null>(null)
   const priorityActivityRef = useRef<string | null>(null)
   const publishDebounceRef = useRef<number | null>(null)
+  const themeActivityResetRef = useRef<number | null>(null)
+  const scheduleThemeActivityResetRef = useRef<() => void>(() => undefined)
   const eventIdRef = useRef(eventId)
   eventIdRef.current = eventId
   const publishPresenceRef = useRef<
@@ -175,7 +184,9 @@ export function useInitOnlinePresence(
         eventId,
         name: accountName,
         activity: resolveActivity(away),
-        theme: resolveInitPresenceTheme(resolvedThemeRef.current),
+        theme:
+          publishThemeRef.current ??
+          resolveInitPresenceTheme(resolvedThemeRef.current),
       }
     },
     [accountName, eventId, resolveActivity],
@@ -321,17 +332,66 @@ export function useInitOnlinePresence(
           await refreshLists(eventId)
         }
 
+        if (metadata.theme) {
+          lastPublishedThemeRef.current = metadata.theme
+        }
+
         return true
       } catch {
         return false
       } finally {
         upsertingRef.current = false
+        publishThemeRef.current = undefined
+        const pendingTheme = pendingThemePublishRef.current
+        if (pendingTheme) {
+          pendingThemePublishRef.current = null
+          publishThemeRef.current = pendingTheme
+          void publishPresenceRef
+            .current(!participantOnlineRef.current, { refresh: false })
+            .then((published) => {
+              if (published) scheduleThemeActivityResetRef.current()
+            })
+        }
       }
     },
     [accountUserId, buildMetadata, enabled, eventId, refreshLists],
   )
 
   publishPresenceRef.current = publishPresence
+
+  const scheduleThemeActivityReset = useCallback(() => {
+    if (themeActivityResetRef.current) {
+      window.clearTimeout(themeActivityResetRef.current)
+    }
+    themeActivityResetRef.current = window.setTimeout(() => {
+      themeActivityResetRef.current = null
+      transientActivityRef.current = null
+      void publishPresence(!participantOnlineRef.current, { refresh: false })
+    }, INIT_REACTION_DURATION_MS)
+  }, [publishPresence])
+  scheduleThemeActivityResetRef.current = scheduleThemeActivityReset
+
+  const syncPresenceTheme = useCallback(
+    async (themeOverride?: InitPresenceTheme) => {
+      if (!enabled || !eventId || !accountUserId) return
+
+      const nextTheme =
+        themeOverride ?? resolveInitPresenceTheme(resolvedThemeRef.current)
+      if (lastPublishedThemeRef.current === nextTheme) return
+
+      transientActivityRef.current = buildInitSwitchingThemeActivity(nextTheme)
+
+      if (upsertingRef.current) {
+        pendingThemePublishRef.current = nextTheme
+        return
+      }
+
+      publishThemeRef.current = nextTheme
+      await publishPresence(!participantOnlineRef.current, { refresh: false })
+      scheduleThemeActivityReset()
+    },
+    [accountUserId, enabled, eventId, publishPresence, scheduleThemeActivityReset],
+  )
 
   const setParticipantStatus = useCallback(
     async (status: InitParticipantStatus) => {
@@ -366,7 +426,8 @@ export function useInitOnlinePresence(
       transientActivityRef.current = null
       priorityActivityRef.current = null
       participantOnlineRef.current = true
-      isFirstThemeSyncRef.current = true
+      lastPublishedThemeRef.current = null
+      pendingThemePublishRef.current = null
       setParticipantStatusState('online')
       return
     }
@@ -411,17 +472,17 @@ export function useInitOnlinePresence(
       if (publishDebounceRef.current) {
         window.clearTimeout(publishDebounceRef.current)
       }
+      if (themeActivityResetRef.current) {
+        window.clearTimeout(themeActivityResetRef.current)
+        themeActivityResetRef.current = null
+      }
     }
   }, [accountUserId, enabled, eventId, refreshLists])
 
   useEffect(() => {
-    if (!enabled || !eventId || !accountUserId) return
-    if (isFirstThemeSyncRef.current) {
-      isFirstThemeSyncRef.current = false
-      return
-    }
-    schedulePresencePublish()
-  }, [accountUserId, enabled, eventId, resolvedTheme, schedulePresencePublish])
+    if (!enabled || !eventId || !accountUserId || !isReady) return
+    void syncPresenceTheme()
+  }, [accountUserId, enabled, eventId, isReady, resolvedTheme, theme, syncPresenceTheme])
 
   useEffect(() => {
     if (!enabled || !eventId || !accountUserId) return
@@ -533,6 +594,7 @@ export function useInitOnlinePresence(
       setBaselineActivity,
       setTransientActivity,
       setPriorityActivity,
+      syncPresenceTheme,
     }
   }, [
     accountUserId,
@@ -546,5 +608,6 @@ export function useInitOnlinePresence(
     setParticipantStatus,
     setTransientActivity,
     setPriorityActivity,
+    syncPresenceTheme,
   ])
 }
