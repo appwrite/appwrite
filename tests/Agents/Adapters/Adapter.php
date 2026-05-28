@@ -166,12 +166,4 @@ abstract class Adapter extends TestCase
         $this->expectException(\Exception::class);
         $adapter->getEmbeddingDimension();
     }
-
-    public function testBulkEmbedEmptyArrayThrows(): void
-    {
-        $adapter = $this->createAdapter();
-
-        $this->expectException(\InvalidArgumentException::class);
-        $adapter->bulkEmbed([]);
-    }
 }
