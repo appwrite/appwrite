@@ -172,7 +172,7 @@ class Create extends Action
         $indexDocuments = [];
         try {
             foreach ($indexes as $indexDef) {
-                $idxDoc = $this->buildIndexDocument($database, $collection, $indexDef, $collectionAttributes);
+                $idxDoc = $this->buildIndexDocument($database, $collection, $indexDef, $collectionAttributes, $dbForDatabases);
                 $collectionIndexes[] = $idxDoc['collection'];
                 $indexDocuments[] = $idxDoc['document'];
             }
@@ -346,7 +346,7 @@ class Create extends Action
      *
      * @return array{collection: Document, document: Document}
      */
-    protected function buildIndexDocument(Document $database, Document $collection, array $indexDef, array $attributeDocuments): array
+    protected function buildIndexDocument(Document $database, Document $collection, array $indexDef, array $attributeDocuments, Database $dbForDatabases): array
     {
         $key = $indexDef['key'];
         $type = $indexDef['type'];
@@ -370,6 +370,11 @@ class Create extends Action
                 if ($attrArray === true) {
                     $lengths[$i] = Database::MAX_ARRAY_INDEX_LENGTH;
                     $orders[$i] = null;
+
+                    if($dbForDatabases->getAdapter()->getSupportForAttributes()){
+                        // Because of a bug in MySQL, we cannot create indexes on array attributes for now, otherwise queries break.
+                        throw new Exception(Exception::INDEX_INVALID, 'Creating indexes on array attributes is not currently supported.');
+                    }
                 }
             } else {
                 if (empty($lengths[$i])) {
