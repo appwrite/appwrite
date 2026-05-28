@@ -227,6 +227,7 @@ class Create extends Action
         }
 
         if ($completed) {
+            $queueForEvents->reset();
             return;
         }
 
@@ -249,6 +250,8 @@ class Create extends Action
                     $metadata = \array_merge($deployment->getAttribute('sourceMetadata', []), $metadata);
 
                     if ($uploaded === $chunks) {
+                        $queueForEvents->reset();
+
                         $response
                             ->setStatusCode(Response::STATUS_CODE_ACCEPTED)
                             ->dynamic($deployment, Response::MODEL_DEPLOYMENT);

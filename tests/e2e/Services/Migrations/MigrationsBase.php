@@ -224,7 +224,20 @@ trait MigrationsBase
         $this->assertEquals(Appwrite::getSupportedResources(), $response['resources']);
         $this->assertEquals('Appwrite', $response['source']);
         $this->assertEquals('Appwrite', $response['destination']);
-        $this->assertNotEmpty($response['statusCounters']);
+
+        // ProjectCustom provisions an api-key and a webhook on each project, so both show up
+        // here. Other resources stay empty and getStatusCounters strips them.
+        // Webhook is name-deduped on the destination — source ProjectCustom's 'Webhook Test'
+        // collides with destination ProjectCustom's, so it lands in 'skip', not 'success'.
+        $this->assertArrayHasKey(Resource::TYPE_API_KEY, $response['statusCounters']);
+        $this->assertArrayHasKey(Resource::TYPE_WEBHOOK, $response['statusCounters']);
+
+        $apiKeyCounts = $response['statusCounters'][Resource::TYPE_API_KEY];
+        $this->assertEquals(0, $apiKeyCounts['error']);
+        $this->assertGreaterThan(0, $apiKeyCounts['success']);
+
+        $webhookCounts = $response['statusCounters'][Resource::TYPE_WEBHOOK];
+        $this->assertEquals(0, $webhookCounts['error']);
     }
 
     /**
@@ -2554,14 +2567,10 @@ trait MigrationsBase
             'x-appwrite-key' => $this->getDestinationProject()['apiKey'],
         ];
 
-        // Unique name so re-runs and parallel suites can't match a stale key
-        // left behind by a previous crashed run.
-        $keyName = 'Test API Key ' . ID::unique();
-
         // Create API key on source project
         $response = $this->client->call(Client::METHOD_POST, '/project/keys', $sourceHeaders, [
             'keyId' => ID::unique(),
-            'name' => $keyName,
+            'name' => 'Test API Key',
             'scopes' => ['databases.read', 'databases.write'],
             'expire' => null,
         ]);
@@ -2600,7 +2609,7 @@ trait MigrationsBase
         $foundKey = null;
 
         foreach ($response['body']['keys'] as $k) {
-            if ($k['name'] === $keyName) {
+            if ($k['name'] === 'Test API Key') {
                 $foundKey = $k;
 
                 break;
@@ -2608,13 +2617,20 @@ trait MigrationsBase
         }
 
         $this->assertNotNull($foundKey);
-        $this->assertEquals($keyName, $foundKey['name']);
+        $this->assertEquals('Test API Key', $foundKey['name']);
         $this->assertEqualsCanonicalizing(['databases.read', 'databases.write'], $foundKey['scopes']);
         $this->assertEmpty($foundKey['expire']);
         $this->assertNotEquals($apiKey['secret'], $foundKey['secret']);
 
-        // Cleanup on destination
-        $this->client->call(Client::METHOD_DELETE, '/project/keys/' . $foundKey['$id'], $destinationHeaders);
+        // Cleanup migrated keys on destination — delete anything that isn't the destination's own auth key,
+        // otherwise later tests inherit duplicated apiKeys and fail on conflict.
+        $destinationAuthSecret = $this->getDestinationProject()['apiKey'];
+        foreach ($response['body']['keys'] as $k) {
+            if ($k['secret'] === $destinationAuthSecret) {
+                continue;
+            }
+            $this->client->call(Client::METHOD_DELETE, '/project/keys/' . $k['$id'], $destinationHeaders);
+        }
 
         // Cleanup on source
         $this->client->call(Client::METHOD_DELETE, '/project/keys/' . $apiKey['$id'], $sourceHeaders);
@@ -2640,7 +2656,7 @@ trait MigrationsBase
 
         $createResp = $this->client->call(Client::METHOD_POST, '/webhooks', $sourceHeaders, [
             'webhookId' => ID::unique(),
-            'url' => 'https://example.test/hook',
+            'url' => 'https://appwrite.io/hook',
             'name' => $webhookName,
             'events' => ['users.*.create', 'users.*.delete'],
             'enabled' => true,
@@ -2682,16 +2698,16 @@ trait MigrationsBase
 
         $this->assertNotNull($foundWebhook, 'Migrated webhook not found on destination');
         $this->assertEquals($webhookName, $foundWebhook['name']);
-        $this->assertEquals('https://example.test/hook', $foundWebhook['url']);
+        $this->assertEquals('https://appwrite.io/hook', $foundWebhook['url']);
         $this->assertEqualsCanonicalizing(['users.*.create', 'users.*.delete'], $foundWebhook['events']);
         $this->assertTrue($foundWebhook['enabled']);
-        $this->assertTrue($foundWebhook['security']);
-        $this->assertEquals('hook-user', $foundWebhook['httpUser']);
-        // authPassword is sensitive; destination must not blindly copy the source value.
-        $this->assertNotEquals('hook-pass', $foundWebhook['httpPass'] ?? '');
-        // signatureKey is regenerated on the destination — must not equal the source key.
-        if (!empty($sourceWebhook['signatureKey'])) {
-            $this->assertNotEquals($sourceWebhook['signatureKey'], $foundWebhook['signatureKey'] ?? '');
+        $this->assertTrue($foundWebhook['tls']);
+        $this->assertEquals('hook-user', $foundWebhook['authUsername']);
+        $this->assertEquals('hook-pass', $foundWebhook['authPassword']);
+        // secret is regenerated on the destination because the SDK strips it from list
+        // responses on read — same caveat as api keys.
+        if (!empty($sourceWebhook['secret'])) {
+            $this->assertNotEquals($sourceWebhook['secret'], $foundWebhook['secret'] ?? '');
         }
 
         // Cleanup on destination
@@ -2701,24 +2717,122 @@ trait MigrationsBase
         $this->client->call(Client::METHOD_DELETE, '/webhooks/' . $sourceWebhook['$id'], $sourceHeaders);
     }
 
+    public function testAppwriteMigrationProjectVariable(): void
+    {
+        $sourceHeaders = [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ];
+
+        $destinationHeaders = [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getDestinationProject()['$id'],
+            'x-appwrite-key' => $this->getDestinationProject()['apiKey'],
+        ];
+
+        // Source-side variable IDs and keys are uniquified so re-runs and parallel suites
+        // can't trip the source-side findOne('variables', [key=...]) skip path.
+        $plainKey = 'TEST_PLAIN_' . \strtoupper(ID::unique());
+        $secretKey = 'TEST_SECRET_' . \strtoupper(ID::unique());
+
+        // Non-secret variable: value should round-trip exactly.
+        $plainResp = $this->client->call(Client::METHOD_POST, '/project/variables', $sourceHeaders, [
+            'variableId' => ID::unique(),
+            'key' => $plainKey,
+            'value' => 'plain-value',
+            'secret' => false,
+        ]);
+        $this->assertEquals(201, $plainResp['headers']['status-code']);
+        $plainVariable = $plainResp['body'];
+
+        // Secret variable: SDK strips `value` on subsequent reads, so the migration
+        // source sees empty and the destination writes empty. Test asserts that.
+        $secretResp = $this->client->call(Client::METHOD_POST, '/project/variables', $sourceHeaders, [
+            'variableId' => ID::unique(),
+            'key' => $secretKey,
+            'value' => 'real-secret-value',
+            'secret' => true,
+        ]);
+        $this->assertEquals(201, $secretResp['headers']['status-code']);
+        $secretVariable = $secretResp['body'];
+
+        $result = $this->performMigrationSync([
+            'resources' => [
+                Resource::TYPE_PROJECT_VARIABLE,
+            ],
+            'endpoint' => $this->webEndpoint,
+            'projectId' => $this->getProject()['$id'],
+            'apiKey' => $this->getProject()['apiKey'],
+        ]);
+
+        $this->assertEquals('completed', $result['status']);
+        $this->assertEquals([Resource::TYPE_PROJECT_VARIABLE], $result['resources']);
+        $this->assertArrayHasKey(Resource::TYPE_PROJECT_VARIABLE, $result['statusCounters']);
+        $this->assertEquals(0, $result['statusCounters'][Resource::TYPE_PROJECT_VARIABLE]['error']);
+        $this->assertEquals(0, $result['statusCounters'][Resource::TYPE_PROJECT_VARIABLE]['pending']);
+        $this->assertGreaterThanOrEqual(2, $result['statusCounters'][Resource::TYPE_PROJECT_VARIABLE]['success']);
+        $this->assertEquals(0, $result['statusCounters'][Resource::TYPE_PROJECT_VARIABLE]['processing']);
+        $this->assertEquals(0, $result['statusCounters'][Resource::TYPE_PROJECT_VARIABLE]['warning']);
+
+        $response = $this->client->call(Client::METHOD_GET, '/project/variables', $destinationHeaders);
+        $this->assertEquals(200, $response['headers']['status-code']);
+
+        $foundPlain = null;
+        $foundSecret = null;
+        foreach ($response['body']['variables'] as $v) {
+            if ($v['key'] === $plainKey) {
+                $foundPlain = $v;
+            } elseif ($v['key'] === $secretKey) {
+                $foundSecret = $v;
+            }
+        }
+
+        $this->assertNotNull($foundPlain, 'Plain variable not found on destination');
+        $this->assertEquals($plainKey, $foundPlain['key']);
+        $this->assertEquals('plain-value', $foundPlain['value']);
+        $this->assertFalse($foundPlain['secret']);
+
+        $this->assertNotNull($foundSecret, 'Secret variable not found on destination');
+        $this->assertEquals($secretKey, $foundSecret['key']);
+        // Secret variables: source SDK never returned the real value, so the destination
+        // also stores empty. The original 'real-secret-value' must not have leaked.
+        $this->assertEmpty($foundSecret['value']);
+        $this->assertTrue($foundSecret['secret']);
+
+        // Cleanup on destination
+        $this->client->call(Client::METHOD_DELETE, '/project/variables/' . $foundPlain['$id'], $destinationHeaders);
+        $this->client->call(Client::METHOD_DELETE, '/project/variables/' . $foundSecret['$id'], $destinationHeaders);
+
+        // Cleanup on source
+        $this->client->call(Client::METHOD_DELETE, '/project/variables/' . $plainVariable['$id'], $sourceHeaders);
+        $this->client->call(Client::METHOD_DELETE, '/project/variables/' . $secretVariable['$id'], $sourceHeaders);
+    }
+
     public function testAppwriteMigrationAuthMethods(): void
     {
-        $consoleHeaders = [
+        $sourceProjectId = $this->getProject()['$id'];
+        $destinationProjectId = $this->getDestinationProject()['$id'];
+
+        $sourceKeyHeaders = [
             'content-type' => 'application/json',
-            'x-appwrite-project' => 'console',
-            'origin' => 'http://localhost',
-            'cookie' => 'a_session_console=' . $this->getRoot()['session'],
+            'x-appwrite-project' => $sourceProjectId,
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ];
+        $destinationKeyHeaders = [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $destinationProjectId,
+            'x-appwrite-key' => $this->getDestinationProject()['apiKey'],
         ];
 
         // Flip a couple of auth methods on the source so the round-trip is
         // observable. Settling on email-password OFF and JWT OFF — the
         // remaining flags stay on their server defaults.
-        $sourceProjectId = $this->getProject()['$id'];
-        $this->client->call(Client::METHOD_PATCH, '/projects/' . $sourceProjectId . '/auth/email-password', $consoleHeaders, [
-            'status' => false,
+        $this->client->call(Client::METHOD_PATCH, '/project/auth-methods/email-password', $sourceKeyHeaders, [
+            'enabled' => false,
         ]);
-        $this->client->call(Client::METHOD_PATCH, '/projects/' . $sourceProjectId . '/auth/jwt', $consoleHeaders, [
-            'status' => false,
+        $this->client->call(Client::METHOD_PATCH, '/project/auth-methods/jwt', $sourceKeyHeaders, [
+            'enabled' => false,
         ]);
 
         $result = $this->performMigrationSync([
@@ -2739,42 +2853,48 @@ trait MigrationsBase
         $this->assertEquals(0, $result['statusCounters'][Resource::TYPE_AUTH_METHODS]['processing']);
         $this->assertEquals(0, $result['statusCounters'][Resource::TYPE_AUTH_METHODS]['warning']);
 
-        $destinationProjectId = $this->getDestinationProject()['$id'];
-        $response = $this->client->call(Client::METHOD_GET, '/projects/' . $destinationProjectId, $consoleHeaders);
+        $response = $this->client->call(Client::METHOD_GET, '/project', $destinationKeyHeaders);
 
         $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertFalse($response['body']['authEmailPassword'], 'authEmailPassword should be migrated as false');
-        $this->assertFalse($response['body']['authJWT'], 'authJWT should be migrated as false');
+        $authMethods = \array_column($response['body']['authMethods'] ?? [], 'enabled', '$id');
+        $this->assertFalse($authMethods['email-password'] ?? null, 'email-password auth method should be migrated as false');
+        $this->assertFalse($authMethods['jwt'] ?? null, 'jwt auth method should be migrated as false');
 
         // Restore source so the test is idempotent.
-        $this->client->call(Client::METHOD_PATCH, '/projects/' . $sourceProjectId . '/auth/email-password', $consoleHeaders, ['status' => true]);
-        $this->client->call(Client::METHOD_PATCH, '/projects/' . $sourceProjectId . '/auth/jwt', $consoleHeaders, ['status' => true]);
+        $this->client->call(Client::METHOD_PATCH, '/project/auth-methods/email-password', $sourceKeyHeaders, ['enabled' => true]);
+        $this->client->call(Client::METHOD_PATCH, '/project/auth-methods/jwt', $sourceKeyHeaders, ['enabled' => true]);
         // Restore destination too.
-        $this->client->call(Client::METHOD_PATCH, '/projects/' . $destinationProjectId . '/auth/email-password', $consoleHeaders, ['status' => true]);
-        $this->client->call(Client::METHOD_PATCH, '/projects/' . $destinationProjectId . '/auth/jwt', $consoleHeaders, ['status' => true]);
+        $this->client->call(Client::METHOD_PATCH, '/project/auth-methods/email-password', $destinationKeyHeaders, ['enabled' => true]);
+        $this->client->call(Client::METHOD_PATCH, '/project/auth-methods/jwt', $destinationKeyHeaders, ['enabled' => true]);
     }
 
     public function testAppwriteMigrationProtocols(): void
     {
-        $consoleHeaders = [
+        $sourceProjectId = $this->getProject()['$id'];
+        $destinationProjectId = $this->getDestinationProject()['$id'];
+
+        $sourceKeyHeaders = [
             'content-type' => 'application/json',
-            'x-appwrite-project' => 'console',
-            'origin' => 'http://localhost',
-            'cookie' => 'a_session_console=' . $this->getRoot()['session'],
+            'x-appwrite-project' => $sourceProjectId,
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ];
+        $destinationKeyHeaders = [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $destinationProjectId,
+            'x-appwrite-key' => $this->getDestinationProject()['apiKey'],
         ];
 
-        $sourceProjectId = $this->getProject()['$id'];
         // Flip graphql + websocket off on source to make the round-trip observable.
-        $this->client->call(Client::METHOD_PATCH, '/projects/' . $sourceProjectId . '/api/graphql', $consoleHeaders, [
-            'status' => false,
+        $this->client->call(Client::METHOD_PATCH, '/project/protocols/graphql', $sourceKeyHeaders, [
+            'enabled' => false,
         ]);
-        $this->client->call(Client::METHOD_PATCH, '/projects/' . $sourceProjectId . '/api/websocket', $consoleHeaders, [
-            'status' => false,
+        $this->client->call(Client::METHOD_PATCH, '/project/protocols/websocket', $sourceKeyHeaders, [
+            'enabled' => false,
         ]);
 
         $result = $this->performMigrationSync([
             'resources' => [
-                Resource::TYPE_PROTOCOLS,
+                Resource::TYPE_PROJECT_PROTOCOLS,
             ],
             'endpoint' => $this->webEndpoint,
             'projectId' => $sourceProjectId,
@@ -2782,51 +2902,55 @@ trait MigrationsBase
         ]);
 
         $this->assertEquals('completed', $result['status']);
-        $this->assertEquals([Resource::TYPE_PROTOCOLS], $result['resources']);
-        $this->assertArrayHasKey(Resource::TYPE_PROTOCOLS, $result['statusCounters']);
-        $this->assertEquals(0, $result['statusCounters'][Resource::TYPE_PROTOCOLS]['error']);
-        $this->assertEquals(0, $result['statusCounters'][Resource::TYPE_PROTOCOLS]['pending']);
-        $this->assertEquals(1, $result['statusCounters'][Resource::TYPE_PROTOCOLS]['success']);
-        $this->assertEquals(0, $result['statusCounters'][Resource::TYPE_PROTOCOLS]['processing']);
-        $this->assertEquals(0, $result['statusCounters'][Resource::TYPE_PROTOCOLS]['warning']);
+        $this->assertEquals([Resource::TYPE_PROJECT_PROTOCOLS], $result['resources']);
+        $this->assertArrayHasKey(Resource::TYPE_PROJECT_PROTOCOLS, $result['statusCounters']);
+        $this->assertEquals(0, $result['statusCounters'][Resource::TYPE_PROJECT_PROTOCOLS]['error']);
+        $this->assertEquals(0, $result['statusCounters'][Resource::TYPE_PROJECT_PROTOCOLS]['pending']);
+        $this->assertEquals(1, $result['statusCounters'][Resource::TYPE_PROJECT_PROTOCOLS]['success']);
+        $this->assertEquals(0, $result['statusCounters'][Resource::TYPE_PROJECT_PROTOCOLS]['processing']);
+        $this->assertEquals(0, $result['statusCounters'][Resource::TYPE_PROJECT_PROTOCOLS]['warning']);
 
-        $destinationProjectId = $this->getDestinationProject()['$id'];
-        $response = $this->client->call(Client::METHOD_GET, '/projects/' . $destinationProjectId, $consoleHeaders);
+        $response = $this->client->call(Client::METHOD_GET, '/project', $destinationKeyHeaders);
 
         $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertFalse($response['body']['protocolStatusForGraphql'], 'GraphQL protocol should be migrated as disabled');
-        $this->assertFalse($response['body']['protocolStatusForWebsocket'], 'WebSocket protocol should be migrated as disabled');
+        $protocols = \array_column($response['body']['protocols'] ?? [], 'enabled', '$id');
+        $this->assertFalse($protocols['graphql'] ?? null, 'GraphQL protocol should be migrated as disabled');
+        $this->assertFalse($protocols['websocket'] ?? null, 'WebSocket protocol should be migrated as disabled');
 
         // Restore both projects so the test is idempotent.
-        $this->client->call(Client::METHOD_PATCH, '/projects/' . $sourceProjectId . '/api/graphql', $consoleHeaders, ['status' => true]);
-        $this->client->call(Client::METHOD_PATCH, '/projects/' . $sourceProjectId . '/api/websocket', $consoleHeaders, ['status' => true]);
-        $this->client->call(Client::METHOD_PATCH, '/projects/' . $destinationProjectId . '/api/graphql', $consoleHeaders, ['status' => true]);
-        $this->client->call(Client::METHOD_PATCH, '/projects/' . $destinationProjectId . '/api/websocket', $consoleHeaders, ['status' => true]);
+        $this->client->call(Client::METHOD_PATCH, '/project/protocols/graphql', $sourceKeyHeaders, ['enabled' => true]);
+        $this->client->call(Client::METHOD_PATCH, '/project/protocols/websocket', $sourceKeyHeaders, ['enabled' => true]);
+        $this->client->call(Client::METHOD_PATCH, '/project/protocols/graphql', $destinationKeyHeaders, ['enabled' => true]);
+        $this->client->call(Client::METHOD_PATCH, '/project/protocols/websocket', $destinationKeyHeaders, ['enabled' => true]);
     }
 
     public function testAppwriteMigrationLabels(): void
     {
-        $consoleHeaders = [
-            'content-type' => 'application/json',
-            'x-appwrite-project' => 'console',
-            'origin' => 'http://localhost',
-            'cookie' => 'a_session_console=' . $this->getRoot()['session'],
-        ];
-
         $sourceProjectId = $this->getProject()['$id'];
         $destinationProjectId = $this->getDestinationProject()['$id'];
 
-        $labels = ['vip-' . \substr(ID::unique(), 0, 8), 'beta-' . \substr(ID::unique(), 0, 8)];
+        $sourceKeyHeaders = [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $sourceProjectId,
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ];
+        $destinationKeyHeaders = [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $destinationProjectId,
+            'x-appwrite-key' => $this->getDestinationProject()['apiKey'],
+        ];
 
-        // Set labels on source.
-        $this->client->call(Client::METHOD_PATCH, '/projects/' . $sourceProjectId, $consoleHeaders, [
-            'name' => $this->getProject()['name'] ?? 'Test',
+        $labels = ['vip' . \substr(ID::unique(), 0, 8), 'beta' . \substr(ID::unique(), 0, 8)];
+
+        // Set labels on source. The labels endpoint is PUT /project/labels — the
+        // generic project update endpoint doesn't accept a labels param.
+        $this->client->call(Client::METHOD_PUT, '/project/labels', $sourceKeyHeaders, [
             'labels' => $labels,
         ]);
 
         $result = $this->performMigrationSync([
             'resources' => [
-                Resource::TYPE_LABELS,
+                Resource::TYPE_PROJECT_LABELS,
             ],
             'endpoint' => $this->webEndpoint,
             'projectId' => $sourceProjectId,
@@ -2834,48 +2958,46 @@ trait MigrationsBase
         ]);
 
         $this->assertEquals('completed', $result['status']);
-        $this->assertEquals([Resource::TYPE_LABELS], $result['resources']);
-        $this->assertArrayHasKey(Resource::TYPE_LABELS, $result['statusCounters']);
-        $this->assertEquals(0, $result['statusCounters'][Resource::TYPE_LABELS]['error']);
-        $this->assertEquals(0, $result['statusCounters'][Resource::TYPE_LABELS]['pending']);
-        $this->assertEquals(1, $result['statusCounters'][Resource::TYPE_LABELS]['success']);
-        $this->assertEquals(0, $result['statusCounters'][Resource::TYPE_LABELS]['processing']);
-        $this->assertEquals(0, $result['statusCounters'][Resource::TYPE_LABELS]['warning']);
+        $this->assertEquals([Resource::TYPE_PROJECT_LABELS], $result['resources']);
+        $this->assertArrayHasKey(Resource::TYPE_PROJECT_LABELS, $result['statusCounters']);
+        $this->assertEquals(0, $result['statusCounters'][Resource::TYPE_PROJECT_LABELS]['error']);
+        $this->assertEquals(0, $result['statusCounters'][Resource::TYPE_PROJECT_LABELS]['pending']);
+        $this->assertEquals(1, $result['statusCounters'][Resource::TYPE_PROJECT_LABELS]['success']);
+        $this->assertEquals(0, $result['statusCounters'][Resource::TYPE_PROJECT_LABELS]['processing']);
+        $this->assertEquals(0, $result['statusCounters'][Resource::TYPE_PROJECT_LABELS]['warning']);
 
-        $response = $this->client->call(Client::METHOD_GET, '/projects/' . $destinationProjectId, $consoleHeaders);
+        $response = $this->client->call(Client::METHOD_GET, '/project', $destinationKeyHeaders);
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertEqualsCanonicalizing($labels, $response['body']['labels']);
 
         // Restore both projects.
-        $this->client->call(Client::METHOD_PATCH, '/projects/' . $sourceProjectId, $consoleHeaders, [
-            'name' => $this->getProject()['name'] ?? 'Test',
-            'labels' => [],
-        ]);
-        $this->client->call(Client::METHOD_PATCH, '/projects/' . $destinationProjectId, $consoleHeaders, [
-            'name' => $this->getDestinationProject()['name'] ?? 'Test',
-            'labels' => [],
-        ]);
+        $this->client->call(Client::METHOD_PUT, '/project/labels', $sourceKeyHeaders, ['labels' => []]);
+        $this->client->call(Client::METHOD_PUT, '/project/labels', $destinationKeyHeaders, ['labels' => []]);
     }
 
     public function testAppwriteMigrationServices(): void
     {
-        $consoleHeaders = [
-            'content-type' => 'application/json',
-            'x-appwrite-project' => 'console',
-            'origin' => 'http://localhost',
-            'cookie' => 'a_session_console=' . $this->getRoot()['session'],
-        ];
-
         $sourceProjectId = $this->getProject()['$id'];
         $destinationProjectId = $this->getDestinationProject()['$id'];
 
+        $sourceKeyHeaders = [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $sourceProjectId,
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ];
+        $destinationKeyHeaders = [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $destinationProjectId,
+            'x-appwrite-key' => $this->getDestinationProject()['apiKey'],
+        ];
+
         // Disable functions + graphql on source as observable changes.
-        $this->client->call(Client::METHOD_PATCH, '/projects/' . $sourceProjectId . '/service/functions', $consoleHeaders, ['status' => false]);
-        $this->client->call(Client::METHOD_PATCH, '/projects/' . $sourceProjectId . '/service/graphql', $consoleHeaders, ['status' => false]);
+        $this->client->call(Client::METHOD_PATCH, '/project/services/functions', $sourceKeyHeaders, ['enabled' => false]);
+        $this->client->call(Client::METHOD_PATCH, '/project/services/graphql', $sourceKeyHeaders, ['enabled' => false]);
 
         $result = $this->performMigrationSync([
             'resources' => [
-                Resource::TYPE_SERVICES,
+                Resource::TYPE_PROJECT_SERVICES,
             ],
             'endpoint' => $this->webEndpoint,
             'projectId' => $sourceProjectId,
@@ -2883,24 +3005,25 @@ trait MigrationsBase
         ]);
 
         $this->assertEquals('completed', $result['status']);
-        $this->assertEquals([Resource::TYPE_SERVICES], $result['resources']);
-        $this->assertArrayHasKey(Resource::TYPE_SERVICES, $result['statusCounters']);
-        $this->assertEquals(0, $result['statusCounters'][Resource::TYPE_SERVICES]['error']);
-        $this->assertEquals(0, $result['statusCounters'][Resource::TYPE_SERVICES]['pending']);
-        $this->assertEquals(1, $result['statusCounters'][Resource::TYPE_SERVICES]['success']);
-        $this->assertEquals(0, $result['statusCounters'][Resource::TYPE_SERVICES]['processing']);
-        $this->assertEquals(0, $result['statusCounters'][Resource::TYPE_SERVICES]['warning']);
+        $this->assertEquals([Resource::TYPE_PROJECT_SERVICES], $result['resources']);
+        $this->assertArrayHasKey(Resource::TYPE_PROJECT_SERVICES, $result['statusCounters']);
+        $this->assertEquals(0, $result['statusCounters'][Resource::TYPE_PROJECT_SERVICES]['error']);
+        $this->assertEquals(0, $result['statusCounters'][Resource::TYPE_PROJECT_SERVICES]['pending']);
+        $this->assertEquals(1, $result['statusCounters'][Resource::TYPE_PROJECT_SERVICES]['success']);
+        $this->assertEquals(0, $result['statusCounters'][Resource::TYPE_PROJECT_SERVICES]['processing']);
+        $this->assertEquals(0, $result['statusCounters'][Resource::TYPE_PROJECT_SERVICES]['warning']);
 
-        $response = $this->client->call(Client::METHOD_GET, '/projects/' . $destinationProjectId, $consoleHeaders);
+        $response = $this->client->call(Client::METHOD_GET, '/project', $destinationKeyHeaders);
         $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertFalse($response['body']['serviceStatusForFunctions'], 'Functions service should be migrated as disabled');
-        $this->assertFalse($response['body']['serviceStatusForGraphql'], 'GraphQL service should be migrated as disabled');
+        $services = \array_column($response['body']['services'] ?? [], 'enabled', '$id');
+        $this->assertFalse($services['functions'] ?? null, 'Functions service should be migrated as disabled');
+        $this->assertFalse($services['graphql'] ?? null, 'GraphQL service should be migrated as disabled');
 
         // Restore both projects.
-        $this->client->call(Client::METHOD_PATCH, '/projects/' . $sourceProjectId . '/service/functions', $consoleHeaders, ['status' => true]);
-        $this->client->call(Client::METHOD_PATCH, '/projects/' . $sourceProjectId . '/service/graphql', $consoleHeaders, ['status' => true]);
-        $this->client->call(Client::METHOD_PATCH, '/projects/' . $destinationProjectId . '/service/functions', $consoleHeaders, ['status' => true]);
-        $this->client->call(Client::METHOD_PATCH, '/projects/' . $destinationProjectId . '/service/graphql', $consoleHeaders, ['status' => true]);
+        $this->client->call(Client::METHOD_PATCH, '/project/services/functions', $sourceKeyHeaders, ['enabled' => true]);
+        $this->client->call(Client::METHOD_PATCH, '/project/services/graphql', $sourceKeyHeaders, ['enabled' => true]);
+        $this->client->call(Client::METHOD_PATCH, '/project/services/functions', $destinationKeyHeaders, ['enabled' => true]);
+        $this->client->call(Client::METHOD_PATCH, '/project/services/graphql', $destinationKeyHeaders, ['enabled' => true]);
     }
 
     public function testAppwriteMigrationPolicies(): void
@@ -2910,12 +3033,12 @@ trait MigrationsBase
 
         // Policies have no /projects/:projectId admin route — they're only
         // reachable via project-scoped /v1/project/policies/* with an API key.
-        $sourceProjectHeaders = [
+        $sourceKeyHeaders = [
             'content-type' => 'application/json',
             'x-appwrite-project' => $sourceProjectId,
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ];
-        $destinationProjectHeaders = [
+        $destinationKeyHeaders = [
             'content-type' => 'application/json',
             'x-appwrite-project' => $destinationProjectId,
             'x-appwrite-key' => $this->getDestinationProject()['apiKey'],
@@ -2923,13 +3046,13 @@ trait MigrationsBase
 
         // Pick three policies that span the field types: int, bool, and
         // bundled membership-privacy.
-        $this->client->call(Client::METHOD_PATCH, '/project/policies/password-history', $sourceProjectHeaders, [
+        $this->client->call(Client::METHOD_PATCH, '/project/policies/password-history', $sourceKeyHeaders, [
             'total' => 5,
         ]);
-        $this->client->call(Client::METHOD_PATCH, '/project/policies/session-alert', $sourceProjectHeaders, [
+        $this->client->call(Client::METHOD_PATCH, '/project/policies/session-alert', $sourceKeyHeaders, [
             'enabled' => true,
         ]);
-        $this->client->call(Client::METHOD_PATCH, '/project/policies/membership-privacy', $sourceProjectHeaders, [
+        $this->client->call(Client::METHOD_PATCH, '/project/policies/membership-privacy', $sourceKeyHeaders, [
             'userEmail' => false,
         ]);
 
@@ -2951,53 +3074,61 @@ trait MigrationsBase
         $this->assertEquals(0, $result['statusCounters'][Resource::TYPE_POLICIES]['processing']);
         $this->assertEquals(0, $result['statusCounters'][Resource::TYPE_POLICIES]['warning']);
 
-        $passwordHistory = $this->client->call(Client::METHOD_GET, '/project/policies/password-history', $destinationProjectHeaders);
+        $passwordHistory = $this->client->call(Client::METHOD_GET, '/project/policies/password-history', $destinationKeyHeaders);
         $this->assertSame(200, $passwordHistory['headers']['status-code']);
         $this->assertSame(5, $passwordHistory['body']['total'], 'passwordHistory should be migrated as 5');
 
-        $sessionAlert = $this->client->call(Client::METHOD_GET, '/project/policies/session-alert', $destinationProjectHeaders);
+        $sessionAlert = $this->client->call(Client::METHOD_GET, '/project/policies/session-alert', $destinationKeyHeaders);
         $this->assertSame(200, $sessionAlert['headers']['status-code']);
         $this->assertTrue($sessionAlert['body']['enabled'], 'session-alert policy should be migrated as enabled');
 
-        $membershipPrivacy = $this->client->call(Client::METHOD_GET, '/project/policies/membership-privacy', $destinationProjectHeaders);
+        $membershipPrivacy = $this->client->call(Client::METHOD_GET, '/project/policies/membership-privacy', $destinationKeyHeaders);
         $this->assertSame(200, $membershipPrivacy['headers']['status-code']);
         $this->assertFalse($membershipPrivacy['body']['userEmail'], 'membership-privacy userEmail should be migrated as false');
 
         // Restore both projects to defaults.
-        $this->client->call(Client::METHOD_PATCH, '/project/policies/password-history', $sourceProjectHeaders, ['total' => 0]);
-        $this->client->call(Client::METHOD_PATCH, '/project/policies/session-alert', $sourceProjectHeaders, ['enabled' => false]);
-        $this->client->call(Client::METHOD_PATCH, '/project/policies/membership-privacy', $sourceProjectHeaders, ['userEmail' => true]);
-        $this->client->call(Client::METHOD_PATCH, '/project/policies/password-history', $destinationProjectHeaders, ['total' => 0]);
-        $this->client->call(Client::METHOD_PATCH, '/project/policies/session-alert', $destinationProjectHeaders, ['enabled' => false]);
-        $this->client->call(Client::METHOD_PATCH, '/project/policies/membership-privacy', $destinationProjectHeaders, ['userEmail' => true]);
+        $this->client->call(Client::METHOD_PATCH, '/project/policies/password-history', $sourceKeyHeaders, ['total' => 0]);
+        $this->client->call(Client::METHOD_PATCH, '/project/policies/session-alert', $sourceKeyHeaders, ['enabled' => false]);
+        $this->client->call(Client::METHOD_PATCH, '/project/policies/membership-privacy', $sourceKeyHeaders, ['userEmail' => true]);
+        $this->client->call(Client::METHOD_PATCH, '/project/policies/password-history', $destinationKeyHeaders, ['total' => 0]);
+        $this->client->call(Client::METHOD_PATCH, '/project/policies/session-alert', $destinationKeyHeaders, ['enabled' => false]);
+        $this->client->call(Client::METHOD_PATCH, '/project/policies/membership-privacy', $destinationKeyHeaders, ['userEmail' => true]);
     }
 
     public function testAppwriteMigrationSMTP(): void
     {
-        $consoleHeaders = [
+        $sourceProjectId = $this->getProject()['$id'];
+        $destinationProjectId = $this->getDestinationProject()['$id'];
+
+        $sourceKeyHeaders = [
             'content-type' => 'application/json',
-            'x-appwrite-project' => 'console',
-            'origin' => 'http://localhost',
-            'cookie' => 'a_session_console=' . $this->getRoot()['session'],
+            'x-appwrite-project' => $sourceProjectId,
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ];
+        $destinationKeyHeaders = [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $destinationProjectId,
+            'x-appwrite-key' => $this->getDestinationProject()['apiKey'],
         ];
 
-        $sourceProjectId = $this->getProject()['$id'];
-
-        // Configure SMTP on the source so the round-trip is observable.
-        // Password is intentionally not migrated (source API never exposes it),
-        // so the destination receives every other field.
-        $this->client->call(Client::METHOD_PATCH, '/projects/' . $sourceProjectId . '/smtp', $consoleHeaders, [
+        // Point at the in-cluster maildev container so the endpoint's SMTP
+        // connection validation passes. Password is not migrated — source
+        // API never exposes it.
+        $sourceSmtpUpdate = $this->client->call(Client::METHOD_PATCH, '/project/smtp', $sourceKeyHeaders, [
             'enabled' => true,
             'senderName' => 'Migration Sender',
-            'senderEmail' => 'sender@example.com',
+            'senderEmail' => 'sender@appwrite.io',
             'replyToName' => 'Migration Reply',
-            'replyToEmail' => 'reply@example.com',
-            'host' => 'smtp.example.com',
-            'port' => 587,
-            'username' => 'smtp-user',
-            'password' => 'smtp-pass',
-            'secure' => 'tls',
+            'replyToEmail' => 'reply@appwrite.io',
+            'host' => 'maildev',
+            'port' => 1025,
         ]);
+        $this->assertEquals(200, $sourceSmtpUpdate['headers']['status-code']);
+
+        // Cross-check the PATCH actually landed on the SOURCE project, not on
+        // a sibling scope. If this fails we've targeted the wrong project.
+        $sourceProjectAfter = $this->client->call(Client::METHOD_GET, '/project', $sourceKeyHeaders);
+        $this->assertSame('Migration Sender', $sourceProjectAfter['body']['smtpSenderName']);
 
         $result = $this->performMigrationSync([
             'resources' => [
@@ -3017,35 +3148,21 @@ trait MigrationsBase
         $this->assertEquals(0, $result['statusCounters'][Resource::TYPE_SMTP]['processing']);
         $this->assertEquals(0, $result['statusCounters'][Resource::TYPE_SMTP]['warning']);
 
-        $destinationProjectId = $this->getDestinationProject()['$id'];
-        $response = $this->client->call(Client::METHOD_GET, '/projects/' . $destinationProjectId, $consoleHeaders);
+        $response = $this->client->call(Client::METHOD_GET, '/project', $destinationKeyHeaders);
 
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertTrue($response['body']['smtpEnabled'], 'smtpEnabled should be migrated as true');
         $this->assertSame('Migration Sender', $response['body']['smtpSenderName']);
-        $this->assertSame('sender@example.com', $response['body']['smtpSenderEmail']);
+        $this->assertSame('sender@appwrite.io', $response['body']['smtpSenderEmail']);
         $this->assertSame('Migration Reply', $response['body']['smtpReplyToName']);
-        $this->assertSame('reply@example.com', $response['body']['smtpReplyToEmail']);
-        $this->assertSame('smtp.example.com', $response['body']['smtpHost']);
-        $this->assertSame(587, $response['body']['smtpPort']);
-        $this->assertSame('smtp-user', $response['body']['smtpUsername']);
-        $this->assertSame('tls', $response['body']['smtpSecure']);
+        $this->assertSame('reply@appwrite.io', $response['body']['smtpReplyToEmail']);
+        $this->assertSame('maildev', $response['body']['smtpHost']);
+        $this->assertSame(1025, $response['body']['smtpPort']);
+        $this->assertSame('', $response['body']['smtpSecure']);
 
         // Reset both projects so the test is idempotent.
-        $reset = [
-            'enabled' => false,
-            'senderName' => '',
-            'senderEmail' => '',
-            'replyToName' => '',
-            'replyToEmail' => '',
-            'host' => '',
-            'port' => 0,
-            'username' => '',
-            'password' => '',
-            'secure' => '',
-        ];
-        $this->client->call(Client::METHOD_PATCH, '/projects/' . $sourceProjectId . '/smtp', $consoleHeaders, $reset);
-        $this->client->call(Client::METHOD_PATCH, '/projects/' . $destinationProjectId . '/smtp', $consoleHeaders, $reset);
+        $this->client->call(Client::METHOD_PATCH, '/project/smtp', $sourceKeyHeaders, ['enabled' => false]);
+        $this->client->call(Client::METHOD_PATCH, '/project/smtp', $destinationKeyHeaders, ['enabled' => false]);
     }
 
     public function testAppwriteMigrationCustomDomains(): void
@@ -3116,28 +3233,30 @@ trait MigrationsBase
 
     public function testAppwriteMigrationEmailTemplate(): void
     {
-        $consoleHeaders = [
-            'content-type' => 'application/json',
-            'x-appwrite-project' => 'console',
-            'origin' => 'http://localhost',
-            'cookie' => 'a_session_console=' . $this->getRoot()['session'],
-        ];
-
         $sourceProjectId = $this->getProject()['$id'];
         $destinationProjectId = $this->getDestinationProject()['$id'];
+
+        $sourceKeyHeaders = [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $sourceProjectId,
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ];
+        $destinationKeyHeaders = [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $destinationProjectId,
+            'x-appwrite-key' => $this->getDestinationProject()['apiKey'],
+        ];
 
         // The source SDK path requires custom SMTP enabled before a template can be
         // saved — and the enable call validates the SMTP connection. `maildev` is the
         // dev mailcatcher in the test cluster's docker-compose; it accepts unauthenticated
         // connections on port 1025, so it's the only host that lets us pass validation.
-        $smtpHost = 'maildev';
-        $smtpPort = 1025;
-        $smtpUpdate = $this->client->call(Client::METHOD_PATCH, '/projects/' . $sourceProjectId . '/smtp', $consoleHeaders, [
+        $smtpUpdate = $this->client->call(Client::METHOD_PATCH, '/project/smtp', $sourceKeyHeaders, [
             'enabled' => true,
             'senderName' => 'Test Sender',
             'senderEmail' => 'sender@example.com',
-            'host' => $smtpHost,
-            'port' => $smtpPort,
+            'host' => 'maildev',
+            'port' => 1025,
         ]);
         $this->assertEquals(200, $smtpUpdate['headers']['status-code'], 'SMTP enable on source failed: ' . \json_encode($smtpUpdate['body']));
 
@@ -3148,9 +3267,11 @@ trait MigrationsBase
 
         $update = $this->client->call(
             Client::METHOD_PATCH,
-            '/projects/' . $sourceProjectId . '/templates/email/' . $templateId . '/' . $locale,
-            $consoleHeaders,
+            '/project/templates/email',
+            $sourceKeyHeaders,
             [
+                'templateId' => $templateId,
+                'locale' => $locale,
                 'subject' => $subject,
                 'message' => $message,
                 'senderName' => 'Template Sender',
@@ -3163,7 +3284,7 @@ trait MigrationsBase
 
         $result = $this->performMigrationSync([
             'resources' => [
-                Resource::TYPE_EMAIL_TEMPLATE,
+                Resource::TYPE_PROJECT_EMAIL_TEMPLATE,
             ],
             'endpoint' => $this->webEndpoint,
             'projectId' => $sourceProjectId,
@@ -3171,27 +3292,28 @@ trait MigrationsBase
         ]);
 
         $this->assertEquals('completed', $result['status']);
-        $this->assertEquals([Resource::TYPE_EMAIL_TEMPLATE], $result['resources']);
-        $this->assertArrayHasKey(Resource::TYPE_EMAIL_TEMPLATE, $result['statusCounters']);
-        $this->assertEquals(0, $result['statusCounters'][Resource::TYPE_EMAIL_TEMPLATE]['error']);
-        $this->assertEquals(0, $result['statusCounters'][Resource::TYPE_EMAIL_TEMPLATE]['pending']);
-        $this->assertGreaterThanOrEqual(1, $result['statusCounters'][Resource::TYPE_EMAIL_TEMPLATE]['success']);
-        $this->assertEquals(0, $result['statusCounters'][Resource::TYPE_EMAIL_TEMPLATE]['processing']);
-        $this->assertEquals(0, $result['statusCounters'][Resource::TYPE_EMAIL_TEMPLATE]['warning']);
+        $this->assertEquals([Resource::TYPE_PROJECT_EMAIL_TEMPLATE], $result['resources']);
+        $this->assertArrayHasKey(Resource::TYPE_PROJECT_EMAIL_TEMPLATE, $result['statusCounters']);
+        $this->assertEquals(0, $result['statusCounters'][Resource::TYPE_PROJECT_EMAIL_TEMPLATE]['error']);
+        $this->assertEquals(0, $result['statusCounters'][Resource::TYPE_PROJECT_EMAIL_TEMPLATE]['pending']);
+        $this->assertGreaterThanOrEqual(1, $result['statusCounters'][Resource::TYPE_PROJECT_EMAIL_TEMPLATE]['success']);
+        $this->assertEquals(0, $result['statusCounters'][Resource::TYPE_PROJECT_EMAIL_TEMPLATE]['processing']);
+        $this->assertEquals(0, $result['statusCounters'][Resource::TYPE_PROJECT_EMAIL_TEMPLATE]['warning']);
 
         // Read-back via the SDK requires the destination to have SMTP enabled too.
-        $this->client->call(Client::METHOD_PATCH, '/projects/' . $destinationProjectId . '/smtp', $consoleHeaders, [
+        $this->client->call(Client::METHOD_PATCH, '/project/smtp', $destinationKeyHeaders, [
             'enabled' => true,
             'senderName' => 'Dest Sender',
             'senderEmail' => 'dest@example.com',
-            'host' => $smtpHost,
-            'port' => $smtpPort,
+            'host' => 'maildev',
+            'port' => 1025,
         ]);
 
         $fetched = $this->client->call(
             Client::METHOD_GET,
-            '/projects/' . $destinationProjectId . '/templates/email/' . $templateId . '/' . $locale,
-            $consoleHeaders
+            '/project/templates/email/' . $templateId,
+            $destinationKeyHeaders,
+            ['locale' => $locale]
         );
         $this->assertEquals(200, $fetched['headers']['status-code']);
         $this->assertSame($subject, $fetched['body']['subject']);
@@ -3202,20 +3324,8 @@ trait MigrationsBase
         $this->assertSame('Reply Team', $fetched['body']['replyToName']);
 
         // Reset both projects so the test is idempotent.
-        $smtpReset = [
-            'enabled' => false,
-            'senderName' => '',
-            'senderEmail' => '',
-            'replyToName' => '',
-            'replyToEmail' => '',
-            'host' => '',
-            'port' => 0,
-            'username' => '',
-            'password' => '',
-            'secure' => '',
-        ];
-        $this->client->call(Client::METHOD_PATCH, '/projects/' . $sourceProjectId . '/smtp', $consoleHeaders, $smtpReset);
-        $this->client->call(Client::METHOD_PATCH, '/projects/' . $destinationProjectId . '/smtp', $consoleHeaders, $smtpReset);
+        $this->client->call(Client::METHOD_PATCH, '/project/smtp', $sourceKeyHeaders, ['enabled' => false]);
+        $this->client->call(Client::METHOD_PATCH, '/project/smtp', $destinationKeyHeaders, ['enabled' => false]);
     }
 
     /**
