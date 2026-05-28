@@ -137,6 +137,7 @@ class Appwrite extends Adapter
             if (! is_array($vec) || $vec === []) {
                 throw new \Exception("Embedding row {$i} missing or empty", $response->getStatusCode());
             }
+            /** @var array<int, float> $vec */
             $embeddings[] = $vec;
         }
 
