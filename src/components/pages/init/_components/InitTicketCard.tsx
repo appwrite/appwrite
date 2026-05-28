@@ -676,6 +676,8 @@ export const InitTicketCard = forwardRef<InitTicketCardHandle, InitTicketCardPro
 
   const applyMouseHoverTilt = useCallback(
     (clientX: number, clientY: number) => {
+      if (deviceTiltEnabled) return
+
       const tilt = computeTiltAtClientCoords(clientX, clientY)
       if (!tilt) return
 
@@ -683,24 +685,19 @@ export const InitTicketCard = forwardRef<InitTicketCardHandle, InitTicketCardPro
       tiltRef.current = tilt
       scheduleTiltApply(TILT_DURATION_MS)
     },
-    [computeTiltAtClientCoords, scheduleTiltApply],
+    [computeTiltAtClientCoords, deviceTiltEnabled, scheduleTiltApply],
   )
 
   const applyPointerTilt = useCallback(
     (clientX: number, clientY: number) => {
+      if (deviceTiltEnabled) return
+
       const tilt = computeTiltAtClientCoords(clientX, clientY)
       if (!tilt) return
 
-      if (deviceTiltEnabled) {
-        pointerTiltActiveRef.current = true
-        pointerTiltRef.current = tilt
-        syncEffectiveTilt(TILT_DURATION_MS)
-        return
-      }
-
       applyMouseHoverTilt(clientX, clientY)
     },
-    [applyMouseHoverTilt, deviceTiltEnabled, syncEffectiveTilt],
+    [applyMouseHoverTilt, computeTiltAtClientCoords, deviceTiltEnabled],
   )
 
   const updateTiltFromPointer = useCallback(
@@ -840,17 +837,19 @@ export const InitTicketCard = forwardRef<InitTicketCardHandle, InitTicketCardPro
     (event: React.PointerEvent<HTMLDivElement>) => {
       if (!interactive || reducedMotion) return
 
+      pointerStartRef.current = { x: event.clientX, y: event.clientY }
+      didDragRef.current = false
+
       if (deviceTiltEnabled) {
         void startDeviceTilt()
       }
 
-      pointerStartRef.current = { x: event.clientX, y: event.clientY }
-      didDragRef.current = false
-
       if (event.pointerType === 'touch') {
         touchActiveRef.current = true
         event.currentTarget.setPointerCapture(event.pointerId)
-        updateTiltFromPointer(event)
+        if (!deviceTiltEnabled) {
+          updateTiltFromPointer(event)
+        }
       }
     },
     [deviceTiltEnabled, interactive, reducedMotion, startDeviceTilt, updateTiltFromPointer],

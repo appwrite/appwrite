@@ -12,7 +12,8 @@ function clamp(value: number, min: number, max: number) {
 }
 
 export function isInitTicketDeviceTiltSupported(): boolean {
-  return typeof window !== 'undefined' && 'DeviceOrientationEvent' in window
+  if (typeof window === 'undefined') return false
+  return 'DeviceOrientationEvent' in window || 'DeviceMotionEvent' in window
 }
 
 export function prefersFinePointer(): boolean {
@@ -20,13 +21,43 @@ export function prefersFinePointer(): boolean {
   return window.matchMedia('(pointer: fine)').matches
 }
 
+export function isIOSDevice(): boolean {
+  if (typeof navigator === 'undefined') return false
+  return (
+    /iPad|iPhone|iPod/.test(navigator.userAgent) ||
+    (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1)
+  )
+}
+
 export function prefersInitTicketDeviceTilt(): boolean {
   if (typeof window === 'undefined') return false
+  if (isIOSDevice()) return true
   if (prefersFinePointer()) return false
   return (
     window.matchMedia('(pointer: coarse)').matches ||
     window.matchMedia('(hover: none)').matches
   )
+}
+
+export async function requestInitTicketDeviceOrientationAccess(): Promise<boolean> {
+  if (!isInitTicketDeviceTiltSupported()) return false
+
+  const Orientation = DeviceOrientationEvent as DeviceOrientationEventConstructor
+  if (typeof Orientation.requestPermission !== 'function') {
+    return true
+  }
+
+  try {
+    return (await Orientation.requestPermission()) === 'granted'
+  } catch {
+    return false
+  }
+}
+
+function tiltFromGravity(x: number, y: number, z: number) {
+  const beta = (Math.atan2(y, Math.hypot(x, z)) * 180) / Math.PI
+  const gamma = (Math.atan2(x, z) * 180) / Math.PI
+  return { beta, gamma }
 }
 
 export function useInitTicketDeviceTilt({
@@ -41,6 +72,7 @@ export function useInitTicketDeviceTilt({
   onTiltChange: (tilt: { x: number; y: number }) => void
 }) {
   const baselineRef = useRef<{ beta: number; gamma: number } | null>(null)
+  const orientationActiveRef = useRef(false)
   const listeningRef = useRef(false)
   const [listening, setListening] = useState(false)
   const onTiltChangeRef = useRef(onTiltChange)
@@ -51,41 +83,8 @@ export function useInitTicketDeviceTilt({
 
   const isSupported = isInitTicketDeviceTiltSupported()
 
-  const stopListening = useCallback(() => {
-    listeningRef.current = false
-    baselineRef.current = null
-    setListening(false)
-    onTiltChangeRef.current({ x: 0, y: 0 })
-  }, [])
-
-  const startListening = useCallback(async (): Promise<boolean> => {
-    if (!enabled || !isSupported || listeningRef.current) {
-      return listeningRef.current
-    }
-
-    const Orientation = DeviceOrientationEvent as DeviceOrientationEventConstructor
-    if (typeof Orientation.requestPermission === 'function') {
-      try {
-        const permission = await Orientation.requestPermission()
-        if (permission !== 'granted') return false
-      } catch {
-        return false
-      }
-    }
-
-    baselineRef.current = null
-    listeningRef.current = true
-    setListening(true)
-    return true
-  }, [enabled, isSupported])
-
-  useEffect(() => {
-    if (!enabled || !listening) return
-
-    const handleOrientation = (event: DeviceOrientationEvent) => {
-      const { beta, gamma } = event
-      if (beta == null || gamma == null) return
-
+  const applyTiltFromAngles = useCallback(
+    (beta: number, gamma: number) => {
       if (!baselineRef.current) {
         baselineRef.current = { beta, gamma }
         return
@@ -98,13 +97,64 @@ export function useInitTicketDeviceTilt({
         x: clamp(-deltaBeta * BETA_SENSITIVITY, -maxTiltX, maxTiltX),
         y: clamp(deltaGamma * GAMMA_SENSITIVITY, -maxTiltY, maxTiltY),
       })
+    },
+    [maxTiltX, maxTiltY],
+  )
+
+  const stopListening = useCallback(() => {
+    listeningRef.current = false
+    baselineRef.current = null
+    orientationActiveRef.current = false
+    setListening(false)
+    onTiltChangeRef.current({ x: 0, y: 0 })
+  }, [])
+
+  const startListening = useCallback(async (): Promise<boolean> => {
+    if (!enabled || !isSupported || listeningRef.current) {
+      return listeningRef.current
+    }
+
+    const granted = await requestInitTicketDeviceOrientationAccess()
+    if (!granted) return false
+
+    baselineRef.current = null
+    orientationActiveRef.current = false
+    listeningRef.current = true
+    setListening(true)
+    return true
+  }, [enabled, isSupported])
+
+  useEffect(() => {
+    if (!enabled || !listening) return
+
+    const handleOrientation = (event: DeviceOrientationEvent) => {
+      const { beta, gamma } = event
+      if (beta == null || gamma == null) return
+
+      orientationActiveRef.current = true
+      applyTiltFromAngles(beta, gamma)
+    }
+
+    const handleMotion = (event: DeviceMotionEvent) => {
+      if (orientationActiveRef.current) return
+
+      const gravity = event.accelerationIncludingGravity
+      if (!gravity || gravity.x == null || gravity.y == null || gravity.z == null) {
+        return
+      }
+
+      const { beta, gamma } = tiltFromGravity(gravity.x, gravity.y, gravity.z)
+      applyTiltFromAngles(beta, gamma)
     }
 
     window.addEventListener('deviceorientation', handleOrientation, { passive: true })
+    window.addEventListener('devicemotion', handleMotion, { passive: true })
+
     return () => {
       window.removeEventListener('deviceorientation', handleOrientation)
+      window.removeEventListener('devicemotion', handleMotion)
     }
-  }, [enabled, listening, maxTiltX, maxTiltY])
+  }, [applyTiltFromAngles, enabled, listening])
 
   useEffect(() => {
     if (!enabled) {

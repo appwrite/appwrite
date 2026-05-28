@@ -325,6 +325,12 @@ export function EventHero({ event, headerAddon, liveBanner }: EventHeroProps) {
             <div className="mt-6 flex flex-wrap items-center justify-center gap-2">
               {!account ? (
                 <EventCtaButton cta={event.primaryCta} variant="brandCta" size="lg" />
+              ) : event.prizes ? (
+                <Button variant="brandCta" size="lg" className="h-10 text-[14px]" asChild>
+                  <a href="#init-prizes">
+                    {event.giveaway?.ctaLabel ?? 'View prizes'}
+                  </a>
+                </Button>
               ) : null}
               <InitAddToCalendarButton />
             </div>
