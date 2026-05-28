@@ -298,9 +298,10 @@ class Builds extends Action
                 $templateReferenceValue = $template->getAttribute('referenceValue', '');
 
                 $templateRootDirectory = $template->getAttribute('rootDirectory', '');
-                $templateRootDirectory = \rtrim($templateRootDirectory, '/');
-                $templateRootDirectory = \ltrim($templateRootDirectory, '.');
-                $templateRootDirectory = \ltrim($templateRootDirectory, '/');
+                $templateRootDirectory = \trim($templateRootDirectory, '/');
+                if ($templateRootDirectory !== '' && \preg_match('#(^|/)\.\.(/|$)#', $templateRootDirectory)) {
+                    throw new \Exception('Invalid template root directory');
+                }
 
                 if (! empty($templateRepositoryName) && ! empty($templateOwnerName) && ! empty($templateReferenceType) && ! empty($templateReferenceValue)) {
                     $stdout = '';
@@ -386,9 +387,10 @@ class Builds extends Action
                 // VCS and VCS+Temaplte
                 $tmpDirectory = '/tmp/builds/' . $deploymentId . '/code';
                 $rootDirectory = $resource->getAttribute('providerRootDirectory', '');
-                $rootDirectory = \rtrim($rootDirectory, '/');
-                $rootDirectory = \ltrim($rootDirectory, '.');
-                $rootDirectory = \ltrim($rootDirectory, '/');
+                $rootDirectory = \trim($rootDirectory, '/');
+                if ($rootDirectory !== '' && \preg_match('#(^|/)\.\.(/|$)#', $rootDirectory)) {
+                    throw new \Exception('Invalid root directory');
+                }
 
                 $owner = $github->getOwnerName($providerInstallationId);
                 $repositoryName = $github->getRepositoryName($providerRepositoryId);
@@ -450,9 +452,10 @@ class Builds extends Action
                 $templateReferenceValue = $template->getAttribute('referenceValue', '');
 
                 $templateRootDirectory = $template->getAttribute('rootDirectory', '');
-                $templateRootDirectory = \rtrim($templateRootDirectory, '/');
-                $templateRootDirectory = \ltrim($templateRootDirectory, '.');
-                $templateRootDirectory = \ltrim($templateRootDirectory, '/');
+                $templateRootDirectory = \trim($templateRootDirectory, '/');
+                if ($templateRootDirectory !== '' && \preg_match('#(^|/)\.\.(/|$)#', $templateRootDirectory)) {
+                    throw new \Exception('Invalid template root directory');
+                }
 
                 if (! empty($templateRepositoryName) && ! empty($templateOwnerName) && ! empty($templateReferenceType) && ! empty($templateReferenceValue)) {
                     // Clone template repo
@@ -485,7 +488,7 @@ class Builds extends Action
                     Console::execute($syncTemplateCommand, '', $stdout, $stderr);
 
                     // Commit and push
-                    $commitMessage = "Create '" . $resource->getAttribute('name', '') . "' function";
+                    $commitMessage = 'Create ' . $resource->getAttribute('name', '') . ' function';
                     $pushTemplateCommand = Command::and(
                         (new Command('git'))
                             ->argument('config')
