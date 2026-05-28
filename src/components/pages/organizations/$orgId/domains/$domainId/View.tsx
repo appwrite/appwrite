@@ -17,6 +17,9 @@ import {
   Copy,
   Check,
   MoreHorizontal,
+  Eye,
+  EyeOff,
+  ArrowLeftRight,
 } from 'lucide-react'
 import { MenuItemContent, MenuItemIcon } from '@/components/global/shared/ContextMenuIcon'
 import { RowActionsMenuTrigger } from '@/components/global/shared/RowActionsMenuTrigger'
@@ -24,9 +27,17 @@ import {
   useDomain,
   useDomainRecords,
   useDomainZone,
+  useDomainTransferStatus,
   DNS_RECORDS_DEFAULT_SORT_BY,
   DNS_RECORDS_DEFAULT_SORT_ORDER,
 } from '@/lib/react-query/hooks'
+import {
+  DOMAIN_TRANSFER_IN_PROGRESS_DESCRIPTION,
+  getDomainTransferStatusBadgeConfig,
+  isDomainTransferInProgress,
+  isPendingDomainTransferStatus,
+  shouldShowDomainTransferStatus,
+} from '@/lib/domains/transfer-status'
 import { ServiceHeader } from '@/components/pages/projects/$projectId/shared/ServiceHeader'
 import { DetailResourceHeaderTitle } from '@/components/global/shared/ResourceTitleSwitcher'
 import { InitialsAvatar } from '@/components/global/shared/Avatar'
@@ -162,6 +173,7 @@ export function View({ initialData }: ViewProps = {}) {
   const [registrarTransferAuthCode, setRegistrarTransferAuthCode] = useState<
     string | null
   >(null)
+  const [transferCodeRevealed, setTransferCodeRevealed] = useState(false)
   const [deleteConfirmation, setDeleteConfirmation] = useState('')
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
   const [selectedRecords, setSelectedRecords] = useState<Set<string>>(new Set())
@@ -218,6 +230,26 @@ export function View({ initialData }: ViewProps = {}) {
   // Fetch domain data (use initialData on first paint so no "Domain not found" / "Loading DNS records" flash)
   const { data: domainFromHook, isLoading: domainLoading } = useDomain(domainId)
   const domain = domainFromHook ?? initialData?.domain
+
+  const { data: transferStatusData } = useDomainTransferStatus(
+    domainId,
+    domain?.transferStatus,
+    orgId,
+  )
+
+  const domainTransferInProgress = isDomainTransferInProgress(domain)
+  const effectiveTransferStatus =
+    transferStatusData?.status ?? domain?.transferStatus
+  const transferInProgress =
+    domainTransferInProgress ||
+    isPendingDomainTransferStatus(transferStatusData?.status)
+  const showTransferStatus =
+    transferInProgress ||
+    shouldShowDomainTransferStatus(effectiveTransferStatus)
+  const transferStatusBadge =
+    showTransferStatus && effectiveTransferStatus
+      ? getDomainTransferStatusBadgeConfig(effectiveTransferStatus)
+      : null
 
   // Fetch DNS records (use initialData only when no filters so we don't show unfiltered data when filtered)
   const hasRecordFilters = (filterQueries?.length ?? 0) > 0
@@ -939,9 +971,36 @@ export function View({ initialData }: ViewProps = {}) {
           activeTab={activeTab}
           fullWidthBorder
           contentAfterBorder={
-            activeTab === 'records' &&
-            verificationStatus &&
-            !verificationStatus.isVerified ? (
+            transferInProgress ? (
+              <div className="border-b border-border bg-blue-500/5">
+                <div className="mx-auto w-full max-w-7xl px-4 py-3 sm:px-6">
+                  <Alert
+                    variant="default"
+                    className="border-blue-500/30 bg-transparent"
+                  >
+                    <ArrowLeftRight className="h-4 w-4 shrink-0 text-blue-500" />
+                    <div className="flex-1 min-w-0 space-y-1">
+                      <AlertTitle className="text-[13px] font-medium text-blue-600 dark:text-blue-400">
+                        Domain transfer in progress
+                        {transferStatusBadge?.label
+                          ? ` · ${transferStatusBadge.label}`
+                          : null}
+                      </AlertTitle>
+                      <AlertDescription className="text-[12px] leading-relaxed text-blue-600/80 dark:text-blue-400/80">
+                        {DOMAIN_TRANSFER_IN_PROGRESS_DESCRIPTION}
+                        {transferStatusData?.reason ? (
+                          <span className="mt-2 block text-blue-600/90 dark:text-blue-400/90">
+                            {transferStatusData.reason}
+                          </span>
+                        ) : null}
+                      </AlertDescription>
+                    </div>
+                  </Alert>
+                </div>
+              </div>
+            ) : activeTab === 'records' &&
+              verificationStatus &&
+              !verificationStatus.isVerified ? (
               <div className="border-b border-border bg-amber-500/5">
                 <div className="mx-auto w-full max-w-7xl px-4 py-3 sm:px-6">
                   <Alert
@@ -997,30 +1056,41 @@ export function View({ initialData }: ViewProps = {}) {
                         Status
                       </p>
                       <div className="min-h-[1.25rem] flex items-center gap-1.5">
-                        {verificationStatus && (
-                          <>
-                            <code
-                              className={cn(
-                                'text-[12px] font-mono font-medium',
-                                verificationStatus.isVerified
-                                  ? 'text-green-600 dark:text-green-500'
-                                  : 'text-yellow-600 dark:text-yellow-500',
-                              )}
-                            >
-                              {verificationStatus.label}
-                            </code>
-                            {!verificationStatus.isVerified && (
-                              <Button
-                                variant="link"
-                                size="sm"
-                                onClick={() => setRetryDialogOpen(true)}
-                                className={metadataActionClassName}
-                                disabled={retryVerificationMutation.isPending}
+                        {transferInProgress && transferStatusBadge ? (
+                          <Badge
+                            variant={transferStatusBadge.variant}
+                            className="text-[10px] shrink-0"
+                          >
+                            {transferStatusBadge.label}
+                          </Badge>
+                        ) : (
+                          verificationStatus && (
+                            <>
+                              <code
+                                className={cn(
+                                  'text-[12px] font-mono font-medium',
+                                  verificationStatus.isVerified
+                                    ? 'text-green-600 dark:text-green-500'
+                                    : 'text-yellow-600 dark:text-yellow-500',
+                                )}
                               >
-                                Verify
-                              </Button>
-                            )}
-                          </>
+                                {verificationStatus.label}
+                              </code>
+                              {!verificationStatus.isVerified && (
+                                <Button
+                                  variant="link"
+                                  size="sm"
+                                  onClick={() => setRetryDialogOpen(true)}
+                                  className={metadataActionClassName}
+                                  disabled={
+                                    retryVerificationMutation.isPending
+                                  }
+                                >
+                                  Verify
+                                </Button>
+                              )}
+                            </>
+                          )
                         )}
                       </div>
                     </div>
@@ -1897,6 +1967,7 @@ export function View({ initialData }: ViewProps = {}) {
                       setRegistrarTransferDialogOpen(open)
                       if (!open) {
                         setRegistrarTransferAuthCode(null)
+                        setTransferCodeRevealed(false)
                       }
                     }}
                   >
@@ -1917,11 +1988,39 @@ export function View({ initialData }: ViewProps = {}) {
                         <>
                           <div className="border-t border-border" />
                           <div className="px-6 py-4">
-                            <Input
-                              readOnly
-                              value={registrarTransferAuthCode}
-                              className="h-10 font-mono text-[13px]"
-                            />
+                            <div className="flex gap-2">
+                              <Input
+                                readOnly
+                                type={transferCodeRevealed ? 'text' : 'password'}
+                                value={registrarTransferAuthCode}
+                                className="h-10 font-mono text-[13px]"
+                              />
+                              <Button
+                                type="button"
+                                variant="outline"
+                                size="icon"
+                                className="h-10 w-10 shrink-0"
+                                onClick={() =>
+                                  setTransferCodeRevealed((v) => !v)
+                                }
+                                title={
+                                  transferCodeRevealed
+                                    ? 'Hide code'
+                                    : 'Show code'
+                                }
+                                aria-label={
+                                  transferCodeRevealed
+                                    ? 'Hide code'
+                                    : 'Show code'
+                                }
+                              >
+                                {transferCodeRevealed ? (
+                                  <EyeOff className="h-4 w-4" />
+                                ) : (
+                                  <Eye className="h-4 w-4" />
+                                )}
+                              </Button>
+                            </div>
                           </div>
                           <div className="px-6 py-4 border-t border-border bg-muted/30 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
                             <Button

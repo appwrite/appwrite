@@ -64,6 +64,10 @@ import { RetryVerification } from './RetryVerification'
 import { DomainContextMenu } from './_components/DomainContextMenu'
 import type { Models } from '@appwrite.io/console'
 import {
+  getDomainTransferStatusBadgeConfig,
+  isDomainTransferInProgress,
+} from '@/lib/domains/transfer-status'
+import {
   useCreateOrganizationDomain,
   useDeleteOrganizationDomain,
   useRetryDomainVerification,
@@ -696,6 +700,18 @@ export function View() {
             <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
               {paginatedDomains.map((domain) => {
                 const verification = getVerificationStatus(domain)
+                const transferInProgress = isDomainTransferInProgress(domain)
+                const transferBadge = transferInProgress
+                  ? getDomainTransferStatusBadgeConfig(domain.transferStatus)
+                  : null
+                const cardStatus = transferInProgress
+                  ? 'processing'
+                  : verification.status === 'verified'
+                    ? 'success'
+                    : 'warning'
+                const cardStatusLabel = transferInProgress
+                  ? transferBadge?.label ?? 'Transfer in progress'
+                  : verification.label
                 return (
                   <DomainContextMenu
                     key={domain.$id}
@@ -711,12 +727,8 @@ export function View() {
                         resourceId={domain.$id}
                         icon={Globe}
                         iconColor="bg-muted text-muted-foreground"
-                        status={
-                          verification.status === 'verified'
-                            ? 'success'
-                            : 'warning'
-                        }
-                        statusLabel={verification.label}
+                        status={cardStatus}
+                        statusLabel={cardStatusLabel}
                         metadata={[
                           {
                             label: 'Nameservers',

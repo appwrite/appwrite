@@ -1352,6 +1352,8 @@ export function View() {
                         deployment.$createdAt,
                       )
                       const isActive = deployment.$id === activeDeployment?.$id
+                      const canDeleteFromMenu =
+                        !isActive && !isDeploymentInProgress(deployment.status)
                       return (
                         <DeploymentListRowContextMenu
                           key={deployment.$id}
@@ -1811,50 +1813,56 @@ export function View() {
                                   </DropdownMenuSubContent>
                                 </DropdownMenuSub>
                                 <DropdownMenuSeparator />
-                                {!isActive &&
-                                  !isDeploymentInProgress(
-                                    deployment.status,
-                                  ) && (
-                                    <DropdownMenuItem
-                                      onClick={async (e) => {
-                                        e.stopPropagation()
-                                        try {
-                                          await deleteFunctionDeployment(
-                                            projectId!,
-                                            functionId!,
-                                            deployment.$id,
-                                          )
-                                          await queryClient.refetchQueries({
-                                            queryKey: [
-                                              'deployments',
-                                              'project',
-                                              projectId,
-                                              functionId,
-                                            ],
-                                          })
-                                          await queryClient.refetchQueries({
-                                            queryKey: [
-                                              'function',
-                                              'project',
-                                              projectId,
-                                              functionId,
-                                            ],
-                                          })
-                                          toast.success(
-                                            'Deployment deleted successfully',
-                                          )
-                                        } catch (error) {
-                                          toast.error(
-                                            error instanceof Error
-                                              ? error.message
-                                              : 'Failed to delete deployment',
-                                          )
-                                        }
-                                      }}
-                                    >
-                                      <MenuItemContent icon={Trash2}>Delete</MenuItemContent>
-                                    </DropdownMenuItem>
-                                  )}
+                                <DropdownMenuItem
+                                  disabled={!canDeleteFromMenu}
+                                  title={
+                                    !canDeleteFromMenu
+                                      ? isActive
+                                        ? 'The active deployment cannot be deleted from the list'
+                                        : isDeploymentInProgress(deployment.status)
+                                          ? 'Wait for the build to finish or cancel it first'
+                                          : undefined
+                                      : undefined
+                                  }
+                                  onClick={async (e) => {
+                                    e.stopPropagation()
+                                    if (!canDeleteFromMenu) return
+                                    try {
+                                      await deleteFunctionDeployment(
+                                        projectId!,
+                                        functionId!,
+                                        deployment.$id,
+                                      )
+                                      await queryClient.refetchQueries({
+                                        queryKey: [
+                                          'deployments',
+                                          'project',
+                                          projectId,
+                                          functionId,
+                                        ],
+                                      })
+                                      await queryClient.refetchQueries({
+                                        queryKey: [
+                                          'function',
+                                          'project',
+                                          projectId,
+                                          functionId,
+                                        ],
+                                      })
+                                      toast.success(
+                                        'Deployment deleted successfully',
+                                      )
+                                    } catch (error) {
+                                      toast.error(
+                                        error instanceof Error
+                                          ? error.message
+                                          : 'Failed to delete deployment',
+                                      )
+                                    }
+                                  }}
+                                >
+                                  <MenuItemContent icon={Trash2}>Delete</MenuItemContent>
+                                </DropdownMenuItem>
                                 {isDeploymentInProgress(deployment.status) && (
                                   <DropdownMenuItem
                                     onClick={(e) => {

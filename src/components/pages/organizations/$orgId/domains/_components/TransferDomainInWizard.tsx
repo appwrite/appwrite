@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
+import { Eye, EyeOff } from 'lucide-react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useNavigate, useParams } from '@tanstack/react-router'
 import { DomainPurchaseStatus } from '@appwrite.io/console'
@@ -35,6 +36,7 @@ export function TransferDomainInWizard({
 
   const [domainInput, setDomainInput] = useState('')
   const [authCode, setAuthCode] = useState('')
+  const [authCodeRevealed, setAuthCodeRevealed] = useState(false)
   const [paymentMethodId, setPaymentMethodId] = useState('')
   const [paymentModalOpen, setPaymentModalOpen] = useState(false)
   const [debouncedPriceDomain, setDebouncedPriceDomain] = useState('')
@@ -82,9 +84,14 @@ export function TransferDomainInWizard({
           organizationId: orgId,
         })
         if (result.status === DomainPurchaseStatus.Succeeded) {
-          await queryClient.refetchQueries({
-            queryKey: ['domains', 'organization', orgId],
-          })
+          await Promise.all([
+            queryClient.refetchQueries({
+              queryKey: ['domains', 'organization', orgId],
+            }),
+            queryClient.invalidateQueries({
+              queryKey: ['domain', result.domainId],
+            }),
+          ])
           toast.success('Transfer payment confirmed')
           navigate({
             to: '/organizations/$orgId/domains/$domainId',
@@ -160,9 +167,14 @@ export function TransferDomainInWizard({
       return { kind: 'done' as const, domainId: finalized.domainId }
     },
     onSuccess: async (result) => {
-      await queryClient.refetchQueries({
-        queryKey: ['domains', 'organization', orgId],
-      })
+      await Promise.all([
+        queryClient.refetchQueries({
+          queryKey: ['domains', 'organization', orgId],
+        }),
+        queryClient.invalidateQueries({
+          queryKey: ['domain', result.domainId],
+        }),
+      ])
       toast.success('Domain transfer started')
       navigate({
         to: '/organizations/$orgId/domains/$domainId',
@@ -262,13 +274,32 @@ export function TransferDomainInWizard({
               <Label htmlFor="td-auth" className="text-[13px]">
                 Authorization code
               </Label>
-              <Input
-                id="td-auth"
-                value={authCode}
-                onChange={(e) => setAuthCode(e.target.value)}
-                placeholder="From your current registrar"
-                className="h-9 text-[13px] font-mono"
-              />
+              <div className="flex gap-2">
+                <Input
+                  id="td-auth"
+                  type={authCodeRevealed ? 'text' : 'password'}
+                  value={authCode}
+                  onChange={(e) => setAuthCode(e.target.value)}
+                  placeholder="From your current registrar"
+                  className="h-9 text-[13px] font-mono"
+                  autoComplete="off"
+                />
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="icon"
+                  className="h-9 w-9 shrink-0"
+                  onClick={() => setAuthCodeRevealed((v) => !v)}
+                  title={authCodeRevealed ? 'Hide code' : 'Show code'}
+                  aria-label={authCodeRevealed ? 'Hide code' : 'Show code'}
+                >
+                  {authCodeRevealed ? (
+                    <EyeOff className="h-4 w-4" />
+                  ) : (
+                    <Eye className="h-4 w-4" />
+                  )}
+                </Button>
+              </div>
             </div>
           </div>
         </div>

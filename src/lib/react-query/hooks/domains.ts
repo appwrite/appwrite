@@ -13,12 +13,15 @@ import {
   queryOptions,
   keepPreviousData,
 } from '@tanstack/react-query'
-import { useMemo } from 'react'
+import { useEffect, useMemo } from 'react'
 import { Query, DomainRegistrationType } from '@appwrite.io/console'
 import type { Models } from '@appwrite.io/console'
 import { sdk } from '@/lib/appwrite/sdk'
+import { isPendingDomainTransferStatus } from '@/lib/domains/transfer-status'
 import { DEFAULT_STALE_TIME, DEFAULT_PAGE_SIZE } from './constants'
 import { Dependencies } from './dependencies'
+
+const DOMAIN_TRANSFER_STATUS_POLL_MS = 15_000
 
 // ============================================================================
 // QUERY FUNCTIONS
@@ -707,6 +710,31 @@ export function domainQueryOptions(domainId: string | null | undefined) {
 }
 
 /**
+ * Query options for live domain transfer-in status (polls while pending).
+ */
+export function domainTransferStatusQueryOptions(
+  domainId: string | null | undefined,
+  transferStatusFromDomain?: string | null,
+) {
+  const enabled = !!domainId && isPendingDomainTransferStatus(transferStatusFromDomain)
+
+  return queryOptions({
+    queryKey: ['domain', domainId, 'transfer-status'],
+    queryFn: () => fetchDomainTransferStatus(domainId!),
+    enabled,
+    staleTime: 0,
+    retry: false,
+    refetchOnMount: true,
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: false,
+    refetchInterval: (query) =>
+      isPendingDomainTransferStatus(query.state.data?.status)
+        ? DOMAIN_TRANSFER_STATUS_POLL_MS
+        : false,
+  })
+}
+
+/**
  * Query options for fetching a single domain price
  */
 export function domainPriceQueryOptions(domain: string | null | undefined) {
@@ -900,6 +928,56 @@ export function useDomainPrices(
  */
 export function useDomain(domainId: string | null | undefined) {
   return useQuery(domainQueryOptions(domainId))
+}
+
+/**
+ * Live transfer-in status from the transfer status endpoint.
+ * Enabled while `transferStatusFromDomain` is a pending enum value.
+ */
+export function useDomainTransferStatus(
+  domainId: string | null | undefined,
+  transferStatusFromDomain?: string | null,
+  organizationId?: string | null,
+) {
+  const queryClient = useQueryClient()
+  const query = useQuery(
+    domainTransferStatusQueryOptions(domainId, transferStatusFromDomain),
+  )
+
+  useEffect(() => {
+    const status = query.data?.status
+    if (!status || !domainId) return
+
+    const endpointPending = isPendingDomainTransferStatus(status)
+    const domainPending = isPendingDomainTransferStatus(transferStatusFromDomain)
+
+    if (endpointPending && !domainPending) {
+      void queryClient.invalidateQueries({ queryKey: ['domain', domainId] })
+      if (organizationId) {
+        void queryClient.invalidateQueries({
+          queryKey: ['domains', 'organization', organizationId],
+        })
+      }
+      return
+    }
+
+    if (domainPending && !endpointPending) {
+      void queryClient.invalidateQueries({ queryKey: ['domain', domainId] })
+      if (organizationId) {
+        void queryClient.invalidateQueries({
+          queryKey: ['domains', 'organization', organizationId],
+        })
+      }
+    }
+  }, [
+    query.data?.status,
+    domainId,
+    organizationId,
+    queryClient,
+    transferStatusFromDomain,
+  ])
+
+  return query
 }
 
 /**

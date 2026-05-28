@@ -1470,6 +1470,9 @@ export function View() {
                       )
                       const isActive =
                         deploymentData.$id === activeDeploymentResolved?.$id
+                      const canDeleteFromMenu =
+                        !isActive &&
+                        !isDeploymentInProgress(deploymentData.status)
                       return (
                         <DeploymentListRowContextMenu
                           key={deploymentData.$id}
@@ -1924,47 +1927,53 @@ export function View() {
                                   </DropdownMenuSubContent>
                                 </DropdownMenuSub>
                                 <DropdownMenuSeparator />
-                                {!isActive &&
-                                  !isDeploymentInProgress(
-                                    deploymentData.status,
-                                  ) && (
-                                    <DropdownMenuItem
-                                      onClick={async (e) => {
-                                        e.stopPropagation()
-                                        try {
-                                          await deleteSiteDeployment(
-                                            projectId!,
-                                            siteId!,
-                                            deploymentData.$id,
-                                          )
-                                          queryClient.invalidateQueries({
-                                            queryKey: [
-                                              ...Dependencies.DEPLOYMENTS,
-                                            ],
-                                          })
-                                          queryClient.invalidateQueries({
-                                            queryKey: [
-                                              'site',
-                                              'project',
-                                              projectId,
-                                              siteId,
-                                            ],
-                                          })
-                                          toast.success(
-                                            'Deployment deleted successfully',
-                                          )
-                                        } catch (error) {
-                                          toast.error(
-                                            error instanceof Error
-                                              ? error.message
-                                              : 'Failed to delete deployment',
-                                          )
-                                        }
-                                      }}
-                                    >
-                                      <MenuItemContent icon={Trash2}>Delete</MenuItemContent>
-                                    </DropdownMenuItem>
-                                  )}
+                                <DropdownMenuItem
+                                  disabled={!canDeleteFromMenu}
+                                  title={
+                                    !canDeleteFromMenu
+                                      ? isActive
+                                        ? 'The active deployment cannot be deleted from the list'
+                                        : isDeploymentInProgress(
+                                              deploymentData.status,
+                                            )
+                                          ? 'Wait for the build to finish or cancel it first'
+                                          : undefined
+                                      : undefined
+                                  }
+                                  onClick={async (e) => {
+                                    e.stopPropagation()
+                                    if (!canDeleteFromMenu) return
+                                    try {
+                                      await deleteSiteDeployment(
+                                        projectId!,
+                                        siteId!,
+                                        deploymentData.$id,
+                                      )
+                                      queryClient.invalidateQueries({
+                                        queryKey: [...Dependencies.DEPLOYMENTS],
+                                      })
+                                      queryClient.invalidateQueries({
+                                        queryKey: [
+                                          'site',
+                                          'project',
+                                          projectId,
+                                          siteId,
+                                        ],
+                                      })
+                                      toast.success(
+                                        'Deployment deleted successfully',
+                                      )
+                                    } catch (error) {
+                                      toast.error(
+                                        error instanceof Error
+                                          ? error.message
+                                          : 'Failed to delete deployment',
+                                      )
+                                    }
+                                  }}
+                                >
+                                  <MenuItemContent icon={Trash2}>Delete</MenuItemContent>
+                                </DropdownMenuItem>
                                 {isDeploymentInProgress(
                                   deploymentData.status,
                                 ) && (
