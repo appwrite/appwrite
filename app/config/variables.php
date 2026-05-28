@@ -1072,7 +1072,7 @@ return [
             ],
             [
                 'name' => '_APP_COMPUTE_NPM_REGISTRY',
-                'description' => 'The npm registry URL used by function and site build containers. Leave empty to use the runtime default npm registry.',
+                'description' => 'The npm registry URL used by function and site build containers. Leave empty to use the runtime default npm registry. This can point to a caching proxy for registry.npmjs.org.',
                 'introduction' => '1.9.0',
                 'default' => '',
                 'required' => false,

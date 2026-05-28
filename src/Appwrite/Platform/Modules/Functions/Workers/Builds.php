@@ -665,8 +665,7 @@ class Builds extends Action
             }
 
             $npmRegistry = System::getEnv('_APP_COMPUTE_NPM_REGISTRY', '');
-            $npmToken = $vars['NPM_TOKEN'] ?? '';
-            if (! empty($npmRegistry) && empty($npmToken)) {
+            if (! empty($npmRegistry)) {
                 if (! isset($vars['NPM_CONFIG_REGISTRY']) && ! isset($vars['NPM_CONFIG_REPLACE_REGISTRY_HOST'])) {
                     $vars['NPM_CONFIG_REGISTRY'] = $npmRegistry;
                     $vars['NPM_CONFIG_REPLACE_REGISTRY_HOST'] = 'npmjs';
