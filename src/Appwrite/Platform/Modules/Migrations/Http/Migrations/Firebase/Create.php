@@ -6,6 +6,7 @@ use Appwrite\Event\Event;
 use Appwrite\Event\Message\Migration as MigrationMessage;
 use Appwrite\Event\Publisher\Migration as MigrationPublisher;
 use Appwrite\Extend\Exception;
+use Appwrite\Platform\Action;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
@@ -15,7 +16,7 @@ use Utopia\Database\Document;
 use Utopia\Database\Helpers\ID;
 use Utopia\Migration\Sources\Appwrite as AppwriteSource;
 use Utopia\Migration\Sources\Firebase;
-use Utopia\Platform\Action;
+use Utopia\Platform\Enum;
 use Utopia\Platform\Scope\HTTP;
 use Utopia\Validator\ArrayList;
 use Utopia\Validator\Text;
@@ -53,7 +54,7 @@ class Create extends Action
                     )
                 ]
             ))
-            ->param('resources', [], new ArrayList(new WhiteList(Firebase::getSupportedResources())), 'List of resources to migrate')
+            ->param('resources', [], new ArrayList(new WhiteList(Firebase::getSupportedResources())), 'List of resources to migrate', enum: new Enum(name: 'FirebaseMigrationResource'))
             ->param('serviceAccount', '', new Text(65536), 'JSON of the Firebase service account credentials')
             ->inject('response')
             ->inject('dbForProject')

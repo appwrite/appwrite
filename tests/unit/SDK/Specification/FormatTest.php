@@ -3,6 +3,13 @@
 namespace Tests\Unit\SDK\Specification;
 
 use Appwrite\SDK\Specification\Format;
+use Appwrite\Utopia\Response\Model\HealthStatus;
+use Appwrite\Utopia\Response\Model\PlatformAndroid;
+use Appwrite\Utopia\Response\Model\PlatformApple;
+use Appwrite\Utopia\Response\Model\PlatformLinux;
+use Appwrite\Utopia\Response\Model\PlatformList;
+use Appwrite\Utopia\Response\Model\PlatformWeb;
+use Appwrite\Utopia\Response\Model\PlatformWindows;
 use PHPUnit\Framework\TestCase;
 use Utopia\DI\Container;
 
@@ -18,9 +25,9 @@ class TestFormat extends Format
         return [];
     }
 
-    public function requestParameterConfig(string $service, string $method, string $param, bool $optional, bool $nullable, mixed $default): array
+    public function requestParameterConfig(bool $optional, bool $nullable, mixed $default, string $methodName = '', string $paramName = ''): array
     {
-        return $this->getRequestParameterConfig($service, $method, $param, $optional, $nullable, $default);
+        return $this->getRequestParameterConfig($optional, $nullable, $default, $methodName, $paramName);
     }
 }
 
@@ -37,9 +44,9 @@ class FormatTest extends TestCase
 
     public function testProjectRequestParameterOverrides(): void
     {
-        $createWebPlatform = $this->format->requestParameterConfig('project', 'createWebPlatform', 'hostname', true, false, '');
-        $updateWebPlatform = $this->format->requestParameterConfig('project', 'updateWebPlatform', 'hostname', true, false, '');
-        $listPlatforms = $this->format->requestParameterConfig('project', 'listPlatforms', 'queries', true, false, []);
+        $createWebPlatform = $this->format->requestParameterConfig(true, false, '', 'project.createWebPlatform', 'hostname');
+        $updateWebPlatform = $this->format->requestParameterConfig(true, false, '', 'project.updateWebPlatform', 'hostname');
+        $listPlatforms = $this->format->requestParameterConfig(true, false, [], 'project.listPlatforms', 'queries');
 
         $this->assertTrue($createWebPlatform['required']);
         $this->assertFalse($createWebPlatform['emitDefault']);
@@ -48,19 +55,25 @@ class FormatTest extends TestCase
         $this->assertTrue($listPlatforms['emitDefault']);
     }
 
-    public function testProjectPlatformResponseTypeUsesSharedEnumName(): void
+    public function testProjectPlatformResponseTypeUsesSharedEnumMetadata(): void
     {
-        $this->assertSame('PlatformType', $this->format->getResponseEnumName('platformAndroid', 'type'));
-        $this->assertSame('PlatformType', $this->format->getResponseEnumName('platformWeb', 'type'));
-        $this->assertSame('PlatformType', $this->format->getResponseEnumName('platformApple', 'type'));
-        $this->assertSame('PlatformType', $this->format->getResponseEnumName('platformWindows', 'type'));
-        $this->assertSame('PlatformType', $this->format->getResponseEnumName('platformLinux', 'type'));
-        $this->assertNull($this->format->getResponseEnumName('platformList', 'type'));
+        $models = [
+            new PlatformAndroid(),
+            new PlatformWeb(),
+            new PlatformApple(),
+            new PlatformWindows(),
+            new PlatformLinux(),
+        ];
+
+        foreach ($models as $model) {
+            $this->assertSame('PlatformType', $model->getRules()['type']['enumSDKName']);
+        }
+
+        $this->assertArrayNotHasKey('enumSDKName', (new PlatformList())->getRules()['platforms']);
     }
 
-    public function testExistingResponseEnumMappingsRemainUnchanged(): void
+    public function testExistingResponseEnumMetadataRemainsUnchanged(): void
     {
-        $this->assertSame('HealthCheckStatus', $this->format->getResponseEnumName('healthStatus', 'status'));
-        $this->assertNull($this->format->getResponseEnumName('key', 'name'));
+        $this->assertSame('HealthCheckStatus', (new HealthStatus())->getRules()['status']['enumSDKName']);
     }
 }

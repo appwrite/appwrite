@@ -3,13 +3,14 @@
 namespace Appwrite\Platform\Modules\Migrations\Http\Migrations\Supabase\Report;
 
 use Appwrite\Extend\Exception;
+use Appwrite\Platform\Action;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response;
 use Utopia\Database\Document;
 use Utopia\Migration\Sources\Supabase;
-use Utopia\Platform\Action;
+use Utopia\Platform\Enum;
 use Utopia\Platform\Scope\HTTP;
 use Utopia\Validator\ArrayList;
 use Utopia\Validator\Integer;
@@ -47,7 +48,7 @@ class Get extends Action
                     )
                 ]
             ))
-            ->param('resources', [], new ArrayList(new WhiteList(Supabase::getSupportedResources(), true)), 'List of resources to migrate')
+            ->param('resources', [], new ArrayList(new WhiteList(Supabase::getSupportedResources(), true)), 'List of resources to migrate', enum: new Enum(name: 'SupabaseMigrationResource'))
             ->param('endpoint', '', new URL(), 'Source\'s Supabase Endpoint.')
             ->param('apiKey', '', new Text(512), 'Source\'s API Key.')
             ->param('databaseHost', '', new Text(512), 'Source\'s Database Host.')
