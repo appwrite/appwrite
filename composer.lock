@@ -3928,12 +3928,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/database.git",
-                "reference": "1abb810d78901aab61a28d38b3eaaf7fc22a7591"
+                "reference": "7dc74890bba40306dcaf36eeef5d64f740bee001"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/database/zipball/1abb810d78901aab61a28d38b3eaaf7fc22a7591",
-                "reference": "1abb810d78901aab61a28d38b3eaaf7fc22a7591",
+                "url": "https://api.github.com/repos/utopia-php/database/zipball/7dc74890bba40306dcaf36eeef5d64f740bee001",
+                "reference": "7dc74890bba40306dcaf36eeef5d64f740bee001",
                 "shasum": ""
             },
             "require": {
@@ -3980,7 +3980,7 @@
                 "issues": "https://github.com/utopia-php/database/issues",
                 "source": "https://github.com/utopia-php/database/tree/chore-bump-console"
             },
-            "time": "2026-05-25T21:06:24+00:00"
+            "time": "2026-05-28T15:23:00+00:00"
         },
         {
             "name": "utopia-php/detector",
