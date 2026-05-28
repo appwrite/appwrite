@@ -223,6 +223,17 @@ class ScriptedAdapter implements Adapter
 
 class TestableGet extends Get
 {
+    /**
+     * Skip parent constructor. Action::__construct chains into
+     * Appwrite\SDK\Method, which loads Swoole at file-load time —
+     * Swoole is a production-only extension, so building the real
+     * Action in a unit test fails. The protected method bridges
+     * below are all the surface the redirect-chain tests need.
+     */
+    public function __construct()
+    {
+    }
+
     public static function assertSafe(string $url): void
     {
         parent::assertSafeUrl($url);
