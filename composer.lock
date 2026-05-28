@@ -4679,12 +4679,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/migration.git",
-                "reference": "327bcc37b8bfbf9a269413aaf3ee6712c5fcdc44"
+                "reference": "b0820ded331d4dc437f183f3ca088df9f2397a5e"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/migration/zipball/327bcc37b8bfbf9a269413aaf3ee6712c5fcdc44",
-                "reference": "327bcc37b8bfbf9a269413aaf3ee6712c5fcdc44",
+                "url": "https://api.github.com/repos/utopia-php/migration/zipball/b0820ded331d4dc437f183f3ca088df9f2397a5e",
+                "reference": "b0820ded331d4dc437f183f3ca088df9f2397a5e",
                 "shasum": ""
             },
             "require": {
@@ -4744,7 +4744,7 @@
                 "source": "https://github.com/utopia-php/migration/tree/add-oauth-providers-migration",
                 "issues": "https://github.com/utopia-php/migration/issues"
             },
-            "time": "2026-05-28T16:13:35+00:00"
+            "time": "2026-05-28T17:09:03+00:00"
         },
         {
             "name": "utopia-php/mongo",
