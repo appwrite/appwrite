@@ -3,6 +3,7 @@ import { type Models, type RealtimeResponseEvent } from '@appwrite.io/console'
 import { useQuery } from '@tanstack/react-query'
 import { consoleAccountQueryOptions } from '@/lib/react-query/hooks/auth'
 import { retainInitPresencesRealtimeListener } from '@/lib/init/init-presences-realtime'
+import { buildInitPresenceActivityAllowlist } from '@/lib/init/init-presence-activity-allowlist'
 import {
   INIT_PRESENCE_HEARTBEAT_MS,
   applyInitPresenceRealtimeRecord,
@@ -28,7 +29,7 @@ import {
   INIT_PRESENCE_ACTIVITY_OFFLINE,
   INIT_PRESENCE_ACTIVITY_ON_INIT,
 } from '@/lib/init/init-presence-activity'
-import type { LaunchEventOnlineUser } from '@/lib/init/types'
+import type { LaunchEvent, LaunchEventOnlineUser } from '@/lib/init/types'
 
 const SIDEBAR_USER_LIMIT = 16
 const AWAY_USER_LIMIT = 8
@@ -103,9 +104,14 @@ function reconcileMapsForEvent(maps: PresenceMaps, eventId: string): PresenceMap
 }
 
 export function useInitOnlinePresence(
-  eventId: string | undefined,
+  event: LaunchEvent | undefined,
   options?: { enabled?: boolean },
 ): InitOnlinePresenceState {
+  const eventId = event?.id
+  const activityAllowlist = useMemo(
+    () => (event ? buildInitPresenceActivityAllowlist(event) : null),
+    [event],
+  )
   const enabled = Boolean(eventId) && (options?.enabled ?? true)
   const { data: account } = useQuery({
     ...consoleAccountQueryOptions(),
@@ -477,16 +483,16 @@ export function useInitOnlinePresence(
   }, [accountUserId, enabled, eventId])
 
   return useMemo(() => {
-    if (!enabled || !accountUserId) return EMPTY_STATE
+    if (!enabled || !accountUserId || !activityAllowlist) return EMPTY_STATE
 
-    const onlineUsers = mapPresencesToOnlineUsers(presenceMaps.online.values()).slice(
-      0,
-      SIDEBAR_USER_LIMIT,
-    )
-    const recentlyOnlineUsers = mapPresencesToOnlineUsers(presenceMaps.away.values()).slice(
-      0,
-      AWAY_USER_LIMIT,
-    )
+    const onlineUsers = mapPresencesToOnlineUsers(
+      presenceMaps.online.values(),
+      activityAllowlist,
+    ).slice(0, SIDEBAR_USER_LIMIT)
+    const recentlyOnlineUsers = mapPresencesToOnlineUsers(
+      presenceMaps.away.values(),
+      activityAllowlist,
+    ).slice(0, AWAY_USER_LIMIT)
     const onlineCount = presenceMaps.online.size
     const othersOnlineCount = Math.max(0, onlineCount - onlineUsers.length)
 
@@ -505,6 +511,7 @@ export function useInitOnlinePresence(
     }
   }, [
     accountUserId,
+    activityAllowlist,
     enabled,
     isReady,
     isParticipantStatusUpdating,

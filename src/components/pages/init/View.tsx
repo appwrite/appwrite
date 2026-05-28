@@ -16,6 +16,7 @@ import { InitTicketSection } from './_components/InitTicketSection'
 import { GiveawayPromoCard } from './_components/GiveawayPromoCard'
 import { GetInvolvedCards } from './_components/GetInvolvedCards'
 import { InitPageCredits } from './_components/InitPageCredits'
+import { InitReactionConfetti } from './_components/InitReactionConfetti'
 import { LiveBannerBar } from './_components/LiveBannerBar'
 import { DayDetailCard } from './_components/DayDetailCard'
 import { LockedDayDetailCard } from './_components/LockedDayDetailCard'
@@ -141,6 +142,10 @@ function InitPageContent({
         </InitTicketVideoRecordingProvider>
       </ConsoleLayout>
 
+      {event.presenceEnabled && account ? (
+        <InitReactionConfetti onlineUsers={event.onlineUsers} />
+      ) : null}
+
       <CommandCenter
         open={commandCenterOpen}
         onOpenChange={setCommandCenterOpen}
@@ -168,7 +173,7 @@ export function View() {
 
   return (
     <InitPresenceProvider
-      eventId={baseEvent.id}
+      event={baseEvent}
       enabled={Boolean(baseEvent.presenceEnabled && isAccountReady && account)}
     >
       <InitPageContent baseEvent={baseEvent} account={account} />

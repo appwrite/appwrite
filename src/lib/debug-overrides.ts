@@ -20,6 +20,7 @@ export const DEBUG_OVERRIDE_KEYS = {
   showBuyTransferDomains: 'debug:showBuyTransferDomains',
   mockInitCurrentDay: 'debug:mockInitCurrentDay',
   mockInitTicketType: 'debug:mockInitTicketType',
+  previewInitReactionConfetti: 'debug:previewInitReactionConfetti',
 } as const
 
 /** Overrides that are not persisted to localStorage (reset on reload). */
@@ -63,6 +64,8 @@ export type DebugOverrides = {
   mockInitCurrentDay: number | null
   /** Mock Init ticket tier on /init. Null uses account rules (gold, silver, standard). */
   mockInitTicketType: InitTicketTypeId | null
+  /** When true, Init reaction confetti triggers with a single online user. */
+  previewInitReactionConfetti: boolean
 }
 
 const isBrowser = typeof window !== 'undefined'
@@ -133,6 +136,10 @@ export function loadDebugOverrides(): DebugOverrides {
     ),
     mockInitTicketType: readNullableInitTicketTypeFromStorage(
       DEBUG_OVERRIDE_KEYS.mockInitTicketType,
+    ),
+    previewInitReactionConfetti: readBooleanFromStorage(
+      DEBUG_OVERRIDE_KEYS.previewInitReactionConfetti,
+      false,
     ),
   }
 }

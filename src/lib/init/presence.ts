@@ -1,6 +1,7 @@
 import { Permission, Query, Role } from '@appwrite.io/console'
 import type { Models } from '@appwrite.io/console'
 import { sdk } from '@/lib/appwrite/sdk'
+import { sanitizeInitPresenceActivity } from '@/lib/init/init-presence-activity-allowlist'
 import type { LaunchEventOnlineUser } from '@/lib/init/types'
 
 /** Heartbeat interval while the Init page is active. */
@@ -388,12 +389,13 @@ export function reconcileExclusivePresenceMaps(
 
 export function presenceToOnlineUser(
   presence: InitPresenceRecord,
+  activityAllowlist: ReadonlySet<string>,
 ): LaunchEventOnlineUser {
   const metadata = parseInitPresenceMetadata(presence.metadata)
   return {
     id: presence.userId,
     name: metadata?.name || 'Console user',
-    activity: metadata?.activity ?? 'On Init',
+    activity: sanitizeInitPresenceActivity(metadata?.activity, activityAllowlist),
     isLive: metadata?.isLive,
   }
 }
@@ -487,10 +489,11 @@ export function buildPresenceMapForEvent(
 
 export function mapPresencesToOnlineUsers(
   presences: Iterable<InitPresenceRecord>,
+  activityAllowlist: ReadonlySet<string>,
 ): LaunchEventOnlineUser[] {
   const users: LaunchEventOnlineUser[] = []
   for (const presence of presences) {
-    users.push(presenceToOnlineUser(presence))
+    users.push(presenceToOnlineUser(presence, activityAllowlist))
   }
   return sortOnlineUsers(users)
 }

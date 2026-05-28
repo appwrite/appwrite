@@ -5,8 +5,8 @@ import {
   type ReactNode,
 } from 'react'
 import { useInitOnlinePresence } from '@/lib/init/use-init-online-presence'
-import type { InitOnlinePresenceState } from '@/lib/init/use-init-online-presence'
-import type { InitParticipantStatus } from '@/lib/init/use-init-online-presence'
+import type { InitOnlinePresenceState, InitParticipantStatus } from '@/lib/init/use-init-online-presence'
+import type { LaunchEvent } from '@/lib/init/types'
 
 export type { InitParticipantStatus }
 
@@ -22,15 +22,15 @@ type InitPresenceContextValue = InitOnlinePresenceState &
 const InitPresenceContext = createContext<InitPresenceContextValue | null>(null)
 
 export function InitPresenceProvider({
-  eventId,
+  event,
   enabled,
   children,
 }: {
-  eventId: string | undefined
+  event: LaunchEvent
   enabled: boolean
   children: ReactNode
 }) {
-  const presence = useInitOnlinePresence(eventId, { enabled })
+  const presence = useInitOnlinePresence(event, { enabled })
 
   const value = useMemo(
     (): InitPresenceContextValue => ({

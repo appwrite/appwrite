@@ -1,11 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { Button } from '@/components/ui/button'
 import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from '@/components/ui/tooltip'
-import {
   useInitPresence,
   useInitPresenceActivity,
 } from '@/lib/init/init-presence-context'
@@ -43,49 +38,42 @@ function ReactionButton({
   const Icon = reaction.icon
 
   return (
-    <Tooltip>
-      <TooltipTrigger asChild>
-        <Button
-          type="button"
-          variant="ghost"
-          size="icon"
-          disabled={disabled}
-          className="relative size-7 shrink-0 overflow-visible rounded-md text-muted-foreground"
-          aria-label={reaction.label}
-          onClick={onClick}
-        >
-          <motion.span
-            key={burstKey}
-            className="inline-flex"
-            initial={reduceMotion ? false : { scale: 1, rotate: 0 }}
-            animate={
-              reduceMotion || burstKey === 0
-                ? undefined
-                : {
-                    scale: [1, 1.45, 0.88, 1.12, 1],
-                    rotate: [0, -16, 14, -8, 0],
-                  }
-            }
-            transition={{ duration: 0.45, ease: REACTION_BUTTON_EASE }}
-          >
-            <Icon className="size-3.5" aria-hidden />
-          </motion.span>
-          {!reduceMotion && burstKey > 0 ? (
-            <motion.span
-              key={`ring-${burstKey}`}
-              className="pointer-events-none absolute inset-0 rounded-md ring-2 ring-[var(--brand-cta)]"
-              initial={{ scale: 0.85, opacity: 0.7 }}
-              animate={{ scale: 1.55, opacity: 0 }}
-              transition={{ duration: 0.45, ease: 'easeOut' }}
-              aria-hidden
-            />
-          ) : null}
-        </Button>
-      </TooltipTrigger>
-      <TooltipContent side="top" className="text-[12px]">
-        {disabled ? 'Go online to react' : reaction.label}
-      </TooltipContent>
-    </Tooltip>
+    <Button
+      type="button"
+      variant="ghost"
+      size="icon"
+      disabled={disabled}
+      className="relative size-7 shrink-0 overflow-visible rounded-md text-muted-foreground"
+      aria-label={reaction.label}
+      onClick={onClick}
+    >
+      <motion.span
+        key={burstKey}
+        className="inline-flex"
+        initial={reduceMotion ? false : { scale: 1, rotate: 0 }}
+        animate={
+          reduceMotion || burstKey === 0
+            ? undefined
+            : {
+                scale: [1, 1.45, 0.88, 1.12, 1],
+                rotate: [0, -16, 14, -8, 0],
+              }
+        }
+        transition={{ duration: 0.45, ease: REACTION_BUTTON_EASE }}
+      >
+        <Icon className="size-3.5" aria-hidden />
+      </motion.span>
+      {!reduceMotion && burstKey > 0 ? (
+        <motion.span
+          key={`ring-${burstKey}`}
+          className="pointer-events-none absolute inset-0 rounded-md ring-2 ring-[var(--brand-cta)]"
+          initial={{ scale: 0.85, opacity: 0.7 }}
+          animate={{ scale: 1.55, opacity: 0 }}
+          transition={{ duration: 0.45, ease: 'easeOut' }}
+          aria-hidden
+        />
+      ) : null}
+    </Button>
   )
 }
 

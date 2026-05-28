@@ -107,10 +107,11 @@ export function writeStoredInitReaction(eventId: string, reactionId: string | nu
 }
 
 export function parseInitReactingActivity(activity: string): InitReaction | null {
-  const byActivity = REACTION_BY_ACTIVITY.get(activity.trim())
+  const trimmed = activity.trim()
+  const byActivity = REACTION_BY_ACTIVITY.get(trimmed)
   if (byActivity) return byActivity
 
-  const legacyMatch = activity.match(/^Reacting:\s*(.+)$/)
+  const legacyMatch = trimmed.match(/^Reacting:\s*(.+)$/)
   if (legacyMatch) {
     return getInitReactionById(legacyMatch[1].trim()) ?? null
   }
@@ -119,11 +120,27 @@ export function parseInitReactingActivity(activity: string): InitReaction | null
 }
 
 export function formatInitPresenceActivityDisplay(activity: string): string {
-  const reaction = parseInitReactingActivity(activity)
-  if (reaction) return reaction.activity
   return activity
 }
 
 export function buildInitReactingActivity(reactionId: string): string {
   return getInitReactionActivity(reactionId) ?? 'On Init'
+}
+
+/** Minimum online users sharing a reaction before the confetti burst. */
+export const INIT_REACTION_CONFETTI_THRESHOLD = 5
+
+/** Wait time before the same reaction can trigger confetti again. */
+export const INIT_REACTION_CONFETTI_COOLDOWN_MS = 6_000
+
+export function getInitReactionCounts(
+  users: readonly { activity: string }[],
+): Map<string, number> {
+  const counts = new Map<string, number>()
+  for (const user of users) {
+    const reaction = parseInitReactingActivity(user.activity)
+    if (!reaction) continue
+    counts.set(reaction.id, (counts.get(reaction.id) ?? 0) + 1)
+  }
+  return counts
 }

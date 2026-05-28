@@ -378,6 +378,22 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
             icon: <Ticket className="h-3 w-3" />,
             submenuVariant: 'initTicketMock',
           },
+          {
+            label: 'Preview reaction confetti',
+            description: overrides.previewInitReactionConfetti
+              ? 'Confetti triggers with 1 user on the same reaction'
+              : 'Confetti needs 5 users on the same reaction',
+            icon: <Sparkles className="h-3 w-3" />,
+            variant: 'switch' as const,
+            switchValue: overrides.previewInitReactionConfetti,
+            switchOnChange: (checked: boolean) => {
+              setOverrides((prev) => ({
+                ...prev,
+                previewInitReactionConfetti: checked,
+              }))
+              setDebugOverride('previewInitReactionConfetti', checked)
+            },
+          },
         ],
       },
       {
@@ -916,6 +932,7 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
     overrides.mockCloudStatusAlert,
     overrides.mockInitCurrentDay,
     overrides.mockInitTicketType,
+    overrides.previewInitReactionConfetti,
     banners.length,
     actions,
     navigate,
