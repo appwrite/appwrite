@@ -942,8 +942,8 @@ export const InitTicketCard = forwardRef<InitTicketCardHandle, InitTicketCardPro
     <div
       ref={captureRootRef}
       className={cn(
-        'relative mx-auto w-full',
-        blurred && 'select-none blur-[6px]',
+        'relative mx-auto w-full select-none',
+        blurred && 'blur-[6px]',
         captureMode && 'pointer-events-none overflow-visible antialiased',
         className,
       )}

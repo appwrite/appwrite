@@ -106,6 +106,104 @@ export function presenceMatchesInitEvent(
   )
 }
 
+export function isPresenceActive(presence: InitPresenceRecord): boolean {
+  if (!presence.expiresAt) return true
+  return new Date(presence.expiresAt).getTime() > Date.now()
+}
+
+export function isInitOnlineStatus(
+  presence: InitPresenceRecord,
+  eventId: string,
+): boolean {
+  if (presence.status === buildInitOnlineStatus(eventId)) return true
+  if (presence.status !== INIT_PRESENCE_STATUS_ONLINE) return false
+  return parseInitPresenceMetadata(presence.metadata)?.eventId === eventId
+}
+
+export function isInitAwayStatus(
+  presence: InitPresenceRecord,
+  eventId: string,
+): boolean {
+  if (presence.status === buildInitAwayStatus(eventId)) return true
+  if (presence.status !== INIT_PRESENCE_STATUS_AWAY) return false
+  return parseInitPresenceMetadata(presence.metadata)?.eventId === eventId
+}
+
+/** Keep realtime/local rows when a list fetch returns before the index catches up. */
+export function mergeInitPresenceMaps(
+  previous: Map<string, InitPresenceRecord>,
+  fromApi: Map<string, InitPresenceRecord>,
+  eventId: string,
+  mode: 'online' | 'away',
+): Map<string, InitPresenceRecord> {
+  const merged = new Map(fromApi)
+  const matchesMode = mode === 'online' ? isInitOnlineStatus : isInitAwayStatus
+  const conflictsWithMode = mode === 'online' ? isInitAwayStatus : isInitOnlineStatus
+
+  for (const [userId, presence] of previous) {
+    if (merged.has(userId)) continue
+    if (!presenceMatchesInitEvent(presence, eventId)) continue
+    if (!isPresenceActive(presence)) continue
+    if (conflictsWithMode(presence, eventId)) continue
+    if (!matchesMode(presence, eventId)) continue
+    merged.set(userId, presence)
+  }
+
+  return merged
+}
+
+function presenceUpdatedAt(presence: InitPresenceRecord): number {
+  return new Date(presence.$updatedAt ?? 0).getTime()
+}
+
+/** Each user belongs in at most one list; resolve index-lag duplicates by latest update. */
+export function reconcileExclusivePresenceMaps(
+  online: Map<string, InitPresenceRecord>,
+  away: Map<string, InitPresenceRecord>,
+  eventId: string,
+): {
+  online: Map<string, InitPresenceRecord>
+  away: Map<string, InitPresenceRecord>
+} {
+  const nextOnline = new Map(online)
+  const nextAway = new Map(away)
+
+  for (const userId of new Set([...nextOnline.keys(), ...nextAway.keys()])) {
+    const onlinePresence = nextOnline.get(userId)
+    const awayPresence = nextAway.get(userId)
+    if (!onlinePresence || !awayPresence) continue
+
+    const onlineValid =
+      isInitOnlineStatus(onlinePresence, eventId) && isPresenceActive(onlinePresence)
+    const awayValid =
+      isInitAwayStatus(awayPresence, eventId) && isPresenceActive(awayPresence)
+
+    if (awayValid && !onlineValid) {
+      nextOnline.delete(userId)
+      continue
+    }
+
+    if (onlineValid && !awayValid) {
+      nextAway.delete(userId)
+      continue
+    }
+
+    if (!onlineValid && !awayValid) {
+      nextOnline.delete(userId)
+      nextAway.delete(userId)
+      continue
+    }
+
+    if (presenceUpdatedAt(awayPresence) >= presenceUpdatedAt(onlinePresence)) {
+      nextOnline.delete(userId)
+    } else {
+      nextAway.delete(userId)
+    }
+  }
+
+  return { online: nextOnline, away: nextAway }
+}
+
 export function presenceToOnlineUser(
   presence: InitPresenceRecord,
 ): LaunchEventOnlineUser {
@@ -145,18 +243,26 @@ export async function listInitPresences(
   mode: 'online' | 'away',
   limit = 50,
 ): Promise<InitPresenceRecord[]> {
-  const status = mode === 'online' ? buildInitOnlineStatus(eventId) : buildInitAwayStatus(eventId)
+  const scopedStatus =
+    mode === 'online' ? buildInitOnlineStatus(eventId) : buildInitAwayStatus(eventId)
+  const matchesMode = mode === 'online' ? isInitOnlineStatus : isInitAwayStatus
+
+  // Query scoped status only. Do not OR with global `online`/`away` — that pulls in
+  // unrelated console presences, exhausts the limit, and drops Init users inconsistently.
   const result = await sdk.forConsole.presences.list({
     queries: [
-      Query.equal('status', [status]),
+      Query.equal('status', [scopedStatus]),
       Query.limit(limit),
       Query.orderDesc('$updatedAt'),
     ],
     total: false,
   })
-  return (result.presences ?? []).filter((presence) =>
-    presenceMatchesInitEvent(presence, eventId),
-  )
+
+  return (result.presences ?? []).filter((presence) => {
+    if (!presenceMatchesInitEvent(presence, eventId)) return false
+    if (!isPresenceActive(presence)) return false
+    return matchesMode(presence, eventId)
+  })
 }
 
 export async function upsertInitPresence(params: {
@@ -167,6 +273,7 @@ export async function upsertInitPresence(params: {
   const presenceId = buildInitPresenceId(params.userId)
   const presence = await sdk.forConsole.presences.upsert({
     presenceId,
+    userId: params.userId,
     status: params.status,
     metadata: params.metadata,
     permissions: buildInitPresencePermissions(params.userId),

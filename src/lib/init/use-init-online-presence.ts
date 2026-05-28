@@ -10,9 +10,13 @@ import {
   buildInitPresenceId,
   buildPresenceMapForEvent,
   clearLegacyInitPresenceStorage,
+  isInitAwayStatus,
+  isInitOnlineStatus,
   listInitPresences,
   mapPresencesToOnlineUsers,
+  mergeInitPresenceMaps,
   presenceMatchesInitEvent,
+  reconcileExclusivePresenceMaps,
   upsertInitPresence,
   type InitPresenceMetadata,
 } from '@/lib/init/presence'
@@ -26,6 +30,8 @@ import type { LaunchEventOnlineUser } from '@/lib/init/types'
 const SIDEBAR_USER_LIMIT = 16
 const AWAY_USER_LIMIT = 8
 const ACTIVITY_PUBLISH_DEBOUNCE_MS = 300
+/** Periodic list sync so the sidebar stays aligned with the API. */
+const INIT_PRESENCE_LIST_REFRESH_MS = 60_000
 const INIT_PARTICIPANT_ONLINE_SESSION_KEY = 'console.init.participantOnline'
 
 function readParticipantOnlinePreference(): boolean {
@@ -83,25 +89,18 @@ function isPresenceDeleteEvent(events: string[]): boolean {
   return events.some((event) => event.includes('presences.') && event.endsWith('.delete'))
 }
 
-function applyRealtimePresenceEvent(
-  map: Map<string, Models.DefaultPresence>,
-  event: RealtimeResponseEvent<Models.DefaultPresence>,
-  eventId: string,
-): void {
-  const payload = event.payload
-  if (!payload?.userId) return
+type PresenceMaps = {
+  online: Map<string, Models.DefaultPresence>
+  away: Map<string, Models.DefaultPresence>
+}
 
-  if (isPresenceDeleteEvent(event.events)) {
-    map.delete(payload.userId)
-    return
-  }
+const createEmptyPresenceMaps = (): PresenceMaps => ({
+  online: new Map(),
+  away: new Map(),
+})
 
-  if (!presenceMatchesInitEvent(payload, eventId)) {
-    map.delete(payload.userId)
-    return
-  }
-
-  map.set(payload.userId, payload)
+function reconcileMapsForEvent(maps: PresenceMaps, eventId: string): PresenceMaps {
+  return reconcileExclusivePresenceMaps(maps.online, maps.away, eventId)
 }
 
 export function useInitOnlinePresence(
@@ -114,12 +113,10 @@ export function useInitOnlinePresence(
     enabled,
   })
 
-  const [onlineMap, setOnlineMap] = useState<Map<string, Models.DefaultPresence>>(
-    () => new Map(),
-  )
-  const [awayMap, setAwayMap] = useState<Map<string, Models.DefaultPresence>>(
-    () => new Map(),
-  )
+  const [presenceMaps, setPresenceMaps] = useState<PresenceMaps>(() => ({
+    online: new Map(),
+    away: new Map(),
+  }))
   const [isReady, setIsReady] = useState(false)
   const [participantStatus, setParticipantStatusState] =
     useState<InitParticipantStatus>('online')
@@ -173,40 +170,48 @@ export function useInitOnlinePresence(
       listInitPresences(scopeEventId, 'away', AWAY_USER_LIMIT),
     ])
 
-    setOnlineMap((previousOnline) => {
-      const next = buildPresenceMapForEvent(online, scopeEventId)
+    setPresenceMaps((previous) => {
+      const onlineFromApi = buildPresenceMapForEvent(online, scopeEventId)
+      const awayFromApi = buildPresenceMapForEvent(away, scopeEventId)
+
+      let nextOnline = mergeInitPresenceMaps(
+        previous.online,
+        onlineFromApi,
+        scopeEventId,
+        'online',
+      )
+      let nextAway = mergeInitPresenceMaps(
+        previous.away,
+        awayFromApi,
+        scopeEventId,
+        'away',
+      )
+
       const selfId = accountUserIdRef.current
 
       if (
         selfId &&
         participantOnlineRef.current &&
-        !next.has(selfId)
+        !nextOnline.has(selfId)
       ) {
-        const selfPresence = previousOnline.get(selfId)
-        if (selfPresence && presenceMatchesInitEvent(selfPresence, scopeEventId)) {
-          next.set(selfId, selfPresence)
+        const selfPresence = previous.online.get(selfId)
+        if (selfPresence && isInitOnlineStatus(selfPresence, scopeEventId)) {
+          nextOnline.set(selfId, selfPresence)
         }
       }
-
-      return next
-    })
-
-    setAwayMap((previousAway) => {
-      const next = buildPresenceMapForEvent(away, scopeEventId)
-      const selfId = accountUserIdRef.current
 
       if (
         selfId &&
         !participantOnlineRef.current &&
-        !next.has(selfId)
+        !nextAway.has(selfId)
       ) {
-        const selfPresence = previousAway.get(selfId)
-        if (selfPresence && presenceMatchesInitEvent(selfPresence, scopeEventId)) {
-          next.set(selfId, selfPresence)
+        const selfPresence = previous.away.get(selfId)
+        if (selfPresence && isInitAwayStatus(selfPresence, scopeEventId)) {
+          nextAway.set(selfId, selfPresence)
         }
       }
 
-      return next
+      return reconcileMapsForEvent({ online: nextOnline, away: nextAway }, scopeEventId)
     })
   }, [])
 
@@ -272,26 +277,20 @@ export function useInitOnlinePresence(
         presenceIdRef.current = presence.$id
 
         if (away) {
-          setAwayMap((prev) => {
-            const next = new Map(prev)
-            next.set(presence.userId, presence)
-            return next
-          })
-          setOnlineMap((prev) => {
-            const next = new Map(prev)
-            next.delete(presence.userId)
-            return next
+          setPresenceMaps((previous) => {
+            const nextOnline = new Map(previous.online)
+            nextOnline.delete(presence.userId)
+            const nextAway = new Map(previous.away)
+            nextAway.set(presence.userId, presence)
+            return reconcileMapsForEvent({ online: nextOnline, away: nextAway }, eventId)
           })
         } else {
-          setOnlineMap((prev) => {
-            const next = new Map(prev)
-            next.set(presence.userId, presence)
-            return next
-          })
-          setAwayMap((prev) => {
-            const next = new Map(prev)
-            next.delete(presence.userId)
-            return next
+          setPresenceMaps((previous) => {
+            const nextOnline = new Map(previous.online)
+            nextOnline.set(presence.userId, presence)
+            const nextAway = new Map(previous.away)
+            nextAway.delete(presence.userId)
+            return reconcileMapsForEvent({ online: nextOnline, away: nextAway }, eventId)
           })
         }
 
@@ -338,8 +337,7 @@ export function useInitOnlinePresence(
 
   useEffect(() => {
     if (!enabled || !eventId || !accountUserId) {
-      setOnlineMap(new Map())
-      setAwayMap(new Map())
+      setPresenceMaps(createEmptyPresenceMaps())
       setIsReady(false)
       baselineActivityRef.current = INIT_PRESENCE_ACTIVITY_ON_INIT
       transientActivityRef.current = null
@@ -399,15 +397,21 @@ export function useInitOnlinePresence(
       void publishPresence(!participantOnlineRef.current, { refresh: false })
     }, INIT_PRESENCE_HEARTBEAT_MS)
 
+    const listRefresh = window.setInterval(() => {
+      void refreshLists(eventId)
+    }, INIT_PRESENCE_LIST_REFRESH_MS)
+
     const onFocus = () => {
       if (participantOnlineRef.current) {
         void publishPresence(false, { refresh: false })
+        void refreshLists(eventId)
       }
     }
 
     const onVisibility = () => {
       if (document.visibilityState === 'visible' && participantOnlineRef.current) {
         void publishPresence(false, { refresh: false })
+        void refreshLists(eventId)
       }
     }
 
@@ -416,8 +420,22 @@ export function useInitOnlinePresence(
 
     return () => {
       window.clearInterval(heartbeat)
+      window.clearInterval(listRefresh)
       window.removeEventListener('focus', onFocus)
       document.removeEventListener('visibilitychange', onVisibility)
+    }
+  }, [accountUserId, enabled, eventId, publishPresence, refreshLists])
+
+  useEffect(() => {
+    if (!enabled || !eventId || !accountUserId) return
+
+    const onPageHide = () => {
+      void publishPresence(true, { refresh: false })
+    }
+
+    window.addEventListener('pagehide', onPageHide)
+    return () => {
+      window.removeEventListener('pagehide', onPageHide)
     }
   }, [accountUserId, enabled, eventId, publishPresence])
 
@@ -433,40 +451,48 @@ export function useInitOnlinePresence(
       const payload = event.payload as Models.DefaultPresence | undefined
       if (!payload?.userId) return
 
-      const status = payload.status
-
-      if (status === buildInitAwayStatus(scopeEventId)) {
-        setAwayMap((prev) => {
-          const next = new Map(prev)
-          applyRealtimePresenceEvent(
-            next,
-            event as RealtimeResponseEvent<Models.DefaultPresence>,
-            scopeEventId,
-          )
-          return next
-        })
-        setOnlineMap((prev) => {
-          const next = new Map(prev)
-          next.delete(payload.userId)
-          return next
+      if (isPresenceDeleteEvent(event.events)) {
+        setPresenceMaps((previous) => {
+          const nextOnline = new Map(previous.online)
+          nextOnline.delete(payload.userId)
+          const nextAway = new Map(previous.away)
+          nextAway.delete(payload.userId)
+          return { online: nextOnline, away: nextAway }
         })
         return
       }
 
-      setOnlineMap((prev) => {
-        const next = new Map(prev)
-        applyRealtimePresenceEvent(
-          next,
-          event as RealtimeResponseEvent<Models.DefaultPresence>,
-          scopeEventId,
-        )
-        return next
-      })
-      setAwayMap((prev) => {
-        const next = new Map(prev)
-        next.delete(payload.userId)
-        return next
-      })
+      if (!presenceMatchesInitEvent(payload, scopeEventId)) {
+        setPresenceMaps((previous) => {
+          const nextOnline = new Map(previous.online)
+          nextOnline.delete(payload.userId)
+          const nextAway = new Map(previous.away)
+          nextAway.delete(payload.userId)
+          return { online: nextOnline, away: nextAway }
+        })
+        return
+      }
+
+      if (isInitAwayStatus(payload, scopeEventId)) {
+        setPresenceMaps((previous) => {
+          const nextOnline = new Map(previous.online)
+          nextOnline.delete(payload.userId)
+          const nextAway = new Map(previous.away)
+          nextAway.set(payload.userId, payload)
+          return reconcileMapsForEvent({ online: nextOnline, away: nextAway }, scopeEventId)
+        })
+        return
+      }
+
+      if (isInitOnlineStatus(payload, scopeEventId)) {
+        setPresenceMaps((previous) => {
+          const nextOnline = new Map(previous.online)
+          nextOnline.set(payload.userId, payload)
+          const nextAway = new Map(previous.away)
+          nextAway.delete(payload.userId)
+          return reconcileMapsForEvent({ online: nextOnline, away: nextAway }, scopeEventId)
+        })
+      }
     }
   })
 
@@ -492,31 +518,18 @@ export function useInitOnlinePresence(
     }
   }, [enabled, eventId])
 
-  useEffect(() => {
-    if (!enabled || !eventId || !accountUserId) return
-
-    const onPageHide = () => {
-      void publishPresence(true, { refresh: false })
-    }
-
-    window.addEventListener('pagehide', onPageHide)
-    return () => {
-      window.removeEventListener('pagehide', onPageHide)
-    }
-  }, [accountUserId, enabled, eventId, publishPresence])
-
   return useMemo(() => {
     if (!enabled || !accountUserId) return EMPTY_STATE
 
-    const onlineUsers = mapPresencesToOnlineUsers(onlineMap.values()).slice(
+    const onlineUsers = mapPresencesToOnlineUsers(presenceMaps.online.values()).slice(
       0,
       SIDEBAR_USER_LIMIT,
     )
-    const recentlyOnlineUsers = mapPresencesToOnlineUsers(awayMap.values()).slice(
+    const recentlyOnlineUsers = mapPresencesToOnlineUsers(presenceMaps.away.values()).slice(
       0,
       AWAY_USER_LIMIT,
     )
-    const onlineCount = onlineMap.size
+    const onlineCount = presenceMaps.online.size
     const othersOnlineCount = Math.max(0, onlineCount - onlineUsers.length)
 
     return {
@@ -534,11 +547,10 @@ export function useInitOnlinePresence(
     }
   }, [
     accountUserId,
-    awayMap,
     enabled,
     isReady,
     isParticipantStatusUpdating,
-    onlineMap,
+    presenceMaps,
     participantStatus,
     setBaselineActivity,
     setParticipantStatus,
