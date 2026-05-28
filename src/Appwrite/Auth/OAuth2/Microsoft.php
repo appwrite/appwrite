@@ -147,7 +147,9 @@ class Microsoft extends OAuth2
      */
     public function isEmailVerified(string $accessToken): bool
     {
-        return false;
+        $email = $this->getUserEmail($accessToken);
+
+        return !empty($email);
     }
 
     /**
