@@ -71,6 +71,7 @@ class PresenceConsoleClientTest extends Scope
         $presenceId = ID::unique();
 
         $client = $this->openConsolePresenceSocket($user, $presenceId);
+        $needsCleanup = false;
 
         try {
             $upsertMetadata = ['testRunId' => ID::unique(), 'case' => 'console-upsert'];
@@ -92,6 +93,7 @@ class PresenceConsoleClientTest extends Scope
                 ]
             );
             $this->assertSame(200, $upsert['headers']['status-code']);
+            $needsCleanup = true;
 
             $upsertEvent = $this->receivePresenceFrame($client, $presenceId, 'upsert');
             $this->assertSame('online', $upsertEvent['data']['payload']['status'] ?? null);
@@ -123,6 +125,18 @@ class PresenceConsoleClientTest extends Scope
             $this->assertSame($user['$id'], $updateEvent['data']['payload']['userId'] ?? null);
         } finally {
             $client->close();
+
+            if ($needsCleanup) {
+                // Drop the row so reruns / parallel users don't accumulate orphaned presences.
+                $this->client->call(
+                    Client::METHOD_DELETE,
+                    '/presences/' . $presenceId,
+                    \array_merge([
+                        'content-type' => 'application/json',
+                        'x-appwrite-project' => 'console',
+                    ], $this->getHeaders())
+                );
+            }
         }
     }
 
@@ -140,7 +154,7 @@ class PresenceConsoleClientTest extends Scope
                     'origin' => 'http://localhost',
                     'cookie' => 'a_session_console=' . $user['session'],
                 ],
-                'timeout' => 2,
+                'timeout' => 1,
             ]
         );
 
