@@ -20,10 +20,10 @@ type InitHeroBackgroundProps = {
   /** When false, timers pause (e.g. hidden collapsed header). */
   active?: boolean
   /**
-   * Particles only — no hero surface or dot grid (e.g. layered under a ticket capture stage).
+   * Particles only - no hero surface or dot grid (e.g. layered under a ticket capture stage).
    */
   bare?: boolean
-  /** Ticket underscore / ID color — tints hero particles (defaults to brand CTA). */
+  /** Ticket underscore / ID color - tints hero particles (defaults to brand CTA). */
   accentColor?: string
   /** Overrides console theme for particle opacity curves (e.g. gold / silver tickets). */
   particleIsDark?: boolean

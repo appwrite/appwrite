@@ -74,6 +74,8 @@ const shareMenuItemClass =
 interface ShareActionsProps {
   compact?: boolean
   isAuthenticated: boolean
+  isRecapMode?: boolean
+  shareButtonLabel?: string
   isSharing: boolean
   shareOpen: boolean
   onShareOpenChange: (open: boolean) => void
@@ -89,6 +91,8 @@ interface ShareActionsProps {
 function ShareActions({
   compact = false,
   isAuthenticated,
+  isRecapMode = false,
+  shareButtonLabel,
   isSharing,
   shareOpen,
   onShareOpenChange,
@@ -108,6 +112,8 @@ function ShareActions({
   )
   const iconSizeClass = compact ? 'mr-1 size-3.5' : 'mr-1.5 size-4'
   const actionsAlignClass = compact ? 'justify-start' : 'justify-center'
+  const primaryShareLabel =
+    shareButtonLabel ?? (isRecapMode ? 'Share ticket' : 'Share and win')
 
   if (!isAuthenticated) {
     return (
@@ -141,7 +147,7 @@ function ShareActions({
             disabled={isSharing}
           >
             <Trophy className={iconSizeClass} />
-            Share and win
+            {primaryShareLabel}
           </Button>
         </PopoverTrigger>
         <PopoverContent align={compact ? 'start' : 'center'} className="w-52 p-1">
@@ -373,9 +379,13 @@ export function InitTicketSection({ event, account }: InitTicketSectionProps) {
     }
   }
 
+  const ticketCopy = event.isRecapMode ? event.recap?.ticket : undefined
+
   const shareActionsProps: ShareActionsProps = {
     compact: collapsed,
     isAuthenticated,
+    isRecapMode: event.isRecapMode,
+    shareButtonLabel: ticketCopy?.shareButtonLabel,
     isSharing,
     shareOpen,
     onShareOpenChange: setShareOpen,
@@ -398,14 +408,18 @@ export function InitTicketSection({ event, account }: InitTicketSectionProps) {
   } as const
 
   const sectionTitle = isAuthenticated
-    ? 'Share to enter the giveaway'
-    : 'Claim your Init ticket'
+    ? (ticketCopy?.titleAuthenticated ?? 'Share to enter the giveaway')
+    : (ticketCopy?.titleGuest ?? 'Claim your Init ticket')
   const sectionDescriptionExpanded = isAuthenticated
-    ? 'Post your ticket on socials during Init week. One ticket holder wins the exclusive giveaway on day 5 — sharing is how you enter.'
-    : 'Create a free account to unlock your personalized pass, customize it with your stack, and share for a chance to win exclusive Init swag.'
+    ? (ticketCopy?.descriptionAuthenticated ??
+      'Post your ticket on socials during Init week. One ticket holder wins the exclusive giveaway on day 5. Sharing is how you enter.')
+    : (ticketCopy?.descriptionGuest ??
+      'Create a free account to unlock your personalized pass, customize it with your stack, and share for a chance to win exclusive Init swag.')
   const sectionDescriptionCollapsed = isAuthenticated
-    ? 'Share your ticket on socials for a chance to win exclusive Init swag.'
-    : 'Sign up to claim your pass and enter the day 5 giveaway.'
+    ? (ticketCopy?.descriptionCollapsedAuthenticated ??
+      'Share your ticket on socials for a chance to win exclusive Init swag.')
+    : (ticketCopy?.descriptionCollapsedGuest ??
+      'Sign up to claim your pass and enter the day 5 giveaway.')
 
   let sectionBody: ReactNode
 

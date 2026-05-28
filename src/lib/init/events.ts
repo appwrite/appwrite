@@ -1,6 +1,7 @@
 import {
   Gift,
   MessageCircle,
+  Rocket,
   Ticket,
 } from 'lucide-react'
 import {
@@ -11,6 +12,7 @@ import {
   INIT_JULY_2026_TICKET_CONFIG,
   INIT_SEP_2026_TICKET_CONFIG,
 } from './ticket-config'
+import { INIT_JULY_2026_PRIZES } from './prizes'
 import { parseDateOnly } from './dates'
 import { resolveInitCurrentDay } from './event-visibility'
 import {
@@ -35,8 +37,11 @@ export const LAUNCH_EVENTS: LaunchEvent[] = [
     featured: true,
     presenceEnabled: true,
     tickets: INIT_JULY_2026_TICKET_CONFIG,
-    primaryCta: { label: 'View event', href: 'https://appwrite.io/init' },
-    secondaryCta: { label: 'Claim your ticket', href: 'https://appwrite.io/init/ticket' },
+    primaryCta: {
+      label: 'Claim your ticket',
+      to: '/sign-up',
+      redirect: '/init',
+    },
     headerNavCta: {
       beforeEvent: {
         label: 'Back to Appwrite',
@@ -80,14 +85,17 @@ export const LAUNCH_EVENTS: LaunchEvent[] = [
       },
     ],
     giveaway: {
-      title: 'Win exclusive Init swag',
+      title: 'Init giveaways',
       description:
-        'Hoodies, caps, bottles, and more. Join our daily events, claim your Init ticket, and enter for a chance to take home Init swag.',
-      imageSrcLight: '/images/init/giveaway-swag-light.png',
-      imageSrcDark: '/images/init/giveaway-swag-dark.png',
+        'Win an Appwrite hoodie and tee, light and dark Appwriter keyboards, a RUNTIME bottle, and more on days 1-4. Day 5 grand prize: 12 months of Claude Max 20x.',
+      ctaLabel: 'View all prizes',
+      ctaHref: '#init-prizes',
+      imageSrcLight: '/images/init/giveaway-swag-promo-light.jpg',
+      imageSrcDark: '/images/init/giveaway-swag-promo.jpg',
       imageAlt:
-        'Init giveaway merchandise including a black hoodie, cap, white water bottle, and folded tee',
+        'Appwrite swag including a hoodie, cap, water bottle, tee, Appwriter keyboards, and a Claude Max 12-month subscription card',
     },
+    prizes: INIT_JULY_2026_PRIZES,
     getInvolved: [
       {
         id: 'ticket',
@@ -106,11 +114,49 @@ export const LAUNCH_EVENTS: LaunchEvent[] = [
       {
         id: 'swag',
         title: 'Earn launch rewards',
-        description: 'Complete challenges during the week to win prizes.',
+        description: 'Join daily sessions and enter the day 5 grand prize draw.',
         icon: Gift,
-        href: 'https://appwrite.io/init/rewards',
+        href: '#init-prizes',
       },
     ],
+    recap: {
+      headline: 'Init recap',
+      description:
+        'Five days of launches are in the books. Rewatch sessions, explore every announcement, and catch up on what you missed from Init July 6 - 10.',
+      bannerMessage:
+        'Init July 6 - 10 has ended. Browse the full recap below.',
+      introTitle: 'Everything we shipped',
+      introDescription:
+        'From Appwrite 2.0 to Appwrite Firewall. Explore the full launch timeline, blog posts, and session replays.',
+      getInvolvedSectionTitle: 'Keep exploring',
+      getInvolved: [
+        {
+          id: 'explore',
+          title: 'Explore Appwrite',
+          description: 'Try the launches from Init week in your project today.',
+          icon: Rocket,
+          href: 'https://appwrite.io',
+        },
+        {
+          id: 'community',
+          title: 'Join the conversation',
+          description: 'Share feedback and stay connected with the Appwrite community.',
+          icon: MessageCircle,
+          href: 'https://appwrite.io/discord',
+        },
+      ],
+      ticket: {
+        titleAuthenticated: 'Your Init ticket',
+        titleGuest: 'View your Init ticket',
+        descriptionAuthenticated:
+          'Your personalized pass from Init week. Customize it, export a share video, or post it on socials.',
+        descriptionGuest:
+          'Sign in to view your personalized Init pass and share your experience from launch week.',
+        descriptionCollapsedAuthenticated: 'Customize and share your Init pass.',
+        descriptionCollapsedGuest: 'Sign in to view your Init pass.',
+        shareButtonLabel: 'Share ticket',
+      },
+    },
   },
   {
     id: 'init-sep-2026',

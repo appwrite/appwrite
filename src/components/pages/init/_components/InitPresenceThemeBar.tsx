@@ -15,17 +15,36 @@ export function InitPresenceThemeBar({
   dark,
   collapsed = false,
   isMobile = false,
+  reserveSpace = false,
 }: {
   light: number
   dark: number
   collapsed?: boolean
   isMobile?: boolean
+  /** Reserve footer height while presence theme counts are not ready yet. */
+  reserveSpace?: boolean
 }) {
   const { resolvedTheme, setTheme } = useTheme()
   const { syncPresenceTheme } = useInitPresence()
   const total = light + dark
   if (collapsed && !isMobile) return null
-  if (total === 0) return null
+  if (total === 0 && !reserveSpace) return null
+
+  const shellClassName = cn('shrink-0 px-3 py-3', isMobile && 'px-4')
+
+  if (total === 0 && reserveSpace) {
+    return (
+      <div className={shellClassName} aria-hidden>
+        <div className="pointer-events-none invisible rounded-lg border border-border bg-card/50 px-1.5 py-1.5">
+          <div className="flex h-6 items-center gap-1">
+            <span className="size-6 shrink-0" />
+            <span className="h-2 min-w-0 flex-1 rounded-full" />
+            <span className="size-6 shrink-0" />
+          </div>
+        </div>
+      </div>
+    )
+  }
 
   const lightPercent = (light / total) * 100
   const darkPercent = 100 - lightPercent
@@ -38,12 +57,7 @@ export function InitPresenceThemeBar({
   }
 
   return (
-    <div
-      className={cn(
-        'shrink-0 px-3 py-3',
-        isMobile && 'px-4',
-      )}
-    >
+    <div className={shellClassName}>
       <div className="rounded-lg border border-border bg-card/50 px-1.5 py-1.5">
         <div className="flex items-center gap-1">
           <Button
@@ -51,8 +65,8 @@ export function InitPresenceThemeBar({
             variant="ghost"
             size="icon"
             className={cn(
-              'size-6 shrink-0 rounded-md text-muted-foreground',
-              activeTheme === 'light' && 'bg-accent text-foreground',
+              'size-6 shrink-0 rounded-md border border-border text-muted-foreground',
+              activeTheme === 'light' && 'border-border bg-accent text-foreground',
             )}
             aria-label="Light theme"
             aria-pressed={activeTheme === 'light'}
@@ -86,8 +100,8 @@ export function InitPresenceThemeBar({
             variant="ghost"
             size="icon"
             className={cn(
-              'size-6 shrink-0 rounded-md text-muted-foreground',
-              activeTheme === 'dark' && 'bg-accent text-foreground',
+              'size-6 shrink-0 rounded-md border border-border text-muted-foreground',
+              activeTheme === 'dark' && 'border-border bg-accent text-foreground',
             )}
             aria-label="Dark theme"
             aria-pressed={activeTheme === 'dark'}

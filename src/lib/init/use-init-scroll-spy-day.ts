@@ -1,11 +1,11 @@
 import { useEffect, useMemo, useState } from 'react'
-import { getInitDayCardId } from './scroll-to-day-card'
+import { getInitDayCardId, INIT_DAY_CARD_SCROLL_OFFSET_PX } from './scroll-to-day-card'
 
 /** Sticky collapsed Init bar height (px). */
 export const INIT_COLLAPSED_HEADER_HEIGHT_PX = 56
 
-/** Matches day card `scroll-mt-28` — anchor line for scroll-spy. */
-export const INIT_DAY_SCROLL_SPY_OFFSET_PX = 112
+/** Matches day card `scroll-mt-28` - anchor line for scroll-spy. */
+export const INIT_DAY_SCROLL_SPY_OFFSET_PX = INIT_DAY_CARD_SCROLL_OFFSET_PX
 
 export function useInitScrollSpyDay(dayNumbers: number[]) {
   const sortedDays = useMemo(

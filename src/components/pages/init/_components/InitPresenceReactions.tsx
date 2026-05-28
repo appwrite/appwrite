@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
+import { Skeleton } from '@/components/ui/skeleton'
 import { Button } from '@/components/ui/button'
 import {
   useInitPresence,
@@ -21,6 +22,31 @@ interface InitPresenceReactionsProps {
   collapsed?: boolean
   isMobile?: boolean
   onReactionPulse?: () => void
+}
+
+const REACTIONS_SECTION_CLASS =
+  'shrink-0 border-t border-border bg-background px-3 py-2 sm:px-3'
+
+function InitPresenceReactionsSkeleton({
+  isMobile = false,
+}: {
+  isMobile?: boolean
+}) {
+  return (
+    <div
+      className={cn(REACTIONS_SECTION_CLASS, isMobile && 'px-4')}
+      aria-busy="true"
+      aria-label="Loading reactions"
+    >
+      <div className="grid w-full grid-cols-6 items-center gap-0">
+        {INIT_REACTIONS.map((reaction) => (
+          <div key={reaction.id} className="flex justify-center">
+            <Skeleton className="size-7 rounded-md bg-muted/80 dark:bg-muted/40" />
+          </div>
+        ))}
+      </div>
+    </div>
+  )
 }
 
 function ReactionButton({
@@ -137,7 +163,9 @@ export function InitPresenceReactions({
   }, [eventId, scheduleReactionReset, setTransientActivity])
 
   if (collapsed && !isMobile) return null
-  if (!isReady) return null
+  if (!isReady) {
+    return <InitPresenceReactionsSkeleton isMobile={isMobile} />
+  }
 
   const isOnline = participantStatus === 'online'
 
@@ -152,14 +180,8 @@ export function InitPresenceReactions({
 
   return (
     <div
-      className={cn(
-        'shrink-0 border-t border-border bg-background px-3 py-2.5',
-        isMobile && 'px-4',
-      )}
+      className={cn(REACTIONS_SECTION_CLASS, isMobile && 'px-4')}
     >
-      <p className="mb-2 text-start text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/70">
-        React
-      </p>
       <div
         className="grid w-full grid-cols-6 items-center gap-0"
         role="group"

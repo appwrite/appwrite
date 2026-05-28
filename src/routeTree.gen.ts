@@ -57,6 +57,7 @@ import { Route as PublicOrganizationsOrgIdMarketplaceRouteImport } from './route
 import { Route as PublicOrganizationsOrgIdDomainsRouteImport } from './routes/_public/organizations.$orgId.domains'
 import { Route as PublicOrganizationsOrgIdChangePlanRouteImport } from './routes/_public/organizations.$orgId.change-plan'
 import { Route as PublicOrganizationsOrgIdBillingRouteImport } from './routes/_public/organizations.$orgId.billing'
+import { Route as ApiInitCalendarEventSlugRouteImport } from './routes/_api/init/calendar/$eventSlug'
 import { Route as PublicProjectsProjectIdStorageIndexRouteImport } from './routes/_public/projects.$projectId.storage.index'
 import { Route as PublicProjectsProjectIdSitesIndexRouteImport } from './routes/_public/projects.$projectId.sites.index'
 import { Route as PublicProjectsProjectIdSettingsIndexRouteImport } from './routes/_public/projects.$projectId.settings.index'
@@ -493,6 +494,12 @@ const PublicOrganizationsOrgIdBillingRoute =
     id: '/billing',
     path: '/billing',
     getParentRoute: () => PublicOrganizationsOrgIdRoute,
+  } as any)
+const ApiInitCalendarEventSlugRoute =
+  ApiInitCalendarEventSlugRouteImport.update({
+    id: '/_api/init/calendar/$eventSlug',
+    path: '/init/calendar/$eventSlug',
+    getParentRoute: () => rootRouteImport,
   } as any)
 const PublicProjectsProjectIdStorageIndexRoute =
   PublicProjectsProjectIdStorageIndexRouteImport.update({
@@ -1664,6 +1671,7 @@ export interface FileRoutesByFullPath {
   '/debug/error-preview': typeof PublicDebugErrorPreviewRoute
   '/organizations/$orgId': typeof PublicOrganizationsOrgIdRouteWithChildren
   '/projects/$projectId': typeof PublicProjectsProjectIdRouteWithChildren
+  '/init/calendar/$eventSlug': typeof ApiInitCalendarEventSlugRoute
   '/organizations/$orgId/billing': typeof PublicOrganizationsOrgIdBillingRoute
   '/organizations/$orgId/change-plan': typeof PublicOrganizationsOrgIdChangePlanRoute
   '/organizations/$orgId/domains': typeof PublicOrganizationsOrgIdDomainsRouteWithChildren
@@ -1880,6 +1888,7 @@ export interface FileRoutesByTo {
   '/': typeof PublicIndexRoute
   '/account/$tab': typeof PublicAccountTabRoute
   '/debug/error-preview': typeof PublicDebugErrorPreviewRoute
+  '/init/calendar/$eventSlug': typeof ApiInitCalendarEventSlugRoute
   '/organizations/$orgId/billing': typeof PublicOrganizationsOrgIdBillingRoute
   '/organizations/$orgId/change-plan': typeof PublicOrganizationsOrgIdChangePlanRoute
   '/organizations/$orgId/members': typeof PublicOrganizationsOrgIdMembersRoute
@@ -2073,6 +2082,7 @@ export interface FileRoutesById {
   '/_public/debug/error-preview': typeof PublicDebugErrorPreviewRoute
   '/_public/organizations/$orgId': typeof PublicOrganizationsOrgIdRouteWithChildren
   '/_public/projects/$projectId': typeof PublicProjectsProjectIdRouteWithChildren
+  '/_api/init/calendar/$eventSlug': typeof ApiInitCalendarEventSlugRoute
   '/_public/organizations/$orgId/billing': typeof PublicOrganizationsOrgIdBillingRoute
   '/_public/organizations/$orgId/change-plan': typeof PublicOrganizationsOrgIdChangePlanRoute
   '/_public/organizations/$orgId/domains': typeof PublicOrganizationsOrgIdDomainsRouteWithChildren
@@ -2293,6 +2303,7 @@ export interface FileRouteTypes {
     | '/debug/error-preview'
     | '/organizations/$orgId'
     | '/projects/$projectId'
+    | '/init/calendar/$eventSlug'
     | '/organizations/$orgId/billing'
     | '/organizations/$orgId/change-plan'
     | '/organizations/$orgId/domains'
@@ -2509,6 +2520,7 @@ export interface FileRouteTypes {
     | '/'
     | '/account/$tab'
     | '/debug/error-preview'
+    | '/init/calendar/$eventSlug'
     | '/organizations/$orgId/billing'
     | '/organizations/$orgId/change-plan'
     | '/organizations/$orgId/members'
@@ -2701,6 +2713,7 @@ export interface FileRouteTypes {
     | '/_public/debug/error-preview'
     | '/_public/organizations/$orgId'
     | '/_public/projects/$projectId'
+    | '/_api/init/calendar/$eventSlug'
     | '/_public/organizations/$orgId/billing'
     | '/_public/organizations/$orgId/change-plan'
     | '/_public/organizations/$orgId/domains'
@@ -2905,6 +2918,7 @@ export interface RootRouteChildren {
   ProtectedRoute: typeof ProtectedRouteWithChildren
   PublicRoute: typeof PublicRouteWithChildren
   ApiHelloRoute: typeof ApiHelloRoute
+  ApiInitCalendarEventSlugRoute: typeof ApiInitCalendarEventSlugRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -3244,6 +3258,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/organizations/$orgId/billing'
       preLoaderRoute: typeof PublicOrganizationsOrgIdBillingRouteImport
       parentRoute: typeof PublicOrganizationsOrgIdRoute
+    }
+    '/_api/init/calendar/$eventSlug': {
+      id: '/_api/init/calendar/$eventSlug'
+      path: '/init/calendar/$eventSlug'
+      fullPath: '/init/calendar/$eventSlug'
+      preLoaderRoute: typeof ApiInitCalendarEventSlugRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/_public/projects/$projectId/storage/': {
       id: '/_public/projects/$projectId/storage/'
@@ -5581,6 +5602,7 @@ const rootRouteChildren: RootRouteChildren = {
   ProtectedRoute: ProtectedRouteWithChildren,
   PublicRoute: PublicRouteWithChildren,
   ApiHelloRoute: ApiHelloRoute,
+  ApiInitCalendarEventSlugRoute: ApiInitCalendarEventSlugRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

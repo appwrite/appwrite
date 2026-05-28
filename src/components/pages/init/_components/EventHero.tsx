@@ -25,6 +25,7 @@ import { EventCtaButton } from '../shared/EventCtas'
 import { InitCollapsedDayNav } from './InitCollapsedDayNav'
 import { InitHeroBackground } from './InitHeroBackground'
 import { useInitTicketVideoRecording } from '@/lib/init/init-ticket-video-recording-context'
+import { InitAddToCalendarButton } from './InitAddToCalendarButton'
 import { InitWordmark } from './InitWordmark'
 
 interface EventHeroProps {
@@ -320,15 +321,15 @@ export function EventHero({ event, headerAddon, liveBanner }: EventHeroProps) {
           <p className="mx-auto mt-4 max-w-xl text-[14px] leading-relaxed text-muted-foreground">
             {event.description}
           </p>
-          {!account ? (
+          {!event.isRecapMode ? (
             <div className="mt-6 flex flex-wrap items-center justify-center gap-2">
-              <EventCtaButton cta={event.primaryCta} variant="brandCta" size="lg" />
-              {event.secondaryCta ? (
-                <EventCtaButton cta={event.secondaryCta} variant="outline" size="lg" />
+              {!account ? (
+                <EventCtaButton cta={event.primaryCta} variant="brandCta" size="lg" />
               ) : null}
+              <InitAddToCalendarButton />
             </div>
           ) : null}
-          {event.onlineCount > 0 ? (
+          {!event.isRecapMode && event.onlineCount > 0 ? (
             <div className="mt-8 flex items-center justify-center gap-3">
               <div className="flex -space-x-2">
                 {event.onlineUsers.slice(0, 4).map((user) => (

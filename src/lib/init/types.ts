@@ -67,6 +67,8 @@ export function isLaunchEventDayLocked(
 export type InitDisplayEvent = LaunchEvent & {
   currentDay: number
   days: LaunchEventDayView[]
+  /** True after the launch week ends — all days unlocked, no live state. */
+  isRecapMode: boolean
 }
 
 export interface LaunchEventScheduleItem {
@@ -107,6 +109,10 @@ export interface LaunchEventInvolvement {
 export interface LaunchEventCta {
   label: string
   href?: string
+  /** Internal TanStack Router path (e.g. `/sign-up`). */
+  to?: string
+  /** Redirect search param for auth routes (e.g. `/init`). */
+  redirect?: string
   external?: boolean
 }
 
@@ -136,6 +142,74 @@ export interface LaunchEventGiveaway {
   imageAlt: string
   imageSrcLight: string
   imageSrcDark: string
+  ctaLabel?: string
+  ctaHref?: string
+}
+
+export interface LaunchEventPrizeVisual {
+  imageAlt: string
+  imageSrcLight?: string
+  imageSrcDark?: string
+}
+
+/** One Init session per day that includes an Appwrite swag giveaway. */
+export interface LaunchEventDailyPrize {
+  day: number
+  dateLabel: string
+  scheduleItemId: string
+  sessionTitle: string
+  platform: LaunchSchedulePlatform
+  timeLabel: string
+  href?: string
+  prizeDescription: string
+  visual?: LaunchEventPrizeVisual
+}
+
+export interface LaunchEventGrandPrize {
+  day: number
+  dateLabel: string
+  title: string
+  description: string
+  eligibility: string
+  visual?: LaunchEventPrizeVisual
+}
+
+export interface LaunchEventPrizes {
+  sectionTitle?: string
+  sectionDescription?: string
+  dailyHeading?: string
+  dailyPrizeLabel?: string
+  grandPrizeHeading?: string
+  dailyGiveaways: LaunchEventDailyPrize[]
+  grandPrize: LaunchEventGrandPrize
+}
+
+export interface LaunchEventRecapTicketCopy {
+  titleAuthenticated: string
+  titleGuest: string
+  descriptionAuthenticated: string
+  descriptionGuest: string
+  descriptionCollapsedAuthenticated: string
+  descriptionCollapsedGuest: string
+  shareButtonLabel?: string
+}
+
+export interface LaunchEventRecap {
+  /** Hero headline when the event week has ended. */
+  headline: string
+  /** Hero description in recap mode. */
+  description: string
+  /** Top banner message below the header. */
+  bannerMessage?: string
+  /** Section above the day timeline in recap mode. */
+  introTitle?: string
+  introDescription?: string
+  /** Replaces "Ways to get involved" in recap mode. */
+  getInvolvedSectionTitle?: string
+  /** Cards shown instead of live-event getInvolved links. */
+  getInvolved?: LaunchEventInvolvement[]
+  /** Ticket section copy overrides. */
+  ticket?: LaunchEventRecapTicketCopy
 }
 
 export interface LaunchEvent {
@@ -167,5 +241,9 @@ export interface LaunchEvent {
   /** Header back/exit CTA beside the logo on `/init`. */
   headerNavCta?: LaunchEventHeaderNavCtaConfig
   giveaway?: LaunchEventGiveaway
+  /** Daily swag sessions and grand prize details for the bottom prizes section. */
+  prizes?: LaunchEventPrizes
+  /** Copy and labels shown after the launch week ends. */
+  recap?: LaunchEventRecap
   getInvolved: LaunchEventInvolvement[]
 }

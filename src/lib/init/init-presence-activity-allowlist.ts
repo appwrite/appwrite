@@ -10,6 +10,8 @@ import {
   buildInitRecordingTicketActivity,
   buildInitSwitchingThemeActivity,
   buildInitViewingDayActivity,
+  buildInitViewingDailyPrizeActivity,
+  buildInitViewingGrandPrizeActivity,
   buildInitViewingTicketActivity,
   buildInitWaitingForDayActivity,
 } from '@/lib/init/init-presence-activity'
@@ -39,6 +41,15 @@ export function buildInitPresenceActivityAllowlist(
 
   for (const item of event.getInvolved) {
     allowed.add(buildInitExploringActivity(item.title))
+  }
+
+  if (event.prizes) {
+    for (const giveaway of event.prizes.dailyGiveaways) {
+      allowed.add(
+        buildInitViewingDailyPrizeActivity(giveaway.day, giveaway.prizeDescription),
+      )
+    }
+    allowed.add(buildInitViewingGrandPrizeActivity(event.prizes.grandPrize.title))
   }
 
   for (const day of event.days) {

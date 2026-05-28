@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useMemo, useState, useEffect } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { ConsoleLayout } from '@/components/global/layout/ConsoleLayout'
 import { CommandCenter } from '@/components/global/shared/CommandCenter'
@@ -8,6 +8,7 @@ import { getActiveLaunchEvent } from '@/lib/init/events'
 import { applyInitEventVisibility } from '@/lib/init/event-visibility'
 import { isLaunchEventDayLocked } from '@/lib/init/types'
 import { InitPresenceProvider, useInitPresence } from '@/lib/init/init-presence-context'
+import { scrollToInitDayFromHash } from '@/lib/init/scroll-to-day-card'
 import { consoleAccountQueryOptions } from '@/lib/react-query/hooks/auth'
 import { cn } from '@/lib/utils'
 import { EventHero } from './_components/EventHero'
@@ -15,9 +16,12 @@ import { EventSchedule } from './_components/EventSchedule'
 import { InitTicketSection } from './_components/InitTicketSection'
 import { GiveawayPromoCard } from './_components/GiveawayPromoCard'
 import { GetInvolvedCards } from './_components/GetInvolvedCards'
+import { InitPrizesSection } from './_components/InitPrizesSection'
 import { InitPageCredits } from './_components/InitPageCredits'
 import { InitReactionConfetti } from './_components/InitReactionConfetti'
 import { LiveBannerBar } from './_components/LiveBannerBar'
+import { InitRecapBanner } from './_components/InitRecapBanner'
+import { InitRecapIntro } from './_components/InitRecapIntro'
 import { DayDetailCard } from './_components/DayDetailCard'
 import { LockedDayDetailCard } from './_components/LockedDayDetailCard'
 import { EventSchedulePanel } from './_components/EventSchedulePanel'
@@ -34,9 +38,11 @@ import type { InitDisplayEvent } from '@/lib/init/types'
 function InitPageContent({
   baseEvent,
   account,
+  isAccountLoading,
 }: {
   baseEvent: InitDisplayEvent
   account?: Models.User | null
+  isAccountLoading: boolean
 }) {
   const [commandCenterOpen, setCommandCenterOpen] = useState(false)
   const [onlineNavOpen, setOnlineNavOpen] = useState(false)
@@ -58,10 +64,18 @@ function InitPageContent({
   useKeyboardShortcut('meta+k', () => setCommandCenterOpen(true))
   useKeyboardShortcut('control+k', () => setCommandCenterOpen(true))
 
-  const showOnlineNav = hasOnlineUsersNav(event, {
-    presenceEnabled: event.presenceEnabled,
-    isAuthenticated: Boolean(account),
-  })
+  useEffect(() => {
+    const frame = requestAnimationFrame(() => scrollToInitDayFromHash())
+    return () => cancelAnimationFrame(frame)
+  }, [event.days.length])
+
+  const showOnlineNav =
+    !event.isRecapMode &&
+    (Boolean(baseEvent.presenceEnabled && isAccountLoading) ||
+      hasOnlineUsersNav(event, {
+        presenceEnabled: baseEvent.presenceEnabled,
+        isAuthenticated: Boolean(account),
+      }))
 
   return (
     <>
@@ -89,7 +103,11 @@ function InitPageContent({
         showFooter
       >
         <InitTicketVideoRecordingProvider>
-          {event.liveBanner ? <LiveBannerBar liveBanner={event.liveBanner} /> : null}
+          {event.isRecapMode ? (
+            <InitRecapBanner event={event} />
+          ) : event.liveBanner ? (
+            <LiveBannerBar liveBanner={event.liveBanner} />
+          ) : null}
 
           <EventHero event={event} liveBanner={event.liveBanner} />
 
@@ -115,23 +133,35 @@ function InitPageContent({
           <div className="border-t border-border" aria-hidden />
 
           <div className="mx-auto w-full max-w-7xl space-y-8 px-4 pb-8 pt-8 sm:px-6 sm:pb-10">
+            <InitRecapIntro event={event} />
+
             <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_320px] xl:grid-cols-[minmax(0,1fr)_360px]">
               <div className="space-y-6">
                 {event.days.map((day) =>
                   isLaunchEventDayLocked(day) ? (
-                    <LockedDayDetailCard key={day.day} day={day} />
+                    <LockedDayDetailCard
+                      key={day.day}
+                      day={day}
+                      eventStartDate={event.startDate}
+                    />
                   ) : (
-                    <DayDetailCard key={day.day} day={day} />
+                    <DayDetailCard
+                      key={day.day}
+                      day={day}
+                      isRecapMode={event.isRecapMode}
+                    />
                   ),
                 )}
               </div>
               <div className="flex flex-col gap-6 lg:sticky lg:top-20 lg:self-start">
                 <EventSchedulePanel event={event} embedded />
-                {event.giveaway ? (
+                {event.giveaway && !event.isRecapMode ? (
                   <GiveawayPromoCard giveaway={event.giveaway} />
                 ) : null}
               </div>
             </div>
+
+            <InitPrizesSection event={event} />
 
             <GetInvolvedCards event={event} />
 
@@ -142,7 +172,7 @@ function InitPageContent({
         </InitTicketVideoRecordingProvider>
       </ConsoleLayout>
 
-      {event.presenceEnabled && account ? (
+      {event.presenceEnabled && account && !event.isRecapMode ? (
         <InitReactionConfetti onlineUsers={event.onlineUsers} />
       ) : null}
 
@@ -163,7 +193,7 @@ export function View() {
     return applyInitEventVisibility(active, { mockCurrentDay: mockInitCurrentDay })
   }, [mockInitCurrentDay])
 
-  const { data: account, isSuccess: isAccountReady } = useQuery(
+  const { data: account, isSuccess: isAccountReady, isLoading: isAccountLoading } = useQuery(
     consoleAccountQueryOptions(),
   )
 
@@ -174,9 +204,18 @@ export function View() {
   return (
     <InitPresenceProvider
       event={baseEvent}
-      enabled={Boolean(baseEvent.presenceEnabled && isAccountReady && account)}
+      enabled={Boolean(
+        baseEvent.presenceEnabled &&
+          !baseEvent.isRecapMode &&
+          isAccountReady &&
+          account,
+      )}
     >
-      <InitPageContent baseEvent={baseEvent} account={account} />
+      <InitPageContent
+        baseEvent={baseEvent}
+        account={account}
+        isAccountLoading={isAccountLoading}
+      />
     </InitPresenceProvider>
   )
 }

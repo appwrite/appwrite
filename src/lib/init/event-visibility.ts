@@ -1,4 +1,5 @@
 import { parseDateOnly } from './dates'
+import { getInitMockDayAfter } from './mock-current-day'
 import type {
   InitDisplayEvent,
   LaunchEvent,
@@ -14,6 +15,10 @@ function toLockedDay(day: LaunchEventDay): LaunchEventDayLocked {
     weekdayLabel: day.weekdayLabel,
     isLocked: true,
   }
+}
+
+function getInitMaxDay(event: LaunchEvent): number {
+  return event.days.reduce((max, day) => Math.max(max, day.day), 0)
 }
 
 /**
@@ -46,6 +51,57 @@ export function resolveInitCurrentDay(
   return Math.min(Math.max(dayIndex, minDay), maxDay)
 }
 
+/** True when the launch week has ended and the page should show recap mode. */
+export function resolveInitRecapMode(
+  event: LaunchEvent,
+  now = new Date(),
+  mockCurrentDay: number | null = null,
+): boolean {
+  const maxDay = getInitMaxDay(event)
+  if (maxDay === 0) return false
+
+  if (mockCurrentDay !== null) {
+    return mockCurrentDay >= getInitMockDayAfter(maxDay)
+  }
+
+  const end = parseDateOnly(event.endDate)
+  end.setHours(23, 59, 59, 999)
+  return now > end
+}
+
+function buildRecapDisplayEvent(
+  event: LaunchEvent,
+  currentDay: number,
+): InitDisplayEvent {
+  const days: LaunchEventDayView[] = event.days.map((day) => ({
+    ...day,
+    isLive: false,
+  }))
+
+  const schedule = event.schedule.map((item) => ({
+    ...item,
+    isLive: false,
+  }))
+
+  const recap = event.recap
+
+  return {
+    ...event,
+    headline: recap?.headline ?? 'Init recap',
+    description:
+      recap?.description ??
+      'Catch up on every launch, rewatch sessions, and explore what shipped during Init week.',
+    days,
+    schedule,
+    liveBanner: undefined,
+    liveActivities: [],
+    giveaway: undefined,
+    getInvolved: recap?.getInvolved ?? event.getInvolved,
+    currentDay,
+    isRecapMode: true,
+  }
+}
+
 /**
  * Strip future-day content from the event so locked material is not present in the tree.
  *
@@ -60,6 +116,11 @@ export function applyInitEventVisibility(
   const mockCurrentDay = options?.mockCurrentDay ?? null
 
   const currentDay = resolveInitCurrentDay(event, now, mockCurrentDay)
+  const isRecapMode = resolveInitRecapMode(event, now, mockCurrentDay)
+
+  if (isRecapMode) {
+    return buildRecapDisplayEvent(event, currentDay)
+  }
 
   const days: LaunchEventDayView[] = event.days.map((day) => {
     if (currentDay <= 0 || day.day > currentDay) {
@@ -88,5 +149,6 @@ export function applyInitEventVisibility(
     schedule,
     liveBanner,
     currentDay,
+    isRecapMode: false,
   }
 }

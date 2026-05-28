@@ -23,6 +23,8 @@ export function isValidInitMockCurrentDay(
 export function formatInitMockCurrentDay(day: number | null): string {
   if (day === null) return 'Using real calendar date'
   if (day === INIT_MOCK_DAY_BEFORE) return 'Before event (all days locked)'
-  if (day === getInitMockDayAfter()) return 'After event (all days unlocked)'
+  if (day === getInitMockDayAfter()) {
+    return 'Simulates after the event. Recap mode with all days unlocked.'
+  }
   return `Day ${day} of ${INIT_LAUNCH_WEEK_DAY_COUNT}`
 }

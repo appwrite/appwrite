@@ -160,8 +160,9 @@ function InitPresenceStatusSkeleton({
         <Skeleton className="mt-0.5 size-8 shrink-0 rounded-full bg-muted/80 dark:bg-muted/40" />
         <div className="min-w-0 flex-1 space-y-2">
           <Skeleton className="h-3.5 w-[58%] bg-muted/80 dark:bg-muted/40" />
-          <Skeleton className="h-8 w-full bg-muted/80 dark:bg-muted/40" />
+          <Skeleton className="min-h-[2lh] w-full bg-muted/80 dark:bg-muted/40" />
         </div>
+        <span className="size-3.5 shrink-0" aria-hidden />
       </div>
       <div className="grid grid-cols-2 gap-1.5">
         <Skeleton className="h-8 rounded-md bg-muted/80 dark:bg-muted/40" />
@@ -194,8 +195,7 @@ export function InitPresenceStatusControl({
     void setParticipantStatus(status)
   }
 
-  if (!account) return null
-  if (!isReady) {
+  if (!account || !isReady) {
     return <InitPresenceStatusSkeleton collapsed={collapsed} isMobile={isMobile} />
   }
 

@@ -51,6 +51,8 @@ function buildPresenceStatusKey(
 const ONLINE_USER_TOOLTIP_CLASS =
   'max-w-[min(280px,calc(100dvw-5rem))] border border-border bg-popover px-3 py-2.5 text-popover-foreground shadow-md [&_svg]:!hidden [&_.reaction-badge_svg]:!inline-block'
 
+const ONLINE_USERS_LIST_CLASS = 'cursor-default select-none'
+
 function OnlineUserTooltipDetails({
   name,
   activity,
@@ -212,6 +214,7 @@ function OnlineUserRow({
     <div
       className={cn(
         'flex w-full items-center gap-2.5 rounded-md px-2.5 py-1.5 text-[13px] font-medium transition-colors duration-150',
+        ONLINE_USERS_LIST_CLASS,
         'text-muted-foreground hover:bg-accent/50 hover:text-foreground',
         collapsed && !isMobile && 'justify-center px-0',
         isMobile && 'gap-3 px-3 py-2.5 text-[14px]',
@@ -234,9 +237,9 @@ function OnlineUserRow({
 
   const animatedRow = (
     <motion.div
-      initial={reduceMotion ? false : { opacity: 0, y: -6 }}
-      animate={{ opacity: 1, y: 0 }}
-      exit={reduceMotion ? undefined : { opacity: 0, y: -6 }}
+      initial={reduceMotion ? false : { opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={reduceMotion ? undefined : { opacity: 0 }}
       transition={PRESENCE_LIST_TRANSITION}
     >
       {collapsed && !isMobile ? (
@@ -245,7 +248,7 @@ function OnlineUserRow({
             <button
               type="button"
               className={cn(
-                'flex w-full cursor-default items-center justify-center rounded-md px-0 py-1.5',
+                'flex w-full cursor-default select-none items-center justify-center rounded-md px-0 py-1.5',
                 'transition-colors duration-150 hover:bg-accent/50',
                 'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background',
               )}
@@ -324,7 +327,6 @@ function UserCategory({
       {users.length > 0 ? (
         <motion.div
           key={label}
-          layout={!reduceMotion}
           initial={reduceMotion ? false : { opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={reduceMotion ? undefined : { opacity: 0 }}
@@ -433,15 +435,7 @@ function OnlineUserRowSkeleton({
 
   if (reduceMotion) return content
 
-  return (
-    <motion.div
-      initial={{ opacity: 0, y: 4 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.2, delay: index * 0.05, ease: PRESENCE_LIST_EASE }}
-    >
-      {content}
-    </motion.div>
-  )
+  return <div>{content}</div>
 }
 
 function UserCategorySkeleton({
@@ -494,15 +488,8 @@ function OnlineUsersListSkeletonView({
   collapsed: boolean
   isMobile?: boolean
 }) {
-  const reduceMotion = useReducedMotion()
-
   return (
-    <motion.div
-      key="loading"
-      initial={reduceMotion ? false : { opacity: 0 }}
-      animate={{ opacity: 1 }}
-      exit={reduceMotion ? undefined : { opacity: 0 }}
-      transition={PRESENCE_LIST_TRANSITION}
+    <div
       aria-busy="true"
       aria-label="Loading online participants"
     >
@@ -531,9 +518,11 @@ function OnlineUsersListSkeletonView({
         </div>
       )}
       <span className="sr-only">Loading online participants</span>
-    </motion.div>
+    </div>
   )
 }
+
+const ONLINE_USERS_LIST_MIN_HEIGHT = 'min-h-[240px]'
 
 function OnlineUsersNavContent({
   event,
@@ -552,21 +541,15 @@ function OnlineUsersNavContent({
   selfUserId?: string
   reactionPulse?: number
 }) {
-  const reduceMotion = useReducedMotion()
   const hasUsers =
     event.onlineUsers.length > 0 || event.recentlyOnlineUsers.length > 0
 
   return (
-    <AnimatePresence initial={false} mode="wait">
+    <div className={cn('relative', ONLINE_USERS_LIST_MIN_HEIGHT)}>
       {showPanel && isLoading ? (
         <OnlineUsersListSkeletonView collapsed={collapsed} isMobile={isMobile} />
       ) : showPanel && !hasUsers ? (
-        <motion.p
-          key="empty"
-          initial={reduceMotion ? false : { opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={reduceMotion ? undefined : { opacity: 0 }}
-          transition={PRESENCE_LIST_TRANSITION}
+        <p
           className={cn(
             'px-2.5 text-[13px] text-muted-foreground',
             isMobile && 'px-0',
@@ -574,16 +557,9 @@ function OnlineUsersNavContent({
           )}
         >
           {collapsed && !isMobile ? '…' : 'No one else online yet. You are connected.'}
-        </motion.p>
+        </p>
       ) : (
-        <motion.div
-          key="lists"
-          initial={reduceMotion ? false : { opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={reduceMotion ? undefined : { opacity: 0 }}
-          transition={PRESENCE_LIST_TRANSITION}
-          className="space-y-6"
-        >
+        <div className={cn('space-y-6', ONLINE_USERS_LIST_CLASS)}>
           <UserCategory
             label="Online now"
             users={event.onlineUsers}
@@ -602,9 +578,9 @@ function OnlineUsersNavContent({
             selfUserId={selfUserId}
             reactionPulse={reactionPulse}
           />
-        </motion.div>
+        </div>
       )}
-    </AnimatePresence>
+    </div>
   )
 }
 
@@ -650,7 +626,7 @@ export function OnlineUsersNav({
         >
           <div className="flex min-h-0 flex-1 flex-col">
             <nav
-              className="min-h-0 flex-1 overflow-y-auto px-3 py-4"
+              className={cn('min-h-0 flex-1 overflow-y-auto px-3 py-4', ONLINE_USERS_LIST_CLASS)}
               role="navigation"
               aria-label="Online participants"
             >
@@ -665,18 +641,19 @@ export function OnlineUsersNav({
             </nav>
 
             {showPanel ? (
-              <InitPresenceThemeBar
-                light={onlineThemeCounts.light}
-                dark={onlineThemeCounts.dark}
-                collapsed={collapsed}
-              />
-            ) : null}
-
-            {showPanel ? (
               <InitPresenceReactions
                 eventId={event.id}
                 collapsed={collapsed}
                 onReactionPulse={() => setReactionPulse((count) => count + 1)}
+              />
+            ) : null}
+
+            {showPanel ? (
+              <InitPresenceThemeBar
+                light={onlineThemeCounts.light}
+                dark={onlineThemeCounts.dark}
+                collapsed={collapsed}
+                reserveSpace={!isPresenceReady}
               />
             ) : null}
           </div>
@@ -728,7 +705,7 @@ export function OnlineUsersNav({
 
         <div className="flex min-h-0 flex-1 flex-col">
           <nav
-            className="min-h-0 flex-1 overflow-y-auto px-4 py-4"
+            className={cn('min-h-0 flex-1 overflow-y-auto px-4 py-4', ONLINE_USERS_LIST_CLASS)}
             role="navigation"
             aria-label="Mobile online participants"
           >
@@ -744,18 +721,19 @@ export function OnlineUsersNav({
           </nav>
 
           {showPanel ? (
-            <InitPresenceThemeBar
-              light={onlineThemeCounts.light}
-              dark={onlineThemeCounts.dark}
-              isMobile
-            />
-          ) : null}
-
-          {showPanel ? (
             <InitPresenceReactions
               eventId={event.id}
               isMobile
               onReactionPulse={() => setReactionPulse((count) => count + 1)}
+            />
+          ) : null}
+
+          {showPanel ? (
+            <InitPresenceThemeBar
+              light={onlineThemeCounts.light}
+              dark={onlineThemeCounts.dark}
+              isMobile
+              reserveSpace={!isPresenceReady}
             />
           ) : null}
         </div>

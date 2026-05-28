@@ -53,6 +53,17 @@ export function buildInitExploringActivity(label: string): string {
   return `Exploring ${label}`
 }
 
+export function buildInitViewingDailyPrizeActivity(
+  day: number,
+  prizeLabel: string,
+): string {
+  return `Viewing Day ${day} prize: ${prizeLabel}`
+}
+
+export function buildInitViewingGrandPrizeActivity(title: string): string {
+  return `Viewing grand prize: ${title}`
+}
+
 export function buildInitSwitchingThemeActivity(theme: 'light' | 'dark'): string {
   return theme === 'light' ? 'Going light' : 'Going dark'
 }

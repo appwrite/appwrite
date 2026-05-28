@@ -24,12 +24,12 @@ function mockDaySliderLabel(day: number): string {
 
 function mockDayPreviewCopy(day: number): string {
   if (day === INIT_MOCK_DAY_BEFORE) {
-    return 'Simulates before the event — all days stay locked.'
+    return 'Simulates before the event - all days stay locked.'
   }
   if (day === MOCK_DAY_MAX) {
-    return 'Simulates after the event — all days unlock.'
+    return 'Simulates after the event. Recap mode with all days unlocked.'
   }
-  return `Simulates day ${day} — unlocks days 1–${day} (schedule, detail cards, Discord sessions, live badges).`
+  return `Simulates day ${day} - unlocks days 1-${day} (schedule, detail cards, Discord sessions, live badges).`
 }
 
 export function DebugMenuInitDayPanel() {

@@ -30,7 +30,13 @@ interface EventSchedulePanelProps {
   embedded?: boolean
 }
 
-function ScheduleRow({ item }: { item: LaunchEventScheduleItem }) {
+function ScheduleRow({
+  item,
+  isRecapMode = false,
+}: {
+  item: LaunchEventScheduleItem
+  isRecapMode?: boolean
+}) {
   const meta = PLATFORM_META[item.platform]
   const { setTransientActivity } = useInitPresenceActivity()
   const sessionActivity = `Checking: ${item.title}`
@@ -47,7 +53,7 @@ function ScheduleRow({ item }: { item: LaunchEventScheduleItem }) {
       <div className="min-w-0 flex-1 space-y-1">
         <div className="flex flex-wrap items-center gap-2">
           <p className="text-[13px] font-medium text-foreground">{item.title}</p>
-          {item.isLive ? (
+          {!isRecapMode && item.isLive ? (
             <Badge variant="error" className="text-[10px] shrink-0">
               Live
             </Badge>
@@ -75,7 +81,8 @@ function ScheduleRow({ item }: { item: LaunchEventScheduleItem }) {
           rel="noopener noreferrer"
           className={cn(
             'group flex items-start gap-3 px-6 py-3.5 transition-colors hover:bg-accent/30',
-            item.isLive &&
+            !isRecapMode &&
+              item.isLive &&
               'bg-[color-mix(in_srgb,var(--brand-cta)_5%,transparent)]',
           )}
           onMouseEnter={() => setTransientActivity(sessionActivity)}
@@ -93,7 +100,9 @@ function ScheduleRow({ item }: { item: LaunchEventScheduleItem }) {
     <li
       className={cn(
         'flex items-start gap-3 px-6 py-3.5',
-        item.isLive && 'bg-[color-mix(in_srgb,var(--brand-cta)_5%,transparent)]',
+        !isRecapMode &&
+          item.isLive &&
+          'bg-[color-mix(in_srgb,var(--brand-cta)_5%,transparent)]',
       )}
       onMouseEnter={() => setTransientActivity(sessionActivity)}
       onMouseLeave={() => setTransientActivity(null)}
@@ -159,13 +168,17 @@ export function EventSchedulePanel({
       <div className="px-6 py-4">
         <div className="flex items-start justify-between gap-3">
           <div className="min-w-0">
-            <h3 className="text-[15px] font-semibold text-foreground">Schedule</h3>
+            <h3 className="text-[15px] font-semibold text-foreground">
+              {event.isRecapMode ? 'Session replays' : 'Schedule'}
+            </h3>
             <p className="mt-1 text-[13px] text-muted-foreground">
-              {selectedDayInfo &&
-              !isLaunchEventDayLocked(selectedDayInfo) &&
-              selectedDayInfo.isLive
-                ? "Today's sessions"
-                : 'Discord and Reddit sessions'}
+              {event.isRecapMode
+                ? 'Session replays and community hangouts'
+                : selectedDayInfo &&
+                    !isLaunchEventDayLocked(selectedDayInfo) &&
+                    selectedDayInfo.isLive
+                  ? "Today's sessions"
+                  : 'Discord and Reddit sessions'}
             </p>
           </div>
           {unlockedScheduleDays.length > 1 ? (
@@ -213,7 +226,11 @@ export function EventSchedulePanel({
       {dayEvents.length > 0 ? (
         <ol className="divide-y divide-border">
           {dayEvents.map((item) => (
-            <ScheduleRow key={item.id} item={item} />
+            <ScheduleRow
+              key={item.id}
+              item={item}
+              isRecapMode={event.isRecapMode}
+            />
           ))}
         </ol>
       ) : (

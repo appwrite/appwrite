@@ -5,6 +5,7 @@ import { useInitPresenceActivity } from '@/lib/init/init-presence-context'
 import { buildInitDayPreviewActivity } from '@/lib/init/init-presence-day-activity'
 import { cn } from '@/lib/utils'
 import { Badge } from '@/components/ui/badge'
+import { InitDayCountdown } from './InitDayCountdown'
 import { Lock } from 'lucide-react'
 
 const CARD_SHELL =
@@ -17,9 +18,11 @@ interface EventScheduleProps {
 
 function LockedScheduleDayCard({
   day,
+  eventStartDate,
   fullWidth = false,
 }: {
   day: Extract<LaunchEventDayView, { isLocked: true }>
+  eventStartDate: string
   fullWidth?: boolean
 }) {
   const { setTransientActivity } = useInitPresenceActivity()
@@ -45,6 +48,12 @@ function LockedScheduleDayCard({
         <Lock className="size-3.5 shrink-0 text-muted-foreground" aria-hidden />
       </div>
       <p className="mt-3 text-[13px] font-medium text-muted-foreground">Coming soon</p>
+      <InitDayCountdown
+        eventStartDate={eventStartDate}
+        dayNumber={day.day}
+        size="sm"
+        className="mt-2"
+      />
       <p className="mt-2 text-[12px] leading-normal text-muted-foreground/80">
         Unlocks on {day.dateLabel}
       </p>
@@ -54,9 +63,11 @@ function LockedScheduleDayCard({
 
 function ScheduleDayCard({
   day,
+  isRecapMode = false,
   fullWidth = false,
 }: {
   day: Extract<LaunchEventDayView, { isLocked?: false }>
+  isRecapMode?: boolean
   fullWidth?: boolean
 }) {
   const { setTransientActivity } = useInitPresenceActivity()
@@ -73,16 +84,19 @@ function ScheduleDayCard({
         'flex flex-col rounded-xl border bg-card/50 p-4 text-left transition-colors',
         'cursor-pointer hover:bg-accent/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background',
         fullWidth ? 'min-w-0 w-full' : 'min-w-[200px] max-w-[220px] shrink-0',
-        day.isLive
-          ? 'border-[color-mix(in_srgb,var(--brand-cta)_45%,var(--border))]'
-          : 'border-border hover:border-border',
+        !isRecapMode &&
+          day.isLive &&
+          'border-[color-mix(in_srgb,var(--brand-cta)_45%,var(--border))]',
+        isRecapMode || !day.isLive
+          ? 'border-border hover:border-border'
+          : undefined,
       )}
     >
       <div className="flex items-start justify-between gap-2">
         <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
           Day {day.day} · {day.dateLabel}
         </p>
-        {day.isLive ? (
+        {!isRecapMode && day.isLive ? (
           <Badge variant="error" className="text-[10px] shrink-0">
             Live
           </Badge>
@@ -101,16 +115,26 @@ function ScheduleDayCard({
 
 function DayPickerCard({
   day,
+  eventStartDate,
+  isRecapMode = false,
   fullWidth = false,
 }: {
   day: LaunchEventDayView
+  eventStartDate: string
+  isRecapMode?: boolean
   fullWidth?: boolean
 }) {
   if (isLaunchEventDayLocked(day)) {
-    return <LockedScheduleDayCard day={day} fullWidth={fullWidth} />
+    return (
+      <LockedScheduleDayCard
+        day={day}
+        eventStartDate={eventStartDate}
+        fullWidth={fullWidth}
+      />
+    )
   }
 
-  return <ScheduleDayCard day={day} fullWidth={fullWidth} />
+  return <ScheduleDayCard day={day} isRecapMode={isRecapMode} fullWidth={fullWidth} />
 }
 
 export function EventSchedule({ event, fullWidth = false }: EventScheduleProps) {
@@ -131,7 +155,13 @@ export function EventSchedule({ event, fullWidth = false }: EventScheduleProps) 
       <section>
         <div className="grid w-full grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-5">
           {event.days.map((day) => (
-            <DayPickerCard key={day.day} day={day} fullWidth />
+            <DayPickerCard
+              key={day.day}
+              day={day}
+              eventStartDate={event.startDate}
+              isRecapMode={event.isRecapMode}
+              fullWidth
+            />
           ))}
         </div>
       </section>
@@ -143,7 +173,12 @@ export function EventSchedule({ event, fullWidth = false }: EventScheduleProps) 
       <div className="-mx-1 overflow-x-auto px-1 pb-1">
         <div className="flex gap-3">
           {event.days.map((day) => (
-            <DayPickerCard key={day.day} day={day} />
+            <DayPickerCard
+              key={day.day}
+              day={day}
+              eventStartDate={event.startDate}
+              isRecapMode={event.isRecapMode}
+            />
           ))}
         </div>
       </div>

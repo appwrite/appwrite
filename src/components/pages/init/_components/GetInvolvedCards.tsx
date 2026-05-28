@@ -1,11 +1,11 @@
-import type { LaunchEvent } from '@/lib/init/types'
+import type { InitDisplayEvent } from '@/lib/init/types'
 import { useInitPresenceActivity } from '@/lib/init/init-presence-context'
 import { buildInitExploringActivity } from '@/lib/init/init-presence-activity'
 import { ChevronRight } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 interface GetInvolvedCardsProps {
-  event: LaunchEvent
+  event: InitDisplayEvent
 }
 
 export function GetInvolvedCards({ event }: GetInvolvedCardsProps) {
@@ -13,13 +13,24 @@ export function GetInvolvedCards({ event }: GetInvolvedCardsProps) {
 
   if (event.getInvolved.length === 0) return null
 
+  const sectionTitle = event.isRecapMode
+    ? (event.recap?.getInvolvedSectionTitle ?? 'Keep exploring')
+    : 'Ways to get involved'
+
+  const itemCount = event.getInvolved.length
+
   return (
     <section className="space-y-4">
-      <h3 className="text-[15px] font-semibold text-foreground">
-        Ways to get involved
-      </h3>
+      <h3 className="text-[15px] font-semibold text-foreground">{sectionTitle}</h3>
 
-      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+      <div
+        className={cn(
+          'grid gap-3',
+          itemCount === 1 && 'max-w-xl grid-cols-1',
+          itemCount === 2 && 'grid-cols-1 sm:grid-cols-2',
+          itemCount >= 3 && 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3',
+        )}
+      >
         {event.getInvolved.map((item) => {
           const Icon = item.icon
           const inner = (
@@ -51,13 +62,17 @@ export function GetInvolvedCards({ event }: GetInvolvedCardsProps) {
             onBlur: () => setTransientActivity(null),
           }
 
+          const isExternalLink =
+            item.href?.startsWith('http://') || item.href?.startsWith('https://')
+
           if (item.href) {
             return (
               <a
                 key={item.id}
                 href={item.href}
-                target="_blank"
-                rel="noopener noreferrer"
+                {...(isExternalLink
+                  ? { target: '_blank', rel: 'noopener noreferrer' }
+                  : {})}
                 className={className}
                 {...presenceHandlers}
               >

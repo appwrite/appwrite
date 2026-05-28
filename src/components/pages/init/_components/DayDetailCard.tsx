@@ -1,11 +1,13 @@
 import type { LaunchEventDay } from '@/lib/init/types'
 import { useInitPresenceActivity } from '@/lib/init/init-presence-context'
 import { buildInitDayPreviewActivity } from '@/lib/init/init-presence-day-activity'
+import { getInitDayCardId } from '@/lib/init/scroll-to-day-card'
 import {
   useInitThemeImageSrc,
   useInitThemeUsesDarkImage,
 } from '@/lib/init/use-init-theme-image'
 import { Badge } from '@/components/ui/badge'
+import { InitDayCardHeaderNav } from './InitDayCardHeaderNav'
 import { ArrowUpRight, Play } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
@@ -123,14 +125,15 @@ function DayTitle({ title }: { title: string }) {
 
 interface DayDetailCardProps {
   day: LaunchEventDay
+  isRecapMode?: boolean
 }
 
-export function DayDetailCard({ day }: DayDetailCardProps) {
+export function DayDetailCard({ day, isRecapMode = false }: DayDetailCardProps) {
   const { setTransientActivity } = useInitPresenceActivity()
 
   return (
     <article
-      id={`day-${day.day}`}
+      id={getInitDayCardId(day.day)}
       className={cn(CARD_SHELL, 'scroll-mt-28')}
       onMouseEnter={() => setTransientActivity(buildInitDayPreviewActivity(day))}
       onMouseLeave={() => setTransientActivity(null)}
@@ -140,12 +143,13 @@ export function DayDetailCard({ day }: DayDetailCardProps) {
         <p className="text-center text-[10px] font-semibold uppercase tracking-[0.2em] text-muted-foreground">
           Day {day.day} / {day.weekdayLabel}
         </p>
-        <div className="flex justify-end">
-          {day.isLive ? (
+        <div className="flex items-center justify-end gap-2">
+          {!isRecapMode && day.isLive ? (
             <Badge variant="error" className="text-[10px] shrink-0">
               Live
             </Badge>
           ) : null}
+          <InitDayCardHeaderNav day={day} />
         </div>
       </header>
 
