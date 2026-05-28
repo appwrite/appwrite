@@ -2904,7 +2904,7 @@ trait MigrationsBase
 
         $result = $this->performMigrationSync([
             'resources' => [
-                Resource::TYPE_PROTOCOLS,
+                Resource::TYPE_PROJECT_PROTOCOLS,
             ],
             'endpoint' => $this->webEndpoint,
             'projectId' => $sourceProjectId,
@@ -2912,13 +2912,13 @@ trait MigrationsBase
         ]);
 
         $this->assertEquals('completed', $result['status']);
-        $this->assertEquals([Resource::TYPE_PROTOCOLS], $result['resources']);
-        $this->assertArrayHasKey(Resource::TYPE_PROTOCOLS, $result['statusCounters']);
-        $this->assertEquals(0, $result['statusCounters'][Resource::TYPE_PROTOCOLS]['error']);
-        $this->assertEquals(0, $result['statusCounters'][Resource::TYPE_PROTOCOLS]['pending']);
-        $this->assertEquals(1, $result['statusCounters'][Resource::TYPE_PROTOCOLS]['success']);
-        $this->assertEquals(0, $result['statusCounters'][Resource::TYPE_PROTOCOLS]['processing']);
-        $this->assertEquals(0, $result['statusCounters'][Resource::TYPE_PROTOCOLS]['warning']);
+        $this->assertEquals([Resource::TYPE_PROJECT_PROTOCOLS], $result['resources']);
+        $this->assertArrayHasKey(Resource::TYPE_PROJECT_PROTOCOLS, $result['statusCounters']);
+        $this->assertEquals(0, $result['statusCounters'][Resource::TYPE_PROJECT_PROTOCOLS]['error']);
+        $this->assertEquals(0, $result['statusCounters'][Resource::TYPE_PROJECT_PROTOCOLS]['pending']);
+        $this->assertEquals(1, $result['statusCounters'][Resource::TYPE_PROJECT_PROTOCOLS]['success']);
+        $this->assertEquals(0, $result['statusCounters'][Resource::TYPE_PROJECT_PROTOCOLS]['processing']);
+        $this->assertEquals(0, $result['statusCounters'][Resource::TYPE_PROJECT_PROTOCOLS]['warning']);
 
         $response = $this->client->call(Client::METHOD_GET, '/project', $destinationAdminHeaders);
 
@@ -2965,7 +2965,7 @@ trait MigrationsBase
 
         $result = $this->performMigrationSync([
             'resources' => [
-                Resource::TYPE_LABELS,
+                Resource::TYPE_PROJECT_LABELS,
             ],
             'endpoint' => $this->webEndpoint,
             'projectId' => $sourceProjectId,
@@ -2973,13 +2973,13 @@ trait MigrationsBase
         ]);
 
         $this->assertEquals('completed', $result['status']);
-        $this->assertEquals([Resource::TYPE_LABELS], $result['resources']);
-        $this->assertArrayHasKey(Resource::TYPE_LABELS, $result['statusCounters']);
-        $this->assertEquals(0, $result['statusCounters'][Resource::TYPE_LABELS]['error']);
-        $this->assertEquals(0, $result['statusCounters'][Resource::TYPE_LABELS]['pending']);
-        $this->assertEquals(1, $result['statusCounters'][Resource::TYPE_LABELS]['success']);
-        $this->assertEquals(0, $result['statusCounters'][Resource::TYPE_LABELS]['processing']);
-        $this->assertEquals(0, $result['statusCounters'][Resource::TYPE_LABELS]['warning']);
+        $this->assertEquals([Resource::TYPE_PROJECT_LABELS], $result['resources']);
+        $this->assertArrayHasKey(Resource::TYPE_PROJECT_LABELS, $result['statusCounters']);
+        $this->assertEquals(0, $result['statusCounters'][Resource::TYPE_PROJECT_LABELS]['error']);
+        $this->assertEquals(0, $result['statusCounters'][Resource::TYPE_PROJECT_LABELS]['pending']);
+        $this->assertEquals(1, $result['statusCounters'][Resource::TYPE_PROJECT_LABELS]['success']);
+        $this->assertEquals(0, $result['statusCounters'][Resource::TYPE_PROJECT_LABELS]['processing']);
+        $this->assertEquals(0, $result['statusCounters'][Resource::TYPE_PROJECT_LABELS]['warning']);
 
         $response = $this->client->call(Client::METHOD_GET, '/project', $destinationAdminHeaders);
         $this->assertEquals(200, $response['headers']['status-code']);
@@ -3017,7 +3017,7 @@ trait MigrationsBase
 
         $result = $this->performMigrationSync([
             'resources' => [
-                Resource::TYPE_SERVICES,
+                Resource::TYPE_PROJECT_SERVICES,
             ],
             'endpoint' => $this->webEndpoint,
             'projectId' => $sourceProjectId,
@@ -3025,13 +3025,13 @@ trait MigrationsBase
         ]);
 
         $this->assertEquals('completed', $result['status']);
-        $this->assertEquals([Resource::TYPE_SERVICES], $result['resources']);
-        $this->assertArrayHasKey(Resource::TYPE_SERVICES, $result['statusCounters']);
-        $this->assertEquals(0, $result['statusCounters'][Resource::TYPE_SERVICES]['error']);
-        $this->assertEquals(0, $result['statusCounters'][Resource::TYPE_SERVICES]['pending']);
-        $this->assertEquals(1, $result['statusCounters'][Resource::TYPE_SERVICES]['success']);
-        $this->assertEquals(0, $result['statusCounters'][Resource::TYPE_SERVICES]['processing']);
-        $this->assertEquals(0, $result['statusCounters'][Resource::TYPE_SERVICES]['warning']);
+        $this->assertEquals([Resource::TYPE_PROJECT_SERVICES], $result['resources']);
+        $this->assertArrayHasKey(Resource::TYPE_PROJECT_SERVICES, $result['statusCounters']);
+        $this->assertEquals(0, $result['statusCounters'][Resource::TYPE_PROJECT_SERVICES]['error']);
+        $this->assertEquals(0, $result['statusCounters'][Resource::TYPE_PROJECT_SERVICES]['pending']);
+        $this->assertEquals(1, $result['statusCounters'][Resource::TYPE_PROJECT_SERVICES]['success']);
+        $this->assertEquals(0, $result['statusCounters'][Resource::TYPE_PROJECT_SERVICES]['processing']);
+        $this->assertEquals(0, $result['statusCounters'][Resource::TYPE_PROJECT_SERVICES]['warning']);
 
         $response = $this->client->call(Client::METHOD_GET, '/project', $destinationAdminHeaders);
         $this->assertEquals(200, $response['headers']['status-code']);
