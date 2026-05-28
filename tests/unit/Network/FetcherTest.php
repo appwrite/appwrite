@@ -2,8 +2,8 @@
 
 namespace Tests\Unit\Network;
 
-use Appwrite\Network\Fetcher;
 use Appwrite\Network\UnsafeUrlException;
+use Appwrite\Platform\Modules\Avatars\Http\Favicon\Get;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use Utopia\Fetch\Adapter;
@@ -15,8 +15,8 @@ class FetcherTest extends TestCase
     public function testAssertSafeAcceptsPublicIpLiteral(): void
     {
         // Should not throw
-        Fetcher::assertSafe('http://1.1.1.1/');
-        Fetcher::assertSafe('https://8.8.8.8/path');
+        TestableGet::assertSafe('http://1.1.1.1/');
+        TestableGet::assertSafe('https://8.8.8.8/path');
         $this->expectNotToPerformAssertions();
     }
 
@@ -24,7 +24,7 @@ class FetcherTest extends TestCase
     public function testAssertSafeRejectsUnsafeUrls(string $url, string $reasonFragment): void
     {
         try {
-            Fetcher::assertSafe($url);
+            TestableGet::assertSafe($url);
             $this->fail("Expected UnsafeUrlException for {$url}");
         } catch (UnsafeUrlException $e) {
             $this->assertStringContainsString(
@@ -63,8 +63,8 @@ class FetcherTest extends TestCase
             $this->ok('FINAL_BODY'),
         ]);
 
-        $fetcher = new Fetcher(userAgent: 'test', adapter: $adapter);
-        $response = $fetcher->fetch('http://8.8.8.8/start');
+        $fetcher = new TestableGet();
+        $response = $fetcher->fetchForTest('http://8.8.8.8/start', $adapter);
 
         $this->assertSame(200, $response->getStatusCode());
         $this->assertSame('FINAL_BODY', $response->getBody());
@@ -82,10 +82,10 @@ class FetcherTest extends TestCase
             $this->ok('SHOULD_NEVER_LEAK'),
         ]);
 
-        $fetcher = new Fetcher(userAgent: 'test', adapter: $adapter);
+        $fetcher = new TestableGet();
 
         try {
-            $fetcher->fetch('http://8.8.8.8/attacker-page');
+            $fetcher->fetchForTest('http://8.8.8.8/attacker-page', $adapter);
             $this->fail('Expected UnsafeUrlException');
         } catch (UnsafeUrlException $e) {
             $this->assertStringContainsString('169.254.169.254', $e->getMessage());
@@ -104,10 +104,10 @@ class FetcherTest extends TestCase
             $this->ok('SHOULD_NEVER_LEAK'),
         ]);
 
-        $fetcher = new Fetcher(userAgent: 'test', adapter: $adapter);
+        $fetcher = new TestableGet();
 
         try {
-            $fetcher->fetch('http://8.8.8.8/attacker-page');
+            $fetcher->fetchForTest('http://8.8.8.8/attacker-page', $adapter);
             $this->fail('Expected UnsafeUrlException');
         } catch (UnsafeUrlException $e) {
             $this->assertStringContainsString('127.0.0.1', $e->getMessage());
@@ -124,8 +124,8 @@ class FetcherTest extends TestCase
             $this->ok('FINAL'),
         ]);
 
-        $fetcher = new Fetcher(userAgent: 'test', adapter: $adapter);
-        $response = $fetcher->fetch('http://8.8.8.8/start');
+        $fetcher = new TestableGet();
+        $response = $fetcher->fetchForTest('http://8.8.8.8/start', $adapter);
 
         $this->assertSame('FINAL', $response->getBody());
     }
@@ -143,11 +143,11 @@ class FetcherTest extends TestCase
             $this->redirect('https://208.67.222.222/7'),
         ]);
 
-        $fetcher = new Fetcher(userAgent: 'test', maxRedirects: 5, adapter: $adapter);
+        $fetcher = new TestableGet();
 
         $this->expectException(\RuntimeException::class);
         $this->expectExceptionMessage('Too many redirects');
-        $fetcher->fetch('http://8.8.8.8/0');
+        $fetcher->fetchForTest('http://8.8.8.8/0', $adapter);
     }
 
     public function testFetchBlocksNonHttpRedirect(): void
@@ -157,10 +157,10 @@ class FetcherTest extends TestCase
             $this->ok('SHOULD_NEVER_LEAK'),
         ]);
 
-        $fetcher = new Fetcher(userAgent: 'test', adapter: $adapter);
+        $fetcher = new TestableGet();
 
         try {
-            $fetcher->fetch('http://8.8.8.8/page');
+            $fetcher->fetchForTest('http://8.8.8.8/page', $adapter);
             $this->fail('Expected UnsafeUrlException');
         } catch (UnsafeUrlException $e) {
             $this->assertStringContainsString("Scheme 'file'", $e->getMessage());
@@ -218,5 +218,18 @@ class ScriptedAdapter implements Adapter
             throw new \RuntimeException("Adapter ran out of scripted responses (call {$this->callCount})");
         }
         return $response;
+    }
+}
+
+class TestableGet extends Get
+{
+    public static function assertSafe(string $url): void
+    {
+        parent::assertSafeUrl($url);
+    }
+
+    public function fetchForTest(string $url, Adapter $adapter): Response
+    {
+        return $this->safeFetch($url, 'test', $adapter);
     }
 }

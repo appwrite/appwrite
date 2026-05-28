@@ -3,7 +3,8 @@
 namespace Appwrite\Platform\Modules\Avatars\Http\Favicon;
 
 use Appwrite\Extend\Exception;
-use Appwrite\Network\Fetcher;
+use Appwrite\Network\UnsafeUrlException;
+use Appwrite\Network\Validator\PublicHostname;
 use Appwrite\Platform\Modules\Avatars\Http\Action;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\ContentType;
@@ -15,6 +16,10 @@ use Appwrite\Utopia\Response;
 use DOMDocument;
 use DOMElement;
 use enshrined\svgSanitize\Sanitizer as SvgSanitizer;
+use Utopia\Domains\Domain;
+use Utopia\Fetch\Adapter;
+use Utopia\Fetch\Client;
+use Utopia\Fetch\Response as FetchResponse;
 use Utopia\Image\Image;
 use Utopia\Platform\Action as UtopiaAction;
 use Utopia\Platform\Scope\HTTP;
@@ -24,6 +29,9 @@ use Utopia\Validator\URL;
 class Get extends Action
 {
     use HTTP;
+
+    private const ALLOWED_SCHEMES = ['http', 'https'];
+    private const MAX_REDIRECTS = 5;
 
     public static function getName(): string
     {
@@ -55,7 +63,7 @@ class Get extends Action
                 ],
                 contentType: ContentType::IMAGE
             ))
-            ->param('url', '', new URL(Fetcher::ALLOWED_SCHEMES), 'Website URL which you want to fetch the favicon from.')
+            ->param('url', '', new URL(self::ALLOWED_SCHEMES), 'Website URL which you want to fetch the favicon from.')
             ->inject('response')
             ->callback($this->action(...));
     }
@@ -71,14 +79,14 @@ class Get extends Action
             throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Imagick extension is missing');
         }
 
-        $fetcher = new Fetcher(\sprintf(
+        $userAgent = \sprintf(
             APP_USERAGENT,
             System::getEnv('_APP_VERSION', 'UNKNOWN'),
             System::getEnv('_APP_EMAIL_SECURITY', System::getEnv('_APP_SYSTEM_SECURITY_EMAIL_ADDRESS', APP_EMAIL_SECURITY))
-        ));
+        );
 
         try {
-            $pageResponse = $fetcher->fetch($url);
+            $pageResponse = $this->safeFetch($url, $userAgent);
         } catch (\Throwable) {
             throw new Exception(Exception::AVATAR_REMOTE_URL_FAILED);
         }
@@ -144,7 +152,7 @@ class Get extends Action
         }
 
         try {
-            $iconResponse = $fetcher->fetch($outputHref);
+            $iconResponse = $this->safeFetch($outputHref, $userAgent);
         } catch (\Throwable) {
             throw new Exception(Exception::AVATAR_REMOTE_URL_FAILED);
         }
@@ -193,5 +201,75 @@ class Get extends Action
             ->setContentType('image/png')
             ->file($data);
         unset($image);
+    }
+
+    /**
+     * @throws UnsafeUrlException
+     */
+    protected static function assertSafeUrl(string $url): void
+    {
+        $parts = \parse_url($url);
+        if (!\is_array($parts)) {
+            throw new UnsafeUrlException('Malformed URL.');
+        }
+
+        $scheme = \strtolower($parts['scheme'] ?? '');
+        if (!\in_array($scheme, self::ALLOWED_SCHEMES, true)) {
+            throw new UnsafeUrlException("Scheme '{$scheme}' is not allowed.");
+        }
+
+        $host = $parts['host'] ?? '';
+        if ($host === '') {
+            throw new UnsafeUrlException('URL has no host.');
+        }
+
+        $isIpLiteral = \filter_var(\trim($host, '[]'), FILTER_VALIDATE_IP) !== false;
+        if (!$isIpLiteral) {
+            try {
+                $domain = new Domain($host);
+            } catch (\Throwable) {
+                throw new UnsafeUrlException("Hostname '{$host}' is invalid.");
+            }
+
+            if (!$domain->isKnown()) {
+                throw new UnsafeUrlException("Hostname '{$host}' is not a known public domain.");
+            }
+        }
+
+        $validator = new PublicHostname();
+        if (!$validator->isValid($host)) {
+            throw new UnsafeUrlException($validator->getDescription());
+        }
+    }
+
+    /**
+     * @throws UnsafeUrlException
+     */
+    protected function safeFetch(string $url, string $userAgent, ?Adapter $adapter = null): FetchResponse
+    {
+        for ($hop = 0; $hop <= self::MAX_REDIRECTS; $hop++) {
+            self::assertSafeUrl($url);
+
+            $client = $adapter !== null ? new Client($adapter) : new Client();
+            $response = $client
+                ->setAllowRedirects(false)
+                ->setUserAgent($userAgent)
+                ->fetch($url);
+
+            $status = $response->getStatusCode();
+            if ($status < 300 || $status >= 400) {
+                return $response;
+            }
+
+            $headers = \array_change_key_case($response->getHeaders(), CASE_LOWER);
+            $location = $headers['location'] ?? '';
+            if ($location === '') {
+                return $response;
+            }
+
+            $url = URLParse::resolveLocation($url, $location);
+        }
+
+        throw new \RuntimeException('Too many redirects.');
     }
 }
