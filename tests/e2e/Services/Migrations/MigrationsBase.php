@@ -3258,30 +3258,25 @@ trait MigrationsBase
 
     public function testAppwriteMigrationEmailTemplate(): void
     {
-        $consoleHeaders = [
-            'content-type' => 'application/json',
-            'x-appwrite-project' => 'console',
-            'origin' => 'http://localhost',
-            'cookie' => 'a_session_console=' . $this->getRoot()['session'],
-        ];
-
         $sourceProjectId = $this->getProject()['$id'];
         $destinationProjectId = $this->getDestinationProject()['$id'];
 
-        $sourceAdminHeaders = \array_merge($consoleHeaders, [
+        $sourceKeyHeaders = [
+            'content-type' => 'application/json',
             'x-appwrite-project' => $sourceProjectId,
-            'x-appwrite-mode' => 'admin',
-        ]);
-        $destinationAdminHeaders = \array_merge($consoleHeaders, [
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ];
+        $destinationKeyHeaders = [
+            'content-type' => 'application/json',
             'x-appwrite-project' => $destinationProjectId,
-            'x-appwrite-mode' => 'admin',
-        ]);
+            'x-appwrite-key' => $this->getDestinationProject()['apiKey'],
+        ];
 
         // The source SDK path requires custom SMTP enabled before a template can be
         // saved — and the enable call validates the SMTP connection. `maildev` is the
         // dev mailcatcher in the test cluster's docker-compose; it accepts unauthenticated
         // connections on port 1025, so it's the only host that lets us pass validation.
-        $smtpUpdate = $this->client->call(Client::METHOD_PATCH, '/project/smtp', $sourceAdminHeaders, [
+        $smtpUpdate = $this->client->call(Client::METHOD_PATCH, '/project/smtp', $sourceKeyHeaders, [
             'enabled' => true,
             'senderName' => 'Test Sender',
             'senderEmail' => 'sender@example.com',
@@ -3298,7 +3293,7 @@ trait MigrationsBase
         $update = $this->client->call(
             Client::METHOD_PATCH,
             '/project/templates/email',
-            $sourceAdminHeaders,
+            $sourceKeyHeaders,
             [
                 'templateId' => $templateId,
                 'locale' => $locale,
@@ -3331,7 +3326,7 @@ trait MigrationsBase
         $this->assertEquals(0, $result['statusCounters'][Resource::TYPE_PROJECT_EMAIL_TEMPLATE]['warning']);
 
         // Read-back via the SDK requires the destination to have SMTP enabled too.
-        $this->client->call(Client::METHOD_PATCH, '/project/smtp', $destinationAdminHeaders, [
+        $this->client->call(Client::METHOD_PATCH, '/project/smtp', $destinationKeyHeaders, [
             'enabled' => true,
             'senderName' => 'Dest Sender',
             'senderEmail' => 'dest@example.com',
@@ -3342,7 +3337,7 @@ trait MigrationsBase
         $fetched = $this->client->call(
             Client::METHOD_GET,
             '/project/templates/email/' . $templateId,
-            $destinationAdminHeaders,
+            $destinationKeyHeaders,
             ['locale' => $locale]
         );
         $this->assertEquals(200, $fetched['headers']['status-code']);
@@ -3354,8 +3349,8 @@ trait MigrationsBase
         $this->assertSame('Reply Team', $fetched['body']['replyToName']);
 
         // Reset both projects so the test is idempotent.
-        $this->client->call(Client::METHOD_PATCH, '/project/smtp', $sourceAdminHeaders, ['enabled' => false]);
-        $this->client->call(Client::METHOD_PATCH, '/project/smtp', $destinationAdminHeaders, ['enabled' => false]);
+        $this->client->call(Client::METHOD_PATCH, '/project/smtp', $sourceKeyHeaders, ['enabled' => false]);
+        $this->client->call(Client::METHOD_PATCH, '/project/smtp', $destinationKeyHeaders, ['enabled' => false]);
     }
 
     /**
