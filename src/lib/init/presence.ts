@@ -2,6 +2,7 @@ import { Permission, Query, Role } from '@appwrite.io/console'
 import type { Models } from '@appwrite.io/console'
 import { sdk } from '@/lib/appwrite/sdk'
 import { sanitizeInitPresenceActivity } from '@/lib/init/init-presence-activity-allowlist'
+import { parseInitPresenceTheme, type InitPresenceTheme } from '@/lib/init/init-presence-theme'
 import type { LaunchEventOnlineUser } from '@/lib/init/types'
 
 /** Heartbeat interval while the Init page is active. */
@@ -29,6 +30,7 @@ export type InitPresenceMetadata = {
   name: string
   activity?: string
   isLive?: boolean
+  theme?: InitPresenceTheme
 }
 
 /** Presence row ID is the signed-in console user ID (one log per user). */
@@ -86,6 +88,7 @@ export function parseInitPresenceMetadata(
     name,
     activity: typeof record.activity === 'string' ? record.activity : undefined,
     isLive: record.isLive === true,
+    theme: parseInitPresenceTheme(record.theme),
   }
 }
 
@@ -397,6 +400,7 @@ export function presenceToOnlineUser(
     name: metadata?.name || 'Console user',
     activity: sanitizeInitPresenceActivity(metadata?.activity, activityAllowlist),
     isLive: metadata?.isLive,
+    theme: metadata?.theme,
   }
 }
 

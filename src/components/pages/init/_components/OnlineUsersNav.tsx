@@ -21,6 +21,7 @@ import { AnimatePresence, motion, useReducedMotion } from 'motion/react'
 import { useState, type CSSProperties } from 'react'
 import { InitPresenceReactions } from './InitPresenceReactions'
 import { InitPresenceStatusControl } from './InitPresenceStatusControl'
+import { InitPresenceThemeBar } from './InitPresenceThemeBar'
 import { OnlineUserReactionBadgeSlot } from './OnlineUserReactionBadge'
 
 interface OnlineUsersNavProps {
@@ -626,7 +627,7 @@ export function OnlineUsersNav({
   const [collapsed, setCollapsed] = useState(false)
   const [reactionPulse, setReactionPulse] = useState(0)
   const { data: account } = useQuery(consoleAccountQueryOptions())
-  const { isReady: isPresenceReady } = useInitPresence()
+  const { isReady: isPresenceReady, onlineThemeCounts } = useInitPresence()
   const isLoadingPresence = showPanel && !isPresenceReady
   const selfUserId = account?.$id
 
@@ -662,6 +663,14 @@ export function OnlineUsersNav({
                 reactionPulse={reactionPulse}
               />
             </nav>
+
+            {showPanel ? (
+              <InitPresenceThemeBar
+                light={onlineThemeCounts.light}
+                dark={onlineThemeCounts.dark}
+                collapsed={collapsed}
+              />
+            ) : null}
 
             {showPanel ? (
               <InitPresenceReactions
@@ -733,6 +742,14 @@ export function OnlineUsersNav({
               reactionPulse={reactionPulse}
             />
           </nav>
+
+          {showPanel ? (
+            <InitPresenceThemeBar
+              light={onlineThemeCounts.light}
+              dark={onlineThemeCounts.dark}
+              isMobile
+            />
+          ) : null}
 
           {showPanel ? (
             <InitPresenceReactions

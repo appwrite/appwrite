@@ -91,6 +91,7 @@ export interface LaunchEventOnlineUser {
   name: string
   activity: string
   isLive?: boolean
+  theme?: 'light' | 'dark'
 }
 
 export type LaunchEventUserPresence = 'online' | 'recent'

@@ -29,7 +29,12 @@ import {
   INIT_PRESENCE_ACTIVITY_OFFLINE,
   INIT_PRESENCE_ACTIVITY_ON_INIT,
 } from '@/lib/init/init-presence-activity'
+import {
+  countInitPresenceThemes,
+  resolveInitPresenceTheme,
+} from '@/lib/init/init-presence-theme'
 import type { LaunchEvent, LaunchEventOnlineUser } from '@/lib/init/types'
+import { useTheme } from 'next-themes'
 
 const SIDEBAR_USER_LIMIT = 16
 const AWAY_USER_LIMIT = 8
@@ -66,6 +71,7 @@ export type InitOnlinePresenceState = {
   recentlyOnlineUsers: LaunchEventOnlineUser[]
   onlineCount: number
   othersOnlineCount: number
+  onlineThemeCounts: { light: number; dark: number }
   isReady: boolean
   participantStatus: InitParticipantStatus
   isParticipantStatusUpdating: boolean
@@ -80,6 +86,7 @@ const EMPTY_STATE: InitOnlinePresenceState = {
   recentlyOnlineUsers: [],
   onlineCount: 0,
   othersOnlineCount: 0,
+  onlineThemeCounts: { light: 0, dark: 0 },
   isReady: false,
   participantStatus: 'online',
   isParticipantStatusUpdating: false,
@@ -113,6 +120,10 @@ export function useInitOnlinePresence(
     [event],
   )
   const enabled = Boolean(eventId) && (options?.enabled ?? true)
+  const { resolvedTheme } = useTheme()
+  const resolvedThemeRef = useRef(resolvedTheme)
+  resolvedThemeRef.current = resolvedTheme
+  const isFirstThemeSyncRef = useRef(true)
   const { data: account } = useQuery({
     ...consoleAccountQueryOptions(),
     enabled,
@@ -164,6 +175,7 @@ export function useInitOnlinePresence(
         eventId,
         name: accountName,
         activity: resolveActivity(away),
+        theme: resolveInitPresenceTheme(resolvedThemeRef.current),
       }
     },
     [accountName, eventId, resolveActivity],
@@ -354,6 +366,7 @@ export function useInitOnlinePresence(
       transientActivityRef.current = null
       priorityActivityRef.current = null
       participantOnlineRef.current = true
+      isFirstThemeSyncRef.current = true
       setParticipantStatusState('online')
       return
     }
@@ -400,6 +413,15 @@ export function useInitOnlinePresence(
       }
     }
   }, [accountUserId, enabled, eventId, refreshLists])
+
+  useEffect(() => {
+    if (!enabled || !eventId || !accountUserId) return
+    if (isFirstThemeSyncRef.current) {
+      isFirstThemeSyncRef.current = false
+      return
+    }
+    schedulePresencePublish()
+  }, [accountUserId, enabled, eventId, resolvedTheme, schedulePresencePublish])
 
   useEffect(() => {
     if (!enabled || !eventId || !accountUserId) return
@@ -485,22 +507,25 @@ export function useInitOnlinePresence(
   return useMemo(() => {
     if (!enabled || !accountUserId || !activityAllowlist) return EMPTY_STATE
 
-    const onlineUsers = mapPresencesToOnlineUsers(
+    const allOnlineUsers = mapPresencesToOnlineUsers(
       presenceMaps.online.values(),
       activityAllowlist,
-    ).slice(0, SIDEBAR_USER_LIMIT)
+    )
+    const onlineUsers = allOnlineUsers.slice(0, SIDEBAR_USER_LIMIT)
     const recentlyOnlineUsers = mapPresencesToOnlineUsers(
       presenceMaps.away.values(),
       activityAllowlist,
     ).slice(0, AWAY_USER_LIMIT)
     const onlineCount = presenceMaps.online.size
     const othersOnlineCount = Math.max(0, onlineCount - onlineUsers.length)
+    const onlineThemeCounts = countInitPresenceThemes(allOnlineUsers)
 
     return {
       onlineUsers,
       recentlyOnlineUsers,
       onlineCount,
       othersOnlineCount,
+      onlineThemeCounts,
       isReady,
       participantStatus,
       isParticipantStatusUpdating,
