@@ -6,31 +6,54 @@ use Utopia\Agents\Adapter;
 use Utopia\Agents\Message;
 use Utopia\Fetch\Client;
 
-class Ollama extends Adapter
+class Appwrite extends Adapter
 {
     /**
-     * EmbeddingGemma - Gemma embedding model for Ollama
+     * NomicEmbedTextV15 - default general purpose text embedding model
      */
-    public const MODEL_EMBEDDING_GEMMA = 'embeddinggemma';
+    public const MODEL_NOMIC_EMBED_TEXT = 'nomic-embed-text';
+
+    /**
+     * EmbeddingGemma300M - Gemma embedding model
+     */
+    public const MODEL_EMBEDDING_GEMMA = 'embedding-gemma';
+
+    /**
+     * AllMiniLML6V2 - small, fast sentence embedding model
+     */
+    public const MODEL_ALL_MINILM = 'all-minilm';
+
+    /**
+     * BGESmallENV15 - small English embedding model
+     */
+    public const MODEL_BGE_SMALL = 'bge-small';
 
     protected string $model;
 
-    private string $endpoint = 'http://ollama:11434/api/embed';
+    private string $endpoint = 'http://appwrite-embedding:11434/embed';
 
-    public const MODELS = [self::MODEL_EMBEDDING_GEMMA];
+    public const MODELS = [
+        self::MODEL_NOMIC_EMBED_TEXT,
+        self::MODEL_EMBEDDING_GEMMA,
+        self::MODEL_ALL_MINILM,
+        self::MODEL_BGE_SMALL,
+    ];
 
     /**
      * Embedding dimensions of specific embedding model
      */
     protected const DIMENSIONS = [
+        self::MODEL_NOMIC_EMBED_TEXT => 768,
         self::MODEL_EMBEDDING_GEMMA => 768,
+        self::MODEL_ALL_MINILM => 384,
+        self::MODEL_BGE_SMALL => 384,
     ];
 
     /**
-     * Create a new Ollama adapter (no API key required for local call)
+     * Create a new Appwrite embedding adapter (no API key required for local call)
      */
     public function __construct(
-        string $model = self::MODEL_EMBEDDING_GEMMA,
+        string $model = self::MODEL_NOMIC_EMBED_TEXT,
         int $timeout = 90000
     ) {
         if (! in_array($model, self::MODELS, true)) {
@@ -42,25 +65,51 @@ class Ollama extends Adapter
     }
 
     /**
-     * Embedding generation (Ollama only supports embeddings, not chat)
+     * Embedding generation (the embedding service only supports embeddings, not chat)
      *
      * @return array{
      *     embedding: array<int, float>,
      *     tokensProcessed: int|null,
-     *     totalDuration: int|null ,
-     *     modelLoadingDuration: int|null
+     *     totalDuration: int|null
      * }
      *
      * @throws \Exception
      */
     public function embed(string $text): array
     {
+        $result = $this->bulkEmbed([$text]);
+
+        return [
+            'embedding' => $result['embeddings'][0],
+            'tokensProcessed' => $result['tokensProcessed'],
+            'totalDuration' => $result['totalDuration'],
+        ];
+    }
+
+    /**
+     * Bulk embedding generation — sends multiple texts in a single request.
+     *
+     * @param  array<int, string>  $texts
+     * @return array{
+     *     embeddings: array<int, array<int, float>>,
+     *     tokensProcessed: int|null,
+     *     totalDuration: int|null
+     * }
+     *
+     * @throws \Exception
+     */
+    public function bulkEmbed(array $texts): array
+    {
+        if (empty($texts)) {
+            throw new \InvalidArgumentException('bulkEmbed requires at least one text');
+        }
+
         $client = new Client();
         $client->setTimeout($this->timeout);
         $client->addHeader('Content-Type', 'application/json');
         $payload = [
             'model' => $this->model,
-            'input' => $text,
+            'texts' => array_values($texts),
         ];
         $response = $client->fetch(
             $this->getEndpoint(),
@@ -78,61 +127,29 @@ class Ollama extends Adapter
             throw new \Exception(is_string($json['error']) ? $json['error'] : 'Unknown error', $response->getStatusCode());
         }
 
-        // totalDuration is entire duration including the modelLoadingDuration
-        $embeddings = isset($json['embeddings']) && is_array($json['embeddings']) ? $json['embeddings'] : [];
-        /** @var array<int, float> $firstEmbedding */
-        $firstEmbedding = isset($embeddings[0]) && is_array($embeddings[0]) ? $embeddings[0] : [];
-
-        return [
-            'embedding' => $firstEmbedding,
-            'tokensProcessed' => isset($json['prompt_eval_count']) && is_int($json['prompt_eval_count']) ? $json['prompt_eval_count'] : null,
-            'totalDuration' => isset($json['total_duration']) && is_int($json['total_duration']) ? $json['total_duration'] : null,
-            'modelLoadingDuration' => isset($json['load_duration']) && is_int($json['load_duration']) ? $json['load_duration'] : null,
-        ];
-    }
-
-    /**
-     * Batch embedding for Ollama — its embed endpoint takes one input, so loop and aggregate.
-     *
-     * @param  array<int, string>  $texts
-     * @return array{
-     *     embeddings: array<int, array<int, float>>,
-     *     tokensProcessed: int|null,
-     *     totalDuration: int|null
-     * }
-     *
-     * @throws \Exception
-     */
-    public function bulkEmbed(array $texts): array
-    {
-        if (empty($texts)) {
-            throw new \InvalidArgumentException('bulkEmbed requires at least one text');
+        if (! isset($json['embeddings']) || ! is_array($json['embeddings']) || count($json['embeddings']) !== count($texts)) {
+            throw new \Exception('Embedding response missing or count mismatch', $response->getStatusCode());
         }
 
+        /** @var array<int, array<int, float>> $embeddings */
         $embeddings = [];
-        $tokens = null;
-        $duration = null;
-
-        foreach ($texts as $text) {
-            $result = $this->embed($text);
-            $embeddings[] = $result['embedding'];
-            if (isset($result['tokensProcessed'])) {
-                $tokens = ($tokens ?? 0) + $result['tokensProcessed'];
+        foreach ($json['embeddings'] as $i => $vec) {
+            if (! is_array($vec) || $vec === []) {
+                throw new \Exception("Embedding row {$i} missing or empty", $response->getStatusCode());
             }
-            if (isset($result['totalDuration'])) {
-                $duration = ($duration ?? 0) + $result['totalDuration'];
-            }
+            /** @var array<int, float> $vec */
+            $embeddings[] = $vec;
         }
 
         return [
             'embeddings' => $embeddings,
-            'tokensProcessed' => $tokens,
-            'totalDuration' => $duration,
+            'tokensProcessed' => isset($json['tokens']) && is_int($json['tokens']) ? $json['tokens'] : null,
+            'totalDuration' => isset($json['total_duration']) && is_int($json['total_duration']) ? $json['total_duration'] : null,
         ];
     }
 
     /**
-     * Get available models for embeddings (for now, only embeddinggemma)
+     * Get available models for embeddings
      *
      * @return array<string>
      */
@@ -179,7 +196,7 @@ class Ollama extends Adapter
      */
     public function send(array $messages, ?callable $listener = null): Message
     {
-        throw new \Exception('OllamaAdapter does not support chat or messages. Use embed() instead.');
+        throw new \Exception('Appwrite does not support chat or messages. Use embed() instead.');
     }
 
     /**
@@ -195,7 +212,7 @@ class Ollama extends Adapter
      */
     public function getName(): string
     {
-        return 'ollama';
+        return 'appwrite-embedding';
     }
 
     /**

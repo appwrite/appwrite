@@ -96,10 +96,24 @@ abstract class Adapter
      *     embedding: array<int, float>,
      *     tokensProcessed: int|null,
      *     totalDuration: int|null ,
-     *     modelLoadingDuration: int|null
+     *     modelLoadingDuration?: int|null
      * }
      */
     abstract public function embed(string $text): array;
+
+    /**
+     * Generate embeddings for a batch of texts (must be implemented if getSupportForEmbeddings is true).
+     *
+     * @param  array<int, string>  $texts
+     * @return array{
+     *     embeddings: array<int, array<int, float>>,
+     *     tokensProcessed: int|null,
+     *     totalDuration: int|null
+     * }
+     *
+     * @throws \Exception
+     */
+    abstract public function bulkEmbed(array $texts): array;
 
     /**
      * get embedding dimenion of the current model

@@ -279,6 +279,19 @@ class FakeAdapter extends Adapter
         throw new \Exception('Embeddings not supported by fake adapter');
     }
 
+    /**
+     * @param  array<int, string>  $texts
+     * @return array{
+     *     embeddings: array<int, array<int, float>>,
+     *     tokensProcessed: int|null,
+     *     totalDuration: int|null
+     * }
+     */
+    public function bulkEmbed(array $texts): array
+    {
+        throw new \Exception('Embeddings not supported by fake adapter');
+    }
+
     public function getEmbeddingDimension(): int
     {
         return 0;

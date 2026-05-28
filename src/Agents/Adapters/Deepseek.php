@@ -420,6 +420,19 @@ class Deepseek extends Adapter
         throw new \Exception('Embeddings are not supported for this adapter.');
     }
 
+    /**
+     * @param  array<int, string>  $texts
+     * @return array{
+     *     embeddings: array<int, array<int, float>>,
+     *     tokensProcessed: int|null,
+     *     totalDuration: int|null
+     * }
+     */
+    public function bulkEmbed(array $texts): array
+    {
+        throw new \Exception('Embeddings are not supported for this adapter.');
+    }
+
     public function getEmbeddingDimension(): int
     {
         throw new \Exception('Embeddings are not supported for this adapter.');

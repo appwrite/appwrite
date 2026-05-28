@@ -118,7 +118,7 @@ class Agent
      *     embedding: array<int, float>,
      *     tokensProcessed: int|null,
      *     totalDuration: int|null ,
-     *     modelLoadingDuration: int|null
+     *     modelLoadingDuration?: int|null
      * }
      *
      * @throws \Exception
