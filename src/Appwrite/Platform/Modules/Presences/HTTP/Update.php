@@ -53,7 +53,7 @@ class Update extends PlatformAction
                     name: 'update',
                     desc: 'Update presence',
                     description: '/docs/references/presences/update.md',
-                    auth: [AuthType::SESSION],
+                    auth: [AuthType::SESSION, AuthType::ADMIN],
                     responses: [
                         new SDKResponse(
                             code: Response::STATUS_CODE_OK,
@@ -76,7 +76,7 @@ class Update extends PlatformAction
                     name: 'updatePresence',
                     desc: 'Update presence',
                     description: '/docs/references/presences/update.md',
-                    auth: [AuthType::KEY, AuthType::JWT, AuthType::ADMIN],
+                    auth: [AuthType::KEY, AuthType::JWT],
                     responses: [
                         new SDKResponse(
                             code: Response::STATUS_CODE_OK,
@@ -128,7 +128,7 @@ class Update extends PlatformAction
         Event $queueForEvents
     ): void {
         $presenceState = new PresenceState();
-        $isAPIKey = $user->isApp($authorization->getRoles());
+        $isAPIKey = $user->isKey($authorization->getRoles());
         $isPrivilegedUser = $user->isPrivileged($authorization->getRoles());
 
         if ($userId && !$isAPIKey && !$isPrivilegedUser) {

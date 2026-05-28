@@ -103,7 +103,7 @@ class Create extends Action
 
     public function action(string $teamId, string $email, string $userId, string $phone, array $roles, string $url, string $name, Response $response, Document $project, User $user, Database $dbForProject, Authorization $authorization, Locale $locale, MailPublisher $publisherForMails, MessagingPublisher $publisherForMessaging, Event $queueForEvents, callable $timelimit, Context $usage, array $plan, array $platform, Password $proofForPassword, Token $proofForToken)
     {
-        $isAppUser = $user->isApp($authorization->getRoles());
+        $isAppUser = $user->isKey($authorization->getRoles());
         $isPrivilegedUser = $user->isPrivileged($authorization->getRoles());
         $invitee = new Document();
         $hash = '';

@@ -28,6 +28,7 @@ class HealthStatus extends Model
                 'default' => '',
                 'example' => 'pass',
                 'enum' => ['pass', 'fail'],
+                'enumSDKName' => 'HealthCheckStatus',
             ])
         ;
     }

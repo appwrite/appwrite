@@ -35,7 +35,9 @@ use Utopia\Database\Adapter\Pool as DatabasePool;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
+use Utopia\Database\Exception\Authorization as AuthorizationException;
 use Utopia\Database\Exception\Query as QueryException;
+use Utopia\Database\Exception\Timeout as TimeoutException;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Helpers\Role;
 use Utopia\Database\Query;
@@ -374,7 +376,16 @@ if (!function_exists('logError')) {
 
         $logger = $register->get('realtimeLogger');
 
-        if ($logger && !$error instanceof Exception) {
+        // Match HTTP semantics (app/controllers/general.php): AppwriteException uses its
+        // configured publish flag; everything else publishes only for code 0 or >= 500.
+        // Without this, expected client errors (e.g. Utopia DB Authorization) hit Sentry.
+        if ($error instanceof AppwriteException) {
+            $publish = $error->isPublishable();
+        } else {
+            $publish = $error->getCode() === 0 || $error->getCode() >= 500;
+        }
+
+        if ($logger && $publish) {
             $version = System::getEnv('_APP_VERSION', 'UNKNOWN');
 
             $log = new Log();
@@ -646,50 +657,58 @@ $server->onWorkerStart(function (int $workerId) use ($server, $register, $stats,
                     $userId = $event['userId'];
 
                     if ($realtime->hasSubscriber($projectId, 'user:' . $userId)) {
-                        $connection = array_key_first(reset($realtime->subscriptions[$projectId]['user:' . $userId]));
-                        $subscriptionsBefore = \count($realtime->getSubscriptionMetadata($connection));
+                        $connections = [];
+                        foreach ($realtime->subscriptions[$projectId]['user:' . $userId] as $byConnection) {
+                            foreach (\array_keys($byConnection) as $connectionId) {
+                                $connections[$connectionId] = true;
+                            }
+                        }
+
                         $consoleDatabase = getConsoleDB();
                         $project = $consoleDatabase->getAuthorization()->skip(fn () => $consoleDatabase->getDocument('projects', $projectId));
                         $database = getProjectDB($project);
 
                         /** @var User $user */
                         $user = $database->getDocument('users', $userId);
-
                         $roles = $user->getRoles($database->getAuthorization());
-                        $authorization = $realtime->connections[$connection]['authorization'] ?? null;
-                        $previousUserId = $realtime->connections[$connection]['userId'] ?? '';
 
-                        $meta = $realtime->getSubscriptionMetadata($connection);
+                        foreach (\array_keys($connections) as $connection) {
+                            $subscriptionsBefore = \count($realtime->getSubscriptionMetadata($connection));
+                            $authorization = $realtime->connections[$connection]['authorization'] ?? null;
+                            $previousUserId = $realtime->connections[$connection]['userId'] ?? '';
 
-                        $realtime->unsubscribe($connection);
+                            $meta = $realtime->getSubscriptionMetadata($connection);
 
-                        foreach ($meta as $subscriptionId => $subscription) {
-                            $queries = Query::parseQueries($subscription['queries'] ?? []);
-                            $channels = Realtime::rebindAccountChannels(
-                                $subscription['channels'] ?? [],
-                                $previousUserId,
-                                $userId
-                            );
-                            $realtime->subscribe(
-                                $projectId,
-                                $connection,
-                                $subscriptionId,
-                                $roles,
-                                $channels,
-                                $queries,
-                                $userId
-                            );
-                        }
+                            $realtime->unsubscribe($connection);
 
-                        // Restore authorization after subscribe
-                        if ($authorization !== null) {
-                            $realtime->connections[$connection]['authorization'] = $authorization;
-                        }
+                            foreach ($meta as $subscriptionId => $subscription) {
+                                $queries = Query::parseQueries($subscription['queries'] ?? []);
+                                $channels = Realtime::rebindAccountChannels(
+                                    $subscription['channels'] ?? [],
+                                    $previousUserId,
+                                    $userId
+                                );
+                                $realtime->subscribe(
+                                    $projectId,
+                                    $connection,
+                                    $subscriptionId,
+                                    $roles,
+                                    $channels,
+                                    $queries,
+                                    $userId
+                                );
+                            }
 
-                        $subscriptionsAfter = \count($realtime->getSubscriptionMetadata($connection));
-                        $subscriptionDelta = $subscriptionsAfter - $subscriptionsBefore;
-                        if ($subscriptionDelta !== 0) {
-                            $register->get('telemetry.workerSubscriptionCounter')->add($subscriptionDelta, $register->get('telemetry.workerAttributes'));
+                            // Restore authorization after subscribe
+                            if ($authorization !== null) {
+                                $realtime->connections[$connection]['authorization'] = $authorization;
+                            }
+
+                            $subscriptionsAfter = \count($realtime->getSubscriptionMetadata($connection));
+                            $subscriptionDelta = $subscriptionsAfter - $subscriptionsBefore;
+                            if ($subscriptionDelta !== 0) {
+                                $register->get('telemetry.workerSubscriptionCounter')->add($subscriptionDelta, $register->get('telemetry.workerAttributes'));
+                            }
                         }
                     }
                 }
@@ -847,7 +866,7 @@ $server->onOpen(function (int $connection, SwooleRequest $request) use ($server,
         $websocketEnabled = $apis['websocket'] ?? $apis['realtime'] ?? true;
         if (
             !$websocketEnabled
-            && !($user->isPrivileged($authorization->getRoles()) || $user->isApp($authorization->getRoles()))
+            && !($user->isPrivileged($authorization->getRoles()) || $user->isKey($authorization->getRoles()))
         ) {
             throw new AppwriteException(AppwriteException::GENERAL_API_DISABLED);
         }
@@ -990,6 +1009,16 @@ $server->onOpen(function (int $connection, SwooleRequest $request) use ($server,
         $success = true;
 
     } catch (Throwable $th) {
+        Span::error($th);
+
+        // Convert known Utopia DB exceptions to AppwriteException so isPublishable()
+        // suppresses expected client errors (permission denied, query timeout) from Sentry.
+        if ($th instanceof AuthorizationException) {
+            $th = new AppwriteException(AppwriteException::USER_UNAUTHORIZED, previous: $th);
+        } elseif ($th instanceof TimeoutException) {
+            $th = new AppwriteException(AppwriteException::DATABASE_TIMEOUT, previous: $th);
+        }
+
         logError($th, 'realtime', project: $project, user: $logUser, authorization: $authorization);
 
         // Handle SQL error code is 'HY000'
@@ -1025,7 +1054,6 @@ $server->onOpen(function (int $connection, SwooleRequest $request) use ($server,
             Console::error('[Error] Code: ' . $response['data']['code']);
             Console::error('[Error] Message: ' . $response['data']['message']);
         }
-        Span::error($th);
     } finally {
         Span::add('realtime.success', $success);
         Span::add('realtime.response_code', $responseCode);
@@ -1084,7 +1112,21 @@ $server->onMessage(function (int $connection, string $message) use ($container, 
         $database->setAuthorization($authorization);
 
         if (!empty($projectId) && $projectId !== 'console') {
-            $project = $authorization->skip(fn () => $database->getDocument('projects', $projectId));
+            // Negative-cache race: if any prior code path queried projects:$projectId
+            // before this project existed (e.g. a router probe during connection
+            // setup), the Database's shared cache may hold an empty result. Try the
+            // cached read first, and only purge/retry when the first lookup reports
+            // not-found so the shared cache remains effective for normal traffic.
+            try {
+                $project = $authorization->skip(fn () => $database->getDocument('projects', $projectId));
+            } catch (AppwriteException $e) {
+                if ($e->getCode() !== 404) {
+                    throw $e;
+                }
+
+                $database->purgeCachedDocument('projects', $projectId);
+                $project = $authorization->skip(fn () => $database->getDocument('projects', $projectId));
+            }
 
             $database = getProjectDB($project);
             $database->setAuthorization($authorization);
@@ -1171,6 +1213,16 @@ $server->onMessage(function (int $connection, string $message) use ($container, 
 
         $success = true;
     } catch (Throwable $th) {
+        Span::error($th);
+
+        // Convert known Utopia DB exceptions to AppwriteException so isPublishable()
+        // suppresses expected client errors (permission denied, query timeout) from Sentry.
+        if ($th instanceof AuthorizationException) {
+            $th = new AppwriteException(AppwriteException::USER_UNAUTHORIZED, previous: $th);
+        } elseif ($th instanceof TimeoutException) {
+            $th = new AppwriteException(AppwriteException::DATABASE_TIMEOUT, previous: $th);
+        }
+
         logError($th, 'realtimeMessage', project: $project, authorization: $authorization);
         $code = $th->getCode();
         if (!is_int($code)) {
@@ -1200,7 +1252,6 @@ $server->onMessage(function (int $connection, string $message) use ($container, 
         if ($th->getCode() === 1008) {
             $server->close($connection, $th->getCode());
         }
-        Span::error($th);
     } finally {
         Span::add('realtime.success', $success);
         Span::add('realtime.response_code', $responseCode);
