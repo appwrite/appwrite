@@ -100,7 +100,7 @@ class Appwrite extends Adapter
      */
     public function bulkEmbed(array $texts): array
     {
-        if ($texts === []) {
+        if (empty($texts)) {
             throw new \InvalidArgumentException('bulkEmbed requires at least one text');
         }
 
