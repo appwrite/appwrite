@@ -6,6 +6,11 @@ use Tests\E2E\Client;
 use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\SideConsole;
+use Utopia\Database\Helpers\ID;
+use Utopia\Database\Helpers\Permission;
+use Utopia\Database\Helpers\Role;
+use WebSocket\Client as WebSocketClient;
+use WebSocket\TimeoutException;
 
 class PresenceConsoleClientTest extends Scope
 {
@@ -58,5 +63,133 @@ class PresenceConsoleClientTest extends Scope
         $this->assertCount(3, $response['body']);
         $this->assertIsNumeric($response['body']['usersOnlineTotal']);
         $this->assertIsArray($response['body']['presences']);
+    }
+
+    public function testConsolePresenceUpsertAndUpdateBroadcastRealtime(): void
+    {
+        $user = $this->getUser();
+        $presenceId = ID::unique();
+
+        $client = $this->openConsolePresenceSocket($user, $presenceId);
+
+        try {
+            $upsertMetadata = ['testRunId' => ID::unique(), 'case' => 'console-upsert'];
+            $upsert = $this->client->call(
+                Client::METHOD_PUT,
+                '/presences/' . $presenceId,
+                \array_merge([
+                    'content-type' => 'application/json',
+                    'x-appwrite-project' => 'console',
+                ], $this->getHeaders()),
+                [
+                    'status' => 'online',
+                    'metadata' => $upsertMetadata,
+                    'permissions' => [
+                        Permission::read(Role::any()),
+                        Permission::update(Role::any()),
+                        Permission::delete(Role::any()),
+                    ],
+                ]
+            );
+            $this->assertSame(200, $upsert['headers']['status-code']);
+
+            $upsertEvent = $this->receivePresenceFrame($client, $presenceId, 'upsert');
+            $this->assertSame('online', $upsertEvent['data']['payload']['status'] ?? null);
+            $this->assertSame($upsertMetadata, $upsertEvent['data']['payload']['metadata'] ?? null);
+            $this->assertSame($user['$id'], $upsertEvent['data']['payload']['userId'] ?? null);
+            // Internal fields must not leak through the realtime broadcast.
+            $this->assertArrayNotHasKey('userInternalId', $upsertEvent['data']['payload']);
+            $this->assertArrayNotHasKey('permissionsHash', $upsertEvent['data']['payload']);
+            $this->assertArrayNotHasKey('hostname', $upsertEvent['data']['payload']);
+
+            $updateMetadata = ['testRunId' => $upsertMetadata['testRunId'], 'case' => 'console-update'];
+            $update = $this->client->call(
+                Client::METHOD_PATCH,
+                '/presences/' . $presenceId,
+                \array_merge([
+                    'content-type' => 'application/json',
+                    'x-appwrite-project' => 'console',
+                ], $this->getHeaders()),
+                [
+                    'status' => 'away',
+                    'metadata' => $updateMetadata,
+                ]
+            );
+            $this->assertSame(200, $update['headers']['status-code']);
+
+            $updateEvent = $this->receivePresenceFrame($client, $presenceId, 'update');
+            $this->assertSame('away', $updateEvent['data']['payload']['status'] ?? null);
+            $this->assertSame($updateMetadata, $updateEvent['data']['payload']['metadata'] ?? null);
+            $this->assertSame($user['$id'], $updateEvent['data']['payload']['userId'] ?? null);
+        } finally {
+            $client->close();
+        }
+    }
+
+    private function openConsolePresenceSocket(array $user, string $presenceId): WebSocketClient
+    {
+        $queryString = \http_build_query([
+            'project' => 'console',
+            'channels' => ['presences', 'presences.' . $presenceId],
+        ]);
+
+        $client = new WebSocketClient(
+            'ws://appwrite.test/v1/realtime?' . $queryString,
+            [
+                'headers' => [
+                    'origin' => 'http://localhost',
+                    'cookie' => 'a_session_console=' . $user['session'],
+                ],
+                'timeout' => 2,
+            ]
+        );
+
+        $connected = \json_decode($client->receive(), true);
+        $this->assertSame('connected', $connected['type'] ?? null);
+
+        return $client;
+    }
+
+    private function receivePresenceFrame(
+        WebSocketClient $client,
+        string $presenceId,
+        string $action,
+        int $timeoutMs = 3000
+    ): array {
+        $deadline = \microtime(true) + ($timeoutMs / 1000);
+        $lastFrame = [];
+
+        while (\microtime(true) < $deadline) {
+            try {
+                $raw = $client->receive();
+            } catch (TimeoutException) {
+                continue;
+            }
+
+            $frame = \json_decode($raw, true);
+            if (!\is_array($frame)) {
+                continue;
+            }
+
+            $lastFrame = $frame;
+            if (
+                ($frame['type'] ?? null) === 'event'
+                && ($frame['data']['payload']['$id'] ?? null) === $presenceId
+                && \in_array(
+                    'presences.' . $presenceId . '.' . $action,
+                    $frame['data']['events'] ?? [],
+                    true
+                )
+            ) {
+                $this->assertContains('presences', $frame['data']['channels'] ?? []);
+                $this->assertContains('presences.' . $presenceId, $frame['data']['channels'] ?? []);
+                return $frame;
+            }
+        }
+
+        $this->fail(
+            'Timed out waiting for presences.' . $presenceId . '.' . $action
+            . ' frame on console. Last frame: ' . \json_encode($lastFrame)
+        );
     }
 }
