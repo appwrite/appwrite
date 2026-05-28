@@ -824,7 +824,8 @@ Http::shutdown()
                 $queueForEvents->getParams()
             );
 
-            if ($project->getId() !== 'console') {
+            $allowedOnConsole = !empty(\array_intersect($route->getGroups(), Realtime::CONSOLE_ALLOWLIST));
+            if ($project->getId() !== 'console' || $allowedOnConsole) {
                 $queueForRealtime
                     ->from($queueForEvents)
                     ->trigger();
