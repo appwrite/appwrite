@@ -304,51 +304,59 @@ export function InitPrizesSection({ event }: InitPrizesSectionProps) {
   }, [raffle.activeGiveaway])
 
   return (
-    <section
-      id="init-prizes"
-      className="scroll-mt-28 space-y-4"
-      aria-labelledby="init-prizes-heading"
-    >
-      <div>
-        <h3 id="init-prizes-heading" className="text-[15px] font-semibold text-foreground">
-          {sectionTitle}
-        </h3>
-        {prizes.sectionDescription ? (
-          <p className="mt-2 max-w-2xl text-[13px] leading-relaxed text-muted-foreground">
-            {prizes.sectionDescription}
-          </p>
-        ) : null}
-      </div>
-
-      <div className="[perspective:1400px]">
-        <div
-          className={cn(
-            'relative',
-            GRID_FLIP_TRANSITION,
-            isGridFlipped && '[transform:rotateY(180deg)]',
-          )}
-        >
-          <div className="[backface-visibility:hidden]">
-            <PrizesGrid prizes={prizes} />
-          </div>
-
-          {raffle.activeGiveaway ? (
-            <div
-              className={cn(
-                'absolute inset-0 min-h-full [backface-visibility:hidden] [transform:rotateY(180deg)]',
-              )}
-            >
-              <InitGiveawayRaffleBack
-                key={raffle.activeGiveaway.day}
-                giveaway={raffle.activeGiveaway}
-                participants={raffle.participants}
-                loadingParticipants={raffle.loadingParticipants}
-                onClose={raffle.close}
-              />
-            </div>
+    <>
+      <div className="border-t border-border" aria-hidden />
+      <div className="py-8">
+        <div className="mx-auto w-full max-w-7xl px-4 sm:px-6">
+          <section
+            id="init-prizes"
+            className="scroll-mt-28 space-y-4"
+            aria-labelledby="init-prizes-heading"
+          >
+        <div>
+          <h3 id="init-prizes-heading" className="text-[15px] font-semibold text-foreground">
+            {sectionTitle}
+          </h3>
+          {prizes.sectionDescription ? (
+            <p className="mt-2 max-w-2xl text-[13px] leading-relaxed text-muted-foreground">
+              {prizes.sectionDescription}
+            </p>
           ) : null}
         </div>
+
+        <div className="[perspective:1400px]">
+          <div
+            className={cn(
+              'relative',
+              GRID_FLIP_TRANSITION,
+              isGridFlipped && '[transform:rotateY(180deg)]',
+            )}
+          >
+            <div className="[backface-visibility:hidden]">
+              <PrizesGrid prizes={prizes} />
+            </div>
+
+            {raffle.activeGiveaway ? (
+              <div
+                className={cn(
+                  'absolute inset-0 min-h-full [backface-visibility:hidden] [transform:rotateY(180deg)]',
+                )}
+              >
+                <InitGiveawayRaffleBack
+                  key={raffle.activeGiveaway.day}
+                  giveaway={raffle.activeGiveaway}
+                  participants={raffle.participants}
+                  loadingParticipants={raffle.loadingParticipants}
+                  onClose={raffle.close}
+                />
+              </div>
+            ) : null}
+          </div>
+        </div>
+          </section>
+        </div>
       </div>
-    </section>
+      <div className="border-t border-border" aria-hidden />
+    </>
   )
 }
