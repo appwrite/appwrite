@@ -131,4 +131,26 @@ class Agent
 
         return $this->adapter->embed($text);
     }
+
+    /**
+     * Get embeddings for a batch of input texts using underlying adapter (if supported)
+     *
+     * @param array<int, string> $texts
+     *
+     * @return array{
+     *     embeddings: array<int, array<int, float>>,
+     *     tokensProcessed: int|null,
+     *     totalDuration: int|null,
+     * }
+     *
+     * @throws \Exception
+     */
+    public function bulkEmbed(array $texts): array
+    {
+        if (! $this->adapter->getSupportForEmbeddings()) {
+            throw new \Exception('This adapter does not support embedding/embedding API.');
+        }
+
+        return $this->adapter->bulkEmbed($texts);
+    }
 }
