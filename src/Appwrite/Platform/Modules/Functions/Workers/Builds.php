@@ -246,17 +246,13 @@ class Builds extends Action
             ->setParam($resourceKey, $resource->getId())
             ->setParam('deploymentId', $deployment->getId());
 
-        $deploymentId = $deployment->getId();
-        $deployment = $dbForProject->getDocument('deployments', $deploymentId);
-        if ($deployment->isEmpty()) {
-            throw new \Exception('Deployment not found');
-        }
-
         if ($deployment->getAttribute('status') === 'canceled') {
-            $this->cancelDeployment($deploymentId, $dbForProject, $queueForRealtime);
+            $this->cancelDeployment($deployment->getId(), $dbForProject, $queueForRealtime);
 
             return;
         }
+
+        $deploymentId = $deployment->getId();
 
         $deployment->setAttribute('buildStartedAt', $startTime);
         $deployment->setAttribute('status', 'processing');
@@ -538,12 +534,6 @@ class Builds extends Action
             }
 
             /** Request the executor to build the code... */
-            $deployment = $dbForProject->getDocument('deployments', $deploymentId);
-            if ($deployment->getAttribute('status') === 'canceled') {
-                $this->cancelDeployment($deploymentId, $dbForProject, $queueForRealtime);
-                return;
-            }
-
             $deployment->setAttribute('status', 'building');
             $deployment = $dbForProject->updateDocument('deployments', $deployment->getId(), new Document([
                 'status' => 'building',
