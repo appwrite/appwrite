@@ -491,9 +491,9 @@ return function (Container $context): void {
         // Impersonation: if current user has impersonator capability and headers/params are set, act as another user
         // Query params mirror the header fallback pattern used by ?project= and ?devKey=,
         // allowing Console to embed impersonation in direct file/image URLs where headers cannot be set.
-        $impersonateUserId = $request->getHeader('x-appwrite-impersonate-user-id', (string)$request->getParam('impersonateUserId', ''));
-        $impersonateEmail = $request->getHeader('x-appwrite-impersonate-user-email', (string)$request->getParam('impersonateEmail', ''));
-        $impersonatePhone = $request->getHeader('x-appwrite-impersonate-user-phone', (string)$request->getParam('impersonatePhone', ''));
+        $impersonateUserId = $request->getHeader('x-appwrite-impersonate-user-id', (string)($request->getParam('impersonateuserid', '') ?: $request->getParam('impersonateUserId', '')));
+        $impersonateEmail = $request->getHeader('x-appwrite-impersonate-user-email', (string)($request->getParam('impersonateuseremail', '') ?: $request->getParam('impersonateEmail', '')));
+        $impersonatePhone = $request->getHeader('x-appwrite-impersonate-user-phone', (string)($request->getParam('impersonateuserphone', '') ?: $request->getParam('impersonatePhone', '')));
         if (!$user->isEmpty() && $user->getAttribute('impersonator', false)) {
             $userDb = (APP_MODE_ADMIN === $mode || $project->getId() === 'console') ? $dbForPlatform : $dbForProject;
             $targetUser = null;
