@@ -719,6 +719,8 @@ function router(Http $utopia, Database $dbForPlatform, callable $getProjectDB, S
         $execution->setAttribute('logs', '');
         $execution->setAttribute('errors', '');
 
+        $execution = $authorization->skip(fn () => $dbForProject->createDocument('executions', $execution));
+
         $headers = [];
         foreach (($executionResponse['headers'] ?? []) as $key => $value) {
             $headers[] = ['name' => $key, 'value' => \is_array($value) ? \implode(', ', $value) : $value];
