@@ -1361,7 +1361,7 @@ services:
   appwrite-embedding:
     image: appwrite/embedding:0.1.0
     environment:
-      EMBEDDING_MODELS: ${_APP_EMBEDDING_MODELS:-nomic}
+      EMBEDDING_MODELS: ${_APP_EMBEDDING_MODELS:-nomic-embed-text}
     container_name: appwrite-embedding
     ports:
       - "11430:11434"
