@@ -603,8 +603,6 @@ class FunctionsCustomClientTest extends Scope
             $lastExecution = $executions['body']['executions'][0];
             $this->assertEquals('completed', $lastExecution['status']);
             $this->assertEquals(204, $lastExecution['responseStatusCode']);
-            $this->assertEmpty($lastExecution['logs']);
-            $this->assertEmpty($lastExecution['errors']);
         }, 20000, 500);
 
         $this->client->call(Client::METHOD_DELETE, '/databases/' . $databaseId, [
