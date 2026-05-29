@@ -58,6 +58,8 @@ class FunctionsScheduleTest extends Scope
             $this->assertEquals('completed', $asyncExecution['status']);
             $this->assertEquals(200, $asyncExecution['responseStatusCode']);
             $this->assertEquals('', $asyncExecution['responseBody']);
+            $this->assertEmpty($asyncExecution['logs']);
+            $this->assertEmpty($asyncExecution['errors']);
             $this->assertGreaterThan(0, $asyncExecution['duration']);
             $this->assertNotEmpty($asyncExecution['$id']);
             $headers = array_column($asyncExecution['requestHeaders'] ?? [], 'value', 'name');
@@ -130,6 +132,8 @@ class FunctionsScheduleTest extends Scope
             $this->assertEquals('completed', $execution['body']['status']);
             $this->assertEquals('/custom-path', $execution['body']['requestPath']);
             $this->assertEquals('PATCH', $execution['body']['requestMethod']);
+            $this->assertEmpty($execution['body']['logs']);
+            $this->assertEmpty($execution['body']['errors']);
             $this->assertGreaterThan(0, $execution['body']['duration']);
         }, 120000, 500);
 

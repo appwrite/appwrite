@@ -2791,6 +2791,8 @@ class SitesCustomServerTest extends Scope
         $this->assertStringContainsString($deploymentId, $logs['body']['executions'][0]['deploymentId']);
         $this->assertStringContainsString("GET", $logs['body']['executions'][0]['requestMethod']);
         $this->assertStringContainsString("/logs-inline", $logs['body']['executions'][0]['requestPath']);
+        $this->assertEmpty($logs['body']['executions'][0]['logs']);
+        $this->assertEmpty($logs['body']['executions'][0]['errors']);
         $log1Id = $logs['body']['executions'][0]['$id'];
         $this->assertNotEmpty($log1Id);
 
@@ -2834,6 +2836,8 @@ class SitesCustomServerTest extends Scope
         $this->assertStringContainsString($deploymentId, $logs['body']['executions'][0]['deploymentId']);
         $this->assertStringContainsString("GET", $logs['body']['executions'][0]['requestMethod']);
         $this->assertStringContainsString("/logs-action", $logs['body']['executions'][0]['requestPath']);
+        $this->assertEmpty($logs['body']['executions'][0]['logs']);
+        $this->assertEmpty($logs['body']['executions'][0]['errors']);
         $log2Id = $logs['body']['executions'][0]['$id'];
         $this->assertNotEmpty($log2Id);
 
