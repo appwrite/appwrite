@@ -582,7 +582,7 @@ class DatabasesCustomServerTest extends Scope
                 'x-appwrite-project' => $this->getProject()['$id'],
                 'x-appwrite-key' => $this->getProject()['apiKey']
             ], [
-                'model' => 'embeddinggemma',
+                'model' => 'nomic',
                 'texts' => [
                     'hello world',
                     'second sentence',
@@ -616,7 +616,7 @@ class DatabasesCustomServerTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ], [
-            'model' => 'embeddinggemma',
+            'model' => 'nomic',
             'texts' => [
                 'valid text',
                 123, // invalid, not a string

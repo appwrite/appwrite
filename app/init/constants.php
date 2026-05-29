@@ -108,6 +108,9 @@ const APP_VCS_GITHUB_EMAIL = 'team@appwrite.io';
 const APP_VCS_GITHUB_URL = 'https://github.com/TeamAppwrite';
 const APP_BRANDED_EMAIL_BASE_TEMPLATE = 'email-base-styled';
 
+// Embeddings
+const APP_EMBEDDING_BATCH_LIMIT = 100;
+
 /**
  * JWT for Resource Tokens.
  */

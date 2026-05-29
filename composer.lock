@@ -3411,16 +3411,16 @@
         },
         {
             "name": "utopia-php/agents",
-            "version": "1.2.2",
+            "version": "1.2.3",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/agents.git",
-                "reference": "0703f4cae02261e09a1bf0d39a4b1ce649cae634"
+                "reference": "47fb6282909fb8dfbb196f1a9834e4d858e41dcb"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/agents/zipball/0703f4cae02261e09a1bf0d39a4b1ce649cae634",
-                "reference": "0703f4cae02261e09a1bf0d39a4b1ce649cae634",
+                "url": "https://api.github.com/repos/utopia-php/agents/zipball/47fb6282909fb8dfbb196f1a9834e4d858e41dcb",
+                "reference": "47fb6282909fb8dfbb196f1a9834e4d858e41dcb",
                 "shasum": ""
             },
             "require": {
@@ -3458,9 +3458,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/agents/issues",
-                "source": "https://github.com/utopia-php/agents/tree/1.2.2"
+                "source": "https://github.com/utopia-php/agents/tree/1.2.3"
             },
-            "time": "2026-05-08T10:38:23+00:00"
+            "time": "2026-05-28T11:22:16+00:00"
         },
         {
             "name": "utopia-php/analytics",

@@ -112,7 +112,7 @@ services:
         condition: service_healthy
       coredns:
         condition: service_started
-      ollama:
+      appwrite-embedding:
         condition: service_started
     entrypoint:
       - php
@@ -304,7 +304,7 @@ services:
     depends_on:
       - ${_APP_DB_HOST:-mongodb}
       - redis
-      - ollama
+      - appwrite-embedding
     environment:
       - _APP_ENV
       - _APP_WORKER_PER_CORE
@@ -346,7 +346,7 @@ services:
     depends_on:
       - redis
       - ${_APP_DB_HOST:-mongodb}
-      - ollama
+      - appwrite-embedding
     environment:
       - _APP_ENV
       - _APP_WORKER_PER_CORE
@@ -380,7 +380,7 @@ services:
       - ${_APP_DB_HOST:-mongodb}
       - request-catcher-sms
       - request-catcher-webhook
-      - ollama
+      - appwrite-embedding
     environment:
       - _APP_ENV
       - _APP_WORKER_PER_CORE
@@ -411,7 +411,7 @@ services:
     depends_on:
       - redis
       - ${_APP_DB_HOST:-mongodb}
-      - ollama
+      - appwrite-embedding
     volumes:
       - appwrite-uploads:/storage/uploads:rw
       - appwrite-cache:/storage/cache:rw
@@ -481,7 +481,7 @@ services:
     depends_on:
       - redis
       - ${_APP_DB_HOST:-mongodb}
-      - ollama
+      - appwrite-embedding
     environment:
       - _APP_ENV
       - _APP_WORKER_PER_CORE
@@ -524,7 +524,7 @@ services:
     depends_on:
       - redis
       - ${_APP_DB_HOST:-mongodb}
-      - ollama
+      - appwrite-embedding
     environment:
       - _APP_ENV
       - _APP_WORKER_PER_CORE
@@ -657,7 +657,7 @@ services:
     depends_on:
       - redis
       - ${_APP_DB_HOST:-mongodb}
-      - ollama
+      - appwrite-embedding
     volumes:
       - appwrite-config:/storage/config:rw
       - appwrite-certificates:/storage/certificates:rw
@@ -1075,7 +1075,7 @@ services:
     depends_on:
       - redis
       - ${_APP_DB_HOST:-mongodb}
-      - ollama
+      - appwrite-embedding
     environment:
       - _APP_ENV
       - _APP_WORKER_PER_CORE
@@ -1109,7 +1109,7 @@ services:
     depends_on:
       - ${_APP_DB_HOST:-mongodb}
       - redis
-      - ollama
+      - appwrite-embedding
     environment:
       - _APP_ENV
       - _APP_WORKER_PER_CORE
@@ -1147,7 +1147,7 @@ services:
     depends_on:
       - ${_APP_DB_HOST:-mongodb}
       - redis
-      - ollama
+      - appwrite-embedding
     environment:
       - _APP_ENV
       - _APP_WORKER_PER_CORE
@@ -1185,7 +1185,7 @@ services:
     depends_on:
       - ${_APP_DB_HOST:-mongodb}
       - redis
-      - ollama
+      - appwrite-embedding
     environment:
       - _APP_ENV
       - _APP_WORKER_PER_CORE
@@ -1358,19 +1358,19 @@ services:
       start_period: 10s
     command: "postgres"
 
-  ollama:
-    image: appwrite/ollama:0.1.1
-    container_name: ollama
-    ports:
-      - "11434:11434"
-    restart: unless-stopped
-    environment:
-      MODELS: ${_APP_EMBEDDING_MODELS:-embeddinggemma}
-      OLLAMA_KEEP_ALIVE: 24h
-    volumes:
-      - appwrite-models:/root/.ollama
-    networks:
-      - appwrite
+    appwrite-embedding:
+      image: appwrite/embedding
+      environment:
+        EMBEDDING_MODELS: "nomic"
+      container_name: appwrite-embedding
+      ports:
+        - "11430:11434"
+      restart: unless-stopped
+      # persistent for caching models across restarts and preloading
+      volumes:
+        - embedding_models:/home/embedder/models
+      networks:
+        - appwrite
 
   redis:
     image: redis:7.4.7-alpine
