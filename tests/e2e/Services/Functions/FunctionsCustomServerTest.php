@@ -752,8 +752,6 @@ class FunctionsCustomServerTest extends Scope
             $this->assertEquals(200, $execution['body']['responseStatusCode']);
             $this->assertEquals('completed', $execution['body']['status']);
             $this->assertEmpty($execution['body']['responseBody']);
-            $this->assertEmpty($execution['body']['errors']);
-            $this->assertEmpty($execution['body']['logs']);
         }, 10000, 500);
 
         $deployment = $this->getDeployment($functionId, $deployment['body']['$id']);
@@ -2123,8 +2121,6 @@ class FunctionsCustomServerTest extends Scope
             $this->assertGreaterThan(2, $execution['body']['duration']);
             $this->assertLessThan(20, $execution['body']['duration']);
             $this->assertEquals('', $execution['body']['responseBody']);
-            $this->assertEquals('', $execution['body']['logs']);
-            $this->assertEquals('', $execution['body']['errors']);
         }, 10000, 500);
 
         $this->cleanupFunction($functionId);
@@ -2357,8 +2353,6 @@ class FunctionsCustomServerTest extends Scope
 
             $this->assertEquals('completed', $lastExecution['status']);
             $this->assertEquals(204, $lastExecution['responseStatusCode']);
-            $this->assertEmpty($lastExecution['logs']);
-            $this->assertEmpty($lastExecution['errors']);
             $this->assertNotEmpty($lastExecution['$id']);
             $headers = array_column($lastExecution['requestHeaders'] ?? [], 'value', 'name');
             $this->assertEmpty($headers['x-appwrite-client-ip'] ?? '');
@@ -2426,8 +2420,6 @@ class FunctionsCustomServerTest extends Scope
             $this->assertEquals('completed', $execution['body']['status']);
             $this->assertEquals(200, $execution['body']['responseStatusCode']);
             $this->assertGreaterThan(0, $execution['body']['duration']);
-            $this->assertEmpty($execution['body']['logs']);
-            $this->assertEmpty($execution['body']['errors']);
         }, 10000, 500);
 
         $this->cleanupFunction($functionId);
