@@ -298,6 +298,9 @@ class Builds extends Action
 
                 $templateRootDirectory = $template->getAttribute('rootDirectory', '');
                 $templateRootDirectory = \trim($templateRootDirectory, '/');
+                while (\str_starts_with($templateRootDirectory, './')) {
+                    $templateRootDirectory = \substr($templateRootDirectory, 2);
+                }
                 if ($templateRootDirectory !== '' && \preg_match('#(^|/)\.\.(/|$)#', $templateRootDirectory)) {
                     throw new \Exception('Invalid template root directory');
                 }
@@ -423,6 +426,9 @@ class Builds extends Action
 
                 $templateRootDirectory = $template->getAttribute('rootDirectory', '');
                 $templateRootDirectory = \trim($templateRootDirectory, '/');
+                while (\str_starts_with($templateRootDirectory, './')) {
+                    $templateRootDirectory = \substr($templateRootDirectory, 2);
+                }
                 if ($templateRootDirectory !== '' && \preg_match('#(^|/)\.\.(/|$)#', $templateRootDirectory)) {
                     throw new \Exception('Invalid template root directory');
                 }
