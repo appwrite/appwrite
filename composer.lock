@@ -3687,16 +3687,16 @@
         },
         {
             "name": "utopia-php/circuit-breaker",
-            "version": "0.3.0",
+            "version": "0.3.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/circuit-breaker.git",
-                "reference": "064243c1667778c00abf027ff53a735a228776de"
+                "reference": "db5d77f6c99ebce2ee81bd8ed4ae8f41bd2b0828"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/circuit-breaker/zipball/064243c1667778c00abf027ff53a735a228776de",
-                "reference": "064243c1667778c00abf027ff53a735a228776de",
+                "url": "https://api.github.com/repos/utopia-php/circuit-breaker/zipball/db5d77f6c99ebce2ee81bd8ed4ae8f41bd2b0828",
+                "reference": "db5d77f6c99ebce2ee81bd8ed4ae8f41bd2b0828",
                 "shasum": ""
             },
             "require": {
@@ -3706,7 +3706,7 @@
                 "laravel/pint": "^1.29",
                 "phpstan/phpstan": "^2.1",
                 "phpunit/phpunit": "^10.0",
-                "utopia-php/telemetry": "0.2.*"
+                "utopia-php/telemetry": "^0.4"
             },
             "suggest": {
                 "ext-opentelemetry": "Required by utopia-php/telemetry when using OpenTelemetry metrics.",
@@ -3743,9 +3743,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/circuit-breaker/issues",
-                "source": "https://github.com/utopia-php/circuit-breaker/tree/0.3.0"
+                "source": "https://github.com/utopia-php/circuit-breaker/tree/0.3.1"
             },
-            "time": "2026-05-12T04:27:08+00:00"
+            "time": "2026-05-29T12:12:23+00:00"
         },
         {
             "name": "utopia-php/cli",
@@ -4679,12 +4679,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/migration.git",
-                "reference": "e809d361b633040002bc284bac09dd987a04cd59"
+                "reference": "4829ace12f43f3d97020661660d0d4abb312eaad"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/migration/zipball/e809d361b633040002bc284bac09dd987a04cd59",
-                "reference": "e809d361b633040002bc284bac09dd987a04cd59",
+                "url": "https://api.github.com/repos/utopia-php/migration/zipball/4829ace12f43f3d97020661660d0d4abb312eaad",
+                "reference": "4829ace12f43f3d97020661660d0d4abb312eaad",
                 "shasum": ""
             },
             "require": {
@@ -4744,7 +4744,7 @@
                 "source": "https://github.com/utopia-php/migration/tree/add-oauth-providers-migration",
                 "issues": "https://github.com/utopia-php/migration/issues"
             },
-            "time": "2026-05-29T10:20:55+00:00"
+            "time": "2026-05-29T14:33:29+00:00"
         },
         {
             "name": "utopia-php/mongo",
