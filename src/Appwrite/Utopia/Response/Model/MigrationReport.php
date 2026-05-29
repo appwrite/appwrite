@@ -5,7 +5,6 @@ namespace Appwrite\Utopia\Response\Model;
 use Appwrite\Utopia\Response;
 use Appwrite\Utopia\Response\Model;
 use Utopia\Migration\Resource;
-use Utopia\Migration\Transfer;
 
 class MigrationReport extends Model
 {
@@ -169,17 +168,12 @@ class MigrationReport extends Model
                 'example' => '1.4.0',
             ]);
 
-        // OAuth2 providers — one rule per provider type. Each is reported as
-        // 0 or 1 (the per-project singleton). Secrets are never migrated;
-        // see the per-provider Resource classes in utopia-php/migration.
-        foreach (Transfer::GROUP_AUTH_OAUTH2_RESOURCES as $oauth2Type) {
-            $this->addRule($oauth2Type, [
-                'type' => self::TYPE_INTEGER,
-                'description' => 'Number of `' . $oauth2Type . '` provider configs to be migrated (0 or 1; secrets are not migrated).',
-                'default' => 0,
-                'example' => 1,
-            ]);
-        }
+        $this->addRule(Resource::TYPE_OAUTH2_PROVIDER, [
+            'type' => self::TYPE_INTEGER,
+            'description' => 'Number of OAuth2 provider configurations to be migrated. Secrets (clientSecret, p8File) are never migrated — destination admin must re-enter them per provider.',
+            'default' => 0,
+            'example' => 5,
+        ]);
     }
 
     /**
