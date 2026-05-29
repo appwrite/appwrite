@@ -1,12 +1,25 @@
 import { defineConfig } from 'vite'
 import { tanstackStart } from '@tanstack/react-start/plugin/vite'
-import { sentryTanstackStart } from '@sentry/tanstackstart-react/vite'
 import viteReact from '@vitejs/plugin-react'
 import viteTsConfigPaths from 'vite-tsconfig-paths'
 import tailwindcss from '@tailwindcss/vite'
 import devtoolsJson from 'vite-plugin-devtools-json'
 
-const config = defineConfig({
+export default defineConfig(async () => {
+  const sentryPlugins =
+    process.env.VITE_SENTRY_DSN && process.env.SENTRY_AUTH_TOKEN
+      ? [
+          (
+            await import('@sentry/tanstackstart-react/vite')
+          ).sentryTanstackStart({
+            org: 'appwrite',
+            project: 'console-v4',
+            authToken: process.env.SENTRY_AUTH_TOKEN,
+          }),
+        ]
+      : []
+
+  return {
   plugins: [
     // this is the plugin that enables path aliases
     viteTsConfigPaths({
@@ -49,16 +62,7 @@ const config = defineConfig({
     }),
     devtoolsJson(),
     viteReact(),
-    // Sentry plugin for source maps upload (only when Sentry is enabled via VITE_SENTRY_DSN)
-    ...(process.env.VITE_SENTRY_DSN && process.env.SENTRY_AUTH_TOKEN
-      ? [
-          sentryTanstackStart({
-            org: 'appwrite',
-            project: 'console-v4',
-            authToken: process.env.SENTRY_AUTH_TOKEN,
-          }),
-        ]
-      : []),
+    ...sentryPlugins,
   ],
   server: {
     host: '::',
@@ -75,17 +79,19 @@ const config = defineConfig({
       'decimal.js',
       'decimal.js-light',
       // CJS entry re-exports `useSyncExternalStoreWithSelector`; pre-bundle so named ESM imports work
-      // (@tanstack/react-store, recharts).
+      // (recharts).
       'use-sync-external-store/shim/with-selector.js',
     ],
     include: [
       'decimal.js',
       'decimal.js-light',
-      '@tanstack/react-store',
       'recharts',
       'use-sync-external-store',
       'use-sync-external-store/shim/with-selector.js',
     ],
+    // Serve TanStack store packages as native ESM. Pre-bundling cached an older
+    // @tanstack/react-store without createAtom when router upgraded first.
+    exclude: ['@tanstack/react-store', '@tanstack/store'],
   },
   preview: {
     port: 4173,
@@ -105,6 +111,5 @@ const config = defineConfig({
     ],
     exclude: ['e2e/**', 'node_modules/**'],
   },
+  }
 })
-
-export default config

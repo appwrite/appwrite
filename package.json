@@ -58,18 +58,20 @@
     "@radix-ui/react-visually-hidden": "^1.2.3",
     "@react-three/drei": "^10.7.7",
     "@react-three/fiber": "9.6.1",
-    "@sentry/tanstackstart-react": "^10.36.0",
+    "@sentry/tanstackstart-react": "^10.40.0",
     "@stripe/stripe-js": "^4.8.0",
     "@tailwindcss/vite": "^4.0.6",
     "@tanstack/react-devtools": "^0.7.1",
     "@tanstack/react-query": "^5.90.2",
     "@tanstack/react-query-devtools": "^5.90.2",
-    "@tanstack/react-router": "^1.132.31",
-    "@tanstack/react-router-devtools": "^1.132.31",
-    "@tanstack/react-router-ssr-query": "^1.132.31",
-    "@tanstack/react-start": "^1.132.32",
+    "@tanstack/react-router": "1.132.31",
+    "@tanstack/react-router-devtools": "1.132.31",
+    "@tanstack/react-router-ssr-query": "1.132.31",
+    "@tanstack/react-start": "1.132.32",
+    "@tanstack/react-store": "^0.9.3",
     "@tanstack/react-virtual": "^3.13.18",
-    "@tanstack/router-plugin": "^1.132.31",
+    "@tanstack/router-plugin": "1.132.31",
+    "@tanstack/store": "^0.9.3",
     "animejs": "^4.4.1",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
@@ -108,7 +110,15 @@
     "zod": "^4.1.11"
   },
   "overrides": {
-    "use-sync-external-store": "^1.6.0"
+    "use-sync-external-store": "^1.6.0",
+    "@tanstack/react-store": "^0.9.3",
+    "@tanstack/store": "^0.9.3"
+  },
+  "pnpm": {
+    "overrides": {
+      "@tanstack/react-store": "^0.9.3",
+      "@tanstack/store": "^0.9.3"
+    }
   },
   "devDependencies": {
     "@playwright/test": "^1.58.2",
