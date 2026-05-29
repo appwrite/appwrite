@@ -135,8 +135,7 @@ class Agent
     /**
      * Get embeddings for a batch of input texts using underlying adapter (if supported)
      *
-     * @param array<int, string> $texts
-     *
+     * @param  array<int, string>  $texts
      * @return array{
      *     embeddings: array<int, array<int, float>>,
      *     tokensProcessed: int|null,
