@@ -714,12 +714,11 @@ function router(Http $utopia, Database $dbForPlatform, callable $getProjectDB, S
                 spec: $spec,
                 resource: $resource->getArrayCopy(),
             ));
+
+            $execution->setAttribute('logs', '');
+            $execution->setAttribute('errors', '');
+            $execution = $authorization->skip(fn () => $dbForProject->createDocument('executions', $execution));
         }
-
-        $execution->setAttribute('logs', '');
-        $execution->setAttribute('errors', '');
-
-        $execution = $authorization->skip(fn () => $dbForProject->createDocument('executions', $execution));
 
         $headers = [];
         foreach (($executionResponse['headers'] ?? []) as $key => $value) {
