@@ -1368,7 +1368,7 @@ services:
     restart: unless-stopped
     # persistent for caching models across restarts and preloading
     volumes:
-      - embedding_models:/home/embedder/models
+      - appwrite-models:/home/embedder/models
     networks:
       - appwrite
 
