@@ -4880,15 +4880,14 @@ export function RowsSpreadsheet({
                         headerCellBorderClass,
                       )}
                     >
-                      <div className="flex min-w-0 items-center gap-1.5">
+                      <div className="flex min-w-0 items-center gap-1">
                         <SequenceHeaderIcon className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
                         <button
                           type="button"
                           aria-label="Copy column name: $sequence"
                           onClick={() => void copyColumnHeaderName('$sequence')}
-                          className="group inline-flex min-w-0 flex-1 items-center gap-0.5 rounded px-0.5 -mx-0.5 py-0 text-left text-[11px] font-medium uppercase tracking-wider text-muted-foreground cursor-pointer transition-colors hover:bg-muted/80 hover:text-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                          className="group inline-flex shrink-0 items-center rounded p-0.5 text-muted-foreground cursor-pointer transition-colors hover:bg-muted/80 hover:text-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
                         >
-                          <span className="min-w-0 truncate">#</span>
                           {copiedColumnHeaderKey === '$sequence' ? (
                             <Check
                               className="h-3 w-3 shrink-0 text-green-600"
@@ -4896,7 +4895,7 @@ export function RowsSpreadsheet({
                             />
                           ) : (
                             <Copy
-                              className="h-3 w-3 shrink-0 text-muted-foreground opacity-0 transition-opacity group-hover:opacity-70 group-focus-visible:opacity-70"
+                              className="h-3 w-3 shrink-0 opacity-0 transition-opacity group-hover:opacity-70 group-focus-visible:opacity-70"
                               aria-hidden
                             />
                           )}

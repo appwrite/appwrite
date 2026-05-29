@@ -94,6 +94,13 @@ export interface LaunchEventOnlineUser {
   activity: string
   isLive?: boolean
   theme?: 'light' | 'dark'
+  /** ISO 3166-1 alpha-2 country code from locale API. */
+  countryCode?: string
+}
+
+export interface InitCommunityCountry {
+  code: string
+  count: number
 }
 
 export type LaunchEventUserPresence = 'online' | 'recent'

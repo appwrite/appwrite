@@ -3,7 +3,7 @@ import type { Models } from '@appwrite.io/console'
 import { sdk } from '@/lib/appwrite/sdk'
 import { sanitizeInitPresenceActivity } from '@/lib/init/init-presence-activity-allowlist'
 import { parseInitPresenceTheme, type InitPresenceTheme } from '@/lib/init/init-presence-theme'
-import type { LaunchEventOnlineUser } from '@/lib/init/types'
+import type { LaunchEventOnlineUser, InitCommunityCountry } from '@/lib/init/types'
 
 /** Heartbeat interval while the Init page is active. */
 export const INIT_PRESENCE_HEARTBEAT_MS = 30_000
@@ -31,6 +31,8 @@ export type InitPresenceMetadata = {
   activity?: string
   isLive?: boolean
   theme?: InitPresenceTheme
+  /** ISO 3166-1 alpha-2 country code from locale API. */
+  countryCode?: string
 }
 
 /** Presence row ID is the signed-in console user ID (one log per user). */
@@ -83,12 +85,15 @@ export function parseInitPresenceMetadata(
   const eventId = typeof record.eventId === 'string' ? record.eventId.trim() : ''
   if (!eventId) return null
   const name = typeof record.name === 'string' ? record.name.trim() : ''
+  const countryCode =
+    typeof record.countryCode === 'string' ? record.countryCode.trim().toUpperCase() : ''
   return {
     eventId,
     name,
     activity: typeof record.activity === 'string' ? record.activity : undefined,
     isLive: record.isLive === true,
     theme: parseInitPresenceTheme(record.theme),
+    countryCode: countryCode || undefined,
   }
 }
 
@@ -401,6 +406,7 @@ export function presenceToOnlineUser(
     activity: sanitizeInitPresenceActivity(metadata?.activity, activityAllowlist),
     isLive: metadata?.isLive,
     theme: metadata?.theme,
+    countryCode: metadata?.countryCode,
   }
 }
 
@@ -410,6 +416,25 @@ export function sortOnlineUsers(users: LaunchEventOnlineUser[]): LaunchEventOnli
     if (liveDelta !== 0) return liveDelta
     return a.name.localeCompare(b.name)
   })
+}
+
+/** Aggregate online participants by country code for the community globe. */
+export function aggregateInitCommunityCountries(
+  presences: Iterable<InitPresenceRecord>,
+  activityAllowlist: ReadonlySet<string>,
+): InitCommunityCountry[] {
+  const counts = new Map<string, number>()
+
+  for (const presence of presences) {
+    const user = presenceToOnlineUser(presence, activityAllowlist)
+    if (!user.countryCode) continue
+    const code = user.countryCode.toUpperCase()
+    counts.set(code, (counts.get(code) ?? 0) + 1)
+  }
+
+  return Array.from(counts.entries())
+    .map(([code, count]) => ({ code, count }))
+    .sort((a, b) => b.count - a.count || a.code.localeCompare(b.code))
 }
 
 function enrichPresenceRecord(

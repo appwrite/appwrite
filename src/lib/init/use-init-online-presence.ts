@@ -2,11 +2,14 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { type Models, type RealtimeResponseEvent } from '@appwrite.io/console'
 import { useQuery } from '@tanstack/react-query'
 import { consoleAccountQueryOptions } from '@/lib/react-query/hooks/auth'
+import { fetchLocale } from '@/lib/react-query/hooks/locale'
+import { LONG_STALE_TIME } from '@/lib/react-query/hooks/constants'
 import { retainInitPresencesRealtimeListener } from '@/lib/init/init-presences-realtime'
 import { buildInitPresenceActivityAllowlist } from '@/lib/init/init-presence-activity-allowlist'
 import {
   INIT_PRESENCE_HEARTBEAT_MS,
   applyInitPresenceRealtimeRecord,
+  aggregateInitCommunityCountries,
   buildInitAwayStatus,
   buildInitOnlineStatus,
   buildInitPresenceId,
@@ -36,7 +39,7 @@ import {
   resolveInitPresenceTheme,
   type InitPresenceTheme,
 } from '@/lib/init/init-presence-theme'
-import type { LaunchEvent, LaunchEventOnlineUser } from '@/lib/init/types'
+import type { LaunchEvent, LaunchEventOnlineUser, InitCommunityCountry } from '@/lib/init/types'
 import { useTheme } from 'next-themes'
 
 const SIDEBAR_USER_LIMIT = 16
@@ -75,6 +78,8 @@ export type InitOnlinePresenceState = {
   onlineCount: number
   othersOnlineCount: number
   onlineThemeCounts: { light: number; dark: number }
+  communityCountries: InitCommunityCountry[]
+  communityDeveloperCount: number
   isReady: boolean
   participantStatus: InitParticipantStatus
   isParticipantStatusUpdating: boolean
@@ -91,6 +96,8 @@ const EMPTY_STATE: InitOnlinePresenceState = {
   onlineCount: 0,
   othersOnlineCount: 0,
   onlineThemeCounts: { light: 0, dark: 0 },
+  communityCountries: [],
+  communityDeveloperCount: 0,
   isReady: false,
   participantStatus: 'online',
   isParticipantStatusUpdating: false,
@@ -135,6 +142,15 @@ export function useInitOnlinePresence(
     ...consoleAccountQueryOptions(),
     enabled,
   })
+  const { data: localeData } = useQuery({
+    queryKey: ['locale', 'console'],
+    queryFn: fetchLocale,
+    staleTime: LONG_STALE_TIME,
+    enabled,
+  })
+
+  const countryCodeRef = useRef<string | undefined>(undefined)
+  countryCodeRef.current = localeData?.countryCode?.trim().toUpperCase() || undefined
 
   const [presenceMaps, setPresenceMaps] = useState<PresenceMaps>(() => ({
     online: new Map(),
@@ -187,6 +203,7 @@ export function useInitOnlinePresence(
         theme:
           publishThemeRef.current ??
           resolveInitPresenceTheme(resolvedThemeRef.current),
+        countryCode: countryCodeRef.current,
       }
     },
     [accountName, eventId, resolveActivity],
@@ -485,6 +502,20 @@ export function useInitOnlinePresence(
   }, [accountUserId, enabled, eventId, isReady, resolvedTheme, theme, syncPresenceTheme])
 
   useEffect(() => {
+    if (!enabled || !eventId || !accountUserId || !isReady || !localeData?.countryCode) {
+      return
+    }
+    void publishPresence(!participantOnlineRef.current, { refresh: false })
+  }, [
+    accountUserId,
+    enabled,
+    eventId,
+    isReady,
+    localeData?.countryCode,
+    publishPresence,
+  ])
+
+  useEffect(() => {
     if (!enabled || !eventId || !accountUserId) return
 
     const heartbeat = window.setInterval(() => {
@@ -580,6 +611,14 @@ export function useInitOnlinePresence(
     const onlineCount = presenceMaps.online.size
     const othersOnlineCount = Math.max(0, onlineCount - onlineUsers.length)
     const onlineThemeCounts = countInitPresenceThemes(allOnlineUsers)
+    const communityCountries = aggregateInitCommunityCountries(
+      presenceMaps.online.values(),
+      activityAllowlist,
+    )
+    const communityDeveloperCount = communityCountries.reduce(
+      (total, country) => total + country.count,
+      0,
+    )
 
     return {
       onlineUsers,
@@ -587,6 +626,8 @@ export function useInitOnlinePresence(
       onlineCount,
       othersOnlineCount,
       onlineThemeCounts,
+      communityCountries,
+      communityDeveloperCount,
       isReady,
       participantStatus,
       isParticipantStatusUpdating,

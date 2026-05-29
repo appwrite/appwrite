@@ -18,6 +18,8 @@ import { GiveawayPromoCard } from './_components/GiveawayPromoCard'
 import { GetInvolvedCards } from './_components/GetInvolvedCards'
 import { InitPrizesSection } from './_components/InitPrizesSection'
 import { InitPageCredits } from './_components/InitPageCredits'
+import { InitGlobalCommunitySection } from './_components/InitGlobalCommunitySection'
+import { useInitCommunityGlobeData } from '@/lib/init/use-init-community-globe-data'
 import { InitGiveawayRaffleConfetti } from './_components/InitGiveawayRaffleConfetti'
 import { InitReactionConfetti } from './_components/InitReactionConfetti'
 import {
@@ -53,6 +55,9 @@ function InitPageContent({
   const [onlineNavOpen, setOnlineNavOpen] = useState(false)
   const presence = useInitPresence()
   const raffle = useInitGiveawayRaffleContext()
+  const communityGlobe = useInitCommunityGlobeData(baseEvent, {
+    enabled: Boolean(baseEvent.presenceEnabled && !baseEvent.isRecapMode),
+  })
 
   const event = useMemo(() => {
     if (!baseEvent.presenceEnabled || !account) {
@@ -171,6 +176,13 @@ function InitPageContent({
           </div>
 
           <InitPrizesSection event={event} />
+
+          {event.presenceEnabled && !event.isRecapMode ? (
+            <InitGlobalCommunitySection
+              countries={communityGlobe.countries}
+              isAuthenticated={Boolean(account)}
+            />
+          ) : null}
 
           <div className="mx-auto w-full max-w-7xl space-y-8 px-4 pb-8 pt-8 sm:px-6 sm:pb-10">
             <GetInvolvedCards event={event} account={account} />
