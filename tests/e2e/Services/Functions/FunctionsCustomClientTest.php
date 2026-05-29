@@ -590,9 +590,7 @@ class FunctionsCustomClientTest extends Scope
             'data' => ['name' => 'Test Document'],
         ]);
         $this->assertEquals(201, $document['headers']['status-code']);
-        $documentId = $document['body']['$id'];
-
-        $this->assertEventually(function () use ($functionId, $documentId) {
+        $this->assertEventually(function () use ($functionId) {
             $executions = $this->client->call(Client::METHOD_GET, '/functions/' . $functionId . '/executions', [
                 'content-type' => 'application/json',
                 'x-appwrite-project' => $this->getProject()['$id'],
