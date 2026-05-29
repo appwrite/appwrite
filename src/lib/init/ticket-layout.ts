@@ -79,3 +79,12 @@ export function initTicketContentGridStyle(): { gridTemplateColumns: string } {
   const { main, stub } = initTicketColumnSplit()
   return { gridTemplateColumns: `${main}fr ${stub}fr` }
 }
+
+/** Front-face holder name — smaller clamp when the display name is long. */
+export function initTicketHolderNameFontSizeClass(name: string): string {
+  const len = name.trim().length
+  if (len > 32) return 'text-[clamp(16px,3.8vw,28px)]'
+  if (len > 24) return 'text-[clamp(20px,4.5vw,34px)]'
+  if (len > 16) return 'text-[clamp(24px,5.5vw,40px)]'
+  return 'text-[clamp(28px,6.5vw,48px)]'
+}

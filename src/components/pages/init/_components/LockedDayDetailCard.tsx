@@ -13,9 +13,14 @@ const CARD_SHELL =
 interface LockedDayDetailCardProps {
   day: LaunchEventDayLocked
   eventStartDate: string
+  currentDay: number
 }
 
-export function LockedDayDetailCard({ day, eventStartDate }: LockedDayDetailCardProps) {
+export function LockedDayDetailCard({
+  day,
+  eventStartDate,
+  currentDay,
+}: LockedDayDetailCardProps) {
   const { setTransientActivity } = useInitPresenceActivity()
 
   return (
@@ -23,7 +28,7 @@ export function LockedDayDetailCard({ day, eventStartDate }: LockedDayDetailCard
       id={getInitDayCardId(day.day)}
       className={cn(CARD_SHELL, 'scroll-mt-28')}
       aria-label={`Day ${day.day} locked`}
-      onMouseEnter={() => setTransientActivity(buildInitDayPreviewActivity(day))}
+      onMouseEnter={() => setTransientActivity(buildInitDayPreviewActivity(day, currentDay))}
       onMouseLeave={() => setTransientActivity(null)}
     >
       <header className="grid grid-cols-[1fr_auto_1fr] items-center border-b border-border px-6 py-3">

@@ -9,13 +9,14 @@ import {
   buildInitReadingDayActivity,
   buildInitRecordingTicketActivity,
   buildInitRunningGiveawayRaffleActivity,
+  buildInitRunningGrandPrizeRevealActivity,
   buildInitSpinningGiveawayRaffleActivity,
   buildInitSwitchingThemeActivity,
   buildInitViewingDayActivity,
   buildInitViewingDailyPrizeActivity,
   buildInitViewingGrandPrizeActivity,
   buildInitViewingTicketActivity,
-  buildInitWaitingForDayActivity,
+  getAllInitWaitingActivities,
 } from '@/lib/init/init-presence-activity'
 import { INIT_REACTIONS, getInitReactionActivity } from '@/lib/init/reactions'
 import type { LaunchEvent } from '@/lib/init/types'
@@ -53,14 +54,20 @@ export function buildInitPresenceActivityAllowlist(
       allowed.add(buildInitRunningGiveawayRaffleActivity(giveaway.day))
     }
     allowed.add(buildInitViewingGrandPrizeActivity(event.prizes.grandPrize.title))
+    allowed.add(buildInitRunningGrandPrizeRevealActivity())
     allowed.add(buildInitSpinningGiveawayRaffleActivity())
   }
 
   for (const day of event.days) {
-    allowed.add(buildInitWaitingForDayActivity(day.day))
     allowed.add(buildInitViewingDayActivity(day.day, day.title))
     allowed.add(buildInitReadingDayActivity(day.day, { title: day.title }))
     allowed.add(buildInitCheckingScheduleActivity(day.day))
+  }
+
+  for (const activity of getAllInitWaitingActivities(
+    event.days.reduce((max, day) => Math.max(max, day.day), 0),
+  )) {
+    allowed.add(activity)
   }
 
   return allowed

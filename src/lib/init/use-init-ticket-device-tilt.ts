@@ -39,19 +39,23 @@ export function prefersInitTicketDeviceTilt(): boolean {
   )
 }
 
-export async function requestInitTicketDeviceOrientationAccess(): Promise<boolean> {
-  if (!isInitTicketDeviceTiltSupported()) return false
+export function requestInitTicketDeviceOrientationAccessFromGesture(): Promise<boolean> {
+  if (!isInitTicketDeviceTiltSupported()) return Promise.resolve(false)
 
   const Orientation = DeviceOrientationEvent as DeviceOrientationEventConstructor
   if (typeof Orientation.requestPermission !== 'function') {
-    return true
+    return Promise.resolve(true)
   }
 
   try {
-    return (await Orientation.requestPermission()) === 'granted'
+    return Orientation.requestPermission().then((state) => state === 'granted')
   } catch {
-    return false
+    return Promise.resolve(false)
   }
+}
+
+export async function requestInitTicketDeviceOrientationAccess(): Promise<boolean> {
+  return requestInitTicketDeviceOrientationAccessFromGesture()
 }
 
 function tiltFromGravity(x: number, y: number, z: number) {
@@ -109,13 +113,18 @@ export function useInitTicketDeviceTilt({
     onTiltChangeRef.current({ x: 0, y: 0 })
   }, [])
 
-  const startListening = useCallback(async (): Promise<boolean> => {
+  const startListening = useCallback(async (options?: {
+    /** Set when iOS permission was already requested in the same user gesture. */
+    skipPermission?: boolean
+  }): Promise<boolean> => {
     if (!enabled || !isSupported || listeningRef.current) {
       return listeningRef.current
     }
 
-    const granted = await requestInitTicketDeviceOrientationAccess()
-    if (!granted) return false
+    if (!options?.skipPermission) {
+      const granted = await requestInitTicketDeviceOrientationAccess()
+      if (!granted) return false
+    }
 
     baselineRef.current = null
     orientationActiveRef.current = false

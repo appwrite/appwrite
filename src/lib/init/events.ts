@@ -102,7 +102,7 @@ export const LAUNCH_EVENTS: LaunchEvent[] = [
         title: 'Claim your ticket',
         description: 'Get access and unlock exclusive swag.',
         icon: Ticket,
-        href: 'https://appwrite.io/init/ticket',
+        href: '#init-ticket',
       },
       {
         id: 'community',

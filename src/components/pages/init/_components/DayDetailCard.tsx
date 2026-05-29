@@ -125,17 +125,18 @@ function DayTitle({ title }: { title: string }) {
 
 interface DayDetailCardProps {
   day: LaunchEventDay
+  currentDay: number
   isRecapMode?: boolean
 }
 
-export function DayDetailCard({ day, isRecapMode = false }: DayDetailCardProps) {
+export function DayDetailCard({ day, currentDay, isRecapMode = false }: DayDetailCardProps) {
   const { setTransientActivity } = useInitPresenceActivity()
 
   return (
     <article
       id={getInitDayCardId(day.day)}
       className={cn(CARD_SHELL, 'scroll-mt-28')}
-      onMouseEnter={() => setTransientActivity(buildInitDayPreviewActivity(day))}
+      onMouseEnter={() => setTransientActivity(buildInitDayPreviewActivity(day, currentDay))}
       onMouseLeave={() => setTransientActivity(null)}
     >
       <header className="grid grid-cols-[1fr_auto_1fr] items-center border-b border-border px-6 py-3">

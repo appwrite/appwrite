@@ -2155,53 +2155,56 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                                               : undefined
                                           }
                                         >
-                                          <Link
-                                            to="/projects/$projectId"
-                                            params={{
-                                              projectId: project.$id,
-                                            }}
-                                            className="block"
-                                          >
-                                            <div>
-                                              <h3 className="flex min-w-0 items-center gap-1.5 text-[14px] font-medium text-foreground group-hover:text-foreground">
-                                                <span className="min-w-0 truncate">
-                                                  {project.name}
-                                                </span>
-                                                <FailedInvoiceWarningIcon
-                                                  show={showFailedInvoiceOrgAlert}
-                                                  orgBillingReadonly={
-                                                    orgBillingReadonlyForFailedInvoice
-                                                  }
-                                                />
-                                              </h3>
-                                              {supportsMultiRegion &&
-                                                project.region && (
-                                                  <div className="mt-0.5 flex items-center gap-1.5 text-[12px] text-muted-foreground">
-                                                    <RegionFlag
-                                                      region={project.region}
-                                                    />
-                                                    {project.region}
-                                                  </div>
-                                                )}
-                                            </div>
-                                            <ProjectCardFooter
-                                              platformsCount={
-                                                project.platformsCount || 0
-                                              }
-                                              apiKeysCount={
-                                                project.apiKeysCount || 0
-                                              }
-                                              paused={project.paused}
-                                            />
-                                          </Link>
-                                          {(canReorderPinned ||
-                                            canPinProjectsResult) && (
-                                            <div
-                                              className={cn(
-                                                'absolute right-2 top-2 z-20 flex items-center gap-0.5 opacity-0 transition-opacity group-hover:opacity-100',
-                                                isDragActive && 'opacity-100',
-                                              )}
+                                          <div className="flex items-start gap-1">
+                                            <Link
+                                              to="/projects/$projectId"
+                                              params={{
+                                                projectId: project.$id,
+                                              }}
+                                              className="min-w-0 flex-1"
                                             >
+                                              <div>
+                                                <h3 className="flex min-w-0 items-center gap-1.5 text-[14px] font-medium text-foreground group-hover:text-foreground">
+                                                  <span className="min-w-0 truncate">
+                                                    {project.name}
+                                                  </span>
+                                                  <FailedInvoiceWarningIcon
+                                                    show={
+                                                      showFailedInvoiceOrgAlert
+                                                    }
+                                                    orgBillingReadonly={
+                                                      orgBillingReadonlyForFailedInvoice
+                                                    }
+                                                  />
+                                                </h3>
+                                                {supportsMultiRegion &&
+                                                  project.region && (
+                                                    <div className="mt-0.5 flex items-center gap-1.5 text-[12px] text-muted-foreground">
+                                                      <RegionFlag
+                                                        region={project.region}
+                                                      />
+                                                      {project.region}
+                                                    </div>
+                                                  )}
+                                              </div>
+                                              <ProjectCardFooter
+                                                platformsCount={
+                                                  project.platformsCount || 0
+                                                }
+                                                apiKeysCount={
+                                                  project.apiKeysCount || 0
+                                                }
+                                                paused={project.paused}
+                                              />
+                                            </Link>
+                                            {(canReorderPinned ||
+                                              canPinProjectsResult) && (
+                                              <div
+                                                className={cn(
+                                                  'flex shrink-0 items-center gap-0.5 opacity-0 transition-opacity group-hover:opacity-100',
+                                                  isDragActive && 'opacity-100',
+                                                )}
+                                              >
                                               {canPinProjectsResult ? (
                                                 <TooltipProvider
                                                   delayDuration={0}
@@ -2275,8 +2278,9 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                                                   </Tooltip>
                                                 </TooltipProvider>
                                               ) : null}
-                                            </div>
-                                          )}
+                                              </div>
+                                            )}
+                                          </div>
                                         </div>
                                       </ProjectContextMenu>
                                     )
@@ -2319,80 +2323,85 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                                               className="group relative rounded-xl border border-border bg-card/50 p-4 transition-all hover:border-border hover:bg-card"
                                               data-project-card
                                             >
-                                              <Link
-                                                to="/projects/$projectId"
-                                                params={{
-                                                  projectId: project.$id,
-                                                }}
-                                                className="block"
-                                              >
-                                                <div>
-                                                  <h3 className="flex min-w-0 items-center gap-1.5 text-[14px] font-medium text-foreground group-hover:text-foreground">
-                                                    <span className="min-w-0 truncate">
-                                                      {project.name}
-                                                    </span>
-                                                    <FailedInvoiceWarningIcon
-                                                      show={
-                                                        showFailedInvoiceOrgAlert
-                                                      }
-                                                      orgBillingReadonly={
-                                                        orgBillingReadonlyForFailedInvoice
-                                                      }
-                                                    />
-                                                  </h3>
-                                                  {supportsMultiRegion &&
-                                                    project.region && (
-                                                      <div className="mt-0.5 flex items-center gap-1.5 text-[12px] text-muted-foreground">
-                                                        <RegionFlag
-                                                          region={
-                                                            project.region
-                                                          }
-                                                        />
-                                                        {project.region}
-                                                      </div>
-                                                    )}
-                                                </div>
-                                                <ProjectCardFooter
-                                                  platformsCount={
-                                                    project.platformsCount || 0
-                                                  }
-                                                  apiKeysCount={
-                                                    project.apiKeysCount || 0
-                                                  }
-                                                  paused={project.paused}
-                                                />
-                                              </Link>
-                                              {canPin &&
-                                                canPinProjectsResult && (
-                                                  <TooltipProvider
-                                                    delayDuration={0}
-                                                  >
-                                                    <Tooltip>
-                                                      <TooltipTrigger asChild>
-                                                        <Button
-                                                          variant="ghost"
-                                                          size="icon"
-                                                          className="absolute right-2 top-2 h-8 w-8 rounded-md opacity-0 transition-opacity group-hover:opacity-100"
-                                                          aria-label="Pin project"
-                                                          onClick={(e) => {
-                                                            e.preventDefault()
-                                                            handlePinProject(
-                                                              project.$id,
-                                                            )
-                                                          }}
-                                                          disabled={
-                                                            updateTeamPrefsMutation.isPending
-                                                          }
-                                                        >
-                                                          <Pin className="h-4 w-4" />
-                                                        </Button>
-                                                      </TooltipTrigger>
-                                                      <TooltipContent>
-                                                        <p>Pin project</p>
-                                                      </TooltipContent>
-                                                    </Tooltip>
-                                                  </TooltipProvider>
-                                                )}
+                                              <div className="flex items-start gap-1">
+                                                <Link
+                                                  to="/projects/$projectId"
+                                                  params={{
+                                                    projectId: project.$id,
+                                                  }}
+                                                  className="min-w-0 flex-1"
+                                                >
+                                                  <div>
+                                                    <h3 className="flex min-w-0 items-center gap-1.5 text-[14px] font-medium text-foreground group-hover:text-foreground">
+                                                      <span className="min-w-0 truncate">
+                                                        {project.name}
+                                                      </span>
+                                                      <FailedInvoiceWarningIcon
+                                                        show={
+                                                          showFailedInvoiceOrgAlert
+                                                        }
+                                                        orgBillingReadonly={
+                                                          orgBillingReadonlyForFailedInvoice
+                                                        }
+                                                      />
+                                                    </h3>
+                                                    {supportsMultiRegion &&
+                                                      project.region && (
+                                                        <div className="mt-0.5 flex items-center gap-1.5 text-[12px] text-muted-foreground">
+                                                          <RegionFlag
+                                                            region={
+                                                              project.region
+                                                            }
+                                                          />
+                                                          {project.region}
+                                                        </div>
+                                                      )}
+                                                  </div>
+                                                  <ProjectCardFooter
+                                                    platformsCount={
+                                                      project.platformsCount ||
+                                                      0
+                                                    }
+                                                    apiKeysCount={
+                                                      project.apiKeysCount || 0
+                                                    }
+                                                    paused={project.paused}
+                                                  />
+                                                </Link>
+                                                {canPin &&
+                                                  canPinProjectsResult && (
+                                                    <div className="flex shrink-0 opacity-0 transition-opacity group-hover:opacity-100">
+                                                      <TooltipProvider
+                                                        delayDuration={0}
+                                                      >
+                                                        <Tooltip>
+                                                          <TooltipTrigger asChild>
+                                                            <Button
+                                                              variant="ghost"
+                                                              size="icon"
+                                                              className="h-8 w-8 rounded-md"
+                                                              aria-label="Pin project"
+                                                              onClick={(e) => {
+                                                                e.preventDefault()
+                                                                handlePinProject(
+                                                                  project.$id,
+                                                                )
+                                                              }}
+                                                              disabled={
+                                                                updateTeamPrefsMutation.isPending
+                                                              }
+                                                            >
+                                                              <Pin className="h-4 w-4" />
+                                                            </Button>
+                                                          </TooltipTrigger>
+                                                          <TooltipContent>
+                                                            <p>Pin project</p>
+                                                          </TooltipContent>
+                                                        </Tooltip>
+                                                      </TooltipProvider>
+                                                    </div>
+                                                  )}
+                                              </div>
                                             </div>
                                           </ProjectContextMenu>
                                         )

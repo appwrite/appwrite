@@ -19,10 +19,12 @@ interface EventScheduleProps {
 function LockedScheduleDayCard({
   day,
   eventStartDate,
+  currentDay,
   fullWidth = false,
 }: {
   day: Extract<LaunchEventDayView, { isLocked: true }>
   eventStartDate: string
+  currentDay: number
   fullWidth?: boolean
 }) {
   const { setTransientActivity } = useInitPresenceActivity()
@@ -31,9 +33,9 @@ function LockedScheduleDayCard({
     <button
       type="button"
       onClick={() => scrollToInitDayCard(day.day)}
-      onMouseEnter={() => setTransientActivity(buildInitDayPreviewActivity(day))}
+      onMouseEnter={() => setTransientActivity(buildInitDayPreviewActivity(day, currentDay))}
       onMouseLeave={() => setTransientActivity(null)}
-      onFocus={() => setTransientActivity(buildInitDayPreviewActivity(day))}
+      onFocus={() => setTransientActivity(buildInitDayPreviewActivity(day, currentDay))}
       onBlur={() => setTransientActivity(null)}
       className={cn(
         'flex flex-col rounded-xl border border-dashed border-border bg-muted/20 p-4 text-left transition-colors',
@@ -63,10 +65,12 @@ function LockedScheduleDayCard({
 
 function ScheduleDayCard({
   day,
+  currentDay,
   isRecapMode = false,
   fullWidth = false,
 }: {
   day: Extract<LaunchEventDayView, { isLocked?: false }>
+  currentDay: number
   isRecapMode?: boolean
   fullWidth?: boolean
 }) {
@@ -76,9 +80,9 @@ function ScheduleDayCard({
     <button
       type="button"
       onClick={() => scrollToInitDayCard(day.day)}
-      onMouseEnter={() => setTransientActivity(buildInitDayPreviewActivity(day))}
+      onMouseEnter={() => setTransientActivity(buildInitDayPreviewActivity(day, currentDay))}
       onMouseLeave={() => setTransientActivity(null)}
-      onFocus={() => setTransientActivity(buildInitDayPreviewActivity(day))}
+      onFocus={() => setTransientActivity(buildInitDayPreviewActivity(day, currentDay))}
       onBlur={() => setTransientActivity(null)}
       className={cn(
         'flex flex-col rounded-xl border bg-card/50 p-4 text-left transition-colors',
@@ -116,11 +120,13 @@ function ScheduleDayCard({
 function DayPickerCard({
   day,
   eventStartDate,
+  currentDay,
   isRecapMode = false,
   fullWidth = false,
 }: {
   day: LaunchEventDayView
   eventStartDate: string
+  currentDay: number
   isRecapMode?: boolean
   fullWidth?: boolean
 }) {
@@ -129,12 +135,20 @@ function DayPickerCard({
       <LockedScheduleDayCard
         day={day}
         eventStartDate={eventStartDate}
+        currentDay={currentDay}
         fullWidth={fullWidth}
       />
     )
   }
 
-  return <ScheduleDayCard day={day} isRecapMode={isRecapMode} fullWidth={fullWidth} />
+  return (
+    <ScheduleDayCard
+      day={day}
+      currentDay={currentDay}
+      isRecapMode={isRecapMode}
+      fullWidth={fullWidth}
+    />
+  )
 }
 
 export function EventSchedule({ event, fullWidth = false }: EventScheduleProps) {
@@ -159,6 +173,7 @@ export function EventSchedule({ event, fullWidth = false }: EventScheduleProps) 
               key={day.day}
               day={day}
               eventStartDate={event.startDate}
+              currentDay={event.currentDay}
               isRecapMode={event.isRecapMode}
               fullWidth
             />
@@ -177,6 +192,7 @@ export function EventSchedule({ event, fullWidth = false }: EventScheduleProps) 
               key={day.day}
               day={day}
               eventStartDate={event.startDate}
+              currentDay={event.currentDay}
               isRecapMode={event.isRecapMode}
             />
           ))}

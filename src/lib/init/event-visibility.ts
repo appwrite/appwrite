@@ -1,5 +1,10 @@
 import { parseDateOnly } from './dates'
 import { getInitMockDayAfter } from './mock-current-day'
+import {
+  applyInitPrizesVisibility,
+  getInitMaskedSessionTitle,
+  isInitDailyPrizeRevealed,
+} from './prize-visibility'
 import type {
   InitDisplayEvent,
   LaunchEvent,
@@ -103,10 +108,11 @@ function buildRecapDisplayEvent(
 }
 
 /**
- * Strip future-day content from the event so locked material is not present in the tree.
+ * Apply day-based visibility to the event for display.
  *
- * When `mockCurrentDay` is set (debug), it drives which days unlock — schedule cards,
- * detail cards, Discord sessions, and live banner all follow the same day.
+ * Future-day launch cards stay locked; schedule and prizes stay visible with
+ * session titles masked until each day unlocks. When `mockCurrentDay` is set
+ * (debug), it drives which days unlock.
  */
 export function applyInitEventVisibility(
   event: LaunchEvent,
@@ -133,21 +139,27 @@ export function applyInitEventVisibility(
     }
   })
 
-  const schedule = event.schedule
-    .filter((item) => currentDay > 0 && item.day <= currentDay)
-    .map((item) => ({
-      ...item,
-      isLive: item.day === currentDay ? item.isLive : false,
-    }))
+  const schedule = event.schedule.map((item) => ({
+    ...item,
+    title: isInitDailyPrizeRevealed(currentDay, item.day)
+      ? item.title
+      : getInitMaskedSessionTitle(item.platform, item.day),
+    isLive: item.day === currentDay ? item.isLive : false,
+  }))
 
   const liveBanner =
     currentDay === 1 && event.liveBanner ? event.liveBanner : undefined
+
+  const prizes = event.prizes
+    ? applyInitPrizesVisibility(event.prizes, currentDay)
+    : undefined
 
   return {
     ...event,
     days,
     schedule,
     liveBanner,
+    prizes,
     currentDay,
     isRecapMode: false,
   }

@@ -39,7 +39,7 @@ function ScheduleRow({
 }) {
   const meta = PLATFORM_META[item.platform]
   const { setTransientActivity } = useInitPresenceActivity()
-  const sessionActivity = `Checking: ${item.title}`
+  const sessionActivity = buildInitCheckingScheduleActivity(item.day)
   const content = (
     <>
       <span className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-muted">
@@ -116,19 +116,14 @@ export function EventSchedulePanel({
   event,
   embedded = false,
 }: EventSchedulePanelProps) {
-  const unlockedScheduleDays = useMemo(() => {
-    const fromDays = event.days
-      .filter((day) => !isLaunchEventDayLocked(day))
-      .map((day) => day.day)
-    const fromSchedule = event.schedule.map((item) => item.day)
-    return [...new Set([...fromDays, ...fromSchedule])].sort((a, b) => a - b)
-  }, [event.days, event.schedule])
+  const scheduleDays = useMemo(() => {
+    return event.days.map((day) => day.day).sort((a, b) => a - b)
+  }, [event.days])
 
   const defaultDay =
-    event.currentDay > 0 &&
-    unlockedScheduleDays.includes(event.currentDay)
+    event.currentDay > 0 && scheduleDays.includes(event.currentDay)
       ? event.currentDay
-      : unlockedScheduleDays[unlockedScheduleDays.length - 1] ?? 1
+      : scheduleDays[0] ?? 1
 
   const [selectedDay, setSelectedDay] = useState(defaultDay)
   const { setTransientActivity } = useInitPresenceActivity()
@@ -140,12 +135,12 @@ export function EventSchedulePanel({
   const selectedDayInfo = event.days.find((day) => day.day === selectedDay)
   const dayEvents = event.schedule.filter((item) => item.day === selectedDay)
 
-  const selectedIndex = unlockedScheduleDays.indexOf(selectedDay)
+  const selectedIndex = scheduleDays.indexOf(selectedDay)
   const canGoPrevious = selectedIndex > 0
   const canGoNext =
-    selectedIndex >= 0 && selectedIndex < unlockedScheduleDays.length - 1
+    selectedIndex >= 0 && selectedIndex < scheduleDays.length - 1
 
-  if (event.schedule.length === 0 || unlockedScheduleDays.length === 0) {
+  if (event.schedule.length === 0 || scheduleDays.length === 0) {
     return null
   }
 
@@ -181,7 +176,7 @@ export function EventSchedulePanel({
                   : 'Discord and Reddit sessions'}
             </p>
           </div>
-          {unlockedScheduleDays.length > 1 ? (
+          {scheduleDays.length > 1 ? (
             <div className="flex shrink-0 items-center gap-0.5">
               <Button
                 type="button"
@@ -192,7 +187,7 @@ export function EventSchedulePanel({
                 aria-label="Previous day"
                 onClick={() => {
                   if (!canGoPrevious) return
-                  setSelectedDay(unlockedScheduleDays[selectedIndex - 1])
+                  setSelectedDay(scheduleDays[selectedIndex - 1])
                 }}
               >
                 <ChevronLeft className="size-4" />
@@ -206,7 +201,7 @@ export function EventSchedulePanel({
                 aria-label="Next day"
                 onClick={() => {
                   if (!canGoNext) return
-                  setSelectedDay(unlockedScheduleDays[selectedIndex + 1])
+                  setSelectedDay(scheduleDays[selectedIndex + 1])
                 }}
               >
                 <ChevronRight className="size-4" />

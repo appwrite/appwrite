@@ -1,5 +1,5 @@
 import type { InitDisplayEvent, LaunchEventOnlineUser } from '@/lib/init/types'
-import { buildInitRunningGiveawayRaffleActivity } from '@/lib/init/init-presence-activity'
+import { buildInitRunningGiveawayRaffleActivity, buildInitRunningGrandPrizeRevealActivity } from '@/lib/init/init-presence-activity'
 import { useInitPresenceActivity } from '@/lib/init/init-presence-context'
 import {
   createContext,
@@ -40,11 +40,17 @@ export function InitGiveawayRaffleProvider({
   const raffle = useInitGiveawayRaffle(
     event,
     event.prizes?.dailyGiveaways ?? [],
+    event.prizes?.grandPrize,
     clearRaffleWinner,
   )
   const { setPriorityActivity } = useInitPresenceActivity()
 
   useEffect(() => {
+    if (raffle.isGrandPrizeRevealOpen) {
+      setPriorityActivity(buildInitRunningGrandPrizeRevealActivity())
+      return () => setPriorityActivity(null)
+    }
+
     if (raffle.activeDay == null) {
       setPriorityActivity(null)
       return
@@ -52,7 +58,7 @@ export function InitGiveawayRaffleProvider({
 
     setPriorityActivity(buildInitRunningGiveawayRaffleActivity(raffle.activeDay))
     return () => setPriorityActivity(null)
-  }, [raffle.activeDay, setPriorityActivity])
+  }, [raffle.activeDay, raffle.isGrandPrizeRevealOpen, setPriorityActivity])
 
   const celebrateRaffleWinner = useCallback((user: LaunchEventOnlineUser) => {
     setRaffleWinnerId(user.id)

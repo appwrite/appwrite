@@ -8,9 +8,16 @@ import {
   type LaunchEventDayView,
 } from '@/lib/init/types'
 
-export function buildInitDayPreviewActivity(day: LaunchEventDayView): string {
+export function buildInitDayPreviewActivity(
+  day: LaunchEventDayView,
+  currentDay: number,
+  seed?: string,
+): string {
   if (isLaunchEventDayLocked(day)) {
-    return buildInitWaitingForDayActivity(day.day)
+    return buildInitWaitingForDayActivity(day.day, {
+      currentDay,
+      seed: seed ?? `preview:${day.day}`,
+    })
   }
   return buildInitPreviewingDayActivity(day.day, {
     locked: false,
@@ -18,9 +25,16 @@ export function buildInitDayPreviewActivity(day: LaunchEventDayView): string {
   })
 }
 
-export function buildInitDayReadingActivity(day: LaunchEventDayView): string {
+export function buildInitDayReadingActivity(
+  day: LaunchEventDayView,
+  currentDay: number,
+  seed?: string,
+): string {
   if (isLaunchEventDayLocked(day)) {
-    return buildInitWaitingForDayActivity(day.day)
+    return buildInitWaitingForDayActivity(day.day, {
+      currentDay,
+      seed: seed ?? `reading:${day.day}`,
+    })
   }
   return buildInitReadingDayActivity(day.day, { title: day.title })
 }

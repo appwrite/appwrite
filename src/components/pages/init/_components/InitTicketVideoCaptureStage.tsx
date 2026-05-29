@@ -43,6 +43,8 @@ export const InitTicketVideoCaptureStage = forwardRef<
 
   useImperativeHandle(ref, () => viewportRef.current as HTMLDivElement)
 
+  const isRecording = showRecordingChrome || showHeroAnimation
+
   return (
     <div className={cn('relative mx-auto w-full max-w-[820px]', className)}>
       <div className="relative w-full aspect-video">
@@ -75,19 +77,23 @@ export const InitTicketVideoCaptureStage = forwardRef<
           <div
             className={cn(
               'absolute inset-0 z-[1]',
-              showHeroAnimation
-                ? 'bg-muted/30 dark:bg-background/40'
-                : INIT_TICKET_VIDEO_SURFACE_CLASS,
+              isRecording
+                ? showHeroAnimation
+                  ? 'bg-muted/30 dark:bg-background/40'
+                  : INIT_TICKET_VIDEO_SURFACE_CLASS
+                : 'bg-transparent',
             )}
             aria-hidden
           />
-          <div
-            className={cn(
-              'pointer-events-none absolute inset-0 z-[2]',
-              INIT_TICKET_VIDEO_DOT_PATTERN_CLASS,
-            )}
-            aria-hidden
-          />
+          {isRecording ? (
+            <div
+              className={cn(
+                'pointer-events-none absolute inset-0 z-[2]',
+                INIT_TICKET_VIDEO_DOT_PATTERN_CLASS,
+              )}
+              aria-hidden
+            />
+          ) : null}
           <div className="relative z-10 flex h-full w-full items-center justify-center px-4 py-0.5 sm:px-6 sm:py-1">
             <div
               className="w-full origin-center scale-[0.94] sm:scale-[0.98]"

@@ -483,7 +483,8 @@ export function InitTicketSection({ event, account }: InitTicketSectionProps) {
 
   return (
     <section
-      className="relative w-full"
+      id="init-ticket"
+      className="relative w-full scroll-mt-28"
       aria-label="Init ticket"
       onMouseEnter={() => {
         if (!isAuthenticated || customizeOpen || isVideoBusy) return

@@ -41,15 +41,15 @@ function ScaledTicketShell({
   return (
     <div
       className={cn(
-        'relative shrink-0',
+        'relative shrink-0 touch-none',
         overflowVisible ? 'overflow-visible' : 'overflow-hidden',
         className,
       )}
-      style={{ width: widthPx, height: heightPx }}
+      style={{ width: widthPx, height: heightPx, touchAction: 'none' }}
     >
       <div
         className={cn(
-          'absolute left-0 top-0 origin-top-left',
+          'absolute left-0 top-0 origin-top-left will-change-transform',
           pointerEventsNone && 'pointer-events-none',
         )}
         style={{

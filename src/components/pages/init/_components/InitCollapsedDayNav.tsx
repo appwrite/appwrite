@@ -8,9 +8,10 @@ import { cn } from '@/lib/utils'
 interface InitCollapsedDayNavProps {
   days: LaunchEventDayView[]
   activeDay: number
+  currentDay: number
 }
 
-export function InitCollapsedDayNav({ days, activeDay }: InitCollapsedDayNavProps) {
+export function InitCollapsedDayNav({ days, activeDay, currentDay }: InitCollapsedDayNavProps) {
   const { setTransientActivity } = useInitPresenceActivity()
 
   if (days.length === 0) return null
@@ -34,9 +35,11 @@ export function InitCollapsedDayNav({ days, activeDay }: InitCollapsedDayNavProp
             )}
             aria-current={isActive ? 'true' : undefined}
             onClick={() => scrollToInitDayCard(day.day)}
-            onMouseEnter={() => setTransientActivity(buildInitDayPreviewActivity(day))}
+            onMouseEnter={() =>
+              setTransientActivity(buildInitDayPreviewActivity(day, currentDay))
+            }
             onMouseLeave={() => setTransientActivity(null)}
-            onFocus={() => setTransientActivity(buildInitDayPreviewActivity(day))}
+            onFocus={() => setTransientActivity(buildInitDayPreviewActivity(day, currentDay))}
             onBlur={() => setTransientActivity(null)}
           >
             Day {day.day}

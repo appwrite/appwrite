@@ -149,11 +149,13 @@ function InitPageContent({
                       key={day.day}
                       day={day}
                       eventStartDate={event.startDate}
+                      currentDay={event.currentDay}
                     />
                   ) : (
                     <DayDetailCard
                       key={day.day}
                       day={day}
+                      currentDay={event.currentDay}
                       isRecapMode={event.isRecapMode}
                     />
                   ),
@@ -171,7 +173,7 @@ function InitPageContent({
           <InitPrizesSection event={event} />
 
           <div className="mx-auto w-full max-w-7xl space-y-8 px-4 pb-8 pt-8 sm:px-6 sm:pb-10">
-            <GetInvolvedCards event={event} />
+            <GetInvolvedCards event={event} account={account} />
 
             <InitPageCredits
               showPresenceCredit={Boolean(event.presenceEnabled && account)}

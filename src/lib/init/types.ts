@@ -171,6 +171,11 @@ export interface LaunchEventGrandPrize {
   title: string
   description: string
   eligibility: string
+  scheduleItemId?: string
+  sessionTitle?: string
+  platform?: LaunchSchedulePlatform
+  timeLabel?: string
+  href?: string
   visual?: LaunchEventPrizeVisual
 }
 

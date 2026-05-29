@@ -15,6 +15,7 @@ import {
 import {
   INIT_PRESENCE_ACTIVITY_ON_INIT,
   buildInitPlayingWithJoolActivity,
+  buildInitPreEventBaselineActivity,
 } from '@/lib/init/init-presence-activity'
 import { InitialsAvatar } from '@/components/global/shared/Avatar'
 import { Badge } from '@/components/ui/badge'
@@ -121,7 +122,11 @@ function CollapsedHeroBar({
               )}
             >
               <div className="pointer-events-auto w-full max-w-full sm:max-w-none">
-                <InitCollapsedDayNav days={days} activeDay={activeDay} />
+                <InitCollapsedDayNav
+                  days={days}
+                  activeDay={activeDay}
+                  currentDay={event.currentDay}
+                />
               </div>
             </div>
 
@@ -210,12 +215,24 @@ export function EventHero({ event, headerAddon, liveBanner }: EventHeroProps) {
 
   useEffect(() => {
     const dayView = findInitDayView(event.days, activeDay)
+    const presenceSeed = account?.$id ?? 'guest'
+
     if (!dayView) {
-      setBaselineActivity(INIT_PRESENCE_ACTIVITY_ON_INIT)
+      setBaselineActivity(
+        event.currentDay <= 0
+          ? buildInitPreEventBaselineActivity(presenceSeed)
+          : INIT_PRESENCE_ACTIVITY_ON_INIT,
+      )
       return
     }
-    setBaselineActivity(buildInitDayReadingActivity(dayView))
-  }, [activeDay, event.days, setBaselineActivity])
+    setBaselineActivity(
+      buildInitDayReadingActivity(
+        dayView,
+        event.currentDay,
+        `${presenceSeed}:day-${dayView.day}`,
+      ),
+    )
+  }, [account?.$id, activeDay, event.currentDay, event.days, setBaselineActivity])
 
   useEffect(() => {
     const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches

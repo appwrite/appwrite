@@ -19,6 +19,7 @@ import {
   INIT_TICKET_STUB_LABEL_INSET,
   initTicketContentGridStyle,
   initTicketDisplayAspectRatio,
+  initTicketHolderNameFontSizeClass,
   initTicketInsetStyle,
 } from '@/lib/init/ticket-layout'
 import type { ResolvedInitTicketAppearance } from '@/lib/init/ticket-types'
@@ -330,7 +331,8 @@ function TicketFrontFace(props: TicketFaceSharedProps) {
             >
               <p
                 className={cn(
-                  'truncate text-[clamp(28px,6.5vw,48px)] font-normal leading-[1.02] tracking-tight',
+                  'truncate font-normal leading-[1.02] tracking-tight',
+                  initTicketHolderNameFontSizeClass(holderName),
                   usesDarkImage ? 'text-white' : 'text-neutral-900',
                 )}
               >

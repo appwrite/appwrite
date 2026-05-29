@@ -1,5 +1,8 @@
 import type { LucideIcon } from 'lucide-react'
 import { Eye, Flame, Heart, PartyPopper, Rocket, Sparkles } from 'lucide-react'
+import { formatInitPresenceActivityDisplay } from '@/lib/init/init-presence-activity'
+
+export { formatInitPresenceActivityDisplay }
 
 export interface InitReaction {
   id: string
@@ -117,10 +120,6 @@ export function parseInitReactingActivity(activity: string): InitReaction | null
   }
 
   return null
-}
-
-export function formatInitPresenceActivityDisplay(activity: string): string {
-  return activity
 }
 
 export function buildInitReactingActivity(reactionId: string): string {

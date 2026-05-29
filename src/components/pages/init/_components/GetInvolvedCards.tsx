@@ -1,23 +1,44 @@
+import type { Models } from '@appwrite.io/console'
 import type { InitDisplayEvent } from '@/lib/init/types'
 import { useInitPresenceActivity } from '@/lib/init/init-presence-context'
 import { buildInitExploringActivity } from '@/lib/init/init-presence-activity'
 import { ChevronRight } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
+export const INIT_TICKET_SECTION_ID = 'init-ticket'
+
 interface GetInvolvedCardsProps {
   event: InitDisplayEvent
+  account?: Models.User | null
 }
 
-export function GetInvolvedCards({ event }: GetInvolvedCardsProps) {
-  const { setTransientActivity } = useInitPresenceActivity()
+function resolveInvolvementItem(
+  item: InitDisplayEvent['getInvolved'][number],
+  isAuthenticated: boolean,
+) {
+  if (item.id !== 'ticket' || !isAuthenticated) return item
 
-  if (event.getInvolved.length === 0) return null
+  return {
+    ...item,
+    title: 'Share ticket',
+    href: `#${INIT_TICKET_SECTION_ID}`,
+  }
+}
+
+export function GetInvolvedCards({ event, account }: GetInvolvedCardsProps) {
+  const { setTransientActivity } = useInitPresenceActivity()
+  const isAuthenticated = Boolean(account)
+  const items = event.getInvolved.map((item) =>
+    resolveInvolvementItem(item, isAuthenticated),
+  )
+
+  if (items.length === 0) return null
 
   const sectionTitle = event.isRecapMode
     ? (event.recap?.getInvolvedSectionTitle ?? 'Keep exploring')
     : 'Ways to get involved'
 
-  const itemCount = event.getInvolved.length
+  const itemCount = items.length
 
   return (
     <section className="space-y-4">
@@ -31,7 +52,7 @@ export function GetInvolvedCards({ event }: GetInvolvedCardsProps) {
           itemCount >= 3 && 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3',
         )}
       >
-        {event.getInvolved.map((item) => {
+        {items.map((item) => {
           const Icon = item.icon
           const inner = (
             <>

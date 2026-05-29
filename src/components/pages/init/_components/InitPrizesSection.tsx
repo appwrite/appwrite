@@ -21,6 +21,7 @@ import {
   PRIZE_SWAG_IMAGE_OPACITY,
 } from './prize-image-styles'
 import { InitGiveawayRaffleBack } from './InitGiveawayRaffleBack'
+import { InitGrandPrizeRevealBack } from './InitGrandPrizeRevealBack'
 import { useInitGiveawayRaffleContext } from './init-giveaway-raffle-context'
 
 /** Compact ratio for the 2×2 daily cells. */
@@ -199,6 +200,7 @@ function GrandPrizeCell({
   grandPrize: LaunchEventGrandPrize
   className?: string
 }) {
+  const platformMeta = grandPrize.platform ? PLATFORM_META[grandPrize.platform] : null
   const presenceHandlers = usePrizePresenceHandlers(
     buildInitViewingGrandPrizeActivity(grandPrize.title),
   )
@@ -223,34 +225,33 @@ function GrandPrizeCell({
         </div>
       </div>
 
-      <div className="flex min-h-0 flex-1 flex-col justify-center px-5 py-6 sm:px-6 sm:py-7">
-        <div className="min-w-0 space-y-4">
-          <div className="min-w-0 space-y-2">
-            <p className={cn(PRIZE_LINE, 'text-[10px] font-semibold uppercase tracking-[0.2em] text-muted-foreground')}>
-              Grand prize · Day {grandPrize.day}
-            </p>
-            <h4
-              className={cn(
-                PRIZE_LINE,
-                'font-aeonik-pro text-[clamp(18px,2.2vw,28px)] font-normal tracking-tight text-foreground',
-              )}
-              title={grandPrize.title}
-            >
-              {grandPrize.title}
-            </h4>
-          </div>
-
-          <div className="min-w-0 space-y-2 border-t border-border pt-4">
-            <p className={cn(PRIZE_LINE, 'text-[13px] text-muted-foreground')} title={grandPrize.description}>
-              {grandPrize.description}
-            </p>
-            <p className={cn(PRIZE_LINE, 'text-[13px] text-foreground/90')} title={grandPrize.eligibility}>
-              {grandPrize.eligibility}
-            </p>
-            <p className={cn(PRIZE_LINE, 'text-[11px] text-muted-foreground')}>
-              Drawn {grandPrize.dateLabel}
-            </p>
-          </div>
+      <div className="flex min-h-0 flex-1 flex-col justify-center px-5 py-5 sm:px-6 sm:py-6">
+        <div className="min-w-0 space-y-3">
+          <p className={cn(PRIZE_LINE, 'text-[10px] font-semibold uppercase tracking-[0.2em] text-muted-foreground')}>
+            Grand prize · Day {grandPrize.day}
+            <span className="mx-1.5 text-border">·</span>
+            {grandPrize.dateLabel}
+          </p>
+          <h4
+            className={cn(
+              PRIZE_LINE,
+              'font-aeonik-pro text-[clamp(18px,2.2vw,24px)] font-normal tracking-tight text-foreground',
+            )}
+            title={grandPrize.title}
+          >
+            {grandPrize.title}
+          </h4>
+          {grandPrize.sessionTitle && platformMeta ? (
+            <div className="flex min-w-0 items-center gap-1.5 text-[11px] text-muted-foreground">
+              <img src={platformMeta.icon} alt="" className="size-3 shrink-0 opacity-70" aria-hidden />
+              <span className={PRIZE_LINE}>
+                {platformMeta.label} · {grandPrize.sessionTitle} · {grandPrize.timeLabel}
+              </span>
+            </div>
+          ) : null}
+          <p className={cn(PRIZE_LINE, 'text-[12px] text-muted-foreground')} title={grandPrize.eligibility}>
+            {grandPrize.eligibility}
+          </p>
         </div>
       </div>
     </article>
@@ -287,8 +288,10 @@ export function InitPrizesSection({ event }: InitPrizesSectionProps) {
   const sectionTitle = prizes.sectionTitle ?? 'Prizes and giveaways'
   const [isGridFlipped, setIsGridFlipped] = useState(false)
 
+  const isRevealOpen = Boolean(raffle.activeGiveaway || raffle.isGrandPrizeRevealOpen)
+
   useEffect(() => {
-    if (raffle.activeGiveaway) {
+    if (isRevealOpen) {
       let flipFrame = 0
       const mountFrame = requestAnimationFrame(() => {
         flipFrame = requestAnimationFrame(() => setIsGridFlipped(true))
@@ -301,7 +304,7 @@ export function InitPrizesSection({ event }: InitPrizesSectionProps) {
 
     setIsGridFlipped(false)
     return undefined
-  }, [raffle.activeGiveaway])
+  }, [isRevealOpen])
 
   return (
     <>
@@ -345,6 +348,19 @@ export function InitPrizesSection({ event }: InitPrizesSectionProps) {
                 <InitGiveawayRaffleBack
                   key={raffle.activeGiveaway.day}
                   giveaway={raffle.activeGiveaway}
+                  participants={raffle.participants}
+                  loadingParticipants={raffle.loadingParticipants}
+                  onClose={raffle.close}
+                />
+              </div>
+            ) : raffle.isGrandPrizeRevealOpen && raffle.grandPrize ? (
+              <div
+                className={cn(
+                  'absolute inset-0 min-h-full [backface-visibility:hidden] [transform:rotateY(180deg)]',
+                )}
+              >
+                <InitGrandPrizeRevealBack
+                  grandPrize={raffle.grandPrize}
                   participants={raffle.participants}
                   loadingParticipants={raffle.loadingParticipants}
                   onClose={raffle.close}
