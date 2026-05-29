@@ -145,6 +145,48 @@ export interface ListSearchParams {
 /** Minimum number of characters before search is applied (avoids API calls for 1–2 chars). */
 export const MIN_SEARCH_LENGTH = 3
 
+/**
+ * Read list search params from TanStack Router validated `search` (not `location.search`,
+ * which is the parsed object when `validateSearch` is set — not a query string).
+ */
+export function parseListSearch(
+  routeSearch: ListSearchParams | undefined,
+  defaults: { page?: number; limit: number },
+): {
+  search?: string
+  page: number
+  limit: number
+  filterMap: FilterMap
+  filterQueries?: string[]
+  sort?: ListSortParams
+} {
+  const page =
+    routeSearch?.page != null &&
+    Number.isInteger(routeSearch.page) &&
+    routeSearch.page >= 1
+      ? routeSearch.page
+      : (defaults.page ?? 1)
+  const limit =
+    routeSearch?.limit != null &&
+    Number.isInteger(routeSearch.limit) &&
+    routeSearch.limit >= 1
+      ? routeSearch.limit
+      : defaults.limit
+  const searchText = routeSearch?.search?.trim()
+  const filterMap = queryParamToMap(routeSearch?.query ?? null)
+  const filterQueries =
+    filterMap.size > 0 ? Array.from(filterMap.values()) : undefined
+  const sort = parseSort(routeSearch?.sort)
+  return {
+    search: searchText === '' ? undefined : searchText,
+    page,
+    limit,
+    filterMap,
+    filterQueries,
+    sort,
+  }
+}
+
 /** Returns a minimal object for router navigate(); omit defaults so URLs stay clean. */
 export function buildListSearchParams(
   params: ListSearchParams,

@@ -57,7 +57,7 @@
     "@radix-ui/react-tooltip": "^1.2.8",
     "@radix-ui/react-visually-hidden": "^1.2.3",
     "@react-three/drei": "^10.7.7",
-    "@react-three/fiber": "^10.0.0-alpha.2",
+    "@react-three/fiber": "9.6.1",
     "@sentry/tanstackstart-react": "^10.36.0",
     "@stripe/stripe-js": "^4.8.0",
     "@tailwindcss/vite": "^4.0.6",

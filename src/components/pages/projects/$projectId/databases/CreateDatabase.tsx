@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { Button } from '@/components/ui/button'
 import {
   Dialog,
@@ -60,10 +60,12 @@ export function CreateDatabase({
     setErrors({})
   }
 
+  const prevOpenRef = useRef(open)
   useEffect(() => {
-    if (!open) {
+    if (prevOpenRef.current && !open) {
       resetForm()
     }
+    prevOpenRef.current = open
   }, [open])
 
   const validate = (): boolean => {

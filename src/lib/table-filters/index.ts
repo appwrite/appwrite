@@ -26,6 +26,7 @@ export {
   compactFilterKeysEqual,
   findCompactFilterKeyInMap,
   buildListSearchParams,
+  parseListSearch,
   MIN_SEARCH_LENGTH,
   PARAM_SEARCH,
   PARAM_QUERY,

@@ -113,13 +113,10 @@ import {
   useSearch,
 } from '@tanstack/react-router'
 import {
-  getSearch,
-  getPage,
-  getLimit,
-  getQueryParam,
   queryParamToMap,
   mapToQueryParam,
   buildListSearchParams,
+  parseListSearch,
   MIN_SEARCH_LENGTH,
   databasesFilterColumns,
 } from '@/lib/table-filters'
@@ -182,37 +179,13 @@ export function View() {
   const isDatabasesIndex =
     location.pathname.replace(/\/$/, '') === `/projects/${projectId}/databases`
   const databaseListParams = useMemo(() => {
-    if (!isDatabasesIndex || typeof search !== 'object') return null
-    const url = new URL(
-      location.pathname + location.search,
-      window.location.origin,
-    )
-    // Prefer router search state (updated by navigate()) over URL so page size change takes effect even if URL lags
-    const pageFromSearch =
-      search.page != null
-        ? typeof search.page === 'number'
-          ? search.page
-          : Number(search.page)
-        : undefined
-    const limitFromSearch =
-      search.limit != null
-        ? typeof search.limit === 'number'
-          ? search.limit
-          : Number(search.limit)
-        : undefined
-    const page =
-      Number.isInteger(pageFromSearch) && (pageFromSearch ?? 0) >= 1
-        ? pageFromSearch!
-        : getPage(url, 1)
-    const limit =
-      Number.isInteger(limitFromSearch) && (limitFromSearch ?? 0) >= 1
-        ? limitFromSearch!
-        : getLimit(url, GRID_DEFAULT_PAGE_SIZE)
+    if (!isDatabasesIndex) return null
+    const parsed = parseListSearch(search, { limit: GRID_DEFAULT_PAGE_SIZE })
     return {
-      search: getSearch(url) ?? search.search,
-      page,
-      limit,
-      filterMap: queryParamToMap(getQueryParam(url) ?? search.query ?? null),
+      search: parsed.search,
+      page: parsed.page,
+      limit: parsed.limit,
+      filterMap: parsed.filterMap,
     }
   }, [
     isDatabasesIndex,
@@ -220,8 +193,6 @@ export function View() {
     search?.query,
     search?.page,
     search?.limit,
-    location.pathname,
-    location.search,
   ])
 
   const urlPage = databaseListParams?.page ?? 1
@@ -248,6 +219,13 @@ export function View() {
     return map.size > 0 ? Array.from(map.values()) : undefined
   }, [displayedFilterQueryString])
   const hasInitedDisplayedRef = useRef(false)
+  const isMountedRef = useRef(false)
+  useEffect(() => {
+    isMountedRef.current = true
+    return () => {
+      isMountedRef.current = false
+    }
+  }, [])
   const [pageSize, setPageSize] = useState(GRID_DEFAULT_PAGE_SIZE)
   const [selectedDatabases, setSelectedDatabases] = useState<Set<string>>(
     new Set(),
@@ -259,6 +237,7 @@ export function View() {
 
   // Open create database flow when ?create=database (wizard when feature enabled; else modal)
   useEffect(() => {
+    if (!isMountedRef.current) return
     if (search?.create === 'database' && !createDatabaseDialogOpen) {
       if (useCreateDatabaseWizard) {
         navigate({
@@ -325,6 +304,7 @@ export function View() {
     if (!isDatabasesIndex) return
     if (searchDebounceRef.current) clearTimeout(searchDebounceRef.current)
     searchDebounceRef.current = setTimeout(() => {
+      if (!isMountedRef.current) return
       const trimmed = searchInput.trim()
       if (trimmed === (urlSearch ?? '')) return
       if (trimmed.length > 0 && trimmed.length < MIN_SEARCH_LENGTH) return

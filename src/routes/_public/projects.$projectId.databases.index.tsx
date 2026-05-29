@@ -10,14 +10,7 @@ import {
   GRID_DEFAULT_PAGE_SIZE,
   ROWS_DEFAULT_PAGE_SIZE,
 } from '@/lib/react-query/hooks/constants'
-import {
-  listSearchSchema,
-  getSearch,
-  getPage,
-  getLimit,
-  getQueryParam,
-  queryParamToMap,
-} from '@/lib/table-filters'
+import { listSearchSchema, parseListSearch } from '@/lib/table-filters'
 import { pageTitle } from '@/lib/utils/page-title'
 
 const DEFAULT_PAGE = 1
@@ -30,24 +23,22 @@ export const Route = createFileRoute('/_public/projects/$projectId/databases/')(
   {
     head: () => ({ meta: [{ title: pageTitle('Databases') }] }),
     validateSearch: databasesSearchSchema,
-    loader: async ({ params, context, location }) => {
+    loader: async ({ params, context, search: routeSearch }) => {
       if (typeof window === 'undefined') return
 
       const { projectId } = params
       const { queryClient } = context
       if (!projectId) return
 
-      const url = new URL(
-        location.pathname + location.search,
-        'http://localhost',
-      )
-      const search = getSearch(url)
-      const page = getPage(url, DEFAULT_PAGE)
-      const limit = getLimit(url, GRID_DEFAULT_PAGE_SIZE)
-      const queryParam = getQueryParam(url)
-      const filterMap = queryParamToMap(queryParam)
-      const filterQueries =
-        filterMap.size > 0 ? Array.from(filterMap.values()) : undefined
+      const {
+        search,
+        page,
+        limit,
+        filterQueries,
+      } = parseListSearch(routeSearch, {
+        page: DEFAULT_PAGE,
+        limit: GRID_DEFAULT_PAGE_SIZE,
+      })
 
       const projectData = await queryClient.ensureQueryData(
         projectQueryOptions(projectId),

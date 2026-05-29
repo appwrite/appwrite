@@ -1,6 +1,6 @@
 import { defineConfig } from 'vite'
 import { tanstackStart } from '@tanstack/react-start/plugin/vite'
-import { sentryTanstackStart } from '@sentry/tanstackstart-react'
+import { sentryTanstackStart } from '@sentry/tanstackstart-react/vite'
 import viteReact from '@vitejs/plugin-react'
 import viteTsConfigPaths from 'vite-tsconfig-paths'
 import tailwindcss from '@tailwindcss/vite'

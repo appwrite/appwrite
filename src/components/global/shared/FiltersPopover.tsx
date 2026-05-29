@@ -103,23 +103,25 @@ export function FiltersPopover({
         side="bottom"
         sideOffset={8}
       >
-        <FiltersPopoverContent
-          columns={columns}
-          filterMap={filterMap}
-          onRemoveFilter={onRemoveFilter}
-          onClearAll={onClearAll}
-          onApplyFilter={onApplyFilter}
-          onClose={() => onOpenChange(false)}
-          resourceLabel={resourceLabel}
-          filterScope={filterScope}
-          onApplyQuery={onApplyQuery}
-          teamId={teamId ?? undefined}
-          sortBy={sortBy}
-          sortOrder={sortOrder}
-          onSortChange={onSortChange}
-          defaultSortParam={defaultSortParam}
-          onReset={onReset}
-        />
+        {open ? (
+          <FiltersPopoverContent
+            columns={columns}
+            filterMap={filterMap}
+            onRemoveFilter={onRemoveFilter}
+            onClearAll={onClearAll}
+            onApplyFilter={onApplyFilter}
+            onClose={() => onOpenChange(false)}
+            resourceLabel={resourceLabel}
+            filterScope={filterScope}
+            onApplyQuery={onApplyQuery}
+            teamId={teamId ?? undefined}
+            sortBy={sortBy}
+            sortOrder={sortOrder}
+            onSortChange={onSortChange}
+            defaultSortParam={defaultSortParam}
+            onReset={onReset}
+          />
+        ) : null}
       </PopoverContent>
     </Popover>
   )

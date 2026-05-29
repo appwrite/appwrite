@@ -116,6 +116,53 @@ function isValidRelativeRedirect(url: string): boolean {
   }
 }
 
+type RouterLocation = ReturnType<typeof useLocation>
+
+/**
+ * Navigate to MFA or sign-in when the account query fails. Must run in useEffect —
+ * never call navigate from inside queryFn (async updates before mount).
+ */
+function useAuthErrorNavigation(error: unknown, location: RouterLocation) {
+  const navigate = useNavigate()
+  const navigateRef = useRef(navigate)
+  navigateRef.current = navigate
+
+  const needsMfa =
+    error instanceof AppwriteException &&
+    error.type === 'user_more_factors_required'
+
+  useEffect(() => {
+    if (!needsMfa || location.pathname === '/mfa') return
+    const redirectUrl = getRelativeRedirectUrl(location as unknown)
+    if (redirectUrl && isValidRelativeRedirect(redirectUrl)) {
+      navigateRef.current({ to: '/mfa', search: { redirect: redirectUrl } })
+    } else {
+      navigateRef.current({ to: '/mfa' })
+    }
+  }, [needsMfa, location.pathname])
+
+  const is401 =
+    !!error &&
+    ((error as { code?: number }).code === 401 ||
+      (error as { status?: number }).status === 401)
+
+  useEffect(() => {
+    if (
+      !is401 ||
+      isAuthPage(location.pathname) ||
+      isOptionalAuthPage(location.pathname)
+    ) {
+      return
+    }
+    const redirectUrl = getRelativeRedirectUrl(location as unknown)
+    if (redirectUrl && isValidRelativeRedirect(redirectUrl)) {
+      navigateRef.current({ to: '/sign-in', search: { redirect: redirectUrl } })
+    } else {
+      navigateRef.current({ to: '/sign-in' })
+    }
+  }, [is401, location.pathname])
+}
+
 export interface AuthData {
   currentUser: unknown
   account: unknown
@@ -221,62 +268,10 @@ export function RequireAuth({
     error,
   } = useQuery({
     ...consoleAccountQueryOptions({ revision: consoleImpersonationRevision }),
-    queryFn: async () => {
-      try {
-        const accountData = await sdk.forConsole.account.get()
-        return accountData
-      } catch (err) {
-        // Handle MFA requirement - redirect to MFA page
-        if (
-          err instanceof AppwriteException &&
-          err.type === 'user_more_factors_required'
-        ) {
-          // Don't redirect if we're already on the MFA page
-          if (location.pathname === '/mfa') {
-            throw err
-          }
-          const redirectUrl = getRelativeRedirectUrl(location as unknown)
-          if (redirectUrl && isValidRelativeRedirect(redirectUrl)) {
-            navigate({ to: '/mfa', search: { redirect: redirectUrl } })
-          } else {
-            navigate({ to: '/mfa' })
-          }
-          throw err
-        }
-
-        // Handle 401 Unauthorized - redirect to sign-in with current location as redirect
-        // But don't redirect if we're already on an auth page (prevents loops)
-        if (isAuthPage(location.pathname) || isOptionalAuthPage(location.pathname)) {
-          throw err
-        }
-
-        const redirectUrl = getRelativeRedirectUrl(location as unknown)
-        if (err instanceof AppwriteException && err.code === 401) {
-          if (redirectUrl && isValidRelativeRedirect(redirectUrl)) {
-            navigate({ to: '/sign-in', search: { redirect: redirectUrl } })
-          } else {
-            navigate({ to: '/sign-in' })
-          }
-          throw err
-        }
-        // Also check for status code in case it's not an AppwriteException
-        if (
-          (err as unknown)?.code === 401 ||
-          (err as unknown)?.status === 401
-        ) {
-          if (redirectUrl && isValidRelativeRedirect(redirectUrl)) {
-            navigate({ to: '/sign-in', search: { redirect: redirectUrl } })
-          } else {
-            navigate({ to: '/sign-in' })
-          }
-          throw err
-        }
-        throw err
-      }
-    },
-    staleTime: CONSOLE_ACCOUNT_STALE_TIME_MS,
     refetchOnMount: true, // Refetch when component mounts
   })
+
+  useAuthErrorNavigation(error, location)
 
   const accountAccessBlocked = !!error && isHttpForbiddenError(error)
   const isAuthenticated = !!account && !error
@@ -288,25 +283,6 @@ export function RequireAuth({
     accountAccessBlocked,
     signOut: () => signOut(navigate),
   }
-
-  // Redirect to sign-in when we observe 401 (e.g. from shared cache when our queryFn didn't run).
-  // Do not put `location` or `navigate` in deps - TanStack Router gives a new `location` reference
-  // most renders, which would re-fire this effect and call navigate in a tight loop.
-  const is401 =
-    error &&
-    ((error as { code?: number }).code === 401 ||
-      (error as { status?: number }).status === 401)
-  const navigateRef = useRef(navigate)
-  navigateRef.current = navigate
-  useEffect(() => {
-    if (!is401 || isAuthPage(location.pathname) || isOptionalAuthPage(location.pathname)) return
-    const redirectUrl = getRelativeRedirectUrl(location as unknown)
-    if (redirectUrl && isValidRelativeRedirect(redirectUrl)) {
-      navigateRef.current({ to: '/sign-in', search: { redirect: redirectUrl } })
-    } else {
-      navigateRef.current({ to: '/sign-in' })
-    }
-  }, [is401, location.pathname])
 
   // Show loading state while checking auth
   if (isLoading) {
@@ -363,60 +339,10 @@ export function useAuth(): AuthData {
     error,
   } = useQuery({
     ...consoleAccountQueryOptions({ revision: consoleImpersonationRevision }),
-    queryFn: async () => {
-      try {
-        return await sdk.forConsole.account.get()
-      } catch (err) {
-        // Handle MFA requirement - redirect to MFA page
-        if (
-          err instanceof AppwriteException &&
-          err.type === 'user_more_factors_required'
-        ) {
-          // Don't redirect if we're already on the MFA page
-          if (location.pathname === '/mfa') {
-            throw err
-          }
-          const redirectUrl = getRelativeRedirectUrl(location as unknown)
-          if (redirectUrl && isValidRelativeRedirect(redirectUrl)) {
-            navigate({ to: '/mfa', search: { redirect: redirectUrl } })
-          } else {
-            navigate({ to: '/mfa' })
-          }
-          throw err
-        }
-
-        // Handle 401 Unauthorized - redirect to sign-in with current location as redirect
-        // But don't redirect if we're already on an auth page (prevents loops)
-        if (isAuthPage(location.pathname) || isOptionalAuthPage(location.pathname)) {
-          throw err
-        }
-
-        const redirectUrl = getRelativeRedirectUrl(location as unknown)
-        if (err instanceof AppwriteException && err.code === 401) {
-          if (redirectUrl && isValidRelativeRedirect(redirectUrl)) {
-            navigate({ to: '/sign-in', search: { redirect: redirectUrl } })
-          } else {
-            navigate({ to: '/sign-in' })
-          }
-          throw err
-        }
-        if (
-          (err as unknown)?.code === 401 ||
-          (err as unknown)?.status === 401
-        ) {
-          if (redirectUrl && isValidRelativeRedirect(redirectUrl)) {
-            navigate({ to: '/sign-in', search: { redirect: redirectUrl } })
-          } else {
-            navigate({ to: '/sign-in' })
-          }
-          throw err
-        }
-        throw err
-      }
-    },
-    staleTime: CONSOLE_ACCOUNT_STALE_TIME_MS,
     refetchOnMount: true,
   })
+
+  useAuthErrorNavigation(error, location)
 
   const accountAccessBlocked = !!error && isHttpForbiddenError(error)
 
