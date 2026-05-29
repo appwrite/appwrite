@@ -12,20 +12,23 @@ export type InitGlobeArc = {
   color: string
 }
 
+export type InitGlobeMarker = {
+  lat: number
+  lng: number
+  color: string
+  count: number
+  pointRadius: number
+  ringMaxRadius: number
+}
+
+export type InitGlobePresenceData = {
+  arcs: InitGlobeArc[]
+  markers: InitGlobeMarker[]
+}
+
 function buildArcColors(brandColor: string): string[] {
   return [brandColor, withAlpha(brandColor, 0.75), withAlpha(brandColor, 0.55)]
 }
-
-const FALLBACK_LOCATIONS: Array<{ code: string; lat: number; lng: number }> = [
-  { code: 'US', lat: 37.09, lng: -95.71 },
-  { code: 'IN', lat: 20.59, lng: 78.96 },
-  { code: 'GB', lat: 55.38, lng: -3.44 },
-  { code: 'DE', lat: 51.17, lng: 10.45 },
-  { code: 'BR', lat: -14.24, lng: -51.93 },
-  { code: 'SG', lat: 1.35, lng: 103.82 },
-  { code: 'NG', lat: 9.08, lng: 8.68 },
-  { code: 'AU', lat: -25.27, lng: 133.78 },
-]
 
 function toLatLng(code: string): { lat: number; lng: number } | null {
   const coords = getCountryCoordinates(code)
@@ -54,41 +57,24 @@ function pushArc(
   })
 }
 
-function buildCountryToCountryArcs(
-  locations: Array<{ lat: number; lng: number; code?: string }>,
-  arcColors: string[],
-  step = 1,
-): InitGlobeArc[] {
-  if (locations.length < 2) return []
+function buildMarkerVisualWeights(count: number, maxCount: number) {
+  const MIN_POINT = 1.25
+  const MAX_POINT = 4.5
+  const MIN_RING = 2
+  const MAX_RING = 7
+  const weight = maxCount <= 1 ? 1 : Math.sqrt(count / maxCount)
 
-  const arcs: InitGlobeArc[] = []
-  let order = 1
-
-  for (let index = 0; index < locations.length; index += step) {
-    const current = locations[index]
-    const next = locations[(index + step) % locations.length]
-    if (current.code && next.code && current.code === next.code) continue
-
-    pushArc(
-      arcs,
-      order,
-      current,
-      next,
-      0.12 + (index % 3) * 0.05,
-      order,
-      arcColors,
-    )
-    order += 1
+  return {
+    pointRadius: MIN_POINT + weight * (MAX_POINT - MIN_POINT),
+    ringMaxRadius: MIN_RING + weight * (MAX_RING - MIN_RING),
   }
-
-  return arcs
 }
 
-/** Build animated arcs for the Aceternity GitHub-style globe from live community data. */
-export function buildInitGlobeArcs(
+/** Build globe arcs and country markers from live presence. No data → empty. */
+export function buildInitGlobePresenceData(
   countries: InitCommunityCountry[],
   brandColor = 'rgb(253, 54, 110)',
-): InitGlobeArc[] {
+): InitGlobePresenceData {
   const arcColors = buildArcColors(brandColor)
   const positions = countries
     .map((country) => {
@@ -99,8 +85,53 @@ export function buildInitGlobeArcs(
     .filter((entry): entry is NonNullable<typeof entry> => entry !== null)
 
   if (positions.length === 0) {
-    return buildCountryToCountryArcs(FALLBACK_LOCATIONS, arcColors, 2)
+    return { arcs: [], markers: [] }
   }
 
-  return buildCountryToCountryArcs(positions, arcColors).slice(0, 40)
+  const maxCount = Math.max(...positions.map((position) => position.count))
+  const markers: InitGlobeMarker[] = positions.map((position, index) => {
+    const { pointRadius, ringMaxRadius } = buildMarkerVisualWeights(
+      position.count,
+      maxCount,
+    )
+
+    return {
+      lat: position.lat,
+      lng: position.lng,
+      color: arcColors[index % arcColors.length],
+      count: position.count,
+      pointRadius,
+      ringMaxRadius,
+    }
+  })
+
+  if (positions.length < 2) {
+    return { arcs: [], markers }
+  }
+
+  const arcs: InitGlobeArc[] = []
+  let order = 1
+
+  for (let index = 0; index < positions.length; index += 1) {
+    const current = positions[index]
+    const arcCount = Math.min(current.count, 2)
+
+    for (let offset = 1; offset <= arcCount; offset += 1) {
+      const target = positions[(index + offset) % positions.length]
+      if (current.code === target.code) continue
+
+      pushArc(
+        arcs,
+        order,
+        current,
+        target,
+        0.12 + (offset - 1) * 0.05,
+        order,
+        arcColors,
+      )
+      order += 1
+    }
+  }
+
+  return { arcs: arcs.slice(0, 40), markers }
 }

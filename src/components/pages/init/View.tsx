@@ -180,6 +180,8 @@ function InitPageContent({
           {event.presenceEnabled && !event.isRecapMode ? (
             <InitGlobalCommunitySection
               countries={communityGlobe.countries}
+              developerCount={communityGlobe.developerCount}
+              isLive={communityGlobe.isLive}
               isAuthenticated={Boolean(account)}
             />
           ) : null}

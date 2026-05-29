@@ -48,6 +48,31 @@ type Position = {
   color: string
 }
 
+export type GlobeMarker = {
+  lat: number
+  lng: number
+  color: string
+  count: number
+  pointRadius: number
+  ringMaxRadius: number
+}
+
+type GlobeRingEntry = {
+  lat: number
+  lng: number
+  color: string
+  ringMaxRadius: number
+}
+
+function markerToRingEntry(marker: GlobeMarker): GlobeRingEntry {
+  return {
+    lat: marker.lat,
+    lng: marker.lng,
+    color: marker.color,
+    ringMaxRadius: marker.ringMaxRadius,
+  }
+}
+
 export type GlobeConfig = {
   pointSize?: number
   globeColor?: string
@@ -79,6 +104,7 @@ export type GlobeConfig = {
 interface WorldProps {
   globeConfig: GlobeConfig
   data: Position[]
+  markers?: GlobeMarker[]
 }
 
 type ResolvedGlobeProps = Required<
@@ -144,7 +170,7 @@ function CameraSync() {
   return null
 }
 
-export function Globe({ globeConfig, data }: WorldProps) {
+export function Globe({ globeConfig, data, markers = [] }: WorldProps) {
   const globeRef = useRef<ThreeGlobe | null>(null)
   const groupRef = useRef<Group | null>(null)
   const [isInitialized, setIsInitialized] = useState(false)
@@ -153,6 +179,8 @@ export function Globe({ globeConfig, data }: WorldProps) {
   resolvedRef.current = resolved
   const dataRef = useRef(data)
   dataRef.current = data
+  const markersRef = useRef(markers)
+  markersRef.current = markers
 
   useEffect(() => {
     if (!globeRef.current && groupRef.current) {
@@ -198,7 +226,8 @@ export function Globe({ globeConfig, data }: WorldProps) {
   useEffect(() => {
     if (!globeRef.current || !isInitialized) return
 
-    const arcs = dataRef.current
+    const arcs = data
+    const countryMarkers = markers
     const { pointSize, arcLength, arcTime, maxRings, rings, polygonColor } =
       resolvedRef.current
     const points: Array<{
@@ -207,23 +236,39 @@ export function Globe({ globeConfig, data }: WorldProps) {
       color: string
       lat: number
       lng: number
+      radius: number
     }> = []
 
-    for (const arc of arcs) {
-      points.push({
-        size: pointSize,
-        order: arc.order,
-        color: arc.color,
-        lat: arc.startLat,
-        lng: arc.startLng,
-      })
-      points.push({
-        size: pointSize,
-        order: arc.order,
-        color: arc.color,
-        lat: arc.endLat,
-        lng: arc.endLng,
-      })
+    if (countryMarkers.length > 0) {
+      for (const [index, marker] of countryMarkers.entries()) {
+        points.push({
+          size: pointSize,
+          order: index + 1,
+          color: marker.color,
+          lat: marker.lat,
+          lng: marker.lng,
+          radius: marker.pointRadius,
+        })
+      }
+    } else {
+      for (const arc of arcs) {
+        points.push({
+          size: pointSize,
+          order: arc.order,
+          color: arc.color,
+          lat: arc.startLat,
+          lng: arc.startLng,
+          radius: 2,
+        })
+        points.push({
+          size: pointSize,
+          order: arc.order,
+          color: arc.color,
+          lat: arc.endLat,
+          lng: arc.endLng,
+          radius: 2,
+        })
+      }
     }
 
     const filteredPoints = points.filter(
@@ -250,25 +295,53 @@ export function Globe({ globeConfig, data }: WorldProps) {
     globeRef.current
       .pointsData(filteredPoints)
       .pointColor((entry) => (entry as { color: string }).color)
-      .pointsMerge(true)
+      .pointsMerge(countryMarkers.length === 0)
       .pointAltitude(0)
-      .pointRadius(2)
+      .pointRadius((entry) => (entry as { radius: number }).radius)
 
-    globeRef.current
-      .ringsData([])
-      .ringColor(() => polygonColor)
-      .ringMaxRadius(maxRings)
-      .ringPropagationSpeed(RING_PROPAGATION_SPEED)
-      .ringRepeatPeriod((arcTime * arcLength) / rings)
-  }, [data, isInitialized])
+    if (countryMarkers.length > 0) {
+      globeRef.current
+        .ringsData(countryMarkers.map(markerToRingEntry))
+        .ringColor((entry) => (entry as { color: string }).color)
+        .ringMaxRadius((entry) => (entry as GlobeRingEntry).ringMaxRadius)
+        .ringPropagationSpeed(RING_PROPAGATION_SPEED)
+        .ringRepeatPeriod((arcTime * arcLength) / rings)
+    } else {
+      globeRef.current
+        .ringsData([])
+        .ringColor(() => polygonColor)
+        .ringMaxRadius(maxRings)
+        .ringPropagationSpeed(RING_PROPAGATION_SPEED)
+        .ringRepeatPeriod((arcTime * arcLength) / rings)
+    }
+  }, [data, isInitialized, markers])
 
   useEffect(() => {
-    if (!globeRef.current || !isInitialized || data.length === 0) return
+    if (!globeRef.current || !isInitialized) return
+    if (data.length === 0 && markers.length === 0) return
 
     const interval = window.setInterval(() => {
       if (!globeRef.current) return
 
       const arcs = dataRef.current
+      const countryMarkers = markersRef.current
+
+      if (countryMarkers.length > 0) {
+        const ringIndexes =
+          countryMarkers.length === 1
+            ? [0]
+            : genRandomNumbers(
+                0,
+                countryMarkers.length,
+                Math.max(1, Math.floor((countryMarkers.length * 4) / 5)),
+              )
+
+        globeRef.current
+          .ringsData(ringIndexes.map((index) => markerToRingEntry(countryMarkers[index])))
+          .ringMaxRadius((entry) => (entry as GlobeRingEntry).ringMaxRadius)
+        return
+      }
+
       const ringIndexes = genRandomNumbers(
         0,
         arcs.length,
@@ -287,7 +360,7 @@ export function Globe({ globeConfig, data }: WorldProps) {
     }, 2000)
 
     return () => window.clearInterval(interval)
-  }, [data, isInitialized])
+  }, [data, isInitialized, markers])
 
   return <group ref={groupRef} />
 }
@@ -336,7 +409,7 @@ function GlobeLights({ globeConfig }: { globeConfig: GlobeConfig }) {
   )
 }
 
-export function World({ globeConfig, data }: WorldProps) {
+export function World({ globeConfig, data, markers }: WorldProps) {
   return (
     <Canvas
       className="h-full w-full"
@@ -355,7 +428,7 @@ export function World({ globeConfig, data }: WorldProps) {
         key={`${globeConfig.evenLighting ? 'even' : 'dir'}-${globeConfig.ambientLight}-${globeConfig.directionalLeftLight}-${globeConfig.pointLight}`}
         globeConfig={globeConfig}
       />
-      <Globe globeConfig={globeConfig} data={data} />
+      <Globe globeConfig={globeConfig} data={data} markers={markers} />
       <OrbitControls
         enablePan={false}
         enableZoom={false}

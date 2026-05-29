@@ -1,6 +1,6 @@
 import { lazy, Suspense, useCallback, useEffect, useMemo, useState } from 'react'
 import { useTheme } from 'next-themes'
-import { buildInitGlobeArcs } from '@/lib/init/build-init-globe-arcs'
+import { buildInitGlobePresenceData } from '@/lib/init/build-init-globe-arcs'
 import { buildInitGlobeConfig, getInitGlobeBrandRgb } from '@/lib/init/init-globe-theme'
 import { useInitPresenceActivity } from '@/lib/init/init-presence-context'
 import { buildInitExploringGlobeActivity } from '@/lib/init/init-presence-activity'
@@ -56,12 +56,70 @@ function serializeCommunityCountries(countries: InitCommunityCountry[]): string 
   return countries.map((country) => `${country.code}:${country.count}`).join('|')
 }
 
+function InitGlobePresenceStats({
+  countries,
+  developerCount,
+  isLive,
+  className,
+}: {
+  countries: InitCommunityCountry[]
+  developerCount: number
+  isLive: boolean
+  className?: string
+}) {
+  const countryCount = countries.length
+  const developers =
+    developerCount > 0
+      ? developerCount
+      : countries.reduce((total, country) => total + country.count, 0)
+
+  if (countryCount === 0 && developers === 0) return null
+
+  return (
+    <div
+      className={cn(
+        'pointer-events-none flex items-center gap-2 rounded-lg border border-border/80 bg-background/85 px-2.5 py-1.5 shadow-sm backdrop-blur-sm',
+        className,
+      )}
+    >
+      {isLive ? (
+        <span className="relative flex size-2 shrink-0" aria-hidden>
+          <span className="absolute inline-flex size-full animate-ping rounded-full bg-green-500/60 opacity-75" />
+          <span className="relative inline-flex size-2 rounded-full bg-green-500" />
+        </span>
+      ) : null}
+      <p className="text-[12px] tabular-nums text-foreground">
+        <span className="font-semibold">{countryCount.toLocaleString()}</span>
+        <span className="text-muted-foreground">
+          {' '}
+          {countryCount === 1 ? 'country' : 'countries'}
+        </span>
+        {developers > 0 ? (
+          <>
+            <span className="text-muted-foreground"> · </span>
+            <span className="font-semibold">{developers.toLocaleString()}</span>
+            <span className="text-muted-foreground"> online</span>
+          </>
+        ) : null}
+      </p>
+      {isLive ? <span className="sr-only">Live presence</span> : null}
+    </div>
+  )
+}
+
 type InitCommunityGlobeProps = {
   countries: InitCommunityCountry[]
+  developerCount: number
+  isLive: boolean
   className?: string
 }
 
-function InitCommunityGlobe({ countries, className }: InitCommunityGlobeProps) {
+function InitCommunityGlobe({
+  countries,
+  developerCount,
+  isLive,
+  className,
+}: InitCommunityGlobeProps) {
   const { config: globeConfig, themeKey } = useInitGlobeConfig()
   const { setTransientActivity } = useInitPresenceActivity()
   const countriesKey = useMemo(
@@ -72,8 +130,8 @@ function InitCommunityGlobe({ countries, className }: InitCommunityGlobeProps) {
     () => (globeConfig ? getInitGlobeBrandRgb() : 'rgb(253, 54, 110)'),
     [globeConfig, themeKey],
   )
-  const arcs = useMemo(
-    () => buildInitGlobeArcs(countries, brandRgb),
+  const globePresence = useMemo(
+    () => buildInitGlobePresenceData(countries, brandRgb),
     [brandRgb, countriesKey],
   )
 
@@ -105,7 +163,12 @@ function InitCommunityGlobe({ countries, className }: InitCommunityGlobeProps) {
           }
         >
           {globeConfig ? (
-            <World key={themeKey} globeConfig={globeConfig} data={arcs} />
+            <World
+              key={themeKey}
+              globeConfig={globeConfig}
+              data={globePresence.arcs}
+              markers={globePresence.markers}
+            />
           ) : (
             <div className="flex aspect-square items-center justify-center">
               <div className="size-10 animate-spin rounded-full border-2 border-border border-t-[var(--brand-cta)]" />
@@ -113,17 +176,28 @@ function InitCommunityGlobe({ countries, className }: InitCommunityGlobeProps) {
           )}
         </Suspense>
       </div>
+
+      <InitGlobePresenceStats
+        countries={countries}
+        developerCount={developerCount}
+        isLive={isLive}
+        className="absolute bottom-4 left-3 z-20 sm:bottom-5 sm:left-4"
+      />
     </div>
   )
 }
 
 type InitGlobalCommunitySectionProps = {
   countries: InitCommunityCountry[]
+  developerCount: number
+  isLive: boolean
   isAuthenticated: boolean
 }
 
 export function InitGlobalCommunitySection({
   countries,
+  developerCount,
+  isLive,
   isAuthenticated,
 }: InitGlobalCommunitySectionProps) {
   return (
@@ -151,7 +225,9 @@ export function InitGlobalCommunitySection({
 
           <InitCommunityGlobe
             countries={countries}
-            className="relative z-0 -mt-6 w-full sm:-mt-10 lg:-mt-14"
+            developerCount={developerCount}
+            isLive={isLive}
+            className="relative z-20 -mt-6 w-full sm:-mt-10 lg:-mt-14"
           />
         </section>
 
