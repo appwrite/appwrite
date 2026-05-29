@@ -105,6 +105,14 @@ class Create extends CreateDocumentAction
                 foreach ($embedResult['embeddings'] as $embedding) {
                     $results[] = $this->embeddingResult($model, $dimension, $embedding);
                 }
+
+                // Partial success: backend returned fewer embeddings than inputs.
+                // Fill the gap with error results so the response stays 1:1 with texts.
+                $missing = \count($batch) - \count($embedResult['embeddings']);
+                for ($i = 0; $i < $missing; $i++) {
+                    $totalErrors++;
+                    $results[] = $this->embeddingResult($model, $dimension, [], 'Error while generating embedding');
+                }
             } catch (\Exception $e) {
                 $totalErrors += \count($batch);
                 $this->logError($e, $model, $project, $log, $logger);
