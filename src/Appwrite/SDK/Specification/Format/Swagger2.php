@@ -369,16 +369,17 @@ class Swagger2 extends Format
                     }
                 }
 
-                $temp['x-appwrite']['auth'] = \array_slice($securities, 0, $this->authCount);
-
-                // For location-type methods, embed ImpersonateUserId in the URL auth so the SDK
-                // automatically appends ?impersonateuserid= to generated URLs. Browsers cannot
-                // carry custom headers on resource requests (img src, href), so impersonation
-                // must fall back to a query parameter for file view/preview/download.
+                // For location-type methods, browsers cannot carry custom headers on resource
+                // requests (img src, href), so impersonation must fall back to a URL query param.
+                // Add ImpersonateUserId to securities before slicing and extend the count by one
+                // so the SDK automatically appends ?impersonateuserid= to file view/preview/download URLs.
+                $authCount = $this->authCount;
                 if ($sdk->getType() === MethodType::LOCATION && \array_key_exists('ImpersonateUserId', $this->keys)) {
-                    $temp['x-appwrite']['auth']['ImpersonateUserId'] = [];
+                    $securities['ImpersonateUserId'] = [];
+                    $authCount += 1;
                 }
 
+                $temp['x-appwrite']['auth'] = \array_slice($securities, 0, $authCount);
                 $temp['security'][] = $securities;
             }
 
