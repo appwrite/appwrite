@@ -3,6 +3,7 @@
 namespace Appwrite\Platform\Modules\Functions\Http\Executions;
 
 use Ahc\Jwt\JWT;
+use Appwrite\Bus\Events\ExecutionLogged;
 use Appwrite\Event\Event;
 use Appwrite\Event\Message\Delete as DeleteMessage;
 use Appwrite\Event\Message\Func as FunctionMessage;
@@ -24,6 +25,7 @@ use Executor\Executor;
 use MaxMind\Db\Reader;
 use Utopia\Auth\Proofs\Token;
 use Utopia\Auth\Store;
+use Utopia\Bus\Bus;
 use Utopia\Config\Config;
 use Utopia\Console;
 use Utopia\Database\Database;
@@ -107,6 +109,7 @@ class Create extends Base
             ->inject('authorization')
             ->inject('publisherForDeletes')
             ->inject('executionsRetentionCount')
+            ->inject('bus')
             ->callback($this->action(...));
     }
 
@@ -135,6 +138,7 @@ class Create extends Base
         Authorization $authorization,
         DeletePublisher $publisherForDeletes,
         int $executionsRetentionCount,
+        Bus $bus,
     ) {
         $async = \strval($async) === 'true' || \strval($async) === '1';
 
@@ -296,7 +300,6 @@ class Create extends Base
 
         if ($async) {
             if (is_null($scheduledAt)) {
-                $execution = $authorization->skip(fn () => $dbForProject->createDocument('executions', $execution));
                 $publisherForFunctions->enqueue(new FunctionMessage(
                     project: $project,
                     user: $user,
@@ -316,7 +319,8 @@ class Create extends Base
                     'path' => $path,
                     'method' => $method,
                     'body' => $body,
-                    'userId' => $user->getId()
+                    'userId' => $user->getId(),
+                    'execution' => $execution->getArrayCopy(),
                 ];
 
                 $schedule = $dbForPlatform->createDocument('schedules', new Document([
@@ -336,7 +340,10 @@ class Create extends Base
                     ->setAttribute('scheduleInternalId', $schedule->getSequence())
                     ->setAttribute('scheduledAt', $scheduledAt);
 
-                $execution = $authorization->skip(fn () => $dbForProject->createDocument('executions', $execution));
+                $bus->dispatch(new ExecutionLogged(
+                    execution: $execution->getArrayCopy(),
+                    project: $project->getArrayCopy(),
+                ));
             }
 
             if ($executionsRetentionCount > 0 && ENABLE_EXECUTIONS_LIMIT_ON_ROUTE) {
@@ -506,7 +513,10 @@ class Create extends Base
                 ->addMetric(str_replace(['{resourceType}', '{resourceInternalId}'], [RESOURCE_TYPE_FUNCTIONS, $function->getSequence()], METRIC_RESOURCE_TYPE_ID_EXECUTIONS_MB_SECONDS), (int)(($spec['memory'] ?? APP_COMPUTE_MEMORY_DEFAULT) * $execution->getAttribute('duration', 0) * ($spec['cpus'] ?? APP_COMPUTE_CPUS_DEFAULT)))
             ;
 
-            $execution = $authorization->skip(fn () => $dbForProject->createDocument('executions', $execution));
+            $bus->dispatch(new ExecutionLogged(
+                execution: $execution->getArrayCopy(),
+                project: $project->getArrayCopy(),
+            ));
         }
 
         $executionResponse['headers']['x-appwrite-execution-id'] = $execution->getId();

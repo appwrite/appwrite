@@ -173,6 +173,7 @@ abstract class ScheduleBase extends Action
                             'schedule' => $schedule->getAttribute('schedule'),
                             'active' => $schedule->getAttribute('active'),
                             'resourceUpdatedAt' => $schedule->getAttribute('resourceUpdatedAt'),
+                            'data' => $schedule->getAttribute('data', []),
                         ];
                     } catch (\Throwable $th) {
                         Console::error("Failed to load schedule for project {$schedule->getAttribute('projectId')} {$collectionId} {$schedule->getAttribute('resourceId')}");
@@ -269,7 +270,14 @@ abstract class ScheduleBase extends Action
 
             // In case the resource is not found (project deleted).
             try {
-                $resource = $getProjectDB($project)->getDocument(static::getCollectionId(), $schedule['resourceId']);
+                $data = \is_array($schedule['data']) ? $schedule['data'] : [];
+                $resource = static::getSupportedResource() === SCHEDULE_RESOURCE_TYPE_EXECUTION
+                    ? new Document($data['execution'] ?? [])
+                    : new Document();
+
+                if ($resource->isEmpty()) {
+                    $resource = $getProjectDB($project)->getDocument(static::getCollectionId(), $schedule['resourceId']);
+                }
             } catch (\Throwable $th) {
                 Console::error("Failed to load resource: projectId::{$schedule['projectId']} resourceId::{$schedule['resourceId']}");
                 Console::error($th->getMessage());
