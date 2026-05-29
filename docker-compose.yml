@@ -1359,7 +1359,7 @@ services:
     command: "postgres"
 
   appwrite-embedding:
-    image: appwrite/embedding
+    image: appwrite/embedding:0.1.0
     environment:
       EMBEDDING_MODELS: ${_APP_EMBEDDING_MODELS:-nomic}
     container_name: appwrite-embedding
