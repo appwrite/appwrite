@@ -73,7 +73,7 @@ class Update extends PlatformAction
                 new Method(
                     namespace: 'presences',
                     group: 'presences',
-                    name: 'updatePresence',
+                    name: 'update',
                     desc: 'Update presence',
                     description: '/docs/references/presences/update.md',
                     auth: [AuthType::KEY, AuthType::JWT],
