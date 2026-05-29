@@ -1358,19 +1358,19 @@ services:
       start_period: 10s
     command: "postgres"
 
-    appwrite-embedding:
-      image: appwrite/embedding
-      environment:
-        EMBEDDING_MODELS: "nomic"
-      container_name: appwrite-embedding
-      ports:
-        - "11430:11434"
-      restart: unless-stopped
-      # persistent for caching models across restarts and preloading
-      volumes:
-        - embedding_models:/home/embedder/models
-      networks:
-        - appwrite
+  appwrite-embedding:
+    image: appwrite/embedding
+    environment:
+      EMBEDDING_MODELS: "nomic"
+    container_name: appwrite-embedding
+    ports:
+      - "11430:11434"
+    restart: unless-stopped
+    # persistent for caching models across restarts and preloading
+    volumes:
+      - embedding_models:/home/embedder/models
+    networks:
+      - appwrite
 
   redis:
     image: redis:7.4.7-alpine

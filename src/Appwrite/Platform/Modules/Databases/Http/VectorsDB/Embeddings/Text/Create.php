@@ -107,7 +107,7 @@ class Create extends CreateDocumentAction
                     $results[] = $this->embeddingResult($model, $dimension, $embedding);
                 }
             } catch (\Exception $e) {
-                $totalErrors++;
+                $totalErrors += \count($batch);
                 $this->logError($e, $model, $project, $log, $logger);
 
                 // One error result per text in the failed batch.
