@@ -87,6 +87,7 @@ class Create extends CreateDocumentAction
 
     public function action(array $texts, string $model, UtopiaResponse $response, Document $project, Agent $embeddingAgent, Context $usage, Log $log, ?Logger $logger): void
     {
+        $adapter = $embeddingAgent->getAdapter();
         $adapter->setModel($model);
         $dimension = $adapter->getEmbeddingDimension();
 
@@ -97,7 +98,6 @@ class Create extends CreateDocumentAction
 
         foreach (array_chunk($texts, APP_EMBEDDING_BATCH_LIMIT) as $batch) {
             try {
-                // TODO: Have the interface in the agents lib itself
                 $embedResult = $embeddingAgent->bulkEmbed($batch);
                 $totalDuration += $embedResult['totalDuration'] ?? 0;
                 $totalTokens += $embedResult['tokensProcessed'] ?? 0;
