@@ -320,7 +320,7 @@ class Functions extends Action
             'duration' => 0.0,
         ]);
 
-        $executionForEvent = new Document($execution->getArrayCopy())
+        $executionForEvent = (new Document($execution->getArrayCopy()))
             ->setAttribute('errors', $message);
 
         Span::add('function.id', $function->getId());
