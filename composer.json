@@ -63,7 +63,7 @@
         "utopia-php/console": "0.1.*",
         "utopia-php/database": "5.*",
         "utopia-php/detector": "0.2.*",
-        "utopia-php/domains": "^2.1",
+        "utopia-php/domains": "^2.2",
         "utopia-php/emails": "0.7.*",
         "utopia-php/dns": "1.7.*",
         "utopia-php/dsn": "0.2.1",
