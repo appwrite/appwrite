@@ -136,6 +136,7 @@ import {
 import type { CompactFilterKey } from '@/lib/table-filters'
 import { FiltersPopover } from '@/components/global/shared/FiltersPopover'
 import { TablesDbRowsColumnsPopover } from './_components/TablesDbRowsColumnsPopover'
+import { TableRowsEditSessionProvider } from './_components/TableRowsEditSession'
 import {
   Tooltip,
   TooltipContent,
@@ -1965,6 +1966,11 @@ export function Workspace({
   )
 
   return (
+    <TableRowsEditSessionProvider
+      projectId={projectId}
+      databaseId={databaseId}
+      canWrite={!noCreateRowPermission}
+    >
     <div className="@container flex h-full min-h-0 min-w-0">
       {showDesktopTableSidebar ? (
         <TableViewResizableLayout sidebar={tableViewSidebar}>
@@ -2011,5 +2017,6 @@ export function Workspace({
         />
       )}
     </div>
+    </TableRowsEditSessionProvider>
   )
 }

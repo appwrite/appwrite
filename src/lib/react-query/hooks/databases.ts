@@ -18,6 +18,11 @@ import type { Models } from '@appwrite.io/console'
 import type { Database, Collection } from '@/lib/utils/mock-data'
 import { sdk } from '@/lib/appwrite/sdk'
 import {
+  groupEditsIntoUpdateOperations,
+  serializeRowDataForApi,
+  type PendingRowCellEdit,
+} from '@/lib/database-row-inline-edits'
+import {
   DEFAULT_STALE_TIME,
   DEFAULT_PAGE_SIZE,
   COLUMNS_INDEXES_DEFAULT_PAGE_SIZE,
@@ -3566,4 +3571,126 @@ export function useDeleteProjectTable(
       })
     },
   })
+}
+
+/**
+ * Commit staged row cell edits atomically using a Tables DB transaction.
+ */
+type TableRowsListCache = {
+  rows: unknown[]
+  total: number
+}
+
+function applyEditsToApiRow(
+  row: Record<string, unknown>,
+  edits: PendingRowCellEdit[],
+): Record<string, unknown> {
+  const rowId = String(row.$id ?? '')
+  const rowEdits = edits.filter((edit) => edit.rowId === rowId)
+  if (rowEdits.length === 0) return row
+
+  const next = { ...row }
+  for (const edit of rowEdits) {
+    const serialized = serializeRowDataForApi({ [edit.columnKey]: edit.value })
+    next[edit.columnKey] = serialized[edit.columnKey]
+  }
+  return next
+}
+
+/**
+ * Patch list-row caches with committed values before clearing pending edits,
+ * so the grid does not flash back to stale data while refetching.
+ */
+export function applyCommittedEditsToRowsCache(
+  queryClient: QueryClient,
+  projectId: string,
+  databaseId: string,
+  edits: PendingRowCellEdit[],
+) {
+  if (edits.length === 0) return
+
+  const editsByTable = new Map<string, PendingRowCellEdit[]>()
+  for (const edit of edits) {
+    const list = editsByTable.get(edit.tableId)
+    if (list) list.push(edit)
+    else editsByTable.set(edit.tableId, [edit])
+  }
+
+  for (const [tableId, tableEdits] of editsByTable) {
+    queryClient.setQueriesData<TableRowsListCache>(
+      {
+        queryKey: ['rows', 'project', projectId, databaseId, tableId],
+      },
+      (old) => {
+        if (!old?.rows?.length) return old
+        const editedRowIds = new Set(tableEdits.map((edit) => edit.rowId))
+        return {
+          ...old,
+          rows: old.rows.map((row) => {
+            const record = row as Record<string, unknown>
+            if (!editedRowIds.has(String(record.$id))) return row
+            return applyEditsToApiRow(record, tableEdits)
+          }),
+        }
+      },
+    )
+  }
+}
+
+export async function commitProjectTableRowEdits(
+  projectId: string,
+  edits: PendingRowCellEdit[],
+) {
+  if (!projectId) {
+    throw new Error('Missing project ID')
+  }
+  if (edits.length === 0) {
+    throw new Error('No edits to commit')
+  }
+
+  const projectSdk = sdk.forProject(projectId)
+  const databaseId = edits[0].databaseId
+  const dm = await getDatabaseModel(projectId, databaseId)
+  const kind = dm?.type ?? DatabaseType.Tablesdb
+
+  if (kind !== DatabaseType.Tablesdb) {
+    throw new Error('Row edit transactions are only supported for Tables DB')
+  }
+
+  if (typeof projectSdk.tablesDB.createTransaction !== 'function') {
+    throw new Error('Transactions are not available in this environment')
+  }
+
+  const operations = groupEditsIntoUpdateOperations(edits)
+  const tx = await projectSdk.tablesDB.createTransaction()
+
+  try {
+    await projectSdk.tablesDB.createOperations({
+      transactionId: tx.$id,
+      operations,
+    })
+    await projectSdk.tablesDB.updateTransaction({
+      transactionId: tx.$id,
+      commit: true,
+    })
+  } catch (error) {
+    try {
+      await projectSdk.tablesDB.updateTransaction({
+        transactionId: tx.$id,
+        rollback: true,
+      })
+    } catch {
+      /* best-effort rollback */
+    }
+    throw error
+  }
+
+  const affectedTables = [...new Set(edits.map((edit) => edit.tableId))]
+
+  return {
+    transactionId: tx.$id,
+    affectedTables,
+    editCount: edits.length,
+    rowCount: operations.length,
+  }
 }

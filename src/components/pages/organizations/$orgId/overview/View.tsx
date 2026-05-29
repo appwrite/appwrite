@@ -1956,8 +1956,8 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
           })()}
 
         {/* Main Content */}
-        <div className="flex-1">
-          <div className="mx-auto max-w-7xl px-4 py-4 sm:px-6">
+        <div className="min-w-0 flex-1">
+          <div className="mx-auto min-w-0 max-w-7xl px-4 py-4 sm:px-6">
             {/* Render child routes (domains list) when on domains route */}
             {shouldRenderChildren && children ? (
               <div className="h-full">{children}</div>
@@ -2101,7 +2101,7 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                                 <h2 className="mb-3 text-[13px] font-semibold text-muted-foreground uppercase tracking-wider">
                                   Pinned
                                 </h2>
-                                <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                                <div className="grid min-w-0 gap-3 sm:grid-cols-2 lg:grid-cols-3">
                                   {pinnedProjects.map((project, index) => {
                                     const isDragActive =
                                       canReorderPinned &&
@@ -2128,7 +2128,7 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                                       >
                                         <div
                                           className={cn(
-                                            'group relative rounded-xl border bg-card/50 p-4 transition-[opacity,transform,box-shadow,border-color] duration-200 ease-out hover:border-border hover:bg-card',
+                                            'group relative min-w-0 overflow-hidden rounded-xl border bg-card/50 p-4 transition-[opacity,transform,box-shadow,border-color] duration-200 ease-out hover:border-border hover:bg-card',
                                             !isDragActive && 'border-border',
                                             isDragSource &&
                                               'z-0 scale-[0.99] opacity-[0.48] ring-2 ring-dashed ring-muted-foreground/45',
@@ -2163,11 +2163,11 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                                               }}
                                               className="min-w-0 flex-1"
                                             >
-                                              <div>
-                                                <h3 className="flex min-w-0 items-center gap-1.5 text-[14px] font-medium text-foreground group-hover:text-foreground">
-                                                  <span className="min-w-0 truncate">
+                                              <div className="min-w-0">
+                                                <div className="flex min-w-0 items-center gap-1.5">
+                                                  <h3 className="min-w-0 flex-1 truncate text-[14px] font-medium text-foreground group-hover:text-foreground">
                                                     {project.name}
-                                                  </span>
+                                                  </h3>
                                                   <FailedInvoiceWarningIcon
                                                     show={
                                                       showFailedInvoiceOrgAlert
@@ -2175,15 +2175,19 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                                                     orgBillingReadonly={
                                                       orgBillingReadonlyForFailedInvoice
                                                     }
+                                                    className="shrink-0"
                                                   />
-                                                </h3>
+                                                </div>
                                                 {supportsMultiRegion &&
                                                   project.region && (
-                                                    <div className="mt-0.5 flex items-center gap-1.5 text-[12px] text-muted-foreground">
+                                                    <div className="mt-0.5 flex min-w-0 items-center gap-1.5 text-[12px] text-muted-foreground">
                                                       <RegionFlag
                                                         region={project.region}
+                                                        className="shrink-0"
                                                       />
-                                                      {project.region}
+                                                      <span className="truncate">
+                                                        {project.region}
+                                                      </span>
                                                     </div>
                                                   )}
                                               </div>
@@ -2303,7 +2307,7 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                                         All projects
                                       </h2>
                                     )}
-                                    <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                                    <div className="grid min-w-0 gap-3 sm:grid-cols-2 lg:grid-cols-3">
                                       {projects.map((project) => {
                                         const canPin =
                                           pinnedIds.length < MAX_PINNED_PROJECTS
@@ -2320,7 +2324,7 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                                             }
                                           >
                                             <div
-                                              className="group relative rounded-xl border border-border bg-card/50 p-4 transition-all hover:border-border hover:bg-card"
+                                              className="group relative min-w-0 overflow-hidden rounded-xl border border-border bg-card/50 p-4 transition-all hover:border-border hover:bg-card"
                                               data-project-card
                                             >
                                               <div className="flex items-start gap-1">
@@ -2331,11 +2335,11 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                                                   }}
                                                   className="min-w-0 flex-1"
                                                 >
-                                                  <div>
-                                                    <h3 className="flex min-w-0 items-center gap-1.5 text-[14px] font-medium text-foreground group-hover:text-foreground">
-                                                      <span className="min-w-0 truncate">
+                                                  <div className="min-w-0">
+                                                    <div className="flex min-w-0 items-center gap-1.5">
+                                                      <h3 className="min-w-0 flex-1 truncate text-[14px] font-medium text-foreground group-hover:text-foreground">
                                                         {project.name}
-                                                      </span>
+                                                      </h3>
                                                       <FailedInvoiceWarningIcon
                                                         show={
                                                           showFailedInvoiceOrgAlert
@@ -2343,17 +2347,21 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                                                         orgBillingReadonly={
                                                           orgBillingReadonlyForFailedInvoice
                                                         }
+                                                        className="shrink-0"
                                                       />
-                                                    </h3>
+                                                    </div>
                                                     {supportsMultiRegion &&
                                                       project.region && (
-                                                        <div className="mt-0.5 flex items-center gap-1.5 text-[12px] text-muted-foreground">
+                                                        <div className="mt-0.5 flex min-w-0 items-center gap-1.5 text-[12px] text-muted-foreground">
                                                           <RegionFlag
                                                             region={
                                                               project.region
                                                             }
+                                                            className="shrink-0"
                                                           />
-                                                          {project.region}
+                                                          <span className="truncate">
+                                                            {project.region}
+                                                          </span>
                                                         </div>
                                                       )}
                                                   </div>

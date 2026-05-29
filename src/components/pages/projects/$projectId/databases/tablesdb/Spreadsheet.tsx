@@ -141,6 +141,12 @@ import { EmptyState } from '@/components/global/shared/EmptyState'
 import { MenuItemContent, MenuItemIcon } from '@/components/global/shared/ContextMenuIcon'
 import { RowActionsMenuTrigger } from '@/components/global/shared/RowActionsMenuTrigger'
 import { SampleDataModal } from './SampleData'
+import { InlineTableCell } from './_components/InlineTableCell'
+import { useTableRowsEditSession } from './_components/TableRowsEditSession'
+import {
+  getSystemDateColumnInfo,
+  type SystemDateColumnKey,
+} from '@/lib/database-row-inline-edits'
 import { generateSampleRows, type Column } from '@/lib/utils/sample-data'
 import { IdInput } from '@/components/ui/id-input'
 import { Button } from '@/components/ui/button'
@@ -2838,6 +2844,8 @@ export function RowsSpreadsheet({
   const rsNav = useMemo(() => dbNavLink(DB_KIND), [])
   const tableId = table.$id
 
+  const editSession = useTableRowsEditSession()
+
   const urlDriven = onNavigateToRowsList != null
 
   const [selectedRows, setSelectedRows] = useState<Set<string>>(new Set())
@@ -3278,6 +3286,21 @@ export function RowsSpreadsheet({
   // Fetch columns from the project SDK
   const { columns: apiColumns, isLoading: columnsLoading } =
     useProjectTableColumns(projectId, databaseId, tableId)
+
+  const findColumnInfo = useCallback(
+    (columnKey: string) =>
+      apiColumns.find((c: unknown) => {
+        const rec = c as Record<string, unknown>
+        const colKey =
+          rec.key ||
+          rec.name ||
+          rec.$id ||
+          rec.attribute ||
+          rec.attributeId
+        return colKey === columnKey
+      }),
+    [apiColumns],
+  )
 
   // Fetch tables for relationship columns (needed for column creation)
   const { tables: availableTablesForColumns } = useTablesForColumns(
@@ -3807,8 +3830,43 @@ export function RowsSpreadsheet({
     return true
   }
 
+  const pendingCellDrawerTimersRef = useRef<
+    Map<string, ReturnType<typeof setTimeout>>
+  >(new Map())
+
+  const cancelPendingCellDrawer = useCallback((rowId: string, columnKey: string) => {
+    const timerKey = `${rowId}:${columnKey}`
+    const timer = pendingCellDrawerTimersRef.current.get(timerKey)
+    if (!timer) return
+    clearTimeout(timer)
+    pendingCellDrawerTimersRef.current.delete(timerKey)
+  }, [])
+
+  const cancelAllPendingCellDrawers = useCallback(() => {
+    for (const timer of pendingCellDrawerTimersRef.current.values()) {
+      clearTimeout(timer)
+    }
+    pendingCellDrawerTimersRef.current.clear()
+  }, [])
+
+  useEffect(() => {
+    const timers = pendingCellDrawerTimersRef.current
+    return () => {
+      for (const timer of timers.values()) clearTimeout(timer)
+      timers.clear()
+    }
+  }, [])
+
   const handleRowClick = (row: RowData, event: MouseEvent) => {
     if (handleRowMultiSelectPointer(row.$id, event)) return
+    if (editSession?.consumeSuppressNextDrawerOpen()) {
+      cancelAllPendingCellDrawers()
+      return
+    }
+    if (editSession?.commitActiveInlineEdit()) {
+      cancelAllPendingCellDrawers()
+      return
+    }
     openRowInDrawer(row, { focusedField: null, initialTab: 'data' })
   }
 
@@ -3818,7 +3876,22 @@ export function RowsSpreadsheet({
 
   const handleCellClick = (row: RowData, key: string, event: MouseEvent) => {
     if (handleRowMultiSelectPointer(row.$id, event)) return
-    openRowInDrawer(row, { focusedField: key, initialTab: null })
+    if (editSession?.consumeSuppressNextDrawerOpen()) {
+      cancelAllPendingCellDrawers()
+      return
+    }
+    if (editSession?.commitActiveInlineEdit()) {
+      cancelAllPendingCellDrawers()
+      return
+    }
+    const timerKey = `${row.$id}:${key}`
+    const existing = pendingCellDrawerTimersRef.current.get(timerKey)
+    if (existing) clearTimeout(existing)
+    const timer = setTimeout(() => {
+      pendingCellDrawerTimersRef.current.delete(timerKey)
+      openRowInDrawer(row, { focusedField: key, initialTab: null })
+    }, 200)
+    pendingCellDrawerTimersRef.current.set(timerKey, timer)
   }
 
   // Open row drawer when URL has #row-<id> or #row-<id>-permissions (e.g. from copied link).
@@ -4230,6 +4303,24 @@ export function RowsSpreadsheet({
     const trimmed =
       stringValue.length > 80 ? `${stringValue.slice(0, 77)}…` : stringValue
     return { full: stringValue, display: trimmed, isNull: false }
+  }
+
+  const formatSystemDateCellDisplay = (
+    value: string | null | undefined,
+  ): { full: string; display: string; isNull: boolean } => {
+    if (!value) return { full: 'null', display: 'N/A', isNull: true }
+    const d = new Date(value)
+    if (Number.isNaN(d.getTime())) {
+      return { full: value, display: value, isNull: false }
+    }
+    return {
+      full: value,
+      display: d.toLocaleString(undefined, {
+        dateStyle: 'short',
+        timeStyle: 'short',
+      }),
+      isNull: false,
+    }
   }
 
   // Detect RTL content
@@ -5035,6 +5126,8 @@ export function RowsSpreadsheet({
                 useInlineDocumentPane &&
                 selectedRowForEdit !== null &&
                 selectedRowForEdit.$id === row.$id
+              const hasPendingEdits =
+                editSession?.isRowEdited(tableId, row.$id) ?? false
               return (
               <RowContextMenu
                 key={row.$id}
@@ -5061,11 +5154,14 @@ export function RowsSpreadsheet({
                 <tr
                   className={cn(
                     'group cursor-pointer transition-colors',
+                    hasPendingEdits &&
+                      'bg-amber-500/10 ring-1 ring-inset ring-amber-500/20 hover:bg-amber-500/15',
                     isInlinePreviewRow
                       ? 'bg-muted/25 ring-1 ring-inset ring-border/20 hover:bg-muted/35'
-                      : selectedRows.has(row.$id)
-                        ? 'bg-muted'
-                        : 'hover:bg-muted/50',
+                      : !hasPendingEdits &&
+                          (selectedRows.has(row.$id)
+                            ? 'bg-muted'
+                            : 'hover:bg-muted/50'),
                   )}
                   onMouseDown={preventRowTextSelectionOnPointer}
                   onClick={(e) => handleRowClick(row, e)}
@@ -5132,95 +5228,85 @@ export function RowsSpreadsheet({
                         </td>
                       )
                     }
-                    if (gridKey === '$createdAt') {
+                    if (gridKey === '$createdAt' || gridKey === '$updatedAt') {
+                      const systemKey = gridKey as SystemDateColumnKey
+                      const originalValue = row[systemKey] ?? null
+                      const displayValue =
+                        editSession?.getCellDisplayValue(
+                          tableId,
+                          row.$id,
+                          systemKey,
+                          originalValue,
+                        ) ?? originalValue
+                      const { full, display, isNull } =
+                        formatSystemDateCellDisplay(
+                          displayValue as string | null,
+                        )
                       return (
                         <td
-                          key="td-$createdAt"
+                          key={`td-${systemKey}`}
                           className={cn(
-                            'w-[180px] px-3 py-1.5',
+                            'relative h-px w-[180px] p-0',
                             bodyCellBorderClass,
                           )}
-                          data-column="$createdAt"
+                          data-column={systemKey}
                         >
-                          {row.$createdAt ? (
-                            useInlineDocumentPane ? (
-                              <span className="text-[12px] text-muted-foreground">
-                                {new Date(row.$createdAt).toLocaleString(
-                                  undefined,
-                                  {
-                                    dateStyle: 'short',
-                                    timeStyle: 'short',
-                                  },
-                                )}
-                              </span>
-                            ) : (
-                              <DateTooltip
-                                date={new Date(row.$createdAt)}
-                                className="text-[12px] text-muted-foreground"
-                              />
-                            )
-                          ) : (
-                            <span className="text-[12px] text-foreground/60">
-                              N/A
-                            </span>
-                          )}
-                        </td>
-                      )
-                    }
-                    if (gridKey === '$updatedAt') {
-                      return (
-                        <td
-                          key="td-$updatedAt"
-                          className={cn(
-                            'w-[180px] px-3 py-1.5',
-                            bodyCellBorderClass,
-                          )}
-                          data-column="$updatedAt"
-                        >
-                          {row.$updatedAt ? (
-                            useInlineDocumentPane ? (
-                              <span className="text-[12px] text-muted-foreground">
-                                {new Date(row.$updatedAt).toLocaleString(
-                                  undefined,
-                                  {
-                                    dateStyle: 'short',
-                                    timeStyle: 'short',
-                                  },
-                                )}
-                              </span>
-                            ) : (
-                              <DateTooltip
-                                date={new Date(row.$updatedAt)}
-                                className="text-[12px] text-muted-foreground"
-                              />
-                            )
-                          ) : (
-                            <span className="text-[12px] text-foreground/60">
-                              N/A
-                            </span>
-                          )}
+                          <InlineTableCell
+                            tableId={tableId}
+                            rowId={row.$id}
+                            columnKey={systemKey}
+                            columnInfo={getSystemDateColumnInfo(systemKey)}
+                            onCancelDrawerOpen={() =>
+                              cancelPendingCellDrawer(row.$id, systemKey)
+                            }
+                            onCellClick={(event) =>
+                              handleCellClick(row, systemKey, event)
+                            }
+                            onCellMouseDown={preventRowTextSelectionOnPointer}
+                            originalValue={originalValue}
+                            canWrite={canWriteRows}
+                            title={full}
+                            display={display}
+                            isNull={isNull}
+                          />
                         </td>
                       )
                     }
 
                     const col = gridKey
+                    const columnInfo = findColumnInfo(col)
                     return (
                       <td
                         key={col}
-                        className={cn('px-3 py-1.5', bodyCellBorderClass)}
+                        className={cn('relative h-px p-0', bodyCellBorderClass)}
                         data-column={col}
-                        onMouseDown={(e) => {
-                          e.stopPropagation()
-                          preventRowTextSelectionOnPointer(e)
-                        }}
-                        onClick={(e) => {
-                          e.stopPropagation()
-                          handleCellClick(row, col, e)
-                        }}
                       >
                         {(() => {
+                          const originalValue = row.data[
+                            col as keyof typeof row.data
+                          ] as
+                            | string
+                            | number
+                            | boolean
+                            | unknown[]
+                            | Record<string, unknown>
+                            | null
+                            | undefined
+                          const displayValue =
+                            editSession?.getCellDisplayValue(
+                              tableId,
+                              row.$id,
+                              col,
+                              (originalValue ?? null) as
+                                | string
+                                | number
+                                | bigint
+                                | boolean
+                                | unknown[]
+                                | null,
+                            ) ?? originalValue
                           const { full, display, isNull } = formatCellValue(
-                            row.data[col as keyof typeof row.data] as
+                            displayValue as
                               | string
                               | number
                               | boolean
@@ -5229,23 +5315,39 @@ export function RowsSpreadsheet({
                               | null
                               | undefined,
                           )
-                          const cellValue =
-                            row.data[col as keyof typeof row.data]
+                          const cellValue = displayValue
                           const isRTLContent =
                             typeof cellValue === 'string'
                               ? isRTL(cellValue)
                               : false
                           return (
-                            <span
-                              className={cn(
-                                'block min-w-0 max-w-full truncate whitespace-nowrap text-[12px]',
-                                isNull ? 'text-foreground/60' : 'text-foreground',
-                              )}
+                            <InlineTableCell
+                              tableId={tableId}
+                              rowId={row.$id}
+                              columnKey={col}
+                              columnInfo={columnInfo}
+                              onCancelDrawerOpen={() =>
+                                cancelPendingCellDrawer(row.$id, col)
+                              }
+                              onCellClick={(event) =>
+                                handleCellClick(row, col, event)
+                              }
+                              onCellMouseDown={preventRowTextSelectionOnPointer}
+                              originalValue={
+                                (originalValue ?? null) as
+                                  | string
+                                  | number
+                                  | bigint
+                                  | boolean
+                                  | unknown[]
+                                  | null
+                              }
+                              canWrite={canWriteRows}
                               title={full}
                               dir={isRTLContent ? 'rtl' : 'ltr'}
-                            >
-                              {display}
-                            </span>
+                              display={display}
+                              isNull={isNull}
+                            />
                           )
                         })()}
                       </td>
