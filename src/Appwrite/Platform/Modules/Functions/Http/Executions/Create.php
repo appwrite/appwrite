@@ -301,7 +301,6 @@ class Create extends Base
         if ($async) {
             if (is_null($scheduledAt)) {
                 $execution = $authorization->skip(fn () => $dbForProject->createDocument('executions', $execution));
-
                 $publisherForFunctions->enqueue(new FunctionMessage(
                     project: $project,
                     user: $user,
@@ -321,8 +320,7 @@ class Create extends Base
                     'path' => $path,
                     'method' => $method,
                     'body' => $body,
-                    'userId' => $user->getId(),
-                    'execution' => $execution->getArrayCopy(),
+                    'userId' => $user->getId()
                 ];
 
                 $schedule = $dbForPlatform->createDocument('schedules', new Document([

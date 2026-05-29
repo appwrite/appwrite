@@ -270,14 +270,7 @@ abstract class ScheduleBase extends Action
 
             // In case the resource is not found (project deleted).
             try {
-                $data = \is_array($schedule['data']) ? $schedule['data'] : [];
-                $resource = static::getSupportedResource() === SCHEDULE_RESOURCE_TYPE_EXECUTION
-                    ? new Document($data['execution'] ?? [])
-                    : new Document();
-
-                if ($resource->isEmpty()) {
-                    $resource = $getProjectDB($project)->getDocument(static::getCollectionId(), $schedule['resourceId']);
-                }
+                $resource = $getProjectDB($project)->getDocument(static::getCollectionId(), $schedule['resourceId']);
             } catch (\Throwable $th) {
                 Console::error("Failed to load resource: projectId::{$schedule['projectId']} resourceId::{$schedule['resourceId']}");
                 Console::error($th->getMessage());
