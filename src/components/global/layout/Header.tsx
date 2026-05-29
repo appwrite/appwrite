@@ -67,6 +67,7 @@ import { useConsoleProfile } from '@/hooks/use-console-profile'
 import { useDebugOverrides } from '@/lib/debug-overrides'
 import { ImpersonateConsoleUserPopover } from '@/components/global/shared/ImpersonateConsoleUserPopover'
 import { BlocksConsoleLink } from '@/components/global/shared/BlocksConsoleLink'
+import { CacheConsoleLink } from '@/components/global/shared/CacheConsoleLink'
 import { openCreateOrganizationFlow } from '@/lib/open-create-organization-flow'
 import { useTheme } from 'next-themes'
 import { getConsoleHeaderLogoClass } from '@/lib/html-theme'
@@ -714,6 +715,7 @@ export function ConsoleHeader({
           {/* Operator tools (render nothing when account is not an impersonator) */}
           <ImpersonateConsoleUserPopover />
           <BlocksConsoleLink />
+          <CacheConsoleLink />
 
           {/* Help/Assistant - hidden on small containers; enabled by profile or experimental override */}
           {showAIAssistant && (
