@@ -128,6 +128,7 @@ import {
   queryParamToMap,
   mapToQueryParam,
   buildListSearchParams,
+  urlFromRouterLocation,
   rowsFilterColumnsFromAttributes,
   tableColumnsFilterColumns,
   tableIndexesFilterColumns,
@@ -579,10 +580,7 @@ export function Workspace({
     (activeTab === 'rows' || activeTab === 'documents') && tableId !== '-'
   const rowsListParams = useMemo(() => {
     if (!isTableDataTab || typeof search !== 'object') return null
-    const url = new URL(
-      location.pathname + location.search,
-      window.location.origin,
-    )
+    const url = urlFromRouterLocation(location, window.location.origin)
     const defaultSort = {
       sortBy: ROWS_DEFAULT_SORT_BY,
       sortOrder: ROWS_DEFAULT_SORT_ORDER as 'asc' | 'desc',

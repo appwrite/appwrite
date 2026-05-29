@@ -1,11 +1,8 @@
 import { createFileRoute } from '@tanstack/react-router'
 import { Workspace } from '@/components/pages/projects/$projectId/databases/View'
 import {
-  getLimit,
-  getPage,
-  getQueryParam,
   listSearchSchema,
-  queryParamToMap,
+  parseListSearch,
 } from '@/lib/table-filters'
 import {
   COLUMNS_INDEXES_DEFAULT_PAGE_SIZE,
@@ -46,7 +43,7 @@ export const Route = createFileRoute(
   }),
   validateSearch: listSearchSchema,
   // @ts-expect-error - route tree may infer loader as never; loader returns { database } on client
-  loader: async ({ params, context, location }) => {
+  loader: async ({ params, context, search: routeSearch }) => {
     // Only run on client side (SDK requires browser environment)
     if (typeof window === 'undefined') {
       return
@@ -66,13 +63,11 @@ export const Route = createFileRoute(
       tableId,
     })
 
-    const url = new URL(location.pathname + location.search, 'http://localhost')
-    const queryParam = getQueryParam(url)
-    const filterMap = queryParamToMap(queryParam)
-    const indexesFilterQueries =
-      filterMap.size > 0 ? Array.from(filterMap.values()) : undefined
-    const page = getPage(url, 1)
-    const limit = getLimit(url, COLUMNS_INDEXES_DEFAULT_PAGE_SIZE)
+    const { page, limit, filterQueries: indexesFilterQueries } =
+      parseListSearch(routeSearch, {
+        page: 1,
+        limit: COLUMNS_INDEXES_DEFAULT_PAGE_SIZE,
+      })
     const pageIndexed = Math.max(0, page - 1)
 
     // Fetch project first so setProjectRegion runs and project-scoped calls use the correct regional endpoint

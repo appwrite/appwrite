@@ -13,11 +13,7 @@ import {
 import { ROWS_DEFAULT_PAGE_SIZE } from '@/lib/react-query/hooks/constants'
 import {
   listSearchSchema,
-  getSearch,
-  getPage,
-  getLimit,
-  getQueryParam,
-  queryParamToMap,
+  parseListSearch,
 } from '@/lib/table-filters'
 import { pageTitle } from '@/lib/utils/page-title'
 import { throwRedirectTablesDbFromCollectionsChild } from '@/lib/database-route-redirects'
@@ -52,7 +48,7 @@ export const Route = createFileRoute(
   // prefetch is done, then transition with data already in cache. See
   // AGENTS.md → "Loading & Navigation" / "List & tab pages: never use pendingComponent".
   validateSearch: listSearchSchema,
-  loader: async ({ params, context, location }) => {
+  loader: async ({ params, context, search: routeSearch }) => {
     if (typeof window === 'undefined') return
 
     const { projectId, dbKind, databaseId, collectionId } = params
@@ -135,17 +131,13 @@ export const Route = createFileRoute(
           replace: true,
         })
       }
-      const url = new URL(
-        location.pathname + location.search,
-        'http://localhost',
+      const { search, page, limit, filterQueries } = parseListSearch(
+        routeSearch,
+        {
+          page: DEFAULT_PAGE,
+          limit: ROWS_DEFAULT_PAGE_SIZE,
+        },
       )
-      const search = getSearch(url)
-      const page = getPage(url, DEFAULT_PAGE)
-      const limit = getLimit(url, ROWS_DEFAULT_PAGE_SIZE)
-      const queryParam = getQueryParam(url)
-      const filterMap = queryParamToMap(queryParam)
-      const filterQueries =
-        filterMap.size > 0 ? Array.from(filterMap.values()) : undefined
 
       await Promise.all([
         tablesPromise,

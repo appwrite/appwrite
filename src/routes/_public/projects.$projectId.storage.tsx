@@ -9,6 +9,7 @@ import {
   redirectStorageFirstBucketOrPlaceholder,
   storageSidebarBucketsQueryOptions,
 } from '@/lib/storage-routes'
+import { searchParamsFromRouterLocation } from '@/lib/table-filters'
 import { WorkspaceLayout } from '@/components/pages/projects/$projectId/storage/_components/WorkspaceLayout'
 
 export const Route = createFileRoute('/_public/projects/$projectId/storage')({
@@ -46,7 +47,7 @@ export const Route = createFileRoute('/_public/projects/$projectId/storage')({
 
     if (
       onStorageIndex &&
-      !new URLSearchParams(location.search).get('create') &&
+      !searchParamsFromRouterLocation(location).get('create') &&
       isRealStorageNavigation(cause, preload)
     ) {
       const freshBucketsData = await queryClient.fetchQuery(bucketsOpts)

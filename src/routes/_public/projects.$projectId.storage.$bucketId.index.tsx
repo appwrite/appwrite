@@ -11,15 +11,7 @@ import {
   FILES_DEFAULT_SORT_BY,
   FILES_DEFAULT_SORT_ORDER,
 } from '@/lib/react-query/hooks'
-import {
-  listSearchSchema,
-  getSearch,
-  getPage,
-  getLimit,
-  getQueryParam,
-  getSort,
-  queryParamToMap,
-} from '@/lib/table-filters'
+import { listSearchSchema, parseListSearch } from '@/lib/table-filters'
 import { pageTitle } from '@/lib/utils/page-title'
 import { ROWS_DEFAULT_PAGE_SIZE } from '@/lib/react-query/hooks/constants'
 
@@ -44,7 +36,7 @@ export const Route = createFileRoute(
     ],
   }),
   validateSearch: bucketFilesSearchSchema,
-  loader: async ({ params, context, location }) => {
+  loader: async ({ params, context, search: routeSearch }) => {
     if (typeof window === 'undefined') return
 
     const { projectId, bucketId } = params
@@ -55,19 +47,15 @@ export const Route = createFileRoute(
       return
     }
 
-    const url = new URL(location.pathname + location.search, 'http://localhost')
-    const fileRaw = url.searchParams.get('file')
-    const fileId =
-      fileRaw && fileRaw.trim().length > 0 ? fileRaw.trim() : undefined
+    const fileId = routeSearch.file?.trim() || undefined
 
-    const search = getSearch(url)
-    const page = getPage(url, DEFAULT_PAGE)
-    const limit = getLimit(url, ROWS_DEFAULT_PAGE_SIZE)
-    const queryParam = getQueryParam(url)
-    const filterMap = queryParamToMap(queryParam)
-    const filterQueries =
-      filterMap.size > 0 ? Array.from(filterMap.values()) : undefined
-    const sort = getSort(url)
+    const { search, page, limit, filterQueries, sort } = parseListSearch(
+      routeSearch,
+      {
+        page: DEFAULT_PAGE,
+        limit: ROWS_DEFAULT_PAGE_SIZE,
+      },
+    )
     const sortBy = sort?.sortBy ?? FILES_DEFAULT_SORT_BY
     const sortOrder = sort?.sortOrder ?? FILES_DEFAULT_SORT_ORDER
 

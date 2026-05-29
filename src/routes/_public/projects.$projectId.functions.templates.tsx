@@ -46,16 +46,14 @@ export const Route = createFileRoute(
     meta: [{ title: pageTitle('Templates', 'Functions') }],
   }),
   validateSearch: templatesSearchSchema,
-  loader: async ({ params, context, location }) => {
+  loader: async ({ params, context, search: routeSearch }) => {
     if (typeof window === 'undefined') return
 
     const { projectId } = params
     const { queryClient } = context
     if (!projectId) return
 
-    const url = new URL(location.pathname + location.search, 'http://localhost')
-    const sp = url.searchParams
-    const nameSearch = (sp.get('search') ?? '').trim()
+    const nameSearch = (routeSearch.search ?? '').trim()
 
     const projectData = await queryClient.ensureQueryData({
       queryKey: ['project', projectId],
@@ -68,18 +66,18 @@ export const Route = createFileRoute(
     // Server-side paging when not using name search (API has no name filter).
     if (!nameSearch) {
       const limit = parseTemplatesLimit(
-        sp.get('limit') ?? undefined,
+        routeSearch.limit,
         GRID_DEFAULT_PAGE_SIZE,
       )
-      let offset = parseTemplatesOffset(sp.get('offset') ?? undefined)
-      if (sp.get('offset') == null && sp.get('page') != null) {
-        const p = Number(sp.get('page'))
+      let offset = parseTemplatesOffset(routeSearch.offset)
+      if (routeSearch.offset == null && routeSearch.page != null) {
+        const p = routeSearch.page
         if (Number.isFinite(p) && p >= 1) {
           offset = (Math.floor(p) - 1) * limit
         }
       }
-      const runtimes = parseCsvParam(sp.get('rt'))
-      const useCases = parseCsvParam(sp.get('uc'))
+      const runtimes = parseCsvParam(routeSearch.rt)
+      const useCases = parseCsvParam(routeSearch.uc)
       prefetch.push(
         queryClient.ensureQueryData(
           functionTemplatesPageQueryOptions(

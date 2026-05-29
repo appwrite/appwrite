@@ -9,6 +9,7 @@ import { useAuth } from '@/components/global/auth/RequireAuth'
 import { ConsoleImpersonationBanner } from '@/components/global/shared/ConsoleImpersonationBanner'
 import { setLastLoginMethod } from '@/lib/utils/auth-storage'
 import { ensurePersonalOrgAndFirstProject } from '@/lib/ensure-personal-org'
+import { searchParamsFromRouterLocation } from '@/lib/table-filters'
 
 export const Route = createFileRoute('/_public/')({
   component: RootRedirect,
@@ -29,7 +30,7 @@ function RootRedirect() {
     if (!account) return
 
     // OAuth callback: persist GitHub as last login method
-    const urlParams = new URLSearchParams(location.search)
+    const urlParams = searchParamsFromRouterLocation(location)
     const isOAuthCallback =
       urlParams.has('project') ||
       urlParams.has('key') ||

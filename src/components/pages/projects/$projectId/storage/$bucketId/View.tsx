@@ -81,6 +81,8 @@ import {
   queryParamToMap,
   mapToQueryParam,
   buildListSearchParams,
+  urlFromRouterLocation,
+  searchParamsFromRouterLocation,
   MIN_SEARCH_LENGTH,
   filesFilterColumns,
 } from '@/lib/table-filters'
@@ -200,10 +202,7 @@ export function View() {
   }
   const filesListParams = useMemo(() => {
     if (!isFilesIndex || typeof search !== 'object') return null
-    const url = new URL(
-      location.pathname + location.search,
-      window.location.origin,
-    )
+    const url = urlFromRouterLocation(location, window.location.origin)
     const parsed = parseSort(search.sort) ?? getSort(url) ?? defaultFilesSort
     // Prefer router search state (updated by navigate()) over URL so page size change takes effect even if URL lags
     const pageFromSearch =
@@ -261,7 +260,7 @@ export function View() {
       return search.file.trim()
     }
     if (typeof window === 'undefined') return undefined
-    const file = new URLSearchParams(location.search).get('file')
+    const file = searchParamsFromRouterLocation(location).get('file')
     return file?.trim() || undefined
   }, [search?.file, location.search])
 

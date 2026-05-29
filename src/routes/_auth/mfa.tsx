@@ -4,7 +4,7 @@ import { MFAChallenge } from '@/components/global/auth/MFAChallenge'
 import { sdk } from '@/lib/appwrite/sdk'
 import { AppwriteException } from '@appwrite.io/console'
 import { fetchMFAFactors } from '@/lib/react-query/hooks'
-import { pageTitle } from '@/lib/utils/page-title'
+import { urlFromRouterLocation } from '@/lib/table-filters'
 
 // Helper function to validate that a redirect URL is relative
 function isValidRelativeRedirect(url: string): boolean {
@@ -59,8 +59,8 @@ export const Route = createFileRoute('/_auth/mfa')({
           mfaRequired = true
         } else if (error.code === 401) {
           // Not authenticated at all - redirect to sign-in
-          const redirectUrl =
-            location.pathname + (location.search ? `?${location.search}` : '')
+          const currentUrl = urlFromRouterLocation(location)
+          const redirectUrl = currentUrl.pathname + currentUrl.search
           throw redirect({
             to: '/sign-in',
             search:

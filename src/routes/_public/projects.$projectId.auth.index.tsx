@@ -1,21 +1,13 @@
 import { createFileRoute } from '@tanstack/react-router'
 import { z } from 'zod'
 import { projectQueryOptions, usersQueryOptions } from '@/lib/react-query/hooks'
-import { GRID_DEFAULT_PAGE_SIZE } from '@/lib/react-query/hooks/constants'
-import { pageTitle } from '@/lib/utils/page-title'
-import {
-  listSearchSchema,
-  getSearch,
-  getPage,
-  getLimit,
-  getQueryParam,
-  getSort,
-  queryParamToMap,
-} from '@/lib/table-filters'
 import {
   USERS_DEFAULT_SORT_BY,
   USERS_DEFAULT_SORT_ORDER,
 } from '@/lib/react-query/hooks/users'
+import { GRID_DEFAULT_PAGE_SIZE } from '@/lib/react-query/hooks/constants'
+import { pageTitle } from '@/lib/utils/page-title'
+import { listSearchSchema, parseListSearch } from '@/lib/table-filters'
 
 const DEFAULT_PAGE = 1
 
@@ -37,7 +29,7 @@ const authSearchSchema = listSearchSchema.extend({
 export const Route = createFileRoute('/_public/projects/$projectId/auth/')({
   head: () => ({ meta: [{ title: pageTitle('Users', 'Auth') }] }),
   validateSearch: authSearchSchema,
-  loader: async ({ params, context, location }) => {
+  loader: async ({ params, context, search: routeSearch }) => {
     if (typeof window === 'undefined') {
       return
     }
@@ -47,15 +39,13 @@ export const Route = createFileRoute('/_public/projects/$projectId/auth/')({
 
     if (!projectId) return
 
-    const url = new URL(location.pathname + location.search, 'http://localhost')
-    const search = getSearch(url)
-    const page = getPage(url, DEFAULT_PAGE)
-    const limit = getLimit(url, GRID_DEFAULT_PAGE_SIZE)
-    const queryParam = getQueryParam(url)
-    const filterMap = queryParamToMap(queryParam)
-    const filterQueries =
-      filterMap.size > 0 ? Array.from(filterMap.values()) : undefined
-    const sort = getSort(url)
+    const { search, page, limit, filterQueries, sort } = parseListSearch(
+      routeSearch,
+      {
+        page: DEFAULT_PAGE,
+        limit: GRID_DEFAULT_PAGE_SIZE,
+      },
+    )
     const sortBy = sort?.sortBy ?? USERS_DEFAULT_SORT_BY
     const sortOrder = sort?.sortOrder ?? USERS_DEFAULT_SORT_ORDER
 

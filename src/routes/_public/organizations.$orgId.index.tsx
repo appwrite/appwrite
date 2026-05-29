@@ -8,6 +8,7 @@ import {
 } from '@/lib/react-query/hooks'
 import { parsePinnedProjectIds } from '@/lib/team-prefs-keys'
 import { GRID_DEFAULT_PAGE_SIZE } from '@/lib/react-query/hooks/constants'
+import { urlFromRouterLocation } from '@/lib/table-filters'
 import { pageTitle } from '@/lib/utils/page-title'
 
 function parseProjectsPage(url: URL): number {
@@ -33,10 +34,7 @@ export const Route = createFileRoute('/_public/organizations/$orgId/')({
 
     const { orgId } = params
     const { queryClient } = context
-    const url = new URL(
-      location.pathname + (location.search ?? ''),
-      'http://localhost',
-    )
+    const url = urlFromRouterLocation(location)
     const projectsPage = parseProjectsPage(url)
     const projectsLimit = parseProjectsLimit(url)
 

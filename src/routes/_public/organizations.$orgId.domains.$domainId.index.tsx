@@ -8,7 +8,7 @@ import {
   DNS_RECORDS_DEFAULT_SORT_ORDER,
 } from '@/lib/react-query/hooks'
 import { pageTitle } from '@/lib/utils/page-title'
-import { listSearchSchema, getSort, getQueryParam, queryParamToMap } from '@/lib/table-filters'
+import { listSearchSchema, parseListSearch } from '@/lib/table-filters'
 import { ROWS_DEFAULT_PAGE_SIZE } from '@/lib/react-query/hooks/constants'
 
 export const Route = createFileRoute(
@@ -22,7 +22,7 @@ export const Route = createFileRoute(
       },
     ],
   }),
-  loader: async ({ params, context, location }) => {
+  loader: async ({ params, context, search: routeSearch }) => {
     if (typeof window === 'undefined') return undefined
 
     const { domainId } = params
@@ -30,20 +30,18 @@ export const Route = createFileRoute(
 
     if (!domainId) return undefined
 
-    const url = new URL(location.pathname + location.search, 'http://localhost')
-    const sort = getSort(url)
+    const { filterQueries, sort } = parseListSearch(routeSearch, {
+      page: 1,
+      limit: ROWS_DEFAULT_PAGE_SIZE,
+    })
     const sortBy = sort?.sortBy ?? DNS_RECORDS_DEFAULT_SORT_BY
     const sortOrder = sort?.sortOrder ?? DNS_RECORDS_DEFAULT_SORT_ORDER
-
-    const filterMap = queryParamToMap(getQueryParam(url))
-    const filterQueriesFromUrl =
-      filterMap.size > 0 ? Array.from(filterMap.values()) : undefined
 
     const recordsOptions = domainRecordsQueryOptions(
       domainId,
       0,
       ROWS_DEFAULT_PAGE_SIZE,
-      filterQueriesFromUrl,
+      filterQueries,
       sortBy,
       sortOrder,
     )

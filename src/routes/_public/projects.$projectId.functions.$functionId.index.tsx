@@ -12,7 +12,7 @@ import {
 } from '@/lib/react-query/hooks'
 import { DOMAINS_DEFAULT_PAGE_SIZE } from '@/lib/react-query/hooks/constants'
 import { pageTitle } from '@/lib/utils/page-title'
-import { listSearchSchema } from '@/lib/table-filters'
+import { listSearchSchema, parseListSearch } from '@/lib/table-filters'
 
 export const Route = createFileRoute(
   '/_public/projects/$projectId/functions/$functionId/',
@@ -25,7 +25,7 @@ export const Route = createFileRoute(
     ],
   }),
   validateSearch: listSearchSchema,
-  loader: async ({ params, context, location }) => {
+  loader: async ({ params, context, search: routeSearch }) => {
     // Only run on client side (SDK requires browser environment)
     if (typeof window === 'undefined') {
       return
@@ -37,11 +37,12 @@ export const Route = createFileRoute(
     // Fetch project first so setProjectRegion runs and project-scoped calls use the correct regional endpoint
     await queryClient.ensureQueryData(projectQueryOptions(projectId))
 
-    const urlParams = new URLSearchParams(location.search)
-    const pageParam = urlParams.get('page')
-    const page = pageParam ? Math.max(1, parseInt(pageParam, 10)) : 1
+    const { page, filterQueries } = parseListSearch(routeSearch, {
+      page: 1,
+      limit: DEFAULT_PAGE_SIZE,
+    })
     const pageIndex = page - 1
-    const hasFilterQuery = !!urlParams.get('query')
+    const hasFilterQuery = !!filterQueries?.length
 
     // Fetch function to get deploymentId - blocks navigation until ready
     const func = await queryClient.ensureQueryData(

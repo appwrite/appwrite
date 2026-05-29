@@ -145,6 +145,66 @@ export interface ListSearchParams {
 /** Minimum number of characters before search is applied (avoids API calls for 1–2 chars). */
 export const MIN_SEARCH_LENGTH = 3
 
+type RouterLocationLike = {
+  pathname: string
+  href?: string
+  searchStr?: string
+  search?: unknown
+}
+
+/**
+ * Build a URL from TanStack Router location. Safe when `validateSearch` is set —
+ * `location.search` is then the parsed object, not a query string.
+ */
+export function urlFromRouterLocation(
+  location: RouterLocationLike,
+  base = 'http://localhost',
+): URL {
+  if (location.href) {
+    try {
+      return new URL(location.href)
+    } catch {
+      // fall through
+    }
+  }
+  if (typeof location.searchStr === 'string') {
+    return new URL(location.pathname + location.searchStr, base)
+  }
+  if (typeof location.search === 'string') {
+    const search = location.search.startsWith('?')
+      ? location.search
+      : location.search
+        ? `?${location.search}`
+        : ''
+    return new URL(location.pathname + search, base)
+  }
+  if (location.search instanceof URLSearchParams) {
+    const qs = location.search.toString()
+    return new URL(location.pathname + (qs ? `?${qs}` : ''), base)
+  }
+  if (location.search && typeof location.search === 'object') {
+    const params = new URLSearchParams()
+    for (const [key, value] of Object.entries(
+      location.search as Record<string, unknown>,
+    )) {
+      if (value !== undefined && value !== null && value !== '') {
+        params.set(key, String(value))
+      }
+    }
+    const qs = params.toString()
+    return new URL(location.pathname + (qs ? `?${qs}` : ''), base)
+  }
+  return new URL(location.pathname, base)
+}
+
+/** URLSearchParams from TanStack Router location (safe with `validateSearch`). */
+export function searchParamsFromRouterLocation(
+  location: RouterLocationLike,
+  base = 'http://localhost',
+): URLSearchParams {
+  return urlFromRouterLocation(location, base).searchParams
+}
+
 /**
  * Read list search params from TanStack Router validated `search` (not `location.search`,
  * which is the parsed object when `validateSearch` is set — not a query string).

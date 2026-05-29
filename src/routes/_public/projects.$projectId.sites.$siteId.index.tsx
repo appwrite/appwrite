@@ -9,7 +9,7 @@ import {
   DEFAULT_PAGE_SIZE,
 } from '@/lib/react-query/hooks'
 import { Query } from '@appwrite.io/console'
-import { listSearchSchema } from '@/lib/table-filters'
+import { listSearchSchema, parseListSearch } from '@/lib/table-filters'
 
 const DEPLOYMENTS_SELECT = [
   Query.select([
@@ -36,7 +36,7 @@ export const Route = createFileRoute(
   '/_public/projects/$projectId/sites/$siteId/',
 )({
   validateSearch: listSearchSchema,
-  loader: async ({ params, context, location }) => {
+  loader: async ({ params, context, search: routeSearch }) => {
     // Only run on client side (SDK requires browser environment)
     if (typeof window === 'undefined') {
       return
@@ -51,12 +51,12 @@ export const Route = createFileRoute(
       // parent loader already fetched.
       await queryClient.ensureQueryData(projectQueryOptions(projectId))
 
-      // Parse page from URL search params as fallback
-      const urlParams = new URLSearchParams(location.search)
-      const pageParam = urlParams.get('page')
-      const page = pageParam ? Math.max(1, parseInt(pageParam, 10)) : 1
-      const pageIndex = page - 1 // Convert 1-indexed to 0-indexed
-      const hasFilterQuery = !!urlParams.get('query')
+      const { page, filterQueries } = parseListSearch(routeSearch, {
+        page: 1,
+        limit: DEFAULT_PAGE_SIZE,
+      })
+      const pageIndex = page - 1
+      const hasFilterQuery = !!filterQueries?.length
 
       // Fetch site to get deploymentId - blocks navigation until ready
       const site = await queryClient.ensureQueryData(

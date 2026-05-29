@@ -170,6 +170,8 @@ import {
   getLimit,
   encodeSort,
   queryParamToMap,
+  urlFromRouterLocation,
+  searchParamsFromRouterLocation,
 } from '@/lib/table-filters'
 import type { CompactFilterKey } from '@/lib/table-filters'
 import {
@@ -5763,10 +5765,7 @@ export function ColumnsSpreadsheet({
       : undefined
 
   const columnsListParams = useMemo(() => {
-    const url = new URL(
-      location.pathname + location.search,
-      window.location.origin,
-    )
+    const url = urlFromRouterLocation(location, window.location.origin)
     // Prefer router search state over URL so page size change takes effect even if URL lags
     const pageFromSearch =
       search?.page != null
@@ -6127,7 +6126,7 @@ export function ColumnsSpreadsheet({
 
   // Check for openSuggest URL parameter and auto-open modal
   useEffect(() => {
-    const searchParams = new URLSearchParams(location.search)
+    const searchParams = searchParamsFromRouterLocation(location)
     if (searchParams.get('openSuggest') === 'true') {
       setContextDialogOpen(true)
       // Clean up URL parameter
@@ -7314,10 +7313,7 @@ export function IndexesSpreadsheet({
       : undefined
 
   const indexesListParams = useMemo(() => {
-    const url = new URL(
-      location.pathname + location.search,
-      window.location.origin,
-    )
+    const url = urlFromRouterLocation(location, window.location.origin)
     // Prefer router search state over URL so page size change takes effect even if URL lags
     const pageFromSearch =
       search?.page != null

@@ -125,6 +125,7 @@ import {
   queryParamToMap,
   mapToQueryParam,
   buildListSearchParams,
+  urlFromRouterLocation,
   dnsRecordsFilterColumns,
 } from '@/lib/table-filters'
 import type { CompactFilterKey } from '@/lib/table-filters'
@@ -194,20 +195,14 @@ export function View({ initialData }: ViewProps = {}) {
   const recordsFilterMap = useMemo(() => {
     if (!isRecordsIndex || typeof search !== 'object' || !search)
       return new Map()
-    const url = new URL(
-      location.pathname + location.search,
-      window.location.origin,
-    )
+    const url = urlFromRouterLocation(location, window.location.origin)
     return queryParamToMap(
       getQueryParam(url) ?? (search.query as string | undefined) ?? null,
     )
   }, [isRecordsIndex, location.pathname, location.search, search?.query])
   const recordsSortParams = useMemo(() => {
     if (!isRecordsIndex || typeof search !== 'object' || !search) return null
-    const url = new URL(
-      location.pathname + location.search,
-      window.location.origin,
-    )
+    const url = urlFromRouterLocation(location, window.location.origin)
     const parsed = parseSort(search.sort as string | undefined) ?? getSort(url)
     return (
       parsed ?? {

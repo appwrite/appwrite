@@ -15,17 +15,14 @@ const storageSearchSchema = z.object({
 export const Route = createFileRoute('/_public/projects/$projectId/storage/')({
   head: () => ({ meta: [{ title: pageTitle('Storage') }] }),
   validateSearch: storageSearchSchema,
-  loader: async ({ params, context, location, cause, preload }) => {
+  loader: async ({ params, context, search: routeSearch, cause, preload }) => {
     if (typeof window === 'undefined') return
 
     const { projectId } = params
     const { queryClient } = context
     if (!projectId) return
 
-    if (
-      new URLSearchParams(location.search).get('create') ||
-      !isRealStorageNavigation(cause, preload)
-    ) {
+    if (routeSearch.create || !isRealStorageNavigation(cause, preload)) {
       return
     }
 

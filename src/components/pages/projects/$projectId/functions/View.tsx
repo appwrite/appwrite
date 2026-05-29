@@ -35,6 +35,7 @@ import {
   queryParamToMap,
   mapToQueryParam,
   buildListSearchParams,
+  urlFromRouterLocation,
   MIN_SEARCH_LENGTH,
   functionsFilterColumns,
 } from '@/lib/table-filters'
@@ -92,10 +93,7 @@ export function View() {
   }
   const functionsListParams = useMemo(() => {
     if (!isFunctionsIndex || typeof search !== 'object') return null
-    const url = new URL(
-      location.pathname + location.search,
-      window.location.origin,
-    )
+    const url = urlFromRouterLocation(location, window.location.origin)
     const parsed =
       parseSort(search.sort as string | undefined) ??
       getSort(url) ??

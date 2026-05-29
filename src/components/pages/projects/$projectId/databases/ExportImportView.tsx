@@ -30,6 +30,7 @@ import {
   getPage,
   getLimit,
   buildListSearchParams,
+  urlFromRouterLocation,
 } from '@/lib/table-filters'
 import {
   useProjectTables,
@@ -82,10 +83,7 @@ export function ExportImportView({ databaseId }: ExportImportViewProps) {
     if (typeof window === 'undefined') {
       return { page: 1, limit: GRID_DEFAULT_PAGE_SIZE }
     }
-    const url = new URL(
-      location.pathname + location.search,
-      window.location.origin,
-    )
+    const url = urlFromRouterLocation(location, window.location.origin)
     return {
       page: getPage(url, 1),
       limit: getLimit(url, GRID_DEFAULT_PAGE_SIZE),

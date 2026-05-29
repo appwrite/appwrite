@@ -18,6 +18,7 @@ import {
   queryParamToMap,
   mapToQueryParam,
   buildListSearchParams,
+  urlFromRouterLocation,
   MIN_SEARCH_LENGTH,
   usersFilterColumns,
   teamsFilterColumns,
@@ -167,10 +168,7 @@ export function View({
         sortOrder: parsed.sortOrder,
       }
     }
-    const url = new URL(
-      location.pathname + location.search,
-      window.location.origin,
-    )
+    const url = urlFromRouterLocation(location, window.location.origin)
     const parsed = getSort(url) ?? defaultSort
     return {
       search: getSearch(url),

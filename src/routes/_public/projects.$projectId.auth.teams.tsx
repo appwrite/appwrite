@@ -24,33 +24,17 @@ export const Route = createFileRoute('/_public/projects/$projectId/auth/teams')(
   {
     head: () => ({ meta: [{ title: pageTitle('Teams', 'Auth') }] }),
     validateSearch: authTeamsSearchSchema,
-    loader: async ({ params, context, location }) => {
+    loader: async ({ params, context, search: routeSearch }) => {
       if (typeof window === 'undefined') return
 
       const { projectId } = params
       const { queryClient } = context
       if (!projectId) return
 
-      const url = new URL(
-        location.pathname + location.search,
-        'http://localhost',
-      )
-      const teamsSearch =
-        url.searchParams.get('teamsSearch')?.trim() || undefined
-      const teamsPage = (() => {
-        const p = url.searchParams.get('teamsPage')
-        if (p == null || p === '') return DEFAULT_PAGE
-        const n = Number(p)
-        return Number.isInteger(n) && n >= 1 ? n : DEFAULT_PAGE
-      })()
-      const teamsLimit = (() => {
-        const p = url.searchParams.get('teamsLimit')
-        if (p == null || p === '') return GRID_DEFAULT_PAGE_SIZE
-        const n = Number(p)
-        return Number.isInteger(n) && n >= 1 ? n : GRID_DEFAULT_PAGE_SIZE
-      })()
-      const teamsQueryParam = url.searchParams.get('teamsQuery')
-      const teamsFilterMap = queryParamToMap(teamsQueryParam)
+      const teamsSearch = routeSearch.teamsSearch?.trim() || undefined
+      const teamsPage = routeSearch.teamsPage ?? DEFAULT_PAGE
+      const teamsLimit = routeSearch.teamsLimit ?? GRID_DEFAULT_PAGE_SIZE
+      const teamsFilterMap = queryParamToMap(routeSearch.teamsQuery ?? null)
       const teamsFilterQueries =
         teamsFilterMap.size > 0
           ? Array.from(teamsFilterMap.values())
