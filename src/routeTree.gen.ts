@@ -16,6 +16,7 @@ import { Route as PublicIndexRouteImport } from './routes/_public/index'
 import { Route as PublicResetRouteImport } from './routes/_public/reset'
 import { Route as PublicInitRouteImport } from './routes/_public/init'
 import { Route as PublicCompsRouteImport } from './routes/_public/comps'
+import { Route as PublicCacheRouteImport } from './routes/_public/cache'
 import { Route as PublicBlocksRouteImport } from './routes/_public/blocks'
 import { Route as PublicAccountRouteImport } from './routes/_public/account'
 import { Route as ProtectedExampleProtectedRouteRouteImport } from './routes/_protected/example-protected-route'
@@ -260,6 +261,11 @@ const PublicInitRoute = PublicInitRouteImport.update({
 const PublicCompsRoute = PublicCompsRouteImport.update({
   id: '/comps',
   path: '/comps',
+  getParentRoute: () => PublicRoute,
+} as any)
+const PublicCacheRoute = PublicCacheRouteImport.update({
+  id: '/cache',
+  path: '/cache',
   getParentRoute: () => PublicRoute,
 } as any)
 const PublicBlocksRoute = PublicBlocksRouteImport.update({
@@ -1663,6 +1669,7 @@ export interface FileRoutesByFullPath {
   '/example-protected-route': typeof ProtectedExampleProtectedRouteRoute
   '/account': typeof PublicAccountRouteWithChildren
   '/blocks': typeof PublicBlocksRoute
+  '/cache': typeof PublicCacheRoute
   '/comps': typeof PublicCompsRoute
   '/init': typeof PublicInitRoute
   '/reset': typeof PublicResetRoute
@@ -1882,6 +1889,7 @@ export interface FileRoutesByTo {
   '/example-protected-route': typeof ProtectedExampleProtectedRouteRoute
   '/account': typeof PublicAccountRouteWithChildren
   '/blocks': typeof PublicBlocksRoute
+  '/cache': typeof PublicCacheRoute
   '/comps': typeof PublicCompsRoute
   '/init': typeof PublicInitRoute
   '/reset': typeof PublicResetRoute
@@ -2074,6 +2082,7 @@ export interface FileRoutesById {
   '/_protected/example-protected-route': typeof ProtectedExampleProtectedRouteRoute
   '/_public/account': typeof PublicAccountRouteWithChildren
   '/_public/blocks': typeof PublicBlocksRoute
+  '/_public/cache': typeof PublicCacheRoute
   '/_public/comps': typeof PublicCompsRoute
   '/_public/init': typeof PublicInitRoute
   '/_public/reset': typeof PublicResetRoute
@@ -2295,6 +2304,7 @@ export interface FileRouteTypes {
     | '/example-protected-route'
     | '/account'
     | '/blocks'
+    | '/cache'
     | '/comps'
     | '/init'
     | '/reset'
@@ -2514,6 +2524,7 @@ export interface FileRouteTypes {
     | '/example-protected-route'
     | '/account'
     | '/blocks'
+    | '/cache'
     | '/comps'
     | '/init'
     | '/reset'
@@ -2705,6 +2716,7 @@ export interface FileRouteTypes {
     | '/_protected/example-protected-route'
     | '/_public/account'
     | '/_public/blocks'
+    | '/_public/cache'
     | '/_public/comps'
     | '/_public/init'
     | '/_public/reset'
@@ -2970,6 +2982,13 @@ declare module '@tanstack/react-router' {
       path: '/comps'
       fullPath: '/comps'
       preLoaderRoute: typeof PublicCompsRouteImport
+      parentRoute: typeof PublicRoute
+    }
+    '/_public/cache': {
+      id: '/_public/cache'
+      path: '/cache'
+      fullPath: '/cache'
+      preLoaderRoute: typeof PublicCacheRouteImport
       parentRoute: typeof PublicRoute
     }
     '/_public/blocks': {
@@ -5573,6 +5592,7 @@ const PublicProjectsProjectIdRouteWithChildren =
 interface PublicRouteChildren {
   PublicAccountRoute: typeof PublicAccountRouteWithChildren
   PublicBlocksRoute: typeof PublicBlocksRoute
+  PublicCacheRoute: typeof PublicCacheRoute
   PublicCompsRoute: typeof PublicCompsRoute
   PublicInitRoute: typeof PublicInitRoute
   PublicResetRoute: typeof PublicResetRoute
@@ -5585,6 +5605,7 @@ interface PublicRouteChildren {
 const PublicRouteChildren: PublicRouteChildren = {
   PublicAccountRoute: PublicAccountRouteWithChildren,
   PublicBlocksRoute: PublicBlocksRoute,
+  PublicCacheRoute: PublicCacheRoute,
   PublicCompsRoute: PublicCompsRoute,
   PublicInitRoute: PublicInitRoute,
   PublicResetRoute: PublicResetRoute,

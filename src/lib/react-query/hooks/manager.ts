@@ -8,6 +8,7 @@
  * - listBlocks(projectId)            - resource blocks for a project
  * - createBlock                       - create a resource block
  * - deleteBlock                       - remove resource block(s)
+ * - deleteCache                        - flush internal caches by region/target
  * - updateUserStatus                  - block/unblock a console user
  *
  * Resource blocks are region-scoped on the server. Because the console SDK
@@ -22,7 +23,13 @@ import {
   useQueryClient,
   type UseMutationOptions,
 } from '@tanstack/react-query'
-import type { Models, BlockResourceType } from '@appwrite.io/console'
+import type {
+  Models,
+  BlockResourceType,
+  Region,
+  CacheTarget,
+  CacheDatabase,
+} from '@appwrite.io/console'
 import { sdk } from '@/lib/appwrite/sdk'
 
 export type BlocksListResponse = Models.BlockList
@@ -34,7 +41,9 @@ function blocksKey(projectId: string | null | undefined) {
   return [BLOCKS_QUERY_KEY, projectId ?? null] as const
 }
 
-export async function fetchBlocks(projectId: string): Promise<BlocksListResponse> {
+export async function fetchBlocks(
+  projectId: string,
+): Promise<BlocksListResponse> {
   if (!projectId) return { blocks: [], total: 0 }
   return sdk.forConsole.manager.listBlocks({ projectId })
 }
@@ -124,6 +133,44 @@ export function useDeleteBlock(
   })
 }
 
+export type DeleteCacheParams = {
+  region?: Region
+  cache?: CacheTarget
+  all?: boolean
+  database?: CacheDatabase
+  projectId?: string
+  collectionId?: string
+  documentId?: string
+}
+
+/**
+ * Clears internal caches via the Manager service. Operator-only.
+ *
+ * Omitting `region` clears the selected target in every region. Returns an
+ * empty object on success, so there is nothing to invalidate in the cache.
+ */
+export function useDeleteCache(
+  options?: Omit<
+    UseMutationOptions<unknown, unknown, DeleteCacheParams>,
+    'mutationFn'
+  >,
+) {
+  return useMutation({
+    mutationFn: async (params: DeleteCacheParams) => {
+      return sdk.forConsole.manager.deleteCache({
+        region: params.region,
+        cache: params.cache,
+        all: params.all,
+        database: params.database,
+        projectId: params.projectId?.trim() || undefined,
+        collectionId: params.collectionId?.trim() || undefined,
+        documentId: params.documentId?.trim() || undefined,
+      })
+    },
+    ...options,
+  })
+}
+
 export type UpdateUserStatusParams = {
   status: boolean
   userId?: string
@@ -149,4 +196,3 @@ export function useUpdateUserStatus(
     ...options,
   })
 }
-
