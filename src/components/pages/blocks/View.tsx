@@ -1,23 +1,18 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from '@tanstack/react-router'
-import type { Models } from '@appwrite.io/console'
 import { useAuth } from '@/components/global/auth/RequireAuth'
 import { ConsoleLayout } from '@/components/global/layout/ConsoleLayout'
 import { CommandCenter } from '@/components/global/shared/CommandCenter'
 import { useKeyboardShortcut } from '@/hooks/use-keyboard-shortcuts'
+import { isOperatorAccount, type OperatorAccount } from '@/lib/operator-account'
 import { BlocksList } from './BlocksList'
 import { ComposeBlock } from './ComposeBlock'
 import { TargetBar } from './TargetBar'
 import { UserStatusPanel } from './UserStatusPanel'
 
-type ImpersonatorAccount = Models.User & {
-  impersonator?: boolean
-  impersonatorUserId?: string
-}
-
 export function BlocksConsoleView() {
   const { account: rawAccount } = useAuth()
-  const account = rawAccount as ImpersonatorAccount | undefined
+  const account = rawAccount as OperatorAccount | undefined
   const navigate = useNavigate()
   const [commandCenterOpen, setCommandCenterOpen] = useState(false)
 
@@ -31,9 +26,7 @@ export function BlocksConsoleView() {
     if (!account) return
     // Match the BlocksConsoleLink gate: allow operators (impersonator flag)
     // and anyone already inside an impersonation session.
-    const allowed =
-      account.impersonator === true || !!account.impersonatorUserId
-    if (!allowed) {
+    if (!isOperatorAccount(account)) {
       navigate({ to: '/account', replace: true })
     }
   }, [account, navigate])

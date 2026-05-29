@@ -42,9 +42,15 @@ export function ClearCachePanel() {
   const targetMeta = CACHE_TARGET_META[target]
   const dbMeta = CACHE_DATABASE_META[database]
 
+  // Non-scopable targets are always cleared in full, so the payload must say so
+  // regardless of the toggle's prior state on a scopable target. This keeps the
+  // same intent ("clear Locks") producing the same payload no matter how the
+  // user arrived at it.
+  const effectiveAll = all || !targetMeta.scopable
+
   // Scoping (database/project/collection/document) only applies to the data
   // cache, and only when we are not flushing the whole target.
-  const showScope = targetMeta.scopable && !all
+  const showScope = !effectiveAll
   const showProject = showScope && dbMeta.takesProject
   const showCollection = showProject && !!projectId.trim()
   const showDocument = showCollection && !!collectionId.trim()
@@ -52,28 +58,25 @@ export function ClearCachePanel() {
   const payload = useMemo<DeleteCacheParams>(() => {
     const p: DeleteCacheParams = { cache: target }
     if (region) p.region = region
-    if (all) {
+    if (effectiveAll) {
       p.all = true
       return p
     }
-    if (targetMeta.scopable) {
-      p.database = database
-      if (dbMeta.takesProject && projectId.trim()) {
-        p.projectId = projectId.trim()
-        if (collectionId.trim()) {
-          p.collectionId = collectionId.trim()
-          if (documentId.trim()) p.documentId = documentId.trim()
-        }
+    p.database = database
+    if (dbMeta.takesProject && projectId.trim()) {
+      p.projectId = projectId.trim()
+      if (collectionId.trim()) {
+        p.collectionId = collectionId.trim()
+        if (documentId.trim()) p.documentId = documentId.trim()
       }
     }
     return p
   }, [
     region,
     target,
-    all,
+    effectiveAll,
     database,
     dbMeta.takesProject,
-    targetMeta.scopable,
     projectId,
     collectionId,
     documentId,
@@ -337,10 +340,10 @@ export function ClearCachePanel() {
               <p>
                 Clear the{' '}
                 <span className="font-medium text-foreground">
-                  {all ? 'entire ' : ''}
+                  {effectiveAll ? 'entire ' : ''}
                   {targetMeta.label.toLowerCase()}
                 </span>{' '}
-                cache in{' '}
+                in{' '}
                 <span className="font-medium text-foreground">
                   {region ? regionLabel : 'all regions'}
                 </span>
