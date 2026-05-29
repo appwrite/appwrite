@@ -27,6 +27,10 @@ import { Textarea } from '@/components/ui/textarea'
 import { BaseDrawer } from '@/components/global/shared/BaseDrawer'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { PUBLIC_ICON_MUTED_CLASSES } from '@/lib/public-icon-classes'
+import {
+  RESOURCE_CARD_GRID_CLASSNAME,
+  RESOURCE_CARD_SHELL_CLASSNAME,
+} from '@/components/pages/projects/$projectId/shared/ResourceCard'
 import { cn } from '@/lib/utils'
 import {
   getOAuth2ProviderFieldErrors,
@@ -856,7 +860,7 @@ export function OAuth2ProvidersSection({
     : ''
 
   const renderProviderGrid = (rows: OAuth2ProviderRow[]) => (
-    <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+    <div className={RESOURCE_CARD_GRID_CLASSNAME}>
       {rows.map((row) => {
         const model = findProjectProviderModel(resolvedProviderList, row.$id)
         const enabled = Boolean(model?.enabled)
@@ -865,7 +869,10 @@ export function OAuth2ProvidersSection({
             key={row.$id}
             type="button"
             onClick={() => openDrawerFor(row.$id)}
-            className="flex w-full cursor-pointer items-center justify-between gap-2 rounded-lg border border-border bg-card/50 p-4 text-left transition-colors hover:bg-card"
+            className={cn(
+              'flex w-full min-w-0 cursor-pointer items-center justify-between gap-2 rounded-lg border border-border bg-card/50 p-4 text-left transition-colors hover:bg-card',
+              RESOURCE_CARD_SHELL_CLASSNAME,
+            )}
           >
             <div className="flex min-w-0 items-center gap-2">
               <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-muted">

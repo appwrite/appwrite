@@ -101,7 +101,7 @@ export const OrganizationUsageLimits = forwardRef<
           </Alert>
         )}
 
-        <div className="space-y-3">
+        <div className="min-w-0 space-y-3">
           {projects.map((project) => {
             const selected = isSelected(project.$id)
             const disabled = !selected && !canSelect
@@ -110,7 +110,7 @@ export const OrganizationUsageLimits = forwardRef<
               <div
                 key={project.$id}
                 className={cn(
-                  'flex items-start space-x-3 rounded-lg border p-3 transition-colors',
+                  'flex min-w-0 items-start space-x-3 rounded-lg border p-3 transition-colors',
                   selected
                     ? 'border-primary bg-primary/5'
                     : 'border-border hover:bg-muted/50',
@@ -127,14 +127,14 @@ export const OrganizationUsageLimits = forwardRef<
                 <Label
                   htmlFor={project.$id}
                   className={cn(
-                    'flex-1 cursor-pointer',
+                    'min-w-0 flex-1 cursor-pointer',
                     disabled && 'cursor-not-allowed',
                   )}
                 >
-                  <div className="text-[13px] font-medium text-foreground">
+                  <div className="truncate text-[13px] font-medium text-foreground">
                     {project.name}
                   </div>
-                  <div className="text-[12px] text-muted-foreground mt-0.5">
+                  <div className="truncate text-[12px] text-muted-foreground mt-0.5">
                     {project.$id}
                   </div>
                 </Label>

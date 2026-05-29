@@ -10,7 +10,7 @@ import { useQueryClient, useQuery } from '@tanstack/react-query'
 import { Clock, Play, FileCode } from 'lucide-react'
 import { RuntimeIcon } from '@/components/global/shared/RuntimeIcon'
 import { ServiceHeader, type Tab } from '../shared/ServiceHeader'
-import { ResourceCard } from '../shared/ResourceCard'
+import { ResourceCard, RESOURCE_CARD_GRID_CLASSNAME } from '../shared/ResourceCard'
 import { Pagination } from '@/components/global/shared/Pagination'
 import { EmptyState } from '@/components/global/shared/EmptyState'
 import { Button } from '@/components/ui/button'
@@ -725,7 +725,7 @@ export function View() {
               />
             ) : (
               <>
-                <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                <div className={RESOURCE_CARD_GRID_CLASSNAME}>
                   {functions.map((func) => {
                     const nextExecution = func.schedule
                       ? getNextScheduledExecution(func as Models.Function)

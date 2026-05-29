@@ -9,6 +9,10 @@ import {
   MARKETPLACE_CATEGORY_ORDER,
   type MarketplaceNavId,
 } from '@/lib/marketplace/marketplace-nav'
+import {
+  RESOURCE_CARD_GRID_2_COL_CLASSNAME,
+  RESOURCE_CARD_GRID_WIDE_CLASSNAME,
+} from '@/components/pages/projects/$projectId/shared/ResourceCard'
 import { MarketplaceAppCard } from './MarketplaceAppCard'
 import { cn } from '@/lib/utils'
 import { ChevronRight } from 'lucide-react'
@@ -71,12 +75,11 @@ function AppGrid({
 }) {
   return (
     <div
-      className={cn(
-        'grid gap-4',
+      className={
         columns === 'compact'
-          ? 'grid-cols-1 sm:grid-cols-2'
-          : 'grid-cols-1 sm:grid-cols-2 xl:grid-cols-3',
-      )}
+          ? RESOURCE_CARD_GRID_2_COL_CLASSNAME
+          : RESOURCE_CARD_GRID_WIDE_CLASSNAME
+      }
     >
       {apps.map((app) => (
         <MarketplaceAppCard key={app.$id} app={app} onClick={() => onAppClick(app)} />

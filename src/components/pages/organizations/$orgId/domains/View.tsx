@@ -35,7 +35,10 @@ import {
 import type { CompactFilterKey } from '@/lib/table-filters'
 import { FiltersPopover } from '@/components/global/shared/FiltersPopover'
 import { useDebugOverrides } from '@/lib/debug-overrides'
-import { ResourceCard } from '@/components/pages/projects/$projectId/shared/ResourceCard'
+import {
+  ResourceCard,
+  RESOURCE_CARD_GRID_CLASSNAME,
+} from '@/components/pages/projects/$projectId/shared/ResourceCard'
 import { DateTooltip } from '@/components/global/shared/DateTooltip'
 import { EmptyState } from '@/components/global/shared/EmptyState'
 import { Pagination } from '@/components/global/shared/Pagination'
@@ -697,7 +700,7 @@ export function View() {
           </div>
         ) : paginatedDomains.length > 0 ? (
           <>
-            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+            <div className={RESOURCE_CARD_GRID_CLASSNAME}>
               {paginatedDomains.map((domain) => {
                 const verification = getVerificationStatus(domain)
                 const transferInProgress = isDomainTransferInProgress(domain)

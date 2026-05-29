@@ -60,7 +60,7 @@ import {
 } from '@/lib/react-query/hooks/users'
 import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert'
 import { ServiceHeader, type Tab } from '../shared/ServiceHeader'
-import { ResourceCard } from '../shared/ResourceCard'
+import { ResourceCard, RESOURCE_CARD_GRID_CLASSNAME } from '../shared/ResourceCard'
 import { DateTooltip } from '@/components/global/shared/DateTooltip'
 import { EmptyState } from '@/components/global/shared/EmptyState'
 import { Pagination } from '@/components/global/shared/Pagination'
@@ -1781,7 +1781,7 @@ export function View({
               )
             ) : (
               <div className="flex flex-col gap-2">
-                <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                <div className={RESOURCE_CARD_GRID_CLASSNAME}>
                   {paginatedUsers.map((user) => {
                     const verification = getUserVerificationStatus(user)
                     const cardStatus =
@@ -2083,7 +2083,7 @@ export function View({
               )
             ) : (
               <div className="flex flex-col gap-2">
-                <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                <div className={RESOURCE_CARD_GRID_CLASSNAME}>
                   {paginatedTeams.map((team) => (
                     <TeamContextMenu
                       key={team.id}

@@ -17,6 +17,10 @@ import {
   Search,
 } from 'lucide-react'
 import { RuntimeIcon } from '@/components/global/shared/RuntimeIcon'
+import {
+  RESOURCE_CARD_GRID_WIDE_CLASSNAME,
+  RESOURCE_CARD_SHELL_CLASSNAME,
+} from '../../shared/ResourceCard'
 import { ServiceHeader, type Tab } from '../../shared/ServiceHeader'
 import { Pagination } from '@/components/global/shared/Pagination'
 import { EmptyState } from '@/components/global/shared/EmptyState'
@@ -1401,7 +1405,7 @@ export function View() {
             />
           ) : (
             <>
-              <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+              <div className={RESOURCE_CARD_GRID_WIDE_CLASSNAME}>
                 {paginatedTemplates.map((template, i) => (
                   <TemplateCard
                     key={`${safeOffset + i}-${String(template.id)}`}
@@ -1456,7 +1460,8 @@ function TemplateCard({
   const hiddenRuntimeNames = hidden.map((h) => h.name).join(', ')
 
   const cardClassName = cn(
-    'group flex w-full min-h-[160px] flex-col rounded-lg border border-border bg-card p-4 text-left transition-colors',
+    'group flex w-full min-h-[160px] min-w-0 flex-col rounded-lg border border-border bg-card p-4 text-left transition-colors',
+    RESOURCE_CARD_SHELL_CLASSNAME,
     'cursor-pointer hover:border-border hover:bg-accent/50',
     'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background',
   )
@@ -1469,8 +1474,8 @@ function TemplateCard({
     >
       <div className="flex flex-1 flex-col gap-3">
         <div className="space-y-1">
-          <div className="flex items-start justify-between gap-2">
-            <h3 className="text-[15px] font-semibold leading-snug text-foreground">
+          <div className="flex min-w-0 items-start justify-between gap-2">
+            <h3 className="min-w-0 flex-1 truncate text-[15px] font-semibold leading-snug text-foreground">
               {template.name}
             </h3>
             <LayoutTemplate className="h-4 w-4 shrink-0 text-muted-foreground opacity-60" />

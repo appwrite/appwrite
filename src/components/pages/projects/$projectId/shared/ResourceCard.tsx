@@ -10,6 +10,26 @@ import { getStatusColor, type StatusType } from '@/lib/utils/status-badge'
 export const RESOURCE_CARD_METADATA_DIVIDER_CLASSNAME =
   'mt-2 min-w-0 border-t border-border pt-2'
 
+/** Three-column resource list grid; children shrink so long titles truncate instead of widening the page. */
+export const RESOURCE_CARD_GRID_CLASSNAME =
+  'grid min-w-0 gap-3 sm:grid-cols-2 lg:grid-cols-3 [&>*]:min-w-0'
+
+/** Four-column resource list grid (e.g. sites). */
+export const RESOURCE_CARD_GRID_4_COL_CLASSNAME =
+  'grid min-w-0 gap-3 sm:grid-cols-2 lg:grid-cols-4 [&>*]:min-w-0'
+
+/** Two-column resource list grid (e.g. analytics websites). */
+export const RESOURCE_CARD_GRID_2_COL_CLASSNAME =
+  'grid min-w-0 gap-4 sm:grid-cols-2 [&>*]:min-w-0'
+
+/** Responsive grid with xl third column (e.g. marketplace, function templates). */
+export const RESOURCE_CARD_GRID_WIDE_CLASSNAME =
+  'grid min-w-0 gap-4 grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 [&>*]:min-w-0'
+
+/** Apply to custom card shells inside resource grids when not using ResourceCard. */
+export const RESOURCE_CARD_SHELL_CLASSNAME =
+  'min-w-0 overflow-hidden'
+
 interface ResourceCardProps {
   title: string
   /** Renders inline after the title (e.g. status badges). */
@@ -63,7 +83,7 @@ export function ResourceCard({
     <div
       onClick={onClick}
       className={cn(
-        'group min-w-0 rounded-lg border border-border bg-card p-4 transition-all',
+        'group min-w-0 overflow-hidden rounded-lg border border-border bg-card p-4 transition-all',
         onClick && 'cursor-pointer hover:border-border hover:bg-accent/50',
         className,
       )}

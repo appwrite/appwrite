@@ -10,6 +10,10 @@ import {
   Copy,
   Key,
 } from 'lucide-react'
+import {
+  RESOURCE_CARD_GRID_CLASSNAME,
+  RESOURCE_CARD_SHELL_CLASSNAME,
+} from '../shared/ResourceCard'
 import { cn } from '@/lib/utils'
 import { useNavigate } from '@tanstack/react-router'
 import { useConsoleProfile } from '@/hooks/use-console-profile'
@@ -941,7 +945,7 @@ export function View({ projectId, initialData }: ViewProps) {
               </div>
             </EmptyState>
           ) : (
-            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+            <div className={RESOURCE_CARD_GRID_CLASSNAME}>
               {integrations.map((integration) => (
                 <PlatformContextMenu
                   key={integration.id}
@@ -958,7 +962,10 @@ export function View({ projectId, initialData }: ViewProps) {
                       setSelectedPlatform(integration.platform)
                       setPlatformDrawerOpen(true)
                     }}
-                    className="group flex cursor-pointer items-center gap-4 rounded-xl border border-border bg-card/50 p-4 text-left transition-colors hover:border-border hover:bg-card"
+                    className={cn(
+                      'group flex min-w-0 cursor-pointer items-center gap-4 rounded-xl border border-border bg-card/50 p-4 text-left transition-colors hover:border-border hover:bg-card',
+                      RESOURCE_CARD_SHELL_CLASSNAME,
+                    )}
                   >
                     <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-muted text-muted-foreground transition-colors group-hover:bg-accent group-hover:text-foreground">
                       {integration.icon}

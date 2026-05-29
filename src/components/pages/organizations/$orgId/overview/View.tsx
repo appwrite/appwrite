@@ -186,7 +186,10 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
-import { RESOURCE_CARD_METADATA_DIVIDER_CLASSNAME } from '@/components/pages/projects/$projectId/shared/ResourceCard'
+import {
+  RESOURCE_CARD_GRID_CLASSNAME,
+  RESOURCE_CARD_METADATA_DIVIDER_CLASSNAME,
+} from '@/components/pages/projects/$projectId/shared/ResourceCard'
 import { CopyableId } from '@/components/global/shared/CopyableId'
 import { DateTooltip } from '@/components/global/shared/DateTooltip'
 import { EmptyState } from '@/components/global/shared/EmptyState'
@@ -2101,7 +2104,7 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                                 <h2 className="mb-3 text-[13px] font-semibold text-muted-foreground uppercase tracking-wider">
                                   Pinned
                                 </h2>
-                                <div className="grid min-w-0 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                                <div className={RESOURCE_CARD_GRID_CLASSNAME}>
                                   {pinnedProjects.map((project, index) => {
                                     const isDragActive =
                                       canReorderPinned &&
@@ -2307,7 +2310,7 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                                         All projects
                                       </h2>
                                     )}
-                                    <div className="grid min-w-0 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                                    <div className={RESOURCE_CARD_GRID_CLASSNAME}>
                                       {projects.map((project) => {
                                         const canPin =
                                           pinnedIds.length < MAX_PINNED_PROJECTS

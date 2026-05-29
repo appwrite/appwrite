@@ -29,6 +29,7 @@ import {
   useOrganizations,
 } from '@/lib/react-query/hooks'
 import { MCPSection } from '@/components/pages/projects/$projectId/shared/MCPSection'
+import { RESOURCE_CARD_GRID_CLASSNAME } from '@/components/pages/projects/$projectId/shared/ResourceCard'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -1011,7 +1012,7 @@ export function ProjectSettingsOverview({
                   </div>
 
                   {/* Service Cards */}
-                  <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                  <div className={RESOURCE_CARD_GRID_CLASSNAME}>
                     {PROJECT_SERVICES.map((service) => {
                       const Icon = service.icon
                       const enabled = services[service.id] ?? true
@@ -1020,7 +1021,7 @@ export function ProjectSettingsOverview({
                         <div
                           key={service.id}
                           className={cn(
-                            'rounded-lg border border-border bg-card/50 p-4 transition-colors',
+                            'min-w-0 rounded-lg border border-border bg-card/50 p-4 transition-colors',
                             isUpdating && 'opacity-75',
                             !isUpdating && 'hover:bg-card',
                           )}

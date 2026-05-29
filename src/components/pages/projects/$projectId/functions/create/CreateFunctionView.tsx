@@ -47,6 +47,10 @@ import {
 } from '@/lib/react-query/hooks/constants'
 import { getApiEndpoint } from '@/lib/appwrite/sdk'
 import { cn } from '@/lib/utils'
+import {
+  RESOURCE_CARD_GRID_2_COL_CLASSNAME,
+  RESOURCE_CARD_SHELL_CLASSNAME,
+} from '../../shared/ResourceCard'
 import { EmptyState } from '@/components/global/shared/EmptyState'
 import { useFunctionWizard } from './WizardContext'
 import type { Models } from '@appwrite.io/console'
@@ -159,7 +163,10 @@ function LanguageCard({
       to="/projects/$projectId/functions/create/template/$templateId"
       params={{ projectId, templateId: template!.id }}
       search={{ runtime: language }}
-      className="group block rounded-xl border border-border bg-card/50 p-4 text-left transition-all hover:border-border/80 hover:bg-card"
+      className={cn(
+        'group block min-w-0 rounded-xl border border-border bg-card/50 p-4 text-left transition-all hover:border-border/80 hover:bg-card',
+        RESOURCE_CARD_SHELL_CLASSNAME,
+      )}
     >
       {content}
     </Link>
@@ -177,11 +184,14 @@ function TemplateCard({
     <Link
       to="/projects/$projectId/functions/create/template/$templateId"
       params={{ projectId, templateId: template.id }}
-      className="group block rounded-xl border border-border bg-card/50 p-4 text-left transition-all hover:border-border/80 hover:bg-card"
+      className={cn(
+        'group block min-w-0 rounded-xl border border-border bg-card/50 p-4 text-left transition-all hover:border-border/80 hover:bg-card',
+        RESOURCE_CARD_SHELL_CLASSNAME,
+      )}
     >
       <div className="flex items-start justify-between gap-2">
         <div className="min-w-0 flex-1">
-          <h3 className="text-[14px] font-semibold text-foreground leading-tight group-hover:text-primary transition-colors">
+          <h3 className="truncate text-[14px] font-semibold text-foreground leading-tight group-hover:text-primary transition-colors">
             {template.name}
           </h3>
           {template.tagline && (
@@ -620,7 +630,7 @@ export function CreateFunctionView() {
               </Link>
             </div>
             {highlighted.length > 0 ? (
-              <div className="grid gap-3 sm:grid-cols-2">
+              <div className={cn(RESOURCE_CARD_GRID_2_COL_CLASSNAME, 'gap-3')}>
                 {highlighted.map((template) => (
                   <TemplateCard
                     key={template.id}

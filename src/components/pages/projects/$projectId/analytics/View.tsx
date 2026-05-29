@@ -2,6 +2,11 @@ import { useState } from 'react'
 import { Link, useNavigate, useParams } from '@tanstack/react-router'
 import { cn } from '@/lib/utils'
 import {
+  RESOURCE_CARD_GRID_2_COL_CLASSNAME,
+  RESOURCE_CARD_METADATA_DIVIDER_CLASSNAME,
+  RESOURCE_CARD_SHELL_CLASSNAME,
+} from '../shared/ResourceCard'
+import {
   Globe,
   TrendingUp,
   TrendingDown,
@@ -20,7 +25,6 @@ import {
   Tablet,
   Bot,
 } from 'lucide-react'
-import { RESOURCE_CARD_METADATA_DIVIDER_CLASSNAME } from '../shared/ResourceCard'
 import { ServiceHeader } from '../shared/ServiceHeader'
 import { DateTooltip } from '@/components/global/shared/DateTooltip'
 import { Pagination } from '@/components/global/shared/Pagination'
@@ -380,11 +384,14 @@ export function View() {
       <div className="mx-auto w-full max-w-7xl flex-1 px-4 pb-4 sm:px-6 sm:pb-6">
         {viewMode === 'grid' ? (
           <div className="flex flex-col gap-2">
-            <div className="grid gap-4 sm:grid-cols-2">
+            <div className={RESOURCE_CARD_GRID_2_COL_CLASSNAME}>
               {paginatedWebsites.map((site) => (
                 <div
                   key={site.id}
-                  className="group cursor-pointer rounded-lg border border-border bg-card p-4 transition-all hover:border-border hover:bg-accent/50"
+                  className={cn(
+                    'group min-w-0 cursor-pointer rounded-lg border border-border bg-card p-4 transition-all hover:border-border hover:bg-accent/50',
+                    RESOURCE_CARD_SHELL_CLASSNAME,
+                  )}
                   onClick={() =>
                     navigate({
                       to: '/projects/$projectId/analytics/$websiteId',
@@ -405,9 +412,9 @@ export function View() {
                           </h3>
                           {site.isAppwriteSite && <AppwriteSitesBadge />}
                         </div>
-                        <p className="mt-0.5 flex items-center gap-1.5 text-[12px] text-muted-foreground">
-                          {site.domain}
-                          <ExternalLink className="h-3 w-3" />
+                        <p className="mt-0.5 flex min-w-0 items-center gap-1.5 truncate text-[12px] text-muted-foreground">
+                          <span className="truncate">{site.domain}</span>
+                          <ExternalLink className="h-3 w-3 shrink-0" />
                         </p>
                       </div>
                     </div>

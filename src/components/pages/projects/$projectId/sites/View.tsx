@@ -9,6 +9,10 @@ import {
 import { useQueryClient, useQuery, useMutation } from '@tanstack/react-query'
 import { useTheme } from 'next-themes'
 import { Globe, List, LayoutGrid } from 'lucide-react'
+import {
+  RESOURCE_CARD_GRID_4_COL_CLASSNAME,
+  RESOURCE_CARD_SHELL_CLASSNAME,
+} from '../shared/ResourceCard'
 import { ServiceHeader } from '../shared/ServiceHeader'
 import { FrameworkIcon } from '@/components/global/shared/FrameworkIcon'
 import { DateTooltip } from '@/components/global/shared/DateTooltip'
@@ -944,7 +948,7 @@ export function View() {
                 </p>
               </div>
             ) : paginatedSites.length > 0 ? (
-              <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+              <div className={RESOURCE_CARD_GRID_4_COL_CLASSNAME}>
                 {paginatedSites.map((site) => {
                   const siteData = site as Models.Site
                   if (!siteData?.$id) return null
@@ -958,9 +962,14 @@ export function View() {
                       <Link
                         to="/projects/$projectId/sites/$siteId/"
                         params={{ projectId, siteId: siteData.$id }}
-                        className="block group"
+                        className="block min-w-0 group"
                       >
-                        <div className="rounded-lg border border-border bg-card overflow-hidden transition-all hover:border-border hover:bg-accent/50">
+                        <div
+                          className={cn(
+                            'rounded-lg border border-border bg-card transition-all hover:border-border hover:bg-accent/50',
+                            RESOURCE_CARD_SHELL_CLASSNAME,
+                          )}
+                        >
                           {/* Preview Image */}
                           {screenshotUrl ? (
                             <div className="aspect-video w-full overflow-hidden bg-muted">

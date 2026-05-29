@@ -85,7 +85,7 @@ type DatabaseWithBackup = Models.Database & {
 
 import { ServiceHeader } from '../shared/ServiceHeader'
 import { sdk } from '@/lib/appwrite/sdk'
-import { ResourceCard } from '../shared/ResourceCard'
+import { ResourceCard, RESOURCE_CARD_GRID_CLASSNAME } from '../shared/ResourceCard'
 import { Pagination } from '@/components/global/shared/Pagination'
 import { CopyableId } from '@/components/global/shared/CopyableId'
 
@@ -1041,7 +1041,7 @@ export function View() {
           )
         ) : (
           <>
-            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+            <div className={RESOURCE_CARD_GRID_CLASSNAME}>
               {paginatedDatabases.map(
                 (
                   db: DatabaseType & {

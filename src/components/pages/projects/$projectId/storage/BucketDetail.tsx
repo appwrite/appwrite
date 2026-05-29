@@ -1,6 +1,10 @@
 import { useState, useMemo, useEffect, useCallback } from 'react'
 import { useLocation, Link } from '@tanstack/react-router'
 import { cn } from '@/lib/utils'
+import {
+  RESOURCE_CARD_GRID_CLASSNAME,
+  RESOURCE_CARD_SHELL_CLASSNAME,
+} from '../shared/ResourceCard'
 import { File, List, LayoutGrid, ArrowLeft, AlertCircle } from 'lucide-react'
 import { formatBytes } from '@/lib/utils/mock-data'
 import {
@@ -623,14 +627,15 @@ export function BucketDetailView() {
               ) : (
                 <div>
                   {files.length > 0 ? (
-                    <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                    <div className={RESOURCE_CARD_GRID_CLASSNAME}>
                       {files.map((file) => {
                         const pending = isFilePending(file)
                         return (
                           <div
                             key={file.$id}
                             className={cn(
-                              'group cursor-pointer overflow-hidden rounded-lg border border-border bg-card transition-all hover:border-primary/30',
+                              'group min-w-0 cursor-pointer overflow-hidden rounded-lg border border-border bg-card transition-all hover:border-primary/30',
+                              RESOURCE_CARD_SHELL_CLASSNAME,
                               pending && 'opacity-75',
                             )}
                             onClick={() => {

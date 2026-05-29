@@ -11,6 +11,7 @@ import { Label } from '@/components/ui/label'
 import { Switch } from '@/components/ui/switch'
 import { Loader2, Mail, Key, Smartphone, UserPlus, Lock } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { RESOURCE_CARD_GRID_CLASSNAME } from '@/components/pages/projects/$projectId/shared/ResourceCard'
 import {
   MockPhoneNumbersCard,
   useAuthSecuritySnapshot,
@@ -150,7 +151,7 @@ export function AuthSettings({ projectId }: AuthSettingsProps) {
           <p className="text-[13px] text-muted-foreground mb-4">
             Enable the authentication methods you wish to use.
           </p>
-          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+          <div className={RESOURCE_CARD_GRID_CLASSNAME}>
             {AUTH_METHODS.map((method) => {
               const Icon = method.icon
               const isUpdating = updatingAuthMethods.has(method.key)
@@ -160,7 +161,7 @@ export function AuthSettings({ projectId }: AuthSettingsProps) {
                 <div
                   key={method.key}
                   className={cn(
-                    'rounded-lg border border-border bg-card/50 p-4 transition-colors',
+                    'min-w-0 rounded-lg border border-border bg-card/50 p-4 transition-colors',
                     isUpdating && 'opacity-75',
                     !isUpdating && 'hover:bg-card',
                   )}

@@ -1,6 +1,10 @@
 import { useState, useMemo } from 'react'
 import { Plug2 } from 'lucide-react'
 import { useNavigate, useParams } from '@tanstack/react-router'
+import {
+  RESOURCE_CARD_GRID_CLASSNAME,
+  RESOURCE_CARD_SHELL_CLASSNAME,
+} from '../shared/ResourceCard'
 import { ServiceHeader } from '../shared/ServiceHeader'
 import { PlatformDrawer } from './_components/PlatformDrawer'
 import { PlatformContextMenu } from './_components/PlatformContextMenu'
@@ -20,6 +24,7 @@ import {
   type ProjectPlatform,
 } from '@/lib/utils/platform'
 import type { AddAppKind } from '@/lib/add-app-wizard/types'
+import { cn } from '@/lib/utils'
 
 export type AppsInitialData = {
   platforms: ProjectPlatform[]
@@ -174,7 +179,7 @@ export function View({ initialData }: ViewProps = {}) {
             />
           )
         ) : (
-          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+          <div className={RESOURCE_CARD_GRID_CLASSNAME}>
             {filteredPlatforms.map((platform: ProjectPlatform) => {
               const platformType = platform.type || 'web'
               const displayName =
@@ -197,7 +202,10 @@ export function View({ initialData }: ViewProps = {}) {
                   <button
                     type="button"
                     onClick={() => handlePlatformClick(platform)}
-                    className="group flex cursor-pointer items-center gap-4 rounded-xl border border-border bg-card/50 p-4 text-left transition-colors hover:border-border hover:bg-card"
+                    className={cn(
+                      'group flex min-w-0 cursor-pointer items-center gap-4 rounded-xl border border-border bg-card/50 p-4 text-left transition-colors hover:border-border hover:bg-card',
+                      RESOURCE_CARD_SHELL_CLASSNAME,
+                    )}
                   >
                     <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-muted text-muted-foreground transition-colors group-hover:bg-accent group-hover:text-foreground">
                       <PlatformIcon
