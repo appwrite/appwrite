@@ -819,7 +819,6 @@ jobs:
 
       - name: Benchmark after
         id: benchmark_after
-        continue-on-error: true
         uses: grafana/run-k6-action@de51a7390bdf0ac85a3bef493691bd71d4c7c158 # v1.4.0
         env:
           APPWRITE_ENDPOINT: 'http://localhost/v1'
@@ -861,7 +860,3 @@ jobs:
             benchmark-before-samples.json
             benchmark-after-samples.json
           retention-days: 7
-
-      - name: Fail benchmark
-        if: always() && steps.benchmark_after.outcome != 'success'
-        run: exit 1
