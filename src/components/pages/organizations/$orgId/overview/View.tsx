@@ -87,6 +87,7 @@ import {
 } from '@/lib/console-access-checks'
 import { ProjectContextMenu } from './_components/ProjectContextMenu'
 import { LightningCollectorGame } from './_components/LightningCollectorGame'
+import { InitOrgPromoBanner } from './_components/InitOrgPromoBanner'
 
 import {
   Popover,
@@ -1526,6 +1527,8 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
         showFooter
         containerClassName="org-layout-container"
       >
+        {activeTab === 'projects' ? <InitOrgPromoBanner /> : null}
+
         {/* Org Header with Switcher */}
         <div>
           {/* Title Row: fixed h-16 so padding + toolbar never grows (h1 margins, badges, etc.) */}
