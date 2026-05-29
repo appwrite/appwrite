@@ -173,7 +173,6 @@ abstract class ScheduleBase extends Action
                             'schedule' => $schedule->getAttribute('schedule'),
                             'active' => $schedule->getAttribute('active'),
                             'resourceUpdatedAt' => $schedule->getAttribute('resourceUpdatedAt'),
-                            'data' => $schedule->getAttribute('data', []),
                         ];
                     } catch (\Throwable $th) {
                         Console::error("Failed to load schedule for project {$schedule->getAttribute('projectId')} {$collectionId} {$schedule->getAttribute('resourceId')}");
