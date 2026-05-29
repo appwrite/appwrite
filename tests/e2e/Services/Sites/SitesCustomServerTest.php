@@ -2274,7 +2274,7 @@ class SitesCustomServerTest extends Scope
         $deployment = $this->createTemplateDeployment($siteId, [
             'repository' => $template['providerRepositoryId'],
             'owner' => $template['providerOwner'],
-            'rootDirectory' => $template['frameworks'][0]['providerRootDirectory'],
+            'rootDirectory' => \ltrim($template['frameworks'][0]['providerRootDirectory'], './'),
             'type' => 'tag',
             'reference' => $template['providerVersion'],
             'activate' => true
@@ -2345,7 +2345,7 @@ class SitesCustomServerTest extends Scope
         $deployment = $this->createTemplateDeployment($siteId, [
             'repository' => $template['providerRepositoryId'],
             'owner' => $template['providerOwner'],
-            'rootDirectory' => $template['frameworks'][0]['providerRootDirectory'],
+            'rootDirectory' => \ltrim($template['frameworks'][0]['providerRootDirectory'], './'),
             'type' => 'branch',
             'reference' => 'main',
             'activate' => true
@@ -2423,7 +2423,7 @@ class SitesCustomServerTest extends Scope
         $deployment = $this->createTemplateDeployment($siteId, [
             'repository' => $template['providerRepositoryId'],
             'owner' => $template['providerOwner'],
-            'rootDirectory' => $template['frameworks'][0]['providerRootDirectory'],
+            'rootDirectory' => \ltrim($template['frameworks'][0]['providerRootDirectory'], './'),
             'type' => 'commit',
             'reference' => $latestCommit,
             'activate' => true
