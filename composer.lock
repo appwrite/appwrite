@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "0f60e85b461aa1a57d624e97be0614bd",
+    "content-hash": "53a96b051328aa5572b1008496733f85",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -4136,16 +4136,16 @@
         },
         {
             "name": "utopia-php/domains",
-            "version": "2.1.0",
+            "version": "2.2.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/domains.git",
-                "reference": "1b1fea8674e8712e0344d3abb5a7acd558dede50"
+                "reference": "77fcf4b63e33b2c1ddf8c67cfc1a57eef2dbec8f"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/domains/zipball/1b1fea8674e8712e0344d3abb5a7acd558dede50",
-                "reference": "1b1fea8674e8712e0344d3abb5a7acd558dede50",
+                "url": "https://api.github.com/repos/utopia-php/domains/zipball/77fcf4b63e33b2c1ddf8c67cfc1a57eef2dbec8f",
+                "reference": "77fcf4b63e33b2c1ddf8c67cfc1a57eef2dbec8f",
                 "shasum": ""
             },
             "require": {
@@ -4192,9 +4192,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/domains/issues",
-                "source": "https://github.com/utopia-php/domains/tree/2.1.0"
+                "source": "https://github.com/utopia-php/domains/tree/2.2.0"
             },
-            "time": "2026-05-14T14:33:46+00:00"
+            "time": "2026-05-28T15:16:46+00:00"
         },
         {
             "name": "utopia-php/dsn",
