@@ -117,10 +117,10 @@ export function InitGlobalCommunitySection({
         <section className="relative px-4 pt-6 sm:px-6 sm:pt-8">
           <div className="relative z-10 mx-auto flex w-full max-w-2xl flex-col items-center space-y-3 text-center">
             <div className="space-y-2">
-              <h3 className="text-[22px] font-semibold tracking-tight text-foreground sm:text-[26px]">
+              <h3 className="text-[15px] font-semibold text-foreground">
                 Developers joining from every corner of the world
               </h3>
-              <p className="mx-auto max-w-xl text-[13px] leading-relaxed text-muted-foreground sm:text-[14px]">
+              <p className="mx-auto max-w-xl text-[13px] leading-relaxed text-muted-foreground">
                 Init brings developers together to connect through a shared passion for
                 code and open source. Watch the globe light up as builders tune in live
                 from around the globe.

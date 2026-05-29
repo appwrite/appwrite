@@ -56,8 +56,8 @@ export function buildInitGlobeConfig(isDark: boolean): GlobeConfig {
   }
 
   const ocean = cssColorToHex(
-    'color-mix(in srgb, var(--brand-cta) 7%, var(--muted))',
-    '#38383f',
+    'color-mix(in srgb, var(--brand-cta) 5%, color-mix(in srgb, var(--muted) 82%, var(--muted-foreground)))',
+    '#43434d',
   )
   const land = cssColorToHex(
     'color-mix(in srgb, var(--muted-foreground) 70%, var(--foreground))',
