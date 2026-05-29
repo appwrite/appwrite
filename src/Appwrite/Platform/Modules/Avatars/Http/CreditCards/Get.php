@@ -34,6 +34,7 @@ class Get extends Action
             ->groups(['api', 'avatars'])
             ->label('scope', 'avatars.read')
             ->label('cache', true)
+            ->label('cache.contentType', 'image/')
             ->label('cache.resource', 'avatar/credit-card')
             ->label('sdk', new Method(
                 namespace: 'avatars',

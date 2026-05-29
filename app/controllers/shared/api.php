@@ -958,7 +958,14 @@ Http::shutdown()
             $resource = $resourceType = null;
             $data = $response->getPayload();
             $statusCode = $response->getStatusCode();
-            if (! empty($data['payload']) && $statusCode >= 200 && $statusCode < 300) {
+            // Routes may declare a `cache.contentType` prefix (e.g. `image/`) that
+            // the response must match to be cacheable. This stops error pages,
+            // fallback bodies, or partial outputs that slipped through with a 2xx
+            // status from being persisted and served back on later requests.
+            $contentTypePrefix = $route->getLabel('cache.contentType', '');
+            $contentType = \strtolower((string) $response->getContentType());
+            $contentTypeOk = empty($contentTypePrefix) || \str_starts_with($contentType, \strtolower($contentTypePrefix));
+            if ($contentTypeOk && ! empty($data['payload']) && $statusCode >= 200 && $statusCode < 300) {
                 $pattern = $route->getLabel('cache.resource', null);
                 if (! empty($pattern)) {
                     $resource = $parseLabel($pattern, $responsePayload, $requestParams, $user, $project);

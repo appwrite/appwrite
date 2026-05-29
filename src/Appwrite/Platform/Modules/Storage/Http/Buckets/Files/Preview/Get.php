@@ -55,6 +55,7 @@ class Get extends Action
             ->label('scope', 'files.read')
             ->label('resourceType', RESOURCE_TYPE_BUCKETS)
             ->label('cache', true)
+            ->label('cache.contentType', 'image/')
             ->label('cache.resourceType', 'bucket/{request.bucketId}')
             ->label('cache.resource', 'file/{request.fileId}')
             ->label('cache.params', ['width', 'height', 'gravity', 'quality', 'borderWidth', 'borderColor', 'borderRadius', 'opacity', 'rotation', 'background', 'output', 'project'])
@@ -175,6 +176,7 @@ class Get extends Action
         $algorithm = $file->getAttribute('algorithm', Compression::NONE);
         $cipher = $file->getAttribute('openSSLCipher');
         $mime = $file->getAttribute('mimeType');
+        $isLogoFallback = false;
         if (!\in_array($mime, $inputs) || $file->getAttribute('sizeActual') > (int) System::getEnv('_APP_STORAGE_PREVIEW_LIMIT', APP_STORAGE_READ_BUFFER)) {
             if (!\in_array($mime, $inputs)) {
                 $path = (\array_key_exists($mime, $fileLogos)) ? $fileLogos[$mime] : $fileLogos['default'];
@@ -188,6 +190,7 @@ class Get extends Action
             $background = (empty($background)) ? 'eceff1' : $background;
             $type = \strtolower(\pathinfo($path, PATHINFO_EXTENSION));
             $deviceForFiles = $deviceForLocal;
+            $isLogoFallback = true;
         }
 
         if (!$deviceForFiles->exists($path)) {
@@ -211,6 +214,16 @@ class Get extends Action
         $source = $deviceForFiles->read($path);
 
         $downloadTime = \microtime(true) - $startTime;
+
+        // Guard against transient backend failures that return a short/empty body
+        // instead of throwing. Without this check, partial bytes can still parse as
+        // a valid (but wrong) image downstream and get persisted to the cache.
+        if (!$isLogoFallback) {
+            $expectedSize = (int) $file->getAttribute('sizeActual', 0);
+            if ($expectedSize > 0 && \strlen($source) !== $expectedSize) {
+                throw new Exception(Exception::STORAGE_FILE_NOT_FOUND, 'Unexpected source size when reading file');
+            }
+        }
 
         if (!empty($cipher)) { // Decrypt
             $source = OpenSSL::decrypt(
