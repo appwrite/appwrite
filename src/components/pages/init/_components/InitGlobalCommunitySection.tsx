@@ -1,7 +1,9 @@
-import { lazy, Suspense, useEffect, useMemo, useState } from 'react'
+import { lazy, Suspense, useCallback, useEffect, useMemo, useState } from 'react'
 import { useTheme } from 'next-themes'
 import { buildInitGlobeArcs } from '@/lib/init/build-init-globe-arcs'
 import { buildInitGlobeConfig, getInitGlobeBrandRgb } from '@/lib/init/init-globe-theme'
+import { useInitPresenceActivity } from '@/lib/init/init-presence-context'
+import { buildInitExploringGlobeActivity } from '@/lib/init/init-presence-activity'
 import type { GlobeConfig } from '@/components/ui/globe'
 import type { InitCommunityCountry } from '@/lib/init/types'
 import { cn } from '@/lib/utils'
@@ -61,6 +63,7 @@ type InitCommunityGlobeProps = {
 
 function InitCommunityGlobe({ countries, className }: InitCommunityGlobeProps) {
   const { config: globeConfig, themeKey } = useInitGlobeConfig()
+  const { setTransientActivity } = useInitPresenceActivity()
   const countriesKey = useMemo(
     () => serializeCommunityCountries(countries),
     [countries],
@@ -74,12 +77,24 @@ function InitCommunityGlobe({ countries, className }: InitCommunityGlobeProps) {
     [brandRgb, countriesKey],
   )
 
+  const handleGlobeInteractionStart = useCallback(() => {
+    setTransientActivity(buildInitExploringGlobeActivity())
+  }, [setTransientActivity])
+
+  const handleGlobeInteractionEnd = useCallback(() => {
+    setTransientActivity(null)
+  }, [setTransientActivity])
+
   return (
     <div
       className={cn(
         'relative mx-auto w-full max-w-[min(100%,44rem)] overflow-hidden aspect-[100/55] sm:max-w-[min(100%,52rem)] lg:max-w-[min(100%,60rem)] xl:max-w-[min(100%,68rem)]',
         className,
       )}
+      onPointerDown={handleGlobeInteractionStart}
+      onPointerUp={handleGlobeInteractionEnd}
+      onPointerLeave={handleGlobeInteractionEnd}
+      onPointerCancel={handleGlobeInteractionEnd}
     >
       <div className="aspect-square w-full">
         <Suspense

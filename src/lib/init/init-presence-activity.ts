@@ -165,6 +165,10 @@ export function buildInitPlayingWithJoolActivity(): string {
   return 'Playing with Jool'
 }
 
+export function buildInitExploringGlobeActivity(): string {
+  return 'Exploring the globe'
+}
+
 export function buildInitExploringActivity(label: string): string {
   return `Exploring ${label}`
 }

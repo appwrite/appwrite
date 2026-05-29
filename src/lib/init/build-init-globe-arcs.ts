@@ -16,10 +16,7 @@ function buildArcColors(brandColor: string): string[] {
   return [brandColor, withAlpha(brandColor, 0.75), withAlpha(brandColor, 0.55)]
 }
 
-/** Neutral hub for “joining Init” arcs (mid-Atlantic). */
-const INIT_COMMUNITY_HUB = { lat: 24, lng: 12 }
-
-const FALLBACK_HUBS: Array<{ code: string; lat: number; lng: number }> = [
+const FALLBACK_LOCATIONS: Array<{ code: string; lat: number; lng: number }> = [
   { code: 'US', lat: 37.09, lng: -95.71 },
   { code: 'IN', lat: 20.59, lng: 78.96 },
   { code: 'GB', lat: 55.38, lng: -3.44 },
@@ -57,6 +54,36 @@ function pushArc(
   })
 }
 
+function buildCountryToCountryArcs(
+  locations: Array<{ lat: number; lng: number; code?: string }>,
+  arcColors: string[],
+  step = 1,
+): InitGlobeArc[] {
+  if (locations.length < 2) return []
+
+  const arcs: InitGlobeArc[] = []
+  let order = 1
+
+  for (let index = 0; index < locations.length; index += step) {
+    const current = locations[index]
+    const next = locations[(index + step) % locations.length]
+    if (current.code && next.code && current.code === next.code) continue
+
+    pushArc(
+      arcs,
+      order,
+      current,
+      next,
+      0.12 + (index % 3) * 0.05,
+      order,
+      arcColors,
+    )
+    order += 1
+  }
+
+  return arcs
+}
+
 /** Build animated arcs for the Aceternity GitHub-style globe from live community data. */
 export function buildInitGlobeArcs(
   countries: InitCommunityCountry[],
@@ -72,54 +99,8 @@ export function buildInitGlobeArcs(
     .filter((entry): entry is NonNullable<typeof entry> => entry !== null)
 
   if (positions.length === 0) {
-    return buildFallbackInitGlobeArcs(arcColors)
+    return buildCountryToCountryArcs(FALLBACK_LOCATIONS, arcColors, 2)
   }
 
-  const arcs: InitGlobeArc[] = []
-  let order = 1
-
-  for (const position of positions) {
-    const arcCount = Math.min(position.count, 2)
-    for (let index = 0; index < arcCount; index += 1) {
-      pushArc(
-        arcs,
-        order,
-        position,
-        INIT_COMMUNITY_HUB,
-        0.18 + index * 0.08,
-        order,
-        arcColors,
-      )
-      order += 1
-    }
-  }
-
-  for (let index = 0; index < positions.length; index += 1) {
-    const current = positions[index]
-    const next = positions[(index + 1) % positions.length]
-    if (current.code === next.code) continue
-    pushArc(arcs, order, current, next, 0.12 + (index % 3) * 0.05, order + 1, arcColors)
-    order += 1
-  }
-
-  return arcs.slice(0, 40)
-}
-
-function buildFallbackInitGlobeArcs(arcColors: string[]): InitGlobeArc[] {
-  const arcs: InitGlobeArc[] = []
-  let order = 1
-
-  for (const hub of FALLBACK_HUBS) {
-    pushArc(arcs, order, hub, INIT_COMMUNITY_HUB, 0.2, order, arcColors)
-    order += 1
-  }
-
-  for (let index = 0; index < FALLBACK_HUBS.length; index += 1) {
-    const current = FALLBACK_HUBS[index]
-    const next = FALLBACK_HUBS[(index + 2) % FALLBACK_HUBS.length]
-    pushArc(arcs, order, current, next, 0.15, order, arcColors)
-    order += 1
-  }
-
-  return arcs
+  return buildCountryToCountryArcs(positions, arcColors).slice(0, 40)
 }

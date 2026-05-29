@@ -5,6 +5,7 @@ import {
   buildInitCheckingScheduleActivity,
   buildInitCustomizingTicketActivity,
   buildInitExploringActivity,
+  buildInitExploringGlobeActivity,
   buildInitPlayingWithJoolActivity,
   buildInitReadingDayActivity,
   buildInitRecordingTicketActivity,
@@ -34,6 +35,7 @@ export function buildInitPresenceActivityAllowlist(
     buildInitRecordingTicketActivity(),
     buildInitCheckingScheduleActivity(),
     buildInitPlayingWithJoolActivity(),
+    buildInitExploringGlobeActivity(),
     buildInitSwitchingThemeActivity('light'),
     buildInitSwitchingThemeActivity('dark'),
   ])
