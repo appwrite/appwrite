@@ -300,6 +300,8 @@ class Create extends Base
 
         if ($async) {
             if (is_null($scheduledAt)) {
+                $execution = $authorization->skip(fn () => $dbForProject->createDocument('executions', $execution));
+
                 $publisherForFunctions->enqueue(new FunctionMessage(
                     project: $project,
                     user: $user,
@@ -340,6 +342,8 @@ class Create extends Base
                     ->setAttribute('scheduleInternalId', $schedule->getSequence())
                     ->setAttribute('scheduledAt', $scheduledAt);
 
+                $execution = $authorization->skip(fn () => $dbForProject->createDocument('executions', $execution));
+
                 $bus->dispatch(new ExecutionLogged(
                     execution: $execution->getArrayCopy(),
                     project: $project->getArrayCopy(),
@@ -359,6 +363,8 @@ class Create extends Base
             $response->dynamic($execution, Response::MODEL_EXECUTION);
             return;
         }
+
+        $execution = $authorization->skip(fn () => $dbForProject->createDocument('executions', $execution));
 
         $durationStart = \microtime(true);
 
@@ -512,6 +518,13 @@ class Create extends Base
                 ->addMetric(str_replace(['{resourceType}'], [RESOURCE_TYPE_FUNCTIONS], METRIC_RESOURCE_TYPE_EXECUTIONS_MB_SECONDS), (int)(($spec['memory'] ?? APP_COMPUTE_MEMORY_DEFAULT) * $execution->getAttribute('duration', 0) * ($spec['cpus'] ?? APP_COMPUTE_CPUS_DEFAULT)))
                 ->addMetric(str_replace(['{resourceType}', '{resourceInternalId}'], [RESOURCE_TYPE_FUNCTIONS, $function->getSequence()], METRIC_RESOURCE_TYPE_ID_EXECUTIONS_MB_SECONDS), (int)(($spec['memory'] ?? APP_COMPUTE_MEMORY_DEFAULT) * $execution->getAttribute('duration', 0) * ($spec['cpus'] ?? APP_COMPUTE_CPUS_DEFAULT)))
             ;
+
+            $authorization->skip(fn () => $dbForProject->updateDocument('executions', $execution->getId(), new Document([
+                'status' => $execution->getAttribute('status'),
+                'responseStatusCode' => $execution->getAttribute('responseStatusCode'),
+                'responseHeaders' => $execution->getAttribute('responseHeaders'),
+                'duration' => $execution->getAttribute('duration'),
+            ])));
 
             $bus->dispatch(new ExecutionLogged(
                 execution: $execution->getArrayCopy(),
