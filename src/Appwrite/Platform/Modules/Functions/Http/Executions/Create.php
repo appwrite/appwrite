@@ -3,7 +3,6 @@
 namespace Appwrite\Platform\Modules\Functions\Http\Executions;
 
 use Ahc\Jwt\JWT;
-use Appwrite\Bus\Events\ExecutionLogged;
 use Appwrite\Event\Event;
 use Appwrite\Event\Message\Delete as DeleteMessage;
 use Appwrite\Event\Message\Func as FunctionMessage;
@@ -25,7 +24,6 @@ use Executor\Executor;
 use MaxMind\Db\Reader;
 use Utopia\Auth\Proofs\Token;
 use Utopia\Auth\Store;
-use Utopia\Bus\Bus;
 use Utopia\Config\Config;
 use Utopia\Console;
 use Utopia\Database\Database;
@@ -109,7 +107,6 @@ class Create extends Base
             ->inject('authorization')
             ->inject('publisherForDeletes')
             ->inject('executionsRetentionCount')
-            ->inject('bus')
             ->callback($this->action(...));
     }
 
@@ -138,7 +135,6 @@ class Create extends Base
         Authorization $authorization,
         DeletePublisher $publisherForDeletes,
         int $executionsRetentionCount,
-        Bus $bus,
     ) {
         $async = \strval($async) === 'true' || \strval($async) === '1';
 
@@ -341,11 +337,6 @@ class Create extends Base
                     ->setAttribute('scheduledAt', $scheduledAt);
 
                 $execution = $authorization->skip(fn () => $dbForProject->createDocument('executions', $execution));
-
-                $bus->dispatch(new ExecutionLogged(
-                    execution: $execution->getArrayCopy(),
-                    project: $project->getArrayCopy(),
-                ));
             }
 
             if ($executionsRetentionCount > 0 && ENABLE_EXECUTIONS_LIMIT_ON_ROUTE) {
@@ -516,11 +507,6 @@ class Create extends Base
             ;
 
             $execution = $authorization->skip(fn () => $dbForProject->createDocument('executions', $execution));
-
-            $bus->dispatch(new ExecutionLogged(
-                execution: $execution->getArrayCopy(),
-                project: $project->getArrayCopy(),
-            ));
         }
 
         $executionResponse['headers']['x-appwrite-execution-id'] = $execution->getId();
