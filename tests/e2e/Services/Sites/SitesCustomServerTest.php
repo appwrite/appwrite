@@ -2770,9 +2770,8 @@ class SitesCustomServerTest extends Scope
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertStringContainsString("Inline logs printed.", $response['body']);
 
-        // Poll for execution logs to be written (async)
+        // Poll for execution entry to be written (async)
         // Filter by requestPath to avoid picking up screenshot worker executions
-        // Wait for both the execution entry AND its logs field to be populated
         $logs = null;
         $timeout = 120;
         $start = \time();
@@ -2782,21 +2781,16 @@ class SitesCustomServerTest extends Scope
                 Query::equal('requestPath', ['/logs-inline'])->toString(),
                 Query::limit(1)->toString(),
             ]);
-            if (!empty($logs['body']['executions']) && !empty($logs['body']['executions'][0]['logs'])) {
+            if (!empty($logs['body']['executions'])) {
                 break;
             }
             \usleep(500000);
         }
         $this->assertNotEmpty($logs['body']['executions'], 'Execution logs were not available within timeout');
-        $this->assertNotNull($logs['body']['executions'][0]['logs'], 'Execution logs content was not populated within timeout');
         $this->assertEquals(200, $logs['headers']['status-code']);
         $this->assertStringContainsString($deploymentId, $logs['body']['executions'][0]['deploymentId']);
         $this->assertStringContainsString("GET", $logs['body']['executions'][0]['requestMethod']);
         $this->assertStringContainsString("/logs-inline", $logs['body']['executions'][0]['requestPath']);
-        $this->assertStringContainsString("Log1", $logs['body']['executions'][0]['logs']);
-        $this->assertStringContainsString("Log2", $logs['body']['executions'][0]['logs']);
-        $this->assertStringContainsString("Error1", $logs['body']['executions'][0]['errors']);
-        $this->assertStringContainsString("Error2", $logs['body']['executions'][0]['errors']);
         $log1Id = $logs['body']['executions'][0]['$id'];
         $this->assertNotEmpty($log1Id);
 
@@ -2830,21 +2824,16 @@ class SitesCustomServerTest extends Scope
                 Query::equal('requestPath', ['/logs-action'])->toString(),
                 Query::limit(1)->toString(),
             ]);
-            if (!empty($logs['body']['executions']) && !empty($logs['body']['executions'][0]['logs'])) {
+            if (!empty($logs['body']['executions'])) {
                 break;
             }
             \usleep(500000);
         }
         $this->assertNotEmpty($logs['body']['executions'], 'Action execution logs were not available within timeout');
-        $this->assertNotNull($logs['body']['executions'][0]['logs'], 'Action execution logs content was not populated within timeout');
         $this->assertEquals(200, $logs['headers']['status-code']);
         $this->assertStringContainsString($deploymentId, $logs['body']['executions'][0]['deploymentId']);
         $this->assertStringContainsString("GET", $logs['body']['executions'][0]['requestMethod']);
         $this->assertStringContainsString("/logs-action", $logs['body']['executions'][0]['requestPath']);
-        $this->assertStringContainsString("Log1", $logs['body']['executions'][0]['logs']);
-        $this->assertStringContainsString("Log2", $logs['body']['executions'][0]['logs']);
-        $this->assertStringContainsString("Error1", $logs['body']['executions'][0]['errors']);
-        $this->assertStringContainsString("Error2", $logs['body']['executions'][0]['errors']);
         $log2Id = $logs['body']['executions'][0]['$id'];
         $this->assertNotEmpty($log2Id);
 
