@@ -1388,7 +1388,7 @@ Http::patch('/v1/users/:userId/name')
         ]
     ))
     ->param('userId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'User ID.', false, ['dbForProject'])
-    ->param('name', '', new Nullable(new Text(128, 0)), 'User name. Max length: 128 chars.')
+    ->param('name', '', new Nullable(new Text(128)), 'User name. Max length: 128 chars.')
     ->inject('response')
     ->inject('dbForProject')
     ->inject('queueForEvents')

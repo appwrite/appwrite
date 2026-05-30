@@ -446,6 +446,7 @@ return function (Container $context): void {
             }
 
             $jwtUserId = $payload['userId'] ?? '';
+            $jwtSessionId = $payload['sessionId'] ?? '';
             if (! empty($jwtUserId)) {
                 if ($mode === APP_MODE_ADMIN) {
                     $user = $dbForPlatform->getDocument('users', $jwtUserId);
@@ -453,14 +454,15 @@ return function (Container $context): void {
                     $user = $dbForProject->getDocument('users', $jwtUserId);
                 }
             }
-            $jwtSessionId = $payload['sessionId'] ?? '';
-            if (! empty($jwtSessionId)) {
+
+            if (!empty($jwtSessionId)) {
                 $session = $user->find('$id', $jwtSessionId, 'sessions');
+                $sessionExpire = $session ? $session->getAttribute('expire') : null;
+
                 if (
-                    empty($session) || 
-                    !$session->isSet('expire') || 
-                    DatabaseDateTime::formatTz(DatabaseDateTime::format(new \DateTime($session->getAttribute('expire')))) < DatabaseDateTime::formatTz(DatabaseDateTime::now())
-                ) { // Match JWT to active token and check expiry
+                    empty($session) ||
+                    (!empty($sessionExpire) && $sessionExpire < DatabaseDateTime::formatTz(DatabaseDateTime::now()))
+                ) {
                     $user = new User([]);
                 }
             }
