@@ -462,7 +462,7 @@ return function (Container $context): void {
                     $user = new User([]);
                 } else {
                     $sessionExpire = $session->getAttribute('expire');
-                    if (!empty($sessionExpire) && $sessionExpire < DatabaseDateTime::formatTz(DatabaseDateTime::now())) {
+                    if (empty($sessionExpire) || $sessionExpire < DatabaseDateTime::formatTz(DatabaseDateTime::now())) {
                         throw new Exception(Exception::USER_SESSION_EXPIRED, 'Session has expired.');
                     }
                 }
