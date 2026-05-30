@@ -3,6 +3,7 @@
 namespace Appwrite\Platform\Modules\Console\Http\Resources;
 
 use Appwrite\Extend\Exception;
+use Appwrite\Platform\Action;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\ContentType;
 use Appwrite\SDK\Method;
@@ -12,7 +13,7 @@ use Utopia\Database\Database;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Domains\Domain as Domain;
-use Utopia\Platform\Action;
+use Utopia\Platform\Enum;
 use Utopia\Platform\Scope\HTTP;
 use Utopia\System\System;
 use Utopia\Validator\Domain as DomainValidator;
@@ -56,7 +57,7 @@ class Get extends Action
             ->label('abuse-key', 'userId:{userId}, url:{url}')
             ->label('abuse-time', 60)
             ->param('value', '', new Text(256), 'Resource value.')
-            ->param('type', '', new WhiteList(['rules']), 'Resource type.')
+            ->param('type', '', new WhiteList(['rules']), 'Resource type.', enum: new Enum(name: 'ConsoleResourceType'))
             ->inject('response')
             ->inject('dbForPlatform')
             ->inject('platform')
@@ -74,34 +75,39 @@ class Get extends Action
     ) {
         $domains = $platform['hostnames'] ?? [];
         if ($type === 'rules') {
-            $sitesDomain = System::getEnv('_APP_DOMAIN_SITES', '');
-            $functionsDomain = System::getEnv('_APP_DOMAIN_FUNCTIONS', '');
-
+            $deniedDomains = [...$domains];
             $restrictions = [];
-            if (!empty($sitesDomain)) {
+
+            $sitesDomains = System::getEnv('_APP_DOMAIN_SITES', '');
+            foreach (\explode(',', $sitesDomains) as $sitesDomain) {
+                if (empty($sitesDomain)) {
+                    continue;
+                }
+
+                $deniedDomains[] = $sitesDomain;
+
                 // Ensure site domains are exactly 1 subdomain, and dont start with reserved prefix
                 $domainLevel = \count(\explode('.', $sitesDomain));
                 $restrictions[] = DomainValidator::createRestriction($sitesDomain, $domainLevel + 1, ['commit-', 'branch-']);
             }
-            if (!empty($functionsDomain)) {
+
+            $functionsDomains = System::getEnv('_APP_DOMAIN_FUNCTIONS', '');
+            foreach (\explode(',', $functionsDomains) as $functionsDomain) {
+                if (empty($functionsDomain)) {
+                    continue;
+                }
+
+                $deniedDomains[] = $functionsDomain;
+
                 // Ensure function domains are exactly 1 subdomain
                 $domainLevel = \count(\explode('.', $functionsDomain));
                 $restrictions[] = DomainValidator::createRestriction($functionsDomain, $domainLevel + 1);
             }
+
             $validator = new DomainValidator($restrictions);
 
             if (!$validator->isValid($value)) {
                 throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'This domain name is not allowed. Please use a different domain.');
-            }
-
-            $deniedDomains = [...$domains];
-
-            if (!empty($sitesDomain)) {
-                $deniedDomains[] = $sitesDomain;
-            }
-
-            if (!empty($functionsDomain)) {
-                $deniedDomains[] = $functionsDomain;
             }
 
             $denyListDomains = System::getEnv('_APP_CUSTOM_DOMAIN_DENY_LIST', '');
@@ -132,6 +138,7 @@ class Get extends Action
             }
 
             $response->noContent();
+            return;
         }
 
         // Only occurs if type is added into whitelist, but not supported in action

@@ -26,7 +26,75 @@ class VCSConsoleClientTest extends Scope
     public string $providerRepositoryId3 = '943139433'; // svelte-starter (public)
     public string $providerRepositoryId4 = '943245292'; // templates-for-sites (public)
 
-    public function testGitHubAuthorize(): string
+    private static array $cachedInstallationId = [];
+    private static array $cachedFunctionData = [];
+
+    /**
+     * Helper method to set up GitHub installation.
+     * Uses static caching to avoid recreating the installation.
+     */
+    protected function setupInstallation(): string
+    {
+        $projectId = $this->getProject()['$id'];
+
+        if (!empty(self::$cachedInstallationId[$projectId])) {
+            return self::$cachedInstallationId[$projectId];
+        }
+
+        $response = $this->client->call(Client::METHOD_GET, '/mock/github/callback', array_merge([
+            'x-appwrite-project' => $projectId,
+        ], $this->getHeaders()), [
+            'providerInstallationId' => $this->providerInstallationId,
+            'projectId' => $projectId,
+        ]);
+
+        self::$cachedInstallationId[$projectId] = $response['body']['installationId'];
+        return self::$cachedInstallationId[$projectId];
+    }
+
+    /**
+     * Helper method to set up a function using VCS.
+     * Uses static caching to avoid recreating the function.
+     */
+    protected function setupFunctionUsingVCS(): array
+    {
+        $projectId = $this->getProject()['$id'];
+
+        if (!empty(self::$cachedFunctionData[$projectId])) {
+            return self::$cachedFunctionData[$projectId];
+        }
+
+        $installationId = $this->setupInstallation();
+
+        $function = $this->client->call(Client::METHOD_POST, '/functions', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ], $this->getHeaders()), [
+            'functionId' => ID::unique(),
+            'name' => 'Test',
+            'execute' => [Role::user($this->getUser()['$id'])->toString()],
+            'runtime' => 'php-8.0',
+            'entrypoint' => 'index.php',
+            'events' => [
+                'users.*.create',
+                'users.*.delete',
+            ],
+            'schedule' => '0 0 1 1 *',
+            'timeout' => 10,
+            'installationId' => $installationId,
+            'providerRepositoryId' => $this->providerRepositoryId,
+            'providerBranch' => 'main',
+        ]);
+
+        self::$cachedFunctionData[$projectId] = [
+            'installationId' => $installationId,
+            'functionId' => $function['body']['$id']
+        ];
+
+        return self::$cachedFunctionData[$projectId];
+    }
+
+    public function testGitHubAuthorize(): void
     {
         /**
          * Test for SUCCESS
@@ -39,15 +107,12 @@ class VCSConsoleClientTest extends Scope
         ]);
 
         $this->assertNotEmpty($response['body']['installationId']);
-        $installationId = $response['body']['installationId'];
-        return $installationId;
     }
 
-    /**
-     * @depends testGitHubAuthorize
-     */
-    public function testGetInstallation(string $installationId): void
+    public function testGetInstallation(): void
     {
+        $installationId = $this->setupInstallation();
+
         /**
          * Test for SUCCESS
          */
@@ -61,11 +126,10 @@ class VCSConsoleClientTest extends Scope
         $this->assertEquals('appwrite-test', $installation['body']['organization']);
     }
 
-    /**
-     * @depends testGitHubAuthorize
-     */
-    public function testDetectRuntime(string $installationId): void
+    public function testDetectRuntime(): void
     {
+        $installationId = $this->setupInstallation();
+
         /**
          * Test for SUCCESS
          */
@@ -98,11 +162,10 @@ class VCSConsoleClientTest extends Scope
         $this->assertEquals(404, $runtime['headers']['status-code']);
     }
 
-    /**
-     * @depends testGitHubAuthorize
-     */
-    public function testDetectFramework(string $installationId)
+    public function testDetectFramework(): void
     {
+        $installationId = $this->setupInstallation();
+
         /**
          * Test for SUCCESS
          */
@@ -166,11 +229,10 @@ class VCSConsoleClientTest extends Scope
         $this->assertEquals(404, $framework['headers']['status-code']);
     }
 
-    /**
-     * @depends testGitHubAuthorize
-     */
-    public function testContents(string $installationId): void
+    public function testContents(): void
     {
+        $installationId = $this->setupInstallation();
+
         /**
          * Test for SUCCESS
          */
@@ -238,11 +300,10 @@ class VCSConsoleClientTest extends Scope
         $this->assertEquals(404, $runtime['headers']['status-code']);
     }
 
-    /**
-     * @depends testGitHubAuthorize
-     */
-    public function testListRepositories(string $installationId): void
+    public function testListRepositories(): void
     {
+        $installationId = $this->setupInstallation();
+
         /**
          * Test for SUCCESS
          */
@@ -398,11 +459,10 @@ class VCSConsoleClientTest extends Scope
         $this->assertEquals($repositories['body']['total'], 0);
     }
 
-    /**
-     * @depends testGitHubAuthorize
-     */
-    public function testGetRepository(string $installationId): void
+    public function testGetRepository(): void
     {
+        $installationId = $this->setupInstallation();
+
         /**
          * Test for SUCCESS
          */
@@ -436,11 +496,10 @@ class VCSConsoleClientTest extends Scope
         $this->assertEquals(404, $repository['headers']['status-code']);
     }
 
-    /**
-     * @depends testGitHubAuthorize
-     */
-    public function testListRepositoryBranches(string $installationId): void
+    public function testListRepositoryBranches(): void
     {
+        $installationId = $this->setupInstallation();
+
         /**
          * Test for SUCCESS
          */
@@ -454,6 +513,59 @@ class VCSConsoleClientTest extends Scope
         $this->assertEquals($repositoryBranches['body']['branches'][0]['name'], 'main');
         $this->assertEquals($repositoryBranches['body']['branches'][1]['name'], 'test');
 
+        $repositoryBranches = $this->client->call(Client::METHOD_GET, '/vcs/github/installations/' . $installationId . '/providerRepositories/' . $this->providerRepositoryId . '/branches', array_merge([
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'search' => 'tes',
+        ]);
+
+        $this->assertEquals(200, $repositoryBranches['headers']['status-code']);
+        $this->assertEquals($repositoryBranches['body']['total'], 1);
+        $this->assertCount(1, $repositoryBranches['body']['branches']);
+        $this->assertEquals($repositoryBranches['body']['branches'][0]['name'], 'test');
+
+        $repositoryBranches = $this->client->call(Client::METHOD_GET, '/vcs/github/installations/' . $installationId . '/providerRepositories/' . $this->providerRepositoryId . '/branches', array_merge([
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'queries' => [
+                Query::limit(1)->toString(),
+                Query::offset(1)->toString(),
+            ],
+        ]);
+
+        $this->assertEquals(200, $repositoryBranches['headers']['status-code']);
+        $this->assertEquals($repositoryBranches['body']['total'], 2);
+        $this->assertCount(1, $repositoryBranches['body']['branches']);
+        $this->assertEquals($repositoryBranches['body']['branches'][0]['name'], 'test');
+
+        $repositoryBranches = $this->client->call(Client::METHOD_GET, '/vcs/github/installations/' . $installationId . '/providerRepositories/' . $this->providerRepositoryId . '/branches', array_merge([
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'queries' => [
+                Query::limit(1)->toString(),
+                Query::cursorAfter(new \Utopia\Database\Document(['$id' => 'main']))->toString(),
+            ],
+        ]);
+
+        $this->assertEquals(200, $repositoryBranches['headers']['status-code']);
+        $this->assertEquals($repositoryBranches['body']['total'], 2);
+        $this->assertCount(1, $repositoryBranches['body']['branches']);
+        $this->assertEquals($repositoryBranches['body']['branches'][0]['name'], 'test');
+
+        $repositoryBranches = $this->client->call(Client::METHOD_GET, '/vcs/github/installations/' . $installationId . '/providerRepositories/' . $this->providerRepositoryId . '/branches', array_merge([
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'queries' => [
+                Query::limit(1)->toString(),
+                Query::cursorBefore(new \Utopia\Database\Document(['$id' => 'test']))->toString(),
+            ],
+        ]);
+
+        $this->assertEquals(200, $repositoryBranches['headers']['status-code']);
+        $this->assertEquals($repositoryBranches['body']['total'], 2);
+        $this->assertCount(1, $repositoryBranches['body']['branches']);
+        $this->assertEquals($repositoryBranches['body']['branches'][0]['name'], 'main');
+
         /**
          * Test for FAILURE
          */
@@ -463,13 +575,22 @@ class VCSConsoleClientTest extends Scope
         ], $this->getHeaders()));
 
         $this->assertEquals(404, $repositoryBranches['headers']['status-code']);
+
+        $repositoryBranches = $this->client->call(Client::METHOD_GET, '/vcs/github/installations/' . $installationId . '/providerRepositories/' . $this->providerRepositoryId . '/branches', array_merge([
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'queries' => [
+                Query::cursorAfter(new \Utopia\Database\Document(['$id' => 'missing-branch']))->toString(),
+            ],
+        ]);
+
+        $this->assertEquals(400, $repositoryBranches['headers']['status-code']);
     }
 
-    /**
-     * @depends testGitHubAuthorize
-     */
-    public function testCreateFunctionUsingVCS(string $installationId): array
+    public function testCreateFunctionUsingVCS(): void
     {
+        $installationId = $this->setupInstallation();
+
         $function = $this->client->call(Client::METHOD_POST, '/functions', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
@@ -496,18 +617,12 @@ class VCSConsoleClientTest extends Scope
         $this->assertEquals('index.php', $function['body']['entrypoint']);
         $this->assertEquals('705764267', $function['body']['providerRepositoryId']);
         $this->assertEquals('main', $function['body']['providerBranch']);
-
-        return [
-            'installationId' => $installationId,
-            'functionId' => $function['body']['$id']
-        ];
     }
 
-    /**
-     * @depends testCreateFunctionUsingVCS
-     */
-    public function testUpdateFunctionUsingVCS(array $data): string
+    public function testUpdateFunctionUsingVCS(): void
     {
+        $data = $this->setupFunctionUsingVCS();
+
         $function = $this->client->call(Client::METHOD_PUT, '/functions/' . $data['functionId'], array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
@@ -534,15 +649,12 @@ class VCSConsoleClientTest extends Scope
         $this->assertEquals('index.php', $function['body']['entrypoint']);
         $this->assertEquals('708688544', $function['body']['providerRepositoryId']);
         $this->assertEquals('main', $function['body']['providerBranch']);
-
-        return $function['body']['$id'];
     }
 
-    /**
-     * @depends testGitHubAuthorize
-     */
-    public function testCreateRepository(string $installationId): void
+    public function testCreateRepository(): void
     {
+        $installationId = $this->setupInstallation();
+
         /**
          * Test for SUCCESS
          */

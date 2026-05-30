@@ -3,6 +3,7 @@
 namespace Appwrite\Auth\OAuth2;
 
 use Appwrite\Auth\OAuth2;
+use Utopia\Fetch\Client as FetchClient;
 
 class Github extends OAuth2
 {
@@ -218,5 +219,35 @@ class Github extends OAuth2
 
         $repository = \json_decode($repository, true);
         return $repository;
+    }
+
+    public function verifyCredentials(): void
+    {
+        $client = new FetchClient();
+        $client->addHeader('Accept', 'application/json');
+
+        $response = $client->fetch(
+            url: 'https://github.com/login/oauth/access_token',
+            method: FetchClient::METHOD_POST,
+            query: [
+                'client_id' => $this->appID,
+                'client_secret' => $this->appSecret,
+                'code' => 'intentionally-invalid-code',
+                'redirect_uri' => 'intentionally-invalid-redirect',
+            ]
+        );
+
+        $json = \json_decode($response->getBody(), true);
+
+        if (isset($json['error']) && $json['error'] === "Not Found") {
+            throw new \Exception('GitHub application with provided Client ID is does not exist.');
+        }
+
+        if (isset($json['error']) && $json['error'] === "incorrect_client_credentials") {
+            throw new \Exception('GitHub application with provided Client ID is valid, but the provided Client Secret is incorrect.');
+        }
+
+        // We still expect error, like redirect_uri_mismatch or bad_verification_code,
+        // but that indicates valid credentials
     }
 }

@@ -23,6 +23,7 @@ class Event
 
     public const FUNCTIONS_QUEUE_NAME = 'v1-functions';
     public const FUNCTIONS_CLASS_NAME = 'FunctionsV1';
+    public const FUNCTIONS_QUEUE_TTL = 60 * 60 * 24 * 7; // 7 days
 
     public const STATS_RESOURCES_QUEUE_NAME = 'v1-stats-resources';
     public const STATS_RESOURCES_CLASS_NAME = 'StatsResourcesV1';
@@ -39,8 +40,14 @@ class Event
     public const BUILDS_QUEUE_NAME = 'v1-builds';
     public const BUILDS_CLASS_NAME = 'BuildsV1';
 
+    public const SCREENSHOTS_QUEUE_NAME = 'v1-screenshots';
+    public const SCREENSHOTS_CLASS_NAME = 'ScreenshotsV1';
+
     public const MESSAGING_QUEUE_NAME = 'v1-messaging';
     public const MESSAGING_CLASS_NAME = 'MessagingV1';
+
+    public const EXECUTIONS_QUEUE_NAME = 'v1-executions';
+    public const EXECUTIONS_CLASS_NAME = 'ExecutionsV1';
 
     public const MIGRATIONS_QUEUE_NAME = 'v1-migrations';
     public const MIGRATIONS_CLASS_NAME = 'MigrationsV1';
@@ -61,6 +68,8 @@ class Event
 
     /** @var bool Non-critical events will not throw an exception when enqueuing of the event fails. */
     protected bool $critical = true;
+
+    protected int $ttl = 0;
 
     /**
      * @param Publisher $publisher
@@ -109,6 +118,29 @@ class Event
     public function getQueue(): string
     {
         return $this->queue;
+    }
+
+    /**
+     * Set TTL (time-to-live) for jobs in this queue.
+     *
+     * @param int $ttl TTL in seconds
+     * @return static
+     */
+    public function setTTL(int $ttl): static
+    {
+        $this->ttl = $ttl;
+
+        return $this;
+    }
+
+    /**
+     * Get TTL (time-to-live) for jobs in this queue.
+     *
+     * @return int
+     */
+    public function getTTL(): int
+    {
+        return $this->ttl;
     }
 
     /**
@@ -253,7 +285,7 @@ class Event
      *
      * @param string $key
      * @param Document $context
-     * @return self
+     * @return static
      */
     public function setContext(string $key, Document $context): self
     {
@@ -277,7 +309,7 @@ class Event
     /**
      * Set class used for this event.
      * @param string $class
-     * @return self
+     * @return static
      */
     public function setClass(string $class): self
     {
@@ -366,7 +398,7 @@ class Event
         }
 
         /** The getter is required since events like Databases need to override the queue name depending on the project */
-        $queue = new Queue($this->getQueue());
+        $queue = new Queue($this->getQueue(), 'utopia-queue', $this->getTTL());
 
         // Merge the base payload with any trimmed values
         $payload = array_merge($this->preparePayload(), $this->trimPayload());
@@ -427,7 +459,7 @@ class Event
         /**
          * Identify all sections of the pattern.
          */
-        $type = $parts[0] ?? false;
+        $type = $parts[0];
         $resource = $parts[1] ?? false;
         $hasSubResource = $count > 3 && \str_starts_with($parts[3], '[');
         $hasSubSubResource = $count > 5 && \str_starts_with($parts[5], '[') && $hasSubResource;
@@ -486,10 +518,12 @@ class Event
      *
      * @param string $pattern
      * @param array $params
+     * @param ?Document $database
+     * @param ?Document $database
      * @return array
      * @throws \InvalidArgumentException
      */
-    public static function generateEvents(string $pattern, array $params = []): array
+    public static function generateEvents(string $pattern, array $params = [], ?Document $database = null): array
     {
         // $params = \array_filter($params, fn($param) => !\is_array($param));
         $paramKeys = \array_keys($params);
@@ -498,6 +532,12 @@ class Event
         $patterns = [];
 
         $parsed = self::parseEventPattern($pattern);
+        // to switch the resource types from databases to the required prefix
+        // eg; all databases events get fired with databases. prefix which mainly depicts legacy type
+        // so a projection from databases to the actual prefix(documentsdb, vectorsdb,etc)
+        if ((str_contains($pattern, 'databases.') && $database && $database->getAttribute('type') !== 'legacy')) {
+            $parsed = self::getDatabaseTypeEvents($database, $parsed);
+        }
         $type = $parsed['type'];
         $resource = $parsed['resource'];
         $subType = $parsed['subType'];
@@ -597,9 +637,11 @@ class Event
          */
         $eventValues = \array_values($events);
 
-        /**
-         * Return a combined list of table, collection events.
-         */
+        $databaseType = $database?->getAttribute('type', 'legacy');
+        if ($database !== null && !\in_array($databaseType, ['legacy', 'tablesdb'], true)) {
+            return $eventValues;
+        }
+
         return Event::mirrorCollectionEvents($pattern, $eventValues[0], $eventValues);
     }
 
@@ -608,10 +650,8 @@ class Event
      *
      * @param Event $event
      *
-     * @return self
-     *
      */
-    public function from(Event $event): self
+    public function from(Event $event): static
     {
         $this->project = $event->getProject();
         $this->user = $event->getUser();
@@ -624,44 +664,118 @@ class Event
     }
 
     /**
-     * Adds `table` events for `collection` events.
+     * Adds table/collection counterpart events for backward compatibility.
      *
      * Example:
      *
      * `databases.*.collections.*.documents.*.update` →\
      * `[databases.*.collections.*.documents.*.update, databases.*.tables.*.rows.*.update]`
+     *
+     * `databases.*.tables.*.rows.*.update` →\
+     * `[databases.*.tables.*.rows.*.update, databases.*.collections.*.documents.*.update]`
      */
     private static function mirrorCollectionEvents(string $pattern, string $firstEvent, array $events): array
     {
-        $tableEventMap = [
+        $collectionsToTablesMap = [
             'documents'    => 'rows',
             'collections'  => 'tables',
             'attributes'   => 'columns',
         ];
 
+        $tablesToCollectionsMap = [
+            'rows'         => 'documents',
+            'tables'       => 'collections',
+            'columns'      => 'attributes',
+        ];
+
+        $databasesEventMap = [
+            'tablesdb'     => 'databases',
+            'tables'       => 'collections',
+            'rows'         => 'documents',
+            'columns'      => 'attributes'
+        ];
+
         if (
-            str_contains($pattern, 'databases.') &&
-            str_contains($firstEvent, 'collections')
+            (
+                str_contains($pattern, 'databases.') &&
+                (
+                    str_contains($firstEvent, 'collections') ||
+                    str_contains($firstEvent, 'tables')
+                )
+            ) ||
+            (
+                str_contains($firstEvent, 'tablesdb.')
+            )
         ) {
             $pairedEvents = [];
-
             foreach ($events as $event) {
                 $pairedEvents[] = $event;
-
-                if (str_contains($event, 'collections')) {
-                    $tableSideEvent = str_replace(
-                        array_keys($tableEventMap),
-                        array_values($tableEventMap),
-                        $event
-                    );
+                // tablesdb needs databases event with tables and collections
+                if (str_contains($event, 'tablesdb')) {
+                    $databasesSideEvent = self::replaceEventSegments($event, $databasesEventMap);
+                    $pairedEvents[] = $databasesSideEvent;
+                    $tableSideEvent = self::replaceEventSegments($databasesSideEvent, $collectionsToTablesMap);
                     $pairedEvents[] = $tableSideEvent;
+                } elseif (str_contains($event, 'collections')) {
+                    $tableSideEvent = self::replaceEventSegments($event, $collectionsToTablesMap);
+                    $pairedEvents[] = $tableSideEvent;
+                } elseif (str_contains($event, 'tables')) {
+                    $collectionSideEvent = self::replaceEventSegments($event, $tablesToCollectionsMap);
+                    $pairedEvents[] = $collectionSideEvent;
                 }
             }
 
             $events = $pairedEvents;
         }
+        // mirrored events can have duplicates in case of smaller events
+        // array unique can turns list to hasmap in case duplicates present
+        // so forcing array value will turn this to array list always
+        return array_values(array_unique($events));
+    }
 
-        return $events;
+    /**
+     * Replace only exact event path segments, never partial substrings.
+     */
+    private static function replaceEventSegments(string $event, array $map): string
+    {
+        $parts = \explode('.', $event);
+        $parts = \array_map(
+            fn (string $part) => $map[$part] ?? $part,
+            $parts
+        );
+
+        return \implode('.', $parts);
+    }
+
+    /**
+     * Maps event terminology based on database type
+    */
+    private static function getDatabaseTypeEvents(Document $database, array $event): array
+    {
+        $eventMap = [];
+        switch ($database->getAttribute('type')) {
+            case 'tablesdb':
+                $eventMap = [
+                    'databases'    => 'tablesdb',
+                    'documents'    => 'rows',
+                    'collections'  => 'tables',
+                    'attributes'   => 'columns',
+                ];
+                break;
+            case 'documentsdb':
+            case 'vectorsdb':
+                // sending the type itself(eg: documentsdb, vectorsdb)
+                $eventMap = [
+                    'databases'    => $database->getAttribute('type')
+                ];
+                break;
+        }
+        foreach ($event as $eventKey => $eventValue) {
+            if (isset($eventMap[$eventValue])) {
+                $event[$eventKey] = $eventMap[$eventValue];
+            }
+        }
+        return $event;
     }
 
     /**

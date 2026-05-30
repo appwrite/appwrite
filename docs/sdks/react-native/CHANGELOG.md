@@ -1,5 +1,26 @@
 # Change log
 
+## 0.24.0
+
+* Added Query.contains, Query.containsAny, and Query.containsAll for enhanced filtering capabilities.
+
+## 0.23.1
+
+* Add `upsert` method to Realtime `Channels` helper class
+* Fix `bignumber.js` bundler conflict by removing direct dependency in favor of transitive dependency from `json-bigint`
+
+## 0.21.0
+
+* Add `queries` parameter to `client.subscribe()` for filtering Realtime events
+* Fix `Roles` enum removed from Teams service; `roles` parameter now accepts `string[]`
+* Fix parameter detection in overloaded methods to check for optional params (Account, Avatars, Graphql)
+
+## 0.20.0
+
+* Add array-based enum parameters (e.g., `permissions: BrowserPermission[]`).
+* Breaking change: `Output` enum has been removed; use `ImageFormat` instead.
+* Add `Channel` helpers for Realtime.
+
 ## 0.19.0
 
 * Add `getScreenshot` method to `Avatars` service

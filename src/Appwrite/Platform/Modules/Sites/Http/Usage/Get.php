@@ -3,6 +3,7 @@
 namespace Appwrite\Platform\Modules\Sites\Http\Usage;
 
 use Appwrite\Extend\Exception;
+use Appwrite\Platform\Action;
 use Appwrite\Platform\Modules\Compute\Base;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
@@ -14,7 +15,7 @@ use Utopia\Database\Document;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\UID;
-use Utopia\Platform\Action;
+use Utopia\Platform\Enum;
 use Utopia\Platform\Scope\HTTP;
 use Utopia\Validator\WhiteList;
 
@@ -51,8 +52,15 @@ class Get extends Base
                     )
                 ]
             ))
-            ->param('siteId', '', new UID(), 'Site ID.')
-            ->param('range', '30d', new WhiteList(['24h', '30d', '90d']), 'Date range.', true)
+            ->param('siteId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Site ID.', false, ['dbForProject'])
+            ->param('range', '30d', new WhiteList(['24h', '30d', '90d']), 'Date range.', true, enum: new Enum(
+                name: 'UsageRange',
+                map: [
+                    '24h' => 'Twenty Four Hours',
+                    '30d' => 'Thirty Days',
+                    '90d' => 'Ninety Days',
+                ]
+            ))
             ->inject('response')
             ->inject('dbForProject')
             ->inject('authorization')
@@ -121,6 +129,7 @@ class Get extends Base
         $format = match ($days['period']) {
             '1h' => 'Y-m-d\TH:00:00.000P',
             '1d' => 'Y-m-d\T00:00:00.000P',
+            default => throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Unsupported period: ' . $days['period']),
         };
 
         foreach ($metrics as $metric) {

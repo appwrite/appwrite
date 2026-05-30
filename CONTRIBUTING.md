@@ -222,73 +222,51 @@ Appwrite's current structure is a combination of both [Monolithic](https://en.wi
 ```bash
 .
 ├── app # Main application
-│   ├── assets
-│   │   ├── dbip
-│   │   ├── fonts
-│   │   └── security
 │   ├── config # Config files
-│   │   ├── avatars
-│   │   ├── collections
-│   │   ├── locale
-│   │   ├── specs
-│   │   ├── storage
-│   │   └── templates
 │   ├── controllers # API & dashboard controllers
 │   │   ├── api
 │   │   ├── shared
 │   │   └── web
-│   ├── init # DB schemas
-│   │   └── database
-│   └── views # HTML server-side templates
-│       ├── general
-│       └── install
+│   ├── db # DB schemas
+│   ├── sdks # SDKs generated copies (used for generating code examples)
+│   ├── tasks # Server CLI commands
+│   ├── views # HTML server-side templates
+│   └── workers # Background workers
 ├── bin # Server executables (tasks & workers)
-├── dev # Debugger config
+├── docker # Docker related resources and configs
 ├── docs # Docs and tutorials
 │   ├── examples
-│   ├── lists
 │   ├── references
-│   ├── sdks
 │   ├── services
 │   ├── specs
 │   └── tutorials
 ├── public # Public files
+│   ├── dist
 │   ├── fonts
 │   ├── images
-│   ├── sdk-console
-│   ├── sdk-project
-│   └── sdk-web
-├── src # Supporting libraries (each lib has one role, common libs are released as
-│   ├── Appwrite
-│   │   ├── Auth
-│   │   ├── Certificates
-│   │   ├── Deletes
-│   │   ├── Detector
-│   │   ├── Docker
-│   │   ├── Event
-│   │   ├── Extend
-│   │   ├── Functions/Validator
-│   │   ├── GraphQL
-│   │   ├── Hooks
-│   │   ├── Messaging
-│   │   ├── Migration
-│   │   ├── Network
-│   │   ├── OpenSSL
-│   │   ├── Platform
-│   │   ├── Promises
-│   │   ├── PubSub
-│   │   ├── SDK
-│   │   ├── Task/Validator
-│   │   ├── Template
-│   │   ├── Transformation
-│   │   ├── URL
-│   │   ├── Utopia
-│   │   └── Vcs
-│   └── Executor
+│   ├── scripts
+│   └── styles
+├── src # Supporting libraries (each lib has one role, common libs are released as individual projects)
+│   └── Appwrite
+│       ├── Auth
+│       ├── Detector
+│       ├── Docker
+|       ├── DSN
+│       ├── Event
+│       ├── Extend
+│       ├── GraphQL
+│       ├── Messaging
+│       ├── Migration
+│       ├── Network
+│       ├── OpenSSL
+│       ├── Promises
+│       ├── Specification
+│       ├── Task
+│       ├── Template
+│       ├── URL
+│       └── Utopia
 └── tests # End to end & unit tests
-    ├── benchmarks
     ├── e2e
-    ├── extensions
     ├── resources
     └── unit
 ```
@@ -431,14 +409,16 @@ Next follow the appropriate steps below depending on whether you're adding the m
 
 **API**
 
-In file `app/controllers/shared/api.php` On the database listener, add to an existing or create a new switch case. Add a call to the usage worker with your new metric const like so:
+In file `app/controllers/shared/api.php` On the database listener, add to an existing or create a new switch case. Accumulate metrics in the usage context like so:
 
 ```php
       case $document->getCollection() === 'teams':
-            $queueForStatsUsage
-                ->addMetric(METRIC_TEAMS, $value); // per project
+            $usage->addMetric(METRIC_TEAMS, $value); // per project
             break;
 ```
+
+The metrics will be automatically published by the shutdown hook at the end of the request. There is no need to manually trigger or publish.
+
 There are cases when you need to handle metric that has a parent entity, like buckets.
 Files are linked to a parent bucket, you should verify you remove the files stats when you delete a bucket.
 
@@ -447,14 +427,13 @@ In that case you need also to handle children removal using addReduce() method c
 ```php
 
  case $document->getCollection() === 'buckets': //buckets
-            $queueForStatsUsage
-                ->addMetric(METRIC_BUCKETS, $value); // per project
+            $usage->addMetric(METRIC_BUCKETS, $value); // per project
             if ($event === Database::EVENT_DOCUMENT_DELETE) {
-                $queueForStatsUsage
+                $usage
                     ->addReduce($document);
             }
             break;
-  
+
 ```
 
 In addition, you will also need to add some logic to the `reduce()` method of the Usage worker located in `/src/Appwrite/Platform/Workers/Usage.php`, like so:
@@ -482,8 +461,12 @@ case $document->getCollection() === 'buckets':
 
 **Background worker**
 
-You need to inject the usage queue in the desired worker on the constructor method
+You need to inject the usage context and publisher in the desired worker on the constructor method
 ```php
+use Appwrite\Usage\Context;
+use Appwrite\Event\Publisher\Usage as UsagePublisher;
+use Appwrite\Event\Message\Usage as UsageMessage;
+
 /**
 * @throws Exception
 */
@@ -496,24 +479,32 @@ public function __construct()
       ->inject('dbForProject')
       ->inject('queueForFunctions')
       ->inject('queueForEvents')
-      ->inject('queueForStatsUsage')
+      ->inject('usage')
+      ->inject('publisherForUsage')
       ->inject('log')
-      ->callback(fn (Message $message, Database $dbForProject, Func $queueForFunctions, Event $queueForEvents, StatsUsage $queueForStatsUsage, Log $log) => $this->action($message, $dbForProject, $queueForFunctions, $queueForEvents, $queueForStatsUsage, $log));
+      ->callback(fn (Message $message, Database $dbForProject, Func $queueForFunctions, Event $queueForEvents, Context $usage, UsagePublisher $publisherForUsage, Log $log) => $this->action($message, $dbForProject, $queueForFunctions, $queueForEvents, $usage, $publisherForUsage, $log));
 }
 ```
 
-and then trigger the queue with the new metric like so: 
+and then accumulate metrics, create a message, and publish like so:
 
 ```php
-$queueForStatsUsage
+$usage
   ->addMetric(METRIC_BUILDS, 1)
   ->addMetric(METRIC_BUILDS_STORAGE, $build->getAttribute('size', 0))
   ->addMetric(METRIC_BUILDS_COMPUTE, (int)$build->getAttribute('duration', 0) * 1000)
-  ->addMetric(str_replace('{functionInternalId}', $function->getSequence(), METRIC_FUNCTION_ID_BUILDS), 1) 
+  ->addMetric(str_replace('{functionInternalId}', $function->getSequence(), METRIC_FUNCTION_ID_BUILDS), 1)
   ->addMetric(str_replace('{functionInternalId}', $function->getSequence(), METRIC_FUNCTION_ID_BUILDS_STORAGE), $build->getAttribute('size', 0))
-  ->addMetric(str_replace('{functionInternalId}', $function->getSequence(), METRIC_FUNCTION_ID_BUILDS_COMPUTE), (int)$build->getAttribute('duration', 0) * 1000)
-  ->setProject($project)
-  ->trigger();
+  ->addMetric(str_replace('{functionInternalId}', $function->getSequence(), METRIC_FUNCTION_ID_BUILDS_COMPUTE), (int)$build->getAttribute('duration', 0) * 1000);
+
+// Publish the accumulated metrics (workers don't have shutdown hooks)
+$message = new UsageMessage(
+    project: $project,
+    metrics: $usage->getMetrics(),
+    reduce: $usage->getReduce()
+);
+$publisherForUsage->enqueue($message);
+$usage->reset();
 ```
 
 

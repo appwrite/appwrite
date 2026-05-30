@@ -2,8 +2,9 @@
 
 namespace Appwrite\Platform\Modules\Databases\Http\Databases\Collections\Attributes;
 
-use Appwrite\Event\Database as EventDatabase;
 use Appwrite\Event\Event;
+use Appwrite\Event\Message\Database as DatabaseMessage;
+use Appwrite\Event\Publisher\Database as DatabasePublisher;
 use Appwrite\Extend\Exception;
 use Appwrite\Utopia\Response;
 use Appwrite\Utopia\Response as UtopiaResponse;
@@ -19,16 +20,16 @@ use Utopia\Database\Exception\Truncate as TruncateException;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\Structure;
+use Utopia\Http\Adapter\Swoole\Response as SwooleResponse;
 use Utopia\Platform\Action as UtopiaAction;
-use Utopia\Swoole\Response as SwooleResponse;
 use Utopia\Validator\Range;
 
 abstract class Action extends UtopiaAction
 {
     /**
-     * @var string|null The current context (either 'column' or 'attribute')
+     * @var string The current context (either 'column' or 'attribute')
      */
-    private ?string $context = ATTRIBUTES;
+    private string $context = ATTRIBUTES;
 
     /**
      * Get the correct response model.
@@ -241,6 +242,10 @@ abstract class Action extends UtopiaAction
                 ? UtopiaResponse::MODEL_ATTRIBUTE_INTEGER
                 : UtopiaResponse::MODEL_COLUMN_INTEGER,
 
+            Database::VAR_BIGINT => $isCollections
+                ? UtopiaResponse::MODEL_ATTRIBUTE_BIGINT
+                : UtopiaResponse::MODEL_COLUMN_BIGINT,
+
             Database::VAR_FLOAT => $isCollections
                 ? UtopiaResponse::MODEL_ATTRIBUTE_FLOAT
                 : UtopiaResponse::MODEL_COLUMN_FLOAT,
@@ -264,6 +269,22 @@ abstract class Action extends UtopiaAction
             Database::VAR_POLYGON => $isCollections
                 ? UtopiaResponse::MODEL_ATTRIBUTE_POLYGON
                 : UtopiaResponse::MODEL_COLUMN_POLYGON,
+
+            Database::VAR_VARCHAR => $isCollections
+                ? UtopiaResponse::MODEL_ATTRIBUTE_VARCHAR
+                : UtopiaResponse::MODEL_COLUMN_VARCHAR,
+
+            Database::VAR_TEXT => $isCollections
+                ? UtopiaResponse::MODEL_ATTRIBUTE_TEXT
+                : UtopiaResponse::MODEL_COLUMN_TEXT,
+
+            Database::VAR_MEDIUMTEXT => $isCollections
+                ? UtopiaResponse::MODEL_ATTRIBUTE_MEDIUMTEXT
+                : UtopiaResponse::MODEL_COLUMN_MEDIUMTEXT,
+
+            Database::VAR_LONGTEXT => $isCollections
+                ? UtopiaResponse::MODEL_ATTRIBUTE_LONGTEXT
+                : UtopiaResponse::MODEL_COLUMN_LONGTEXT,
 
             Database::VAR_STRING => match ($format) {
                 APP_DATABASE_ATTRIBUTE_EMAIL => $isCollections
@@ -292,7 +313,7 @@ abstract class Action extends UtopiaAction
         };
     }
 
-    protected function createAttribute(string $databaseId, string $collectionId, Document $attribute, Response $response, Database $dbForProject, EventDatabase $queueForDatabase, Event $queueForEvents, Authorization $authorization): Document
+    protected function createAttribute(string $databaseId, string $collectionId, Document $attribute, Response $response, Database $dbForProject, DatabasePublisher $publisherForDatabase, Event $queueForEvents, Authorization $authorization): Document
     {
         $key = $attribute->getAttribute('key');
         $type = $attribute->getAttribute('type', '');
@@ -366,14 +387,14 @@ abstract class Action extends UtopiaAction
                 'filters' => $filters,
                 'options' => $options,
             ]);
+
             if (
                 !$dbForProject->getAdapter()->getSupportForSpatialIndexNull() &&
                 \in_array($attribute->getAttribute('type'), Database::SPATIAL_TYPES) &&
                 $attribute->getAttribute('required')
             ) {
-                $hasData = !$authorization->skip(fn () => $dbForProject
-                    ->findOne('database_' . $db->getSequence() . '_collection_' . $collection->getSequence()))
-                    ->isEmpty();
+                $hasData = $authorization->skip(fn () => $dbForProject
+                    ->count('database_' . $db->getSequence() . '_collection_' . $collection->getSequence())) > 0;
 
                 if ($hasData) {
                     throw new StructureException('Failed to add required spatial column: existing rows present. Make the column optional.');
@@ -444,20 +465,6 @@ abstract class Action extends UtopiaAction
             $dbForProject->purgeCachedCollection('database_' . $db->getSequence() . '_collection_' . $relatedCollection->getSequence());
         }
 
-        $queueForDatabase
-            ->setType(DATABASE_TYPE_CREATE_ATTRIBUTE)
-            ->setDatabase($db);
-
-        if ($this->isCollectionsAPI()) {
-            $queueForDatabase
-                ->setDocument($attribute)
-                ->setCollection($collection);
-        } else {
-            $queueForDatabase
-                ->setRow($attribute)
-                ->setTable($collection);
-        }
-
         $queueForEvents
             ->setContext('database', $db)
             ->setParam('databaseId', $databaseId)
@@ -467,12 +474,24 @@ abstract class Action extends UtopiaAction
             ->setParam('columnId', $attribute->getId())
             ->setContext($this->getCollectionsEventsContext(), $collection);
 
+        $publisherForDatabase->enqueue(new DatabaseMessage(
+            project: $queueForEvents->getProject(),
+            user: $queueForEvents->getUser(),
+            type: DATABASE_TYPE_CREATE_ATTRIBUTE,
+            database: $db,
+            collection: $this->isCollectionsAPI() ? $collection : null,
+            document: $this->isCollectionsAPI() ? $attribute : null,
+            table: $this->isCollectionsAPI() ? null : $collection,
+            row: $this->isCollectionsAPI() ? null : $attribute,
+            events: Event::generateEvents($queueForEvents->getEvent(), $queueForEvents->getParams()),
+        ));
+
         $response->setStatusCode(SwooleResponse::STATUS_CODE_CREATED);
 
         return $attribute;
     }
 
-    protected function updateAttribute(string $databaseId, string $collectionId, string $key, Database $dbForProject, Event $queueForEvents, Authorization $authorization, string $type, int $size = null, string $filter = null, string|bool|int|float|array $default = null, bool $required = null, int|float|null $min = null, int|float|null $max = null, array $elements = null, array $options = [], string $newKey = null): Document
+    protected function updateAttribute(string $databaseId, string $collectionId, string $key, Database $dbForProject, Event $queueForEvents, Authorization $authorization, string $type, ?int $size = null, ?string $filter = null, string|bool|int|float|array|null $default = null, ?bool $required = null, int|float|null $min = null, int|float|null $max = null, ?array $elements = null, array $options = [], ?string $newKey = null): Document
     {
         $db = $authorization->skip(fn () => $dbForProject->getDocument('databases', $databaseId));
 
@@ -524,6 +543,7 @@ abstract class Action extends UtopiaAction
 
         switch ($attribute->getAttribute('format')) {
             case APP_DATABASE_ATTRIBUTE_INT_RANGE:
+            case APP_DATABASE_ATTRIBUTE_BIGINT_RANGE:
             case APP_DATABASE_ATTRIBUTE_FLOAT_RANGE:
                 $min ??= $attribute->getAttribute('formatOptions')['min'];
                 $max ??= $attribute->getAttribute('formatOptions')['max'];
@@ -532,14 +552,15 @@ abstract class Action extends UtopiaAction
                     throw new Exception($this->getInvalidValueException(), 'Minimum value must be lesser than maximum value');
                 }
 
-                if ($attribute->getAttribute('format') === APP_DATABASE_ATTRIBUTE_INT_RANGE) {
-                    $validator = new Range($min, $max, Database::VAR_INTEGER);
-                } else {
+                if ($attribute->getAttribute('format') === APP_DATABASE_ATTRIBUTE_FLOAT_RANGE) {
                     $validator = new Range($min, $max, Database::VAR_FLOAT);
 
                     if (!is_null($default)) {
                         $default = \floatval($default);
                     }
+                } else {
+                    // intRange and bigintRange share the same integer range semantics
+                    $validator = new Range($min, $max, Range::TYPE_INTEGER);
                 }
 
                 if (!is_null($default) && !$validator->isValid($default)) {

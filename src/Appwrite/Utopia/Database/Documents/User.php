@@ -17,7 +17,7 @@ class User extends Document
     public const ROLE_ADMIN = 'admin';
     public const ROLE_DEVELOPER = 'developer';
     public const ROLE_OWNER = 'owner';
-    public const ROLE_APPS = 'apps';
+    public const ROLE_KEYS = 'keys';
     public const ROLE_SYSTEM = 'system';
 
     public function getEmail(): ?string
@@ -39,7 +39,7 @@ class User extends Document
     {
         $roles = [];
 
-        if (!$this->isPrivileged($authorization->getRoles()) && !$this->isApp($authorization->getRoles())) {
+        if (!$this->isKey($authorization->getRoles())) {
             if ($this->getId()) {
                 $roles[] = Role::user($this->getId())->toString();
                 $roles[] = Role::users()->toString();
@@ -86,7 +86,6 @@ class User extends Document
     /**
      * Check if user is anonymous.
      *
-     * @param Document $this
      * @return bool
      */
     public function isAnonymous(): bool
@@ -102,7 +101,7 @@ class User extends Document
      *
      * @return bool
      */
-    public static function isPrivileged(array $roles): bool
+    public function isPrivileged(array $roles): bool
     {
         if (
             in_array(self::ROLE_OWNER, $roles) ||
@@ -116,22 +115,22 @@ class User extends Document
     }
 
     /**
-     * Is App User?
+     * Is Key User?
      *
      * @param array<string> $roles
      *
      * @return bool
      */
-    public static function isApp(array $roles): bool
+    public function isKey(array $roles): bool
     {
-        if (in_array(self::ROLE_APPS, $roles)) {
+        if (in_array(self::ROLE_KEYS, $roles)) {
             return true;
         }
 
         return false;
     }
 
-    public function tokenVerify(int $type = null, string $secret, Proof $proofForToken): false|Document
+    public function tokenVerify(?int $type, string $secret, Proof $proofForToken): false|Document
     {
         $tokens = $this->getAttribute('tokens', []);
         foreach ($tokens as $token) {
@@ -153,7 +152,6 @@ class User extends Document
     /**
      * Verify session and check that its not expired.
      *
-     * @param array<Document> $sessions
      * @param string $secret
      *
      * @return bool|string
@@ -173,8 +171,6 @@ class User extends Document
                 return $session->getId();
             }
         }
-
-        return false;
 
         return false;
     }

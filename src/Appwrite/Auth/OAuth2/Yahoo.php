@@ -23,8 +23,9 @@ class Yahoo extends OAuth2
      * @var array
      */
     protected array $scopes = [
-        'sdct-r',
-        'sdpp-w',
+        'openid',
+        'profile',
+        'email',
     ];
 
     /**
@@ -155,7 +156,7 @@ class Yahoo extends OAuth2
     /**
      * Check if the OAuth email is verified
      *
-     * If present, the email is verified. This was verfied through a manual Yahoo sign up process
+     * If present, the email is verified. This was verified through a manual Yahoo sign up process
      *
      * @param string $accessToken
      *

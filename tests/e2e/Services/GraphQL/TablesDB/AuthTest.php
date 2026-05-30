@@ -18,7 +18,6 @@ class AuthTest extends Scope
     use Base;
 
     private array $account1;
-    private array $account2;
 
     private string $token1;
     private string $token2;
@@ -140,7 +139,17 @@ class AuthTest extends Scope
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ], $gqlPayload);
 
-        sleep(1);
+        $databaseId = $this->database['body']['data']['databasesCreate']['_id'];
+        $tableId = $this->table['body']['data']['tablesDBCreateTable']['_id'];
+
+        $this->assertEventually(function () use ($databaseId, $tableId) {
+            $response = $this->client->call(Client::METHOD_GET, '/tablesdb/' . $databaseId . '/tables/' . $tableId . '/columns/name', array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+                'x-appwrite-key' => $this->getProject()['apiKey'],
+            ]));
+            $this->assertEquals('available', $response['body']['status']);
+        }, 30000, 250);
     }
 
     public function testInvalidAuth()

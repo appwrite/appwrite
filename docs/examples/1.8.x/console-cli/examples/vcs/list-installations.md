@@ -1,1 +1,0 @@
-appwrite vcs list-installations

@@ -6,15 +6,9 @@ use DeviceDetector\DeviceDetector;
 
 class Detector
 {
-    /**
-     * @param string
-     */
     protected $userAgent = '';
 
-    /**
-     * @param DeviceDetector
-     */
-    protected $detctor;
+    protected $detector;
 
     /**
      * @param string $userAgent
@@ -93,19 +87,19 @@ class Detector
      */
     protected function getDetector(): DeviceDetector
     {
-        if (!$this->detctor) {
-            $this->detctor = new DeviceDetector($this->userAgent);
+        if (!$this->detector) {
+            $this->detector = new DeviceDetector($this->userAgent);
             $this->detctor->skipBotDetection(); // OPTIONAL: If called, bot detection will completely be skipped (bots will be detected as regular devices then)
             $this->detctor->parse();
         }
 
-        return $this->detctor;
+        return $this->detector;
     }
 
     /**
      * Sets whether to skip bot detection.
      * It is needed if we want bots to be processed as a simple clients. So we can detect if it is mobile client,
-     * or desktop, or enything else. By default all this information is not retrieved for the bots.
+     * or desktop, or anything else. By default all this information is not retrieved for the bots.
      *
      * @param bool $skip
      */

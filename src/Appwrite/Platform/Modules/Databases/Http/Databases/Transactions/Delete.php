@@ -2,7 +2,8 @@
 
 namespace Appwrite\Platform\Modules\Databases\Http\Databases\Transactions;
 
-use Appwrite\Event\Delete as DeleteEvent;
+use Appwrite\Event\Message\Delete as DeleteMessage;
+use Appwrite\Event\Publisher\Delete as DeletePublisher;
 use Appwrite\Extend\Exception;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\ContentType;
@@ -10,8 +11,9 @@ use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response as UtopiaResponse;
 use Utopia\Database\Database;
+use Utopia\Database\Document;
 use Utopia\Database\Validator\UID;
-use Utopia\Swoole\Response as SwooleResponse;
+use Utopia\Http\Adapter\Swoole\Response as SwooleResponse;
 
 class Delete extends Action
 {
@@ -48,14 +50,15 @@ class Delete extends Action
                 ],
                 contentType: ContentType::NONE
             ))
-            ->param('transactionId', '', new UID(), 'Transaction ID.')
+            ->param('transactionId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Transaction ID.', false, ['dbForProject'])
             ->inject('response')
             ->inject('dbForProject')
-            ->inject('queueForDeletes')
+            ->inject('publisherForDeletes')
+            ->inject('project')
             ->callback($this->action(...));
     }
 
-    public function action(string $transactionId, UtopiaResponse $response, Database $dbForProject, DeleteEvent $queueForDeletes): void
+    public function action(string $transactionId, UtopiaResponse $response, Database $dbForProject, DeletePublisher $publisherForDeletes, Document $project): void
     {
         $transaction = $dbForProject->getDocument('transactions', $transactionId);
 
@@ -65,9 +68,11 @@ class Delete extends Action
 
         $dbForProject->deleteDocument('transactions', $transactionId);
 
-        $queueForDeletes
-            ->setType(DELETE_TYPE_DOCUMENT)
-            ->setDocument($transaction);
+        $publisherForDeletes->enqueue(new DeleteMessage(
+            project: $project,
+            type: DELETE_TYPE_DOCUMENT,
+            document: $transaction,
+        ));
 
         $response->noContent();
     }

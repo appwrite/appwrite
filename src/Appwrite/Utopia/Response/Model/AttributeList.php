@@ -19,6 +19,9 @@ class AttributeList extends Model
             ->addRule('attributes', [
                 'type' => [
                     Response::MODEL_ATTRIBUTE_BOOLEAN,
+                    // BigInt must come before Integer: response model dispatch is "first match wins",
+                    // and Integer matches all int types (including bigint), while BigInt is more specific (size=8).
+                    Response::MODEL_ATTRIBUTE_BIGINT,
                     Response::MODEL_ATTRIBUTE_INTEGER,
                     Response::MODEL_ATTRIBUTE_FLOAT,
                     Response::MODEL_ATTRIBUTE_EMAIL,
@@ -30,7 +33,11 @@ class AttributeList extends Model
                     Response::MODEL_ATTRIBUTE_POINT,
                     Response::MODEL_ATTRIBUTE_LINE,
                     Response::MODEL_ATTRIBUTE_POLYGON,
-                    Response::MODEL_ATTRIBUTE_STRING // needs to be last, since its condition would dominate any other string attribute
+                    Response::MODEL_ATTRIBUTE_VARCHAR,
+                    Response::MODEL_ATTRIBUTE_TEXT,
+                    Response::MODEL_ATTRIBUTE_MEDIUMTEXT,
+                    Response::MODEL_ATTRIBUTE_LONGTEXT,
+                    Response::MODEL_ATTRIBUTE_STRING, // needs to be last, since its condition would dominate any other string attribute
                 ],
                 'description' => 'List of attributes.',
                 'default' => [],
