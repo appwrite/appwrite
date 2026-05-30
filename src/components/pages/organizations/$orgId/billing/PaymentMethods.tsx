@@ -1,5 +1,10 @@
 import { useMemo, useState } from 'react'
 import { CreditCard, Plus, Info } from '@/lib/icons'
+import { PaymentMethodBrandAvatar } from '@/components/global/shared/PaymentMethodBrandAvatar'
+import {
+  warningAlertContainerClassName,
+  warningAlertTextClassName,
+} from '@/components/global/shared/WarningAlert'
 import { Trash2, Star, ArrowLeftRight } from 'lucide-react'
 import { MenuItemContent, MenuItemIcon } from '@/components/global/shared/ContextMenuIcon'
 import { RowActionsMenuTrigger } from '@/components/global/shared/RowActionsMenuTrigger'
@@ -319,9 +324,7 @@ export function PaymentMethods({
                     className="flex items-center justify-between rounded-lg border border-border bg-muted/20 px-4 py-3"
                   >
                     <div className="flex items-center gap-3 min-w-0">
-                      <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-muted shrink-0">
-                        <CreditCard className="h-4 w-4 text-muted-foreground" />
-                      </div>
+                      <PaymentMethodBrandAvatar brand={pm.brand} />
                       <div className="min-w-0">
                         <p className="text-[13px] font-medium text-foreground truncate">
                           {pm.brand} {maskCardNumber(pm.last4 || '')}
@@ -544,20 +547,8 @@ function PaymentMethodCard({
 
   return (
     <div className="flex items-center justify-between px-6 py-4 hover:bg-accent/50 transition-colors">
-      <div className="flex items-center gap-4">
-        <div
-          className={cn(
-            'flex h-10 w-10 items-center justify-center rounded-lg',
-            isPrimary ? 'bg-primary/10' : 'bg-muted',
-          )}
-        >
-          <CreditCard
-            className={cn(
-              'h-5 w-5',
-              isPrimary ? 'text-primary' : 'text-muted-foreground',
-            )}
-          />
-        </div>
+      <div className="flex items-center gap-2">
+        <PaymentMethodBrandAvatar brand={method.brand} />
         <div>
           <div className="flex items-center gap-2">
             <p className="text-[13px] font-medium text-foreground">
@@ -585,9 +576,16 @@ function PaymentMethodCard({
             </p>
           )}
           {errorMessage && (
-            <p className="text-[11px] text-red-600 dark:text-red-400 mt-0.5">
-              {errorMessage}
-            </p>
+            <div
+              className={cn(
+                'mt-1.5 rounded-md border px-2 py-1',
+                warningAlertContainerClassName,
+              )}
+            >
+              <p className={cn('text-[11px]', warningAlertTextClassName)}>
+                {errorMessage}
+              </p>
+            </div>
           )}
         </div>
       </div>

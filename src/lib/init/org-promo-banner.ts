@@ -8,10 +8,9 @@ export type InitOrgPromoBannerContent = {
   eventId: string
   phase: InitOrgPromoPhase
   dateRangeLabel: string
-  headline: string
-  description: string
+  message: string
   cta: LaunchEventCta
-  badgeLabel: string
+  badgeLabel?: string
 }
 
 function resolveInitOrgPromoPhase(
@@ -41,20 +40,17 @@ export function resolveInitOrgPromoBanner(
         eventId: event.id,
         phase,
         dateRangeLabel: event.dateRangeLabel,
-        headline: event.headline,
-        description:
-          'A week of product launches, live sessions, and community events. Claim your ticket to join.',
+        message:
+          'A week of launches, live sessions, and community events. Claim your ticket to join.',
         cta: event.primaryCta,
-        badgeLabel: 'Coming soon',
       }
     case 'during':
       return {
         eventId: event.id,
         phase,
         dateRangeLabel: event.dateRangeLabel,
-        headline: 'Init is live',
-        description:
-          'Join launch week - live sessions, product drops, and community giveaways.',
+        message:
+          'Launch week is live. Follow daily drops, live sessions, and giveaways.',
         cta: { label: 'Join Init', to: '/init' },
         badgeLabel: 'Live',
       }
@@ -63,10 +59,9 @@ export function resolveInitOrgPromoBanner(
         eventId: event.id,
         phase,
         dateRangeLabel: event.dateRangeLabel,
-        headline: event.recap?.headline ?? 'Init recap',
-        description:
+        message:
           event.recap?.bannerMessage ??
-          `${event.dateRangeLabel} has ended. Catch up on every launch and session replay.`,
+          'Init week has ended. Explore every launch and session replay.',
         cta: { label: 'View recap', to: '/init' },
         badgeLabel: 'Recap',
       }

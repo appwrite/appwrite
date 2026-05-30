@@ -159,8 +159,8 @@ export function SupportPopover({ orgId }: SupportPopoverProps) {
   const handleUpgrade = () => {
     if (orgId) {
       navigate({
-        to: '/organizations/$orgId/change-plan',
-        params: { orgId },
+        to: '/upgrade',
+        search: { orgId },
       })
     }
   }

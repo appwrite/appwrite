@@ -70,12 +70,11 @@ export function UpgradeCurtain({
     const finalOrgId = getOrgIdFromUrl()
     if (finalOrgId) {
       navigate({
-        to: '/organizations/$orgId/change-plan',
-        params: { orgId: finalOrgId },
+        to: '/upgrade',
+        search: { orgId: finalOrgId },
       })
     } else {
-      // Fallback: navigate to organizations page
-      navigate({ to: '/organizations' })
+      navigate({ to: '/upgrade' })
     }
   }
 

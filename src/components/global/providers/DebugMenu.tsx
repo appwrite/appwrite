@@ -525,6 +525,15 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
             },
             icon: <Bug className="h-3 w-3" />,
           },
+          {
+            label: 'Org setup wizard',
+            description: 'Preview the organization creation setup progress stage.',
+            onClick: () => {
+              navigate({ to: '/debug/org-setup-preview' })
+              setIsOpen(false)
+            },
+            icon: <Loader2 className="h-3 w-3" />,
+          },
         ],
       },
       {

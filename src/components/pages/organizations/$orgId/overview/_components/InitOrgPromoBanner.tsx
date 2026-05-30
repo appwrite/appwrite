@@ -3,14 +3,12 @@ import { Link } from '@tanstack/react-router'
 import { InitHeroBackground } from '@/components/pages/init/_components/InitHeroBackground'
 import { InitWordmark } from '@/components/pages/init/_components/InitWordmark'
 import { Badge } from '@/components/ui/badge'
-import { Button } from '@/components/ui/button'
 import { useDebugOverrides } from '@/lib/debug-overrides'
 import {
   getInitOrgPromoBannerContent,
   type InitOrgPromoPhase,
 } from '@/lib/init/org-promo-banner'
 import type { LaunchEventCta } from '@/lib/init/types'
-import { cn } from '@/lib/utils'
 import type { ReactNode } from 'react'
 
 const BADGE_VARIANT: Record<
@@ -69,59 +67,62 @@ export function InitOrgPromoBanner() {
   if (!content) return null
 
   return (
-    <div className="border-b border-border">
+    <div className="overflow-visible border-b border-border">
       <div
         ref={bannerRef}
-        className="relative min-h-[88px] overflow-hidden bg-background"
+        className="group/banner relative min-h-14 overflow-visible bg-background [clip-path:inset(0_-100vw_0_-100vw)]"
       >
-        <InitHeroBackground containerRef={bannerRef} compact active />
+        <InitHeroBackground
+          containerRef={bannerRef}
+          compact
+          fullWidthMotion
+          active
+        />
+
+        <div
+          aria-hidden
+          className="pointer-events-none absolute inset-0 z-[1] bg-muted/0 transition-colors duration-300 ease-out group-hover/banner:bg-muted/30"
+        />
 
         <InitOrgPromoBannerLink
           cta={content.cta}
-          className="group relative z-10 mx-auto flex min-h-[88px] w-full max-w-7xl cursor-pointer items-center gap-3 px-4 py-3 transition-opacity hover:opacity-90 sm:gap-4 sm:px-6"
+          className="relative z-10 mx-auto flex min-h-14 w-full max-w-7xl cursor-pointer items-center justify-center gap-2 px-4 py-3 sm:gap-2.5 sm:px-6"
         >
-          <div className="flex min-w-0 shrink-0 items-center gap-2 sm:gap-3">
-            <InitWordmark className="shrink-0 text-[22px] text-foreground sm:text-[26px]" />
-            <span className="hidden text-[10px] font-semibold uppercase tracking-[0.2em] text-muted-foreground sm:inline">
-              {content.dateRangeLabel}
-            </span>
-          </div>
-
-          <div className="hidden min-w-0 flex-1 items-center gap-2 md:flex">
-            <Badge
-              variant={BADGE_VARIANT[content.phase]}
-              className="text-[10px] shrink-0"
-            >
-              {content.badgeLabel}
-            </Badge>
-            <p className="min-w-0 truncate text-[13px] text-muted-foreground">
-              <span className="font-medium text-foreground">
-                {content.headline}
+          <InitWordmark className="shrink-0 text-[20px] text-foreground transition-colors duration-300 ease-out group-hover/banner:text-foreground sm:text-[22px]" />
+          <span
+            aria-hidden
+            className="hidden shrink-0 text-muted-foreground/40 sm:inline"
+          >
+            ·
+          </span>
+          <span className="hidden shrink-0 text-[10px] font-semibold uppercase tracking-[0.2em] text-muted-foreground md:inline">
+            {content.dateRangeLabel}
+          </span>
+          {content.badgeLabel ? (
+            <>
+              <span
+                aria-hidden
+                className="hidden shrink-0 text-muted-foreground/40 md:inline"
+              >
+                ·
               </span>
-              <span className="hidden lg:inline">
-                {' '}
-                - {content.description}
-              </span>
-            </p>
-          </div>
-
-          <div className="ml-auto flex shrink-0 items-center gap-2">
-            <Badge
-              variant={BADGE_VARIANT[content.phase]}
-              className={cn('text-[10px] shrink-0 md:hidden')}
-            >
-              {content.badgeLabel}
-            </Badge>
-            <Button
-              variant="brandCta"
-              size="sm"
-              className="pointer-events-none h-8 text-[13px]"
-              tabIndex={-1}
-              aria-hidden
-            >
-              {content.cta.label}
-            </Button>
-          </div>
+              <Badge
+                variant={BADGE_VARIANT[content.phase]}
+                className="text-[10px] shrink-0"
+              >
+                {content.badgeLabel}
+              </Badge>
+            </>
+          ) : null}
+          <span
+            aria-hidden
+            className="hidden shrink-0 text-muted-foreground/40 sm:inline"
+          >
+            ·
+          </span>
+          <p className="min-w-0 truncate text-[13px] text-muted-foreground transition-colors duration-300 ease-out group-hover/banner:text-foreground/80">
+            {content.message}
+          </p>
         </InitOrgPromoBannerLink>
       </div>
     </div>

@@ -15,6 +15,7 @@ import {
 } from 'lucide-react'
 import { Link } from '@tanstack/react-router'
 import { MenuItemContent, MenuItemIcon } from '@/components/global/shared/ContextMenuIcon'
+import { PaymentMethodBrandAvatar } from '@/components/global/shared/PaymentMethodBrandAvatar'
 import { RowActionsMenuTrigger } from '@/components/global/shared/RowActionsMenuTrigger'
 import { Button } from '@/components/ui/button'
 import {
@@ -265,9 +266,7 @@ export function AccountPaymentMethods({
                     >
                       <TableCell className="px-4 py-3">
                         <div className="flex items-center gap-3">
-                          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-muted">
-                            <CreditCard className="h-4 w-4 text-muted-foreground" />
-                          </div>
+                          <PaymentMethodBrandAvatar brand={method.brand} />
                           <div className="min-w-0">
                             <p className="text-[13px] font-medium text-foreground">
                               {method.brand} ••••{method.last4}

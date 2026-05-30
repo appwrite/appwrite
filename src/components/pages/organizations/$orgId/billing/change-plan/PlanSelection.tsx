@@ -1,20 +1,54 @@
+import { useState } from 'react'
 import type { BillingPlanTier } from '@/lib/constants/billing-plan'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from '@/components/ui/collapsible'
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
 import { Label } from '@/components/ui/label'
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from '@/components/ui/tooltip'
-import { Info, ExternalLink } from '@/lib/icons'
+import { ChevronDown, Info, ExternalLink } from '@/lib/icons'
 import {
   getPlanNameFromTier,
   resolveOrganizationPlanDisplayLabel,
 } from '@/lib/utils/plan-filter'
 import { cn } from '@/lib/utils'
+
+const CONTACT_SALES_URL =
+  import.meta.env.VITE_CONTACT_SALES_URL ||
+  'https://appwrite.io/contact-us/enterprise'
+
+const ENTERPRISE_INTRO =
+  'Custom plans for teams that need negotiated limits, compliance, premium support, and tailored billing.'
+
+const ENTERPRISE_WHO_SHOULD_REACH_OUT = [
+  'Organizations with compliance or procurement requirements',
+  'Companies needing annual contracts, custom SLAs, or dedicated support',
+  'Teams that need custom resource limits or volume pricing',
+]
+
+const ENTERPRISE_WHEN_TO_REACH_OUT = [
+  'When you need SOC 2, BAA, 24/7 support, or a success manager',
+  'During vendor review, security assessment, or enterprise procurement',
+  'When pay-as-you-go plans do not meet your support or billing needs',
+]
+
+const planCardShellClassName =
+  'flex items-start gap-4 rounded-lg border p-4 transition-colors'
+const planCardBodyClassName = 'flex-1 min-w-0'
+
+const planCardContentClassName = 'space-y-1.5'
+const planTitleRowClassName = 'flex items-center gap-2 flex-wrap'
+const planListClassName = 'grid gap-3'
+
+const ENTERPRISE_COLLAPSED_HINT =
+  'Need compliance, custom SLAs, or volume pricing?'
+
+const FREE_PLAN_UNAVAILABLE_DESCRIPTION =
+  'Free plan unavailable. Your account already has a free organization.'
 
 interface PlanSelectionProps {
   plans: Record<string, unknown>
@@ -23,6 +57,7 @@ interface PlanSelectionProps {
   onPlanSelect: (plan: BillingPlanTier) => void
   selfService: boolean
   hasFreeOrgs: boolean
+  isCreateMode?: boolean
   variant?: 'card' | 'inline'
 }
 
@@ -33,12 +68,18 @@ export function PlanSelection({
   onPlanSelect,
   selfService,
   hasFreeOrgs,
+  isCreateMode = false,
   variant = 'card',
 }: PlanSelectionProps) {
+  const [enterpriseOpen, setEnterpriseOpen] = useState(false)
   const availablePlans =
     plans && typeof plans === 'object' ? Object.entries(plans) : []
 
+  const isOrganizationOnFreePlan =
+    !isCreateMode && getPlanNameFromTier(currentPlan as string) === 'free'
+
   const isCurrentPlan = (planTier: string) => {
+    if (isCreateMode) return false
     return (
       planTier === currentPlan ||
       getPlanNameFromTier(planTier) ===
@@ -50,11 +91,141 @@ export function PlanSelection({
     return getPlanNameFromTier(planTier) === 'free'
   }
 
+  const isFreeDisabledByAccountLimit = (planTier: string) =>
+    selfService &&
+    isFreePlan(planTier) &&
+    hasFreeOrgs &&
+    (isCreateMode || !isOrganizationOnFreePlan)
+
   const isDisabled = (planTier: string) => {
     if (!selfService) return true
-    if (isFreePlan(planTier) && hasFreeOrgs) return true
+    if (isFreeDisabledByAccountLimit(planTier)) return true
     return false
   }
+
+  const isEnterpriseCurrent =
+    getPlanNameFromTier(currentPlan as string) === 'custom' ||
+    (currentPlan as string).toLowerCase() === 'enterprise'
+
+  const enterpriseDetails = (
+    <>
+      <div className="border-t border-border" />
+      <div className="px-6 py-5 grid gap-6 sm:grid-cols-2">
+        <div>
+          <p className="text-[13px] font-medium text-foreground">
+            Who should reach out
+          </p>
+          <ul className="mt-2 space-y-2 text-[13px] text-muted-foreground leading-relaxed list-disc pl-4">
+            {ENTERPRISE_WHO_SHOULD_REACH_OUT.map((item) => (
+              <li key={item}>{item}</li>
+            ))}
+          </ul>
+        </div>
+        <div>
+          <p className="text-[13px] font-medium text-foreground">
+            When to reach out
+          </p>
+          <ul className="mt-2 space-y-2 text-[13px] text-muted-foreground leading-relaxed list-disc pl-4">
+            {ENTERPRISE_WHEN_TO_REACH_OUT.map((item) => (
+              <li key={item}>{item}</li>
+            ))}
+          </ul>
+        </div>
+      </div>
+    </>
+  )
+
+  const contactSalesButton = (
+    <Button
+      variant="outline"
+      size="sm"
+      className="h-8 shrink-0 text-[13px]"
+      asChild
+    >
+      <a
+        href={CONTACT_SALES_URL}
+        target="_blank"
+        rel="noopener noreferrer"
+      >
+        Contact sales
+      </a>
+    </Button>
+  )
+
+  const enterpriseSection = isCreateMode ? (
+    <Collapsible
+      open={enterpriseOpen}
+      onOpenChange={setEnterpriseOpen}
+      className="mt-8 rounded-xl border border-border bg-card/50 overflow-hidden"
+    >
+      <div className="px-6 py-5">
+        <div className="flex items-start justify-between gap-6">
+          <div className="min-w-0 flex-1 space-y-2">
+            <span className="text-[15px] font-semibold text-foreground">
+              Enterprise
+            </span>
+            <p className="text-[13px] text-muted-foreground leading-relaxed">
+              {ENTERPRISE_COLLAPSED_HINT}
+            </p>
+          </div>
+          {contactSalesButton}
+        </div>
+      </div>
+
+      <CollapsibleContent>
+        <div className="border-t border-border px-6 py-4">
+          <p className="text-[13px] text-muted-foreground leading-relaxed">
+            {ENTERPRISE_INTRO}
+          </p>
+        </div>
+        {enterpriseDetails}
+      </CollapsibleContent>
+
+      <CollapsibleTrigger asChild>
+        <button
+          type="button"
+          className="flex w-full cursor-pointer items-center justify-between gap-3 border-t border-border px-6 py-3 text-[13px] text-muted-foreground transition-colors hover:bg-muted/30 hover:text-foreground"
+        >
+          <span>
+            {enterpriseOpen ? 'Show less' : 'Learn more'}
+          </span>
+          <ChevronDown
+            className={cn(
+              'h-4 w-4 shrink-0 transition-transform duration-200',
+              enterpriseOpen && 'rotate-180',
+            )}
+          />
+        </button>
+      </CollapsibleTrigger>
+    </Collapsible>
+  ) : (
+    <div className="mt-10 rounded-xl border border-border bg-card/50 overflow-hidden">
+      <div className="px-6 py-5">
+        <div className="flex items-start justify-between gap-6">
+          <div className="min-w-0 flex-1 space-y-2">
+            <div className={planTitleRowClassName}>
+              <span className="text-[15px] font-semibold text-foreground">
+                Enterprise
+              </span>
+              {isEnterpriseCurrent && (
+                <Badge
+                  variant="info"
+                  className="text-[10px] font-medium px-2 py-0.5 h-5 shrink-0"
+                >
+                  Current plan
+                </Badge>
+              )}
+            </div>
+            <p className="text-[13px] text-muted-foreground leading-relaxed">
+              {ENTERPRISE_INTRO}
+            </p>
+          </div>
+          {contactSalesButton}
+        </div>
+      </div>
+      {enterpriseDetails}
+    </div>
+  )
 
   const radioGroupContent = (
     <>
@@ -73,108 +244,115 @@ export function PlanSelection({
       <RadioGroup
         value={selectedPlan || undefined}
         onValueChange={(value) => onPlanSelect(value as BillingPlanTier)}
-        className="space-y-2"
+        className={planListClassName}
       >
         {availablePlans.map(([planTier, planData]) => {
-          // Use plan name from API response, fallback to derived name
-          const planName = resolveOrganizationPlanDisplayLabel({
-            billingPlan: planTier,
-            planName: (planData as { name?: string } | undefined)?.name ?? null,
-            planId: (planData as { $id?: string } | undefined)?.$id,
-          })
-          const disabled = isDisabled(planTier)
-          const isCurrent = isCurrentPlan(planTier)
-          const price = planData?.price || 0
-          // API uses 'desc' not 'description'
-          const description = planData?.desc || planData?.description
-          const isSelected = selectedPlan === planTier
-          const showTooltip = disabled && isFreePlan(planTier) && hasFreeOrgs
+            // Use plan name from API response, fallback to derived name
+            const planName = resolveOrganizationPlanDisplayLabel({
+              billingPlan: planTier,
+              planName:
+                (planData as { name?: string } | undefined)?.name ?? null,
+              planId: (planData as { $id?: string } | undefined)?.$id,
+            })
+            const disabled = isDisabled(planTier)
+            const isCurrent = isCurrentPlan(planTier)
+            const price = planData?.price || 0
+            // API uses 'desc' not 'description'
+            const description = planData?.desc || planData?.description
+            const planDescription = isFreeDisabledByAccountLimit(planTier)
+              ? FREE_PLAN_UNAVAILABLE_DESCRIPTION
+              : description
+            const isSelected = selectedPlan === planTier
+            const isRecommendedPlan = getPlanNameFromTier(planTier) === 'pro'
 
-          const planCardContent = (
-            <>
-              <RadioGroupItem
-                value={planTier}
-                id={planTier}
-                disabled={disabled}
-                className="mt-0.5 shrink-0 pointer-events-none"
-              />
-              <Label
-                htmlFor={planTier}
+            const handleSelect = () => {
+              if (disabled) return
+              onPlanSelect(planTier as BillingPlanTier)
+            }
+
+            return (
+              <div
+                key={planTier}
+                role="radio"
+                aria-checked={isSelected}
+                aria-disabled={disabled}
+                tabIndex={disabled ? -1 : 0}
+                onClick={handleSelect}
+                onKeyDown={(event) => {
+                  if (disabled) return
+                  if (event.key === 'Enter' || event.key === ' ') {
+                    event.preventDefault()
+                    handleSelect()
+                  }
+                }}
                 className={cn(
-                  'flex-1 cursor-pointer min-w-0 pointer-events-none',
-                  disabled && 'cursor-not-allowed',
+                  planCardShellClassName,
+                  isSelected
+                    ? 'border-primary bg-card'
+                    : 'border-border bg-card/50 hover:border-primary/30',
+                  disabled
+                    ? 'cursor-not-allowed opacity-50'
+                    : 'cursor-pointer',
                 )}
               >
-                <div className="space-y-0.5">
-                  {/* Plan Name - on its own line */}
-                  <div className="flex items-center gap-2 flex-wrap">
-                    <span className="text-[15px] font-semibold text-foreground">
-                      {planName}
-                    </span>
-                    {isCurrent && (
-                      <Badge
-                        variant="info"
-                        className="text-[10px] font-medium px-2 py-0.5 h-5 shrink-0"
-                      >
-                        Current plan
-                      </Badge>
-                    )}
-                  </div>
-
-                  {/* Description - on its own line */}
-                  {description && (
-                    <p className="text-[13px] text-muted-foreground leading-snug">
-                      {description}
-                    </p>
+                <RadioGroupItem
+                  value={planTier}
+                  id={planTier}
+                  disabled={disabled}
+                  className="mt-0.5 shrink-0 pointer-events-none"
+                />
+                <Label
+                  htmlFor={planTier}
+                  className={cn(
+                    planCardBodyClassName,
+                    'pointer-events-none',
+                    disabled ? 'cursor-not-allowed' : 'cursor-pointer',
                   )}
+                >
+                  <div className={planCardContentClassName}>
+                    <div className={planTitleRowClassName}>
+                      <span className="text-[15px] font-semibold text-foreground">
+                        {planName}
+                      </span>
+                      {isRecommendedPlan && !isCurrent && (
+                        <Badge
+                          variant="success"
+                          className="text-[10px] font-medium px-2 py-0.5 h-5 shrink-0"
+                        >
+                          Recommended
+                        </Badge>
+                      )}
+                      {isCurrent && (
+                        <Badge
+                          variant="info"
+                          className="text-[10px] font-medium px-2 py-0.5 h-5 shrink-0"
+                        >
+                          Current plan
+                        </Badge>
+                      )}
+                    </div>
 
-                  {/* Price - on its own line */}
-                  <div className="text-[13px] font-medium text-foreground">
-                    {price > 0 ? (
-                      <span>${price.toFixed(2)} per month + usage</span>
-                    ) : (
-                      <span>$0.00</span>
+                    {planDescription && (
+                      <p className="text-[13px] text-muted-foreground leading-snug">
+                        {planDescription}
+                      </p>
                     )}
+
+                    <div className="text-[13px] font-medium text-foreground">
+                      {price > 0 ? (
+                        <span>${price.toFixed(2)} per month</span>
+                      ) : (
+                        <span>$0.00</span>
+                      )}
+                    </div>
                   </div>
-                </div>
-              </Label>
-            </>
-          )
-
-          const planCard = (
-            <div
-              key={planTier}
-              className={cn(
-                'flex items-start gap-3 rounded-lg border p-3 transition-colors',
-                isSelected
-                  ? 'border-primary bg-card'
-                  : 'border-border bg-card/50 hover:border-primary/30',
-                disabled && 'opacity-50 cursor-not-allowed',
-              )}
-            >
-              {planCardContent}
-            </div>
-          )
-
-          if (showTooltip) {
-            return (
-              <Tooltip key={planTier}>
-                <TooltipTrigger asChild>
-                  <div className="w-full">{planCard}</div>
-                </TooltipTrigger>
-                <TooltipContent>
-                  <p>
-                    You already have a free organization. You can only have one
-                    free organization per account.
-                  </p>
-                </TooltipContent>
-              </Tooltip>
+                </Label>
+              </div>
             )
-          }
-
-          return planCard
-        })}
+          })}
       </RadioGroup>
+
+      {enterpriseSection}
 
       {variant === 'card' && (
         <div className="mt-4">
@@ -215,7 +393,7 @@ export function PlanSelection({
 
       <div className="border-t border-border" />
 
-      <div className="px-6 py-4">{radioGroupContent}</div>
+      <div className="px-6 py-5">{radioGroupContent}</div>
     </div>
   )
 }

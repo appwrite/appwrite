@@ -95,7 +95,7 @@ export function ConsoleHeader({
   const { openCommandCenter: contextOpenCommandCenter } =
     useKeyboardShortcutsContext()
   const { toggleChat } = useAIChat()
-  const { account, signOut, isAuthenticated } = useAuth()
+  const { account, signOut, isAuthenticated, isLoading: isAuthLoading } = useAuth()
   const location = useLocation()
   const navigate = useNavigate()
   const params = useParams({ strict: false })
@@ -185,7 +185,8 @@ export function ConsoleHeader({
     : null
   const logoColumnWidth = 60
   const isOptionalAuth = isOptionalAuthPage(location.pathname)
-  const showGuestHeader = isOptionalAuth && !isAuthenticated
+  const optionalAuthPending = isOptionalAuth && isAuthLoading
+  const showGuestHeader = isOptionalAuth && !isAuthenticated && !isAuthLoading
   const authRedirect = location.pathname
 
   return (
@@ -658,7 +659,15 @@ export function ConsoleHeader({
 
         {/* Right: Actions */}
         <div className="flex shrink-0 items-center gap-1 @[640px]:gap-2 min-w-0">
-          {showGuestHeader ? (
+          {optionalAuthPending ? (
+            <div
+              className="flex h-9 items-center gap-1 @[640px]:gap-2"
+              aria-hidden
+            >
+              <div className="h-9 w-[4.75rem] shrink-0 rounded-md @[640px]:w-[4.875rem]" />
+              <div className="h-9 w-[4.875rem] shrink-0 rounded-md" />
+            </div>
+          ) : showGuestHeader ? (
             <>
               <Button asChild variant="outline" size="sm" className="h-9 text-[13px]">
                 <Link to="/sign-in" search={{ redirect: authRedirect }}>
@@ -750,8 +759,8 @@ export function ConsoleHeader({
                   className="h-9 shrink-0 cursor-pointer gap-1.5 px-3 text-[12px] font-semibold relative z-10 rounded-[calc(0.375rem-1px)]"
                 >
                   <Link
-                    to="/organizations/$orgId/change-plan"
-                    params={{ orgId }}
+                    to="/upgrade"
+                    search={{ orgId }}
                   >
                     <ArrowUpCircle className="h-4 w-4" />
                     Upgrade

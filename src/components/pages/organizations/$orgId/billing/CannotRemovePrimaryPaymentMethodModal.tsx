@@ -11,7 +11,8 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
-import { CreditCard, Plus } from '@/lib/icons'
+import { Plus } from '@/lib/icons'
+import { PaymentMethodBrandAvatar } from '@/components/global/shared/PaymentMethodBrandAvatar'
 import { formatPaymentMethodSummary } from './utils'
 import type { Models } from '@appwrite.io/console'
 
@@ -80,9 +81,7 @@ export function CannotRemovePrimaryPaymentMethodModal({
                         className="flex items-center justify-between gap-3 rounded-lg border border-border bg-muted/20 px-4 py-3"
                       >
                         <div className="flex min-w-0 items-center gap-3">
-                          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-muted">
-                            <CreditCard className="h-4 w-4 text-muted-foreground" />
-                          </div>
+                          <PaymentMethodBrandAvatar brand={method.brand} />
                           <span className="truncate text-[13px] font-medium text-foreground">
                             {formatPaymentMethodSummary(method)}
                           </span>

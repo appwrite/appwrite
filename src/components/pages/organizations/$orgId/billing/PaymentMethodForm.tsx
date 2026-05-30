@@ -10,6 +10,10 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { Loader2 } from 'lucide-react'
+import {
+  warningAlertContainerClassName,
+  warningAlertTextClassName,
+} from '@/components/global/shared/WarningAlert'
 import { toast } from 'sonner'
 import type {
   PaymentMethod as StripePaymentMethod,
@@ -145,7 +149,9 @@ export function PaymentMethodForm({
   const setDefaultPaymentMethodMutation =
     useSetOrganizationDefaultPaymentMethod()
   const setBackupPaymentMethodMutation = useSetOrganizationBackupPaymentMethod()
-  const { paymentMethods: allPaymentMethods } = usePaymentMethods()
+  const { paymentMethods: allPaymentMethods } = usePaymentMethods({
+    enabled: open,
+  })
 
   const { theme } = useTheme()
 
@@ -592,7 +598,7 @@ export function PaymentMethodForm({
         <>
           <div className="space-y-2">
             <Label htmlFor="cardholder-name" className="text-[13px]">
-              Cardholder name
+              Cardholder name <span className="text-destructive">*</span>
             </Label>
             <Input
               id="cardholder-name"
@@ -655,7 +661,7 @@ export function PaymentMethodForm({
           {stateOptional && (
             <div className="space-y-2">
               <Label htmlFor="cardholder-name-recover" className="text-[13px]">
-                Cardholder name
+                Cardholder name <span className="text-destructive">*</span>
               </Label>
               <Input
                 id="cardholder-name-recover"
@@ -670,7 +676,12 @@ export function PaymentMethodForm({
 
           <div className="space-y-2">
             <Label htmlFor="state" className="text-[13px]">
-              State {stateOptional ? '(optional)' : ''}
+              State{' '}
+              {stateOptional ? (
+                '(optional)'
+              ) : (
+                <span className="text-destructive">*</span>
+              )}
             </Label>
             <Select
               value={selectedState}
@@ -693,8 +704,13 @@ export function PaymentMethodForm({
       )}
 
       {error && (
-        <div className="rounded-md bg-red-500/10 border border-red-500/20 px-3 py-2">
-          <p className="text-[12px] text-red-600 dark:text-red-400">{error}</p>
+        <div
+          className={cn(
+            'rounded-lg border px-3 py-2',
+            warningAlertContainerClassName,
+          )}
+        >
+          <p className={warningAlertTextClassName}>{error}</p>
         </div>
       )}
 

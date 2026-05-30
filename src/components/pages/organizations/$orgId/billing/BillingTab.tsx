@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react'
 import { useParams, useNavigate } from '@tanstack/react-router'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
+import { WarningAlert } from '@/components/global/shared/WarningAlert'
 import { Button } from '@/components/ui/button'
 import { AlertTriangle, CreditCard } from 'lucide-react'
 import {
@@ -101,8 +102,8 @@ export function BillingTab() {
   const handleChangePlan = () => {
     if (orgId) {
       navigate({
-        to: '/organizations/$orgId/change-plan',
-        params: { orgId },
+        to: '/upgrade',
+        search: { orgId },
       })
     }
   }
@@ -142,35 +143,33 @@ export function BillingTab() {
             ],
           },
           node: (
-            <Alert variant="default" className="border-red-500/30 bg-red-500/5">
-              <AlertTriangle className="h-4 w-4 text-red-500" />
-              <AlertTitle className="text-[13px] font-medium text-red-600 dark:text-red-400">
-                {orgBillingReadonly
+            <WarningAlert
+              title={
+                orgBillingReadonly
                   ? 'Payment failed - organization in read-only mode'
-                  : 'Payment failed'}
-              </AlertTitle>
-              <AlertDescription className="mt-2 text-[12px] text-red-600/80 dark:text-red-400/80">
-                {orgBillingReadonly && (
-                  <p className="mb-2 font-medium text-red-600 dark:text-red-400">
-                    Changes to projects and services are limited until the
-                    outstanding invoice is paid. Complete payment to restore
-                    full access.
-                  </p>
-                )}
-                {failedInvoice.lastError ||
-                  'Your last payment attempt failed. Please update your payment method and try again.'}
-                <div className="mt-3">
-                  <Button
-                    size="sm"
-                    className="h-8 bg-red-500 px-3 text-[12px] font-medium text-red-50 hover:bg-red-400"
-                    onClick={handleRetryPayment}
-                    disabled={retryPaymentMutation.isPending}
-                  >
-                    Try again
-                  </Button>
-                </div>
-              </AlertDescription>
-            </Alert>
+                  : 'Payment failed'
+              }
+            >
+              {orgBillingReadonly && (
+                <p className="mb-2 font-medium text-red-600 dark:text-red-400">
+                  Changes to projects and services are limited until the
+                  outstanding invoice is paid. Complete payment to restore full
+                  access.
+                </p>
+              )}
+              {failedInvoice.lastError ||
+                'Your last payment attempt failed. Please update your payment method and try again.'}
+              <div className="mt-3">
+                <Button
+                  size="sm"
+                  className="h-8 bg-red-500 px-3 text-[12px] font-medium text-red-50 hover:bg-red-400"
+                  onClick={handleRetryPayment}
+                  disabled={retryPaymentMutation.isPending}
+                >
+                  Try again
+                </Button>
+              </div>
+            </WarningAlert>
           ),
         })
       }
@@ -183,17 +182,11 @@ export function BillingTab() {
             keywords: ['expired', 'declined', 'failed card', 'backup'],
           },
           node: (
-            <Alert variant="default" className="border-red-500/30 bg-red-500/5">
-              <CreditCard className="h-4 w-4 text-red-500" />
-              <AlertTitle className="text-[13px] font-medium text-red-600 dark:text-red-400">
-                Payment method failed
-              </AlertTitle>
-              <AlertDescription className="mt-2 text-[12px] text-red-600/80 dark:text-red-400/80">
-                Your default payment method has failed and you don't have a
-                backup method. Please add a new payment method to continue using
-                our services.
-              </AlertDescription>
-            </Alert>
+            <WarningAlert title="Payment method failed" icon={CreditCard}>
+              Your default payment method has failed and you don't have a backup
+              method. Please add a new payment method to continue using our
+              services.
+            </WarningAlert>
           ),
         })
       }

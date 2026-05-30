@@ -1,13 +1,16 @@
 import { useState, useEffect, useMemo, useRef } from 'react'
-import { useParams, useNavigate, useSearch, Link } from '@tanstack/react-router'
+import { useNavigate, useSearch, Link } from '@tanstack/react-router'
 import { useQueryClient } from '@tanstack/react-query'
+import { ID } from '@appwrite.io/console'
 import {
   BillingPlanTier,
   type BillingPlanTier as BillingPlanTierType,
 } from '@/lib/constants/billing-plan'
 import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
+import { WarningAlert } from '@/components/global/shared/WarningAlert'
 import { AlertTriangle } from '@/lib/icons'
 import { toast } from 'sonner'
 import { WizardLayout } from '@/components/global/shared/WizardLayout'
@@ -20,14 +23,17 @@ import {
   useOrganizationUsage,
   useOrganizationProjects,
   useEstimationUpdatePlan,
+  useEstimationCreateOrganization,
   useUpdateOrganizationPlan,
   useUpdateSelectedProjects,
   useValidateOrganization,
   useCreateDowngradeFeedback,
+  useCreateOrganization,
   usePaymentMethods,
   useOrganizations,
 } from '@/lib/react-query/hooks'
 import { useSmartNavigation } from '@/lib/hooks/useSmartNavigation'
+import { useDebouncedValue } from '@/lib/hooks/useDebouncedValue'
 import { PlanSelection } from './change-plan/PlanSelection'
 import { SelectPaymentMethod } from './change-plan/SelectPaymentMethod'
 import { EstimatedTotalBox } from './change-plan/EstimatedTotalBox'
@@ -35,6 +41,10 @@ import { PlanComparisonBox } from './change-plan/PlanComparisonBox'
 import { OrganizationUsageLimits } from './change-plan/OrganizationUsageLimits'
 import { ValidateCreditModal } from './change-plan/ValidateCredit'
 import { PaymentModal } from './Payment'
+import {
+  OrganizationSetupProgress,
+  type OrganizationSetupProgressState,
+} from './change-plan/OrganizationSetupProgress'
 import {
   Select,
   SelectContent,
@@ -44,6 +54,7 @@ import {
 } from '@/components/ui/select'
 import { Textarea } from '@/components/ui/textarea'
 import { confirmPayment } from '@/lib/utils/stripe'
+import { getPlanNameFromTier } from '@/lib/utils/plan-filter'
 import type { Models } from '@appwrite.io/console'
 
 /**
@@ -54,11 +65,13 @@ import type { Models } from '@appwrite.io/console'
  * coupon codes, and member invites.
  */
 
+const ESTIMATION_DEBOUNCE_MS = 500
+
 export function ChangePlanWizardFullscreen() {
-  const params = useParams({ strict: false })
   const navigate = useNavigate()
-  const search = useSearch({ strict: false })
-  const orgId = params.orgId as string | undefined
+  const search = useSearch({ from: '/_public/upgrade' })
+  const orgId = search.orgId
+  const isCreateMode = !orgId
   const queryClient = useQueryClient()
 
   // Smart navigation for cancel/close actions
@@ -86,23 +99,26 @@ export function ChangePlanWizardFullscreen() {
     [memberships, membersTotal],
   )
 
-  // Check if user has a free organization.
-  // org.plan is derived from billingPlan via getPlanNameFromTier() in useOrganizations(),
-  // so 'free' already covers tier-0 / Tier0 variants - no need for additional checks.
+  // Another free org on this account blocks downgrading/creating a second free org.
   const hasFreeOrgs = useMemo(() => {
-    return organizations.some((org) => org.plan === 'free')
-  }, [organizations])
+    return organizations.some(
+      (org) => org.plan === 'free' && org.$id !== orgId,
+    )
+  }, [organizations, orgId])
 
-  // Determine default plan (Pro or Scale based on current plan)
+  // Default selection: Pro for new orgs; current plan when changing an existing org.
   const defaultPlan = useMemo(() => {
-    const currentPlanTier = organization?.billingPlan || 'tier-0'
-    return currentPlanTier === 'tier-0' ? 'tier-1' : currentPlanTier
-  }, [organization?.billingPlan])
+    if (isCreateMode) {
+      return BillingPlanTier.Tier1
+    }
+    return organization?.billingPlan || BillingPlanTier.Tier0
+  }, [isCreateMode, organization?.billingPlan])
 
   // Check if self-service is allowed (defaults to true)
-  const selfService = plan?.selfService !== false
+  const selfService = isCreateMode ? true : plan?.selfService !== false
 
   // State management
+  const [organizationName, setOrganizationName] = useState('')
   const [selectedPlan, setSelectedPlan] = useState<BillingPlanTierType | null>(
     null,
   )
@@ -121,6 +137,8 @@ export function ChangePlanWizardFullscreen() {
   const [feedbackMessage, setFeedbackMessage] = useState<string>('')
   const [couponModalOpen, setCouponModalOpen] = useState(false)
   const [paymentModalOpen, setPaymentModalOpen] = useState(false)
+  const [setupProgress, setSetupProgress] =
+    useState<OrganizationSetupProgressState | null>(null)
   const [usageLimitsComponentRef, setUsageLimitsComponentRef] = useState<{
     getSelectedProjects?: () => string[]
   } | null>(null)
@@ -129,26 +147,34 @@ export function ChangePlanWizardFullscreen() {
       ref as { getSelectedProjects?: () => string[] } | null,
     )
 
-  // Fetch additional data
-  const { paymentMethods } = usePaymentMethods()
   const { usage: orgUsage } = useOrganizationUsage(orgId)
   const { projects: allProjects } = useOrganizationProjects(orgId)
 
   // Get current plan tier
-  const currentPlanTier = organization?.billingPlan || 'tier-0'
+  const currentPlanTier = isCreateMode
+    ? BillingPlanTier.Tier0
+    : organization?.billingPlan || 'tier-0'
   const currentPlanEnum = useMemo(() => {
+    if (isCreateMode) {
+      return BillingPlanTier.Tier0
+    }
     try {
       return currentPlanTier as BillingPlanTierType
     } catch {
       return BillingPlanTier.Tier0
     }
-  }, [currentPlanTier])
+  }, [currentPlanTier, isCreateMode])
 
   // Mutations (defined early for use in useEffect)
   const updatePlanMutation = useUpdateOrganizationPlan()
+  const createOrgMutation = useCreateOrganization()
   const updateSelectedProjectsMutation = useUpdateSelectedProjects()
   const validateOrganizationMutation = useValidateOrganization()
   const createDowngradeFeedbackMutation = useCreateDowngradeFeedback()
+  const isSubmitting =
+    updatePlanMutation.isPending ||
+    createOrgMutation.isPending ||
+    setupProgress !== null
 
   // Handle payment confirmation redirect (only once)
   const paymentConfirmedHandled = useRef(false)
@@ -191,36 +217,86 @@ export function ChangePlanWizardFullscreen() {
   // Initialize selected plan from URL or default (only once)
   const [planInitialized, setPlanInitialized] = useState(false)
   useEffect(() => {
-    if (planInitialized) return // Only initialize once
+    if (planInitialized) return
+    if (!billingPlans || Object.keys(billingPlans).length === 0) return
+    if (!isCreateMode && orgId && !organization) return
 
-    const planParam = search?.plan as string
-    if (
-      planParam &&
-      Object.values(BillingPlanTier).includes(planParam as BillingPlanTierType)
-    ) {
+    const isValidPlan = (plan: string) => plan in billingPlans
+
+    const planParam = search?.plan as string | undefined
+    if (planParam && isValidPlan(planParam)) {
       setSelectedPlan(planParam as BillingPlanTierType)
       setPlanInitialized(true)
-    } else if (
-      defaultPlan &&
-      Object.values(BillingPlanTier).includes(
-        defaultPlan as BillingPlanTierType,
-      )
-    ) {
-      setSelectedPlan(defaultPlan as BillingPlanTierType)
-      setPlanInitialized(true)
+      return
     }
-  }, [search?.plan, defaultPlan, planInitialized])
 
-  // Get coupon from URL if provided
+    if (defaultPlan && isValidPlan(defaultPlan)) {
+      setSelectedPlan(defaultPlan as BillingPlanTierType)
+    }
+
+    setPlanInitialized(true)
+  }, [
+    search?.plan,
+    defaultPlan,
+    planInitialized,
+    isCreateMode,
+    orgId,
+    organization,
+    billingPlans,
+  ])
+
+  // Apply coupon from URL with full details (including expiration)
   const couponCodeFromUrl = search?.code as string | undefined
-  const { coupon: couponFromUrl } = useCouponAccount(couponCodeFromUrl || null)
-
-  // Update selected coupon when fetched from URL
+  const { coupon: couponFromUrl } = useCouponAccount(
+    couponCodeFromUrl?.trim() || null,
+  )
   useEffect(() => {
     if (couponFromUrl) {
       setSelectedCoupon(couponFromUrl)
     }
   }, [couponFromUrl])
+
+  // Determine if upgrade or downgrade
+  const isUpgrade = useMemo(() => {
+    if (!selectedPlan || !currentPlanEnum) return false
+    if (isCreateMode) {
+      return selectedPlan !== BillingPlanTier.Tier0
+    }
+    const currentTier =
+      parseInt(currentPlanEnum.replace('tier-', '').replace('Tier', '')) || 0
+    const selectedTier =
+      parseInt(selectedPlan.replace('tier-', '').replace('Tier', '')) || 0
+    return selectedTier > currentTier
+  }, [selectedPlan, currentPlanEnum, isCreateMode])
+
+  const isDowngrade = useMemo(() => {
+    if (isCreateMode) return false
+    if (!selectedPlan || !currentPlanEnum) return false
+    const currentTier =
+      parseInt(currentPlanEnum.replace('tier-', '').replace('Tier', '')) || 0
+    const selectedTier =
+      parseInt(selectedPlan.replace('tier-', '').replace('Tier', '')) || 0
+    return selectedTier < currentTier
+  }, [selectedPlan, currentPlanEnum, isCreateMode])
+
+  // Clear coupon when downgrading an existing organization
+  useEffect(() => {
+    if (isDowngrade) {
+      setSelectedCoupon(null)
+    }
+  }, [isDowngrade, selectedPlan])
+
+  const needsPaymentMethods =
+    !!selectedPlan &&
+    selectedPlan !== BillingPlanTier.Tier0 &&
+    isUpgrade
+
+  // Fetch saved cards only for paid-plan flows, or when the add-card modal is open.
+  const { paymentMethods, isLoading: paymentMethodsLoading } = usePaymentMethods(
+    {
+      enabled: needsPaymentMethods || paymentModalOpen,
+    },
+  )
 
   // Set default payment method
   useEffect(() => {
@@ -239,71 +315,84 @@ export function ChangePlanWizardFullscreen() {
     }
   }, [organization?.paymentMethodId, paymentMethods, paymentMethodId])
 
-  // Determine if upgrade or downgrade
-  const isUpgrade = useMemo(() => {
-    if (!selectedPlan || !currentPlanEnum) return false
-    const currentTier =
-      parseInt(currentPlanEnum.replace('tier-', '').replace('Tier', '')) || 0
-    const selectedTier =
-      parseInt(selectedPlan.replace('tier-', '').replace('Tier', '')) || 0
-    return selectedTier > currentTier
-  }, [selectedPlan, currentPlanEnum])
-
-  const isDowngrade = useMemo(() => {
-    if (!selectedPlan || !currentPlanEnum) return false
-    const currentTier =
-      parseInt(currentPlanEnum.replace('tier-', '').replace('Tier', '')) || 0
-    const selectedTier =
-      parseInt(selectedPlan.replace('tier-', '').replace('Tier', '')) || 0
-    return selectedTier < currentTier
-  }, [selectedPlan, currentPlanEnum])
-
   // Get estimation for selected plan (only when plan is selected and not free)
-  // Only fetch estimation when we have a selected plan and it's not the current plan
-  const shouldFetchEstimation =
-    selectedPlan &&
-    selectedPlan !== currentPlanEnum &&
-    selectedPlan !== BillingPlanTier.Tier0 &&
+  const estimationPaymentMethodId = useMemo(() => {
+    if (paymentMethodId) return paymentMethodId
+    if (organization?.paymentMethodId) return organization.paymentMethodId
+    const completedMethod = paymentMethods.find(
+      (pm: Models.PaymentMethod) => pm.last4,
+    )
+    return completedMethod?.$id
+  }, [paymentMethodId, organization?.paymentMethodId, paymentMethods])
+
+  const estimationCouponId = useMemo(() => {
+    if (!isUpgrade || !selectedCoupon) return undefined
+    const value = selectedCoupon.code ?? selectedCoupon.$id
+    if (typeof value !== 'string') return undefined
+    const trimmed = value.trim()
+    return trimmed.length > 0 ? trimmed : undefined
+  }, [selectedCoupon, isUpgrade])
+
+  const debouncedEstimationPlan = useDebouncedValue(
+    selectedPlan && selectedPlan !== BillingPlanTier.Tier0 ? selectedPlan : null,
+    ESTIMATION_DEBOUNCE_MS,
+  )
+  const debouncedEstimationPaymentMethodId = useDebouncedValue(
+    estimationPaymentMethodId ?? null,
+    ESTIMATION_DEBOUNCE_MS,
+  )
+
+  const shouldFetchUpdateEstimationDebounced =
+    !isCreateMode &&
+    debouncedEstimationPlan &&
+    debouncedEstimationPlan !== currentPlanEnum &&
     orgId
 
-  // Validate coupon ID - must be a non-empty string that's a valid UID
-  const validCouponId = useMemo(() => {
-    if (!selectedCoupon) return undefined
+  const shouldFetchCreateEstimationDebounced =
+    isCreateMode &&
+    debouncedEstimationPlan &&
+    !!debouncedEstimationPaymentMethodId
 
-    // Try to get the ID - could be $id or code, but must be a string
-    const couponIdValue = selectedCoupon.$id || selectedCoupon.code
-
-    // Ensure it's a string (not object, array, null, etc.)
-    if (typeof couponIdValue !== 'string') {
-      console.warn(
-        'Invalid coupon ID type:',
-        typeof couponIdValue,
-        couponIdValue,
-      )
-      return undefined
-    }
-
-    const couponId = couponIdValue.trim()
-
-    // UID validation: non-empty, max 36 chars, valid chars only, can't start with underscore
-    if (
-      couponId &&
-      couponId.length > 0 &&
-      couponId.length <= 36 &&
-      /^[a-zA-Z0-9][a-zA-Z0-9_]*$/.test(couponId) &&
-      !couponId.startsWith('_')
-    ) {
-      return couponId
-    }
-    return undefined
-  }, [selectedCoupon])
-
-  const estimation = useEstimationUpdatePlan(
-    shouldFetchEstimation ? orgId : null,
-    shouldFetchEstimation ? selectedPlan : null,
-    shouldFetchEstimation ? validCouponId : undefined,
-    [],
+  const updateEstimation = useEstimationUpdatePlan(
+    shouldFetchUpdateEstimationDebounced ? orgId : null,
+    shouldFetchUpdateEstimationDebounced ? debouncedEstimationPlan : null,
+    shouldFetchUpdateEstimationDebounced ? estimationCouponId : undefined,
   )
+
+  const createEstimation = useEstimationCreateOrganization(
+    shouldFetchCreateEstimationDebounced ? debouncedEstimationPlan : null,
+    shouldFetchCreateEstimationDebounced ? estimationCouponId : undefined,
+    undefined,
+    shouldFetchCreateEstimationDebounced
+      ? debouncedEstimationPaymentMethodId
+      : null,
+  )
+
+  const estimation = isCreateMode ? createEstimation : updateEstimation
+
+  const estimationInputsDebouncing =
+    (selectedPlan && selectedPlan !== BillingPlanTier.Tier0
+      ? selectedPlan
+      : null) !== debouncedEstimationPlan ||
+    (isCreateMode &&
+      (estimationPaymentMethodId ?? null) !==
+        debouncedEstimationPaymentMethodId)
+
+  const awaitingEstimationPaymentMethod =
+    isCreateMode &&
+    !!selectedPlan &&
+    selectedPlan !== BillingPlanTier.Tier0 &&
+    !paymentMethodsLoading &&
+    !estimationPaymentMethodId
+
+  const estimationBoxLoading =
+    estimation.isLoading ||
+    estimation.isFetching ||
+    estimationInputsDebouncing ||
+    (isCreateMode &&
+      !!selectedPlan &&
+      selectedPlan !== BillingPlanTier.Tier0 &&
+      paymentMethodsLoading)
 
   // Get target plan info
   const targetPlanInfo = selectedPlan ? billingPlans[selectedPlan] : null
@@ -316,8 +405,23 @@ export function ChangePlanWizardFullscreen() {
   // Check if submit button should be disabled
   const isButtonDisabled = useMemo(() => {
     if (!selfService) return true
-    if (!selectedPlan || selectedPlan === currentPlanEnum) return true
-    if (updatePlanMutation.isPending) return true
+    if (!selectedPlan) return true
+    if (isSubmitting) return true
+
+    if (isCreateMode) {
+      if (!organizationName.trim()) return true
+      if (selectedPlan === BillingPlanTier.Tier0 && hasFreeOrgs) return true
+      if (isUpgrade) {
+        if (!paymentMethodId) return true
+        const selectedMethod = paymentMethods.find(
+          (pm: Models.PaymentMethod) => pm.$id === paymentMethodId,
+        )
+        if (!selectedMethod?.last4) return true
+      }
+      return false
+    }
+
+    if (selectedPlan === currentPlanEnum) return true
 
     // For upgrades: payment method required
     if (isUpgrade) {
@@ -359,12 +463,25 @@ export function ChangePlanWizardFullscreen() {
     targetProjectsLimit,
     feedbackMessage,
     hasFreeOrgs,
-    updatePlanMutation.isPending,
+    isCreateMode,
+    organizationName,
+    isSubmitting,
   ])
 
   // Handle upgrade
   const handleUpgrade = async () => {
     if (!orgId || !selectedPlan || !paymentMethodId) return
+
+    const planLabel = getPlanNameFromTier(selectedPlan)
+    const showActivationStep = selectedPlan !== BillingPlanTier.Tier0
+
+    setSetupProgress({
+      mode: 'upgrade',
+      phase: 'submitting',
+      planLabel,
+      showPaymentStep: false,
+      showActivationStep,
+    })
 
     try {
       const result = await updatePlanMutation.mutateAsync({
@@ -400,6 +517,15 @@ export function ChangePlanWizardFullscreen() {
       if (resultObj?.clientSecret) {
         // Grab the Stripe provider id so confirmPayment can attach the card
         // if the PaymentIntent still needs a payment method.
+        setSetupProgress((prev) =>
+          prev
+            ? {
+                ...prev,
+                showPaymentStep: true,
+                phase: 'confirming-payment',
+              }
+            : prev,
+        )
         const selectedMethod = paymentMethods.find(
           (pm) => pm.$id === paymentMethodId,
         )
@@ -419,10 +545,19 @@ export function ChangePlanWizardFullscreen() {
       }
 
       // Validate the organization after payment (needed regardless of 3DS)
+      if (showActivationStep) {
+        setSetupProgress((prev) =>
+          prev ? { ...prev, phase: 'activating' } : prev,
+        )
+      }
       await validateOrganizationMutation.mutateAsync({
         organizationId: orgId,
         invites: [],
       })
+
+      setSetupProgress((prev) =>
+        prev ? { ...prev, phase: 'complete' } : prev,
+      )
 
       toast.success('Plan updated successfully')
       navigate({
@@ -430,6 +565,7 @@ export function ChangePlanWizardFullscreen() {
         params: { orgId },
       })
     } catch (error) {
+      setSetupProgress(null)
       toast.error(
         error instanceof Error ? error.message : 'Failed to update plan',
       )
@@ -482,8 +618,116 @@ export function ChangePlanWizardFullscreen() {
     }
   }
 
+  // Handle create organization with selected plan
+  const handleCreateOrganization = async () => {
+    if (!selectedPlan || !organizationName.trim()) return
+
+    const organizationId = ID.unique()
+    const requiresPayment =
+      selectedPlan !== BillingPlanTier.Tier0 && isUpgrade && paymentMethodId
+
+    if (selectedPlan !== BillingPlanTier.Tier0 && !paymentMethodId) {
+      return
+    }
+
+    const planLabel = getPlanNameFromTier(selectedPlan)
+    const showActivationStep = selectedPlan !== BillingPlanTier.Tier0
+
+    setSetupProgress({
+      mode: 'create',
+      phase: 'submitting',
+      organizationName: organizationName.trim(),
+      planLabel,
+      showPaymentStep: false,
+      showActivationStep,
+    })
+
+    try {
+      const result = await createOrgMutation.mutateAsync({
+        organizationId,
+        name: organizationName.trim(),
+        billingPlan: selectedPlan,
+        paymentMethodId: requiresPayment ? paymentMethodId : undefined,
+        couponId: isUpgrade
+          ? (selectedCoupon?.code ?? selectedCoupon?.$id)
+          : undefined,
+        budget: billingBudget,
+        taxId: taxId || null,
+      })
+
+      const resultObj = result as {
+        clientSecret?: string
+        status?: string | number
+        $id?: string
+      }
+      const createdOrgId = resultObj?.$id || organizationId
+      const statusRequiresAction =
+        typeof resultObj?.status === 'string' &&
+        (resultObj.status === 'requires_action' ||
+          resultObj.status === 'requires_authentication')
+      if (statusRequiresAction && !resultObj?.clientSecret) {
+        throw new Error(
+          'Payment authentication is required but the server did not return a client secret.',
+        )
+      }
+
+      if (resultObj?.clientSecret && paymentMethodId) {
+        setSetupProgress((prev) =>
+          prev
+            ? {
+                ...prev,
+                showPaymentStep: true,
+                phase: 'confirming-payment',
+              }
+            : prev,
+        )
+        const selectedMethod = paymentMethods.find(
+          (pm) => pm.$id === paymentMethodId,
+        )
+        await confirmPayment({
+          clientSecret: resultObj.clientSecret,
+          paymentMethod: selectedMethod?.providerMethodId || undefined,
+        })
+        await queryClient.invalidateQueries({
+          queryKey: ['organization', createdOrgId],
+        })
+      }
+
+      if (showActivationStep) {
+        setSetupProgress((prev) =>
+          prev ? { ...prev, phase: 'activating' } : prev,
+        )
+        await validateOrganizationMutation.mutateAsync({
+          organizationId: createdOrgId,
+          invites: [],
+        })
+      }
+
+      setSetupProgress((prev) =>
+        prev ? { ...prev, phase: 'complete' } : prev,
+      )
+
+      toast.success('Organization created successfully')
+      navigate({
+        to: '/organizations/$orgId',
+        params: { orgId: createdOrgId },
+      })
+    } catch (error) {
+      setSetupProgress(null)
+      toast.error(
+        error instanceof Error
+          ? error.message
+          : 'Failed to create organization',
+      )
+    }
+  }
+
   // Handle submit
   const handleSubmit = () => {
+    if (isCreateMode) {
+      handleCreateOrganization()
+      return
+    }
     if (isUpgrade) {
       handleUpgrade()
     } else if (isDowngrade) {
@@ -516,24 +760,37 @@ export function ChangePlanWizardFullscreen() {
     currentTierStr === 'custom' ||
     currentTierStr === 'Custom'
 
-  // Early return if critical data is missing
-  if (!orgId) {
+  const wizardTitle = isCreateMode ? 'Create organization' : 'Change plan'
+  const submitLabel = isCreateMode ? 'Create organization' : 'Change plan'
+
+  if (setupProgress) {
     return (
-      <div className="flex h-full flex-col items-center justify-center">
-        <p className="text-[13px] text-muted-foreground">
-          Organization ID is required
-        </p>
-        <Button variant="outline" onClick={handleCancel} className="mt-4">
-          Go Back
-        </Button>
-      </div>
+      <WizardLayout
+        title={wizardTitle}
+        fullscreen
+        useSidebar={false}
+        skipInitialFieldFocus
+        fallbackPath={
+          orgId ? `/organizations/${orgId}/settings/billing` : undefined
+        }
+      >
+        <OrganizationSetupProgress progress={setupProgress} />
+      </WizardLayout>
     )
   }
 
   return (
     <WizardLayout
-      title="Change plan"
+      title={wizardTitle}
       fullscreen
+      skipInitialFieldFocus={!isCreateMode}
+      initialFocusKey={
+        isCreateMode
+          ? plansLoading
+            ? 'plans-loading'
+            : 'plans-ready'
+          : undefined
+      }
       fallbackPath={
         orgId ? `/organizations/${orgId}/settings/billing` : undefined
       }
@@ -543,7 +800,12 @@ export function ChangePlanWizardFullscreen() {
           {showEstimatedTotal && (
             <EstimatedTotalBox
               estimation={estimation.estimation}
-              isLoading={estimation.isLoading}
+              isLoading={estimationBoxLoading}
+              awaitingPaymentMethod={awaitingEstimationPaymentMethod}
+              error={estimation.error}
+              onRetry={() => {
+                void estimation.refetch()
+              }}
               selectedPlan={selectedPlan}
               billingPlans={billingPlans}
               coupon={selectedCoupon}
@@ -567,21 +829,39 @@ export function ChangePlanWizardFullscreen() {
           <Button
             variant="outline"
             onClick={handleCancel}
-            disabled={updatePlanMutation.isPending}
+            disabled={isSubmitting}
           >
             Cancel
           </Button>
           <Button onClick={handleSubmit} disabled={isButtonDisabled}>
-            Change plan
+            {submitLabel}
           </Button>
         </>
       }
     >
+      {isCreateMode && (
+        <div className="space-y-2">
+          <Label htmlFor="organization-name">
+            Name <span className="text-destructive">*</span>
+          </Label>
+          <Input
+            id="organization-name"
+            type="text"
+            placeholder="My Organization"
+            value={organizationName}
+            onChange={(e) => setOrganizationName(e.target.value)}
+            disabled={isSubmitting}
+            maxLength={128}
+            required
+          />
+        </div>
+      )}
+
       {/* Select Plan Section */}
       <div>
-        <h2 className="text-lg font-semibold text-foreground mb-2">
-          Select plan
-        </h2>
+        <Label className="mb-2 block">
+          Select plan <span className="text-destructive">*</span>
+        </Label>
         {!selfService ? (
           <Alert className="mt-2">
             <AlertTriangle className="h-4 w-4" />
@@ -635,6 +915,7 @@ export function ChangePlanWizardFullscreen() {
                 onPlanSelect={setSelectedPlan}
                 selfService={selfService}
                 hasFreeOrgs={hasFreeOrgs}
+                isCreateMode={isCreateMode}
                 variant="inline"
               />
             ) : (
@@ -660,9 +941,8 @@ export function ChangePlanWizardFullscreen() {
             onAddPaymentMethod={() => setPaymentModalOpen(true)}
             taxId={taxId}
             onTaxIdChange={setTaxId}
+            showApplyCoupon={isUpgrade}
             onAddCredits={() => setCouponModalOpen(true)}
-            organizationId={orgId}
-            onPaymentMethodAdded={handlePaymentMethodAdded}
           />
         </>
       )}
@@ -672,24 +952,18 @@ export function ChangePlanWizardFullscreen() {
         <>
           {/* One free org per account */}
           {selectedPlan === BillingPlanTier.Tier0 && hasFreeOrgs && (
-            <Alert variant="destructive">
-              <AlertTriangle className="h-4 w-4" />
-              <AlertTitle>
-                You can only have one free organization per account
-              </AlertTitle>
-              <AlertDescription className="mt-2">
-                To downgrade this organization, first migrate or delete your
-                existing free organization.{' '}
-                <a
-                  href="https://appwrite.io/docs/advanced/migrations/cloud"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="underline"
-                >
-                  Migration guide
-                </a>
-              </AlertDescription>
-            </Alert>
+            <WarningAlert title="You can only have one free organization per account">
+              To downgrade this organization, first migrate or delete your
+              existing free organization.{' '}
+              <a
+                href="https://appwrite.io/docs/advanced/migrations/cloud"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="underline"
+              >
+                Migration guide
+              </a>
+            </WarningAlert>
           )}
 
           {/* Project Selection */}
@@ -720,33 +994,27 @@ export function ChangePlanWizardFullscreen() {
           )}
 
           {selectedPlan === BillingPlanTier.Tier0 && (
-            <Alert variant="destructive">
-              <AlertTriangle className="h-4 w-4" />
-              <AlertTitle>Downgrading to Free Plan</AlertTitle>
-              <AlertDescription className="mt-2">
-                Your plan will change on{' '}
-                {organization?.billingPlanDowngrade ||
-                  'the end of your billing period'}
-                . You will lose access to premium features and organization
-                members beyond the free limit will be removed.
-                <a
-                  href="https://appwrite.io/docs/migration"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="ml-1 underline"
-                >
-                  Learn more about migration
-                </a>
-              </AlertDescription>
-            </Alert>
+            <WarningAlert title="Downgrading to Free Plan">
+              Your plan will change on{' '}
+              {organization?.billingPlanDowngrade ||
+                'the end of your billing period'}
+              . You will lose access to premium features and organization
+              members beyond the free limit will be removed.
+              <a
+                href="https://appwrite.io/docs/migration"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="ml-1 underline"
+              >
+                Learn more about migration
+              </a>
+            </WarningAlert>
           )}
 
           {/* Feedback Form for Free Plan (matches old console: "What wasn't working for you?" required) */}
           {selectedPlan === BillingPlanTier.Tier0 && !hasFreeOrgs && (
             <div>
-              <h2 className="text-lg font-semibold text-foreground mb-2">
-                Feedback
-              </h2>
+              <Label className="mb-2 block">Feedback</Label>
               <p className="text-[13px] text-muted-foreground mb-4">
                 What wasn&apos;t working for you? Please share anything that
                 influenced your decision to downgrade. This feedback helps us
@@ -758,7 +1026,7 @@ export function ChangePlanWizardFullscreen() {
                     htmlFor="downgrade-message"
                     className="text-[13px] font-medium"
                   >
-                    Your feedback <span className="text-red-500">*</span>
+                    Your feedback <span className="text-destructive">*</span>
                   </Label>
                   <Textarea
                     id="downgrade-message"
@@ -821,7 +1089,6 @@ export function ChangePlanWizardFullscreen() {
         onOpenChange={setCouponModalOpen}
         onCouponApply={(coupon) => {
           setSelectedCoupon(coupon)
-          setCouponModalOpen(false)
         }}
         elevatedForWizard
       />

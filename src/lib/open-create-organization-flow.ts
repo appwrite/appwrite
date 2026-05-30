@@ -1,10 +1,13 @@
+import { getActiveProfileFeatures } from '@/lib/console-profiles'
+
 /**
- * Starts the same create-organization flow as the header "New Organization" action:
- * optional in-app callback (org overview), else navigate with `createOrg` search param.
+ * Starts the create-organization flow:
+ * - Cloud (billing): fullscreen upgrade wizard at `/upgrade`
+ * - Self-hosted: optional in-app callback (org overview), else `createOrg` search param
  */
 export function openCreateOrganizationFlow(
   navigate: (opts: {
-    to: '/organizations/$orgId' | '/'
+    to: '/organizations/$orgId' | '/' | '/upgrade'
     params?: { orgId: string }
     search?: { createOrg: boolean }
   }) => void,
@@ -13,6 +16,11 @@ export function openCreateOrganizationFlow(
     orgId: string | undefined
   },
 ): void {
+  if (getActiveProfileFeatures().billing) {
+    navigate({ to: '/upgrade' })
+    return
+  }
+
   if (options.onCreateOrganization) {
     options.onCreateOrganization()
     return

@@ -28,6 +28,9 @@ import {
   type ConsoleAccess,
   FULL_ACCESS,
 } from '@/lib/console-roles'
+
+const ESTIMATION_STALE_TIME = 5 * 60 * 1000
+const EMPTY_ESTIMATION_INVITES: string[] = []
 import { getActiveProfileFeatures } from '@/lib/console-profiles'
 import {
   getPlanNameFromTier,
@@ -570,26 +573,12 @@ export async function fetchBillingPlans() {
  * @returns Coupon details from the API
  */
 export async function fetchCouponAccount(couponCode: string) {
-  if (!couponCode) {
+  const trimmed = couponCode?.trim()
+  if (!trimmed) {
     return null
   }
-  try {
-    // Try billing service first (if it exists)
-    if ((sdk.forConsole as unknown).billing?.getCouponAccount) {
-      return await (sdk.forConsole as unknown).billing.getCouponAccount(
-        couponCode,
-      )
-    }
-    // Fallback to organizations service
-    if ((sdk.forConsole.organizations as unknown).getCouponAccount) {
-      return await (sdk.forConsole.organizations as unknown).getCouponAccount(
-        couponCode,
-      )
-    }
-    return null
-  } catch {
-    return null
-  }
+
+  return await sdk.forConsole.account.getCoupon({ couponId: trimmed })
 }
 
 /**
@@ -652,36 +641,21 @@ export async function fetchOrganizationProjects(organizationId: string) {
  */
 export async function fetchEstimationCreateOrganization(
   billingPlan: BillingPlanTierType,
-  couponId: string | null,
+  couponId: string | null | undefined,
   collaborators: string[],
+  paymentMethodId?: string,
 ) {
-  try {
-    // Try billing service first (if it exists)
-    if ((sdk.forConsole as unknown).billing?.estimationCreateOrganization) {
-      return await (
-        sdk.forConsole as unknown
-      ).billing.estimationCreateOrganization(
-        billingPlan,
-        couponId || undefined,
-        collaborators,
-      )
-    }
-    // Fallback to organizations service
-    if (
-      (sdk.forConsole.organizations as unknown).estimationCreateOrganization
-    ) {
-      return await (
-        sdk.forConsole.organizations as unknown
-      ).estimationCreateOrganization(
-        billingPlan,
-        couponId || undefined,
-        collaborators,
-      )
-    }
-    return null
-  } catch {
-    return null
-  }
+  const couponParam =
+    typeof couponId === 'string' && couponId.trim().length > 0
+      ? couponId.trim()
+      : undefined
+
+  return await sdk.forConsole.organizations.estimationCreateOrganization({
+    billingPlan,
+    paymentMethodId,
+    invites: collaborators,
+    couponId: couponParam,
+  })
 }
 
 /**
@@ -702,50 +676,18 @@ export async function fetchEstimationUpdatePlan(
   if (!organizationId) {
     return null
   }
-  try {
-    // Only pass couponId if it's a valid UID string
-    // UID validation: non-empty, max 36 chars, valid chars only (a-z, A-Z, 0-9, _), can't start with _
-    let couponParam: string | undefined = undefined
-    if (couponId) {
-      // Ensure it's a string, not an object or array
-      if (typeof couponId !== 'string') {
-        couponParam = undefined
-      } else {
-        const trimmed = couponId.trim()
-        if (
-          trimmed.length > 0 &&
-          trimmed.length <= 36 &&
-          /^[a-zA-Z0-9][a-zA-Z0-9_]*$/.test(trimmed) &&
-          !trimmed.startsWith('_')
-        ) {
-          couponParam = trimmed
-        }
-      }
-    }
 
-    // Try billing service first (if it exists)
-    if ((sdk.forConsole as unknown).billing?.estimationUpdatePlan) {
-      return await (sdk.forConsole as unknown).billing.estimationUpdatePlan({
-        organizationId,
-        billingPlan,
-        invites: collaborators,
-        couponId: couponParam,
-      })
-    }
-    // Fallback to organizations service
-    if ((sdk.forConsole.organizations as unknown).estimationUpdatePlan) {
-      const orgService = sdk.forConsole.organizations as unknown
-      return await orgService.estimationUpdatePlan({
-        organizationId,
-        billingPlan,
-        invites: collaborators,
-        couponId: couponParam,
-      })
-    }
-    return null
-  } catch {
-    return null
-  }
+  const couponParam =
+    typeof couponId === 'string' && couponId.trim().length > 0
+      ? couponId.trim()
+      : undefined
+
+  return await sdk.forConsole.organizations.estimationUpdatePlan({
+    organizationId,
+    billingPlan,
+    invites: collaborators,
+    couponId: couponParam,
+  })
 }
 
 // ============================================================================
@@ -761,6 +703,13 @@ export async function fetchEstimationUpdatePlan(
 export async function createOrganization(orgData: {
   organizationId?: string
   name: string
+  billingPlan?: BillingPlanTierType
+  paymentMethodId?: string
+  billingAddressId?: string
+  couponId?: string
+  invites?: string[]
+  budget?: number
+  taxId?: string | null
 }) {
   if (!orgData.name.trim()) {
     throw new Error('Organization name is required')
@@ -772,7 +721,13 @@ export async function createOrganization(orgData: {
     return await sdk.forConsole.organizations.create({
       organizationId,
       name: orgData.name.trim(),
-      billingPlan: BillingPlanTier.Tier0, // Free tier by default
+      billingPlan: orgData.billingPlan ?? BillingPlanTier.Tier0,
+      paymentMethodId: orgData.paymentMethodId,
+      billingAddressId: orgData.billingAddressId,
+      couponId: orgData.couponId,
+      invites: orgData.invites,
+      budget: orgData.budget,
+      taxId: orgData.taxId || undefined,
     })
   }
 
@@ -1953,13 +1908,20 @@ export function useOrganizationCredits(
  *
  * @returns Payment methods list with loading state
  */
-export function usePaymentMethods() {
-  const { data, isLoading, error, refetch } = useQuery(
-    paymentMethodsQueryOptions(),
+export function usePaymentMethods(options?: { enabled?: boolean }) {
+  const enabled = options?.enabled ?? true
+  const { data, isLoading, error, refetch } = useQuery({
+    ...paymentMethodsQueryOptions(),
+    enabled,
+  })
+
+  const paymentMethods = useMemo(
+    () => data?.paymentMethods ?? [],
+    [data?.paymentMethods],
   )
 
   return {
-    paymentMethods: data?.paymentMethods || [],
+    paymentMethods,
     total: data?.total || 0,
     isLoading,
     error,
@@ -2579,7 +2541,8 @@ export function useOrganizationProjects(
 export function useEstimationCreateOrganization(
   billingPlan: BillingPlanTierType | null | undefined,
   couponId: string | null | undefined,
-  collaborators: string[],
+  collaborators: string[] = EMPTY_ESTIMATION_INVITES,
+  paymentMethodId?: string | null,
 ) {
   // Serialize collaborators array to avoid reference equality issues
   // Sort and join to create a stable key - use JSON.stringify for more reliable comparison
@@ -2588,32 +2551,34 @@ export function useEstimationCreateOrganization(
     return JSON.stringify([...collaborators].sort())
   }, [collaborators])
 
-  const { data, isLoading, error, refetch } = useQuery({
+  const { data, isLoading, isFetching, error, refetch } = useQuery({
     queryKey: [
       'estimation-create-org',
       billingPlan,
-      couponId,
+      couponId ?? null,
       collaboratorsKey,
+      paymentMethodId ?? null,
     ],
     queryFn: () =>
       fetchEstimationCreateOrganization(
         billingPlan!,
-        couponId || null,
+        couponId ?? null,
         collaborators,
+        paymentMethodId ?? undefined,
       ),
-    enabled: !!billingPlan,
-    staleTime: 30 * 1000, // 30 seconds
-    // Prevent refetch on window focus to avoid loops
+    enabled: !!billingPlan && !!paymentMethodId,
+    staleTime: ESTIMATION_STALE_TIME,
     refetchOnWindowFocus: false,
     refetchOnMount: false,
     refetchOnReconnect: false,
-    retry: false, // Don't retry on error
-    gcTime: 5 * 60 * 1000, // Keep in cache for 5 minutes
+    retry: false,
+    gcTime: ESTIMATION_STALE_TIME,
   })
 
   return {
     estimation: data,
     isLoading,
+    isFetching,
     error,
     refetch,
   }
@@ -2632,7 +2597,7 @@ export function useEstimationUpdatePlan(
   organizationId: string | null | undefined,
   billingPlan: BillingPlanTierType | null | undefined,
   couponId: string | null | undefined,
-  collaborators: string[],
+  collaborators: string[] = EMPTY_ESTIMATION_INVITES,
 ) {
   // Serialize collaborators array to avoid reference equality issues
   // Sort and join to create a stable key - use JSON.stringify for more reliable comparison
@@ -2641,12 +2606,12 @@ export function useEstimationUpdatePlan(
     return JSON.stringify([...collaborators].sort())
   }, [collaborators])
 
-  const { data, isLoading, error, refetch } = useQuery({
+  const { data, isLoading, isFetching, error, refetch } = useQuery({
     queryKey: [
       'estimation-update-plan',
       organizationId,
       billingPlan,
-      couponId,
+      couponId ?? null,
       collaboratorsKey,
     ],
     queryFn: () =>
@@ -2657,18 +2622,18 @@ export function useEstimationUpdatePlan(
         collaborators,
       ),
     enabled: !!organizationId && !!billingPlan,
-    staleTime: 30 * 1000, // 30 seconds
-    // Prevent refetch on window focus to avoid loops
+    staleTime: ESTIMATION_STALE_TIME,
     refetchOnWindowFocus: false,
     refetchOnMount: false,
     refetchOnReconnect: false,
-    retry: false, // Don't retry on error
-    gcTime: 5 * 60 * 1000, // Keep in cache for 5 minutes
+    retry: false,
+    gcTime: ESTIMATION_STALE_TIME,
   })
 
   return {
     estimation: data,
     isLoading,
+    isFetching,
     error,
     refetch,
   }

@@ -58,8 +58,8 @@ export function PlanLimitWarning({
                       .{' '}
                       {orgId && (
                         <Link
-                          to="/organizations/$orgId/change-plan"
-                          params={{ orgId }}
+                          to="/upgrade"
+                          search={{ orgId }}
                           className="font-medium underline hover:no-underline"
                         >
                           Upgrade
@@ -73,8 +73,8 @@ export function PlanLimitWarning({
                       . You have {remaining} remaining.{' '}
                       {orgId && (
                         <Link
-                          to="/organizations/$orgId/change-plan"
-                          params={{ orgId }}
+                          to="/upgrade"
+                          search={{ orgId }}
                           className="font-medium underline hover:no-underline"
                         >
                           Upgrade
@@ -92,7 +92,7 @@ export function PlanLimitWarning({
                 size="sm"
                 className="h-8 shrink-0 bg-amber-500 px-3 text-[12px] font-medium text-amber-950 hover:bg-amber-400 dark:bg-amber-500 dark:text-amber-950 dark:hover:bg-amber-400"
               >
-                <Link to="/organizations/$orgId/change-plan" params={{ orgId }}>
+                <Link to="/upgrade" search={{ orgId }}>
                   Upgrade
                 </Link>
               </Button>

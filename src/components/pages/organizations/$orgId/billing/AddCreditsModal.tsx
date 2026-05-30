@@ -35,19 +35,19 @@ export function AddCreditsModal({
   onSuccess,
 }: AddCreditsModalProps) {
   const [couponCode, setCouponCode] = useState('')
+  const trimmedCode = couponCode.trim()
   const addCreditMutation = useAddOrganizationCredit()
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    const code = couponCode.trim()
-    if (!code) {
+    if (!trimmedCode) {
       toast.error('Please enter a promo code')
       return
     }
     try {
       await addCreditMutation.mutateAsync({
         organizationId,
-        couponId: code,
+        couponId: trimmedCode,
       })
       const message = organizationName
         ? `Credit has been added to ${organizationName}`
@@ -76,7 +76,8 @@ export function AddCreditsModal({
         <DialogHeader className="px-6 pt-6 text-left">
           <DialogTitle>Add credits</DialogTitle>
           <DialogDescription className="text-[13px] mt-2">
-            Apply Appwrite credits to your organization.
+            Apply Appwrite credits to your organization. Credits expire after a
+            set period and do not roll over.
           </DialogDescription>
         </DialogHeader>
         <div className="border-t border-border" />
@@ -89,7 +90,9 @@ export function AddCreditsModal({
             <Input
               id="add-credits-code"
               value={couponCode}
-              onChange={(e) => setCouponCode(e.target.value.trimStart())}
+              onChange={(e) =>
+                setCouponCode(e.target.value.trimStart().toUpperCase())
+              }
               placeholder="Promo code"
               className="mt-2 h-9 text-[13px]"
               disabled={addCreditMutation.isPending}
@@ -108,7 +111,7 @@ export function AddCreditsModal({
             </Button>
             <Button
               type="submit"
-              disabled={!couponCode.trim() || addCreditMutation.isPending}
+              disabled={!trimmedCode || addCreditMutation.isPending}
             >
               Add credits
             </Button>

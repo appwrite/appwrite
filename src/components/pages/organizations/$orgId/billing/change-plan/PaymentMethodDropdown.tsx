@@ -7,6 +7,7 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { Plus, Ticket } from 'lucide-react'
+import { PaymentMethodBrandAvatar } from '@/components/global/shared/PaymentMethodBrandAvatar'
 import type { Models } from '@appwrite.io/console'
 import { formatPaymentMethodSummary } from '../utils'
 
@@ -32,6 +33,13 @@ export function PaymentMethodDropdown({
   const getDisplayText = (method: Models.PaymentMethod) =>
     formatPaymentMethodSummary(method)
 
+  const renderPaymentMethodOption = (method: Models.PaymentMethod) => (
+    <span className="flex min-w-0 items-center gap-1.5">
+      <PaymentMethodBrandAvatar brand={method.brand} />
+      <span className="truncate">{getDisplayText(method)}</span>
+    </span>
+  )
+
   return (
     <div className="space-y-3">
       {/* Payment Method Dropdown */}
@@ -45,12 +53,23 @@ export function PaymentMethodDropdown({
             onValueChange={onPaymentMethodSelect}
           >
             <SelectTrigger className="h-9 w-full min-w-0 text-[13px]">
-              <SelectValue placeholder="Select payment method" />
+              <SelectValue placeholder="Select payment method">
+                {selectedPaymentMethodId
+                  ? (() => {
+                      const method = completedPaymentMethods.find(
+                        (pm) => pm.$id === selectedPaymentMethodId,
+                      )
+                      return method
+                        ? renderPaymentMethodOption(method)
+                        : undefined
+                    })()
+                  : undefined}
+              </SelectValue>
             </SelectTrigger>
             <SelectContent>
               {completedPaymentMethods.map((method) => (
                 <SelectItem key={method.$id} value={method.$id}>
-                  {getDisplayText(method)}
+                  {renderPaymentMethodOption(method)}
                 </SelectItem>
               ))}
             </SelectContent>

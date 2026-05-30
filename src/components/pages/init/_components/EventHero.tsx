@@ -352,21 +352,25 @@ export function EventHero({ event, headerAddon, liveBanner }: EventHeroProps) {
               <InitAddToCalendarButton />
             </div>
           ) : null}
-          {!event.isRecapMode && event.onlineCount > 0 ? (
-            <div className="mt-8 flex items-center justify-center gap-3">
-              <div className="flex -space-x-2">
-                {event.onlineUsers.slice(0, 4).map((user) => (
-                  <InitialsAvatar
-                    key={user.id}
-                    name={user.name}
-                    size="sm"
-                    className="ring-2 ring-background"
-                  />
-                ))}
-              </div>
-              <span className="text-[12px] text-muted-foreground">
-                {event.onlineCount.toLocaleString()} online now
-              </span>
+          {!event.isRecapMode && event.presenceEnabled ? (
+            <div className="mt-8 flex min-h-8 items-center justify-center gap-3">
+              {event.onlineCount > 0 ? (
+                <>
+                  <div className="flex -space-x-2">
+                    {event.onlineUsers.slice(0, 4).map((user) => (
+                      <InitialsAvatar
+                        key={user.id}
+                        name={user.name}
+                        size="sm"
+                        className="ring-2 ring-background"
+                      />
+                    ))}
+                  </div>
+                  <span className="text-[12px] text-muted-foreground">
+                    {event.onlineCount.toLocaleString()} online now
+                  </span>
+                </>
+              ) : null}
             </div>
           ) : null}
         </div>

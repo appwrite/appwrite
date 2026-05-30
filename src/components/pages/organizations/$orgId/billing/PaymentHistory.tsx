@@ -23,6 +23,7 @@ import { useQueryClient } from '@tanstack/react-query'
 import type { Models } from '@appwrite.io/console'
 import { sdk } from '@/lib/appwrite/sdk'
 import { toast } from 'sonner'
+import { WarningAlert } from '@/components/global/shared/WarningAlert'
 import { confirmPayment } from '@/lib/utils/stripe'
 
 const ITEMS_PER_PAGE = 5
@@ -255,13 +256,12 @@ export function PaymentHistory() {
             Payment history
           </h3>
         </div>
-        <div className="border-t border-border px-6 py-12 text-center">
-          <p className="text-[13px] text-red-600 dark:text-red-400">
-            Failed to load invoices.{' '}
+        <div className="border-t border-border px-6 py-6">
+          <WarningAlert title="Failed to load invoices">
             {displayedError instanceof Error
               ? displayedError.message
               : 'Please try again.'}
-          </p>
+          </WarningAlert>
         </div>
       </div>
     )
@@ -292,9 +292,9 @@ export function PaymentHistory() {
           Payment history
         </h3>
         {requestedPageError && requestedPage !== displayedPage && (
-          <p className="text-[12px] text-red-600 dark:text-red-400">
+          <WarningAlert className="max-w-sm">
             Failed to load page {requestedPage + 1}
-          </p>
+          </WarningAlert>
         )}
       </div>
 

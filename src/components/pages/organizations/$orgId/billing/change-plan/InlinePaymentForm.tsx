@@ -17,7 +17,7 @@ export function InlinePaymentForm({
     <div className="rounded-lg border border-border bg-card/50 p-4 space-y-4">
       <div className="flex items-center justify-between">
         <h3 className="text-[15px] font-semibold text-foreground">
-          Add payment method
+          Add payment method <span className="text-destructive">*</span>
         </h3>
         {onCancel && (
           <Button

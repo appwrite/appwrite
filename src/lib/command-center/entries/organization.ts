@@ -199,7 +199,12 @@ const ORG_CREATE: CommandEntry[] = [
     icon: Building2,
     shortcut: 'C T',
     keywords: ['new', 'organization', 'team', 'add'],
-    perform: (ctx) => ctx.closeCommandCenter(),
+    perform: (ctx) => {
+      ctx.closeCommandCenter()
+      if (ctx.features.billing) {
+        ctx.navigate('/upgrade')
+      }
+    },
   },
   {
     id: 'org.create.invite-member',

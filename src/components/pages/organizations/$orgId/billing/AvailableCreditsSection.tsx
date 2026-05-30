@@ -2,7 +2,8 @@ import { useState, useMemo, useEffect } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { Plus, Ticket, ChevronLeft, ChevronRight } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import { formatCurrency, formatDate } from './utils'
+import { formatCurrency } from './utils'
+import { DateTooltip } from '@/components/global/shared/DateTooltip'
 import { cn } from '@/lib/utils'
 import {
   Table,
@@ -223,9 +224,15 @@ export function AvailableCreditsSection({
       {/* Header */}
       <div className="px-6 py-4">
         <div className="flex items-center justify-between">
-          <h3 className="text-[15px] font-semibold text-foreground">
-            Available credits
-          </h3>
+          <div>
+            <h3 className="text-[15px] font-semibold text-foreground">
+              Available credits
+            </h3>
+            <p className="text-[13px] text-muted-foreground mt-2 leading-relaxed">
+              Credits expire on the date shown for each code. Unused credits do
+              not roll over after that date.
+            </p>
+          </div>
           {hasCredits && (
             <Badge
               variant="info"
@@ -295,7 +302,7 @@ export function AvailableCreditsSection({
                     Remaining
                   </TableHead>
                   <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider text-right">
-                    Expires At
+                    Credit expires
                   </TableHead>
                 </TableRow>
               </TableHeader>
@@ -335,24 +342,33 @@ export function AvailableCreditsSection({
                       <TableCell className="px-4 py-3 text-right">
                         {credit.expiration ? (
                           <div className="flex items-center justify-end gap-2">
-                            <span
+                            <DateTooltip
+                              date={credit.expiration}
                               className={cn(
                                 'text-[12px]',
                                 isExpired
-                                  ? 'text-muted-foreground'
+                                  ? 'text-muted-foreground line-through'
                                   : 'text-foreground',
                               )}
-                            >
-                              {formatDate(credit.expiration)}
-                            </span>
-                            {isExpired && (
+                            />
+                            {isExpired ? (
                               <Badge
                                 variant="error"
                                 className="h-5 px-1.5 text-[10px] shrink-0"
                               >
                                 Expired
                               </Badge>
-                            )}
+                            ) : credit.expiresAtDate &&
+                              !isExpired &&
+                              credit.expiresAtDate.getTime() - Date.now() <=
+                                30 * 24 * 60 * 60 * 1000 ? (
+                              <Badge
+                                variant="warning"
+                                className="h-5 px-1.5 text-[10px] shrink-0"
+                              >
+                                Expires soon
+                              </Badge>
+                            ) : null}
                           </div>
                         ) : (
                           <span className="text-[12px] text-muted-foreground">

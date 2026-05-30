@@ -62,10 +62,15 @@ interface WizardLayoutProps {
    */
   fullscreenContentXClassName?: string
   /**
-   * When true, skips auto-focusing the first focusable field on mount.
-   * Use for wizards where another region (e.g. a canvas) should receive initial focus.
+   * When true, skips auto-focusing the first text field or radio on mount.
+   * Use for change/edit wizards (e.g. upgrade an existing org) or when another
+   * region should receive initial focus (e.g. a canvas).
    */
   skipInitialFieldFocus?: boolean
+  /**
+   * When this value changes, initial focus runs again (e.g. after async content mounts).
+   */
+  initialFocusKey?: string | number
 }
 
 /**
@@ -119,25 +124,37 @@ export function WizardLayout({
   fullscreenInnerClassName,
   fullscreenContentXClassName,
   skipInitialFieldFocus = false,
+  initialFocusKey,
 }: WizardLayoutProps) {
   // Use smart navigation hook for consistent back behavior
   // Navigation priority: fallbackPath (if provided) > browser history > root
   const smartGoBack = useSmartNavigation({ fallbackPath })
   const contentRef = useRef<HTMLDivElement>(null)
 
-  // Focus the first input when the wizard opens (unless skipped for canvas-first wizards)
+  // Focus the first input or radio when the wizard opens (unless skipped for canvas-first wizards)
   useEffect(() => {
     if (skipInitialFieldFocus) return
     const timer = requestAnimationFrame(() => {
-      const el = contentRef.current?.querySelector<
+      const root = contentRef.current
+      if (!root) return
+
+      const textInput = root.querySelector<
         HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
       >(
         'input:not([type="hidden"]):not([disabled]), textarea:not([disabled]), select:not([disabled])',
       )
-      el?.focus()
+      if (textInput) {
+        textInput.focus()
+        return
+      }
+
+      const radio = root.querySelector<HTMLElement>(
+        '[data-slot="radio-group-item"]:not([disabled])',
+      )
+      radio?.focus()
     })
     return () => cancelAnimationFrame(timer)
-  }, [skipInitialFieldFocus])
+  }, [skipInitialFieldFocus, initialFocusKey])
 
   /**
    * Handle wizard close: use custom onClose or smart navigation

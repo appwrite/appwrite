@@ -13,6 +13,7 @@ import { Route as PublicRouteImport } from './routes/_public'
 import { Route as ProtectedRouteImport } from './routes/_protected'
 import { Route as AuthRouteImport } from './routes/_auth'
 import { Route as PublicIndexRouteImport } from './routes/_public/index'
+import { Route as PublicUpgradeRouteImport } from './routes/_public/upgrade'
 import { Route as PublicResetRouteImport } from './routes/_public/reset'
 import { Route as PublicInitRouteImport } from './routes/_public/init'
 import { Route as PublicCompsRouteImport } from './routes/_public/comps'
@@ -30,6 +31,7 @@ import { Route as AuthJoinRouteImport } from './routes/_auth/join'
 import { Route as ApiHelloRouteImport } from './routes/_api/hello'
 import { Route as PublicProjectsProjectIdRouteImport } from './routes/_public/projects.$projectId'
 import { Route as PublicOrganizationsOrgIdRouteImport } from './routes/_public/organizations.$orgId'
+import { Route as PublicDebugOrgSetupPreviewRouteImport } from './routes/_public/debug.org-setup-preview'
 import { Route as PublicDebugErrorPreviewRouteImport } from './routes/_public/debug.error-preview'
 import { Route as PublicAccountTabRouteImport } from './routes/_public/account.$tab'
 import { Route as PublicProjectsProjectIdIndexRouteImport } from './routes/_public/projects.$projectId.index'
@@ -56,7 +58,6 @@ import { Route as PublicOrganizationsOrgIdSettingsRouteImport } from './routes/_
 import { Route as PublicOrganizationsOrgIdMembersRouteImport } from './routes/_public/organizations.$orgId.members'
 import { Route as PublicOrganizationsOrgIdMarketplaceRouteImport } from './routes/_public/organizations.$orgId.marketplace'
 import { Route as PublicOrganizationsOrgIdDomainsRouteImport } from './routes/_public/organizations.$orgId.domains'
-import { Route as PublicOrganizationsOrgIdChangePlanRouteImport } from './routes/_public/organizations.$orgId.change-plan'
 import { Route as PublicOrganizationsOrgIdBillingRouteImport } from './routes/_public/organizations.$orgId.billing'
 import { Route as ApiInitCalendarEventSlugRouteImport } from './routes/_api/init/calendar/$eventSlug'
 import { Route as PublicProjectsProjectIdStorageIndexRouteImport } from './routes/_public/projects.$projectId.storage.index'
@@ -248,6 +249,11 @@ const PublicIndexRoute = PublicIndexRouteImport.update({
   path: '/',
   getParentRoute: () => PublicRoute,
 } as any)
+const PublicUpgradeRoute = PublicUpgradeRouteImport.update({
+  id: '/upgrade',
+  path: '/upgrade',
+  getParentRoute: () => PublicRoute,
+} as any)
 const PublicResetRoute = PublicResetRouteImport.update({
   id: '/reset',
   path: '/reset',
@@ -333,6 +339,12 @@ const PublicOrganizationsOrgIdRoute =
   PublicOrganizationsOrgIdRouteImport.update({
     id: '/organizations/$orgId',
     path: '/organizations/$orgId',
+    getParentRoute: () => PublicRoute,
+  } as any)
+const PublicDebugOrgSetupPreviewRoute =
+  PublicDebugOrgSetupPreviewRouteImport.update({
+    id: '/debug/org-setup-preview',
+    path: '/debug/org-setup-preview',
     getParentRoute: () => PublicRoute,
   } as any)
 const PublicDebugErrorPreviewRoute = PublicDebugErrorPreviewRouteImport.update({
@@ -487,12 +499,6 @@ const PublicOrganizationsOrgIdDomainsRoute =
   PublicOrganizationsOrgIdDomainsRouteImport.update({
     id: '/domains',
     path: '/domains',
-    getParentRoute: () => PublicOrganizationsOrgIdRoute,
-  } as any)
-const PublicOrganizationsOrgIdChangePlanRoute =
-  PublicOrganizationsOrgIdChangePlanRouteImport.update({
-    id: '/change-plan',
-    path: '/change-plan',
     getParentRoute: () => PublicOrganizationsOrgIdRoute,
   } as any)
 const PublicOrganizationsOrgIdBillingRoute =
@@ -1673,14 +1679,15 @@ export interface FileRoutesByFullPath {
   '/comps': typeof PublicCompsRoute
   '/init': typeof PublicInitRoute
   '/reset': typeof PublicResetRoute
+  '/upgrade': typeof PublicUpgradeRoute
   '/': typeof PublicIndexRoute
   '/account/$tab': typeof PublicAccountTabRoute
   '/debug/error-preview': typeof PublicDebugErrorPreviewRoute
+  '/debug/org-setup-preview': typeof PublicDebugOrgSetupPreviewRoute
   '/organizations/$orgId': typeof PublicOrganizationsOrgIdRouteWithChildren
   '/projects/$projectId': typeof PublicProjectsProjectIdRouteWithChildren
   '/init/calendar/$eventSlug': typeof ApiInitCalendarEventSlugRoute
   '/organizations/$orgId/billing': typeof PublicOrganizationsOrgIdBillingRoute
-  '/organizations/$orgId/change-plan': typeof PublicOrganizationsOrgIdChangePlanRoute
   '/organizations/$orgId/domains': typeof PublicOrganizationsOrgIdDomainsRouteWithChildren
   '/organizations/$orgId/marketplace': typeof PublicOrganizationsOrgIdMarketplaceRouteWithChildren
   '/organizations/$orgId/members': typeof PublicOrganizationsOrgIdMembersRoute
@@ -1893,12 +1900,13 @@ export interface FileRoutesByTo {
   '/comps': typeof PublicCompsRoute
   '/init': typeof PublicInitRoute
   '/reset': typeof PublicResetRoute
+  '/upgrade': typeof PublicUpgradeRoute
   '/': typeof PublicIndexRoute
   '/account/$tab': typeof PublicAccountTabRoute
   '/debug/error-preview': typeof PublicDebugErrorPreviewRoute
+  '/debug/org-setup-preview': typeof PublicDebugOrgSetupPreviewRoute
   '/init/calendar/$eventSlug': typeof ApiInitCalendarEventSlugRoute
   '/organizations/$orgId/billing': typeof PublicOrganizationsOrgIdBillingRoute
-  '/organizations/$orgId/change-plan': typeof PublicOrganizationsOrgIdChangePlanRoute
   '/organizations/$orgId/members': typeof PublicOrganizationsOrgIdMembersRoute
   '/organizations/$orgId/settings': typeof PublicOrganizationsOrgIdSettingsRouteWithChildren
   '/organizations/$orgId/support': typeof PublicOrganizationsOrgIdSupportRoute
@@ -2086,14 +2094,15 @@ export interface FileRoutesById {
   '/_public/comps': typeof PublicCompsRoute
   '/_public/init': typeof PublicInitRoute
   '/_public/reset': typeof PublicResetRoute
+  '/_public/upgrade': typeof PublicUpgradeRoute
   '/_public/': typeof PublicIndexRoute
   '/_public/account/$tab': typeof PublicAccountTabRoute
   '/_public/debug/error-preview': typeof PublicDebugErrorPreviewRoute
+  '/_public/debug/org-setup-preview': typeof PublicDebugOrgSetupPreviewRoute
   '/_public/organizations/$orgId': typeof PublicOrganizationsOrgIdRouteWithChildren
   '/_public/projects/$projectId': typeof PublicProjectsProjectIdRouteWithChildren
   '/_api/init/calendar/$eventSlug': typeof ApiInitCalendarEventSlugRoute
   '/_public/organizations/$orgId/billing': typeof PublicOrganizationsOrgIdBillingRoute
-  '/_public/organizations/$orgId/change-plan': typeof PublicOrganizationsOrgIdChangePlanRoute
   '/_public/organizations/$orgId/domains': typeof PublicOrganizationsOrgIdDomainsRouteWithChildren
   '/_public/organizations/$orgId/marketplace': typeof PublicOrganizationsOrgIdMarketplaceRouteWithChildren
   '/_public/organizations/$orgId/members': typeof PublicOrganizationsOrgIdMembersRoute
@@ -2308,14 +2317,15 @@ export interface FileRouteTypes {
     | '/comps'
     | '/init'
     | '/reset'
+    | '/upgrade'
     | '/'
     | '/account/$tab'
     | '/debug/error-preview'
+    | '/debug/org-setup-preview'
     | '/organizations/$orgId'
     | '/projects/$projectId'
     | '/init/calendar/$eventSlug'
     | '/organizations/$orgId/billing'
-    | '/organizations/$orgId/change-plan'
     | '/organizations/$orgId/domains'
     | '/organizations/$orgId/marketplace'
     | '/organizations/$orgId/members'
@@ -2528,12 +2538,13 @@ export interface FileRouteTypes {
     | '/comps'
     | '/init'
     | '/reset'
+    | '/upgrade'
     | '/'
     | '/account/$tab'
     | '/debug/error-preview'
+    | '/debug/org-setup-preview'
     | '/init/calendar/$eventSlug'
     | '/organizations/$orgId/billing'
-    | '/organizations/$orgId/change-plan'
     | '/organizations/$orgId/members'
     | '/organizations/$orgId/settings'
     | '/organizations/$orgId/support'
@@ -2720,14 +2731,15 @@ export interface FileRouteTypes {
     | '/_public/comps'
     | '/_public/init'
     | '/_public/reset'
+    | '/_public/upgrade'
     | '/_public/'
     | '/_public/account/$tab'
     | '/_public/debug/error-preview'
+    | '/_public/debug/org-setup-preview'
     | '/_public/organizations/$orgId'
     | '/_public/projects/$projectId'
     | '/_api/init/calendar/$eventSlug'
     | '/_public/organizations/$orgId/billing'
-    | '/_public/organizations/$orgId/change-plan'
     | '/_public/organizations/$orgId/domains'
     | '/_public/organizations/$orgId/marketplace'
     | '/_public/organizations/$orgId/members'
@@ -2963,6 +2975,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PublicIndexRouteImport
       parentRoute: typeof PublicRoute
     }
+    '/_public/upgrade': {
+      id: '/_public/upgrade'
+      path: '/upgrade'
+      fullPath: '/upgrade'
+      preLoaderRoute: typeof PublicUpgradeRouteImport
+      parentRoute: typeof PublicRoute
+    }
     '/_public/reset': {
       id: '/_public/reset'
       path: '/reset'
@@ -3080,6 +3099,13 @@ declare module '@tanstack/react-router' {
       path: '/organizations/$orgId'
       fullPath: '/organizations/$orgId'
       preLoaderRoute: typeof PublicOrganizationsOrgIdRouteImport
+      parentRoute: typeof PublicRoute
+    }
+    '/_public/debug/org-setup-preview': {
+      id: '/_public/debug/org-setup-preview'
+      path: '/debug/org-setup-preview'
+      fullPath: '/debug/org-setup-preview'
+      preLoaderRoute: typeof PublicDebugOrgSetupPreviewRouteImport
       parentRoute: typeof PublicRoute
     }
     '/_public/debug/error-preview': {
@@ -3262,13 +3288,6 @@ declare module '@tanstack/react-router' {
       path: '/domains'
       fullPath: '/organizations/$orgId/domains'
       preLoaderRoute: typeof PublicOrganizationsOrgIdDomainsRouteImport
-      parentRoute: typeof PublicOrganizationsOrgIdRoute
-    }
-    '/_public/organizations/$orgId/change-plan': {
-      id: '/_public/organizations/$orgId/change-plan'
-      path: '/change-plan'
-      fullPath: '/organizations/$orgId/change-plan'
-      preLoaderRoute: typeof PublicOrganizationsOrgIdChangePlanRouteImport
       parentRoute: typeof PublicOrganizationsOrgIdRoute
     }
     '/_public/organizations/$orgId/billing': {
@@ -4620,7 +4639,6 @@ const PublicOrganizationsOrgIdSettingsRouteWithChildren =
 
 interface PublicOrganizationsOrgIdRouteChildren {
   PublicOrganizationsOrgIdBillingRoute: typeof PublicOrganizationsOrgIdBillingRoute
-  PublicOrganizationsOrgIdChangePlanRoute: typeof PublicOrganizationsOrgIdChangePlanRoute
   PublicOrganizationsOrgIdDomainsRoute: typeof PublicOrganizationsOrgIdDomainsRouteWithChildren
   PublicOrganizationsOrgIdMarketplaceRoute: typeof PublicOrganizationsOrgIdMarketplaceRouteWithChildren
   PublicOrganizationsOrgIdMembersRoute: typeof PublicOrganizationsOrgIdMembersRoute
@@ -4632,8 +4650,6 @@ interface PublicOrganizationsOrgIdRouteChildren {
 const PublicOrganizationsOrgIdRouteChildren: PublicOrganizationsOrgIdRouteChildren =
   {
     PublicOrganizationsOrgIdBillingRoute: PublicOrganizationsOrgIdBillingRoute,
-    PublicOrganizationsOrgIdChangePlanRoute:
-      PublicOrganizationsOrgIdChangePlanRoute,
     PublicOrganizationsOrgIdDomainsRoute:
       PublicOrganizationsOrgIdDomainsRouteWithChildren,
     PublicOrganizationsOrgIdMarketplaceRoute:
@@ -5596,8 +5612,10 @@ interface PublicRouteChildren {
   PublicCompsRoute: typeof PublicCompsRoute
   PublicInitRoute: typeof PublicInitRoute
   PublicResetRoute: typeof PublicResetRoute
+  PublicUpgradeRoute: typeof PublicUpgradeRoute
   PublicIndexRoute: typeof PublicIndexRoute
   PublicDebugErrorPreviewRoute: typeof PublicDebugErrorPreviewRoute
+  PublicDebugOrgSetupPreviewRoute: typeof PublicDebugOrgSetupPreviewRoute
   PublicOrganizationsOrgIdRoute: typeof PublicOrganizationsOrgIdRouteWithChildren
   PublicProjectsProjectIdRoute: typeof PublicProjectsProjectIdRouteWithChildren
 }
@@ -5609,8 +5627,10 @@ const PublicRouteChildren: PublicRouteChildren = {
   PublicCompsRoute: PublicCompsRoute,
   PublicInitRoute: PublicInitRoute,
   PublicResetRoute: PublicResetRoute,
+  PublicUpgradeRoute: PublicUpgradeRoute,
   PublicIndexRoute: PublicIndexRoute,
   PublicDebugErrorPreviewRoute: PublicDebugErrorPreviewRoute,
+  PublicDebugOrgSetupPreviewRoute: PublicDebugOrgSetupPreviewRoute,
   PublicOrganizationsOrgIdRoute: PublicOrganizationsOrgIdRouteWithChildren,
   PublicProjectsProjectIdRoute: PublicProjectsProjectIdRouteWithChildren,
 }

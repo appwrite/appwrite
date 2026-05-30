@@ -17,6 +17,8 @@ const PARTICLE_BRIGHTNESS = 0.8
 type InitHeroBackgroundProps = {
   containerRef: RefObject<HTMLElement | null>
   compact?: boolean
+  /** Compact horizontal bars (e.g. org promo): drift across the full banner width. */
+  fullWidthMotion?: boolean
   /** When false, timers pause (e.g. hidden collapsed header). */
   active?: boolean
   /**
@@ -138,6 +140,7 @@ function applyParticleTheme(
 export function InitHeroBackground({
   containerRef,
   compact = false,
+  fullWidthMotion = false,
   active = true,
   bare = false,
   accentColor,
@@ -151,6 +154,7 @@ export function InitHeroBackground({
   const runtimeRef = useRef<AnimationRuntime | null>(null)
   const themeStateRef = useRef<ThemeState | null>(null)
   const compactRef = useRef(compact)
+  const fullWidthMotionRef = useRef(fullWidthMotion)
   const activeRef = useRef(active)
   const canRunRef = useRef(true)
   const keepAliveWhenHiddenRef = useRef(keepAliveWhenHidden)
@@ -161,6 +165,7 @@ export function InitHeroBackground({
   const accentColorRef = useRef(accentColor)
 
   compactRef.current = compact
+  fullWidthMotionRef.current = fullWidthMotion
   activeRef.current = active
   accentColorRef.current = accentColor
   keepAliveWhenHiddenRef.current = keepAliveWhenHidden
@@ -244,9 +249,14 @@ export function InitHeroBackground({
 
     const getViewport = () => {
       const isCompact = compactRef.current
+      const isFullWidth = fullWidthMotionRef.current
+      const rightHalfWidth = container.clientWidth * 0.5
       return {
-        w: container.clientWidth * (isCompact ? 0.32 : 0.5),
-        h: container.clientHeight * (isCompact ? 0.9 : 0.5),
+        w:
+          isCompact && isFullWidth
+            ? rightHalfWidth * 0.85
+            : container.clientWidth * (isCompact ? 0.32 : 0.5),
+        h: container.clientHeight * (isCompact && isFullWidth ? 1.75 : isCompact ? 0.9 : 0.5),
       }
     }
 
@@ -291,13 +301,19 @@ export function InitHeroBackground({
       },
     })
 
+    const isFullWidthMotion = fullWidthMotionRef.current && compactRef.current
     const autoMove = createTimeline()
       .add(
         cursor,
         {
-          x: [-viewport.w * 0.45, viewport.w * 0.45],
+          x: isFullWidthMotion
+            ? [-viewport.w * 0.6, viewport.w * 0.6]
+            : [-viewport.w * 0.45, viewport.w * 0.45],
           modifier: (x) =>
-            x + Math.sin(mainLoop.currentTime * timeScale(0.0007)) * viewport.w * 0.5,
+            x +
+            Math.sin(mainLoop.currentTime * timeScale(0.0007)) *
+              viewport.w *
+              (isFullWidthMotion ? 0.28 : 0.5),
           duration: dur(3000),
           ease: 'inOutExpo',
           alternate: true,
@@ -310,9 +326,14 @@ export function InitHeroBackground({
       .add(
         cursor,
         {
-          y: [-viewport.h * 0.45, viewport.h * 0.45],
+          y: isFullWidthMotion
+            ? [-viewport.h * 0.5, viewport.h * 0.5]
+            : [-viewport.h * 0.45, viewport.h * 0.45],
           modifier: (y) =>
-            y + Math.cos(mainLoop.currentTime * timeScale(0.00012)) * viewport.h * 0.5,
+            y +
+            Math.cos(mainLoop.currentTime * timeScale(0.00012)) *
+              viewport.h *
+              (isFullWidthMotion ? 0.48 : 0.5),
           duration: dur(1000),
           ease: 'inOutQuad',
           alternate: true,
@@ -356,7 +377,8 @@ export function InitHeroBackground({
       if (!point) return
 
       onInteractionStartRef.current?.()
-      cursor.x = point.clientX - rect.left - viewport.w
+      const motionOriginX = isFullWidthMotion ? container.clientWidth * 0.5 : 0
+      cursor.x = point.clientX - rect.left - motionOriginX - viewport.w
       cursor.y = point.clientY - rect.top - viewport.h
       autoMove.pause()
       manualMovementTimeout.restart()
@@ -438,7 +460,7 @@ export function InitHeroBackground({
       runtimeRef.current = null
       themeStateRef.current = null
     }
-  }, [containerRef, particleIsDark, particleMotionSpeed])
+  }, [containerRef, particleIsDark, particleMotionSpeed, fullWidthMotion])
 
   useEffect(() => {
     runtimeRef.current?.syncLayout()
@@ -483,6 +505,10 @@ export function InitHeroBackground({
     }
   }, [resolvedTheme, accentColor, particleIsDark, containerRef])
 
+  const creatureClassName = isDark
+    ? 'flex flex-wrap items-center justify-center [&>.init-hero-particle]:relative [&>.init-hero-particle]:m-[3em] [&>.init-hero-particle]:size-[4em] [&>.init-hero-particle]:rounded-[2em] [&>.init-hero-particle]:[mix-blend-mode:plus-lighter] [&>.init-hero-particle]:will-change-transform [&>.init-hero-particle]:[transform-style:preserve-3d]'
+    : 'flex flex-wrap items-center justify-center [&>.init-hero-particle]:relative [&>.init-hero-particle]:m-[3em] [&>.init-hero-particle]:size-[4em] [&>.init-hero-particle]:rounded-[2em] [&>.init-hero-particle]:mix-blend-normal [&>.init-hero-particle]:will-change-transform [&>.init-hero-particle]:[transform-style:preserve-3d]'
+
   return (
     <>
       {!bare ? (
@@ -503,20 +529,33 @@ export function InitHeroBackground({
       ) : null}
       <div
         className={cn(
-          'pointer-events-none absolute inset-0 flex overflow-hidden transition-[justify-content,padding] duration-500 ease-[cubic-bezier(0.4,0,0.2,1)]',
-          compact ? 'items-center justify-end pe-2 sm:pe-6' : 'items-center justify-center',
+          'pointer-events-none absolute inset-0 flex transition-[justify-content,padding] duration-500 ease-[cubic-bezier(0.4,0,0.2,1)]',
+          compact && fullWidthMotion ? 'overflow-visible' : 'overflow-hidden',
+          compact
+            ? fullWidthMotion
+              ? 'items-stretch'
+              : 'items-center justify-end pe-2 sm:pe-6'
+            : 'items-center justify-center',
         )}
         aria-hidden
       >
-        <div
-          ref={creatureRef}
-          className={
-            isDark
-              ? 'flex flex-wrap items-center justify-center [&>.init-hero-particle]:relative [&>.init-hero-particle]:m-[3em] [&>.init-hero-particle]:size-[4em] [&>.init-hero-particle]:rounded-[2em] [&>.init-hero-particle]:[mix-blend-mode:plus-lighter] [&>.init-hero-particle]:will-change-transform [&>.init-hero-particle]:[transform-style:preserve-3d]'
-              : 'flex flex-wrap items-center justify-center [&>.init-hero-particle]:relative [&>.init-hero-particle]:m-[3em] [&>.init-hero-particle]:size-[4em] [&>.init-hero-particle]:rounded-[2em] [&>.init-hero-particle]:mix-blend-normal [&>.init-hero-particle]:will-change-transform [&>.init-hero-particle]:[transform-style:preserve-3d]'
-          }
-          style={{ width: '150em', height: '150em' }}
-        />
+        {compact && fullWidthMotion ? (
+          <div className="relative h-full w-full overflow-visible">
+            <div className="absolute left-[75%] top-1/2 -translate-x-1/2 -translate-y-1/2">
+              <div
+                ref={creatureRef}
+                className={creatureClassName}
+                style={{ width: '150em', height: '150em' }}
+              />
+            </div>
+          </div>
+        ) : (
+          <div
+            ref={creatureRef}
+            className={creatureClassName}
+            style={{ width: '150em', height: '150em' }}
+          />
+        )}
       </div>
     </>
   )

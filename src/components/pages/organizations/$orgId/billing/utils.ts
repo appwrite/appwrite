@@ -136,13 +136,27 @@ const CARD_BRAND_LABELS: Record<string, string> = {
   diners_club: 'Diners Club',
   jcb: 'JCB',
   unionpay: 'UnionPay',
+  maestro: 'Maestro',
+  elo: 'Elo',
+  hipercard: 'Hipercard',
+  mir: 'MIR',
+  rupay: 'RuPay',
+  argencard: 'Argencard',
+  cabal: 'Cabal',
+  cencosud: 'Cencosud',
+  naranja: 'Naranja',
+  'targeta-shopping': 'Tarjeta Shopping',
+}
+
+function normalizePaymentCardBrand(brand: string | undefined): string {
+  return brand?.trim().toLowerCase().replace(/[\s-]+/g, '_') || ''
 }
 
 /**
  * Human-readable card network from API `brand` (often Stripe-style slugs).
  */
 export function formatPaymentCardBrand(brand: string | undefined): string {
-  const b = brand?.trim().toLowerCase() || ''
+  const b = normalizePaymentCardBrand(brand)
   if (CARD_BRAND_LABELS[b]) return CARD_BRAND_LABELS[b]
   if (!b) return 'Card'
   return b
@@ -201,3 +215,4 @@ export function isSubscriptionFailedInvoiceWithError(
     !!failedInvoice.lastError
   )
 }
+

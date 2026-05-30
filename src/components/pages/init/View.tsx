@@ -45,11 +45,9 @@ import type { InitDisplayEvent } from '@/lib/init/types'
 function InitPageContent({
   baseEvent,
   account,
-  isAccountLoading,
 }: {
   baseEvent: InitDisplayEvent
   account?: Models.User | null
-  isAccountLoading: boolean
 }) {
   const [commandCenterOpen, setCommandCenterOpen] = useState(false)
   const [onlineNavOpen, setOnlineNavOpen] = useState(false)
@@ -82,11 +80,10 @@ function InitPageContent({
 
   const showOnlineNav =
     !event.isRecapMode &&
-    (Boolean(baseEvent.presenceEnabled && isAccountLoading) ||
-      hasOnlineUsersNav(event, {
-        presenceEnabled: baseEvent.presenceEnabled,
-        isAuthenticated: Boolean(account),
-      }))
+    hasOnlineUsersNav(event, {
+      presenceEnabled: baseEvent.presenceEnabled,
+      isAuthenticated: Boolean(account),
+    })
 
   return (
     <>
@@ -191,6 +188,7 @@ function InitPageContent({
 
             <InitPageCredits
               showPresenceCredit={Boolean(event.presenceEnabled && account)}
+              showGlobeCredit={Boolean(event.presenceEnabled && !event.isRecapMode)}
             />
           </div>
         </InitTicketVideoRecordingProvider>
@@ -222,9 +220,7 @@ export function View() {
     return applyInitEventVisibility(active, { mockCurrentDay: mockInitCurrentDay })
   }, [mockInitCurrentDay])
 
-  const { data: account, isSuccess: isAccountReady, isLoading: isAccountLoading } = useQuery(
-    consoleAccountQueryOptions(),
-  )
+  const { data: account, isSuccess: isAccountReady } = useQuery(consoleAccountQueryOptions())
 
   if (!baseEvent) {
     return <InitEmptyState />
@@ -241,11 +237,7 @@ export function View() {
       )}
     >
       <InitGiveawayRaffleProvider event={baseEvent}>
-        <InitPageContent
-          baseEvent={baseEvent}
-          account={account}
-          isAccountLoading={isAccountLoading}
-        />
+        <InitPageContent baseEvent={baseEvent} account={account} />
       </InitGiveawayRaffleProvider>
     </InitPresenceProvider>
   )

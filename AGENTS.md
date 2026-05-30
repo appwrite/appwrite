@@ -426,6 +426,10 @@ Checklist (in this order):
 - **Reset after submission** - All creation forms reset and close dialog on success
 - **Row ID input** - Show `IdInput` only during creation, optional custom ID or auto-generate
 
+### Copy
+
+- **No em dashes** - Do not use em dashes (`—`) in user-facing copy, labels, descriptions, or empty states. Use a period, comma, colon, or parentheses instead.
+
 ### Visual Design
 
 - **Service avatars**: Always neutral (`bg-muted text-muted-foreground`), never colored
@@ -1016,6 +1020,7 @@ Follow the modal structure pattern above. For no-content modals, skip content se
 | Button during action   | Keep text, use `disabled` state                                                                                                                                                                                                           |
 | Unavailable action     | Disable button with tooltip, don't hide                                                                                                                                                                                                   |
 | Text buttons           | No tooltip when button has a text label (tooltips only for icon-only buttons)                                                                                                                                                             |
+| Em dashes              | Never use `—` in user-facing copy; use a period, comma, colon, or parentheses instead                                                                                                                                                     |
 | Service avatar         | `bg-muted text-muted-foreground` (never colored)                                                                                                                                                                                          |
 | Badge style            | Use status variants (`error`, `warning`, `success`, `info`) for same design; `text-[10px] shrink-0` when inline with text                                                                                                                 |
 | Icon spacing           | `mr-1.5` or `gap-1.5`                                                                                                                                                                                                                     |

@@ -596,6 +596,14 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
     'owner' | 'developer' | 'editor' | 'analyst' | 'billing'
   >('developer')
   const [createOrgDialogOpen, setCreateOrgDialogOpen] = useState(false)
+
+  const handleOpenCreateOrganization = useCallback(() => {
+    if (features.billing) {
+      navigate({ to: '/upgrade' })
+      return
+    }
+    setCreateOrgDialogOpen(true)
+  }, [features.billing, navigate])
   const [createProjectDialogOpen, setCreateProjectDialogOpen] = useState(false)
   const [deleteOrgDialogOpen, setDeleteOrgDialogOpen] = useState(false)
   const [deleteOrgConfirmation, setDeleteOrgConfirmation] = useState('')
@@ -768,13 +776,22 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
     }
   }, [selectedOrg])
 
-  // Check for createOrg search param and open dialog
+  // Check for createOrg search param and open dialog (self-hosted) or upgrade wizard (cloud)
   useEffect(() => {
     const shouldCreateOrg =
       typeof search === 'object' &&
       'createOrg' in search &&
       search.createOrg === true
-    if (shouldCreateOrg && !organizationsLoading && !createOrgDialogOpen) {
+    if (!shouldCreateOrg || organizationsLoading) {
+      return
+    }
+
+    if (features.billing) {
+      navigate({ to: '/upgrade', replace: true })
+      return
+    }
+
+    if (!createOrgDialogOpen) {
       setCreateOrgDialogOpen(true)
       // Remove the search param from URL
       navigate({
@@ -795,6 +812,7 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
     createOrgDialogOpen,
     navigate,
     location.pathname,
+    features.billing,
   ])
 
   // Check for create=project search param (e.g. from header plus button) and open Create Project dialog
@@ -842,8 +860,10 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
           params: { orgId: organizations[0].$id },
           replace: true,
         })
+      } else if (features.billing) {
+        navigate({ to: '/upgrade', replace: true })
       } else if (!createOrgDialogOpen) {
-        // No organizations at all, open creation wizard (only if not already open)
+        // No organizations at all, open creation dialog (only if not already open)
         setCreateOrgDialogOpen(true)
       }
     }
@@ -854,6 +874,7 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
     orgId,
     navigate,
     createOrgDialogOpen,
+    features.billing,
   ])
 
   // Mutation to update user prefs when switching organizations
@@ -1515,7 +1536,7 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
       <ConsoleLayout
         header={{
           onCommandCenterOpen: () => setCommandCenterOpen(true),
-          onCreateOrganization: () => setCreateOrgDialogOpen(true),
+          onCreateOrganization: handleOpenCreateOrganization,
         }}
         headerBanner={
           <OrganizationFailedInvoiceHeaderBanner
@@ -1613,7 +1634,7 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                       <button
                         onClick={() => {
                           setOrgSwitcherOpen(false)
-                          setCreateOrgDialogOpen(true)
+                          handleOpenCreateOrganization()
                         }}
                         className="flex w-full cursor-pointer items-center gap-2 rounded-md px-2 py-2 text-[13px] text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
                       >
@@ -1643,7 +1664,7 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                     size="sm"
                     className="h-8 w-8 p-0 rounded-lg hover:bg-accent"
                     aria-label="Create organization"
-                    onClick={() => setCreateOrgDialogOpen(true)}
+                    onClick={handleOpenCreateOrganization}
                   >
                     <Plus className="h-4 w-4" />
                   </Button>
@@ -1840,8 +1861,8 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                                   Your {planName} plan includes up to {limit}{' '}
                                   member{limit !== 1 ? 's' : ''}.{' '}
                                   <Link
-                                    to="/organizations/$orgId/change-plan"
-                                    params={{ orgId: orgId! } as unknown}
+                                    to="/upgrade"
+                                    search={{ orgId: orgId! }}
                                     className="font-medium underline hover:no-underline"
                                   >
                                     Upgrade
@@ -1854,8 +1875,8 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                                   member{limit !== 1 ? 's' : ''}. You have{' '}
                                   {remaining} remaining.{' '}
                                   <Link
-                                    to="/organizations/$orgId/change-plan"
-                                    params={{ orgId: orgId! } as unknown}
+                                    to="/upgrade"
+                                    search={{ orgId: orgId! }}
                                     className="font-medium underline hover:no-underline"
                                   >
                                     Upgrade
@@ -1872,8 +1893,8 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                           className="h-8 shrink-0 bg-amber-500 px-3 text-[12px] font-medium text-amber-950 hover:bg-amber-400 dark:bg-amber-500 dark:text-amber-950 dark:hover:bg-amber-400"
                         >
                           <Link
-                            to="/organizations/$orgId/change-plan"
-                            params={{ orgId: orgId! } as unknown}
+                            to="/upgrade"
+                            search={{ orgId: orgId! }}
                           >
                             Upgrade
                           </Link>
@@ -1929,8 +1950,8 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                                 Your {planName} plan includes up to {limit}{' '}
                                 project{limit !== 1 ? 's' : ''}.{' '}
                                 <Link
-                                  to="/organizations/$orgId/change-plan"
-                                  params={{ orgId: orgId! } as unknown}
+                                  to="/upgrade"
+                                  search={{ orgId: orgId! }}
                                   className="font-medium underline hover:no-underline"
                                 >
                                   Upgrade
@@ -1946,8 +1967,8 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                           className="h-8 shrink-0 bg-amber-500 px-3 text-[12px] font-medium text-amber-950 hover:bg-amber-400 dark:bg-amber-500 dark:text-amber-950 dark:hover:bg-amber-400"
                         >
                           <Link
-                            to="/organizations/$orgId/change-plan"
-                            params={{ orgId: orgId! } as unknown}
+                            to="/upgrade"
+                            search={{ orgId: orgId! }}
                           >
                             Upgrade
                           </Link>
@@ -3690,27 +3711,28 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
         </DialogContent>
       </Dialog>
 
-      {/* Create Organization Dialog */}
-      <CreateOrganizationDialog
-        open={createOrgDialogOpen}
-        onOpenChange={setCreateOrgDialogOpen}
-        onCreate={async (orgData) => {
-          try {
-            const newOrg = await createOrgMutation.mutateAsync(orgData)
-            toast.success('Organization created successfully')
-            setCreateOrgDialogOpen(false)
-            // Navigate to the newly created organization
-            navigate({
-              to: '/organizations/$orgId',
-              params: { orgId: newOrg.$id },
-              replace: true,
-            })
-          } catch (error: unknown) {
-            toast.error(error?.message || 'Failed to create organization')
-          }
-        }}
-        isLoading={createOrgMutation.isPending}
-      />
+      {!features.billing && (
+        <CreateOrganizationDialog
+          open={createOrgDialogOpen}
+          onOpenChange={setCreateOrgDialogOpen}
+          onCreate={async (orgData) => {
+            try {
+              const newOrg = await createOrgMutation.mutateAsync(orgData)
+              toast.success('Organization created successfully')
+              setCreateOrgDialogOpen(false)
+              // Navigate to the newly created organization
+              navigate({
+                to: '/organizations/$orgId',
+                params: { orgId: newOrg.$id },
+                replace: true,
+              })
+            } catch (error: unknown) {
+              toast.error(error?.message || 'Failed to create organization')
+            }
+          }}
+          isLoading={createOrgMutation.isPending}
+        />
+      )}
 
       {/* Create Project Dialog */}
       <CreateProjectDialog

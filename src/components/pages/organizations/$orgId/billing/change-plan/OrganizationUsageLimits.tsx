@@ -8,8 +8,7 @@ import {
 } from 'react'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Label } from '@/components/ui/label'
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
-import { AlertTriangle } from 'lucide-react'
+import { WarningAlert } from '@/components/global/shared/WarningAlert'
 import { cn } from '@/lib/utils'
 import type { Models } from '@appwrite.io/console'
 
@@ -78,7 +77,8 @@ export const OrganizationUsageLimits = forwardRef<
     <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
       <div className="px-6 py-4">
         <h3 className="text-[15px] font-semibold text-foreground">
-          Select projects to keep
+          Select projects to keep{' '}
+          <span className="text-destructive">*</span>
         </h3>
         <p className="text-[13px] text-muted-foreground mt-2">
           You have {projects.length} projects, but the selected plan allows only{' '}
@@ -91,14 +91,10 @@ export const OrganizationUsageLimits = forwardRef<
 
       <div className="px-6 py-4">
         {!isValid && (
-          <Alert variant="destructive" className="mb-4">
-            <AlertTriangle className="h-4 w-4" />
-            <AlertTitle>Invalid Selection</AlertTitle>
-            <AlertDescription className="mt-2">
-              Please select exactly {targetLimit} project
-              {targetLimit !== 1 ? 's' : ''}.
-            </AlertDescription>
-          </Alert>
+          <WarningAlert title="Invalid Selection" className="mb-4">
+            Please select exactly {targetLimit} project
+            {targetLimit !== 1 ? 's' : ''}.
+          </WarningAlert>
         )}
 
         <div className="min-w-0 space-y-3">

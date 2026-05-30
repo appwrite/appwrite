@@ -9,8 +9,8 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { Plus, Ticket } from 'lucide-react'
+import { PaymentMethodBrandAvatar } from '@/components/global/shared/PaymentMethodBrandAvatar'
 import { formatPaymentMethodSummary } from '../utils'
-import { InlinePaymentForm } from './InlinePaymentForm'
 import type { Models } from '@appwrite.io/console'
 
 interface SelectPaymentMethodProps {
@@ -20,8 +20,8 @@ interface SelectPaymentMethodProps {
   onAddPaymentMethod: () => void
   taxId: string
   onTaxIdChange: (taxId: string) => void
-  onAddCredits: () => void
-  organizationId?: string
+  onAddCredits?: () => void
+  showApplyCoupon?: boolean
   onPaymentMethodAdded?: () => void
 }
 
@@ -33,80 +33,100 @@ export function SelectPaymentMethod({
   taxId,
   onTaxIdChange,
   onAddCredits,
-  organizationId,
-  onPaymentMethodAdded,
+  showApplyCoupon = false,
 }: SelectPaymentMethodProps) {
   // Filter to only show completed cards (with last4)
   const completedPaymentMethods = paymentMethods.filter((pm) => pm.last4)
-
-  // Show inline form only when dropdown is empty (no payment methods)
-  const showInlineForm = completedPaymentMethods.length === 0
+  const hasCompletedPaymentMethods = completedPaymentMethods.length > 0
 
   const getDisplayText = (method: Models.PaymentMethod) =>
     formatPaymentMethodSummary(method, { includeExpiry: true })
 
-  const handlePaymentMethodAdded = () => {
-    onPaymentMethodAdded?.()
-  }
+  const renderPaymentMethodOption = (method: Models.PaymentMethod) => (
+    <span className="flex min-w-0 items-center gap-1.5">
+      <PaymentMethodBrandAvatar brand={method.brand} />
+      <span className="truncate">{getDisplayText(method)}</span>
+    </span>
+  )
 
   return (
     <div className="space-y-4">
-      {/* Inline Payment Form - only show when dropdown is empty */}
-      {showInlineForm ? (
-        <InlinePaymentForm
-          organizationId={organizationId}
-          onSuccess={handlePaymentMethodAdded}
-        />
-      ) : (
-        <>
-          {/* Payment Method Dropdown */}
-          <div>
-            <Label
-              htmlFor="payment-method"
-              className="text-[13px] font-medium mb-2 block"
-            >
-              Payment method
-            </Label>
+      <div>
+        <Label
+          htmlFor="payment-method"
+          className="text-[13px] font-medium mb-2 block"
+        >
+          Payment method <span className="text-destructive">*</span>
+        </Label>
+
+        {hasCompletedPaymentMethods ? (
+          <>
             <Select
               value={selectedPaymentMethodId || undefined}
               onValueChange={onPaymentMethodSelect}
             >
               <SelectTrigger id="payment-method" className="h-9 text-[13px]">
-                <SelectValue placeholder="Select payment method" />
+                <SelectValue placeholder="Select payment method">
+                  {selectedPaymentMethodId
+                    ? (() => {
+                        const method = completedPaymentMethods.find(
+                          (pm) => pm.$id === selectedPaymentMethodId,
+                        )
+                        return method
+                          ? renderPaymentMethodOption(method)
+                          : undefined
+                      })()
+                    : undefined}
+                </SelectValue>
               </SelectTrigger>
               <SelectContent className="z-[9999]">
                 {completedPaymentMethods.map((method) => (
                   <SelectItem key={method.$id} value={method.$id}>
-                    {getDisplayText(method)}
+                    {renderPaymentMethodOption(method)}
                   </SelectItem>
                 ))}
               </SelectContent>
             </Select>
-          </div>
 
-          {/* Action Buttons */}
-          <div className="flex items-center gap-2">
+            <div className="mt-3 flex items-center gap-2">
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-8 text-[13px]"
+                onClick={onAddPaymentMethod}
+              >
+                <Plus className="mr-1.5 h-4 w-4" />
+                Add payment method
+              </Button>
+              {showApplyCoupon && onAddCredits ? (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-8 text-[13px]"
+                  onClick={onAddCredits}
+                >
+                  <Ticket className="mr-1.5 h-4 w-4" />
+                  Apply coupon
+                </Button>
+              ) : null}
+            </div>
+          </>
+        ) : (
+          <div className="rounded-lg border border-border bg-card/50 p-4">
+            <p className="text-[13px] text-muted-foreground leading-relaxed">
+              Add a payment method to continue with a paid plan.
+            </p>
             <Button
-              variant="ghost"
+              variant="outline"
               size="sm"
-              className="h-8 text-[13px]"
+              className="mt-3 h-8 text-[13px]"
               onClick={onAddPaymentMethod}
             >
-              <Plus className="mr-1.5 h-4 w-4" />
               Add payment method
             </Button>
-            <Button
-              variant="ghost"
-              size="sm"
-              className="h-8 text-[13px]"
-              onClick={onAddCredits}
-            >
-              <Ticket className="mr-1.5 h-4 w-4" />
-              Add credits
-            </Button>
           </div>
-        </>
-      )}
+        )}
+      </div>
 
       {/* Tax ID */}
       <div className="pt-4 border-t border-border">
