@@ -1400,6 +1400,8 @@ Http::patch('/v1/users/:userId/name')
             throw new Exception(Exception::USER_NOT_FOUND);
         }
 
+        $name = $name ?? '';
+
         $user->setAttribute('name', $name);
 
         $user = $dbForProject->updateDocument('users', $user->getId(), new Document(['name' => $user->getAttribute('name')]));
