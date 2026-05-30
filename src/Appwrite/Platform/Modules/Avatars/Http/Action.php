@@ -103,7 +103,7 @@ class Action extends PlatformAction
                     $verificationId = $oauth2->getUserID($accessToken);
 
                     if (empty($verificationId)) {
-                        throw new \Exception("Locked tokens."); // Race codition, handeled in catch
+                        throw new \Exception("Locked tokens."); // Race condition, handeled in catch
                     }
 
                     $gitHubSession

@@ -180,7 +180,7 @@ class Screenshot extends Action
 
         $siteId = $site['body']['$id'];
 
-        // Prepare API key, incase it's needed as variable
+        // Prepare API key, in case it's needed as variable
         $response = $client->call(Client::METHOD_POST, '/projects/' . $projectId . '/keys', [
             'content-type' => 'application/json',
             'x-appwrite-project' => 'console',

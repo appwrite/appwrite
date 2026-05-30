@@ -320,7 +320,7 @@ class V15 extends Migration
     }
 
     /**
-     * Migrates all Integer colums for timestamps to DateTime.
+     * Migrates all Integer columns for timestamps to DateTime.
      *
      * @return void
      * @throws \Exception

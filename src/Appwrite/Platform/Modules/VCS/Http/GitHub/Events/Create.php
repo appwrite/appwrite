@@ -211,11 +211,11 @@ class Create extends Action
             $providerCommitAuthor = $commitDetails["commitAuthor"] ?? '';
             $providerCommitMessage = $commitDetails["commitMessage"] ?? '';
 
-            $prFiles = $github->getPullRequestFiles($providerRepositoryOwner, $providerRepositoryName, $providerPullRequestId);
+            $profiles = $github->getPullRequestFiles($providerRepositoryOwner, $providerRepositoryName, $providerPullRequestId);
             $providerAffectedFiles = [
-                ...array_column($prFiles, 'filename'),
+                ...array_column($profiles, 'filename'),
                 // Only renamed files include previous_filename; skip missing values from other file changes.
-                ...array_filter(array_column($prFiles, 'previous_filename'))
+                ...array_filter(array_column($profiles, 'previous_filename'))
             ];
 
             $repositories = $authorization->skip(fn () => $dbForPlatform->find('repositories', [

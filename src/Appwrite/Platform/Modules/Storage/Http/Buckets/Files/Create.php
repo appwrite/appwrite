@@ -387,7 +387,7 @@ class Create extends Action
                 } else {
                     // reset the algorithm to none as we do not compress the file
                     // if file size exceedes the APP_STORAGE_READ_BUFFER
-                    // regardless the bucket compression algoorithm
+                    // regardless the bucket compression algorithm
                     $algorithm = Compression::NONE;
                 }
 

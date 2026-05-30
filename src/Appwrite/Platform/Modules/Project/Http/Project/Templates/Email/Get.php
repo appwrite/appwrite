@@ -71,7 +71,7 @@ class Get extends Action
         $template['templateId'] = $templateId;
         $template['locale'] = $locale;
 
-        // Prepare default tempaltes
+        // Prepare default templates
         $localeObj = new Locale($locale);
         $localeObj->setFallback(System::getEnv('_APP_LOCALE', 'en'));
 

@@ -41,7 +41,7 @@ class Update extends Action
                 group: 'policies',
                 name: 'updatePasswordHistoryPolicy',
                 description: <<<EOT
-                Updates one of password strength policies. Based on total length configured, previous password hashes are stored, and users cannot choose a new password that is already stored in the passwird history list, when updating an user password, or setting new one through password recovery.
+                Updates one of password strength policies. Based on total length configured, previous password hashes are stored, and users cannot choose a new password that is already stored in the password history list, when updating an user password, or setting new one through password recovery.
                 
                 Keep in mind, while password history policy is disabled, the history is not being stored. Enabling the policy will not have any history on existing users, and it will only start to collect and enforce the policy on password changes since the policy is enabled.
                 EOT,

@@ -710,7 +710,7 @@ class Specs extends Action
 
             // Copy generated spec files into specs/{version}/ subdirectory
             $prPlatforms = static::getPlatformsForPR();
-            $prFiles = \array_filter(
+            $profiles = \array_filter(
                 $generatedFiles,
                 fn (string $file) => \in_array(
                     \substr(\basename($file, '.json'), \strrpos(\basename($file, '.json'), '-') + 1),
@@ -721,7 +721,7 @@ class Specs extends Action
 
             $specsSubDir = $mocks ? 'mocks' : $version;
             \exec('mkdir -p ' . \escapeshellarg("{$target}/specs/{$specsSubDir}"));
-            foreach ($prFiles as $file) {
+            foreach ($profiles as $file) {
                 $fileName = \basename($file);
                 \exec('cp ' . \escapeshellarg($file) . ' ' . \escapeshellarg("{$target}/specs/{$specsSubDir}/{$fileName}"));
                 Console::success("Copied spec file to repo: specs/{$specsSubDir}/{$fileName}");

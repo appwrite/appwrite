@@ -888,7 +888,7 @@ class Builds extends Action
             if ($resource->getCollection() === 'sites' && ! empty($detectionLogs)) {
                 $files = \explode("\n", $detectionLogs); // Parse output
                 $files = \array_filter($files); // Remove empty
-                $files = \array_map(fn ($file) => \trim($file), $files); // Remove whitepsaces
+                $files = \array_map(fn ($file) => \trim($file), $files); // Remove whitespaces
                 $files = \array_map(fn ($file) => \str_starts_with($file, './') ? \substr($file, 2) : $file, $files); // Remove beginning ./
 
                 $detector = new Rendering($resource->getAttribute('framework', ''));
