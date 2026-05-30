@@ -590,7 +590,9 @@ class FunctionsCustomClientTest extends Scope
             'data' => ['name' => 'Test Document'],
         ]);
         $this->assertEquals(201, $document['headers']['status-code']);
-        $this->assertEventually(function () use ($functionId) {
+        $documentId = $document['body']['$id'];
+
+        $this->assertEventually(function () use ($functionId, $documentId) {
             $executions = $this->client->call(Client::METHOD_GET, '/functions/' . $functionId . '/executions', [
                 'content-type' => 'application/json',
                 'x-appwrite-project' => $this->getProject()['$id'],
@@ -603,6 +605,7 @@ class FunctionsCustomClientTest extends Scope
             $lastExecution = $executions['body']['executions'][0];
             $this->assertEquals('completed', $lastExecution['status']);
             $this->assertEquals(204, $lastExecution['responseStatusCode']);
+            $this->assertStringContainsString($documentId, $lastExecution['logs']);
         }, 20000, 500);
 
         $this->client->call(Client::METHOD_DELETE, '/databases/' . $databaseId, [

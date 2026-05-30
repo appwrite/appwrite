@@ -761,11 +761,11 @@ jobs:
         run: |
           docker tag ${{ env.IMAGE }}:before ${{ env.IMAGE }}
           docker compose up -d --wait --no-build
-          for attempt in $(seq 1 10); do
-            if curl -fsS http://localhost/v1/health/version; then
+          for attempt in $(seq 1 5); do
+            if curl -fsS http://localhost/v1/health; then
               break
             fi
-            if [ "$attempt" -eq 10 ]; then
+            if [ "$attempt" -eq 5 ]; then
               exit 1
             fi
             sleep 1
@@ -825,11 +825,11 @@ jobs:
         run: |
           docker tag ${{ env.IMAGE }}:after ${{ env.IMAGE }}
           docker compose up -d --wait --no-build
-          for attempt in $(seq 1 10); do
-            if curl -fsS http://localhost/v1/health/version; then
+          for attempt in $(seq 1 5); do
+            if curl -fsS http://localhost/v1/health; then
               break
             fi
-            if [ "$attempt" -eq 10 ]; then
+            if [ "$attempt" -eq 5 ]; then
               exit 1
             fi
             sleep 1
