@@ -138,8 +138,12 @@ trait PoliciesBase
         $this->assertArrayHasKey('total', $response['body']);
         $this->assertIsArray($response['body']['policies']);
         $this->assertIsInt($response['body']['total']);
-        $this->assertSame(\count($expected), $response['body']['total']);
-        $this->assertCount(\count($expected), $response['body']['policies']);
+
+        // Unpaginated list: total reflects exactly what was returned.
+        $this->assertSame($response['body']['total'], \count($response['body']['policies']));
+
+        // At least the known policies are present; downstream may add more.
+        $this->assertGreaterThanOrEqual(\count($expected), $response['body']['total']);
 
         $policyIds = \array_column($response['body']['policies'], '$id');
 
@@ -222,7 +226,15 @@ trait PoliciesBase
 
         $this->assertSame(200, $response['headers']['status-code']);
         $this->assertSame(0, $response['body']['total']);
-        $this->assertCount(\count($this->getExpectedPolicies()), $response['body']['policies']);
+
+        // total=false skips the count but still returns every policy; downstream may add more.
+        $this->assertGreaterThanOrEqual(\count($this->getExpectedPolicies()), \count($response['body']['policies']));
+
+        $policyIds = \array_column($response['body']['policies'], '$id');
+
+        foreach (\array_keys($this->getExpectedPolicies()) as $policyId) {
+            $this->assertContains($policyId, $policyIds);
+        }
     }
 
     public function testListPoliciesWithLimit(): void
@@ -233,7 +245,9 @@ trait PoliciesBase
 
         $this->assertSame(200, $response['headers']['status-code']);
         $this->assertCount(1, $response['body']['policies']);
-        $this->assertSame(\count($this->getExpectedPolicies()), $response['body']['total']);
+
+        // limit caps the page, not the total; downstream may add more policies.
+        $this->assertGreaterThanOrEqual(\count($this->getExpectedPolicies()), $response['body']['total']);
     }
 
     public function testListPoliciesWithOffset(): void
