@@ -615,6 +615,7 @@ Http::post('/v1/users/:userId/targets')
     ->inject('response')
     ->inject('dbForProject')
     ->action(function (string $targetId, string $userId, string $providerType, string $identifier, string $providerId, ?string $name, Event $queueForEvents, Response $response, Database $dbForProject) {
+        $name = $name ?? '';
         $targetId = $targetId == 'unique()' ? ID::unique() : $targetId;
 
         $provider = $dbForProject->getDocument('providers', $providerId);
@@ -1868,6 +1869,7 @@ Http::patch('/v1/users/:userId/targets/:targetId')
     ->inject('response')
     ->inject('dbForProject')
     ->action(function (string $userId, string $targetId, string $identifier, string $providerId, ?string $name, Event $queueForEvents, Response $response, Database $dbForProject) {
+        $name = $name ?? '';
         $user = $dbForProject->getDocument('users', $userId);
 
         if ($user->isEmpty()) {
