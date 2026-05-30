@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "0f60e85b461aa1a57d624e97be0614bd",
+    "content-hash": "53a96b051328aa5572b1008496733f85",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -2895,16 +2895,16 @@
         },
         {
             "name": "symfony/polyfill-mbstring",
-            "version": "v1.37.0",
+            "version": "v1.38.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/symfony/polyfill-mbstring.git",
-                "reference": "6a21eb99c6973357967f6ce3708cd55a6bec6315"
+                "reference": "14c5439eec4ccff081ac14eca2dc57feb2a66d92"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/symfony/polyfill-mbstring/zipball/6a21eb99c6973357967f6ce3708cd55a6bec6315",
-                "reference": "6a21eb99c6973357967f6ce3708cd55a6bec6315",
+                "url": "https://api.github.com/repos/symfony/polyfill-mbstring/zipball/14c5439eec4ccff081ac14eca2dc57feb2a66d92",
+                "reference": "14c5439eec4ccff081ac14eca2dc57feb2a66d92",
                 "shasum": ""
             },
             "require": {
@@ -2956,7 +2956,7 @@
                 "shim"
             ],
             "support": {
-                "source": "https://github.com/symfony/polyfill-mbstring/tree/v1.37.0"
+                "source": "https://github.com/symfony/polyfill-mbstring/tree/v1.38.1"
             },
             "funding": [
                 {
@@ -2976,7 +2976,7 @@
                     "type": "tidelift"
                 }
             ],
-            "time": "2026-04-10T17:25:58+00:00"
+            "time": "2026-05-26T12:51:13+00:00"
         },
         {
             "name": "symfony/polyfill-php82",
@@ -4136,16 +4136,16 @@
         },
         {
             "name": "utopia-php/domains",
-            "version": "2.1.0",
+            "version": "2.2.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/domains.git",
-                "reference": "1b1fea8674e8712e0344d3abb5a7acd558dede50"
+                "reference": "77fcf4b63e33b2c1ddf8c67cfc1a57eef2dbec8f"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/domains/zipball/1b1fea8674e8712e0344d3abb5a7acd558dede50",
-                "reference": "1b1fea8674e8712e0344d3abb5a7acd558dede50",
+                "url": "https://api.github.com/repos/utopia-php/domains/zipball/77fcf4b63e33b2c1ddf8c67cfc1a57eef2dbec8f",
+                "reference": "77fcf4b63e33b2c1ddf8c67cfc1a57eef2dbec8f",
                 "shasum": ""
             },
             "require": {
@@ -4192,9 +4192,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/domains/issues",
-                "source": "https://github.com/utopia-php/domains/tree/2.1.0"
+                "source": "https://github.com/utopia-php/domains/tree/2.2.0"
             },
-            "time": "2026-05-14T14:33:46+00:00"
+            "time": "2026-05-28T15:16:46+00:00"
         },
         {
             "name": "utopia-php/dsn",
@@ -5638,16 +5638,16 @@
     "packages-dev": [
         {
             "name": "appwrite/sdk-generator",
-            "version": "1.31.1",
+            "version": "1.31.8",
             "source": {
                 "type": "git",
                 "url": "https://github.com/appwrite/sdk-generator.git",
-                "reference": "5699f6da951aef9378fabdcf12f40a9a54fb3128"
+                "reference": "3bc6c697e60807dd036b5c02c66d03183afad79f"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/appwrite/sdk-generator/zipball/5699f6da951aef9378fabdcf12f40a9a54fb3128",
-                "reference": "5699f6da951aef9378fabdcf12f40a9a54fb3128",
+                "url": "https://api.github.com/repos/appwrite/sdk-generator/zipball/3bc6c697e60807dd036b5c02c66d03183afad79f",
+                "reference": "3bc6c697e60807dd036b5c02c66d03183afad79f",
                 "shasum": ""
             },
             "require": {
@@ -5656,7 +5656,7 @@
                 "ext-mbstring": "*",
                 "matthiasmullie/minify": "1.3.*",
                 "php": ">=8.3",
-                "twig/twig": "3.26.*"
+                "twig/twig": "3.27.*"
             },
             "require-dev": {
                 "brianium/paratest": "7.*",
@@ -5683,9 +5683,9 @@
             "description": "Appwrite PHP library for generating API SDKs for multiple programming languages and platforms",
             "support": {
                 "issues": "https://github.com/appwrite/sdk-generator/issues",
-                "source": "https://github.com/appwrite/sdk-generator/tree/1.31.1"
+                "source": "https://github.com/appwrite/sdk-generator/tree/1.31.8"
             },
-            "time": "2026-05-20T22:22:59+00:00"
+            "time": "2026-05-28T05:01:17+00:00"
         },
         {
             "name": "brianium/paratest",
@@ -8469,16 +8469,16 @@
         },
         {
             "name": "twig/twig",
-            "version": "v3.26.0",
+            "version": "v3.27.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/twigphp/Twig.git",
-                "reference": "1fcae487b180d78e6351f4e0afa91f9eab96a2bc"
+                "reference": "04ae1bfe9463c816cf72ca0abe7eae2c77a9a9ed"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/twigphp/Twig/zipball/1fcae487b180d78e6351f4e0afa91f9eab96a2bc",
-                "reference": "1fcae487b180d78e6351f4e0afa91f9eab96a2bc",
+                "url": "https://api.github.com/repos/twigphp/Twig/zipball/04ae1bfe9463c816cf72ca0abe7eae2c77a9a9ed",
+                "reference": "04ae1bfe9463c816cf72ca0abe7eae2c77a9a9ed",
                 "shasum": ""
             },
             "require": {
@@ -8533,7 +8533,7 @@
             ],
             "support": {
                 "issues": "https://github.com/twigphp/Twig/issues",
-                "source": "https://github.com/twigphp/Twig/tree/v3.26.0"
+                "source": "https://github.com/twigphp/Twig/tree/v3.27.0"
             },
             "funding": [
                 {
@@ -8545,7 +8545,7 @@
                     "type": "tidelift"
                 }
             ],
-            "time": "2026-05-20T07:31:59+00:00"
+            "time": "2026-05-27T13:05:51+00:00"
         }
     ],
     "aliases": [],

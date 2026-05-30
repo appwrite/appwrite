@@ -78,6 +78,10 @@ class Update extends Action
             throw new Exception(Exception::MEMBERSHIP_NOT_FOUND);
         }
 
+        if ($membership->getAttribute('teamInternalId') !== $team->getSequence()) {
+            throw new Exception(Exception::TEAM_MEMBERSHIP_MISMATCH);
+        }
+
         $profile = $dbForProject->getDocument('users', $membership->getAttribute('userId'));
         if ($profile->isEmpty()) {
             throw new Exception(Exception::USER_NOT_FOUND);

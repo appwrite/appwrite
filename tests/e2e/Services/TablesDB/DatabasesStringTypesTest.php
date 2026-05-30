@@ -795,7 +795,9 @@ class DatabasesStringTypesTest extends Scope
 
         $this->assertEquals(204, $deleteVarchar['headers']['status-code']);
 
-        // Poll until async deletion completes
+        // Poll until async deletion completes. Timeout raised to 60s to match
+        // the migration-polling and schema-polling defaults used elsewhere —
+        // shared-mode CI delete-worker contention can exceed the original 30s.
         $this->assertEventually(function () use ($databaseId, $tableId) {
             $response = $this->client->call(Client::METHOD_GET, '/tablesdb/' . $databaseId . '/tables/' . $tableId . '/columns/varchar_min', [
                 'content-type' => 'application/json',
@@ -803,6 +805,6 @@ class DatabasesStringTypesTest extends Scope
                 'x-appwrite-key' => $this->getProject()['apiKey'],
             ]);
             $this->assertEquals(404, $response['headers']['status-code']);
-        }, 30000, 250);
+        }, 60000, 250);
     }
 }
