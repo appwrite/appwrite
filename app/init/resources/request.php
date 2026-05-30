@@ -455,7 +455,12 @@ return function (Container $context): void {
             }
             $jwtSessionId = $payload['sessionId'] ?? '';
             if (! empty($jwtSessionId)) {
-                if (empty($user->find('$id', $jwtSessionId, 'sessions'))) { // Match JWT to active token
+                $session = $user->find('$id', $jwtSessionId, 'sessions');
+                if (
+                    empty($session) || 
+                    !$session->isSet('expire') || 
+                    DatabaseDateTime::formatTz(DatabaseDateTime::format(new \DateTime($session->getAttribute('expire')))) < DatabaseDateTime::formatTz(DatabaseDateTime::now())
+                ) { // Match JWT to active token and check expiry
                     $user = new User([]);
                 }
             }
