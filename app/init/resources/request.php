@@ -457,13 +457,14 @@ return function (Container $context): void {
 
             if (!empty($jwtSessionId)) {
                 $session = $user->find('$id', $jwtSessionId, 'sessions');
-                $sessionExpire = $session ? $session->getAttribute('expire') : null;
 
-                if (
-                    empty($session) ||
-                    (!empty($sessionExpire) && $sessionExpire < DatabaseDateTime::formatTz(DatabaseDateTime::now()))
-                ) {
+                if (empty($session)) {
                     $user = new User([]);
+                } else {
+                    $sessionExpire = $session->getAttribute('expire');
+                    if (!empty($sessionExpire) && $sessionExpire < DatabaseDateTime::formatTz(DatabaseDateTime::now())) {
+                        throw new Exception(Exception::USER_SESSION_EXPIRED, 'Session has expired.');
+                    }
                 }
             }
         }
