@@ -1293,7 +1293,7 @@ Http::patch('/v1/messaging/providers/mailgun/:providerId')
     ->inject('queueForEvents')
     ->inject('dbForProject')
     ->inject('response')
-    ->action(function (string $providerId, string $name, string $apiKey, string $domain, ?bool $isEuRegion, ?bool $enabled, ?string $fromName, string $fromEmail, ?string $replyToName, string $replyToEmail, Event $queueForEvents, Database $dbForProject, Response $response) {
+    ->action(function (string $providerId, string $name, string $apiKey, string $domain, ?bool $isEuRegion, ?bool $enabled, ?string $fromName, string $fromEmail, ?string $replyToName, ?string $replyToEmail, Event $queueForEvents, Database $dbForProject, Response $response) {
         $provider = $dbForProject->getDocument('providers', $providerId);
 
         if ($provider->isEmpty()) {
@@ -1404,7 +1404,7 @@ Http::patch('/v1/messaging/providers/sendgrid/:providerId')
     ->inject('queueForEvents')
     ->inject('dbForProject')
     ->inject('response')
-    ->action(function (string $providerId, string $name, ?bool $enabled, string $apiKey, ?string $fromName, string $fromEmail, ?string $replyToName, string $replyToEmail, Event $queueForEvents, Database $dbForProject, Response $response) {
+    ->action(function (string $providerId, string $name, ?bool $enabled, string $apiKey, ?string $fromName, string $fromEmail, ?string $replyToName, ?string $replyToEmail, Event $queueForEvents, Database $dbForProject, Response $response) {
         $provider = $dbForProject->getDocument('providers', $providerId);
 
         if ($provider->isEmpty()) {
@@ -1502,7 +1502,7 @@ Http::patch('/v1/messaging/providers/resend/:providerId')
     ->inject('queueForEvents')
     ->inject('dbForProject')
     ->inject('response')
-    ->action(function (string $providerId, string $name, ?bool $enabled, string $apiKey, ?string $fromName, string $fromEmail, ?string $replyToName, string $replyToEmail, Event $queueForEvents, Database $dbForProject, Response $response) {
+    ->action(function (string $providerId, string $name, ?bool $enabled, string $apiKey, ?string $fromName, string $fromEmail, ?string $replyToName, ?string $replyToEmail, Event $queueForEvents, Database $dbForProject, Response $response) {
         $provider = $dbForProject->getDocument('providers', $providerId);
 
         if ($provider->isEmpty()) {

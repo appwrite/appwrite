@@ -354,7 +354,7 @@ class Certificates extends Action
             // Update attributes on certificate document
             $certificate->setAttributes([
                 'attempts' => $attempts,
-                'renewDate' => DateTime::addSeconds(new \DateTime(), 60 * 60 * \pow(2, $attempts)), // Exponential backoff: retry in 2^(attempts) hours
+                'renewDate' => DateTime::addSeconds(new \DateTime(), 60 * 60 * \pow(2, \min($attempts, 7))), // Exponential backoff: retry in 2^(min(attempts, 7)) hours (max 128h)
             ]);
 
             // Mark rule as 'unverified'
