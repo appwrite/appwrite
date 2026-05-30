@@ -446,6 +446,7 @@ return function (Container $context): void {
             }
 
             $jwtUserId = $payload['userId'] ?? '';
+            $jwtSessionId = $payload['sessionId'] ?? '';
             if (! empty($jwtUserId)) {
                 if ($mode === APP_MODE_ADMIN) {
                     $user = $dbForPlatform->getDocument('users', $jwtUserId);
@@ -453,10 +454,17 @@ return function (Container $context): void {
                     $user = $dbForProject->getDocument('users', $jwtUserId);
                 }
             }
-            $jwtSessionId = $payload['sessionId'] ?? '';
-            if (! empty($jwtSessionId)) {
-                if (empty($user->find('$id', $jwtSessionId, 'sessions'))) { // Match JWT to active token
+
+            if (!empty($jwtSessionId)) {
+                $session = $user->find('$id', $jwtSessionId, 'sessions');
+
+                if (empty($session)) {
                     $user = new User([]);
+                } else {
+                    $sessionExpire = $session->getAttribute('expire');
+                    if (empty($sessionExpire) || $sessionExpire < DatabaseDateTime::formatTz(DatabaseDateTime::now())) {
+                        throw new Exception(Exception::USER_SESSION_EXPIRED, 'Session has expired.');
+                    }
                 }
             }
         }

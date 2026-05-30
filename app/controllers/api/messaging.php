@@ -86,15 +86,18 @@ Http::post('/v1/messaging/providers/mailgun')
     ->param('apiKey', '', new Text(0), 'Mailgun API Key.', true)
     ->param('domain', '', new Text(0), 'Mailgun Domain.', true)
     ->param('isEuRegion', null, new Nullable(new Boolean()), 'Set as EU region.', true)
-    ->param('fromName', '', new Text(128, 0), 'Sender Name.', true)
+    ->param('fromName', null, new Nullable(new Text(128)), 'Sender Name.', true)
     ->param('fromEmail', '', new Email(), 'Sender email address.', true)
-    ->param('replyToName', '', new Text(128, 0), 'Name set in the reply to field for the mail. Default value is sender name. Reply to name must have reply to email as well.', true)
+    ->param('replyToName', null, new Nullable(new Text(128)), 'Name set in the reply to field for the mail. Default value is sender name. Reply to name must have reply to email as well.', true)
     ->param('replyToEmail', '', new Email(), 'Email set in the reply to field for the mail. Default value is sender email. Reply to email must have reply to name as well.', true)
     ->param('enabled', null, new Nullable(new Boolean()), 'Set as enabled.', true)
     ->inject('queueForEvents')
     ->inject('dbForProject')
     ->inject('response')
-    ->action(function (string $providerId, string $name, string $apiKey, string $domain, ?bool $isEuRegion, string $fromName, string $fromEmail, string $replyToName, string $replyToEmail, ?bool $enabled, Event $queueForEvents, Database $dbForProject, Response $response) {
+    ->action(function (string $providerId, string $name, string $apiKey, string $domain, ?bool $isEuRegion, ?string $fromName, string $fromEmail, ?string $replyToName, string $replyToEmail, ?bool $enabled, Event $queueForEvents, Database $dbForProject, Response $response) {
+        $fromName = $fromName ?? '';
+        $replyToName = $replyToName ?? '';
+
         $providerId = $providerId == 'unique()' ? ID::unique() : $providerId;
 
         $credentials = [];
@@ -178,15 +181,18 @@ Http::post('/v1/messaging/providers/sendgrid')
     ->param('providerId', '', fn (Database $dbForProject) => new CustomId(false, $dbForProject->getAdapter()->getMaxUIDLength()), 'Provider ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.', false, ['dbForProject'])
     ->param('name', '', new Text(128), 'Provider name.')
     ->param('apiKey', '', new Text(0), 'Sendgrid API key.', true)
-    ->param('fromName', '', new Text(128, 0), 'Sender Name.', true)
+    ->param('fromName', null, new Nullable(new Text(128)), 'Sender Name.', true)
     ->param('fromEmail', '', new Email(), 'Sender email address.', true)
-    ->param('replyToName', '', new Text(128, 0), 'Name set in the reply to field for the mail. Default value is sender name.', true)
+    ->param('replyToName', null, new Nullable(new Text(128)), 'Name set in the reply to field for the mail. Default value is sender name.', true)
     ->param('replyToEmail', '', new Email(), 'Email set in the reply to field for the mail. Default value is sender email.', true)
     ->param('enabled', null, new Nullable(new Boolean()), 'Set as enabled.', true)
     ->inject('queueForEvents')
     ->inject('dbForProject')
     ->inject('response')
-    ->action(function (string $providerId, string $name, string $apiKey, string $fromName, string $fromEmail, string $replyToName, string $replyToEmail, ?bool $enabled, Event $queueForEvents, Database $dbForProject, Response $response) {
+    ->action(function (string $providerId, string $name, string $apiKey, ?string $fromName, string $fromEmail, ?string $replyToName, string $replyToEmail, ?bool $enabled, Event $queueForEvents, Database $dbForProject, Response $response) {
+        $fromName = $fromName ?? '';
+        $replyToName = $replyToName ?? '';
+
         $providerId = $providerId == 'unique()' ? ID::unique() : $providerId;
 
         $credentials = [];
@@ -260,15 +266,18 @@ Http::post('/v1/messaging/providers/resend')
     ->param('providerId', '', fn (Database $dbForProject) => new CustomId(false, $dbForProject->getAdapter()->getMaxUIDLength()), 'Provider ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.', false, ['dbForProject'])
     ->param('name', '', new Text(128), 'Provider name.')
     ->param('apiKey', '', new Text(0), 'Resend API key.', true)
-    ->param('fromName', '', new Text(128, 0), 'Sender Name.', true)
+    ->param('fromName', null, new Nullable(new Text(128)), 'Sender Name.', true)
     ->param('fromEmail', '', new Email(), 'Sender email address.', true)
-    ->param('replyToName', '', new Text(128, 0), 'Name set in the reply to field for the mail. Default value is sender name.', true)
+    ->param('replyToName', null, new Nullable(new Text(128)), 'Name set in the reply to field for the mail. Default value is sender name.', true)
     ->param('replyToEmail', '', new Email(), 'Email set in the reply to field for the mail. Default value is sender email.', true)
     ->param('enabled', null, new Nullable(new Boolean()), 'Set as enabled.', true)
     ->inject('queueForEvents')
     ->inject('dbForProject')
     ->inject('response')
-    ->action(function (string $providerId, string $name, string $apiKey, string $fromName, string $fromEmail, string $replyToName, string $replyToEmail, ?bool $enabled, Event $queueForEvents, Database $dbForProject, Response $response) {
+    ->action(function (string $providerId, string $name, string $apiKey, ?string $fromName, string $fromEmail, ?string $replyToName, string $replyToEmail, ?bool $enabled, Event $queueForEvents, Database $dbForProject, Response $response) {
+        $fromName = $fromName ?? '';
+        $replyToName = $replyToName ?? '';
+
         $providerId = $providerId == 'unique()' ? ID::unique() : $providerId;
 
         $credentials = [];
@@ -368,15 +377,18 @@ Http::post('/v1/messaging/providers/smtp')
     ->param('encryption', '', new WhiteList(['none', 'ssl', 'tls']), 'Encryption type. Can be omitted, \'ssl\', or \'tls\'', true, enum: new Enum(name: 'SmtpEncryption'))
     ->param('autoTLS', true, new Boolean(), 'Enable SMTP AutoTLS feature.', true)
     ->param('mailer', '', new Text(0), 'The value to use for the X-Mailer header.', true)
-    ->param('fromName', '', new Text(128, 0), 'Sender Name.', true)
+    ->param('fromName', null, new Nullable(new Text(128)), 'Sender Name.', true)
     ->param('fromEmail', '', new Email(), 'Sender email address.', true)
-    ->param('replyToName', '', new Text(128, 0), 'Name set in the reply to field for the mail. Default value is sender name.', true)
+    ->param('replyToName', null, new Nullable(new Text(128)), 'Name set in the reply to field for the mail. Default value is sender name.', true)
     ->param('replyToEmail', '', new Email(), 'Email set in the reply to field for the mail. Default value is sender email.', true)
     ->param('enabled', null, new Nullable(new Boolean()), 'Set as enabled.', true)
     ->inject('queueForEvents')
     ->inject('dbForProject')
     ->inject('response')
-    ->action(function (string $providerId, string $name, string $host, int $port, string $username, string $password, string $encryption, bool $autoTLS, string $mailer, string $fromName, string $fromEmail, string $replyToName, string $replyToEmail, ?bool $enabled, Event $queueForEvents, Database $dbForProject, Response $response) {
+    ->action(function (string $providerId, string $name, string $host, int $port, string $username, string $password, string $encryption, bool $autoTLS, string $mailer, ?string $fromName, string $fromEmail, ?string $replyToName, string $replyToEmail, ?bool $enabled, Event $queueForEvents, Database $dbForProject, Response $response) {
+        $fromName = $fromName ?? '';
+        $replyToName = $replyToName ?? '';
+
         $providerId = $providerId == 'unique()' ? ID::unique() : $providerId;
 
         $credentials = [
@@ -1274,14 +1286,14 @@ Http::patch('/v1/messaging/providers/mailgun/:providerId')
     ->param('domain', '', new Text(0), 'Mailgun Domain.', true)
     ->param('isEuRegion', null, new Nullable(new Boolean()), 'Set as EU region.', true)
     ->param('enabled', null, new Nullable(new Boolean()), 'Set as enabled.', true)
-    ->param('fromName', '', new Text(128), 'Sender Name.', true)
+    ->param('fromName', null, new Nullable(new Text(128)), 'Sender Name.', true)
     ->param('fromEmail', '', new Email(), 'Sender email address.', true)
-    ->param('replyToName', '', new Text(128), 'Name set in the reply to field for the mail. Default value is sender name.', true)
-    ->param('replyToEmail', '', new Text(128), 'Email set in the reply to field for the mail. Default value is sender email.', true)
+    ->param('replyToName', null, new Nullable(new Text(128)), 'Name set in the reply to field for the mail. Default value is sender name.', true)
+    ->param('replyToEmail', null, new Nullable(new Text(128)), 'Email set in the reply to field for the mail. Default value is sender email.', true)
     ->inject('queueForEvents')
     ->inject('dbForProject')
     ->inject('response')
-    ->action(function (string $providerId, string $name, string $apiKey, string $domain, ?bool $isEuRegion, ?bool $enabled, string $fromName, string $fromEmail, string $replyToName, string $replyToEmail, Event $queueForEvents, Database $dbForProject, Response $response) {
+    ->action(function (string $providerId, string $name, string $apiKey, string $domain, ?bool $isEuRegion, ?bool $enabled, ?string $fromName, string $fromEmail, ?string $replyToName, ?string $replyToEmail, Event $queueForEvents, Database $dbForProject, Response $response) {
         $provider = $dbForProject->getDocument('providers', $providerId);
 
         if ($provider->isEmpty()) {
@@ -1300,7 +1312,7 @@ Http::patch('/v1/messaging/providers/mailgun/:providerId')
 
         $options = $provider->getAttribute('options');
 
-        if (!empty($fromName)) {
+        if (!\is_null($fromName)) {
             $options['fromName'] = $fromName;
         }
 
@@ -1308,11 +1320,11 @@ Http::patch('/v1/messaging/providers/mailgun/:providerId')
             $options['fromEmail'] = $fromEmail;
         }
 
-        if (!empty($replyToName)) {
+        if (!\is_null($replyToName)) {
             $options['replyToName'] = $replyToName;
         }
 
-        if (!empty($replyToEmail)) {
+        if (!\is_null($replyToEmail)) {
             $options['replyToEmail'] = $replyToEmail;
         }
 
@@ -1385,14 +1397,14 @@ Http::patch('/v1/messaging/providers/sendgrid/:providerId')
     ->param('name', '', new Text(128), 'Provider name.', true)
     ->param('enabled', null, new Nullable(new Boolean()), 'Set as enabled.', true)
     ->param('apiKey', '', new Text(0), 'Sendgrid API key.', true)
-    ->param('fromName', '', new Text(128), 'Sender Name.', true)
+    ->param('fromName', null, new Nullable(new Text(128)), 'Sender Name.', true)
     ->param('fromEmail', '', new Email(), 'Sender email address.', true)
-    ->param('replyToName', '', new Text(128), 'Name set in the Reply To field for the mail. Default value is Sender Name.', true)
-    ->param('replyToEmail', '', new Text(128), 'Email set in the Reply To field for the mail. Default value is Sender Email.', true)
+    ->param('replyToName', null, new Nullable(new Text(128)), 'Name set in the Reply To field for the mail. Default value is Sender Name.', true)
+    ->param('replyToEmail', null, new Nullable(new Text(128)), 'Email set in the Reply To field for the mail. Default value is Sender Email.', true)
     ->inject('queueForEvents')
     ->inject('dbForProject')
     ->inject('response')
-    ->action(function (string $providerId, string $name, ?bool $enabled, string $apiKey, string $fromName, string $fromEmail, string $replyToName, string $replyToEmail, Event $queueForEvents, Database $dbForProject, Response $response) {
+    ->action(function (string $providerId, string $name, ?bool $enabled, string $apiKey, ?string $fromName, string $fromEmail, ?string $replyToName, ?string $replyToEmail, Event $queueForEvents, Database $dbForProject, Response $response) {
         $provider = $dbForProject->getDocument('providers', $providerId);
 
         if ($provider->isEmpty()) {
@@ -1410,7 +1422,7 @@ Http::patch('/v1/messaging/providers/sendgrid/:providerId')
 
         $options = $provider->getAttribute('options');
 
-        if (!empty($fromName)) {
+        if (!\is_null($fromName)) {
             $options['fromName'] = $fromName;
         }
 
@@ -1418,11 +1430,11 @@ Http::patch('/v1/messaging/providers/sendgrid/:providerId')
             $options['fromEmail'] = $fromEmail;
         }
 
-        if (!empty($replyToName)) {
+        if (!\is_null($replyToName)) {
             $options['replyToName'] = $replyToName;
         }
 
-        if (!empty($replyToEmail)) {
+        if (!\is_null($replyToEmail)) {
             $options['replyToEmail'] = $replyToEmail;
         }
 
@@ -1483,14 +1495,14 @@ Http::patch('/v1/messaging/providers/resend/:providerId')
     ->param('name', '', new Text(128), 'Provider name.', true)
     ->param('enabled', null, new Nullable(new Boolean()), 'Set as enabled.', true)
     ->param('apiKey', '', new Text(0), 'Resend API key.', true)
-    ->param('fromName', '', new Text(128), 'Sender Name.', true)
+    ->param('fromName', null, new Nullable(new Text(128)), 'Sender Name.', true)
     ->param('fromEmail', '', new Email(), 'Sender email address.', true)
-    ->param('replyToName', '', new Text(128), 'Name set in the Reply To field for the mail. Default value is Sender Name.', true)
-    ->param('replyToEmail', '', new Text(128), 'Email set in the Reply To field for the mail. Default value is Sender Email.', true)
+    ->param('replyToName', null, new Nullable(new Text(128)), 'Name set in the Reply To field for the mail. Default value is Sender Name.', true)
+    ->param('replyToEmail', null, new Nullable(new Text(128)), 'Email set in the Reply To field for the mail. Default value is Sender Email.', true)
     ->inject('queueForEvents')
     ->inject('dbForProject')
     ->inject('response')
-    ->action(function (string $providerId, string $name, ?bool $enabled, string $apiKey, string $fromName, string $fromEmail, string $replyToName, string $replyToEmail, Event $queueForEvents, Database $dbForProject, Response $response) {
+    ->action(function (string $providerId, string $name, ?bool $enabled, string $apiKey, ?string $fromName, string $fromEmail, ?string $replyToName, ?string $replyToEmail, Event $queueForEvents, Database $dbForProject, Response $response) {
         $provider = $dbForProject->getDocument('providers', $providerId);
 
         if ($provider->isEmpty()) {
@@ -1508,7 +1520,7 @@ Http::patch('/v1/messaging/providers/resend/:providerId')
 
         $options = $provider->getAttribute('options');
 
-        if (!empty($fromName)) {
+        if (!\is_null($fromName)) {
             $options['fromName'] = $fromName;
         }
 
@@ -1516,11 +1528,11 @@ Http::patch('/v1/messaging/providers/resend/:providerId')
             $options['fromEmail'] = $fromEmail;
         }
 
-        if (!empty($replyToName)) {
+        if (!\is_null($replyToName)) {
             $options['replyToName'] = $replyToName;
         }
 
-        if (!empty($replyToEmail)) {
+        if (!\is_null($replyToEmail)) {
             $options['replyToEmail'] = $replyToEmail;
         }
 
@@ -1606,15 +1618,15 @@ Http::patch('/v1/messaging/providers/smtp/:providerId')
     ->param('encryption', '', new WhiteList(['none', 'ssl', 'tls']), 'Encryption type. Can be \'ssl\' or \'tls\'', true, enum: new Enum(name: 'SmtpEncryption'))
     ->param('autoTLS', null, new Nullable(new Boolean()), 'Enable SMTP AutoTLS feature.', true)
     ->param('mailer', '', new Text(0), 'The value to use for the X-Mailer header.', true)
-    ->param('fromName', '', new Text(128), 'Sender Name.', true)
+    ->param('fromName', null, new Nullable(new Text(128)), 'Sender Name.', true)
     ->param('fromEmail', '', new Email(), 'Sender email address.', true)
-    ->param('replyToName', '', new Text(128), 'Name set in the Reply To field for the mail. Default value is Sender Name.', true)
-    ->param('replyToEmail', '', new Text(128), 'Email set in the Reply To field for the mail. Default value is Sender Email.', true)
+    ->param('replyToName', null, new Nullable(new Text(128)), 'Name set in the Reply To field for the mail. Default value is Sender Name.', true)
+    ->param('replyToEmail', null, new Nullable(new Text(128)), 'Email set in the Reply To field for the mail. Default value is Sender Email.', true)
     ->param('enabled', null, new Nullable(new Boolean()), 'Set as enabled.', true)
     ->inject('queueForEvents')
     ->inject('dbForProject')
     ->inject('response')
-    ->action(function (string $providerId, string $name, string $host, ?int $port, string $username, string $password, string $encryption, ?bool $autoTLS, string $mailer, string $fromName, string $fromEmail, string $replyToName, string $replyToEmail, ?bool $enabled, Event $queueForEvents, Database $dbForProject, Response $response) {
+    ->action(function (string $providerId, string $name, string $host, ?int $port, string $username, string $password, string $encryption, ?bool $autoTLS, string $mailer, ?string $fromName, string $fromEmail, ?string $replyToName, ?string $replyToEmail, ?bool $enabled, Event $queueForEvents, Database $dbForProject, Response $response) {
         $provider = $dbForProject->getDocument('providers', $providerId);
 
         if ($provider->isEmpty()) {
@@ -1643,7 +1655,7 @@ Http::patch('/v1/messaging/providers/smtp/:providerId')
             $options['mailer'] = $mailer;
         }
 
-        if (!empty($fromName)) {
+        if (!\is_null($fromName)) {
             $options['fromName'] = $fromName;
         }
 
@@ -1651,11 +1663,11 @@ Http::patch('/v1/messaging/providers/smtp/:providerId')
             $options['fromEmail'] = $fromEmail;
         }
 
-        if (!empty($replyToName)) {
+        if (!\is_null($replyToName)) {
             $options['replyToName'] = $replyToName;
         }
 
-        if (!empty($replyToEmail)) {
+        if (!\is_null($replyToEmail)) {
             $options['replyToEmail'] = $replyToEmail;
         }
 

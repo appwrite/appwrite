@@ -184,6 +184,7 @@ class Certificates extends Action
             $logs = "\033[90m[{$date}] \033[31mDNS verification failed: \033[0m\n";
             $logs .= \mb_strcut($err->getMessage(), 0, 500000); // Limit to 500kb
             $rule->setAttribute('logs', $logs);
+            $rule->setAttribute('status', RULE_STATUS_CERTIFICATE_GENERATION_FAILED);
         } finally {
             // Update rule and emit events
             $this->updateRuleAndSendEvents($rule, $dbForPlatform, $queueForEvents, $queueForWebhooks, $publisherForFunctions, $queueForRealtime);
@@ -353,7 +354,7 @@ class Certificates extends Action
             // Update attributes on certificate document
             $certificate->setAttributes([
                 'attempts' => $attempts,
-                'renewDate' => DateTime::now(), // Store current time as renew date to ensure another attempt in next maintenance cycle.
+                'renewDate' => DateTime::addSeconds(new \DateTime(), 60 * 60 * \pow(2, \min($attempts, 7))), // Exponential backoff: retry in 2^(min(attempts, 7)) hours (max 128h)
             ]);
 
             // Mark rule as 'unverified'

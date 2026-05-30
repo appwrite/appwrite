@@ -108,6 +108,7 @@ class Update extends Action
             }
         } catch (Exception $err) {
             $authorization->skip(fn () => $dbForPlatform->updateDocument('rules', $rule->getId(), new Document([
+                'status' => RULE_STATUS_CERTIFICATE_GENERATION_FAILED,
                 '$updatedAt' => DateTime::now(),
             ])));
             throw $err;
