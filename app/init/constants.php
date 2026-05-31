@@ -206,6 +206,7 @@ const DATABASE_TYPE_DELETE_DATABASE = 'deleteDatabase';
 // Build Worker Types
 const BUILD_TYPE_DEPLOYMENT = 'deployment';
 const BUILD_TYPE_RETRY = 'retry';
+const BUILD_TYPE_ORCHESTRATOR_EVENT = 'orchestratorEvent';
 
 // Deletion Types
 
@@ -487,6 +488,7 @@ const ADVISOR_REPORT_TYPES = [
 
 // Resource types for Tokens
 const TOKENS_RESOURCE_TYPE_FILES = 'files';
+const TOKENS_RESOURCE_TYPE_DEPLOYMENT_ARTIFACTS = 'deploymentArtifacts';
 const TOKENS_RESOURCE_TYPE_SITES = 'sites';
 const TOKENS_RESOURCE_TYPE_FUNCTIONS = 'functions';
 const TOKENS_RESOURCE_TYPE_DATABASES = 'databases';

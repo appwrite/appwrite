@@ -1062,7 +1062,7 @@ return function (Container $context): void {
     }, ['request', 'project', 'team', 'user']);
 
     $context->set('resourceToken', function ($project, $dbForProject, $request, Authorization $authorization) {
-        $tokenJWT = $request->getParam('token');
+        $tokenJWT = $request->getQuery('token');
 
         if (! empty($tokenJWT) && ! $project->isEmpty()) { // JWT authentication
             // Use a large but reasonable maxAge to avoid auto-exp when token has no expiry
@@ -1122,6 +1122,31 @@ return function (Container $context): void {
                         'fileId' => $ids[1],
                         'bucketInternalId' => $sequences[0],
                         'fileInternalId' => $sequences[1],
+                    ]);
+                })(),
+                TOKENS_RESOURCE_TYPE_DEPLOYMENT_ARTIFACTS => (function () use ($token, $dbForProject, $authorization) {
+                    $sequences = explode(':', $token->getAttribute('resourceInternalId'));
+                    $ids = explode(':', $token->getAttribute('resourceId'));
+
+                    if (count($sequences) !== 2 || count($ids) !== 4) {
+                        return new Document([]);
+                    }
+
+                    $accessedAt = $token->getAttribute('accessedAt', 0);
+                    if (empty($accessedAt) || DatabaseDateTime::formatTz(DatabaseDateTime::addSeconds(new \DateTime(), -APP_RESOURCE_TOKEN_ACCESS)) > $accessedAt) {
+                        $token->setAttribute('accessedAt', DatabaseDateTime::now());
+                        $authorization->skip(fn () => $dbForProject->updateDocument('resourceTokens', $token->getId(), new Document([
+                            'accessedAt' => $token->getAttribute('accessedAt')
+                        ])));
+                    }
+
+                    return new Document([
+                        'resourceType' => $ids[0],
+                        'resourceId' => $ids[1],
+                        'deploymentId' => $ids[2],
+                        'purpose' => $ids[3],
+                        'resourceInternalId' => $sequences[0],
+                        'deploymentInternalId' => $sequences[1],
                     ]);
                 })(),
 

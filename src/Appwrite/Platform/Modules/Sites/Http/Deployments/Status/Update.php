@@ -14,10 +14,12 @@ use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 use Utopia\Database\Exception\Transaction as TransactionException;
+use Utopia\Database\Query;
 use Utopia\Database\Validator\UID;
 use Utopia\Lock\Exception\Contention;
 use Utopia\Platform\Action;
 use Utopia\Platform\Scope\HTTP;
+use Utopia\System\System;
 
 class Update extends Action
 {
@@ -92,6 +94,11 @@ class Update extends Action
         $startTime = new \DateTime($deployment->getAttribute('buildStartedAt', 'now'));
         $endTime = new \DateTime('now');
         $duration = $endTime->getTimestamp() - $startTime->getTimestamp();
+        $logs = $deployment->getAttribute('buildLogs', '');
+        if (!\str_contains($logs, 'Build has been canceled.')) {
+            $date = \date('H:i:s');
+            $logs .= "\033[90m[$date] \033[90m[\033[0mappwrite\033[90m]\033[33m Build has been canceled. \033[0m\n";
+        }
 
         // Write under the Jobs worker's per-deployment lock: its handlers
         // read-modify-write buildLogs, and an unserialized cancel write here
