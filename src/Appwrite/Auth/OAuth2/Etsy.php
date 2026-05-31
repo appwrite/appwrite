@@ -33,6 +33,7 @@ class Etsy extends OAuth2
      * @var string
      */
     private string $pkce = '';
+    private string $pkceChallenge = '';
 
     /**
      * @return string
@@ -40,10 +41,28 @@ class Etsy extends OAuth2
     private function getPKCE(): string
     {
         if (empty($this->pkce)) {
-            $this->pkce = \bin2hex(\random_bytes(rand(43, 128)));
+            $length = \random_int(43, 128);
+            $chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-._~';
+            $this->pkce = '';
+            for ($i = 0; $i < $length; $i++) {
+                $this->pkce .= $chars[\random_int(0, \strlen($chars) - 1)];
+            }
         }
 
         return $this->pkce;
+    }
+
+    /**
+     * @return string
+     */
+    private function getPKCEChallenge(): string
+    {
+        if (empty($this->pkceChallenge)) {
+            $verifier = $this->getPKCE();
+            $hash = \hash('sha256', $verifier, true);
+            $this->pkceChallenge = \rtrim(\strtr(\base64_encode($hash), '+/', '-_'), '=');
+        }
+        return $this->pkceChallenge;
     }
 
     /**
@@ -65,7 +84,7 @@ class Etsy extends OAuth2
             'response_type' => 'code',
             'state' => \json_encode($this->state),
             'scope' => $this->scopes,
-            'code_challenge' => $this->getPKCE(),
+            'code_challenge' => $this->getPKCEChallenge(),
             'code_challenge_method' => 'S256',
         ]);
     }
@@ -188,6 +207,7 @@ class Etsy extends OAuth2
         $this->user = \json_decode($this->request(
             'GET',
             'https://api.etsy.com/v3/application/users/' . $this->getUserID($accessToken),
+            $headers
         ), true);
 
         return $this->user;

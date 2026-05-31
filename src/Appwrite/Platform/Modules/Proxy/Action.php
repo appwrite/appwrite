@@ -208,6 +208,10 @@ class Action extends PlatformAction
             }
         }
 
+        // CNAME Flattening: For apex domains, we allow A/AAAA records to point to our servers
+        // even if the rule type suggests a CNAME. This is common for "Appwrite Sites" on apex domains.
+        $isApex = empty($domain->getRegisterable()) || $domain->get() === $domain->getRegisterable();
+
         $validators = [];
         $mainValidator = null; // Validator to use for error description
 
