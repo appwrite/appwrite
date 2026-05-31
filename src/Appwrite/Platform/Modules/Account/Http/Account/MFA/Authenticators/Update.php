@@ -42,6 +42,8 @@ class Update extends Action
             ->label('audits.event', 'user.update')
             ->label('audits.resource', 'user/{response.$id}')
             ->label('audits.userId', '{response.$id}')
+            ->label('abuse-limit', 10)
+            ->label('abuse-key', 'url:{url},userId:{userId}')
             ->label('sdk', [
                 new Method(
                     namespace: 'account',
