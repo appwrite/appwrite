@@ -105,6 +105,103 @@ interface MenuSection {
   items: MenuItem[]
 }
 
+type ResolvedSubmenu = {
+  title: string
+  items: MenuItem[]
+  parentSection: string
+  /** Menu key to return to on back; null opens the root debug list. */
+  parentSubmenuKey: string | null
+  submenuVariant?: MenuItem['submenuVariant']
+}
+
+function menuItemHasSubmenu(item: MenuItem): boolean {
+  return (
+    Boolean(item.submenu?.length) ||
+    item.submenuVariant === 'profileComparison' ||
+    item.submenuVariant === 'prefsDebug' ||
+    item.submenuVariant === 'initDayMock' ||
+    item.submenuVariant === 'initTicketMock'
+  )
+}
+
+function resolveMenuItemSubmenu(
+  item: MenuItem,
+  itemKey: string,
+  activeKey: string,
+  sectionTitle: string,
+  parentSubmenuKey: string | null,
+): ResolvedSubmenu | null {
+  if (itemKey === activeKey) {
+    if (item.submenuVariant) {
+      return {
+        title: item.label,
+        items: [],
+        parentSection: sectionTitle,
+        parentSubmenuKey,
+        submenuVariant: item.submenuVariant,
+      }
+    }
+    if (item.submenu?.length) {
+      return {
+        title: item.label,
+        items: item.submenu,
+        parentSection: sectionTitle,
+        parentSubmenuKey,
+      }
+    }
+  }
+
+  if (item.submenu) {
+    for (const child of item.submenu) {
+      const childKey = `${itemKey}-${child.label}`
+      const resolved = resolveMenuItemSubmenu(
+        child,
+        childKey,
+        activeKey,
+        sectionTitle,
+        itemKey,
+      )
+      if (resolved) return resolved
+    }
+  }
+
+  return null
+}
+
+function resolveActiveSubmenu(
+  sections: MenuSection[],
+  activeKey: string,
+): ResolvedSubmenu | null {
+  for (const section of sections) {
+    for (const item of section.items) {
+      const itemKey = `${section.title}-${item.label}`
+      const resolved = resolveMenuItemSubmenu(
+        item,
+        itemKey,
+        activeKey,
+        section.title,
+        null,
+      )
+      if (resolved) return resolved
+    }
+  }
+  return null
+}
+
+function getInitSubmenuDescription(overrides: DebugOverrides): string {
+  const parts: string[] = []
+  if (overrides.mockInitCurrentDay !== null) {
+    parts.push(formatInitMockCurrentDay(overrides.mockInitCurrentDay))
+  }
+  if (overrides.mockInitTicketType !== null) {
+    parts.push(formatInitMockTicketType(overrides.mockInitTicketType))
+  }
+  if (overrides.previewInitReactionConfetti) {
+    parts.push('Confetti preview on')
+  }
+  return parts.length > 0 ? parts.join(' · ') : 'Launch week mocks and previews'
+}
+
 const PROFILE_IDS = ['cloud', 'self-hosted'] as const
 
 function ConsoleProfileComparisonTable({
@@ -361,41 +458,38 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
       icon: <Image className="h-3 w-3" />,
     }))
 
-    return [
+    const initSubmenuItems: MenuItem[] = [
       {
-        title: 'Init',
-        icon: <CalendarDays className="h-3.5 w-3.5" />,
-        items: [
-          {
-            label: 'Mock current day',
-            description: formatInitMockCurrentDay(overrides.mockInitCurrentDay),
-            icon: <CalendarDays className="h-3 w-3" />,
-            submenuVariant: 'initDayMock',
-          },
-          {
-            label: 'Mock ticket type',
-            description: formatInitMockTicketType(overrides.mockInitTicketType),
-            icon: <Ticket className="h-3 w-3" />,
-            submenuVariant: 'initTicketMock',
-          },
-          {
-            label: 'Preview reaction confetti',
-            description: overrides.previewInitReactionConfetti
-              ? 'Confetti triggers with 1 user on the same reaction'
-              : 'Confetti needs 5 users on the same reaction',
-            icon: <Sparkles className="h-3 w-3" />,
-            variant: 'switch' as const,
-            switchValue: overrides.previewInitReactionConfetti,
-            switchOnChange: (checked: boolean) => {
-              setOverrides((prev) => ({
-                ...prev,
-                previewInitReactionConfetti: checked,
-              }))
-              setDebugOverride('previewInitReactionConfetti', checked)
-            },
-          },
-        ],
+        label: 'Mock current day',
+        description: formatInitMockCurrentDay(overrides.mockInitCurrentDay),
+        icon: <CalendarDays className="h-3 w-3" />,
+        submenuVariant: 'initDayMock',
       },
+      {
+        label: 'Mock ticket type',
+        description: formatInitMockTicketType(overrides.mockInitTicketType),
+        icon: <Ticket className="h-3 w-3" />,
+        submenuVariant: 'initTicketMock',
+      },
+      {
+        label: 'Preview reaction confetti',
+        description: overrides.previewInitReactionConfetti
+          ? 'Confetti triggers with 1 user on the same reaction'
+          : 'Confetti needs 5 users on the same reaction',
+        icon: <Sparkles className="h-3 w-3" />,
+        variant: 'switch' as const,
+        switchValue: overrides.previewInitReactionConfetti,
+        switchOnChange: (checked: boolean) => {
+          setOverrides((prev) => ({
+            ...prev,
+            previewInitReactionConfetti: checked,
+          }))
+          setDebugOverride('previewInitReactionConfetti', checked)
+        },
+      },
+    ]
+
+    return [
       {
         title: 'Appearance',
         icon: <Palette className="h-3.5 w-3.5" />,
@@ -563,6 +657,12 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
               'Account prefs and team (org) prefs: view, edit JSON, set/delete keys, reset',
             icon: <Braces className="h-3 w-3" />,
             submenuVariant: 'prefsDebug',
+          },
+          {
+            label: 'Init',
+            description: getInitSubmenuDescription(overrides),
+            icon: <CalendarDays className="h-3 w-3" />,
+            submenu: initSubmenuItems,
           },
           {
             label: 'Feature flags',
@@ -755,20 +855,6 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
                 },
               },
               {
-                label: 'Buy and transfer domains',
-                description:
-                  'Org domains list Buy domain / Transfer in buttons and /domains/buy, /domains/transfer-in.',
-                variant: 'switch' as const,
-                switchValue: overrides.showBuyTransferDomains,
-                switchOnChange: (checked: boolean) => {
-                  setOverrides((prev) => ({
-                    ...prev,
-                    showBuyTransferDomains: checked,
-                  }))
-                  setDebugOverride('showBuyTransferDomains', checked)
-                },
-              },
-              {
                 label: 'Reset feature flags',
                 description:
                   'Restore profile toggles on this list to canonical defaults and clear local switches (marketplace, AI assistant, native app bar, success team card, functions local editor).',
@@ -937,7 +1023,6 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
     overrides.showSuccessTeamCard,
     overrides.showFullscreenLoader,
     overrides.showFunctionsLocalEditor,
-    overrides.showBuyTransferDomains,
     overrides.mockCloudStatusAlert,
     overrides.mockInitCurrentDay,
     overrides.mockInitTicketType,
@@ -951,57 +1036,11 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
     clearAllBanners,
   ])
 
-  // Get current submenu items
-  const currentSubmenu = useMemo(() => {
-    if (!activeSubmenu) return null
-
-    for (const section of sections) {
-      for (const item of section.items) {
-        const itemKey = `${section.title}-${item.label}`
-        if (itemKey !== activeSubmenu) continue
-        if (item.submenuVariant === 'profileComparison') {
-          return {
-            title: item.label,
-            items: [] as MenuItem[],
-            parentSection: section.title,
-            submenuVariant: 'profileComparison' as const,
-          }
-        }
-        if (item.submenuVariant === 'prefsDebug') {
-          return {
-            title: item.label,
-            items: [] as MenuItem[],
-            parentSection: section.title,
-            submenuVariant: 'prefsDebug' as const,
-          }
-        }
-        if (item.submenuVariant === 'initDayMock') {
-          return {
-            title: item.label,
-            items: [] as MenuItem[],
-            parentSection: section.title,
-            submenuVariant: 'initDayMock' as const,
-          }
-        }
-        if (item.submenuVariant === 'initTicketMock') {
-          return {
-            title: item.label,
-            items: [] as MenuItem[],
-            parentSection: section.title,
-            submenuVariant: 'initTicketMock' as const,
-          }
-        }
-        if (item.submenu) {
-          return {
-            title: item.label,
-            items: item.submenu,
-            parentSection: section.title,
-          }
-        }
-      }
-    }
-    return null
-  }, [activeSubmenu, sections])
+  const currentSubmenu = useMemo(
+    () =>
+      activeSubmenu ? resolveActiveSubmenu(sections, activeSubmenu) : null,
+    [activeSubmenu, sections],
+  )
 
   if (!isVisible) return null
 
@@ -1046,7 +1085,9 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
             <div className="flex items-center gap-2">
               {currentSubmenu && (
                 <button
-                  onClick={() => setActiveSubmenu(null)}
+                  onClick={() =>
+                    setActiveSubmenu(currentSubmenu.parentSubmenuKey)
+                  }
                   className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg transition-colors hover:bg-[#9B87F5]/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#9B87F5]/50"
                   aria-label="Back"
                 >
@@ -1078,8 +1119,13 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
                 <DebugMenuInitTicketPanel />
               ) : (
               <nav className="space-y-0.5" aria-label={currentSubmenu.title}>
-                {currentSubmenu.items.map((item, itemIndex) =>
-                  item.variant === 'switch' ? (
+                {currentSubmenu.items.map((item, itemIndex) => {
+                  const nestedSubmenuKey = activeSubmenu
+                    ? `${activeSubmenu}-${item.label}`
+                    : null
+                  const hasNestedSubmenu = menuItemHasSubmenu(item)
+
+                  return item.variant === 'switch' ? (
                     <div
                       key={`submenu-${itemIndex}`}
                       className={cn(
@@ -1107,7 +1153,14 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
                   ) : (
                     <button
                       key={`submenu-${itemIndex}`}
-                      onClick={item.onClick}
+                      type="button"
+                      onClick={() => {
+                        if (hasNestedSubmenu && nestedSubmenuKey) {
+                          setActiveSubmenu(nestedSubmenuKey)
+                        } else if (item.onClick) {
+                          item.onClick()
+                        }
+                      }}
                       disabled={item.disabled}
                       className={`flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-left text-[13px] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#9B87F5]/50 ${
                         item.disabled
@@ -1135,9 +1188,12 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
                           {item.badge}
                         </span>
                       )}
+                      {hasNestedSubmenu && (
+                        <ChevronRight className="h-4 w-4 flex-shrink-0 text-[#9B87F5]/60" />
+                      )}
                     </button>
-                  ),
-                )}
+                  )
+                })}
               </nav>
               )
             ) : (
@@ -1178,12 +1234,7 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
                           )
                         }
 
-                        const hasSubmenu =
-                          Boolean(item.submenu?.length) ||
-                          item.submenuVariant === 'profileComparison' ||
-                          item.submenuVariant === 'prefsDebug' ||
-                          item.submenuVariant === 'initDayMock' ||
-                          item.submenuVariant === 'initTicketMock'
+                        const hasSubmenu = menuItemHasSubmenu(item)
                         const itemKey = `${section.title}-${item.label}`
 
                         return (

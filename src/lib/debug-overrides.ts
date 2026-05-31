@@ -17,7 +17,6 @@ export const DEBUG_OVERRIDE_KEYS = {
   mockCloudStatusAlert: 'debug:mockCloudStatusAlert',
   showFullscreenLoader: 'debug:showFullscreenLoader',
   showFunctionsLocalEditor: 'debug:showFunctionsLocalEditor',
-  showBuyTransferDomains: 'debug:showBuyTransferDomains',
   mockInitCurrentDay: 'debug:mockInitCurrentDay',
   mockInitTicketType: 'debug:mockInitTicketType',
   previewInitReactionConfetti: 'debug:previewInitReactionConfetti',
@@ -52,11 +51,6 @@ export type DebugOverrides = {
    * (Monaco + gzip deploy prep). Default false.
    */
   showFunctionsLocalEditor: boolean
-  /**
-   * When true, exposes Buy domain and Transfer in on the org domains list and
-   * /domains/buy and /domains/transfer-in routes. Default false.
-   */
-  showBuyTransferDomains: boolean
   /**
    * Mock which Init launch day is "today" (0 = before, 1–5 = during, 6 = after).
    * Null uses the real calendar date.
@@ -127,10 +121,6 @@ export function loadDebugOverrides(): DebugOverrides {
       DEBUG_OVERRIDE_KEYS.showFunctionsLocalEditor,
       false,
     ),
-    showBuyTransferDomains: readBooleanFromStorage(
-      DEBUG_OVERRIDE_KEYS.showBuyTransferDomains,
-      false,
-    ),
     mockInitCurrentDay: readNullableInitDayFromStorage(
       DEBUG_OVERRIDE_KEYS.mockInitCurrentDay,
     ),
@@ -188,7 +178,6 @@ const FEATURE_FLAGS_MENU_DEBUG_KEYS: (keyof DebugOverrides)[] = [
   'showNativeAppBar',
   'showSuccessTeamCard',
   'showFunctionsLocalEditor',
-  'showBuyTransferDomains',
 ]
 
 /** Clear persisted debug overrides used by the Feature flags submenu only. */

@@ -26,6 +26,8 @@ import {
   Plug2,
   ArrowUpCircle,
   ArrowLeft,
+  DatabaseZap,
+  ShieldAlert,
 } from 'lucide-react'
 import { useAuth, isOptionalAuthPage } from '@/components/global/auth/RequireAuth'
 import { ProjectSelector } from '@/components/pages/projects/$projectId/shared/ProjectSelector'
@@ -66,8 +68,10 @@ import { useOrganizationPlan } from '@/lib/react-query/hooks'
 import { useConsoleProfile } from '@/hooks/use-console-profile'
 import { useDebugOverrides } from '@/lib/debug-overrides'
 import { ImpersonateConsoleUserPopover } from '@/components/global/shared/ImpersonateConsoleUserPopover'
-import { BlocksConsoleLink } from '@/components/global/shared/BlocksConsoleLink'
-import { CacheConsoleLink } from '@/components/global/shared/CacheConsoleLink'
+import {
+  isOperatorAccount,
+  type OperatorAccount,
+} from '@/lib/operator-account'
 import { openCreateOrganizationFlow } from '@/lib/open-create-organization-flow'
 import { useTheme } from 'next-themes'
 import { getConsoleHeaderLogoClass } from '@/lib/html-theme'
@@ -96,6 +100,8 @@ export function ConsoleHeader({
     useKeyboardShortcutsContext()
   const { toggleChat } = useAIChat()
   const { account, signOut, isAuthenticated, isLoading: isAuthLoading } = useAuth()
+  const operatorAccount = account as OperatorAccount | undefined
+  const showAdminSection = isOperatorAccount(operatorAccount)
   const location = useLocation()
   const navigate = useNavigate()
   const params = useParams({ strict: false })
@@ -723,8 +729,6 @@ export function ConsoleHeader({
 
           {/* Operator tools (render nothing when account is not an impersonator) */}
           <ImpersonateConsoleUserPopover />
-          <BlocksConsoleLink />
-          <CacheConsoleLink />
 
           {/* Help/Assistant - hidden on small containers; enabled by profile or experimental override */}
           {showAIAssistant && (
@@ -916,6 +920,36 @@ export function ConsoleHeader({
                     <span>Payments</span>
                   </Link>
                 </DropdownMenuItem>
+              )}
+
+              {showAdminSection && (
+                <>
+                  <DropdownMenuSeparator className="my-1 bg-border" />
+
+                  <DropdownMenuLabel className="px-2 py-1.5 text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
+                    Admin
+                  </DropdownMenuLabel>
+
+                  <DropdownMenuItem asChild>
+                    <Link
+                      to="/cache"
+                      className="flex cursor-pointer items-center gap-2 rounded px-2 py-1.5 text-[13px] text-muted-foreground hover:bg-accent hover:text-foreground focus:bg-accent focus:text-foreground"
+                    >
+                      <DatabaseZap className="h-4 w-4" />
+                      <span>Cache</span>
+                    </Link>
+                  </DropdownMenuItem>
+
+                  <DropdownMenuItem asChild>
+                    <Link
+                      to="/blocks"
+                      className="flex cursor-pointer items-center gap-2 rounded px-2 py-1.5 text-[13px] text-muted-foreground hover:bg-accent hover:text-foreground focus:bg-accent focus:text-foreground"
+                    >
+                      <ShieldAlert className="h-4 w-4" />
+                      <span>Blocks</span>
+                    </Link>
+                  </DropdownMenuItem>
+                </>
               )}
 
               <DropdownMenuSeparator className="my-1 bg-border" />

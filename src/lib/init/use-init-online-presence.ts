@@ -138,6 +138,9 @@ export function useInitOnlinePresence(
   const publishThemeRef = useRef<InitPresenceTheme | undefined>(undefined)
   const lastPublishedThemeRef = useRef<InitPresenceTheme | null>(null)
   const pendingThemePublishRef = useRef<InitPresenceTheme | null>(null)
+  /** After first theme reconcile, show "Going light/dark" only for real changes. */
+  const initialThemeSyncDoneRef = useRef(false)
+  const themeReady = resolvedTheme !== undefined
   const { data: account } = useQuery({
     ...consoleAccountQueryOptions(),
     enabled,
@@ -394,9 +397,16 @@ export function useInitOnlinePresence(
 
       const nextTheme =
         themeOverride ?? resolveInitPresenceTheme(resolvedThemeRef.current)
-      if (lastPublishedThemeRef.current === nextTheme) return
+      if (lastPublishedThemeRef.current === nextTheme) {
+        initialThemeSyncDoneRef.current = true
+        return
+      }
 
-      transientActivityRef.current = buildInitSwitchingThemeActivity(nextTheme)
+      const showThemeActivity =
+        themeOverride != null || initialThemeSyncDoneRef.current
+      if (showThemeActivity) {
+        transientActivityRef.current = buildInitSwitchingThemeActivity(nextTheme)
+      }
 
       if (upsertingRef.current) {
         pendingThemePublishRef.current = nextTheme
@@ -405,7 +415,10 @@ export function useInitOnlinePresence(
 
       publishThemeRef.current = nextTheme
       await publishPresence(!participantOnlineRef.current, { refresh: false })
-      scheduleThemeActivityReset()
+      initialThemeSyncDoneRef.current = true
+      if (showThemeActivity) {
+        scheduleThemeActivityReset()
+      }
     },
     [accountUserId, enabled, eventId, publishPresence, scheduleThemeActivityReset],
   )
@@ -445,9 +458,12 @@ export function useInitOnlinePresence(
       participantOnlineRef.current = true
       lastPublishedThemeRef.current = null
       pendingThemePublishRef.current = null
+      initialThemeSyncDoneRef.current = false
       setParticipantStatusState('online')
       return
     }
+
+    if (!themeReady) return
 
     const startOnline = readParticipantOnlinePreference()
     participantOnlineRef.current = startOnline
@@ -494,12 +510,21 @@ export function useInitOnlinePresence(
         themeActivityResetRef.current = null
       }
     }
-  }, [accountUserId, enabled, eventId, refreshLists])
+  }, [accountUserId, enabled, eventId, refreshLists, themeReady])
 
   useEffect(() => {
-    if (!enabled || !eventId || !accountUserId || !isReady) return
+    if (!enabled || !eventId || !accountUserId || !isReady || !themeReady) return
     void syncPresenceTheme()
-  }, [accountUserId, enabled, eventId, isReady, resolvedTheme, theme, syncPresenceTheme])
+  }, [
+    accountUserId,
+    enabled,
+    eventId,
+    isReady,
+    themeReady,
+    resolvedTheme,
+    theme,
+    syncPresenceTheme,
+  ])
 
   useEffect(() => {
     if (!enabled || !eventId || !accountUserId || !isReady || !localeData?.countryCode) {

@@ -106,13 +106,35 @@ export function ChangePlanWizardFullscreen() {
     )
   }, [organizations, orgId])
 
-  // Default selection: Pro for new orgs; current plan when changing an existing org.
+  // Default selection: Pro for new orgs; first paid plan when upgrading from Free;
+  // otherwise the org's current plan.
   const defaultPlan = useMemo(() => {
     if (isCreateMode) {
       return BillingPlanTier.Tier1
     }
-    return organization?.billingPlan || BillingPlanTier.Tier0
-  }, [isCreateMode, organization?.billingPlan])
+
+    const current = organization?.billingPlan || BillingPlanTier.Tier0
+
+    if (
+      getPlanNameFromTier(current) === 'free' &&
+      billingPlans &&
+      Object.keys(billingPlans).length > 0
+    ) {
+      const firstPaidPlan = Object.keys(billingPlans)
+        .filter((tier) => getPlanNameFromTier(tier) !== 'free')
+        .sort((a, b) => {
+          const tierNumber = (id: string) =>
+            parseInt(id.match(/tier-(\d+)/i)?.[1] ?? '999', 10)
+          return tierNumber(a) - tierNumber(b)
+        })[0]
+
+      if (firstPaidPlan) {
+        return firstPaidPlan as BillingPlanTierType
+      }
+    }
+
+    return current as BillingPlanTierType
+  }, [isCreateMode, organization?.billingPlan, billingPlans])
 
   // Check if self-service is allowed (defaults to true)
   const selfService = isCreateMode ? true : plan?.selfService !== false

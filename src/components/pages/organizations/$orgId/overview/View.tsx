@@ -9,6 +9,7 @@ import {
 import {
   Plus,
   Globe,
+  Folder,
   Search,
   ChevronDown,
   Check,
@@ -248,6 +249,40 @@ function orgMembershipRoleDisplay(role: string): {
     Icon: Users,
     label: role.charAt(0).toUpperCase() + role.slice(1),
   }
+}
+
+/** Header avatar stack beside Invite: fixed width fits this many md avatars. */
+const HEADER_MEMBER_AVATAR_SLOTS = 2
+
+function EmptyMemberAvatarSlot({
+  zIndex,
+  onClick,
+  disabled,
+}: {
+  zIndex: number
+  onClick: () => void
+  disabled?: boolean
+}) {
+  return (
+    <button
+      type="button"
+      disabled={disabled}
+      onClick={onClick}
+      className={cn(
+        'relative rounded-full border-2 border-background focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2',
+        disabled
+          ? 'cursor-not-allowed opacity-50'
+          : 'cursor-pointer hover:opacity-90',
+      )}
+      style={{ zIndex }}
+      title={disabled ? undefined : 'Invite member'}
+      aria-label="Invite member"
+    >
+      <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-dashed border-muted-foreground/35 bg-muted/25">
+        <Plus className="h-3.5 w-3.5 text-muted-foreground" />
+      </div>
+    </button>
+  )
 }
 
 // Component to display project platforms and API keys
@@ -1554,7 +1589,7 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
         <div>
           {/* Title Row: fixed h-16 so padding + toolbar never grows (h1 margins, badges, etc.) */}
           <div className="mx-auto flex h-16 min-h-16 w-full max-w-7xl shrink-0 items-center justify-between gap-3 px-4 sm:px-6">
-            {/* Left: Org Switcher - h-8 control; overflow-hidden contains h1 (no UA margin shift) */}
+            {/* Left: Org Switcher - h-8 control; h1 uses m-0 so UA margins do not shift layout */}
             <div className="flex h-8 min-h-8 max-h-8 shrink-0 items-center gap-2">
               {selectedOrg ? (
                 <Popover
@@ -1564,10 +1599,10 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                   <PopoverTrigger asChild>
                     <button
                       type="button"
-                      className="group flex h-8 max-h-8 min-h-8 min-w-0 cursor-pointer items-center gap-2 overflow-hidden rounded-lg px-2 -ml-2 transition-colors hover:bg-accent"
+                      className="group flex h-8 max-h-8 min-h-8 min-w-0 cursor-pointer items-center gap-2 rounded-lg px-2 -ml-2 transition-colors hover:bg-accent"
                     >
                       <InitialsAvatar name={selectedOrg.name} size="sm" />
-                      <h1 className="m-0 truncate text-[13px] font-semibold leading-none text-foreground">
+                      <h1 className="m-0 truncate text-[13px] font-semibold leading-tight text-foreground">
                         {selectedOrg.name}
                       </h1>
                       {isCloud && (
@@ -1678,16 +1713,7 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
             {/* Right: same fixed h-8 band as left */}
             <div className="flex h-8 min-h-8 max-h-8 shrink-0 items-center gap-3">
               {orgId && (
-                <div
-                  className={cn(
-                    'flex h-8 min-h-8 w-[5.5rem] shrink-0 items-center',
-                    !selectedOrg || membershipsLoading
-                      ? 'justify-start'
-                      : memberships.length === 1
-                        ? 'justify-center'
-                        : 'justify-start',
-                  )}
-                >
+                <div className="flex h-8 min-h-8 w-[5.5rem] shrink-0 items-center justify-start">
                   {!selectedOrg || membershipsLoading ? (
                     <div className="flex -space-x-2" aria-hidden>
                       <div
@@ -1703,54 +1729,87 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                         <div className="h-8 w-8 shrink-0 rounded-full bg-muted animate-pulse" />
                       </div>
                     </div>
-                  ) : memberships.length > 0 ? (
+                  ) : (
                     (() => {
-                      const displayMembers = memberships.slice(0, 2)
+                      const displayMembers = memberships.slice(
+                        0,
+                        HEADER_MEMBER_AVATAR_SLOTS,
+                      )
                       const totalCount = membershipsTotal
+                      const showOverflow =
+                        totalCount > HEADER_MEMBER_AVATAR_SLOTS
+                      const emptySlotCount = showOverflow
+                        ? 0
+                        : Math.max(
+                            0,
+                            HEADER_MEMBER_AVATAR_SLOTS - totalCount,
+                          )
+                      const slotCount =
+                        displayMembers.length +
+                        emptySlotCount +
+                        (showOverflow ? 1 : 0)
 
                       return (
-                        <Link
-                          to="/organizations/$orgId/settings/members"
-                          params={{ orgId: orgId! }}
+                        <div
                           className={cn(
-                            'flex h-8 min-h-8 rounded-full focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 cursor-pointer hover:opacity-90 transition-opacity',
-                            displayMembers.length > 1 && '-space-x-2',
+                            'flex h-8 min-h-8 items-center',
+                            slotCount > 1 && '-space-x-2',
                           )}
-                          title="View members"
                         >
-                          {displayMembers.map(
-                            (member: TeamMember, index: number) => (
-                              <div
-                                key={member.$id}
-                                className="relative rounded-full border-2 border-background"
-                                style={{
-                                  zIndex: displayMembers.length - index,
-                                }}
-                                title={member.userName}
-                              >
-                                <InitialsAvatar
-                                  name={member.userName}
-                                  size="md"
-                                />
-                              </div>
+                          {(displayMembers.length > 0 || showOverflow) && (
+                            <Link
+                              to="/organizations/$orgId/settings/members"
+                              params={{ orgId: orgId! }}
+                              className={cn(
+                                'flex h-8 min-h-8 rounded-full focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 cursor-pointer hover:opacity-90 transition-opacity',
+                                (displayMembers.length > 1 ||
+                                  (displayMembers.length > 0 && showOverflow)) &&
+                                  '-space-x-2',
+                              )}
+                              title="View members"
+                            >
+                              {displayMembers.map(
+                                (member: TeamMember, index: number) => (
+                                  <div
+                                    key={member.$id}
+                                    className="relative rounded-full border-2 border-background"
+                                    style={{
+                                      zIndex:
+                                        emptySlotCount +
+                                        (displayMembers.length - index),
+                                    }}
+                                    title={member.userName}
+                                  >
+                                    <InitialsAvatar
+                                      name={member.userName}
+                                      size="md"
+                                    />
+                                  </div>
+                                ),
+                              )}
+                              {showOverflow && (
+                                <div
+                                  className="relative flex h-8 w-8 items-center justify-center rounded-full border-2 border-background bg-muted text-[11px] font-medium text-foreground/80"
+                                  style={{ zIndex: 0 }}
+                                >
+                                  +{totalCount - HEADER_MEMBER_AVATAR_SLOTS}
+                                </div>
+                              )}
+                            </Link>
+                          )}
+                          {Array.from({ length: emptySlotCount }).map(
+                            (_, index) => (
+                              <EmptyMemberAvatarSlot
+                                key={`empty-member-slot-${index}`}
+                                zIndex={emptySlotCount - index}
+                                onClick={() => setInviteDialogOpen(true)}
+                                disabled={inviteDisabled}
+                              />
                             ),
                           )}
-                          {totalCount > 2 && (
-                            <div
-                              className="relative flex h-8 w-8 items-center justify-center rounded-full border-2 border-background bg-muted text-[11px] font-medium text-foreground/80"
-                              style={{ zIndex: 0 }}
-                            >
-                              +{totalCount - 2}
-                            </div>
-                          )}
-                        </Link>
+                        </div>
                       )
                     })()
-                  ) : (
-                    <div className="flex -space-x-2" aria-hidden>
-                      <div className="relative h-8 w-8 shrink-0 rounded-full border-2 border-transparent" />
-                      <div className="relative h-8 w-8 shrink-0 rounded-full border-2 border-transparent" />
-                    </div>
                   )}
                 </div>
               )}
@@ -2452,17 +2511,12 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                               pinnedProjects.length === 0) &&
                               displayedProjectsByTeam.length === 0 && (
                                 <EmptyState
-                                  icon={Search}
-                                  title="No projects found"
-                                  description={
-                                    searchQuery
-                                      ? undefined
-                                      : 'Create your first project to get started'
-                                  }
+                                  icon={Folder}
+                                  title="No projects yet"
+                                  description="Create your first project to get started"
                                   isEmpty={!searchQuery}
                                   hasFilters={!!searchQuery}
-                                  variant="centered"
-                                  iconSize="md"
+                                  variant="card"
                                 />
                               )}
 

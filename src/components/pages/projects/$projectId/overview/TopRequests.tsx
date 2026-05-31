@@ -178,12 +178,10 @@ export function TopRequests({
                       {request.statusCode || '—'}
                     </span>
                     <span
-                      className="min-w-0 flex-1 overflow-hidden text-[12px] text-foreground/70"
+                      className="min-w-0 flex-1 truncate font-mono text-[12px] text-foreground/70"
                       title={request.path}
                     >
-                      <span className="block overflow-hidden text-ellipsis whitespace-nowrap font-mono">
-                        {truncateMiddle(request.path, PATH_DISPLAY_MAX)}
-                      </span>
+                      {truncateMiddle(request.path, PATH_DISPLAY_MAX)}
                     </span>
                     <span className="shrink-0 text-right text-[12px] font-medium tabular-nums text-muted-foreground">
                       {formatValue(request.count)}

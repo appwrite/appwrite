@@ -13,7 +13,7 @@ export type ConsoleProfileId = 'cloud' | 'self-hosted'
 export type ConsoleProfileFeatures = {
   /** Billing and subscription management */
   billing: boolean
-  /** Organization-level custom domains (DNS, verification, buy domain) */
+  /** Organization-level custom domains (DNS, verification, buy domain, transfer in) */
   domains: boolean
   /** Organization marketplace (browse and publish apps) */
   marketplace: boolean

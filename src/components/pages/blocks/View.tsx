@@ -24,7 +24,7 @@ export function BlocksConsoleView() {
 
   useEffect(() => {
     if (!account) return
-    // Match the BlocksConsoleLink gate: allow operators (impersonator flag)
+    // Match the account menu Admin gate: allow operators (impersonator flag)
     // and anyone already inside an impersonation session.
     if (!isOperatorAccount(account)) {
       navigate({ to: '/account', replace: true })

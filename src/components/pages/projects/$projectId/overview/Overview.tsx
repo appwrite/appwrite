@@ -532,12 +532,13 @@ export function View({ projectId, initialData }: ViewProps) {
         <div className="mx-auto w-full max-w-7xl px-4 py-4 sm:px-6">
           <div className="flex flex-col gap-2 lg:flex-row lg:items-center lg:justify-between">
             {/* Left: Title */}
-            <div className="flex items-center gap-3">
+            <div className="flex min-w-0 items-center gap-3">
               <h1
                 className={cn(
-                  'text-[17px] font-medium text-foreground',
+                  'min-w-0 truncate text-[17px] font-medium text-foreground',
                   isCloud ? 'font-aeonik-pro' : 'font-inter-overview',
                 )}
+                title={currentProject?.name || undefined}
               >
                 {currentProject?.name || ''}
               </h1>

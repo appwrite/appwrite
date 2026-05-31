@@ -6,11 +6,11 @@ export const OVERVIEW_TOP_BREAKDOWN_ITEM_COUNT = 7
 
 /** Fixed-height list so skeleton, partial, and full results share the same layout. */
 export const overviewTopBreakdownListClass =
-  'relative flex min-h-[276px] flex-col gap-1'
+  'relative flex min-h-[276px] w-full min-w-0 flex-col gap-1'
 
 /** One breakdown row — keep skeleton and data rows the same height. */
 export const overviewTopBreakdownRowClass =
-  'flex h-9 min-h-9 shrink-0 items-center gap-2 rounded-md px-2'
+  'flex h-9 min-h-9 w-full min-w-0 shrink-0 items-center gap-2 overflow-hidden rounded-md px-2'
 
 /** Chart + breakdown row min height (column padding + header + breakdown list). */
 export const overviewChartContentRowClass =

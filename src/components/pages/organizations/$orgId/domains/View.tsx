@@ -35,7 +35,6 @@ import {
 } from '@/lib/table-filters'
 import type { CompactFilterKey } from '@/lib/table-filters'
 import { FiltersPopover } from '@/components/global/shared/FiltersPopover'
-import { useDebugOverrides } from '@/lib/debug-overrides'
 import {
   ResourceCard,
   RESOURCE_CARD_GRID_CLASSNAME,
@@ -95,7 +94,6 @@ export function View() {
   const location = useLocation()
   const search = useSearch({ strict: false })
   const queryClient = useQueryClient()
-  const { showBuyTransferDomains } = useDebugOverrides()
   const [isCreateDomainSubmitting, setIsCreateDomainSubmitting] =
     useState(false)
 
@@ -648,36 +646,32 @@ export function View() {
           />
         </div>
         <div className="ml-auto flex items-center gap-2">
-          {showBuyTransferDomains && (
-            <>
-              <Button
-                variant="outline"
-                asChild
-                className="h-9 gap-1.5 text-[13px] font-medium"
-              >
-                <Link
-                  to="/organizations/$orgId/domains/transfer-in"
-                  params={{ orgId: orgId! }}
-                >
-                  <ArrowLeftRight className="h-4 w-4" />
-                  Transfer in
-                </Link>
-              </Button>
-              <Button
-                variant="outline"
-                asChild
-                className="h-9 gap-1.5 text-[13px] font-medium"
-              >
-                <Link
-                  to="/organizations/$orgId/domains/buy"
-                  params={{ orgId: orgId! }}
-                >
-                  <ShoppingCart className="h-4 w-4" />
-                  Buy domain
-                </Link>
-              </Button>
-            </>
-          )}
+          <Button
+            variant="outline"
+            asChild
+            className="h-9 gap-1.5 text-[13px] font-medium"
+          >
+            <Link
+              to="/organizations/$orgId/domains/transfer-in"
+              params={{ orgId: orgId! }}
+            >
+              <ArrowLeftRight className="h-4 w-4" />
+              Transfer in
+            </Link>
+          </Button>
+          <Button
+            variant="outline"
+            asChild
+            className="h-9 gap-1.5 text-[13px] font-medium"
+          >
+            <Link
+              to="/organizations/$orgId/domains/buy"
+              params={{ orgId: orgId! }}
+            >
+              <ShoppingCart className="h-4 w-4" />
+              Buy domain
+            </Link>
+          </Button>
           <Button
             variant="brandCta"
             onClick={() => setCreateDialogOpen(true)}

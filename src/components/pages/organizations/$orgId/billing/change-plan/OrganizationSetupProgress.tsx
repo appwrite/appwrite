@@ -109,7 +109,7 @@ export function OrganizationSetupProgress({
                   className={cn(
                     'flex h-8 w-8 shrink-0 items-center justify-center rounded-full border-2 text-[12px] font-semibold transition-colors',
                     isComplete &&
-                      'border-primary bg-primary text-primary-foreground',
+                      'border-green-600 bg-green-600 text-white dark:border-green-500 dark:bg-green-500',
                     isCurrent &&
                       'border-primary bg-background text-primary',
                     isUpcoming &&
@@ -128,7 +128,7 @@ export function OrganizationSetupProgress({
                   <div
                     className={cn(
                       'my-1 w-px flex-1 min-h-[2rem]',
-                      isComplete ? 'bg-primary' : 'bg-border',
+                      isComplete ? 'bg-green-600 dark:bg-green-500' : 'bg-border',
                     )}
                   />
                 ) : null}
