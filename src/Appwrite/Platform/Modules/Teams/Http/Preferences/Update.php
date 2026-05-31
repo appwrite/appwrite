@@ -76,7 +76,9 @@ class Update extends Action
             'prefs' => $prefs->getArrayCopy()
         ]));
 
-        $queueForEvents->setParam('teamId', $team->getId());
+        $queueForEvents
+            ->setParam('teamId', $team->getId())
+            ->setPayload($response->output($team, Response::MODEL_TEAM));
 
         $response->dynamic($prefs, Response::MODEL_PREFERENCES);
     }
