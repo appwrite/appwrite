@@ -11,17 +11,9 @@ $httpsPort = $this->getParam('httpsPort', '');
 $version = $this->getParam('version', '');
 $organization = $this->getParam('organization', '');
 $image = $this->getParam('image', '');
-$enableAssistant = $this->getParam('enableAssistant', false);
-$executorImages = $this->getParam('executorImages', '');
-$dbService = $this->getParam('database', 'mongodb');
-$allowedDbServices = ['mariadb', 'mongodb'];
-if (!\in_array($dbService, $allowedDbServices, true)) {
-    $dbService = 'mongodb';
-}
-$hostPath = rtrim($this->getParam('hostPath', ''), '/');
 ?>services:
   traefik:
-    image: traefik:3.6
+    image: traefik:2.11
     container_name: appwrite-traefik
     <<: *x-logging
     command:
@@ -68,9 +60,6 @@ $hostPath = rtrim($this->getParam('hostPath', ''), '/');
       - traefik.http.routers.appwrite_api_https.service=appwrite_api
       - traefik.http.routers.appwrite_api_https.tls=true
     volumes:
-<?php if ($version === 'local' && !empty($hostPath)): ?>
-      - "<?php echo $hostPath; ?>:/usr/src/code:rw"
-<?php endif; ?>
       - appwrite-uploads:/storage/uploads:rw
       - appwrite-imports:/storage/imports:rw
       - appwrite-cache:/storage/cache:rw
@@ -80,10 +69,8 @@ $hostPath = rtrim($this->getParam('hostPath', ''), '/');
       - appwrite-sites:/storage/sites:rw
       - appwrite-builds:/storage/builds:rw
     depends_on:
-      redis:
-        condition: service_healthy
-      <?= $dbService ?>:
-        condition: service_healthy
+      - mariadb
+      - redis
 #      - clamav
     environment:
       - _APP_ENV
@@ -115,7 +102,6 @@ $hostPath = rtrim($this->getParam('hostPath', ''), '/');
       - _APP_REDIS_PORT
       - _APP_REDIS_USER
       - _APP_REDIS_PASS
-      - _APP_DB_ADAPTER
       - _APP_DB_HOST
       - _APP_DB_PORT
       - _APP_DB_SCHEMA
@@ -178,7 +164,6 @@ $hostPath = rtrim($this->getParam('hostPath', ''), '/');
       - _APP_MAINTENANCE_RETENTION_SCHEDULES
       - _APP_SMS_PROVIDER
       - _APP_SMS_FROM
-      - _APP_GRAPHQL_INTROSPECTION
       - _APP_GRAPHQL_MAX_BATCH_SIZE
       - _APP_GRAPHQL_MAX_COMPLEXITY
       - _APP_GRAPHQL_MAX_DEPTH
@@ -194,7 +179,7 @@ $hostPath = rtrim($this->getParam('hostPath', ''), '/');
   appwrite-console:
     <<: *x-logging
     container_name: appwrite-console
-    image: <?php echo $organization; ?>/console:7.8.26
+    image: <?php echo $organization; ?>/console:7.4.7
     restart: unless-stopped
     networks:
       - appwrite
@@ -236,10 +221,8 @@ $hostPath = rtrim($this->getParam('hostPath', ''), '/');
     networks:
       - appwrite
     depends_on:
-      redis:
-        condition: service_healthy
-      <?= $dbService ?>:
-        condition: service_healthy
+      - mariadb
+      - redis
     environment:
       - _APP_ENV
       - _APP_WORKER_PER_CORE
@@ -250,7 +233,6 @@ $hostPath = rtrim($this->getParam('hostPath', ''), '/');
       - _APP_REDIS_PORT
       - _APP_REDIS_USER
       - _APP_REDIS_PASS
-      - _APP_DB_ADAPTER
       - _APP_DB_HOST
       - _APP_DB_PORT
       - _APP_DB_SCHEMA
@@ -268,10 +250,8 @@ $hostPath = rtrim($this->getParam('hostPath', ''), '/');
     networks:
       - appwrite
     depends_on:
-      redis:
-        condition: service_healthy
-      <?= $dbService ?>:
-        condition: service_healthy
+      - redis
+      - mariadb
     environment:
       - _APP_ENV
       - _APP_WORKER_PER_CORE
@@ -280,7 +260,6 @@ $hostPath = rtrim($this->getParam('hostPath', ''), '/');
       - _APP_REDIS_PORT
       - _APP_REDIS_USER
       - _APP_REDIS_PASS
-      - _APP_DB_ADAPTER
       - _APP_DB_HOST
       - _APP_DB_PORT
       - _APP_DB_SCHEMA
@@ -297,17 +276,14 @@ $hostPath = rtrim($this->getParam('hostPath', ''), '/');
     networks:
       - appwrite
     depends_on:
-      redis:
-        condition: service_healthy
-      <?= $dbService ?>:
-        condition: service_healthy
+      - redis
+      - mariadb
     environment:
       - _APP_ENV
       - _APP_WORKER_PER_CORE
       - _APP_OPENSSL_KEY_V1
       - _APP_EMAIL_SECURITY
       - _APP_SYSTEM_SECURITY_EMAIL_ADDRESS
-      - _APP_DB_ADAPTER
       - _APP_DB_HOST
       - _APP_DB_PORT
       - _APP_DB_SCHEMA
@@ -328,10 +304,8 @@ $hostPath = rtrim($this->getParam('hostPath', ''), '/');
     networks:
       - appwrite
     depends_on:
-      redis:
-        condition: service_healthy
-      <?= $dbService ?>:
-        condition: service_healthy
+      - redis
+      - mariadb
     volumes:
       - appwrite-uploads:/storage/uploads:rw
       - appwrite-cache:/storage/cache:rw
@@ -347,7 +321,6 @@ $hostPath = rtrim($this->getParam('hostPath', ''), '/');
       - _APP_REDIS_PORT
       - _APP_REDIS_USER
       - _APP_REDIS_PASS
-      - _APP_DB_ADAPTER
       - _APP_DB_HOST
       - _APP_DB_PORT
       - _APP_DB_SCHEMA
@@ -394,10 +367,8 @@ $hostPath = rtrim($this->getParam('hostPath', ''), '/');
     networks:
       - appwrite
     depends_on:
-      redis:
-        condition: service_healthy
-      <?= $dbService ?>:
-        condition: service_healthy
+      - redis
+      - mariadb
     environment:
       - _APP_ENV
       - _APP_WORKER_PER_CORE
@@ -406,7 +377,6 @@ $hostPath = rtrim($this->getParam('hostPath', ''), '/');
       - _APP_REDIS_PORT
       - _APP_REDIS_USER
       - _APP_REDIS_PASS
-      - _APP_DB_ADAPTER
       - _APP_DB_HOST
       - _APP_DB_PORT
       - _APP_DB_SCHEMA
@@ -423,10 +393,8 @@ $hostPath = rtrim($this->getParam('hostPath', ''), '/');
     networks:
       - appwrite
     depends_on:
-      redis:
-        condition: service_healthy
-      <?= $dbService ?>:
-        condition: service_healthy
+      - redis
+      - mariadb
     volumes:
       - appwrite-functions:/storage/functions:rw
       - appwrite-sites:/storage/sites:rw
@@ -442,7 +410,6 @@ $hostPath = rtrim($this->getParam('hostPath', ''), '/');
       - _APP_REDIS_PORT
       - _APP_REDIS_USER
       - _APP_REDIS_PASS
-      - _APP_DB_ADAPTER
       - _APP_DB_HOST
       - _APP_DB_PORT
       - _APP_DB_SCHEMA
@@ -494,10 +461,8 @@ $hostPath = rtrim($this->getParam('hostPath', ''), '/');
     networks:
       - appwrite
     depends_on:
-      redis:
-        condition: service_healthy
-      <?= $dbService ?>:
-        condition: service_healthy
+      - redis
+      - mariadb
     volumes:
       - appwrite-config:/storage/config:rw
       - appwrite-certificates:/storage/certificates:rw
@@ -517,36 +482,6 @@ $hostPath = rtrim($this->getParam('hostPath', ''), '/');
       - _APP_REDIS_PORT
       - _APP_REDIS_USER
       - _APP_REDIS_PASS
-      - _APP_DB_ADAPTER
-      - _APP_DB_HOST
-      - _APP_DB_PORT
-      - _APP_DB_SCHEMA
-      - _APP_DB_USER
-      - _APP_DB_PASS
-      - _APP_LOGGING_CONFIG
-
-  appwrite-worker-executions:
-    image: <?php echo $organization; ?>/<?php echo $image; ?>:<?php echo $version."\n"; ?>
-    entrypoint: worker-executions
-    <<: *x-logging
-    container_name: appwrite-worker-executions
-    restart: unless-stopped
-    networks:
-      - appwrite
-    depends_on:
-      redis:
-        condition: service_healthy
-      <?= $dbService ?>:
-        condition: service_healthy
-    environment:
-      - _APP_ENV
-      - _APP_WORKER_PER_CORE
-      - _APP_REDIS_HOST
-      - _APP_REDIS_PORT
-      - _APP_REDIS_USER
-      - _APP_REDIS_PASS
-      - _APP_ENV
-      - _APP_DB_ADAPTER
       - _APP_DB_HOST
       - _APP_DB_PORT
       - _APP_DB_SCHEMA
@@ -563,12 +498,9 @@ $hostPath = rtrim($this->getParam('hostPath', ''), '/');
     networks:
       - appwrite
     depends_on:
-      redis:
-        condition: service_healthy
-      <?= $dbService ?>:
-        condition: service_healthy
-      openruntimes-executor:
-        condition: service_started
+      - redis
+      - mariadb
+      - openruntimes-executor
     environment:
       - _APP_ENV
       - _APP_WORKER_PER_CORE
@@ -579,7 +511,6 @@ $hostPath = rtrim($this->getParam('hostPath', ''), '/');
       - _APP_REDIS_PORT
       - _APP_REDIS_USER
       - _APP_REDIS_PASS
-      - _APP_DB_ADAPTER
       - _APP_DB_HOST
       - _APP_DB_PORT
       - _APP_DB_SCHEMA
@@ -606,17 +537,13 @@ $hostPath = rtrim($this->getParam('hostPath', ''), '/');
     networks:
       - appwrite
     depends_on:
-      redis:
-        condition: service_healthy
-      <?= $dbService ?>:
-        condition: service_healthy
+      - redis
     environment:
       - _APP_ENV
       - _APP_WORKER_PER_CORE
       - _APP_OPENSSL_KEY_V1
       - _APP_SYSTEM_EMAIL_NAME
       - _APP_SYSTEM_EMAIL_ADDRESS
-      - _APP_DB_ADAPTER
       - _APP_DB_HOST
       - _APP_DB_PORT
       - _APP_DB_SCHEMA
@@ -646,10 +573,7 @@ $hostPath = rtrim($this->getParam('hostPath', ''), '/');
     volumes:
       - appwrite-uploads:/storage/uploads:rw
     depends_on:
-      redis:
-        condition: service_healthy
-      <?= $dbService ?>:
-        condition: service_healthy
+      - redis
     environment:
       - _APP_ENV
       - _APP_WORKER_PER_CORE
@@ -658,7 +582,6 @@ $hostPath = rtrim($this->getParam('hostPath', ''), '/');
       - _APP_REDIS_PORT
       - _APP_REDIS_USER
       - _APP_REDIS_PASS
-      - _APP_DB_ADAPTER
       - _APP_DB_HOST
       - _APP_DB_PORT
       - _APP_DB_SCHEMA
@@ -701,8 +624,7 @@ $hostPath = rtrim($this->getParam('hostPath', ''), '/');
     volumes:
       - appwrite-imports:/storage/imports:rw
     depends_on:
-      <?= $dbService ?>:
-        condition: service_healthy
+      - mariadb
     environment:
       - _APP_ENV
       - _APP_WORKER_PER_CORE
@@ -718,7 +640,6 @@ $hostPath = rtrim($this->getParam('hostPath', ''), '/');
       - _APP_REDIS_PORT
       - _APP_REDIS_USER
       - _APP_REDIS_PASS
-      - _APP_DB_ADAPTER
       - _APP_DB_HOST
       - _APP_DB_PORT
       - _APP_DB_SCHEMA
@@ -737,10 +658,7 @@ $hostPath = rtrim($this->getParam('hostPath', ''), '/');
     networks:
       - appwrite
     depends_on:
-      redis:
-        condition: service_healthy
-      <?= $dbService ?>:
-        condition: service_healthy
+      - redis
     environment:
       - _APP_ENV
       - _APP_WORKER_PER_CORE
@@ -756,7 +674,6 @@ $hostPath = rtrim($this->getParam('hostPath', ''), '/');
       - _APP_REDIS_PORT
       - _APP_REDIS_USER
       - _APP_REDIS_PASS
-      - _APP_DB_ADAPTER
       - _APP_DB_HOST
       - _APP_DB_PORT
       - _APP_DB_SCHEMA
@@ -780,15 +697,12 @@ $hostPath = rtrim($this->getParam('hostPath', ''), '/');
     networks:
       - appwrite
     depends_on:
-      redis:
-        condition: service_healthy
-      <?= $dbService ?>:
-        condition: service_healthy
+      - redis
+      - mariadb
     environment:
       - _APP_ENV
       - _APP_WORKER_PER_CORE
       - _APP_OPENSSL_KEY_V1
-      - _APP_DB_ADAPTER
       - _APP_DB_HOST
       - _APP_DB_PORT
       - _APP_DB_SCHEMA
@@ -812,15 +726,12 @@ $hostPath = rtrim($this->getParam('hostPath', ''), '/');
     networks:
       - appwrite
     depends_on:
-      redis:
-        condition: service_healthy
-      <?= $dbService ?>:
-        condition: service_healthy
+      - redis
+      - mariadb
     environment:
       - _APP_ENV
       - _APP_WORKER_PER_CORE
       - _APP_OPENSSL_KEY_V1
-      - _APP_DB_ADAPTER
       - _APP_DB_HOST
       - _APP_DB_PORT
       - _APP_DB_SCHEMA
@@ -843,15 +754,12 @@ $hostPath = rtrim($this->getParam('hostPath', ''), '/');
     networks:
       - appwrite
     depends_on:
-      redis:
-        condition: service_healthy
-      <?= $dbService ?>:
-        condition: service_healthy
+      - redis
+      - mariadb
     environment:
       - _APP_ENV
       - _APP_WORKER_PER_CORE
       - _APP_OPENSSL_KEY_V1
-      - _APP_DB_ADAPTER
       - _APP_DB_HOST
       - _APP_DB_PORT
       - _APP_DB_SCHEMA
@@ -874,26 +782,16 @@ $hostPath = rtrim($this->getParam('hostPath', ''), '/');
     networks:
       - appwrite
     depends_on:
-      <?= $dbService ?>:
-        condition: service_healthy
-      redis:
-        condition: service_healthy
+      - mariadb
+      - redis
     environment:
       - _APP_ENV
       - _APP_WORKER_PER_CORE
       - _APP_OPENSSL_KEY_V1
-      - _APP_OPTIONS_FORCE_HTTPS
-      - _APP_DOMAIN
-      - _APP_CONSOLE_DOMAIN
-      - _APP_DOMAIN_FUNCTIONS
-      - _APP_DOMAIN_SITES
-      - _APP_MIGRATION_HOST
-      - _APP_CONSOLE_SCHEMA
       - _APP_REDIS_HOST
       - _APP_REDIS_PORT
       - _APP_REDIS_USER
       - _APP_REDIS_PASS
-      - _APP_DB_ADAPTER
       - _APP_DB_HOST
       - _APP_DB_PORT
       - _APP_DB_SCHEMA
@@ -909,26 +807,16 @@ $hostPath = rtrim($this->getParam('hostPath', ''), '/');
     networks:
       - appwrite
     depends_on:
-      <?= $dbService ?>:
-        condition: service_healthy
-      redis:
-        condition: service_healthy
+      - mariadb
+      - redis
     environment:
       - _APP_ENV
       - _APP_WORKER_PER_CORE
       - _APP_OPENSSL_KEY_V1
-      - _APP_OPTIONS_FORCE_HTTPS
-      - _APP_DOMAIN
-      - _APP_CONSOLE_DOMAIN
-      - _APP_DOMAIN_FUNCTIONS
-      - _APP_DOMAIN_SITES
-      - _APP_MIGRATION_HOST
-      - _APP_CONSOLE_SCHEMA
       - _APP_REDIS_HOST
       - _APP_REDIS_PORT
       - _APP_REDIS_USER
       - _APP_REDIS_PASS
-      - _APP_DB_ADAPTER
       - _APP_DB_HOST
       - _APP_DB_PORT
       - _APP_DB_SCHEMA
@@ -944,10 +832,8 @@ $hostPath = rtrim($this->getParam('hostPath', ''), '/');
     networks:
       - appwrite
     depends_on:
-      <?= $dbService ?>:
-        condition: service_healthy
-      redis:
-        condition: service_healthy
+      - mariadb
+      - redis
     environment:
       - _APP_ENV
       - _APP_WORKER_PER_CORE
@@ -956,14 +842,12 @@ $hostPath = rtrim($this->getParam('hostPath', ''), '/');
       - _APP_REDIS_PORT
       - _APP_REDIS_USER
       - _APP_REDIS_PASS
-      - _APP_DB_ADAPTER
       - _APP_DB_HOST
       - _APP_DB_PORT
       - _APP_DB_SCHEMA
       - _APP_DB_USER
       - _APP_DB_PASS
 
-<?php if ($enableAssistant): ?>
   appwrite-assistant:
     image: appwrite/assistant:0.8.4
     container_name: appwrite-assistant
@@ -973,7 +857,6 @@ $hostPath = rtrim($this->getParam('hostPath', ''), '/');
       - appwrite
     environment:
       - _APP_ASSISTANT_OPENAI_API_KEY
-<?php endif; ?>
 
   appwrite-browser:
     image: appwrite/browser:0.3.2
@@ -984,14 +867,15 @@ $hostPath = rtrim($this->getParam('hostPath', ''), '/');
       - appwrite
 
   openruntimes-executor:
-    container_name: exc1
+    container_name: openruntimes-executor
     hostname: exc1
     <<: *x-logging
     restart: unless-stopped
     stop_signal: SIGINT
-    image: openruntimes/executor:0.25.1
+    image: openruntimes/executor:0.7.22
     networks:
       - appwrite
+      - runtimes
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
       - appwrite-builds:/storage/builds:rw
@@ -1001,9 +885,6 @@ $hostPath = rtrim($this->getParam('hostPath', ''), '/');
       # It's not possible to share mount file between 2 containers without host mount (copying is too slow)
       - /tmp:/tmp:rw
     environment:
-      - OPR_EXECUTOR_CONNECTION_STORAGE=local://localhost
-      - OPR_EXECUTOR_CONNECTION_BUILD_CACHE_STORAGE=
-      - OPR_EXECUTOR_IMAGES=<?php echo $executorImages; ?>
       - OPR_EXECUTOR_INACTIVE_TRESHOLD=$_APP_COMPUTE_INACTIVE_THRESHOLD
       - OPR_EXECUTOR_MAINTENANCE_INTERVAL=$_APP_COMPUTE_MAINTENANCE_INTERVAL
       - OPR_EXECUTOR_NETWORK=$_APP_COMPUTE_RUNTIMES_NETWORK
@@ -1037,10 +918,10 @@ $hostPath = rtrim($this->getParam('hostPath', ''), '/');
       - OPR_EXECUTOR_STORAGE_WASABI_REGION=$_APP_STORAGE_WASABI_REGION
       - OPR_EXECUTOR_STORAGE_WASABI_BUCKET=$_APP_STORAGE_WASABI_BUCKET
 
-<?php if ($dbService === 'mariadb'): ?>
   mariadb:
-    image: mariadb:10.11
+    image: mariadb:10.11 # fix issues when upgrading using: mysql_upgrade -u root -p
     container_name: appwrite-mariadb
+    <<: *x-logging
     restart: unless-stopped
     networks:
       - appwrite
@@ -1053,111 +934,9 @@ $hostPath = rtrim($this->getParam('hostPath', ''), '/');
       - MYSQL_PASSWORD=${_APP_DB_PASS}
       - MARIADB_AUTO_UPGRADE=1
     command: 'mysqld --innodb-flush-method=fsync'
-    healthcheck:
-      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
-      interval: 10s
-      timeout: 10s
-      retries: 10
-      start_period: 30s
-
-<?php elseif ($dbService === 'mongodb'): ?>
-
-  mongodb:
-    image: mongo:8.2.5
-    container_name: appwrite-mongodb
-    <<: *x-logging
-    restart: unless-stopped
-    networks:
-      - appwrite
-    volumes:
-      - appwrite-mongodb:/data/db
-      - appwrite-mongodb-keyfile:/data/keyfile
-    environment:
-      - MONGO_INITDB_ROOT_USERNAME=root
-      - MONGO_INITDB_ROOT_PASSWORD=${_APP_DB_ROOT_PASS}
-      - MONGO_INITDB_DATABASE=${_APP_DB_SCHEMA}
-      - MONGO_INITDB_USERNAME=${_APP_DB_USER}
-      - MONGO_INITDB_PASSWORD=${_APP_DB_PASS}
-    entrypoint:
-      - /bin/bash
-      - -c
-      - |
-        set -e
-        KEYFILE_PATH="/data/keyfile/mongo-keyfile"
-        INIT_FLAG="/data/db/.mongodb_initialized"
-
-        # Generate keyfile if it doesn't exist
-        if [ ! -f "$$KEYFILE_PATH" ]; then
-          echo "Generating random MongoDB keyfile..."
-          mkdir -p /data/keyfile
-          openssl rand -base64 756 > "$$KEYFILE_PATH"
-        fi
-        chmod 400 "$$KEYFILE_PATH"
-        chown mongodb:mongodb "$$KEYFILE_PATH" 2>/dev/null || chown 999:999 "$$KEYFILE_PATH"
-
-        # If not initialized, start without auth first to set up replica set and users
-        if [ ! -f "$$INIT_FLAG" ]; then
-          echo "First-time initialization: starting MongoDB without auth..."
-          mongod --replSet rs0 --bind_ip_all --fork --logpath /var/log/mongodb/mongod.log --dbpath /data/db
-
-          echo "Waiting for MongoDB to start..."
-          sleep 5
-
-          echo "Initializing replica set..."
-          mongosh --eval "rs.initiate({_id: 'rs0', members: [{_id: 0, host: 'mongodb:27017'}]})"
-
-          echo "Waiting for replica set to initialize..."
-          sleep 5
-
-          echo "Creating root user..."
-          mongosh admin --eval "db.createUser({user: '$$MONGO_INITDB_ROOT_USERNAME', pwd: '$$MONGO_INITDB_ROOT_PASSWORD', roles: ['root']})"
-
-          echo "Creating application user..."
-          mongosh admin --eval "db.createUser({user: '$$MONGO_INITDB_USERNAME', pwd: '$$MONGO_INITDB_PASSWORD', roles: [{role: 'readWrite', db: '$$MONGO_INITDB_DATABASE'}]})"
-
-          echo "Shutting down MongoDB..."
-          mongod --dbpath /data/db --shutdown
-
-          touch "$$INIT_FLAG"
-          echo "Initialization complete."
-        fi
-
-        echo "Starting MongoDB with authentication..."
-        exec mongod --replSet rs0 --bind_ip_all --auth --keyFile "$$KEYFILE_PATH"
-    healthcheck:
-      test: |
-        mongosh -u root -p "$$MONGO_INITDB_ROOT_PASSWORD" --authenticationDatabase admin --quiet --eval "rs.status().ok" | grep -q 1
-      interval: 10s
-      timeout: 10s
-      retries: 10
-      start_period: 60s
-
-<?php elseif ($dbService === 'postgresql'): ?>
-
-  postgresql:
-    image: appwrite/postgres:0.1.0
-    container_name: appwrite-postgresql
-    restart: unless-stopped
-    networks:
-      - appwrite
-    volumes:
-      - appwrite-postgresql:/var/lib/postgresql:rw
-    environment:
-      - POSTGRES_DB=${_APP_DB_SCHEMA}
-      - POSTGRES_USER=${_APP_DB_USER}
-      - POSTGRES_PASSWORD=${_APP_DB_PASS}
-    command: "postgres"
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${_APP_DB_USER} -d ${_APP_DB_SCHEMA}"]
-      interval: 10s
-      timeout: 10s
-      retries: 10
-      start_period: 30s
-
-<?php endif; ?>
 
   redis:
-    image: redis:7.4.7-alpine
+    image: redis:7.2.4-alpine
     container_name: appwrite-redis
     <<: *x-logging
     restart: unless-stopped
@@ -1170,12 +949,6 @@ $hostPath = rtrim($this->getParam('hostPath', ''), '/');
       - appwrite
     volumes:
       - appwrite-redis:/data:rw
-    healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-      start_period: 10s
 
   # clamav:
   #   image: appwrite/clamav:1.2.0
@@ -1195,14 +968,7 @@ networks:
     name: runtimes
 
 volumes:
-<?php if ($dbService === 'mariadb'): ?>
   appwrite-mariadb:
-<?php elseif ($dbService === 'postgresql'): ?>
-  appwrite-postgresql:
-<?php elseif ($dbService === 'mongodb'): ?>
-  appwrite-mongodb:
-  appwrite-mongodb-keyfile:
-<?php endif; ?>
   appwrite-redis:
   appwrite-cache:
   appwrite-uploads:
@@ -1212,4 +978,3 @@ volumes:
   appwrite-sites:
   appwrite-builds:
   appwrite-config:
-  openruntimes-node-modules-cache:

@@ -9,5 +9,11 @@ return [
         'mfaChallenge',
         'sessionAlert',
         'otpSession'
+    ],
+    'sms' => [
+        'verification',
+        'login',
+        'invitation',
+        'mfaChallenge'
     ]
 ];

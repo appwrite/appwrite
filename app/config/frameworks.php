@@ -14,11 +14,7 @@ return [
         'name' => 'Analog',
         'screenshotSleep' => 3000,
         'buildRuntime' => 'node-22',
-        'runtimes' => array_merge(
-            $templateRuntimes['NODE'],
-            $templateRuntimes['BUN'],
-            $templateRuntimes['DENO']
-        ),
+        'runtimes' => $templateRuntimes['NODE'],
         'bundleCommand' => 'bash /usr/local/server/helpers/analog/bundle.sh',
         'envCommand' => 'source /usr/local/server/helpers/analog/env.sh',
         'adapters' => [
@@ -44,11 +40,7 @@ return [
         'name' => 'Angular',
         'screenshotSleep' => 3000,
         'buildRuntime' => 'node-22',
-        'runtimes' => array_merge(
-            $templateRuntimes['NODE'],
-            $templateRuntimes['BUN'],
-            $templateRuntimes['DENO']
-        ),
+        'runtimes' => $templateRuntimes['NODE'],
         'bundleCommand' => 'bash /usr/local/server/helpers/angular/bundle.sh',
         'envCommand' => 'source /usr/local/server/helpers/angular/env.sh',
         'adapters' => [
@@ -74,11 +66,7 @@ return [
         'name' => 'Next.js',
         'screenshotSleep' => 3000,
         'buildRuntime' => 'node-22',
-        'runtimes' => array_merge(
-            $templateRuntimes['NODE'],
-            $templateRuntimes['BUN'],
-            $templateRuntimes['DENO']
-        ),
+        'runtimes' => $templateRuntimes['NODE'],
         'bundleCommand' => 'bash /usr/local/server/helpers/next-js/bundle.sh',
         'envCommand' => 'source /usr/local/server/helpers/next-js/env.sh',
         'adapters' => [
@@ -103,11 +91,7 @@ return [
         'name' => 'React',
         'screenshotSleep' => 3000,
         'buildRuntime' => 'node-22',
-        'runtimes' => array_merge(
-            $templateRuntimes['NODE'],
-            $templateRuntimes['BUN'],
-            $templateRuntimes['DENO']
-        ),
+        'runtimes' => $templateRuntimes['NODE'],
         'adapters' => [
             'static' => [
                 'key' => 'static',
@@ -124,11 +108,7 @@ return [
         'name' => 'Nuxt',
         'screenshotSleep' => 3000,
         'buildRuntime' => 'node-22',
-        'runtimes' => array_merge(
-            $templateRuntimes['NODE'],
-            $templateRuntimes['BUN'],
-            $templateRuntimes['DENO']
-        ),
+        'runtimes' => $templateRuntimes['NODE'],
         'bundleCommand' => 'bash /usr/local/server/helpers/nuxt/bundle.sh',
         'envCommand' => 'source /usr/local/server/helpers/nuxt/env.sh',
         'adapters' => [
@@ -153,11 +133,7 @@ return [
         'name' => 'Vue.js',
         'screenshotSleep' => 5000,
         'buildRuntime' => 'node-22',
-        'runtimes' => array_merge(
-            $templateRuntimes['NODE'],
-            $templateRuntimes['BUN'],
-            $templateRuntimes['DENO']
-        ),
+        'runtimes' => $templateRuntimes['NODE'],
         'adapters' => [
             'static' => [
                 'key' => 'static',
@@ -174,11 +150,7 @@ return [
         'name' => 'SvelteKit',
         'screenshotSleep' => 3000,
         'buildRuntime' => 'node-22',
-        'runtimes' => array_merge(
-            $templateRuntimes['NODE'],
-            $templateRuntimes['BUN'],
-            $templateRuntimes['DENO']
-        ),
+        'runtimes' => $templateRuntimes['NODE'],
         'bundleCommand' => 'bash /usr/local/server/helpers/sveltekit/bundle.sh',
         'envCommand' => 'source /usr/local/server/helpers/sveltekit/env.sh',
         'adapters' => [
@@ -203,11 +175,7 @@ return [
         'name' => 'Astro',
         'screenshotSleep' => 3000,
         'buildRuntime' => 'node-22',
-        'runtimes' => array_merge(
-            $templateRuntimes['NODE'],
-            $templateRuntimes['BUN'],
-            $templateRuntimes['DENO']
-        ),
+        'runtimes' => $templateRuntimes['NODE'],
         'bundleCommand' => 'bash /usr/local/server/helpers/astro/bundle.sh',
         'envCommand' => 'source /usr/local/server/helpers/astro/env.sh',
         'adapters' => [
@@ -232,11 +200,7 @@ return [
         'name' => 'TanStack Start',
         'screenshotSleep' => 3000,
         'buildRuntime' => 'node-22',
-        'runtimes' => array_merge(
-            $templateRuntimes['NODE'],
-            $templateRuntimes['BUN'],
-            $templateRuntimes['DENO']
-        ),
+        'runtimes' => $templateRuntimes['NODE'],
         'bundleCommand' => 'bash /usr/local/server/helpers/tanstack-start/bundle.sh',
         'envCommand' => 'source /usr/local/server/helpers/tanstack-start/env.sh',
         'adapters' => [
@@ -261,11 +225,7 @@ return [
         'name' => 'Remix',
         'screenshotSleep' => 3000,
         'buildRuntime' => 'node-22',
-        'runtimes' => array_merge(
-            $templateRuntimes['NODE'],
-            $templateRuntimes['BUN'],
-            $templateRuntimes['DENO']
-        ),
+        'runtimes' => $templateRuntimes['NODE'],
         'bundleCommand' => 'bash /usr/local/server/helpers/remix/bundle.sh',
         'envCommand' => 'source /usr/local/server/helpers/remix/env.sh',
         'adapters' => [
@@ -290,11 +250,7 @@ return [
         'name' => 'Lynx',
         'screenshotSleep' => 5000,
         'buildRuntime' => 'node-22',
-        'runtimes' => array_merge(
-            $templateRuntimes['NODE'],
-            $templateRuntimes['BUN'],
-            $templateRuntimes['DENO']
-        ),
+        'runtimes' => $templateRuntimes['NODE'],
         'adapters' => [
             'static' => [
                 'key' => 'static',
@@ -328,11 +284,7 @@ return [
         'name' => 'React Native',
         'screenshotSleep' => 3000,
         'buildRuntime' => 'node-22',
-        'runtimes' => array_merge(
-            $templateRuntimes['NODE'],
-            $templateRuntimes['BUN'],
-            $templateRuntimes['DENO']
-        ),
+        'runtimes' => $templateRuntimes['NODE'],
         'adapters' => [
             'static' => [
                 'key' => 'static',
@@ -349,11 +301,7 @@ return [
         'name' => 'Vite',
         'screenshotSleep' => 3000,
         'buildRuntime' => 'node-22',
-        'runtimes' => array_merge(
-            $templateRuntimes['NODE'],
-            $templateRuntimes['BUN'],
-            $templateRuntimes['DENO']
-        ),
+        'runtimes' => $templateRuntimes['NODE'],
         'adapters' => [
             'static' => [
                 'key' => 'static',
@@ -369,11 +317,7 @@ return [
         'name' => 'Other',
         'screenshotSleep' => 3000,
         'buildRuntime' => 'node-22',
-        'runtimes' => array_merge(
-            $templateRuntimes['NODE'],
-            $templateRuntimes['BUN'],
-            $templateRuntimes['DENO']
-        ),
+        'runtimes' => $templateRuntimes['NODE'],
         'adapters' => [
             'static' => [
                 'key' => 'static',

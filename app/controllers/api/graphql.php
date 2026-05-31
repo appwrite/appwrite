@@ -18,34 +18,28 @@ use GraphQL\Validator\Rules\DisableIntrospection;
 use GraphQL\Validator\Rules\QueryComplexity;
 use GraphQL\Validator\Rules\QueryDepth;
 use Swoole\Coroutine\WaitGroup;
+use Utopia\App;
 use Utopia\Database\Document;
 use Utopia\Database\Validator\Authorization;
-use Utopia\Http\Http;
 use Utopia\System\System;
 use Utopia\Validator\JSON;
 use Utopia\Validator\Text;
 
-Http::init()
+App::init()
     ->groups(['graphql'])
     ->inject('project')
-    ->inject('user')
-    ->inject('request')
-    ->inject('response')
     ->inject('authorization')
-    ->action(function (Document $project, User $user, Request $request, Response $response, Authorization $authorization) {
-        $response->setUser($user);
-        $request->setUser($user);
-
+    ->action(function (Document $project, Authorization $authorization) {
         if (
             array_key_exists('graphql', $project->getAttribute('apis', []))
             && !$project->getAttribute('apis', [])['graphql']
-            && !($user->isPrivileged($authorization->getRoles()) || $user->isKey($authorization->getRoles()))
+            && !(User::isPrivileged($authorization->getRoles()) || User::isApp($authorization->getRoles()))
         ) {
             throw new AppwriteException(AppwriteException::GENERAL_API_DISABLED);
         }
     });
 
-Http::get('/v1/graphql')
+App::get('/v1/graphql')
     ->desc('GraphQL endpoint')
     ->groups(['graphql'])
     ->label('scope', 'graphql')
@@ -92,7 +86,7 @@ Http::get('/v1/graphql')
             ->json($output);
     });
 
-Http::post('/v1/graphql/mutation')
+App::post('/v1/graphql/mutation')
     ->desc('GraphQL endpoint')
     ->groups(['graphql'])
     ->label('scope', 'graphql')
@@ -122,11 +116,11 @@ Http::post('/v1/graphql/mutation')
     ->action(function (Request $request, Response $response, GQLSchema $schema, Adapter $promiseAdapter) {
         $query = $request->getParams();
 
-        if ($request->getHeaderLine('x-sdk-graphql') == 'true') {
+        if ($request->getHeader('x-sdk-graphql') == 'true') {
             $query = $query['query'];
         }
 
-        $type = $request->getHeaderLine('content-type');
+        $type = $request->getHeader('content-type');
 
         if (\str_starts_with($type, 'application/graphql')) {
             $query = parseGraphql($request);
@@ -143,7 +137,7 @@ Http::post('/v1/graphql/mutation')
             ->json($output);
     });
 
-Http::post('/v1/graphql')
+App::post('/v1/graphql')
     ->desc('GraphQL endpoint')
     ->groups(['graphql'])
     ->label('scope', 'graphql')
@@ -173,11 +167,11 @@ Http::post('/v1/graphql')
     ->action(function (Request $request, Response $response, GQLSchema $schema, Adapter $promiseAdapter) {
         $query = $request->getParams();
 
-        if ($request->getHeaderLine('x-sdk-graphql') == 'true') {
+        if ($request->getHeader('x-sdk-graphql') == 'true') {
             $query = $query['query'];
         }
 
-        $type = $request->getHeaderLine('content-type');
+        $type = $request->getHeader('content-type');
 
         if (\str_starts_with($type, 'application/graphql')) {
             $query = parseGraphql($request);
@@ -230,15 +224,12 @@ function execute(
     $flags = DebugFlag::INCLUDE_DEBUG_MESSAGE | DebugFlag::INCLUDE_TRACE;
     $validations = GraphQL::getStandardValidationRules();
 
-    if (System::getEnv('_APP_GRAPHQL_INTROSPECTION', 'enabled') === 'disabled') {
-        $validations[] = new DisableIntrospection(DisableIntrospection::ENABLED);
-    }
-
     if (System::getEnv('_APP_OPTIONS_ABUSE', 'enabled') !== 'disabled') {
+        $validations[] = new DisableIntrospection();
         $validations[] = new QueryComplexity($maxComplexity);
         $validations[] = new QueryDepth($maxDepth);
     }
-    if (Http::getMode() === Http::MODE_TYPE_PRODUCTION) {
+    if (App::getMode() === App::MODE_TYPE_PRODUCTION) {
         $flags = DebugFlag::NONE;
     }
 
@@ -339,7 +330,7 @@ function processResult($result, $debugFlags): array
     );
 }
 
-Http::shutdown()
+App::shutdown()
     ->groups(['schema'])
     ->inject('project')
     ->action(function (Document $project) {
