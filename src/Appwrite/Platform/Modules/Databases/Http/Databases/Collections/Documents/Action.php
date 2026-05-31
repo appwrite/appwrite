@@ -540,7 +540,7 @@ abstract class Action extends DatabasesAction
         callable $getDatabasesDB,
         Authorization $authorization,
     ): array {
-        $isAPIKey = $user->isApp($authorization->getRoles());
+        $isAPIKey = $user->isKey($authorization->getRoles());
         $isPrivilegedUser = $user->isPrivileged($authorization->getRoles());
 
         $database = $authorization->skip(fn () => $dbForProject->getDocument('databases', $databaseId));

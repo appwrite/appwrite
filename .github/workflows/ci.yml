@@ -761,6 +761,15 @@ jobs:
         run: |
           docker tag ${{ env.IMAGE }}:before ${{ env.IMAGE }}
           docker compose up -d --wait --no-build
+          for attempt in $(seq 1 10); do
+            if curl -fsS http://localhost/v1/health/version; then
+              break
+            fi
+            if [ "$attempt" -eq 10 ]; then
+              exit 1
+            fi
+            sleep 1
+          done
 
       - name: Prepare benchmark files
         run: rm -f benchmark-before-summary.json benchmark-after-summary.json benchmark-before-samples.json benchmark-after-samples.json
@@ -816,6 +825,15 @@ jobs:
         run: |
           docker tag ${{ env.IMAGE }}:after ${{ env.IMAGE }}
           docker compose up -d --wait --no-build
+          for attempt in $(seq 1 10); do
+            if curl -fsS http://localhost/v1/health/version; then
+              break
+            fi
+            if [ "$attempt" -eq 10 ]; then
+              exit 1
+            fi
+            sleep 1
+          done
 
       - name: Benchmark after
         id: benchmark_after

@@ -657,50 +657,58 @@ $server->onWorkerStart(function (int $workerId) use ($server, $register, $stats,
                     $userId = $event['userId'];
 
                     if ($realtime->hasSubscriber($projectId, 'user:' . $userId)) {
-                        $connection = array_key_first(reset($realtime->subscriptions[$projectId]['user:' . $userId]));
-                        $subscriptionsBefore = \count($realtime->getSubscriptionMetadata($connection));
+                        $connections = [];
+                        foreach ($realtime->subscriptions[$projectId]['user:' . $userId] as $byConnection) {
+                            foreach (\array_keys($byConnection) as $connectionId) {
+                                $connections[$connectionId] = true;
+                            }
+                        }
+
                         $consoleDatabase = getConsoleDB();
                         $project = $consoleDatabase->getAuthorization()->skip(fn () => $consoleDatabase->getDocument('projects', $projectId));
                         $database = getProjectDB($project);
 
                         /** @var User $user */
                         $user = $database->getDocument('users', $userId);
-
                         $roles = $user->getRoles($database->getAuthorization());
-                        $authorization = $realtime->connections[$connection]['authorization'] ?? null;
-                        $previousUserId = $realtime->connections[$connection]['userId'] ?? '';
 
-                        $meta = $realtime->getSubscriptionMetadata($connection);
+                        foreach (\array_keys($connections) as $connection) {
+                            $subscriptionsBefore = \count($realtime->getSubscriptionMetadata($connection));
+                            $authorization = $realtime->connections[$connection]['authorization'] ?? null;
+                            $previousUserId = $realtime->connections[$connection]['userId'] ?? '';
 
-                        $realtime->unsubscribe($connection);
+                            $meta = $realtime->getSubscriptionMetadata($connection);
 
-                        foreach ($meta as $subscriptionId => $subscription) {
-                            $queries = Query::parseQueries($subscription['queries'] ?? []);
-                            $channels = Realtime::rebindAccountChannels(
-                                $subscription['channels'] ?? [],
-                                $previousUserId,
-                                $userId
-                            );
-                            $realtime->subscribe(
-                                $projectId,
-                                $connection,
-                                $subscriptionId,
-                                $roles,
-                                $channels,
-                                $queries,
-                                $userId
-                            );
-                        }
+                            $realtime->unsubscribe($connection);
 
-                        // Restore authorization after subscribe
-                        if ($authorization !== null) {
-                            $realtime->connections[$connection]['authorization'] = $authorization;
-                        }
+                            foreach ($meta as $subscriptionId => $subscription) {
+                                $queries = Query::parseQueries($subscription['queries'] ?? []);
+                                $channels = Realtime::rebindAccountChannels(
+                                    $subscription['channels'] ?? [],
+                                    $previousUserId,
+                                    $userId
+                                );
+                                $realtime->subscribe(
+                                    $projectId,
+                                    $connection,
+                                    $subscriptionId,
+                                    $roles,
+                                    $channels,
+                                    $queries,
+                                    $userId
+                                );
+                            }
 
-                        $subscriptionsAfter = \count($realtime->getSubscriptionMetadata($connection));
-                        $subscriptionDelta = $subscriptionsAfter - $subscriptionsBefore;
-                        if ($subscriptionDelta !== 0) {
-                            $register->get('telemetry.workerSubscriptionCounter')->add($subscriptionDelta, $register->get('telemetry.workerAttributes'));
+                            // Restore authorization after subscribe
+                            if ($authorization !== null) {
+                                $realtime->connections[$connection]['authorization'] = $authorization;
+                            }
+
+                            $subscriptionsAfter = \count($realtime->getSubscriptionMetadata($connection));
+                            $subscriptionDelta = $subscriptionsAfter - $subscriptionsBefore;
+                            if ($subscriptionDelta !== 0) {
+                                $register->get('telemetry.workerSubscriptionCounter')->add($subscriptionDelta, $register->get('telemetry.workerAttributes'));
+                            }
                         }
                     }
                 }
@@ -858,7 +866,7 @@ $server->onOpen(function (int $connection, SwooleRequest $request) use ($server,
         $websocketEnabled = $apis['websocket'] ?? $apis['realtime'] ?? true;
         if (
             !$websocketEnabled
-            && !($user->isPrivileged($authorization->getRoles()) || $user->isApp($authorization->getRoles()))
+            && !($user->isPrivileged($authorization->getRoles()) || $user->isKey($authorization->getRoles()))
         ) {
             throw new AppwriteException(AppwriteException::GENERAL_API_DISABLED);
         }

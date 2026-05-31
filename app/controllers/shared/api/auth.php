@@ -51,7 +51,7 @@ Http::init()
         }
 
         $isPrivilegedUser = $user->isPrivileged($authorization->getRoles());
-        $isAppUser = $user->isApp($authorization->getRoles());
+        $isAppUser = $user->isKey($authorization->getRoles());
 
         if ($isAppUser || $isPrivilegedUser) { // Skip limits for app and console devs
             return;
