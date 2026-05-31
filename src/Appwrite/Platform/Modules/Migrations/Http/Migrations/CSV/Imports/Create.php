@@ -26,6 +26,7 @@ use Utopia\Migration\Sources\Appwrite as AppwriteSource;
 use Utopia\Migration\Sources\CSV;
 use Utopia\Migration\Transfer;
 use Utopia\Platform\Action;
+use Utopia\Platform\Enum;
 use Utopia\Platform\Scope\HTTP;
 use Utopia\Storage\Device;
 use Utopia\System\System;
@@ -69,7 +70,7 @@ class Create extends Action
             ->param('fileId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'File ID.', false, ['dbForProject'])
             ->param('resourceId', null, new CompoundUID(), 'Composite ID in the format {databaseId:collectionId}, identifying a collection within a database.')
             ->param('internalFile', false, new Boolean(), 'Is the file stored in an internal bucket?', true)
-            ->param('onDuplicate', OnDuplicate::Fail->value, new WhiteList(OnDuplicate::values()), 'Behavior when a row with an existing $id is encountered. "fail" (default): abort on first conflict. "skip": silently ignore. "overwrite": replace existing row.', true)
+            ->param('onDuplicate', OnDuplicate::Fail->value, new WhiteList(OnDuplicate::values()), 'Behavior when a row with an existing $id is encountered. "fail" (default): abort on first conflict. "skip": silently ignore. "overwrite": replace existing row.', true, enum: new Enum(name: 'OnDuplicate'))
             ->inject('response')
             ->inject('dbForProject')
             ->inject('dbForPlatform')

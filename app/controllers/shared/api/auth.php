@@ -9,6 +9,7 @@ use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Http\Http;
+use Utopia\Http\Route;
 use Utopia\System\System;
 
 Http::init()
@@ -32,13 +33,13 @@ Http::init()
 
 Http::init()
     ->groups(['auth'])
-    ->inject('utopia')
+    ->inject('route')
     ->inject('request')
     ->inject('project')
     ->inject('geoRecord')
     ->inject('user')
     ->inject('authorization')
-    ->action(function (Http $utopia, Request $request, Document $project, GeoRecord $geoRecord, User $user, Authorization $authorization) {
+    ->action(function (Route $route, Request $request, Document $project, GeoRecord $geoRecord, User $user, Authorization $authorization) {
         $denylist = System::getEnv('_APP_CONSOLE_COUNTRIES_DENYLIST', '');
         if (!empty($denylist) && $project->getId() === 'console') {
             $countries = \array_map('strtolower', \array_map('trim', explode(',', $denylist)));
@@ -48,10 +49,8 @@ Http::init()
             }
         }
 
-        $route = $utopia->match($request);
-
         $isPrivilegedUser = $user->isPrivileged($authorization->getRoles());
-        $isAppUser = $user->isApp($authorization->getRoles());
+        $isAppUser = $user->isKey($authorization->getRoles());
 
         if ($isAppUser || $isPrivilegedUser) { // Skip limits for app and console devs
             return;

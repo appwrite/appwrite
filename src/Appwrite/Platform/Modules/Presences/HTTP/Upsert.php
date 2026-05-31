@@ -54,7 +54,7 @@ class Upsert extends PlatformAction
                     name: 'upsert',
                     desc: 'Upsert presence',
                     description: '/docs/references/presences/upsert.md',
-                    auth: [AuthType::SESSION],
+                    auth: [AuthType::SESSION, AuthType::ADMIN],
                     responses: [
                         new SDKResponse(
                             code: Response::STATUS_CODE_OK,
@@ -76,7 +76,7 @@ class Upsert extends PlatformAction
                     name: 'upsert',
                     desc: 'Upsert presence',
                     description: '/docs/references/presences/upsert.md',
-                    auth: [AuthType::KEY, AuthType::JWT, AuthType::ADMIN],
+                    auth: [AuthType::KEY, AuthType::JWT],
                     responses: [
                         new SDKResponse(
                             code: Response::STATUS_CODE_OK,
@@ -128,21 +128,19 @@ class Upsert extends PlatformAction
         Event $queueForEvents,
         Context $usage
     ): void {
-        $isAPIKey = $user->isApp($authorization->getRoles());
+        $isAPIKey = $user->isKey($authorization->getRoles());
         $isPrivilegedUser = $user->isPrivileged($authorization->getRoles());
         if ($userId && !$isAPIKey && !$isPrivilegedUser) {
             throw new Exception(Exception::GENERAL_UNAUTHORIZED_SCOPE, "userId is not allowed for non-API key and non-privileged users");
         }
 
-        if (($isAPIKey || $isPrivilegedUser) && !$userId) {
-            throw new Exception(Exception::GENERAL_BAD_REQUEST, "userId is required for API key and privileged users");
+        // API keys have no associated session user — they must target one explicitly
+        if ($isAPIKey && !$userId) {
+            throw new Exception(Exception::GENERAL_BAD_REQUEST, "userId is required for API key authentication");
         }
         $userInternalId = null;
         $resolvedUserId = $userId;
-        if (!$isAPIKey && !$isPrivilegedUser) {
-            $userInternalId = $user->getSequence();
-            $resolvedUserId = $user->getId();
-        } else {
+        if ($userId) {
             $fetchedUser = $dbForProject->getDocument('users', $userId);
             if ($fetchedUser->isEmpty()) {
                 throw new Exception(Exception::USER_NOT_FOUND, params: [$userId]);
@@ -150,6 +148,9 @@ class Upsert extends PlatformAction
 
             $userInternalId = (string) $fetchedUser->getSequence();
             $resolvedUserId = $fetchedUser->getId();
+        } else {
+            $userInternalId = $user->getSequence();
+            $resolvedUserId = $user->getId();
         }
 
         if (empty($userInternalId)) {
