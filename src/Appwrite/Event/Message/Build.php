@@ -14,6 +14,7 @@ final class Build extends Base
         public readonly string $type,
         public readonly ?Document $template = null,
         public readonly array $platform = [],
+        public readonly array $event = [],
     ) {
     }
 
@@ -28,6 +29,7 @@ final class Build extends Base
             'type' => $this->type,
             'template' => $this->template?->getArrayCopy(),
             'platform' => $platform,
+            'event' => $this->event,
         ];
     }
 
@@ -40,6 +42,7 @@ final class Build extends Base
             type: $data['type'] ?? '',
             template: !empty($data['template']) ? new Document($data['template']) : null,
             platform: $data['platform'] ?? [],
+            event: $data['event'] ?? [],
         );
     }
 }
