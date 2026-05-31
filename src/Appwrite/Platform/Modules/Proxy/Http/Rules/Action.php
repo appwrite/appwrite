@@ -137,15 +137,21 @@ class Action extends PlatformAction
             $targetCNAME = new Domain(System::getEnv('_APP_DOMAIN_SITES', ''));
         }
 
+        // CNAME Flattening: For apex domains, we allow A/AAAA records to point to our servers
+        // even if the rule type suggests a CNAME. This is common for "Appwrite Sites" on apex domains.
+        $isApex = empty($domain->getRegisterable()) || $domain->get() === $domain->getRegisterable();
+
         $validators = [];
         $mainValidator = null; // Validator to use for error description
 
         if (!is_null($targetCNAME)) {
-            $validator = new $dnsValidatorClass($targetCNAME->get(), Record::TYPE_CNAME, $dnsServers);
-            $validators[] = $validator;
+            if (!$isApex) {
+                $validator = new $dnsValidatorClass($targetCNAME->get(), Record::TYPE_CNAME, $dnsServers);
+                $validators[] = $validator;
 
-            if (\is_null($mainValidator)) {
-                $mainValidator = $validator;
+                if (\is_null($mainValidator)) {
+                    $mainValidator = $validator;
+                }
             }
         }
 
