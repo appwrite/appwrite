@@ -282,7 +282,9 @@ class Create extends Action
 
         $operations = 0;
 
-        $checkPermissions = function (Document $collection, Document $document, string $permission) use ($isAPIKey, $isPrivilegedUser, &$checkPermissions, $dbForProject, $database, &$operations, $authorization) {
+        $nestedCreates = [];
+
+        $checkPermissions = function (Document $collection, Document $document, string $permission) use ($isAPIKey, $isPrivilegedUser, &$checkPermissions, $dbForProject, $database, &$operations, $authorization, &$nestedCreates) {
             $operations++;
 
             $documentSecurity = $collection->getAttribute('documentSecurity', false);
@@ -340,6 +342,11 @@ class Create extends Action
 
                         if ($current->isEmpty()) {
                             $type = Database::PERMISSION_CREATE;
+
+                            $nestedCreates[] = [
+                                'collection' => $relatedCollection,
+                                'documentId' => $relation->getId(),
+                            ];
 
                             if (isset($relation['$id']) && $relation['$id'] === 'unique()') {
                                 $relation['$id'] = ID::unique();
@@ -479,6 +486,17 @@ class Create extends Action
         } catch (StructureException $e) {
             throw new Exception($this->getStructureException(), $e->getMessage());
         }
+
+        $this->triggerRelationshipCreates(
+            nestedCreates: $nestedCreates,
+            database: $database,
+            dbForProject: $dbForProject,
+            queueForEvents: $queueForEvents,
+            queueForRealtime: $queueForRealtime,
+            publisherForFunctions: $publisherForFunctions,
+            queueForWebhooks: $queueForWebhooks,
+            eventProcessor: $eventProcessor,
+        );
 
         $queueForEvents
             ->setParam('databaseId', $databaseId)
