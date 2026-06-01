@@ -19,13 +19,10 @@ class QueryPlanDetail extends Model
 
     public function __construct()
     {
+        // The library plan also carries `engine` and the raw vendor `tree`;
+        // both are deliberately omitted here so the public DTO does not leak the
+        // backing database engine or its internal plan structure.
         $this
-            ->addRule('engine', [
-                'type' => self::TYPE_STRING,
-                'description' => 'Backend that produced the plan (e.g. mysql, mariadb, postgres, mongo).',
-                'default' => '',
-                'example' => 'mariadb',
-            ])
             ->addRule('rowsScanned', [
                 'type' => self::TYPE_INTEGER,
                 'description' => 'Estimated rows the planner expects to examine. Null when the engine reports no estimate.',
@@ -60,13 +57,6 @@ class QueryPlanDetail extends Model
                 'default' => null,
                 'required' => false,
                 'example' => 1.84,
-            ])
-            ->addRule('tree', [
-                'type' => self::TYPE_JSON,
-                'description' => 'Raw vendor-native query plan, with internal storage identifiers stripped. Shape varies by engine.',
-                'default' => new \stdClass,
-                'required' => false,
-                'example' => ['query_block' => ['select_id' => 1]],
             ])
             ->addRule('error', [
                 'type' => self::TYPE_STRING,

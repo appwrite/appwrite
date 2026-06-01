@@ -784,7 +784,15 @@ trait DatabasesBase
         $first = $response['body']['queries'][0];
         $this->assertEquals('find', $first['purpose']);
         $this->assertEquals($containerId, $first['context']['collection']);
-        $this->assertArrayHasKey('engine', $first['plan']);
+
+        // The plan exposes normalized metrics only.
+        $this->assertArrayHasKey('rowsScanned', $first['plan']);
+        $this->assertArrayHasKey('indexUsed', $first['plan']);
+        $this->assertArrayHasKey('estimatedCost', $first['plan']);
+
+        // The backing engine and the raw vendor plan tree must not be exposed.
+        $this->assertArrayNotHasKey('engine', $first['plan']);
+        $this->assertArrayNotHasKey('tree', $first['plan']);
 
         // listRows/listDocuments fires find() + count() (for total) by default — explain mirrors it.
         $purposes = array_column($response['body']['queries'], 'purpose');

@@ -168,10 +168,12 @@ abstract class Get extends Action
     }
 
     /**
-     * Project the library plan onto the fixed QueryPlanDetail shape so the
-     * typed DTO is stable regardless of engine. The library guarantees these
-     * keys for a successful plan and an `error` key when EXPLAIN failed; we
-     * surface both rather than leaking whatever ad-hoc shape arrived.
+     * Project the library plan onto the fixed QueryPlanDetail shape.
+     *
+     * The library plan also carries `engine` and the raw vendor `tree`; both are
+     * intentionally dropped here so the public response never leaks the backing
+     * database engine or its internal plan structure. Only the normalized,
+     * engine-agnostic metrics (and an `error` when EXPLAIN failed) are exposed.
      *
      * @param  array<string, mixed>  $plan
      * @return array<string, mixed>
@@ -179,13 +181,11 @@ abstract class Get extends Action
     protected function normalizePlan(array $plan): array
     {
         return [
-            'engine' => $plan['engine'] ?? '',
             'rowsScanned' => $plan['rowsScanned'] ?? null,
             'indexUsed' => $plan['indexUsed'] ?? null,
             'estimatedCost' => $plan['estimatedCost'] ?? null,
             'rowsReturned' => $plan['rowsReturned'] ?? null,
             'executionTime' => $plan['executionTime'] ?? null,
-            'tree' => $plan['tree'] ?? null,
             'error' => $plan['error'] ?? null,
         ];
     }
