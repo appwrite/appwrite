@@ -2,19 +2,20 @@
 
 namespace Appwrite\Auth\Validator;
 
+use Utopia\Validator;
+
 /**
  * Password.
  *
  * Validates user password string
  */
-class PasswordDictionary extends PasswordStrength
+class PasswordDictionary extends Validator
 {
     protected array $dictionary;
     protected bool $enabled;
 
-    public function __construct(array $dictionary, bool $enabled = false, bool $allowEmpty = false, array $policy = [])
+    public function __construct(array $dictionary, bool $enabled = false)
     {
-        parent::__construct($policy, $allowEmpty);
         $this->dictionary = $dictionary;
         $this->enabled = $enabled;
     }
@@ -28,7 +29,7 @@ class PasswordDictionary extends PasswordStrength
      */
     public function getDescription(): string
     {
-        return parent::getDescription() . ' It should not be one of the commonly used passwords.';
+        return 'Password should not be one of the commonly used passwords.';
     }
 
     /**
@@ -40,11 +41,7 @@ class PasswordDictionary extends PasswordStrength
      */
     public function isValid($value): bool
     {
-        if (!parent::isValid($value)) {
-            return false;
-        }
-
-        if ($this->enabled && array_key_exists($value, $this->dictionary)) {
+        if ($this->enabled && \is_string($value) && array_key_exists($value, $this->dictionary)) {
             return false;
         }
         return true;

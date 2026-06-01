@@ -7,6 +7,7 @@ use Appwrite\Auth\Phrase;
 use Appwrite\Auth\Validator\Password;
 use Appwrite\Auth\Validator\PasswordDictionary;
 use Appwrite\Auth\Validator\PasswordHistory;
+use Appwrite\Auth\Validator\PasswordStrength;
 use Appwrite\Auth\Validator\PersonalData;
 use Appwrite\Auth\Validator\Phone;
 use Appwrite\Bus\Events\SessionCreated;
@@ -71,6 +72,7 @@ use Utopia\Platform\Enum;
 use Utopia\Storage\Validator\FileName;
 use Utopia\System\System;
 use Utopia\Validator;
+use Utopia\Validator\AllOf;
 use Utopia\Validator\ArrayList;
 use Utopia\Validator\Assoc;
 use Utopia\Validator\Boolean;
@@ -255,7 +257,7 @@ Http::post('/v1/account')
     ->label('abuse-limit', 10)
     ->param('userId', '', fn (Database $dbForProject) => new CustomId(false, $dbForProject->getAdapter()->getMaxUIDLength()), 'User ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.', false, ['dbForProject'])
     ->param('email', '', new EmailValidator(), 'User email.')
-    ->param('password', '', fn ($project, $passwordsDictionary) => new PasswordDictionary($passwordsDictionary, enabled: $project->getAttribute('auths', [])['passwordDictionary'] ?? false, policy: $project->getAttribute('auths', [])['passwordStrength'] ?? []), 'New user password. Must be between 8 and 256 chars.', false, ['project', 'passwordsDictionary'])
+    ->param('password', '', fn ($project, $passwordsDictionary) => new AllOf([new PasswordStrength($project->getAttribute('auths', [])['passwordStrength'] ?? []), new PasswordDictionary($passwordsDictionary, enabled: $project->getAttribute('auths', [])['passwordDictionary'] ?? false)], Validator::TYPE_STRING), 'New user password. Must be between 6 and 256 chars.', false, ['project', 'passwordsDictionary'])
     ->param('name', '', new Text(128), 'User name. Max length: 128 chars.', true)
     ->inject('request')
     ->inject('response')
@@ -3271,7 +3273,7 @@ Http::patch('/v1/account/password')
         contentType: ContentType::JSON
     ))
     ->label('abuse-limit', 10)
-    ->param('password', '', fn ($project, $passwordsDictionary) => new PasswordDictionary($passwordsDictionary, enabled: $project->getAttribute('auths', [])['passwordDictionary'] ?? false, policy: $project->getAttribute('auths', [])['passwordStrength'] ?? []), 'New user password. Must be at least 8 chars.', false, ['project', 'passwordsDictionary'])
+    ->param('password', '', fn ($project, $passwordsDictionary) => new AllOf([new PasswordStrength($project->getAttribute('auths', [])['passwordStrength'] ?? []), new PasswordDictionary($passwordsDictionary, enabled: $project->getAttribute('auths', [])['passwordDictionary'] ?? false)], Validator::TYPE_STRING), 'New user password. Must be at least 6 chars.', false, ['project', 'passwordsDictionary'])
     ->param('oldPassword', '', new Password(), 'Current user password. Must be at least 8 chars.', true)
     ->inject('response')
     ->inject('user')
@@ -3888,7 +3890,7 @@ Http::put('/v1/account/recovery')
     ->label('abuse-key', 'url:{url},userId:{param-userId}')
     ->param('userId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'User ID.', false, ['dbForProject'])
     ->param('secret', '', new Text(256), 'Valid reset token.')
-    ->param('password', '', fn ($project, $passwordsDictionary) => new PasswordDictionary($passwordsDictionary, enabled: $project->getAttribute('auths', [])['passwordDictionary'] ?? false, policy: $project->getAttribute('auths', [])['passwordStrength'] ?? []), 'New user password. Must be between 8 and 256 chars.', false, ['project', 'passwordsDictionary'])
+    ->param('password', '', fn ($project, $passwordsDictionary) => new AllOf([new PasswordStrength($project->getAttribute('auths', [])['passwordStrength'] ?? []), new PasswordDictionary($passwordsDictionary, enabled: $project->getAttribute('auths', [])['passwordDictionary'] ?? false)], Validator::TYPE_STRING), 'New user password. Must be between 6 and 256 chars.', false, ['project', 'passwordsDictionary'])
     ->inject('response')
     ->inject('user')
     ->inject('dbForProject')

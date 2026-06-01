@@ -2912,7 +2912,7 @@ class ProjectsConsoleClientTest extends Scope
             'x-appwrite-project' => $id,
             'x-appwrite-mode' => 'admin',
         ], $this->getHeaders()), [
-            'minLength' => 7,
+            'minLength' => 5,
         ]);
 
         $this->assertEquals(400, $response['headers']['status-code']);
@@ -2939,11 +2939,11 @@ class ProjectsConsoleClientTest extends Scope
         ]);
 
         $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertEquals(12, $response['body']['authPasswordStrengthMinLength']);
-        $this->assertEquals(true, $response['body']['authPasswordStrengthRequireUppercase']);
-        $this->assertEquals(true, $response['body']['authPasswordStrengthRequireLowercase']);
-        $this->assertEquals(true, $response['body']['authPasswordStrengthRequireNumber']);
-        $this->assertEquals(true, $response['body']['authPasswordStrengthRequireSpecialChar']);
+        $this->assertEquals(12, $response['body']['minLength']);
+        $this->assertEquals(true, $response['body']['requireUppercase']);
+        $this->assertEquals(true, $response['body']['requireLowercase']);
+        $this->assertEquals(true, $response['body']['requireNumber']);
+        $this->assertEquals(true, $response['body']['requireSpecialChar']);
 
         $weakPassword = 'password123!';
         $validPassword = 'Password123!';
@@ -3066,11 +3066,11 @@ class ProjectsConsoleClientTest extends Scope
         ]);
 
         $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertEquals(8, $response['body']['authPasswordStrengthMinLength']);
-        $this->assertEquals(false, $response['body']['authPasswordStrengthRequireUppercase']);
-        $this->assertEquals(false, $response['body']['authPasswordStrengthRequireLowercase']);
-        $this->assertEquals(false, $response['body']['authPasswordStrengthRequireNumber']);
-        $this->assertEquals(false, $response['body']['authPasswordStrengthRequireSpecialChar']);
+        $this->assertEquals(8, $response['body']['minLength']);
+        $this->assertEquals(false, $response['body']['requireUppercase']);
+        $this->assertEquals(false, $response['body']['requireLowercase']);
+        $this->assertEquals(false, $response['body']['requireNumber']);
+        $this->assertEquals(false, $response['body']['requireSpecialChar']);
     }
 
     #[Group('smtpAndTemplates')]

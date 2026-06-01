@@ -114,10 +114,28 @@ class ProjectConsoleClientTest extends Scope
         $this->assertSame(0, $response['body']['pingCount']);
         $this->assertSame('', $response['body']['pingedAt']);
 
-        // Ensure old unsupported fields are not present
+        // Ensure old flattened fields are not present
         $this->assertArrayNotHasKey('description', $response['body']);
         $this->assertArrayNotHasKey('logo', $response['body']);
         $this->assertArrayNotHasKey('url', $response['body']);
+        $this->assertArrayNotHasKey('authDuration', $response['body']);
+        $this->assertArrayNotHasKey('authLimit', $response['body']);
+        $this->assertArrayNotHasKey('authSessionsLimit', $response['body']);
+        $this->assertArrayNotHasKey('authPasswordHistory', $response['body']);
+        $this->assertArrayNotHasKey('authPasswordStrengthMinLength', $response['body']);
+        $this->assertArrayNotHasKey('authPasswordStrengthRequireUppercase', $response['body']);
+        $this->assertArrayNotHasKey('authPasswordStrengthRequireLowercase', $response['body']);
+        $this->assertArrayNotHasKey('authPasswordStrengthRequireNumber', $response['body']);
+        $this->assertArrayNotHasKey('authPasswordStrengthRequireSpecialChar', $response['body']);
+        $this->assertArrayNotHasKey('authPasswordDictionary', $response['body']);
+        $this->assertArrayNotHasKey('authPersonalDataCheck', $response['body']);
+        $this->assertArrayNotHasKey('authDisposableEmails', $response['body']);
+        $this->assertArrayNotHasKey('authCanonicalEmails', $response['body']);
+        $this->assertArrayNotHasKey('authFreeEmails', $response['body']);
+        $this->assertArrayNotHasKey('oAuthProviders', $response['body']);
+        $this->assertArrayNotHasKey('platforms', $response['body']);
+        $this->assertArrayNotHasKey('webhooks', $response['body']);
+        $this->assertArrayNotHasKey('keys', $response['body']);
     }
 
     protected function createTeam(string $name): array

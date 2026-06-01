@@ -46,11 +46,11 @@ class Update extends Action
                 responses: [
                     new SDKResponse(
                         code: Response::STATUS_CODE_OK,
-                        model: Response::MODEL_PROJECT,
+                        model: Response::MODEL_POLICY_PASSWORD_STRENGTH,
                     ),
                 ],
             ))
-            ->param('minLength', null, new Range(8, 256), 'Minimum password length. Value must be between 8 and 256. Default is 8.', optional: true)
+            ->param('minLength', null, new Range(6, 256), 'Minimum password length. Value must be between 6 and 256. Default is 8.', optional: true)
             ->param('requireUppercase', null, new Boolean(), 'Whether passwords must include at least one uppercase letter.', optional: true)
             ->param('requireLowercase', null, new Boolean(), 'Whether passwords must include at least one lowercase letter.', optional: true)
             ->param('requireNumber', null, new Boolean(), 'Whether passwords must include at least one number.', optional: true)
@@ -108,6 +108,8 @@ class Update extends Action
             ->setParam('projectId', $project->getId())
             ->setParam('policy', 'password-strength');
 
-        $response->dynamic($project, Response::MODEL_PROJECT);
+        $response->dynamic(new Document(\array_merge($auths['passwordStrength'], [
+            '$id' => 'password-strength',
+        ])), Response::MODEL_POLICY_PASSWORD_STRENGTH);
     }
 }

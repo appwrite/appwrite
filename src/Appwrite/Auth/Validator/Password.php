@@ -12,10 +12,12 @@ use Utopia\Validator;
 class Password extends Validator
 {
     protected bool $allowEmpty;
+    protected int $minLength;
 
-    public function __construct(bool $allowEmpty = false)
+    public function __construct(bool $allowEmpty = false, int $minLength = 8)
     {
         $this->allowEmpty = $allowEmpty;
+        $this->minLength = $minLength;
     }
 
     /**
@@ -27,7 +29,7 @@ class Password extends Validator
      */
     public function getDescription(): string
     {
-        return 'Password must be between 8 and 256 characters long.';
+        return 'Password must be between ' . $this->minLength . ' and 256 characters long.';
     }
 
     /**
@@ -47,7 +49,7 @@ class Password extends Validator
             return true;
         }
 
-        if (\strlen($value) < 8) {
+        if (\strlen($value) < $this->minLength) {
             return false;
         }
 

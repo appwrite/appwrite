@@ -480,11 +480,12 @@ trait PoliciesBase
         ]);
 
         $this->assertSame(200, $response['headers']['status-code']);
-        $this->assertSame(12, $response['body']['authPasswordStrengthMinLength']);
-        $this->assertSame(true, $response['body']['authPasswordStrengthRequireUppercase']);
-        $this->assertSame(true, $response['body']['authPasswordStrengthRequireLowercase']);
-        $this->assertSame(true, $response['body']['authPasswordStrengthRequireNumber']);
-        $this->assertSame(true, $response['body']['authPasswordStrengthRequireSpecialChar']);
+        $this->assertSame('password-strength', $response['body']['$id']);
+        $this->assertSame(12, $response['body']['minLength']);
+        $this->assertSame(true, $response['body']['requireUppercase']);
+        $this->assertSame(true, $response['body']['requireLowercase']);
+        $this->assertSame(true, $response['body']['requireNumber']);
+        $this->assertSame(true, $response['body']['requireSpecialChar']);
 
         $policy = $this->getPolicy('password-strength');
         $this->assertSame(200, $policy['headers']['status-code']);
@@ -515,11 +516,24 @@ trait PoliciesBase
         ]);
 
         $this->assertSame(200, $response['headers']['status-code']);
-        $this->assertSame(12, $response['body']['authPasswordStrengthMinLength']);
-        $this->assertSame(true, $response['body']['authPasswordStrengthRequireUppercase']);
-        $this->assertSame(false, $response['body']['authPasswordStrengthRequireLowercase']);
-        $this->assertSame(true, $response['body']['authPasswordStrengthRequireNumber']);
-        $this->assertSame(true, $response['body']['authPasswordStrengthRequireSpecialChar']);
+        $this->assertSame(12, $response['body']['minLength']);
+        $this->assertSame(true, $response['body']['requireUppercase']);
+        $this->assertSame(false, $response['body']['requireLowercase']);
+        $this->assertSame(true, $response['body']['requireNumber']);
+        $this->assertSame(true, $response['body']['requireSpecialChar']);
+
+        // Cleanup
+        $this->resetPasswordStrengthPolicy();
+    }
+
+    public function testUpdatePasswordStrengthPolicyMinLength(): void
+    {
+        $response = $this->updatePasswordStrengthPolicy([
+            'minLength' => 6,
+        ]);
+
+        $this->assertSame(200, $response['headers']['status-code']);
+        $this->assertSame(6, $response['body']['minLength']);
 
         // Cleanup
         $this->resetPasswordStrengthPolicy();
@@ -528,7 +542,7 @@ trait PoliciesBase
     public function testUpdatePasswordStrengthPolicyBelowMinLength(): void
     {
         $response = $this->client->call(Client::METHOD_PATCH, '/project/policies/password-strength', $this->buildHeaders(), [
-            'minLength' => 7,
+            'minLength' => 5,
         ]);
 
         $this->assertSame(400, $response['headers']['status-code']);
@@ -541,11 +555,11 @@ trait PoliciesBase
         $response = $this->client->call(Client::METHOD_PATCH, '/project/policies/password-strength', $this->buildHeaders(), []);
 
         $this->assertSame(200, $response['headers']['status-code']);
-        $this->assertSame(8, $response['body']['authPasswordStrengthMinLength']);
-        $this->assertSame(false, $response['body']['authPasswordStrengthRequireUppercase']);
-        $this->assertSame(false, $response['body']['authPasswordStrengthRequireLowercase']);
-        $this->assertSame(false, $response['body']['authPasswordStrengthRequireNumber']);
-        $this->assertSame(false, $response['body']['authPasswordStrengthRequireSpecialChar']);
+        $this->assertSame(8, $response['body']['minLength']);
+        $this->assertSame(false, $response['body']['requireUppercase']);
+        $this->assertSame(false, $response['body']['requireLowercase']);
+        $this->assertSame(false, $response['body']['requireNumber']);
+        $this->assertSame(false, $response['body']['requireSpecialChar']);
     }
 
     public function testUpdatePasswordStrengthPolicyWithoutAuth(): void

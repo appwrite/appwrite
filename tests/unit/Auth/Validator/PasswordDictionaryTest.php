@@ -19,7 +19,7 @@ class PasswordDictionaryTest extends TestCase
 
     public function testValues(): void
     {
-        $this->assertEquals($this->object->isValid('1'), false); // to check parent is being called
+        $this->assertEquals($this->object->isValid('1'), true);
         $this->assertEquals($this->object->isValid('123456'), false);
         $this->assertEquals($this->object->isValid('password'), false);
         $this->assertEquals($this->object->isValid('myPasswordIsRight'), true);
@@ -33,6 +33,6 @@ class PasswordDictionaryTest extends TestCase
 
         $pass .= 'p'; // 257 chars
 
-        $this->assertEquals($this->object->isValid($pass), false);
+        $this->assertEquals($this->object->isValid($pass), true);
     }
 }
