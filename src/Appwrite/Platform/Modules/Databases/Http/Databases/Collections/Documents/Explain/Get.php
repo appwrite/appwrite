@@ -158,11 +158,34 @@ abstract class Get extends Action
             $output[] = new Document([
                 'purpose' => $entry['purpose'] ?? 'find',
                 'context' => $context,
-                'plan' => $entry['plan'] ?? [],
+                'plan' => $this->normalizePlan($entry['plan'] ?? []),
             ]);
         }
 
         return $output;
+    }
+
+    /**
+     * Project the library plan onto the fixed QueryPlanDetail shape so the
+     * typed DTO is stable regardless of engine. The library guarantees these
+     * keys for a successful plan and an `error` key when EXPLAIN failed; we
+     * surface both rather than leaking whatever ad-hoc shape arrived.
+     *
+     * @param  array<string, mixed>  $plan
+     * @return array<string, mixed>
+     */
+    protected function normalizePlan(array $plan): array
+    {
+        return [
+            'engine' => $plan['engine'] ?? '',
+            'rowsScanned' => $plan['rowsScanned'] ?? null,
+            'indexUsed' => $plan['indexUsed'] ?? null,
+            'estimatedCost' => $plan['estimatedCost'] ?? null,
+            'rowsReturned' => $plan['rowsReturned'] ?? null,
+            'executionTime' => $plan['executionTime'] ?? null,
+            'tree' => $plan['tree'] ?? null,
+            'error' => $plan['error'] ?? null,
+        ];
     }
 
     protected function buildCollectionResolver(

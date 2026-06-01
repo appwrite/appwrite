@@ -3,8 +3,9 @@
 namespace Appwrite\Utopia\Response\Model;
 
 use Appwrite\Utopia\Response;
+use Appwrite\Utopia\Response\Model;
 
-class QueryPlanEntry extends Any
+class QueryPlanEntry extends Model
 {
     public function getName(): string
     {
@@ -21,7 +22,7 @@ class QueryPlanEntry extends Any
         $this
             ->addRule('purpose', [
                 'type' => self::TYPE_STRING,
-                'description' => 'Reason this read was issued (e.g. "find" for each underlying find call).',
+                'description' => 'Reason this read was issued (e.g. "find" for the row lookup, "count" for the total).',
                 'default' => 'find',
                 'example' => 'find',
             ])
@@ -32,15 +33,10 @@ class QueryPlanEntry extends Any
                 'example' => ['collection' => 'movies'],
             ])
             ->addRule('plan', [
-                'type' => self::TYPE_JSON,
-                'description' => 'Vendor-native query plan. Carries `engine`, `rowsScanned`, `indexUsed`, `estimatedCost`, and a `tree` with the raw plan. Internal storage details are stripped.',
+                'type' => Response::MODEL_QUERY_PLAN_DETAIL,
+                'description' => 'Normalized query plan with engine-native detail. Internal storage identifiers are stripped.',
                 'default' => new \stdClass,
-                'example' => [
-                    'engine' => 'sql',
-                    'rowsScanned' => 25,
-                    'indexUsed' => 'idx_status',
-                    'estimatedCost' => 4.5,
-                ],
+                'example' => [],
             ]);
     }
 }

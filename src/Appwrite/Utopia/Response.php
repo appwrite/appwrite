@@ -119,6 +119,8 @@ class Response extends SwooleResponse
 
     public const MODEL_QUERY_PLAN_ENTRY = 'queryPlanEntry';
 
+    public const MODEL_QUERY_PLAN_DETAIL = 'queryPlanDetail';
+
     // Database Attributes
     public const MODEL_ATTRIBUTE = 'attribute';
 

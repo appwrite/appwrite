@@ -159,7 +159,11 @@ class ExplainAggressiveTest extends Scope
         ]);
 
         $this->assertEquals(200, $r['headers']['status-code']);
-        $this->assertCount(1, $r['body']['queries']);
+        // total defaults to true, so listRows fires find() + count(): two plan
+        // entries. Assert the find entry is present rather than a fixed count.
+        $purposes = \array_column($r['body']['queries'], 'purpose');
+        $this->assertContains('find', $purposes);
+        $this->assertContains('count', $purposes);
     }
 
     public function test_ordering_descending(): void
@@ -240,6 +244,9 @@ class ExplainAggressiveTest extends Scope
         $this->assertArrayHasKey('rowsScanned', $plan);
         $this->assertArrayHasKey('indexUsed', $plan);
         $this->assertArrayHasKey('estimatedCost', $plan);
+        // Actual execution stats from the real read that ran under explain.
+        $this->assertArrayHasKey('rowsReturned', $plan);
+        $this->assertArrayHasKey('executionTime', $plan);
         $this->assertArrayHasKey('tree', $plan);
     }
 
@@ -289,10 +296,11 @@ class ExplainAggressiveTest extends Scope
     {
         $r = $this->explain([Query::limit(1)->toString()]);
 
-        // The shipped appwrite stack runs Mongo by default; engine reflects the
-        // actual backend. Only assert it's a known string.
+        // Engine reflects the actual backend with a precise per-adapter label.
+        // The shipped appwrite stack may run Mongo or an SQL engine depending on
+        // the test configuration, so accept any known backend label.
         $engine = $r['body']['queries'][0]['plan']['engine'] ?? null;
-        $this->assertContains($engine, ['sql', 'mongo']);
+        $this->assertContains($engine, ['mysql', 'mariadb', 'postgres', 'sqlite', 'mongo']);
     }
 
     public function test_back_to_back_calls_are_independent(): void
