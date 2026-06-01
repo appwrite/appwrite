@@ -60,7 +60,7 @@ class QueryPlanDetail extends Model
             ->addRule('tree', [
                 'type' => self::TYPE_JSON,
                 'description' => 'Raw query plan from the engine, with internal storage identifiers stripped. Carries the full access-path detail (scan type, candidate indexes, filter conditions) for deep diagnosis. Shape varies by engine.',
-                'default' => new \stdClass,
+                'default' => new \stdClass(),
                 'required' => false,
                 'example' => ['query_block' => ['select_id' => 1]],
             ])

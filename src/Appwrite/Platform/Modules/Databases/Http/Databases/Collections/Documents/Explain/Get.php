@@ -105,7 +105,9 @@ class Get extends Action
             }
         };
 
-        $plan = null;
+        // withExplain overwrites $plan via its by-ref out-param; seed it with an
+        // empty plan so the response is well-formed even if nothing was captured.
+        $plan = new Document(['queries' => []]);
         try {
             // Rows are intentionally discarded — we only want the captured plan.
             $dbForDatabases->withExplain($scope, $plan);
@@ -124,9 +126,8 @@ class Get extends Action
             throw new Exception(Exception::DATABASE_TIMEOUT);
         }
 
-        // withExplain populates $plan via its finally; stay null-safe regardless.
         $translated = $this->translatePlanCollections(
-            $plan?->getAttribute('queries', []) ?? [],
+            $plan->getAttribute('queries', []),
             $database,
             $collection,
             $dbForProject,
