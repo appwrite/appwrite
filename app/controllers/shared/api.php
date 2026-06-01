@@ -863,13 +863,6 @@ Http::shutdown()
             }
         }
 
-        // Reproduce the resolved param set: injected path values take precedence
-        // over query/body params, falling back to each param's declared default.
-        $requestParams = [];
-        foreach ($route->getParams() as $key => $param) {
-            $requestParams[$key] = $params[$key] ?? $request->getParam($key, $param['default']);
-        }
-
         /**
          * Abuse labels
          */
@@ -910,7 +903,7 @@ Http::shutdown()
          */
         $pattern = $route->getLabel('audits.resource', null);
         if (! empty($pattern)) {
-            $resource = $parseLabel($pattern, $responsePayload, $requestParams, $user, $project);
+            $resource = $parseLabel($pattern, $responsePayload, $params, $user, $project);
             if (! empty($resource) && $resource !== $pattern) {
                 $auditContext->resource = $resource;
             }
