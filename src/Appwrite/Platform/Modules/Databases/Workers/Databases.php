@@ -61,11 +61,25 @@ class Databases extends Action
             throw new Exception('Missing payload');
         }
 
+        Span::add('project.id', $project->getId());
+        Span::add('queue.pid', $message->getPid());
+        Span::add('queue.name', $message->getQueue());
+        Span::add('message.timestamp', (string) $message->getTimestamp());
+
         $databaseMessage = DatabaseMessage::fromArray($payload);
+
         $type = $databaseMessage->type;
+        Span::add('payload.type', $type);
+
         $document = $databaseMessage->row ?? $databaseMessage->document ?? new Document();
+        Span::add('database.document.id', $document->getId());
+
         $collection = $databaseMessage->table ?? $databaseMessage->collection ?? new Document();
+        Span::add('database.collection.id', $collection->getId());
+
         $database = $databaseMessage->database ?? new Document();
+        Span::add('database.id', $database->getId());
+
         /**
          * @var Database $dbForDatabases
          */
@@ -73,21 +87,11 @@ class Databases extends Action
         $log->addTag('projectId', $project->getId());
         $log->addTag('type', $type);
 
-        Span::add('project.id', $project->getId());
-        Span::add('payload.type', $type);
-        Span::add('queue.pid', $message->getPid());
-        Span::add('queue.name', $message->getQueue());
-        Span::add('message.timestamp', (string) $message->getTimestamp());
-        Span::add('database.collection.id', $collection->getId());
-        Span::add('database.document.id', $document->getId());
-
         if ($database->isEmpty()) {
             throw new Exception('Missing database');
         }
 
         $log->addTag('databaseId', $database->getId());
-
-        Span::add('database.id', $database->getId());
 
         match (\strval($type)) {
             DATABASE_TYPE_DELETE_DATABASE => $this->deleteDatabase($database, $dbForProject, $dbForDatabases),
@@ -616,8 +620,12 @@ class Databases extends Action
                 $callback
             );
         } catch (\Throwable $th) {
-            $tenant = $database->getSharedTables() ? 'Tenant:'.$database->getTenant() : '';
-            Span::add('delete_by_group.error', "Failed to delete documents/rows for collection/table: {$database->getNamespace()}_{$collectionId} {$tenant} :{$th->getMessage()}");
+            Span::add('delete_by_group.namespace', $database->getNamespace());
+            Span::add('delete_by_group.collection.id', $collectionId);
+            if ($database->getSharedTables()) {
+                Span::add('delete_by_group.tenant', $database->getTenant());
+            }
+            Span::add('delete_by_group.error', $th->getMessage());
             return;
         }
 
