@@ -57,7 +57,6 @@ interface NavItem {
   icon: LucideIcon | 'imagine'
   path: string
   comingSoon?: boolean
-  disablePreload?: boolean
 }
 
 interface NavCategory {
@@ -105,14 +104,12 @@ const getNavItems = (projectId: string) => {
           label: 'Databases',
           icon: Database,
           path: `/projects/${projectId}/databases`,
-          disablePreload: true,
         },
         {
           id: 'storage',
           label: 'Storage',
           icon: Folder,
           path: `/projects/${projectId}/storage/-`,
-          disablePreload: true,
         },
         {
           id: 'functions',
@@ -380,7 +377,6 @@ export function ConsoleSidebar({
       <Link
         key={item.id}
         to={item.path}
-        preload={item.disablePreload ? false : undefined}
         data-nav-item
         onClick={isMobile ? onMobileClose : undefined}
         className={cn(
