@@ -38,6 +38,7 @@ use Utopia\Database\Validator\Authorization\Input;
 use Utopia\Database\Validator\Roles;
 use Utopia\Http\Http;
 use Utopia\Http\Route;
+use Utopia\Http\Router;
 use Utopia\Span\Span;
 use Utopia\System\System;
 use Utopia\Telemetry\Adapter as Telemetry;
@@ -862,7 +863,14 @@ Http::shutdown()
             }
         }
 
-        $requestParams = $route->getParamsValues();
+        $preparedPath = Router::preparePath($route->getMatchedPath());
+        $pathValues = $route->getPathValues($request, $preparedPath[0]);
+        $reqParams = $request->getParams();
+
+        $requestParams = [];
+        foreach ($route->getParams() as $key => $param) {
+            $requestParams[$key] = $pathValues[$key] ?? $reqParams[$key] ?? $param['default'];
+        }
 
         /**
          * Abuse labels
