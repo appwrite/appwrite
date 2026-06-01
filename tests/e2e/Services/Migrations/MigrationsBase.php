@@ -3328,6 +3328,79 @@ trait MigrationsBase
         $this->client->call(Client::METHOD_PATCH, '/project/smtp', $destinationKeyHeaders, ['enabled' => false]);
     }
 
+    public function testAppwriteMigrationOAuth(): void
+    {
+        $sourceProjectId = $this->getProject()['$id'];
+        $destinationProjectId = $this->getDestinationProject()['$id'];
+
+        $sourceKeyHeaders = [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $sourceProjectId,
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ];
+        $destinationKeyHeaders = [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $destinationProjectId,
+            'x-appwrite-key' => $this->getDestinationProject()['apiKey'],
+        ];
+
+        // Configure a GitHub OAuth2 provider on the source. enabled=false keeps the
+        // PATCH from triggering live credential verification (enabling fires a real
+        // network call to the provider). The migration carries the readable clientId
+        // and the enabled flag; the clientSecret is write-only on the source API and
+        // is never migrated.
+        $clientId = 'gh-client-' . ID::unique();
+        $configure = $this->client->call(Client::METHOD_PATCH, '/project/oauth2/github', $sourceKeyHeaders, [
+            'clientId' => $clientId,
+            'clientSecret' => 'gh-secret-not-migrated',
+            'enabled' => false,
+        ]);
+        $this->assertEquals(200, $configure['headers']['status-code']);
+        $this->assertSame($clientId, $configure['body']['clientId']);
+
+        $result = $this->performMigrationSync([
+            'resources' => [
+                Resource::TYPE_OAUTH2_PROVIDER,
+            ],
+            'endpoint' => $this->webEndpoint,
+            'projectId' => $sourceProjectId,
+            'apiKey' => $this->getProject()['apiKey'],
+        ]);
+
+        $this->assertEquals('completed', $result['status']);
+        $this->assertEquals([Resource::TYPE_OAUTH2_PROVIDER], $result['resources']);
+        $this->assertArrayHasKey(Resource::TYPE_OAUTH2_PROVIDER, $result['statusCounters']);
+        $oauthCounters = $result['statusCounters'][Resource::TYPE_OAUTH2_PROVIDER];
+        $this->assertEquals(0, $oauthCounters['error']);
+        $this->assertEquals(0, $oauthCounters['pending']);
+        $this->assertEquals(0, $oauthCounters['processing']);
+        $this->assertEquals(0, $oauthCounters['warning']);
+        // listOAuth2Providers returns every server-enabled provider, so a single run
+        // emits all of them; the configured GitHub provider is among the successes.
+        $this->assertGreaterThanOrEqual(1, $oauthCounters['success']);
+
+        // The GitHub provider must round-trip to the destination: the readable
+        // clientId and enabled flag are carried; the secret is write-only and reads
+        // back empty on every path.
+        $fetched = $this->client->call(Client::METHOD_GET, '/project/oauth2/github', $destinationKeyHeaders);
+        $this->assertEquals(200, $fetched['headers']['status-code']);
+        $this->assertSame($clientId, $fetched['body']['clientId']);
+        $this->assertFalse($fetched['body']['enabled']);
+        $this->assertSame('', $fetched['body']['clientSecret']);
+
+        // Reset both projects so the test is idempotent.
+        $this->client->call(Client::METHOD_PATCH, '/project/oauth2/github', $sourceKeyHeaders, [
+            'clientId' => '',
+            'clientSecret' => '',
+            'enabled' => false,
+        ]);
+        $this->client->call(Client::METHOD_PATCH, '/project/oauth2/github', $destinationKeyHeaders, [
+            'clientId' => '',
+            'clientSecret' => '',
+            'enabled' => false,
+        ]);
+    }
+
     /**
      * Import documents from a CSV file.
      */
