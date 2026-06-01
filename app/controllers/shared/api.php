@@ -958,61 +958,6 @@ Http::shutdown()
             $publisherForAudits->enqueue(AuditMessage::fromContext($auditContext));
         }
 
-        // Cache label
-        $useCache = $route->getLabel('cache', false);
-        if ($useCache) {
-            $resource = $resourceType = null;
-            $data = $response->getPayload();
-            $statusCode = $response->getStatusCode();
-            if (! empty($data['payload']) && $statusCode >= 200 && $statusCode < 300) {
-                $pattern = $route->getLabel('cache.resource', null);
-                if (! empty($pattern)) {
-                    $resource = $parseLabel($pattern, $responsePayload, $requestParams, $user, $project);
-                }
-
-                $pattern = $route->getLabel('cache.resourceType', null);
-                if (! empty($pattern)) {
-                    $resourceType = $parseLabel($pattern, $responsePayload, $requestParams, $user, $project);
-                }
-
-                $cache = new Cache(
-                    new Filesystem(APP_STORAGE_CACHE . DIRECTORY_SEPARATOR . 'app-' . $project->getId())
-                );
-
-                $key = $request->cacheIdentifier();
-                $signature = md5($data['payload']);
-                $cacheLog = $authorization->skip(fn () => $dbForProject->getDocument('cache', $key));
-                $accessedAt = $cacheLog->getAttribute('accessedAt', 0);
-                $now = DateTime::now();
-                if ($cacheLog->isEmpty()) {
-                    try {
-                        $authorization->skip(fn () => $dbForProject->createDocument('cache', new Document([
-                            '$id' => $key,
-                            'resource' => $resource,
-                            'resourceType' => $resourceType,
-                            'mimeType' => $response->getContentType(),
-                            'accessedAt' => $now,
-                            'signature' => $signature,
-                        ])));
-                    } catch (DuplicateException) {
-                        // Race condition: another concurrent request already created the cache document
-                        $cacheLog = $authorization->skip(fn () => $dbForProject->getDocument('cache', $key));
-                    }
-                } elseif (DateTime::formatTz(DateTime::addSeconds(new \DateTime(), -APP_CACHE_UPDATE)) > $accessedAt) {
-                    $cacheLog->setAttribute('accessedAt', $now);
-                    $authorization->skip(fn () => $dbForProject->updateDocument('cache', $cacheLog->getId(), new Document([
-                        'accessedAt' => $cacheLog->getAttribute('accessedAt')
-                    ])));
-                    // Overwrite the file every APP_CACHE_UPDATE seconds to update the file modified time that is used in the TTL checks in cache->load()
-                    $cache->save($key, $data['payload']);
-                }
-
-                if ($signature !== $cacheLog->getAttribute('signature')) {
-                    $cache->save($key, $data['payload']);
-                }
-            }
-        }
-
         if ($project->getId() !== 'console') {
             if (! $user->isPrivileged($authorization->getRoles())) {
                 $bus->dispatch(new RequestCompleted(
@@ -1048,6 +993,82 @@ Http::shutdown()
 
                 $publisherForUsage->enqueue($message);
             }
+        }
+    });
+
+Http::shutdown()
+    ->groups(['api'])
+    ->inject('route')
+    ->inject('params')
+    ->inject('request')
+    ->inject('response')
+    ->inject('project')
+    ->inject('user')
+    ->inject('dbForProject')
+    ->inject('authorization')
+    ->action(function (Route $route, array $params, Request $request, Response $response, Document $project, User $user, Database $dbForProject, Authorization $authorization) use ($parseLabel) {
+        if (! $route->getLabel('cache', false)) {
+            return;
+        }
+
+        $data = $response->getPayload();
+        $statusCode = $response->getStatusCode();
+        if (empty($data['payload']) || $statusCode < 200 || $statusCode >= 300) {
+            return;
+        }
+
+        // Reproduce the resolved param set: injected path values take precedence
+        // over query/body params, falling back to each param's declared default.
+        $requestParams = [];
+        foreach ($route->getParams() as $key => $param) {
+            $requestParams[$key] = $params[$key] ?? $request->getParam($key, $param['default']);
+        }
+
+        $resource = $resourceType = null;
+        $pattern = $route->getLabel('cache.resource', null);
+        if (! empty($pattern)) {
+            $resource = $parseLabel($pattern, $data, $requestParams, $user, $project);
+        }
+
+        $pattern = $route->getLabel('cache.resourceType', null);
+        if (! empty($pattern)) {
+            $resourceType = $parseLabel($pattern, $data, $requestParams, $user, $project);
+        }
+
+        $cache = new Cache(
+            new Filesystem(APP_STORAGE_CACHE . DIRECTORY_SEPARATOR . 'app-' . $project->getId())
+        );
+
+        $key = $request->cacheIdentifier();
+        $signature = md5($data['payload']);
+        $cacheLog = $authorization->skip(fn () => $dbForProject->getDocument('cache', $key));
+        $accessedAt = $cacheLog->getAttribute('accessedAt', 0);
+        $now = DateTime::now();
+        if ($cacheLog->isEmpty()) {
+            try {
+                $authorization->skip(fn () => $dbForProject->createDocument('cache', new Document([
+                    '$id' => $key,
+                    'resource' => $resource,
+                    'resourceType' => $resourceType,
+                    'mimeType' => $response->getContentType(),
+                    'accessedAt' => $now,
+                    'signature' => $signature,
+                ])));
+            } catch (DuplicateException) {
+                // Race condition: another concurrent request already created the cache document
+                $cacheLog = $authorization->skip(fn () => $dbForProject->getDocument('cache', $key));
+            }
+        } elseif (DateTime::formatTz(DateTime::addSeconds(new \DateTime(), -APP_CACHE_UPDATE)) > $accessedAt) {
+            $cacheLog->setAttribute('accessedAt', $now);
+            $authorization->skip(fn () => $dbForProject->updateDocument('cache', $cacheLog->getId(), new Document([
+                'accessedAt' => $cacheLog->getAttribute('accessedAt')
+            ])));
+            // Overwrite the file every APP_CACHE_UPDATE seconds to update the file modified time that is used in the TTL checks in cache->load()
+            $cache->save($key, $data['payload']);
+        }
+
+        if ($signature !== $cacheLog->getAttribute('signature')) {
+            $cache->save($key, $data['payload']);
         }
     });
 
