@@ -1,6 +1,6 @@
 import { parseDateOnly, resolveInitDayUnlockDate } from './dates'
 import { resolveInitCurrentDay, resolveInitRecapMode } from './event-visibility'
-import type { LaunchEvent } from './types'
+import type { LaunchEvent, LaunchEventScheduleItem } from './types'
 
 const INIT_PAGE_URL = 'https://appwrite.io/init'
 
@@ -199,6 +199,153 @@ function formatGoogleCalendarDate(date: Date): string {
   return formatIcsDateOnly(date)
 }
 
+function formatGoogleCalendarDateTime(date: Date): string {
+  return `${formatIcsDateOnly(date)}T${String(date.getHours()).padStart(2, '0')}${String(
+    date.getMinutes(),
+  ).padStart(2, '0')}00`
+}
+
+function parseScheduleTimeLabel(timeLabel: string): {
+  hours: number
+  minutes: number
+} | null {
+  const match = timeLabel.trim().match(/^(\d{1,2}):(\d{2})\s*(AM|PM)$/i)
+  if (!match) return null
+
+  const hour = Number.parseInt(match[1], 10)
+  const minutes = Number.parseInt(match[2], 10)
+  const period = match[3].toUpperCase()
+  if (hour < 1 || hour > 12 || minutes < 0 || minutes > 59) return null
+
+  return {
+    hours: (hour % 12) + (period === 'PM' ? 12 : 0),
+    minutes,
+  }
+}
+
+function getInitScheduleItemDateRange(
+  event: LaunchEvent,
+  item: LaunchEventScheduleItem,
+): { start: Date; end: Date; allDay: boolean } {
+  const start = resolveInitDayUnlockDate(event.startDate, item.day)
+  const parsedTime = parseScheduleTimeLabel(item.timeLabel)
+
+  if (!parsedTime) {
+    const end = new Date(start)
+    end.setDate(end.getDate() + 1)
+    return { start, end, allDay: true }
+  }
+
+  start.setHours(parsedTime.hours, parsedTime.minutes, 0, 0)
+  const end = new Date(start)
+  end.setHours(end.getHours() + 1)
+  return { start, end, allDay: false }
+}
+
+function getInitScheduleItemPlatformLabel(
+  platform: LaunchEventScheduleItem['platform'],
+): string {
+  switch (platform) {
+    case 'discord':
+      return 'Discord'
+    case 'reddit':
+      return 'Reddit'
+    case 'youtube':
+      return 'YouTube'
+  }
+}
+
+function getInitScheduleItemSummary(item: LaunchEventScheduleItem): string {
+  return `Init: ${item.title}`
+}
+
+function getInitScheduleItemDescription(
+  event: LaunchEvent,
+  item: LaunchEventScheduleItem,
+): string {
+  const details = [
+    `${getInitScheduleItemPlatformLabel(item.platform)} · ${item.timeLabel}`,
+    '',
+    `View on Init: ${INIT_PAGE_URL}#day-${item.day}`,
+  ]
+
+  if (item.href) {
+    details.push('', item.href)
+  }
+
+  const day = event.days.find((entry) => entry.day === item.day)
+  if (day && 'title' in day) {
+    details.unshift(`Day ${day.day}: ${day.title}`, '')
+  }
+
+  return details.join('\n')
+}
+
+function buildInitScheduleItemCalendarEvent(
+  event: LaunchEvent,
+  item: LaunchEventScheduleItem,
+): string {
+  const { start, end, allDay } = getInitScheduleItemDateRange(event, item)
+  const dateLines = allDay
+    ? [
+        `DTSTART;VALUE=DATE:${formatIcsDateOnly(start)}`,
+        `DTEND;VALUE=DATE:${formatIcsDateOnly(end)}`,
+      ]
+    : [
+        `DTSTART:${formatGoogleCalendarDateTime(start)}`,
+        `DTEND:${formatGoogleCalendarDateTime(end)}`,
+      ]
+
+  return [
+    'BEGIN:VEVENT',
+    `UID:init-${event.id}-${item.id}@appwrite.io`,
+    `DTSTAMP:${formatIcsUtcTimestamp(new Date())}`,
+    ...dateLines,
+    foldIcsLine(`SUMMARY:${escapeIcsText(getInitScheduleItemSummary(item))}`),
+    foldIcsLine(
+      `DESCRIPTION:${escapeIcsText(getInitScheduleItemDescription(event, item))}`,
+    ),
+    `URL:${INIT_PAGE_URL}#day-${item.day}`,
+    'END:VEVENT',
+  ].join('\r\n')
+}
+
+export function buildInitScheduleItemCalendarIcs(
+  event: LaunchEvent,
+  item: LaunchEventScheduleItem,
+): string {
+  return [
+    'BEGIN:VCALENDAR',
+    'VERSION:2.0',
+    'PRODID:-//Appwrite//Init//EN',
+    'CALSCALE:GREGORIAN',
+    'METHOD:PUBLISH',
+    foldIcsLine(`X-WR-CALNAME:${escapeIcsText(getInitScheduleItemSummary(item))}`),
+    buildInitScheduleItemCalendarEvent(event, item),
+    'END:VCALENDAR',
+  ].join('\r\n')
+}
+
+export function buildGoogleCalendarScheduleItemEventUrl(
+  event: LaunchEvent,
+  item: LaunchEventScheduleItem,
+): string {
+  const { start, end, allDay } = getInitScheduleItemDateRange(event, item)
+  const dates = allDay
+    ? `${formatGoogleCalendarDate(start)}/${formatGoogleCalendarDate(end)}`
+    : `${formatGoogleCalendarDateTime(start)}/${formatGoogleCalendarDateTime(end)}`
+
+  const params = new URLSearchParams({
+    action: 'TEMPLATE',
+    text: getInitScheduleItemSummary(item),
+    dates,
+    details: getInitScheduleItemDescription(event, item),
+    location: item.href ?? INIT_PAGE_URL,
+  })
+
+  return `https://calendar.google.com/calendar/render?${params.toString()}`
+}
+
 function buildInitCalendarWeekDetails(
   event: LaunchEvent,
   options?: InitCalendarVisibilityOptions,
@@ -281,6 +428,20 @@ export function downloadInitEventCalendar(
   const anchor = document.createElement('a')
   anchor.href = url
   anchor.download = `${event.slug}.ics`
+  anchor.click()
+  URL.revokeObjectURL(url)
+}
+
+export function downloadInitScheduleItemCalendar(
+  event: LaunchEvent,
+  item: LaunchEventScheduleItem,
+): void {
+  const ics = buildInitScheduleItemCalendarIcs(event, item)
+  const blob = new Blob([ics], { type: 'text/calendar;charset=utf-8' })
+  const url = URL.createObjectURL(blob)
+  const anchor = document.createElement('a')
+  anchor.href = url
+  anchor.download = `${event.slug}-${item.id}.ics`
   anchor.click()
   URL.revokeObjectURL(url)
 }

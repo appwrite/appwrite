@@ -7,10 +7,12 @@ import {
 import { useTheme } from 'next-themes'
 import { useEffect, useRef, type RefObject } from 'react'
 import { animate, createTimeline, createTimer, stagger, utils } from 'animejs'
+import type { StaggerFunction } from 'animejs'
 import { cn } from '@/lib/utils'
+import { useInitLowPowerAnimationDecision } from '@/lib/init/use-init-low-power-animations'
 
 const ROWS = 13
-const GRID: [number, number] = [ROWS, ROWS]
+const LOW_POWER_ROWS = 9
 const FROM = 'center'
 const PARTICLE_BRIGHTNESS = 0.8
 
@@ -39,13 +41,18 @@ type InitHeroBackgroundProps = {
   keepAliveWhenHidden?: boolean
 }
 
-type ParticleTheme = ReturnType<typeof getParticleTheme>
+type ParticleTheme = {
+  opacityRange: [number, number]
+  lightnessRange: [number, number]
+  shadowRange: [number, number]
+  pulseOpacity: number
+}
 
 type AnimationRuntime = {
   particleEls: NodeListOf<Element>
-  scaleStagger: ReturnType<typeof stagger>
+  scaleStagger: StaggerFunction<number>
   grid: [number, number]
-  from: string
+  from: typeof FROM
   mainLoop: ReturnType<typeof createTimer>
   autoMove: ReturnType<typeof createTimeline>
   manualMovementTimeout: ReturnType<typeof createTimer>
@@ -56,8 +63,9 @@ type AnimationRuntime = {
 
 type ThemeState = {
   particleTheme: ParticleTheme
-  opacityStagger: ReturnType<typeof stagger>
+  opacityStagger: StaggerFunction<number>
   accent: ParsedAccentHsl
+  lowPower: boolean
 }
 
 function getBrandPink() {
@@ -111,6 +119,7 @@ function applyParticleTheme(
   particleTheme: ParticleTheme,
   isDark: boolean,
   accent: ParsedAccentHsl,
+  lowPower: boolean,
 ) {
   const { particleEls, scaleStagger, grid, from } = runtime
   const accentCss = accentHslToCss(accent)
@@ -118,20 +127,34 @@ function applyParticleTheme(
   const shadowColor = isDark
     ? dimBrandPink(accentCss)
     : `color-mix(in srgb, ${accentCss} 90%, transparent)`
+  const lightnessStagger = stagger(particleTheme.lightnessRange, { grid, from })
+  const shadowStagger = stagger(particleTheme.shadowRange, { grid, from })
+  const backgroundStagger: StaggerFunction<string> = (
+    target,
+    index,
+    targets,
+    prevTween,
+    tl,
+  ) => {
+    const lightness = lightnessStagger(target, index, targets, prevTween, tl)
+    return `hsl(${accent.h}, ${accent.s}%, ${lightness}%)`
+  }
+  const boxShadowStagger: StaggerFunction<string> = (
+    target,
+    index,
+    targets,
+    prevTween,
+    tl,
+  ) => {
+    const shadow = shadowStagger(target, index, targets, prevTween, tl)
+    return `0px 0px ${utils.round(shadow, 0)}em 0px ${shadowColor}`
+  }
 
   utils.set(particleEls, {
     scale: scaleStagger,
     opacity: opacityStagger,
-    background: stagger(particleTheme.lightnessRange, {
-      grid,
-      from,
-      modifier: (v) => `hsl(${accent.h}, ${accent.s}%, ${v}%)`,
-    }),
-    boxShadow: stagger(particleTheme.shadowRange, {
-      grid,
-      from,
-      modifier: (v) => `0px 0px ${utils.round(v, 0)}em 0px ${shadowColor}`,
-    }),
+    background: backgroundStagger,
+    boxShadow: lowPower ? 'none' : boxShadowStagger,
   })
 
   return { opacityStagger, accent }
@@ -163,6 +186,8 @@ export function InitHeroBackground({
   const { resolvedTheme } = useTheme()
   const isDark = particleIsDark ?? isDarkChrome(resolvedTheme)
   const accentColorRef = useRef(accentColor)
+  const animationDecision = useInitLowPowerAnimationDecision()
+  const lowPower = animationDecision.enabled
 
   compactRef.current = compact
   fullWidthMotionRef.current = fullWidthMotion
@@ -187,15 +212,19 @@ export function InitHeroBackground({
     const creatureEl = creatureRef.current
     if (!container || !creatureEl) return
 
-    const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
-    if (prefersReducedMotion) return
+    if (!animationDecision.joolAnimationEnabled) return
 
-    const grid = GRID
+    const rows = lowPower ? LOW_POWER_ROWS : ROWS
+    const grid: [number, number] = [rows, rows]
     const from = FROM
     const motion = Math.max(0.12, Math.min(1, particleMotionSpeed))
     const dur = (ms: number) => ms / motion
     const timeScale = (factor: number) => factor * motion
-    const scaleStagger = stagger([2, 5], { ease: 'inQuad', grid, from })
+    const scaleStagger = stagger(lowPower ? [1.6, 3.6] : [2, 5], {
+      ease: 'inQuad',
+      grid,
+      from,
+    })
     const darkChrome = particleIsDark ?? isDarkChrome(resolvedTheme)
     const particleTheme = getParticleTheme(darkChrome)
     const accent = parseCssAccentToHsl(
@@ -203,7 +232,7 @@ export function InitHeroBackground({
       container,
     )
 
-    for (let i = 0; i < ROWS * ROWS; i++) {
+    for (let i = 0; i < rows * rows; i++) {
       const particle = document.createElement('div')
       particle.className = 'init-hero-particle'
       creatureEl.appendChild(particle)
@@ -221,8 +250,8 @@ export function InitHeroBackground({
     syncLayout()
 
     utils.set(creatureEl, {
-      width: `${ROWS * 10}em`,
-      height: `${ROWS * 10}em`,
+      width: `${rows * 10}em`,
+      height: `${rows * 10}em`,
     })
 
     const { opacityStagger, accent: appliedAccent } = applyParticleTheme(
@@ -230,17 +259,19 @@ export function InitHeroBackground({
       particleTheme,
       darkChrome,
       accent,
+      lowPower,
     )
     themeStateRef.current = {
       particleTheme,
       opacityStagger,
       accent: appliedAccent,
+      lowPower,
     }
 
     utils.set(particleEls, {
       x: 0,
       y: 0,
-      zIndex: stagger([ROWS * ROWS, 1], {
+      zIndex: stagger([rows * rows, 1], {
         grid,
         from,
         modifier: utils.round(0),
@@ -264,6 +295,8 @@ export function InitHeroBackground({
     const cursor = { x: 0, y: 0 }
 
     const pulse = () => {
+      if (lowPower) return
+
       const themeState = themeStateRef.current
       if (!themeState) return
 
@@ -286,15 +319,20 @@ export function InitHeroBackground({
     }
 
     const mainLoop = createTimer({
-      frameRate: 15,
+      frameRate: lowPower ? 8 : 15,
       onUpdate: () => {
         if (!canRunRef.current || !activeRef.current) return
 
         animate(particleEls, {
           x: cursor.x,
           y: cursor.y,
-          delay: stagger(dur(40), { grid, from }),
-          duration: stagger(dur(120), { start: dur(750), ease: 'inQuad', grid, from }),
+          delay: stagger(lowPower ? dur(70) : dur(40), { grid, from }),
+          duration: stagger(lowPower ? dur(180) : dur(120), {
+            start: lowPower ? dur(950) : dur(750),
+            ease: 'inQuad',
+            grid,
+            from,
+          }),
           ease: 'inOut',
           composition: 'blend',
         })
@@ -460,7 +498,15 @@ export function InitHeroBackground({
       runtimeRef.current = null
       themeStateRef.current = null
     }
-  }, [containerRef, particleIsDark, particleMotionSpeed, fullWidthMotion])
+  }, [
+    containerRef,
+    particleIsDark,
+    particleMotionSpeed,
+    fullWidthMotion,
+    lowPower,
+    resolvedTheme,
+    animationDecision.joolAnimationEnabled,
+  ])
 
   useEffect(() => {
     runtimeRef.current?.syncLayout()
@@ -489,11 +535,13 @@ export function InitHeroBackground({
           particleTheme,
           darkChrome,
           accent,
+          lowPower,
         )
         themeStateRef.current = {
           particleTheme,
           opacityStagger,
           accent: appliedAccent,
+          lowPower,
         }
       })
     })
@@ -503,7 +551,7 @@ export function InitHeroBackground({
       cancelAnimationFrame(outerFrame)
       cancelAnimationFrame(innerFrame)
     }
-  }, [resolvedTheme, accentColor, particleIsDark, containerRef])
+  }, [resolvedTheme, accentColor, particleIsDark, containerRef, lowPower])
 
   const creatureClassName = isDark
     ? 'flex flex-wrap items-center justify-center [&>.init-hero-particle]:relative [&>.init-hero-particle]:m-[3em] [&>.init-hero-particle]:size-[4em] [&>.init-hero-particle]:rounded-[2em] [&>.init-hero-particle]:[mix-blend-mode:plus-lighter] [&>.init-hero-particle]:will-change-transform [&>.init-hero-particle]:[transform-style:preserve-3d]'

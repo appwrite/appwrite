@@ -1,4 +1,9 @@
-import type { LaunchEventDay, LaunchEventDayResource, LaunchEventScheduleItem } from '@/lib/init/types'
+import type {
+  LaunchEventDay,
+  LaunchEventDayResource,
+  LaunchEventScheduleItem,
+  InitDisplayEvent,
+} from '@/lib/init/types'
 import { useInitPresenceActivity } from '@/lib/init/init-presence-context'
 import { buildInitDayPreviewActivity } from '@/lib/init/init-presence-day-activity'
 import { getInitDayCardId } from '@/lib/init/scroll-to-day-card'
@@ -9,7 +14,7 @@ import {
 import { Badge } from '@/components/ui/badge'
 import { InitDayCardHeaderNav } from './InitDayCardHeaderNav'
 import { InitScheduleRow } from './InitScheduleRow'
-import { ArrowUpRight, Play } from 'lucide-react'
+import { ArrowUpRight, BookOpen, FileText, Play } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 const CARD_SHELL =
@@ -125,6 +130,7 @@ function DayTitle({ title }: { title: string }) {
 }
 
 interface DayDetailCardProps {
+  event: InitDisplayEvent
   day: LaunchEventDay
   scheduleItems: LaunchEventScheduleItem[]
   currentDay: number
@@ -132,6 +138,9 @@ interface DayDetailCardProps {
 }
 
 function DayResourceRow({ resource }: { resource: LaunchEventDayResource }) {
+  const type = resource.typeLabel.toLowerCase()
+  const ResourceIcon = type === 'docs' ? BookOpen : FileText
+
   return (
     <li>
       <a
@@ -140,12 +149,15 @@ function DayResourceRow({ resource }: { resource: LaunchEventDayResource }) {
         rel="noopener noreferrer"
         className="group flex items-center gap-4 px-6 py-3.5 transition-colors hover:bg-accent/30"
       >
-        <Badge
-          variant="secondary"
-          className="shrink-0 rounded-md bg-muted px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground"
-        >
-          {resource.typeLabel}
-        </Badge>
+        <span className="flex w-[92px] shrink-0">
+          <Badge
+            variant="secondary"
+            className="gap-1.5 rounded-md bg-muted px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground"
+          >
+            <ResourceIcon className="size-3 text-muted-foreground" aria-hidden />
+            {resource.typeLabel}
+          </Badge>
+        </span>
         <span className="min-w-0 flex-1 text-[13px] font-medium text-foreground">
           {resource.title}
         </span>
@@ -159,6 +171,7 @@ function DayResourceRow({ resource }: { resource: LaunchEventDayResource }) {
 }
 
 export function DayDetailCard({
+  event,
   day,
   scheduleItems,
   currentDay,
@@ -175,6 +188,7 @@ export function DayDetailCard({
     blogResources.length > 0 ||
     scheduleItems.length > 0 ||
     otherResources.length > 0
+  const footerVideos = day.footerVideos ?? []
 
   return (
     <article
@@ -221,8 +235,10 @@ export function DayDetailCard({
           {scheduleItems.map((item) => (
             <InitScheduleRow
               key={item.id}
+              event={event}
               item={item}
               isRecapMode={isRecapMode}
+              inlineWhenWide
             />
           ))}
           {otherResources.map((resource) => (
@@ -231,9 +247,9 @@ export function DayDetailCard({
         </ul>
       ) : null}
 
-      {(day.footerVideos?.length ?? 0) > 0 ? (
+      {footerVideos.length > 0 ? (
         <div className="grid gap-6 border-t border-border px-6 py-6 sm:grid-cols-2">
-          {day.footerVideos.map((video) => (
+          {footerVideos.map((video) => (
             <VideoThumbnail
               key={video.id}
               label={video.label}

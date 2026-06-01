@@ -160,6 +160,7 @@ function InitPageContent({
                   ) : (
                     <DayDetailCard
                       key={day.day}
+                      event={event}
                       day={day}
                       scheduleItems={event.schedule.filter(
                         (item) => item.day === day.day,

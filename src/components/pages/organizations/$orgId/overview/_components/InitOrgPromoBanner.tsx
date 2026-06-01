@@ -31,11 +31,7 @@ function InitOrgPromoBannerLink({
 }) {
   if (cta.to) {
     return (
-      <Link
-        to={cta.to}
-        search={cta.redirect ? { redirect: cta.redirect } : undefined}
-        className={className}
-      >
+      <Link to={cta.to} className={className}>
         {children}
       </Link>
     )

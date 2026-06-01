@@ -18,7 +18,6 @@ import { EventCtaButton } from '../shared/EventCtas'
 import { InitCollapsedDayNav } from './InitCollapsedDayNav'
 import { InitHeroBackground } from './InitHeroBackground'
 import { useInitTicketVideoRecording } from '@/lib/init/init-ticket-video-recording-context'
-import { InitAddToCalendarButton } from './InitAddToCalendarButton'
 import { InitWordmark } from './InitWordmark'
 
 interface EventHeroProps {
@@ -320,7 +319,6 @@ export function EventHero({ event, headerAddon, liveBanner }: EventHeroProps) {
                   </a>
                 </Button>
               ) : null}
-              <InitAddToCalendarButton />
             </div>
           ) : null}
           {!event.isRecapMode && event.presenceEnabled ? (

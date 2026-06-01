@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react'
 import {
-  getInitMockDayAfter,
   isValidInitMockCurrentDay,
 } from '@/lib/init/mock-current-day'
 import {
@@ -20,6 +19,7 @@ export const DEBUG_OVERRIDE_KEYS = {
   mockInitCurrentDay: 'debug:mockInitCurrentDay',
   mockInitTicketType: 'debug:mockInitTicketType',
   previewInitReactionConfetti: 'debug:previewInitReactionConfetti',
+  initLowPowerAnimations: 'debug:initLowPowerAnimations',
 } as const
 
 /** Overrides that are not persisted to localStorage (reset on reload). */
@@ -35,6 +35,8 @@ export type MockCloudStatusAlert =
   | 'degraded'
   | 'downtime'
   | 'maintenance'
+
+export type InitLowPowerAnimationsOverride = 'auto' | 'on' | 'off'
 
 export type DebugOverrides = {
   showNativeAppBar: boolean
@@ -60,6 +62,8 @@ export type DebugOverrides = {
   mockInitTicketType: InitTicketTypeId | null
   /** When true, Init reaction confetti triggers with a single online user. */
   previewInitReactionConfetti: boolean
+  /** Controls Init animation optimizations for constrained devices. */
+  initLowPowerAnimations: InitLowPowerAnimationsOverride
 }
 
 const isBrowser = typeof window !== 'undefined'
@@ -130,6 +134,11 @@ export function loadDebugOverrides(): DebugOverrides {
     previewInitReactionConfetti: readBooleanFromStorage(
       DEBUG_OVERRIDE_KEYS.previewInitReactionConfetti,
       false,
+    ),
+    initLowPowerAnimations: readStringFromStorage(
+      DEBUG_OVERRIDE_KEYS.initLowPowerAnimations,
+      ['auto', 'on', 'off'] as const,
+      'auto',
     ),
   }
 }

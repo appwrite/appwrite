@@ -128,6 +128,7 @@ export function EventSchedulePanel({
           {dayEvents.map((item) => (
             <InitScheduleRow
               key={item.id}
+              event={event}
               item={item}
               isRecapMode={event.isRecapMode}
             />

@@ -42,7 +42,7 @@ export function resolveInitOrgPromoBanner(
         dateRangeLabel: event.dateRangeLabel,
         message:
           'A week of launches, live sessions, and community events. Claim your ticket to join.',
-        cta: event.primaryCta,
+        cta: { label: event.primaryCta.label, to: '/init' },
       }
     case 'during':
       return {

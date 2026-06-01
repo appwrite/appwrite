@@ -42,8 +42,7 @@ export const INIT_JULY_2026_DAYS: LaunchEventDay[] = [
       {
         id: 'day1-hyperloop',
         typeLabel: 'Blog',
-        title:
-          'Hyperloop B - New engine behind Appwrite 2.0, up to 5x performance - In memory of Binyamin',
+        title: 'Hyperloop B - New engine behind Appwrite 2.0',
         href: 'https://appwrite.io/blog',
         actionLabel: 'Read article',
       },

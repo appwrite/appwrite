@@ -39,6 +39,7 @@ import {
 import { PUBLIC_ICON_MUTED_CLASSES } from '@/lib/public-icon-classes'
 import { DateTooltip } from '@/components/global/shared/DateTooltip'
 import { InitialsAvatar } from '@/components/global/shared/Avatar'
+import { CopyableId } from '@/components/global/shared/CopyableId'
 import { AuthenticatorType, AuthenticationFactor } from '@appwrite.io/console'
 import { Link } from '@tanstack/react-router'
 import type { Models } from '@appwrite.io/console'
@@ -55,12 +56,41 @@ export function AccountOverview() {
   return (
     <div className="mx-auto w-full max-w-7xl px-4 py-4 sm:px-6">
       <div className="space-y-6">
+        <AccountIdSection />
         <UpdateNameSection />
         <UpdateEmailSection />
         <UpdatePasswordSection />
         {features.accountIdentities && <IdentitiesSection />}
         {features.accountMfa && <MFASection />}
         <DeleteAccountSection />
+      </div>
+    </div>
+  )
+}
+
+// ============================================================================
+// ACCOUNT ID SECTION
+// ============================================================================
+
+function AccountIdSection() {
+  const { account } = useAuth()
+
+  if (!account?.$id) return null
+
+  return (
+    <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
+      <div className="px-6 py-4">
+        <h3 className="text-[15px] font-semibold text-foreground">
+          Account ID
+        </h3>
+      </div>
+      <div className="border-t border-border" />
+      <div className="px-6 py-4">
+        <p className="text-[13px] text-muted-foreground mb-3">
+          Use this ID when integrating with the Appwrite API or SDKs. Support
+          may also ask for this ID when assisting with issues.
+        </p>
+        <CopyableId id={account.$id} size="md" maxWidth={240} />
       </div>
     </div>
   )

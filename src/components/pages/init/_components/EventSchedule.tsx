@@ -69,7 +69,7 @@ function ScheduleDayCard({
   isRecapMode = false,
   fullWidth = false,
 }: {
-  day: Extract<LaunchEventDayView, { isLocked?: false }>
+  day: Exclude<LaunchEventDayView, { isLocked: true }>
   currentDay: number
   isRecapMode?: boolean
   fullWidth?: boolean

@@ -71,6 +71,10 @@ import type { ConsoleProfileFeatures } from '@/lib/console-profiles'
 import { DebugMenuPrefsPanel } from '@/components/global/providers/DebugMenuPrefsPanel'
 import { DebugMenuInitDayPanel } from '@/components/global/providers/DebugMenuInitDayPanel'
 import { DebugMenuInitTicketPanel } from '@/components/global/providers/DebugMenuInitTicketPanel'
+import {
+  useInitLowPowerAnimationDecision,
+  type InitLowPowerAnimationDecision,
+} from '@/lib/init/use-init-low-power-animations'
 interface DebugAction {
   label: string
   onClick: () => void
@@ -199,7 +203,29 @@ function getInitSubmenuDescription(overrides: DebugOverrides): string {
   if (overrides.previewInitReactionConfetti) {
     parts.push('Confetti preview on')
   }
+  if (overrides.initLowPowerAnimations !== 'auto') {
+    parts.push(`Low power ${overrides.initLowPowerAnimations}`)
+  }
   return parts.length > 0 ? parts.join(' · ') : 'Launch week mocks and previews'
+}
+
+function formatLowPowerSignalValue(value: number | string | boolean | null) {
+  if (value === null) return 'Unavailable'
+  if (typeof value === 'boolean') return value ? 'On' : 'Off'
+  return String(value)
+}
+
+function getLowPowerDecisionDescription(
+  decision: InitLowPowerAnimationDecision,
+) {
+  const result = decision.enabled ? 'enabled' : 'disabled'
+  const jool = decision.joolAnimationEnabled ? 'Jool can animate' : 'Jool is blocked'
+  if (decision.override !== 'auto') {
+    return `Result: ${result}. ${decision.reason} Auto would be ${
+      decision.autoDetected ? 'enabled' : 'disabled'
+    }. ${jool}.`
+  }
+  return `Result: ${result}. ${decision.reason} ${jool}.`
 }
 
 const PROFILE_IDS = ['cloud', 'self-hosted'] as const
@@ -334,6 +360,7 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
   const { preset: endpointPreset, customUrl: endpointCustomUrl } =
     useDebugEndpoint()
   const navigate = useNavigate()
+  const initLowPowerDecision = useInitLowPowerAnimationDecision()
 
   const applyOverrideAndReload = (action: () => void) => {
     setIsOpen(false)
@@ -458,6 +485,78 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
       icon: <Image className="h-3 w-3" />,
     }))
 
+    const lowPowerAnimationOptions: MenuItem[] = (
+      [
+        {
+          value: 'auto',
+          label: 'Auto',
+          description: 'Use device, memory, and data-saver signals.',
+        },
+        {
+          value: 'on',
+          label: 'On',
+          description: 'Force optimized Init animations for testing.',
+        },
+        {
+          value: 'off',
+          label: 'Off',
+          description: 'Force full Init animations for comparison.',
+        },
+      ] as const
+    ).map((option) => ({
+      label: option.label,
+      description: option.description,
+      active: overrides.initLowPowerAnimations === option.value,
+      icon: <Sparkles className="h-3 w-3" />,
+      onClick: () => {
+        setOverrides((prev) => ({
+          ...prev,
+          initLowPowerAnimations: option.value,
+        }))
+        setDebugOverride('initLowPowerAnimations', option.value)
+      },
+    }))
+
+    const lowPowerAnimationSubmenu: MenuItem[] = [
+      ...lowPowerAnimationOptions,
+      {
+        label: 'Low-power decision',
+        description: getLowPowerDecisionDescription(initLowPowerDecision),
+        icon: <Sparkles className="h-3 w-3" />,
+        disabled: true,
+        rowClassName: 'mt-2 border-t border-[#9B87F5]/15 pt-3',
+      },
+      {
+        label: 'Jool animation gate',
+        description: initLowPowerDecision.joolAnimationReason,
+        icon: <Sparkles className="h-3 w-3" />,
+        disabled: true,
+      },
+      {
+        label: 'Detection thresholds',
+        description:
+          'Auto enables low-power mode if Data Saver is on, connection is 2g or slow-2g, memory is 4 GB or less, or CPU has 4 logical cores or fewer.',
+        icon: <Sparkles className="h-3 w-3" />,
+        disabled: true,
+      },
+      {
+        label: 'Detected signals',
+        description: `CPU: ${formatLowPowerSignalValue(
+          initLowPowerDecision.signals.hardwareConcurrency,
+        )} cores. Memory: ${formatLowPowerSignalValue(
+          initLowPowerDecision.signals.deviceMemory,
+        )} GB. Data Saver: ${formatLowPowerSignalValue(
+          initLowPowerDecision.signals.saveData,
+        )}. Connection: ${formatLowPowerSignalValue(
+          initLowPowerDecision.signals.effectiveType,
+        )}. Reduced motion: ${formatLowPowerSignalValue(
+          initLowPowerDecision.prefersReducedMotion,
+        )}.`,
+        icon: <Sparkles className="h-3 w-3" />,
+        disabled: true,
+      },
+    ]
+
     const initSubmenuItems: MenuItem[] = [
       {
         label: 'Mock current day',
@@ -486,6 +585,12 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
           }))
           setDebugOverride('previewInitReactionConfetti', checked)
         },
+      },
+      {
+        label: 'Low-power animations',
+        description: getLowPowerDecisionDescription(initLowPowerDecision),
+        icon: <Sparkles className="h-3 w-3" />,
+        submenu: lowPowerAnimationSubmenu,
       },
     ]
 
@@ -1016,17 +1121,11 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
     features.userVerification,
     features.oauthApps,
     features.orgApiKeys,
+    features.marketplace,
     endpointPreset,
     endpointCustomUrl,
-    overrides.showNativeAppBar,
-    overrides.showAIAssistant,
-    overrides.showSuccessTeamCard,
-    overrides.showFullscreenLoader,
-    overrides.showFunctionsLocalEditor,
-    overrides.mockCloudStatusAlert,
-    overrides.mockInitCurrentDay,
-    overrides.mockInitTicketType,
-    overrides.previewInitReactionConfetti,
+    initLowPowerDecision,
+    overrides,
     banners.length,
     actions,
     navigate,
