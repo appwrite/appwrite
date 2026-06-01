@@ -353,7 +353,7 @@ class Certificates extends Action
             // Update attributes on certificate document
             $certificate->setAttributes([
                 'attempts' => $attempts,
-                'renewDate' => DateTime::now(), // Store current time as renew date to ensure another attempt in next maintenance cycle.
+                'renewDate' => DateTime::addSeconds(new \DateTime(), 60 * 60 * $attempts), // Exponential backoff: retry in (attempts) hours
             ]);
 
             // Mark rule as 'unverified'
