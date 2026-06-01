@@ -257,6 +257,9 @@ function TicketFaceShell({
   isBack?: boolean
   children: ReactNode
 }) {
+  const [loadedBackgroundSrc, setLoadedBackgroundSrc] = useState<string | null>(null)
+  const backgroundLoaded = loadedBackgroundSrc === ticketBgSrc
+
   return (
     <div
       className={cn(
@@ -265,15 +268,21 @@ function TicketFaceShell({
       )}
     >
       <img
+        key={ticketBgSrc}
         src={ticketBgSrc}
         alt=""
-        className="pointer-events-none absolute inset-0 size-full object-contain object-top"
+        className={cn(
+          'pointer-events-none absolute inset-0 size-full object-contain object-top',
+          backgroundLoaded ? 'opacity-100' : 'opacity-0',
+        )}
         aria-hidden
         draggable={false}
+        onLoad={() => setLoadedBackgroundSrc(ticketBgSrc)}
       />
       <div
         className={cn(
           'absolute inset-0 overflow-visible',
+          backgroundLoaded ? 'opacity-100' : 'opacity-0',
           usesDarkImage ? 'text-white' : 'text-neutral-900',
         )}
         style={inset}

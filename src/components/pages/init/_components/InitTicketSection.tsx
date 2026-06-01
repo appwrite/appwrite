@@ -61,6 +61,7 @@ import {
 interface InitTicketSectionProps {
   event: InitDisplayEvent
   account?: Models.User | null
+  accountReady?: boolean
 }
 
 function buildShareUrl(): string {
@@ -208,7 +209,11 @@ function ShareActions({
   )
 }
 
-export function InitTicketSection({ event, account }: InitTicketSectionProps) {
+export function InitTicketSection({
+  event,
+  account,
+  accountReady = true,
+}: InitTicketSectionProps) {
   const isAuthenticated = Boolean(account)
   const themeUsesDarkImage = useInitThemeUsesDarkImage()
   const { mockInitTicketType } = useDebugOverrides()
@@ -430,7 +435,7 @@ export function InitTicketSection({ event, account }: InitTicketSectionProps) {
           widthPx={INIT_TICKET_COLLAPSED_WIDTH_PX}
           pointerEventsNone
         >
-          <InitTicketCard {...ticketCardProps} previewOnly />
+          {accountReady ? <InitTicketCard {...ticketCardProps} previewOnly /> : null}
         </InitTicketScaledFrame>
         <div className="min-w-0 flex-1 space-y-2 text-left">
           <h2 className="text-[14px] font-semibold leading-tight tracking-tight text-foreground sm:text-[15px]">
@@ -458,11 +463,13 @@ export function InitTicketSection({ event, account }: InitTicketSectionProps) {
             className="w-full"
             overflowVisible
           >
-            <InitTicketCard
-              ref={ticketCardRef}
-              captureMode={isCapturingVideo}
-              {...ticketCardProps}
-            />
+            {accountReady ? (
+              <InitTicketCard
+                ref={ticketCardRef}
+                captureMode={isCapturingVideo}
+                {...ticketCardProps}
+              />
+            ) : null}
           </InitTicketScaledFrame>
         </InitTicketVideoCaptureStage>
 

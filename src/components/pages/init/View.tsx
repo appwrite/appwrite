@@ -46,9 +46,11 @@ import type { InitDisplayEvent } from '@/lib/init/types'
 function InitPageContent({
   baseEvent,
   account,
+  accountReady,
 }: {
   baseEvent: InitDisplayEvent
   account?: Models.User | null
+  accountReady: boolean
 }) {
   const [commandCenterOpen, setCommandCenterOpen] = useState(false)
   const [onlineNavOpen, setOnlineNavOpen] = useState(false)
@@ -138,7 +140,11 @@ function InitPageContent({
               aria-hidden
             />
             <div className="relative z-10 mx-auto w-full max-w-7xl px-4 pb-4 pt-2 sm:px-6 sm:pb-6">
-              <InitTicketSection event={event} account={account} />
+              <InitTicketSection
+                event={event}
+                account={account}
+                accountReady={accountReady}
+              />
             </div>
           </div>
 
@@ -228,7 +234,12 @@ export function View() {
     return applyInitEventVisibility(active, { mockCurrentDay: mockInitCurrentDay })
   }, [mockInitCurrentDay])
 
-  const { data: account, isSuccess: isAccountReady } = useQuery(consoleAccountQueryOptions())
+  const {
+    data: account,
+    isSuccess: isAccountSuccess,
+    isError: isAccountError,
+  } = useQuery(consoleAccountQueryOptions())
+  const isAccountReady = isAccountSuccess || isAccountError
 
   if (!baseEvent) {
     return <InitEmptyState />
@@ -245,7 +256,11 @@ export function View() {
       )}
     >
       <InitGiveawayRaffleProvider event={baseEvent}>
-        <InitPageContent baseEvent={baseEvent} account={account} />
+        <InitPageContent
+          baseEvent={baseEvent}
+          account={account}
+          accountReady={isAccountReady}
+        />
       </InitGiveawayRaffleProvider>
     </InitPresenceProvider>
   )
