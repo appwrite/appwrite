@@ -610,23 +610,20 @@ class Databases extends Action
      * @param Database $database
      * @param callable|null $callback
      * @return void
-     * @throws Exception
+     * @throws \Throwable
      */
     protected function deleteByGroup(string $collectionId, array $queries, Database $database, ?callable $callback = null): void
     {
         Span::add('delete_by_group.collection.id', $collectionId);
 
-        try {
-            $count = $database->deleteDocuments(
-                $collectionId,
-                $queries,
-                Database::DELETE_BATCH_SIZE,
-                $callback
-            );
-        } catch (\Throwable $th) {
-            Span::add('delete_by_group.error', $th->getMessage());
-            return;
-        }
+        // A failed batch delete is non-recoverable: let it propagate to the
+        // worker's error handler so the message is marked failed and retried.
+        $count = $database->deleteDocuments(
+            $collectionId,
+            $queries,
+            Database::DELETE_BATCH_SIZE,
+            $callback
+        );
 
         Span::add('delete_by_group.count', $count);
     }
