@@ -569,9 +569,6 @@ class Databases extends Action
 
         $dbForDatabases->deleteCollection('database_' . $databaseInternalId . '_collection_' . $collection->getSequence());
 
-        // The table is already dropped, so run every metadata cleanup even if
-        // one fails -- skipping the rest would orphan attribute/index rows.
-        // attemptAll re-throws the first failure so the message is retried.
         $this->attemptAll(
             // Related collections relating to current collection
             fn () => $this->deleteByGroup(
