@@ -52,56 +52,56 @@ class DocumentsDB extends Base
 
     private function registerDatabaseActions(Service $service): void
     {
-        $service->addAction(CreateTablesDatabase::getName(), new CreateTablesDatabase);
-        $service->addAction(GetTablesDatabase::getName(), new GetTablesDatabase);
-        $service->addAction(UpdateTablesDatabase::getName(), new UpdateTablesDatabase);
-        $service->addAction(DeleteTablesDatabase::getName(), new DeleteTablesDatabase);
-        $service->addAction(ListTablesDatabase::getName(), new ListTablesDatabase);
-        $service->addAction(GetTablesDatabaseUsage::getName(), new GetTablesDatabaseUsage);
-        $service->addAction(ListTablesDatabaseUsage::getName(), new ListTablesDatabaseUsage);
+        $service->addAction(CreateTablesDatabase::getName(), new CreateTablesDatabase());
+        $service->addAction(GetTablesDatabase::getName(), new GetTablesDatabase());
+        $service->addAction(UpdateTablesDatabase::getName(), new UpdateTablesDatabase());
+        $service->addAction(DeleteTablesDatabase::getName(), new DeleteTablesDatabase());
+        $service->addAction(ListTablesDatabase::getName(), new ListTablesDatabase());
+        $service->addAction(GetTablesDatabaseUsage::getName(), new GetTablesDatabaseUsage());
+        $service->addAction(ListTablesDatabaseUsage::getName(), new ListTablesDatabaseUsage());
     }
 
     private function registerTableActions(Service $service): void
     {
-        $service->addAction(CreateTable::getName(), new CreateTable);
-        $service->addAction(GetTable::getName(), new GetTable);
-        $service->addAction(UpdateTable::getName(), new UpdateTable);
-        $service->addAction(DeleteTable::getName(), new DeleteTable);
-        $service->addAction(ListTables::getName(), new ListTables);
-        $service->addAction(GetTableUsage::getName(), new GetTableUsage);
+        $service->addAction(CreateTable::getName(), new CreateTable());
+        $service->addAction(GetTable::getName(), new GetTable());
+        $service->addAction(UpdateTable::getName(), new UpdateTable());
+        $service->addAction(DeleteTable::getName(), new DeleteTable());
+        $service->addAction(ListTables::getName(), new ListTables());
+        $service->addAction(GetTableUsage::getName(), new GetTableUsage());
     }
 
     private function registerIndexActions(Service $service): void
     {
-        $service->addAction(CreateColumnIndex::getName(), new CreateColumnIndex);
-        $service->addAction(GetColumnIndex::getName(), new GetColumnIndex);
-        $service->addAction(DeleteColumnIndex::getName(), new DeleteColumnIndex);
-        $service->addAction(ListColumnIndexes::getName(), new ListColumnIndexes);
+        $service->addAction(CreateColumnIndex::getName(), new CreateColumnIndex());
+        $service->addAction(GetColumnIndex::getName(), new GetColumnIndex());
+        $service->addAction(DeleteColumnIndex::getName(), new DeleteColumnIndex());
+        $service->addAction(ListColumnIndexes::getName(), new ListColumnIndexes());
     }
 
     private function registerRowActions(Service $service): void
     {
-        $service->addAction(CreateRow::getName(), new CreateRow);
-        $service->addAction(GetRow::getName(), new GetRow);
-        $service->addAction(UpdateRow::getName(), new UpdateRow);
-        $service->addAction(UpdateRows::getName(), new UpdateRows);
-        $service->addAction(UpsertRow::getName(), new UpsertRow);
-        $service->addAction(UpsertRows::getName(), new UpsertRows);
-        $service->addAction(DeleteRow::getName(), new DeleteRow);
-        $service->addAction(DeleteRows::getName(), new DeleteRows);
-        $service->addAction(ListRows::getName(), new ListRows);
-        $service->addAction(ExplainDocuments::getName(), new ExplainDocuments);
-        $service->addAction(IncrementRowColumn::getName(), new IncrementRowColumn);
-        $service->addAction(DecrementRowColumn::getName(), new DecrementRowColumn);
+        $service->addAction(CreateRow::getName(), new CreateRow());
+        $service->addAction(GetRow::getName(), new GetRow());
+        $service->addAction(UpdateRow::getName(), new UpdateRow());
+        $service->addAction(UpdateRows::getName(), new UpdateRows());
+        $service->addAction(UpsertRow::getName(), new UpsertRow());
+        $service->addAction(UpsertRows::getName(), new UpsertRows());
+        $service->addAction(DeleteRow::getName(), new DeleteRow());
+        $service->addAction(DeleteRows::getName(), new DeleteRows());
+        $service->addAction(ListRows::getName(), new ListRows());
+        $service->addAction(ExplainDocuments::getName(), new ExplainDocuments());
+        $service->addAction(IncrementRowColumn::getName(), new IncrementRowColumn());
+        $service->addAction(DecrementRowColumn::getName(), new DecrementRowColumn());
     }
 
     private function registerTransactionActions(Service $service): void
     {
-        $service->addAction(CreateTransaction::getName(), new CreateTransaction);
-        $service->addAction(GetTransaction::getName(), new GetTransaction);
-        $service->addAction(UpdateTransaction::getName(), new UpdateTransaction);
-        $service->addAction(DeleteTransaction::getName(), new DeleteTransaction);
-        $service->addAction(ListTransactions::getName(), new ListTransactions);
-        $service->addAction(CreateOperations::getName(), new CreateOperations);
+        $service->addAction(CreateTransaction::getName(), new CreateTransaction());
+        $service->addAction(GetTransaction::getName(), new GetTransaction());
+        $service->addAction(UpdateTransaction::getName(), new UpdateTransaction());
+        $service->addAction(DeleteTransaction::getName(), new DeleteTransaction());
+        $service->addAction(ListTransactions::getName(), new ListTransactions());
+        $service->addAction(CreateOperations::getName(), new CreateOperations());
     }
 }
