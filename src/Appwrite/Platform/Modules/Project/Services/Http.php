@@ -80,11 +80,7 @@ use Appwrite\Platform\Modules\Project\Http\Project\Policies\MembershipPrivacy\Up
 use Appwrite\Platform\Modules\Project\Http\Project\Policies\PasswordDictionary\Update as UpdatePasswordDictionaryPolicy;
 use Appwrite\Platform\Modules\Project\Http\Project\Policies\PasswordHistory\Update as UpdatePasswordHistoryPolicy;
 use Appwrite\Platform\Modules\Project\Http\Project\Policies\PasswordPersonalData\Update as UpdatePasswordPersonalDataPolicy;
-use Appwrite\Platform\Modules\Project\Http\Project\Policies\PasswordStrength\MinLength\Update as UpdatePasswordStrengthMinLengthPolicy;
-use Appwrite\Platform\Modules\Project\Http\Project\Policies\PasswordStrength\RequireLowercase\Update as UpdatePasswordStrengthRequireLowercasePolicy;
-use Appwrite\Platform\Modules\Project\Http\Project\Policies\PasswordStrength\RequireNumber\Update as UpdatePasswordStrengthRequireNumberPolicy;
-use Appwrite\Platform\Modules\Project\Http\Project\Policies\PasswordStrength\RequireSpecialChar\Update as UpdatePasswordStrengthRequireSpecialCharPolicy;
-use Appwrite\Platform\Modules\Project\Http\Project\Policies\PasswordStrength\RequireUppercase\Update as UpdatePasswordStrengthRequireUppercasePolicy;
+use Appwrite\Platform\Modules\Project\Http\Project\Policies\PasswordStrength\Update as UpdatePasswordStrengthPolicy;
 use Appwrite\Platform\Modules\Project\Http\Project\Policies\SessionAlert\Update as UpdateSessionAlertPolicy;
 use Appwrite\Platform\Modules\Project\Http\Project\Policies\SessionDuration\Update as UpdateSessionDurationPolicy;
 use Appwrite\Platform\Modules\Project\Http\Project\Policies\SessionInvalidation\Update as UpdateSessionInvalidationPolicy;
@@ -173,11 +169,7 @@ class Http extends Service
         $this->addAction(UpdateMembershipPrivacyPolicy::getName(), new UpdateMembershipPrivacyPolicy());
         $this->addAction(UpdatePasswordDictionaryPolicy::getName(), new UpdatePasswordDictionaryPolicy());
         $this->addAction(UpdatePasswordHistoryPolicy::getName(), new UpdatePasswordHistoryPolicy());
-        $this->addAction(UpdatePasswordStrengthMinLengthPolicy::getName(), new UpdatePasswordStrengthMinLengthPolicy());
-        $this->addAction(UpdatePasswordStrengthRequireUppercasePolicy::getName(), new UpdatePasswordStrengthRequireUppercasePolicy());
-        $this->addAction(UpdatePasswordStrengthRequireLowercasePolicy::getName(), new UpdatePasswordStrengthRequireLowercasePolicy());
-        $this->addAction(UpdatePasswordStrengthRequireNumberPolicy::getName(), new UpdatePasswordStrengthRequireNumberPolicy());
-        $this->addAction(UpdatePasswordStrengthRequireSpecialCharPolicy::getName(), new UpdatePasswordStrengthRequireSpecialCharPolicy());
+        $this->addAction(UpdatePasswordStrengthPolicy::getName(), new UpdatePasswordStrengthPolicy());
         $this->addAction(UpdatePasswordPersonalDataPolicy::getName(), new UpdatePasswordPersonalDataPolicy());
         $this->addAction(UpdateSessionAlertPolicy::getName(), new UpdateSessionAlertPolicy());
         $this->addAction(UpdateSessionDurationPolicy::getName(), new UpdateSessionDurationPolicy());

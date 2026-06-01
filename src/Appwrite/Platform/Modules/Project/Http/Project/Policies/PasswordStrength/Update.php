@@ -1,6 +1,6 @@
 <?php
 
-namespace Appwrite\Platform\Modules\Project\Http\Project\Policies\PasswordStrength\RequireLowercase;
+namespace Appwrite\Platform\Modules\Project\Http\Project\Policies\PasswordStrength;
 
 use Appwrite\Event\Event;
 use Appwrite\Platform\Action;
@@ -13,6 +13,7 @@ use Utopia\Database\Document;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Platform\Scope\HTTP;
 use Utopia\Validator\Boolean;
+use Utopia\Validator\Range;
 
 class Update extends Action
 {
@@ -20,15 +21,15 @@ class Update extends Action
 
     public static function getName()
     {
-        return 'updateProjectPasswordStrengthRequireLowercase';
+        return 'updateProjectPasswordStrengthPolicy';
     }
 
     public function __construct()
     {
         $this
             ->setHttpMethod(Action::HTTP_REQUEST_METHOD_PATCH)
-            ->setHttpPath('/v1/project/policies/password-strength/require-lowercase')
-            ->desc('Update password strength lowercase requirement')
+            ->setHttpPath('/v1/project/policies/password-strength')
+            ->desc('Update password strength policy')
             ->groups(['api', 'project'])
             ->label('scope', ['policies.write', 'project.policies.write'])
             ->label('event', 'projects.[projectId].policies.[policy].update')
@@ -37,9 +38,9 @@ class Update extends Action
             ->label('sdk', new Method(
                 namespace: 'project',
                 group: 'policies',
-                name: 'updatePasswordStrengthRequireLowercase',
+                name: 'updatePasswordStrengthPolicy',
                 description: <<<'EOT'
-                Update whether passwords must include at least one lowercase letter.
+                Update the password strength requirements for users in the project.
                 EOT,
                 auth: [AuthType::ADMIN, AuthType::KEY],
                 responses: [
@@ -49,7 +50,11 @@ class Update extends Action
                     ),
                 ],
             ))
-            ->param('enabled', null, new Boolean(), 'Whether passwords must include at least one lowercase letter.')
+            ->param('minLength', null, new Range(8, 256), 'Minimum password length. Value must be between 8 and 256. Default is 8.', optional: true)
+            ->param('requireUppercase', null, new Boolean(), 'Whether passwords must include at least one uppercase letter.', optional: true)
+            ->param('requireLowercase', null, new Boolean(), 'Whether passwords must include at least one lowercase letter.', optional: true)
+            ->param('requireNumber', null, new Boolean(), 'Whether passwords must include at least one number.', optional: true)
+            ->param('requireSpecialChar', null, new Boolean(), 'Whether passwords must include at least one special character.', optional: true)
             ->inject('response')
             ->inject('dbForPlatform')
             ->inject('project')
@@ -59,7 +64,11 @@ class Update extends Action
     }
 
     public function action(
-        bool $enabled,
+        ?int $minLength,
+        ?bool $requireUppercase,
+        ?bool $requireLowercase,
+        ?bool $requireNumber,
+        ?bool $requireSpecialChar,
         Response $response,
         Database $dbForPlatform,
         Document $project,
@@ -74,7 +83,22 @@ class Update extends Action
             'requireNumber' => false,
             'requireSpecialChar' => false,
         ], $auths['passwordStrength'] ?? []);
-        $auths['passwordStrength']['requireLowercase'] = $enabled;
+
+        if ($minLength !== null) {
+            $auths['passwordStrength']['minLength'] = $minLength;
+        }
+        if ($requireUppercase !== null) {
+            $auths['passwordStrength']['requireUppercase'] = $requireUppercase;
+        }
+        if ($requireLowercase !== null) {
+            $auths['passwordStrength']['requireLowercase'] = $requireLowercase;
+        }
+        if ($requireNumber !== null) {
+            $auths['passwordStrength']['requireNumber'] = $requireNumber;
+        }
+        if ($requireSpecialChar !== null) {
+            $auths['passwordStrength']['requireSpecialChar'] = $requireSpecialChar;
+        }
 
         $project = $authorization->skip(fn () => $dbForPlatform->updateDocument('projects', $project->getId(), new Document([
             'auths' => $auths,
@@ -82,7 +106,7 @@ class Update extends Action
 
         $queueForEvents
             ->setParam('projectId', $project->getId())
-            ->setParam('policy', 'password-strength.require-lowercase');
+            ->setParam('policy', 'password-strength');
 
         $response->dynamic($project, Response::MODEL_PROJECT);
     }
