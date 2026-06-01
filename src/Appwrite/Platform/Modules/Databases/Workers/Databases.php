@@ -616,8 +616,6 @@ class Databases extends Action
     {
         Span::add('delete_by_group.collection.id', $collectionId);
 
-        // A failed batch delete is non-recoverable: let it propagate to the
-        // worker's error handler so the message is marked failed and retried.
         $count = $database->deleteDocuments(
             $collectionId,
             $queries,
