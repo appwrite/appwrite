@@ -158,9 +158,11 @@ import {
 import { BillingTab } from '../billing/BillingTab'
 import { ComplianceTab } from '../settings/ComplianceTab'
 import { View as DomainsView } from '../domains/View'
+import { useOrganizationDomainsPlanLimit } from '../domains/_components/useOrganizationDomainsPlanLimit'
 import { View as MarketplaceView } from '../marketplace/View'
 import { EnterpriseSuccessManager } from '@/components/pages/projects/$projectId/shared/EnterpriseSuccessManager'
 import { Pagination } from '@/components/global/shared/Pagination'
+import { PlanLimitWarning } from '@/components/pages/projects/$projectId/shared/PlanLimitWarning'
 import { OrganizationFailedInvoiceHeaderBanner } from '@/components/global/shared/OrganizationFailedInvoiceHeaderBanner'
 import { FailedInvoiceWarningIcon } from '@/components/global/shared/FailedInvoiceWarningIcon'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
@@ -204,6 +206,24 @@ const CONTACT_SALES_URL =
   import.meta.env.VITE_CONTACT_SALES_URL ||
   'https://appwrite.io/contact-us/enterprise'
 const LEGAL_EMAIL = import.meta.env.VITE_LEGAL_EMAIL || 'legal@appwrite.io'
+
+function DomainsPlanLimitAlert({ orgId }: { orgId: string | undefined }) {
+  const { currentCount, limit, plan, planName } =
+    useOrganizationDomainsPlanLimit(orgId)
+
+  if (plan === undefined) return null
+
+  return (
+    <PlanLimitWarning
+      currentCount={currentCount}
+      limit={limit}
+      planName={planName}
+      resourceName="domains"
+      orgId={orgId}
+      fullWidth={false}
+    />
+  )
+}
 
 // Role options with descriptions (matching InviteMembersDialog)
 const ROLE_OPTIONS = [
@@ -258,12 +278,14 @@ function EmptyMemberAvatarSlot({
   zIndex,
   onClick,
   disabled,
+  disabledTooltip,
 }: {
   zIndex: number
   onClick: () => void
   disabled?: boolean
+  disabledTooltip?: string
 }) {
-  return (
+  const button = (
     <button
       type="button"
       disabled={disabled}
@@ -282,6 +304,25 @@ function EmptyMemberAvatarSlot({
         <Plus className="h-3.5 w-3.5 text-muted-foreground" />
       </div>
     </button>
+  )
+
+  if (!disabled || !disabledTooltip) {
+    return button
+  }
+
+  return (
+    <TooltipProvider delayDuration={0}>
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <span className="relative inline-flex shrink-0" style={{ zIndex }}>
+            {button}
+          </span>
+        </TooltipTrigger>
+        <TooltipContent className="max-w-xs text-xs">
+          {disabledTooltip}
+        </TooltipContent>
+      </Tooltip>
+    </TooltipProvider>
   )
 }
 
@@ -1344,6 +1385,13 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
   const canInviteMembers = canInviteOrgMember(access, features)
   const inviteDisabled =
     !supportsAdditionalMembers || !canInviteMembers || !orgId
+  const inviteDisabledTooltip = !orgId
+    ? 'Select an organization to invite members.'
+    : !canInviteMembers
+      ? "You don't have permission to invite members."
+      : !supportsAdditionalMembers
+        ? 'Member limit reached for your plan.'
+        : undefined
 
   // Calculate member limit
   // Check both addons.seats and plan.members field
@@ -1804,6 +1852,7 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                                 zIndex={emptySlotCount - index}
                                 onClick={() => setInviteDialogOpen(true)}
                                 disabled={inviteDisabled}
+                                disabledTooltip={inviteDisabledTooltip}
                               />
                             ),
                           )}
@@ -1814,16 +1863,29 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                 </div>
               )}
 
-              <Button
-                size="sm"
-                variant="outline"
-                className="h-8 gap-2 border-border text-[13px] text-muted-foreground hover:bg-accent hover:text-foreground"
-                onClick={() => setInviteDialogOpen(true)}
-                disabled={inviteDisabled}
-              >
-                <UserPlus className="h-3.5 w-3.5" />
-                Invite
-              </Button>
+              <TooltipProvider delayDuration={0}>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <span className="inline-flex">
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="h-8 gap-2 border-border text-[13px] text-muted-foreground hover:bg-accent hover:text-foreground"
+                        onClick={() => setInviteDialogOpen(true)}
+                        disabled={inviteDisabled}
+                      >
+                        <UserPlus className="h-3.5 w-3.5" />
+                        Invite
+                      </Button>
+                    </span>
+                  </TooltipTrigger>
+                  {inviteDisabledTooltip ? (
+                    <TooltipContent className="max-w-xs text-xs">
+                      {inviteDisabledTooltip}
+                    </TooltipContent>
+                  ) : null}
+                </Tooltip>
+              </TooltipProvider>
             </div>
           </div>
 
@@ -1869,6 +1931,10 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
             </div>
           </div>
         </div>
+
+        {activeTab === 'domains' ? (
+          <DomainsPlanLimitAlert orgId={orgId} />
+        ) : null}
 
         {/* Plan Limit Alert - After Tabs */}
         {activeTab === 'settings' &&
@@ -2823,15 +2889,30 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                                   />
                                 </div>
 
-                                <Button
-                                  variant="brandCta"
-                                  className="ml-auto h-9 gap-2 text-[13px] font-medium"
-                                  onClick={() => setInviteDialogOpen(true)}
-                                  disabled={inviteDisabled}
-                                >
-                                  <Plus className="h-4 w-4" />
-                                  Invite
-                                </Button>
+                                <TooltipProvider delayDuration={0}>
+                                  <Tooltip>
+                                    <TooltipTrigger asChild>
+                                      <span className="ml-auto inline-flex">
+                                        <Button
+                                          variant="brandCta"
+                                          className="h-9 gap-2 text-[13px] font-medium"
+                                          onClick={() =>
+                                            setInviteDialogOpen(true)
+                                          }
+                                          disabled={inviteDisabled}
+                                        >
+                                          <Plus className="h-4 w-4" />
+                                          Invite
+                                        </Button>
+                                      </span>
+                                    </TooltipTrigger>
+                                    {inviteDisabledTooltip ? (
+                                      <TooltipContent className="max-w-xs text-xs">
+                                        {inviteDisabledTooltip}
+                                      </TooltipContent>
+                                    ) : null}
+                                  </Tooltip>
+                                </TooltipProvider>
                               </div>
 
                               {/* Members List or Empty State */}

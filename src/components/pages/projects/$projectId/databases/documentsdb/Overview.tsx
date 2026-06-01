@@ -9,7 +9,6 @@ import {
   Table2,
   CheckCircle2,
   AlertCircle,
-  ArrowLeft,
   BarChart3,
   ExternalLink,
   Download,
@@ -965,7 +964,12 @@ export function Overview({
               ) : null}
               {database && (database as Models.Database).enabled === false ? (
                 <div className="border-b border-border bg-amber-500/5">
-                  <div className="mx-auto w-full max-w-7xl px-4 py-3 sm:px-6">
+                  <div
+                    className={cn(
+                      'w-full px-4 py-3 sm:px-6',
+                      activeTab !== 'monitor' && 'mx-auto max-w-7xl',
+                    )}
+                  >
                     <Alert
                       variant="default"
                       className="border-amber-500/30 bg-transparent"

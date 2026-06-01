@@ -687,6 +687,7 @@ export function View() {
               })}
               resourceName="sites"
               orgId={project?.teamId}
+              fullWidth={false}
             />
           ) : undefined
         }

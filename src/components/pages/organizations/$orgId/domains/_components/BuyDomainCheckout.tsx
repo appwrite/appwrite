@@ -31,6 +31,7 @@ import { confirmPayment } from '@/lib/utils/stripe'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
 import { toast } from 'sonner'
 import { cn } from '@/lib/utils'
+import { useOrganizationDomainsPlanLimit } from './useOrganizationDomainsPlanLimit'
 
 export type BuyDomainSelection = {
   domain: string
@@ -186,6 +187,8 @@ export function BuyDomainCheckout({
   const { organization } = useOrganizationById(orgId)
   const { paymentMethods } = usePaymentMethods()
   const { addresses } = useBillingAddresses()
+  const { isAtLimit: isDomainLimitReached, limit: domainsLimit } =
+    useOrganizationDomainsPlanLimit(orgId)
 
   const [firstName, setFirstName] = useState('')
   const [lastName, setLastName] = useState('')
@@ -242,6 +245,11 @@ export function BuyDomainCheckout({
 
   const purchaseMutation = useMutation({
     mutationFn: async () => {
+      if (isDomainLimitReached) {
+        throw new Error(
+          `Your current plan includes up to ${domainsLimit} domains.`,
+        )
+      }
       if (!billingAddressId) {
         throw new Error('Select a billing address')
       }
@@ -323,6 +331,7 @@ export function BuyDomainCheckout({
 
   const canSubmit =
     !purchaseMutation.isPending &&
+    !isDomainLimitReached &&
     !!billingAddressId &&
     !!paymentMethodId &&
     completedPaymentMethods.length > 0 &&
@@ -368,6 +377,12 @@ export function BuyDomainCheckout({
           <p className="mt-1 text-[13px] text-muted-foreground">
             Registrant details must match your domain registry requirements.
           </p>
+          {isDomainLimitReached ? (
+            <p className="mt-2 text-[12px] text-amber-600 dark:text-amber-400">
+              Your current plan includes up to {domainsLimit} domains. Upgrade
+              to register another domain.
+            </p>
+          ) : null}
         </div>
 
         <div className="rounded-xl border border-border bg-card/50 overflow-hidden">

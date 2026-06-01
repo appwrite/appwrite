@@ -1565,7 +1565,15 @@ export function Workspace({
               </div>
               {database && (database as Models.Database).enabled === false ? (
                 <div className="border-b border-border bg-amber-500/5">
-                  <div className="px-4 py-3 sm:px-6">
+                  <div
+                    className={cn(
+                      'px-4 py-3 sm:px-6',
+                      isDatabaseLevelView &&
+                        databaseTab !== 'visualizer' &&
+                        databaseTab !== 'monitor' &&
+                        'mx-auto w-full max-w-7xl',
+                    )}
+                  >
                     <Alert
                       variant="default"
                       className="border-amber-500/30 bg-transparent"
@@ -1598,7 +1606,15 @@ export function Workspace({
                 </div>
               ) : tableDataForStatus && !tableDataForStatus.enabled ? (
                 <div className="border-b border-border bg-amber-500/5">
-                  <div className="px-4 py-3 sm:px-6">
+                  <div
+                    className={cn(
+                      'px-4 py-3 sm:px-6',
+                      isDatabaseLevelView &&
+                        databaseTab !== 'visualizer' &&
+                        databaseTab !== 'monitor' &&
+                        'mx-auto w-full max-w-7xl',
+                    )}
+                  >
                     <Alert
                       variant="default"
                       className="border-amber-500/30 bg-transparent"

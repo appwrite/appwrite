@@ -34,7 +34,7 @@ export const overviewChartPanelEmptyClass =
   'flex min-h-[240px] w-full flex-1 items-center justify-center rounded-lg border border-dashed border-border bg-muted/20 text-[13px] text-muted-foreground'
 
 export const overviewChartPanelErrorClass =
-  'flex min-h-[240px] w-full flex-1 flex-col items-center justify-center gap-3 rounded-lg border border-dashed border-destructive/30 bg-destructive/5 px-6 text-center'
+  'flex min-h-[240px] w-full flex-1 flex-col items-center justify-center gap-3 rounded-lg border border-dashed border-border bg-muted/20 px-6 text-center'
 
 export const OVERVIEW_METRIC_NOT_AVAILABLE = 'N/A'
 

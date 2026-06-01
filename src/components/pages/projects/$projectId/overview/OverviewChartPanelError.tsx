@@ -15,7 +15,7 @@ export function OverviewChartPanelError({
 }: OverviewChartPanelErrorProps) {
   return (
     <div className={overviewChartPanelErrorClass}>
-      <AlertCircle className="h-8 w-8 shrink-0 text-destructive/80" />
+      <AlertCircle className="h-8 w-8 shrink-0 text-muted-foreground" />
       <div className="max-w-sm">
         <p className="text-[13px] font-medium text-foreground">{title}</p>
         <p className="mt-1 text-[12px] leading-relaxed text-muted-foreground">

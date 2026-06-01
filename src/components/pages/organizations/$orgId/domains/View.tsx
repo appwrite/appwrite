@@ -1,7 +1,6 @@
 import { useState, useEffect, useMemo, useRef } from 'react'
 import {
   Globe,
-  MoreHorizontal,
   CheckCircle2,
   AlertCircle,
   Search,
@@ -11,7 +10,6 @@ import {
 } from 'lucide-react'
 import {
   useOrganizationDomains,
-  fetchOrganizationDomains,
   DOMAINS_DEFAULT_SORT_BY,
   DOMAINS_DEFAULT_SORT_ORDER,
   domainRecordsQueryOptions,
@@ -46,6 +44,12 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
 import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@/components/ui/tooltip'
+import {
   Dialog,
   DialogContent,
   DialogDescription,
@@ -65,6 +69,7 @@ import { getErrorMessage } from '@/lib/utils/error-formatting'
 import { CreateDomainDialog } from './CreateDomain'
 import { RetryVerification } from './RetryVerification'
 import { DomainContextMenu } from './_components/DomainContextMenu'
+import { useOrganizationDomainsPlanLimit } from './_components/useOrganizationDomainsPlanLimit'
 import type { Models } from '@appwrite.io/console'
 import {
   getDomainTransferStatusBadgeConfig,
@@ -418,6 +423,13 @@ export function View() {
 
   // Paginated data
   const paginatedDomains = apiDomains
+  const {
+    limit: domainsLimit,
+    isAtLimit: isDomainLimitReached,
+  } = useOrganizationDomainsPlanLimit(orgId)
+  const domainLimitTooltip = isDomainLimitReached
+    ? `Your current plan includes up to ${domainsLimit} domains.`
+    : undefined
 
   useEffect(() => {
     setSelectedDomains(new Set())
@@ -471,24 +483,6 @@ export function View() {
     bulkDeleteMutation.mutate(Array.from(selectedDomains))
   }
 
-  const toggleDomain = (domainId: string) => {
-    const newSelected = new Set(selectedDomains)
-    if (newSelected.has(domainId)) {
-      newSelected.delete(domainId)
-    } else {
-      newSelected.add(domainId)
-    }
-    setSelectedDomains(newSelected)
-  }
-
-  const toggleAllDomains = () => {
-    if (selectedDomains.size === paginatedDomains.length) {
-      setSelectedDomains(new Set())
-    } else {
-      setSelectedDomains(new Set(paginatedDomains.map((d) => d.$id)))
-    }
-  }
-
   const handlePageChange = (page: number) => {
     setRequestedPage(page)
     setSelectedDomains(new Set())
@@ -527,6 +521,10 @@ export function View() {
 
   const handleCreateDomain = async (domain: string) => {
     if (!orgId) return
+    if (isDomainLimitReached) {
+      toast.error(`Your current plan includes up to ${domainsLimit} domains.`)
+      return
+    }
     setIsCreateDomainSubmitting(true)
     try {
       const createdDomain = await createDomainMutation.mutateAsync(domain)
@@ -646,40 +644,78 @@ export function View() {
           />
         </div>
         <div className="ml-auto flex items-center gap-2">
-          <Button
-            variant="outline"
-            asChild
-            className="h-9 gap-1.5 text-[13px] font-medium"
-          >
-            <Link
-              to="/organizations/$orgId/domains/transfer-in"
-              params={{ orgId: orgId! }}
-            >
-              <ArrowLeftRight className="h-4 w-4" />
-              Transfer in
-            </Link>
-          </Button>
-          <Button
-            variant="outline"
-            asChild
-            className="h-9 gap-1.5 text-[13px] font-medium"
-          >
-            <Link
-              to="/organizations/$orgId/domains/buy"
-              params={{ orgId: orgId! }}
-            >
-              <ShoppingCart className="h-4 w-4" />
-              Buy domain
-            </Link>
-          </Button>
-          <Button
-            variant="brandCta"
-            onClick={() => setCreateDialogOpen(true)}
-            className="h-9 gap-1.5 text-[13px] font-medium"
-          >
-            <Plus className="h-4 w-4" />
-            Add domain
-          </Button>
+          <TooltipProvider delayDuration={0}>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <span className="inline-flex">
+                  <Button
+                    variant="outline"
+                    disabled={isDomainLimitReached}
+                    onClick={() =>
+                      navigate({
+                        to: '/organizations/$orgId/domains/transfer-in',
+                        params: { orgId: orgId! },
+                      })
+                    }
+                    className="h-9 gap-1.5 text-[13px] font-medium"
+                  >
+                    <ArrowLeftRight className="h-4 w-4" />
+                    Transfer in
+                  </Button>
+                </span>
+              </TooltipTrigger>
+              {domainLimitTooltip ? (
+                <TooltipContent className="max-w-xs text-xs">
+                  {domainLimitTooltip}
+                </TooltipContent>
+              ) : null}
+            </Tooltip>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <span className="inline-flex">
+                  <Button
+                    variant="outline"
+                    disabled={isDomainLimitReached}
+                    onClick={() =>
+                      navigate({
+                        to: '/organizations/$orgId/domains/buy',
+                        params: { orgId: orgId! },
+                      })
+                    }
+                    className="h-9 gap-1.5 text-[13px] font-medium"
+                  >
+                    <ShoppingCart className="h-4 w-4" />
+                    Buy domain
+                  </Button>
+                </span>
+              </TooltipTrigger>
+              {domainLimitTooltip ? (
+                <TooltipContent className="max-w-xs text-xs">
+                  {domainLimitTooltip}
+                </TooltipContent>
+              ) : null}
+            </Tooltip>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <span className="inline-flex">
+                  <Button
+                    variant="brandCta"
+                    onClick={() => setCreateDialogOpen(true)}
+                    disabled={isDomainLimitReached}
+                    className="h-9 gap-1.5 text-[13px] font-medium"
+                  >
+                    <Plus className="h-4 w-4" />
+                    Add domain
+                  </Button>
+                </span>
+              </TooltipTrigger>
+              {domainLimitTooltip ? (
+                <TooltipContent className="max-w-xs text-xs">
+                  {domainLimitTooltip}
+                </TooltipContent>
+              ) : null}
+            </Tooltip>
+          </TooltipProvider>
         </div>
       </div>
 

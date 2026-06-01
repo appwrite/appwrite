@@ -4,6 +4,7 @@ import { pageTitle } from '@/lib/utils/page-title'
 import {
   organizationsQueryOptions,
   organizationDomainsQueryOptions,
+  organizationPlanQueryOptions,
   DOMAINS_DEFAULT_SORT_BY,
   DOMAINS_DEFAULT_SORT_ORDER,
 } from '@/lib/react-query/hooks'
@@ -32,18 +33,32 @@ export const Route = createFileRoute('/_public/organizations/$orgId/domains/')({
     const sortBy = sort?.sortBy ?? DOMAINS_DEFAULT_SORT_BY
     const sortOrder = sort?.sortOrder ?? DOMAINS_DEFAULT_SORT_ORDER
 
-    await queryClient.ensureQueryData(organizationsQueryOptions())
-    await queryClient.ensureQueryData(
-      organizationDomainsQueryOptions(
-        orgId,
-        page - 1,
-        limit,
-        search ?? undefined,
-        filterQueries,
-        sortBy,
-        sortOrder,
+    await Promise.all([
+      queryClient.ensureQueryData(organizationsQueryOptions()),
+      queryClient.ensureQueryData(organizationPlanQueryOptions(orgId)),
+      queryClient.ensureQueryData(
+        organizationDomainsQueryOptions(
+          orgId,
+          page - 1,
+          limit,
+          search ?? undefined,
+          filterQueries,
+          sortBy,
+          sortOrder,
+        ),
       ),
-    )
+      queryClient.ensureQueryData(
+        organizationDomainsQueryOptions(
+          orgId,
+          0,
+          1,
+          undefined,
+          undefined,
+          DOMAINS_DEFAULT_SORT_BY,
+          DOMAINS_DEFAULT_SORT_ORDER,
+        ),
+      ),
+    ])
   },
   component: DomainsIndexPage,
 })

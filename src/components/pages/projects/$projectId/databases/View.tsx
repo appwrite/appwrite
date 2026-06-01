@@ -746,6 +746,7 @@ export function View() {
               })}
               resourceName="databases"
               orgId={project?.teamId}
+              fullWidth={false}
             />
           ) : undefined
         }

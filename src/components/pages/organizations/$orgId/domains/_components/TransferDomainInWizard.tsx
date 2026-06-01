@@ -20,6 +20,7 @@ import { getErrorMessage } from '@/lib/utils/error-formatting'
 import { toast } from 'sonner'
 import type { TransferInSearch } from '@/routes/_public/organizations.$orgId.domains.transfer-in'
 import { TransferDomainInSummary } from './TransferDomainInSummary'
+import { useOrganizationDomainsPlanLimit } from './useOrganizationDomainsPlanLimit'
 
 const PRICE_DEBOUNCE_MS = 500
 
@@ -33,6 +34,8 @@ export function TransferDomainInWizard({
   const queryClient = useQueryClient()
   const { organization } = useOrganizationById(orgId)
   const { paymentMethods } = usePaymentMethods()
+  const { isAtLimit: isDomainLimitReached, limit: domainsLimit } =
+    useOrganizationDomainsPlanLimit(orgId)
 
   const [domainInput, setDomainInput] = useState('')
   const [authCode, setAuthCode] = useState('')
@@ -129,6 +132,11 @@ export function TransferDomainInWizard({
   const transferMutation = useMutation({
     mutationFn: async () => {
       if (!orgId) throw new Error('Organization is required')
+      if (isDomainLimitReached) {
+        throw new Error(
+          `Your current plan includes up to ${domainsLimit} domains.`,
+        )
+      }
       const domain = domainInput.trim().toLowerCase()
       if (!domain || !domain.includes('.')) {
         throw new Error('Enter a full domain name (e.g. example.com)')
@@ -188,6 +196,7 @@ export function TransferDomainInWizard({
 
   const canStartTransfer =
     !transferMutation.isPending &&
+    !isDomainLimitReached &&
     completedPaymentMethods.length > 0 &&
     !!paymentMethodId &&
     domainInput.trim().includes('.') &&
@@ -245,6 +254,12 @@ export function TransferDomainInWizard({
             code from your current registrar. Registry fees are shown in the
             summary as you type the domain name.
           </p>
+          {isDomainLimitReached ? (
+            <p className="mt-2 text-[12px] text-amber-600 dark:text-amber-400">
+              Your current plan includes up to {domainsLimit} domains. Upgrade
+              to transfer another domain.
+            </p>
+          ) : null}
         </div>
 
         <div className="rounded-xl border border-border bg-card/50 overflow-hidden">

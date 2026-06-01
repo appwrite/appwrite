@@ -24,6 +24,7 @@ import {
 } from '@/lib/react-query/hooks/domains'
 import { BuyDomainCheckout, type BuyDomainSelection } from './BuyDomainCheckout'
 import type { BuyDomainWizardSearch } from '@/routes/_public/organizations.$orgId.domains.buy'
+import { useOrganizationDomainsPlanLimit } from './useOrganizationDomainsPlanLimit'
 
 /** Number of TLDs to fetch on first paint (above the fold) */
 const INITIAL_VISIBLE_COUNT = 24
@@ -225,6 +226,8 @@ export function BuyDomainWizard({
   const [checkoutSelection, setCheckoutSelection] =
     useState<BuyDomainSelection | null>(null)
   const paymentReturnHandled = useRef(false)
+  const { isAtLimit: isDomainLimitReached, limit: domainsLimit } =
+    useOrganizationDomainsPlanLimit(orgId)
 
   const fallbackPath = `/organizations/${orgId}/domains/`
 
@@ -423,6 +426,10 @@ export function BuyDomainWizard({
       renewalPeriodYears?: number
     },
   ) => {
+    if (isDomainLimitReached) {
+      toast.error(`Your current plan includes up to ${domainsLimit} domains.`)
+      return
+    }
     setCheckoutSelection({
       domain: full.toLowerCase(),
       price: opts?.price,
@@ -488,6 +495,12 @@ export function BuyDomainWizard({
                 autoFocus
               />
             </div>
+            {isDomainLimitReached ? (
+              <p className="text-[12px] text-amber-600 dark:text-amber-400">
+                Your current plan includes up to {domainsLimit} domains. Upgrade
+                to buy another domain.
+              </p>
+            ) : null}
           </div>
         </div>
 
@@ -509,6 +522,7 @@ export function BuyDomainWizard({
                       })
                     }
                     onVisible={() => addRequestedTld(s.tld)}
+                    limitReached={isDomainLimitReached}
                   />
                 ))}
               </div>
@@ -543,10 +557,12 @@ function DomainCard({
   suggestion,
   onSelect,
   onVisible,
+  limitReached = false,
 }: {
   suggestion: DomainSuggestion
   onSelect: (full: string) => void
   onVisible?: () => void
+  limitReached?: boolean
 }) {
   const {
     full,
@@ -564,7 +580,10 @@ function DomainCard({
   const hasReportedVisible = useRef(false)
 
   const canSelect =
-    !taken && priceLoaded && !(premium && (price == null || price <= 0))
+    !limitReached &&
+    !taken &&
+    priceLoaded &&
+    !(premium && (price == null || price <= 0))
 
   useEffect(() => {
     if (!onVisible || hasReportedVisible.current) return
@@ -592,6 +611,8 @@ function DomainCard({
       aria-label={
         taken
           ? `${full} is taken`
+          : limitReached
+            ? 'Domain limit reached'
           : canSelect
             ? `Add ${full} to cart`
             : `Loading price for ${full}`
@@ -608,7 +629,7 @@ function DomainCard({
           : isPerfectMatch
             ? 'border-blue-500/25 bg-blue-500/5 dark:bg-blue-500/10 ring-1 ring-blue-500/20 shadow-sm transition-all duration-150 enabled:hover:border-blue-500/35 enabled:hover:bg-blue-500/10 dark:enabled:hover:bg-blue-500/15 enabled:cursor-pointer'
             : 'border-border/60 bg-card/40 transition-all duration-150 enabled:hover:border-foreground/15 enabled:hover:bg-muted/30 enabled:cursor-pointer',
-        !canSelect && !taken && 'cursor-wait',
+        !canSelect && !taken && (limitReached ? 'cursor-not-allowed' : 'cursor-wait'),
         taken && 'cursor-not-allowed',
       )}
     >

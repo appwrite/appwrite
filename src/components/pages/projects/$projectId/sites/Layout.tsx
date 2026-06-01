@@ -350,7 +350,12 @@ function SiteLayoutContent() {
           contentAfterBorder={
             isBuilding ? (
               <div className="border-b border-border bg-blue-500/5">
-                <div className="mx-auto w-full max-w-7xl px-4 py-3 sm:px-6">
+                <div
+                  className={cn(
+                    'w-full px-4 py-3 sm:px-6',
+                    activeTab !== 'logs' && 'mx-auto max-w-7xl',
+                  )}
+                >
                   <Alert
                     variant="default"
                     className="border-blue-500/30 bg-transparent"

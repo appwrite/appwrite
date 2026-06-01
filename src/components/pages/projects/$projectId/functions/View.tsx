@@ -688,6 +688,7 @@ export function View() {
               })}
               resourceName="functions"
               orgId={project?.teamId}
+              fullWidth={false}
             />
           ) : undefined
         }
