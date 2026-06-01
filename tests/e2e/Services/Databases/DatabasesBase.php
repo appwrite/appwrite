@@ -756,6 +756,72 @@ trait DatabasesBase
         return [$this->getRecordResource() => $documents['body'][$this->getRecordResource()], 'databaseId' => $databaseId];
     }
 
+    public function testExplain(): void
+    {
+        // Explain is exposed on TablesDB/DocumentsDB/VectorsDB, not the legacy API.
+        if ($this->getDatabaseType() === 'legacy') {
+            $this->markTestSkipped('Explain is not available on the legacy databases API');
+        }
+
+        $data = $this->setupDocuments();
+        $databaseId = $data['databaseId'];
+        $containerId = $data['moviesId'];
+
+        $response = $this->client->call(Client::METHOD_GET, $this->getRecordUrl($databaseId, $containerId) . '/explain', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'queries' => [
+                Query::orderAsc('releaseYear')->toString(),
+                Query::limit(10)->toString(),
+            ],
+        ]);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertIsArray($response['body']['queries']);
+        $this->assertNotEmpty($response['body']['queries']);
+
+        $first = $response['body']['queries'][0];
+        $this->assertEquals('find', $first['purpose']);
+        $this->assertEquals($containerId, $first['context']['collection']);
+        $this->assertArrayHasKey('engine', $first['plan']);
+
+        // listRows/listDocuments fires find() + count() (for total) by default — explain mirrors it.
+        $purposes = array_column($response['body']['queries'], 'purpose');
+        $this->assertContains('find', $purposes);
+        $this->assertContains('count', $purposes);
+
+        // Internal storage identifiers must never leak into the plan.
+        $rawPlan = json_encode($response['body']['queries']);
+        $this->assertStringNotContainsString('_perms', $rawPlan);
+        $this->assertStringNotContainsString('__metadata', $rawPlan);
+    }
+
+    public function testExplainSkipsCountWhenTotalIsFalse(): void
+    {
+        // Explain is exposed on TablesDB/DocumentsDB/VectorsDB, not the legacy API.
+        if ($this->getDatabaseType() === 'legacy') {
+            $this->markTestSkipped('Explain is not available on the legacy databases API');
+        }
+
+        $data = $this->setupDocuments();
+        $databaseId = $data['databaseId'];
+        $containerId = $data['moviesId'];
+
+        $response = $this->client->call(Client::METHOD_GET, $this->getRecordUrl($databaseId, $containerId) . '/explain', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'queries' => [Query::limit(10)->toString()],
+            'total' => false,
+        ]);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $purposes = array_column($response['body']['queries'], 'purpose');
+        $this->assertContains('find', $purposes);
+        $this->assertNotContains('count', $purposes);
+    }
+
     public function testCreateDatabase(): void
     {
         /**
