@@ -786,116 +786,129 @@ Http::shutdown()
 Http::shutdown()
     ->groups(['api'])
     ->inject('route')
+    ->inject('response')
+    ->inject('project')
+    ->inject('queueForEvents')
+    ->inject('publisherForFunctions')
+    ->inject('queueForWebhooks')
+    ->inject('queueForRealtime')
+    ->inject('dbForProject')
+    ->inject('eventProcessor')
+    ->action(function (Route $route, Response $response, Document $project, Event $queueForEvents, FunctionPublisher $publisherForFunctions, Event $queueForWebhooks, Realtime $queueForRealtime, Database $dbForProject, EventProcessor $eventProcessor) {
+        if (empty($queueForEvents->getEvent())) {
+            return;
+        }
+
+        if (empty($queueForEvents->getPayload())) {
+            $queueForEvents->setPayload($response->getPayload());
+        }
+
+        // Get project and function/webhook events (cached)
+        $functionsEvents = $eventProcessor->getFunctionsEvents($project, $dbForProject);
+        $webhooksEvents = $eventProcessor->getWebhooksEvents($project);
+
+        // Generate events for this operation
+        $generatedEvents = Event::generateEvents(
+            $queueForEvents->getEvent(),
+            $queueForEvents->getParams()
+        );
+
+        $allowedOnConsole = !empty(\array_intersect($route->getGroups(), Realtime::CONSOLE_ALLOWLIST));
+        if ($project->getId() !== 'console' || $allowedOnConsole) {
+            $queueForRealtime
+                ->from($queueForEvents)
+                ->trigger();
+        }
+
+        // Only trigger functions if there are matching function events
+        if (! empty($functionsEvents)) {
+            foreach ($generatedEvents as $event) {
+                if (isset($functionsEvents[$event])) {
+                    $publisherForFunctions->enqueue(FunctionMessage::fromEvent(
+                        event: $queueForEvents->getEvent(),
+                        params: $queueForEvents->getParams(),
+                        project: $queueForEvents->getProject(),
+                        user: $queueForEvents->getUser(),
+                        userId: $queueForEvents->getUserId(),
+                        payload: $queueForEvents->getPayload(),
+                        platform: $queueForEvents->getPlatform(),
+                    ));
+                    break;
+                }
+            }
+        }
+
+        // Only trigger webhooks if there are matching webhook events
+        if (! empty($webhooksEvents)) {
+            foreach ($generatedEvents as $event) {
+                if (isset($webhooksEvents[$event])) {
+                    $queueForWebhooks
+                        ->from($queueForEvents)
+                        ->trigger();
+                    break;
+                }
+            }
+        }
+    });
+
+Http::shutdown()
+    ->groups(['api'])
+    ->inject('route')
+    ->inject('request')
+    ->inject('response')
+    ->inject('project')
+    ->inject('user')
+    ->inject('timelimit')
+    ->action(function (Route $route, Request $request, Response $response, Document $project, User $user, callable $timelimit) {
+        $abuseEnabled = System::getEnv('_APP_OPTIONS_ABUSE', 'enabled') !== 'disabled';
+        $abuseResetCode = $route->getLabel('abuse-reset', []);
+        $abuseResetCode = \is_array($abuseResetCode) ? $abuseResetCode : [$abuseResetCode];
+
+        if (! $abuseEnabled || \count($abuseResetCode) === 0 || ! \in_array($response->getStatusCode(), $abuseResetCode)) {
+            return;
+        }
+
+        $abuseKeyLabel = $route->getLabel('abuse-key', 'url:{url},ip:{ip}');
+        $abuseKeyLabel = (! is_array($abuseKeyLabel)) ? [$abuseKeyLabel] : $abuseKeyLabel;
+
+        foreach ($abuseKeyLabel as $abuseKey) {
+            $start = $request->getContentRangeStart();
+            $end = $request->getContentRangeEnd();
+            $timeLimit = $timelimit($abuseKey, $route->getLabel('abuse-limit', 0), $route->getLabel('abuse-time', 3600));
+            $timeLimit
+                ->setParam('{projectId}', $project->getId())
+                ->setParam('{userId}', $user->getId())
+                ->setParam('{userAgent}', $request->getUserAgent(''))
+                ->setParam('{ip}', $request->getIP())
+                ->setParam('{url}', $request->getHostname() . $route->getPath())
+                ->setParam('{method}', $request->getMethod())
+                ->setParam('{chunkId}', (int) ($start / ($end + 1 - $start)));
+
+            foreach ($request->getParams() as $key => $value) { // Set request params as potential abuse keys
+                if (! empty($value)) {
+                    $timeLimit->setParam('{param-' . $key . '}', (\is_array($value)) ? \json_encode($value) : $value);
+                }
+            }
+
+            $abuse = new Abuse($timeLimit);
+            $abuse->reset();
+        }
+    });
+
+Http::shutdown()
+    ->groups(['api'])
+    ->inject('route')
     ->inject('params')
     ->inject('request')
     ->inject('response')
     ->inject('project')
     ->inject('user')
-    ->inject('queueForEvents')
     ->inject('auditContext')
     ->inject('publisherForAudits')
-    ->inject('publisherForFunctions')
-    ->inject('queueForWebhooks')
-    ->inject('queueForRealtime')
-    ->inject('dbForProject')
-    ->inject('timelimit')
-    ->inject('eventProcessor')
     ->inject('mode')
-    ->action(function (Route $route, array $params, Request $request, Response $response, Document $project, User $user, Event $queueForEvents, AuditContext $auditContext, Audit $publisherForAudits, FunctionPublisher $publisherForFunctions, Event $queueForWebhooks, Realtime $queueForRealtime, Database $dbForProject, callable $timelimit, EventProcessor $eventProcessor, string $mode) use ($parseLabel) {
-
+    ->action(function (Route $route, array $params, Request $request, Response $response, Document $project, User $user, AuditContext $auditContext, Audit $publisherForAudits, string $mode) use ($parseLabel) {
         $responsePayload = $response->getPayload();
 
-        if (! empty($queueForEvents->getEvent())) {
-            if (empty($queueForEvents->getPayload())) {
-                $queueForEvents->setPayload($responsePayload);
-            }
-
-            // Get project and function/webhook events (cached)
-            $functionsEvents = $eventProcessor->getFunctionsEvents($project, $dbForProject);
-            $webhooksEvents = $eventProcessor->getWebhooksEvents($project);
-
-            // Generate events for this operation
-            $generatedEvents = Event::generateEvents(
-                $queueForEvents->getEvent(),
-                $queueForEvents->getParams()
-            );
-
-            $allowedOnConsole = !empty(\array_intersect($route->getGroups(), Realtime::CONSOLE_ALLOWLIST));
-            if ($project->getId() !== 'console' || $allowedOnConsole) {
-                $queueForRealtime
-                    ->from($queueForEvents)
-                    ->trigger();
-            }
-
-            // Only trigger functions if there are matching function events
-            if (! empty($functionsEvents)) {
-                foreach ($generatedEvents as $event) {
-                    if (isset($functionsEvents[$event])) {
-                        $publisherForFunctions->enqueue(FunctionMessage::fromEvent(
-                            event: $queueForEvents->getEvent(),
-                            params: $queueForEvents->getParams(),
-                            project: $queueForEvents->getProject(),
-                            user: $queueForEvents->getUser(),
-                            userId: $queueForEvents->getUserId(),
-                            payload: $queueForEvents->getPayload(),
-                            platform: $queueForEvents->getPlatform(),
-                        ));
-                        break;
-                    }
-                }
-            }
-
-            // Only trigger webhooks if there are matching webhook events
-            if (! empty($webhooksEvents)) {
-                foreach ($generatedEvents as $event) {
-                    if (isset($webhooksEvents[$event])) {
-                        $queueForWebhooks
-                            ->from($queueForEvents)
-                            ->trigger();
-                        break;
-                    }
-                }
-            }
-        }
-
-        /**
-         * Abuse labels
-         */
-        $abuseEnabled = System::getEnv('_APP_OPTIONS_ABUSE', 'enabled') !== 'disabled';
-        $abuseResetCode = $route->getLabel('abuse-reset', []);
-        $abuseResetCode = \is_array($abuseResetCode) ? $abuseResetCode : [$abuseResetCode];
-
-        if ($abuseEnabled && \count($abuseResetCode) > 0 && \in_array($response->getStatusCode(), $abuseResetCode)) {
-            $abuseKeyLabel = $route->getLabel('abuse-key', 'url:{url},ip:{ip}');
-            $abuseKeyLabel = (! is_array($abuseKeyLabel)) ? [$abuseKeyLabel] : $abuseKeyLabel;
-
-            foreach ($abuseKeyLabel as $abuseKey) {
-                $start = $request->getContentRangeStart();
-                $end = $request->getContentRangeEnd();
-                $timeLimit = $timelimit($abuseKey, $route->getLabel('abuse-limit', 0), $route->getLabel('abuse-time', 3600));
-                $timeLimit
-                    ->setParam('{projectId}', $project->getId())
-                    ->setParam('{userId}', $user->getId())
-                    ->setParam('{userAgent}', $request->getUserAgent(''))
-                    ->setParam('{ip}', $request->getIP())
-                    ->setParam('{url}', $request->getHostname() . $route->getPath())
-                    ->setParam('{method}', $request->getMethod())
-                    ->setParam('{chunkId}', (int) ($start / ($end + 1 - $start)));
-
-                foreach ($request->getParams() as $key => $value) { // Set request params as potential abuse keys
-                    if (! empty($value)) {
-                        $timeLimit->setParam('{param-' . $key . '}', (\is_array($value)) ? \json_encode($value) : $value);
-                    }
-                }
-
-                $abuse = new Abuse($timeLimit);
-                $abuse->reset();
-            }
-        }
-
-        /**
-         * Audit labels
-         */
         $pattern = $route->getLabel('audits.resource', null);
         if (! empty($pattern)) {
             $resource = $parseLabel($pattern, $responsePayload, $params, $user, $project);
