@@ -16,7 +16,7 @@
     "emails.magicSession.signature": "فريق {{project}}",
     "emails.recovery.subject": "تغيير كلمة السر",
     "emails.recovery.hello": "أهلا {{user}}،",
-    "emails.recovery.body": "برجاء اتباع الراط التالي لتغيير كلمة السر الخاصة بـ{{project}}",
+    "emails.recovery.body": "الرجاء اتباع الرابط التالي لتغيير كلمة السر الخاصة بـ{{project}}",
     "emails.recovery.footer": "لولم تطلب تغيير كلمة السر، يمكنك تجاهل هذه الرسالة",
     "emails.recovery.thanks": "شكرا،",
     "emails.recovery.buttonText": "إعادة تعيين كلمة المرور",
