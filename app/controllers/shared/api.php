@@ -38,7 +38,6 @@ use Utopia\Database\Validator\Authorization\Input;
 use Utopia\Database\Validator\Roles;
 use Utopia\Http\Http;
 use Utopia\Http\Route;
-use Utopia\Http\Router;
 use Utopia\Span\Span;
 use Utopia\System\System;
 use Utopia\Telemetry\Adapter as Telemetry;
@@ -787,6 +786,7 @@ Http::shutdown()
 Http::shutdown()
     ->groups(['api'])
     ->inject('route')
+    ->inject('params')
     ->inject('request')
     ->inject('response')
     ->inject('project')
@@ -806,7 +806,7 @@ Http::shutdown()
     ->inject('bus')
     ->inject('apiKey')
     ->inject('mode')
-    ->action(function (Route $route, Request $request, Response $response, Document $project, User $user, Event $queueForEvents, AuditContext $auditContext, Audit $publisherForAudits, Context $usage, UsagePublisher $publisherForUsage, FunctionPublisher $publisherForFunctions, Event $queueForWebhooks, Realtime $queueForRealtime, Database $dbForProject, Authorization $authorization, callable $timelimit, EventProcessor $eventProcessor, Bus $bus, ?Key $apiKey, string $mode) use ($parseLabel) {
+    ->action(function (Route $route, array $params, Request $request, Response $response, Document $project, User $user, Event $queueForEvents, AuditContext $auditContext, Audit $publisherForAudits, Context $usage, UsagePublisher $publisherForUsage, FunctionPublisher $publisherForFunctions, Event $queueForWebhooks, Realtime $queueForRealtime, Database $dbForProject, Authorization $authorization, callable $timelimit, EventProcessor $eventProcessor, Bus $bus, ?Key $apiKey, string $mode) use ($parseLabel) {
 
         $responsePayload = $response->getPayload();
 
@@ -863,13 +863,14 @@ Http::shutdown()
             }
         }
 
-        $preparedPath = Router::preparePath($route->getMatchedPath());
-        $pathValues = $route->getPathValues($request, $preparedPath[0]);
+        // $params holds the URL path values (injected from the route match);
+        // merge in query/body params and declared defaults to reproduce the
+        // full resolved param set, with path values taking precedence.
         $reqParams = $request->getParams();
 
         $requestParams = [];
         foreach ($route->getParams() as $key => $param) {
-            $requestParams[$key] = $pathValues[$key] ?? $reqParams[$key] ?? $param['default'];
+            $requestParams[$key] = $params[$key] ?? $reqParams[$key] ?? $param['default'];
         }
 
         /**
