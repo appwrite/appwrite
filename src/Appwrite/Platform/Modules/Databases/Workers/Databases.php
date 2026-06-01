@@ -620,11 +620,11 @@ class Databases extends Action
                 $callback
             );
         } catch (\Throwable $th) {
-            Span::add('delete_by_group.namespace', $database->getNamespace());
-            Span::add('delete_by_group.collection.id', $collectionId);
+            Span::add('database.namespace', $database->getNamespace());
             if ($database->getSharedTables()) {
-                Span::add('delete_by_group.tenant', $database->getTenant());
+                Span::add('database.tenant', $database->getTenant());
             }
+            Span::add('delete_by_group.collection', $collectionId);
             Span::add('delete_by_group.error', $th->getMessage());
             return;
         }
