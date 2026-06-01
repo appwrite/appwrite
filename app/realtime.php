@@ -8,7 +8,7 @@ use Appwrite\Extend\Exception as AppwriteException;
 use Appwrite\Messaging\Adapter\Realtime;
 use Appwrite\Network\Validator\Origin;
 use Appwrite\Presences\State as PresenceState;
-use Appwrite\PubSub\Adapter\Redis as PubSubRedis;
+use Appwrite\PubSub\Adapter as PubSubAdapter;
 use Appwrite\Realtime\Message\Dispatcher as MessageDispatcher;
 use Appwrite\Realtime\Message\Handlers\Authentication as AuthenticationHandler;
 use Appwrite\Realtime\Message\Handlers\Ping as PingHandler;
@@ -257,23 +257,18 @@ if (!function_exists('getRealtimePubSub')) {
      * Build a dedicated Redis connection for the worker's long-lived pub/sub subscription.
      *
      * The subscribe loop blocks on this connection for the worker's entire life, so it must
-     * own its connection rather than borrow a pool slot it would never return. A fresh,
-     * non-persistent socket is opened per call so each reconnect attempt starts clean.
+     * own its connection rather than borrow a pool slot it would never return. The connection
+     * is built by the shared factoryForPubSub resource, and a fresh socket is opened per call
+     * so each reconnect attempt starts clean.
      */
-    function getRealtimePubSub(): PubSubRedis
+    function getRealtimePubSub(): PubSubAdapter
     {
-        $host = System::getEnv('_APP_REDIS_HOST', 'localhost');
-        $port = System::getEnv('_APP_REDIS_PORT', 6379);
-        $pass = System::getEnv('_APP_REDIS_PASS', '');
+        global $container;
 
-        $redis = new \Redis();
-        $redis->connect($host, (int)$port);
-        if ($pass) {
-            $redis->auth($pass);
-        }
-        $redis->setOption(\Redis::OPT_READ_TIMEOUT, -1);
+        /** @var callable(): PubSubAdapter $factory */
+        $factory = $container->get('factoryForPubSub');
 
-        return new PubSubRedis($redis);
+        return $factory();
     }
 }
 
