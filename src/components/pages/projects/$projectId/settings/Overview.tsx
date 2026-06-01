@@ -70,7 +70,6 @@ import {
   protocolsRecordFromProject,
   servicesRecordFromProject,
   patchProjectProtocolsInCache,
-  patchProjectServicesInCache,
 } from '@/lib/project-settings'
 import { GitConfigurationCard } from './GitConfigurationCard'
 import { getApiEndpoint } from '@/lib/appwrite/sdk'
@@ -199,8 +198,11 @@ export function ProjectSettingsOverview({
   const queryClient = useQueryClient()
   const search = useSearch({ from: '/_public/projects/$projectId/settings' })
 
-  const { project, isLoading: projectLoading } = useProject(projectId)
-  const rawProjectData = project
+  const {
+    project,
+    projectData: rawProjectData,
+    isLoading: projectLoading,
+  } = useProject(projectId)
 
   // Check permissions (assuming project has permissions info)
   // For now, we'll assume canWriteProjects is true if project exists
@@ -330,14 +332,6 @@ export function ProjectSettingsOverview({
       })
   }
 
-  const patchCachedService = (serviceId: ProjectServiceId, enabled: boolean) => {
-    queryClient.setQueryData<Models.Project | undefined>(
-      ['project', projectId],
-      (current) =>
-        current ? patchProjectServicesInCache(current, serviceId, enabled) : current,
-    )
-  }
-
   const patchCachedProtocol = (
     protocolId: ProjectProtocolId,
     enabled: boolean,
@@ -384,6 +378,16 @@ export function ProjectSettingsOverview({
     },
   })
 
+  const setServicesFromProjectResponse = (response: Models.Project) => {
+    setServices(
+      servicesRecordFromProject(
+        response,
+        PROJECT_SERVICES.map((service) => service.id),
+      ),
+    )
+    queryClient.setQueryData<Models.Project>(['project', projectId], response)
+  }
+
   // Mutation to update service status
   const updateServiceMutation = useMutation({
     mutationFn: async ({
@@ -397,19 +401,14 @@ export function ProjectSettingsOverview({
       return { response, service, status }
     },
     onSuccess: (data) => {
-      const { service, status } = data
+      const { response, service, status } = data
       const serviceLabel =
         PROJECT_SERVICES.find((item) => item.id === service)?.label ?? service
       toast.success(
         `${serviceLabel} service has been ${status ? 'enabled' : 'disabled'}`,
       )
 
-      setServices((prev) => ({
-        ...prev,
-        [service]: status,
-      }))
-
-      patchCachedService(service, status)
+      setServicesFromProjectResponse(response)
 
       setUpdatingServices((prev) => {
         const next = new Set(prev)
@@ -444,28 +443,14 @@ export function ProjectSettingsOverview({
       return { response, status }
     },
     onSuccess: (data) => {
-      const { status } = data
+      const { response, status } = data
       toast.success(
         `All services for ${project?.name || 'project'} has been ${status ? 'enabled' : 'disabled'}.`,
       )
 
-      setServices(
-        Object.fromEntries(
-          PROJECT_SERVICES.map((service) => [service.id, status]),
-        ),
-      )
-
-      queryClient.setQueryData<Models.Project | undefined>(
-        ['project', projectId],
-        (current) => {
-          if (!current) return current
-          let next = current
-          for (const service of PROJECT_SERVICES) {
-            next = patchProjectServicesInCache(next, service.id, status)
-          }
-          return next
-        },
-      )
+      if (response) {
+        setServicesFromProjectResponse(response)
+      }
       // Track analytics: Submit.ProjectService
     },
     onError: (error: Error) => {

@@ -596,6 +596,7 @@ export function useProject(projectId: string | undefined) {
 
   return {
     project,
+    projectData,
     isLoading,
     error,
     refetch,
