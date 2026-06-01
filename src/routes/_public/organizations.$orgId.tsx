@@ -135,11 +135,17 @@ function OrganizationLayout() {
   const isOrgDomainsWizardRoute =
     pathname.includes('/domains/buy') ||
     pathname.includes('/domains/transfer-in')
+  const isUpgradeWizardRoute = pathname === '/upgrade'
+  const renderOutletOnly =
+    isDomainDetailRoute ||
+    isSupportRoute ||
+    isOrgDomainsWizardRoute ||
+    isUpgradeWizardRoute
 
   return (
     <RequireAuth>
-      {isDomainDetailRoute || isSupportRoute || isOrgDomainsWizardRoute ? (
-        // Domain detail, support, and domain wizards: outlet only (fullscreen / own chrome)
+      {renderOutletOnly ? (
+        // Domain detail, support, upgrade, and domain wizards: outlet only (fullscreen / own chrome)
         <Outlet />
       ) : (
         // For other routes, render OrgOverview which provides header/tabs

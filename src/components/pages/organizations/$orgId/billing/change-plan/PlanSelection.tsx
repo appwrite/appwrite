@@ -105,8 +105,9 @@ export function PlanSelection({
     hasFreeOrgs &&
     (isCreateMode || !isOrganizationOnFreePlan)
 
-  const isDisabled = (_planTier: string) => {
+  const isDisabled = (planTier: string) => {
     if (!selfService) return true
+    if (isCreateMode && isFreeDisabledByAccountLimit(planTier)) return true
     return false
   }
 

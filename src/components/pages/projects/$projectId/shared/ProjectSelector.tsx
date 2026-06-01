@@ -548,6 +548,7 @@ export function ProjectSelector({
             <ProjectSelectorPlanBadge
               plan={currentProjectOrg.plan}
               billingStress={!!billingFailureTeamId}
+              upcomingDowngrade={!!currentProjectOrg.billingPlanDowngrade}
             />
           )}
           <ChevronDown className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
@@ -637,6 +638,7 @@ export function ProjectSelector({
                 <ProjectSelectorPlanBadge
                   plan={currentProjectOrg.plan}
                   billingStress={!!billingFailureTeamId}
+                  upcomingDowngrade={!!currentProjectOrg.billingPlanDowngrade}
                 />
               )}
             </div>
@@ -833,10 +835,14 @@ function ProjectSelectorContent({
                         <span
                           className={cn(
                             'shrink-0 rounded px-1.5 py-0.5 text-[10px] font-medium capitalize',
-                            getPlanBadgeColor(teamOrg.plan),
+                            teamOrg.billingPlanDowngrade
+                              ? 'border border-amber-500/20 bg-amber-500/10 text-amber-600 dark:text-amber-400'
+                              : getPlanBadgeColor(teamOrg.plan),
                           )}
                         >
-                          {getPlanDisplayName(teamOrg.plan)}
+                          {teamOrg.billingPlanDowngrade
+                            ? 'Downgraded'
+                            : getPlanDisplayName(teamOrg.plan)}
                         </span>
                       )}
                     </div>
@@ -1133,10 +1139,14 @@ function MobileProjectSelectorContent({
                         <span
                           className={cn(
                             'shrink-0 rounded px-1.5 py-0.5 text-[10px] font-medium capitalize',
-                            getPlanBadgeColor(teamOrg.plan),
+                            teamOrg.billingPlanDowngrade
+                              ? 'border border-amber-500/20 bg-amber-500/10 text-amber-600 dark:text-amber-400'
+                              : getPlanBadgeColor(teamOrg.plan),
                           )}
                         >
-                          {getPlanDisplayName(teamOrg.plan)}
+                          {teamOrg.billingPlanDowngrade
+                            ? 'Downgraded'
+                            : getPlanDisplayName(teamOrg.plan)}
                         </span>
                       )}
                       {selectedTeam.$id === team.$id && (

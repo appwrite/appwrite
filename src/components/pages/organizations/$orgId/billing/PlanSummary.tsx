@@ -855,16 +855,6 @@ export function PlanSummary({ onChangePlan, orgId }: PlanSummaryProps) {
                 Change plan
               </Button>
             )}
-            {organization?.billingPlanDowngrade && (
-              <Button
-                variant="outline"
-                size="sm"
-                className="h-9 text-[13px]"
-                onClick={onChangePlan}
-              >
-                Cancel change
-              </Button>
-            )}
           </div>
         </div>
       )}

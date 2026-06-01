@@ -22,6 +22,7 @@ import {
   Braces,
   CalendarDays,
   Ticket,
+  Boxes,
 } from 'lucide-react'
 import {
   Popover,
@@ -71,6 +72,7 @@ import type { ConsoleProfileFeatures } from '@/lib/console-profiles'
 import { DebugMenuPrefsPanel } from '@/components/global/providers/DebugMenuPrefsPanel'
 import { DebugMenuInitDayPanel } from '@/components/global/providers/DebugMenuInitDayPanel'
 import { DebugMenuInitTicketPanel } from '@/components/global/providers/DebugMenuInitTicketPanel'
+import { DebugMenuSeedResourcesPanel } from '@/components/global/providers/DebugMenuSeedResourcesPanel'
 import {
   useInitLowPowerAnimationDecision,
   type InitLowPowerAnimationDecision,
@@ -98,7 +100,12 @@ interface MenuItem {
   description?: string
   submenu?: MenuItem[]
   /** Opens the profile comparison table instead of a submenu list. */
-  submenuVariant?: 'profileComparison' | 'prefsDebug' | 'initDayMock' | 'initTicketMock'
+  submenuVariant?:
+    | 'profileComparison'
+    | 'prefsDebug'
+    | 'initDayMock'
+    | 'initTicketMock'
+    | 'seedResources'
   /** Extra classes on submenu row buttons (e.g. separator above reset actions). */
   rowClassName?: string
 }
@@ -124,7 +131,8 @@ function menuItemHasSubmenu(item: MenuItem): boolean {
     item.submenuVariant === 'profileComparison' ||
     item.submenuVariant === 'prefsDebug' ||
     item.submenuVariant === 'initDayMock' ||
-    item.submenuVariant === 'initTicketMock'
+    item.submenuVariant === 'initTicketMock' ||
+    item.submenuVariant === 'seedResources'
   )
 }
 
@@ -219,7 +227,9 @@ function getLowPowerDecisionDescription(
   decision: InitLowPowerAnimationDecision,
 ) {
   const result = decision.enabled ? 'enabled' : 'disabled'
-  const jool = decision.joolAnimationEnabled ? 'Jool can animate' : 'Jool is blocked'
+  const jool = decision.joolAnimationEnabled
+    ? 'Jool can animate'
+    : 'Jool is blocked'
   if (decision.override !== 'auto') {
     return `Result: ${result}. ${decision.reason} Auto would be ${
       decision.autoDetected ? 'enabled' : 'disabled'
@@ -308,22 +318,11 @@ function ConsoleProfileComparisonTable({
   )
 }
 
-function TableRow({
-  className,
-  ...props
-}: ComponentProps<'tr'>) {
-  return (
-    <tr
-      className={cn('hover:bg-[#9B87F5]/5', className)}
-      {...props}
-    />
-  )
+function TableRow({ className, ...props }: ComponentProps<'tr'>) {
+  return <tr className={cn('hover:bg-[#9B87F5]/5', className)} {...props} />
 }
 
-function TableHead({
-  className,
-  ...props
-}: ComponentProps<'th'>) {
+function TableHead({ className, ...props }: ComponentProps<'th'>) {
   return (
     <th
       className={cn(
@@ -335,10 +334,7 @@ function TableHead({
   )
 }
 
-function TableCell({
-  className,
-  ...props
-}: ComponentProps<'td'>) {
+function TableCell({ className, ...props }: ComponentProps<'td'>) {
   return (
     <td
       className={cn('px-2 py-1.5 align-middle text-[#E5DEFF]', className)}
@@ -726,7 +722,8 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
           },
           {
             label: 'Org setup wizard',
-            description: 'Preview the organization creation setup progress stage.',
+            description:
+              'Preview the organization creation setup progress stage.',
             onClick: () => {
               navigate({ to: '/debug/org-setup-preview' })
               setIsOpen(false)
@@ -764,6 +761,13 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
             submenuVariant: 'prefsDebug',
           },
           {
+            label: 'Seed resources',
+            description:
+              'Create projects, mock memberships, empty DBs, buckets, and domains in the current context.',
+            icon: <Boxes className="h-3 w-3" />,
+            submenuVariant: 'seedResources',
+          },
+          {
             label: 'Init',
             description: getInitSubmenuDescription(overrides),
             icon: <CalendarDays className="h-3 w-3" />,
@@ -771,7 +775,8 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
           },
           {
             label: 'Feature flags',
-            description: 'Console profile overrides (dedicated DBs, org features, and more)',
+            description:
+              'Console profile overrides (dedicated DBs, org features, and more)',
             icon: <FlaskConical className="h-3 w-3" />,
             submenu: [
               {
@@ -865,8 +870,7 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
                 switchValue: features.oauthApps,
                 switchOnChange: (checked: boolean) => {
                   setTimeout(
-                    () =>
-                      setDebugProfileFeatureOverride('oauthApps', checked),
+                    () => setDebugProfileFeatureOverride('oauthApps', checked),
                     0,
                   )
                 },
@@ -879,8 +883,7 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
                 switchValue: features.orgApiKeys,
                 switchOnChange: (checked: boolean) => {
                   setTimeout(
-                    () =>
-                      setDebugProfileFeatureOverride('orgApiKeys', checked),
+                    () => setDebugProfileFeatureOverride('orgApiKeys', checked),
                     0,
                   )
                 },
@@ -1032,18 +1035,18 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
                   profileId === 'cloud'
                     ? undefined
                     : () => {
-                  const url = window.prompt(
-                    'Enter API endpoint URL (e.g. https://my-appwrite.example/v1)',
-                    endpointPreset === 'custom' && endpointCustomUrl
-                      ? endpointCustomUrl
-                      : 'https://cloud.appwrite.io/v1',
-                  )
-                  if (url?.trim()) {
-                    applyOverrideAndReload(() =>
-                      setDebugEndpointOverride('custom', url.trim()),
-                    )
-                  }
-                },
+                        const url = window.prompt(
+                          'Enter API endpoint URL (e.g. https://my-appwrite.example/v1)',
+                          endpointPreset === 'custom' && endpointCustomUrl
+                            ? endpointCustomUrl
+                            : 'https://cloud.appwrite.io/v1',
+                        )
+                        if (url?.trim()) {
+                          applyOverrideAndReload(() =>
+                            setDebugEndpointOverride('custom', url.trim()),
+                          )
+                        }
+                      },
                 active: endpointPreset === 'custom',
                 disabled: profileId === 'cloud',
                 icon: <Globe className="h-3 w-3" />,
@@ -1173,9 +1176,10 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
           className={cn(
             'z-[10060] max-h-[85dvh] overflow-hidden rounded-xl border border-[#9B87F5]/25 bg-[#1A1F2C] p-0 shadow-xl',
             currentSubmenu?.submenuVariant === 'profileComparison' ||
-            currentSubmenu?.submenuVariant === 'prefsDebug' ||
-            currentSubmenu?.submenuVariant === 'initDayMock' ||
-            currentSubmenu?.submenuVariant === 'initTicketMock'
+              currentSubmenu?.submenuVariant === 'prefsDebug' ||
+              currentSubmenu?.submenuVariant === 'seedResources' ||
+              currentSubmenu?.submenuVariant === 'initDayMock' ||
+              currentSubmenu?.submenuVariant === 'initTicketMock'
               ? 'w-[min(92vw,720px)]'
               : 'w-80',
           )}
@@ -1206,94 +1210,96 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
             {currentSubmenu ? (
               currentSubmenu.submenuVariant === 'profileComparison' ? (
                 <div className="px-1" aria-label={currentSubmenu.title}>
-                  <ConsoleProfileComparisonTable
-                    activeProfileId={profileId}
-                  />
+                  <ConsoleProfileComparisonTable activeProfileId={profileId} />
                 </div>
               ) : currentSubmenu.submenuVariant === 'prefsDebug' ? (
                 <DebugMenuPrefsPanel />
+              ) : currentSubmenu.submenuVariant === 'seedResources' ? (
+                <DebugMenuSeedResourcesPanel />
               ) : currentSubmenu.submenuVariant === 'initDayMock' ? (
                 <DebugMenuInitDayPanel />
               ) : currentSubmenu.submenuVariant === 'initTicketMock' ? (
                 <DebugMenuInitTicketPanel />
               ) : (
-              <nav className="space-y-0.5" aria-label={currentSubmenu.title}>
-                {currentSubmenu.items.map((item, itemIndex) => {
-                  const nestedSubmenuKey = activeSubmenu
-                    ? `${activeSubmenu}-${item.label}`
-                    : null
-                  const hasNestedSubmenu = menuItemHasSubmenu(item)
+                <nav className="space-y-0.5" aria-label={currentSubmenu.title}>
+                  {currentSubmenu.items.map((item, itemIndex) => {
+                    const nestedSubmenuKey = activeSubmenu
+                      ? `${activeSubmenu}-${item.label}`
+                      : null
+                    const hasNestedSubmenu = menuItemHasSubmenu(item)
 
-                  return item.variant === 'switch' ? (
-                    <div
-                      key={`submenu-${itemIndex}`}
-                      className={cn(
-                        'flex items-center justify-between gap-3 rounded-lg px-3 py-2.5 transition-colors hover:bg-[#9B87F5]/10',
-                        item.disabled && 'opacity-50',
-                      )}
-                    >
-                      <div className="flex-1 min-w-0">
-                        <div className="text-[13px] font-medium text-[#E5DEFF]">
-                          {item.label}
-                        </div>
-                        {item.description && (
-                          <div className="mt-0.5 text-[11px] text-[#9B87F5]/80">
-                            {item.description}
-                          </div>
+                    return item.variant === 'switch' ? (
+                      <div
+                        key={`submenu-${itemIndex}`}
+                        className={cn(
+                          'flex items-center justify-between gap-3 rounded-lg px-3 py-2.5 transition-colors hover:bg-[#9B87F5]/10',
+                          item.disabled && 'opacity-50',
                         )}
+                      >
+                        <div className="flex-1 min-w-0">
+                          <div className="text-[13px] font-medium text-[#E5DEFF]">
+                            {item.label}
+                          </div>
+                          {item.description && (
+                            <div className="mt-0.5 text-[11px] text-[#9B87F5]/80">
+                              {item.description}
+                            </div>
+                          )}
+                        </div>
+                        <Switch
+                          checked={item.switchValue}
+                          onCheckedChange={item.switchOnChange}
+                          disabled={item.disabled}
+                          className="flex-shrink-0"
+                        />
                       </div>
-                      <Switch
-                        checked={item.switchValue}
-                        onCheckedChange={item.switchOnChange}
+                    ) : (
+                      <button
+                        key={`submenu-${itemIndex}`}
+                        type="button"
+                        onClick={() => {
+                          if (hasNestedSubmenu && nestedSubmenuKey) {
+                            setActiveSubmenu(nestedSubmenuKey)
+                          } else if (item.onClick) {
+                            item.onClick()
+                          }
+                        }}
                         disabled={item.disabled}
-                        className="flex-shrink-0"
-                      />
-                    </div>
-                  ) : (
-                    <button
-                      key={`submenu-${itemIndex}`}
-                      type="button"
-                      onClick={() => {
-                        if (hasNestedSubmenu && nestedSubmenuKey) {
-                          setActiveSubmenu(nestedSubmenuKey)
-                        } else if (item.onClick) {
-                          item.onClick()
-                        }
-                      }}
-                      disabled={item.disabled}
-                      className={`flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-left text-[13px] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#9B87F5]/50 ${
-                        item.disabled
-                          ? 'cursor-not-allowed opacity-50'
-                          : item.active
-                          ? 'bg-[#9B87F5]/25 text-white'
-                          : 'text-[#E5DEFF]/90 hover:bg-[#9B87F5]/15 hover:text-white'
-                      } ${item.rowClassName ?? ''}`}
-                    >
-                      {item.icon && (
-                        <span className="flex-shrink-0 text-[#9B87F5]">
-                          {item.icon}
-                        </span>
-                      )}
-                      <span className="flex-1">
-                        <span className="block font-medium">{item.label}</span>
-                        {item.description && (
-                          <span className="mt-0.5 block text-[11px] font-normal opacity-80">
-                            {item.description}
+                        className={`flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-left text-[13px] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#9B87F5]/50 ${
+                          item.disabled
+                            ? 'cursor-not-allowed opacity-50'
+                            : item.active
+                              ? 'bg-[#9B87F5]/25 text-white'
+                              : 'text-[#E5DEFF]/90 hover:bg-[#9B87F5]/15 hover:text-white'
+                        } ${item.rowClassName ?? ''}`}
+                      >
+                        {item.icon && (
+                          <span className="flex-shrink-0 text-[#9B87F5]">
+                            {item.icon}
                           </span>
                         )}
-                      </span>
-                      {item.badge !== undefined && (
-                        <span className="flex-shrink-0 rounded-full bg-[#9B87F5]/30 px-2 py-0.5 text-[11px] font-medium text-[#9B87F5]">
-                          {item.badge}
+                        <span className="flex-1">
+                          <span className="block font-medium">
+                            {item.label}
+                          </span>
+                          {item.description && (
+                            <span className="mt-0.5 block text-[11px] font-normal opacity-80">
+                              {item.description}
+                            </span>
+                          )}
                         </span>
-                      )}
-                      {hasNestedSubmenu && (
-                        <ChevronRight className="h-4 w-4 flex-shrink-0 text-[#9B87F5]/60" />
-                      )}
-                    </button>
-                  )
-                })}
-              </nav>
+                        {item.badge !== undefined && (
+                          <span className="flex-shrink-0 rounded-full bg-[#9B87F5]/30 px-2 py-0.5 text-[11px] font-medium text-[#9B87F5]">
+                            {item.badge}
+                          </span>
+                        )}
+                        {hasNestedSubmenu && (
+                          <ChevronRight className="h-4 w-4 flex-shrink-0 text-[#9B87F5]/60" />
+                        )}
+                      </button>
+                    )
+                  })}
+                </nav>
               )
             ) : (
               <nav className="space-y-5" aria-label="Debug options">

@@ -113,14 +113,24 @@ export function getMemberLimit(
 export function getDowngradePlanLimits(
   targetPlan: Record<string, unknown> | null | undefined,
 ): DowngradePlanLimits {
+  const planName =
+    typeof targetPlan?.name === 'string' ? targetPlan.name.toLowerCase() : ''
+  const isFreePlan =
+    planName.includes('free') ||
+    planName === 'starter' ||
+    (targetPlan &&
+      Number(targetPlan.price ?? 0) === 0 &&
+      Number(targetPlan.order ?? 0) <= 0)
+
   return {
     projects:
       readPlanLimit(targetPlan, 'projects') ??
       readAddonLimit(targetPlan, 'projects'),
-    members: getMemberLimit(targetPlan),
+    members: getMemberLimit(targetPlan) ?? (isFreePlan ? 1 : null),
     domains:
       readPlanLimit(targetPlan, 'domains', true) ??
-      readAddonLimit(targetPlan, 'domains', true),
+      readAddonLimit(targetPlan, 'domains', true) ??
+      (isFreePlan ? 0 : null),
     databases: readPlanLimit(targetPlan, 'databases'),
     buckets: readPlanLimit(targetPlan, 'buckets'),
     functions: readPlanLimit(targetPlan, 'functions'),

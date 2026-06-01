@@ -73,18 +73,22 @@ type ProjectSelectorPlanBadgeProps = {
   plan: Organization['plan']
   /** When true, play shatter / stress motion (same signal as billing header alert - no extra fetch). */
   billingStress: boolean
+  upcomingDowngrade?: boolean
   className?: string
 }
 
 export function ProjectSelectorPlanBadge({
   plan,
   billingStress,
+  upcomingDowngrade = false,
   className,
 }: ProjectSelectorPlanBadgeProps) {
-  const label = getPlanDisplayName(plan)
-  const colors = getPlanBadgeColor(plan)
+  const label = upcomingDowngrade ? 'Downgraded' : getPlanDisplayName(plan)
+  const colors = upcomingDowngrade
+    ? 'border-amber-500/20 bg-amber-500/10 text-amber-600 dark:text-amber-400'
+    : getPlanBadgeColor(plan)
 
-  if (!billingStress) {
+  if (!billingStress || upcomingDowngrade) {
     return (
       <span
         className={cn(

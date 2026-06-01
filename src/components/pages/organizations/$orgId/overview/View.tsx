@@ -294,7 +294,7 @@ function EmptyMemberAvatarSlot({
         'relative flex shrink-0 items-center justify-center rounded-full border-2 border-background focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2',
         disabled
           ? 'cursor-not-allowed opacity-50'
-          : 'cursor-pointer hover:opacity-90',
+          : 'cursor-pointer',
       )}
       style={{ zIndex }}
       title={disabled ? undefined : 'Invite member'}
@@ -804,6 +804,7 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
         name: string
         total?: number
         billingPlan?: string
+        billingPlanDowngrade?: unknown
         tier?: string
         prefs?: Record<string, unknown>
         status?: string
@@ -821,6 +822,7 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
           plan,
           members: org.total || 0,
           status: org.status,
+          billingPlanDowngrade: org.billingPlanDowngrade,
         }
       },
     )
@@ -1657,10 +1659,14 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                         <Badge
                           className={cn(
                             'shrink-0 rounded px-1.5 py-0.5 text-[10px] font-medium leading-none',
-                            getPlanBadgeColor(selectedOrg.plan),
+                            selectedOrg.billingPlanDowngrade
+                              ? 'border-amber-500/20 bg-amber-500/10 text-amber-600 dark:text-amber-400'
+                              : getPlanBadgeColor(selectedOrg.plan),
                           )}
                         >
-                          {getPlanDisplayName(selectedOrg.plan)}
+                          {selectedOrg.billingPlanDowngrade
+                            ? 'Downgraded'
+                            : getPlanDisplayName(selectedOrg.plan)}
                         </Badge>
                       )}
                       <ChevronDown className="h-3.5 w-3.5 shrink-0 text-muted-foreground transition-transform group-data-[state=open]:rotate-180" />
@@ -1695,10 +1701,14 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                                 <span
                                   className={cn(
                                     'rounded px-1.5 py-0.5 text-[10px] font-medium',
-                                    getPlanBadgeColor(org.plan),
+                                    org.billingPlanDowngrade
+                                      ? 'border-amber-500/20 bg-amber-500/10 text-amber-600 dark:text-amber-400'
+                                      : getPlanBadgeColor(org.plan),
                                   )}
                                 >
-                                  {getPlanDisplayName(org.plan)}
+                                  {org.billingPlanDowngrade
+                                    ? 'Downgraded'
+                                    : getPlanDisplayName(org.plan)}
                                 </span>
                               )}
                               <span className="text-[11px] text-muted-foreground">
@@ -1809,7 +1819,7 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                               to="/organizations/$orgId/settings/members"
                               params={{ orgId: orgId! }}
                               className={cn(
-                                'flex h-8 min-h-8 items-center rounded-full focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 cursor-pointer hover:opacity-90 transition-opacity',
+                                'flex h-8 min-h-8 items-center rounded-full focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 cursor-pointer',
                                 (displayMembers.length > 1 ||
                                   (displayMembers.length > 0 && showOverflow)) &&
                                   '-space-x-2',
@@ -3399,7 +3409,7 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                                             <Link
                                               to="/organizations/$orgId/settings/members"
                                               params={{ orgId: orgId! }}
-                                              className="flex -space-x-2 rounded-full focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 cursor-pointer hover:opacity-90 transition-opacity"
+                                              className="flex -space-x-2 rounded-full focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 cursor-pointer"
                                               title="View members"
                                               onClick={() =>
                                                 setDeleteOrgDialogOpen(false)

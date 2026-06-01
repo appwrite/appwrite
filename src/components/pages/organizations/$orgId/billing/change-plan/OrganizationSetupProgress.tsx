@@ -3,17 +3,27 @@ import { cn } from '@/lib/utils'
 
 export type OrganizationSetupPhase =
   | 'submitting'
+  | 'updating-plan'
+  | 'deleting-projects'
+  | 'deleting-resources'
+  | 'deleting-memberships'
+  | 'deleting-organization'
   | 'confirming-payment'
   | 'activating'
   | 'complete'
 
 export type OrganizationSetupProgressState = {
-  mode: 'create' | 'upgrade'
+  mode: 'create' | 'upgrade' | 'downgrade'
   phase: OrganizationSetupPhase
   organizationName?: string
   planLabel: string
   showPaymentStep: boolean
   showActivationStep: boolean
+  showPlanUpdateStep?: boolean
+  showProjectDeletionStep?: boolean
+  showResourceDeletionStep?: boolean
+  showMembershipDeletionStep?: boolean
+  showOrganizationDeletionStep?: boolean
 }
 
 type SetupStep = {
@@ -23,21 +33,114 @@ type SetupStep = {
 }
 
 function buildSteps(state: OrganizationSetupProgressState): SetupStep[] {
-  const { mode, planLabel, showPaymentStep, showActivationStep, organizationName } =
-    state
+  const {
+    mode,
+    planLabel,
+    showPaymentStep,
+    showActivationStep,
+    organizationName,
+    showPlanUpdateStep,
+    showProjectDeletionStep,
+    showResourceDeletionStep,
+    showMembershipDeletionStep,
+    showOrganizationDeletionStep,
+  } = state
+
+  if (mode === 'downgrade') {
+    const steps: SetupStep[] = []
+
+    if (showResourceDeletionStep) {
+      steps.push({
+        phase: 'deleting-resources',
+        label: 'Deleting resources',
+        description: 'Removing resources that are not kept for the target plan.',
+      })
+    }
+
+    if (showOrganizationDeletionStep) {
+      steps.push({
+        phase: 'deleting-organization',
+        label: 'Deleting organization',
+        description: 'Removing the organization you chose not to keep.',
+      })
+    }
+
+    if (showProjectDeletionStep) {
+      steps.push({
+        phase: 'deleting-projects',
+        label: 'Deleting projects',
+        description: 'Removing projects that are not kept for the target plan.',
+      })
+    }
+
+    if (showPlanUpdateStep) {
+      steps.push({
+        phase: 'updating-plan',
+        label: 'Updating plan',
+        description: `Applying your ${planLabel} plan changes.`,
+      })
+    }
+
+    if (showMembershipDeletionStep) {
+      steps.push({
+        phase: 'deleting-memberships',
+        label: 'Deleting members',
+        description: 'Removing members that are not kept for the target plan.',
+      })
+    }
+
+    steps.push({
+      phase: 'complete',
+      label: 'Finishing up',
+      description: 'Preparing your organization dashboard.',
+    })
+
+    return steps
+  }
 
   const steps: SetupStep[] = [
     {
       phase: 'submitting',
-      label: mode === 'create' ? 'Creating organization' : 'Updating plan',
+      label:
+        mode === 'create'
+          ? 'Creating organization'
+          : mode === 'downgrade'
+            ? 'Preparing downgrade'
+            : 'Updating plan',
       description:
         mode === 'create'
           ? organizationName
             ? `Setting up ${organizationName} and your billing profile.`
             : 'Setting up your workspace and billing profile.'
+          : mode === 'downgrade'
+            ? `Preparing your ${planLabel} plan changes.`
           : `Applying your ${planLabel} plan changes.`,
     },
   ]
+
+  if (showProjectDeletionStep) {
+    steps.push({
+      phase: 'deleting-projects',
+      label: 'Deleting projects',
+      description: 'Removing projects that are not kept for the target plan.',
+    })
+  }
+
+  if (showResourceDeletionStep) {
+    steps.push({
+      phase: 'deleting-resources',
+      label: 'Deleting resources',
+      description: 'Removing resources that are not kept for the target plan.',
+    })
+  }
+
+  if (showOrganizationDeletionStep) {
+    steps.push({
+      phase: 'deleting-organization',
+      label: 'Deleting organization',
+      description: 'Removing the organization you chose not to keep.',
+    })
+  }
 
   if (showPaymentStep) {
     steps.push({
@@ -81,6 +184,8 @@ export function OrganizationSetupProgress({
   const headline =
     progress.mode === 'create'
       ? 'Setting up your organization'
+      : progress.mode === 'downgrade'
+        ? 'Downgrading your plan'
       : 'Updating your plan'
 
   return (

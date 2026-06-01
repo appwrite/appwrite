@@ -45,16 +45,9 @@ function ImpactListSection({
   return (
     <div className="space-y-2">
       <p className="text-[13px] font-medium text-foreground">{title}</p>
-      <ul className="space-y-1.5">
-        {items.map((item) => (
-          <li
-            key={item.$id}
-            className="text-[13px] leading-normal text-red-600 dark:text-red-400"
-          >
-            {getLabel(item)}
-          </li>
-        ))}
-      </ul>
+      <p className="text-[13px] leading-normal text-red-600 dark:text-red-400">
+        {items.map((item) => getLabel(item)).join(', ')}
+      </p>
     </div>
   )
 }

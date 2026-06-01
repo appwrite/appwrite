@@ -1438,6 +1438,7 @@ export function useOrganizations() {
         name: string
         total?: number
         billingPlan?: string
+        billingPlanDowngrade?: unknown
         status?: string
       }
       // Map billingPlan to plan name using the filter
@@ -1451,6 +1452,7 @@ export function useOrganizations() {
         plan,
         members: o.total || 0,
         status: o.status,
+        billingPlanDowngrade: o.billingPlanDowngrade,
       }
     }) as Organization[]
   }, [organizationsData])

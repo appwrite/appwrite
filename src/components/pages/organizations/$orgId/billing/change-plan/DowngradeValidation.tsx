@@ -30,6 +30,7 @@ export type DowngradeValidationHandle = {
   getSelectedDomainIds: () => string[]
   isValid: () => boolean
   deleteMarkedResources: () => Promise<void>
+  deleteMarkedMemberships: () => Promise<void>
 }
 
 export type { DowngradeResourceValidationHandle }
@@ -228,9 +229,10 @@ export function DowngradeValidation({
   const domainsTotal = domainsData?.total ?? domains.length
 
   const needsMemberSelection =
-    membersLimit !== null && membershipsTotal > membersLimit
+    membersLimit !== null &&
+    (membershipsLoading || membershipsTotal > membersLimit)
   const needsDomainSelection =
-    domainsLimit !== null && domainsTotal > domainsLimit
+    domainsLimit !== null && (domainsLoading || domainsTotal > domainsLimit)
 
   const pageCurrentUserMembership = useMemo(
     () => findCurrentUserMembership(memberships, accountModel),
@@ -521,23 +523,13 @@ export function DowngradeValidation({
   selectedMemberIdsRef.current = selectedMemberIds
   selectedDomainIdsRef.current = selectedDomainIds
 
-  const deleteMarkedResources = useCallback(async () => {
-    const [allMemberships, allDomains] = await Promise.all([
-      needsMemberSelection
-        ? fetchAllDowngradeMemberships(organizationId)
-        : Promise.resolve(membershipsRef.current),
-      needsDomainSelection
-        ? fetchAllDowngradeDomains(organizationId)
-        : Promise.resolve(domainsRef.current),
-    ])
+  const deleteMarkedMemberships = useCallback(async () => {
+    if (!needsMemberSelection) return
 
+    const allMemberships = await fetchAllDowngradeMemberships(organizationId)
     const membershipIdsToDelete = allMemberships
       .filter((membership) => !selectedMemberIdsRef.current.has(membership.$id))
       .map((membership) => membership.$id)
-
-    const domainIdsToDelete = allDomains
-      .filter((domain) => !selectedDomainIdsRef.current.has(domain.$id))
-      .map((domain) => domain.$id)
 
     if (membershipIdsToDelete.length > 0) {
       await deleteDowngradeMemberships(
@@ -546,6 +538,16 @@ export function DowngradeValidation({
         Array.from(selectedMemberIdsRef.current),
       )
     }
+  }, [needsMemberSelection, organizationId])
+
+  const deleteMarkedResources = useCallback(async () => {
+    const allDomains = needsDomainSelection
+      ? await fetchAllDowngradeDomains(organizationId)
+      : []
+
+    const domainIdsToDelete = allDomains
+      .filter((domain) => !selectedDomainIdsRef.current.has(domain.$id))
+      .map((domain) => domain.$id)
 
     if (domainIdsToDelete.length > 0) {
       await deleteDowngradeDomains(
@@ -556,11 +558,13 @@ export function DowngradeValidation({
     }
 
     await resourceRef.current?.deleteMarkedResources()
-  }, [needsDomainSelection, needsMemberSelection, organizationId])
+  }, [needsDomainSelection, organizationId])
 
   const deleteMarkedResourcesRef = useRef(deleteMarkedResources)
+  const deleteMarkedMembershipsRef = useRef(deleteMarkedMemberships)
 
   deleteMarkedResourcesRef.current = deleteMarkedResources
+  deleteMarkedMembershipsRef.current = deleteMarkedMemberships
 
   useEffect(() => {
     onRefRef.current({
@@ -580,6 +584,7 @@ export function DowngradeValidation({
         )
       },
       deleteMarkedResources: () => deleteMarkedResourcesRef.current(),
+      deleteMarkedMemberships: () => deleteMarkedMembershipsRef.current(),
     })
 
     return () => {

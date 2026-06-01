@@ -11,6 +11,8 @@ export interface Organization {
   members: number
   /** Cloud billing: e.g. `readonly` when the org is restricted after failed payment */
   status?: string
+  /** Cloud billing: scheduled downgrade date or marker. */
+  billingPlanDowngrade?: unknown
 }
 
 export interface Team {

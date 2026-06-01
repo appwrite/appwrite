@@ -477,7 +477,7 @@ export function DowngradeResourceValidation({
     }
   }, [])
 
-  const lastReportedValidRef = useRef(isValid)
+  const lastReportedValidRef = useRef<boolean | null>(null)
 
   useEffect(() => {
     if (lastReportedValidRef.current === isValid) return
