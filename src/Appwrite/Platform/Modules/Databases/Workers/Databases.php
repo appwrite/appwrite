@@ -612,6 +612,10 @@ class Databases extends Action
      */
     protected function deleteByGroup(string $collectionId, array $queries, Database $database, ?callable $callback = null): void
     {
+        Span::add('database.namespace', $database->getNamespace());
+        Span::add('database.tenant', $database->getTenant());
+        Span::add('delete_by_group.collection', $collectionId);
+
         try {
             $count = $database->deleteDocuments(
                 $collectionId,
@@ -620,11 +624,6 @@ class Databases extends Action
                 $callback
             );
         } catch (\Throwable $th) {
-            Span::add('database.namespace', $database->getNamespace());
-            if ($database->getSharedTables()) {
-                Span::add('database.tenant', $database->getTenant());
-            }
-            Span::add('delete_by_group.collection', $collectionId);
             Span::add('delete_by_group.error', $th->getMessage());
             return;
         }
