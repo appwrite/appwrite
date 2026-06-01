@@ -104,8 +104,10 @@ abstract class Get extends Action
             }
         };
 
+        $plan = null;
         try {
-            $plan = $dbForDatabases->withExplain($scope);
+            // Rows are intentionally discarded — we only want the captured plan.
+            $dbForDatabases->withExplain($scope, $plan);
         } catch (OrderException $e) {
             $documents = $this->isCollectionsAPI() ? 'documents' : 'rows';
             $attribute = $this->isCollectionsAPI() ? 'attribute' : 'column';
