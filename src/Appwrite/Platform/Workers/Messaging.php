@@ -264,9 +264,15 @@ class Messaging extends Action
                     default => throw new \Exception('Provider with the requested ID is of the incorrect type')
                 };
 
+                $maxMessagesPerRequest = $adapter->getMaxMessagesPerRequest();
+
+                if ($providerType === MESSAGE_TYPE_EMAIL && $provider->getAttribute('provider') === 'smtp') {
+                    $maxMessagesPerRequest = 1;
+                }
+
                 $batches = \array_chunk(
                     \array_keys($identifiersForProvider),
-                    $adapter->getMaxMessagesPerRequest()
+                    $maxMessagesPerRequest
                 );
 
                 return batch(\array_map(function ($batch) use ($message, $provider, $providerType, $adapter, $dbForProject, $deviceForFiles, $project, $publisherForUsage) {
@@ -623,14 +629,6 @@ class Messaging extends Action
         $subject = $data['subject'];
         $content = $data['content'];
         $html = $data['html'] ?? false;
-
-        // For SMTP, move all recipients to BCC and use default recipient in TO field
-        if ($provider->getAttribute('provider') === 'smtp') {
-            foreach ($to as $recipient) {
-                $bcc[] = ['email' => $recipient];
-            }
-            $to = [];
-        }
 
         return new Email(
             $to,
