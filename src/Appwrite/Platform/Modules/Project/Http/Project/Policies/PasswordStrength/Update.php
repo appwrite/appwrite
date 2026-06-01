@@ -51,10 +51,10 @@ class Update extends Action
                 ],
             ))
             ->param('minLength', null, new Range(8, 256), 'Minimum password length. Value must be between 8 and 256. Default is 8.', optional: true)
-            ->param('requireUppercase', null, new Boolean(), 'Whether passwords must include at least one uppercase letter.', optional: true)
-            ->param('requireLowercase', null, new Boolean(), 'Whether passwords must include at least one lowercase letter.', optional: true)
-            ->param('requireNumber', null, new Boolean(), 'Whether passwords must include at least one number.', optional: true)
-            ->param('requireSpecialChar', null, new Boolean(), 'Whether passwords must include at least one special character.', optional: true)
+            ->param('uppercase', null, new Boolean(), 'Whether passwords must include at least one uppercase letter.', optional: true)
+            ->param('lowercase', null, new Boolean(), 'Whether passwords must include at least one lowercase letter.', optional: true)
+            ->param('number', null, new Boolean(), 'Whether passwords must include at least one number.', optional: true)
+            ->param('symbols', null, new Boolean(), 'Whether passwords must include at least one symbol.', optional: true)
             ->inject('response')
             ->inject('dbForPlatform')
             ->inject('project')
@@ -65,10 +65,10 @@ class Update extends Action
 
     public function action(
         ?int $minLength,
-        ?bool $requireUppercase,
-        ?bool $requireLowercase,
-        ?bool $requireNumber,
-        ?bool $requireSpecialChar,
+        ?bool $uppercase,
+        ?bool $lowercase,
+        ?bool $number,
+        ?bool $symbols,
         Response $response,
         Database $dbForPlatform,
         Document $project,
@@ -78,26 +78,26 @@ class Update extends Action
         $auths = $project->getAttribute('auths', []);
         $auths['passwordStrength'] = \array_merge([
             'minLength' => 8,
-            'requireUppercase' => false,
-            'requireLowercase' => false,
-            'requireNumber' => false,
-            'requireSpecialChar' => false,
+            'uppercase' => false,
+            'lowercase' => false,
+            'number' => false,
+            'symbols' => false,
         ], $auths['passwordStrength'] ?? []);
 
         if ($minLength !== null) {
             $auths['passwordStrength']['minLength'] = $minLength;
         }
-        if ($requireUppercase !== null) {
-            $auths['passwordStrength']['requireUppercase'] = $requireUppercase;
+        if ($uppercase !== null) {
+            $auths['passwordStrength']['uppercase'] = $uppercase;
         }
-        if ($requireLowercase !== null) {
-            $auths['passwordStrength']['requireLowercase'] = $requireLowercase;
+        if ($lowercase !== null) {
+            $auths['passwordStrength']['lowercase'] = $lowercase;
         }
-        if ($requireNumber !== null) {
-            $auths['passwordStrength']['requireNumber'] = $requireNumber;
+        if ($number !== null) {
+            $auths['passwordStrength']['number'] = $number;
         }
-        if ($requireSpecialChar !== null) {
-            $auths['passwordStrength']['requireSpecialChar'] = $requireSpecialChar;
+        if ($symbols !== null) {
+            $auths['passwordStrength']['symbols'] = $symbols;
         }
 
         $project = $authorization->skip(fn () => $dbForPlatform->updateDocument('projects', $project->getId(), new Document([

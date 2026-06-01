@@ -15,7 +15,7 @@ trait PoliciesBase
         return [
             'password-dictionary' => ['enabled'],
             'password-history' => ['total'],
-            'password-strength' => ['minLength', 'requireUppercase', 'requireLowercase', 'requireNumber', 'requireSpecialChar'],
+            'password-strength' => ['minLength', 'uppercase', 'lowercase', 'number', 'symbols'],
             'password-personal-data' => ['enabled'],
             'session-alert' => ['enabled'],
             'session-duration' => ['duration'],
@@ -69,10 +69,10 @@ trait PoliciesBase
         $this->updatePasswordHistoryPolicy(5);
         $this->updatePasswordStrengthPolicy([
             'minLength' => 12,
-            'requireUppercase' => true,
-            'requireLowercase' => true,
-            'requireNumber' => true,
-            'requireSpecialChar' => true,
+            'uppercase' => true,
+            'lowercase' => true,
+            'number' => true,
+            'symbols' => true,
         ]);
         $this->updateSessionDurationPolicy(3600);
         $this->updateMembershipPrivacyPolicy([
@@ -97,10 +97,10 @@ trait PoliciesBase
 
         $this->assertSame(200, $passwordStrength['headers']['status-code']);
         $this->assertSame(12, $passwordStrength['body']['minLength']);
-        $this->assertSame(true, $passwordStrength['body']['requireUppercase']);
-        $this->assertSame(true, $passwordStrength['body']['requireLowercase']);
-        $this->assertSame(true, $passwordStrength['body']['requireNumber']);
-        $this->assertSame(true, $passwordStrength['body']['requireSpecialChar']);
+        $this->assertSame(true, $passwordStrength['body']['uppercase']);
+        $this->assertSame(true, $passwordStrength['body']['lowercase']);
+        $this->assertSame(true, $passwordStrength['body']['number']);
+        $this->assertSame(true, $passwordStrength['body']['symbols']);
 
         $this->assertSame(200, $sessionDuration['headers']['status-code']);
         $this->assertSame(3600, $sessionDuration['body']['duration']);
@@ -199,10 +199,10 @@ trait PoliciesBase
         $this->updatePasswordHistoryPolicy(5);
         $this->updatePasswordStrengthPolicy([
             'minLength' => 12,
-            'requireUppercase' => true,
-            'requireLowercase' => true,
-            'requireNumber' => true,
-            'requireSpecialChar' => true,
+            'uppercase' => true,
+            'lowercase' => true,
+            'number' => true,
+            'symbols' => true,
         ]);
         $this->updateSessionDurationPolicy(3600);
         $this->updateMembershipPrivacyPolicy([
@@ -225,10 +225,10 @@ trait PoliciesBase
         $this->assertSame(true, $byId['password-dictionary']['enabled']);
         $this->assertSame(5, $byId['password-history']['total']);
         $this->assertSame(12, $byId['password-strength']['minLength']);
-        $this->assertSame(true, $byId['password-strength']['requireUppercase']);
-        $this->assertSame(true, $byId['password-strength']['requireLowercase']);
-        $this->assertSame(true, $byId['password-strength']['requireNumber']);
-        $this->assertSame(true, $byId['password-strength']['requireSpecialChar']);
+        $this->assertSame(true, $byId['password-strength']['uppercase']);
+        $this->assertSame(true, $byId['password-strength']['lowercase']);
+        $this->assertSame(true, $byId['password-strength']['number']);
+        $this->assertSame(true, $byId['password-strength']['symbols']);
         $this->assertSame(3600, $byId['session-duration']['duration']);
         $this->assertSame(true, $byId['membership-privacy']['userId']);
         $this->assertSame(true, $byId['membership-privacy']['userEmail']);
@@ -473,27 +473,27 @@ trait PoliciesBase
     {
         $response = $this->updatePasswordStrengthPolicy([
             'minLength' => 12,
-            'requireUppercase' => true,
-            'requireLowercase' => true,
-            'requireNumber' => true,
-            'requireSpecialChar' => true,
+            'uppercase' => true,
+            'lowercase' => true,
+            'number' => true,
+            'symbols' => true,
         ]);
 
         $this->assertSame(200, $response['headers']['status-code']);
         $this->assertSame('password-strength', $response['body']['$id']);
         $this->assertSame(12, $response['body']['minLength']);
-        $this->assertSame(true, $response['body']['requireUppercase']);
-        $this->assertSame(true, $response['body']['requireLowercase']);
-        $this->assertSame(true, $response['body']['requireNumber']);
-        $this->assertSame(true, $response['body']['requireSpecialChar']);
+        $this->assertSame(true, $response['body']['uppercase']);
+        $this->assertSame(true, $response['body']['lowercase']);
+        $this->assertSame(true, $response['body']['number']);
+        $this->assertSame(true, $response['body']['symbols']);
 
         $policy = $this->getPolicy('password-strength');
         $this->assertSame(200, $policy['headers']['status-code']);
         $this->assertSame(12, $policy['body']['minLength']);
-        $this->assertSame(true, $policy['body']['requireUppercase']);
-        $this->assertSame(true, $policy['body']['requireLowercase']);
-        $this->assertSame(true, $policy['body']['requireNumber']);
-        $this->assertSame(true, $policy['body']['requireSpecialChar']);
+        $this->assertSame(true, $policy['body']['uppercase']);
+        $this->assertSame(true, $policy['body']['lowercase']);
+        $this->assertSame(true, $policy['body']['number']);
+        $this->assertSame(true, $policy['body']['symbols']);
 
         // Cleanup
         $this->resetPasswordStrengthPolicy();
@@ -503,24 +503,24 @@ trait PoliciesBase
     {
         $response = $this->updatePasswordStrengthPolicy([
             'minLength' => 12,
-            'requireUppercase' => true,
-            'requireLowercase' => true,
-            'requireNumber' => true,
-            'requireSpecialChar' => true,
+            'uppercase' => true,
+            'lowercase' => true,
+            'number' => true,
+            'symbols' => true,
         ]);
 
         $this->assertSame(200, $response['headers']['status-code']);
 
         $response = $this->updatePasswordStrengthPolicy([
-            'requireLowercase' => false,
+            'lowercase' => false,
         ]);
 
         $this->assertSame(200, $response['headers']['status-code']);
         $this->assertSame(12, $response['body']['minLength']);
-        $this->assertSame(true, $response['body']['requireUppercase']);
-        $this->assertSame(false, $response['body']['requireLowercase']);
-        $this->assertSame(true, $response['body']['requireNumber']);
-        $this->assertSame(true, $response['body']['requireSpecialChar']);
+        $this->assertSame(true, $response['body']['uppercase']);
+        $this->assertSame(false, $response['body']['lowercase']);
+        $this->assertSame(true, $response['body']['number']);
+        $this->assertSame(true, $response['body']['symbols']);
 
         // Cleanup
         $this->resetPasswordStrengthPolicy();
@@ -556,10 +556,10 @@ trait PoliciesBase
 
         $this->assertSame(200, $response['headers']['status-code']);
         $this->assertSame(8, $response['body']['minLength']);
-        $this->assertSame(false, $response['body']['requireUppercase']);
-        $this->assertSame(false, $response['body']['requireLowercase']);
-        $this->assertSame(false, $response['body']['requireNumber']);
-        $this->assertSame(false, $response['body']['requireSpecialChar']);
+        $this->assertSame(false, $response['body']['uppercase']);
+        $this->assertSame(false, $response['body']['lowercase']);
+        $this->assertSame(false, $response['body']['number']);
+        $this->assertSame(false, $response['body']['symbols']);
     }
 
     public function testUpdatePasswordStrengthPolicyWithoutAuth(): void
@@ -1292,10 +1292,10 @@ trait PoliciesBase
     {
         $this->updatePasswordStrengthPolicy([
             'minLength' => 8,
-            'requireUppercase' => false,
-            'requireLowercase' => false,
-            'requireNumber' => false,
-            'requireSpecialChar' => false,
+            'uppercase' => false,
+            'lowercase' => false,
+            'number' => false,
+            'symbols' => false,
         ]);
     }
 

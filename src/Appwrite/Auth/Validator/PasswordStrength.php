@@ -10,20 +10,20 @@ namespace Appwrite\Auth\Validator;
 class PasswordStrength extends Password
 {
     protected int $minLength;
-    protected bool $requireUppercase;
-    protected bool $requireLowercase;
-    protected bool $requireNumber;
-    protected bool $requireSpecialChar;
+    protected bool $uppercase;
+    protected bool $lowercase;
+    protected bool $number;
+    protected bool $symbols;
 
     public function __construct(array $policy = [], bool $allowEmpty = false)
     {
         parent::__construct($allowEmpty);
 
         $this->minLength = $policy['minLength'] ?? 8;
-        $this->requireUppercase = $policy['requireUppercase'] ?? false;
-        $this->requireLowercase = $policy['requireLowercase'] ?? false;
-        $this->requireNumber = $policy['requireNumber'] ?? false;
-        $this->requireSpecialChar = $policy['requireSpecialChar'] ?? false;
+        $this->uppercase = $policy['uppercase'] ?? false;
+        $this->lowercase = $policy['lowercase'] ?? false;
+        $this->number = $policy['number'] ?? false;
+        $this->symbols = $policy['symbols'] ?? false;
     }
 
     public function getDescription(): string
@@ -32,20 +32,20 @@ class PasswordStrength extends Password
             'between ' . $this->minLength . ' and 256 characters long',
         ];
 
-        if ($this->requireUppercase) {
+        if ($this->uppercase) {
             $requirements[] = 'include an uppercase letter';
         }
 
-        if ($this->requireLowercase) {
+        if ($this->lowercase) {
             $requirements[] = 'include a lowercase letter';
         }
 
-        if ($this->requireNumber) {
+        if ($this->number) {
             $requirements[] = 'include a number';
         }
 
-        if ($this->requireSpecialChar) {
-            $requirements[] = 'include a special character';
+        if ($this->symbols) {
+            $requirements[] = 'include a symbol';
         }
 
         return 'Password must be ' . \implode(', ', $requirements) . '.';
@@ -68,19 +68,19 @@ class PasswordStrength extends Password
             return false;
         }
 
-        if ($this->requireUppercase && !\preg_match('/[A-Z]/', $value)) {
+        if ($this->uppercase && !\preg_match('/[A-Z]/', $value)) {
             return false;
         }
 
-        if ($this->requireLowercase && !\preg_match('/[a-z]/', $value)) {
+        if ($this->lowercase && !\preg_match('/[a-z]/', $value)) {
             return false;
         }
 
-        if ($this->requireNumber && !\preg_match('/\d/', $value)) {
+        if ($this->number && !\preg_match('/\d/', $value)) {
             return false;
         }
 
-        if ($this->requireSpecialChar && !\preg_match('/[^\p{L}\p{N}\s]/u', $value)) {
+        if ($this->symbols && !\preg_match('/[^\p{L}\p{N}\s]/u', $value)) {
             return false;
         }
 

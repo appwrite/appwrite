@@ -1434,7 +1434,7 @@ Http::patch('/v1/users/:userId/password')
         ]
     ))
     ->param('userId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'User ID.', false, ['dbForProject'])
-    ->param('password', '', fn ($project, $passwordsDictionary) => new AllOf([new PasswordStrength($project->getAttribute('auths', [])['passwordStrength'] ?? [], allowEmpty: true), new PasswordDictionary($passwordsDictionary, enabled: $project->getAttribute('auths', [])['passwordDictionary'] ?? false)], Validator::TYPE_STRING), 'New user password. Must be at least 8 chars.', false, ['project', 'passwordsDictionary'])
+    ->param('password', '', fn ($project, $passwordsDictionary) => new AllOf([new PasswordStrength($project->getAttribute('auths', [])['passwordStrength'] ?? [], allowEmpty: true), new PasswordDictionary($passwordsDictionary, enabled: $project->getAttribute('auths', [])['passwordDictionary'] ?? false, allowEmpty: true)], Validator::TYPE_STRING), 'New user password. Must be at least 8 chars.', false, ['project', 'passwordsDictionary'])
     ->inject('response')
     ->inject('project')
     ->inject('dbForProject')

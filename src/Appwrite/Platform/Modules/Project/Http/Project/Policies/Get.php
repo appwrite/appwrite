@@ -113,10 +113,10 @@ class Get extends Action
             'password-strength' => [
                 new Document(\array_merge([
                     'minLength' => 8,
-                    'requireUppercase' => false,
-                    'requireLowercase' => false,
-                    'requireNumber' => false,
-                    'requireSpecialChar' => false,
+                    'uppercase' => false,
+                    'lowercase' => false,
+                    'number' => false,
+                    'symbols' => false,
                 ], $auths['passwordStrength'] ?? [], [
                     '$id' => 'password-strength',
                 ])),

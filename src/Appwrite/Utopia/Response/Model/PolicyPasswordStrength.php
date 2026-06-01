@@ -21,27 +21,27 @@ class PolicyPasswordStrength extends PolicyBase
                 'default' => 8,
                 'example' => 12,
             ])
-            ->addRule('requireUppercase', [
+            ->addRule('uppercase', [
                 'type' => self::TYPE_BOOLEAN,
                 'description' => 'Whether passwords must include at least one uppercase letter.',
                 'default' => false,
                 'example' => true,
             ])
-            ->addRule('requireLowercase', [
+            ->addRule('lowercase', [
                 'type' => self::TYPE_BOOLEAN,
                 'description' => 'Whether passwords must include at least one lowercase letter.',
                 'default' => false,
                 'example' => true,
             ])
-            ->addRule('requireNumber', [
+            ->addRule('number', [
                 'type' => self::TYPE_BOOLEAN,
                 'description' => 'Whether passwords must include at least one number.',
                 'default' => false,
                 'example' => true,
             ])
-            ->addRule('requireSpecialChar', [
+            ->addRule('symbols', [
                 'type' => self::TYPE_BOOLEAN,
-                'description' => 'Whether passwords must include at least one special character.',
+                'description' => 'Whether passwords must include at least one symbol.',
                 'default' => false,
                 'example' => true,
             ]);

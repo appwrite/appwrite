@@ -2936,18 +2936,18 @@ class ProjectsConsoleClientTest extends Scope
             'x-appwrite-project' => $id,
             'x-appwrite-mode' => 'admin',
         ], $this->getHeaders()), [
-            'requireUppercase' => true,
-            'requireLowercase' => true,
-            'requireNumber' => true,
-            'requireSpecialChar' => true,
+            'uppercase' => true,
+            'lowercase' => true,
+            'number' => true,
+            'symbols' => true,
         ]);
 
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertEquals(12, $response['body']['minLength']);
-        $this->assertEquals(true, $response['body']['requireUppercase']);
-        $this->assertEquals(true, $response['body']['requireLowercase']);
-        $this->assertEquals(true, $response['body']['requireNumber']);
-        $this->assertEquals(true, $response['body']['requireSpecialChar']);
+        $this->assertEquals(true, $response['body']['uppercase']);
+        $this->assertEquals(true, $response['body']['lowercase']);
+        $this->assertEquals(true, $response['body']['number']);
+        $this->assertEquals(true, $response['body']['symbols']);
 
         $weakPassword = 'password123!';
         $validPassword = 'Password123!';
@@ -3063,18 +3063,18 @@ class ProjectsConsoleClientTest extends Scope
             'x-appwrite-mode' => 'admin',
         ], $this->getHeaders()), [
             'minLength' => 8,
-            'requireUppercase' => false,
-            'requireLowercase' => false,
-            'requireNumber' => false,
-            'requireSpecialChar' => false,
+            'uppercase' => false,
+            'lowercase' => false,
+            'number' => false,
+            'symbols' => false,
         ]);
 
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertEquals(8, $response['body']['minLength']);
-        $this->assertEquals(false, $response['body']['requireUppercase']);
-        $this->assertEquals(false, $response['body']['requireLowercase']);
-        $this->assertEquals(false, $response['body']['requireNumber']);
-        $this->assertEquals(false, $response['body']['requireSpecialChar']);
+        $this->assertEquals(false, $response['body']['uppercase']);
+        $this->assertEquals(false, $response['body']['lowercase']);
+        $this->assertEquals(false, $response['body']['number']);
+        $this->assertEquals(false, $response['body']['symbols']);
     }
 
     #[Group('smtpAndTemplates')]

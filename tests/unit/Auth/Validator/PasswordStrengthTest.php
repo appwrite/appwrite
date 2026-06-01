@@ -19,10 +19,10 @@ class PasswordStrengthTest extends TestCase
     {
         $validator = new PasswordStrength([
             'minLength' => 12,
-            'requireUppercase' => true,
-            'requireLowercase' => true,
-            'requireNumber' => true,
-            'requireSpecialChar' => true,
+            'uppercase' => true,
+            'lowercase' => true,
+            'number' => true,
+            'symbols' => true,
         ]);
 
         $this->assertFalse($validator->isValid('Password1!'));
@@ -48,10 +48,10 @@ class PasswordStrengthTest extends TestCase
     {
         $validator = new PasswordStrength([
             'minLength' => 12,
-            'requireUppercase' => true,
-            'requireLowercase' => true,
-            'requireNumber' => true,
-            'requireSpecialChar' => true,
+            'uppercase' => true,
+            'lowercase' => true,
+            'number' => true,
+            'symbols' => true,
         ], true);
 
         $this->assertTrue($validator->isValid(''));
