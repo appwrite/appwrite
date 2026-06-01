@@ -569,33 +569,50 @@ class Databases extends Action
 
         $dbForDatabases->deleteCollection('database_' . $databaseInternalId . '_collection_' . $collection->getSequence());
 
-        /**
-         * Related collections relating to current collection
-         */
-        $this->deleteByGroup(
-            'attributes',
-            [
+        // The table is already dropped, so attempt every metadata cleanup even
+        // if an earlier one fails -- skipping the rest would leave orphaned
+        // attribute/index rows. Re-throw the first failure afterwards so the
+        // worker marks the message failed and retries the outstanding work.
+        $cleanups = [
+            /**
+             * Related collections relating to current collection
+             */
+            fn () => $this->deleteByGroup(
+                'attributes',
+                [
+                    Query::equal('databaseInternalId', [$databaseInternalId]),
+                    Query::equal('type', [Database::VAR_RELATIONSHIP]),
+                    Query::notEqual('collectionInternalId', $collectionInternalId),
+                    Query::contains('options', ['"relatedCollection":"'. $collectionId .'"']),
+                ],
+                $dbForProject,
+                function ($attribute) use ($dbForProject, $databaseInternalId) {
+                    $dbForProject->purgeCachedDocument('database_' . $databaseInternalId, $attribute->getAttribute('collectionId'));
+                    $dbForProject->purgeCachedCollection('database_' . $databaseInternalId . '_collection_' . $attribute->getAttribute('collectionInternalId'));
+                }
+            ),
+            fn () => $this->deleteByGroup('attributes', [
                 Query::equal('databaseInternalId', [$databaseInternalId]),
-                Query::equal('type', [Database::VAR_RELATIONSHIP]),
-                Query::notEqual('collectionInternalId', $collectionInternalId),
-                Query::contains('options', ['"relatedCollection":"'. $collectionId .'"']),
-            ],
-            $dbForProject,
-            function ($attribute) use ($dbForProject, $databaseInternalId) {
-                $dbForProject->purgeCachedDocument('database_' . $databaseInternalId, $attribute->getAttribute('collectionId'));
-                $dbForProject->purgeCachedCollection('database_' . $databaseInternalId . '_collection_' . $attribute->getAttribute('collectionInternalId'));
+                Query::equal('collectionInternalId', [$collectionInternalId])
+            ], $dbForProject),
+            fn () => $this->deleteByGroup('indexes', [
+                Query::equal('databaseInternalId', [$databaseInternalId]),
+                Query::equal('collectionInternalId', [$collectionInternalId])
+            ], $dbForProject),
+        ];
+
+        $error = null;
+        foreach ($cleanups as $cleanup) {
+            try {
+                $cleanup();
+            } catch (\Throwable $e) {
+                $error ??= $e;
             }
-        );
+        }
 
-        $this->deleteByGroup('attributes', [
-            Query::equal('databaseInternalId', [$databaseInternalId]),
-            Query::equal('collectionInternalId', [$collectionInternalId])
-        ], $dbForProject);
-
-        $this->deleteByGroup('indexes', [
-            Query::equal('databaseInternalId', [$databaseInternalId]),
-            Query::equal('collectionInternalId', [$collectionInternalId])
-        ], $dbForProject);
+        if ($error !== null) {
+            throw $error;
+        }
     }
 
 
