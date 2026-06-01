@@ -758,11 +758,6 @@ trait DatabasesBase
 
     public function testExplain(): void
     {
-        // Explain is exposed on TablesDB/DocumentsDB/VectorsDB, not the legacy API.
-        if ($this->getDatabaseType() === 'legacy') {
-            $this->markTestSkipped('Explain is not available on the legacy databases API');
-        }
-
         $data = $this->setupDocuments();
         $databaseId = $data['databaseId'];
         $containerId = $data['moviesId'];
@@ -785,33 +780,30 @@ trait DatabasesBase
         $this->assertEquals('find', $first['purpose']);
         $this->assertEquals($containerId, $first['context']['collection']);
 
-        // The plan exposes normalized metrics only.
+        // The plan exposes normalized metrics plus the sanitized raw tree.
         $this->assertArrayHasKey('rowsScanned', $first['plan']);
         $this->assertArrayHasKey('indexUsed', $first['plan']);
         $this->assertArrayHasKey('estimatedCost', $first['plan']);
+        $this->assertArrayHasKey('tree', $first['plan']);
 
-        // The backing engine and the raw vendor plan tree must not be exposed.
+        // The backing engine must not be exposed.
         $this->assertArrayNotHasKey('engine', $first['plan']);
-        $this->assertArrayNotHasKey('tree', $first['plan']);
 
         // listRows/listDocuments fires find() + count() (for total) by default — explain mirrors it.
         $purposes = array_column($response['body']['queries'], 'purpose');
         $this->assertContains('find', $purposes);
         $this->assertContains('count', $purposes);
 
-        // Internal storage identifiers must never leak into the plan.
+        // Internal storage identifiers must never leak into the plan — including
+        // the raw tree, which embeds physical table/namespace references.
         $rawPlan = json_encode($response['body']['queries']);
         $this->assertStringNotContainsString('_perms', $rawPlan);
         $this->assertStringNotContainsString('__metadata', $rawPlan);
+        $this->assertStringNotContainsString('_collection_', $rawPlan);
     }
 
     public function testExplainSkipsCountWhenTotalIsFalse(): void
     {
-        // Explain is exposed on TablesDB/DocumentsDB/VectorsDB, not the legacy API.
-        if ($this->getDatabaseType() === 'legacy') {
-            $this->markTestSkipped('Explain is not available on the legacy databases API');
-        }
-
         $data = $this->setupDocuments();
         $databaseId = $data['databaseId'];
         $containerId = $data['moviesId'];

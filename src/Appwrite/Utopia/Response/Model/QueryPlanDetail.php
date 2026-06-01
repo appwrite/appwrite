@@ -19,9 +19,8 @@ class QueryPlanDetail extends Model
 
     public function __construct()
     {
-        // The library plan also carries `engine` and the raw vendor `tree`;
-        // both are deliberately omitted here so the public DTO does not leak the
-        // backing database engine or its internal plan structure.
+        // The library plan also carries `engine`; it is omitted here so the
+        // public DTO does not advertise the backing database engine.
         $this
             ->addRule('rowsScanned', [
                 'type' => self::TYPE_INTEGER,
@@ -57,6 +56,13 @@ class QueryPlanDetail extends Model
                 'default' => null,
                 'required' => false,
                 'example' => 1.84,
+            ])
+            ->addRule('tree', [
+                'type' => self::TYPE_JSON,
+                'description' => 'Raw query plan from the engine, with internal storage identifiers stripped. Carries the full access-path detail (scan type, candidate indexes, filter conditions) for deep diagnosis. Shape varies by engine.',
+                'default' => new \stdClass,
+                'required' => false,
+                'example' => ['query_block' => ['select_id' => 1]],
             ])
             ->addRule('error', [
                 'type' => self::TYPE_STRING,
