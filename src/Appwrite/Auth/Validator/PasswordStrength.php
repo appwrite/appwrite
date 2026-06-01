@@ -17,8 +17,9 @@ class PasswordStrength extends Password
 
     public function __construct(array $policy = [], bool $allowEmpty = false)
     {
-        parent::__construct($allowEmpty, $policy['minLength'] ?? 8);
+        parent::__construct($allowEmpty);
 
+        $this->minLength = $policy['minLength'] ?? 8;
         $this->requireUppercase = $policy['requireUppercase'] ?? false;
         $this->requireLowercase = $policy['requireLowercase'] ?? false;
         $this->requireNumber = $policy['requireNumber'] ?? false;

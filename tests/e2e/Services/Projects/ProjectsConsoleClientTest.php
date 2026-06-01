@@ -2916,7 +2916,7 @@ class ProjectsConsoleClientTest extends Scope
             'x-appwrite-project' => $id,
             'x-appwrite-mode' => 'admin',
         ], $this->getHeaders()), [
-            'minLength' => 5,
+            'minLength' => 7,
         ]);
 
         $this->assertEquals(400, $response['headers']['status-code']);

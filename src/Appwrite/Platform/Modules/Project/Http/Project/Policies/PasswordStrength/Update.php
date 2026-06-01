@@ -50,7 +50,7 @@ class Update extends Action
                     ),
                 ],
             ))
-            ->param('minLength', null, new Range(6, 256), 'Minimum password length. Value must be between 6 and 256. Default is 8.', optional: true)
+            ->param('minLength', null, new Range(8, 256), 'Minimum password length. Value must be between 8 and 256. Default is 8.', optional: true)
             ->param('requireUppercase', null, new Boolean(), 'Whether passwords must include at least one uppercase letter.', optional: true)
             ->param('requireLowercase', null, new Boolean(), 'Whether passwords must include at least one lowercase letter.', optional: true)
             ->param('requireNumber', null, new Boolean(), 'Whether passwords must include at least one number.', optional: true)

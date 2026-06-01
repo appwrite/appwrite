@@ -34,14 +34,14 @@ class PasswordStrengthTest extends TestCase
         $this->assertTrue($validator->isValid('Password123€'));
     }
 
-    public function testMinLengthCanBeSix(): void
+    public function testMinLengthCanBeEight(): void
     {
         $validator = new PasswordStrength([
-            'minLength' => 6,
+            'minLength' => 8,
         ]);
 
-        $this->assertFalse($validator->isValid('12345'));
-        $this->assertTrue($validator->isValid('123456'));
+        $this->assertFalse($validator->isValid('1234567'));
+        $this->assertTrue($validator->isValid('12345678'));
     }
 
     public function testAllowEmpty(): void

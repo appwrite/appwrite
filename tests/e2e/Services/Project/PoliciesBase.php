@@ -529,11 +529,11 @@ trait PoliciesBase
     public function testUpdatePasswordStrengthPolicyMinLength(): void
     {
         $response = $this->updatePasswordStrengthPolicy([
-            'minLength' => 6,
+            'minLength' => 8,
         ]);
 
         $this->assertSame(200, $response['headers']['status-code']);
-        $this->assertSame(6, $response['body']['minLength']);
+        $this->assertSame(8, $response['body']['minLength']);
 
         // Cleanup
         $this->resetPasswordStrengthPolicy();
@@ -542,7 +542,7 @@ trait PoliciesBase
     public function testUpdatePasswordStrengthPolicyBelowMinLength(): void
     {
         $response = $this->client->call(Client::METHOD_PATCH, '/project/policies/password-strength', $this->buildHeaders(), [
-            'minLength' => 5,
+            'minLength' => 7,
         ]);
 
         $this->assertSame(400, $response['headers']['status-code']);
