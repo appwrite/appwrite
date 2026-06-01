@@ -20,6 +20,7 @@ interface VerifyDomainProps {
   projectId: string
   region?: string
   rule: Models.ProxyRule
+  organizationDomainId?: string
   onVerifySuccess: () => void
   onReconfigure?: () => void
 }
@@ -30,6 +31,7 @@ export function VerifyDomain({
   projectId,
   region,
   rule,
+  organizationDomainId,
   onVerifySuccess,
   onReconfigure,
 }: VerifyDomainProps) {
@@ -56,7 +58,10 @@ export function VerifyDomain({
   const handleVerify = async () => {
     setVerificationError(null)
     try {
-      const updated = await verifyMutation.mutateAsync(rule.$id)
+      const updated = await verifyMutation.mutateAsync({
+        ruleId: rule.$id,
+        organizationDomainId,
+      })
       if (updated.status === 'verified') {
         toast.success('Domain verified')
         onOpenChange(false)

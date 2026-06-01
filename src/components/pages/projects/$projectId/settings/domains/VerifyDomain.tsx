@@ -17,6 +17,7 @@ interface VerifyDomainDialogProps {
   projectId: string
   region?: string
   rule: Models.ProxyRule
+  organizationDomainId?: string
   onVerifySuccess: () => void
   onReconfigure?: (domain: string) => void
 }
@@ -27,6 +28,7 @@ export function VerifyDomainDialog({
   projectId,
   region,
   rule,
+  organizationDomainId,
   onVerifySuccess,
   onReconfigure,
 }: VerifyDomainDialogProps) {
@@ -53,7 +55,10 @@ export function VerifyDomainDialog({
   const handleVerify = async () => {
     setVerificationError(null)
     try {
-      const updatedRule = await verifyDomainMutation.mutateAsync(rule.$id)
+      const updatedRule = await verifyDomainMutation.mutateAsync({
+        ruleId: rule.$id,
+        organizationDomainId,
+      })
       if (updatedRule.status === 'created') {
         setVerificationError(
           'Domain verification failed. Please check your domain settings or try again later.',

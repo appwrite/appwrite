@@ -8,7 +8,7 @@ import appCss from '../styles.css?url'
 
 import type { QueryClient } from '@tanstack/react-query'
 import { useQueryClient } from '@tanstack/react-query'
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Toaster } from '@/components/ui/sonner'
 import { ThemeProvider, useTheme } from 'next-themes'
 import {
@@ -60,6 +60,21 @@ const scripts: React.DetailedHTMLProps<
   HTMLScriptElement
 >[] = []
 
+const PLAUSIBLE_SCRIPT_SRC = (
+  import.meta.env.VITE_PLAUSIBLE_SCRIPT_SRC as string | undefined
+)?.trim()
+const PLAUSIBLE_INIT_SCRIPT = `window.plausible=window.plausible||function(){(plausible.q=plausible.q||[]).push(arguments)},plausible.init=plausible.init||function(i){plausible.o=i||{}};
+plausible.init()`
+
+declare global {
+  interface Window {
+    plausible?: (
+      eventName: 'pageview' | string,
+      options?: { u?: string; props?: Record<string, unknown> },
+    ) => void
+  }
+}
+
 /**
  * `type="module"` script URLs must not be path-relative: the browser resolves them
  * against the current pathname, so e.g. `analytics.js` on `/projects/.../messaging`
@@ -85,6 +100,13 @@ if (import.meta.env.VITE_INSTRUMENTATION_SCRIPT_SRC) {
       import.meta.env.VITE_INSTRUMENTATION_SCRIPT_SRC,
     ),
     type: 'module',
+  })
+}
+
+if (PLAUSIBLE_SCRIPT_SRC) {
+  scripts.push({
+    async: true,
+    src: PLAUSIBLE_SCRIPT_SRC,
   })
 }
 
@@ -241,6 +263,24 @@ function ClientOnly({ children }: { children: React.ReactNode }) {
   return <>{children}</>
 }
 
+function PlausibleRouteTracker() {
+  const location = useLocation()
+  const skippedInitialPageview = useRef(false)
+
+  useEffect(() => {
+    if (!PLAUSIBLE_SCRIPT_SRC || typeof window === 'undefined') return
+
+    if (!skippedInitialPageview.current) {
+      skippedInitialPageview.current = true
+      return
+    }
+
+    window.plausible?.('pageview', { u: window.location.href })
+  }, [location.href])
+
+  return null
+}
+
 /** When true, upload progress is shown by the project layout unified panel instead of root */
 function isProjectRoute(pathname: string) {
   const parts = pathname.split('/').filter(Boolean)
@@ -298,8 +338,12 @@ function RootDocument({ children }: { children: React.ReactNode }) {
       </head>
       <body suppressHydrationWarning>
         <ScriptOnce>{THEME_SCRIPT}</ScriptOnce>
+        {PLAUSIBLE_SCRIPT_SRC ? (
+          <ScriptOnce>{PLAUSIBLE_INIT_SCRIPT}</ScriptOnce>
+        ) : null}
         <DynamicFavicon />
         <UploadWarning />
+        <PlausibleRouteTracker />
         <ClientThemeProvider>
           <NavigationHistoryProvider>
             {/* Show branded loader (logo + 2.0) from first paint; avoid route "Loading..." flash.

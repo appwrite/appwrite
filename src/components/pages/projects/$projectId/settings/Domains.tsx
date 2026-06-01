@@ -121,6 +121,11 @@ export function Domains({
     return status === 'created' || status === 'unverified'
   }
 
+  const getOrganizationDomainId = (rule: Models.ProxyRule) => {
+    const apex = getApexDomain(rule.domain)
+    return apex ? apexToOrgDomainId.get(apex.toLowerCase()) : undefined
+  }
+
   // Filter rules by search
   const filteredRules = useMemo(() => {
     if (!searchValueProp.trim()) return rules
@@ -321,6 +326,7 @@ export function Domains({
             projectId={projectId}
             region={region}
             rule={selectedRule}
+            organizationDomainId={getOrganizationDomainId(selectedRule)}
             onReconfigure={(reconfigureDomain) => {
               setVerifyDomainOpen(false)
               setSelectedRule(null)
@@ -345,6 +351,7 @@ export function Domains({
             projectId={projectId}
             region={region}
             rule={selectedRule}
+            organizationDomainId={getOrganizationDomainId(selectedRule)}
             onRetrySuccess={() => {
               toast.success('Verification in progress')
               setRetryDomainOpen(false)

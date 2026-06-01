@@ -63,7 +63,7 @@ export function InitOrgPromoBanner() {
   if (!content) return null
 
   return (
-    <div className="overflow-visible border-b border-border">
+    <div className="overflow-hidden border-b border-border">
       <div
         ref={bannerRef}
         className="group/banner relative min-h-14 overflow-visible bg-background [clip-path:inset(0_-100vw_0_-100vw)]"

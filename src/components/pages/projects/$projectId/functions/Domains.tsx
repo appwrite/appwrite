@@ -135,6 +135,11 @@ export function View() {
     setDeleteDomainOpen(true)
   }
 
+  const getOrganizationDomainId = (rule: Models.ProxyRule) => {
+    const apex = getApexDomain(rule.domain)
+    return apex ? apexToOrgDomainId.get(apex.toLowerCase()) : undefined
+  }
+
   if (domainsLoading && rules.length === 0 && !domainsFetching) {
     return (
       <div className="mx-auto w-full max-w-7xl px-4 py-4 sm:px-6">
@@ -365,6 +370,7 @@ export function View() {
             projectId={projectId ?? ''}
             rule={selectedRule}
             region={project?.region}
+            organizationDomainId={getOrganizationDomainId(selectedRule)}
             onVerifySuccess={() => setSelectedRule(null)}
             onReconfigure={() => {
               setVerifyOpen(false)

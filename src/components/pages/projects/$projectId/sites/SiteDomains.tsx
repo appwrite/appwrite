@@ -100,6 +100,11 @@ export function SiteDomainsView() {
     setDeleteDomainOpen(true)
   }
 
+  const getOrganizationDomainId = (rule: Models.ProxyRule) => {
+    const apex = getApexDomain(rule.domain)
+    return apex ? apexToOrgDomainId.get(apex.toLowerCase()) : undefined
+  }
+
   if (domainsLoading) {
     return (
       <div className="rounded-lg border border-border bg-card py-12 text-center">
@@ -311,6 +316,7 @@ export function SiteDomainsView() {
             projectId={projectId ?? ''}
             rule={selectedRule}
             region={project?.region}
+            organizationDomainId={getOrganizationDomainId(selectedRule)}
             onVerifySuccess={() => {
               setVerifyOpen(false)
               setSelectedRule(null)

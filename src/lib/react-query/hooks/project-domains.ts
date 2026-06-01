@@ -14,6 +14,14 @@ import { Query } from '@appwrite.io/console'
 import { sdk } from '@/lib/appwrite/sdk'
 import { Dependencies } from './dependencies'
 import { DEFAULT_STALE_TIME } from './constants'
+import { getActiveProfileId } from '@/lib/console-profiles'
+
+type VerifyDomainInput =
+  | string
+  | {
+      ruleId: string
+      organizationDomainId?: string
+    }
 
 // ============================================================================
 // QUERY FUNCTIONS
@@ -195,7 +203,11 @@ export function useVerifyDomain(
   const queryClient = useQueryClient()
 
   return useMutation({
-    mutationFn: async (ruleId: string) => {
+    mutationFn: async (input: VerifyDomainInput) => {
+      const ruleId = typeof input === 'string' ? input : input.ruleId
+      const organizationDomainId =
+        typeof input === 'string' ? undefined : input.organizationDomainId
+
       if (!projectId) {
         throw new Error('Project ID is required')
       }
@@ -203,8 +215,19 @@ export function useVerifyDomain(
         throw new Error('Rule ID is required')
       }
 
+      if (getActiveProfileId() === 'cloud' && organizationDomainId) {
+        try {
+          await sdk.forConsole.domains.updateNameservers({
+            domainId: organizationDomainId,
+          })
+        } catch {
+          // Match the old Console: nameserver update is best-effort before
+          // proxy rule verification, but should not block verification.
+        }
+      }
+
       const projectSdk = sdk.forProject(projectId, region)
-      return await projectSdk.proxy.updateRuleVerification({ ruleId })
+      return await projectSdk.proxy.updateRuleStatus({ ruleId })
     },
     onSuccess: () => {
       queryClient.invalidateQueries({

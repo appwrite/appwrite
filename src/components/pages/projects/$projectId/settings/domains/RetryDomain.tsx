@@ -18,6 +18,7 @@ interface RetryDomainDialogProps {
   projectId: string
   region?: string
   rule: Models.ProxyRule
+  organizationDomainId?: string
   onRetrySuccess: () => void
 }
 
@@ -27,6 +28,7 @@ export function RetryDomainDialog({
   projectId,
   region,
   rule,
+  organizationDomainId,
   onRetrySuccess,
 }: RetryDomainDialogProps) {
   const verifyDomainMutation = useVerifyDomain(projectId, region)
@@ -41,7 +43,10 @@ export function RetryDomainDialog({
   const handleRetry = async () => {
     setVerificationError(null)
     try {
-      const updatedRule = await verifyDomainMutation.mutateAsync(rule.$id)
+      const updatedRule = await verifyDomainMutation.mutateAsync({
+        ruleId: rule.$id,
+        organizationDomainId,
+      })
       if (updatedRule.status === 'created') {
         setVerificationError(
           'Domain verification failed. Please check your domain settings or try again later.',

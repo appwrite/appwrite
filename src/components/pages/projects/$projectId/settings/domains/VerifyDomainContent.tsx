@@ -427,12 +427,9 @@ export function VerifyDomainContent({
   return (
     <div className={compact ? 'space-y-4' : 'space-y-6'}>
       {verificationError && (
-        <Alert
-          variant="destructive"
-          className="bg-destructive/10 border-destructive"
-        >
-          <AlertDescription>{verificationError}</AlertDescription>
-        </Alert>
+        <p role="alert" className="text-[13px] text-destructive">
+          {verificationError}
+        </p>
       )}
       {rule.status === 'verifying' && (
         <Alert variant="default" className="border-blue-500/30 bg-blue-500/5">
