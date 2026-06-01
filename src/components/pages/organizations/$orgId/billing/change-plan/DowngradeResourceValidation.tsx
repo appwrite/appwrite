@@ -39,6 +39,7 @@ import {
   type DowngradeResourceType,
   type ProjectDowngradeResources,
 } from '@/lib/billing/downgrade-plan-limits'
+import type { ProjectResourceImpact } from './DowngradeImpactSummary'
 
 const COLUMN_LIST_PAGE_SIZE = 5
 /** Matches list row (py-2.5 + single line) and space-y-1 gaps for stable pagination height. */
@@ -188,7 +189,11 @@ interface DowngradeResourceValidationProps {
   targetPlan: Record<string, unknown> | null | undefined
   onRef: (ref: DowngradeResourceValidationHandle | null) => void
   onValidityChange?: (valid: boolean) => void
-  onImpactChange?: (impact: DowngradeResourceImpact, loading: boolean) => void
+  onImpactChange?: (
+    impact: DowngradeResourceImpact,
+    loading: boolean,
+    projectImpacts: ProjectResourceImpact[],
+  ) => void
 }
 
 export function DowngradeResourceValidation({
@@ -372,18 +377,30 @@ export function DowngradeResourceValidation({
 
   const isValid = resourceSelectionValid && !resourcesLoading
 
-  const resourceImpact = useMemo(() => {
-    const perProject = projects.map((project) => {
+  const projectResourceImpacts = useMemo<ProjectResourceImpact[]>(() => {
+    return projects.map((project) => {
       const resources = resourcesByProjectId.get(project.$id)
-      if (!resources) return {}
-      return countResourcesToDeleteForProject(
-        resources,
-        resourceSelections[project.$id] ?? {},
-        limits,
-      )
+      const impact = resources
+        ? countResourcesToDeleteForProject(
+            resources,
+            resourceSelections[project.$id] ?? {},
+            limits,
+          )
+        : {}
+
+      return {
+        projectId: project.$id,
+        projectName: project.name || project.$id,
+        resourceImpact: impact,
+      }
     })
-    return mergeResourceImpacts(perProject)
   }, [projects, resourceSelections, resourcesByProjectId, limits])
+
+  const resourceImpact = useMemo(() => {
+    return mergeResourceImpacts(
+      projectResourceImpacts.map(({ resourceImpact }) => resourceImpact),
+    )
+  }, [projectResourceImpacts])
 
   const onImpactChangeRef = useRef(onImpactChange)
   useEffect(() => {
@@ -393,11 +410,15 @@ export function DowngradeResourceValidation({
   const lastImpactSignatureRef = useRef('')
 
   useEffect(() => {
-    const signature = `${resourcesLoading}:${JSON.stringify(resourceImpact)}`
+    const signature = `${resourcesLoading}:${JSON.stringify(projectResourceImpacts)}`
     if (lastImpactSignatureRef.current === signature) return
     lastImpactSignatureRef.current = signature
-    onImpactChangeRef.current?.(resourceImpact, resourcesLoading)
-  }, [resourceImpact, resourcesLoading])
+    onImpactChangeRef.current?.(
+      resourceImpact,
+      resourcesLoading,
+      projectResourceImpacts,
+    )
+  }, [projectResourceImpacts, resourceImpact, resourcesLoading])
 
   const getSelectedProjects = useCallback(
     () => projects.map((project) => project.$id),

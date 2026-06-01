@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { useQuery } from '@tanstack/react-query'
+import { keepPreviousData, useQuery } from '@tanstack/react-query'
 import type { Models } from '@appwrite.io/console'
 import { useAuth } from '@/components/global/auth/RequireAuth'
 import { getDowngradePlanLimits } from '@/lib/billing/downgrade-plan-limits'
@@ -8,8 +8,10 @@ import {
   deleteDowngradeMemberships,
 } from '@/lib/billing/delete-downgrade-org-resources'
 import { fetchOrganizationDomains } from '@/lib/react-query/hooks/domains'
+import { fetchOrganizationProjects } from '@/lib/react-query/hooks/organizations'
 import { fetchOrganizationMemberships } from '@/lib/react-query/hooks/teams'
 import { DowngradeImpactSummary } from './DowngradeImpactSummary'
+import type { ProjectResourceImpact } from './DowngradeImpactSummary'
 import { DowngradeLimitSelection } from './DowngradeLimitSelection'
 import { DowngradeProjectSelection } from './DowngradeProjectSelection'
 import {
@@ -19,7 +21,8 @@ import {
 import type { DowngradeResourceImpact } from '@/lib/billing/downgrade-plan-limits'
 import type { DeletedOrganizationImpact } from '@/lib/billing/fetch-deleted-org-impact'
 
-const DOWNGRADE_ORG_LIST_LIMIT = 1000
+const DOWNGRADE_SELECTION_PAGE_SIZE = 5
+const DOWNGRADE_DELETE_PAGE_SIZE = 100
 
 export type DowngradeValidationHandle = {
   getSelectedProjects: () => string[]
@@ -45,10 +48,49 @@ function findCurrentUserMembership(
   )
 }
 
+async function fetchAllDowngradeMemberships(organizationId: string) {
+  const all: Models.Membership[] = []
+  let page = 0
+  let total = 0
+
+  do {
+    const data = await fetchOrganizationMemberships(
+      organizationId,
+      page,
+      DOWNGRADE_DELETE_PAGE_SIZE,
+    )
+    all.push(...((data.memberships ?? []) as Models.Membership[]))
+    total = data.total ?? all.length
+    page += 1
+  } while (all.length < total)
+
+  return all
+}
+
+async function fetchAllDowngradeDomains(organizationId: string) {
+  const all: Models.Domain[] = []
+  let page = 0
+  let total = 0
+
+  do {
+    const data = await fetchOrganizationDomains(
+      organizationId,
+      page,
+      DOWNGRADE_DELETE_PAGE_SIZE,
+    )
+    all.push(...((data.domains ?? []) as Models.Domain[]))
+    total = data.total ?? all.length
+    page += 1
+  } while (all.length < total)
+
+  return all
+}
+
 interface DowngradeValidationProps {
   organizationId: string
   organizationName?: string
   projects: Models.Project[]
+  projectsTotal?: number
   targetPlan: Record<string, unknown> | null | undefined
   onRef: (ref: DowngradeValidationHandle | null) => void
   onValidityChange?: (valid: boolean) => void
@@ -61,6 +103,7 @@ export function DowngradeValidation({
   organizationId,
   organizationName,
   projects,
+  projectsTotal = projects.length,
   targetPlan,
   onRef,
   onValidityChange,
@@ -69,53 +112,119 @@ export function DowngradeValidation({
   expectDeletedOrganizationImpact = false,
 }: DowngradeValidationProps) {
   const { account } = useAuth()
+  const accountModel = account as Models.User | undefined
   const limits = useMemo(() => getDowngradePlanLimits(targetPlan), [targetPlan])
   const projectsLimit = limits.projects
   const membersLimit = limits.members
   const domainsLimit = limits.domains
 
   const needsProjectSelection =
-    projectsLimit !== null && projects.length > projectsLimit
+    projectsLimit !== null && projectsTotal > projectsLimit
 
-  const { data: membershipsData, isLoading: membershipsLoading } = useQuery({
+  const [projectPage, setProjectPage] = useState(1)
+  const [memberPage, setMemberPage] = useState(1)
+  const [domainPage, setDomainPage] = useState(1)
+  const [displayedProjectPage, setDisplayedProjectPage] = useState(1)
+  const [displayedMemberPage, setDisplayedMemberPage] = useState(1)
+  const [displayedDomainPage, setDisplayedDomainPage] = useState(1)
+
+  const {
+    data: projectPageData,
+    isLoading: projectsLoading,
+    isFetching: projectsFetching,
+  } = useQuery({
+    queryKey: [
+      'projects',
+      'organization',
+      organizationId,
+      'downgrade',
+      projectPage,
+      DOWNGRADE_SELECTION_PAGE_SIZE,
+    ],
+    queryFn: () =>
+      fetchOrganizationProjects(
+        organizationId,
+        projectPage - 1,
+        DOWNGRADE_SELECTION_PAGE_SIZE,
+      ),
+    enabled: !!organizationId && needsProjectSelection,
+    placeholderData: keepPreviousData,
+    staleTime: 30_000,
+  })
+
+  const {
+    data: membershipsData,
+    isLoading: membershipsLoading,
+    isFetching: membershipsFetching,
+  } = useQuery({
     queryKey: [
       'memberships',
       'organization',
       organizationId,
       'downgrade',
-      DOWNGRADE_ORG_LIST_LIMIT,
+      memberPage,
+      DOWNGRADE_SELECTION_PAGE_SIZE,
     ],
     queryFn: () =>
       fetchOrganizationMemberships(
         organizationId,
-        0,
-        DOWNGRADE_ORG_LIST_LIMIT,
+        memberPage - 1,
+        DOWNGRADE_SELECTION_PAGE_SIZE,
       ),
     enabled: !!organizationId,
+    placeholderData: keepPreviousData,
     staleTime: 30_000,
   })
 
-  const { data: domainsData, isLoading: domainsLoading } = useQuery({
+  const {
+    data: domainsData,
+    isLoading: domainsLoading,
+    isFetching: domainsFetching,
+  } = useQuery({
     queryKey: [
       'domains',
       'organization',
       organizationId,
       'downgrade',
-      DOWNGRADE_ORG_LIST_LIMIT,
+      domainPage,
+      DOWNGRADE_SELECTION_PAGE_SIZE,
     ],
     queryFn: () =>
       fetchOrganizationDomains(
         organizationId,
-        0,
-        DOWNGRADE_ORG_LIST_LIMIT,
+        domainPage - 1,
+        DOWNGRADE_SELECTION_PAGE_SIZE,
       ),
     enabled: !!organizationId,
+    placeholderData: keepPreviousData,
     staleTime: 30_000,
   })
 
-  const memberships = membershipsData?.memberships ?? []
+  useEffect(() => {
+    if (projectsFetching || !projectPageData) return
+    setDisplayedProjectPage(projectPage)
+  }, [projectPage, projectPageData, projectsFetching])
+
+  useEffect(() => {
+    if (membershipsFetching || !membershipsData) return
+    setDisplayedMemberPage(memberPage)
+  }, [memberPage, membershipsData, membershipsFetching])
+
+  useEffect(() => {
+    if (domainsFetching || !domainsData) return
+    setDisplayedDomainPage(domainPage)
+  }, [domainPage, domainsData, domainsFetching])
+
+  const projectPageProjects = projectPageData?.projects ?? []
+  const currentProjects = needsProjectSelection ? projectPageProjects : projects
+  const currentProjectsTotal = needsProjectSelection
+    ? (projectPageData?.total ?? projectsTotal)
+    : projectsTotal
+
+  const memberships = (membershipsData?.memberships ??
+    []) as Models.Membership[]
   const membershipsTotal = membershipsData?.total ?? memberships.length
-  const domains = domainsData?.domains ?? []
+  const domains = (domainsData?.domains ?? []) as Models.Domain[]
   const domainsTotal = domainsData?.total ?? domains.length
 
   const needsMemberSelection =
@@ -123,10 +232,38 @@ export function DowngradeValidation({
   const needsDomainSelection =
     domainsLimit !== null && domainsTotal > domainsLimit
 
-  const currentUserMembership = useMemo(
-    () => findCurrentUserMembership(memberships, account),
-    [memberships, account],
+  const pageCurrentUserMembership = useMemo(
+    () => findCurrentUserMembership(memberships, accountModel),
+    [memberships, accountModel],
   )
+  const { data: currentUserMembershipData } = useQuery({
+    queryKey: [
+      'memberships',
+      'organization',
+      organizationId,
+      'downgrade',
+      'current-user',
+      accountModel?.email,
+    ],
+    queryFn: () =>
+      fetchOrganizationMemberships(
+        organizationId,
+        0,
+        1,
+        accountModel?.email ?? undefined,
+      ),
+    enabled: !!organizationId && !!accountModel?.email,
+    staleTime: 30_000,
+  })
+  const queriedCurrentUserMembership = useMemo(
+    () => findCurrentUserMembership(
+      (currentUserMembershipData?.memberships ?? []) as Models.Membership[],
+      accountModel,
+    ),
+    [currentUserMembershipData?.memberships, accountModel],
+  )
+  const currentUserMembership =
+    pageCurrentUserMembership ?? queriedCurrentUserMembership
   const lockedMembershipId = currentUserMembership?.$id ?? null
 
   const [selectedProjectIds, setSelectedProjectIds] = useState<Set<string>>(
@@ -138,15 +275,28 @@ export function DowngradeValidation({
   const [selectedDomainIds, setSelectedDomainIds] = useState<Set<string>>(
     () => new Set(),
   )
+  const [selectedProjectsById, setSelectedProjectsById] = useState<
+    Map<string, Models.Project>
+  >(() => new Map())
+  const [selectedMembershipsById, setSelectedMembershipsById] = useState<
+    Map<string, Models.Membership>
+  >(() => new Map())
+  const [selectedDomainsById, setSelectedDomainsById] = useState<
+    Map<string, Models.Domain>
+  >(() => new Map())
 
   useEffect(() => {
     setSelectedProjectIds(new Set())
     setSelectedMemberIds(new Set())
     setSelectedDomainIds(new Set())
+    setSelectedProjectsById(new Map())
+    setSelectedMembershipsById(new Map())
+    setSelectedDomainsById(new Map())
   }, [organizationId])
 
   useEffect(() => {
-    if (!needsMemberSelection || !lockedMembershipId) return
+    if (!needsMemberSelection || !lockedMembershipId || !currentUserMembership)
+      return
 
     setSelectedMemberIds((prev) => {
       if (prev.has(lockedMembershipId)) return prev
@@ -154,30 +304,34 @@ export function DowngradeValidation({
       next.add(lockedMembershipId)
       return next
     })
-  }, [needsMemberSelection, lockedMembershipId])
+    setSelectedMembershipsById((prev) => {
+      if (prev.has(lockedMembershipId)) return prev
+      const next = new Map(prev)
+      next.set(lockedMembershipId, currentUserMembership)
+      return next
+    })
+  }, [needsMemberSelection, lockedMembershipId, currentUserMembership])
 
   const keptProjects = useMemo(() => {
     if (needsProjectSelection) {
-      return projects.filter((project) => selectedProjectIds.has(project.$id))
+      return Array.from(selectedProjectsById.values())
     }
     return projects
-  }, [needsProjectSelection, projects, selectedProjectIds])
+  }, [needsProjectSelection, projects, selectedProjectsById])
 
   const keptMemberships = useMemo(() => {
     if (needsMemberSelection) {
-      return memberships.filter((membership) =>
-        selectedMemberIds.has(membership.$id),
-      )
+      return Array.from(selectedMembershipsById.values())
     }
     return memberships
-  }, [needsMemberSelection, memberships, selectedMemberIds])
+  }, [needsMemberSelection, memberships, selectedMembershipsById])
 
   const keptDomains = useMemo(() => {
     if (needsDomainSelection) {
-      return domains.filter((domain) => selectedDomainIds.has(domain.$id))
+      return Array.from(selectedDomainsById.values())
     }
     return domains
-  }, [needsDomainSelection, domains, selectedDomainIds])
+  }, [needsDomainSelection, domains, selectedDomainsById])
 
   const projectSelectionValid =
     !needsProjectSelection ||
@@ -194,24 +348,39 @@ export function DowngradeValidation({
     (domainsLimit !== null && selectedDomainIds.size === domainsLimit)
 
   const orgSelectionsLoading =
+    (needsProjectSelection && projectsLoading) ||
     (needsMemberSelection && membershipsLoading) ||
     (needsDomainSelection && domainsLoading)
 
   const orgSelectionsValid =
-    !orgSelectionsLoading && memberSelectionValid && domainSelectionValid
+    !orgSelectionsLoading &&
+    projectSelectionValid &&
+    memberSelectionValid &&
+    domainSelectionValid
 
   const resourceRef = useRef<DowngradeResourceValidationHandle | null>(null)
   const resourceValidRef = useRef(false)
   const [resourceImpact, setResourceImpact] = useState<DowngradeResourceImpact>(
     {},
   )
+  const [keptProjectResourceImpacts, setKeptProjectResourceImpacts] = useState<
+    ProjectResourceImpact[]
+  >([])
   const [resourceImpactLoading, setResourceImpactLoading] = useState(false)
 
   const handleResourceImpactChange = useCallback(
-    (impact: DowngradeResourceImpact, loading: boolean) => {
+    (
+      impact: DowngradeResourceImpact,
+      loading: boolean,
+      projectImpacts: ProjectResourceImpact[],
+    ) => {
       setResourceImpact((prev) => {
         if (JSON.stringify(prev) === JSON.stringify(impact)) return prev
         return impact
+      })
+      setKeptProjectResourceImpacts((prev) => {
+        if (JSON.stringify(prev) === JSON.stringify(projectImpacts)) return prev
+        return projectImpacts
       })
       setResourceImpactLoading((prev) => (prev === loading ? prev : loading))
     },
@@ -221,6 +390,7 @@ export function DowngradeValidation({
   const toggleProject = useCallback(
     (projectId: string) => {
       if (!needsProjectSelection || projectsLimit === null) return
+      const project = currentProjects.find((item) => item.$id === projectId)
 
       setSelectedProjectIds((prev) => {
         const next = new Set(prev)
@@ -231,14 +401,24 @@ export function DowngradeValidation({
         }
         return next
       })
+      setSelectedProjectsById((prev) => {
+        const next = new Map(prev)
+        if (next.has(projectId)) {
+          next.delete(projectId)
+        } else if (next.size < projectsLimit && project) {
+          next.set(projectId, project)
+        }
+        return next
+      })
     },
-    [needsProjectSelection, projectsLimit],
+    [currentProjects, needsProjectSelection, projectsLimit],
   )
 
   const toggleMember = useCallback(
     (membershipId: string) => {
       if (!needsMemberSelection || membersLimit === null) return
       if (membershipId === lockedMembershipId) return
+      const membership = memberships.find((item) => item.$id === membershipId)
 
       setSelectedMemberIds((prev) => {
         const next = new Set(prev)
@@ -249,13 +429,23 @@ export function DowngradeValidation({
         }
         return next
       })
+      setSelectedMembershipsById((prev) => {
+        const next = new Map(prev)
+        if (next.has(membershipId)) {
+          next.delete(membershipId)
+        } else if (next.size < membersLimit && membership) {
+          next.set(membershipId, membership)
+        }
+        return next
+      })
     },
-    [needsMemberSelection, membersLimit, lockedMembershipId],
+    [memberships, needsMemberSelection, membersLimit, lockedMembershipId],
   )
 
   const toggleDomain = useCallback(
     (domainId: string) => {
       if (!needsDomainSelection || domainsLimit === null) return
+      const domain = domains.find((item) => item.$id === domainId)
 
       setSelectedDomainIds((prev) => {
         const next = new Set(prev)
@@ -266,8 +456,17 @@ export function DowngradeValidation({
         }
         return next
       })
+      setSelectedDomainsById((prev) => {
+        const next = new Map(prev)
+        if (next.has(domainId)) {
+          next.delete(domainId)
+        } else if (next.size < domainsLimit && domain) {
+          next.set(domainId, domain)
+        }
+        return next
+      })
     },
-    [needsDomainSelection, domainsLimit],
+    [domains, needsDomainSelection, domainsLimit],
   )
 
   const syncValidity = useCallback(() => {
@@ -323,11 +522,20 @@ export function DowngradeValidation({
   selectedDomainIdsRef.current = selectedDomainIds
 
   const deleteMarkedResources = useCallback(async () => {
-    const membershipIdsToDelete = membershipsRef.current
+    const [allMemberships, allDomains] = await Promise.all([
+      needsMemberSelection
+        ? fetchAllDowngradeMemberships(organizationId)
+        : Promise.resolve(membershipsRef.current),
+      needsDomainSelection
+        ? fetchAllDowngradeDomains(organizationId)
+        : Promise.resolve(domainsRef.current),
+    ])
+
+    const membershipIdsToDelete = allMemberships
       .filter((membership) => !selectedMemberIdsRef.current.has(membership.$id))
       .map((membership) => membership.$id)
 
-    const domainIdsToDelete = domainsRef.current
+    const domainIdsToDelete = allDomains
       .filter((domain) => !selectedDomainIdsRef.current.has(domain.$id))
       .map((domain) => domain.$id)
 
@@ -348,7 +556,7 @@ export function DowngradeValidation({
     }
 
     await resourceRef.current?.deleteMarkedResources()
-  }, [organizationId])
+  }, [needsDomainSelection, needsMemberSelection, organizationId])
 
   const deleteMarkedResourcesRef = useRef(deleteMarkedResources)
 
@@ -435,10 +643,15 @@ export function DowngradeValidation({
     <div className="space-y-4">
       {needsProjectSelection && projectsLimit !== null ? (
         <DowngradeProjectSelection
-          projects={projects}
+          projects={currentProjects}
+          total={currentProjectsTotal}
+          page={displayedProjectPage}
           projectsLimit={projectsLimit}
           selectedProjectIds={selectedProjectIds}
           onToggleProject={toggleProject}
+          onPageChange={setProjectPage}
+          loading={projectsLoading && !projectPageData}
+          paginationDisabled={projectsFetching}
         />
       ) : null}
 
@@ -449,9 +662,13 @@ export function DowngradeValidation({
           resourceLabel="members"
           limit={membersLimit}
           items={memberItems}
+          total={membershipsTotal}
+          page={displayedMemberPage}
           selectedIds={selectedMemberIds}
           onToggle={toggleMember}
-          loading={membershipsLoading}
+          onPageChange={setMemberPage}
+          loading={membershipsLoading && !membershipsData}
+          paginationDisabled={membershipsFetching}
         />
       ) : null}
 
@@ -462,9 +679,13 @@ export function DowngradeValidation({
           resourceLabel="domains"
           limit={domainsLimit}
           items={domainItems}
+          total={domainsTotal}
+          page={displayedDomainPage}
           selectedIds={selectedDomainIds}
           onToggle={toggleDomain}
-          loading={domainsLoading}
+          onPageChange={setDomainPage}
+          loading={domainsLoading && !domainsData}
+          paginationDisabled={domainsFetching}
         />
       ) : null}
 
@@ -488,6 +709,7 @@ export function DowngradeValidation({
           allDomains={domains}
           keptDomains={keptDomains}
           resourceImpact={resourceImpact}
+          keptProjectResourceImpacts={keptProjectResourceImpacts}
           resourcesLoading={resourceImpactLoading || orgSelectionsLoading}
           deletedOrganizationImpact={deletedOrganizationImpact}
           deletedOrganizationLoading={deletedOrganizationLoading}

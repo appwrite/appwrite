@@ -1,8 +1,14 @@
+import { ChevronLeft, ChevronRight } from 'lucide-react'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Label } from '@/components/ui/label'
 import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
 import { WarningAlert } from '@/components/global/shared/WarningAlert'
 import { cn } from '@/lib/utils'
+
+const SELECTION_PAGE_SIZE = 5
+const SELECTION_ROW_HEIGHT_CLASS = 'h-[46px]'
+const SELECTION_LIST_MIN_HEIGHT_CLASS = 'min-h-[262px]'
 
 export type DowngradeLimitSelectionItem = {
   id: string
@@ -17,9 +23,13 @@ interface DowngradeLimitSelectionProps {
   resourceLabel: string
   limit: number
   items: DowngradeLimitSelectionItem[]
+  total: number
+  page: number
   selectedIds: Set<string>
   onToggle: (id: string) => void
+  onPageChange: (page: number) => void
   loading?: boolean
+  paginationDisabled?: boolean
 }
 
 export function DowngradeLimitSelection({
@@ -28,11 +38,19 @@ export function DowngradeLimitSelection({
   resourceLabel,
   limit,
   items,
+  total,
+  page,
   selectedIds,
   onToggle,
+  onPageChange,
   loading = false,
+  paginationDisabled = false,
 }: DowngradeLimitSelectionProps) {
   const selectionValid = selectedIds.size === limit
+  const totalPages = Math.max(1, Math.ceil(total / SELECTION_PAGE_SIZE))
+  const safePage = Math.min(page, totalPages)
+  const pageStart = (safePage - 1) * SELECTION_PAGE_SIZE
+  const pageEnd = Math.min(pageStart + items.length, total)
 
   return (
     <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
@@ -61,61 +79,103 @@ export function DowngradeLimitSelection({
           </WarningAlert>
         ) : null}
 
-        {loading ? (
-          <p className="text-[13px] text-muted-foreground">Loading...</p>
-        ) : (
-          <div className="space-y-2">
-            {items.map((item) => {
-              const selected = selectedIds.has(item.id)
-              const disabled =
-                item.locked || (!selected && selectedIds.size >= limit)
+        <div className={cn('space-y-2', SELECTION_LIST_MIN_HEIGHT_CLASS)}>
+          {loading ? (
+            <p className="text-[13px] text-muted-foreground">Loading...</p>
+          ) : (
+            <>
+              {items.map((item) => {
+                const selected = selectedIds.has(item.id)
+                const disabled =
+                  item.locked || (!selected && selectedIds.size >= limit)
 
-              return (
-                <div
-                  key={item.id}
-                  className={cn(
-                    'flex items-start gap-3 rounded-lg border p-3 transition-colors',
-                    selected
-                      ? 'border-primary bg-primary/5'
-                      : 'border-border bg-background/60',
-                    disabled && !item.locked && 'opacity-50',
-                  )}
-                >
-                  <Checkbox
-                    id={`keep-${resourceLabel}-${item.id}`}
-                    checked={selected}
-                    disabled={disabled}
-                    onCheckedChange={() => onToggle(item.id)}
-                    className="mt-0.5 shrink-0"
-                  />
-                  <Label
-                    htmlFor={`keep-${resourceLabel}-${item.id}`}
+                return (
+                  <div
+                    key={item.id}
                     className={cn(
-                      'min-w-0 flex-1',
-                      disabled ? 'cursor-not-allowed' : 'cursor-pointer',
+                      'flex items-start gap-3 rounded-lg border p-3 transition-colors',
+                      SELECTION_ROW_HEIGHT_CLASS,
+                      selected
+                        ? 'border-primary bg-primary/5'
+                        : 'border-border bg-background/60',
+                      disabled && !item.locked && 'opacity-50',
                     )}
                   >
-                    <div className="flex items-start gap-2 min-w-0">
-                      <p className="min-w-0 truncate text-[13px] font-medium leading-normal text-foreground">
-                        {item.label}
-                      </p>
-                      {item.locked ? (
-                        <Badge variant="info" className="text-[10px] shrink-0">
-                          You
-                        </Badge>
-                      ) : null}
-                    </div>
-                    {item.description ? (
-                      <p className="min-w-0 truncate text-[12px] leading-normal text-muted-foreground mt-0.5">
-                        {item.description}
-                      </p>
-                    ) : null}
-                  </Label>
-                </div>
-              )
-            })}
+                    <Checkbox
+                      id={`keep-${resourceLabel}-${item.id}`}
+                      checked={selected}
+                      disabled={disabled}
+                      onCheckedChange={() => onToggle(item.id)}
+                      className="mt-0.5 shrink-0"
+                    />
+                    <Label
+                      htmlFor={`keep-${resourceLabel}-${item.id}`}
+                      className={cn(
+                        'min-w-0 flex-1',
+                        disabled ? 'cursor-not-allowed' : 'cursor-pointer',
+                      )}
+                    >
+                      <div className="flex items-center gap-2 min-w-0">
+                        <p className="min-w-0 truncate text-[13px] font-medium leading-normal text-foreground">
+                          {item.label}
+                        </p>
+                        {item.locked ? (
+                          <Badge
+                            variant="info"
+                            className="text-[10px] shrink-0"
+                          >
+                            You
+                          </Badge>
+                        ) : null}
+                      </div>
+                    </Label>
+                  </div>
+                )
+              })}
+              {Array.from({
+                length: Math.max(0, SELECTION_PAGE_SIZE - items.length),
+              }).map((_, index) => (
+                <div
+                  key={`limit-selection-spacer-${index}`}
+                  className={SELECTION_ROW_HEIGHT_CLASS}
+                  aria-hidden
+                />
+              ))}
+            </>
+          )}
+        </div>
+
+        {total > SELECTION_PAGE_SIZE ? (
+          <div className="flex items-center justify-between gap-3 border-t border-border pt-4">
+            <p className="text-[12px] text-muted-foreground">
+              Showing {pageStart + 1}-{pageEnd} of {total} {resourceLabel}
+            </p>
+            <div className="flex items-center gap-1">
+              <Button
+                type="button"
+                variant="outline"
+                size="icon"
+                className="h-8 w-8"
+                onClick={() => onPageChange(safePage - 1)}
+                disabled={safePage <= 1 || loading || paginationDisabled}
+                aria-label={`Previous ${resourceLabel} page`}
+              >
+                <ChevronLeft className="h-3.5 w-3.5" />
+              </Button>
+              <Button
+                type="button"
+                variant="outline"
+                size="icon"
+                className="h-8 w-8"
+                onClick={() => onPageChange(safePage + 1)}
+                disabled={safePage >= totalPages || loading || paginationDisabled}
+                aria-label={`Next ${resourceLabel} page`}
+              >
+                <ChevronRight className="h-3.5 w-3.5" />
+              </Button>
+            </div>
           </div>
-        )}
+        ) : null}
       </div>
     </div>
   )

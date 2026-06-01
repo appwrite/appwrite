@@ -27,6 +27,7 @@ export type DeletedOrganizationImpact = {
 export async function fetchDeletedOrganizationImpact(
   organizationId: string,
   organizationName: string,
+  fallbackProjects: Models.Project[] = [],
 ): Promise<DeletedOrganizationImpact> {
   const [projectsData, membershipsData, domainsData] = await Promise.all([
     fetchOrganizationProjects(organizationId),
@@ -42,7 +43,9 @@ export async function fetchDeletedOrganizationImpact(
     ),
   ])
 
-  const projects = projectsData.projects ?? []
+  const fetchedProjects = projectsData.projects ?? []
+  const projects =
+    fetchedProjects.length > 0 ? fetchedProjects : fallbackProjects
   const resourceImpacts = await Promise.all(
     projects.map((project) => fetchProjectDowngradeResources(project.$id)),
   )

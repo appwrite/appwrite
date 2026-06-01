@@ -1,4 +1,5 @@
 import type { Models } from '@appwrite.io/console'
+import type { ReactNode } from 'react'
 import {
   DOWNGRADE_RESOURCE_TYPES,
   getTotalResourceDeletions,
@@ -15,12 +16,19 @@ interface DowngradeImpactSummaryProps {
   allDomains?: Models.Domain[]
   keptDomains?: Models.Domain[]
   resourceImpact: DowngradeResourceImpact
+  keptProjectResourceImpacts?: ProjectResourceImpact[]
   resourcesLoading?: boolean
   deletedOrganizationImpact?: DeletedOrganizationImpact | null
   deletedOrganizationLoading?: boolean
   /** When true, wait for deleted-org impact before showing the empty state. */
   expectDeletedOrganizationImpact?: boolean
   keptOrganizationImpactReady?: boolean
+}
+
+export type ProjectResourceImpact = {
+  projectId: string
+  projectName: string
+  resourceImpact: DowngradeResourceImpact
 }
 
 function ImpactListSection({
@@ -84,10 +92,10 @@ function ResourceImpactSection({
   )
 }
 
-function DeletedProjectResourceSection({
+function ProjectResourceImpactSection({
   projects,
 }: {
-  projects: DeletedOrganizationImpact['projectResourceImpacts']
+  projects: ProjectResourceImpact[]
 }) {
   const projectsWithResources = projects.filter(
     ({ resourceImpact }) => getTotalResourceDeletions(resourceImpact) > 0,
@@ -110,7 +118,7 @@ function DeletedProjectResourceSection({
             return (
               <div
                 key={projectId}
-                className="rounded-lg border border-border bg-background/60 p-3"
+                className="rounded-lg border border-border bg-card/50 p-3"
               >
                 <p className="truncate text-[13px] font-medium leading-normal text-foreground">
                   {projectName}
@@ -137,6 +145,30 @@ function DeletedProjectResourceSection({
   )
 }
 
+function OrganizationImpactSection({
+  name,
+  description,
+  children,
+}: {
+  name: string
+  description: string
+  children: ReactNode
+}) {
+  return (
+    <div className="rounded-lg border border-border bg-background/60 p-4 space-y-4">
+      <div>
+        <p className="text-[13px] font-semibold leading-normal text-foreground">
+          {name}
+        </p>
+        <p className="text-[13px] leading-normal text-muted-foreground mt-1">
+          {description}
+        </p>
+      </div>
+      {children}
+    </div>
+  )
+}
+
 export function DowngradeImpactSummary({
   keptOrganizationName,
   allProjects,
@@ -146,6 +178,7 @@ export function DowngradeImpactSummary({
   allDomains = [],
   keptDomains = [],
   resourceImpact,
+  keptProjectResourceImpacts = [],
   resourcesLoading = false,
   deletedOrganizationImpact = null,
   deletedOrganizationLoading = false,
@@ -221,51 +254,46 @@ export function DowngradeImpactSummary({
                   removed...
                 </p>
               ) : hasDeletedOrgImpact && deletedOrganizationImpact ? (
-              <div className="space-y-4">
-                <div>
-                  <p className="text-[13px] font-semibold text-foreground">
-                    {deletedOrganizationImpact.organizationName}
-                  </p>
-                  <p className="text-[13px] text-muted-foreground mt-1">
-                    This entire organization will be deleted, including all of
-                    its projects and resources.
-                  </p>
-                </div>
+                <OrganizationImpactSection
+                  name={deletedOrganizationImpact.organizationName}
+                  description="This entire organization will be deleted, including all of its projects and resources."
+                >
+                  <ImpactListSection
+                    title={`Projects (${deletedOrganizationImpact.projects.length})`}
+                    items={deletedOrganizationImpact.projects}
+                    getLabel={(project) =>
+                      (project as Models.Project).name || project.$id
+                    }
+                  />
 
-                <ImpactListSection
-                  title={`Projects (${deletedOrganizationImpact.projects.length})`}
-                  items={deletedOrganizationImpact.projects}
-                  getLabel={(project) =>
-                    (project as Models.Project).name || project.$id
-                  }
-                />
+                  <ImpactListSection
+                    title={`Members (${deletedOrganizationImpact.memberships.length})`}
+                    items={deletedOrganizationImpact.memberships}
+                    getLabel={(membership) => {
+                      const member = membership as Models.Membership
+                      return member.userName || member.userEmail || member.$id
+                    }}
+                  />
 
-                <ImpactListSection
-                  title={`Members (${deletedOrganizationImpact.memberships.length})`}
-                  items={deletedOrganizationImpact.memberships}
-                  getLabel={(membership) => {
-                    const member = membership as Models.Membership
-                    return member.userName || member.userEmail || member.$id
-                  }}
-                />
+                  <ImpactListSection
+                    title={`Domains (${deletedOrganizationImpact.domains.length})`}
+                    items={deletedOrganizationImpact.domains}
+                    getLabel={(domain) =>
+                      (domain as Models.Domain).domain || domain.$id
+                    }
+                  />
 
-                <ImpactListSection
-                  title={`Domains (${deletedOrganizationImpact.domains.length})`}
-                  items={deletedOrganizationImpact.domains}
-                  getLabel={(domain) =>
-                    (domain as Models.Domain).domain || domain.$id
-                  }
-                />
+                  <ResourceImpactSection
+                    title="Resources in all projects"
+                    resourceImpact={deletedOrganizationImpact.resourceImpact}
+                  />
 
-                <ResourceImpactSection
-                  title="Resources in all projects"
-                  resourceImpact={deletedOrganizationImpact.resourceImpact}
-                />
-
-                <DeletedProjectResourceSection
-                  projects={deletedOrganizationImpact.projectResourceImpacts ?? []}
-                />
-              </div>
+                  <ProjectResourceImpactSection
+                    projects={
+                      deletedOrganizationImpact.projectResourceImpacts ?? []
+                    }
+                  />
+                </OrganizationImpactSection>
               ) : null
             ) : null}
 
@@ -279,46 +307,44 @@ export function DowngradeImpactSummary({
                   Calculating impact for resources to remove...
                 </p>
               ) : hasKeptOrgImpact ? (
-              <div className="space-y-4">
-                <div>
-                  <p className="text-[13px] font-semibold text-foreground">
-                    {keptOrgLabel}
-                  </p>
-                  <p className="text-[13px] text-muted-foreground mt-1">
-                    Resources removed to fit the target plan limits.
-                  </p>
-                </div>
+                <OrganizationImpactSection
+                  name={keptOrgLabel}
+                  description="Resources removed to fit the target plan limits."
+                >
+                  <ImpactListSection
+                    title={`Projects (${projectsToDelete.length})`}
+                    items={projectsToDelete}
+                    getLabel={(project) =>
+                      (project as Models.Project).name || project.$id
+                    }
+                  />
 
-                <ImpactListSection
-                  title={`Projects (${projectsToDelete.length})`}
-                  items={projectsToDelete}
-                  getLabel={(project) =>
-                    (project as Models.Project).name || project.$id
-                  }
-                />
+                  <ImpactListSection
+                    title={`Members (${membersToDelete.length})`}
+                    items={membersToDelete}
+                    getLabel={(membership) => {
+                      const member = membership as Models.Membership
+                      return member.userName || member.userEmail || member.$id
+                    }}
+                  />
 
-                <ImpactListSection
-                  title={`Members (${membersToDelete.length})`}
-                  items={membersToDelete}
-                  getLabel={(membership) => {
-                    const member = membership as Models.Membership
-                    return member.userName || member.userEmail || member.$id
-                  }}
-                />
+                  <ImpactListSection
+                    title={`Domains (${domainsToDelete.length})`}
+                    items={domainsToDelete}
+                    getLabel={(domain) =>
+                      (domain as Models.Domain).domain || domain.$id
+                    }
+                  />
 
-                <ImpactListSection
-                  title={`Domains (${domainsToDelete.length})`}
-                  items={domainsToDelete}
-                  getLabel={(domain) =>
-                    (domain as Models.Domain).domain || domain.$id
-                  }
-                />
+                  <ResourceImpactSection
+                    title="Resources in kept projects"
+                    resourceImpact={resourceImpact}
+                  />
 
-                <ResourceImpactSection
-                  title="Resources in kept projects"
-                  resourceImpact={resourceImpact}
-                />
-              </div>
+                  <ProjectResourceImpactSection
+                    projects={keptProjectResourceImpacts}
+                  />
+                </OrganizationImpactSection>
               ) : null
             ) : null}
 

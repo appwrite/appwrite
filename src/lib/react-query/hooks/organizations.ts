@@ -614,13 +614,21 @@ export async function fetchOrganizationUsage(organizationId: string) {
  * @param organizationId - The organization ID
  * @returns Projects list
  */
-export async function fetchOrganizationProjects(organizationId: string) {
+export async function fetchOrganizationProjects(
+  organizationId: string,
+  page: number = 0,
+  limit: number = 1000,
+) {
   if (!organizationId) {
     return { projects: [] }
   }
   try {
     const response = await listConsoleProjects({
-      queries: [Query.equal('teamId', organizationId), Query.limit(1000)],
+      queries: [
+        Query.equal('teamId', organizationId),
+        Query.limit(limit),
+        Query.offset(page * limit),
+      ],
     })
     return {
       projects: response.projects || [],

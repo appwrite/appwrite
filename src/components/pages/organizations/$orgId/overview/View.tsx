@@ -269,7 +269,7 @@ function EmptyMemberAvatarSlot({
       disabled={disabled}
       onClick={onClick}
       className={cn(
-        'relative rounded-full border-2 border-background focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2',
+        'relative flex shrink-0 items-center justify-center rounded-full border-2 border-background focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2',
         disabled
           ? 'cursor-not-allowed opacity-50'
           : 'cursor-pointer hover:opacity-90',
@@ -1761,7 +1761,7 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                               to="/organizations/$orgId/settings/members"
                               params={{ orgId: orgId! }}
                               className={cn(
-                                'flex h-8 min-h-8 rounded-full focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 cursor-pointer hover:opacity-90 transition-opacity',
+                                'flex h-8 min-h-8 items-center rounded-full focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 cursor-pointer hover:opacity-90 transition-opacity',
                                 (displayMembers.length > 1 ||
                                   (displayMembers.length > 0 && showOverflow)) &&
                                   '-space-x-2',

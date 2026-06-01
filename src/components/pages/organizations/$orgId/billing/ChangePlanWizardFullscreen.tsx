@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo, useRef, useCallback } from 'react'
 import { useNavigate, useSearch, Link } from '@tanstack/react-router'
-import { useQuery, useQueryClient } from '@tanstack/react-query'
+import { useQueries, useQuery, useQueryClient } from '@tanstack/react-query'
 import { ID } from '@appwrite.io/console'
 import {
   BillingPlanTier,
@@ -43,7 +43,17 @@ import { DowngradeValidation } from './change-plan/DowngradeValidation'
 import type { DowngradeValidationHandle } from './change-plan/DowngradeValidation'
 import { DowngradeImpactSummary } from './change-plan/DowngradeImpactSummary'
 import { resolveOrgToDelete } from '@/lib/billing/free-plan-conflict'
-import { fetchDeletedOrganizationImpact } from '@/lib/billing/fetch-deleted-org-impact'
+import {
+  fetchDeletedOrganizationImpact,
+  type DeletedOrganizationImpact,
+} from '@/lib/billing/fetch-deleted-org-impact'
+import { fetchProjectDowngradeResources } from '@/lib/billing/fetch-project-downgrade-resources'
+import {
+  DOWNGRADE_RESOURCE_TYPES,
+  type DowngradeResourceImpact,
+} from '@/lib/billing/downgrade-plan-limits'
+import { fetchOrganizationDomains } from '@/lib/react-query/hooks/domains'
+import { fetchOrganizationMemberships } from '@/lib/react-query/hooks/teams'
 import { ValidateCreditModal } from './change-plan/ValidateCredit'
 import { PaymentModal } from './Payment'
 import {
@@ -77,6 +87,7 @@ import type { Models } from '@appwrite.io/console'
  */
 
 const ESTIMATION_DEBOUNCE_MS = 500
+const DELETED_ORG_LIST_LIMIT = 1000
 
 export function ChangePlanWizardFullscreen() {
   const navigate = useNavigate()
@@ -202,7 +213,11 @@ export function ChangePlanWizardFullscreen() {
   }, [])
 
   const { usage: orgUsage } = useOrganizationUsage(orgId)
-  const { projects: allProjects } = useOrganizationProjects(orgId)
+  const {
+    projects: allProjects,
+    total: allProjectsTotal,
+    isLoading: allProjectsLoading,
+  } = useOrganizationProjects(orgId)
 
   const selectedPlanIsFree = useMemo(
     () => isFreePlanRef(selectedPlan, billingPlans),
@@ -389,6 +404,20 @@ export function ChangePlanWizardFullscreen() {
     freePlanKeepChoiceId,
   ])
 
+  const deletedOrganizationFallbackProjects = useMemo(() => {
+    if (orgToDelete?.$id !== orgId) return []
+    return allProjects
+  }, [allProjects, orgId, orgToDelete?.$id])
+
+  const deletedOrganizationFallbackProjectSignature = useMemo(
+    () =>
+      deletedOrganizationFallbackProjects
+        .map((project) => project.$id)
+        .sort()
+        .join(','),
+    [deletedOrganizationFallbackProjects],
+  )
+
   const {
     data: deletedOrganizationImpact,
     isLoading: deletedOrganizationImpactLoading,
@@ -399,15 +428,108 @@ export function ChangePlanWizardFullscreen() {
       'deleted-organization-impact',
       'with-project-resource-breakdown',
       orgToDelete?.$id,
+      deletedOrganizationFallbackProjectSignature,
     ],
     queryFn: () =>
       fetchDeletedOrganizationImpact(
         orgToDelete!.$id,
         orgToDelete!.name,
+        deletedOrganizationFallbackProjects,
       ),
-    enabled: !!orgToDelete,
+    enabled:
+      !!orgToDelete && (orgToDelete.$id !== orgId || !allProjectsLoading),
     staleTime: 30 * 1000,
   })
+
+  const isDeletingCurrentOrganization = orgToDelete?.$id === orgId
+  const currentDeletedMembershipsQuery = useQuery({
+    queryKey: [
+      'billing',
+      'current-deleted-organization-memberships',
+      orgId,
+    ],
+    queryFn: () =>
+      fetchOrganizationMemberships(orgId!, 0, DELETED_ORG_LIST_LIMIT),
+    enabled: !!orgId && isDeletingCurrentOrganization,
+    staleTime: 30 * 1000,
+  })
+
+  const currentDeletedDomainsQuery = useQuery({
+    queryKey: ['billing', 'current-deleted-organization-domains', orgId],
+    queryFn: () => fetchOrganizationDomains(orgId!, 0, DELETED_ORG_LIST_LIMIT),
+    enabled: !!orgId && isDeletingCurrentOrganization,
+    staleTime: 30 * 1000,
+  })
+
+  const currentDeletedResourceQueries = useQueries({
+    queries: allProjects.map((project) => ({
+      queryKey: [
+        'billing',
+        'current-deleted-organization-project-resources',
+        project.$id,
+      ],
+      queryFn: () => fetchProjectDowngradeResources(project.$id),
+      enabled:
+        isDeletingCurrentOrganization && !allProjectsLoading && !!project.$id,
+      staleTime: 30 * 1000,
+    })),
+  })
+
+  const currentDeletedOrganizationImpact = useMemo<DeletedOrganizationImpact | null>(() => {
+    if (!isDeletingCurrentOrganization || !orgToDelete || !orgId) return null
+    if (allProjectsLoading) return null
+
+    const resourceImpact: DowngradeResourceImpact = {}
+    const projectResourceImpacts = allProjects.map((project, index) => {
+      const resources = currentDeletedResourceQueries[index]?.data
+      const projectImpact: DowngradeResourceImpact = {}
+
+      for (const { id } of DOWNGRADE_RESOURCE_TYPES) {
+        const total = resources?.[id]?.total ?? 0
+        resourceImpact[id] = (resourceImpact[id] ?? 0) + total
+        projectImpact[id] = total
+      }
+
+      return {
+        projectId: project.$id,
+        projectName: project.name || project.$id,
+        resourceImpact: projectImpact,
+      }
+    })
+
+    return {
+      organizationId: orgId,
+      organizationName: orgToDelete.name,
+      projects: allProjects,
+      memberships: currentDeletedMembershipsQuery.data?.memberships ?? [],
+      domains: currentDeletedDomainsQuery.data?.domains ?? [],
+      resourceImpact,
+      projectResourceImpacts,
+    }
+  }, [
+    allProjects,
+    allProjectsLoading,
+    currentDeletedDomainsQuery.data?.domains,
+    currentDeletedMembershipsQuery.data?.memberships,
+    currentDeletedResourceQueries,
+    isDeletingCurrentOrganization,
+    orgId,
+    orgToDelete,
+  ])
+
+  const currentDeletedOrganizationLoading =
+    isDeletingCurrentOrganization &&
+    (allProjectsLoading ||
+      currentDeletedMembershipsQuery.isLoading ||
+      currentDeletedDomainsQuery.isLoading ||
+      currentDeletedResourceQueries.some((query) => query.isLoading))
+
+  const effectiveDeletedOrganizationImpact =
+    currentDeletedOrganizationImpact ?? deletedOrganizationImpact ?? null
+  const effectiveDeletedOrganizationLoading =
+    currentDeletedOrganizationLoading ||
+    deletedOrganizationImpactLoading ||
+    deletedOrganizationImpactPending
 
   useEffect(() => {
     if (!showFreePlanConflict || !organization || isCreateMode) {
@@ -1141,14 +1263,12 @@ export function ChangePlanWizardFullscreen() {
               organizationId={orgId}
               organizationName={organization?.name}
               projects={allProjects}
+              projectsTotal={allProjectsTotal}
               targetPlan={targetPlanInfo}
               onRef={handleDowngradeValidationRef}
               onValidityChange={handleDowngradeValidationValid}
-              deletedOrganizationImpact={deletedOrganizationImpact ?? null}
-              deletedOrganizationLoading={
-                deletedOrganizationImpactLoading ||
-                deletedOrganizationImpactPending
-              }
+              deletedOrganizationImpact={effectiveDeletedOrganizationImpact}
+              deletedOrganizationLoading={effectiveDeletedOrganizationLoading}
               expectDeletedOrganizationImpact={!!orgToDelete}
             />
           ) : orgToDelete ? (
@@ -1157,11 +1277,8 @@ export function ChangePlanWizardFullscreen() {
               allProjects={[]}
               keptProjects={[]}
               resourceImpact={{}}
-              deletedOrganizationImpact={deletedOrganizationImpact ?? null}
-              deletedOrganizationLoading={
-                deletedOrganizationImpactLoading ||
-                deletedOrganizationImpactPending
-              }
+              deletedOrganizationImpact={effectiveDeletedOrganizationImpact}
+              deletedOrganizationLoading={effectiveDeletedOrganizationLoading}
               expectDeletedOrganizationImpact
               keptOrganizationImpactReady={false}
             />
