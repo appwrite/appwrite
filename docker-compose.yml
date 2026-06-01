@@ -1364,7 +1364,7 @@ services:
       EMBEDDING_MODELS: ${_APP_EMBEDDING_MODELS:-nomic-embed-text}
     container_name: appwrite-embedding
     ports:
-      - "11430:11434"
+      - "3000:3000"
     restart: unless-stopped
     # persistent for caching models across restarts and preloading
     volumes:
