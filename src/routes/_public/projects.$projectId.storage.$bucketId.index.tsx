@@ -47,10 +47,11 @@ export const Route = createFileRoute(
       return
     }
 
-    const fileId = routeSearch.file?.trim() || undefined
+    const routeSearchParams = routeSearch ?? {}
+    const fileId = routeSearchParams.file?.trim() || undefined
 
     const { search, page, limit, filterQueries, sort } = parseListSearch(
-      routeSearch,
+      routeSearchParams,
       {
         page: DEFAULT_PAGE,
         limit: ROWS_DEFAULT_PAGE_SIZE,

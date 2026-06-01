@@ -22,7 +22,9 @@ export const Route = createFileRoute('/_public/projects/$projectId/storage/')({
     const { queryClient } = context
     if (!projectId) return
 
-    if (routeSearch.create || !isRealStorageNavigation(cause, preload)) {
+    const routeSearchParams = routeSearch ?? {}
+
+    if (routeSearchParams.create || !isRealStorageNavigation(cause, preload)) {
       return
     }
 
