@@ -614,7 +614,7 @@ class Databases extends Action
     {
         Span::add('database.namespace', $database->getNamespace());
         Span::add('database.tenant', $database->getTenant());
-        Span::add('delete_by_group.collection', $collectionId);
+        Span::add('delete_by_group.collection.id', $collectionId);
 
         try {
             $count = $database->deleteDocuments(
