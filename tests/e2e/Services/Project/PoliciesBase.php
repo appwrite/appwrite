@@ -7,13 +7,12 @@ use Utopia\Database\Query;
 
 trait PoliciesBase
 {
-    // =========================================================================
-    // Get Policy
-    // =========================================================================
-
-    public function testGetPolicy(): void
+    /**
+     * @return array<string, array<string>>
+     */
+    protected function getExpectedPolicies(): array
     {
-        $expectedFields = [
+        return [
             'password-dictionary' => ['enabled'],
             'password-history' => ['total'],
             'password-strength' => ['minLength', 'requireUppercase', 'requireLowercase', 'requireNumber', 'requireSpecialChar'],
@@ -25,8 +24,15 @@ trait PoliciesBase
             'user-limit' => ['total'],
             'membership-privacy' => ['userId', 'userEmail', 'userPhone', 'userName', 'userMFA'],
         ];
+    }
 
-        foreach ($expectedFields as $policyId => $fields) {
+    // =========================================================================
+    // Get Policy
+    // =========================================================================
+
+    public function testGetPolicy(): void
+    {
+        foreach ($this->getExpectedPolicies() as $policyId => $fields) {
             $response = $this->getPolicy($policyId);
 
             $this->assertSame(200, $response['headers']['status-code']);
@@ -142,26 +148,25 @@ trait PoliciesBase
     {
         $response = $this->listPolicies();
 
+        $expected = $this->getExpectedPolicies();
+
         $this->assertSame(200, $response['headers']['status-code']);
         $this->assertArrayHasKey('policies', $response['body']);
         $this->assertArrayHasKey('total', $response['body']);
         $this->assertIsArray($response['body']['policies']);
         $this->assertIsInt($response['body']['total']);
-        $this->assertSame(10, $response['body']['total']);
-        $this->assertCount(10, $response['body']['policies']);
+
+        // Unpaginated list: total reflects exactly what was returned.
+        $this->assertSame($response['body']['total'], \count($response['body']['policies']));
+
+        // At least the known policies are present; downstream may add more.
+        $this->assertGreaterThanOrEqual(\count($expected), $response['body']['total']);
 
         $policyIds = \array_column($response['body']['policies'], '$id');
 
-        $this->assertContains('password-dictionary', $policyIds);
-        $this->assertContains('password-history', $policyIds);
-        $this->assertContains('password-strength', $policyIds);
-        $this->assertContains('password-personal-data', $policyIds);
-        $this->assertContains('session-alert', $policyIds);
-        $this->assertContains('session-duration', $policyIds);
-        $this->assertContains('session-invalidation', $policyIds);
-        $this->assertContains('session-limit', $policyIds);
-        $this->assertContains('user-limit', $policyIds);
-        $this->assertContains('membership-privacy', $policyIds);
+        foreach (\array_keys($expected) as $policyId) {
+            $this->assertContains($policyId, $policyIds);
+        }
     }
 
     public function testListPoliciesResponseModel(): void
@@ -179,24 +184,13 @@ trait PoliciesBase
             $byId[$policy['$id']] = $policy;
         }
 
-        $this->assertArrayHasKey('enabled', $byId['password-dictionary']);
-        $this->assertArrayHasKey('total', $byId['password-history']);
-        $this->assertArrayHasKey('minLength', $byId['password-strength']);
-        $this->assertArrayHasKey('requireUppercase', $byId['password-strength']);
-        $this->assertArrayHasKey('requireLowercase', $byId['password-strength']);
-        $this->assertArrayHasKey('requireNumber', $byId['password-strength']);
-        $this->assertArrayHasKey('requireSpecialChar', $byId['password-strength']);
-        $this->assertArrayHasKey('enabled', $byId['password-personal-data']);
-        $this->assertArrayHasKey('enabled', $byId['session-alert']);
-        $this->assertArrayHasKey('duration', $byId['session-duration']);
-        $this->assertArrayHasKey('enabled', $byId['session-invalidation']);
-        $this->assertArrayHasKey('total', $byId['session-limit']);
-        $this->assertArrayHasKey('total', $byId['user-limit']);
-        $this->assertArrayHasKey('userId', $byId['membership-privacy']);
-        $this->assertArrayHasKey('userEmail', $byId['membership-privacy']);
-        $this->assertArrayHasKey('userPhone', $byId['membership-privacy']);
-        $this->assertArrayHasKey('userName', $byId['membership-privacy']);
-        $this->assertArrayHasKey('userMFA', $byId['membership-privacy']);
+        foreach ($this->getExpectedPolicies() as $policyId => $fields) {
+            $this->assertArrayHasKey($policyId, $byId);
+
+            foreach ($fields as $field) {
+                $this->assertArrayHasKey($field, $byId[$policyId]);
+            }
+        }
     }
 
     public function testListPoliciesReflectsUpdates(): void
@@ -262,7 +256,15 @@ trait PoliciesBase
 
         $this->assertSame(200, $response['headers']['status-code']);
         $this->assertSame(0, $response['body']['total']);
-        $this->assertCount(10, $response['body']['policies']);
+
+        // total=false skips the count but still returns every policy; downstream may add more.
+        $this->assertGreaterThanOrEqual(\count($this->getExpectedPolicies()), \count($response['body']['policies']));
+
+        $policyIds = \array_column($response['body']['policies'], '$id');
+
+        foreach (\array_keys($this->getExpectedPolicies()) as $policyId) {
+            $this->assertContains($policyId, $policyIds);
+        }
     }
 
     public function testListPoliciesWithLimit(): void
@@ -273,7 +275,9 @@ trait PoliciesBase
 
         $this->assertSame(200, $response['headers']['status-code']);
         $this->assertCount(1, $response['body']['policies']);
-        $this->assertSame(10, $response['body']['total']);
+
+        // limit caps the page, not the total; downstream may add more policies.
+        $this->assertGreaterThanOrEqual(\count($this->getExpectedPolicies()), $response['body']['total']);
     }
 
     public function testListPoliciesWithOffset(): void

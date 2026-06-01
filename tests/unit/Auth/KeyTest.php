@@ -22,7 +22,7 @@ class KeyTest extends TestCase
             'collections.read',
             'documents.read',
         ];
-        $roleScopes = Config::getParam('roles', [])[User::ROLE_APPS]['scopes'];
+        $roleScopes = Config::getParam('roles', [])[User::ROLE_KEYS]['scopes'];
         $guestRoleScopes = Config::getParam('roles', [])[User::ROLE_GUESTS]['scopes'];
 
         $key = self::generateKey($projectId, $usage, $scopes);
@@ -37,7 +37,7 @@ class KeyTest extends TestCase
         $this->assertEquals('', $decoded->getTeamId());
         $this->assertEquals('', $decoded->getUserId());
         $this->assertEquals(API_KEY_EPHEMERAL, $decoded->getType());
-        $this->assertEquals(User::ROLE_APPS, $decoded->getRole());
+        $this->assertEquals(User::ROLE_KEYS, $decoded->getRole());
         $this->assertEquals(\array_merge($scopes, $roleScopes), $decoded->getScopes());
         $this->assertEquals('Ephemeral Key', $decoded->getName());
 
@@ -61,7 +61,7 @@ class KeyTest extends TestCase
         $this->assertEquals('', $decoded->getTeamId());
         $this->assertEquals('', $decoded->getUserId());
         $this->assertEquals(API_KEY_EPHEMERAL, $decoded->getType());
-        $this->assertEquals(User::ROLE_APPS, $decoded->getRole());
+        $this->assertEquals(User::ROLE_KEYS, $decoded->getRole());
         $this->assertEquals(\array_merge($scopes, $roleScopes), $decoded->getScopes());
         $this->assertEquals('Ephemeral Key', $decoded->getName());
         $this->assertEquals(['metric123'], $decoded->getDisabledMetrics());
@@ -123,7 +123,7 @@ class KeyTest extends TestCase
         $this->assertEquals('', $decoded->getTeamId());
         $this->assertEquals('', $decoded->getUserId());
         $this->assertEquals(API_KEY_STANDARD, $decoded->getType());
-        $this->assertEquals(User::ROLE_APPS, $decoded->getRole());
+        $this->assertEquals(User::ROLE_KEYS, $decoded->getRole());
         $this->assertEquals(\array_merge($scopes, $roleScopes), $decoded->getScopes());
         $this->assertEquals('Standard key', $decoded->getName());
 
@@ -146,7 +146,7 @@ class KeyTest extends TestCase
         $this->assertEquals('', $decoded->getTeamId());
         $this->assertEquals('', $decoded->getUserId());
         $this->assertEquals(API_KEY_STANDARD, $decoded->getType());
-        $this->assertEquals(User::ROLE_APPS, $decoded->getRole());
+        $this->assertEquals(User::ROLE_KEYS, $decoded->getRole());
         $this->assertEquals(\array_merge($scopes, $roleScopes), $decoded->getScopes());
         $this->assertEquals('Standard key', $decoded->getName());
 
@@ -194,7 +194,7 @@ class KeyTest extends TestCase
         $this->assertEquals('', $decoded->getTeamId());
         $this->assertEquals('', $decoded->getUserId());
         $this->assertEquals(API_KEY_STANDARD, $decoded->getType());
-        $this->assertEquals(User::ROLE_APPS, $decoded->getRole());
+        $this->assertEquals(User::ROLE_KEYS, $decoded->getRole());
         $this->assertEquals(\array_merge($scopes, $roleScopes), $decoded->getScopes());
         $this->assertEquals('Standard key', $decoded->getName());
 
@@ -289,7 +289,7 @@ class KeyTest extends TestCase
         $this->assertEquals($teamId, $decoded->getTeamId());
         $this->assertEquals('', $decoded->getUserId());
         $this->assertEquals(API_KEY_ORGANIZATION, $decoded->getType());
-        $this->assertEquals(User::ROLE_APPS, $decoded->getRole());
+        $this->assertEquals(User::ROLE_KEYS, $decoded->getRole());
         $this->assertEquals($scopes, $decoded->getScopes());
         $this->assertEquals('Organization key', $decoded->getName());
 
@@ -336,7 +336,7 @@ class KeyTest extends TestCase
         $this->assertEquals($teamId, $decoded->getTeamId());
         $this->assertEquals('', $decoded->getUserId());
         $this->assertEquals(API_KEY_ORGANIZATION, $decoded->getType());
-        $this->assertEquals(User::ROLE_APPS, $decoded->getRole());
+        $this->assertEquals(User::ROLE_KEYS, $decoded->getRole());
         $this->assertEquals($scopes, $decoded->getScopes());
         $this->assertEquals('Organization key', $decoded->getName());
     }

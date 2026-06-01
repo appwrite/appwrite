@@ -201,7 +201,7 @@ class Create extends Action
             $documents = [$data];
         }
 
-        $isAPIKey = $user->isApp($authorization->getRoles());
+        $isAPIKey = $user->isKey($authorization->getRoles());
         $isPrivilegedUser = $user->isPrivileged($authorization->getRoles());
 
         if ($isBulk && !$isAPIKey && !$isPrivilegedUser) {
