@@ -5,7 +5,7 @@ import { buildInitExploringActivity } from '@/lib/init/init-presence-activity'
 import { ChevronRight } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
-export const INIT_TICKET_SECTION_ID = 'init-ticket'
+import { INIT_GET_INVOLVED_SECTION_ID, INIT_TICKET_SECTION_ID } from '@/lib/init/init-section-ids'
 
 interface GetInvolvedCardsProps {
   event: InitDisplayEvent
@@ -41,7 +41,7 @@ export function GetInvolvedCards({ event, account }: GetInvolvedCardsProps) {
   const itemCount = items.length
 
   return (
-    <section className="space-y-4">
+    <section id={INIT_GET_INVOLVED_SECTION_ID} className="space-y-4">
       <h3 className="text-[15px] font-semibold text-foreground">{sectionTitle}</h3>
 
       <div
@@ -57,7 +57,16 @@ export function GetInvolvedCards({ event, account }: GetInvolvedCardsProps) {
           const inner = (
             <>
               <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-muted text-muted-foreground">
-                <Icon className="size-5" aria-hidden />
+                {item.iconSrc ? (
+                  <img
+                    src={item.iconSrc}
+                    alt=""
+                    className="size-5 dark:invert-0"
+                    aria-hidden
+                  />
+                ) : Icon ? (
+                  <Icon className="size-5" aria-hidden />
+                ) : null}
               </div>
               <div className="min-w-0 flex-1">
                 <p className="text-[13px] font-medium text-foreground">{item.title}</p>

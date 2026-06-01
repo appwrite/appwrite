@@ -17,8 +17,10 @@ import {
   PRIZE_CARD_BG,
   PRIZE_IMAGE_FRAME,
   PRIZE_IMAGE_HOVER_ZOOM,
+  PRIZE_IMAGE_HOVER_ZOOM_COMPACT,
   PRIZE_IMAGE_INSET,
   PRIZE_SWAG_IMAGE_OPACITY,
+  PRIZE_SWAG_IMAGE_OPACITY_COMPACT,
 } from './prize-image-styles'
 import { InitGiveawayRaffleBack } from './InitGiveawayRaffleBack'
 import { InitGrandPrizeRevealBack } from './InitGrandPrizeRevealBack'
@@ -67,11 +69,13 @@ function PrizeImage({
   visual,
   placeholderIcon: PlaceholderIcon,
   subdued = false,
+  compact = false,
   className,
 }: {
   visual?: LaunchEventPrizeVisual
   placeholderIcon: typeof Gift
   subdued?: boolean
+  compact?: boolean
   className?: string
 }) {
   const imageSrc = useInitThemeImageSrc(
@@ -88,8 +92,9 @@ function PrizeImage({
           alt={visual.imageAlt}
           className={cn(
             'absolute inset-0 size-full object-cover object-center',
-            PRIZE_IMAGE_HOVER_ZOOM,
-            subdued && PRIZE_SWAG_IMAGE_OPACITY,
+            compact ? PRIZE_IMAGE_HOVER_ZOOM_COMPACT : PRIZE_IMAGE_HOVER_ZOOM,
+            subdued &&
+              (compact ? PRIZE_SWAG_IMAGE_OPACITY_COMPACT : PRIZE_SWAG_IMAGE_OPACITY),
             className,
           )}
           loading="lazy"
@@ -132,7 +137,7 @@ function DailyPrizeCell({
         )}
       >
         <div className={cn(PRIZE_IMAGE_FRAME, DAILY_IMAGE_ASPECT)}>
-          <PrizeImage visual={giveaway.visual} placeholderIcon={Gift} subdued />
+          <PrizeImage visual={giveaway.visual} placeholderIcon={Gift} subdued compact />
         </div>
       </div>
 

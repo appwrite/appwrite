@@ -164,6 +164,8 @@ export function useInitOnlinePresence(
     useState<InitParticipantStatus>('online')
   const [isParticipantStatusUpdating, setIsParticipantStatusUpdating] =
     useState(false)
+  /** Bumped when local activity refs change so the sidebar reflects hover state immediately. */
+  const [activityDisplayVersion, setActivityDisplayVersion] = useState(0)
 
   const presenceIdRef = useRef<string | null>(null)
   const upsertingRef = useRef(false)
@@ -189,6 +191,10 @@ export function useInitOnlinePresence(
     if (transientActivityRef.current) return transientActivityRef.current
     if (priorityActivityRef.current) return priorityActivityRef.current
     return baselineActivityRef.current
+  }, [])
+
+  const bumpActivityDisplay = useCallback(() => {
+    setActivityDisplayVersion((version) => version + 1)
   }, [])
 
   const accountUserId = account?.$id
@@ -284,10 +290,11 @@ export function useInitOnlinePresence(
       if (!next || baselineActivityRef.current === next) return
       baselineActivityRef.current = next
       if (!transientActivityRef.current && !priorityActivityRef.current) {
+        bumpActivityDisplay()
         schedulePresencePublish()
       }
     },
-    [schedulePresencePublish],
+    [bumpActivityDisplay, schedulePresencePublish],
   )
 
   const setTransientActivity = useCallback(
@@ -295,9 +302,10 @@ export function useInitOnlinePresence(
       const next = activity?.trim() || null
       if (transientActivityRef.current === next) return
       transientActivityRef.current = next
+      bumpActivityDisplay()
       schedulePresencePublish()
     },
-    [schedulePresencePublish],
+    [bumpActivityDisplay, schedulePresencePublish],
   )
 
   const setPriorityActivity = useCallback(
@@ -305,9 +313,10 @@ export function useInitOnlinePresence(
       const next = activity?.trim() || null
       if (priorityActivityRef.current === next) return
       priorityActivityRef.current = next
+      bumpActivityDisplay()
       schedulePresencePublish()
     },
-    [schedulePresencePublish],
+    [bumpActivityDisplay, schedulePresencePublish],
   )
 
   const publishPresence = useCallback(
@@ -386,9 +395,10 @@ export function useInitOnlinePresence(
     themeActivityResetRef.current = window.setTimeout(() => {
       themeActivityResetRef.current = null
       transientActivityRef.current = null
+      bumpActivityDisplay()
       void publishPresence(!participantOnlineRef.current, { refresh: false })
     }, INIT_REACTION_DURATION_MS)
-  }, [publishPresence])
+  }, [bumpActivityDisplay, publishPresence])
   scheduleThemeActivityResetRef.current = scheduleThemeActivityReset
 
   const syncPresenceTheme = useCallback(
@@ -406,6 +416,7 @@ export function useInitOnlinePresence(
         themeOverride != null || initialThemeSyncDoneRef.current
       if (showThemeActivity) {
         transientActivityRef.current = buildInitSwitchingThemeActivity(nextTheme)
+        bumpActivityDisplay()
       }
 
       if (upsertingRef.current) {
@@ -420,7 +431,7 @@ export function useInitOnlinePresence(
         scheduleThemeActivityReset()
       }
     },
-    [accountUserId, enabled, eventId, publishPresence, scheduleThemeActivityReset],
+    [accountUserId, bumpActivityDisplay, enabled, eventId, publishPresence, scheduleThemeActivityReset],
   )
 
   const setParticipantStatus = useCallback(
@@ -437,6 +448,7 @@ export function useInitOnlinePresence(
       if (!online) {
         transientActivityRef.current = null
         priorityActivityRef.current = null
+        bumpActivityDisplay()
       }
 
       try {
@@ -445,7 +457,7 @@ export function useInitOnlinePresence(
         setIsParticipantStatusUpdating(false)
       }
     },
-    [accountUserId, enabled, eventId, publishPresence],
+    [accountUserId, bumpActivityDisplay, enabled, eventId, publishPresence],
   )
 
   useEffect(() => {
@@ -624,9 +636,14 @@ export function useInitOnlinePresence(
   return useMemo(() => {
     if (!enabled || !accountUserId || !activityAllowlist) return EMPTY_STATE
 
+    void activityDisplayVersion
+    const selfOnlineActivity = resolveActivity(false)
+
     const allOnlineUsers = mapPresencesToOnlineUsers(
       presenceMaps.online.values(),
       activityAllowlist,
+    ).map((user) =>
+      user.id === accountUserId ? { ...user, activity: selfOnlineActivity } : user,
     )
     const onlineUsers = allOnlineUsers.slice(0, SIDEBAR_USER_LIMIT)
     const recentlyOnlineUsers = mapPresencesToOnlineUsers(
@@ -665,11 +682,13 @@ export function useInitOnlinePresence(
   }, [
     accountUserId,
     activityAllowlist,
+    activityDisplayVersion,
     enabled,
     isReady,
     isParticipantStatusUpdating,
     presenceMaps,
     participantStatus,
+    resolveActivity,
     setBaselineActivity,
     setParticipantStatus,
     setTransientActivity,

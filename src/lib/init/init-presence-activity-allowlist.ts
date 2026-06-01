@@ -48,6 +48,13 @@ export function buildInitPresenceActivityAllowlist(
     allowed.add(buildInitExploringActivity(item.title))
   }
 
+  if (event.prizes?.sectionTitle) {
+    allowed.add(buildInitExploringActivity(event.prizes.sectionTitle))
+  }
+
+  allowed.add(buildInitExploringActivity('Ways to get involved'))
+  allowed.add(buildInitExploringActivity('Keep exploring'))
+
   if (event.prizes) {
     for (const giveaway of event.prizes.dailyGiveaways) {
       allowed.add(

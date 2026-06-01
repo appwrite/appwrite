@@ -1,4 +1,4 @@
-import type { LaunchEventDay } from '@/lib/init/types'
+import type { LaunchEventDay, LaunchEventDayResource, LaunchEventScheduleItem } from '@/lib/init/types'
 import { useInitPresenceActivity } from '@/lib/init/init-presence-context'
 import { buildInitDayPreviewActivity } from '@/lib/init/init-presence-day-activity'
 import { getInitDayCardId } from '@/lib/init/scroll-to-day-card'
@@ -8,6 +8,7 @@ import {
 } from '@/lib/init/use-init-theme-image'
 import { Badge } from '@/components/ui/badge'
 import { InitDayCardHeaderNav } from './InitDayCardHeaderNav'
+import { InitScheduleRow } from './InitScheduleRow'
 import { ArrowUpRight, Play } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
@@ -125,12 +126,55 @@ function DayTitle({ title }: { title: string }) {
 
 interface DayDetailCardProps {
   day: LaunchEventDay
+  scheduleItems: LaunchEventScheduleItem[]
   currentDay: number
   isRecapMode?: boolean
 }
 
-export function DayDetailCard({ day, currentDay, isRecapMode = false }: DayDetailCardProps) {
+function DayResourceRow({ resource }: { resource: LaunchEventDayResource }) {
+  return (
+    <li>
+      <a
+        href={resource.href}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="group flex items-center gap-4 px-6 py-3.5 transition-colors hover:bg-accent/30"
+      >
+        <Badge
+          variant="secondary"
+          className="shrink-0 rounded-md bg-muted px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground"
+        >
+          {resource.typeLabel}
+        </Badge>
+        <span className="min-w-0 flex-1 text-[13px] font-medium text-foreground">
+          {resource.title}
+        </span>
+        <span className="flex shrink-0 items-center gap-1 text-[12px] text-muted-foreground transition-colors group-hover:text-foreground">
+          {resource.actionLabel}
+          <ArrowUpRight className="size-3.5" aria-hidden />
+        </span>
+      </a>
+    </li>
+  )
+}
+
+export function DayDetailCard({
+  day,
+  scheduleItems,
+  currentDay,
+  isRecapMode = false,
+}: DayDetailCardProps) {
   const { setTransientActivity } = useInitPresenceActivity()
+  const blogResources = day.resources.filter(
+    (resource) => resource.typeLabel.toLowerCase() === 'blog',
+  )
+  const otherResources = day.resources.filter(
+    (resource) => resource.typeLabel.toLowerCase() !== 'blog',
+  )
+  const hasListContent =
+    blogResources.length > 0 ||
+    scheduleItems.length > 0 ||
+    otherResources.length > 0
 
   return (
     <article
@@ -169,31 +213,20 @@ export function DayDetailCard({ day, currentDay, isRecapMode = false }: DayDetai
         </div>
       </div>
 
-      {day.resources.length > 0 ? (
+      {hasListContent ? (
         <ul className="divide-y divide-border border-t border-border">
-          {day.resources.map((resource) => (
-            <li key={resource.id}>
-              <a
-                href={resource.href}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="group flex items-center gap-4 px-6 py-3.5 transition-colors hover:bg-accent/30"
-              >
-                <Badge
-                  variant="secondary"
-                  className="shrink-0 rounded-md bg-muted px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground"
-                >
-                  {resource.typeLabel}
-                </Badge>
-                <span className="min-w-0 flex-1 text-[13px] font-medium text-foreground">
-                  {resource.title}
-                </span>
-                <span className="flex shrink-0 items-center gap-1 text-[12px] text-muted-foreground transition-colors group-hover:text-foreground">
-                  {resource.actionLabel}
-                  <ArrowUpRight className="size-3.5" aria-hidden />
-                </span>
-              </a>
-            </li>
+          {blogResources.map((resource) => (
+            <DayResourceRow key={resource.id} resource={resource} />
+          ))}
+          {scheduleItems.map((item) => (
+            <InitScheduleRow
+              key={item.id}
+              item={item}
+              isRecapMode={isRecapMode}
+            />
+          ))}
+          {otherResources.map((resource) => (
+            <DayResourceRow key={resource.id} resource={resource} />
           ))}
         </ul>
       ) : null}

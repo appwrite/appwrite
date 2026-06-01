@@ -123,3 +123,102 @@ export function resolveOrganizationPlanDisplayLabel(
   }
   return getBillingPlanDisplayLabel(input.billingPlan)
 }
+
+export type BillingPlanRecord = {
+  $id?: string
+  name?: string
+  order?: number
+  price?: number
+}
+
+function canonicalRank(plan: CanonicalPlanId): number {
+  if (plan === 'free') return 0
+  if (plan === 'pro' || plan === 'education') return 1
+  return 2
+}
+
+/**
+ * Resolve a billing plan record from a plan ref (billingPlans map key or $id).
+ */
+export function resolveBillingPlanRecord(
+  planRef: string | null | undefined,
+  plans: Record<string, BillingPlanRecord> | null | undefined,
+): BillingPlanRecord | null {
+  if (!planRef || !plans) return null
+  if (plans[planRef]) return plans[planRef]
+  return Object.values(plans).find((plan) => plan.$id === planRef) ?? null
+}
+
+/**
+ * Canonical plan id from a billing plan ref and optional plan catalog.
+ * Uses plan record fields when available, then falls back to tier parsing.
+ */
+export function getPlanCanonicalFromRecord(
+  planRef: string | null | undefined,
+  plans: Record<string, BillingPlanRecord> | null | undefined,
+): CanonicalPlanId {
+  const plan = resolveBillingPlanRecord(planRef, plans)
+  if (plan?.name) {
+    const name = plan.name.toLowerCase()
+    if (name.includes('free') || name === 'starter') return 'free'
+    if (name.includes('pro')) return 'pro'
+    if (name.includes('education') || name.includes('sponsored')) {
+      return 'education'
+    }
+  }
+
+  if (plan && typeof plan.order === 'number') {
+    if (plan.order <= 0 && (plan.price ?? 0) === 0) return 'free'
+    if (plan.order === 1) return 'pro'
+  }
+
+  return getPlanNameFromTier(plan?.$id ?? planRef)
+}
+
+export function isFreePlanRef(
+  planRef: string | null | undefined,
+  plans: Record<string, BillingPlanRecord> | null | undefined,
+): boolean {
+  return getPlanCanonicalFromRecord(planRef, plans) === 'free'
+}
+
+export function compareBillingPlanRefs(
+  currentRef: string | null | undefined,
+  selectedRef: string | null | undefined,
+  plans: Record<string, BillingPlanRecord> | null | undefined,
+): 'upgrade' | 'downgrade' | 'same' | 'unknown' {
+  if (!currentRef || !selectedRef) return 'unknown'
+  if (currentRef === selectedRef) return 'same'
+
+  const currentPlan = resolveBillingPlanRecord(currentRef, plans)
+  const selectedPlan = resolveBillingPlanRecord(selectedRef, plans)
+
+  if (
+    currentPlan &&
+    selectedPlan &&
+    typeof currentPlan.order === 'number' &&
+    typeof selectedPlan.order === 'number' &&
+    currentPlan.order !== selectedPlan.order
+  ) {
+    return selectedPlan.order < currentPlan.order ? 'downgrade' : 'upgrade'
+  }
+
+  if (
+    currentPlan &&
+    selectedPlan &&
+    typeof currentPlan.price === 'number' &&
+    typeof selectedPlan.price === 'number' &&
+    currentPlan.price !== selectedPlan.price
+  ) {
+    return selectedPlan.price < currentPlan.price ? 'downgrade' : 'upgrade'
+  }
+
+  const currentRank = canonicalRank(getPlanCanonicalFromRecord(currentRef, plans))
+  const selectedRank = canonicalRank(
+    getPlanCanonicalFromRecord(selectedRef, plans),
+  )
+
+  if (selectedRank < currentRank) return 'downgrade'
+  if (selectedRank > currentRank) return 'upgrade'
+  return 'unknown'
+}

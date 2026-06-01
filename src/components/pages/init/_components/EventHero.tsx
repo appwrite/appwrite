@@ -8,15 +8,7 @@ import {
   useInitScrollSpyDay,
 } from '@/lib/init/use-init-scroll-spy-day'
 import { useInitPresenceActivity } from '@/lib/init/init-presence-context'
-import {
-  buildInitDayReadingActivity,
-  findInitDayView,
-} from '@/lib/init/init-presence-day-activity'
-import {
-  INIT_PRESENCE_ACTIVITY_ON_INIT,
-  buildInitPlayingWithJoolActivity,
-  buildInitPreEventBaselineActivity,
-} from '@/lib/init/init-presence-activity'
+import { buildInitPlayingWithJoolActivity } from '@/lib/init/init-presence-activity'
 import { InitialsAvatar } from '@/components/global/shared/Avatar'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -205,34 +197,13 @@ export function EventHero({ event, headerAddon, liveBanner }: EventHeroProps) {
   const dayNumbers = useMemo(() => event.days.map((day) => day.day), [event.days])
   const activeDay = useInitScrollSpyDay(dayNumbers)
   const { isCapturing: isTicketVideoCapturing } = useInitTicketVideoRecording()
-  const { setBaselineActivity, setTransientActivity } = useInitPresenceActivity()
+  const { setTransientActivity } = useInitPresenceActivity()
   const handleJoolInteractionStart = useCallback(() => {
     setTransientActivity(buildInitPlayingWithJoolActivity())
   }, [setTransientActivity])
   const handleJoolInteractionEnd = useCallback(() => {
     setTransientActivity(null)
   }, [setTransientActivity])
-
-  useEffect(() => {
-    const dayView = findInitDayView(event.days, activeDay)
-    const presenceSeed = account?.$id ?? 'guest'
-
-    if (!dayView) {
-      setBaselineActivity(
-        event.currentDay <= 0
-          ? buildInitPreEventBaselineActivity(presenceSeed)
-          : INIT_PRESENCE_ACTIVITY_ON_INIT,
-      )
-      return
-    }
-    setBaselineActivity(
-      buildInitDayReadingActivity(
-        dayView,
-        event.currentDay,
-        `${presenceSeed}:day-${dayView.day}`,
-      ),
-    )
-  }, [account?.$id, activeDay, event.currentDay, event.days, setBaselineActivity])
 
   useEffect(() => {
     const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches

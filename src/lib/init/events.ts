@@ -1,6 +1,5 @@
 import {
   Gift,
-  MessageCircle,
   Rocket,
   Ticket,
 } from 'lucide-react'
@@ -108,7 +107,7 @@ export const LAUNCH_EVENTS: LaunchEvent[] = [
         id: 'community',
         title: 'Join the conversation',
         description: 'Share feedback and connect with the community.',
-        icon: MessageCircle,
+        iconSrc: '/icons/discord-simple.svg',
         href: 'https://appwrite.io/discord',
       },
       {
@@ -141,7 +140,7 @@ export const LAUNCH_EVENTS: LaunchEvent[] = [
           id: 'community',
           title: 'Join the conversation',
           description: 'Share feedback and stay connected with the Appwrite community.',
-          icon: MessageCircle,
+          iconSrc: '/icons/discord-simple.svg',
           href: 'https://appwrite.io/discord',
         },
       ],

@@ -127,10 +127,10 @@ export const OrganizationUsageLimits = forwardRef<
                     disabled && 'cursor-not-allowed',
                   )}
                 >
-                  <div className="truncate text-[13px] font-medium text-foreground">
+                  <div className="min-w-0 truncate text-[13px] font-medium leading-normal text-foreground">
                     {project.name}
                   </div>
-                  <div className="truncate text-[12px] text-muted-foreground mt-0.5">
+                  <div className="min-w-0 truncate text-[12px] leading-normal text-muted-foreground mt-0.5">
                     {project.$id}
                   </div>
                 </Label>

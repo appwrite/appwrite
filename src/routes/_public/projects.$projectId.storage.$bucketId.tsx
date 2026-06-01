@@ -17,17 +17,25 @@ export const Route = createFileRoute(
       },
     ],
   }),
-  loader: async ({ params, context }) => {
+  loader: async ({ params, context, cause, preload }) => {
     if (typeof window === 'undefined') return
     const { projectId, bucketId } = params
     const { queryClient } = context
     if (!projectId || !bucketId) return
 
     if (bucketId === STORAGE_PLACEHOLDER_BUCKET_ID) {
-      const bucketsData = await queryClient.fetchQuery(
+      if (cause === 'preload' || preload) {
+        return { bucket: undefined }
+      }
+
+      const bucketsData = await queryClient.ensureQueryData(
         storageSidebarBucketsQueryOptions(projectId),
       )
-      redirectStorageFirstBucketOrPlaceholder(projectId, bucketsData)
+      const firstId = bucketsData.buckets?.[0]?.$id
+      if (firstId) {
+        redirectStorageFirstBucketOrPlaceholder(projectId, bucketsData)
+      }
+      return { bucket: undefined }
     }
 
     await queryClient.fetchQuery({

@@ -6,7 +6,7 @@ import { ChevronRight, Gift } from 'lucide-react'
 import {
   PRIZE_CARD_BG,
   PRIZE_IMAGE_FRAME,
-  PRIZE_IMAGE_HOVER_ZOOM,
+  PRIZE_IMAGE_HOVER_ZOOM_COMPACT,
   PRIZE_IMAGE_INSET,
 } from './prize-image-styles'
 
@@ -37,7 +37,7 @@ export function GiveawayPromoCard({ giveaway }: GiveawayPromoCardProps) {
             alt={giveaway.imageAlt}
             className={cn(
               'absolute inset-0 size-full object-cover object-center',
-              PRIZE_IMAGE_HOVER_ZOOM,
+              PRIZE_IMAGE_HOVER_ZOOM_COMPACT,
             )}
             loading="lazy"
             decoding="async"

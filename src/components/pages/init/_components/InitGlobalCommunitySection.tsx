@@ -4,6 +4,7 @@ import { buildInitGlobePresenceData } from '@/lib/init/build-init-globe-arcs'
 import { buildInitGlobeConfig, getInitGlobeBrandRgb } from '@/lib/init/init-globe-theme'
 import { useInitPresenceActivity } from '@/lib/init/init-presence-context'
 import { buildInitExploringGlobeActivity } from '@/lib/init/init-presence-activity'
+import { INIT_GLOBE_SECTION_ID } from '@/lib/init/init-section-ids'
 import type { GlobeConfig } from '@/components/ui/globe'
 import type { InitCommunityCountry } from '@/lib/init/types'
 import { cn } from '@/lib/utils'
@@ -121,7 +122,6 @@ function InitCommunityGlobe({
   className,
 }: InitCommunityGlobeProps) {
   const { config: globeConfig, themeKey } = useInitGlobeConfig()
-  const { setTransientActivity } = useInitPresenceActivity()
   const countriesKey = useMemo(
     () => serializeCommunityCountries(countries),
     [countries],
@@ -135,24 +135,12 @@ function InitCommunityGlobe({
     [brandRgb, countriesKey],
   )
 
-  const handleGlobeInteractionStart = useCallback(() => {
-    setTransientActivity(buildInitExploringGlobeActivity())
-  }, [setTransientActivity])
-
-  const handleGlobeInteractionEnd = useCallback(() => {
-    setTransientActivity(null)
-  }, [setTransientActivity])
-
   return (
     <div
       className={cn(
         'relative mx-auto w-full max-w-[min(100%,44rem)] overflow-hidden aspect-[100/55] sm:max-w-[min(100%,52rem)] lg:max-w-[min(100%,60rem)] xl:max-w-[min(100%,68rem)]',
         className,
       )}
-      onPointerDown={handleGlobeInteractionStart}
-      onPointerUp={handleGlobeInteractionEnd}
-      onPointerLeave={handleGlobeInteractionEnd}
-      onPointerCancel={handleGlobeInteractionEnd}
     >
       <div className="aspect-square w-full">
         <Suspense
@@ -200,10 +188,26 @@ export function InitGlobalCommunitySection({
   isLive,
   isAuthenticated,
 }: InitGlobalCommunitySectionProps) {
+  const { setTransientActivity } = useInitPresenceActivity()
+  const globeActivity = buildInitExploringGlobeActivity()
+
+  const handleGlobeSectionEnter = useCallback(() => {
+    setTransientActivity(globeActivity)
+  }, [globeActivity, setTransientActivity])
+
+  const handleGlobeSectionLeave = useCallback(() => {
+    setTransientActivity(null)
+  }, [setTransientActivity])
+
   return (
     <div className="relative">
       <div className="relative overflow-hidden">
-        <section className="relative px-4 pt-6 sm:px-6 sm:pt-8">
+        <section
+          id={INIT_GLOBE_SECTION_ID}
+          className="relative px-4 pt-6 sm:px-6 sm:pt-8"
+          onMouseEnter={handleGlobeSectionEnter}
+          onMouseLeave={handleGlobeSectionLeave}
+        >
           <div className="relative z-10 mx-auto flex w-full max-w-2xl flex-col items-center space-y-3 text-center">
             <div className="space-y-2">
               <h3 className="text-[15px] font-semibold text-foreground">

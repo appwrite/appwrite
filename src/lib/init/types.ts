@@ -109,7 +109,9 @@ export interface LaunchEventInvolvement {
   id: string
   title: string
   description: string
-  icon: LucideIcon
+  icon?: LucideIcon
+  /** Brand icon path (e.g. Discord) — rendered instead of `icon` when set. */
+  iconSrc?: string
   href?: string
 }
 

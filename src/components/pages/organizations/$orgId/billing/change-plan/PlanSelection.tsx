@@ -12,7 +12,10 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
 import { Label } from '@/components/ui/label'
 import { ChevronDown, Info, ExternalLink } from '@/lib/icons'
 import {
+  getPlanCanonicalFromRecord,
   getPlanNameFromTier,
+  isFreePlanRef,
+  resolveBillingPlanRecord,
   resolveOrganizationPlanDisplayLabel,
 } from '@/lib/utils/plan-filter'
 import { cn } from '@/lib/utils'
@@ -47,8 +50,8 @@ const planListClassName = 'grid gap-3'
 const ENTERPRISE_COLLAPSED_HINT =
   'Need compliance, custom SLAs, or volume pricing?'
 
-const FREE_PLAN_UNAVAILABLE_DESCRIPTION =
-  'Free plan unavailable. Your account already has a free organization.'
+const FREE_PLAN_CONFLICT_DESCRIPTION =
+  'Only one free organization per account.'
 
 interface PlanSelectionProps {
   plans: Record<string, unknown>
@@ -75,20 +78,25 @@ export function PlanSelection({
   const availablePlans =
     plans && typeof plans === 'object' ? Object.entries(plans) : []
 
+  const planCatalog = plans as Record<
+    string,
+    { $id?: string; name?: string; order?: number; price?: number }
+  >
+
   const isOrganizationOnFreePlan =
-    !isCreateMode && getPlanNameFromTier(currentPlan as string) === 'free'
+    !isCreateMode && isFreePlanRef(currentPlan as string, planCatalog)
 
   const isCurrentPlan = (planTier: string) => {
     if (isCreateMode) return false
     return (
       planTier === currentPlan ||
-      getPlanNameFromTier(planTier) ===
-        getPlanNameFromTier(currentPlan as string)
+      getPlanCanonicalFromRecord(planTier, planCatalog) ===
+        getPlanCanonicalFromRecord(currentPlan as string, planCatalog)
     )
   }
 
   const isFreePlan = (planTier: string) => {
-    return getPlanNameFromTier(planTier) === 'free'
+    return isFreePlanRef(planTier, planCatalog)
   }
 
   const isFreeDisabledByAccountLimit = (planTier: string) =>
@@ -97,11 +105,20 @@ export function PlanSelection({
     hasFreeOrgs &&
     (isCreateMode || !isOrganizationOnFreePlan)
 
-  const isDisabled = (planTier: string) => {
+  const isDisabled = (_planTier: string) => {
     if (!selfService) return true
-    if (isFreeDisabledByAccountLimit(planTier)) return true
     return false
   }
+
+  const hasFreePlanConflict = (planTier: string) =>
+    isFreeDisabledByAccountLimit(planTier)
+
+  const selectedPlanIsFree =
+    !!selectedPlan &&
+    ((resolveBillingPlanRecord(selectedPlan, planCatalog)?.price ?? 0) === 0 ||
+      isFreePlanRef(selectedPlan, planCatalog))
+
+  const showEnterpriseSection = !!selectedPlan && !selectedPlanIsFree
 
   const isEnterpriseCurrent =
     getPlanNameFromTier(currentPlan as string) === 'custom' ||
@@ -259,11 +276,15 @@ export function PlanSelection({
             const price = planData?.price || 0
             // API uses 'desc' not 'description'
             const description = planData?.desc || planData?.description
-            const planDescription = isFreeDisabledByAccountLimit(planTier)
-              ? FREE_PLAN_UNAVAILABLE_DESCRIPTION
+            const planDescription = hasFreePlanConflict(planTier)
+              ? FREE_PLAN_CONFLICT_DESCRIPTION
               : description
             const isSelected = selectedPlan === planTier
-            const isRecommendedPlan = getPlanNameFromTier(planTier) === 'pro'
+            const isRecommendedPlan =
+              getPlanCanonicalFromRecord(
+                planTier,
+                plans as Record<string, { $id?: string; name?: string; order?: number; price?: number }>,
+              ) === 'pro'
 
             const handleSelect = () => {
               if (disabled) return
@@ -352,7 +373,7 @@ export function PlanSelection({
           })}
       </RadioGroup>
 
-      {enterpriseSection}
+      {showEnterpriseSection ? enterpriseSection : null}
 
       {variant === 'card' && (
         <div className="mt-4">

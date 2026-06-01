@@ -1,6 +1,6 @@
-import { useState, useEffect, useMemo, useRef } from 'react'
+import { useState, useEffect, useMemo, useRef, useCallback } from 'react'
 import { useNavigate, useSearch, Link } from '@tanstack/react-router'
-import { useQueryClient } from '@tanstack/react-query'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { ID } from '@appwrite.io/console'
 import {
   BillingPlanTier,
@@ -35,10 +35,15 @@ import {
 import { useSmartNavigation } from '@/lib/hooks/useSmartNavigation'
 import { useDebouncedValue } from '@/lib/hooks/useDebouncedValue'
 import { PlanSelection } from './change-plan/PlanSelection'
+import { FreePlanConflictResolution } from './change-plan/FreePlanConflictResolution'
 import { SelectPaymentMethod } from './change-plan/SelectPaymentMethod'
 import { EstimatedTotalBox } from './change-plan/EstimatedTotalBox'
 import { PlanComparisonBox } from './change-plan/PlanComparisonBox'
-import { OrganizationUsageLimits } from './change-plan/OrganizationUsageLimits'
+import { DowngradeValidation } from './change-plan/DowngradeValidation'
+import type { DowngradeValidationHandle } from './change-plan/DowngradeValidation'
+import { DowngradeImpactSummary } from './change-plan/DowngradeImpactSummary'
+import { resolveOrgToDelete } from '@/lib/billing/free-plan-conflict'
+import { fetchDeletedOrganizationImpact } from '@/lib/billing/fetch-deleted-org-impact'
 import { ValidateCreditModal } from './change-plan/ValidateCredit'
 import { PaymentModal } from './Payment'
 import {
@@ -54,7 +59,13 @@ import {
 } from '@/components/ui/select'
 import { Textarea } from '@/components/ui/textarea'
 import { confirmPayment } from '@/lib/utils/stripe'
-import { getPlanNameFromTier } from '@/lib/utils/plan-filter'
+import {
+  compareBillingPlanRefs,
+  getPlanCanonicalFromRecord,
+  getPlanNameFromTier,
+  isFreePlanRef,
+  resolveBillingPlanRecord,
+} from '@/lib/utils/plan-filter'
 import type { Models } from '@appwrite.io/console'
 
 /**
@@ -106,6 +117,13 @@ export function ChangePlanWizardFullscreen() {
     )
   }, [organizations, orgId])
 
+  const otherFreeOrg = useMemo(() => {
+    return (
+      organizations.find((org) => org.plan === 'free' && org.$id !== orgId) ??
+      null
+    )
+  }, [organizations, orgId])
+
   // Default selection: Pro for new orgs; first paid plan when upgrading from Free;
   // otherwise the org's current plan.
   const defaultPlan = useMemo(() => {
@@ -116,16 +134,21 @@ export function ChangePlanWizardFullscreen() {
     const current = organization?.billingPlan || BillingPlanTier.Tier0
 
     if (
-      getPlanNameFromTier(current) === 'free' &&
+      getPlanCanonicalFromRecord(current, billingPlans) === 'free' &&
       billingPlans &&
       Object.keys(billingPlans).length > 0
     ) {
       const firstPaidPlan = Object.keys(billingPlans)
-        .filter((tier) => getPlanNameFromTier(tier) !== 'free')
+        .filter(
+          (planId) =>
+            getPlanCanonicalFromRecord(planId, billingPlans) !== 'free',
+        )
         .sort((a, b) => {
-          const tierNumber = (id: string) =>
-            parseInt(id.match(/tier-(\d+)/i)?.[1] ?? '999', 10)
-          return tierNumber(a) - tierNumber(b)
+          const orderA =
+            resolveBillingPlanRecord(a, billingPlans)?.order ?? 999
+          const orderB =
+            resolveBillingPlanRecord(b, billingPlans)?.order ?? 999
+          return orderA - orderB
         })[0]
 
       if (firstPaidPlan) {
@@ -161,16 +184,35 @@ export function ChangePlanWizardFullscreen() {
   const [paymentModalOpen, setPaymentModalOpen] = useState(false)
   const [setupProgress, setSetupProgress] =
     useState<OrganizationSetupProgressState | null>(null)
-  const [usageLimitsComponentRef, setUsageLimitsComponentRef] = useState<{
-    getSelectedProjects?: () => string[]
-  } | null>(null)
-  const handleUsageLimitsRef = (ref: unknown) =>
-    setUsageLimitsComponentRef(
-      ref as { getSelectedProjects?: () => string[] } | null,
-    )
+  const downgradeValidationRef = useRef<DowngradeValidationHandle | null>(null)
+  const [downgradeValidationValid, setDowngradeValidationValid] = useState(true)
+  const [freePlanKeepChoiceId, setFreePlanKeepChoiceId] = useState<
+    string | null
+  >(null)
+
+  const handleDowngradeValidationRef = useCallback(
+    (ref: DowngradeValidationHandle | null) => {
+      downgradeValidationRef.current = ref
+    },
+    [],
+  )
+
+  const handleDowngradeValidationValid = useCallback((valid: boolean) => {
+    setDowngradeValidationValid((prev) => (prev === valid ? prev : valid))
+  }, [])
 
   const { usage: orgUsage } = useOrganizationUsage(orgId)
   const { projects: allProjects } = useOrganizationProjects(orgId)
+
+  const selectedPlanIsFree = useMemo(
+    () => isFreePlanRef(selectedPlan, billingPlans),
+    [selectedPlan, billingPlans],
+  )
+
+  const selectedPlanIsPro = useMemo(
+    () => getPlanCanonicalFromRecord(selectedPlan, billingPlans) === 'pro',
+    [selectedPlan, billingPlans],
+  )
 
   // Get current plan tier
   const currentPlanTier = isCreateMode
@@ -280,26 +322,100 @@ export function ChangePlanWizardFullscreen() {
 
   // Determine if upgrade or downgrade
   const isUpgrade = useMemo(() => {
-    if (!selectedPlan || !currentPlanEnum) return false
-    if (isCreateMode) {
-      return selectedPlan !== BillingPlanTier.Tier0
-    }
-    const currentTier =
-      parseInt(currentPlanEnum.replace('tier-', '').replace('Tier', '')) || 0
-    const selectedTier =
-      parseInt(selectedPlan.replace('tier-', '').replace('Tier', '')) || 0
-    return selectedTier > currentTier
-  }, [selectedPlan, currentPlanEnum, isCreateMode])
+    if (!selectedPlan) return false
+    if (isCreateMode) return !selectedPlanIsFree
+    if (!currentPlanEnum) return false
+    return (
+      compareBillingPlanRefs(currentPlanEnum, selectedPlan, billingPlans) ===
+      'upgrade'
+    )
+  }, [
+    selectedPlan,
+    currentPlanEnum,
+    isCreateMode,
+    billingPlans,
+    selectedPlanIsFree,
+  ])
 
   const isDowngrade = useMemo(() => {
-    if (isCreateMode) return false
-    if (!selectedPlan || !currentPlanEnum) return false
-    const currentTier =
-      parseInt(currentPlanEnum.replace('tier-', '').replace('Tier', '')) || 0
-    const selectedTier =
-      parseInt(selectedPlan.replace('tier-', '').replace('Tier', '')) || 0
-    return selectedTier < currentTier
-  }, [selectedPlan, currentPlanEnum, isCreateMode])
+    if (isCreateMode || !selectedPlan || !currentPlanEnum) return false
+    return (
+      compareBillingPlanRefs(currentPlanEnum, selectedPlan, billingPlans) ===
+      'downgrade'
+    )
+  }, [selectedPlan, currentPlanEnum, isCreateMode, billingPlans])
+
+  const showFreePlanConflict =
+    selectedPlanIsFree &&
+    hasFreeOrgs &&
+    !!otherFreeOrg &&
+    (isCreateMode || isDowngrade)
+
+  const isKeepingExistingFreeOrg = useMemo(() => {
+    if (!showFreePlanConflict || !otherFreeOrg || !organization || isCreateMode) {
+      return false
+    }
+    const keepChoiceId = freePlanKeepChoiceId ?? organization.$id
+    return keepChoiceId === otherFreeOrg.$id
+  }, [
+    showFreePlanConflict,
+    otherFreeOrg,
+    organization,
+    isCreateMode,
+    freePlanKeepChoiceId,
+  ])
+
+  const orgToDelete = useMemo(() => {
+    if (!showFreePlanConflict || !otherFreeOrg || isCreateMode) return null
+
+    const currentOrg = organization
+      ? { $id: organization.$id, name: organization.name }
+      : null
+    const keepChoiceId = freePlanKeepChoiceId ?? organization?.$id
+
+    if (!keepChoiceId) return null
+
+    return resolveOrgToDelete(
+      keepChoiceId,
+      otherFreeOrg,
+      currentOrg,
+      !isCreateMode,
+    )
+  }, [
+    showFreePlanConflict,
+    otherFreeOrg,
+    organization,
+    isCreateMode,
+    freePlanKeepChoiceId,
+  ])
+
+  const {
+    data: deletedOrganizationImpact,
+    isLoading: deletedOrganizationImpactLoading,
+    isPending: deletedOrganizationImpactPending,
+  } = useQuery({
+    queryKey: [
+      'billing',
+      'deleted-organization-impact',
+      'with-project-resource-breakdown',
+      orgToDelete?.$id,
+    ],
+    queryFn: () =>
+      fetchDeletedOrganizationImpact(
+        orgToDelete!.$id,
+        orgToDelete!.name,
+      ),
+    enabled: !!orgToDelete,
+    staleTime: 30 * 1000,
+  })
+
+  useEffect(() => {
+    if (!showFreePlanConflict || !organization || isCreateMode) {
+      setFreePlanKeepChoiceId(null)
+      return
+    }
+    setFreePlanKeepChoiceId((prev) => prev ?? organization.$id)
+  }, [showFreePlanConflict, organization?.$id, isCreateMode])
 
   // Clear coupon when downgrading an existing organization
   useEffect(() => {
@@ -309,9 +425,7 @@ export function ChangePlanWizardFullscreen() {
   }, [isDowngrade, selectedPlan])
 
   const needsPaymentMethods =
-    !!selectedPlan &&
-    selectedPlan !== BillingPlanTier.Tier0 &&
-    isUpgrade
+    !!selectedPlan && !selectedPlanIsFree && isUpgrade
 
   // Fetch saved cards only for paid-plan flows, or when the add-card modal is open.
   const { paymentMethods, isLoading: paymentMethodsLoading } = usePaymentMethods(
@@ -356,7 +470,7 @@ export function ChangePlanWizardFullscreen() {
   }, [selectedCoupon, isUpgrade])
 
   const debouncedEstimationPlan = useDebouncedValue(
-    selectedPlan && selectedPlan !== BillingPlanTier.Tier0 ? selectedPlan : null,
+    selectedPlan && !selectedPlanIsFree ? selectedPlan : null,
     ESTIMATION_DEBOUNCE_MS,
   )
   const debouncedEstimationPaymentMethodId = useDebouncedValue(
@@ -393,9 +507,8 @@ export function ChangePlanWizardFullscreen() {
   const estimation = isCreateMode ? createEstimation : updateEstimation
 
   const estimationInputsDebouncing =
-    (selectedPlan && selectedPlan !== BillingPlanTier.Tier0
-      ? selectedPlan
-      : null) !== debouncedEstimationPlan ||
+    (selectedPlan && !selectedPlanIsFree ? selectedPlan : null) !==
+      debouncedEstimationPlan ||
     (isCreateMode &&
       (estimationPaymentMethodId ?? null) !==
         debouncedEstimationPaymentMethodId)
@@ -403,7 +516,7 @@ export function ChangePlanWizardFullscreen() {
   const awaitingEstimationPaymentMethod =
     isCreateMode &&
     !!selectedPlan &&
-    selectedPlan !== BillingPlanTier.Tier0 &&
+    !selectedPlanIsFree &&
     !paymentMethodsLoading &&
     !estimationPaymentMethodId
 
@@ -413,16 +526,26 @@ export function ChangePlanWizardFullscreen() {
     estimationInputsDebouncing ||
     (isCreateMode &&
       !!selectedPlan &&
-      selectedPlan !== BillingPlanTier.Tier0 &&
+      !selectedPlanIsFree &&
       paymentMethodsLoading)
 
   // Get target plan info
-  const targetPlanInfo = selectedPlan ? billingPlans[selectedPlan] : null
+  const targetPlanInfo = useMemo(() => {
+    return resolveBillingPlanRecord(selectedPlan, billingPlans) as
+      | Record<string, unknown>
+      | null
+  }, [billingPlans, selectedPlan])
+
   const targetProjectsLimit = targetPlanInfo?.projects ?? 0
-  const needsProjectSelection =
-    isDowngrade &&
-    targetProjectsLimit > 0 &&
-    allProjects.length > targetProjectsLimit
+  const needsDowngradeValidation =
+    isDowngrade && !!selectedPlan && !isKeepingExistingFreeOrg
+
+  useEffect(() => {
+    if (!needsDowngradeValidation || isKeepingExistingFreeOrg) {
+      downgradeValidationRef.current = null
+      setDowngradeValidationValid(true)
+    }
+  }, [needsDowngradeValidation, isKeepingExistingFreeOrg])
 
   // Check if submit button should be disabled
   const isButtonDisabled = useMemo(() => {
@@ -432,7 +555,7 @@ export function ChangePlanWizardFullscreen() {
 
     if (isCreateMode) {
       if (!organizationName.trim()) return true
-      if (selectedPlan === BillingPlanTier.Tier0 && hasFreeOrgs) return true
+      if (selectedPlanIsFree && hasFreeOrgs) return true
       if (isUpgrade) {
         if (!paymentMethodId) return true
         const selectedMethod = paymentMethods.find(
@@ -454,21 +577,17 @@ export function ChangePlanWizardFullscreen() {
       if (!selectedMethod?.last4) return true // Must be a completed card
     }
 
-    // For downgrades: check project selection if needed
+    // For downgrades: validate project/resource selection
     if (isDowngrade) {
-      if (needsProjectSelection) {
-        if (!usageLimitsComponentRef) return true
-        const selected = usageLimitsComponentRef.getSelectedProjects?.()
-        if (!selected || selected.length !== targetProjectsLimit) return true
-      }
+      if (needsDowngradeValidation && !downgradeValidationValid) return true
 
       // For free plan: feedback required (message only, like old console)
-      if (selectedPlan === BillingPlanTier.Tier0 && !hasFreeOrgs) {
+      if (selectedPlanIsFree && !hasFreeOrgs) {
         if (!feedbackMessage.trim()) return true
       }
 
       // One free org per account: cannot downgrade to Free if user has another free org
-      if (selectedPlan === BillingPlanTier.Tier0 && hasFreeOrgs) return true
+      if (selectedPlanIsFree && hasFreeOrgs) return true
     }
 
     return false
@@ -480,10 +599,10 @@ export function ChangePlanWizardFullscreen() {
     isDowngrade,
     paymentMethodId,
     paymentMethods,
-    needsProjectSelection,
-    usageLimitsComponentRef,
-    targetProjectsLimit,
+    needsDowngradeValidation,
+    downgradeValidationValid,
     feedbackMessage,
+    selectedPlanIsFree,
     hasFreeOrgs,
     isCreateMode,
     organizationName,
@@ -495,7 +614,7 @@ export function ChangePlanWizardFullscreen() {
     if (!orgId || !selectedPlan || !paymentMethodId) return
 
     const planLabel = getPlanNameFromTier(selectedPlan)
-    const showActivationStep = selectedPlan !== BillingPlanTier.Tier0
+    const showActivationStep = !selectedPlanIsFree
 
     setSetupProgress({
       mode: 'upgrade',
@@ -599,6 +718,10 @@ export function ChangePlanWizardFullscreen() {
     if (!orgId || !selectedPlan) return
 
     try {
+      if (downgradeValidationRef.current?.deleteMarkedResources) {
+        await downgradeValidationRef.current.deleteMarkedResources()
+      }
+
       // Update the plan
       await updatePlanMutation.mutateAsync({
         organizationId: orgId,
@@ -607,18 +730,22 @@ export function ChangePlanWizardFullscreen() {
       })
 
       // Update selected projects if plan has project limit
-      if (needsProjectSelection && usageLimitsComponentRef) {
-        const selected = usageLimitsComponentRef.getSelectedProjects?.()
-        if (selected && selected.length > 0) {
-          await updateSelectedProjectsMutation.mutateAsync({
-            organizationId: orgId,
-            projectIds: selected,
-          })
-        }
+      const selectedProjects =
+        downgradeValidationRef.current?.getSelectedProjects?.()
+      if (
+        targetProjectsLimit > 0 &&
+        allProjects.length > targetProjectsLimit &&
+        selectedProjects &&
+        selectedProjects.length > 0
+      ) {
+        await updateSelectedProjectsMutation.mutateAsync({
+          organizationId: orgId,
+          projectIds: selectedProjects,
+        })
       }
 
       // Track feedback if downgrading to Free (reason optional, message required per old console)
-      if (selectedPlan === BillingPlanTier.Tier0 && !hasFreeOrgs) {
+      if (selectedPlanIsFree && !hasFreeOrgs) {
         await createDowngradeFeedbackMutation.mutateAsync({
           organizationId: orgId,
           reason: feedbackDowngradeReason || 'other',
@@ -646,14 +773,14 @@ export function ChangePlanWizardFullscreen() {
 
     const organizationId = ID.unique()
     const requiresPayment =
-      selectedPlan !== BillingPlanTier.Tier0 && isUpgrade && paymentMethodId
+      !selectedPlanIsFree && isUpgrade && paymentMethodId
 
-    if (selectedPlan !== BillingPlanTier.Tier0 && !paymentMethodId) {
+    if (!selectedPlanIsFree && !paymentMethodId) {
       return
     }
 
     const planLabel = getPlanNameFromTier(selectedPlan)
-    const showActivationStep = selectedPlan !== BillingPlanTier.Tier0
+    const showActivationStep = !selectedPlanIsFree
 
     setSetupProgress({
       mode: 'create',
@@ -770,14 +897,14 @@ export function ChangePlanWizardFullscreen() {
   const showEstimatedTotal =
     selectedTierStr &&
     selectedTierStr !== currentTierStr &&
-    selectedTierStr !== BillingPlanTier.Tier0 &&
+    !selectedPlanIsFree &&
     currentTierStr !== 'custom' &&
     currentTierStr !== 'Custom'
 
   // Show plan comparison box conditions
   const showPlanComparison =
     !showEstimatedTotal ||
-    selectedTierStr === BillingPlanTier.Tier0 ||
+    selectedPlanIsFree ||
     selectedTierStr === currentTierStr ||
     currentTierStr === 'custom' ||
     currentTierStr === 'Custom'
@@ -969,39 +1096,79 @@ export function ChangePlanWizardFullscreen() {
         </>
       )}
 
+      {showFreePlanConflict && otherFreeOrg && (
+        <FreePlanConflictResolution
+          otherFreeOrg={otherFreeOrg}
+          currentOrg={
+            organization
+              ? { $id: organization.$id, name: organization.name }
+              : null
+          }
+          pendingOrgName={organizationName}
+          showCurrentOrgOption={!isCreateMode}
+          keepChoiceId={
+            !isCreateMode && organization
+              ? (freePlanKeepChoiceId ?? organization.$id)
+              : undefined
+          }
+          onKeepChoiceChange={
+            !isCreateMode ? setFreePlanKeepChoiceId : undefined
+          }
+          onCurrentOrgDeleted={() => {
+            if (!orgId) return
+            const remainingOrgs = organizations.filter(
+              (org) => org.$id !== orgId,
+            )
+            if (remainingOrgs.length > 0) {
+              navigate({
+                to: '/organizations/$orgId',
+                params: { orgId: remainingOrgs[0].$id },
+                replace: true,
+              })
+            } else {
+              navigate({ to: '/', replace: true })
+            }
+          }}
+        />
+      )}
+
       {/* Downgrade-specific sections */}
       {isDowngrade && selectedPlan && (
         <>
-          {/* One free org per account */}
-          {selectedPlan === BillingPlanTier.Tier0 && hasFreeOrgs && (
-            <WarningAlert title="You can only have one free organization per account">
-              To downgrade this organization, first migrate or delete your
-              existing free organization.{' '}
-              <a
-                href="https://appwrite.io/docs/advanced/migrations/cloud"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="underline"
-              >
-                Migration guide
-              </a>
-            </WarningAlert>
-          )}
-
-          {/* Project Selection */}
-          {needsProjectSelection && (
-            <OrganizationUsageLimits
+          {needsDowngradeValidation && orgId ? (
+            <DowngradeValidation
+              key={`${orgId}-${freePlanKeepChoiceId ?? 'default'}`}
+              organizationId={orgId}
+              organizationName={organization?.name}
               projects={allProjects}
-              orgUsage={orgUsage}
-              members={members}
-              organization={organization}
-              targetLimit={targetProjectsLimit}
-              onRef={handleUsageLimitsRef}
+              targetPlan={targetPlanInfo}
+              onRef={handleDowngradeValidationRef}
+              onValidityChange={handleDowngradeValidationValid}
+              deletedOrganizationImpact={deletedOrganizationImpact ?? null}
+              deletedOrganizationLoading={
+                deletedOrganizationImpactLoading ||
+                deletedOrganizationImpactPending
+              }
+              expectDeletedOrganizationImpact={!!orgToDelete}
             />
-          )}
+          ) : orgToDelete ? (
+            <DowngradeImpactSummary
+              key={`deleted-org-impact-${orgToDelete.$id}`}
+              allProjects={[]}
+              keptProjects={[]}
+              resourceImpact={{}}
+              deletedOrganizationImpact={deletedOrganizationImpact ?? null}
+              deletedOrganizationLoading={
+                deletedOrganizationImpactLoading ||
+                deletedOrganizationImpactPending
+              }
+              expectDeletedOrganizationImpact
+              keptOrganizationImpactReady={false}
+            />
+          ) : null}
 
           {/* Downgrade Alerts */}
-          {selectedPlan === BillingPlanTier.Tier1 && (
+          {selectedPlanIsPro && (
             <Alert>
               <AlertTriangle className="h-4 w-4" />
               <AlertTitle>
@@ -1015,7 +1182,7 @@ export function ChangePlanWizardFullscreen() {
             </Alert>
           )}
 
-          {selectedPlan === BillingPlanTier.Tier0 && (
+          {selectedPlanIsFree && (
             <WarningAlert title="Downgrading to Free Plan">
               Your plan will change on{' '}
               {organization?.billingPlanDowngrade ||
@@ -1034,7 +1201,7 @@ export function ChangePlanWizardFullscreen() {
           )}
 
           {/* Feedback Form for Free Plan (matches old console: "What wasn't working for you?" required) */}
-          {selectedPlan === BillingPlanTier.Tier0 && !hasFreeOrgs && (
+          {selectedPlanIsFree && !hasFreeOrgs && (
             <div>
               <Label className="mb-2 block">Feedback</Label>
               <p className="text-[13px] text-muted-foreground mb-4">

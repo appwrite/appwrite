@@ -45,3 +45,26 @@ export function findInitDayView(
 ): LaunchEventDayView | undefined {
   return days.find((day) => day.day === dayNumber)
 }
+
+/** Scroll-spy can land on a locked future day; baseline should stay on the last unlocked day. */
+export function resolveInitScrollSpyBaselineDay(
+  days: LaunchEventDayView[],
+  activeDay: number,
+  currentDay: number,
+): LaunchEventDayView | undefined {
+  const activeDayView = findInitDayView(days, activeDay)
+  if (activeDayView && !isLaunchEventDayLocked(activeDayView)) {
+    return activeDayView
+  }
+
+  if (currentDay <= 0) return undefined
+
+  const currentDayView = findInitDayView(days, currentDay)
+  if (currentDayView && !isLaunchEventDayLocked(currentDayView)) {
+    return currentDayView
+  }
+
+  return days
+    .filter((day) => !isLaunchEventDayLocked(day) && day.day <= currentDay)
+    .sort((a, b) => b.day - a.day)[0]
+}

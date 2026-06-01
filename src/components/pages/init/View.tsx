@@ -19,6 +19,7 @@ import { GetInvolvedCards } from './_components/GetInvolvedCards'
 import { InitPrizesSection } from './_components/InitPrizesSection'
 import { InitPageCredits } from './_components/InitPageCredits'
 import { InitGlobalCommunitySection } from './_components/InitGlobalCommunitySection'
+import { InitPresenceBaselineSync } from './_components/InitPresenceBaselineSync'
 import { useInitCommunityGlobeData } from '@/lib/init/use-init-community-globe-data'
 import { InitGiveawayRaffleConfetti } from './_components/InitGiveawayRaffleConfetti'
 import { InitReactionConfetti } from './_components/InitReactionConfetti'
@@ -87,6 +88,9 @@ function InitPageContent({
 
   return (
     <>
+      {baseEvent.presenceEnabled && !baseEvent.isRecapMode && account ? (
+        <InitPresenceBaselineSync event={baseEvent} />
+      ) : null}
       <ConsoleLayout
         header={{
           onCommandCenterOpen: () => setCommandCenterOpen(true),
@@ -157,6 +161,9 @@ function InitPageContent({
                     <DayDetailCard
                       key={day.day}
                       day={day}
+                      scheduleItems={event.schedule.filter(
+                        (item) => item.day === day.day,
+                      )}
                       currentDay={event.currentDay}
                       isRecapMode={event.isRecapMode}
                     />
