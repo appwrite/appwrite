@@ -569,14 +569,11 @@ class Databases extends Action
 
         $dbForDatabases->deleteCollection('database_' . $databaseInternalId . '_collection_' . $collection->getSequence());
 
-        // The table is already dropped, so attempt every metadata cleanup even
-        // if an earlier one fails -- skipping the rest would leave orphaned
-        // attribute/index rows. Re-throw the first failure afterwards so the
-        // worker marks the message failed and retries the outstanding work.
-        $cleanups = [
-            /**
-             * Related collections relating to current collection
-             */
+        // The table is already dropped, so run every metadata cleanup even if
+        // one fails -- skipping the rest would orphan attribute/index rows.
+        // attemptAll re-throws the first failure so the message is retried.
+        $this->attemptAll(
+            // Related collections relating to current collection
             fn () => $this->deleteByGroup(
                 'attributes',
                 [
@@ -599,9 +596,21 @@ class Databases extends Action
                 Query::equal('databaseInternalId', [$databaseInternalId]),
                 Query::equal('collectionInternalId', [$collectionInternalId])
             ], $dbForProject),
-        ];
+        );
+    }
 
+    /**
+     * Run every cleanup even if some fail, then re-throw the first failure so
+     * the worker marks the message failed and retries the outstanding work.
+     *
+     * @param callable ...$cleanups
+     * @return void
+     * @throws \Throwable
+     */
+    private function attemptAll(callable ...$cleanups): void
+    {
         $error = null;
+
         foreach ($cleanups as $cleanup) {
             try {
                 $cleanup();
