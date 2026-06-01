@@ -79,6 +79,8 @@ class Databases extends Action
 
         $database = $databaseMessage->database ?? new Document();
         Span::add('database.id', $database->getId());
+        Span::add('database.namespace', $dbForProject->getNamespace());
+        Span::add('database.tenant', $dbForProject->getTenant());
 
         /**
          * @var Database $dbForDatabases
@@ -612,8 +614,6 @@ class Databases extends Action
      */
     protected function deleteByGroup(string $collectionId, array $queries, Database $database, ?callable $callback = null): void
     {
-        Span::add('database.namespace', $database->getNamespace());
-        Span::add('database.tenant', $database->getTenant());
         Span::add('delete_by_group.collection.id', $collectionId);
 
         try {
