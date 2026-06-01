@@ -61,11 +61,6 @@ class Databases extends Action
             throw new Exception('Missing payload');
         }
 
-        Span::add('project.id', $project->getId());
-        Span::add('queue.pid', $message->getPid());
-        Span::add('queue.name', $message->getQueue());
-        Span::add('message.timestamp', (string) $message->getTimestamp());
-
         $databaseMessage = DatabaseMessage::fromArray($payload);
 
         $type = $databaseMessage->type;
