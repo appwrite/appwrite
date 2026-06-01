@@ -794,19 +794,14 @@ Http::shutdown()
     ->inject('queueForEvents')
     ->inject('auditContext')
     ->inject('publisherForAudits')
-    ->inject('usage')
-    ->inject('publisherForUsage')
     ->inject('publisherForFunctions')
     ->inject('queueForWebhooks')
     ->inject('queueForRealtime')
     ->inject('dbForProject')
-    ->inject('authorization')
     ->inject('timelimit')
     ->inject('eventProcessor')
-    ->inject('bus')
-    ->inject('apiKey')
     ->inject('mode')
-    ->action(function (Route $route, array $params, Request $request, Response $response, Document $project, User $user, Event $queueForEvents, AuditContext $auditContext, Audit $publisherForAudits, Context $usage, UsagePublisher $publisherForUsage, FunctionPublisher $publisherForFunctions, Event $queueForWebhooks, Realtime $queueForRealtime, Database $dbForProject, Authorization $authorization, callable $timelimit, EventProcessor $eventProcessor, Bus $bus, ?Key $apiKey, string $mode) use ($parseLabel) {
+    ->action(function (Route $route, array $params, Request $request, Response $response, Document $project, User $user, Event $queueForEvents, AuditContext $auditContext, Audit $publisherForAudits, FunctionPublisher $publisherForFunctions, Event $queueForWebhooks, Realtime $queueForRealtime, Database $dbForProject, callable $timelimit, EventProcessor $eventProcessor, string $mode) use ($parseLabel) {
 
         $responsePayload = $response->getPayload();
 
@@ -950,43 +945,6 @@ Http::shutdown()
 
             $publisherForAudits->enqueue(AuditMessage::fromContext($auditContext));
         }
-
-        if ($project->getId() !== 'console') {
-            if (! $user->isPrivileged($authorization->getRoles())) {
-                $bus->dispatch(new RequestCompleted(
-                    project: $project->getArrayCopy(),
-                    request: $request,
-                    response: $response,
-                ));
-            }
-
-            // Publish usage metrics if context has data
-            if (! $usage->isEmpty()) {
-                $metrics = $usage->getMetrics();
-
-                // Filter out API key disabled metrics using suffix pattern matching
-                $disabledMetrics = $apiKey?->getDisabledMetrics() ?? [];
-                if (! empty($disabledMetrics)) {
-                    $metrics = array_values(array_filter($metrics, function ($metric) use ($disabledMetrics) {
-                        foreach ($disabledMetrics as $pattern) {
-                            if (str_ends_with($metric['key'], $pattern)) {
-                                return false;
-                            }
-                        }
-
-                        return true;
-                    }));
-                }
-
-                $message = new UsageMessage(
-                    project: $project,
-                    metrics: $metrics,
-                    reduce: $usage->getReduce()
-                );
-
-                $publisherForUsage->enqueue($message);
-            }
-        }
     });
 
 Http::shutdown()
@@ -1010,58 +968,106 @@ Http::shutdown()
             return;
         }
 
-        // Reproduce the resolved param set: injected path values take precedence
-        // over query/body params, falling back to each param's declared default.
-        $requestParams = [];
-        foreach ($route->getParams() as $key => $param) {
-            $requestParams[$key] = $params[$key] ?? $request->getParam($key, $param['default']);
-        }
-
-        $resource = $resourceType = null;
-        $pattern = $route->getLabel('cache.resource', null);
-        if (! empty($pattern)) {
-            $resource = $parseLabel($pattern, $data, $requestParams, $user, $project);
-        }
-
-        $pattern = $route->getLabel('cache.resourceType', null);
-        if (! empty($pattern)) {
-            $resourceType = $parseLabel($pattern, $data, $requestParams, $user, $project);
-        }
-
         $cache = new Cache(
             new Filesystem(APP_STORAGE_CACHE . DIRECTORY_SEPARATOR . 'app-' . $project->getId())
         );
-
         $key = $request->cacheIdentifier();
         $signature = md5($data['payload']);
-        $cacheLog = $authorization->skip(fn () => $dbForProject->getDocument('cache', $key));
-        $accessedAt = $cacheLog->getAttribute('accessedAt', 0);
         $now = DateTime::now();
+        $cacheLog = $authorization->skip(fn () => $dbForProject->getDocument('cache', $key));
+
+        // First request for this resource: record it and persist the payload.
         if ($cacheLog->isEmpty()) {
+            // Resolve resource labels lazily — only needed when creating the entry.
+            $requestParams = [];
+            foreach ($route->getParams() as $paramKey => $param) {
+                $requestParams[$paramKey] = $params[$paramKey] ?? $request->getParam($paramKey, $param['default']);
+            }
+
+            $resourcePattern = $route->getLabel('cache.resource', null);
+            $resourceTypePattern = $route->getLabel('cache.resourceType', null);
+
             try {
                 $authorization->skip(fn () => $dbForProject->createDocument('cache', new Document([
                     '$id' => $key,
-                    'resource' => $resource,
-                    'resourceType' => $resourceType,
+                    'resource' => empty($resourcePattern) ? null : $parseLabel($resourcePattern, $data, $requestParams, $user, $project),
+                    'resourceType' => empty($resourceTypePattern) ? null : $parseLabel($resourceTypePattern, $data, $requestParams, $user, $project),
                     'mimeType' => $response->getContentType(),
                     'accessedAt' => $now,
                     'signature' => $signature,
                 ])));
+                $cache->save($key, $data['payload']);
+
+                return;
             } catch (DuplicateException) {
-                // Race condition: another concurrent request already created the cache document
+                // Race condition: another concurrent request already created the entry.
                 $cacheLog = $authorization->skip(fn () => $dbForProject->getDocument('cache', $key));
             }
-        } elseif (DateTime::formatTz(DateTime::addSeconds(new \DateTime(), -APP_CACHE_UPDATE)) > $accessedAt) {
-            $cacheLog->setAttribute('accessedAt', $now);
-            $authorization->skip(fn () => $dbForProject->updateDocument('cache', $cacheLog->getId(), new Document([
-                'accessedAt' => $cacheLog->getAttribute('accessedAt')
-            ])));
-            // Overwrite the file every APP_CACHE_UPDATE seconds to update the file modified time that is used in the TTL checks in cache->load()
-            $cache->save($key, $data['payload']);
         }
 
-        if ($signature !== $cacheLog->getAttribute('signature')) {
+        // Existing entry: refresh the access time once per APP_CACHE_UPDATE window
+        // (keeps the file mtime current for TTL checks) and re-persist on content change.
+        $stale = DateTime::formatTz(DateTime::addSeconds(new \DateTime(), -APP_CACHE_UPDATE)) > $cacheLog->getAttribute('accessedAt', 0);
+        if ($stale) {
+            $authorization->skip(fn () => $dbForProject->updateDocument('cache', $cacheLog->getId(), new Document([
+                'accessedAt' => $now,
+            ])));
+        }
+
+        if ($stale || $signature !== $cacheLog->getAttribute('signature')) {
             $cache->save($key, $data['payload']);
+        }
+    });
+
+Http::shutdown()
+    ->groups(['api'])
+    ->inject('request')
+    ->inject('response')
+    ->inject('project')
+    ->inject('user')
+    ->inject('usage')
+    ->inject('publisherForUsage')
+    ->inject('authorization')
+    ->inject('bus')
+    ->inject('apiKey')
+    ->action(function (Request $request, Response $response, Document $project, User $user, Context $usage, UsagePublisher $publisherForUsage, Authorization $authorization, Bus $bus, ?Key $apiKey) {
+        if ($project->getId() === 'console') {
+            return;
+        }
+
+        if (! $user->isPrivileged($authorization->getRoles())) {
+            $bus->dispatch(new RequestCompleted(
+                project: $project->getArrayCopy(),
+                request: $request,
+                response: $response,
+            ));
+        }
+
+        // Publish usage metrics if context has data
+        if (! $usage->isEmpty()) {
+            $metrics = $usage->getMetrics();
+
+            // Filter out API key disabled metrics using suffix pattern matching
+            $disabledMetrics = $apiKey?->getDisabledMetrics() ?? [];
+            if (! empty($disabledMetrics)) {
+                $metrics = array_values(array_filter($metrics, function ($metric) use ($disabledMetrics) {
+                    foreach ($disabledMetrics as $pattern) {
+                        if (str_ends_with($metric['key'], $pattern)) {
+                            return false;
+                        }
+                    }
+
+                    return true;
+                }));
+            }
+
+            $message = new UsageMessage(
+                project: $project,
+                metrics: $metrics,
+                reduce: $usage->getReduce()
+            );
+
+            $publisherForUsage->enqueue($message);
         }
     });
 
