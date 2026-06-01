@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "53a96b051328aa5572b1008496733f85",
+    "content-hash": "95a83cce1d03ceb2bfc777309ebe79e9",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -3411,7 +3411,7 @@
         },
         {
             "name": "utopia-php/agents",
-            "version": "1.2.4",
+            "version": "2.1.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/agents.git",
@@ -3458,7 +3458,7 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/agents/issues",
-                "source": "https://github.com/utopia-php/agents/tree/1.2.4"
+                "source": "https://github.com/utopia-php/agents/tree/2.1.0"
             },
             "time": "2026-05-29T10:44:54+00:00"
         },
