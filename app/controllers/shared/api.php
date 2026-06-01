@@ -863,14 +863,11 @@ Http::shutdown()
             }
         }
 
-        // $params holds the URL path values (injected from the route match);
-        // merge in query/body params and declared defaults to reproduce the
-        // full resolved param set, with path values taking precedence.
-        $reqParams = $request->getParams();
-
+        // Reproduce the resolved param set: injected path values take precedence
+        // over query/body params, falling back to each param's declared default.
         $requestParams = [];
         foreach ($route->getParams() as $key => $param) {
-            $requestParams[$key] = $params[$key] ?? $reqParams[$key] ?? $param['default'];
+            $requestParams[$key] = $params[$key] ?? $request->getParam($key, $param['default']);
         }
 
         /**
