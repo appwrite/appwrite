@@ -3375,9 +3375,8 @@ trait MigrationsBase
         $this->assertEquals(0, $oauthCounters['pending']);
         $this->assertEquals(0, $oauthCounters['processing']);
         $this->assertEquals(0, $oauthCounters['warning']);
-        // listOAuth2Providers returns every server-enabled provider, so a single run
-        // emits all of them; the configured GitHub provider is among the successes.
-        $this->assertGreaterThanOrEqual(1, $oauthCounters['success']);
+        // Only configured providers migrate; this project set up GitHub alone.
+        $this->assertEquals(1, $oauthCounters['success']);
 
         // The GitHub provider must round-trip to the destination: the readable
         // clientId and enabled flag are carried; the secret is write-only and reads
