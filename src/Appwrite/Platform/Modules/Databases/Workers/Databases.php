@@ -569,56 +569,33 @@ class Databases extends Action
 
         $dbForDatabases->deleteCollection('database_' . $databaseInternalId . '_collection_' . $collection->getSequence());
 
-        $this->attemptAll(
-            // Related collections relating to current collection
-            fn () => $this->deleteByGroup(
-                'attributes',
-                [
-                    Query::equal('databaseInternalId', [$databaseInternalId]),
-                    Query::equal('type', [Database::VAR_RELATIONSHIP]),
-                    Query::notEqual('collectionInternalId', $collectionInternalId),
-                    Query::contains('options', ['"relatedCollection":"'. $collectionId .'"']),
-                ],
-                $dbForProject,
-                function ($attribute) use ($dbForProject, $databaseInternalId) {
-                    $dbForProject->purgeCachedDocument('database_' . $databaseInternalId, $attribute->getAttribute('collectionId'));
-                    $dbForProject->purgeCachedCollection('database_' . $databaseInternalId . '_collection_' . $attribute->getAttribute('collectionInternalId'));
-                }
-            ),
-            fn () => $this->deleteByGroup('attributes', [
+        /**
+         * Related collections relating to current collection
+         */
+        $this->deleteByGroup(
+            'attributes',
+            [
                 Query::equal('databaseInternalId', [$databaseInternalId]),
-                Query::equal('collectionInternalId', [$collectionInternalId])
-            ], $dbForProject),
-            fn () => $this->deleteByGroup('indexes', [
-                Query::equal('databaseInternalId', [$databaseInternalId]),
-                Query::equal('collectionInternalId', [$collectionInternalId])
-            ], $dbForProject),
-        );
-    }
-
-    /**
-     * Run every cleanup even if some fail, then re-throw the first failure so
-     * the worker marks the message failed and retries the outstanding work.
-     *
-     * @param callable ...$cleanups
-     * @return void
-     * @throws \Throwable
-     */
-    private function attemptAll(callable ...$cleanups): void
-    {
-        $error = null;
-
-        foreach ($cleanups as $cleanup) {
-            try {
-                $cleanup();
-            } catch (\Throwable $e) {
-                $error ??= $e;
+                Query::equal('type', [Database::VAR_RELATIONSHIP]),
+                Query::notEqual('collectionInternalId', $collectionInternalId),
+                Query::contains('options', ['"relatedCollection":"'. $collectionId .'"']),
+            ],
+            $dbForProject,
+            function ($attribute) use ($dbForProject, $databaseInternalId) {
+                $dbForProject->purgeCachedDocument('database_' . $databaseInternalId, $attribute->getAttribute('collectionId'));
+                $dbForProject->purgeCachedCollection('database_' . $databaseInternalId . '_collection_' . $attribute->getAttribute('collectionInternalId'));
             }
-        }
+        );
 
-        if ($error !== null) {
-            throw $error;
-        }
+        $this->deleteByGroup('attributes', [
+            Query::equal('databaseInternalId', [$databaseInternalId]),
+            Query::equal('collectionInternalId', [$collectionInternalId])
+        ], $dbForProject);
+
+        $this->deleteByGroup('indexes', [
+            Query::equal('databaseInternalId', [$databaseInternalId]),
+            Query::equal('collectionInternalId', [$collectionInternalId])
+        ], $dbForProject);
     }
 
 
@@ -628,18 +605,23 @@ class Databases extends Action
      * @param Database $database
      * @param callable|null $callback
      * @return void
-     * @throws \Throwable
+     * @throws Exception
      */
     protected function deleteByGroup(string $collectionId, array $queries, Database $database, ?callable $callback = null): void
     {
         Span::add('delete_by_group.collection.id', $collectionId);
 
-        $count = $database->deleteDocuments(
-            $collectionId,
-            $queries,
-            Database::DELETE_BATCH_SIZE,
-            $callback
-        );
+        try {
+            $count = $database->deleteDocuments(
+                $collectionId,
+                $queries,
+                Database::DELETE_BATCH_SIZE,
+                $callback
+            );
+        } catch (\Throwable $th) {
+            Span::add('delete_by_group.error', $th->getMessage());
+            return;
+        }
 
         Span::add('delete_by_group.count', $count);
     }
