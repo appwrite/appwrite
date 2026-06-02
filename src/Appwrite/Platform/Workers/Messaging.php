@@ -497,6 +497,11 @@ class Messaging extends Action
     /**
      * Send a single adapter-sized batch and report delivery counts plus a bounded error list.
      *
+     * Wraps the provider call in a backoff/retry loop that reacts to provider rate limiting and transient
+     * failures (see {@see retrySend()}). Accounting stays exact: only still-failing recipients are ever
+     * retried, so `delivered` is summed across attempts without double-counting, and `recipients` always
+     * reports the original batch size so the caller's `failed = recipients - delivered` holds.
+     *
      * @param array<string> $batch
      * @return array{delivered: int, recipients: int, errors: array<string>}
      */
@@ -512,72 +517,227 @@ class Messaging extends Action
         UsagePublisher $publisherForUsage
     ): array {
         $recipients = \count($batch);
-        $delivered = 0;
-        $errors = [];
 
-        $messageData = clone $message;
-        $messageData->setAttribute('to', $batch);
+        [
+            'delivered' => $delivered,
+            'errors' => $errors,
+        ] = $this->retrySend($batch, $message, $provider, $providerType, $adapter, $dbForProject, $deviceForFiles, $project);
 
-        $data = match ($providerType) {
-            MESSAGE_TYPE_SMS => $this->buildSmsMessage($messageData, $provider),
-            MESSAGE_TYPE_PUSH => $this->buildPushMessage($messageData),
-            MESSAGE_TYPE_EMAIL => $this->buildEmailMessage($dbForProject, $messageData, $provider, $deviceForFiles, $project),
-            default => throw new \Exception('Provider with the requested ID is of the incorrect type')
-        };
+        $failed = $recipients - $delivered;
+        $usage = new UsageContext();
+        $usage
+            ->addMetric(METRIC_MESSAGES, $recipients)
+            ->addMetric(METRIC_MESSAGES_SENT, $delivered)
+            ->addMetric(METRIC_MESSAGES_FAILED, $failed)
+            ->addMetric(str_replace('{type}', $provider->getAttribute('type'), METRIC_MESSAGES_TYPE), $recipients)
+            ->addMetric(str_replace('{type}', $provider->getAttribute('type'), METRIC_MESSAGES_TYPE_SENT), $delivered)
+            ->addMetric(str_replace('{type}', $provider->getAttribute('type'), METRIC_MESSAGES_TYPE_FAILED), $failed)
+            ->addMetric(str_replace(['{type}', '{provider}'], [$provider->getAttribute('type'), $provider->getAttribute('provider')], METRIC_MESSAGES_TYPE_PROVIDER), $recipients)
+            ->addMetric(str_replace(['{type}', '{provider}'], [$provider->getAttribute('type'), $provider->getAttribute('provider')], METRIC_MESSAGES_TYPE_PROVIDER_SENT), $delivered)
+            ->addMetric(str_replace(['{type}', '{provider}'], [$provider->getAttribute('type'), $provider->getAttribute('provider')], METRIC_MESSAGES_TYPE_PROVIDER_FAILED), $failed);
 
-        try {
-            $response = $adapter->send($data);
-            $delivered = (int) $response['deliveredTo'];
-
-            foreach ($response['results'] as $result) {
-                if ($result['status'] === 'failure' && \count($errors) < MESSAGE_DELIVERY_ERRORS_LIMIT) {
-                    $errors[] = "Failed sending to target {$result['recipient']} with error: {$result['error']}";
-                }
-
-                // Deleting push targets when token has expired.
-                if (($result['error'] ?? '') === 'Expired device token') {
-                    $target = $dbForProject->findOne('targets', [
-                        Query::equal('identifier', [$result['recipient']])
-                    ]);
-
-                    if (!$target->isEmpty()) {
-                        $dbForProject->updateDocument(
-                            'targets',
-                            $target->getId(),
-                            $target->setAttribute('expired', true)
-                        );
-                    }
-                }
-            }
-        } catch (\Throwable $e) {
-            // Whole-batch failure: record one representative error and count every recipient as failed.
-            $delivered = 0;
-            $errors = ['Failed sending to targets with error: ' . $e->getMessage()];
-        } finally {
-            $failed = $recipients - $delivered;
-            $usage = new UsageContext();
-            $usage
-                ->addMetric(METRIC_MESSAGES, $recipients)
-                ->addMetric(METRIC_MESSAGES_SENT, $delivered)
-                ->addMetric(METRIC_MESSAGES_FAILED, $failed)
-                ->addMetric(str_replace('{type}', $provider->getAttribute('type'), METRIC_MESSAGES_TYPE), $recipients)
-                ->addMetric(str_replace('{type}', $provider->getAttribute('type'), METRIC_MESSAGES_TYPE_SENT), $delivered)
-                ->addMetric(str_replace('{type}', $provider->getAttribute('type'), METRIC_MESSAGES_TYPE_FAILED), $failed)
-                ->addMetric(str_replace(['{type}', '{provider}'], [$provider->getAttribute('type'), $provider->getAttribute('provider')], METRIC_MESSAGES_TYPE_PROVIDER), $recipients)
-                ->addMetric(str_replace(['{type}', '{provider}'], [$provider->getAttribute('type'), $provider->getAttribute('provider')], METRIC_MESSAGES_TYPE_PROVIDER_SENT), $delivered)
-                ->addMetric(str_replace(['{type}', '{provider}'], [$provider->getAttribute('type'), $provider->getAttribute('provider')], METRIC_MESSAGES_TYPE_PROVIDER_FAILED), $failed);
-
-            $publisherForUsage->enqueue(new Usage(
-                project: $project,
-                metrics: $usage->getMetrics(),
-            ));
-        }
+        $publisherForUsage->enqueue(new Usage(
+            project: $project,
+            metrics: $usage->getMetrics(),
+        ));
 
         return [
             'delivered' => $delivered,
             'recipients' => $recipients,
             'errors' => $errors,
         ];
+    }
+
+    /**
+     * Drive a batch through provider sends with exponential backoff, reacting to throttling and transient
+     * errors by retrying only the recipients that are still failing.
+     *
+     * Partitioning per attempt: the provider's per-recipient results are split into delivered (summed into
+     * the running total, never retried) and failures. A failure whose error matches {@see isRetryableError()}
+     * stays pending for the next attempt; any other failure becomes a terminal error immediately. When
+     * `send()` throws, the throw is retryable only if its message matches; otherwise every still-pending
+     * recipient is recorded as terminal. The next attempt rebuilds the provider message with only the pending
+     * recipients in `to`, so an already-delivered recipient is never re-sent. After {@see MESSAGE_SEND_MAX_RETRIES}
+     * attempts, any recipients still pending are flushed to terminal errors.
+     *
+     * Note: provider `Retry-After` hints are not honored — the agnostic adapter {@see \Utopia\Messaging\Response}
+     * exposes only generic per-recipient strings, never a structured retry delay, so we keep the library
+     * adapter-agnostic and rely on exponential backoff alone.
+     *
+     * @param array<string> $batch
+     * @return array{delivered: int, errors: array<string>}
+     */
+    private function retrySend(
+        array $batch,
+        Document $message,
+        Document $provider,
+        string $providerType,
+        EmailAdapter|SMSAdapter|PushAdapter $adapter,
+        Database $dbForProject,
+        Device $deviceForFiles,
+        Document $project
+    ): array {
+        $delivered = 0;
+        $errors = [];
+
+        // Recipients still awaiting a successful (or terminal) outcome; shrinks to only the failing ones each attempt.
+        $pending = $batch;
+
+        for ($attempt = 1; $attempt <= MESSAGE_SEND_MAX_RETRIES; $attempt++) {
+            $hasRetriesLeft = $attempt < MESSAGE_SEND_MAX_RETRIES;
+
+            // Rebuild the provider message scoped to only the still-pending recipients so a partially-delivered
+            // batch never re-sends to recipients that already succeeded on an earlier attempt.
+            $data = $this->buildMessage($pending, $message, $provider, $providerType, $dbForProject, $deviceForFiles, $project);
+
+            $retry = [];
+
+            try {
+                $response = $adapter->send($data);
+                $delivered += (int) $response['deliveredTo'];
+
+                foreach ($response['results'] as $result) {
+                    if ($result['status'] !== 'failure') {
+                        continue;
+                    }
+
+                    $error = $result['error'] ?? null;
+                    $recipient = $result['recipient'];
+
+                    // Deleting push targets when token has expired.
+                    if ($error === 'Expired device token') {
+                        $target = $dbForProject->findOne('targets', [
+                            Query::equal('identifier', [$recipient])
+                        ]);
+
+                        if (!$target->isEmpty()) {
+                            $dbForProject->updateDocument(
+                                'targets',
+                                $target->getId(),
+                                $target->setAttribute('expired', true)
+                            );
+                        }
+                    }
+
+                    if ($hasRetriesLeft && $this->isRetryableError($error)) {
+                        $retry[] = $recipient;
+                        continue;
+                    }
+
+                    $this->recordError($errors, "Failed sending to target {$recipient} with error: {$error}");
+                }
+            } catch (\Throwable $e) {
+                // Whole-batch failure: retry every still-pending recipient when the throw looks transient,
+                // otherwise record one representative terminal error covering them all.
+                if ($hasRetriesLeft && $this->isRetryableError($e->getMessage())) {
+                    $retry = $pending;
+                } else {
+                    $this->recordError($errors, 'Failed sending to targets with error: ' . $e->getMessage());
+                }
+            }
+
+            $pending = $retry;
+
+            if (empty($pending)) {
+                break;
+            }
+
+            // Exponential backoff with jitter; non-blocking under Swoole so sibling sends keep progressing.
+            $delay = $this->retryDelay() * (2 ** ($attempt - 1));
+            $delay += $delay * (\random_int(0, 100) / 1000);
+            \Swoole\Coroutine::sleep($delay);
+        }
+
+        return [
+            'delivered' => $delivered,
+            'errors' => $errors,
+        ];
+    }
+
+    /**
+     * Append a delivery error while keeping the retained list bounded by {@see MESSAGE_DELIVERY_ERRORS_LIMIT}.
+     *
+     * @param array<string> $errors
+     */
+    private function recordError(array &$errors, string $error): void
+    {
+        if (\count($errors) >= MESSAGE_DELIVERY_ERRORS_LIMIT) {
+            return;
+        }
+
+        $errors[] = $error;
+    }
+
+    /**
+     * Conservatively classify a provider error string as retryable. The agnostic adapter
+     * {@see \Utopia\Messaging\Response} returns only free-form error strings, so string matching is the only
+     * provider-agnostic signal available. The pattern list is intentionally narrow — throttling, rate limits,
+     * quota, service-unavailable and timeout phrasing — so permanent failures (e.g. invalid recipients) are
+     * never retried.
+     */
+    private function isRetryableError(?string $error): bool
+    {
+        if ($error === null || $error === '') {
+            return false;
+        }
+
+        $patterns = [
+            'throttl',
+            'rate exceeded',
+            'rate limit',
+            'too many requests',
+            '429',
+            'quota',
+            'service unavailable',
+            '503',
+            'timed out',
+            'timeout',
+            'temporarily',
+        ];
+
+        $needle = \strtolower($error);
+
+        foreach ($patterns as $pattern) {
+            if (\str_contains($needle, $pattern)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * Base seconds for exponential backoff between send retries. Isolated so tests can override it to keep the
+     * suite instant without touching the production constant.
+     */
+    protected function retryDelay(): float
+    {
+        return MESSAGE_SEND_RETRY_DELAY;
+    }
+
+    /**
+     * Build the provider-specific message for a set of recipients.
+     *
+     * @param array<string> $to
+     */
+    private function buildMessage(
+        array $to,
+        Document $message,
+        Document $provider,
+        string $providerType,
+        Database $dbForProject,
+        Device $deviceForFiles,
+        Document $project
+    ): Email|SMS|Push {
+        $messageData = clone $message;
+        $messageData->setAttribute('to', $to);
+
+        return match ($providerType) {
+            MESSAGE_TYPE_SMS => $this->buildSmsMessage($messageData, $provider),
+            MESSAGE_TYPE_PUSH => $this->buildPushMessage($messageData),
+            MESSAGE_TYPE_EMAIL => $this->buildEmailMessage($dbForProject, $messageData, $provider, $deviceForFiles, $project),
+            default => throw new \Exception('Provider with the requested ID is of the incorrect type')
+        };
     }
 
     private function sendInternalSMSMessage(Document $message, Document $project, array $recipients, Log $log): void

@@ -246,6 +246,8 @@ const MESSAGE_SEND_TYPE_EXTERNAL = 'external';
 const MESSAGE_RECIPIENTS_PAGE_SIZE = 1000; // Recipients resolved from the database per page while streaming a send
 const MESSAGE_SEND_CONCURRENCY = 10; // Maximum adapter send requests running concurrently within a single send job
 const MESSAGE_DELIVERY_ERRORS_LIMIT = 100; // Maximum number of per-recipient delivery errors retained on a message
+const MESSAGE_SEND_MAX_RETRIES = 5; // Maximum number of attempts to deliver a batch when the provider throttles or fails transiently
+const MESSAGE_SEND_RETRY_DELAY = 1.0; // Base seconds for exponential backoff between batch send retries; overridable in tests for an instant suite
 // Mail Types
 const MAIL_TYPE_VERIFICATION = 'verification';
 const MAIL_TYPE_MAGIC_SESSION = 'magicSession';

@@ -91,6 +91,7 @@ class ConcurrencyProbeAdapter extends EmailAdapter
 
 /**
  * Worker subclass that injects the instrumented email adapter instead of a network-backed provider adapter.
+ * Retry backoff is zeroed so the throttle/retry tests stay instant.
  */
 class TestableMessaging extends Messaging
 {
@@ -101,6 +102,80 @@ class TestableMessaging extends Messaging
     protected function getEmailAdapter(Document $provider): ?EmailAdapter
     {
         return $this->emailAdapter;
+    }
+
+    protected function retryDelay(): float
+    {
+        return 0.0;
+    }
+}
+
+/**
+ * Email adapter double whose per-attempt outcome is scripted. Each {@see process()} call records the exact
+ * `to` recipients it received and consults the next scripted step, which either throws (simulating a
+ * connection-level provider error) or returns a per-recipient success/failure verdict. When the script runs
+ * out, every recipient succeeds — modelling a provider that has stopped throttling.
+ */
+class ScriptedEmailAdapter extends EmailAdapter
+{
+    public int $sendCalls = 0;
+
+    /**
+     * @var array<array<string>> Recipient email lists captured per {@see process()} call, in call order.
+     */
+    public array $recipientsPerCall = [];
+
+    /**
+     * @param array<\Throwable|(callable(string): ?string)> $script One step per attempt. A Throwable is thrown
+     *        for that attempt; a callable returns an error string for a failing recipient or null for success.
+     */
+    public function __construct(private readonly array $script = [])
+    {
+    }
+
+    public function getName(): string
+    {
+        return 'ScriptedEmail';
+    }
+
+    public function getMaxMessagesPerRequest(): int
+    {
+        return 1000;
+    }
+
+    /**
+     * @param EmailMessage $message
+     * @return array{deliveredTo: int, type: string, results: array<array<string, mixed>>}
+     */
+    protected function process(EmailMessage $message): array
+    {
+        $recipients = \array_map(static fn (array $entry): string => $entry['email'], $message->getTo());
+        $this->recipientsPerCall[] = $recipients;
+
+        $step = $this->script[$this->sendCalls] ?? null;
+        $this->sendCalls++;
+
+        if ($step instanceof \Throwable) {
+            throw $step;
+        }
+
+        $response = new Response($this->getType());
+        $delivered = 0;
+
+        foreach ($recipients as $recipient) {
+            $error = \is_callable($step) ? $step($recipient) : null;
+
+            if ($error === null) {
+                $delivered++;
+                $response->addResult($recipient);
+            } else {
+                $response->addResult($recipient, $error);
+            }
+        }
+
+        $response->setDeliveredTo($delivered);
+
+        return $response->toArray();
     }
 }
 
@@ -326,7 +401,7 @@ class MessagingFanoutTest extends TestCase
 
     private function sendTopic(
         RecordingDatabase $database,
-        ConcurrencyProbeAdapter $adapter
+        EmailAdapter $adapter
     ): void {
         $worker = new TestableMessaging($adapter);
         $method = new \ReflectionMethod(Messaging::class, 'sendExternalMessage');
@@ -481,6 +556,120 @@ class MessagingFanoutTest extends TestCase
 
         $this->assertSame(0, $adapter->sendCalls, 'Already-sent messages must not be reprocessed');
         $this->assertNull($database->updatedMessage, 'Terminal messages must not be rewritten');
+    }
+
+    public function testThrottledBatchIsRetriedThenFullyDelivered(): void
+    {
+        $count = 5;
+        $data = $this->topicDataset($count);
+        $database = new RecordingDatabase($data['subscribers'], $data['targets'], [], $this->provider());
+
+        // First attempt throttles every recipient; the script then runs out so the second attempt succeeds.
+        $adapter = new ScriptedEmailAdapter([
+            static fn (string $recipient): string => 'Rate limit exceeded, please retry',
+        ]);
+
+        $this->sendTopic($database, $adapter);
+
+        $message = $database->updatedMessage;
+        $this->assertNotNull($message);
+
+        // The batch was retried exactly once and then fully delivered with no double-counting.
+        $this->assertSame(2, $adapter->sendCalls, 'Throttled batch must be retried once');
+        $this->assertSame($count, $message->getAttribute('deliveredTotal'));
+        $this->assertSame(MessageStatus::SENT, $message->getAttribute('status'));
+        $this->assertEmpty($message->getAttribute('deliveryErrors'));
+
+        // Both attempts targeted the full recipient set (none had succeeded on the first attempt).
+        $this->assertCount($count, $adapter->recipientsPerCall[0]);
+        $this->assertCount($count, $adapter->recipientsPerCall[1]);
+    }
+
+    public function testRetryTargetsOnlyThrottledRecipients(): void
+    {
+        $count = 5;
+        $data = $this->topicDataset($count);
+        $database = new RecordingDatabase($data['subscribers'], $data['targets'], [], $this->provider());
+
+        // user2@ and user4@ throttle on the first attempt; everyone else succeeds. The second attempt has no
+        // script step, so the two retried recipients then succeed.
+        $throttled = ['user2@example.com', 'user4@example.com'];
+        $adapter = new ScriptedEmailAdapter([
+            static fn (string $recipient): ?string => \in_array($recipient, $throttled, true)
+                ? 'Too Many Requests'
+                : null,
+        ]);
+
+        $this->sendTopic($database, $adapter);
+
+        $message = $database->updatedMessage;
+        $this->assertNotNull($message);
+
+        $this->assertSame(2, $adapter->sendCalls, 'A partially throttled batch must be retried once');
+
+        // The retry must re-send to ONLY the throttled recipients — never the ones already delivered.
+        \sort($adapter->recipientsPerCall[1]);
+        $this->assertSame($throttled, $adapter->recipientsPerCall[1]);
+
+        // Every recipient is ultimately delivered and counted exactly once.
+        $this->assertSame($count, $message->getAttribute('deliveredTotal'));
+        $this->assertSame(MessageStatus::SENT, $message->getAttribute('status'));
+        $this->assertEmpty($message->getAttribute('deliveryErrors'));
+    }
+
+    public function testNonRetryableFailureIsNotRetried(): void
+    {
+        $count = 3;
+        $data = $this->topicDataset($count);
+        $database = new RecordingDatabase($data['subscribers'], $data['targets'], [], $this->provider());
+
+        // user1@ permanently fails with a non-retryable error; the rest succeed.
+        $adapter = new ScriptedEmailAdapter([
+            static fn (string $recipient): ?string => $recipient === 'user1@example.com'
+                ? 'Invalid recipient address'
+                : null,
+        ]);
+
+        $this->sendTopic($database, $adapter);
+
+        $message = $database->updatedMessage;
+        $this->assertNotNull($message);
+
+        // A permanent failure is recorded immediately, never retried.
+        $this->assertSame(1, $adapter->sendCalls, 'Non-retryable failures must not trigger a retry');
+        $this->assertSame($count - 1, $message->getAttribute('deliveredTotal'));
+        $this->assertSame(MessageStatus::FAILED, $message->getAttribute('status'));
+        $errors = $message->getAttribute('deliveryErrors');
+        $this->assertCount(1, $errors);
+        $this->assertStringContainsString('user1@example.com', $errors[0]);
+        $this->assertStringContainsString('Invalid recipient address', $errors[0]);
+    }
+
+    public function testExhaustedRetriesRecordTerminalFailure(): void
+    {
+        $count = 2;
+        $data = $this->topicDataset($count);
+        $database = new RecordingDatabase($data['subscribers'], $data['targets'], [], $this->provider());
+
+        // Every attempt throttles, for more steps than MESSAGE_SEND_MAX_RETRIES, so retries are exhausted.
+        $script = \array_fill(
+            0,
+            MESSAGE_SEND_MAX_RETRIES + 2,
+            static fn (string $recipient): string => 'Service unavailable, throttled'
+        );
+        $adapter = new ScriptedEmailAdapter($script);
+
+        $this->sendTopic($database, $adapter);
+
+        $message = $database->updatedMessage;
+        $this->assertNotNull($message);
+
+        // The batch is attempted exactly MESSAGE_SEND_MAX_RETRIES times, then the still-throttled recipients
+        // become terminal failures with nothing delivered.
+        $this->assertSame(MESSAGE_SEND_MAX_RETRIES, $adapter->sendCalls, 'Attempts must be capped at MESSAGE_SEND_MAX_RETRIES');
+        $this->assertSame(0, $message->getAttribute('deliveredTotal'));
+        $this->assertSame(MessageStatus::FAILED, $message->getAttribute('status'));
+        $this->assertCount($count, $message->getAttribute('deliveryErrors'));
     }
 
     /**
