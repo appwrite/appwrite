@@ -363,6 +363,18 @@ class MessagingFanoutTest extends TestCase
 {
     private const RECIPIENT_COUNT = 4500;
 
+    protected function setUp(): void
+    {
+        // These tests drive the worker through real Swoole coroutines (Co\run/batch). Under the native
+        // extension that scheduler runs in-process and destabilises later tests in the shared unit suite
+        // (the run aborts mid-suite inside unrelated coroutine-sensitive tests). They run locally against
+        // the Fiber polyfill in SwooleCoroutinePolyfill.php; the real worker path is exercised on CI by the
+        // e2e Messaging suite. See PR #12465.
+        if (\extension_loaded('swoole')) {
+            $this->markTestSkipped('Fan-out coroutine tests run only without the native Swoole extension; the worker path is covered on CI by the e2e Messaging suite.');
+        }
+    }
+
     private function provider(): Document
     {
         return new Document([
