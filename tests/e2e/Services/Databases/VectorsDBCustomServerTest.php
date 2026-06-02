@@ -581,7 +581,7 @@ class VectorsDBCustomServerTest extends Scope
                 'x-appwrite-project' => $this->getProject()['$id'],
                 'x-appwrite-key' => $this->getProject()['apiKey']
             ], [
-                'model' => 'embeddinggemma',
+                'model' => 'nomic-embed-text',
                 'texts' => [
                     'hello world',
                     'second sentence',
@@ -615,7 +615,7 @@ class VectorsDBCustomServerTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ], [
-            'model' => 'embeddinggemma',
+            'model' => 'nomic-embed-text',
             'texts' => [
                 'valid text',
                 123, // invalid, not a string
