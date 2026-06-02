@@ -51,6 +51,28 @@ class Builds extends Action
     }
 
     /**
+     * Normalize a build root directory and reject path traversal.
+     *
+     * Collapses a leading "./" and surrounding slashes, then rejects any
+     * remaining ".." segment so the value cannot escape the build directory
+     * once it is interpolated into filesystem and shell paths downstream.
+     *
+     * @throws Exception when the path contains a ".." segment
+     */
+    public static function normalizeRootDirectory(string $rootDirectory): string
+    {
+        $rootDirectory = \rtrim($rootDirectory, '/');
+        $rootDirectory = \ltrim($rootDirectory, '.');
+        $rootDirectory = \ltrim($rootDirectory, '/');
+
+        if ($rootDirectory !== '' && \preg_match('#(^|/)\.\.(/|$)#', $rootDirectory)) {
+            throw new \Exception('Invalid root directory');
+        }
+
+        return $rootDirectory;
+    }
+
+    /**
      * @throws Exception
      */
     public function __construct()
@@ -296,10 +318,7 @@ class Builds extends Action
                 $templateReferenceType = $template->getAttribute('referenceType', '');
                 $templateReferenceValue = $template->getAttribute('referenceValue', '');
 
-                $templateRootDirectory = $template->getAttribute('rootDirectory', '');
-                $templateRootDirectory = \rtrim($templateRootDirectory, '/');
-                $templateRootDirectory = \ltrim($templateRootDirectory, '.');
-                $templateRootDirectory = \ltrim($templateRootDirectory, '/');
+                $templateRootDirectory = self::normalizeRootDirectory($template->getAttribute('rootDirectory', ''));
 
                 if (! empty($templateRepositoryName) && ! empty($templateOwnerName) && ! empty($templateReferenceType) && ! empty($templateReferenceValue)) {
                     $stdout = '';
@@ -361,10 +380,7 @@ class Builds extends Action
             } elseif ($isVcsEnabled) {
                 // VCS and VCS+Temaplte
                 $tmpDirectory = '/tmp/builds/' . $deploymentId . '/code';
-                $rootDirectory = $resource->getAttribute('providerRootDirectory', '');
-                $rootDirectory = \rtrim($rootDirectory, '/');
-                $rootDirectory = \ltrim($rootDirectory, '.');
-                $rootDirectory = \ltrim($rootDirectory, '/');
+                $rootDirectory = self::normalizeRootDirectory($resource->getAttribute('providerRootDirectory', ''));
 
                 $owner = $github->getOwnerName($providerInstallationId);
                 $repositoryName = $github->getRepositoryName($providerRepositoryId);
@@ -419,10 +435,7 @@ class Builds extends Action
                 $templateReferenceType = $template->getAttribute('referenceType', '');
                 $templateReferenceValue = $template->getAttribute('referenceValue', '');
 
-                $templateRootDirectory = $template->getAttribute('rootDirectory', '');
-                $templateRootDirectory = \rtrim($templateRootDirectory, '/');
-                $templateRootDirectory = \ltrim($templateRootDirectory, '.');
-                $templateRootDirectory = \ltrim($templateRootDirectory, '/');
+                $templateRootDirectory = self::normalizeRootDirectory($template->getAttribute('rootDirectory', ''));
 
                 if (! empty($templateRepositoryName) && ! empty($templateOwnerName) && ! empty($templateReferenceType) && ! empty($templateReferenceValue)) {
                     // Clone template repo
