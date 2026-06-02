@@ -21,6 +21,7 @@ use Utopia\Messaging\Adapter\Email as EmailAdapter;
 use Utopia\Messaging\Adapter\Email\Mailgun;
 use Utopia\Messaging\Adapter\Email\Resend;
 use Utopia\Messaging\Adapter\Email\Sendgrid;
+use Utopia\Messaging\Adapter\Email\SES;
 use Utopia\Messaging\Adapter\Email\SMTP;
 use Utopia\Messaging\Adapter\Push\APNS;
 use Utopia\Messaging\Adapter\Push as PushAdapter;
@@ -537,6 +538,12 @@ class Messaging extends Action
             ),
             'sendgrid' => new Sendgrid($apiKey),
             'resend' => new Resend($apiKey),
+            'ses' => new SES(
+                $credentials['accessKey'] ?? '',
+                $credentials['secretKey'] ?? '',
+                $credentials['region'] ?? '',
+                $credentials['sessionToken'] ?? null,
+            ),
             default => null
         };
     }
