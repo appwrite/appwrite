@@ -344,9 +344,13 @@ $register->set('pools', function () {
 
             // PubSub workers hold one long-lived subscribed connection and also need
             // spare capacity for publishes from the same process.
-            $connectionPoolSize = $type === 'pubsub'
-                ? max(2, $poolSize)
-                : $poolSize;
+            // Consumer pools lease one connection per consume coroutine for the
+            // lifetime of the worker, plus headroom for queue-size reads.
+            $connectionPoolSize = match ($type) {
+                'pubsub' => max(2, $poolSize),
+                'consumer' => $poolSize + 2,
+                default => $poolSize,
+            };
 
             $pool = new Pool($poolAdapter, $name, $connectionPoolSize, function () use ($type, $resource, $dsn) {
                 // Get Adapter
@@ -368,15 +372,9 @@ $register->set('pools', function () {
                             default => null
                         };
                     case 'publisher':
+                    case 'consumer':
                         return match ($dsn->getScheme()) {
                             'redis' => new Queue\Broker\Redis(new Queue\Connection\Redis($dsn->getHost(), $dsn->getPort())),
-                            default => null
-                        };
-                    case 'consumer':
-                        // Consumers are shared by multiple coroutines within a worker
-                        // process, so serialize commands on the single connection.
-                        return match ($dsn->getScheme()) {
-                            'redis' => new Queue\Broker\Redis(new Queue\Connection\Locking(new Queue\Connection\Redis($dsn->getHost(), $dsn->getPort()))),
                             default => null
                         };
                     case 'cache':

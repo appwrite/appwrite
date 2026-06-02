@@ -83,8 +83,14 @@ if (\str_starts_with($workerName, 'databases')) {
 /** @var \Utopia\Pools\Group $pools */
 $pools = $container->get('pools');
 
+// Each consume coroutine leases its own broker connection from the pool for
+// the lifetime of its consume loop, so concurrent coroutines never share a
+// connection. The publisher side backs the queue-depth telemetry gauge.
 $adapter = new Swoole(
-    $pools->get('consumer')->pop()->getResource(),
+    new BrokerPool(
+        publisher: $pools->get('consumer'),
+        consumer: $pools->get('consumer'),
+    ),
     System::getEnv('_APP_WORKERS_NUM', 1),
     $queueName,
     maxCoroutines: (int) System::getEnv('_APP_WORKER_MAX_COROUTINES', 1),
