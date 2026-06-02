@@ -1289,6 +1289,91 @@ trait StorageBase
         $this->assertEquals(204, $deleteBucketResponse['headers']['status-code']);
     }
 
+    public function testCreateBucketFileChunkedUploadWithoutReadPermission(): void
+    {
+        $bucket = $this->client->call(Client::METHOD_POST, '/storage/buckets', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            'bucketId' => ID::unique(),
+            'name' => 'Test Bucket Chunked Upload No Read Permission',
+            'fileSecurity' => true,
+            'permissions' => [
+                Permission::create(Role::any()),
+            ],
+        ]);
+
+        $this->assertEquals(201, $bucket['headers']['status-code']);
+
+        $bucketId = $bucket['body']['$id'];
+        $source = __DIR__ . "/../../../resources/disk-a/large-file.mp4";
+        $totalSize = \filesize($source);
+        $chunkSize = 5 * 1024 * 1024;
+        $mimeType = mime_content_type($source);
+        $fileId = ID::unique();
+        $uploadedFileId = null;
+
+        $this->assertGreaterThan($chunkSize, $totalSize, 'Test file must span at least 2 chunks');
+
+        try {
+            $handle = fopen($source, 'rb');
+            $this->assertNotFalse($handle, "Could not open test resource: $source");
+
+            $firstChunk = fread($handle, $chunkSize);
+            $secondChunk = fread($handle, min($chunkSize, $totalSize - $chunkSize));
+            fclose($handle);
+
+            $permissions = [
+                Permission::delete(Role::user($this->getUser()['$id'])),
+            ];
+
+            $firstUpload = $this->client->call(Client::METHOD_POST, '/storage/buckets/' . $bucketId . '/files', array_merge([
+                'content-type' => 'multipart/form-data',
+                'x-appwrite-project' => $this->getProject()['$id'],
+                'content-range' => 'bytes 0-' . ($chunkSize - 1) . '/' . $totalSize,
+            ], $this->getHeaders()), [
+                'fileId' => $fileId,
+                'file' => new CURLFile('data://' . $mimeType . ';base64,' . base64_encode($firstChunk), $mimeType, 'large-file.mp4'),
+                'permissions' => $permissions,
+            ]);
+
+            $this->assertEquals(201, $firstUpload['headers']['status-code']);
+            $this->assertNotContains(Permission::read(Role::user($this->getUser()['$id'])), $firstUpload['body']['$permissions']);
+
+            $uploadedFileId = $firstUpload['body']['$id'];
+            $secondChunkEnd = $chunkSize + strlen($secondChunk) - 1;
+
+            $secondUpload = $this->client->call(Client::METHOD_POST, '/storage/buckets/' . $bucketId . '/files', array_merge([
+                'content-type' => 'multipart/form-data',
+                'x-appwrite-project' => $this->getProject()['$id'],
+                'content-range' => 'bytes ' . $chunkSize . '-' . $secondChunkEnd . '/' . $totalSize,
+                'x-appwrite-id' => $uploadedFileId,
+            ], $this->getHeaders()), [
+                'fileId' => $fileId,
+                'file' => new CURLFile('data://' . $mimeType . ';base64,' . base64_encode($secondChunk), $mimeType, 'large-file.mp4'),
+                'permissions' => $permissions,
+            ]);
+
+            $this->assertEquals(201, $secondUpload['headers']['status-code'], $secondUpload['body']['message'] ?? '');
+            $this->assertEquals(2, $secondUpload['body']['chunksUploaded']);
+        } finally {
+            if (!empty($uploadedFileId)) {
+                $this->client->call(Client::METHOD_DELETE, '/storage/buckets/' . $bucketId . '/files/' . $uploadedFileId, [
+                    'content-type' => 'application/json',
+                    'x-appwrite-project' => $this->getProject()['$id'],
+                    'x-appwrite-key' => $this->getProject()['apiKey'],
+                ]);
+            }
+
+            $this->client->call(Client::METHOD_DELETE, '/storage/buckets/' . $bucketId, [
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+                'x-appwrite-key' => $this->getProject()['apiKey'],
+            ]);
+        }
+    }
+
     public function testCreateBucketFileOutOfOrder(): void
     {
         // Create a bucket for this test
