@@ -86,14 +86,16 @@ $pools = $container->get('pools');
 $adapter = new Swoole(
     $pools->get('consumer')->pop()->getResource(),
     System::getEnv('_APP_WORKERS_NUM', 1),
-    $queueName
+    $queueName,
+    maxCoroutines: (int) System::getEnv('_APP_WORKER_MAX_COROUTINES', 1),
+    resources: $container,
 );
 
-$worker = new Server($adapter, $container);
+$worker = new Server($adapter);
 
 try {
     $worker->init()->action(function () use ($worker, $registerWorkerMessageResources, $queueName) {
-        $registerWorkerMessageResources($worker->getContainer());
+        $registerWorkerMessageResources($worker->context());
         Span::init("worker.{$queueName}");
     });
 
@@ -103,7 +105,7 @@ try {
 
     $container->set('bus', function ($register) use ($worker) {
         return $register->get('bus')->setResolver(
-            fn (string $name) => $worker->getContainer()->get($name)
+            fn (string $name) => $worker->context()->get($name)
         );
     }, ['register']);
 

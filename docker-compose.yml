@@ -350,6 +350,7 @@ services:
     environment:
       - _APP_ENV
       - _APP_WORKER_PER_CORE
+      - _APP_WORKER_MAX_COROUTINES
       - _APP_POOL_ADAPTER
       - _APP_OPENSSL_KEY_V1
       - _APP_REDIS_HOST
@@ -737,6 +738,7 @@ services:
     environment:
       - _APP_ENV
       - _APP_WORKER_PER_CORE
+      - _APP_WORKER_MAX_COROUTINES
       - _APP_POOL_ADAPTER
       - _APP_OPENSSL_KEY_V1
       - _APP_DOMAIN

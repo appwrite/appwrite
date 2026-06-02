@@ -364,9 +364,15 @@ $register->set('pools', function () {
                             default => null
                         };
                     case 'publisher':
-                    case 'consumer':
                         return match ($dsn->getScheme()) {
                             'redis' => new Queue\Broker\Redis(new Queue\Connection\Redis($dsn->getHost(), $dsn->getPort())),
+                            default => null
+                        };
+                    case 'consumer':
+                        // Consumers are shared by multiple coroutines within a worker
+                        // process, so serialize commands on the single connection.
+                        return match ($dsn->getScheme()) {
+                            'redis' => new Queue\Broker\Redis(new Queue\Connection\Locking(new Queue\Connection\Redis($dsn->getHost(), $dsn->getPort()))),
                             default => null
                         };
                     case 'cache':
