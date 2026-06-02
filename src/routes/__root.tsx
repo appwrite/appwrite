@@ -8,7 +8,7 @@ import appCss from '../styles.css?url'
 
 import type { QueryClient } from '@tanstack/react-query'
 import { useQueryClient } from '@tanstack/react-query'
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Toaster } from '@/components/ui/sonner'
 import { ThemeProvider, useTheme } from 'next-themes'
 import {
@@ -33,7 +33,7 @@ import { consoleProjectScopesQueryOptions } from '@/lib/react-query/hooks/consol
 import { DynamicFavicon } from '@/components/global/shared/DynamicFavicon'
 import { UploadWarning } from '@/components/global/providers/UploadWarning'
 import { GlobalUploadProgress } from '@/components/global/shared/GlobalUploadProgress'
-import { useLocation } from '@tanstack/react-router'
+import { useLocation, useMatches } from '@tanstack/react-router'
 
 interface MyRouterContext {
   queryClient: QueryClient
@@ -64,13 +64,13 @@ const PLAUSIBLE_SCRIPT_SRC = (
   import.meta.env.VITE_PLAUSIBLE_SCRIPT_SRC as string | undefined
 )?.trim()
 const PLAUSIBLE_INIT_SCRIPT = `window.plausible=window.plausible||function(){(plausible.q=plausible.q||[]).push(arguments)},plausible.init=plausible.init||function(i){plausible.o=i||{}};
-plausible.init()`
+plausible.init({ autoCapturePageviews: false })`
 
 declare global {
   interface Window {
     plausible?: (
       eventName: 'pageview' | string,
-      options?: { u?: string; props?: Record<string, unknown> },
+      options?: { url?: string; u?: string; props?: Record<string, unknown> },
     ) => void
   }
 }
@@ -263,20 +263,27 @@ function ClientOnly({ children }: { children: React.ReactNode }) {
   return <>{children}</>
 }
 
+function getPlausibleRoutePath(routeId: string | undefined, pathname: string) {
+  const routePath = routeId
+    ?.split('/')
+    .filter(Boolean)
+    .filter((part) => !part.startsWith('_'))
+    .join('/')
+
+  return routePath ? `/${routePath}` : pathname || '/'
+}
+
 function PlausibleRouteTracker() {
   const location = useLocation()
-  const skippedInitialPageview = useRef(false)
+  const matches = useMatches()
+  const leafRoute = matches[matches.length - 1]
 
   useEffect(() => {
     if (!PLAUSIBLE_SCRIPT_SRC || typeof window === 'undefined') return
 
-    if (!skippedInitialPageview.current) {
-      skippedInitialPageview.current = true
-      return
-    }
-
-    window.plausible?.('pageview', { u: window.location.href })
-  }, [location.href])
+    const routePath = getPlausibleRoutePath(leafRoute?.routeId, location.pathname)
+    window.plausible?.('pageview', { url: `${window.location.origin}${routePath}` })
+  }, [leafRoute?.routeId, location.pathname])
 
   return null
 }
