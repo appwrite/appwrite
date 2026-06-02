@@ -800,6 +800,7 @@ trait DatabasesBase
         $this->assertStringNotContainsString('_perms', $rawPlan);
         $this->assertStringNotContainsString('__metadata', $rawPlan);
         $this->assertStringNotContainsString('_collection_', $rawPlan);
+        $this->assertDoesNotMatchRegularExpression('/_\d+_[\w-]{16,}/', $rawPlan);
     }
 
     public function testExplainSkipsCountWhenTotalIsFalse(): void

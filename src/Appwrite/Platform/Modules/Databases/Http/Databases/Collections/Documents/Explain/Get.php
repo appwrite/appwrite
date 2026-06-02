@@ -227,7 +227,7 @@ class Get extends Action
             'rowsReturned' => $plan['rowsReturned'] ?? null,
             'executionTime' => $plan['executionTime'] ?? null,
             'tree' => isset($plan['tree']) ? $this->scrubPhysicalIdentifiers($plan['tree']) : null,
-            'error' => $plan['error'] ?? null,
+            'error' => isset($plan['error']) ? $this->scrubPhysicalIdentifiers($plan['error']) : null,
         ];
     }
 
@@ -266,6 +266,14 @@ class Get extends Action
             '/(?:_\d+_)?database_[\w-]+_collection_[\w-]+_perms\b/i' => '<permissionCheck>',
             '/(?:_\d+_)?database_[\w-]+_collection_[\w-]+_permission\b/i' => '<permissionCheck>',
             '/(?:_\d+_)?database_[\w-]+__metadata\b/i' => '<metadata>',
+            '/_\d+_[\w-]{16,}_(?:permission|perms)\b/i' => '<permissionCheck>',
+            '/_\d+_[\w-]{16,}_ukey\b/i' => '<index>',
+            '/_\d+_[\w-]{16,}_[A-Za-z][\w-]*\b/i' => '<index>',
+            '/_\d+_[\w-]{16,}\b/i' => '<collection>',
+            '/_[\w-]{16,}_(?:permission|perms)\b/i' => '<permissionCheck>',
+            '/_[\w-]{16,}_ukey\b/i' => '<index>',
+            '/_[\w-]{16,}_[A-Za-z][\w-]*\b/i' => '<index>',
+            '/_[\w-]{16,}\b/i' => '<collection>',
             '/(?:_\d+_)?database_[\w-]+_collection_[\w-]+\b/i' => '<collection>',
         ];
 
