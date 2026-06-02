@@ -12,3 +12,7 @@ parameters:
     - vendor/swoole/ide-helper
   excludePaths:
     - tests/resources
+    # Declares stand-in Swoole\Coroutine and Swoole\Coroutine\Channel classes guarded by a runtime
+    # extension check. PHPStan ignores that guard, so analysing this file would shadow the real Swoole
+    # ide-helper stubs and report false "undefined method" errors across the codebase (e.g. app/realtime.php).
+    - tests/unit/Messaging/SwooleCoroutinePolyfill.php
