@@ -27,7 +27,7 @@ permissions:
 jobs:
   dependencies:
     name: Checks / Dependencies
-    if: github.event_name == 'pull_request'
+    if: false # TEMP: disabled to iterate on the failing e2e jobs; revert before merge
     permissions:
       actions: read
       security-events: write
@@ -36,7 +36,7 @@ jobs:
 
   security:
     name: Checks / Image
-    if: github.event_name == 'pull_request'
+    if: false # TEMP: disabled to iterate on the failing e2e jobs; revert before merge
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -91,6 +91,7 @@ jobs:
 
   composer:
     name: Checks / Composer
+    if: false # TEMP: disabled to iterate on the failing e2e jobs; revert before merge
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
@@ -141,6 +142,7 @@ jobs:
 
   analyze:
     name: Checks / Analyze
+    if: false # TEMP: disabled to iterate on the failing e2e jobs; revert before merge
     runs-on: ubuntu-latest
     steps:
       - name: Check out the repo
@@ -169,6 +171,7 @@ jobs:
 
   specs:
     name: Checks / Specs
+    if: false # TEMP: disabled to iterate on the failing e2e jobs; revert before merge
     runs-on: ubuntu-latest
     steps:
       - name: Check out the repo
@@ -190,6 +193,7 @@ jobs:
 
   locale:
     name: Checks / Locale
+    if: false # TEMP: disabled to iterate on the failing e2e jobs; revert before merge
     runs-on: ubuntu-latest
     steps:
       - name: Check out the repo
@@ -289,6 +293,7 @@ jobs:
 
   unit:
     name: Tests / Unit
+    if: false # TEMP: disabled to iterate on the failing e2e jobs; revert before merge
     runs-on: ubuntu-latest
     needs: build
     permissions:
@@ -342,6 +347,7 @@ jobs:
 
   e2e_general:
     name: Tests / E2E / General
+    if: false # TEMP: disabled to iterate on the failing e2e jobs; revert before merge
     runs-on: ubuntu-latest
     needs: build
     permissions:
@@ -417,33 +423,13 @@ jobs:
       matrix:
         database: ${{ fromJSON(needs.matrix.outputs.databases) }}
         mode: ${{ fromJSON(needs.matrix.outputs.modes) }}
+        # TEMP: narrowed to the previously-failing services to re-validate fixes.
+        # Revert to the full list before merge.
         service: [
-          Account,
-          Avatars,
-          Console,
           Databases,
           TablesDB,
-          Functions,
-          FunctionsSchedule,
-          GraphQL,
-          Health,
-          Advisor,
-          Locale,
-          Projects,
           Realtime,
-          Sites,
-          Proxy,
-          Storage,
-          Tokens,
-          Teams,
-          Users,
-          ProjectWebhooks,
-          Webhooks,
-          VCS,
-          Messaging,
-          Migrations,
-          Project,
-          Presences
+          Migrations
         ]
         include:
           - service: Databases
@@ -555,6 +541,7 @@ jobs:
 
   e2e_abuse:
     name: Tests / E2E / Abuse (${{ matrix.mode }})
+    if: false # TEMP: disabled to iterate on the failing e2e jobs; revert before merge
     runs-on: ubuntu-latest
     needs: [build, matrix]
     permissions:
@@ -622,6 +609,7 @@ jobs:
 
   e2e_screenshots:
     name: Tests / E2E / Screenshots (${{ matrix.mode }})
+    if: false # TEMP: disabled to iterate on the failing e2e jobs; revert before merge
     runs-on: ubuntu-latest
     needs: [build, matrix]
     permissions:
@@ -694,7 +682,7 @@ jobs:
 
   benchmark:
     name: Benchmark
-    if: github.event_name == 'pull_request'
+    if: false # TEMP: disabled to iterate on the failing e2e jobs; revert before merge
     runs-on: ubuntu-latest
     needs: build
     permissions:
