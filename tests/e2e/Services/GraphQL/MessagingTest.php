@@ -107,6 +107,12 @@ class MessagingTest extends Scope
                 'teamId' => 'my-teamid',
                 'bundleId' => 'my-bundleid',
             ],
+            'Telnyx' => [
+                'providerId' => ID::unique(),
+                'name' => 'Telnyx1',
+                'apiKey' => 'my-apikey',
+                'from' => '+123456789',
+            ],
         ];
 
         $providers = [];
@@ -206,6 +212,11 @@ class MessagingTest extends Scope
                 'authKeyId' => 'my-authkeyid',
                 'teamId' => 'my-teamid',
                 'bundleId' => 'my-bundleid',
+            ],
+            'Telnyx' => [
+                'providerId' => $providers[10]['_id'],
+                'name' => 'Telnyx2',
+                'apiKey' => 'my-apikey',
             ],
         ];
         foreach (\array_keys($providersParams) as $index => $providerKey) {
@@ -877,7 +888,7 @@ class MessagingTest extends Scope
     public function testCreateProviders(): void
     {
         $providers = $this->setupProviders();
-        $this->assertCount(10, $providers);
+        $this->assertCount(11, $providers);
     }
 
     public function testUpdateProviders(): void

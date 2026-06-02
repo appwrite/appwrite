@@ -31,6 +31,7 @@ use Utopia\Messaging\Adapter\SMS\GEOSMS;
 use Utopia\Messaging\Adapter\SMS\Inforu;
 use Utopia\Messaging\Adapter\SMS\Mock;
 use Utopia\Messaging\Adapter\SMS\Msg91;
+use Utopia\Messaging\Adapter\SMS\Telnyx;
 use Utopia\Messaging\Adapter\SMS\Telesign;
 use Utopia\Messaging\Adapter\SMS\TextMagic;
 use Utopia\Messaging\Adapter\SMS\Twilio;
@@ -184,7 +185,7 @@ class Messaging extends Action
         }
 
         if (empty($allTargets)) {
-            $dbForProject->updateDocument('messages', $message->getId(), $message->setAttributes([
+            $dbForProject->updateDocument('messages', $message->getId(), new Document([
                 'status' => MessageStatus::FAILED,
                 'deliveryErrors' => ['No valid recipients found.']
             ]));
@@ -199,7 +200,7 @@ class Messaging extends Action
         ]);
 
         if ($default->isEmpty()) {
-            $dbForProject->updateDocument('messages', $message->getId(), $message->setAttributes([
+            $dbForProject->updateDocument('messages', $message->getId(), new Document([
                 'status' => MessageStatus::FAILED,
                 'deliveryErrors' => ['No enabled provider found.']
             ]));
@@ -300,7 +301,9 @@ class Messaging extends Action
                                         $dbForProject->updateDocument(
                                             'targets',
                                             $target->getId(),
-                                            $target->setAttribute('expired', true)
+                                            new Document([
+                                                'expired' => true,
+                                            ])
                                         );
                                     }
                                 }
@@ -479,6 +482,9 @@ class Messaging extends Action
             'vonage' => new Vonage(
                 $credentials['apiKey'] ?? '',
                 $credentials['apiSecret'] ??  ''
+            ),
+            'telnyx' => new Telnyx(
+                $credentials['apiKey'] ?? ''
             ),
             'fast2sms' => new Fast2SMS(
                 $credentials['apiKey'] ?? '',
@@ -814,6 +820,9 @@ class Messaging extends Action
                 'vonage' => [
                     'apiKey' => $user,
                     'apiSecret' => $password
+                ],
+                'telnyx' => [
+                    'apiKey' => $password,
                 ],
                 'fast2sms' => [
                     'senderId' => $user,

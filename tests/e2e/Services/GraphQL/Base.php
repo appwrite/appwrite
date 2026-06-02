@@ -301,6 +301,7 @@ trait Base
     public const string CREATE_TEXTMAGIC_PROVIDER = 'create_textmagic_provider';
     public const string CREATE_MSG91_PROVIDER = 'create_msg91_provider';
     public const string CREATE_VONAGE_PROVIDER = 'create_vonage_provider';
+    public const string CREATE_TELNYX_PROVIDER = 'create_telnyx_provider';
     public const string CREATE_FCM_PROVIDER = 'create_fcm_provider';
     public const string CREATE_APNS_PROVIDER = 'create_apns_provider';
     public const string LIST_PROVIDERS = 'list_providers';
@@ -314,6 +315,7 @@ trait Base
     public const string UPDATE_TEXTMAGIC_PROVIDER = 'update_textmagic_provider';
     public const string UPDATE_MSG91_PROVIDER = 'update_msg91_provider';
     public const string UPDATE_VONAGE_PROVIDER = 'update_vonage_provider';
+    public const string UPDATE_TELNYX_PROVIDER = 'update_telnyx_provider';
     public const string UPDATE_FCM_PROVIDER = 'update_fcm_provider';
     public const string UPDATE_APNS_PROVIDER = 'update_apns_provider';
     public const string DELETE_PROVIDER = 'delete_provider';
@@ -2597,6 +2599,16 @@ trait Base
                         enabled
                     }
                 }';
+            case self::CREATE_TELNYX_PROVIDER:
+                return 'mutation createTelnyxProvider($providerId: String!, $name: String!, $from: String!, $apiKey: String!) {
+                    messagingCreateTelnyxProvider(providerId: $providerId, name: $name, from: $from, apiKey: $apiKey) {
+                        _id
+                        name
+                        provider
+                        type
+                        enabled
+                    }
+                }';
             case self::CREATE_FCM_PROVIDER:
                 return 'mutation createFcmProvider($providerId: String!, $name: String!, $serviceAccountJSON: Json) {
                     messagingCreateFcmProvider(providerId: $providerId, name: $name, serviceAccountJSON: $serviceAccountJSON) {
@@ -2724,6 +2736,16 @@ trait Base
             case self::UPDATE_VONAGE_PROVIDER:
                 return 'mutation updateVonageProvider($providerId: String!, $name: String!, $apiKey: String!, $apiSecret: String!) {
                     messagingUpdateVonageProvider(providerId: $providerId, name: $name, apiKey: $apiKey, apiSecret: $apiSecret) {
+                        _id
+                        name
+                        provider
+                        type
+                        enabled
+                    }
+                }';
+            case self::UPDATE_TELNYX_PROVIDER:
+                return 'mutation updateTelnyxProvider($providerId: String!, $name: String!, $apiKey: String!) {
+                    messagingUpdateTelnyxProvider(providerId: $providerId, name: $name, apiKey: $apiKey) {
                         _id
                         name
                         provider
