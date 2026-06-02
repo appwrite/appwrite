@@ -242,6 +242,10 @@ const RULE_STATUS_VERIFIED = 'verified';
 // Message types
 const MESSAGE_SEND_TYPE_INTERNAL = 'internal';
 const MESSAGE_SEND_TYPE_EXTERNAL = 'external';
+// External message fan-out tuning
+const MESSAGE_RECIPIENTS_PAGE_SIZE = 1000; // Recipients resolved from the database per page while streaming a send
+const MESSAGE_SEND_CONCURRENCY = 10; // Maximum adapter send requests running concurrently within a single send job
+const MESSAGE_DELIVERY_ERRORS_LIMIT = 100; // Maximum number of per-recipient delivery errors retained on a message
 // Mail Types
 const MAIL_TYPE_VERIFICATION = 'verification';
 const MAIL_TYPE_MAGIC_SESSION = 'magicSession';
