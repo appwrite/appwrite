@@ -281,7 +281,457 @@ trait OAuth2Base
 
     public function testUpdateOAuth2OktaRoundTrip(): void
     {
-        $update = $this->updateOAuth2('okta', [
+        // Only authorization+token, missing userInfo — must fail to enable.
+        $this->updateOAuth2('oidc', [
+            'clientId' => '',
+            'clientSecret' => '',
+            'wellKnownURL' => '',
+            'authorizationURL' => '',
+            'tokenURL' => '',
+            'userInfoURL' => '',
+            'enabled' => false,
+        ]);
+
+        $response = $this->updateOAuth2('oidc', [
+            'clientId' => 'oidc-partial',
+            'clientSecret' => 'oidc-partial-secret',
+            'authorizationURL' => 'https://idp.example.com/oauth2/authorize',
+            'tokenURL' => 'https://idp.example.com/oauth2/token',
+            'enabled' => true,
+        ]);
+
+        $this->assertSame(400, $response['headers']['status-code']);
+        $this->assertSame('general_argument_invalid', $response['body']['type']);
+
+        // Cleanup
+        $this->updateOAuth2('oidc', [
+            'clientId' => '',
+            'clientSecret' => '',
+            'wellKnownURL' => '',
+            'authorizationURL' => '',
+            'tokenURL' => '',
+            'userInfoURL' => '',
+            'enabled' => false,
+        ]);
+    }
+
+    public function testUpdateOAuth2OidcEnableSucceedsWithWellKnown(): void
+    {
+        $update = $this->updateOAuth2('oidc', [
+            'clientId' => 'oidc-enable-client',
+            'clientSecret' => 'oidc-enable-secret',
+            'wellKnownURL' => 'https://idp.example.com/.well-known/openid-configuration',
+            'enabled' => true,
+        ]);
+
+        $this->assertSame(200, $update['headers']['status-code']);
+        $this->assertTrue($update['body']['enabled']);
+
+        // GET must hide clientSecret while keeping clientId and the URL.
+        $get = $this->getOAuth2Provider('oidc');
+        $this->assertSame(200, $get['headers']['status-code']);
+        $this->assertTrue($get['body']['enabled']);
+        $this->assertSame('oidc-enable-client', $get['body']['clientId']);
+        $this->assertSame('https://idp.example.com/.well-known/openid-configuration', $get['body']['wellKnownURL']);
+        $this->assertSame('', $get['body']['clientSecret']);
+
+        // Cleanup
+        $this->updateOAuth2('oidc', [
+            'clientId' => '',
+            'clientSecret' => '',
+            'wellKnownURL' => '',
+            'authorizationURL' => '',
+            'tokenURL' => '',
+            'userInfoURL' => '',
+            'enabled' => false,
+        ]);
+    }
+
+    public function testUpdateOAuth2OidcEnableInSeparateRequestWithWellKnown(): void
+    {
+        // Configure URLs first with `enabled: false`. Then enable in a SECOND
+        // request that omits all URL fields. The merge-on-enable logic in
+        // Oidc::handle() must see the previously-stored wellKnownEndpoint and
+        // allow the toggle. This is the headline feature of the merge logic.
+        $this->updateOAuth2('oidc', [
+            'clientId' => 'oidc-split-wk-client',
+            'clientSecret' => 'oidc-split-wk-secret',
+            'wellKnownURL' => 'https://idp.example.com/.well-known/openid-configuration',
+            'enabled' => false,
+        ]);
+
+        $enable = $this->updateOAuth2('oidc', [
+            'enabled' => true,
+        ]);
+        $this->assertSame(200, $enable['headers']['status-code']);
+        $this->assertTrue($enable['body']['enabled']);
+
+        // Cleanup
+        $this->updateOAuth2('oidc', [
+            'clientId' => '',
+            'clientSecret' => '',
+            'wellKnownURL' => '',
+            'authorizationURL' => '',
+            'tokenURL' => '',
+            'userInfoURL' => '',
+            'enabled' => false,
+        ]);
+    }
+
+    public function testUpdateOAuth2OidcEnableAcrossRequestsWithDiscoveryURLs(): void
+    {
+        // Reset to clean state — earlier tests in this section may have left
+        // partial URL state when running in any order.
+        $this->updateOAuth2('oidc', [
+            'clientId' => '',
+            'clientSecret' => '',
+            'wellKnownURL' => '',
+            'authorizationURL' => '',
+            'tokenURL' => '',
+            'userInfoURL' => '',
+            'enabled' => false,
+        ]);
+
+        // Request 1: configure two of the three discovery URLs.
+        $this->updateOAuth2('oidc', [
+            'clientId' => 'oidc-split-discovery',
+            'clientSecret' => 'oidc-split-discovery-secret',
+            'authorizationURL' => 'https://idp.example.com/oauth2/authorize',
+            'tokenURL' => 'https://idp.example.com/oauth2/token',
+            'enabled' => false,
+        ]);
+
+        // Request 2: send only the third URL plus enable=true. The merged
+        // state must include the two stored URLs + the new one to satisfy
+        // the all-three-discovery-URLs branch of the enable check.
+        $enable = $this->updateOAuth2('oidc', [
+            'userInfoURL' => 'https://idp.example.com/oauth2/userinfo',
+            'enabled' => true,
+        ]);
+        $this->assertSame(200, $enable['headers']['status-code']);
+        $this->assertTrue($enable['body']['enabled']);
+
+        // Confirm all three URLs ended up persisted (merge wrote the new
+        // userInfoURL while preserving the previously stored two).
+        $get = $this->getOAuth2Provider('oidc');
+        $this->assertSame(200, $get['headers']['status-code']);
+        $this->assertSame('https://idp.example.com/oauth2/authorize', $get['body']['authorizationURL']);
+        $this->assertSame('https://idp.example.com/oauth2/token', $get['body']['tokenURL']);
+        $this->assertSame('https://idp.example.com/oauth2/userinfo', $get['body']['userInfoURL']);
+
+        // Cleanup
+        $this->updateOAuth2('oidc', [
+            'clientId' => '',
+            'clientSecret' => '',
+            'wellKnownURL' => '',
+            'authorizationURL' => '',
+            'tokenURL' => '',
+            'userInfoURL' => '',
+            'enabled' => false,
+        ]);
+    }
+
+    public function testUpdateOAuth2OidcEnableFailsAfterClearingWellKnown(): void
+    {
+        // Seed wellKnownURL only (no discovery URLs).
+        $this->updateOAuth2('oidc', [
+            'clientId' => 'oidc-clear-then-enable',
+            'clientSecret' => 'oidc-clear-then-enable-secret',
+            'wellKnownURL' => 'https://idp.example.com/.well-known/openid-configuration',
+            'authorizationURL' => '',
+            'tokenURL' => '',
+            'userInfoURL' => '',
+            'enabled' => false,
+        ]);
+
+        // Clear wellKnownURL and try to enable in the same request. Merge
+        // sees `wellKnown=''` (the cleared empty wins over the stored value
+        // because the new value is non-null) and no discovery URLs → 400.
+        // This is the inverse of testUpdateOAuth2OidcEnableInSeparateRequestWithWellKnown:
+        // confirms the merge correctly *replaces* with empty rather than
+        // falling back to the stored non-empty value.
+        $response = $this->updateOAuth2('oidc', [
+            'wellKnownURL' => '',
+            'enabled' => true,
+        ]);
+        $this->assertSame(400, $response['headers']['status-code']);
+        $this->assertSame('general_argument_invalid', $response['body']['type']);
+
+        // Cleanup
+        $this->updateOAuth2('oidc', [
+            'clientId' => '',
+            'clientSecret' => '',
+            'wellKnownURL' => '',
+            'authorizationURL' => '',
+            'tokenURL' => '',
+            'userInfoURL' => '',
+            'enabled' => false,
+        ]);
+    }
+
+    public function testUpdateOAuth2OidcSwitchModesWellKnownToDiscovery(): void
+    {
+        // Configure with wellKnownURL, then switch to the three-discovery-URL
+        // mode in a single request: clear wellKnown, set the three URLs,
+        // enable. Merge sees wellKnown='' AND all three discovery URLs set →
+        // hasAllDiscovery branch passes.
+        $this->updateOAuth2('oidc', [
+            'clientId' => 'oidc-switch-client',
+            'clientSecret' => 'oidc-switch-secret',
+            'wellKnownURL' => 'https://idp.example.com/.well-known/openid-configuration',
+            'enabled' => false,
+        ]);
+
+        $switch = $this->updateOAuth2('oidc', [
+            'wellKnownURL' => '',
+            'authorizationURL' => 'https://idp.example.com/oauth2/authorize',
+            'tokenURL' => 'https://idp.example.com/oauth2/token',
+            'userInfoURL' => 'https://idp.example.com/oauth2/userinfo',
+            'enabled' => true,
+        ]);
+        $this->assertSame(200, $switch['headers']['status-code']);
+        $this->assertTrue($switch['body']['enabled']);
+        $this->assertSame('', $switch['body']['wellKnownURL']);
+        $this->assertSame('https://idp.example.com/oauth2/authorize', $switch['body']['authorizationURL']);
+        $this->assertSame('https://idp.example.com/oauth2/token', $switch['body']['tokenURL']);
+        $this->assertSame('https://idp.example.com/oauth2/userinfo', $switch['body']['userInfoURL']);
+
+        // Cleanup
+        $this->updateOAuth2('oidc', [
+            'clientId' => '',
+            'clientSecret' => '',
+            'wellKnownURL' => '',
+            'authorizationURL' => '',
+            'tokenURL' => '',
+            'userInfoURL' => '',
+            'enabled' => false,
+        ]);
+    }
+
+    public function testUpdateOAuth2OidcURLsAcceptEmpty(): void
+    {
+        // All four URL fields use `Nullable(URL(allowEmpty: true))`. Passing `''`
+        // for each must clear them rather than 400 on URL validation.
+        $this->updateOAuth2('oidc', [
+            'clientId' => 'oidc-clear-client',
+            'clientSecret' => 'oidc-clear-secret',
+            'wellKnownURL' => 'https://idp.example.com/.well-known/openid-configuration',
+            'authorizationURL' => 'https://idp.example.com/oauth2/authorize',
+            'tokenURL' => 'https://idp.example.com/oauth2/token',
+            'userInfoURL' => 'https://idp.example.com/oauth2/userinfo',
+            'enabled' => false,
+        ]);
+
+        $response = $this->updateOAuth2('oidc', [
+            'wellKnownURL' => '',
+            'authorizationURL' => '',
+            'tokenURL' => '',
+            'userInfoURL' => '',
+        ]);
+
+        $this->assertSame(200, $response['headers']['status-code']);
+        $this->assertSame('', $response['body']['wellKnownURL']);
+        $this->assertSame('', $response['body']['authorizationURL']);
+        $this->assertSame('', $response['body']['tokenURL']);
+        $this->assertSame('', $response['body']['userInfoURL']);
+
+        // Cleanup
+        $this->updateOAuth2('oidc', [
+            'clientId' => '',
+            'clientSecret' => '',
+            'enabled' => false,
+        ]);
+    }
+
+    public function testUpdateOAuth2OidcBackwardCompatibleResponseFormat(): void
+    {
+        // Reset to clean state
+        $this->updateOAuth2('oidc', [
+            'clientId' => '',
+            'clientSecret' => '',
+            'wellKnownURL' => '',
+            'authorizationURL' => '',
+            'tokenURL' => '',
+            'userInfoURL' => '',
+            'enabled' => false,
+        ]);
+
+        $headers = [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-response-format' => '1.9.3',
+        ];
+        $headers = \array_merge($headers, $this->getHeaders());
+
+        // Update using OLD param names (aliases must still work)
+        $response = $this->client->call(
+            Client::METHOD_PATCH,
+            '/project/oauth2/oidc',
+            $headers,
+            [
+                'clientId' => 'oidc-compat-client',
+                'clientSecret' => 'oidc-compat-secret',
+                'tokenUrl' => 'https://idp.example.com/oauth2/token',
+                'userInfoUrl' => 'https://idp.example.com/oauth2/userinfo',
+                'enabled' => false,
+            ],
+        );
+
+        $this->assertSame(200, $response['headers']['status-code']);
+        $this->assertArrayHasKey('tokenUrl', $response['body']);
+        $this->assertArrayHasKey('userInfoUrl', $response['body']);
+        $this->assertArrayNotHasKey('tokenURL', $response['body']);
+        $this->assertArrayNotHasKey('userInfoURL', $response['body']);
+        $this->assertSame('https://idp.example.com/oauth2/token', $response['body']['tokenUrl']);
+        $this->assertSame('https://idp.example.com/oauth2/userinfo', $response['body']['userInfoUrl']);
+
+        // GET with 1.9.3 format must also return old param names
+        $get = $this->client->call(
+            Client::METHOD_GET,
+            '/project/oauth2/oidc',
+            $headers,
+        );
+
+        $this->assertSame(200, $get['headers']['status-code']);
+        $this->assertArrayHasKey('tokenUrl', $get['body']);
+        $this->assertArrayHasKey('userInfoUrl', $get['body']);
+        $this->assertArrayNotHasKey('tokenURL', $get['body']);
+        $this->assertArrayNotHasKey('userInfoURL', $get['body']);
+        $this->assertSame('https://idp.example.com/oauth2/token', $get['body']['tokenUrl']);
+        $this->assertSame('https://idp.example.com/oauth2/userinfo', $get['body']['userInfoUrl']);
+
+        // LIST with 1.9.3 format must also return old param names for OIDC
+        $list = $this->client->call(
+            Client::METHOD_GET,
+            '/project/oauth2',
+            $headers,
+        );
+
+        $this->assertSame(200, $list['headers']['status-code']);
+        $oidcEntry = null;
+        foreach ($list['body']['providers'] as $provider) {
+            if ($provider['$id'] === 'oidc') {
+                $oidcEntry = $provider;
+                break;
+            }
+        }
+        $this->assertNotNull($oidcEntry, 'OIDC provider missing from listOAuth2Providers response');
+        $this->assertArrayHasKey('tokenUrl', $oidcEntry);
+        $this->assertArrayHasKey('userInfoUrl', $oidcEntry);
+        $this->assertArrayNotHasKey('tokenURL', $oidcEntry);
+        $this->assertArrayNotHasKey('userInfoURL', $oidcEntry);
+        $this->assertSame('https://idp.example.com/oauth2/token', $oidcEntry['tokenUrl']);
+        $this->assertSame('https://idp.example.com/oauth2/userinfo', $oidcEntry['userInfoUrl']);
+
+        // Cleanup
+        $this->updateOAuth2('oidc', [
+            'clientId' => '',
+            'clientSecret' => '',
+            'tokenURL' => '',
+            'userInfoURL' => '',
+            'enabled' => false,
+        ]);
+    }
+
+    public function testUpdateOAuth2OidcPromptAndMaxAge(): void
+    {
+        $response = $this->updateOAuth2('oidc', [
+            'clientId' => 'oidc-prompt-client',
+            'clientSecret' => 'oidc-prompt-secret',
+            'wellKnownURL' => 'https://idp.example.com/.well-known/openid-configuration',
+            'prompt' => ['login', 'consent'],
+            'maxAge' => 3600,
+            'enabled' => false,
+        ]);
+
+        $this->assertSame(200, $response['headers']['status-code']);
+        $this->assertSame(['login', 'consent'], $response['body']['prompt']);
+        $this->assertSame(3600, $response['body']['maxAge']);
+
+        // GET reads back prompt + maxAge while hiding the clientSecret.
+        $get = $this->getOAuth2Provider('oidc');
+        $this->assertSame(200, $get['headers']['status-code']);
+        $this->assertSame(['login', 'consent'], $get['body']['prompt']);
+        $this->assertSame(3600, $get['body']['maxAge']);
+        $this->assertSame('', $get['body']['clientSecret']);
+
+        // Cleanup
+        $this->updateOAuth2('oidc', [
+            'clientId' => '',
+            'clientSecret' => '',
+            'wellKnownURL' => '',
+            'authorizationURL' => '',
+            'tokenURL' => '',
+            'userInfoURL' => '',
+            'prompt' => [],
+            'enabled' => false,
+        ]);
+    }
+
+    public function testUpdateOAuth2OidcPartialPreservesPromptAndMaxAge(): void
+    {
+        // Seed prompt + maxAge.
+        $this->updateOAuth2('oidc', [
+            'clientId' => 'oidc-seed-client',
+            'clientSecret' => 'oidc-seed-secret',
+            'wellKnownURL' => 'https://idp.example.com/.well-known/openid-configuration',
+            'prompt' => ['select_account'],
+            'maxAge' => 120,
+            'enabled' => false,
+        ]);
+
+        // Update only clientId — prompt and maxAge must be preserved.
+        $response = $this->updateOAuth2('oidc', [
+            'clientId' => 'oidc-rotated-client',
+        ]);
+
+        $this->assertSame(200, $response['headers']['status-code']);
+        $this->assertSame('oidc-rotated-client', $response['body']['clientId']);
+        $this->assertSame(['select_account'], $response['body']['prompt']);
+        $this->assertSame(120, $response['body']['maxAge']);
+
+        // Cleanup
+        $this->updateOAuth2('oidc', [
+            'clientId' => '',
+            'clientSecret' => '',
+            'wellKnownURL' => '',
+            'prompt' => [],
+            'enabled' => false,
+        ]);
+    }
+
+    public function testUpdateOAuth2OidcPromptNoneAloneRejected(): void
+    {
+        $response = $this->updateOAuth2('oidc', [
+            'clientId' => 'oidc-prompt-none',
+            'clientSecret' => 'oidc-prompt-none-secret',
+            'prompt' => ['none', 'consent'],
+            'enabled' => false,
+        ]);
+
+        $this->assertSame(400, $response['headers']['status-code']);
+        $this->assertSame('general_argument_invalid', $response['body']['type']);
+    }
+
+    public function testUpdateOAuth2OidcMaxAgeNegativeRejected(): void
+    {
+        $response = $this->updateOAuth2('oidc', [
+            'clientId' => 'oidc-maxage-negative',
+            'clientSecret' => 'oidc-maxage-negative-secret',
+            'maxAge' => -1,
+            'enabled' => false,
+        ]);
+
+        $this->assertSame(400, $response['headers']['status-code']);
+    }
+
+    // =========================================================================
+    // Update Okta (clientId + clientSecret + optional domain/authServer)
+    // =========================================================================
+
+    public function testUpdateOAuth2Okta(): void
+    {
+        $response = $this->updateOAuth2('okta', [
             'clientId' => '0oa00000000000000698',
             'clientSecret' => 'okta-secret',
             'domain' => 'trial-6400025.okta.com',
