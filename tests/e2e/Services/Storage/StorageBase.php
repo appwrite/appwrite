@@ -1324,6 +1324,7 @@ trait StorageBase
             $permissions = [
                 Permission::delete(Role::user($this->getUser()['$id'])),
             ];
+            $upload = null;
 
             for ($chunk = 0; $chunk < $chunksTotal; $chunk++) {
                 $start = $chunk * $chunkSize;
@@ -1353,6 +1354,10 @@ trait StorageBase
             }
 
             fclose($handle);
+
+            if ($upload === null) {
+                $this->fail('Expected at least one chunk upload response.');
+            }
 
             $this->assertNotContains(Permission::read(Role::user($this->getUser()['$id'])), $upload['body']['$permissions']);
             $this->assertEquals($chunksTotal, $upload['body']['chunksTotal']);
