@@ -475,6 +475,7 @@ jobs:
             echo "_APP_DB_HOST=mongodb" >> $GITHUB_ENV
             echo "_APP_DB_PORT=27017" >> $GITHUB_ENV
           elif [ "${{ matrix.database }}" = "PostgreSQL" ]; then
+            echo "COMPOSE_FILE=docker-compose.yml:docker-compose.ci-postgres.yml" >> $GITHUB_ENV
             echo "COMPOSE_PROFILES=postgresql" >> $GITHUB_ENV
             echo "_APP_DB_ADAPTER=postgresql" >> $GITHUB_ENV
             echo "_APP_DB_HOST=postgresql" >> $GITHUB_ENV
