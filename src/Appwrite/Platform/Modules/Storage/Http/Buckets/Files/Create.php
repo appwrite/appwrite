@@ -497,6 +497,8 @@ class Create extends Action
                     ->setParam('bucketId', $bucket->getId())
                     ->setParam('fileId', $file->getId())
                     ->setContext('bucket', $bucket);
+            } else {
+                $queueForEvents->reset();
             }
 
             $metadata = null; // was causing leaks as it was passed by reference
