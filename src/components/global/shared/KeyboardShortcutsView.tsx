@@ -192,17 +192,19 @@ export function KeyboardShortcutsView({
           </div>
         </div>
 
-        <KeyboardLayoutVisualizer
-          isMac={isMac}
-          highlightedKeys={selectedShortcut?.highlightKeys ?? []}
-          sequentialHighlightKeys={
-            selectedShortcut
-              ? getSequentialHighlightKeys(selectedShortcut)
-              : undefined
-          }
-          className="shrink-0 border-t border-border/60"
-          compact={!isMobile}
-        />
+        {!isMobile && (
+          <KeyboardLayoutVisualizer
+            isMac={isMac}
+            highlightedKeys={selectedShortcut?.highlightKeys ?? []}
+            sequentialHighlightKeys={
+              selectedShortcut
+                ? getSequentialHighlightKeys(selectedShortcut)
+                : undefined
+            }
+            className="shrink-0 border-t border-border/60"
+            compact
+          />
+        )}
       </div>
 
       {!isMobile && (
