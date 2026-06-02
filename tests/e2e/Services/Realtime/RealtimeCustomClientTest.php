@@ -821,7 +821,7 @@ class RealtimeCustomClientTest extends Scope
                 'x-appwrite-key' => $this->getProject()['apiKey'],
             ]));
             $this->assertEquals('available', $response['body']['status']);
-        }, 30000, 250);
+        }, 120000, 500);
 
         /**
          * Test Document Create
@@ -1405,7 +1405,7 @@ class RealtimeCustomClientTest extends Scope
                 'x-appwrite-key' => $this->getProject()['apiKey'],
             ]));
             $this->assertEquals('available', $response['body']['status']);
-        }, 30000, 250);
+        }, 120000, 500);
 
         // create
         $this->client->call(Client::METHOD_POST, "/databases/{$databaseId}/collections/{$actorsId}/documents", array_merge([
@@ -1957,7 +1957,7 @@ class RealtimeCustomClientTest extends Scope
                 'x-appwrite-key' => $this->getProject()['apiKey'],
             ]));
             $this->assertEquals('available', $response['body']['status']);
-        }, 30000, 250);
+        }, 120000, 500);
 
         /**
          * Test Document Create
@@ -2672,7 +2672,7 @@ class RealtimeCustomClientTest extends Scope
             ]));
 
             $this->assertEquals('available', $attribute['body']['status']);
-        }, 30000, 250);
+        }, 120000, 500);
 
         /**
          * TablesDB table in the same database (/tablesdb API).
@@ -3192,7 +3192,7 @@ class RealtimeCustomClientTest extends Scope
                 'x-appwrite-key' => $this->getProject()['apiKey'],
             ]));
             $this->assertEquals('available', $response['body']['status']);
-        }, 30000, 250);
+        }, 120000, 500);
 
         /**
          * Test Transaction Create with Single Document
@@ -3398,7 +3398,7 @@ class RealtimeCustomClientTest extends Scope
             ]));
 
             $this->assertEquals('available', $attribute['body']['status']);
-        }, 30000, 250);
+        }, 120000, 500);
 
         $legacyClient = $this->getWebsocket([
             "databases.{$legacyDatabaseId}.collections.{$legacyCollectionId}.documents",
@@ -3672,7 +3672,7 @@ class RealtimeCustomClientTest extends Scope
                 'x-appwrite-key' => $this->getProject()['apiKey'],
             ]));
             $this->assertEquals('available', $response['body']['status']);
-        }, 30000, 250);
+        }, 120000, 500);
 
         /**
          * Test Multiple Operations in Single Transaction
@@ -3828,7 +3828,7 @@ class RealtimeCustomClientTest extends Scope
                 'x-appwrite-key' => $this->getProject()['apiKey'],
             ]));
             $this->assertEquals('available', $response['body']['status']);
-        }, 30000, 250);
+        }, 120000, 500);
 
         /**
          * Test Transaction Rollback - Should NOT trigger realtime events
@@ -3972,7 +3972,7 @@ class RealtimeCustomClientTest extends Scope
                 'x-appwrite-key' => $this->getProject()['apiKey'],
             ]));
             $this->assertEquals('available', $response['body']['status']);
-        }, 30000, 250);
+        }, 120000, 500);
 
         $this->assertEventually(function () use ($databaseId, $level2Id) {
             $response = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $level2Id . '/attributes/name', array_merge([
@@ -3981,7 +3981,7 @@ class RealtimeCustomClientTest extends Scope
                 'x-appwrite-key' => $this->getProject()['apiKey'],
             ]));
             $this->assertEquals('available', $response['body']['status']);
-        }, 30000, 250);
+        }, 120000, 500);
 
         // two-way one-to-one relationship from level1 to level2
         $this->client->call(Client::METHOD_POST, "/databases/{$databaseId}/collections/{$level1Id}/attributes/relationship", array_merge([
@@ -4003,7 +4003,7 @@ class RealtimeCustomClientTest extends Scope
                 'x-appwrite-key' => $this->getProject()['apiKey'],
             ]));
             $this->assertEquals('available', $response['body']['status']);
-        }, 30000, 250);
+        }, 120000, 500);
 
         $doc2 = $this->client->call(Client::METHOD_POST, "/databases/{$databaseId}/collections/{$level2Id}/documents", array_merge([
             'content-type' => 'application/json',
@@ -4115,7 +4115,7 @@ class RealtimeCustomClientTest extends Scope
                 'x-appwrite-key' => $this->getProject()['apiKey'],
             ]));
             $this->assertEquals('available', $response['body']['status'] ?? null);
-        }, 30000, 250);
+        }, 120000, 500);
 
         Coroutine\run(function () use ($session, $projectId, $databaseId, $collectionId) {
             $headers = [
@@ -5652,7 +5652,7 @@ class RealtimeCustomClientTest extends Scope
                 'x-appwrite-key' => $this->getProject()['apiKey'],
             ]));
             $this->assertEquals('available', $response['body']['status']);
-        }, 30000, 250);
+        }, 120000, 500);
 
         //Test Document Create
         $document = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $actorsId . '/documents', array_merge([

@@ -423,11 +423,13 @@ jobs:
       matrix:
         database: ${{ fromJSON(needs.matrix.outputs.databases) }}
         mode: ${{ fromJSON(needs.matrix.outputs.modes) }}
-        # TEMP: narrowed to explain-related services for this PR.
+        # TEMP: narrowed to the previously-failing services to re-validate fixes.
         # Revert to the full list before merge.
         service: [
           Databases,
-          TablesDB
+          TablesDB,
+          Realtime,
+          Migrations
         ]
         include:
           - service: Databases
@@ -438,6 +440,8 @@ jobs:
             runner: runs-on=${{ github.run_id }}/runner=8cpu-linux-x64/volume=120g/spot=false
             paratest_processes: 3
             timeout_minutes: 30
+          - service: Migrations
+            paratest_processes: 1
     steps:
       - name: Checkout repository
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2

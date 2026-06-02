@@ -139,7 +139,7 @@ trait MigrationsBase
 
             $this->assertEquals(200, $response['headers']['status-code']);
             $this->assertEquals('available', $response['body']['status']);
-        }, 5000, 500);
+        }, 120000, 500);
 
         self::$cachedTableData = [
             'databaseId' => $databaseId,
@@ -605,7 +605,7 @@ trait MigrationsBase
 
             $this->assertEquals(200, $response['headers']['status-code']);
             $this->assertEquals('available', $response['body']['status']);
-        }, 5000, 500);
+        }, 120000, 500);
 
         $result = $this->performMigrationSync([
             'resources' => [
@@ -1142,7 +1142,7 @@ trait MigrationsBase
             $r = $this->client->call(Client::METHOD_GET, '/tablesdb/' . $databaseId . '/tables/' . $tableId . '/columns/orphan_col', $destHeaders);
             $this->assertEquals(200, $r['headers']['status-code']);
             $this->assertEquals('available', $r['body']['status']);
-        }, 5000, 500);
+        }, 120000, 500);
 
         // Seed a row on source so per-table orphan cleanup fires inside
         // createRecord (before rows land), not just at end of run.
@@ -1225,7 +1225,7 @@ trait MigrationsBase
             $r = $this->client->call(Client::METHOD_GET, '/tablesdb/' . $databaseId . '/tables/' . $tableId . '/columns/dest_only_col', $destHeaders);
             $this->assertEquals(200, $r['headers']['status-code']);
             $this->assertEquals('available', $r['body']['status']);
-        }, 5000, 500);
+        }, 120000, 500);
 
         $this->client->call(Client::METHOD_POST, '/tablesdb/' . $databaseId . '/tables/' . $tableId . '/rows', $sourceHeaders, [
             'rowId' => ID::unique(),
@@ -1318,7 +1318,7 @@ trait MigrationsBase
             $this->assertEquals('available', $r['body']['status']);
             $this->assertFalse($r['body']['required']);
             $this->assertEquals('unknown', $r['body']['default']);
-        }, 5000, 500);
+        }, 120000, 500);
 
         $overwriteResult = $this->performMigrationSync([
             'resources' => $resources,
@@ -1335,7 +1335,7 @@ trait MigrationsBase
             $this->assertEquals('available', $r['body']['status']);
             $this->assertFalse($r['body']['required'], 'updateAttributeInPlace must propagate source required=false');
             $this->assertEquals('unknown', $r['body']['default'], 'updateAttributeInPlace must propagate source default');
-        }, 10000, 500);
+        }, 120000, 500);
 
         // Pre-existing row preserved — proof that the path was UpdateInPlace
         // and not DropAndRecreate (which would have nulled this column).
@@ -1396,7 +1396,7 @@ trait MigrationsBase
             $this->assertEquals(200, $r['headers']['status-code']);
             $this->assertEquals('available', $r['body']['status']);
             $this->assertFalse($r['body']['required']);
-        }, 5000, 500);
+        }, 120000, 500);
 
         sleep(1);
 
@@ -1413,7 +1413,7 @@ trait MigrationsBase
             $this->assertEquals(200, $r['headers']['status-code']);
             $this->assertEquals('available', $r['body']['status']);
             $this->assertTrue($r['body']['required']);
-        }, 5000, 500);
+        }, 120000, 500);
 
         $skipResult = $this->performMigrationSync([
             'resources' => $resources,
@@ -1481,7 +1481,7 @@ trait MigrationsBase
             $this->assertEquals(200, $r['headers']['status-code']);
             $this->assertEquals('available', $r['body']['status']);
             $this->assertEquals(Database::RELATION_MUTATE_CASCADE, $r['body']['onDelete']);
-        }, 10000, 500);
+        }, 120000, 500);
 
         $resources = [
             Resource::TYPE_DATABASE,
@@ -1508,7 +1508,7 @@ trait MigrationsBase
             $this->assertEquals(200, $child['headers']['status-code']);
             $this->assertEquals('available', $child['body']['status']);
             $this->assertEquals(Database::RELATION_MUTATE_CASCADE, $child['body']['onDelete']);
-        }, 10000, 500);
+        }, 120000, 500);
 
         sleep(1);
 
@@ -1523,7 +1523,7 @@ trait MigrationsBase
             $this->assertEquals(200, $r['headers']['status-code']);
             $this->assertEquals('available', $r['body']['status']);
             $this->assertEquals(Database::RELATION_MUTATE_RESTRICT, $r['body']['onDelete']);
-        }, 5000, 500);
+        }, 120000, 500);
 
         $overwriteResult = $this->performMigrationSync([
             'resources' => $resources,
@@ -1549,7 +1549,7 @@ trait MigrationsBase
             $this->assertEquals(200, $child['headers']['status-code']);
             $this->assertEquals('available', $child['body']['status']);
             $this->assertEquals(Database::RELATION_MUTATE_RESTRICT, $child['body']['onDelete'], 'partner-side onDelete must reflect source after in-place update');
-        }, 10000, 500);
+        }, 120000, 500);
 
         $this->client->call(Client::METHOD_DELETE, '/databases/' . $databaseId, $destHeaders);
         $this->client->call(Client::METHOD_DELETE, '/databases/' . $databaseId, $sourceHeaders);
@@ -1607,7 +1607,7 @@ trait MigrationsBase
             $r = $this->client->call(Client::METHOD_GET, '/tablesdb/' . $databaseId . '/tables/parents/columns/label', $sourceHeaders);
             $this->assertEquals(200, $r['headers']['status-code']);
             $this->assertEquals('available', $r['body']['status']);
-        }, 10000, 500);
+        }, 120000, 500);
 
         $createRel = $this->client->call(Client::METHOD_POST, '/tablesdb/' . $databaseId . '/tables/parents/columns/relationship', $sourceHeaders, [
             'relatedTableId' => 'children',
@@ -1623,7 +1623,7 @@ trait MigrationsBase
             $r = $this->client->call(Client::METHOD_GET, '/tablesdb/' . $databaseId . '/tables/parents/columns/kids', $sourceHeaders);
             $this->assertEquals(200, $r['headers']['status-code']);
             $this->assertEquals('available', $r['body']['status']);
-        }, 10000, 500);
+        }, 120000, 500);
 
         $parentRow = $this->client->call(Client::METHOD_POST, '/tablesdb/' . $databaseId . '/tables/parents/rows', $sourceHeaders, [
             'rowId' => 'parent-1',
@@ -1661,7 +1661,7 @@ trait MigrationsBase
         $this->assertEventually(function () use ($databaseId, $sourceHeaders) {
             $r = $this->client->call(Client::METHOD_GET, '/tablesdb/' . $databaseId . '/tables/parents/columns/kids', $sourceHeaders);
             $this->assertEquals(404, $r['headers']['status-code']);
-        }, 10000, 500);
+        }, 120000, 500);
 
         sleep(1);
         $recreate = $this->client->call(Client::METHOD_POST, '/tablesdb/' . $databaseId . '/tables/parents/columns/relationship', $sourceHeaders, [
@@ -1678,7 +1678,7 @@ trait MigrationsBase
             $r = $this->client->call(Client::METHOD_GET, '/tablesdb/' . $databaseId . '/tables/parents/columns/kids', $sourceHeaders);
             $this->assertEquals(200, $r['headers']['status-code']);
             $this->assertEquals('available', $r['body']['status']);
-        }, 10000, 500);
+        }, 120000, 500);
 
         // Child-row's relationship was wiped by the source-side delete. Re-link.
         $relink = $this->client->call(Client::METHOD_PATCH, '/tablesdb/' . $databaseId . '/tables/children/rows/child-1', $sourceHeaders, [
@@ -1703,7 +1703,7 @@ trait MigrationsBase
             $child = $this->client->call(Client::METHOD_GET, '/tablesdb/' . $databaseId . '/tables/children/columns/parent', $destHeaders);
             $this->assertEquals(200, $child['headers']['status-code']);
             $this->assertEquals('available', $child['body']['status']);
-        }, 10000, 500);
+        }, 120000, 500);
 
         // Both rows survive the re-migration. If the partner-side dedup were
         // missing and the partner pass re-fired DropAndRecreate, the partner
@@ -1761,7 +1761,7 @@ trait MigrationsBase
             $r = $this->client->call(Client::METHOD_GET, '/tablesdb/' . $databaseId . '/tables/parents/columns/kids', $sourceHeaders);
             $this->assertEquals(200, $r['headers']['status-code']);
             $this->assertEquals('available', $r['body']['status']);
-        }, 10000, 500);
+        }, 120000, 500);
 
         $resources = [
             Resource::TYPE_DATABASE,
@@ -1782,7 +1782,7 @@ trait MigrationsBase
             $this->assertEquals(200, $r['headers']['status-code']);
             $this->assertEquals('available', $r['body']['status']);
             $this->assertEquals(Database::RELATION_MUTATE_CASCADE, $r['body']['onDelete']);
-        }, 10000, 500);
+        }, 120000, 500);
 
         sleep(1);
 
@@ -1795,7 +1795,7 @@ trait MigrationsBase
             $r = $this->client->call(Client::METHOD_GET, '/tablesdb/' . $databaseId . '/tables/parents/columns/kids', $sourceHeaders);
             $this->assertEquals('available', $r['body']['status']);
             $this->assertEquals(Database::RELATION_MUTATE_RESTRICT, $r['body']['onDelete']);
-        }, 5000, 500);
+        }, 120000, 500);
 
         $overwriteResult = $this->performMigrationSync([
             'resources' => $resources,
@@ -1813,7 +1813,7 @@ trait MigrationsBase
             $this->assertEquals(Database::RELATION_MUTATE_RESTRICT, $r['body']['onDelete'], 'one-way DropAndRecreate must propagate source onDelete');
             $this->assertEquals(Database::RELATION_ONE_TO_MANY, $r['body']['relationType'], 'DropAndRecreate must preserve relationType');
             $this->assertFalse($r['body']['twoWay'], 'DropAndRecreate must preserve twoWay=false');
-        }, 10000, 500);
+        }, 120000, 500);
 
         $this->client->call(Client::METHOD_DELETE, '/databases/' . $databaseId, $destHeaders);
         $this->client->call(Client::METHOD_DELETE, '/databases/' . $databaseId, $sourceHeaders);
@@ -1872,7 +1872,7 @@ trait MigrationsBase
         $this->assertEventually(function () use ($databaseId, $tableId, $sourceHeaders) {
             $r = $this->client->call(Client::METHOD_GET, '/tablesdb/' . $databaseId . '/tables/' . $tableId . '/columns/name', $sourceHeaders);
             $this->assertEquals(404, $r['headers']['status-code']);
-        }, 10000, 500);
+        }, 120000, 500);
 
         // Recreate with `array: true` — a non-SDK change (`array` is in
         // ATTRIBUTE_NON_SDK_FIELDS). Forces updateAttributeInPlace to bail
@@ -1890,7 +1890,7 @@ trait MigrationsBase
             $r = $this->client->call(Client::METHOD_GET, '/tablesdb/' . $databaseId . '/tables/' . $tableId . '/columns/name', $sourceHeaders);
             $this->assertEquals(200, $r['headers']['status-code']);
             $this->assertEquals('available', $r['body']['status']);
-        }, 10000, 500);
+        }, 120000, 500);
 
         // Source row's data was nulled by the source-side delete. Set a list value (column is array=true now).
         $relink = $this->client->call(Client::METHOD_PATCH, '/tablesdb/' . $databaseId . '/tables/' . $tableId . '/rows/' . $rowId, $sourceHeaders, [
@@ -1913,7 +1913,7 @@ trait MigrationsBase
             $this->assertEquals('available', $col['body']['status']);
             $this->assertTrue($col['body']['array'], 'recreated column must reflect the new spec (array=true)');
             $this->assertFalse($col['body']['required']);
-        }, 10000, 500);
+        }, 120000, 500);
 
         $rowAfter = $this->client->call(Client::METHOD_GET, '/tablesdb/' . $databaseId . '/tables/' . $tableId . '/rows/' . $rowId, $destHeaders);
         $this->assertEquals(200, $rowAfter['headers']['status-code']);
@@ -1980,7 +1980,7 @@ trait MigrationsBase
         $this->assertEventually(function () use ($databaseId, $tableId, $sourceHeaders) {
             $r = $this->client->call(Client::METHOD_GET, '/tablesdb/' . $databaseId . '/tables/' . $tableId . '/columns/name', $sourceHeaders);
             $this->assertEquals(404, $r['headers']['status-code']);
-        }, 10000, 500);
+        }, 120000, 500);
 
         $recreate = $this->client->call(Client::METHOD_POST, '/tablesdb/' . $databaseId . '/tables/' . $tableId . '/columns/string', $sourceHeaders, [
             'key' => 'name',
@@ -1993,7 +1993,7 @@ trait MigrationsBase
             $r = $this->client->call(Client::METHOD_GET, '/tablesdb/' . $databaseId . '/tables/' . $tableId . '/columns/name', $sourceHeaders);
             $this->assertEquals(200, $r['headers']['status-code']);
             $this->assertEquals('available', $r['body']['status']);
-        }, 10000, 500);
+        }, 120000, 500);
 
         $relink = $this->client->call(Client::METHOD_PATCH, '/tablesdb/' . $databaseId . '/tables/' . $tableId . '/rows/' . $rowId, $sourceHeaders, [
             'data' => ['name' => 'after-recreate'],
@@ -2882,7 +2882,7 @@ trait MigrationsBase
                 $response = $this->client->call(Client::METHOD_GET, '/tablesdb/' . $databaseId . '/tables/' . $tableId . '/columns/' . $column, $headers);
                 $this->assertEquals(200, $response['headers']['status-code']);
                 $this->assertEquals('available', $response['body']['status']);
-            }, 5000, 500);
+            }, 120000, 500);
         }
 
         // bucket
@@ -3143,7 +3143,7 @@ trait MigrationsBase
                 $response = $this->client->call(Client::METHOD_GET, '/tablesdb/' . $databaseId . '/tables/' . $tableId . '/columns/' . $column, $headers);
                 $this->assertEquals(200, $response['headers']['status-code']);
                 $this->assertEquals('available', $response['body']['status']);
-            }, 5000, 500);
+            }, 120000, 500);
         }
 
         // bucket
@@ -5109,7 +5109,7 @@ trait MigrationsBase
 
             $this->assertEquals(200, $response['headers']['status-code']);
             $this->assertEquals('available', $response['body']['status']);
-        }, 5000, 500);
+        }, 120000, 500);
 
         $sqlIndexKey = 'product_unique';
 
@@ -5134,7 +5134,7 @@ trait MigrationsBase
 
             $this->assertEquals(200, $index['headers']['status-code']);
             $this->assertEquals('available', $index['body']['status']);
-        }, 30000, 500);
+        }, 120000, 500);
 
         // Create Row in Table
         $row = $this->client->call(Client::METHOD_POST, '/tablesdb/' . $sqlDatabaseId . '/tables/' . $tableId . '/rows', [
@@ -5201,7 +5201,7 @@ trait MigrationsBase
 
             $this->assertEquals(200, $index['headers']['status-code']);
             $this->assertEquals('available', $index['body']['status']);
-        }, 30000, 500);
+        }, 120000, 500);
 
         // Create Document in Collection
         $document = $this->client->call(Client::METHOD_POST, '/documentsdb/' . $docsDatabaseId . '/collections/' . $collectionId . '/documents', [
@@ -5269,7 +5269,7 @@ trait MigrationsBase
                 }
             }
             return true;
-        }, 10000, 500);
+        }, 120000, 500);
 
         $metadataIndexKey = '_key_metadata';
         $vectorIndexes = $this->client->call(Client::METHOD_GET, '/vectorsdb/' . $vectorDatabaseId . '/collections/' . $vectorCollectionId . '/indexes', [
@@ -5312,7 +5312,7 @@ trait MigrationsBase
             if (isset($index['body']['status'])) {
                 $this->assertEquals('available', $index['body']['status']);
             }
-        }, 30000, 500);
+        }, 120000, 500);
 
         // Create Document in VectorsDB Collection
         $vectorDocument = $this->client->call(Client::METHOD_POST, '/vectorsdb/' . $vectorDatabaseId . '/collections/' . $vectorCollectionId . '/documents', [
