@@ -16,6 +16,8 @@ use Appwrite\Event\Publisher\Screenshot as ScreenshotPublisher;
 use Appwrite\Event\Publisher\StatsResources as StatsResourcesPublisher;
 use Appwrite\Event\Publisher\Usage as UsagePublisher;
 use Appwrite\Platform\Modules\Storage\Config\StorageCacheControl;
+use Appwrite\PubSub\Adapter\Pool as PubSubPool;
+use Appwrite\PubSub\Adapter\Redis as PubSub;
 use Executor\Executor;
 use Utopia\Abuse\Adapters\TimeLimit\Redis as TimeLimitRedis;
 use Utopia\Cache\Adapter\Pool as CachePool;
@@ -28,7 +30,10 @@ use Utopia\Database\Validator\Authorization;
 use Utopia\DI\Container;
 use Utopia\DSN\DSN;
 use Utopia\Lock\Distributed;
+use Utopia\Pools\Adapter\Stack as StackPool;
+use Utopia\Pools\Adapter\Swoole as SwoolePool;
 use Utopia\Pools\Group;
+use Utopia\Pools\Pool;
 use Utopia\Queue\Broker\Pool as BrokerPool;
 use Utopia\Queue\Publisher;
 use Utopia\Queue\Queue;
@@ -211,6 +216,46 @@ $container->set('redis', function () {
 
     return $redis;
 });
+
+/**
+ * Single source for building pub/sub connections. Resolves to a factory that opens a
+ * fresh, non-persistent Redis connection each call. Both the dedicated subscriber (used
+ * by the realtime worker, which blocks on its connection for the worker's whole life) and
+ * the pooled publisher below build on this, so the connection setup lives in one place.
+ *
+ * @return callable(): PubSub
+ */
+$container->set('factoryForPubSub', function (): callable {
+    $host = System::getEnv('_APP_REDIS_HOST', 'localhost');
+    $port = System::getEnv('_APP_REDIS_PORT', 6379);
+    $pass = System::getEnv('_APP_REDIS_PASS', '');
+
+    return function () use ($host, $port, $pass): PubSub {
+        $redis = new \Redis();
+        $redis->connect($host, (int) $port);
+        if ($pass) {
+            $redis->auth($pass);
+        }
+        $redis->setOption(\Redis::OPT_READ_TIMEOUT, -1);
+
+        return new PubSub($redis);
+    };
+});
+
+/**
+ * Pooled pub/sub adapter for the publish path (borrow-and-return). Connections are built
+ * by factoryForPubSub. Sizing mirrors the per-worker pool sizing in app/init/registers.php.
+ */
+$container->set('poolForPubSub', function (callable $factoryForPubSub): PubSubPool {
+    $maxConnections = (int) System::getEnv('_APP_CONNECTIONS_MAX', 151);
+    $instanceConnections = $maxConnections / (int) System::getEnv('_APP_POOL_CLIENTS', 14);
+    $workerCount = (int) System::getEnv('_APP_CPU_NUM', swoole_cpu_num()) * (int) System::getEnv('_APP_WORKER_PER_CORE', 6);
+    $poolSize = max(1, (int) ($instanceConnections / $workerCount));
+
+    $poolAdapter = System::getEnv('_APP_POOL_ADAPTER', 'stack') === 'swoole' ? new SwoolePool() : new StackPool();
+
+    return new PubSubPool(new Pool($poolAdapter, 'pubsub', $poolSize, $factoryForPubSub));
+}, ['factoryForPubSub']);
 
 $container->set('locks', fn (Group $pools) => fn (string $key, int $ttl, callable $callback, float $timeout = 0.0): mixed => $pools->get('lock')->use(
     fn (\Redis $redis) => (new Distributed($redis, $key, ttl: $ttl))->withLock($callback, timeout: $timeout)

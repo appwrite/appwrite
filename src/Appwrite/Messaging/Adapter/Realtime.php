@@ -68,13 +68,15 @@ class Realtime extends MessagingAdapter
 
     /**
      * Get the PubSubPool instance, initializing it lazily if needed.
-     * This allows unit tests to work without requiring the global $register.
+     * This allows unit tests to work without requiring the global $container.
      */
     private function getPubSubPool(): PubSubPool
     {
         if ($this->pubSubPool === null) {
-            global $register;
-            $this->pubSubPool = new PubSubPool($register->get('pools')->get('pubsub'));
+            global $container;
+            /** @var PubSubPool $pool */
+            $pool = $container->get('poolForPubSub');
+            $this->pubSubPool = $pool;
         }
 
         return $this->pubSubPool;

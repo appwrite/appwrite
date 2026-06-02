@@ -338,13 +338,7 @@ $register->set('pools', function () {
 
             $poolAdapter = System::getEnv('_APP_POOL_ADAPTER', default: 'stack') === 'swoole' ? new SwoolePool() : new StackPool();
 
-            // PubSub workers hold one long-lived subscribed connection and also need
-            // spare capacity for publishes from the same process.
-            $connectionPoolSize = $type === 'pubsub'
-                ? max(2, $poolSize)
-                : $poolSize;
-
-            $pool = new Pool($poolAdapter, $name, $connectionPoolSize, function () use ($type, $resource, $dsn) {
+            $pool = new Pool($poolAdapter, $name, $poolSize, function () use ($type, $resource, $dsn) {
                 // Get Adapter
                 switch ($type) {
                     case 'database':
