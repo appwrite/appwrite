@@ -90,7 +90,7 @@ class Membership extends Model
             ])
             ->addRule('userAccessedAt', [
                 'type' => self::TYPE_DATETIME,
-                'description' => 'Most recent access date in ISO 8601 format. Hide this attribute by toggling membership privacy in the Console.',
+                'description' => 'Most recent access date in ISO 8601 format. Show this attribute by toggling membership privacy in the Console.',
                 'default' => '',
                 'example' => self::TYPE_DATETIME_EXAMPLE,
             ])
