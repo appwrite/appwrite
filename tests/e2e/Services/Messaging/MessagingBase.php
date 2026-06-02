@@ -1055,7 +1055,7 @@ trait MessagingBase
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ];
 
-        // Create disabled: missing fromEmail and partial credentials.
+        // Create with full credentials but no fromEmail, so the provider stays disabled.
         $response = $this->client->call(Client::METHOD_POST, '/messaging/providers/ses', $headers, [
             'providerId' => ID::unique(),
             'name' => 'SES1',

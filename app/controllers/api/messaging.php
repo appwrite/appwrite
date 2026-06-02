@@ -297,9 +297,9 @@ Http::post('/v1/messaging/providers/ses')
         if (
             $enabled === true
             && !empty($fromEmail)
-            && \array_key_exists('accessKey', $credentials)
-            && \array_key_exists('secretKey', $credentials)
-            && \array_key_exists('region', $credentials)
+            && !empty($credentials['accessKey'])
+            && !empty($credentials['secretKey'])
+            && !empty($credentials['region'])
         ) {
             $enabled = true;
         } else {
@@ -1642,10 +1642,10 @@ Http::patch('/v1/messaging/providers/ses/:providerId')
         if (!\is_null($enabled)) {
             if ($enabled) {
                 if (
-                    \array_key_exists('accessKey', $credentials) &&
-                    \array_key_exists('secretKey', $credentials) &&
-                    \array_key_exists('region', $credentials) &&
-                    \array_key_exists('fromEmail', $options)
+                    !empty($credentials['accessKey']) &&
+                    !empty($credentials['secretKey']) &&
+                    !empty($credentials['region']) &&
+                    !empty($options['fromEmail'])
                 ) {
                     $provider->setAttribute('enabled', true);
                 } else {
