@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "551924e300a646e6f433ea0a0f3d6c9f",
+    "content-hash": "22527fed7377783fba0d3a83be3a9f4d",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -3923,16 +3923,16 @@
         },
         {
             "name": "utopia-php/database",
-            "version": "5.9.0",
+            "version": "dev-main",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/database.git",
-                "reference": "477bae83e27631f78c159f45b0441c0c7dc69050"
+                "reference": "567901977c0128a3bd1cb9917553ebb4c1055582"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/database/zipball/477bae83e27631f78c159f45b0441c0c7dc69050",
-                "reference": "477bae83e27631f78c159f45b0441c0c7dc69050",
+                "url": "https://api.github.com/repos/utopia-php/database/zipball/567901977c0128a3bd1cb9917553ebb4c1055582",
+                "reference": "567901977c0128a3bd1cb9917553ebb4c1055582",
                 "shasum": ""
             },
             "require": {
@@ -3957,6 +3957,7 @@
                 "swoole/ide-helper": "5.1.3",
                 "utopia-php/cli": "0.22.*"
             },
+            "default-branch": true,
             "type": "library",
             "autoload": {
                 "psr-4": {
@@ -3977,9 +3978,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/database/issues",
-                "source": "https://github.com/utopia-php/database/tree/5.9.0"
+                "source": "https://github.com/utopia-php/database/tree/main"
             },
-            "time": "2026-05-17T15:57:21+00:00"
+            "time": "2026-05-19T02:54:27+00:00"
         },
         {
             "name": "utopia-php/detector",
@@ -8549,9 +8550,17 @@
             "time": "2026-05-27T13:05:51+00:00"
         }
     ],
-    "aliases": [],
+    "aliases": [
+        {
+            "package": "utopia-php/database",
+            "version": "dev-main",
+            "alias": "5.9.0",
+            "alias_normalized": "5.9.0.0"
+        }
+    ],
     "minimum-stability": "dev",
     "stability-flags": {
+        "utopia-php/database": 20,
         "utopia-php/http": 5
     },
     "prefer-stable": true,
