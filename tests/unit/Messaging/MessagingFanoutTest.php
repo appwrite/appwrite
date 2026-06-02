@@ -435,8 +435,9 @@ class MessagingFanoutTest extends TestCase
         EmailAdapter $adapter
     ): void {
         $worker = new TestableMessaging($adapter);
+        // No setAccessible(true): reflection invokes private methods without it on PHP 8.1+, and the call is
+        // deprecated on PHP 8.5 (the CI unit-test runtime), where the suite fails on triggered deprecations.
         $method = new \ReflectionMethod(Messaging::class, 'sendExternalMessage');
-        $method->setAccessible(true);
 
         $publisher = $this->createMock(UsagePublisher::class);
         $publisher->method('enqueue')->willReturn(true);
@@ -574,8 +575,9 @@ class MessagingFanoutTest extends TestCase
         $adapter = new ConcurrencyProbeAdapter();
 
         $worker = new TestableMessaging($adapter);
+        // No setAccessible(true): reflection invokes private methods without it on PHP 8.1+, and the call is
+        // deprecated on PHP 8.5 (the CI unit-test runtime), where the suite fails on triggered deprecations.
         $method = new \ReflectionMethod(Messaging::class, 'sendExternalMessage');
-        $method->setAccessible(true);
         $publisher = $this->createMock(UsagePublisher::class);
         $device = new Local(\sys_get_temp_dir());
         $project = new Document(['$id' => 'project1', '$sequence' => '1']);
