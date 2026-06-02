@@ -565,7 +565,7 @@ abstract class Action extends DatabasesAction
         $cursor = \reset($cursor);
 
         if ($cursor !== false) {
-            $validator = new Cursor;
+            $validator = new Cursor();
             if (! $validator->isValid($cursor)) {
                 throw new Exception(Exception::GENERAL_QUERY_INVALID, $validator->getDescription());
             }
