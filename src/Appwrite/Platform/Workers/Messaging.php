@@ -666,9 +666,13 @@ class Messaging extends Action
             }
 
             // Exponential backoff with jitter; non-blocking under Swoole so sibling sends keep progressing.
+            // Skip a non-positive delay: Swoole\Coroutine::sleep() rejects 0/negative values (which tests
+            // produce by overriding the base delay to 0 for speed), and it would otherwise emit a warning.
             $delay = $this->retryDelay() * (2 ** ($attempt - 1));
             $delay += $delay * (\random_int(0, 100) / 1000);
-            \Swoole\Coroutine::sleep($delay);
+            if ($delay > 0) {
+                \Swoole\Coroutine::sleep($delay);
+            }
         }
 
         return [
