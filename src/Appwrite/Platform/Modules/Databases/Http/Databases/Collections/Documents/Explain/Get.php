@@ -8,6 +8,7 @@ use Appwrite\SDK\AuthType;
 use Appwrite\SDK\ContentType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
+use Appwrite\Usage\Context;
 use Appwrite\Utopia\Database\Documents\User;
 use Appwrite\Utopia\Response as UtopiaResponse;
 use Utopia\Database\Database;
@@ -67,6 +68,7 @@ class Get extends Action
             ->inject('dbForProject')
             ->inject('user')
             ->inject('getDatabasesDB')
+            ->inject('usage')
             ->inject('authorization')
             ->callback($this->action(...));
     }
@@ -83,6 +85,7 @@ class Get extends Action
         Database $dbForProject,
         User $user,
         callable $getDatabasesDB,
+        Context $usage,
         Authorization $authorization,
     ): void {
         // Reuses the same prep listRows runs (auth, lookups, query parse,
@@ -126,8 +129,18 @@ class Get extends Action
             throw new Exception(Exception::DATABASE_TIMEOUT);
         }
 
+        $entries = $plan->getAttribute('queries', []);
+
+        // Explain runs the real find()/count(), so it must be metered like
+        // listRows. One captured entry == one physical read; floor at 1 so a
+        // scan can never be free of quota (matches XList's max($operations, 1)).
+        $operations = \max(\count($entries), 1);
+        $usage
+            ->addMetric($this->getDatabasesOperationReadMetric(), $operations)
+            ->addMetric(str_replace('{databaseInternalId}', $database->getSequence(), $this->getDatabasesIdOperationReadMetric()), $operations);
+
         $translated = $this->translatePlanCollections(
-            $plan->getAttribute('queries', []),
+            $entries,
             $database,
             $collection,
             $dbForProject,
@@ -150,8 +163,8 @@ class Get extends Action
         Database $dbForProject,
         Authorization $authorization,
     ): array {
-        $databaseSequence = $database->getSequence();
-        $databaseCollectionsTable = 'database_'.$databaseSequence;
+        $databaseInternalId = (string) $database->getSequence();
+        $databaseCollectionsTable = 'database_'.$databaseInternalId;
         $collectionResolver = $this->buildCollectionResolver($database, $collection, $dbForProject, $authorization);
 
         $output = [];
@@ -167,7 +180,7 @@ class Get extends Action
             $output[] = new Document([
                 'purpose' => $entry['purpose'] ?? 'find',
                 'context' => $this->normalizeContext($context),
-                'plan' => $this->normalizePlan($entry['plan'] ?? [], $databaseCollectionsTable, $collectionResolver),
+                'plan' => $this->normalizePlan($entry['plan'] ?? []),
             ]);
         }
 
@@ -203,49 +216,61 @@ class Get extends Action
      * kept — it holds the access-path detail customers need for deep diagnosis.
      *
      * @param  array<string, mixed>  $plan
-     * @param  callable(string): ?string  $collectionResolver
      * @return array<string, mixed>
      */
-    protected function normalizePlan(array $plan, string $databaseCollectionsTable, callable $collectionResolver): array
+    protected function normalizePlan(array $plan): array
     {
         return [
             'rowsScanned' => $plan['rowsScanned'] ?? null,
-            'indexUsed' => $plan['indexUsed'] ?? null,
+            'indexUsed' => isset($plan['indexUsed']) ? $this->scrubPhysicalIdentifiers($plan['indexUsed']) : null,
             'estimatedCost' => $plan['estimatedCost'] ?? null,
             'rowsReturned' => $plan['rowsReturned'] ?? null,
             'executionTime' => $plan['executionTime'] ?? null,
-            'tree' => isset($plan['tree']) ? $this->scrubTreeIdentifiers($plan['tree'], $databaseCollectionsTable, $collectionResolver) : null,
+            'tree' => isset($plan['tree']) ? $this->scrubPhysicalIdentifiers($plan['tree']) : null,
             'error' => $plan['error'] ?? null,
         ];
     }
 
     /**
-     * Rewrite physical collection identifiers in the raw plan tree back to the
-     * user-facing collection id. The library strips internal column names but
-     * leaves physical table/namespace references (e.g. the MariaDB `table_name`
-     * or the Mongo `namespace`), which embed `database_<seq>_collection_<seq>`.
+     * Replace internal storage identifiers the engine leaves in the raw plan
+     * with generic placeholders.
      *
-     * @param  callable(string): ?string  $collectionResolver
+     * The library renames internal columns, but physical table/index/relation
+     * names still leak across engines as `[_<tenant>_]database_<dbSeq>_collection_<collSeq>`
+     * with optional `_perms`/`_permission`/`_metadata` suffixes. We don't resolve
+     * these back to user ids (the entry's `context.collection` already carries
+     * that) — we just collapse any physical token to a placeholder so the public
+     * tree never exposes internal naming, tenant ids, or sequences. Walks
+     * recursively over arrays and strings.
      */
-    protected function scrubTreeIdentifiers(mixed $node, string $databaseCollectionsTable, callable $collectionResolver): mixed
+    protected function scrubPhysicalIdentifiers(mixed $node): mixed
     {
         if (\is_array($node)) {
             $result = [];
             foreach ($node as $key => $value) {
-                $result[$key] = $this->scrubTreeIdentifiers($value, $databaseCollectionsTable, $collectionResolver);
+                $result[$key] = $this->scrubPhysicalIdentifiers($value);
             }
 
             return $result;
         }
 
-        if (\is_string($node) && \str_contains($node, $databaseCollectionsTable.'_collection_')) {
-            $needle = $databaseCollectionsTable.'_collection_';
+        if (! \is_string($node)) {
+            return $node;
+        }
 
-            return \preg_replace_callback(
-                '/'.\preg_quote($needle, '/').'([0-9a-f-]+)/i',
-                fn (array $m) => $collectionResolver($m[1]) ?? $m[0],
-                $node,
-            );
+        // Sequences are numeric (MariaDB/Postgres) or hyphenated UUIDs (Mongo),
+        // so the id class allows word chars and hyphens. Order matters: match the
+        // longest/most-specific suffix first so a perms or metadata table is not
+        // first collapsed to a bare <collection>.
+        $patterns = [
+            '/(?:_\d+_)?database_[\w-]+_collection_[\w-]+_perms\b/i' => '<permissionCheck>',
+            '/(?:_\d+_)?database_[\w-]+_collection_[\w-]+_permission\b/i' => '<permissionCheck>',
+            '/(?:_\d+_)?database_[\w-]+__metadata\b/i' => '<metadata>',
+            '/(?:_\d+_)?database_[\w-]+_collection_[\w-]+\b/i' => '<collection>',
+        ];
+
+        foreach ($patterns as $pattern => $replacement) {
+            $node = \preg_replace($pattern, $replacement, $node) ?? $node;
         }
 
         return $node;

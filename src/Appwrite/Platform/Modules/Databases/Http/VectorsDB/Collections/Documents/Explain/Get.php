@@ -57,6 +57,7 @@ class Get extends DocumentExplain
             ->inject('dbForProject')
             ->inject('user')
             ->inject('getDatabasesDB')
+            ->inject('usage')
             ->inject('authorization')
             ->callback($this->action(...));
     }
