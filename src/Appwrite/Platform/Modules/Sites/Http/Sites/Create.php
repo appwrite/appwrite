@@ -82,11 +82,12 @@ class Create extends Base
             ->param('providerRootDirectory', '', new Text(128, 0), 'Path to site code in the linked repo.', true)
             ->param('providerBranches', [], new ArrayList(new Text(128), APP_LIMIT_ARRAY_PARAMS_SIZE), 'List of branch name patterns to trigger automatic deployments. Supports wildcards. Leave empty to deploy on all branches.', true)
             ->param('providerPaths', [], new ArrayList(new Text(128), APP_LIMIT_ARRAY_PARAMS_SIZE), 'List of file path patterns to trigger automatic deployments. Supports wildcards. Leave empty to deploy on all file changes.', true)
-            ->param('buildSpecification', fn (array $plan) => $this->getDefaultSpecification($plan), fn (array $plan) => new Specification(
+            ->param('buildSpecification', fn (array $plan) => $this->getDefaultSpecification($plan, 'buildSpecifications', APP_SITES_BUILD_SPECIFICATION_DEFAULT, true), fn (array $plan) => new Specification(
                 $plan,
                 Config::getParam('specifications', []),
                 System::getEnv('_APP_COMPUTE_CPUS', 0),
-                System::getEnv('_APP_COMPUTE_MEMORY', 0)
+                System::getEnv('_APP_COMPUTE_MEMORY', 0),
+                'buildSpecifications'
             ), 'Build specification for the site deployments.', true, ['plan'])
             ->param('runtimeSpecification', fn (array $plan) => $this->getDefaultSpecification($plan), fn (array $plan) => new Specification(
                 $plan,

@@ -100,6 +100,7 @@ class SitesCustomServerTest extends Scope
         $this->assertEquals(true, $dateValidator->isValid($site['body']['$createdAt']));
         $this->assertEquals(true, $dateValidator->isValid($site['body']['$updatedAt']));
         $this->assertEquals('node-22', $site['body']['buildRuntime']);
+        $this->assertEquals(Specification::S_2VCPU_2GB, $site['body']['buildSpecification']);
         $this->assertEquals(null, $site['body']['fallbackFile']);
         $this->assertEquals('./', $site['body']['outputDirectory']);
 
