@@ -423,25 +423,23 @@ jobs:
       matrix:
         database: ${{ fromJSON(needs.matrix.outputs.databases) }}
         mode: ${{ fromJSON(needs.matrix.outputs.modes) }}
-        # TEMP: narrowed to the previously-failing services to re-validate fixes.
+        # TEMP: narrowed to explain-related services to re-validate this feature.
         # Revert to the full list before merge.
         service: [
           Databases,
-          TablesDB,
-          Realtime,
-          Migrations
+          TablesDB
         ]
         include:
           - service: Databases
             runner: runs-on=${{ github.run_id }}/runner=8cpu-linux-x64/volume=120g/spot=false
-            paratest_processes: 3
+            paratest_processes: 1
+            test_filter: "testExplain"
             timeout_minutes: 30
           - service: TablesDB
             runner: runs-on=${{ github.run_id }}/runner=8cpu-linux-x64/volume=120g/spot=false
-            paratest_processes: 3
-            timeout_minutes: 30
-          - service: Migrations
             paratest_processes: 1
+            test_filter: "testExplain"
+            timeout_minutes: 30
     steps:
       - name: Checkout repository
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
@@ -528,11 +526,17 @@ jobs:
               PARATEST_PROCESSES="$(nproc)"
             fi
 
+            TEST_FILTER="${{ matrix.test_filter }}"
+            FILTER_FLAG=""
+            if [ -n "$TEST_FILTER" ]; then
+              FILTER_FLAG="--filter $TEST_FILTER"
+            fi
+
             docker compose exec -T \
               -e _APP_E2E_RESPONSE_FORMAT="${{ github.event.inputs.response_format }}" \
               -e _TESTS_OAUTH2_GITHUB_CLIENT_ID="${{ secrets.TESTS_OAUTH2_GITHUB_CLIENT_ID }}" \
               -e _TESTS_OAUTH2_GITHUB_CLIENT_SECRET="${{ secrets.TESTS_OAUTH2_GITHUB_CLIENT_SECRET }}" \
-              appwrite vendor/bin/paratest --processes "$PARATEST_PROCESSES" $FUNCTIONAL_FLAG "$SERVICE_PATH" --exclude-group abuseEnabled --exclude-group screenshots --log-junit tests/e2e/Services/${{ matrix.service }}/junit.xml
+              appwrite vendor/bin/paratest --processes "$PARATEST_PROCESSES" $FUNCTIONAL_FLAG $FILTER_FLAG "$SERVICE_PATH" --exclude-group abuseEnabled --exclude-group screenshots --log-junit tests/e2e/Services/${{ matrix.service }}/junit.xml
 
       - name: Failure Logs
         if: failure()

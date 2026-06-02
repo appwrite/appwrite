@@ -1,0 +1,12 @@
+# TEMPORARY dev override: overmount the local feat/explain database lib so the
+# running stack reflects unreleased library changes.
+# Usage: docker compose -f docker-compose.yml -f docker-compose.explain-dev.yml up -d
+
+services:
+  appwrite:
+    volumes:
+      - ../database/src/Database:/usr/src/code/vendor/utopia-php/database/src/Database:ro
+
+  appwrite-worker-databases:
+    volumes:
+      - ../database/src/Database:/usr/src/code/vendor/utopia-php/database/src/Database:ro
