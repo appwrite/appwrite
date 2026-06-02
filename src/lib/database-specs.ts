@@ -10,6 +10,8 @@ export type SpecOption = {
   label: string
   cpu: string
   memory: string
+  /** Max direct database connections for the tier. */
+  connections: string
   price: string
   comingSoon?: boolean
 }
@@ -17,9 +19,10 @@ export type SpecOption = {
 export const TABLE_DB_SPEC_OPTIONS: SpecOption[] = [
   {
     id: 'shared',
-    label: 'Shared DB',
+    label: 'Shared',
     cpu: 'Shared',
     memory: 'Shared',
+    connections: 'Shared',
     price: 'Pay as you go (disk + DB ops)',
   },
   {
@@ -27,6 +30,7 @@ export const TABLE_DB_SPEC_OPTIONS: SpecOption[] = [
     label: 'Micro',
     cpu: '2-core (shared)',
     memory: '1 GB',
+    connections: '60',
     price: '$10/mo',
     comingSoon: true,
   },
@@ -35,6 +39,7 @@ export const TABLE_DB_SPEC_OPTIONS: SpecOption[] = [
     label: 'Small',
     cpu: '2-core (shared)',
     memory: '2 GB',
+    connections: '90',
     price: '$15/mo',
     comingSoon: true,
   },
@@ -43,6 +48,7 @@ export const TABLE_DB_SPEC_OPTIONS: SpecOption[] = [
     label: 'Medium',
     cpu: '2-core (shared)',
     memory: '4 GB',
+    connections: '120',
     price: '$60/mo',
     comingSoon: true,
   },
@@ -51,6 +57,7 @@ export const TABLE_DB_SPEC_OPTIONS: SpecOption[] = [
     label: 'Large',
     cpu: '2-core (dedicated)',
     memory: '8 GB',
+    connections: '160',
     price: '$110/mo',
     comingSoon: true,
   },
@@ -59,6 +66,7 @@ export const TABLE_DB_SPEC_OPTIONS: SpecOption[] = [
     label: 'XL',
     cpu: '4-core (dedicated)',
     memory: '16 GB',
+    connections: '240',
     price: '$210/mo',
     comingSoon: true,
   },
@@ -67,6 +75,7 @@ export const TABLE_DB_SPEC_OPTIONS: SpecOption[] = [
     label: '2XL',
     cpu: '8-core (dedicated)',
     memory: '32 GB',
+    connections: '380',
     price: '$410/mo',
     comingSoon: true,
   },
@@ -75,6 +84,7 @@ export const TABLE_DB_SPEC_OPTIONS: SpecOption[] = [
     label: '4XL',
     cpu: '16-core (dedicated)',
     memory: '64 GB',
+    connections: '480',
     price: '$960/mo',
     comingSoon: true,
   },

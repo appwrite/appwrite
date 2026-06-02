@@ -28,6 +28,7 @@
     "@dnd-kit/utilities": "^3.2.2",
     "@faker-js/faker": "^10.1.0",
     "@hookform/resolvers": "^5.2.2",
+    "@lucide/lab": "^0.1.2",
     "@monaco-editor/react": "^4.7.0",
     "@radix-ui/react-accordion": "^1.2.12",
     "@radix-ui/react-alert-dialog": "^1.1.15",

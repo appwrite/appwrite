@@ -1413,7 +1413,7 @@ export function DatabaseDetailLayout({
               <span className="flex min-w-0 flex-1 flex-col gap-0.5">
                 <span className="text-[13px]">Upgrade database specs</span>
                 <span className="text-[11px] text-muted-foreground/80">
-                  Shared DB
+                  Shared
                 </span>
               </span>
             </Link>
@@ -1634,7 +1634,7 @@ export function DatabaseEmptyState({ databaseId }: DatabaseEmptyStateProps) {
               <span className="flex min-w-0 flex-1 flex-col gap-0.5">
                 <span className="text-[13px]">Upgrade database specs</span>
                 <span className="text-[11px] text-muted-foreground/80">
-                  Shared DB
+                  Shared
                 </span>
               </span>
             </Link>

@@ -1542,7 +1542,7 @@ export function Overview({
                       Specification
                     </h3>
                     <p className="text-[13px] text-muted-foreground mt-2">
-                      Current tier: Shared DB. Dedicated tiers are coming soon.
+                      Current tier: Shared. Dedicated tiers are coming soon.
                     </p>
                   </div>
                   <div className="border-t border-border" />
@@ -1559,6 +1559,9 @@ export function Overview({
                             </TableHead>
                             <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">
                               Memory
+                            </TableHead>
+                            <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">
+                              Connections
                             </TableHead>
                             <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider text-right w-[180px]">
                               Price
@@ -1606,6 +1609,9 @@ export function Overview({
                                 </TableCell>
                                 <TableCell className="px-4 py-3 text-[13px] text-muted-foreground">
                                   {spec.memory}
+                                </TableCell>
+                                <TableCell className="px-4 py-3 text-[13px] tabular-nums text-muted-foreground">
+                                  {spec.connections}
                                 </TableCell>
                                 <TableCell className="px-4 py-3 text-right">
                                   {locked ? (

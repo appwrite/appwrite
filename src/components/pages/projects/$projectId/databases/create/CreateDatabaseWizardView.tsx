@@ -6,6 +6,11 @@
 import { useState, useMemo } from 'react'
 import { useParams, useNavigate } from '@tanstack/react-router'
 import { Table as TableIcon, Braces, Layers } from 'lucide-react'
+import {
+  MySQLDolphinIcon,
+  PostgresElephantIcon,
+} from '../_components/database-mascot-icons'
+import { CreateDatabaseSummary } from '../_components/CreateDatabaseSummary'
 import { WizardLayout } from '@/components/global/shared/WizardLayout'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -31,53 +36,80 @@ import { useConsoleProfile } from '@/hooks/use-console-profile'
 import { TABLE_DB_SPEC_OPTIONS as SPEC_OPTIONS } from '@/lib/database-specs'
 import { DEFAULT_NEW_DATABASE_NAME } from '@/lib/default-new-database-name'
 
-export type DatabaseTypeOption = 'TablesDB' | 'DocumentsDB' | 'VectorsDB'
+export type DatabaseTypeOption =
+  | 'TablesDB'
+  | 'DocumentsDB'
+  | 'VectorsDB'
+  | 'Postgres'
+  | 'MySQL'
 
 type DbTypeChoice = {
   id: DatabaseTypeOption
   label: string
   description: string
-  tags: string[]
-  icon: 'table' | 'braces' | 'layers'
+  icon: 'table' | 'braces' | 'layers' | 'elephant' | 'dolphin'
+  comingSoon?: boolean
 }
 
-const DB_TYPE_OPTIONS: DbTypeChoice[] = [
+const DB_TYPE_GROUPS: {
+  title: string
+  description: string
+  options: DbTypeChoice[]
+}[] = [
   {
-    id: 'TablesDB',
-    label: 'Tables DB',
+    title: 'Appwrite databases',
     description:
-      'Relational-style database with tables, columns, and indexes. Ideal for structured data and complex queries.',
-    tags: [
-      'Relational data',
-      'CRUD apps',
-      'Structured schemas',
-      'SQL-like queries',
+      'Managed Appwrite-native databases for app data, documents, and AI workloads.',
+    options: [
+      {
+        id: 'TablesDB',
+        label: 'TablesDB',
+        description:
+          'Relational-style database with tables, columns, and indexes. Ideal for structured data and complex queries.',
+        icon: 'table',
+      },
+      {
+        id: 'DocumentsDB',
+        label: 'DocumentsDB',
+        description:
+          'Document-based storage with flexible schemas. Store JSON documents and query with filters and full-text search.',
+        icon: 'braces',
+      },
+      {
+        id: 'VectorsDB',
+        label: 'VectorsDB',
+        description:
+          'Vector database for embeddings and similarity search. Power AI features like semantic search and recommendations.',
+        icon: 'layers',
+      },
     ],
-    icon: 'table',
   },
   {
-    id: 'DocumentsDB',
-    label: 'Documents DB',
+    title: 'Raw databases',
     description:
-      'Document-based storage with flexible schemas. Store JSON documents and query with filters and full-text search.',
-    tags: [
-      'JSON documents',
-      'Flexible schema',
-      'Content apps',
-      'Catalogs',
-      'Logs',
+      'Dedicated SQL engines for teams that need direct Postgres or MySQL compatibility.',
+    options: [
+      {
+        id: 'Postgres',
+        label: 'Postgres',
+        description:
+          'A dedicated PostgreSQL database for relational workloads, SQL tooling, and portable schemas.',
+        icon: 'elephant',
+        comingSoon: true,
+      },
+      {
+        id: 'MySQL',
+        label: 'MySQL',
+        description:
+          'A dedicated MySQL database for common relational workloads and existing MySQL applications.',
+        icon: 'dolphin',
+        comingSoon: true,
+      },
     ],
-    icon: 'braces',
-  },
-  {
-    id: 'VectorsDB',
-    label: 'Vectors DB',
-    description:
-      'Vector database for embeddings and similarity search. Power AI features like semantic search and recommendations.',
-    tags: ['Embeddings', 'Semantic search', 'AI/ML', 'Recommendations'],
-    icon: 'layers',
   },
 ]
+
+const DB_TYPE_OPTIONS = DB_TYPE_GROUPS.flatMap((group) => group.options)
 
 function validateDatabaseId(id: string): boolean {
   if (!id || id.length === 0) return true
@@ -132,6 +164,10 @@ export function CreateDatabaseWizardView() {
     () => (specId ? selectableSpecs.find((s) => s.id === specId) : null),
     [specId, selectableSpecs],
   )
+  const selectedDbType = useMemo(
+    () => (dbType ? DB_TYPE_OPTIONS.find((opt) => opt.id === dbType) : null),
+    [dbType],
+  )
 
   const createMutation = useMutation({
     mutationFn: (data: { databaseId?: string; name: string }) => {
@@ -174,12 +210,17 @@ export function CreateDatabaseWizardView() {
   const isCreatePending = createMutation.isPending
   const showNameForm = Boolean(
     dbType &&
-      (!showSpecsForType ||
-        (selectedSpec != null &&
-          (!isTablesDB || selectedSpec.id === 'shared'))),
+    !selectedDbType?.comingSoon &&
+    (!showSpecsForType ||
+      (selectedSpec != null && (!isTablesDB || selectedSpec.id === 'shared'))),
   )
 
-  const canCreate = Boolean(showNameForm && name.trim().length > 0 && dbType)
+  const canCreate = Boolean(
+    showNameForm &&
+    name.trim().length > 0 &&
+    dbType &&
+    !selectedDbType?.comingSoon,
+  )
   const footer = (
     <div className="flex w-full justify-end">
       <Button
@@ -197,7 +238,7 @@ export function CreateDatabaseWizardView() {
       title="Create database"
       fullscreen
       useSidebar={false}
-      maxWidth="max-w-4xl"
+      maxWidth="max-w-6xl"
       fallbackPath={`/projects/${pid}/databases`}
       footer={footer}
       footerAlign="right"
@@ -245,65 +286,104 @@ export function CreateDatabaseWizardView() {
 
         {/* 2. Database type */}
         <section>
-          <h2 className="text-[15px] font-semibold text-foreground mb-1">
-            Choose database type
-          </h2>
-          <p className="text-[13px] text-muted-foreground mb-4">
-            Choose the database type that best fits your use case. You can add
-            more databases later.
-          </p>
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-            {DB_TYPE_OPTIONS.map((opt) => (
-              <button
-                key={opt.id}
-                type="button"
-                onClick={() => {
-                  setDbType(opt.id)
-                  setSpecId(opt.id === 'TablesDB' ? 'shared' : null)
-                }}
+          <div className="mb-8 text-center">
+            <h2 className="text-[15px] font-semibold text-foreground mb-1">
+              Choose database type
+            </h2>
+            <p className="mx-auto max-w-2xl text-[13px] text-muted-foreground">
+              Pick an Appwrite-native database or a raw database engine.
+            </p>
+          </div>
+          <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+            {DB_TYPE_GROUPS.map((group, groupIndex) => (
+              <div
+                key={group.title}
                 className={cn(
-                  'flex w-full cursor-pointer flex-col items-stretch gap-3 rounded-xl border border-border bg-card/50 p-5 text-left transition-all hover:border-border/80 hover:bg-card/60',
-                  dbType === opt.id &&
-                    'border-primary ring-1 ring-primary/20 hover:border-primary',
+                  'space-y-3',
+                  groupIndex > 0 &&
+                    'border-t border-border pt-6 lg:border-l lg:border-t-0 lg:pl-6 lg:pt-0',
                 )}
               >
-                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-muted text-muted-foreground">
-                  {opt.icon === 'table' && <TableIcon className="h-5 w-5" />}
-                  {opt.icon === 'braces' && <Braces className="h-5 w-5" />}
-                  {opt.icon === 'layers' && <Layers className="h-5 w-5" />}
+                <div className="mb-6 space-y-1 text-center">
+                  <h3 className="text-[12px] font-semibold uppercase tracking-wider text-muted-foreground">
+                    {group.title}
+                  </h3>
+                  <p className="text-[12px] leading-5 text-muted-foreground">
+                    {group.description}
+                  </p>
                 </div>
-                <span className="flex items-center gap-2">
-                  <span className="text-[14px] font-medium text-foreground">
-                    {opt.label}
-                  </span>
-                  {(opt.id === 'DocumentsDB' || opt.id === 'VectorsDB') && (
-                    <Badge variant="info" className="text-[10px] shrink-0">
-                      Beta
-                    </Badge>
-                  )}
-                </span>
-                <p className="text-[12px] text-muted-foreground">
-                  {opt.description}
-                </p>
-                <div className="flex flex-wrap gap-1.5">
-                  {opt.tags.map((tag) => (
-                    <Badge
-                      key={tag}
-                      variant="info"
-                      className="text-[10px] shrink-0"
+                <div className="space-y-4">
+                  {group.options.map((opt) => (
+                    <button
+                      key={opt.id}
+                      type="button"
+                      disabled={opt.comingSoon}
+                      onClick={() => {
+                        setDbType(opt.id)
+                        setSpecId(opt.id === 'TablesDB' ? 'shared' : null)
+                      }}
+                      className={cn(
+                        'flex w-full cursor-pointer items-start gap-4 rounded-xl border border-border bg-card/50 p-4 text-left transition-all hover:border-border/80 hover:bg-card/60 disabled:cursor-not-allowed disabled:opacity-60 disabled:hover:border-border disabled:hover:bg-card/50',
+                        dbType === opt.id &&
+                          !opt.comingSoon &&
+                          'border-primary ring-1 ring-primary/20 hover:border-primary',
+                      )}
                     >
-                      {tag}
-                    </Badge>
+                      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-muted text-muted-foreground">
+                        {opt.icon === 'table' && (
+                          <TableIcon className="h-5 w-5" />
+                        )}
+                        {opt.icon === 'braces' && (
+                          <Braces className="h-5 w-5" />
+                        )}
+                        {opt.icon === 'layers' && (
+                          <Layers className="h-5 w-5" />
+                        )}
+                        {opt.icon === 'elephant' && (
+                          <PostgresElephantIcon className="h-5 w-5" />
+                        )}
+                        {opt.icon === 'dolphin' && (
+                          <MySQLDolphinIcon className="h-5 w-5" />
+                        )}
+                      </div>
+                      <div className="min-w-0 flex-1 space-y-2">
+                        <span className="flex flex-wrap items-center gap-2">
+                          <span className="text-[14px] font-medium text-foreground">
+                            {opt.label}
+                          </span>
+                          {(opt.id === 'DocumentsDB' ||
+                            opt.id === 'VectorsDB') && (
+                            <Badge
+                              variant="info"
+                              className="text-[10px] shrink-0"
+                            >
+                              Beta
+                            </Badge>
+                          )}
+                          {opt.comingSoon && (
+                            <Badge
+                              variant="inactive"
+                              className="text-[10px] shrink-0"
+                            >
+                              Coming soon
+                            </Badge>
+                          )}
+                        </span>
+                        <p className="text-[12px] leading-5 text-muted-foreground">
+                          {opt.description}
+                        </p>
+                      </div>
+                    </button>
                   ))}
                 </div>
-              </button>
+              </div>
             ))}
           </div>
         </section>
 
         {/* 3. Specifications (table) – revealed when type selected and that type has dedicated support */}
         {dbType && showSpecsForType && (
-          <section>
+          <section className="pt-6">
             <h2 className="text-[15px] font-semibold text-foreground mb-1">
               Specifications
             </h2>
@@ -335,6 +415,9 @@ export function CreateDatabaseWizardView() {
                       </TableHead>
                       <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">
                         Memory
+                      </TableHead>
+                      <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">
+                        Connections
                       </TableHead>
                       <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider text-right w-[140px]">
                         Price
@@ -378,6 +461,9 @@ export function CreateDatabaseWizardView() {
                           </TableCell>
                           <TableCell className="px-4 py-3.5 text-[13px] text-muted-foreground">
                             {spec.memory}
+                          </TableCell>
+                          <TableCell className="px-4 py-3.5 text-[13px] tabular-nums text-muted-foreground">
+                            {spec.connections}
                           </TableCell>
                           <TableCell className="px-4 py-3.5 text-right">
                             {locked ? (
