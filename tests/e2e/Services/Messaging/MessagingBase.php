@@ -1105,6 +1105,14 @@ trait MessagingBase
         $this->assertEquals('my-access-key', $updateResponse['body']['credentials']['accessKey']);
         $this->assertEquals('my-secret-key', $updateResponse['body']['credentials']['secretKey']);
 
+        // Regression: enabling while fromEmail is still empty must be rejected, not silently enabled.
+        $enableWithoutFromEmail = $this->client->call(Client::METHOD_PATCH, '/messaging/providers/ses/' . $providerId, $headers, [
+            'enabled' => true,
+        ]);
+
+        $this->assertEquals(400, $enableWithoutFromEmail['headers']['status-code']);
+        $this->assertEquals('provider_missing_credentials', $enableWithoutFromEmail['body']['type']);
+
         // Enable the first provider once fromEmail is supplied.
         $enableResponse = $this->client->call(Client::METHOD_PATCH, '/messaging/providers/ses/' . $providerId, $headers, [
             'fromEmail' => 'sender-email@my-domain.com',
