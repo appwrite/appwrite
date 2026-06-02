@@ -1313,6 +1313,7 @@ trait StorageBase
         $mimeType = mime_content_type($source);
         $fileId = ID::unique();
         $uploadedFileId = null;
+        $chunksTotal = (int) ceil($totalSize / $chunkSize);
 
         $this->assertGreaterThan($chunkSize, $totalSize, 'Test file must span at least 2 chunks');
 
@@ -1320,44 +1321,47 @@ trait StorageBase
             $handle = fopen($source, 'rb');
             $this->assertNotFalse($handle, "Could not open test resource: $source");
 
-            $firstChunk = fread($handle, $chunkSize);
-            $secondChunk = fread($handle, min($chunkSize, $totalSize - $chunkSize));
-            fclose($handle);
-
             $permissions = [
                 Permission::delete(Role::user($this->getUser()['$id'])),
             ];
 
-            $firstUpload = $this->client->call(Client::METHOD_POST, '/storage/buckets/' . $bucketId . '/files', array_merge([
-                'content-type' => 'multipart/form-data',
-                'x-appwrite-project' => $this->getProject()['$id'],
-                'content-range' => 'bytes 0-' . ($chunkSize - 1) . '/' . $totalSize,
-            ], $this->getHeaders()), [
-                'fileId' => $fileId,
-                'file' => new CURLFile('data://' . $mimeType . ';base64,' . base64_encode($firstChunk), $mimeType, 'large-file.mp4'),
-                'permissions' => $permissions,
-            ]);
+            for ($chunk = 0; $chunk < $chunksTotal; $chunk++) {
+                $start = $chunk * $chunkSize;
+                $chunkData = fread($handle, min($chunkSize, $totalSize - $start));
+                $end = $start + strlen($chunkData) - 1;
 
-            $this->assertEquals(201, $firstUpload['headers']['status-code']);
-            $this->assertNotContains(Permission::read(Role::user($this->getUser()['$id'])), $firstUpload['body']['$permissions']);
+                $headers = [
+                    'content-type' => 'multipart/form-data',
+                    'x-appwrite-project' => $this->getProject()['$id'],
+                    'content-range' => 'bytes ' . $start . '-' . $end . '/' . $totalSize,
+                ];
 
-            $uploadedFileId = $firstUpload['body']['$id'];
-            $secondChunkEnd = $chunkSize + strlen($secondChunk) - 1;
+                if (!empty($uploadedFileId)) {
+                    $headers['x-appwrite-id'] = $uploadedFileId;
+                }
 
-            $secondUpload = $this->client->call(Client::METHOD_POST, '/storage/buckets/' . $bucketId . '/files', array_merge([
-                'content-type' => 'multipart/form-data',
-                'x-appwrite-project' => $this->getProject()['$id'],
-                'content-range' => 'bytes ' . $chunkSize . '-' . $secondChunkEnd . '/' . $totalSize,
-                'x-appwrite-id' => $uploadedFileId,
-            ], $this->getHeaders()), [
-                'fileId' => $fileId,
-                'file' => new CURLFile('data://' . $mimeType . ';base64,' . base64_encode($secondChunk), $mimeType, 'large-file.mp4'),
-                'permissions' => $permissions,
-            ]);
+                $upload = $this->client->call(Client::METHOD_POST, '/storage/buckets/' . $bucketId . '/files', array_merge($headers, $this->getHeaders()), [
+                    'fileId' => $fileId,
+                    'file' => new CURLFile('data://' . $mimeType . ';base64,' . base64_encode($chunkData), $mimeType, 'large-file.mp4'),
+                    'permissions' => $permissions,
+                ]);
 
-            $this->assertEquals(201, $secondUpload['headers']['status-code'], $secondUpload['body']['message'] ?? '');
-            $this->assertEquals(2, $secondUpload['body']['chunksUploaded']);
+                $this->assertEquals(201, $upload['headers']['status-code'], $upload['body']['message'] ?? '');
+                $this->assertEquals($chunk + 1, $upload['body']['chunksUploaded']);
+
+                $uploadedFileId ??= $upload['body']['$id'];
+            }
+
+            fclose($handle);
+
+            $this->assertNotContains(Permission::read(Role::user($this->getUser()['$id'])), $upload['body']['$permissions']);
+            $this->assertEquals($chunksTotal, $upload['body']['chunksTotal']);
+            $this->assertEquals($chunksTotal, $upload['body']['chunksUploaded']);
         } finally {
+            if (isset($handle) && \is_resource($handle)) {
+                fclose($handle);
+            }
+
             if (!empty($uploadedFileId)) {
                 $this->client->call(Client::METHOD_DELETE, '/storage/buckets/' . $bucketId . '/files/' . $uploadedFileId, [
                     'content-type' => 'application/json',
