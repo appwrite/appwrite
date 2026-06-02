@@ -18,6 +18,7 @@ use Utopia\Logger\Log;
 use Utopia\Pools\Group;
 use Utopia\Queue\Publisher;
 use Utopia\Registry\Registry;
+use Utopia\Span\Span;
 use Utopia\Storage\Device\Telemetry as TelemetryDevice;
 use Utopia\System\System;
 use Utopia\Telemetry\Adapter as Telemetry;
@@ -55,7 +56,11 @@ return function (Container $container): void {
             return $project;
         }
 
-        return $dbForPlatform->getDocument('projects', $project->getId());
+        $project = $dbForPlatform->getDocument('projects', $project->getId());
+
+        Span::add('project.id', $project->getId());
+
+        return $project;
     }, ['message', 'dbForPlatform']);
 
     $container->set('dbForProject', fn (DatabaseFactory $databaseFactory, Document $project, Database $dbForPlatform) => $project->isEmpty() || $project->getId() === 'console'
