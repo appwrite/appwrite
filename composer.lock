@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "5e251e32e77d0eeac8d0aad25188f08a",
+    "content-hash": "ec80b1465e57bc223903fa102249f216",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -3411,16 +3411,16 @@
         },
         {
             "name": "utopia-php/agents",
-            "version": "1.2.2",
+            "version": "2.1.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/agents.git",
-                "reference": "0703f4cae02261e09a1bf0d39a4b1ce649cae634"
+                "reference": "c9785833948639c09c8ccc3e954178c66ed9a896"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/agents/zipball/0703f4cae02261e09a1bf0d39a4b1ce649cae634",
-                "reference": "0703f4cae02261e09a1bf0d39a4b1ce649cae634",
+                "url": "https://api.github.com/repos/utopia-php/agents/zipball/c9785833948639c09c8ccc3e954178c66ed9a896",
+                "reference": "c9785833948639c09c8ccc3e954178c66ed9a896",
                 "shasum": ""
             },
             "require": {
@@ -3458,9 +3458,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/agents/issues",
-                "source": "https://github.com/utopia-php/agents/tree/1.2.2"
+                "source": "https://github.com/utopia-php/agents/tree/2.1.0"
             },
-            "time": "2026-05-08T10:38:23+00:00"
+            "time": "2026-05-29T10:44:54+00:00"
         },
         {
             "name": "utopia-php/analytics",
