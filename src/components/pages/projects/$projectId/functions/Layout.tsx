@@ -9,9 +9,11 @@ import { useMutation, useQueryClient, useIsFetching } from '@tanstack/react-quer
 import { ServiceHeader, type Tab } from '../shared/ServiceHeader'
 import { DetailResourceHeaderTitle } from '@/components/global/shared/ResourceTitleSwitcher'
 import { DeploymentInfo } from '@/components/global/shared/DeploymentInfo'
+import type { Models } from '@appwrite.io/console'
 import {
   useProjectFunction,
   useFunctionDeployment,
+  functionDeploymentQueryOptions,
   useProject,
   useOrganizationScopes,
 } from '@/lib/react-query/hooks'
@@ -75,28 +77,6 @@ function FunctionLayoutContent() {
       queryKey: ['executions', 'function', projectId, functionId],
     }) > 0
 
-  const { data: func, isLoading } = useProjectFunction(projectId, functionId)
-  const { data: activeDeployment } = useFunctionDeployment(
-    projectId,
-    functionId,
-    func?.deploymentId || undefined,
-  )
-  const { project } = useProject(projectId)
-  const { features } = useConsoleProfile()
-  const { access } = useOrganizationScopes(project?.teamId)
-  const showSecuritySettings = canShowFunctionSecuritySettings(access, features)
-
-  // Get search value from URL (location.search may be string or parsed object in TanStack Router)
-  const domainsSearchValue = (() => {
-    const search = location.search
-    if (typeof search === 'object' && search !== null && 'search' in search) {
-      return (search as { search?: string }).search ?? ''
-    }
-    const params = new URLSearchParams(typeof search === 'string' ? search : '')
-    return params.get('search') || ''
-  })()
-
-  // Derive active tab from pathname
   const activeTab = useMemo(() => {
     const pathParts = location.pathname.split('/').filter(Boolean)
     const functionIndex = pathParts.findIndex(
@@ -107,8 +87,6 @@ function FunctionLayoutContent() {
     )
 
     if (functionIndex >= 0) {
-      // Check if there's a tab segment after function ID
-      // Pattern: /projects/:projectId/functions/:functionId/:tab?
       if (pathParts[functionIndex + 2]) {
         const tabFromPath = pathParts[functionIndex + 2]
         if (
@@ -126,9 +104,43 @@ function FunctionLayoutContent() {
       }
     }
 
-    // Default to deployments for index route
     return 'deployments'
   }, [location.pathname])
+
+  const { data: func, isLoading } = useProjectFunction(projectId, functionId)
+  const activeDeploymentId = func?.deploymentId
+  const isExecutionsTab = activeTab === 'executions'
+  const cachedActiveDeployment =
+    projectId && functionId && activeDeploymentId
+      ? queryClient.getQueryData<Models.Deployment>(
+          functionDeploymentQueryOptions(
+            projectId,
+            functionId,
+            activeDeploymentId,
+          ).queryKey,
+        )
+      : undefined
+  const { data: activeDeploymentFromQuery } = useFunctionDeployment(
+    projectId,
+    functionId,
+    isExecutionsTab ? undefined : activeDeploymentId,
+  )
+  const activeDeployment = activeDeploymentFromQuery ?? cachedActiveDeployment
+
+  const { project } = useProject(projectId)
+  const { features } = useConsoleProfile()
+  const { access } = useOrganizationScopes(project?.teamId)
+  const showSecuritySettings = canShowFunctionSecuritySettings(access, features)
+
+  // Get search value from URL (location.search may be string or parsed object in TanStack Router)
+  const domainsSearchValue = (() => {
+    const search = location.search
+    if (typeof search === 'object' && search !== null && 'search' in search) {
+      return (search as { search?: string }).search ?? ''
+    }
+    const params = new URLSearchParams(typeof search === 'string' ? search : '')
+    return params.get('search') || ''
+  })()
 
   const [filtersOpen, setFiltersOpen] = useState(false)
   const functionFilterMap = useMemo(() => {

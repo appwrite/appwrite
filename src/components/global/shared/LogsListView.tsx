@@ -270,7 +270,7 @@ export function LogsListView({
   emptyStateAction,
   hasFilters = false,
   itemLabel = 'executions',
-  isFetching = false,
+  isFetching: _isFetching = false,
   projectId,
   resourceVariant,
   resourceId,
@@ -318,7 +318,7 @@ export function LogsListView({
     }
   }
 
-  if (isLoading || isFetching) {
+  if (isLoading && executions.length === 0) {
     return (
       <div className="flex min-h-0 min-w-0 flex-1 flex-col">
         <LogsLoadingTable rowCount={pageSize} />

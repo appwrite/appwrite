@@ -3,7 +3,6 @@ import { Layout } from '@/components/pages/projects/$projectId/sites/Layout'
 import {
   siteQueryOptions,
   siteDeploymentsQueryOptions,
-  siteDeploymentQueryOptions,
   siteDomainsQueryOptions,
   projectQueryOptions,
 } from '@/lib/react-query/hooks'
@@ -16,6 +15,9 @@ export const Route = createFileRoute(
   '/_public/projects/$projectId/sites/$siteId',
 )({
   validateSearch: listSearchSchema,
+  // Site layout data depends on path params only — not logs pagination/filters.
+  loaderDeps: () => ({}),
+  staleTime: 30_000,
   head: ({ loaderData }) => ({
     meta: [
       {
@@ -66,12 +68,8 @@ export const Route = createFileRoute(
             ]),
           ]),
         ),
-        // Fetch production-ready deployments (for active deployment info)
-        site.deploymentId
-          ? queryClient.ensureQueryData(
-              siteDeploymentQueryOptions(projectId, siteId, site.deploymentId),
-            )
-          : Promise.resolve(),
+        // Active deployment is fetched by the Deployments tab loader and site
+        // layout (non-logs tabs). Skip here so logs navigation does not refetch.
         // Fetch first page of domains (same limit as Domains tab to share cache)
         queryClient.ensureQueryData(
           siteDomainsQueryOptions(

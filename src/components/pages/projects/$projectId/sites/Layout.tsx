@@ -8,9 +8,11 @@ import {
 import { useQueryClient, useMutation, useIsFetching } from '@tanstack/react-query'
 import { ServiceHeader, type Tab } from '../shared/ServiceHeader'
 import { DetailResourceHeaderTitle } from '@/components/global/shared/ResourceTitleSwitcher'
+import type { Models } from '@appwrite.io/console'
 import {
   useProjectSite,
   useSiteDeployment,
+  siteDeploymentQueryOptions,
   useProject,
   useOrganizationScopes,
   cancelSiteDeployment,
@@ -73,11 +75,41 @@ function SiteLayoutContent() {
       queryKey: ['logs', 'site', projectId, siteId],
     }) > 0
   const { data: site } = useProjectSite(projectId, siteId)
-  const { data: activeDeployment } = useSiteDeployment(
+
+  const activeTab = useMemo(() => {
+    const pathParts = location.pathname.split('/').filter(Boolean)
+    const sitesIndex = pathParts.findIndex((part) => part === 'sites')
+
+    if (sitesIndex >= 0 && pathParts[sitesIndex + 2]) {
+      const tab = pathParts[sitesIndex + 2]
+      if (
+        ['deployments', 'logs', 'domains', 'variables', 'settings'].includes(
+          tab,
+        )
+      ) {
+        return tab
+      }
+    }
+
+    return 'deployments'
+  }, [location.pathname])
+
+  const activeDeploymentId = site?.deploymentId
+  const isLogsTab = activeTab === 'logs'
+  const cachedActiveDeployment =
+    projectId && siteId && activeDeploymentId
+      ? queryClient.getQueryData<Models.Deployment>(
+          siteDeploymentQueryOptions(projectId, siteId, activeDeploymentId)
+            .queryKey,
+        )
+      : undefined
+  const { data: activeDeploymentFromQuery } = useSiteDeployment(
     projectId,
     siteId,
-    site?.deploymentId ?? undefined,
+    isLogsTab ? undefined : activeDeploymentId,
   )
+  const activeDeployment = activeDeploymentFromQuery ?? cachedActiveDeployment
+
   const { project } = useProject(projectId)
   const { features } = useConsoleProfile()
   const { access } = useOrganizationScopes(project?.teamId)
@@ -126,26 +158,6 @@ function SiteLayoutContent() {
   const [cliDeployOpen, setCliDeployOpen] = useState(false)
   const [manualDeployOpen, setManualDeployOpen] = useState(false)
   const [filtersOpen, setFiltersOpen] = useState(false)
-
-  // Derive active tab from pathname
-  const activeTab = useMemo(() => {
-    const pathParts = location.pathname.split('/').filter(Boolean)
-    const sitesIndex = pathParts.findIndex((part) => part === 'sites')
-
-    if (sitesIndex >= 0 && pathParts[sitesIndex + 2]) {
-      const tab = pathParts[sitesIndex + 2]
-      if (
-        ['deployments', 'logs', 'domains', 'variables', 'settings'].includes(
-          tab,
-        )
-      ) {
-        return tab
-      }
-    }
-
-    // Default to deployments for index route
-    return 'deployments'
-  }, [location.pathname])
 
   const siteFilterMap = useMemo(() => {
     const search = location.search
