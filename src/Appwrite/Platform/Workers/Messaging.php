@@ -177,8 +177,6 @@ class Messaging extends Action
         $hasRecipients = false;
 
         foreach ($this->streamRecipients($dbForProject, $topicIds, $userIds, $targetIds, $providerType, $default) as $page) {
-            $hasRecipients = true;
-
             /**
              * @var array<callable> $tasks
              */
@@ -216,6 +214,14 @@ class Messaging extends Action
                     );
                 }
             }
+
+            // A page can resolve to zero identifiers (e.g. subscribers whose targetInternalId matches no targets
+            // row), so an empty task list must not count as recipients or run batch() for nothing.
+            if (empty($tasks)) {
+                continue;
+            }
+
+            $hasRecipients = true;
 
             /**
              * @var array<array{delivered: int, recipients: int, errors: array<string>}> $results
@@ -486,6 +492,10 @@ class Messaging extends Action
         $provider = $dbForProject->getDocument('providers', $providerId);
 
         if ($provider->isEmpty() || !$provider->getAttribute('enabled')) {
+            // Cache the fallback under this id too, so a topic full of targets pointing at the same
+            // disabled/missing provider does not re-query the providers collection once per page.
+            $providers[$providerId] = $default;
+
             return $default;
         }
 
@@ -592,8 +602,24 @@ class Messaging extends Action
 
             $retry = [];
 
+            // The try/catch wraps ONLY the provider send. A whole-batch throw is retryable when transient,
+            // otherwise it records one representative terminal error. The previous behaviour of resetting
+            // $delivered to 0 on a throw is gone — the retry refactor sums delivered across attempts, and the
+            // expired-device-token cleanup below is isolated in its own try so a DB hiccup there can never be
+            // misattributed as a send failure.
             try {
                 $response = $adapter->send($data);
+            } catch (\Throwable $e) {
+                if ($hasRetriesLeft && $this->isRetryableError($e->getMessage())) {
+                    $retry = $pending;
+                } else {
+                    $this->recordError($errors, 'Failed sending to targets with error: ' . $e->getMessage());
+                }
+
+                $response = null;
+            }
+
+            if ($response !== null) {
                 $delivered += (int) $response['deliveredTo'];
 
                 foreach ($response['results'] as $result) {
@@ -604,18 +630,23 @@ class Messaging extends Action
                     $error = $result['error'] ?? null;
                     $recipient = $result['recipient'];
 
-                    // Deleting push targets when token has expired.
+                    // Best-effort: deleting push targets when the token has expired. Isolated so a transient DB
+                    // error here never affects delivery accounting or the retry decision below.
                     if ($error === 'Expired device token') {
-                        $target = $dbForProject->findOne('targets', [
-                            Query::equal('identifier', [$recipient])
-                        ]);
+                        try {
+                            $target = $dbForProject->findOne('targets', [
+                                Query::equal('identifier', [$recipient])
+                            ]);
 
-                        if (!$target->isEmpty()) {
-                            $dbForProject->updateDocument(
-                                'targets',
-                                $target->getId(),
-                                $target->setAttribute('expired', true)
-                            );
+                            if (!$target->isEmpty()) {
+                                $dbForProject->updateDocument(
+                                    'targets',
+                                    $target->getId(),
+                                    $target->setAttribute('expired', true)
+                                );
+                            }
+                        } catch (\Throwable) {
+                            // Best-effort; must not affect accounting or retries.
                         }
                     }
 
@@ -625,14 +656,6 @@ class Messaging extends Action
                     }
 
                     $this->recordError($errors, "Failed sending to target {$recipient} with error: {$error}");
-                }
-            } catch (\Throwable $e) {
-                // Whole-batch failure: retry every still-pending recipient when the throw looks transient,
-                // otherwise record one representative terminal error covering them all.
-                if ($hasRetriesLeft && $this->isRetryableError($e->getMessage())) {
-                    $retry = $pending;
-                } else {
-                    $this->recordError($errors, 'Failed sending to targets with error: ' . $e->getMessage());
                 }
             }
 

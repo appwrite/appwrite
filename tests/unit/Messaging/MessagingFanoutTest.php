@@ -328,6 +328,37 @@ class RecordingDatabase extends Database
     }
 }
 
+/**
+ * {@see RecordingDatabase} variant whose expired-device-token cleanup always fails: `findOne('targets')`
+ * resolves to a real target so the worker attempts the update, and `updateDocument('targets')` throws a
+ * transient error. Used to prove that a DB hiccup during best-effort cleanup never leaks into delivery
+ * accounting or the retry decision.
+ */
+class ExpiredTokenCleanupFailingDatabase extends RecordingDatabase
+{
+    public int $targetUpdateAttempts = 0;
+
+    public function findOne(string $collection, array $queries = []): Document
+    {
+        if ($collection === 'targets') {
+            return new Document(['$id' => 'target-expired', '$sequence' => '1']);
+        }
+
+        return parent::findOne($collection, $queries);
+    }
+
+    public function updateDocument(string $collection, string $id, Document $document): Document
+    {
+        if ($collection === 'targets') {
+            $this->targetUpdateAttempts++;
+
+            throw new \RuntimeException('Transient database error during target cleanup');
+        }
+
+        return parent::updateDocument($collection, $id, $document);
+    }
+}
+
 class MessagingFanoutTest extends TestCase
 {
     private const RECIPIENT_COUNT = 4500;
@@ -405,6 +436,7 @@ class MessagingFanoutTest extends TestCase
     ): void {
         $worker = new TestableMessaging($adapter);
         $method = new \ReflectionMethod(Messaging::class, 'sendExternalMessage');
+        $method->setAccessible(true);
 
         $publisher = $this->createMock(UsagePublisher::class);
         $publisher->method('enqueue')->willReturn(true);
@@ -543,6 +575,7 @@ class MessagingFanoutTest extends TestCase
 
         $worker = new TestableMessaging($adapter);
         $method = new \ReflectionMethod(Messaging::class, 'sendExternalMessage');
+        $method->setAccessible(true);
         $publisher = $this->createMock(UsagePublisher::class);
         $device = new Local(\sys_get_temp_dir());
         $project = new Document(['$id' => 'project1', '$sequence' => '1']);
@@ -670,6 +703,46 @@ class MessagingFanoutTest extends TestCase
         $this->assertSame(0, $message->getAttribute('deliveredTotal'));
         $this->assertSame(MessageStatus::FAILED, $message->getAttribute('status'));
         $this->assertCount($count, $message->getAttribute('deliveryErrors'));
+    }
+
+    public function testExpiredTokenCleanupFailureDoesNotCorruptAccounting(): void
+    {
+        $count = 3;
+        $data = $this->topicDataset($count);
+        // The cleanup path always throws, but the worker must isolate it: the send result is what's accounted.
+        $database = new ExpiredTokenCleanupFailingDatabase($data['subscribers'], $data['targets'], [], $this->provider());
+
+        // user1@ comes back with an expired device token (triggering cleanup, which then throws); the other
+        // two recipients are delivered. The expired-token error is terminal, never retryable.
+        $adapter = new ScriptedEmailAdapter([
+            static fn (string $recipient): ?string => $recipient === 'user1@example.com'
+                ? 'Expired device token'
+                : null,
+        ]);
+
+        $this->sendTopic($database, $adapter);
+
+        $message = $database->updatedMessage;
+        $this->assertNotNull($message);
+
+        // The worker reached the cleanup (so the isolation is genuinely exercised) and it threw.
+        $this->assertGreaterThan(0, $database->targetUpdateAttempts, 'Expired-token cleanup must have been attempted');
+
+        // The send was attempted exactly once: a thrown cleanup must not look like a transient send failure
+        // and must not trigger a retry.
+        $this->assertSame(1, $adapter->sendCalls, 'Cleanup failure must not trigger a send retry');
+
+        // Accounting reflects the send result, not the cleanup throw: two delivered, one terminal failure.
+        $this->assertSame($count - 1, $message->getAttribute('deliveredTotal'));
+        $this->assertSame(MessageStatus::FAILED, $message->getAttribute('status'));
+
+        // The recorded error is the provider's expired-token failure for the real recipient — proving the
+        // database exception was swallowed rather than misattributed as the send error.
+        $errors = $message->getAttribute('deliveryErrors');
+        $this->assertCount(1, $errors);
+        $this->assertStringContainsString('user1@example.com', $errors[0]);
+        $this->assertStringContainsString('Expired device token', $errors[0]);
+        $this->assertStringNotContainsString('Transient database error', $errors[0]);
     }
 
     /**

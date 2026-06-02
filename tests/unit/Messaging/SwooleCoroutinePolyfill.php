@@ -54,6 +54,14 @@ namespace Swoole\Coroutine {
 
             public function push(mixed $data, float $timeout = 0): bool
             {
+                // Enforce capacity so a full channel reports back-pressure exactly like a real Swoole channel.
+                // A full Semaphore permit channel then fails to acquire, which surfaces as a
+                // {@see \Utopia\Lock\Exception\Contention} that the batch() scheduler defers to a later tick —
+                // making the concurrency bound genuinely enforced rather than silently unbounded.
+                if (\count($this->buffer) >= $this->capacity) {
+                    return false;
+                }
+
                 $this->buffer[] = $data;
 
                 return true;
