@@ -53,8 +53,6 @@ use function Swoole\Coroutine\batch;
 
 class Messaging extends Action
 {
-    private ?Local $localDevice = null;
-
     private ?SMSAdapter $adapter = null;
 
     public static function getName(): string
@@ -716,11 +714,9 @@ class Messaging extends Action
 
     private function getLocalDevice($project): Local
     {
-        if ($this->localDevice === null) {
-            $this->localDevice = new Local(APP_STORAGE_UPLOADS . '/app-' . $project->getId());
-        }
-
-        return $this->localDevice;
+        // Not cached: the path is project-scoped and the worker handles
+        // messages from many projects (and coroutines run them concurrently).
+        return new Local(APP_STORAGE_UPLOADS . '/app-' . $project->getId());
     }
 
     private function createInternalSMSAdapter(): ?SMSAdapter
