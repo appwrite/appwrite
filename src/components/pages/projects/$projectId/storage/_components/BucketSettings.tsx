@@ -30,6 +30,7 @@ import { CopyableId } from '@/components/global/shared/CopyableId'
 import { DateTooltip } from '@/components/global/shared/DateTooltip'
 import { Loader2, FolderOpen, X, Plus } from 'lucide-react'
 import { formatBytes } from '@/lib/utils/mock-data'
+import { pickFormDecimalByteDisplayUnit } from '@/lib/utils/byte-display-unit'
 import {
   Dialog,
   DialogContent,
@@ -104,28 +105,11 @@ export function BucketSettings() {
         (bucket.compression as 'none' | 'gzip' | 'zstd') || 'none'
       setCompression(bucketCompression)
       setTransformations(bucket.transformations)
-      // Initialize file size with unit conversion
-      // Choose the highest unit that still shows a whole number
+      // Pick the unit whose numeric value is smallest while still a whole integer
       if (bucket.maximumFileSize > 0) {
-        const bytes = bucket.maximumFileSize
-        const GB = bytes / (1000 * 1000 * 1000)
-        const MB = bytes / (1000 * 1000)
-        const KB = bytes / 1000
-
-        // Check from highest to lowest unit, use first that gives whole number
-        if (GB >= 1 && Number.isInteger(GB)) {
-          setMaximumFileSize(GB)
-          setFileSizeUnit('GB')
-        } else if (MB >= 1 && Number.isInteger(MB)) {
-          setMaximumFileSize(MB)
-          setFileSizeUnit('MB')
-        } else if (KB >= 1 && Number.isInteger(KB)) {
-          setMaximumFileSize(KB)
-          setFileSizeUnit('KB')
-        } else {
-          setMaximumFileSize(bytes)
-          setFileSizeUnit('bytes')
-        }
+        const { value, unit } = pickFormDecimalByteDisplayUnit(bucket.maximumFileSize)
+        setMaximumFileSize(value)
+        setFileSizeUnit(unit)
       } else {
         setMaximumFileSize(0)
         setFileSizeUnit('MB')

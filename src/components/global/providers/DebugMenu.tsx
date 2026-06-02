@@ -23,6 +23,7 @@ import {
   CalendarDays,
   Ticket,
   Boxes,
+  Keyboard,
 } from 'lucide-react'
 import {
   Popover,
@@ -44,8 +45,10 @@ import {
   setDebugOverride,
   subscribeToDebugOverrides,
   type DebugOverrides,
+  type KeyboardLayoutOverride,
   type MockCloudStatusAlert,
 } from '@/lib/debug-overrides'
+import { isMacPlatform } from '@/lib/keyboard-shortcuts/display'
 import { formatInitMockCurrentDay } from '@/lib/init/mock-current-day'
 import { formatInitMockTicketType } from '@/lib/init/ticket-types'
 import { useFavicon, type FaviconVariant } from '@/hooks/use-favicon'
@@ -415,6 +418,46 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
       icon: <Palette className="h-3 w-3" />,
     }))
 
+    const keyboardLayoutDescription =
+      overrides.keyboardLayout === 'auto'
+        ? `Auto (${isMacPlatform() ? 'macOS' : 'Windows'})`
+        : overrides.keyboardLayout === 'macos'
+          ? 'macOS layout'
+          : 'Windows layout'
+
+    const keyboardLayoutOptions: MenuItem[] = (
+      [
+        {
+          label: 'Auto',
+          value: 'auto' as const,
+          description: 'Detect from device',
+        },
+        {
+          label: 'macOS layout',
+          value: 'macos' as const,
+          description: 'Show macOS keyboard and ⌘ shortcuts',
+        },
+        {
+          label: 'Windows layout',
+          value: 'windows' as const,
+          description: 'Show Windows keyboard and Ctrl shortcuts',
+        },
+      ] satisfies ReadonlyArray<{
+        label: string
+        value: KeyboardLayoutOverride
+        description: string
+      }>
+    ).map((option) => ({
+      label: option.label,
+      description: option.description,
+      onClick: () => {
+        setOverrides((prev) => ({ ...prev, keyboardLayout: option.value }))
+        setDebugOverride('keyboardLayout', option.value)
+      },
+      active: overrides.keyboardLayout === option.value,
+      icon: <Keyboard className="h-3 w-3" />,
+    }))
+
     const profileOptions: MenuItem[] = [
       {
         label: 'Cloud',
@@ -746,6 +789,12 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
                 <Server className="h-3 w-3" />
               ),
             submenu: profileOptions,
+          },
+          {
+            label: 'Keyboard layout',
+            description: keyboardLayoutDescription,
+            icon: <Keyboard className="h-3 w-3" />,
+            submenu: keyboardLayoutOptions,
           },
           {
             label: 'Compare profiles',

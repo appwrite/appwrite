@@ -237,11 +237,21 @@ export function CreateDatabaseWizardView() {
     <WizardLayout
       title="Create database"
       fullscreen
-      useSidebar={false}
-      maxWidth="max-w-6xl"
+      maxWidth="max-w-[1400px]"
       fallbackPath={`/projects/${pid}/databases`}
       footer={footer}
       footerAlign="right"
+      sidebar={
+        <CreateDatabaseSummary
+          name={name}
+          databaseId={databaseId}
+          dbType={dbType}
+          selectedDbType={selectedDbType ?? null}
+          showSpecs={Boolean(dbType && showSpecsForType)}
+          selectedSpec={selectedSpec ?? null}
+          canCreate={canCreate}
+        />
+      }
     >
       <div className="space-y-10">
         {/* 1. Name & ID */}
@@ -286,11 +296,11 @@ export function CreateDatabaseWizardView() {
 
         {/* 2. Database type */}
         <section>
-          <div className="mb-8 text-center">
+          <div className="mb-8">
             <h2 className="text-[15px] font-semibold text-foreground mb-1">
               Choose database type
             </h2>
-            <p className="mx-auto max-w-2xl text-[13px] text-muted-foreground">
+            <p className="text-[13px] text-muted-foreground">
               Pick an Appwrite-native database or a raw database engine.
             </p>
           </div>
@@ -304,7 +314,7 @@ export function CreateDatabaseWizardView() {
                     'border-t border-border pt-6 lg:border-l lg:border-t-0 lg:pl-6 lg:pt-0',
                 )}
               >
-                <div className="mb-6 space-y-1 text-center">
+                <div className="mb-6 space-y-1">
                   <h3 className="text-[12px] font-semibold uppercase tracking-wider text-muted-foreground">
                     {group.title}
                   </h3>

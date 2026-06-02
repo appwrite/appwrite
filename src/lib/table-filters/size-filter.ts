@@ -2,6 +2,8 @@
  * Helpers for filter columns with format "size" (e.g. file size in bytes).
  */
 
+import { pickBinaryByteDisplayUnit } from '@/lib/utils/byte-display-unit'
+
 export const SIZE_FILTER_UNITS = [
   { value: 'bytes', label: 'Bytes' },
   { value: 'kb', label: 'KB' },
@@ -23,8 +25,6 @@ export function sizeFilterToBytes(value: number, unit: string): number {
   return Math.round(value * factor)
 }
 
-const K = 1024
-
 /** Convert stored byte count to a human amount + unit for the size filter inputs. */
 export function bytesToSizeFilterInput(bytes: number): {
   value: string
@@ -33,14 +33,8 @@ export function bytesToSizeFilterInput(bytes: number): {
   if (!Number.isFinite(bytes) || bytes < 0) {
     return { value: String(bytes), unit: 'bytes' }
   }
-  const units = ['bytes', 'kb', 'mb', 'gb', 'tb'] as const
-  let i = 0
-  let n = bytes
-  while (n >= K && i < units.length - 1) {
-    n /= K
-    i++
-  }
+  const { value, unit } = pickBinaryByteDisplayUnit(bytes)
   const rounded =
-    n % 1 === 0 ? String(n) : String(parseFloat(n.toFixed(6)))
-  return { value: rounded, unit: units[i] }
+    Number.isInteger(value) ? String(value) : String(parseFloat(value.toFixed(6)))
+  return { value: rounded, unit }
 }

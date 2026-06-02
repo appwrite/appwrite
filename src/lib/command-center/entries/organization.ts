@@ -185,9 +185,11 @@ const ORG_CREATE: CommandEntry[] = [
         : "You don't have permission to create projects.",
     perform: (ctx) => {
       ctx.closeCommandCenter()
-      // The org overview is responsible for actually opening the create dialog;
-      // navigating ensures we're on the right page.
-      if (ctx.orgId) ctx.navigate(`/organizations/${ctx.orgId}`)
+      if (ctx.handlers.onOrgCreateProject) {
+        ctx.handlers.onOrgCreateProject()
+      } else if (ctx.orgId) {
+        ctx.navigate(`/organizations/${ctx.orgId}`)
+      }
     },
   },
   {

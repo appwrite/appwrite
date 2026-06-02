@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useCallback, useMemo, useState } from 'react'
 import { useLocation, Link } from '@tanstack/react-router'
 import { type Tab } from '../projects/$projectId/shared/ServiceHeader'
 import { AccountOverview } from './Overview'
@@ -10,7 +10,7 @@ import { useConsoleProfile } from '@/hooks/use-console-profile'
 import { ConsoleLayout } from '@/components/global/layout/ConsoleLayout'
 import { CommandCenter } from '@/components/global/shared/CommandCenter'
 import { cn } from '@/lib/utils'
-import { useKeyboardShortcut } from '@/hooks/use-keyboard-shortcuts'
+import { useGlobalCommandShortcuts } from '@/lib/keyboard-shortcuts/use-global-command-shortcuts'
 import { useScrollToCard } from '@/hooks/use-scroll-to-card'
 
 const BASE_TABS: Tab[] = [
@@ -40,6 +40,8 @@ export function View({ activeTab: tabProp }: ViewProps) {
   const { account, signOut } = useAuth()
   const { features } = useConsoleProfile()
   const [commandCenterOpen, setCommandCenterOpen] = useState(false)
+  const [commandCenterInitialSubPage, setCommandCenterInitialSubPage] =
+    useState<string | null>(null)
 
   useScrollToCard()
 
@@ -51,19 +53,20 @@ export function View({ activeTab: tabProp }: ViewProps) {
     [features.billing],
   )
 
-  // Command center shortcut (Cmd+K / Ctrl+K)
-  useKeyboardShortcut('meta+k', () => {
+  const openAccountCommandCenter = useCallback(() => {
+    setCommandCenterInitialSubPage(null)
     setCommandCenterOpen(true)
-  })
+  }, [])
 
-  useKeyboardShortcut('control+k', () => {
+  const openAccountShortcutsHelp = useCallback(() => {
+    setCommandCenterInitialSubPage('shortcuts')
     setCommandCenterOpen(true)
-  })
+  }, [])
 
-  // Focus search shortcut (/)
-  useKeyboardShortcut('/', (e) => {
-    e.preventDefault()
-    setCommandCenterOpen(true)
+  useGlobalCommandShortcuts({
+    commandCenterOpen,
+    onOpenCommandCenter: openAccountCommandCenter,
+    onOpenShortcutsHelp: openAccountShortcutsHelp,
   })
 
   // Derive active tab from pathname if prop is not provided
@@ -210,8 +213,13 @@ export function View({ activeTab: tabProp }: ViewProps) {
       {/* Command Center */}
       <CommandCenter
         open={commandCenterOpen}
-        onOpenChange={setCommandCenterOpen}
+        onOpenChange={(open) => {
+          setCommandCenterOpen(open)
+          if (!open) setCommandCenterInitialSubPage(null)
+        }}
         context="account"
+        initialSubPage={commandCenterInitialSubPage}
+        onInitialSubPageConsumed={() => setCommandCenterInitialSubPage(null)}
       />
     </>
   )

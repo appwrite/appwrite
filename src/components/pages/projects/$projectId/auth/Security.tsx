@@ -42,9 +42,18 @@ import { UpgradeCurtain } from '@/components/ui/upgrade-curtain'
 import {
   toSeconds,
   fromSeconds,
+  createTimeUnitPair,
   type TimeUnit,
   type TimeUnitPair,
 } from '@/lib/utils/time-unit-converter'
+
+const SESSION_LENGTH_UNITS: TimeUnit[] = [
+  'weeks',
+  'days',
+  'hours',
+  'minutes',
+  'seconds',
+]
 
 export function useAuthSecuritySnapshot(projectId: string) {
   const { project } = useProject(projectId)
@@ -201,57 +210,8 @@ export function SessionLengthCard({
 }) {
   const MAX_DURATION_SECONDS = 31_536_000 // 1 year in seconds (365 days)
 
-  // Convert seconds to the best human-friendly unit (excluding years and months)
-  // Prefers the smallest unit that gives a whole number, otherwise the smallest unit
-  const getInitialPair = (seconds: number): TimeUnitPair => {
-    if (seconds === 0) {
-      return { value: 0, unit: 'seconds' }
-    }
-
-    // Available units in order from largest to smallest (excluding years and months)
-    const availableUnits: TimeUnit[] = [
-      'weeks',
-      'days',
-      'hours',
-      'minutes',
-      'seconds',
-    ]
-
-    let bestWholeNumber: TimeUnitPair | null = null
-    let smallestUnit: TimeUnitPair | null = null
-
-    // Try each unit to find the best one
-    for (const unit of availableUnits) {
-      const value = fromSeconds(seconds, unit)
-      // If value is >= 1, consider this unit
-      if (value >= 1) {
-        // Check if it's a whole number (within 0.01 tolerance)
-        const rounded = Math.round(value)
-        if (Math.abs(value - rounded) < 0.01) {
-          // This is a whole number - prefer the smallest whole number unit
-          if (!bestWholeNumber) {
-            bestWholeNumber = { value: rounded, unit }
-          }
-        }
-        // Track the smallest unit that gives >= 1 (even if fractional)
-        if (!smallestUnit) {
-          smallestUnit = { value: Math.round(value * 100) / 100, unit }
-        }
-      }
-    }
-
-    // Prefer whole number, otherwise use smallest unit
-    if (bestWholeNumber) {
-      return bestWholeNumber
-    }
-
-    if (smallestUnit) {
-      return smallestUnit
-    }
-
-    // Fallback to seconds if less than 1 second (shouldn't happen in practice)
-    return { value: seconds, unit: 'seconds' }
-  }
+  const getInitialPair = (seconds: number): TimeUnitPair =>
+    createTimeUnitPair(seconds, { units: SESSION_LENGTH_UNITS })
 
   const initialPair = getInitialPair(currentDuration)
   const [duration, setDuration] = useState(initialPair.value)

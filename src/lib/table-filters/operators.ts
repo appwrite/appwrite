@@ -5,6 +5,7 @@
  */
 
 import { Query } from '@appwrite.io/console'
+import { formatBinaryBytes } from '@/lib/utils/byte-display-unit'
 import type {
   CompactFilterKey,
   FilterColumn,
@@ -377,14 +378,5 @@ export function buildFilterTagFromCompactKey(
 
 /** Format byte count for filter tag display (e.g. 1048576 → "1 MB"). */
 function formatBytesForFilter(bytes: number): string {
-  if (!Number.isFinite(bytes) || bytes < 0) return String(bytes)
-  if (bytes === 0) return '0 B'
-  const k = 1024
-  const sizes = ['B', 'KB', 'MB', 'GB', 'TB']
-  const i = Math.min(
-    Math.floor(Math.log(bytes) / Math.log(k)),
-    sizes.length - 1,
-  )
-  const val = bytes / Math.pow(k, i)
-  return (val % 1 === 0 ? val : parseFloat(val.toFixed(2))) + ' ' + sizes[i]
+  return formatBinaryBytes(bytes)
 }

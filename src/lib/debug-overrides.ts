@@ -20,6 +20,7 @@ export const DEBUG_OVERRIDE_KEYS = {
   mockInitTicketType: 'debug:mockInitTicketType',
   previewInitReactionConfetti: 'debug:previewInitReactionConfetti',
   initLowPowerAnimations: 'debug:initLowPowerAnimations',
+  keyboardLayout: 'debug:keyboardLayout',
 } as const
 
 /** Overrides that are not persisted to localStorage (reset on reload). */
@@ -37,6 +38,8 @@ export type MockCloudStatusAlert =
   | 'maintenance'
 
 export type InitLowPowerAnimationsOverride = 'auto' | 'on' | 'off'
+
+export type KeyboardLayoutOverride = 'auto' | 'macos' | 'windows'
 
 export type DebugOverrides = {
   showNativeAppBar: boolean
@@ -64,6 +67,8 @@ export type DebugOverrides = {
   previewInitReactionConfetti: boolean
   /** Controls Init animation optimizations for constrained devices. */
   initLowPowerAnimations: InitLowPowerAnimationsOverride
+  /** Command center keyboard visualizer and shortcut labels. */
+  keyboardLayout: KeyboardLayoutOverride
 }
 
 const isBrowser = typeof window !== 'undefined'
@@ -138,6 +143,11 @@ export function loadDebugOverrides(): DebugOverrides {
     initLowPowerAnimations: readStringFromStorage(
       DEBUG_OVERRIDE_KEYS.initLowPowerAnimations,
       ['auto', 'on', 'off'] as const,
+      'auto',
+    ),
+    keyboardLayout: readStringFromStorage(
+      DEBUG_OVERRIDE_KEYS.keyboardLayout,
+      ['auto', 'macos', 'windows'] as const,
       'auto',
     ),
   }

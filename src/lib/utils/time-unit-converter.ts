@@ -5,6 +5,8 @@
  * and seconds (the base unit used by the API).
  */
 
+import { pickUnitWithSmallestIntegerValue } from '@/lib/utils/pick-display-unit'
+
 export type TimeUnit =
   | 'seconds'
   | 'minutes'
@@ -29,6 +31,16 @@ const TIME_UNIT_TO_SECONDS: Record<TimeUnit, number> = {
   years: 365 * 24 * 60 * 60, // Approximate: 365 days
 }
 
+const DEFAULT_TIME_UNITS: TimeUnit[] = [
+  'years',
+  'months',
+  'weeks',
+  'days',
+  'hours',
+  'minutes',
+  'seconds',
+]
+
 /**
  * Converts a time value from a given unit to seconds
  */
@@ -44,39 +56,19 @@ export function fromSeconds(seconds: number, unit: TimeUnit): number {
 }
 
 /**
- * Creates a time unit pair from seconds, automatically selecting the best unit
- * to represent the duration in a human-readable format
+ * Creates a time unit pair from seconds, picking the unit whose numeric value is
+ * smallest while still a whole integer (e.g. 86400s → 1 day, not 24 hours).
  */
-export function createTimeUnitPair(seconds: number): TimeUnitPair {
-  if (seconds === 0) {
-    return { value: 0, unit: 'seconds' }
-  }
-
-  // Try to find the best unit that gives a whole number or reasonable decimal
-  const units: TimeUnit[] = [
-    'years',
-    'months',
-    'weeks',
-    'days',
-    'hours',
-    'minutes',
-    'seconds',
-  ]
-
-  for (const unit of units) {
-    const value = fromSeconds(seconds, unit)
-    // If the value is >= 1 and reasonably whole (within 0.01), use this unit
-    if (value >= 1 && Math.abs(value - Math.round(value)) < 0.01) {
-      return { value: Math.round(value), unit }
-    }
-    // If value is >= 0.1, use this unit even if not perfectly whole
-    if (value >= 0.1) {
-      return { value: Math.round(value * 100) / 100, unit }
-    }
-  }
-
-  // Fallback to seconds
-  return { value: seconds, unit: 'seconds' }
+export function createTimeUnitPair(
+  seconds: number,
+  options?: { units?: readonly TimeUnit[] },
+): TimeUnitPair {
+  const units = options?.units ?? DEFAULT_TIME_UNITS
+  const scales = units.map((unit) => ({
+    unit,
+    factor: TIME_UNIT_TO_SECONDS[unit],
+  }))
+  return pickUnitWithSmallestIntegerValue(seconds, scales)
 }
 
 /**

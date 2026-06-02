@@ -37,7 +37,8 @@ import {
   PinOff,
   PauseCircle,
 } from '@/lib/icons'
-import { useKeyboardShortcut } from '@/hooks/use-keyboard-shortcuts'
+import { useSequentialShortcuts } from '@/hooks/use-keyboard-shortcuts'
+import { useGlobalCommandShortcuts } from '@/lib/keyboard-shortcuts/use-global-command-shortcuts'
 import { RegionFlag } from '@/components/global/shared/RegionFlag'
 import { type Organization, type TeamMember } from '@/lib/utils/mock-data'
 import { Button } from '@/components/ui/button'
@@ -85,6 +86,8 @@ import {
   canPinProjects,
   canAccessOrgOverviewTab,
   getFirstAllowedOrgOverviewPath,
+  canShowOrgBillingNav,
+  canShowOrgComplianceNav,
 } from '@/lib/console-access-checks'
 import { ProjectContextMenu } from './_components/ProjectContextMenu'
 import { LightningCollectorGame } from './_components/LightningCollectorGame'
@@ -663,6 +666,8 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
   ])
 
   const [commandCenterOpen, setCommandCenterOpen] = useState(false)
+  const [commandCenterInitialSubPage, setCommandCenterInitialSubPage] =
+    useState<string | null>(null)
   const [orgSwitcherOpen, setOrgSwitcherOpen] = useState(false)
   const [inviteDialogOpen, setInviteDialogOpen] = useState(false)
   const [updateRoleDialogOpen, setUpdateRoleDialogOpen] = useState(false)
@@ -733,20 +738,79 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
     }
   }, [activeTab, settingsSubTab, features, access, orgId, navigate])
 
-  // Command center shortcut (Cmd+K / Ctrl+K)
-  useKeyboardShortcut('meta+k', () => {
+  const handleOrgNavigate = useCallback(
+    (tab: string) => {
+      const tabRoutes: Record<string, string> = {
+        projects: '/organizations/$orgId',
+        marketplace: '/organizations/$orgId/marketplace/',
+        domains: '/organizations/$orgId/domains/',
+        settings: '/organizations/$orgId/settings',
+        'settings/members': '/organizations/$orgId/settings/members',
+        'settings/billing': '/organizations/$orgId/settings/billing',
+        'settings/compliance': '/organizations/$orgId/settings/compliance',
+      }
+
+      const route = tabRoutes[tab]
+      if (route) {
+        navigate({
+          to: route as unknown,
+          params: { orgId: orgId! } as unknown,
+          replace: true,
+        })
+      }
+    },
+    [navigate, orgId],
+  )
+
+  const openOrgCommandCenter = useCallback(() => {
+    setCommandCenterInitialSubPage(null)
     setCommandCenterOpen(true)
+  }, [])
+
+  const openOrgShortcutsHelp = useCallback(() => {
+    setCommandCenterInitialSubPage('shortcuts')
+    setCommandCenterOpen(true)
+  }, [])
+
+  useGlobalCommandShortcuts({
+    commandCenterOpen,
+    onOpenCommandCenter: openOrgCommandCenter,
+    onOpenShortcutsHelp: openOrgShortcutsHelp,
   })
 
-  useKeyboardShortcut('control+k', () => {
-    setCommandCenterOpen(true)
-  })
-
-  // Focus search shortcut (/)
-  useKeyboardShortcut('/', (e) => {
-    e.preventDefault()
-    setCommandCenterOpen(true)
-  })
+  useSequentialShortcuts(
+    {
+      'g p': () => handleOrgNavigate('projects'),
+      ...(canShowOrgDomainsTab(access, features)
+        ? { 'g d': () => handleOrgNavigate('domains') }
+        : {}),
+      ...(canShowOrgSettingsTab(access)
+        ? { 'g s': () => handleOrgNavigate('settings') }
+        : {}),
+      ...(canAccessOrgSettingsMembers(access)
+        ? { 'g m': () => handleOrgNavigate('settings/members') }
+        : {}),
+      ...(canShowOrgBillingNav(access, features)
+        ? { 'g b': () => handleOrgNavigate('settings/billing') }
+        : {}),
+      ...(canShowOrgComplianceNav(access, features)
+        ? { 'g c': () => handleOrgNavigate('settings/compliance') }
+        : {}),
+      ...(canCreateProject(access, features)
+        ? {
+            'c p': () => {
+              handleOrgNavigate('projects')
+              setCreateProjectDialogOpen(true)
+            },
+          }
+        : {}),
+      'c t': () => handleOpenCreateOrganization(),
+      ...(canInviteOrgMember(access, features)
+        ? { 'c m': () => setInviteDialogOpen(true) }
+        : {}),
+    },
+    { enabled: !commandCenterOpen },
+  )
 
   // Projects list: prefer URL search so page size change and page are shareable
   const projectsPageFromSearch =
@@ -1557,27 +1621,6 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
       ? projectsByTeam
       : filteredProjectsByTeam
 
-  const handleOrgNavigate = (tab: string) => {
-    const tabRoutes: Record<string, string> = {
-      projects: '/organizations/$orgId',
-      marketplace: '/organizations/$orgId/marketplace/',
-      domains: '/organizations/$orgId/domains/',
-      settings: '/organizations/$orgId/settings',
-      'settings/members': '/organizations/$orgId/settings/members',
-      'settings/billing': '/organizations/$orgId/settings/billing',
-      'settings/compliance': '/organizations/$orgId/settings/compliance',
-    }
-
-    const route = tabRoutes[tab]
-    if (route) {
-      navigate({
-        to: route as unknown,
-        params: { orgId: orgId! } as unknown,
-        replace: true,
-      })
-    }
-  }
-
   const handleSelectOrg = async (org: Organization) => {
     setOrgSwitcherOpen(false)
 
@@ -1620,7 +1663,7 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
     <>
       <ConsoleLayout
         header={{
-          onCommandCenterOpen: () => setCommandCenterOpen(true),
+          onCommandCenterOpen: openOrgCommandCenter,
           onCreateOrganization: handleOpenCreateOrganization,
         }}
         headerBanner={
@@ -3616,12 +3659,25 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
       {/* Command Center */}
       <CommandCenter
         open={commandCenterOpen}
-        onOpenChange={setCommandCenterOpen}
+        onOpenChange={(open) => {
+          setCommandCenterOpen(open)
+          if (!open) setCommandCenterInitialSubPage(null)
+        }}
         context="org"
         onOrgNavigate={handleOrgNavigate}
+        initialSubPage={commandCenterInitialSubPage}
+        onInitialSubPageConsumed={() => setCommandCenterInitialSubPage(null)}
         onInviteMember={
           canInviteOrgMember(access, features) && supportsAdditionalMembers
             ? () => setInviteDialogOpen(true)
+            : undefined
+        }
+        onOrgCreateProject={
+          canCreateProject(access, features)
+            ? () => {
+                handleOrgNavigate('projects')
+                setCreateProjectDialogOpen(true)
+              }
             : undefined
         }
         orgId={orgId}

@@ -1,5 +1,10 @@
 import { useEffect, useRef } from 'react'
 import { shouldSuppressGlobalShortcuts } from '@/lib/global-shortcut-suppress'
+import {
+  useDebugOverrides,
+  type KeyboardLayoutOverride,
+} from '@/lib/debug-overrides'
+import { isMacPlatform } from '@/lib/keyboard-shortcuts/display'
 
 type KeyCombo = string | string[]
 type ShortcutHandler = (e: KeyboardEvent) => void
@@ -38,6 +43,17 @@ function parseKeyCombo(combo: KeyCombo): string[] {
     return combo.map(normalizeKey)
   }
   return combo.split('+').map((k) => normalizeKey(k.trim()))
+}
+
+function eventMatchesRequiredKey(
+  e: KeyboardEvent,
+  requiredKey: string,
+): boolean {
+  const pressed = normalizeKey(e.key)
+  if (pressed === requiredKey) return true
+  // US QWERTY: ? is shift+/ but e.key is '?'.
+  if (requiredKey === '/' && pressed === '?') return true
+  return false
 }
 
 function isInputElement(element: Element | null): boolean {
@@ -81,9 +97,6 @@ export function useKeyboardShortcut(
         shift: e.shiftKey,
       }
 
-      // Get the actual key pressed
-      const pressedKey = normalizeKey(e.key)
-
       // Check if all required keys match
       const requiredModifiers = keys.filter((k) =>
         ['meta', 'control', 'alt', 'shift'].includes(k),
@@ -107,7 +120,8 @@ export function useKeyboardShortcut(
 
       // Verify the main key
       const keyMatches =
-        requiredKeys.length === 0 || requiredKeys.includes(pressedKey)
+        requiredKeys.length === 0 ||
+        requiredKeys.every((key) => eventMatchesRequiredKey(e, key))
 
       if (modifiersMatch && noExtraModifiers && keyMatches) {
         if (preventDefault) e.preventDefault()
@@ -184,6 +198,8 @@ export function useSequentialShortcuts(
         resetSequence()
         return
       }
+
+      e.preventDefault()
 
       // Check for exact match
       if (handlersRef.current[currentSequence]) {
@@ -332,15 +348,27 @@ export function useArrowNavigation(
 }
 
 /**
- * Hook to detect platform for showing correct modifier key
+ * Resolve whether to show macOS or Windows keyboard layout / shortcut labels.
+ */
+export function resolveKeyboardLayoutIsMac(
+  override: KeyboardLayoutOverride,
+): boolean {
+  if (override === 'macos') return true
+  if (override === 'windows') return false
+  return isMacPlatform()
+}
+
+/**
+ * Hook to detect platform for showing correct modifier key and keyboard layout.
+ * Respects debug menu keyboard layout override when set.
  */
 export function usePlatform() {
-  const isMac =
-    typeof navigator !== 'undefined' &&
-    /Mac|iPod|iPhone|iPad/.test(navigator.platform)
+  const { keyboardLayout } = useDebugOverrides()
+  const isMac = resolveKeyboardLayoutIsMac(keyboardLayout)
 
   return {
     isMac,
+    keyboardLayout,
     modKey: isMac ? '⌘' : 'Ctrl',
     altKey: isMac ? '⌥' : 'Alt',
   }

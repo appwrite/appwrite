@@ -1,0 +1,222 @@
+import { useEffect, useMemo, useState } from 'react'
+import { X } from 'lucide-react'
+import { Command } from '@/components/ui/command'
+import { cn } from '@/lib/utils'
+import { usePlatform } from '@/hooks/use-keyboard-shortcuts'
+import { DEFAULT_GROUP_LABELS, type CommandKind } from '@/lib/command-center'
+import {
+  buildShortcutGroups,
+  type ParsedShortcut,
+} from '@/lib/keyboard-shortcuts/display'
+import { KeyboardLayoutVisualizer } from '@/components/global/shared/KeyboardLayoutVisualizer'
+
+interface ShortcutCommand {
+  id: string
+  label: string
+  shortcut?: string
+  kind: string
+  group?: string
+}
+
+interface KeyboardShortcutsViewProps {
+  commands: ShortcutCommand[]
+  isMobile: boolean
+  onBack: () => void
+  onClose: () => void
+  onKeyDown: (e: React.KeyboardEvent) => void
+}
+
+function ShortcutKeyBadges({
+  keys,
+  isSequential,
+  highlighted = false,
+}: {
+  keys: string[]
+  isSequential?: boolean
+  highlighted?: boolean
+}) {
+  return (
+    <div className="flex shrink-0 items-center gap-0.5">
+      {keys.map((key, i) => (
+        <span key={i} className="flex items-center gap-0.5">
+          {isSequential && i > 0 && (
+            <span
+              className={cn(
+                'text-[10px]',
+                highlighted
+                  ? 'text-primary/70'
+                  : 'text-muted-foreground/60',
+              )}
+            >
+              then
+            </span>
+          )}
+          <kbd
+            className={cn(
+              'flex h-5 min-w-[20px] items-center justify-center rounded border px-1.5 text-[10px] font-medium',
+              highlighted
+                ? 'border-primary/35 bg-primary/15 text-primary'
+                : 'border-border bg-muted/50 text-foreground/80 dark:bg-muted/40 dark:text-muted-foreground',
+            )}
+          >
+            {key}
+          </kbd>
+        </span>
+      ))}
+    </div>
+  )
+}
+
+function getSequentialHighlightKeys(shortcut: ParsedShortcut) {
+  if (!shortcut.isSequential) return undefined
+  return shortcut.highlightKeys
+}
+
+export function KeyboardShortcutsView({
+  commands,
+  isMobile,
+  onBack,
+  onClose,
+  onKeyDown,
+}: KeyboardShortcutsViewProps) {
+  const { isMac } = usePlatform()
+  const [selectedId, setSelectedId] = useState<string | null>(null)
+
+  const groups = useMemo(
+    () =>
+      buildShortcutGroups(
+        commands,
+        (kind) => DEFAULT_GROUP_LABELS[kind as CommandKind] ?? kind,
+        isMac,
+      ),
+    [commands, isMac],
+  )
+
+  const allShortcuts = useMemo(
+    () => groups.flatMap((group) => group.shortcuts),
+    [groups],
+  )
+
+  const selectedShortcut = useMemo(
+    () => allShortcuts.find((shortcut) => shortcut.id === selectedId) ?? null,
+    [allShortcuts, selectedId],
+  )
+
+  useEffect(() => {
+    if (!selectedId && allShortcuts.length > 0) {
+      setSelectedId(allShortcuts[0].id)
+    }
+  }, [allShortcuts, selectedId])
+
+  return (
+    <Command
+      className={cn(
+        'flex min-h-0 flex-1 flex-col bg-transparent',
+        isMobile && 'flex-1',
+      )}
+      onKeyDown={onKeyDown}
+    >
+      <div className="flex h-14 shrink-0 items-center border-b border-border px-3">
+        <button
+          onClick={onBack}
+          className="flex h-6 items-center gap-1 rounded bg-accent px-2 text-[11px] font-medium text-muted-foreground hover:bg-accent/80 hover:text-foreground"
+        >
+          ← Back
+        </button>
+        <h2 className="flex-1 pl-3 text-[14px] font-medium text-foreground">
+          Keyboard shortcuts
+        </h2>
+        {isMobile && (
+          <button
+            onClick={onClose}
+            className="flex h-8 w-8 items-center justify-center rounded-md text-muted-foreground hover:bg-accent hover:text-foreground"
+          >
+            <X className="h-5 w-5" />
+          </button>
+        )}
+      </div>
+
+      <div className="flex min-h-0 flex-1 flex-col">
+        <div className="min-h-0 flex-1 overflow-y-auto px-4 py-4 sm:px-6">
+          <div
+            className={cn(
+              'gap-x-6 [column-fill:balance]',
+              isMobile ? 'columns-1' : 'columns-2',
+            )}
+          >
+            {groups.map((group) => (
+              <section
+                key={group.label}
+                className="mb-5 inline-block w-full break-inside-avoid"
+              >
+                <h3 className="mb-2 text-[11px] font-semibold uppercase tracking-wider text-foreground/55 dark:text-muted-foreground">
+                  {group.label}
+                </h3>
+                <div className="space-y-0.5 rounded-lg border border-border bg-muted/30 p-1 dark:border-border/60 dark:bg-muted/20">
+                  {group.shortcuts.map((shortcut) => {
+                    const isSelected = selectedId === shortcut.id
+                    return (
+                      <button
+                        key={shortcut.id}
+                        type="button"
+                        onClick={() => setSelectedId(shortcut.id)}
+                        onFocus={() => setSelectedId(shortcut.id)}
+                        className={cn(
+                          'flex w-full items-center gap-3 rounded-md px-3 py-2 text-left transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-0',
+                          isSelected
+                            ? 'bg-primary/10 ring-1 ring-inset ring-primary/25'
+                            : 'hover:bg-primary/5',
+                        )}
+                      >
+                        <span
+                          className={cn(
+                            'min-w-0 flex-1 text-[13px] leading-snug',
+                            isSelected
+                              ? 'font-medium text-foreground'
+                              : 'text-foreground/90',
+                          )}
+                        >
+                          {shortcut.description}
+                        </span>
+                        <ShortcutKeyBadges
+                          keys={shortcut.displayKeys}
+                          isSequential={shortcut.isSequential}
+                          highlighted={isSelected}
+                        />
+                      </button>
+                    )
+                  })}
+                </div>
+              </section>
+            ))}
+          </div>
+        </div>
+
+        <KeyboardLayoutVisualizer
+          isMac={isMac}
+          highlightedKeys={selectedShortcut?.highlightKeys ?? []}
+          sequentialHighlightKeys={
+            selectedShortcut
+              ? getSequentialHighlightKeys(selectedShortcut)
+              : undefined
+          }
+          className="shrink-0 border-t border-border/60"
+          compact={!isMobile}
+        />
+      </div>
+
+      {!isMobile && (
+        <div className="flex shrink-0 items-center border-t border-border px-6 py-2">
+          <span className="flex items-center gap-1 text-[11px] text-foreground/50 dark:text-muted-foreground/60">
+            <kbd className="rounded border border-border bg-muted/50 px-1 py-0.5 text-[10px] text-foreground/80 dark:bg-muted/40 dark:text-muted-foreground">
+              esc
+            </kbd>
+            back
+          </span>
+        </div>
+      )}
+    </Command>
+  )
+}
+
+export { ShortcutKeyBadges }

@@ -41,6 +41,7 @@ export interface CommandContext {
   handlers: {
     onProjectCreate?: (type: CreateResourceType) => void
     onOrgInviteMember?: () => void
+    onOrgCreateProject?: () => void
   }
 }
 

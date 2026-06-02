@@ -1,6 +1,12 @@
 import { useState, useEffect, useMemo, useCallback, useRef } from 'react'
 import { cn } from '@/lib/utils'
 import { useIsMobile } from '@/hooks/use-mobile'
+import { useKeyboardShortcut, usePlatform } from '@/hooks/use-keyboard-shortcuts'
+import { formatDisplayKeys } from '@/lib/keyboard-shortcuts/display'
+import {
+  KeyboardShortcutsView,
+  ShortcutKeyBadges,
+} from '@/components/global/shared/KeyboardShortcutsView'
 import {
   Building2,
   Clock,
@@ -128,6 +134,21 @@ const RESOURCE_SEARCH_SPECS: ResourceSearchSpec[] = [
   },
 ]
 
+function commandCenterDialogClass(isMobile: boolean, page?: string) {
+  return cn(
+    'overflow-hidden border-border bg-popover p-0 shadow-2xl',
+    isMobile
+      ? 'h-[100dvh] w-screen max-w-none rounded-none border-0 flex flex-col'
+      : page === 'shortcuts'
+        ? 'flex w-full flex-col sm:max-w-4xl h-[85dvh] max-h-[85dvh]'
+        : 'w-full sm:max-w-2xl',
+  )
+}
+
+function commandCenterListHeightClass(isMobile: boolean) {
+  return isMobile ? 'max-h-none flex-1 min-h-0' : 'max-h-[min(420px,58dvh)]'
+}
+
 interface CommandCenterProps {
   open: boolean
   onOpenChange: (open: boolean) => void
@@ -142,8 +163,13 @@ interface CommandCenterProps {
   onOrgNavigate?: (tab: string) => void
   /** Callback when "Invite Member" is selected (org context) */
   onInviteMember?: () => void
+  /** Org context: open create project dialog */
+  onOrgCreateProject?: () => void
   projectId?: string | null
   orgId?: string | null
+  /** When set while opening, navigates to this command center sub-page (e.g. shortcuts). */
+  initialSubPage?: string | null
+  onInitialSubPageConsumed?: () => void
 }
 
 function toRegistryScope(ctx: CommandCenterContext): CommandScope {
@@ -169,8 +195,11 @@ export function CommandCenter({
   context = 'project',
   onOrgNavigate,
   onInviteMember,
+  onOrgCreateProject,
   projectId,
   orgId,
+  initialSubPage,
+  onInitialSubPageConsumed,
 }: CommandCenterProps) {
   const [search, setSearch] = useState('')
   const [pages, setPages] = useState<string[]>([])
@@ -180,6 +209,7 @@ export function CommandCenter({
   const prevSearchScopeRef = useRef<typeof searchScope>(null)
   const currentPage = pages[pages.length - 1]
   const isMobile = useIsMobile()
+  const { isMac } = usePlatform()
   const navigate = useNavigate()
   const { features } = useConsoleProfile()
   const isOrgContext = context === 'org'
@@ -217,6 +247,7 @@ export function CommandCenter({
       handlers: {
         onProjectCreate: onCreateResource,
         onOrgInviteMember: onInviteMember,
+        onOrgCreateProject,
       },
     }),
     [
@@ -231,7 +262,31 @@ export function CommandCenter({
       openShortcutsPage,
       onCreateResource,
       onInviteMember,
+      onOrgCreateProject,
     ],
+  )
+
+  // When the command center is already open, Cmd/Ctrl+K and / refocus search.
+  const focusSearchInput = useCallback(() => {
+    if (currentPage === 'shortcuts' || currentPage === 'functions') return
+    inputRef.current?.focus()
+  }, [currentPage])
+
+  useKeyboardShortcut('meta+k', focusSearchInput, {
+    enabled: open,
+    ignoreInputs: false,
+  })
+  useKeyboardShortcut('control+k', focusSearchInput, {
+    enabled: open,
+    ignoreInputs: false,
+  })
+  useKeyboardShortcut(
+    '/',
+    (e) => {
+      e.preventDefault()
+      focusSearchInput()
+    },
+    { enabled: open && currentPage !== 'shortcuts' },
   )
 
   // Load entries from registry, lift them into runtime commands.
@@ -423,6 +478,12 @@ export function CommandCenter({
       setSearchScope(null)
     }
   }, [open])
+
+  useEffect(() => {
+    if (!open || !initialSubPage) return
+    setPages([initialSubPage])
+    onInitialSubPageConsumed?.()
+  }, [open, initialSubPage, onInitialSubPageConsumed])
 
   const isScopeLoading = useMemo(() => {
     if (!searchScope) return false
@@ -840,9 +901,31 @@ export function CommandCenter({
   }, [searchScope, isScopeLoading])
 
   // Handle keyboard navigation within pages and scope removal.
-  // Escape walks back through accumulated state one step at a time:
-  //   typed text → scope → sub-page → close dialog.
-  // Backspace on an empty input acts as the "back" action.
+  const handleEscape = useCallback(
+    (e: { preventDefault: () => void; stopPropagation?: () => void }) => {
+      if (search) {
+        e.preventDefault()
+        e.stopPropagation?.()
+        setSearch('')
+        return true
+      }
+      if (searchScope) {
+        e.preventDefault()
+        e.stopPropagation?.()
+        setSearchScope(null)
+        return true
+      }
+      if (pages.length > 0) {
+        e.preventDefault()
+        e.stopPropagation?.()
+        setPages(pages.slice(0, -1))
+        return true
+      }
+      return false
+    },
+    [search, searchScope, pages],
+  )
+
   const handleKeyDown = useCallback(
     (e: React.KeyboardEvent) => {
       if (e.key === 'Backspace' && !search) {
@@ -859,133 +942,55 @@ export function CommandCenter({
       }
 
       if (e.key === 'Escape') {
-        if (search) {
-          e.preventDefault()
-          e.stopPropagation()
-          setSearch('')
-          return
-        }
-        if (searchScope) {
-          e.preventDefault()
-          e.stopPropagation()
-          setSearchScope(null)
-          return
-        }
-        if (pages.length > 0) {
-          e.preventDefault()
-          e.stopPropagation()
-          setPages(pages.slice(0, -1))
-          return
-        }
-        // Otherwise: let the Dialog handle Escape and close the command center.
+        handleEscape(e)
       }
     },
-    [search, searchScope, pages],
+    [search, searchScope, pages, handleEscape],
   )
 
-  // ── Shortcuts page ──────────────────────────────────────────────────────
-  if (currentPage === 'shortcuts') {
-    return (
-      <Dialog open={open} onOpenChange={onOpenChange}>
-        <DialogContent
-          className={cn(
-            'overflow-hidden border-border bg-popover p-0 shadow-2xl',
-            isMobile
-              ? 'h-[100dvh] w-screen max-w-none rounded-none border-0'
-              : 'max-w-2xl',
-          )}
-          showCloseButton={false}
-          aria-describedby={undefined}
-        >
-          <VisuallyHidden>
-            <DialogTitle>Keyboard Shortcuts</DialogTitle>
-          </VisuallyHidden>
-          <Command className="bg-transparent" onKeyDown={handleKeyDown}>
-            <div className="flex items-center border-b border-border px-4 py-3">
-              <button
-                onClick={() => setPages([])}
-                className="mr-3 flex h-6 items-center gap-1 rounded bg-accent px-2 text-[11px] font-medium text-muted-foreground hover:bg-accent/80 hover:text-foreground"
-              >
-                ← Back
-              </button>
-              <h2 className="flex-1 text-[14px] font-medium text-foreground">
-                Keyboard shortcuts
-              </h2>
-              {isMobile && (
-                <button
-                  onClick={() => onOpenChange(false)}
-                  className="flex h-8 w-8 items-center justify-center rounded-md text-muted-foreground hover:bg-accent hover:text-foreground"
-                >
-                  <X className="h-5 w-5" />
-                </button>
-              )}
-            </div>
-            <div
-              className={cn(
-                'overflow-y-auto p-4',
-                isMobile ? 'flex-1' : 'max-h-[min(400px,60dvh)]',
-              )}
-            >
-              <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-                {buildShortcutGroups(allCommands).map((group) => (
-                  <div key={group.label}>
-                    <h3 className="mb-3 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
-                      {group.label}
-                    </h3>
-                    <div className="space-y-2">
-                      {group.shortcuts.map((shortcut, i) => (
-                        <div
-                          key={i}
-                          className="flex items-center justify-between"
-                        >
-                          <span className="text-[13px] text-muted-foreground">
-                            {shortcut.description}
-                          </span>
-                          <div className="flex items-center gap-1">
-                            {shortcut.keys.map((key, j) => (
-                              <kbd
-                                key={j}
-                                className="flex h-5 min-w-[20px] items-center justify-center rounded bg-accent px-1.5 text-[10px] font-medium text-muted-foreground"
-                              >
-                                {key}
-                              </kbd>
-                            ))}
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </Command>
-        </DialogContent>
-      </Dialog>
-    )
-  }
+  const dialogTitle =
+    currentPage === 'shortcuts'
+      ? 'Keyboard shortcuts'
+      : currentPage === 'functions' && context === 'project'
+        ? 'Execute function'
+        : 'Command center'
 
-  // ── Functions page (execute function) ───────────────────────────────────
-  if (currentPage === 'functions' && context === 'project') {
-    return (
-      <Dialog open={open} onOpenChange={onOpenChange}>
-        <DialogContent
-          className={cn(
-            'overflow-hidden border-border bg-popover p-0 shadow-2xl',
-            isMobile
-              ? 'h-[100dvh] w-screen max-w-none rounded-none border-0 flex flex-col'
-              : 'sm:max-w-2xl',
-          )}
-          showCloseButton={false}
-          aria-describedby={undefined}
-        >
-          <VisuallyHidden>
-            <DialogTitle>Execute function</DialogTitle>
-          </VisuallyHidden>
+  const placeholder = searchScope
+    ? `Search ${searchScope}...`
+    : context === 'org'
+      ? 'Search projects, settings, members…'
+      : context === 'account'
+        ? 'Search account, sessions, security…'
+        : 'Search anything - pages, tabs, settings, resources…'
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent
+        className={commandCenterDialogClass(isMobile, currentPage)}
+        showCloseButton={false}
+        aria-describedby={undefined}
+        onEscapeKeyDown={(e) => {
+          if (handleEscape(e)) return
+        }}
+      >
+        <VisuallyHidden>
+          <DialogTitle>{dialogTitle}</DialogTitle>
+        </VisuallyHidden>
+
+        {currentPage === 'shortcuts' ? (
+          <KeyboardShortcutsView
+            commands={allCommands}
+            isMobile={isMobile}
+            onBack={() => setPages([])}
+            onClose={() => onOpenChange(false)}
+            onKeyDown={handleKeyDown}
+          />
+        ) : currentPage === 'functions' && context === 'project' ? (
           <Command
             className={cn('bg-transparent', isMobile && 'flex flex-col flex-1')}
             onKeyDown={handleKeyDown}
           >
-            <div className="flex items-center border-b border-border [&_[data-slot=command-input-wrapper]]:h-12 [&_[data-slot=command-input-wrapper]]:border-transparent">
+            <div className="flex items-center border-b border-border [&_[data-slot=command-input-wrapper]]:h-14 [&_[data-slot=command-input-wrapper]]:border-transparent">
               <button
                 onClick={() => setPages([])}
                 className="ml-3 flex h-6 items-center gap-1 rounded bg-accent px-2 text-[11px] font-medium text-muted-foreground hover:bg-accent/80 hover:text-foreground"
@@ -996,7 +1001,7 @@ export function CommandCenter({
                 placeholder="Select function to execute..."
                 value={search}
                 onValueChange={setSearch}
-                className="border-0 text-foreground placeholder:text-muted-foreground"
+                className="h-14 border-0 text-foreground placeholder:text-muted-foreground"
               />
               {isMobile && (
                 <button
@@ -1007,12 +1012,7 @@ export function CommandCenter({
                 </button>
               )}
             </div>
-            <CommandList
-              className={cn(
-                'p-2',
-                isMobile ? 'flex-1 max-h-none' : 'max-h-[min(320px,48dvh)]',
-              )}
-            >
+            <CommandList className={cn('p-2', commandCenterListHeightClass(isMobile))}>
               <CommandEmpty className="py-6 text-center text-[13px] text-muted-foreground">
                 No functions found.
               </CommandEmpty>
@@ -1057,183 +1057,140 @@ export function CommandCenter({
               </CommandGroup>
             </CommandList>
           </Command>
-        </DialogContent>
-      </Dialog>
-    )
-  }
-
-  // ── Main command center ────────────────────────────────────────────────
-  const placeholder = searchScope
-    ? `Search ${searchScope}...`
-    : context === 'org'
-      ? 'Search projects, settings, members…'
-      : context === 'account'
-        ? 'Search account, sessions, security…'
-        : 'Search anything - pages, tabs, settings, resources…'
-
-  return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent
-        className={cn(
-          'overflow-hidden border-border bg-popover p-0 shadow-2xl',
-          isMobile
-            ? 'h-[100dvh] w-screen max-w-none rounded-none border-0 flex flex-col'
-            : 'sm:max-w-2xl',
-        )}
-        showCloseButton={false}
-        aria-describedby={undefined}
-      >
-        <VisuallyHidden>
-          <DialogTitle>Command center</DialogTitle>
-        </VisuallyHidden>
-        <Command
-          className={cn('bg-transparent', isMobile && 'flex flex-col flex-1')}
-          onKeyDown={handleKeyDown}
-          shouldFilter={false}
-        >
-          <div className="flex items-center gap-2 border-b border-border px-3 [&_[data-slot=command-input-wrapper]]:h-14 [&_[data-slot=command-input-wrapper]]:border-transparent [&_[data-slot=command-input-wrapper]]:flex-1">
-            {searchScope && (
-              <Badge
-                variant="secondary"
-                className="shrink-0 flex items-center gap-1.5 h-6 px-2 text-[11px] font-medium"
-              >
-                <span className="capitalize">{searchScope}</span>
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation()
-                    setSearchScope(null)
-                    setSearch('')
-                  }}
-                  className="ml-0.5 rounded-sm hover:bg-accent/80 p-0.5 -mr-0.5"
-                  aria-label="Remove scope"
-                >
-                  <X className="h-3 w-3" />
-                </button>
-              </Badge>
-            )}
-            <CommandInput
-              ref={inputRef}
-              placeholder={placeholder}
-              value={search}
-              onValueChange={setSearch}
-              autoFocus
-              className="h-14 border-0 text-[14px] text-foreground placeholder:text-muted-foreground"
-            />
-            {isMobile && (
-              <button
-                onClick={() => onOpenChange(false)}
-                className="shrink-0 flex h-8 w-8 items-center justify-center rounded-md text-muted-foreground hover:bg-accent hover:text-foreground"
-              >
-                <X className="h-5 w-5" />
-              </button>
-            )}
-          </div>
-          <CommandList
-            className={cn(
-              'p-2',
-              isMobile
-                ? 'max-h-none flex-1 min-h-0'
-                : 'max-h-[min(420px,58dvh)]',
-            )}
+        ) : (
+          <Command
+            className={cn('bg-transparent', isMobile && 'flex flex-col flex-1')}
+            onKeyDown={handleKeyDown}
+            shouldFilter={false}
           >
-            {/* Custom empty state: only show "no results" when the user has
-                actually typed something or chosen a resource scope. Avoids
-                the flash of "No results" before the default list mounts. */}
-            {nonEmptyGroups.length === 0 && (search.trim() || searchScope) && (
-              <div className="py-6 text-center text-[13px] text-muted-foreground">
-                {searchScope && isScopeLoading
-                  ? `Searching ${searchScope}…`
-                  : 'No results found.'}
+            <div className="flex items-center gap-2 border-b border-border px-3 [&_[data-slot=command-input-wrapper]]:h-14 [&_[data-slot=command-input-wrapper]]:border-transparent [&_[data-slot=command-input-wrapper]]:flex-1">
+              {searchScope && (
+                <Badge
+                  variant="secondary"
+                  className="shrink-0 flex items-center gap-1.5 h-6 px-2 text-[11px] font-medium"
+                >
+                  <span className="capitalize">{searchScope}</span>
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      setSearchScope(null)
+                      setSearch('')
+                    }}
+                    className="ml-0.5 rounded-sm hover:bg-accent/80 p-0.5 -mr-0.5"
+                    aria-label="Remove scope"
+                  >
+                    <X className="h-3 w-3" />
+                  </button>
+                </Badge>
+              )}
+              <CommandInput
+                ref={inputRef}
+                placeholder={placeholder}
+                value={search}
+                onValueChange={setSearch}
+                autoFocus
+                className="h-14 border-0 text-[14px] text-foreground placeholder:text-muted-foreground"
+              />
+              {isMobile && (
+                <button
+                  onClick={() => onOpenChange(false)}
+                  className="shrink-0 flex h-8 w-8 items-center justify-center rounded-md text-muted-foreground hover:bg-accent hover:text-foreground"
+                >
+                  <X className="h-5 w-5" />
+                </button>
+              )}
+            </div>
+            <CommandList className={cn('p-2', commandCenterListHeightClass(isMobile))}>
+              {nonEmptyGroups.length === 0 && (search.trim() || searchScope) && (
+                <div className="py-6 text-center text-[13px] text-muted-foreground">
+                  {searchScope && isScopeLoading
+                    ? `Searching ${searchScope}…`
+                    : 'No results found.'}
+                </div>
+              )}
+
+              {nonEmptyGroups.map((group, groupIndex) => (
+                <div key={group.id}>
+                  {groupIndex > 0 && (
+                    <CommandSeparator className="my-2 bg-border" />
+                  )}
+                  <CommandGroup
+                    heading={group.label}
+                    className="[&_[cmdk-group-heading]]:px-2 [&_[cmdk-group-heading]]:py-1.5 [&_[cmdk-group-heading]]:text-[11px] [&_[cmdk-group-heading]]:font-medium [&_[cmdk-group-heading]]:uppercase [&_[cmdk-group-heading]]:tracking-wider [&_[cmdk-group-heading]]:text-muted-foreground"
+                  >
+                    {group.commands.map((cmd) => {
+                      const Icon = cmd.icon
+                      return (
+                        <CommandItem
+                          key={cmd.id}
+                          value={`${cmd.id}-${cmd.label}`}
+                          onSelect={cmd.select}
+                          disabled={cmd.disabled}
+                          className="group flex cursor-pointer items-center gap-3 rounded-md px-2 py-2 text-muted-foreground data-[selected=true]:bg-accent data-[selected=true]:text-foreground"
+                        >
+                          <div className="flex h-7 w-7 items-center justify-center rounded-md bg-muted group-data-[selected=true]:bg-accent">
+                            {Icon && <Icon className="h-3.5 w-3.5" />}
+                          </div>
+                          <div className="flex-1 overflow-hidden">
+                            <p className="truncate text-[13px] font-medium">
+                              {cmd.label}
+                            </p>
+                            {cmd.description && (
+                              <p className="truncate text-[11px] text-muted-foreground group-data-[selected=true]:text-foreground/80">
+                                {cmd.description}
+                              </p>
+                            )}
+                          </div>
+                          {cmd.shortcut && !isMobile && (
+                            <ShortcutKeyBadges
+                              keys={formatDisplayKeys(cmd.shortcut, isMac)}
+                              isSequential={!cmd.shortcut.includes('+') && cmd.shortcut.split(/\s+/).length > 1}
+                            />
+                          )}
+                          {cmd.isResourceSearch && (
+                            <ArrowRight className="h-3.5 w-3.5 text-muted-foreground/50" />
+                          )}
+                        </CommandItem>
+                      )
+                    })}
+                  </CommandGroup>
+                </div>
+              ))}
+            </CommandList>
+
+            {!isMobile && (
+              <div className="flex shrink-0 items-center justify-between border-t border-border px-3 py-2">
+                <div className="flex items-center gap-3 text-[11px] text-muted-foreground/60">
+                  <span className="flex items-center gap-1">
+                    <kbd className="rounded bg-accent px-1 py-0.5 text-[10px]">
+                      ↑↓
+                    </kbd>
+                    navigate
+                  </span>
+                  <span className="flex items-center gap-1">
+                    <kbd className="rounded bg-accent px-1 py-0.5 text-[10px]">
+                      ↵
+                    </kbd>
+                    select
+                  </span>
+                  <span className="flex items-center gap-1">
+                    <kbd className="rounded bg-accent px-1 py-0.5 text-[10px]">
+                      esc
+                    </kbd>
+                    close
+                  </span>
+                </div>
+                <button
+                  onClick={() => setPages([...pages, 'shortcuts'])}
+                  className="flex items-center gap-1 text-[11px] text-muted-foreground hover:text-foreground"
+                >
+                  <Keyboard className="h-3 w-3" />
+                  <span>All shortcuts</span>
+                </button>
               </div>
             )}
-
-            {nonEmptyGroups.map((group, groupIndex) => (
-              <div key={group.id}>
-                {groupIndex > 0 && (
-                  <CommandSeparator className="my-2 bg-border" />
-                )}
-                <CommandGroup
-                  heading={group.label}
-                  className="[&_[cmdk-group-heading]]:px-2 [&_[cmdk-group-heading]]:py-1.5 [&_[cmdk-group-heading]]:text-[11px] [&_[cmdk-group-heading]]:font-medium [&_[cmdk-group-heading]]:uppercase [&_[cmdk-group-heading]]:tracking-wider [&_[cmdk-group-heading]]:text-muted-foreground"
-                >
-                  {group.commands.map((cmd) => {
-                    const Icon = cmd.icon
-                    return (
-                      <CommandItem
-                        key={cmd.id}
-                        value={`${cmd.id}-${cmd.label}`}
-                        onSelect={cmd.select}
-                        disabled={cmd.disabled}
-                        className="group flex cursor-pointer items-center gap-3 rounded-md px-2 py-2 text-muted-foreground data-[selected=true]:bg-accent data-[selected=true]:text-foreground"
-                      >
-                        <div className="flex h-7 w-7 items-center justify-center rounded-md bg-muted group-data-[selected=true]:bg-accent">
-                          {Icon && <Icon className="h-3.5 w-3.5" />}
-                        </div>
-                        <div className="flex-1 overflow-hidden">
-                          <p className="truncate text-[13px] font-medium">
-                            {cmd.label}
-                          </p>
-                          {cmd.description && (
-                            <p className="truncate text-[11px] text-muted-foreground group-data-[selected=true]:text-foreground/80">
-                              {cmd.description}
-                            </p>
-                          )}
-                        </div>
-                        {cmd.shortcut && !isMobile && (
-                          <div className="flex items-center gap-1">
-                            {cmd.shortcut.split(' ').map((key, i) => (
-                              <kbd
-                                key={i}
-                                className="flex h-5 min-w-[20px] items-center justify-center rounded bg-accent px-1.5 text-[10px] font-medium text-muted-foreground"
-                              >
-                                {key}
-                              </kbd>
-                            ))}
-                          </div>
-                        )}
-                        {cmd.isResourceSearch && (
-                          <ArrowRight className="h-3.5 w-3.5 text-muted-foreground/50" />
-                        )}
-                      </CommandItem>
-                    )
-                  })}
-                </CommandGroup>
-              </div>
-            ))}
-          </CommandList>
-
-          {!isMobile && (
-            <div className="flex items-center justify-between border-t border-border px-3 py-2">
-              <div className="flex items-center gap-3 text-[11px] text-muted-foreground/60">
-                <span className="flex items-center gap-1">
-                  <kbd className="rounded bg-accent px-1 py-0.5 text-[10px]">
-                    ↑↓
-                  </kbd>
-                  navigate
-                </span>
-                <span className="flex items-center gap-1">
-                  <kbd className="rounded bg-accent px-1 py-0.5 text-[10px]">
-                    ↵
-                  </kbd>
-                  select
-                </span>
-                <span className="flex items-center gap-1">
-                  <kbd className="rounded bg-accent px-1 py-0.5 text-[10px]">
-                    esc
-                  </kbd>
-                  close
-                </span>
-              </div>
-              <button
-                onClick={() => setPages([...pages, 'shortcuts'])}
-                className="flex items-center gap-1 text-[11px] text-muted-foreground hover:text-foreground"
-              >
-                <Keyboard className="h-3 w-3" />
-                <span>All shortcuts</span>
-              </button>
-            </div>
-          )}
-        </Command>
+          </Command>
+        )}
       </DialogContent>
     </Dialog>
   )
@@ -1313,27 +1270,4 @@ function searchCommandsRuntime(
   return ranked
     .map((r) => byId.get(r.entry.id))
     .filter((x): x is RuntimeCommand => Boolean(x))
-}
-
-function buildShortcutGroups(commands: RuntimeCommand[]) {
-  // Surface only commands with shortcuts; group by their group/kind label.
-  const buckets = new Map<string, Array<{ keys: string[]; description: string }>>()
-  for (const cmd of commands) {
-    if (!cmd.shortcut) continue
-    const label = cmd.group ?? DEFAULT_GROUP_LABELS[cmd.kind]
-    const arr = buckets.get(label) ?? []
-    arr.push({ keys: cmd.shortcut.split(' '), description: cmd.label })
-    buckets.set(label, arr)
-  }
-  // Always include global shortcuts.
-  buckets.set('Global', [
-    { keys: ['⌘', 'K'], description: 'Open command center' },
-    { keys: ['?'], description: 'Show keyboard shortcuts' },
-    { keys: ['Esc'], description: 'Close / go back' },
-    { keys: ['/'], description: 'Focus search' },
-  ])
-  return Array.from(buckets.entries()).map(([label, shortcuts]) => ({
-    label,
-    shortcuts,
-  }))
 }
