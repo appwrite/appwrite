@@ -292,9 +292,8 @@ class MessagingFanoutTest extends TestCase
 
     public function testRecipientsArePaginatedWithoutSubqueryFilter(): void
     {
-        // 4500 subscribers over a 1000-row page is five pages, with a duplicate identifier inside one page to
-        // exercise per-page deduplication.
-        $count = 4500;
+        // Always span several pages regardless of the configured page size, so cursor pagination is exercised.
+        $count = MESSAGE_RECIPIENTS_PAGE_SIZE * 2 + 500;
         $data = $this->topicDataset($count);
         $database = new RecordingDatabase($data['subscribers'], $data['targets']);
 
