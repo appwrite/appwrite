@@ -23,6 +23,7 @@ const languageIconMap: Record<string, string> = {
   deno: 'deno.svg',
   bun: 'bun.svg',
   dart: 'dart.svg',
+  flutter: 'flutter.svg',
   swift: 'swift.svg',
   kotlin: 'kotlin.svg',
   java: 'java.svg',

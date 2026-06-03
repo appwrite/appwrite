@@ -33,6 +33,7 @@ function getRuntimeLanguage(runtime: string): string | null {
     deno: 'deno',
     bun: 'bun',
     dart: 'dart',
+    flutter: 'flutter',
     swift: 'swift',
     kotlin: 'kotlin',
     dotnet: 'dotnet',
