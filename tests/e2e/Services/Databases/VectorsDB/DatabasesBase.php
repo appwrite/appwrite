@@ -437,6 +437,15 @@ trait DatabasesBase
         $this->assertArrayHasKey('index', $first['plan']['access']);
         $this->assertContains($first['plan']['access']['type'], ['index_scan', 'full_scan', 'unknown']);
         $this->assertArrayNotHasKey('engine', $first['plan']);
+
+        $rawPlan = json_encode($response['body']['queries']);
+        $this->assertDoesNotMatchRegularExpression('/_[\w-]{16,}_[\w-]{16,}/', $rawPlan);
+        $this->assertStringNotContainsString('$db', $rawPlan);
+        $this->assertStringNotContainsString('serverInfo', $rawPlan);
+        $this->assertStringNotContainsString('serverParameters', $rawPlan);
+        $this->assertStringNotContainsString('$clusterTime', $rawPlan);
+        $this->assertStringNotContainsString('operationTime', $rawPlan);
+        $this->assertStringNotContainsString('slotBasedPlan', $rawPlan);
     }
 
     #[Depends('testDocumentsVectorQueries')]

@@ -29,13 +29,13 @@ class QueryPlanEntry extends Model
             ->addRule('context', [
                 'type' => self::TYPE_JSON,
                 'description' => 'User-facing identifiers this plan refers to (e.g. {"collection": "movies"}).',
-                'default' => new \stdClass(),
+                'default' => new \stdClass,
                 'example' => ['collection' => 'movies'],
             ])
             ->addRule('plan', [
                 'type' => Response::MODEL_QUERY_PLAN_DETAIL,
-                'description' => 'Normalized query plan with engine-native detail. Internal storage identifiers are stripped.',
-                'default' => new \stdClass(),
+                'description' => 'Normalized query plan with backend-specific detail. Internal storage identifiers and runtime metadata are stripped.',
+                'default' => new \stdClass,
                 'example' => [],
             ]);
     }

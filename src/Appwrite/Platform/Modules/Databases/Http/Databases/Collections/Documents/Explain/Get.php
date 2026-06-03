@@ -198,11 +198,15 @@ class Get extends Action
      */
     protected function normalizeContext(array $context): array
     {
-        $normalized = ['collection' => $context['collection'] ?? null];
+        $normalized = [
+            'collection' => isset($context['collection'])
+                ? $this->scrubPhysicalIdentifiers($context['collection'])
+                : null,
+        ];
 
         // Only sum captures carry an attribute; omit it otherwise.
         if (isset($context['attribute'])) {
-            $normalized['attribute'] = $context['attribute'];
+            $normalized['attribute'] = $this->scrubPhysicalIdentifiers($context['attribute']);
         }
 
         return $normalized;
@@ -211,8 +215,8 @@ class Get extends Action
     /**
      * Project the library plan onto the fixed QueryPlanDetail shape.
      *
-     * The library plan also carries `engine`, which is dropped so the response
-     * never advertises the backing database engine. The sanitized `tree` is
+     * The library plan also carries backend identity, which is dropped so the
+     * response never advertises the backing database. The sanitized `tree` is
      * kept — it holds the access-path detail customers need for deep diagnosis.
      *
      * @param  array<string, mixed>  $plan
@@ -294,22 +298,27 @@ class Get extends Action
     }
 
     /**
-     * Replace internal storage identifiers the engine leaves in the raw plan
+     * Replace internal storage identifiers the backend leaves in the raw plan
      * with generic placeholders.
      *
      * The library renames internal columns, but physical table/index/relation
-     * names still leak across engines as `[_<tenant>_]database_<dbSeq>_collection_<collSeq>`
+     * names still leak across backends as `[_<tenant>_]database_<dbSeq>_collection_<collSeq>`
      * with optional `_perms`/`_permission`/`_metadata` suffixes. We don't resolve
      * these back to user ids (the entry's `context.collection` already carries
      * that) — we just collapse any physical token to a placeholder so the public
-     * tree never exposes internal naming, tenant ids, or sequences. Walks
-     * recursively over arrays and strings.
+     * tree never exposes internal naming, tenant ids, or sequences. It also
+     * removes runtime metadata that does not help customers decide whether the
+     * access path is good.
      */
     protected function scrubPhysicalIdentifiers(mixed $node): mixed
     {
         if (\is_array($node)) {
             $result = [];
             foreach ($node as $key => $value) {
+                if (\is_string($key) && $this->shouldDropPlanTreeKey($key)) {
+                    continue;
+                }
+
                 $result[$key] = $this->scrubPhysicalIdentifiers($value);
             }
 
@@ -328,6 +337,8 @@ class Get extends Action
             '/(?:_\d+_)?database_[\w-]+_collection_[\w-]+_perms\b/i' => '<permissionCheck>',
             '/(?:_\d+_)?database_[\w-]+_collection_[\w-]+_permission\b/i' => '<permissionCheck>',
             '/(?:_\d+_)?database_[\w-]+__metadata\b/i' => '<metadata>',
+            '/_\d+_[\w-]{16,}_[\w-]{16,}\b/i' => '<collection>',
+            '/_[\w-]{16,}_[\w-]{16,}\b/i' => '<collection>',
             '/_\d+_[\w-]{16,}_(?:permission|perms)\b/i' => '<permissionCheck>',
             '/_\d+_[\w-]{16,}_ukey\b/i' => '<index>',
             '/_\d+_[\w-]{16,}_[A-Za-z][\w-]*\b/i' => '<index>',
@@ -344,6 +355,18 @@ class Get extends Action
         }
 
         return $node;
+    }
+
+    protected function shouldDropPlanTreeKey(string $key): bool
+    {
+        return \in_array($key, [
+            '$db',
+            '$clusterTime',
+            'operationTime',
+            'serverInfo',
+            'serverParameters',
+            'slotBasedPlan',
+        ], true);
     }
 
     protected function buildCollectionResolver(
