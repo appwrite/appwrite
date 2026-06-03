@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useMutation } from '@tanstack/react-query'
 import { useNavigate } from '@tanstack/react-router'
 import { toast } from 'sonner'
@@ -19,10 +19,39 @@ import { Label } from '@/components/ui/label'
 import { Card } from '@/components/ui/card'
 import { ArrowLeft, Smartphone, Mail } from 'lucide-react'
 import { useQueryClient } from '@tanstack/react-query'
+import { getErrorMessage } from '@/lib/utils/error-formatting'
 
 interface MFAChallengeProps {
   factors: Models.MfaFactors & { recoveryCode?: boolean }
   redirect?: string
+}
+
+function getDefaultChallengeType(
+  factors: Models.MfaFactors & { recoveryCode?: boolean },
+): AuthenticationFactor | null {
+  if (factors.totp) return AuthenticationFactor.Totp
+  if (factors.email) return AuthenticationFactor.Email
+  if (factors.phone) return AuthenticationFactor.Phone
+  if (factors.recoveryCode) return AuthenticationFactor.Recoverycode
+  return null
+}
+
+function hasAnyMfaFactor(
+  factors: Models.MfaFactors & { recoveryCode?: boolean },
+) {
+  return Boolean(
+    factors.totp ||
+      factors.email ||
+      factors.phone ||
+      factors.recoveryCode,
+  )
+}
+
+function readOtpFromForm(form: HTMLFormElement, fallback: string) {
+  const otpInput = form.querySelector(
+    'input[data-input-otp]',
+  ) as HTMLInputElement | null
+  return (otpInput?.value ?? fallback).trim()
 }
 
 /**
@@ -34,7 +63,6 @@ export async function verifyMFAChallenge(
   challengeType: AuthenticationFactor,
   factors?: Models.MfaFactors & { recoveryCode?: boolean },
 ) {
-  // Validate factor
   if (factors) {
     const factorMap = {
       [AuthenticationFactor.Totp]: factors.totp,
@@ -49,9 +77,12 @@ export async function verifyMFAChallenge(
   }
 
   let activeChallenge = challenge
+  const otp = code.trim()
 
-  // For Email/Phone, challenge must exist (created when factor is selected)
-  // For TOTP/Recovery, create challenge if it doesn't exist
+  if (!otp) {
+    throw new Error('Please enter a verification code')
+  }
+
   if (!activeChallenge) {
     if (
       challengeType === AuthenticationFactor.Email ||
@@ -60,194 +91,187 @@ export async function verifyMFAChallenge(
       throw new Error('Challenge must be created for Email/Phone factors')
     }
 
-    // Create challenge for TOTP/Recovery (though guide says not required,
-    // SDK may still need it for verification)
-    try {
-      activeChallenge = await sdk.forConsole.account.createMFAChallenge({
-        factor: challengeType,
-      })
-    } catch (error: unknown) {
-      // If challenge creation fails for TOTP/Recovery, try verification without challenge
-      // Some SDKs might handle this differently
-      throw new Error(
-        error.message || 'Failed to create challenge. Please try again.',
-      )
-    }
+    activeChallenge = await sdk.forConsole.account.createMFAChallenge({
+      factor: challengeType,
+    })
   }
 
-  // Verify challenge
   await sdk.forConsole.account.updateMFAChallenge({
     challengeId: activeChallenge.$id,
-    otp: code,
+    otp,
   })
 }
 
 export function MFAChallenge({ factors, redirect }: MFAChallengeProps) {
   const navigate = useNavigate()
   const queryClient = useQueryClient()
-  const [challengeType, setChallengeType] =
-    useState<AuthenticationFactor | null>(null)
+  const [challengeType, setChallengeType] = useState<AuthenticationFactor | null>(
+    () => getDefaultChallengeType(factors),
+  )
   const [challenge, setChallenge] = useState<Models.MfaChallenge | null>(null)
   const [code, setCode] = useState('')
   const [disabled, setDisabled] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [isChallengeReady, setIsChallengeReady] = useState(() => {
+    const defaultType = getDefaultChallengeType(factors)
+    return (
+      defaultType === AuthenticationFactor.Totp ||
+      defaultType === AuthenticationFactor.Recoverycode ||
+      defaultType === null
+    )
+  })
 
-  // Auto-select first available factor (priority: TOTP > Email > Phone)
-  useEffect(() => {
-    if (challengeType) return
+  const codeRef = useRef(code)
+  const challengeRef = useRef(challenge)
+  const challengeTypeRef = useRef(challengeType)
+  const challengeRequestIdRef = useRef(0)
 
-    if (factors.totp) {
-      setChallengeType(AuthenticationFactor.Totp)
-      setChallenge(null) // TOTP doesn't need challenge creation
-    } else if (factors.email) {
-      setChallengeType(AuthenticationFactor.Email)
-      createChallenge(AuthenticationFactor.Email)
-    } else if (factors.phone) {
-      setChallengeType(AuthenticationFactor.Phone)
-      createChallenge(AuthenticationFactor.Phone)
+  const setCodeValue = (value: string) => {
+    codeRef.current = value
+    setCode(value)
+  }
+
+  const setChallengeValue = (value: Models.MfaChallenge | null) => {
+    challengeRef.current = value
+    setChallenge(value)
+  }
+
+  const setChallengeTypeValue = (value: AuthenticationFactor | null) => {
+    challengeTypeRef.current = value
+    setChallengeType(value)
+  }
+
+  const createChallenge = async (factor: AuthenticationFactor) => {
+    const requestId = ++challengeRequestIdRef.current
+    setDisabled(true)
+    setChallengeTypeValue(factor)
+    setCodeValue('')
+    setError(null)
+    setChallengeValue(null)
+
+    if (
+      factor === AuthenticationFactor.Totp ||
+      factor === AuthenticationFactor.Recoverycode
+    ) {
+      setIsChallengeReady(true)
+      setDisabled(false)
+      return
     }
-  }, [factors, challengeType])
 
-  // Focus the input when challengeType changes
+    setIsChallengeReady(false)
+
+    try {
+      const newChallenge = await sdk.forConsole.account.createMFAChallenge({
+        factor,
+      })
+      if (requestId !== challengeRequestIdRef.current) return
+      setChallengeValue(newChallenge)
+      setIsChallengeReady(true)
+    } catch (error: unknown) {
+      if (requestId !== challengeRequestIdRef.current) return
+      const message = getErrorMessage(error, 'Failed to create challenge')
+      setError(message)
+      toast.error(message)
+    } finally {
+      if (requestId === challengeRequestIdRef.current) {
+        setDisabled(false)
+      }
+    }
+  }
+
+  useEffect(() => {
+    const defaultType = getDefaultChallengeType(factors)
+    if (
+      defaultType === AuthenticationFactor.Email ||
+      defaultType === AuthenticationFactor.Phone
+    ) {
+      void createChallenge(defaultType)
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
   useEffect(() => {
     if (!challengeType) return
 
-    // Use requestAnimationFrame to ensure the input is rendered
     const focusInput = () => {
       if (challengeType === AuthenticationFactor.Recoverycode) {
-        // Focus recovery code input
         const recoveryInput = document.getElementById(
           'mfa-code',
         ) as HTMLInputElement | null
         recoveryInput?.focus()
+        return
+      }
+
+      const otpContainer = document.querySelector(
+        '[data-slot="input-otp"]',
+      ) as HTMLElement | null
+      if (!otpContainer) return
+
+      const input = otpContainer.querySelector('input') as HTMLInputElement | null
+      if (input) {
+        input.focus()
       } else {
-        // For OTP input, find the container and focus it
-        // The input-otp library uses a hidden input that we can focus
-        const otpContainer = document.querySelector(
-          '[data-slot="input-otp"]',
-        ) as HTMLElement | null
-        if (otpContainer) {
-          // Find the actual input element (input-otp uses a hidden input)
-          const input = otpContainer.querySelector(
-            'input',
-          ) as HTMLInputElement | null
-          if (input) {
-            input.focus()
-          } else {
-            // Fallback: click the container to activate the first slot
-            otpContainer.click()
-            // Also try to focus the container itself
-            otpContainer.focus()
-          }
-        }
+        otpContainer.click()
+        otpContainer.focus()
       }
     }
 
-    // Double requestAnimationFrame to ensure DOM is ready
     requestAnimationFrame(() => {
-      requestAnimationFrame(() => {
-        focusInput()
-      })
+      requestAnimationFrame(focusInput)
     })
   }, [challengeType])
 
-  const createChallenge = async (factor: AuthenticationFactor) => {
-    setDisabled(true)
-    setChallengeType(factor)
-    setCode('')
-    setError(null)
-
-    try {
-      if (
-        factor !== AuthenticationFactor.Totp &&
-        factor !== AuthenticationFactor.Recoverycode
-      ) {
-        const newChallenge = await sdk.forConsole.account.createMFAChallenge({
-          factor,
-        })
-        setChallenge(newChallenge)
-      } else {
-        setChallenge(null)
-      }
-    } catch (error: unknown) {
-      setError(error.message || 'Failed to create challenge')
-      toast.error(error.message || 'Failed to create challenge')
-    } finally {
-      setDisabled(false)
-    }
-  }
-
   const verifyMutation = useMutation({
-    mutationFn: async () => {
-      if (!challengeType) {
+    mutationFn: async (otp: string) => {
+      const activeChallengeType = challengeTypeRef.current
+      if (!activeChallengeType) {
         throw new Error('Please select an authentication factor')
       }
 
-      // For TOTP and Recovery codes, create challenge if needed
-      let activeChallenge = challenge
-      if (
-        !activeChallenge &&
-        (challengeType === AuthenticationFactor.Totp ||
-          challengeType === AuthenticationFactor.Recoverycode)
-      ) {
-        try {
-          activeChallenge = await sdk.forConsole.account.createMFAChallenge({
-            factor: challengeType,
-          })
-          setChallenge(activeChallenge)
-        } catch (error: unknown) {
-          // If challenge creation fails, try to verify anyway (SDK might handle it)
-          console.warn(
-            'Failed to create challenge for TOTP/Recovery, attempting verification:',
-            error,
-          )
-        }
-      }
-
-      await verifyMFAChallenge(activeChallenge, code, challengeType, factors)
+      await verifyMFAChallenge(
+        challengeRef.current,
+        otp,
+        activeChallengeType,
+        factors,
+      )
     },
     onSuccess: async () => {
-      // After MFA verification, the session is now fully authenticated
-      // Clear any error state and prepare for navigation
       setError(null)
 
-      // Determine target URL
       const targetUrl =
         redirect && redirect.startsWith('/') && !redirect.includes('://')
           ? redirect
           : '/'
 
-      // Clear the account query cache to force a fresh fetch on next page
       queryClient.removeQueries({ queryKey: ['account', 'console'] })
-
-      // Use window.location for a full page reload
-      // This ensures all components and loaders start fresh with the authenticated state
       window.location.href = targetUrl
     },
     onError: (error: unknown) => {
-      const errorMessage = error.message || 'Failed to verify code'
+      const errorMessage = getErrorMessage(error, 'Failed to verify code')
       setError(errorMessage)
-      setCode('')
+      setCodeValue('')
     },
   })
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
-    if (!challengeType || !code) return
+    if (!challengeTypeRef.current) return
+
+    const otp = readOtpFromForm(e.currentTarget, codeRef.current)
+    setCodeValue(otp)
 
     const isValidCode =
-      challengeType === AuthenticationFactor.Recoverycode
-        ? code.length > 0
-        : code.length === 6
+      challengeTypeRef.current === AuthenticationFactor.Recoverycode
+        ? otp.length > 0
+        : otp.length === 6
 
     if (isValidCode) {
-      verifyMutation.mutate()
+      verifyMutation.mutate(otp)
     }
   }
 
   const handleBack = async () => {
     try {
-      // Delete current session to cancel MFA flow
       await sdk.forConsole.account.deleteSession({ sessionId: 'current' })
     } catch {
       // Ignore errors - session might not exist
@@ -281,6 +305,25 @@ export function MFAChallenge({ factors, redirect }: MFAChallengeProps) {
       ? code.length > 0
       : code.length === 6
 
+  if (!hasAnyMfaFactor(factors)) {
+    return (
+      <Card className="overflow-hidden p-6 md:p-10">
+        <div className="space-y-4 text-center">
+          <h1 className="text-2xl font-semibold tracking-tight">
+            Two-factor authentication
+          </h1>
+          <p className="text-sm text-muted-foreground">
+            No verification methods are available for this account. Contact
+            support if you need help signing in.
+          </p>
+          <Button variant="outline" onClick={() => void handleBack()}>
+            Back to sign in
+          </Button>
+        </div>
+      </Card>
+    )
+  }
+
   return (
     <Card className="overflow-hidden py-0">
       <div className="grid md:grid-cols-2">
@@ -293,7 +336,12 @@ export function MFAChallenge({ factors, redirect }: MFAChallengeProps) {
             </div>
 
             <form onSubmit={handleSubmit} className="space-y-6">
-              {/* Factor Selection */}
+              {!isChallengeReady && (
+                <p className="text-sm text-muted-foreground">
+                  Preparing verification...
+                </p>
+              )}
+
               {enabledMainFactors.length > 1 && (
                 <div className="space-y-3">
                   <Label>Authentication method</Label>
@@ -307,12 +355,7 @@ export function MFAChallenge({ factors, redirect }: MFAChallengeProps) {
                             : 'outline'
                         }
                         className="justify-start"
-                        onClick={() => {
-                          setChallengeType(AuthenticationFactor.Totp)
-                          setChallenge(null)
-                          setCode('')
-                          setError(null)
-                        }}
+                        onClick={() => void createChallenge(AuthenticationFactor.Totp)}
                         disabled={disabled}
                       >
                         <Smartphone className="mr-1.5 h-4 w-4" />
@@ -328,9 +371,7 @@ export function MFAChallenge({ factors, redirect }: MFAChallengeProps) {
                             : 'outline'
                         }
                         className="justify-start"
-                        onClick={() =>
-                          createChallenge(AuthenticationFactor.Email)
-                        }
+                        onClick={() => void createChallenge(AuthenticationFactor.Email)}
                         disabled={disabled}
                       >
                         <Mail className="mr-1.5 h-4 w-4" />
@@ -346,9 +387,7 @@ export function MFAChallenge({ factors, redirect }: MFAChallengeProps) {
                             : 'outline'
                         }
                         className="justify-start"
-                        onClick={() =>
-                          createChallenge(AuthenticationFactor.Phone)
-                        }
+                        onClick={() => void createChallenge(AuthenticationFactor.Phone)}
                         disabled={disabled}
                       >
                         <Smartphone className="mr-1.5 h-4 w-4" />
@@ -359,7 +398,6 @@ export function MFAChallenge({ factors, redirect }: MFAChallengeProps) {
                 </div>
               )}
 
-              {/* Code Input */}
               {challengeType && (
                 <div className="space-y-3">
                   <Label htmlFor="mfa-code">
@@ -376,7 +414,7 @@ export function MFAChallenge({ factors, redirect }: MFAChallengeProps) {
                       type="text"
                       value={code}
                       onChange={(e) => {
-                        setCode(e.target.value)
+                        setCodeValue(e.target.value)
                         setError(null)
                       }}
                       placeholder="Enter recovery code"
@@ -390,10 +428,14 @@ export function MFAChallenge({ factors, redirect }: MFAChallengeProps) {
                         maxLength={6}
                         value={code}
                         onChange={(value) => {
-                          setCode(value)
+                          setCodeValue(value)
                           setError(null)
                         }}
-                        disabled={disabled || verifyMutation.isPending}
+                        disabled={
+                          disabled ||
+                          verifyMutation.isPending ||
+                          !isChallengeReady
+                        }
                         containerClassName="w-full justify-center"
                       >
                         <InputOTPGroup className="flex-1">
@@ -429,7 +471,6 @@ export function MFAChallenge({ factors, redirect }: MFAChallengeProps) {
                     </div>
                   )}
 
-                  {/* Error Message */}
                   {error && (
                     <div className="rounded-md bg-destructive/10 border border-destructive/20 p-3">
                       <p className="text-sm text-destructive">{error}</p>
@@ -438,24 +479,21 @@ export function MFAChallenge({ factors, redirect }: MFAChallengeProps) {
                 </div>
               )}
 
-              {/* Recovery Code Link */}
-              {challengeType !== AuthenticationFactor.Recoverycode && (
-                <div className="text-center">
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setChallengeType(AuthenticationFactor.Recoverycode)
-                      setChallenge(null)
-                      setCode('')
-                      setError(null)
-                    }}
-                    disabled={disabled || verifyMutation.isPending}
-                    className="text-sm text-muted-foreground hover:text-foreground underline underline-offset-4 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    Use a recovery code instead
-                  </button>
-                </div>
-              )}
+              {factors.recoveryCode &&
+                challengeType !== AuthenticationFactor.Recoverycode && (
+                  <div className="text-center">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        void createChallenge(AuthenticationFactor.Recoverycode)
+                      }}
+                      disabled={disabled || verifyMutation.isPending}
+                      className="text-sm text-muted-foreground hover:text-foreground underline underline-offset-4 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      Use a recovery code instead
+                    </button>
+                  </div>
+                )}
 
               <div className="flex flex-col gap-2">
                 <Button
@@ -464,6 +502,7 @@ export function MFAChallenge({ factors, redirect }: MFAChallengeProps) {
                   disabled={
                     !challengeType ||
                     !isCodeValid ||
+                    !isChallengeReady ||
                     disabled ||
                     verifyMutation.isPending
                   }
@@ -473,7 +512,7 @@ export function MFAChallenge({ factors, redirect }: MFAChallengeProps) {
                 <div className="text-center pt-4">
                   <button
                     type="button"
-                    onClick={handleBack}
+                    onClick={() => void handleBack()}
                     disabled={disabled || verifyMutation.isPending}
                     className="text-sm text-muted-foreground hover:text-foreground underline underline-offset-4 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                   >

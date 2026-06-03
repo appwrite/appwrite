@@ -1,12 +1,14 @@
-import { createFileRoute, redirect } from '@tanstack/react-router'
+import { useEffect, useState } from 'react'
+import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import { z } from 'zod'
+import { Loader2 } from 'lucide-react'
 import { MFAChallenge } from '@/components/global/auth/MFAChallenge'
 import { sdk } from '@/lib/appwrite/sdk'
 import { AppwriteException } from '@appwrite.io/console'
+import type { Models } from '@appwrite.io/console'
 import { fetchMFAFactors } from '@/lib/react-query/hooks'
-import { urlFromRouterLocation } from '@/lib/table-filters'
+import { pageTitle } from '@/lib/utils/page-title'
 
-// Helper function to validate that a redirect URL is relative
 function isValidRelativeRedirect(url: string): boolean {
   try {
     return url.startsWith('/') && !url.includes('://')
@@ -24,88 +26,86 @@ const searchSchema = z.object({
     }),
 })
 
+type MfaFactorsWithRecovery = Models.MfaFactors & { recoveryCode: boolean }
+
 export const Route = createFileRoute('/_auth/mfa')({
   component: MFAPage,
   validateSearch: searchSchema,
   head: () => ({ meta: [{ title: pageTitle('Two-factor authentication') }] }),
-  loader: async ({ location }) => {
-    // Check if MFA is required by trying to get account
-    // If we get 'user_more_factors_required' error, MFA is required
-    let mfaRequired = false
-
-    try {
-      await sdk.forConsole.account.get()
-      // If we can get account successfully, MFA is not required - redirect to home
-      throw redirect({
-        to: '/',
-        throw: true,
-      })
-    } catch (error: unknown) {
-      // Check if this is a redirect (from the success case above)
-      const status =
-        typeof error === 'object' &&
-        error !== null &&
-        'status' in error &&
-        typeof (error as { status: number }).status === 'number'
-          ? (error as { status: number }).status
-          : undefined
-      if (status === 302 || status === 303) {
-        throw error
-      }
-
-      if (error instanceof AppwriteException) {
-        // Check for MFA requirement error - this is the key check
-        if (error.type === 'user_more_factors_required') {
-          mfaRequired = true
-        } else if (error.code === 401) {
-          // Not authenticated at all - redirect to sign-in
-          const currentUrl = urlFromRouterLocation(location)
-          const redirectUrl = currentUrl.pathname + currentUrl.search
-          throw redirect({
-            to: '/sign-in',
-            search:
-              redirectUrl !== '/mfa' ? { redirect: redirectUrl } : undefined,
-            throw: true,
-          })
-        } else {
-          // Other error - redirect to sign-in
-          throw redirect({
-            to: '/sign-in',
-            throw: true,
-          })
-        }
-      } else {
-        // Unknown error - redirect to sign-in
-        throw redirect({
-          to: '/sign-in',
-          throw: true,
-        })
-      }
-    }
-
-    // Double-check: if MFA is not required, redirect to home
-    if (!mfaRequired) {
-      throw redirect({
-        to: '/',
-        throw: true,
-      })
-    }
-
-    // Fetch available MFA factors
-    const factors = await fetchMFAFactors()
-
-    return {
-      factors: {
-        ...factors,
-        recoveryCode: true, // Recovery codes are always available if MFA is enabled
-      },
-    }
-  },
 })
 
 function MFAPage() {
-  const { factors } = Route.useLoaderData()
+  const navigate = useNavigate()
   const search = Route.useSearch({ from: '/_auth/mfa' })
+  const [factors, setFactors] = useState<MfaFactorsWithRecovery | null>(null)
+  const [isInitializing, setIsInitializing] = useState(true)
+
+  useEffect(() => {
+    let cancelled = false
+
+    async function init() {
+      try {
+        await sdk.forConsole.account.get()
+
+        const target =
+          search.redirect && isValidRelativeRedirect(search.redirect)
+            ? search.redirect
+            : '/'
+        navigate({ to: target, replace: true })
+        return
+      } catch (error: unknown) {
+        if (!(error instanceof AppwriteException)) {
+          navigate({ to: '/sign-in', replace: true })
+          return
+        }
+
+        if (error.type === 'user_more_factors_required') {
+          try {
+            const availableFactors = await fetchMFAFactors()
+            if (cancelled) return
+            setFactors({
+              ...availableFactors,
+              recoveryCode: true,
+            })
+            setIsInitializing(false)
+          } catch {
+            if (!cancelled) {
+              navigate({ to: '/sign-in', replace: true })
+            }
+          }
+          return
+        }
+
+        if (error.code === 401) {
+          navigate({
+            to: '/sign-in',
+            search:
+              search.redirect && isValidRelativeRedirect(search.redirect)
+                ? { redirect: search.redirect }
+                : undefined,
+            replace: true,
+          })
+          return
+        }
+
+        navigate({ to: '/sign-in', replace: true })
+      }
+    }
+
+    void init()
+
+    return () => {
+      cancelled = true
+    }
+  }, [navigate, search.redirect])
+
+  if (isInitializing || !factors) {
+    return (
+      <div className="bg-background relative flex min-h-svh flex-col items-center justify-center p-6 md:p-10">
+        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+      </div>
+    )
+  }
 
   return (
     <div className="bg-background relative flex min-h-svh flex-col items-center justify-center p-6 md:p-10">
