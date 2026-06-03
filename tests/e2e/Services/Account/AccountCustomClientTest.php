@@ -129,6 +129,16 @@ class AccountCustomClientTest extends Scope
         ];
     }
 
+    protected function getNextTOTP(\OTPHP\TOTP $totp, string $previousOtp): string
+    {
+        do {
+            sleep(1);
+            $otp = $totp->now();
+        } while ($otp === $previousOtp);
+
+        return $otp;
+    }
+
     /**
      * Helper to set up a basic account
      */
@@ -4164,21 +4174,8 @@ class AccountCustomClientTest extends Scope
         $this->assertEquals(401, $regenerateWithoutChallenge['headers']['status-code']);
         $this->assertEquals('user_challenge_required', $regenerateWithoutChallenge['body']['type']);
 
-        $authenticator = $this->client->call(Client::METHOD_POST, '/account/mfa/authenticators/totp', $headers);
-
-        $this->assertEquals(200, $authenticator['headers']['status-code']);
-        $this->assertNotEmpty($authenticator['body']['secret']);
-
-        $totp = \OTPHP\TOTP::create($authenticator['body']['secret']);
-
-        $verification = $this->client->call(Client::METHOD_PUT, '/account/mfa/authenticators/totp', $headers, [
-            'otp' => $totp->now(),
-        ]);
-
-        $this->assertEquals(200, $verification['headers']['status-code']);
-
         $challenge = $this->client->call(Client::METHOD_POST, '/account/mfa/challenges', $headers, [
-            'factor' => 'totp',
+            'factor' => 'recoveryCode',
         ]);
 
         $this->assertEquals(201, $challenge['headers']['status-code']);
@@ -4186,7 +4183,7 @@ class AccountCustomClientTest extends Scope
 
         $challengeVerification = $this->client->call(Client::METHOD_PUT, '/account/mfa/challenges', $headers, [
             'challengeId' => $challenge['body']['$id'],
-            'otp' => $totp->now(),
+            'otp' => $recoveryCodes['body']['recoveryCodes'][0],
         ]);
 
         $this->assertEquals(200, $challengeVerification['headers']['status-code']);
@@ -4216,10 +4213,16 @@ class AccountCustomClientTest extends Scope
         $this->assertEquals(200, $authenticator['headers']['status-code']);
         $this->assertNotEmpty($authenticator['body']['secret']);
 
+        $recoveryCodes = $this->client->call(Client::METHOD_POST, '/account/mfa/recovery-codes', $headers);
+
+        $this->assertEquals(201, $recoveryCodes['headers']['status-code']);
+        $this->assertNotEmpty($recoveryCodes['body']['recoveryCodes']);
+
         $totp = \OTPHP\TOTP::create($authenticator['body']['secret']);
+        $enrollmentOtp = $totp->now();
 
         $verification = $this->client->call(Client::METHOD_PUT, '/account/mfa/authenticators/totp', $headers, [
-            'otp' => $totp->now(),
+            'otp' => $enrollmentOtp,
         ]);
 
         $this->assertEquals(200, $verification['headers']['status-code']);
@@ -4230,7 +4233,7 @@ class AccountCustomClientTest extends Scope
         $this->assertEquals('user_challenge_required', $deleteWithoutChallenge['body']['type']);
 
         $challenge = $this->client->call(Client::METHOD_POST, '/account/mfa/challenges', $headers, [
-            'factor' => 'totp',
+            'factor' => 'recoveryCode',
         ]);
 
         $this->assertEquals(201, $challenge['headers']['status-code']);
@@ -4238,7 +4241,7 @@ class AccountCustomClientTest extends Scope
 
         $challengeVerification = $this->client->call(Client::METHOD_PUT, '/account/mfa/challenges', $headers, [
             'challengeId' => $challenge['body']['$id'],
-            'otp' => $totp->now(),
+            'otp' => $recoveryCodes['body']['recoveryCodes'][0],
         ]);
 
         $this->assertEquals(200, $challengeVerification['headers']['status-code']);
@@ -4288,8 +4291,10 @@ class AccountCustomClientTest extends Scope
         $this->assertEquals(401, $invalidVerification['headers']['status-code']);
         $this->assertEquals('user_invalid_token', $invalidVerification['body']['type']);
 
+        $enrollmentOtp = $totp->now();
+
         $verification = $this->client->call(Client::METHOD_PUT, '/account/mfa/authenticators/totp', $headers, [
-            'otp' => $totp->now(),
+            'otp' => $enrollmentOtp,
         ]);
 
         $this->assertEquals(200, $verification['headers']['status-code']);
@@ -4321,7 +4326,7 @@ class AccountCustomClientTest extends Scope
 
         $challengeVerification = $this->client->call(Client::METHOD_PUT, '/account/mfa/challenges', $headers, [
             'challengeId' => $challenge['body']['$id'],
-            'otp' => $totp->now(),
+            'otp' => $this->getNextTOTP($totp, $enrollmentOtp),
         ]);
 
         $this->assertEquals(200, $challengeVerification['headers']['status-code']);
@@ -4356,9 +4361,10 @@ class AccountCustomClientTest extends Scope
         $this->assertNotEmpty($authenticator['body']['secret']);
 
         $totp = \OTPHP\TOTP::create($authenticator['body']['secret']);
+        $enrollmentOtp = $totp->now();
 
         $verification = $this->client->call(Client::METHOD_PUT, '/account/mfa/authenticators/totp', $headers, [
-            'otp' => $totp->now(),
+            'otp' => $enrollmentOtp,
         ]);
 
         $this->assertEquals(200, $verification['headers']['status-code']);
@@ -4404,7 +4410,7 @@ class AccountCustomClientTest extends Scope
 
         $challengeVerification = $this->client->call(Client::METHOD_PUT, '/account/mfa/challenges', $newSessionHeaders, [
             'challengeId' => $challenge['body']['$id'],
-            'otp' => $totp->now(),
+            'otp' => $this->getNextTOTP($totp, $enrollmentOtp),
         ]);
 
         $this->assertEquals(200, $challengeVerification['headers']['status-code']);
