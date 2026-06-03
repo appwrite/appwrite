@@ -337,6 +337,11 @@ trait UsersBase
         $this->assertEquals($body['status'], true);
         $this->assertGreaterThan('2000-01-01 00:00:00', $body['registration']);
         $this->assertEquals($body['labels'], []);
+        $this->assertArrayHasKey('emailCanonical', $body);
+        $this->assertArrayHasKey('emailIsFree', $body);
+        $this->assertArrayHasKey('emailIsDisposable', $body);
+        $this->assertArrayHasKey('emailIsCorporate', $body);
+        $this->assertArrayHasKey('emailIsCanonical', $body);
 
         /**
          * Test Create with Custom ID for SUCCESS
@@ -751,6 +756,11 @@ trait UsersBase
             }
         }
         $this->assertNotNull($user1, 'user1 should exist in user list');
+        $this->assertArrayHasKey('emailCanonical', $user1);
+        $this->assertArrayHasKey('emailIsFree', $user1);
+        $this->assertArrayHasKey('emailIsDisposable', $user1);
+        $this->assertArrayHasKey('emailIsCorporate', $user1);
+        $this->assertArrayHasKey('emailIsCanonical', $user1);
 
         // This test ensures that by default, endpoints dont support select queries
         // If we add select query to this endpoint, you will need to remove this test
@@ -1092,6 +1102,11 @@ trait UsersBase
         $this->assertNotEmpty($user['body']['email']);
         $this->assertEquals($user['body']['status'], true);
         $this->assertGreaterThan('2000-01-01 00:00:00', $user['body']['registration']);
+        $this->assertArrayHasKey('emailCanonical', $user['body']);
+        $this->assertArrayHasKey('emailIsFree', $user['body']);
+        $this->assertArrayHasKey('emailIsDisposable', $user['body']);
+        $this->assertArrayHasKey('emailIsCorporate', $user['body']);
+        $this->assertArrayHasKey('emailIsCanonical', $user['body']);
 
         $sessions = $this->client->call(Client::METHOD_GET, '/users/' . $data['userId'] . '/sessions', array_merge([
             'content-type' => 'application/json',
