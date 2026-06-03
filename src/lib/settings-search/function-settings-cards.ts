@@ -46,6 +46,11 @@ export const FUNCTION_SETTINGS_CARD_INDEX: SettingsCardIndexEntry[] = [
   },
   {
     sectionId: 'build',
+    title: 'Triggers',
+    keywords: ['git', 'branch', 'path', 'glob', 'filter', 'deploy', 'pattern'],
+  },
+  {
+    sectionId: 'build',
     title: 'Specification',
     keywords: ['vcpu', 'memory', 'worker', 'profile', 'cpu'],
   },
@@ -70,12 +75,12 @@ export const FUNCTION_SETTINGS_CARD_INDEX: SettingsCardIndexEntry[] = [
     keywords: ['vcpu', 'memory', 'cpu', 'resources'],
   },
   {
-    sectionId: 'triggers',
+    sectionId: 'executions',
     title: 'Schedule',
     keywords: ['cron', 'scheduled', 'recurring'],
   },
   {
-    sectionId: 'triggers',
+    sectionId: 'executions',
     title: 'Events',
     keywords: ['webhook', 'trigger', 'invoke', 'async'],
   },

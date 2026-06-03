@@ -1,0 +1,72 @@
+import { useMutation, useQueryClient } from '@tanstack/react-query'
+import { toast } from 'sonner'
+import type { Models } from '@appwrite.io/console'
+import { sdk } from '@/lib/appwrite/sdk'
+import { buildSiteUpdateParams } from '@/lib/react-query/hooks'
+import { describeTriggerBehavior, normalizeTriggerPatterns } from '@/lib/git-build-triggers'
+import { getErrorMessage } from '@/lib/utils/error-formatting'
+import { BuildTriggersCard } from '../../shared/BuildTriggersCard'
+
+const SITES_BUILD_TRIGGERS_DOCS =
+  'https://appwrite.io/docs/products/sites/deploy-from-git#build-triggers'
+
+interface SiteBuildTriggersCardProps {
+  projectId: string | null | undefined
+  siteId: string | null | undefined
+  site: Models.Site
+}
+
+export function SiteBuildTriggersCard({
+  projectId,
+  siteId,
+  site,
+}: SiteBuildTriggersCardProps) {
+  const queryClient = useQueryClient()
+
+  const updateSiteMutation = useMutation({
+    mutationFn: async (updates: {
+      providerBranches: string[]
+      providerPaths: string[]
+    }) => {
+      if (!projectId || !siteId)
+        throw new Error('Project ID and Site ID are required')
+      const projectSdk = sdk.forProject(projectId)
+      return await projectSdk.sites.update(buildSiteUpdateParams(site, updates))
+    },
+    onSuccess: (_data, variables) => {
+      const summary = describeTriggerBehavior(
+        variables.providerBranches,
+        variables.providerPaths,
+      )
+      toast.success(`Triggers updated. ${summary}`)
+      queryClient.invalidateQueries({
+        queryKey: ['site', 'project', projectId, siteId],
+      })
+      queryClient.invalidateQueries({
+        queryKey: ['sites', 'project', projectId],
+      })
+    },
+    onError: (error: unknown) => {
+      toast.error(getErrorMessage(error, 'Failed to update triggers'))
+    },
+  })
+
+  if (!projectId || !siteId) return null
+
+  return (
+    <BuildTriggersCard
+      kind="site"
+      resource={site}
+      projectId={projectId}
+      resourceId={siteId}
+      docsLink={SITES_BUILD_TRIGGERS_DOCS}
+      isSaving={updateSiteMutation.isPending}
+      onSave={(updates) =>
+        updateSiteMutation.mutate({
+          providerBranches: normalizeTriggerPatterns(updates.providerBranches),
+          providerPaths: normalizeTriggerPatterns(updates.providerPaths),
+        })
+      }
+    />
+  )
+}

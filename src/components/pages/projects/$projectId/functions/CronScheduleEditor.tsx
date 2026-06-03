@@ -347,6 +347,11 @@ export function formatCronExpression(cron: string): string {
   return description || cron
 }
 
+function getCronFromPreset(preset: SchedulePreset): string {
+  if (preset === 'disabled') return ''
+  return PRESET_OPTIONS.find((p) => p.value === preset)?.cron ?? ''
+}
+
 export function CronScheduleEditor({
   value,
   onChange,
@@ -357,15 +362,20 @@ export function CronScheduleEditor({
   const [customCron, setCustomCron] = useState('')
   const [popoverOpen, setPopoverOpen] = useState(false)
 
-  // Initialize from value
+  const selectPreset = (nextPreset: SchedulePreset) => {
+    setPreset(nextPreset)
+    onChange(getCronFromPreset(nextPreset))
+  }
+
+  // Sync internal editor state when the value prop changes externally.
   useEffect(() => {
     if (!value || !value.trim()) {
       setPreset('disabled')
       setMode('preset')
+      setCustomCron('')
       return
     }
 
-    // Check if value matches a preset
     const matchingPreset = PRESET_OPTIONS.find((p) => p.cron === value)
     if (matchingPreset) {
       setPreset(matchingPreset.value)
@@ -373,31 +383,9 @@ export function CronScheduleEditor({
       return
     }
 
-    // If it doesn't match a preset, use advanced mode
     setCustomCron(value)
     setMode('advanced')
   }, [value])
-
-  // Update cron when preset changes
-  useEffect(() => {
-    if (mode === 'preset') {
-      if (preset === 'disabled') {
-        onChange('')
-      } else {
-        const presetOption = PRESET_OPTIONS.find((p) => p.value === preset)
-        if (presetOption) {
-          onChange(presetOption.cron)
-        }
-      }
-    }
-  }, [preset, mode, onChange])
-
-  // Update cron when advanced mode changes
-  useEffect(() => {
-    if (mode === 'advanced') {
-      onChange(customCron)
-    }
-  }, [customCron, mode, onChange])
 
   const validation = useMemo(() => {
     let currentValue = ''
@@ -438,19 +426,19 @@ export function CronScheduleEditor({
         currentValue = presetOption?.cron || ''
       }
 
-      if (!currentValue || !currentValue.trim()) {
-        setPreset('disabled')
-      } else {
+      let nextPreset: SchedulePreset = 'disabled'
+      if (currentValue.trim()) {
         const matchingPreset = PRESET_OPTIONS.find(
           (p) => p.cron === currentValue,
         )
         if (matchingPreset) {
-          setPreset(matchingPreset.value)
-        } else {
-          setPreset('disabled')
+          nextPreset = matchingPreset.value
         }
       }
+
+      setPreset(nextPreset)
       setMode('preset')
+      onChange(getCronFromPreset(nextPreset))
     } else {
       // When switching to advanced, set customCron to current value
       let currentValue = ''
@@ -462,6 +450,7 @@ export function CronScheduleEditor({
       }
       setCustomCron(currentValue)
       setMode('advanced')
+      onChange(currentValue)
     }
   }
 
@@ -550,7 +539,7 @@ export function CronScheduleEditor({
                       <CommandItem
                         value="disabled"
                         onSelect={() => {
-                          setPreset('disabled')
+                          selectPreset('disabled')
                           setPopoverOpen(false)
                         }}
                         className="px-3 py-2.5"
@@ -573,7 +562,7 @@ export function CronScheduleEditor({
                           key={presetOption.value}
                           value={`${presetOption.label} ${presetOption.description} ${presetOption.cron}`}
                           onSelect={() => {
-                            setPreset(presetOption.value)
+                            selectPreset(presetOption.value)
                             setPopoverOpen(false)
                           }}
                           className="px-3 py-2.5"
@@ -600,7 +589,7 @@ export function CronScheduleEditor({
                           key={presetOption.value}
                           value={`${presetOption.label} ${presetOption.description} ${presetOption.cron}`}
                           onSelect={() => {
-                            setPreset(presetOption.value)
+                            selectPreset(presetOption.value)
                             setPopoverOpen(false)
                           }}
                           className="px-3 py-2.5"
@@ -627,7 +616,7 @@ export function CronScheduleEditor({
                           key={presetOption.value}
                           value={`${presetOption.label} ${presetOption.description} ${presetOption.cron}`}
                           onSelect={() => {
-                            setPreset(presetOption.value)
+                            selectPreset(presetOption.value)
                             setPopoverOpen(false)
                           }}
                           className="px-3 py-2.5"
@@ -654,7 +643,7 @@ export function CronScheduleEditor({
                           key={presetOption.value}
                           value={`${presetOption.label} ${presetOption.description} ${presetOption.cron}`}
                           onSelect={() => {
-                            setPreset(presetOption.value)
+                            selectPreset(presetOption.value)
                             setPopoverOpen(false)
                           }}
                           className="px-3 py-2.5"
@@ -690,7 +679,11 @@ export function CronScheduleEditor({
           <Input
             id="cron-expression"
             value={customCron}
-            onChange={(e) => setCustomCron(e.target.value)}
+            onChange={(e) => {
+              const next = e.target.value
+              setCustomCron(next)
+              onChange(next)
+            }}
             placeholder="0 0 * * *"
             className="font-mono text-[13px] h-9"
             disabled={disabled}
@@ -704,12 +697,17 @@ export function CronScheduleEditor({
 
       {/* Validation & Preview */}
       {validation.valid && value && value.trim() && (
-        <Alert className="border-green-500/30 bg-green-500/5 transition-all duration-200">
-          <CheckCircle2 className="h-4 w-4 text-green-500" />
-          <AlertDescription className="text-[12px] text-green-600 dark:text-green-400">
-            <span className="font-medium">Schedule:</span> {formattedSchedule}
-          </AlertDescription>
-        </Alert>
+        <div className="rounded-lg border border-border bg-muted/30 overflow-hidden transition-all duration-200">
+          <div className="flex items-center gap-2 border-b border-border bg-muted/40 px-3.5 py-2">
+            <CheckCircle2 className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+            <span className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+              Schedule preview
+            </span>
+          </div>
+          <p className="px-3.5 py-3 text-[13px] font-medium leading-relaxed text-foreground">
+            {formattedSchedule}
+          </p>
+        </div>
       )}
       {!validation.valid && value && value.trim() && (
         <Alert variant="destructive" className="transition-all duration-200">

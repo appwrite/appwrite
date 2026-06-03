@@ -38,6 +38,11 @@ export const SITE_SETTINGS_CARD_INDEX: SettingsCardIndexEntry[] = [
   },
   {
     sectionId: 'build',
+    title: 'Triggers',
+    keywords: ['git', 'branch', 'path', 'glob', 'filter', 'deploy', 'pattern'],
+  },
+  {
+    sectionId: 'build',
     title: 'Specification',
     keywords: ['vcpu', 'memory', 'worker', 'profile'],
   },

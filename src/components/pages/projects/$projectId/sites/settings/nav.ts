@@ -72,6 +72,11 @@ export const SITE_SETTINGS_NAV: ResourceSettingsNavItem[] = [
       'cleanup',
       'inactive',
       'forever',
+      'triggers',
+      'branch filter',
+      'path filter',
+      'glob',
+      'pattern',
     ],
   },
   {

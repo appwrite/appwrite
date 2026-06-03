@@ -172,9 +172,9 @@ import { Route as PublicProjectsProjectIdMessagingProvidersProviderIdSettingsRou
 import { Route as PublicProjectsProjectIdMessagingProvidersProviderIdActivityRouteImport } from './routes/_public/projects.$projectId.messaging.providers.$providerId.activity'
 import { Route as PublicProjectsProjectIdFunctionsCreateTemplateTemplateIdRouteImport } from './routes/_public/projects.$projectId.functions.create.template.$templateId'
 import { Route as PublicProjectsProjectIdFunctionsCreateRepositoryRepositoryRouteImport } from './routes/_public/projects.$projectId.functions.create.repository.$repository'
-import { Route as PublicProjectsProjectIdFunctionsFunctionIdSettingsTriggersRouteImport } from './routes/_public/projects.$projectId.functions.$functionId.settings.triggers'
 import { Route as PublicProjectsProjectIdFunctionsFunctionIdSettingsRuntimeRouteImport } from './routes/_public/projects.$projectId.functions.$functionId.settings.runtime'
 import { Route as PublicProjectsProjectIdFunctionsFunctionIdSettingsGitRouteImport } from './routes/_public/projects.$projectId.functions.$functionId.settings.git'
+import { Route as PublicProjectsProjectIdFunctionsFunctionIdSettingsExecutionsRouteImport } from './routes/_public/projects.$projectId.functions.$functionId.settings.executions'
 import { Route as PublicProjectsProjectIdFunctionsFunctionIdSettingsDangerZoneRouteImport } from './routes/_public/projects.$projectId.functions.$functionId.settings.danger-zone'
 import { Route as PublicProjectsProjectIdFunctionsFunctionIdSettingsBuildRouteImport } from './routes/_public/projects.$projectId.functions.$functionId.settings.build'
 import { Route as PublicProjectsProjectIdFunctionsFunctionIdDomainsAddRouteImport } from './routes/_public/projects.$projectId.functions.$functionId.domains.add'
@@ -1194,13 +1194,6 @@ const PublicProjectsProjectIdFunctionsCreateRepositoryRepositoryRoute =
     path: '/repository/$repository',
     getParentRoute: () => PublicProjectsProjectIdFunctionsCreateRoute,
   } as any)
-const PublicProjectsProjectIdFunctionsFunctionIdSettingsTriggersRoute =
-  PublicProjectsProjectIdFunctionsFunctionIdSettingsTriggersRouteImport.update({
-    id: '/triggers',
-    path: '/triggers',
-    getParentRoute: () =>
-      PublicProjectsProjectIdFunctionsFunctionIdSettingsRoute,
-  } as any)
 const PublicProjectsProjectIdFunctionsFunctionIdSettingsRuntimeRoute =
   PublicProjectsProjectIdFunctionsFunctionIdSettingsRuntimeRouteImport.update({
     id: '/runtime',
@@ -1215,6 +1208,15 @@ const PublicProjectsProjectIdFunctionsFunctionIdSettingsGitRoute =
     getParentRoute: () =>
       PublicProjectsProjectIdFunctionsFunctionIdSettingsRoute,
   } as any)
+const PublicProjectsProjectIdFunctionsFunctionIdSettingsExecutionsRoute =
+  PublicProjectsProjectIdFunctionsFunctionIdSettingsExecutionsRouteImport.update(
+    {
+      id: '/executions',
+      path: '/executions',
+      getParentRoute: () =>
+        PublicProjectsProjectIdFunctionsFunctionIdSettingsRoute,
+    } as any,
+  )
 const PublicProjectsProjectIdFunctionsFunctionIdSettingsDangerZoneRoute =
   PublicProjectsProjectIdFunctionsFunctionIdSettingsDangerZoneRouteImport.update(
     {
@@ -1825,9 +1827,9 @@ export interface FileRoutesByFullPath {
   '/projects/$projectId/functions/$functionId/domains/add': typeof PublicProjectsProjectIdFunctionsFunctionIdDomainsAddRoute
   '/projects/$projectId/functions/$functionId/settings/build': typeof PublicProjectsProjectIdFunctionsFunctionIdSettingsBuildRoute
   '/projects/$projectId/functions/$functionId/settings/danger-zone': typeof PublicProjectsProjectIdFunctionsFunctionIdSettingsDangerZoneRoute
+  '/projects/$projectId/functions/$functionId/settings/executions': typeof PublicProjectsProjectIdFunctionsFunctionIdSettingsExecutionsRoute
   '/projects/$projectId/functions/$functionId/settings/git': typeof PublicProjectsProjectIdFunctionsFunctionIdSettingsGitRoute
   '/projects/$projectId/functions/$functionId/settings/runtime': typeof PublicProjectsProjectIdFunctionsFunctionIdSettingsRuntimeRoute
-  '/projects/$projectId/functions/$functionId/settings/triggers': typeof PublicProjectsProjectIdFunctionsFunctionIdSettingsTriggersRoute
   '/projects/$projectId/functions/create/repository/$repository': typeof PublicProjectsProjectIdFunctionsCreateRepositoryRepositoryRoute
   '/projects/$projectId/functions/create/template/$templateId': typeof PublicProjectsProjectIdFunctionsCreateTemplateTemplateIdRoute
   '/projects/$projectId/messaging/providers/$providerId/activity': typeof PublicProjectsProjectIdMessagingProvidersProviderIdActivityRoute
@@ -2018,9 +2020,9 @@ export interface FileRoutesByTo {
   '/projects/$projectId/functions/$functionId/domains/add': typeof PublicProjectsProjectIdFunctionsFunctionIdDomainsAddRoute
   '/projects/$projectId/functions/$functionId/settings/build': typeof PublicProjectsProjectIdFunctionsFunctionIdSettingsBuildRoute
   '/projects/$projectId/functions/$functionId/settings/danger-zone': typeof PublicProjectsProjectIdFunctionsFunctionIdSettingsDangerZoneRoute
+  '/projects/$projectId/functions/$functionId/settings/executions': typeof PublicProjectsProjectIdFunctionsFunctionIdSettingsExecutionsRoute
   '/projects/$projectId/functions/$functionId/settings/git': typeof PublicProjectsProjectIdFunctionsFunctionIdSettingsGitRoute
   '/projects/$projectId/functions/$functionId/settings/runtime': typeof PublicProjectsProjectIdFunctionsFunctionIdSettingsRuntimeRoute
-  '/projects/$projectId/functions/$functionId/settings/triggers': typeof PublicProjectsProjectIdFunctionsFunctionIdSettingsTriggersRoute
   '/projects/$projectId/functions/create/repository/$repository': typeof PublicProjectsProjectIdFunctionsCreateRepositoryRepositoryRoute
   '/projects/$projectId/functions/create/template/$templateId': typeof PublicProjectsProjectIdFunctionsCreateTemplateTemplateIdRoute
   '/projects/$projectId/messaging/providers/$providerId/activity': typeof PublicProjectsProjectIdMessagingProvidersProviderIdActivityRoute
@@ -2240,9 +2242,9 @@ export interface FileRoutesById {
   '/_public/projects/$projectId/functions/$functionId/domains/add': typeof PublicProjectsProjectIdFunctionsFunctionIdDomainsAddRoute
   '/_public/projects/$projectId/functions/$functionId/settings/build': typeof PublicProjectsProjectIdFunctionsFunctionIdSettingsBuildRoute
   '/_public/projects/$projectId/functions/$functionId/settings/danger-zone': typeof PublicProjectsProjectIdFunctionsFunctionIdSettingsDangerZoneRoute
+  '/_public/projects/$projectId/functions/$functionId/settings/executions': typeof PublicProjectsProjectIdFunctionsFunctionIdSettingsExecutionsRoute
   '/_public/projects/$projectId/functions/$functionId/settings/git': typeof PublicProjectsProjectIdFunctionsFunctionIdSettingsGitRoute
   '/_public/projects/$projectId/functions/$functionId/settings/runtime': typeof PublicProjectsProjectIdFunctionsFunctionIdSettingsRuntimeRoute
-  '/_public/projects/$projectId/functions/$functionId/settings/triggers': typeof PublicProjectsProjectIdFunctionsFunctionIdSettingsTriggersRoute
   '/_public/projects/$projectId/functions/create/repository/$repository': typeof PublicProjectsProjectIdFunctionsCreateRepositoryRepositoryRoute
   '/_public/projects/$projectId/functions/create/template/$templateId': typeof PublicProjectsProjectIdFunctionsCreateTemplateTemplateIdRoute
   '/_public/projects/$projectId/messaging/providers/$providerId/activity': typeof PublicProjectsProjectIdMessagingProvidersProviderIdActivityRoute
@@ -2463,9 +2465,9 @@ export interface FileRouteTypes {
     | '/projects/$projectId/functions/$functionId/domains/add'
     | '/projects/$projectId/functions/$functionId/settings/build'
     | '/projects/$projectId/functions/$functionId/settings/danger-zone'
+    | '/projects/$projectId/functions/$functionId/settings/executions'
     | '/projects/$projectId/functions/$functionId/settings/git'
     | '/projects/$projectId/functions/$functionId/settings/runtime'
-    | '/projects/$projectId/functions/$functionId/settings/triggers'
     | '/projects/$projectId/functions/create/repository/$repository'
     | '/projects/$projectId/functions/create/template/$templateId'
     | '/projects/$projectId/messaging/providers/$providerId/activity'
@@ -2656,9 +2658,9 @@ export interface FileRouteTypes {
     | '/projects/$projectId/functions/$functionId/domains/add'
     | '/projects/$projectId/functions/$functionId/settings/build'
     | '/projects/$projectId/functions/$functionId/settings/danger-zone'
+    | '/projects/$projectId/functions/$functionId/settings/executions'
     | '/projects/$projectId/functions/$functionId/settings/git'
     | '/projects/$projectId/functions/$functionId/settings/runtime'
-    | '/projects/$projectId/functions/$functionId/settings/triggers'
     | '/projects/$projectId/functions/create/repository/$repository'
     | '/projects/$projectId/functions/create/template/$templateId'
     | '/projects/$projectId/messaging/providers/$providerId/activity'
@@ -2877,9 +2879,9 @@ export interface FileRouteTypes {
     | '/_public/projects/$projectId/functions/$functionId/domains/add'
     | '/_public/projects/$projectId/functions/$functionId/settings/build'
     | '/_public/projects/$projectId/functions/$functionId/settings/danger-zone'
+    | '/_public/projects/$projectId/functions/$functionId/settings/executions'
     | '/_public/projects/$projectId/functions/$functionId/settings/git'
     | '/_public/projects/$projectId/functions/$functionId/settings/runtime'
-    | '/_public/projects/$projectId/functions/$functionId/settings/triggers'
     | '/_public/projects/$projectId/functions/create/repository/$repository'
     | '/_public/projects/$projectId/functions/create/template/$templateId'
     | '/_public/projects/$projectId/messaging/providers/$providerId/activity'
@@ -4088,13 +4090,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PublicProjectsProjectIdFunctionsCreateRepositoryRepositoryRouteImport
       parentRoute: typeof PublicProjectsProjectIdFunctionsCreateRoute
     }
-    '/_public/projects/$projectId/functions/$functionId/settings/triggers': {
-      id: '/_public/projects/$projectId/functions/$functionId/settings/triggers'
-      path: '/triggers'
-      fullPath: '/projects/$projectId/functions/$functionId/settings/triggers'
-      preLoaderRoute: typeof PublicProjectsProjectIdFunctionsFunctionIdSettingsTriggersRouteImport
-      parentRoute: typeof PublicProjectsProjectIdFunctionsFunctionIdSettingsRoute
-    }
     '/_public/projects/$projectId/functions/$functionId/settings/runtime': {
       id: '/_public/projects/$projectId/functions/$functionId/settings/runtime'
       path: '/runtime'
@@ -4107,6 +4102,13 @@ declare module '@tanstack/react-router' {
       path: '/git'
       fullPath: '/projects/$projectId/functions/$functionId/settings/git'
       preLoaderRoute: typeof PublicProjectsProjectIdFunctionsFunctionIdSettingsGitRouteImport
+      parentRoute: typeof PublicProjectsProjectIdFunctionsFunctionIdSettingsRoute
+    }
+    '/_public/projects/$projectId/functions/$functionId/settings/executions': {
+      id: '/_public/projects/$projectId/functions/$functionId/settings/executions'
+      path: '/executions'
+      fullPath: '/projects/$projectId/functions/$functionId/settings/executions'
+      preLoaderRoute: typeof PublicProjectsProjectIdFunctionsFunctionIdSettingsExecutionsRouteImport
       parentRoute: typeof PublicProjectsProjectIdFunctionsFunctionIdSettingsRoute
     }
     '/_public/projects/$projectId/functions/$functionId/settings/danger-zone': {
@@ -5055,9 +5057,9 @@ const PublicProjectsProjectIdFunctionsFunctionIdDomainsRouteWithChildren =
 interface PublicProjectsProjectIdFunctionsFunctionIdSettingsRouteChildren {
   PublicProjectsProjectIdFunctionsFunctionIdSettingsBuildRoute: typeof PublicProjectsProjectIdFunctionsFunctionIdSettingsBuildRoute
   PublicProjectsProjectIdFunctionsFunctionIdSettingsDangerZoneRoute: typeof PublicProjectsProjectIdFunctionsFunctionIdSettingsDangerZoneRoute
+  PublicProjectsProjectIdFunctionsFunctionIdSettingsExecutionsRoute: typeof PublicProjectsProjectIdFunctionsFunctionIdSettingsExecutionsRoute
   PublicProjectsProjectIdFunctionsFunctionIdSettingsGitRoute: typeof PublicProjectsProjectIdFunctionsFunctionIdSettingsGitRoute
   PublicProjectsProjectIdFunctionsFunctionIdSettingsRuntimeRoute: typeof PublicProjectsProjectIdFunctionsFunctionIdSettingsRuntimeRoute
-  PublicProjectsProjectIdFunctionsFunctionIdSettingsTriggersRoute: typeof PublicProjectsProjectIdFunctionsFunctionIdSettingsTriggersRoute
   PublicProjectsProjectIdFunctionsFunctionIdSettingsIndexRoute: typeof PublicProjectsProjectIdFunctionsFunctionIdSettingsIndexRoute
 }
 
@@ -5067,12 +5069,12 @@ const PublicProjectsProjectIdFunctionsFunctionIdSettingsRouteChildren: PublicPro
       PublicProjectsProjectIdFunctionsFunctionIdSettingsBuildRoute,
     PublicProjectsProjectIdFunctionsFunctionIdSettingsDangerZoneRoute:
       PublicProjectsProjectIdFunctionsFunctionIdSettingsDangerZoneRoute,
+    PublicProjectsProjectIdFunctionsFunctionIdSettingsExecutionsRoute:
+      PublicProjectsProjectIdFunctionsFunctionIdSettingsExecutionsRoute,
     PublicProjectsProjectIdFunctionsFunctionIdSettingsGitRoute:
       PublicProjectsProjectIdFunctionsFunctionIdSettingsGitRoute,
     PublicProjectsProjectIdFunctionsFunctionIdSettingsRuntimeRoute:
       PublicProjectsProjectIdFunctionsFunctionIdSettingsRuntimeRoute,
-    PublicProjectsProjectIdFunctionsFunctionIdSettingsTriggersRoute:
-      PublicProjectsProjectIdFunctionsFunctionIdSettingsTriggersRoute,
     PublicProjectsProjectIdFunctionsFunctionIdSettingsIndexRoute:
       PublicProjectsProjectIdFunctionsFunctionIdSettingsIndexRoute,
   }

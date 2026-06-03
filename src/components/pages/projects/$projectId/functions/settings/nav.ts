@@ -1,4 +1,4 @@
-import { Cpu, GitBranch, Hammer, Settings, Zap } from 'lucide-react'
+import { Cpu, GitBranch, Hammer, Play, Settings } from 'lucide-react'
 import type { ResourceSettingsNavItem } from '../../shared/ProjectResourceSettingsShell'
 
 export const FUNCTION_SETTINGS_NAV: ResourceSettingsNavItem[] = [
@@ -77,6 +77,11 @@ export const FUNCTION_SETTINGS_NAV: ResourceSettingsNavItem[] = [
       'cleanup',
       'inactive',
       'forever',
+      'triggers',
+      'branch filter',
+      'path filter',
+      'glob',
+      'pattern',
     ],
   },
   {
@@ -100,17 +105,18 @@ export const FUNCTION_SETTINGS_NAV: ResourceSettingsNavItem[] = [
     ],
   },
   {
-    id: 'triggers',
-    label: 'Triggers',
-    pathSuffix: 'triggers',
-    icon: Zap,
+    id: 'executions',
+    label: 'Executions',
+    pathSuffix: 'executions',
+    icon: Play,
     keywords: [
-      'triggers',
-      'trigger',
+      'executions',
+      'execution',
       'schedule',
       'cron',
       'events',
       'webhook',
+      'trigger',
       'invoke',
       'async',
     ],

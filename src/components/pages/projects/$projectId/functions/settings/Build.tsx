@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import {
+  useProject,
   useProjectFunction,
   useFunctionSpecifications,
   buildFunctionUpdateParams,
@@ -13,20 +14,19 @@ import { useMutation, useQueryClient } from '@tanstack/react-query'
 import type { Models } from '@appwrite.io/console'
 import { toast } from 'sonner'
 import { hasUnavailableSpecifications } from '@/lib/specifications'
+import { SpecificationsUpgradeNote } from '@/components/global/shared/SpecificationsUpgradeNote'
 import { SpecificationTableCard } from '../../shared/SpecificationTableCard'
 import { FunctionDeploymentRetentionCard } from './FunctionDeploymentRetentionCard'
+import { FunctionBuildTriggersCard } from '../FunctionBuildTriggersCard'
 import {
   SettingsCardsList,
   type SettingsCardItem,
 } from '@/components/global/shared/settings-search/SettingsCardsList'
 
-const CONTACT_SALES_URL =
-  import.meta.env.VITE_CONTACT_SALES_URL ||
-  'https://appwrite.io/contact-us/enterprise'
-
 export function View() {
   const { projectId, functionId } = useParams({ strict: false })
   const queryClient = useQueryClient()
+  const { project } = useProject(projectId)
 
   const { data: func, isLoading: funcLoading } = useProjectFunction(
     projectId,
@@ -99,30 +99,11 @@ export function View() {
   if (!func) return null
 
   const specFooterNote = hasUnavailableSpecifications(specifications) ? (
-    <div className="rounded-lg border border-border bg-muted/30 px-3 py-2.5">
-      <p className="text-[12px] text-muted-foreground">
-        Need more resources?{' '}
-        <a
-          href="#"
-          className="font-medium text-foreground underline hover:no-underline"
-          onClick={(e) => {
-            e.preventDefault()
-          }}
-        >
-          Upgrade your plan
-        </a>{' '}
-        or{' '}
-        <a
-          href={CONTACT_SALES_URL}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="font-medium text-foreground underline hover:no-underline"
-        >
-          contact sales
-        </a>{' '}
-        to unlock additional specifications.
-      </p>
-    </div>
+    <SpecificationsUpgradeNote
+      orgId={project?.teamId}
+      showContactSales
+      analyticsSurface="function_build_settings"
+    />
   ) : undefined
 
   const cards: SettingsCardItem[] = [
@@ -171,6 +152,24 @@ export function View() {
         </div>
       </div>
       ),
+    },
+    {
+      id: 'triggers',
+      search: {
+        title: 'Triggers',
+        description:
+          'Control which branch pushes and file changes trigger automatic deployments.',
+        keywords: [
+          'git',
+          'branch',
+          'path',
+          'glob',
+          'filter',
+          'deploy',
+          'pattern',
+        ],
+      },
+      node: <FunctionBuildTriggersCard func={func} />,
     },
     {
       id: 'deployment-retention',

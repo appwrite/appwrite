@@ -8,6 +8,7 @@ import { SiteBuildFrameworkCard } from './SiteBuildFrameworkCard'
 import { SiteBuildCommandsCard } from './SiteBuildCommandsCard'
 import { SiteBuildSpecificationCard } from './SiteBuildSpecificationCard'
 import { SiteDeploymentRetentionCard } from './SiteDeploymentRetentionCard'
+import { SiteBuildTriggersCard } from './SiteBuildTriggersCard'
 
 export function View() {
   const { projectId, siteId } = useParams({ strict: false })
@@ -47,6 +48,30 @@ export function View() {
       },
       node: (
         <SiteBuildCommandsCard
+          projectId={projectId}
+          siteId={siteId}
+          site={site}
+        />
+      ),
+    },
+    {
+      id: 'triggers',
+      search: {
+        title: 'Triggers',
+        description:
+          'Control which branch pushes and file changes trigger automatic deployments.',
+        keywords: [
+          'git',
+          'branch',
+          'path',
+          'glob',
+          'filter',
+          'deploy',
+          'pattern',
+        ],
+      },
+      node: (
+        <SiteBuildTriggersCard
           projectId={projectId}
           siteId={siteId}
           site={site}

@@ -9,7 +9,7 @@ export type ResourceSettingsNavItem = {
   id: string
   label: string
   /** Path after `.../settings` - use `''` for index */
-  pathSuffix: '' | 'git' | 'build' | 'runtime' | 'triggers'
+  pathSuffix: '' | 'git' | 'build' | 'runtime' | 'executions'
   icon: LucideIcon
   keywords: string[]
 }
@@ -21,7 +21,7 @@ type FunctionSettingsPath =
   | '/projects/$projectId/functions/$functionId/settings/git'
   | '/projects/$projectId/functions/$functionId/settings/build'
   | '/projects/$projectId/functions/$functionId/settings/runtime'
-  | '/projects/$projectId/functions/$functionId/settings/triggers'
+  | '/projects/$projectId/functions/$functionId/settings/executions'
 
 type SiteSettingsPath =
   | '/projects/$projectId/sites/$siteId/settings'
@@ -37,7 +37,8 @@ const FUNCTION_SETTINGS_TO: Record<
   git: '/projects/$projectId/functions/$functionId/settings/git',
   build: '/projects/$projectId/functions/$functionId/settings/build',
   runtime: '/projects/$projectId/functions/$functionId/settings/runtime',
-  triggers: '/projects/$projectId/functions/$functionId/settings/triggers',
+  executions:
+    '/projects/$projectId/functions/$functionId/settings/executions',
 }
 
 const SITE_SETTINGS_TO: Record<
@@ -48,8 +49,8 @@ const SITE_SETTINGS_TO: Record<
   git: '/projects/$projectId/sites/$siteId/settings/git',
   build: '/projects/$projectId/sites/$siteId/settings/build',
   runtime: '/projects/$projectId/sites/$siteId/settings/runtime',
-  /** Unused: site settings nav has no triggers item */
-  triggers: '/projects/$projectId/sites/$siteId/settings',
+  /** Unused: site settings nav has no executions item */
+  executions: '/projects/$projectId/sites/$siteId/settings',
 }
 
 function useActiveSettingsSection(pathname: string): string {
@@ -59,7 +60,7 @@ function useActiveSettingsSection(pathname: string): string {
     const next = i >= 0 ? parts[i + 1] : undefined
     if (!next) return 'general'
     if (next === 'danger-zone') return 'general'
-    if (['git', 'build', 'runtime', 'triggers'].includes(next)) return next
+    if (['git', 'build', 'runtime', 'executions'].includes(next)) return next
     return 'general'
   }, [pathname])
 }
@@ -93,14 +94,18 @@ export function ProjectResourceSettingsShell({
       ? FUNCTION_SETTINGS_CARD_INDEX
       : SITE_SETTINGS_CARD_INDEX
 
-  const layoutNavItems = navItems.map((item) => ({
-    id: item.id,
-    label: item.label,
-    icon: item.icon,
-    keywords: item.keywords,
-    to: toForItem(item.pathSuffix),
-    params: paramsForNavigate,
-  }))
+  const layoutNavItems = useMemo(
+    () =>
+      navItems.map((item) => ({
+        id: item.id,
+        label: item.label,
+        icon: item.icon,
+        keywords: item.keywords,
+        to: toForItem(item.pathSuffix),
+        params: paramsForNavigate,
+      })),
+    [navItems, kind, projectId, functionId, siteId],
+  )
 
   return (
     <SettingsLayoutShell

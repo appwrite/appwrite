@@ -112,7 +112,7 @@ export function View() {
     return a.every((val, idx) => val === b[idx])
   }
 
-  const triggersPending =
+  const executionsPending =
     scheduleMutation.isPending || eventsMutation.isPending
 
   if (funcLoading) {
@@ -146,7 +146,7 @@ export function View() {
           <CronScheduleEditor
             value={schedule}
             onChange={setSchedule}
-            disabled={triggersPending}
+            disabled={executionsPending}
           />
         </div>
         <div className="px-6 py-4 border-t border-border bg-muted/30">
@@ -196,7 +196,7 @@ export function View() {
               variant="outline"
               className="h-9 text-[13px]"
               onClick={() => setEventDialogOpen(true)}
-              disabled={events.length >= 100 || triggersPending}
+              disabled={events.length >= 100 || executionsPending}
             >
               <Plus className="mr-1.5 h-4 w-4" />
               Add event
@@ -214,7 +214,7 @@ export function View() {
                       size="sm"
                       className="h-7 w-7 p-0"
                       onClick={() => handleRemoveEvent(event)}
-                      disabled={triggersPending}
+                      disabled={executionsPending}
                       aria-label={`Remove event ${event}`}
                     >
                       <X className="h-4 w-4" />
