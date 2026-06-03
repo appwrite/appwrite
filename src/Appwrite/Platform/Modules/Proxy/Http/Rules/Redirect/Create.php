@@ -68,7 +68,7 @@ class Create extends Action
             ->param('domain', null, new ValidatorDomain(), 'Domain name.')
             ->param('url', null, new URL(), 'Target URL of redirection')
             ->param('statusCode', null, new WhiteList([301, 302, 307, 308]), 'Status code of redirection', enum: new Enum(
-                name: 'RedirectStatusCode',
+                name: 'StatusCode',
                 map: [
                     '301' => 'MovedPermanently',
                     '302' => 'Found',
