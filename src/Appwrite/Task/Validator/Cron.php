@@ -38,7 +38,12 @@ class Cron extends Validator
             return false;
         }
 
-        return true;
+        try {
+            (new CronExpression($value))->getNextRunDate();
+            return true;
+        } catch (\RuntimeException) {
+            return false;
+        }
     }
 
     /**

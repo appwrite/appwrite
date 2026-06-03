@@ -70,6 +70,10 @@ class Get extends Action
             throw new Exception(Exception::MEMBERSHIP_NOT_FOUND);
         }
 
+        if ($membership->getAttribute('teamInternalId') !== $team->getSequence()) {
+            throw new Exception(Exception::TEAM_MEMBERSHIP_MISMATCH);
+        }
+
         // Default should be "false", but existing projects already rely on this being "true"
         $membershipsPrivacy =  [
             'userName' => $project->getAttribute('auths', [])['membershipsUserName'] ?? true,
