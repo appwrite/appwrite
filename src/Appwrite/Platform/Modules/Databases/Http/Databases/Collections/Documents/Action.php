@@ -504,4 +504,133 @@ abstract class Action extends DatabasesAction
         $queueForRealtime->reset();
         $queueForWebhooks->reset();
     }
+
+    /**
+     * Emit `documents.[id].create` events for child rows that were created
+     * implicitly by utopia-php/database through a relationship attribute.
+     *
+     * Why this exists:
+     *
+     * When a parent document carries nested relationship payloads (one-to-many,
+     * many-to-one, ...), utopia-php/database resolves and creates each child
+     * inside its own `silent()` block (see Database::createDocument). That
+     * silent block suppresses the low-level `EVENT_DOCUMENT_CREATE` trigger
+     * for every child row, and the HTTP create action only enqueues a single
+     * event for the root document. The end-result is that any Appwrite
+     * Function, Webhook, or Realtime subscriber listening to
+     * `databases.*.collections.{B}.documents.*.create` is never invoked for
+     * those nested children, even though the rows clearly exist in B.
+     *
+     * This helper replays the missing event for each newly-created child,
+     * mirroring exactly what `triggerBulk` does for bulk creates so behaviour
+     * is consistent regardless of how the row was inserted.
+     *
+     * Caller contract:
+     *  - `$nestedCreates` is a list of `['collection' => Document, 'documentId' => string]`.
+     *  - `$dbForDatabases` MUST be the same connection that ran the parent
+     *    `createDocuments()` (matters for documents-db/vectors-db adapters).
+     *  - On return the main `$queueForEvents` is reset (params/event/payload
+     *    cleared, context preserved). The caller is expected to re-populate
+     *    it with the root document's event right after.
+     *
+     * @param array<int, array{collection: Document, documentId: string}> $nestedCreates
+     */
+    protected function triggerRelationshipCreates(
+        array $nestedCreates,
+        Document $database,
+        Database $dbForDatabases,
+        Database $dbForProject,
+        Event $queueForEvents,
+        Event $queueForRealtime,
+        Event $queueForFunctions,
+        Event $queueForWebhooks,
+        EventProcessor $eventProcessor,
+        Authorization $authorization,
+    ): void {
+        if (empty($nestedCreates)) {
+            return;
+        }
+
+        $project = $queueForEvents->getProject();
+        $functionsEvents = $eventProcessor->getFunctionsEvents($project, $dbForProject);
+        $webhooksEvents = $eventProcessor->getWebhooksEvents($project);
+        $collectionsCache = [];
+        $isConsole = $project->getId() === 'console';
+
+        foreach ($nestedCreates as $entry) {
+            /** @var Document $relatedCollection */
+            $relatedCollection = $entry['collection'];
+            $documentId = $entry['documentId'];
+
+            $childDoc = $authorization->skip(
+                fn () => $dbForDatabases->getDocument(
+                    'database_' . $database->getSequence() . '_collection_' . $relatedCollection->getSequence(),
+                    $documentId
+                )
+            );
+
+            // Child may have been deduplicated or skipped by the adapter (e.g.
+            // when the relationship value referenced an existing row). Safe to skip.
+            if ($childDoc->isEmpty()) {
+                continue;
+            }
+
+            // Attach $databaseId / $collectionId / $tableId metadata to the
+            // payload so subscribers see the same shape as a direct create.
+            $this->processDocument(
+                database: $database,
+                collection: $relatedCollection,
+                document: $childDoc,
+                dbForProject: $dbForProject,
+                collectionsCache: $collectionsCache,
+                authorization: $authorization,
+            );
+
+            $queueForEvents
+                ->setEvent('databases.[databaseId].collections.[collectionId].documents.[documentId].create')
+                ->setParam('databaseId', $database->getId())
+                ->setContext('database', $database)
+                ->setParam('collectionId', $relatedCollection->getId())
+                ->setParam('tableId', $relatedCollection->getId())
+                ->setContext($this->getCollectionsEventsContext(), $relatedCollection)
+                ->setParam('documentId', $childDoc->getId())
+                ->setParam('rowId', $childDoc->getId())
+                ->setPayload($childDoc->getArrayCopy());
+
+            // Realtime is suppressed for the console project to match api.php shutdown logic.
+            if (!$isConsole) {
+                $queueForRealtime->from($queueForEvents)->trigger();
+            }
+
+            $generatedEvents = Event::generateEvents(
+                $queueForEvents->getEvent(),
+                $queueForEvents->getParams()
+            );
+
+            if (!empty($functionsEvents)) {
+                foreach ($generatedEvents as $eventName) {
+                    if (isset($functionsEvents[$eventName])) {
+                        $queueForFunctions->from($queueForEvents)->trigger();
+                        break;
+                    }
+                }
+            }
+
+            if (!empty($webhooksEvents)) {
+                foreach ($generatedEvents as $eventName) {
+                    if (isset($webhooksEvents[$eventName])) {
+                        $queueForWebhooks->from($queueForEvents)->trigger();
+                        break;
+                    }
+                }
+            }
+        }
+
+        // Clear params/event/payload so the caller can set the root event
+        // cleanly. Context (project, user, database, etc.) is preserved by reset().
+        $queueForEvents->reset();
+        $queueForRealtime->reset();
+        $queueForFunctions->reset();
+        $queueForWebhooks->reset();
+    }
 }
