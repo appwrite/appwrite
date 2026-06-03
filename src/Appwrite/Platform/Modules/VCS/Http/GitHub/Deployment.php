@@ -578,6 +578,14 @@ trait Deployment
 
                 Span::add("{$logBase}.build.triggered", 'true');
                 //TODO: Add event?
+            } catch (Exception $e) {
+                Span::add("{$logBase}.error", $e->getMessage());
+                Span::add("{$logBase}.error.type", $e->getType());
+                if ($e->getCode() < 500) {
+                    Console::warning("Skipping repository '{$repository->getId()}' ({$e->getType()}): {$e->getMessage()}");
+                    continue;
+                }
+                $errors[] = $e->getMessage();
             } catch (\Throwable $e) {
                 Span::add("{$logBase}.error", $e->getMessage());
                 $errors[] = $e->getMessage();
