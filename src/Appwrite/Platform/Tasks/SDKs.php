@@ -24,6 +24,7 @@ use Appwrite\SDK\Language\REST;
 use Appwrite\SDK\Language\Ruby;
 use Appwrite\SDK\Language\Rust;
 use Appwrite\SDK\Language\Swift;
+use Appwrite\SDK\Language\Unity;
 use Appwrite\SDK\Language\Web;
 use Appwrite\SDK\SDK;
 use Appwrite\Spec\StaticSpec;
@@ -430,6 +431,11 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
                     case 'dotnet':
                         $cover = '';
                         $config = new DotNet();
+                        break;
+                    case 'unity':
+                        $cover = '';
+                        $config = new Unity();
+                        $config->setPackageName('io.appwrite.unity');
                         break;
                     case 'android':
                         $config = new Android();
