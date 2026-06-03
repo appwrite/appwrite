@@ -84,7 +84,7 @@ class Create extends Action
             'limit' => 0,
             'maxSessions' => 0,
             'passwordStrength' => [
-                'minLength' => 8,
+                'min' => 8,
                 'uppercase' => false,
                 'lowercase' => false,
                 'number' => false,

@@ -18,7 +18,7 @@ class PasswordStrengthTest extends TestCase
     public function testConfiguredPolicy(): void
     {
         $validator = new PasswordStrength([
-            'minLength' => 12,
+            'min' => 12,
             'uppercase' => true,
             'lowercase' => true,
             'number' => true,
@@ -34,10 +34,10 @@ class PasswordStrengthTest extends TestCase
         $this->assertTrue($validator->isValid('Password123€'));
     }
 
-    public function testMinLengthCanBeEight(): void
+    public function testMinimumCanBeEight(): void
     {
         $validator = new PasswordStrength([
-            'minLength' => 8,
+            'min' => 8,
         ]);
 
         $this->assertFalse($validator->isValid('1234567'));
@@ -47,7 +47,7 @@ class PasswordStrengthTest extends TestCase
     public function testAllowEmpty(): void
     {
         $validator = new PasswordStrength([
-            'minLength' => 12,
+            'min' => 12,
             'uppercase' => true,
             'lowercase' => true,
             'number' => true,

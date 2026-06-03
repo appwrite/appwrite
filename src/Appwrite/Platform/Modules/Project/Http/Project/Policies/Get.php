@@ -112,7 +112,7 @@ class Get extends Action
             ],
             'password-strength' => [
                 new Document(\array_merge([
-                    'minLength' => 8,
+                    'min' => 8,
                     'uppercase' => false,
                     'lowercase' => false,
                     'number' => false,

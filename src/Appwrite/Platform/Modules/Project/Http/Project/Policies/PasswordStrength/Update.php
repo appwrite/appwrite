@@ -50,7 +50,7 @@ class Update extends Action
                     ),
                 ],
             ))
-            ->param('minLength', null, new Range(8, 256), 'Minimum password length. Value must be between 8 and 256. Default is 8.', optional: true)
+            ->param('min', null, new Range(8, 256), 'Minimum password length. Value must be between 8 and 256. Default is 8.', optional: true)
             ->param('uppercase', null, new Boolean(), 'Whether passwords must include at least one uppercase letter.', optional: true)
             ->param('lowercase', null, new Boolean(), 'Whether passwords must include at least one lowercase letter.', optional: true)
             ->param('number', null, new Boolean(), 'Whether passwords must include at least one number.', optional: true)
@@ -64,7 +64,7 @@ class Update extends Action
     }
 
     public function action(
-        ?int $minLength,
+        ?int $min,
         ?bool $uppercase,
         ?bool $lowercase,
         ?bool $number,
@@ -77,15 +77,15 @@ class Update extends Action
     ): void {
         $auths = $project->getAttribute('auths', []);
         $auths['passwordStrength'] = \array_merge([
-            'minLength' => 8,
+            'min' => 8,
             'uppercase' => false,
             'lowercase' => false,
             'number' => false,
             'symbols' => false,
         ], $auths['passwordStrength'] ?? []);
 
-        if ($minLength !== null) {
-            $auths['passwordStrength']['minLength'] = $minLength;
+        if ($min !== null) {
+            $auths['passwordStrength']['min'] = $min;
         }
         if ($uppercase !== null) {
             $auths['passwordStrength']['uppercase'] = $uppercase;

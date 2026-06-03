@@ -2916,7 +2916,7 @@ class ProjectsConsoleClientTest extends Scope
             'x-appwrite-project' => $id,
             'x-appwrite-mode' => 'admin',
         ], $this->getHeaders()), [
-            'minLength' => 7,
+            'min' => 7,
         ]);
 
         $this->assertEquals(400, $response['headers']['status-code']);
@@ -2926,7 +2926,7 @@ class ProjectsConsoleClientTest extends Scope
             'x-appwrite-project' => $id,
             'x-appwrite-mode' => 'admin',
         ], $this->getHeaders()), [
-            'minLength' => 12,
+            'min' => 12,
         ]);
 
         $this->assertEquals(200, $response['headers']['status-code']);
@@ -2943,7 +2943,7 @@ class ProjectsConsoleClientTest extends Scope
         ]);
 
         $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertEquals(12, $response['body']['minLength']);
+        $this->assertEquals(12, $response['body']['min']);
         $this->assertEquals(true, $response['body']['uppercase']);
         $this->assertEquals(true, $response['body']['lowercase']);
         $this->assertEquals(true, $response['body']['number']);
@@ -3062,7 +3062,7 @@ class ProjectsConsoleClientTest extends Scope
             'x-appwrite-project' => $id,
             'x-appwrite-mode' => 'admin',
         ], $this->getHeaders()), [
-            'minLength' => 8,
+            'min' => 8,
             'uppercase' => false,
             'lowercase' => false,
             'number' => false,
@@ -3070,7 +3070,7 @@ class ProjectsConsoleClientTest extends Scope
         ]);
 
         $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertEquals(8, $response['body']['minLength']);
+        $this->assertEquals(8, $response['body']['min']);
         $this->assertEquals(false, $response['body']['uppercase']);
         $this->assertEquals(false, $response['body']['lowercase']);
         $this->assertEquals(false, $response['body']['number']);

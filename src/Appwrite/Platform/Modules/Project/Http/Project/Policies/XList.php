@@ -104,7 +104,7 @@ class XList extends Action
                 'total' => $auths['passwordHistory'] ?? 0,
             ]),
             new Document(\array_merge([
-                'minLength' => 8,
+                'min' => 8,
                 'uppercase' => false,
                 'lowercase' => false,
                 'number' => false,

@@ -122,7 +122,7 @@ class ProjectConsoleClientTest extends Scope
         $this->assertArrayNotHasKey('authLimit', $response['body']);
         $this->assertArrayNotHasKey('authSessionsLimit', $response['body']);
         $this->assertArrayNotHasKey('authPasswordHistory', $response['body']);
-        $this->assertArrayNotHasKey('authPasswordStrengthMinLength', $response['body']);
+        $this->assertArrayNotHasKey('authPasswordStrengthMin', $response['body']);
         $this->assertArrayNotHasKey('authPasswordStrengthRequireUppercase', $response['body']);
         $this->assertArrayNotHasKey('authPasswordStrengthRequireLowercase', $response['body']);
         $this->assertArrayNotHasKey('authPasswordStrengthRequireNumber', $response['body']);

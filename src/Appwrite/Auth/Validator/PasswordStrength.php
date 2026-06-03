@@ -9,7 +9,7 @@ namespace Appwrite\Auth\Validator;
  */
 class PasswordStrength extends Password
 {
-    protected int $minLength;
+    protected int $min;
     protected bool $uppercase;
     protected bool $lowercase;
     protected bool $number;
@@ -19,7 +19,7 @@ class PasswordStrength extends Password
     {
         parent::__construct($allowEmpty);
 
-        $this->minLength = $policy['minLength'] ?? 8;
+        $this->min = $policy['min'] ?? 8;
         $this->uppercase = $policy['uppercase'] ?? false;
         $this->lowercase = $policy['lowercase'] ?? false;
         $this->number = $policy['number'] ?? false;
@@ -29,7 +29,7 @@ class PasswordStrength extends Password
     public function getDescription(): string
     {
         $requirements = [
-            'between ' . $this->minLength . ' and 256 characters long',
+            'between ' . $this->min . ' and 256 characters long',
         ];
 
         if ($this->uppercase) {
@@ -64,7 +64,7 @@ class PasswordStrength extends Password
             return true;
         }
 
-        if (\strlen($value) < $this->minLength) {
+        if (\strlen($value) < $this->min) {
             return false;
         }
 

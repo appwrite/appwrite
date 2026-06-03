@@ -32,7 +32,7 @@ class PoliciesPasswordStrengthIntegrationTest extends Scope
         ];
 
         $response = $this->client->call(Client::METHOD_PATCH, '/project/policies/password-strength', $serverHeaders, [
-            'minLength' => 12,
+            'min' => 12,
             'uppercase' => true,
             'lowercase' => true,
             'number' => true,
@@ -40,7 +40,7 @@ class PoliciesPasswordStrengthIntegrationTest extends Scope
         ]);
 
         $this->assertSame(200, $response['headers']['status-code']);
-        $this->assertSame(12, $response['body']['minLength']);
+        $this->assertSame(12, $response['body']['min']);
         $this->assertTrue($response['body']['uppercase']);
         $this->assertTrue($response['body']['lowercase']);
         $this->assertTrue($response['body']['number']);
@@ -65,7 +65,7 @@ class PoliciesPasswordStrengthIntegrationTest extends Scope
         $this->assertSame(201, $valid['headers']['status-code']);
 
         $response = $this->client->call(Client::METHOD_PATCH, '/project/policies/password-strength', $serverHeaders, [
-            'minLength' => 8,
+            'min' => 8,
             'uppercase' => false,
             'lowercase' => false,
             'number' => false,

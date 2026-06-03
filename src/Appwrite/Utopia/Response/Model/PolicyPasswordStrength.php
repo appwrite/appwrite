@@ -15,7 +15,7 @@ class PolicyPasswordStrength extends PolicyBase
         parent::__construct();
 
         $this
-            ->addRule('minLength', [
+            ->addRule('min', [
                 'type' => self::TYPE_INTEGER,
                 'description' => 'Minimum password length required for user passwords.',
                 'default' => 8,
