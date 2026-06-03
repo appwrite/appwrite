@@ -406,7 +406,7 @@ jobs:
 
   e2e_service:
     name: Tests / E2E / ${{ matrix.database }} (${{ matrix.mode }}) / ${{ matrix.service }}
-    runs-on: ${{ matrix.runner || format('runs-on={0}/runner=4cpu-linux-x64/volume=120g/spot=false', github.run_id) }}
+    runs-on: ${{ matrix.runner || format('runs-on={0}/runner=4cpu-linux-x64/volume=120g/spot=false/extras=otel', github.run_id) }}
     needs: [build, matrix]
     permissions:
       contents: read
@@ -447,11 +447,11 @@ jobs:
         ]
         include:
           - service: Databases
-            runner: runs-on=${{ github.run_id }}/runner=8cpu-linux-x64/volume=120g/spot=false
+            runner: runs-on=${{ github.run_id }}/runner=8cpu-linux-x64/volume=120g/spot=false/extras=otel
             paratest_processes: 3
             timeout_minutes: 30
           - service: TablesDB
-            runner: runs-on=${{ github.run_id }}/runner=8cpu-linux-x64/volume=120g/spot=false
+            runner: runs-on=${{ github.run_id }}/runner=8cpu-linux-x64/volume=120g/spot=false/extras=otel
             paratest_processes: 3
             timeout_minutes: 30
           - service: Migrations
