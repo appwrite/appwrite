@@ -640,41 +640,27 @@ final class RuntimeQueryTest extends TestCase
     // TYPE_SELECT tests - select("*") means "listen to all events"
     public function testSelectAllIsAllowed(): void
     {
-        $query = Query::select(['*']);
+        $query = Query::select('*');
         $this->assertTrue(RuntimeQuery::isSelectAll($query));
-    }
-
-    public function testSelectSpecificFieldsNotAllowed(): void
-    {
-        $query = Query::select(['name', 'age']);
-        $this->assertFalse(RuntimeQuery::isSelectAll($query));
     }
 
     public function testSelectSingleFieldNotAllowed(): void
     {
-        $query = Query::select(['name']);
+        $query = Query::select('name');
         $this->assertFalse(RuntimeQuery::isSelectAll($query));
     }
 
     public function testValidateSelectQueryWithWildcard(): void
     {
-        $query = Query::select(['*']);
+        $query = Query::select('*');
         // Should not throw
         RuntimeQuery::validateSelectQuery($query);
         $this->addToAssertionCount(1);
     }
 
-    public function testValidateSelectQueryWithSpecificFields(): void
-    {
-        $query = Query::select(['name', 'age']);
-        $this->expectException(\InvalidArgumentException::class);
-        $this->expectExceptionMessage('Only select("*") is allowed in Realtime queries');
-        RuntimeQuery::validateSelectQuery($query);
-    }
-
     public function testValidateSelectQueryWithSingleField(): void
     {
-        $query = Query::select(['name']);
+        $query = Query::select('name');
         $this->expectException(\InvalidArgumentException::class);
         $this->expectExceptionMessage('Only select("*") is allowed in Realtime queries');
         RuntimeQuery::validateSelectQuery($query);
@@ -702,7 +688,7 @@ final class RuntimeQueryTest extends TestCase
     // Filter tests with select("*")
     public function testFilterWithSelectAllReturnsPayload(): void
     {
-        $query = Query::select(['*']);
+        $query = Query::select('*');
         $payload = ['name' => 'John', 'age' => 30];
         $result = $this->compileAndFilter([$query], $payload);
         $this->assertSame($payload, $result);
@@ -712,7 +698,7 @@ final class RuntimeQueryTest extends TestCase
     {
         // If select("*") is present, it should return payload regardless of other queries
         $queries = [
-            Query::select(['*']),
+            Query::select('*'),
             Query::equal('name', ['Jane']), // This would normally fail
         ];
         $payload = ['name' => 'John', 'age' => 30];
@@ -723,7 +709,7 @@ final class RuntimeQueryTest extends TestCase
 
     public function testFilterWithSelectAllOnEmptyPayload(): void
     {
-        $query = Query::select(['*']);
+        $query = Query::select('*');
         $payload = [];
         $result = $this->compileAndFilter([$query], $payload);
         $this->assertSame($payload, $result);
