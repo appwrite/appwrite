@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "6d9e9def89afce07a6a1218de9eb128e",
+    "content-hash": "3741a6417a090af9c7dae4c76a15d83f",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -4657,16 +4657,16 @@
         },
         {
             "name": "utopia-php/migration",
-            "version": "dev-feat/appwrite-cursor-sequence",
+            "version": "1.12.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/migration.git",
-                "reference": "0e665fbc38aace2a74d954d4bdb3ebf1fe717c06"
+                "reference": "3ee6e12af256726bddc3a0402c94535132abecc6"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/migration/zipball/0e665fbc38aace2a74d954d4bdb3ebf1fe717c06",
-                "reference": "0e665fbc38aace2a74d954d4bdb3ebf1fe717c06",
+                "url": "https://api.github.com/repos/utopia-php/migration/zipball/3ee6e12af256726bddc3a0402c94535132abecc6",
+                "reference": "3ee6e12af256726bddc3a0402c94535132abecc6",
                 "shasum": ""
             },
             "require": {
@@ -4706,9 +4706,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/migration/issues",
-                "source": "https://github.com/utopia-php/migration/tree/feat/appwrite-cursor-sequence"
+                "source": "https://github.com/utopia-php/migration/tree/1.12.0"
             },
-            "time": "2026-06-02T15:37:29+00:00"
+            "time": "2026-05-14T07:30:09+00:00"
         },
         {
             "name": "utopia-php/mongo",
@@ -8555,19 +8555,12 @@
             "version": "dev-feat/explain",
             "alias": "5.9.0",
             "alias_normalized": "5.9.0.0"
-        },
-        {
-            "package": "utopia-php/migration",
-            "version": "dev-feat/appwrite-cursor-sequence",
-            "alias": "1.12.0",
-            "alias_normalized": "1.12.0.0"
         }
     ],
     "minimum-stability": "dev",
     "stability-flags": {
         "utopia-php/database": 20,
-        "utopia-php/http": 5,
-        "utopia-php/migration": 20
+        "utopia-php/http": 5
     },
     "prefer-stable": true,
     "prefer-lowest": false,
