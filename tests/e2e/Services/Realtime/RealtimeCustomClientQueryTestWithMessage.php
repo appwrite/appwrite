@@ -755,7 +755,7 @@ class RealtimeCustomClientQueryTestWithMessage extends Scope
                 'x-appwrite-key' => $this->getProject()['apiKey'],
             ]));
             $this->assertEquals('available', $response['body']['status']);
-        }, 120000, 500);
+        }, 30000, 250);
 
         $targetDocumentId = ID::unique();
         $otherDocumentId = ID::unique();
