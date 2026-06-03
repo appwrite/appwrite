@@ -52,7 +52,6 @@ class Http extends Service
         // Runtimes
         $this->addAction(ListRuntimes::getName(), new ListRuntimes());
 
-
         // Deployments
         $this->addAction(CreateDeployment::getName(), new CreateDeployment());
         $this->addAction(CreateTemplateDeployment::getName(), new CreateTemplateDeployment());
