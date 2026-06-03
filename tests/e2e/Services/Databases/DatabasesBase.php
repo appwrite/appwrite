@@ -756,6 +756,73 @@ trait DatabasesBase
         return [$this->getRecordResource() => $documents['body'][$this->getRecordResource()], 'databaseId' => $databaseId];
     }
 
+    public function testExplain(): void
+    {
+        $data = $this->setupDocuments();
+        $databaseId = $data['databaseId'];
+        $containerId = $data['moviesId'];
+
+        $response = $this->client->call(Client::METHOD_GET, $this->getRecordUrl($databaseId, $containerId) . '/explain', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'queries' => [
+                Query::orderAsc('releaseYear')->toString(),
+                Query::limit(10)->toString(),
+            ],
+        ]);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertIsArray($response['body']['queries']);
+        $this->assertNotEmpty($response['body']['queries']);
+
+        $first = $response['body']['queries'][0];
+        $this->assertEquals('find', $first['purpose']);
+        $this->assertEquals($containerId, $first['context']['collection']);
+
+        // The plan exposes normalized metrics plus the sanitized raw tree.
+        $this->assertArrayHasKey('rowsScanned', $first['plan']);
+        $this->assertArrayHasKey('indexUsed', $first['plan']);
+        $this->assertArrayHasKey('estimatedCost', $first['plan']);
+        $this->assertArrayHasKey('tree', $first['plan']);
+
+        // The backing engine must not be exposed.
+        $this->assertArrayNotHasKey('engine', $first['plan']);
+
+        // listRows/listDocuments fires find() + count() (for total) by default — explain mirrors it.
+        $purposes = array_column($response['body']['queries'], 'purpose');
+        $this->assertContains('find', $purposes);
+        $this->assertContains('count', $purposes);
+
+        // Internal storage identifiers must never leak into the plan — including
+        // the raw tree, which embeds physical table/namespace references.
+        $rawPlan = json_encode($response['body']['queries']);
+        $this->assertStringNotContainsString('_perms', $rawPlan);
+        $this->assertStringNotContainsString('__metadata', $rawPlan);
+        $this->assertStringNotContainsString('_collection_', $rawPlan);
+        $this->assertDoesNotMatchRegularExpression('/_\d+_[\w-]{16,}/', $rawPlan);
+    }
+
+    public function testExplainSkipsCountWhenTotalIsFalse(): void
+    {
+        $data = $this->setupDocuments();
+        $databaseId = $data['databaseId'];
+        $containerId = $data['moviesId'];
+
+        $response = $this->client->call(Client::METHOD_GET, $this->getRecordUrl($databaseId, $containerId) . '/explain', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'queries' => [Query::limit(10)->toString()],
+            'total' => false,
+        ]);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $purposes = array_column($response['body']['queries'], 'purpose');
+        $this->assertContains('find', $purposes);
+        $this->assertNotContains('count', $purposes);
+    }
+
     public function testCreateDatabase(): void
     {
         /**
