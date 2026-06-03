@@ -64,6 +64,7 @@ class Get extends Action
             ->param('collectionId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Collection ID.', false, ['dbForProject'])
             ->param('queries', [], new ArrayList(new Text(APP_LIMIT_ARRAY_ELEMENT_SIZE), APP_LIMIT_ARRAY_PARAMS_SIZE), 'Array of query strings generated using the Query class provided by the SDK. Same shape as listDocuments.', true)
             ->param('total', true, new Boolean(true), 'When true, the explain captures the COUNT(*) call listDocuments fires for the total field as a second entry. Mirrors listDocuments default behavior.', true)
+            ->param('tree', false, new Boolean(true), 'When true, populate the sanitized backend-specific query plan tree. Defaults to false so the tree field is null.', true)
             ->inject('response')
             ->inject('dbForProject')
             ->inject('user')
@@ -81,6 +82,7 @@ class Get extends Action
         string $collectionId,
         array $queries,
         bool $includeTotal,
+        bool $includeTree,
         UtopiaResponse $response,
         Database $dbForProject,
         User $user,
@@ -145,6 +147,7 @@ class Get extends Action
             $collection,
             $dbForProject,
             $authorization,
+            $includeTree,
         );
 
         $response->dynamic(new Document([
@@ -162,6 +165,7 @@ class Get extends Action
         Document $collection,
         Database $dbForProject,
         Authorization $authorization,
+        bool $includeTree,
     ): array {
         $databaseInternalId = (string) $database->getSequence();
         $databaseCollectionsTable = 'database_'.$databaseInternalId;
@@ -180,7 +184,7 @@ class Get extends Action
             $output[] = new Document([
                 'purpose' => $entry['purpose'] ?? 'find',
                 'context' => $this->normalizeContext($context),
-                'plan' => $this->normalizePlan($entry['plan'] ?? []),
+                'plan' => $this->normalizePlan($entry['plan'] ?? [], $includeTree),
             ]);
         }
 
@@ -215,19 +219,17 @@ class Get extends Action
     /**
      * Project the library plan onto the fixed QueryPlanDetail shape.
      *
-     * The library plan also carries backend identity, which is dropped so the
-     * response never advertises the backing database. The sanitized `tree` is
-     * kept — it holds the access-path detail customers need for deep diagnosis.
+     * The sanitized `tree` is only populated when requested for deep diagnosis.
      *
      * @param  array<string, mixed>  $plan
      * @return array<string, mixed>
      */
-    protected function normalizePlan(array $plan): array
+    protected function normalizePlan(array $plan, bool $includeTree): array
     {
         $indexUsed = isset($plan['indexUsed']) ? $this->scrubPhysicalIdentifiers($plan['indexUsed']) : null;
         $tree = isset($plan['tree']) ? $this->scrubPhysicalIdentifiers($plan['tree']) : null;
 
-        return [
+        $normalized = [
             'metrics' => [
                 'estimatedRecordsScanned' => $plan['rowsScanned'] ?? null,
                 'recordsReturned' => $plan['rowsReturned'] ?? null,
@@ -243,9 +245,11 @@ class Get extends Action
             'estimatedCost' => $plan['estimatedCost'] ?? null,
             'rowsReturned' => $plan['rowsReturned'] ?? null,
             'executionTime' => $plan['executionTime'] ?? null,
-            'tree' => $tree,
+            'tree' => $includeTree ? $tree : null,
             'error' => isset($plan['error']) ? $this->scrubPhysicalIdentifiers($plan['error']) : null,
         ];
+
+        return $normalized;
     }
 
     protected function inferAccessType(mixed $indexUsed, mixed $tree): string
@@ -319,6 +323,15 @@ class Get extends Action
                     continue;
                 }
 
+                if (\is_string($key) && \is_string($value)) {
+                    $masked = $this->maskPlanTreeValue($key, $value);
+                    if ($masked !== null) {
+                        $result[$key] = $masked;
+
+                        continue;
+                    }
+                }
+
                 $result[$key] = $this->scrubPhysicalIdentifiers($value);
             }
 
@@ -337,6 +350,9 @@ class Get extends Action
             '/(?:_\d+_)?database_[\w-]+_collection_[\w-]+_perms\b/i' => '<permissionCheck>',
             '/(?:_\d+_)?database_[\w-]+_collection_[\w-]+_permission\b/i' => '<permissionCheck>',
             '/(?:_\d+_)?database_[\w-]+__metadata\b/i' => '<metadata>',
+            '/\b[a-f0-9]{32}_[A-Za-z][\w-]*\b/i' => '<index>',
+            '/_index_[A-Za-z][\w-]*\b/i' => '<index>',
+            '/_\d+_\d+\b/i' => '<collection>',
             '/_\d+_[\w-]{16,}_[\w-]{16,}\b/i' => '<collection>',
             '/_[\w-]{16,}_[\w-]{16,}\b/i' => '<collection>',
             '/_\d+_[\w-]{16,}_(?:permission|perms)\b/i' => '<permissionCheck>',
@@ -355,6 +371,16 @@ class Get extends Action
         }
 
         return $node;
+    }
+
+    protected function maskPlanTreeValue(string $key, string $value): ?string
+    {
+        return match ($key) {
+            'namespace' => \preg_replace('/^[^.]+\\./', '', $this->scrubPhysicalIdentifiers($value)) ?? $value,
+            'Relation Name' => '<collection>',
+            'Index Name' => '<index>',
+            default => null,
+        };
     }
 
     protected function shouldDropPlanTreeKey(string $key): bool

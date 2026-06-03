@@ -25,12 +25,19 @@ trait DatabasesBase
      * Static caches for test data - keyed by project ID to support parallel test runs
      */
     private static array $databaseCache = [];
+
     private static array $collectionCache = [];
+
     private static array $attributesCache = [];
+
     private static array $indexesCache = [];
+
     private static array $documentsCache = [];
+
     private static array $oneToOneCache = [];
+
     private static array $oneToManyCache = [];
+
     private static array $fulltextDocsCache = [];
 
     /**
@@ -48,41 +55,38 @@ trait DatabasesBase
     protected function setupDatabase(): array
     {
         $cacheKey = $this->getCacheKey();
-        if (!empty(self::$databaseCache[$cacheKey])) {
+        if (! empty(self::$databaseCache[$cacheKey])) {
             return self::$databaseCache[$cacheKey];
         }
 
         $database = $this->client->call(Client::METHOD_POST, $this->getApiBasePath(), [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
+            'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
             'databaseId' => ID::unique(),
-            'name' => 'Test Database'
+            'name' => 'Test Database',
         ]);
 
         $this->assertNotEmpty($database['body']['$id']);
         $this->assertEquals(201, $database['headers']['status-code']);
 
         self::$databaseCache[$cacheKey] = ['databaseId' => $database['body']['$id']];
+
         return self::$databaseCache[$cacheKey];
     }
 
     /**
      * Helper to create an attribute on a collection.
      *
-     * @param string $databaseId
-     * @param string $collectionId
-     * @param string $type
-     * @param array<string, mixed> $payload
-     *
+     * @param  array<string, mixed>  $payload
      * @return array<string, mixed>
      */
     protected function createAttribute(string $databaseId, string $collectionId, string $type, array $payload): array
     {
         return $this->client->call(
             Client::METHOD_POST,
-            $this->getSchemaUrl($databaseId, $collectionId) . '/' . $type,
+            $this->getSchemaUrl($databaseId, $collectionId).'/'.$type,
             [
                 'content-type' => 'application/json',
                 'x-appwrite-project' => $this->getProject()['$id'],
@@ -92,7 +96,6 @@ trait DatabasesBase
         );
     }
 
-
     /**
      * Setup: Create database and collections
      * Uses static caching to avoid recreating resources
@@ -100,7 +103,7 @@ trait DatabasesBase
     protected function setupCollection(): array
     {
         $cacheKey = $this->getCacheKey();
-        if (!empty(self::$collectionCache[$cacheKey])) {
+        if (! empty(self::$collectionCache[$cacheKey])) {
             return self::$collectionCache[$cacheKey];
         }
 
@@ -110,7 +113,7 @@ trait DatabasesBase
         $movies = $this->client->call(Client::METHOD_POST, $this->getContainerUrl($databaseId), array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
+            'x-appwrite-key' => $this->getProject()['apiKey'],
         ]), [
             $this->getContainerIdParam() => ID::unique(),
             'name' => 'Movies',
@@ -125,7 +128,7 @@ trait DatabasesBase
         $actors = $this->client->call(Client::METHOD_POST, $this->getContainerUrl($databaseId), array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
+            'x-appwrite-key' => $this->getProject()['apiKey'],
         ]), [
             $this->getContainerIdParam() => ID::unique(),
             'name' => 'Actors',
@@ -140,7 +143,7 @@ trait DatabasesBase
         $books = $this->client->call(Client::METHOD_POST, $this->getContainerUrl($databaseId), array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
+            'x-appwrite-key' => $this->getProject()['apiKey'],
         ]), [
             $this->getContainerIdParam() => ID::unique(),
             'name' => 'Books',
@@ -158,6 +161,7 @@ trait DatabasesBase
             'actorsId' => $actors['body']['$id'],
             'booksId' => $books['body']['$id'],
         ];
+
         return self::$collectionCache[$cacheKey];
     }
 
@@ -168,15 +172,16 @@ trait DatabasesBase
     protected function setupAttributes(): array
     {
         $cacheKey = $this->getCacheKey();
-        if (!empty(self::$attributesCache[$cacheKey])) {
+        if (! empty(self::$attributesCache[$cacheKey])) {
             return self::$attributesCache[$cacheKey];
         }
 
         $data = $this->setupCollection();
         $databaseId = $data['databaseId'];
 
-        if (!$this->getSupportForAttributes()) {
+        if (! $this->getSupportForAttributes()) {
             self::$attributesCache[$cacheKey] = $data;
+
             return self::$attributesCache[$cacheKey];
         }
         $title = $this->createAttribute($databaseId, $data['moviesId'], 'string', [
@@ -224,22 +229,22 @@ trait DatabasesBase
             'required' => false,
         ]);
 
-        $relationship = $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $data['moviesId']) . '/relationship', array_merge([
+        $relationship = $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $data['moviesId']).'/relationship', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
+            'x-appwrite-key' => $this->getProject()['apiKey'],
         ]), [
             $this->getRelatedIdParam() => $data['actorsId'],
             'type' => 'oneToMany',
             'twoWay' => true,
             'key' => 'starringActors',
-            'twoWayKey' => 'movie'
+            'twoWayKey' => 'movie',
         ]);
 
-        $integers = $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $data['moviesId']) . '/integer', array_merge([
+        $integers = $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $data['moviesId']).'/integer', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
+            'x-appwrite-key' => $this->getProject()['apiKey'],
         ]), [
             'key' => 'integers',
             'required' => false,
@@ -259,20 +264,20 @@ trait DatabasesBase
         $this->assertEquals(202, $integers['headers']['status-code']);
 
         // Books collection attributes (for fulltext search tests)
-        $bookTitle = $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $data['booksId']) . '/string', array_merge([
+        $bookTitle = $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $data['booksId']).'/string', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
+            'x-appwrite-key' => $this->getProject()['apiKey'],
         ]), [
             'key' => 'title',
             'size' => 256,
             'required' => true,
         ]);
 
-        $bookDescription = $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $data['booksId']) . '/string', array_merge([
+        $bookDescription = $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $data['booksId']).'/string', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
+            'x-appwrite-key' => $this->getProject()['apiKey'],
         ]), [
             'key' => 'description',
             'size' => 2048,
@@ -300,7 +305,7 @@ trait DatabasesBase
     protected function setupIndexes(): array
     {
         $cacheKey = $this->getCacheKey();
-        if (!empty(self::$indexesCache[$cacheKey])) {
+        if (! empty(self::$indexesCache[$cacheKey])) {
             return self::$indexesCache[$cacheKey];
         }
 
@@ -310,7 +315,7 @@ trait DatabasesBase
         $titleIndex = $this->client->call(Client::METHOD_POST, $this->getIndexUrl($databaseId, $data['moviesId']), array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
+            'x-appwrite-key' => $this->getProject()['apiKey'],
         ]), [
             'key' => 'titleIndex',
             'type' => 'fulltext',
@@ -320,7 +325,7 @@ trait DatabasesBase
         $releaseYearIndex = $this->client->call(Client::METHOD_POST, $this->getIndexUrl($databaseId, $data['moviesId']), array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
+            'x-appwrite-key' => $this->getProject()['apiKey'],
         ]), [
             'key' => 'releaseYear',
             'type' => 'key',
@@ -330,7 +335,7 @@ trait DatabasesBase
         $releaseWithDate1 = $this->client->call(Client::METHOD_POST, $this->getIndexUrl($databaseId, $data['moviesId']), array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
+            'x-appwrite-key' => $this->getProject()['apiKey'],
         ]), [
             'key' => 'releaseYearDated',
             'type' => 'key',
@@ -340,7 +345,7 @@ trait DatabasesBase
         $releaseWithDate2 = $this->client->call(Client::METHOD_POST, $this->getIndexUrl($databaseId, $data['moviesId']), array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
+            'x-appwrite-key' => $this->getProject()['apiKey'],
         ]), [
             'key' => 'birthDay',
             'type' => 'key',
@@ -351,7 +356,7 @@ trait DatabasesBase
         $booksFtsIndex = $this->client->call(Client::METHOD_POST, $this->getIndexUrl($databaseId, $data['booksId']), array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
+            'x-appwrite-key' => $this->getProject()['apiKey'],
         ]), [
             'key' => 'fts_description',
             'type' => Database::INDEX_FULLTEXT,
@@ -381,7 +386,7 @@ trait DatabasesBase
     protected function setupDocuments(): array
     {
         $cacheKey = $this->getCacheKey();
-        if (!empty(self::$documentsCache[$cacheKey])) {
+        if (! empty(self::$documentsCache[$cacheKey])) {
             return self::$documentsCache[$cacheKey];
         }
 
@@ -400,13 +405,13 @@ trait DatabasesBase
                 'actors' => [
                     'Chris Evans',
                     'Samuel Jackson',
-                ]
+                ],
             ],
             'permissions' => [
                 Permission::read(Role::user($this->getUser()['$id'])),
                 Permission::update(Role::user($this->getUser()['$id'])),
                 Permission::delete(Role::user($this->getUser()['$id'])),
-            ]
+            ],
         ]);
 
         $document2 = $this->client->call(Client::METHOD_POST, $this->getRecordUrl($databaseId, $data['moviesId']), array_merge([
@@ -423,13 +428,13 @@ trait DatabasesBase
                     'Zendaya Maree Stoermer',
                     'Samuel Jackson',
                 ],
-                'integers' => [50, 60]
+                'integers' => [50, 60],
             ],
             'permissions' => [
                 Permission::read(Role::user($this->getUser()['$id'])),
                 Permission::update(Role::user($this->getUser()['$id'])),
                 Permission::delete(Role::user($this->getUser()['$id'])),
-            ]
+            ],
         ]);
 
         $document3 = $this->client->call(Client::METHOD_POST, $this->getRecordUrl($databaseId, $data['moviesId']), array_merge([
@@ -446,13 +451,13 @@ trait DatabasesBase
                     'Tom Holland',
                     'Zendaya Maree Stoermer',
                 ],
-                'integers' => [50]
+                'integers' => [50],
             ],
             'permissions' => [
                 Permission::read(Role::user($this->getUser()['$id'])),
                 Permission::update(Role::user($this->getUser()['$id'])),
                 Permission::delete(Role::user($this->getUser()['$id'])),
-            ]
+            ],
         ]);
 
         $this->assertEquals(201, $document1['headers']['status-code']);
@@ -466,6 +471,7 @@ trait DatabasesBase
         ];
 
         self::$documentsCache[$cacheKey] = $data;
+
         return self::$documentsCache[$cacheKey];
     }
 
@@ -476,7 +482,7 @@ trait DatabasesBase
     protected function setupOneToOneRelationship(): array
     {
         $cacheKey = $this->getCacheKey();
-        if (!empty(self::$oneToOneCache[$cacheKey])) {
+        if (! empty(self::$oneToOneCache[$cacheKey])) {
             return self::$oneToOneCache[$cacheKey];
         }
 
@@ -486,7 +492,7 @@ trait DatabasesBase
         $person = $this->client->call(Client::METHOD_POST, $this->getContainerUrl($databaseId), array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
+            'x-appwrite-key' => $this->getProject()['apiKey'],
         ]), [
             $this->getContainerIdParam() => ID::unique(),
             'name' => 'person',
@@ -504,7 +510,7 @@ trait DatabasesBase
         $library = $this->client->call(Client::METHOD_POST, $this->getContainerUrl($databaseId), array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
+            'x-appwrite-key' => $this->getProject()['apiKey'],
         ]), [
             $this->getContainerIdParam() => ID::unique(),
             'name' => 'library',
@@ -518,10 +524,10 @@ trait DatabasesBase
 
         $this->assertEquals(201, $library['headers']['status-code']);
 
-        $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $person['body']['$id']) . '/string', array_merge([
+        $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $person['body']['$id']).'/string', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
+            'x-appwrite-key' => $this->getProject()['apiKey'],
         ]), [
             'key' => 'fullName',
             'size' => 255,
@@ -530,10 +536,10 @@ trait DatabasesBase
 
         $this->waitForAttribute($databaseId, $person['body']['$id'], 'fullName');
 
-        $libraryName = $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $library['body']['$id']) . '/string', array_merge([
+        $libraryName = $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $library['body']['$id']).'/string', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
+            'x-appwrite-key' => $this->getProject()['apiKey'],
         ]), [
             'key' => 'libraryName',
             'size' => 255,
@@ -548,6 +554,7 @@ trait DatabasesBase
             'personCollection' => $person['body']['$id'],
             'libraryCollection' => $library['body']['$id'],
         ];
+
         return self::$oneToOneCache[$cacheKey];
     }
 
@@ -558,7 +565,7 @@ trait DatabasesBase
     protected function setupOneToManyRelationship(): array
     {
         $cacheKey = $this->getCacheKey();
-        if (!empty(self::$oneToManyCache[$cacheKey])) {
+        if (! empty(self::$oneToManyCache[$cacheKey])) {
             return self::$oneToManyCache[$cacheKey];
         }
 
@@ -568,10 +575,10 @@ trait DatabasesBase
         $libraryCollection = $data['libraryCollection'];
 
         // One person can own several libraries
-        $relation = $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $personCollection) . '/relationship', array_merge([
+        $relation = $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $personCollection).'/relationship', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
+            'x-appwrite-key' => $this->getProject()['apiKey'],
         ]), [
             $this->getRelatedIdParam() => $libraryCollection,
             'type' => Database::RELATION_ONE_TO_MANY,
@@ -584,7 +591,7 @@ trait DatabasesBase
         if ($relation['headers']['status-code'] === 409) {
             // Relationship already exists, just wait for it to be available
         } else {
-            $this->assertEquals(202, $relation['headers']['status-code'], 'Relationship creation failed: ' . \json_encode($relation['body'] ?? 'no body'));
+            $this->assertEquals(202, $relation['headers']['status-code'], 'Relationship creation failed: '.\json_encode($relation['body'] ?? 'no body'));
         }
 
         // Wait for both the relationship attribute and its twoWayKey to be available
@@ -620,17 +627,17 @@ trait DatabasesBase
                             Permission::delete(Role::any()),
                         ],
                         'libraryName' => 'Library 11',
-                    ]
+                    ],
                 ],
             ],
             'permissions' => [
                 Permission::read(Role::any()),
                 Permission::update(Role::any()),
                 Permission::delete(Role::any()),
-            ]
+            ],
         ]);
 
-        $this->assertEquals(201, $person['headers']['status-code'], 'Person with libraries creation failed: ' . \json_encode($person['body'] ?? 'no body'));
+        $this->assertEquals(201, $person['headers']['status-code'], 'Person with libraries creation failed: '.\json_encode($person['body'] ?? 'no body'));
 
         // Create two person documents with null fullName for isNull query testing
         $nullPerson1 = $this->client->call(Client::METHOD_POST, $this->getRecordUrl($databaseId, $personCollection), $serverHeaders, [
@@ -642,9 +649,9 @@ trait DatabasesBase
                 Permission::read(Role::any()),
                 Permission::update(Role::any()),
                 Permission::delete(Role::any()),
-            ]
+            ],
         ]);
-        $this->assertEquals(201, $nullPerson1['headers']['status-code'], 'Null person 1 creation failed: ' . \json_encode($nullPerson1['body'] ?? 'no body'));
+        $this->assertEquals(201, $nullPerson1['headers']['status-code'], 'Null person 1 creation failed: '.\json_encode($nullPerson1['body'] ?? 'no body'));
 
         $nullPerson2 = $this->client->call(Client::METHOD_POST, $this->getRecordUrl($databaseId, $personCollection), $serverHeaders, [
             $this->getRecordIdParam() => ID::unique(),
@@ -655,9 +662,9 @@ trait DatabasesBase
                 Permission::read(Role::any()),
                 Permission::update(Role::any()),
                 Permission::delete(Role::any()),
-            ]
+            ],
         ]);
-        $this->assertEquals(201, $nullPerson2['headers']['status-code'], 'Null person 2 creation failed: ' . \json_encode($nullPerson2['body'] ?? 'no body'));
+        $this->assertEquals(201, $nullPerson2['headers']['status-code'], 'Null person 2 creation failed: '.\json_encode($nullPerson2['body'] ?? 'no body'));
 
         // Update onDelete to cascade
         $this->client->call(Client::METHOD_PATCH, $this->getSchemaUrl($databaseId, $personCollection, 'relationship', 'libraries'), $serverHeaders, [
@@ -665,6 +672,7 @@ trait DatabasesBase
         ]);
 
         self::$oneToManyCache[$cacheKey] = ['databaseId' => $databaseId, 'personCollection' => $personCollection, 'libraryCollection' => $libraryCollection];
+
         return self::$oneToManyCache[$cacheKey];
     }
 
@@ -676,7 +684,7 @@ trait DatabasesBase
     protected function setupFulltextSearchDocuments(): array
     {
         $cacheKey = $this->getCacheKey();
-        if (!empty(self::$fulltextDocsCache[$cacheKey])) {
+        if (! empty(self::$fulltextDocsCache[$cacheKey])) {
             return self::$fulltextDocsCache[$cacheKey];
         }
 
@@ -687,7 +695,7 @@ trait DatabasesBase
         $row1 = $this->client->call(Client::METHOD_POST, $this->getRecordUrl($databaseId, $booksId), array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
+            'x-appwrite-key' => $this->getProject()['apiKey'],
         ]), [
             $this->getRecordIdParam() => ID::unique(),
             'data' => [
@@ -696,14 +704,14 @@ trait DatabasesBase
             ],
             'permissions' => [
                 Permission::read(Role::any()),
-            ]
+            ],
         ]);
         $this->assertEquals(201, $row1['headers']['status-code']);
 
         $row2 = $this->client->call(Client::METHOD_POST, $this->getRecordUrl($databaseId, $booksId), array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
+            'x-appwrite-key' => $this->getProject()['apiKey'],
         ]), [
             $this->getRecordIdParam() => ID::unique(),
             'data' => [
@@ -712,14 +720,14 @@ trait DatabasesBase
             ],
             'permissions' => [
                 Permission::read(Role::any()),
-            ]
+            ],
         ]);
         $this->assertEquals(201, $row2['headers']['status-code']);
 
         $row3 = $this->client->call(Client::METHOD_POST, $this->getRecordUrl($databaseId, $booksId), array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
+            'x-appwrite-key' => $this->getProject()['apiKey'],
         ]), [
             $this->getRecordIdParam() => ID::unique(),
             'data' => [
@@ -728,11 +736,12 @@ trait DatabasesBase
             ],
             'permissions' => [
                 Permission::read(Role::any()),
-            ]
+            ],
         ]);
         $this->assertEquals(201, $row3['headers']['status-code']);
 
         self::$fulltextDocsCache[$cacheKey] = $data;
+
         return self::$fulltextDocsCache[$cacheKey];
     }
 
@@ -762,7 +771,7 @@ trait DatabasesBase
         $databaseId = $data['databaseId'];
         $containerId = $data['moviesId'];
 
-        $response = $this->client->call(Client::METHOD_GET, $this->getRecordUrl($databaseId, $containerId) . '/explain', array_merge([
+        $response = $this->client->call(Client::METHOD_GET, $this->getRecordUrl($databaseId, $containerId).'/explain', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
@@ -776,15 +785,33 @@ trait DatabasesBase
         $this->assertIsArray($response['body']['queries']);
         $this->assertNotEmpty($response['body']['queries']);
 
+        $assertNoInternalIdentifiers = function (array $queries): void {
+            $rawPlan = json_encode($queries) ?: '';
+
+            $this->assertStringNotContainsString('_perms', $rawPlan);
+            $this->assertStringNotContainsString('__metadata', $rawPlan);
+            $this->assertStringNotContainsString('_collection_', $rawPlan);
+            $this->assertDoesNotMatchRegularExpression('/_\d+_[\w-]{16,}/', $rawPlan);
+            $this->assertDoesNotMatchRegularExpression('/_[\w-]{16,}_[\w-]{16,}/', $rawPlan);
+            $this->assertDoesNotMatchRegularExpression('/"_\d+_\d+"/', $rawPlan);
+            $this->assertStringNotContainsString('_index_', $rawPlan);
+            $this->assertStringNotContainsString('appwrite.<collection>', $rawPlan);
+            $this->assertStringNotContainsString('$db', $rawPlan);
+            $this->assertStringNotContainsString('serverInfo', $rawPlan);
+            $this->assertStringNotContainsString('serverParameters', $rawPlan);
+            $this->assertStringNotContainsString('$clusterTime', $rawPlan);
+            $this->assertStringNotContainsString('operationTime', $rawPlan);
+            $this->assertStringNotContainsString('slotBasedPlan', $rawPlan);
+        };
+
         $first = $response['body']['queries'][0];
         $this->assertEquals('find', $first['purpose']);
         $this->assertEquals($containerId, $first['context']['collection']);
 
-        // The plan exposes normalized metrics plus the sanitized raw tree.
         $this->assertArrayHasKey('rowsScanned', $first['plan']);
         $this->assertArrayHasKey('indexUsed', $first['plan']);
         $this->assertArrayHasKey('estimatedCost', $first['plan']);
-        $this->assertArrayHasKey('tree', $first['plan']);
+        $this->assertFalse(isset($first['plan']['tree']));
         $this->assertArrayHasKey('metrics', $first['plan']);
         $this->assertArrayHasKey('access', $first['plan']);
         $this->assertArrayHasKey('estimatedRecordsScanned', $first['plan']['metrics']);
@@ -795,28 +822,38 @@ trait DatabasesBase
         $this->assertArrayHasKey('index', $first['plan']['access']);
         $this->assertContains($first['plan']['access']['type'], ['index_scan', 'full_scan', 'unknown']);
 
-        // The backing engine must not be exposed.
-        $this->assertArrayNotHasKey('engine', $first['plan']);
+        foreach ($response['body']['queries'] as $entry) {
+            $this->assertArrayNotHasKey('engine', $entry['plan']);
+            $this->assertFalse(isset($entry['plan']['tree']));
+        }
 
         // listRows/listDocuments fires find() + count() (for total) by default — explain mirrors it.
         $purposes = array_column($response['body']['queries'], 'purpose');
         $this->assertContains('find', $purposes);
         $this->assertContains('count', $purposes);
+        // Internal storage identifiers must never leak into the plan.
+        $assertNoInternalIdentifiers($response['body']['queries']);
 
-        // Internal storage identifiers must never leak into the plan — including
-        // the raw tree, which embeds physical table/namespace references.
-        $rawPlan = json_encode($response['body']['queries']);
-        $this->assertStringNotContainsString('_perms', $rawPlan);
-        $this->assertStringNotContainsString('__metadata', $rawPlan);
-        $this->assertStringNotContainsString('_collection_', $rawPlan);
-        $this->assertDoesNotMatchRegularExpression('/_\d+_[\w-]{16,}/', $rawPlan);
-        $this->assertDoesNotMatchRegularExpression('/_[\w-]{16,}_[\w-]{16,}/', $rawPlan);
-        $this->assertStringNotContainsString('$db', $rawPlan);
-        $this->assertStringNotContainsString('serverInfo', $rawPlan);
-        $this->assertStringNotContainsString('serverParameters', $rawPlan);
-        $this->assertStringNotContainsString('$clusterTime', $rawPlan);
-        $this->assertStringNotContainsString('operationTime', $rawPlan);
-        $this->assertStringNotContainsString('slotBasedPlan', $rawPlan);
+        $treeResponse = $this->client->call(Client::METHOD_GET, $this->getRecordUrl($databaseId, $containerId).'/explain', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'queries' => [
+                Query::orderAsc('releaseYear')->toString(),
+                Query::limit(10)->toString(),
+            ],
+            'tree' => true,
+        ]);
+
+        $this->assertEquals(200, $treeResponse['headers']['status-code']);
+        $this->assertArrayHasKey('tree', $treeResponse['body']['queries'][0]['plan']);
+        $this->assertNotNull($treeResponse['body']['queries'][0]['plan']['tree']);
+
+        foreach ($treeResponse['body']['queries'] as $entry) {
+            $this->assertArrayNotHasKey('engine', $entry['plan']);
+        }
+
+        $assertNoInternalIdentifiers($treeResponse['body']['queries']);
     }
 
     public function testExplainSkipsCountWhenTotalIsFalse(): void
@@ -825,7 +862,7 @@ trait DatabasesBase
         $databaseId = $data['databaseId'];
         $containerId = $data['moviesId'];
 
-        $response = $this->client->call(Client::METHOD_GET, $this->getRecordUrl($databaseId, $containerId) . '/explain', array_merge([
+        $response = $this->client->call(Client::METHOD_GET, $this->getRecordUrl($databaseId, $containerId).'/explain', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
@@ -847,10 +884,10 @@ trait DatabasesBase
         $database = $this->client->call(Client::METHOD_POST, $this->getApiBasePath(), [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
+            'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
             'databaseId' => ID::unique(),
-            'name' => 'Test Database'
+            'name' => 'Test Database',
         ]);
 
         $this->assertNotEmpty($database['body']['$id']);
@@ -869,7 +906,7 @@ trait DatabasesBase
         $movies = $this->client->call(Client::METHOD_POST, $this->getContainerUrl($databaseId), array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
+            'x-appwrite-key' => $this->getProject()['apiKey'],
         ]), [
             $this->getContainerIdParam() => ID::unique(),
             'name' => 'Movies',
@@ -891,7 +928,7 @@ trait DatabasesBase
         $actors = $this->client->call(Client::METHOD_POST, $this->getContainerUrl($databaseId), array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
+            'x-appwrite-key' => $this->getProject()['apiKey'],
         ]), [
             $this->getContainerIdParam() => ID::unique(),
             'name' => 'Actors',
@@ -910,6 +947,7 @@ trait DatabasesBase
         if ($this->getSide() === 'server') {
             // Server side can't get past the invalid key check anyway
             $this->expectNotToPerformAssertions();
+
             return;
         }
 
@@ -917,7 +955,7 @@ trait DatabasesBase
 
         $response = $this->client->call(
             Client::METHOD_GET,
-            $this->getApiBasePath() . '/console/' . $this->getContainerResource() . '/' . $data['moviesId'] . '/' . $this->getRecordResource(),
+            $this->getApiBasePath().'/console/'.$this->getContainerResource().'/'.$data['moviesId'].'/'.$this->getRecordResource(),
             array_merge([
                 'content-type' => 'application/json',
                 'x-appwrite-project' => 'console',
@@ -933,7 +971,7 @@ trait DatabasesBase
 
         $response = $this->client->call(
             Client::METHOD_GET,
-            $this->getApiBasePath() . '/console/' . $this->getContainerResource() . '/' . $data['moviesId'] . '/' . $this->getRecordResource(),
+            $this->getApiBasePath().'/console/'.$this->getContainerResource().'/'.$data['moviesId'].'/'.$this->getRecordResource(),
             array_merge([
                 'content-type' => 'application/json',
                 // 'x-appwrite-project' => '', empty header
@@ -956,7 +994,7 @@ trait DatabasesBase
         $response = $this->client->call(Client::METHOD_PUT, $this->getContainerUrl($databaseId, $data['moviesId']), array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
+            'x-appwrite-key' => $this->getProject()['apiKey'],
         ]), [
             'name' => 'Movies',
             'enabled' => false,
@@ -993,7 +1031,7 @@ trait DatabasesBase
 
             $this->assertEquals(404, $responseListDocument['headers']['status-code']);
 
-            $responseGetDocument = $this->client->call(Client::METHOD_GET, $this->getContainerUrl($databaseId, $data['moviesId']) . '/' . $this->getRecordResource() . '/someID', array_merge([
+            $responseGetDocument = $this->client->call(Client::METHOD_GET, $this->getContainerUrl($databaseId, $data['moviesId']).'/'.$this->getRecordResource().'/someID', array_merge([
                 'content-type' => 'application/json',
                 'x-appwrite-project' => $this->getProject()['$id'],
             ], $this->getHeaders()));
@@ -1004,7 +1042,7 @@ trait DatabasesBase
         $response = $this->client->call(Client::METHOD_PUT, $this->getContainerUrl($databaseId, $data['moviesId']), array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
+            'x-appwrite-key' => $this->getProject()['apiKey'],
         ]), [
             'name' => 'Movies',
             'enabled' => true,
@@ -1017,7 +1055,7 @@ trait DatabasesBase
 
     public function testCreateAttributes(): void
     {
-        if (!$this->getSupportForAttributes()) {
+        if (! $this->getSupportForAttributes()) {
             $this->markTestSkipped('Attributes are not supported by this database adapter');
         }
         // Use dedicated collections for this test to avoid conflicts with setupAttributes()
@@ -1028,7 +1066,7 @@ trait DatabasesBase
         $movies = $this->client->call(Client::METHOD_POST, $this->getContainerUrl($databaseId), array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
+            'x-appwrite-key' => $this->getProject()['apiKey'],
         ]), [
             $this->getContainerIdParam() => ID::unique(),
             'name' => 'AttribTestMovies',
@@ -1043,7 +1081,7 @@ trait DatabasesBase
         $actors = $this->client->call(Client::METHOD_POST, $this->getContainerUrl($databaseId), array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
+            'x-appwrite-key' => $this->getProject()['apiKey'],
         ]), [
             $this->getContainerIdParam() => ID::unique(),
             'name' => 'AttribTestActors',
@@ -1055,20 +1093,20 @@ trait DatabasesBase
         $this->assertEquals(201, $actors['headers']['status-code']);
         $actorsId = $actors['body']['$id'];
 
-        $title = $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $moviesId) . '/string', array_merge([
+        $title = $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $moviesId).'/string', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
+            'x-appwrite-key' => $this->getProject()['apiKey'],
         ]), [
             'key' => 'title',
             'size' => 256,
             'required' => true,
         ]);
 
-        $description = $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $moviesId) . '/string', array_merge([
+        $description = $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $moviesId).'/string', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
+            'x-appwrite-key' => $this->getProject()['apiKey'],
         ]), [
             'key' => 'description',
             'size' => 500,
@@ -1076,10 +1114,10 @@ trait DatabasesBase
             'default' => '',
         ]);
 
-        $tagline = $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $moviesId) . '/string', array_merge([
+        $tagline = $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $moviesId).'/string', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
+            'x-appwrite-key' => $this->getProject()['apiKey'],
         ]), [
             'key' => 'tagline',
             'size' => 600,
@@ -1087,10 +1125,10 @@ trait DatabasesBase
             'default' => '',
         ]);
 
-        $releaseYear = $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $moviesId) . '/integer', array_merge([
+        $releaseYear = $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $moviesId).'/integer', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
+            'x-appwrite-key' => $this->getProject()['apiKey'],
         ]), [
             'key' => 'releaseYear',
             'required' => true,
@@ -1098,20 +1136,20 @@ trait DatabasesBase
             'max' => 2200,
         ]);
 
-        $duration = $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $moviesId) . '/integer', array_merge([
+        $duration = $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $moviesId).'/integer', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
+            'x-appwrite-key' => $this->getProject()['apiKey'],
         ]), [
             'key' => 'duration',
             'required' => false,
             'min' => 60,
         ]);
 
-        $actorsAttr = $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $moviesId) . '/string', array_merge([
+        $actorsAttr = $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $moviesId).'/string', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
+            'x-appwrite-key' => $this->getProject()['apiKey'],
         ]), [
             'key' => 'actors',
             'size' => 256,
@@ -1119,10 +1157,10 @@ trait DatabasesBase
             'array' => true,
         ]);
 
-        $datetime = $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $moviesId) . '/datetime', array_merge([
+        $datetime = $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $moviesId).'/datetime', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
+            'x-appwrite-key' => $this->getProject()['apiKey'],
         ]), [
             'key' => 'birthDay',
             'required' => false,
@@ -1130,23 +1168,23 @@ trait DatabasesBase
 
         $relationship = null;
         if ($this->getSupportForRelationships()) {
-            $relationship = $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $moviesId) . '/relationship', array_merge([
+            $relationship = $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $moviesId).'/relationship', array_merge([
                 'content-type' => 'application/json',
                 'x-appwrite-project' => $this->getProject()['$id'],
-                'x-appwrite-key' => $this->getProject()['apiKey']
+                'x-appwrite-key' => $this->getProject()['apiKey'],
             ]), [
                 $this->getRelatedIdParam() => $actorsId,
                 'type' => 'oneToMany',
                 'twoWay' => true,
                 'key' => 'starringActors',
-                'twoWayKey' => 'movie'
+                'twoWayKey' => 'movie',
             ]);
         }
 
-        $integers = $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $moviesId) . '/integer', array_merge([
+        $integers = $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $moviesId).'/integer', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
+            'x-appwrite-key' => $this->getProject()['apiKey'],
         ]), [
             'key' => 'integers',
             'required' => false,
@@ -1196,10 +1234,10 @@ trait DatabasesBase
         $this->assertEquals($datetime['body']['required'], false);
 
         // to meet mongodb duplicate attributes index limit
-        $integers2 = $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $moviesId) . '/integer', array_merge([
+        $integers2 = $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $moviesId).'/integer', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
+            'x-appwrite-key' => $this->getProject()['apiKey'],
         ]), [
             'key' => 'integers2',
             'required' => false,
@@ -1207,7 +1245,6 @@ trait DatabasesBase
             'min' => 10,
             'max' => 99,
         ]);
-
 
         $this->assertEquals($description['body']['size'], 500);
         $this->assertEquals($tagline['body']['size'], 600);
@@ -1241,7 +1278,7 @@ trait DatabasesBase
         $movies = $this->client->call(Client::METHOD_GET, $this->getContainerUrl($databaseId, $moviesId), array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
+            'x-appwrite-key' => $this->getProject()['apiKey'],
         ]));
 
         $schemaResource = $this->getSchemaResource();
@@ -1257,7 +1294,7 @@ trait DatabasesBase
         $this->assertEquals($movies['body'][$schemaResource][4]['key'], $duration['body']['key']);
         $this->assertEquals($movies['body'][$schemaResource][5]['key'], $actorsAttr['body']['key']);
         $this->assertEquals($movies['body'][$schemaResource][6]['key'], $datetime['body']['key']);
-        if (!$this->getSupportForRelationships()) {
+        if (! $this->getSupportForRelationships()) {
             $this->assertEquals($movies['body'][$schemaResource][7]['key'], $integers['body']['key']);
             $this->assertEquals($movies['body'][$schemaResource][8]['key'], $integers2['body']['key']);
         } else {
@@ -1269,7 +1306,7 @@ trait DatabasesBase
 
     public function testListAttributes(): void
     {
-        if (!$this->getSupportForAttributes()) {
+        if (! $this->getSupportForAttributes()) {
             $this->markTestSkipped('Attributes are not supported by this database adapter');
         }
         $data = $this->setupAttributes();
@@ -1282,7 +1319,7 @@ trait DatabasesBase
             'queries' => [
                 Query::equal('type', ['string'])->toString(),
                 Query::limit(2)->toString(),
-                Query::cursorAfter(new Document(['$id' => 'title']))->toString()
+                Query::cursorAfter(new Document(['$id' => 'title']))->toString(),
             ],
         ]);
         $this->assertEquals(200, $response['headers']['status-code']);
@@ -1300,7 +1337,7 @@ trait DatabasesBase
 
     public function testPatchAttribute(): void
     {
-        if (!$this->getSupportForAttributes()) {
+        if (! $this->getSupportForAttributes()) {
             $this->markTestSkipped('Attributes are not supported by this database adapter');
         }
         $data = $this->setupDatabase();
@@ -1309,7 +1346,7 @@ trait DatabasesBase
         $collection = $this->client->call(Client::METHOD_POST, $this->getContainerUrl($databaseId), array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
+            'x-appwrite-key' => $this->getProject()['apiKey'],
         ]), [
             $this->getContainerIdParam() => ID::unique(),
             'name' => 'patch',
@@ -1322,10 +1359,10 @@ trait DatabasesBase
         $this->assertEquals(201, $collection['headers']['status-code']);
         $this->assertEquals($collection['body']['name'], 'patch');
 
-        $attribute = $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $collection['body']['$id']) . '/string', array_merge([
+        $attribute = $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $collection['body']['$id']).'/string', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
+            'x-appwrite-key' => $this->getProject()['apiKey'],
         ]), [
             'key' => 'title',
             'required' => true,
@@ -1339,7 +1376,7 @@ trait DatabasesBase
         $index = $this->client->call(Client::METHOD_POST, $this->getIndexUrl($databaseId, $collection['body']['$id']), array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
+            'x-appwrite-key' => $this->getProject()['apiKey'],
         ]), [
             'key' => 'titleIndex',
             'type' => 'key',
@@ -1352,7 +1389,7 @@ trait DatabasesBase
         /**
          * Update attribute size to exceed Index maximum length
          */
-        $attribute = $this->client->call(Client::METHOD_PATCH, $this->getSchemaUrl($databaseId, $collection['body']['$id']) . '/string/'.$attribute['body']['key'], array_merge([
+        $attribute = $this->client->call(Client::METHOD_PATCH, $this->getSchemaUrl($databaseId, $collection['body']['$id']).'/string/'.$attribute['body']['key'], array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey'],
@@ -1368,22 +1405,22 @@ trait DatabasesBase
 
     public function testUpdateAttributeEnum(): void
     {
-        if (!$this->getSupportForAttributes()) {
+        if (! $this->getSupportForAttributes()) {
             $this->markTestSkipped('Attributes are not supported by this database adapter');
         }
         $database = $this->client->call(Client::METHOD_POST, $this->getApiBasePath(), [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
+            'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
             'databaseId' => ID::unique(),
-            'name' => 'Test Database 2'
+            'name' => 'Test Database 2',
         ]);
 
         $players = $this->client->call(Client::METHOD_POST, $this->getContainerUrl($database['body']['$id']), array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
+            'x-appwrite-key' => $this->getProject()['apiKey'],
         ]), [
             $this->getContainerIdParam() => ID::unique(),
             'name' => 'Players',
@@ -1394,7 +1431,7 @@ trait DatabasesBase
         ]);
 
         // Create enum attribute
-        $attribute = $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($database['body']['$id'], $players['body']['$id']) . '/enum', array_merge([
+        $attribute = $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($database['body']['$id'], $players['body']['$id']).'/enum', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey'],
@@ -1412,14 +1449,14 @@ trait DatabasesBase
         $this->waitForAttribute($database['body']['$id'], $players['body']['$id'], 'position');
 
         // Update enum attribute
-        $attribute = $this->client->call(Client::METHOD_PATCH, $this->getSchemaUrl($database['body']['$id'], $players['body']['$id']) . '/enum/' . $attribute['body']['key'], array_merge([
+        $attribute = $this->client->call(Client::METHOD_PATCH, $this->getSchemaUrl($database['body']['$id'], $players['body']['$id']).'/enum/'.$attribute['body']['key'], array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ]), [
             'elements' => ['goalkeeper', 'defender', 'midfielder', 'forward', 'coach'],
             'required' => true,
-            'default' => null
+            'default' => null,
         ]);
 
         $this->assertEquals(200, $attribute['headers']['status-code']);
@@ -1428,7 +1465,7 @@ trait DatabasesBase
 
     public function testAttributeResponseModels(): void
     {
-        if (!$this->getSupportForAttributes()) {
+        if (! $this->getSupportForAttributes()) {
             $this->markTestSkipped('Attributes are not supported by this database adapter');
         }
         $data = $this->setupAttributes();
@@ -1436,7 +1473,7 @@ trait DatabasesBase
         $collection = $this->client->call(Client::METHOD_POST, $this->getContainerUrl($databaseId), array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
+            'x-appwrite-key' => $this->getProject()['apiKey'],
         ]), [
             $this->getContainerIdParam() => ID::unique(),
             'name' => 'Response Models',
@@ -1451,10 +1488,10 @@ trait DatabasesBase
 
         $attributesPath = $this->getSchemaUrl($databaseId, $collectionId);
 
-        $string = $this->client->call(Client::METHOD_POST, $attributesPath . '/string', array_merge([
+        $string = $this->client->call(Client::METHOD_POST, $attributesPath.'/string', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
+            'x-appwrite-key' => $this->getProject()['apiKey'],
         ]), [
             'key' => 'string',
             'size' => 16,
@@ -1462,20 +1499,20 @@ trait DatabasesBase
             'default' => 'default',
         ]);
 
-        $email = $this->client->call(Client::METHOD_POST, $attributesPath . '/email', array_merge([
+        $email = $this->client->call(Client::METHOD_POST, $attributesPath.'/email', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
+            'x-appwrite-key' => $this->getProject()['apiKey'],
         ]), [
             'key' => 'email',
             'required' => false,
             'default' => 'default@example.com',
         ]);
 
-        $enum = $this->client->call(Client::METHOD_POST, $attributesPath . '/enum', array_merge([
+        $enum = $this->client->call(Client::METHOD_POST, $attributesPath.'/enum', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
+            'x-appwrite-key' => $this->getProject()['apiKey'],
         ]), [
             'key' => 'enum',
             'elements' => ['yes', 'no', 'maybe'],
@@ -1483,64 +1520,64 @@ trait DatabasesBase
             'default' => 'maybe',
         ]);
 
-        $ip = $this->client->call(Client::METHOD_POST, $attributesPath . '/ip', array_merge([
+        $ip = $this->client->call(Client::METHOD_POST, $attributesPath.'/ip', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
+            'x-appwrite-key' => $this->getProject()['apiKey'],
         ]), [
             'key' => 'ip',
             'required' => false,
             'default' => '192.0.2.0',
         ]);
 
-        $url = $this->client->call(Client::METHOD_POST, $attributesPath . '/url', array_merge([
+        $url = $this->client->call(Client::METHOD_POST, $attributesPath.'/url', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
+            'x-appwrite-key' => $this->getProject()['apiKey'],
         ]), [
             'key' => 'url',
             'required' => false,
             'default' => 'http://example.com',
         ]);
 
-        $integer = $this->client->call(Client::METHOD_POST, $attributesPath . '/integer', array_merge([
+        $integer = $this->client->call(Client::METHOD_POST, $attributesPath.'/integer', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
+            'x-appwrite-key' => $this->getProject()['apiKey'],
         ]), [
             'key' => 'integer',
             'required' => false,
             'min' => 1,
             'max' => 5,
-            'default' => 3
+            'default' => 3,
         ]);
 
-        $float = $this->client->call(Client::METHOD_POST, $attributesPath . '/float', array_merge([
+        $float = $this->client->call(Client::METHOD_POST, $attributesPath.'/float', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
+            'x-appwrite-key' => $this->getProject()['apiKey'],
         ]), [
             'key' => 'float',
             'required' => false,
             'min' => 1.5,
             'max' => 5.5,
-            'default' => 3.5
+            'default' => 3.5,
         ]);
 
-        $boolean = $this->client->call(Client::METHOD_POST, $attributesPath . '/boolean', array_merge([
+        $boolean = $this->client->call(Client::METHOD_POST, $attributesPath.'/boolean', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
+            'x-appwrite-key' => $this->getProject()['apiKey'],
         ]), [
             'key' => 'boolean',
             'required' => false,
             'default' => true,
         ]);
 
-        $datetime = $this->client->call(Client::METHOD_POST, $attributesPath . '/datetime', array_merge([
+        $datetime = $this->client->call(Client::METHOD_POST, $attributesPath.'/datetime', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
+            'x-appwrite-key' => $this->getProject()['apiKey'],
         ]), [
             'key' => 'datetime',
             'required' => false,
@@ -1549,23 +1586,23 @@ trait DatabasesBase
 
         $relationship = null;
         if ($this->getSupportForRelationships()) {
-            $relationship = $this->client->call(Client::METHOD_POST, $attributesPath . '/relationship', array_merge([
+            $relationship = $this->client->call(Client::METHOD_POST, $attributesPath.'/relationship', array_merge([
                 'content-type' => 'application/json',
                 'x-appwrite-project' => $this->getProject()['$id'],
-                'x-appwrite-key' => $this->getProject()['apiKey']
+                'x-appwrite-key' => $this->getProject()['apiKey'],
             ]), [
                 $this->getRelatedIdParam() => $data['actorsId'],
                 'type' => 'oneToMany',
                 'twoWay' => true,
                 'key' => 'relationship',
-                'twoWayKey' => 'twoWayKey'
+                'twoWayKey' => 'twoWayKey',
             ]);
         }
 
-        $strings = $this->client->call(Client::METHOD_POST, $attributesPath . '/string', array_merge([
+        $strings = $this->client->call(Client::METHOD_POST, $attributesPath.'/string', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
+            'x-appwrite-key' => $this->getProject()['apiKey'],
         ]), [
             'key' => 'names',
             'size' => 512,
@@ -1573,10 +1610,10 @@ trait DatabasesBase
             'array' => true,
         ]);
 
-        $integers = $this->client->call(Client::METHOD_POST, $attributesPath . '/integer', array_merge([
+        $integers = $this->client->call(Client::METHOD_POST, $attributesPath.'/integer', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
+            'x-appwrite-key' => $this->getProject()['apiKey'],
         ]), [
             'key' => 'numbers',
             'required' => false,
@@ -1690,79 +1727,79 @@ trait DatabasesBase
         // Wait for database worker to create attributes
         $this->waitForAllAttributes($databaseId, $collectionId);
 
-        $stringResponse = $this->client->call(Client::METHOD_GET, $attributesPath . '/' . $string['body']['key'], array_merge([
+        $stringResponse = $this->client->call(Client::METHOD_GET, $attributesPath.'/'.$string['body']['key'], array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
+            'x-appwrite-key' => $this->getProject()['apiKey'],
         ]));
 
-        $emailResponse = $this->client->call(Client::METHOD_GET, $attributesPath . '/' . $email['body']['key'], array_merge([
+        $emailResponse = $this->client->call(Client::METHOD_GET, $attributesPath.'/'.$email['body']['key'], array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
+            'x-appwrite-key' => $this->getProject()['apiKey'],
         ]));
 
-        $enumResponse = $this->client->call(Client::METHOD_GET, $attributesPath . '/' . $enum['body']['key'], array_merge([
+        $enumResponse = $this->client->call(Client::METHOD_GET, $attributesPath.'/'.$enum['body']['key'], array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
+            'x-appwrite-key' => $this->getProject()['apiKey'],
         ]));
 
-        $ipResponse = $this->client->call(Client::METHOD_GET, $attributesPath . '/' . $ip['body']['key'], array_merge([
+        $ipResponse = $this->client->call(Client::METHOD_GET, $attributesPath.'/'.$ip['body']['key'], array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
+            'x-appwrite-key' => $this->getProject()['apiKey'],
         ]));
 
-        $urlResponse = $this->client->call(Client::METHOD_GET, $attributesPath . '/' . $url['body']['key'], array_merge([
+        $urlResponse = $this->client->call(Client::METHOD_GET, $attributesPath.'/'.$url['body']['key'], array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
+            'x-appwrite-key' => $this->getProject()['apiKey'],
         ]));
 
-        $integerResponse = $this->client->call(Client::METHOD_GET, $attributesPath . '/' . $integer['body']['key'], array_merge([
+        $integerResponse = $this->client->call(Client::METHOD_GET, $attributesPath.'/'.$integer['body']['key'], array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
+            'x-appwrite-key' => $this->getProject()['apiKey'],
         ]));
 
-        $floatResponse = $this->client->call(Client::METHOD_GET, $attributesPath . '/' . $float['body']['key'], array_merge([
+        $floatResponse = $this->client->call(Client::METHOD_GET, $attributesPath.'/'.$float['body']['key'], array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
+            'x-appwrite-key' => $this->getProject()['apiKey'],
         ]));
 
-        $booleanResponse = $this->client->call(Client::METHOD_GET, $attributesPath . '/' . $boolean['body']['key'], array_merge([
+        $booleanResponse = $this->client->call(Client::METHOD_GET, $attributesPath.'/'.$boolean['body']['key'], array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
+            'x-appwrite-key' => $this->getProject()['apiKey'],
         ]));
 
-        $datetimeResponse = $this->client->call(Client::METHOD_GET, $attributesPath . '/' . $datetime['body']['key'], array_merge([
+        $datetimeResponse = $this->client->call(Client::METHOD_GET, $attributesPath.'/'.$datetime['body']['key'], array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
+            'x-appwrite-key' => $this->getProject()['apiKey'],
         ]));
 
         $relationshipResponse = null;
         if ($this->getSupportForRelationships()) {
-            $relationshipResponse = $this->client->call(Client::METHOD_GET, $attributesPath . '/' . $relationship['body']['key'], array_merge([
+            $relationshipResponse = $this->client->call(Client::METHOD_GET, $attributesPath.'/'.$relationship['body']['key'], array_merge([
                 'content-type' => 'application/json',
                 'x-appwrite-project' => $this->getProject()['$id'],
-                'x-appwrite-key' => $this->getProject()['apiKey']
+                'x-appwrite-key' => $this->getProject()['apiKey'],
             ]));
         }
 
-        $stringsResponse = $this->client->call(Client::METHOD_GET, $attributesPath . '/' . $strings['body']['key'], array_merge([
+        $stringsResponse = $this->client->call(Client::METHOD_GET, $attributesPath.'/'.$strings['body']['key'], array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
+            'x-appwrite-key' => $this->getProject()['apiKey'],
         ]));
 
-        $integersResponse = $this->client->call(Client::METHOD_GET, $attributesPath . '/' . $integers['body']['key'], array_merge([
+        $integersResponse = $this->client->call(Client::METHOD_GET, $attributesPath.'/'.$integers['body']['key'], array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
+            'x-appwrite-key' => $this->getProject()['apiKey'],
         ]));
 
         $this->assertEquals(200, $stringResponse['headers']['status-code']);
@@ -1863,7 +1900,7 @@ trait DatabasesBase
         $attributes = $this->client->call(Client::METHOD_GET, $this->getSchemaUrl($databaseId, $collectionId), array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
+            'x-appwrite-key' => $this->getProject()['apiKey'],
         ]));
 
         $this->assertEquals(200, $attributes['headers']['status-code']);
@@ -1875,9 +1912,9 @@ trait DatabasesBase
         $attributesWithIncludeTotalFalse = $this->client->call(Client::METHOD_GET, $this->getSchemaUrl($databaseId, $collectionId), array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
+            'x-appwrite-key' => $this->getProject()['apiKey'],
         ]), [
-            'total' => false
+            'total' => false,
         ]);
 
         $this->assertEquals(200, $attributesWithIncludeTotalFalse['headers']['status-code']);
@@ -1985,7 +2022,7 @@ trait DatabasesBase
         $collection = $this->client->call(Client::METHOD_GET, $this->getContainerUrl($databaseId, $collectionId), array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
+            'x-appwrite-key' => $this->getProject()['apiKey'],
         ]));
 
         $this->assertEquals(200, $collection['headers']['status-code']);
@@ -2067,7 +2104,6 @@ trait DatabasesBase
         $this->assertEquals($datetimeResponse['body']['array'], $attributes[8]['array']);
         $this->assertEquals($datetimeResponse['body']['default'], $attributes[8]['default']);
 
-
         $this->assertEquals($stringsResponse['body']['key'], $attributes[$stringsIndex]['key']);
         $this->assertEquals($stringsResponse['body']['type'], $attributes[$stringsIndex]['type']);
         $this->assertEquals($stringsResponse['body']['status'], $attributes[$stringsIndex]['status']);
@@ -2105,10 +2141,10 @@ trait DatabasesBase
         /**
          * Test for FAILURE
          */
-        $badEnum = $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $collectionId) . '/enum', array_merge([
+        $badEnum = $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $collectionId).'/enum', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
+            'x-appwrite-key' => $this->getProject()['apiKey'],
         ]), [
             'key' => 'enum',
             'elements' => ['yes', 'no', ''],
@@ -2130,7 +2166,7 @@ trait DatabasesBase
         $collection = $this->client->call(Client::METHOD_POST, $this->getContainerUrl($databaseId), array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
+            'x-appwrite-key' => $this->getProject()['apiKey'],
         ]), [
             $this->getContainerIdParam() => ID::unique(),
             'name' => 'IndexTestCollection',
@@ -2215,7 +2251,7 @@ trait DatabasesBase
         $titleIndex = $this->client->call(Client::METHOD_POST, $this->getIndexUrl($databaseId, $collectionId), array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
+            'x-appwrite-key' => $this->getProject()['apiKey'],
         ]), [
             'key' => 'titleIndex',
             'type' => 'fulltext',
@@ -2231,7 +2267,7 @@ trait DatabasesBase
         $releaseYearIndex = $this->client->call(Client::METHOD_POST, $this->getIndexUrl($databaseId, $collectionId), array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
+            'x-appwrite-key' => $this->getProject()['apiKey'],
         ]), [
             'key' => 'releaseYear',
             'type' => 'key',
@@ -2247,7 +2283,7 @@ trait DatabasesBase
         $releaseWithDate1 = $this->client->call(Client::METHOD_POST, $this->getIndexUrl($databaseId, $collectionId), array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
+            'x-appwrite-key' => $this->getProject()['apiKey'],
         ]), [
             'key' => 'releaseYearDated',
             'type' => 'key',
@@ -2265,7 +2301,7 @@ trait DatabasesBase
         $releaseWithDate2 = $this->client->call(Client::METHOD_POST, $this->getIndexUrl($databaseId, $collectionId), array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
+            'x-appwrite-key' => $this->getProject()['apiKey'],
         ]), [
             'key' => 'birthDay',
             'type' => 'key',
@@ -2282,7 +2318,7 @@ trait DatabasesBase
         $fulltextReleaseYear = $this->client->call(Client::METHOD_POST, $this->getIndexUrl($databaseId, $collectionId), array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
+            'x-appwrite-key' => $this->getProject()['apiKey'],
         ]), [
             'key' => 'releaseYearDated',
             'type' => 'fulltext',
@@ -2294,7 +2330,7 @@ trait DatabasesBase
         $noAttributes = $this->client->call(Client::METHOD_POST, $this->getIndexUrl($databaseId, $collectionId), array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
+            'x-appwrite-key' => $this->getProject()['apiKey'],
         ]), [
             'key' => 'none',
             'type' => 'key',
@@ -2307,7 +2343,7 @@ trait DatabasesBase
         $duplicates = $this->client->call(Client::METHOD_POST, $this->getIndexUrl($databaseId, $collectionId), array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
+            'x-appwrite-key' => $this->getProject()['apiKey'],
         ]), [
             'key' => 'duplicate',
             'type' => 'fulltext',
@@ -2350,7 +2386,7 @@ trait DatabasesBase
         ]);
 
         $this->assertEquals(400, $fulltextArray['headers']['status-code']);
-        $errorMessage = $this->getSupportForAttributes() ? "Creating indexes on array attributes is not currently supported." : "There is already a fulltext index in the collection";
+        $errorMessage = $this->getSupportForAttributes() ? 'Creating indexes on array attributes is not currently supported.' : 'There is already a fulltext index in the collection';
         $this->assertEquals($errorMessage, $fulltextArray['body']['message']);
 
         if ($this->getSupportForAttributes()) {
@@ -2421,7 +2457,7 @@ trait DatabasesBase
             $this->assertEquals(400, $index2['headers']['status-code']);
             $this->assertEquals('Creating indexes on array attributes is not currently supported.', $index2['body']['message']);
 
-            if (!$this->getSupportForMultipleFulltextIndexes()) {
+            if (! $this->getSupportForMultipleFulltextIndexes()) {
                 // Some databases only allow one fulltext index per collection
                 $this->assertEquals('There is already a fulltext index in the collection', $fulltextReleaseYear['body']['message']);
             } else {
@@ -2436,7 +2472,7 @@ trait DatabasesBase
             $collectionResponse = $this->client->call(Client::METHOD_GET, $this->getContainerUrl($databaseId, $collectionId), array_merge([
                 'content-type' => 'application/json',
                 'x-appwrite-project' => $this->getProject()['$id'],
-                'x-appwrite-key' => $this->getProject()['apiKey']
+                'x-appwrite-key' => $this->getProject()['apiKey'],
             ]), []);
 
             $this->assertIsArray($collectionResponse['body']['indexes']);
@@ -2452,7 +2488,7 @@ trait DatabasesBase
                 $collResp = $this->client->call(Client::METHOD_GET, $this->getContainerUrl($databaseId, $collectionId), array_merge([
                     'content-type' => 'application/json',
                     'x-appwrite-project' => $this->getProject()['$id'],
-                    'x-appwrite-key' => $this->getProject()['apiKey']
+                    'x-appwrite-key' => $this->getProject()['apiKey'],
                 ]));
 
                 foreach ($collResp['body']['indexes'] as $index) {
@@ -2466,8 +2502,9 @@ trait DatabasesBase
 
     public function testGetIndexByKeyWithLengths(): void
     {
-        if (!$this->getSupportForAttributes()) {
+        if (! $this->getSupportForAttributes()) {
             $this->expectNotToPerformAssertions();
+
             return;
         }
         $data = $this->setupAttributes();
@@ -2478,20 +2515,20 @@ trait DatabasesBase
         $create = $this->client->call(Client::METHOD_POST, $this->getIndexUrl($databaseId, $collectionId), [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
+            'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
             'key' => 'lengthTestIndex',
             'type' => 'key',
-            $this->getIndexAttributesParam() => ['title','description'],
-            'lengths' => [128,200]
+            $this->getIndexAttributesParam() => ['title', 'description'],
+            'lengths' => [128, 200],
         ]);
         $this->assertEquals(202, $create['headers']['status-code']);
 
         // Fetch index and check correct lengths
-        $index = $this->client->call(Client::METHOD_GET, $this->getIndexUrl($databaseId, $collectionId, "lengthTestIndex"), [
+        $index = $this->client->call(Client::METHOD_GET, $this->getIndexUrl($databaseId, $collectionId, 'lengthTestIndex'), [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
+            'x-appwrite-key' => $this->getProject()['apiKey'],
         ]);
         $this->assertEquals(200, $index['headers']['status-code']);
         $this->assertEquals('lengthTestIndex', $index['body']['key']);
@@ -2501,7 +2538,7 @@ trait DatabasesBase
         $create = $this->client->call(Client::METHOD_POST, $this->getIndexUrl($databaseId, $collectionId), [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
+            'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
             'key' => 'lengthOverrideTestIndex',
             'type' => 'key',
@@ -2515,28 +2552,28 @@ trait DatabasesBase
         $create = $this->client->call(Client::METHOD_POST, $this->getIndexUrl($databaseId, $collectionId), [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
+            'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
             'key' => 'lengthCountExceededIndex',
             'type' => 'key',
             $this->getIndexAttributesParam() => ['title'],
-            'lengths' => [128, 128]
+            'lengths' => [128, 128],
         ]);
         $this->assertEquals(400, $create['headers']['status-code']);
 
         // Test case for lengths exceeding total of 768/1024
         $indexLength = 256;
-        if (!$this->getSupportForRelationships()) {
+        if (! $this->getSupportForRelationships()) {
             $indexLength = 500;
         }
         $create = $this->client->call(Client::METHOD_POST, $this->getIndexUrl($databaseId, $collectionId), [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
+            'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
             'key' => 'lengthTooLargeIndex',
             'type' => 'key',
-            $this->getIndexAttributesParam() => ['title','description','tagline','actors'],
+            $this->getIndexAttributesParam() => ['title', 'description', 'tagline', 'actors'],
             'lengths' => [$indexLength, $indexLength, $indexLength, 20],
         ]);
 
@@ -2546,12 +2583,12 @@ trait DatabasesBase
         $create = $this->client->call(Client::METHOD_POST, $this->getIndexUrl($databaseId, $collectionId), [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
+            'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
             'key' => 'negativeLengthIndex',
             'type' => 'key',
             $this->getIndexAttributesParam() => ['title'],
-            'lengths' => [-1]
+            'lengths' => [-1],
         ]);
         $this->assertEquals(400, $create['headers']['status-code']);
     }
@@ -2567,7 +2604,7 @@ trait DatabasesBase
         ]), [
             'queries' => [
                 Query::equal('type', ['key'])->toString(),
-                Query::limit(2)->toString()
+                Query::limit(2)->toString(),
             ],
         ]);
         $this->assertEquals(200, $response['headers']['status-code']);
@@ -2601,13 +2638,13 @@ trait DatabasesBase
                 'actors' => [
                     'Chris Evans',
                     'Samuel Jackson',
-                ]
+                ],
             ],
             'permissions' => [
                 Permission::read(Role::user($this->getUser()['$id'])),
                 Permission::update(Role::user($this->getUser()['$id'])),
                 Permission::delete(Role::user($this->getUser()['$id'])),
-            ]
+            ],
         ]);
 
         $document2 = $this->client->call(Client::METHOD_POST, $this->getRecordUrl($databaseId, $data['moviesId']), array_merge([
@@ -2624,13 +2661,13 @@ trait DatabasesBase
                     'Zendaya Maree Stoermer',
                     'Samuel Jackson',
                 ],
-                'integers' => [50,60]
+                'integers' => [50, 60],
             ],
             'permissions' => [
                 Permission::read(Role::user($this->getUser()['$id'])),
                 Permission::update(Role::user($this->getUser()['$id'])),
                 Permission::delete(Role::user($this->getUser()['$id'])),
-            ]
+            ],
         ]);
 
         $document3 = $this->client->call(Client::METHOD_POST, $this->getRecordUrl($databaseId, $data['moviesId']), array_merge([
@@ -2647,13 +2684,13 @@ trait DatabasesBase
                     'Tom Holland',
                     'Zendaya Maree Stoermer',
                 ],
-                'integers' => [50]
+                'integers' => [50],
             ],
             'permissions' => [
                 Permission::read(Role::user($this->getUser()['$id'])),
                 Permission::update(Role::user($this->getUser()['$id'])),
                 Permission::delete(Role::user($this->getUser()['$id'])),
-            ]
+            ],
         ]);
 
         $document4 = $this->client->call(Client::METHOD_POST, $this->getRecordUrl($databaseId, $data['moviesId']), array_merge([
@@ -2663,13 +2700,13 @@ trait DatabasesBase
             $this->getRecordIdParam() => ID::unique(),
             'data' => [
                 'releaseYear' => 2020, // Missing title, expect an 400 error
-                'birthDay' => null // adding null here as documentsdb will require it as for documentsdb this document will be created
+                'birthDay' => null, // adding null here as documentsdb will require it as for documentsdb this document will be created
             ],
             'permissions' => [
                 Permission::read(Role::user($this->getUser()['$id'])),
                 Permission::update(Role::user($this->getUser()['$id'])),
                 Permission::delete(Role::user($this->getUser()['$id'])),
-            ]
+            ],
         ]);
 
         $this->assertEquals(201, $document1['headers']['status-code']);
@@ -2748,7 +2785,7 @@ trait DatabasesBase
         ], $this->getHeaders()), [
             'data' => [
                 'title' => 'Thor: Ragnarok',
-                'releaseYear' => 2000
+                'releaseYear' => 2000,
             ],
             'permissions' => [
                 Permission::read(Role::users()),
@@ -2807,7 +2844,7 @@ trait DatabasesBase
         ], $this->getHeaders()), [
             'data' => [
                 'title' => 'Thor: Love and Thunder',
-                'releaseYear' => 2000
+                'releaseYear' => 2000,
             ],
             'permissions' => [
                 Permission::read(Role::users()),
@@ -2833,10 +2870,10 @@ trait DatabasesBase
         ], $this->getHeaders()), [
             'data' => [
                 'title' => 'Thor: Love and Thunder',
-                'releaseYear' => 2000
+                'releaseYear' => 2000,
             ],
             'permissions' => [
-                Permission::update(Role::users())
+                Permission::update(Role::users()),
             ],
         ]);
         // shouldn't be able to read as no read permission
@@ -2869,12 +2906,12 @@ trait DatabasesBase
         ], $this->getHeaders()), [
             'data' => [
                 'title' => 'Thor: Love and Thunder',
-                'releaseYear' => 2000
+                'releaseYear' => 2000,
             ],
             'permissions' => [
                 Permission::read(Role::users()),
                 Permission::update(Role::users()),
-                Permission::delete(Role::users())
+                Permission::delete(Role::users()),
             ],
         ]);
         $document = $this->client->call(Client::METHOD_DELETE, $this->getRecordUrl($databaseId, $data['moviesId'], $documentId), array_merge([
@@ -2892,7 +2929,7 @@ trait DatabasesBase
             $person = $this->client->call(Client::METHOD_POST, $this->getContainerUrl($databaseId), array_merge([
                 'content-type' => 'application/json',
                 'x-appwrite-project' => $this->getProject()['$id'],
-                'x-appwrite-key' => $this->getProject()['apiKey']
+                'x-appwrite-key' => $this->getProject()['apiKey'],
             ]), [
                 $this->getContainerIdParam() => 'person-upsert',
                 'name' => 'person',
@@ -2910,7 +2947,7 @@ trait DatabasesBase
             $library = $this->client->call(Client::METHOD_POST, $this->getContainerUrl($databaseId), array_merge([
                 'content-type' => 'application/json',
                 'x-appwrite-project' => $this->getProject()['$id'],
-                'x-appwrite-key' => $this->getProject()['apiKey']
+                'x-appwrite-key' => $this->getProject()['apiKey'],
             ]), [
                 $this->getContainerIdParam() => 'library-upsert',
                 'name' => 'library',
@@ -2925,10 +2962,10 @@ trait DatabasesBase
 
             $this->assertEquals(201, $library['headers']['status-code']);
 
-            $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $person['body']['$id']) . '/string', array_merge([
+            $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $person['body']['$id']).'/string', array_merge([
                 'content-type' => 'application/json',
                 'x-appwrite-project' => $this->getProject()['$id'],
-                'x-appwrite-key' => $this->getProject()['apiKey']
+                'x-appwrite-key' => $this->getProject()['apiKey'],
             ]), [
                 'key' => 'fullName',
                 'size' => 255,
@@ -2937,10 +2974,10 @@ trait DatabasesBase
 
             $this->waitForAttribute($databaseId, $person['body']['$id'], 'fullName');
 
-            $relation = $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $person['body']['$id']) . '/relationship', array_merge([
+            $relation = $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $person['body']['$id']).'/relationship', array_merge([
                 'content-type' => 'application/json',
                 'x-appwrite-project' => $this->getProject()['$id'],
-                'x-appwrite-key' => $this->getProject()['apiKey']
+                'x-appwrite-key' => $this->getProject()['apiKey'],
             ]), [
                 $this->getRelatedIdParam() => 'library-upsert',
                 'type' => Database::RELATION_ONE_TO_ONE,
@@ -2951,10 +2988,10 @@ trait DatabasesBase
 
             $this->waitForAttribute($databaseId, $person['body']['$id'], 'library');
 
-            $libraryName = $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $library['body']['$id']) . '/string', array_merge([
+            $libraryName = $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $library['body']['$id']).'/string', array_merge([
                 'content-type' => 'application/json',
                 'x-appwrite-project' => $this->getProject()['$id'],
-                'x-appwrite-key' => $this->getProject()['apiKey']
+                'x-appwrite-key' => $this->getProject()['apiKey'],
             ]), [
                 'key' => 'libraryName',
                 'size' => 255,
@@ -2986,7 +3023,7 @@ trait DatabasesBase
                     Permission::read(Role::users()),
                     Permission::update(Role::users()),
                     Permission::delete(Role::users()),
-                ]
+                ],
             ]);
 
             $this->assertEquals('Library 1', $person1['body']['library']['libraryName']);
@@ -3002,7 +3039,6 @@ trait DatabasesBase
 
             $this->assertEquals(1, $documents['body']['total']);
             $this->assertEquals('Library 1', $documents['body'][$this->getRecordResource()][0]['library']['libraryName']);
-
 
             $person1 = $this->client->call(Client::METHOD_PUT, $this->getRecordUrl($databaseId, $person['body']['$id'], $documentId), array_merge([
                 'content-type' => 'application/json',
@@ -3023,7 +3059,7 @@ trait DatabasesBase
                     Permission::read(Role::users()),
                     Permission::update(Role::users()),
                     Permission::delete(Role::users()),
-                ]
+                ],
             ]);
 
             // data should get updated
@@ -3040,7 +3076,6 @@ trait DatabasesBase
 
             $this->assertEquals(1, $documents['body']['total']);
             $this->assertEquals('Library 2', $documents['body'][$this->getRecordResource()][0]['library']['libraryName']);
-
 
             // data should get added
             $person1 = $this->client->call(Client::METHOD_PUT, $this->getRecordUrl($databaseId, $person['body']['$id'], ID::unique()), array_merge([
@@ -3062,7 +3097,7 @@ trait DatabasesBase
                     Permission::read(Role::users()),
                     Permission::update(Role::users()),
                     Permission::delete(Role::users()),
-                ]
+                ],
             ]);
 
             $this->assertEquals('Library 2', $person1['body']['library']['libraryName']);
@@ -3071,7 +3106,7 @@ trait DatabasesBase
                 'x-appwrite-project' => $this->getProject()['$id'],
             ], $this->getHeaders()), [
                 'queries' => [
-                    Query::select(['fullName', 'library.*'])->toString()
+                    Query::select(['fullName', 'library.*'])->toString(),
                 ],
             ]);
             $this->assertEquals(2, $documents['body']['total']);
@@ -3084,8 +3119,8 @@ trait DatabasesBase
         ], $this->getHeaders()), [
             'data' => [
                 'title' => 'Thor: Ragnarok',
-                'releaseYear' => 2000
-            ]
+                'releaseYear' => 2000,
+            ],
         ]);
 
         $this->assertEquals(200, $document['headers']['status-code']);
@@ -3094,7 +3129,7 @@ trait DatabasesBase
         $document = $this->client->call(Client::METHOD_GET, $this->getRecordUrl($databaseId, $data['moviesId'], $documentId), array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
+            'x-appwrite-key' => $this->getProject()['apiKey'],
         ]));
 
         $this->assertEquals(200, $document['headers']['status-code']);
@@ -3102,7 +3137,7 @@ trait DatabasesBase
         $deleteResponse = $this->client->call(Client::METHOD_DELETE, $this->getRecordUrl($databaseId, $data['moviesId'], $documentId), array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
+            'x-appwrite-key' => $this->getProject()['apiKey'],
         ]));
 
         $this->assertEquals(204, $deleteResponse['headers']['status-code']);
@@ -3117,8 +3152,8 @@ trait DatabasesBase
             ], $this->getHeaders()), [
                 'data' => [
                     'title' => 'Thor: Ragnarok',
-                    'releaseYear' => 2000
-                ]
+                    'releaseYear' => 2000,
+                ],
             ]);
 
             $this->assertEquals(200, $document['headers']['status-code']);
@@ -3129,14 +3164,14 @@ trait DatabasesBase
             $defaultPermission = [
                 Permission::read(Role::user($this->getUser()['$id'])),
                 Permission::update(Role::user($this->getUser()['$id'])),
-                Permission::delete(Role::user($this->getUser()['$id']))
+                Permission::delete(Role::user($this->getUser()['$id'])),
             ];
             // ignoring the order of the permission and checking the permissions
             $this->assertEqualsCanonicalizing($defaultPermission, $permissionsCreated);
 
             $document = $this->client->call(Client::METHOD_GET, $this->getRecordUrl($databaseId, $data['moviesId'], $documentId), array_merge([
                 'content-type' => 'application/json',
-                'x-appwrite-project' => $this->getProject()['$id']
+                'x-appwrite-project' => $this->getProject()['$id'],
             ], $this->getHeaders()));
 
             $this->assertEquals(200, $document['headers']['status-code']);
@@ -3148,8 +3183,8 @@ trait DatabasesBase
             ], $this->getHeaders()), [
                 'data' => [
                     'title' => 'Thor: Ragnarok',
-                    'releaseYear' => 2002
-                ]
+                    'releaseYear' => 2002,
+                ],
             ]);
             $this->assertEquals(200, $document['headers']['status-code']);
             $this->assertEquals('Thor: Ragnarok', $document['body']['title']);
@@ -3164,11 +3199,11 @@ trait DatabasesBase
             ], $this->getHeaders()), [
                 'data' => [
                     'title' => 'Thor: Ragnarok',
-                    'releaseYear' => 2002
+                    'releaseYear' => 2002,
                 ],
                 'permissions' => [
-                    Permission::update(Role::user($this->getUser()['$id']))
-                ]
+                    Permission::update(Role::user($this->getUser()['$id'])),
+                ],
             ]);
             $this->assertEquals(200, $document['headers']['status-code']);
             $this->assertEquals('Thor: Ragnarok', $document['body']['title']);
@@ -3177,7 +3212,7 @@ trait DatabasesBase
 
             $deleteResponse = $this->client->call(Client::METHOD_DELETE, $this->getRecordUrl($databaseId, $data['moviesId'], $documentId), array_merge([
                 'content-type' => 'application/json',
-                'x-appwrite-project' => $this->getProject()['$id']
+                'x-appwrite-project' => $this->getProject()['$id'],
             ], $this->getHeaders()));
 
             $this->assertEquals(401, $deleteResponse['headers']['status-code']);
@@ -3189,12 +3224,12 @@ trait DatabasesBase
             ], $this->getHeaders()), [
                 'data' => [
                     'title' => 'Thor: Ragnarok',
-                    'releaseYear' => 2002
+                    'releaseYear' => 2002,
                 ],
                 'permissions' => [
                     Permission::update(Role::user($this->getUser()['$id'])),
-                    Permission::delete(Role::user($this->getUser()['$id']))
-                ]
+                    Permission::delete(Role::user($this->getUser()['$id'])),
+                ],
             ]);
             $this->assertEquals(200, $document['headers']['status-code']);
             $this->assertEquals('Thor: Ragnarok', $document['body']['title']);
@@ -3203,7 +3238,7 @@ trait DatabasesBase
 
             $deleteResponse = $this->client->call(Client::METHOD_DELETE, $this->getRecordUrl($databaseId, $data['moviesId'], $documentId), array_merge([
                 'content-type' => 'application/json',
-                'x-appwrite-project' => $this->getProject()['$id']
+                'x-appwrite-project' => $this->getProject()['$id'],
             ], $this->getHeaders()));
 
             $this->assertEquals(204, $deleteResponse['headers']['status-code']);
@@ -3232,7 +3267,7 @@ trait DatabasesBase
                     'x-appwrite-project' => $this->getProject()['$id'],
                 ], $this->getHeaders()), [
                     'queries' => [
-                        Query::select(['fullName', 'library.*'])->toString()
+                        Query::select(['fullName', 'library.*'])->toString(),
                     ],
                 ]);
                 $this->assertGreaterThanOrEqual(1, $documents['body']['total']);
@@ -3294,7 +3329,7 @@ trait DatabasesBase
                     'content-type' => 'application/json',
                     'x-appwrite-project' => $this->getProject()['$id'],
                 ], $this->getHeaders()), [
-                    'data' => $update['body']
+                    'data' => $update['body'],
                 ]);
 
                 $this->assertEquals(200, $upserted['headers']['status-code']);
@@ -3356,7 +3391,7 @@ trait DatabasesBase
         $patchNull = $this->client->call(Client::METHOD_PATCH, $this->getSchemaUrl($databaseId, $data['moviesId'], 'string', 'description'), array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
+            'x-appwrite-key' => $this->getProject()['apiKey'],
         ]), [
             'default' => null,
             'required' => false,
@@ -3374,7 +3409,7 @@ trait DatabasesBase
                 'actors' => [
                     'Dummy',
                 ],
-            ]
+            ],
         ]);
 
         $this->assertEquals(201, $document1['headers']['status-code']);
@@ -3385,14 +3420,14 @@ trait DatabasesBase
         ], $this->getHeaders()), [
             'queries' => [
                 Query::orderAsc('dummy')->toString(),
-                Query::cursorAfter(new Document(['$id' => $document1['body']['$id']]))->toString()
+                Query::cursorAfter(new Document(['$id' => $document1['body']['$id']]))->toString(),
             ],
         ]);
         // should throw 400 as the order attr description of the selected doc is null
         $this->assertEquals(400, $documentsPaginated['headers']['status-code']);
 
         // deleting the dummy doc created
-        $this->client->call(Client::METHOD_DELETE, $this->getContainerUrl($databaseId, $data['moviesId']) . '/' . $this->getRecordResource() . '/' . $document1['body']['$id'], array_merge([
+        $this->client->call(Client::METHOD_DELETE, $this->getContainerUrl($databaseId, $data['moviesId']).'/'.$this->getRecordResource().'/'.$document1['body']['$id'], array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()));
@@ -3400,7 +3435,7 @@ trait DatabasesBase
 
     public function testListDocumentsWithCache(): void
     {
-        if (!$this->getSupportForAttributes()) {
+        if (! $this->getSupportForAttributes()) {
             $this->markTestSkipped('Attributes are not supported by this database adapter');
         }
         $data = $this->setupDocuments();
@@ -3533,7 +3568,7 @@ trait DatabasesBase
 
     public function testListDocumentsCacheBustedByAttributeChange(): void
     {
-        if (!$this->getSupportForAttributes()) {
+        if (! $this->getSupportForAttributes()) {
             $this->markTestSkipped('Attributes are not supported by this database adapter');
         }
         $data = $this->setupDocuments();
@@ -3574,10 +3609,10 @@ trait DatabasesBase
         $this->assertEquals('hit', $documents2['headers']['x-appwrite-cache']);
 
         // 3. Add a new attribute to the collection, which updates the collection's $updatedAt.
-        $attribute = $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $data['moviesId']) . '/string', array_merge([
+        $attribute = $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $data['moviesId']).'/string', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
+            'x-appwrite-key' => $this->getProject()['apiKey'],
         ]), [
             'key' => 'cacheTestAttr',
             'size' => 64,
@@ -3605,7 +3640,7 @@ trait DatabasesBase
 
     public function testListDocumentsCachedWithoutSelectQuery(): void
     {
-        if (!$this->getSupportForAttributes()) {
+        if (! $this->getSupportForAttributes()) {
             $this->markTestSkipped('Attributes are not supported by this database adapter');
         }
         $data = $this->setupDocuments();
@@ -3651,7 +3686,7 @@ trait DatabasesBase
 
     public function testListDocumentsCachePurgedByUpdate(): void
     {
-        if (!$this->getSupportForAttributes()) {
+        if (! $this->getSupportForAttributes()) {
             $this->markTestSkipped('Attributes are not supported by this database adapter');
         }
         $data = $this->setupDocuments();
@@ -3845,7 +3880,7 @@ trait DatabasesBase
         $this->assertSame($sequence, $response['body'][$this->getRecordResource()][0]['$sequence']);
 
         // Query with int $sequence value (supported by SQL adapters, rejected by MongoDB)
-        $intSequence = (int)$sequence;
+        $intSequence = (int) $sequence;
         $response = $this->client->call(Client::METHOD_GET, $this->getRecordUrl($databaseId, $data['moviesId']), array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
@@ -3856,7 +3891,7 @@ trait DatabasesBase
         ]);
 
         $adapter = getenv('_APP_DB_ADAPTER');
-        if ($adapter === 'mongodb' || !$this->getSupportForAttributes()) {
+        if ($adapter === 'mongodb' || ! $this->getSupportForAttributes()) {
             $this->assertEquals(400, $response['headers']['status-code']);
         } else {
             $this->assertEquals(200, $response['headers']['status-code']);
@@ -3894,7 +3929,7 @@ trait DatabasesBase
         ], $this->getHeaders()), [
             'queries' => [
                 Query::equal('$id', $docIds)->toString(),
-                Query::cursorAfter(new Document(['$id' => $base['body'][$this->getRecordResource()][0]['$id']]))->toString()
+                Query::cursorAfter(new Document(['$id' => $base['body'][$this->getRecordResource()][0]['$id']]))->toString(),
             ],
         ]);
 
@@ -3909,7 +3944,7 @@ trait DatabasesBase
         ], $this->getHeaders()), [
             'queries' => [
                 Query::equal('$id', $docIds)->toString(),
-                Query::cursorAfter(new Document(['$id' => $base['body'][$this->getRecordResource()][2]['$id']]))->toString()
+                Query::cursorAfter(new Document(['$id' => $base['body'][$this->getRecordResource()][2]['$id']]))->toString(),
             ],
         ]);
 
@@ -3925,7 +3960,7 @@ trait DatabasesBase
         ], $this->getHeaders()), [
             'queries' => [
                 Query::equal('$id', $docIds)->toString(),
-                Query::orderAsc('releaseYear')->toString()
+                Query::orderAsc('releaseYear')->toString(),
             ],
         ]);
 
@@ -3942,7 +3977,7 @@ trait DatabasesBase
             'queries' => [
                 Query::equal('$id', $docIds)->toString(),
                 Query::cursorAfter(new Document(['$id' => $base['body'][$this->getRecordResource()][1]['$id']]))->toString(),
-                Query::orderAsc('releaseYear')->toString()
+                Query::orderAsc('releaseYear')->toString(),
             ],
         ]);
 
@@ -3959,7 +3994,7 @@ trait DatabasesBase
         ], $this->getHeaders()), [
             'queries' => [
                 Query::equal('$id', $docIds)->toString(),
-                Query::orderDesc('releaseYear')->toString()
+                Query::orderDesc('releaseYear')->toString(),
             ],
         ]);
 
@@ -3976,7 +4011,7 @@ trait DatabasesBase
             'queries' => [
                 Query::equal('$id', $docIds)->toString(),
                 Query::cursorAfter(new Document(['$id' => $base['body'][$this->getRecordResource()][1]['$id']]))->toString(),
-                Query::orderDesc('releaseYear')->toString()
+                Query::orderDesc('releaseYear')->toString(),
             ],
         ]);
 
@@ -4001,7 +4036,6 @@ trait DatabasesBase
         /**
          * Test null value for cursor
          */
-
         $documents = $this->client->call(Client::METHOD_GET, $this->getRecordUrl($databaseId, $data['moviesId']), array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
@@ -4235,7 +4269,7 @@ trait DatabasesBase
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
             'queries' => [
-                '{"method":"contains","attribute":"title","values":[bad]}'
+                '{"method":"contains","attribute":"title","values":[bad]}',
             ],
         ]);
 
@@ -4358,7 +4392,6 @@ trait DatabasesBase
             $this->assertContains('1975-06-12T18:12:55.000+00:00', $birthDays);
         }
 
-
         $documents = $this->client->call(Client::METHOD_GET, $this->getRecordUrl($databaseId, $data['moviesId']), array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
@@ -4394,7 +4427,7 @@ trait DatabasesBase
         $value = '';
 
         for ($i = 0; $i < 101; $i++) {
-            $value .= "[" . $i . "] Too long title to cross 2k chars query limit ";
+            $value .= '['.$i.'] Too long title to cross 2k chars query limit ';
         }
 
         $documents = $this->client->call(Client::METHOD_GET, $this->getRecordUrl($databaseId, $data['moviesId']), array_merge([
@@ -4407,7 +4440,7 @@ trait DatabasesBase
         ]);
 
         // Todo: Not sure what to do we with Query length Test VS old? JSON validator will fails if query string will be truncated?
-        //$this->assertEquals(400, $documents['headers']['status-code']);
+        // $this->assertEquals(400, $documents['headers']['status-code']);
 
         // Todo: Disabled for CL - Uncomment after ProxyDatabase cleanup for find method
         // $documents = $this->client->call(Client::METHOD_GET, $this->getRecordUrl($databaseId, $data['moviesId']), array_merge([
@@ -4452,14 +4485,14 @@ trait DatabasesBase
         $this->assertEquals($databaseId, $document['body']['$databaseId']);
         $this->assertEquals($document['body']['title'], 'Thor: Ragnaroc');
         $this->assertEquals($document['body']['releaseYear'], 2017);
-        $dateValidator = new DatetimeValidator();
+        $dateValidator = new DatetimeValidator;
         $this->assertEquals(true, $dateValidator->isValid($document['body']['$createdAt']));
         $this->assertEquals(true, $dateValidator->isValid($document['body']['birthDay']));
         $this->assertContains(Permission::read(Role::user($this->getUser()['$id'])), $document['body']['$permissions']);
         $this->assertContains(Permission::update(Role::user($this->getUser()['$id'])), $document['body']['$permissions']);
         $this->assertContains(Permission::delete(Role::user($this->getUser()['$id'])), $document['body']['$permissions']);
 
-        $document = $this->client->call(Client::METHOD_PATCH, $this->getContainerUrl($databaseId, $data['moviesId']) . '/' . $this->getRecordResource() . '/' . $id, array_merge([
+        $document = $this->client->call(Client::METHOD_PATCH, $this->getContainerUrl($databaseId, $data['moviesId']).'/'.$this->getRecordResource().'/'.$id, array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
@@ -4484,7 +4517,7 @@ trait DatabasesBase
         $this->assertContains(Permission::update(Role::users()), $document['body']['$permissions']);
         $this->assertContains(Permission::delete(Role::users()), $document['body']['$permissions']);
 
-        $document = $this->client->call(Client::METHOD_GET, $this->getContainerUrl($databaseId, $data['moviesId']) . '/' . $this->getRecordResource() . '/' . $id, array_merge([
+        $document = $this->client->call(Client::METHOD_GET, $this->getContainerUrl($databaseId, $data['moviesId']).'/'.$this->getRecordResource().'/'.$id, array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()));
@@ -4498,7 +4531,7 @@ trait DatabasesBase
         $this->assertEquals($document['body']['title'], 'Thor: Ragnarok');
         $this->assertEquals($document['body']['releaseYear'], 2017);
 
-        $response = $this->client->call(Client::METHOD_PATCH, $this->getContainerUrl($databaseId, $data['moviesId']) . '/' . $this->getRecordResource() . '/' . $id, array_merge([
+        $response = $this->client->call(Client::METHOD_PATCH, $this->getContainerUrl($databaseId, $data['moviesId']).'/'.$this->getRecordResource().'/'.$id, array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-timestamp' => DateTime::formatTz(DateTime::now()),
@@ -4511,7 +4544,7 @@ trait DatabasesBase
         $this->assertEquals(200, $response['headers']['status-code']);
 
         // Test readonly attributes are ignored
-        $response = $this->client->call(Client::METHOD_PATCH, $this->getContainerUrl($databaseId, $data['moviesId']) . '/' . $this->getRecordResource() . '/' . $id, array_merge([
+        $response = $this->client->call(Client::METHOD_PATCH, $this->getContainerUrl($databaseId, $data['moviesId']).'/'.$this->getRecordResource().'/'.$id, array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-timestamp' => DateTime::formatTz(DateTime::now()),
@@ -4543,8 +4576,9 @@ trait DatabasesBase
 
     public function testOperators(): void
     {
-        if (!$this->getSupportForOperators()) {
+        if (! $this->getSupportForOperators()) {
             $this->expectNotToPerformAssertions();
+
             return;
         }
 
@@ -4552,10 +4586,10 @@ trait DatabasesBase
         $database = $this->client->call(Client::METHOD_POST, $this->getApiBasePath(), [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
+            'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
             'databaseId' => ID::unique(),
-            'name' => 'Test Database for Operators'
+            'name' => 'Test Database for Operators',
         ]);
 
         $this->assertEquals(201, $database['headers']['status-code']);
@@ -4565,7 +4599,7 @@ trait DatabasesBase
         $collection = $this->client->call(Client::METHOD_POST, $this->getContainerUrl($databaseId), [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
+            'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
             $this->getContainerIdParam() => ID::unique(),
             'name' => 'Operator Tests',
@@ -4579,39 +4613,38 @@ trait DatabasesBase
         $collectionId = $collection['body']['$id'];
 
         // Create attributes
-        $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $collectionId) . '/string', [
+        $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $collectionId).'/string', [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
+            'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
             'key' => 'title',
             'size' => 256,
             'required' => true,
         ]);
 
-        $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $collectionId) . '/integer', [
+        $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $collectionId).'/integer', [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
+            'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
             'key' => 'releaseYear',
             'required' => true,
         ]);
 
-        $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $collectionId) . '/integer', [
+        $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $collectionId).'/integer', [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
+            'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
             'key' => 'duration',
             'required' => false,
         ]);
 
-
-        $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $collectionId) . '/string', [
+        $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $collectionId).'/string', [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
+            'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
             'key' => 'actors',
             'size' => 256,
@@ -4619,30 +4652,30 @@ trait DatabasesBase
             'array' => true,
         ]);
 
-        $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $collectionId) . '/integer', [
+        $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $collectionId).'/integer', [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
+            'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
             'key' => 'integers',
             'required' => false,
             'array' => true,
         ]);
 
-        $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $collectionId) . '/string', [
+        $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $collectionId).'/string', [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
+            'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
             'key' => 'tagline',
             'size' => 512,
             'required' => false,
         ]);
 
-        $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $collectionId) . '/datetime', [
+        $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $collectionId).'/datetime', [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
+            'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
             'key' => 'birthDay',
             'required' => false,
@@ -4760,7 +4793,7 @@ trait DatabasesBase
 
         // Test upsert with operators
         $upsertId = ID::unique();
-        $upserted = $this->client->call(Client::METHOD_PUT, $this->getContainerUrl($databaseId, $collectionId) . '/' . $this->getRecordResource() . '/' . $upsertId, array_merge([
+        $upserted = $this->client->call(Client::METHOD_PUT, $this->getContainerUrl($databaseId, $collectionId).'/'.$this->getRecordResource().'/'.$upsertId, array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
@@ -4779,7 +4812,7 @@ trait DatabasesBase
 
         $this->assertEquals(200, $upserted['headers']['status-code']);
 
-        $upserted = $this->client->call(Client::METHOD_PUT, $this->getContainerUrl($databaseId, $collectionId) . '/' . $this->getRecordResource() . '/' . $upsertId, array_merge([
+        $upserted = $this->client->call(Client::METHOD_PUT, $this->getContainerUrl($databaseId, $collectionId).'/'.$this->getRecordResource().'/'.$upsertId, array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
@@ -4797,8 +4830,9 @@ trait DatabasesBase
 
     public function testBulkOperators(): void
     {
-        if (!$this->getSupportForOperators()) {
+        if (! $this->getSupportForOperators()) {
             $this->expectNotToPerformAssertions();
+
             return;
         }
 
@@ -4806,10 +4840,10 @@ trait DatabasesBase
         $database = $this->client->call(Client::METHOD_POST, $this->getApiBasePath(), [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
+            'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
             'databaseId' => ID::unique(),
-            'name' => 'Test Database for Bulk Operators'
+            'name' => 'Test Database for Bulk Operators',
         ]);
 
         $this->assertEquals(201, $database['headers']['status-code']);
@@ -4819,7 +4853,7 @@ trait DatabasesBase
         $collection = $this->client->call(Client::METHOD_POST, $this->getContainerUrl($databaseId), [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
+            'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
             $this->getContainerIdParam() => ID::unique(),
             'name' => 'Bulk Operator Tests',
@@ -4833,30 +4867,29 @@ trait DatabasesBase
         $collectionId = $collection['body']['$id'];
 
         // Create attributes
-        $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $collectionId) . '/string', [
+        $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $collectionId).'/string', [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
+            'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
             'key' => 'title',
             'size' => 256,
             'required' => true,
         ]);
 
-        $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $collectionId) . '/integer', [
+        $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $collectionId).'/integer', [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
+            'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
             'key' => 'releaseYear',
             'required' => true,
         ]);
 
-
-        $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $collectionId) . '/string', [
+        $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $collectionId).'/string', [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
+            'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
             'key' => 'actors',
             'size' => 256,
@@ -4864,10 +4897,10 @@ trait DatabasesBase
             'array' => true,
         ]);
 
-        $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $collectionId) . '/datetime', [
+        $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $collectionId).'/datetime', [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
+            'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
             'key' => 'birthDay',
             'required' => false,
@@ -4920,7 +4953,7 @@ trait DatabasesBase
         $bulkUpdate = $this->client->call(Client::METHOD_PATCH, $this->getRecordUrl($databaseId, $collectionId), array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
+            'x-appwrite-key' => $this->getProject()['apiKey'],
         ]), [
             'data' => [
                 'releaseYear' => Operator::increment(10)->toString(),
@@ -4934,7 +4967,7 @@ trait DatabasesBase
         $this->assertGreaterThanOrEqual(2, $bulkUpdate['body']['total']);
 
         // Verify the updates
-        $verify1 = $this->client->call(Client::METHOD_GET, $this->getContainerUrl($databaseId, $collectionId) . '/' . $this->getRecordResource() . '/' . $document1['body']['$id'], array_merge([
+        $verify1 = $this->client->call(Client::METHOD_GET, $this->getContainerUrl($databaseId, $collectionId).'/'.$this->getRecordResource().'/'.$document1['body']['$id'], array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()));
@@ -4942,7 +4975,7 @@ trait DatabasesBase
         $this->assertEquals(200, $verify1['headers']['status-code']);
         $this->assertEquals(2030, $verify1['body']['releaseYear']);
 
-        $verify2 = $this->client->call(Client::METHOD_GET, $this->getContainerUrl($databaseId, $collectionId) . '/' . $this->getRecordResource() . '/' . $document2['body']['$id'], array_merge([
+        $verify2 = $this->client->call(Client::METHOD_GET, $this->getContainerUrl($databaseId, $collectionId).'/'.$this->getRecordResource().'/'.$document2['body']['$id'], array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()));
@@ -4970,28 +5003,28 @@ trait DatabasesBase
                 Permission::read(Role::user($this->getUser()['$id'])),
                 Permission::update(Role::user($this->getUser()['$id'])),
                 Permission::delete(Role::user($this->getUser()['$id'])),
-            ]
+            ],
         ]);
 
         $id = $document['body']['$id'];
 
         $this->assertEquals(201, $document['headers']['status-code']);
 
-        $document = $this->client->call(Client::METHOD_GET, $this->getContainerUrl($databaseId, $data['moviesId']) . '/' . $this->getRecordResource() . '/' . $id, array_merge([
+        $document = $this->client->call(Client::METHOD_GET, $this->getContainerUrl($databaseId, $data['moviesId']).'/'.$this->getRecordResource().'/'.$id, array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()));
 
         $this->assertEquals(200, $document['headers']['status-code']);
 
-        $document = $this->client->call(Client::METHOD_DELETE, $this->getContainerUrl($databaseId, $data['moviesId']) . '/' . $this->getRecordResource() . '/' . $id, array_merge([
+        $document = $this->client->call(Client::METHOD_DELETE, $this->getContainerUrl($databaseId, $data['moviesId']).'/'.$this->getRecordResource().'/'.$id, array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()));
 
         $this->assertEquals(204, $document['headers']['status-code']);
 
-        $document = $this->client->call(Client::METHOD_GET, $this->getContainerUrl($databaseId, $data['moviesId']) . '/' . $this->getRecordResource() . '/' . $id, array_merge([
+        $document = $this->client->call(Client::METHOD_GET, $this->getContainerUrl($databaseId, $data['moviesId']).'/'.$this->getRecordResource().'/'.$id, array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()));
@@ -5001,13 +5034,13 @@ trait DatabasesBase
 
     public function testInvalidDocumentStructure(): void
     {
-        if (!$this->getSupportForAttributes()) {
+        if (! $this->getSupportForAttributes()) {
             $this->markTestSkipped('Attributes are not supported by this database adapter');
         }
         $database = $this->client->call(Client::METHOD_POST, $this->getApiBasePath(), array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
+            'x-appwrite-key' => $this->getProject()['apiKey'],
         ]), [
             'databaseId' => ID::unique(),
             'name' => 'InvalidDocumentDatabase',
@@ -5019,7 +5052,7 @@ trait DatabasesBase
         $collection = $this->client->call(Client::METHOD_POST, $this->getContainerUrl($databaseId), array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
+            'x-appwrite-key' => $this->getProject()['apiKey'],
         ]), [
             $this->getContainerIdParam() => ID::unique(),
             'name' => 'invalidDocumentStructure',
@@ -5035,48 +5068,48 @@ trait DatabasesBase
 
         $collectionId = $collection['body']['$id'];
 
-        $email = $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $collectionId) . '/email', array_merge([
+        $email = $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $collectionId).'/email', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
+            'x-appwrite-key' => $this->getProject()['apiKey'],
         ]), [
             'key' => 'email',
             'required' => false,
         ]);
 
-        $enum = $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $collectionId) . '/enum', array_merge([
+        $enum = $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $collectionId).'/enum', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
+            'x-appwrite-key' => $this->getProject()['apiKey'],
         ]), [
             'key' => 'enum',
             'elements' => ['yes', 'no', 'maybe'],
             'required' => false,
         ]);
 
-        $ip = $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $collectionId) . '/ip', array_merge([
+        $ip = $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $collectionId).'/ip', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
+            'x-appwrite-key' => $this->getProject()['apiKey'],
         ]), [
             'key' => 'ip',
             'required' => false,
         ]);
 
-        $url = $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $collectionId) . '/url', array_merge([
+        $url = $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $collectionId).'/url', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
+            'x-appwrite-key' => $this->getProject()['apiKey'],
         ]), [
             'key' => 'url',
             'size' => 256,
             'required' => false,
         ]);
 
-        $range = $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $collectionId) . '/integer', array_merge([
+        $range = $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $collectionId).'/integer', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
+            'x-appwrite-key' => $this->getProject()['apiKey'],
         ]), [
             'key' => 'range',
             'required' => false,
@@ -5085,10 +5118,10 @@ trait DatabasesBase
         ]);
 
         // TODO@kodumbeats min and max are rounded in error message
-        $floatRange = $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $collectionId) . '/float', array_merge([
+        $floatRange = $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $collectionId).'/float', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
+            'x-appwrite-key' => $this->getProject()['apiKey'],
         ]), [
             'key' => 'floatRange',
             'required' => false,
@@ -5096,10 +5129,10 @@ trait DatabasesBase
             'max' => 1.4,
         ]);
 
-        $probability = $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $collectionId) . '/float', array_merge([
+        $probability = $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $collectionId).'/float', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
+            'x-appwrite-key' => $this->getProject()['apiKey'],
         ]), [
             'key' => 'probability',
             'required' => false,
@@ -5108,20 +5141,20 @@ trait DatabasesBase
             'max' => 1,
         ]);
 
-        $upperBound = $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $collectionId) . '/integer', array_merge([
+        $upperBound = $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $collectionId).'/integer', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
+            'x-appwrite-key' => $this->getProject()['apiKey'],
         ]), [
             'key' => 'upperBound',
             'required' => false,
             'max' => 10,
         ]);
 
-        $lowerBound = $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $collectionId) . '/integer', array_merge([
+        $lowerBound = $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $collectionId).'/integer', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
+            'x-appwrite-key' => $this->getProject()['apiKey'],
         ]), [
             'key' => 'lowerBound',
             'required' => false,
@@ -5131,10 +5164,9 @@ trait DatabasesBase
         /**
          * Test for failure
          */
-
-        $invalidRange = $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $collectionId) . '/integer', array_merge([
+        $invalidRange = $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $collectionId).'/integer', array_merge([
             'content-type' => 'application/json', 'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
+            'x-appwrite-key' => $this->getProject()['apiKey'],
         ]), [
             'key' => 'invalidRange',
             'required' => false,
@@ -5142,9 +5174,9 @@ trait DatabasesBase
             'max' => 3,
         ]);
 
-        $defaultArray = $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $collectionId) . '/integer', array_merge([
+        $defaultArray = $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $collectionId).'/integer', array_merge([
             'content-type' => 'application/json', 'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
+            'x-appwrite-key' => $this->getProject()['apiKey'],
         ]), [
             'key' => 'defaultArray',
             'required' => false,
@@ -5152,54 +5184,54 @@ trait DatabasesBase
             'array' => true,
         ]);
 
-        $defaultRequired = $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $collectionId) . '/integer', array_merge([
+        $defaultRequired = $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $collectionId).'/integer', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
+            'x-appwrite-key' => $this->getProject()['apiKey'],
         ]), [
             'attributeId' => ID::custom('defaultRequired'),
             'required' => true,
-            'default' => 12
+            'default' => 12,
         ]);
 
-        $enumDefault = $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $collectionId) . '/enum', array_merge([
+        $enumDefault = $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $collectionId).'/enum', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
+            'x-appwrite-key' => $this->getProject()['apiKey'],
         ]), [
             'attributeId' => ID::custom('enumDefault'),
             'elements' => ['north', 'west'],
-            'default' => 'south'
+            'default' => 'south',
         ]);
 
-        $enumDefaultStrict = $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $collectionId) . '/enum', array_merge([
+        $enumDefaultStrict = $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $collectionId).'/enum', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
+            'x-appwrite-key' => $this->getProject()['apiKey'],
         ]), [
             'attributeId' => ID::custom('enumDefault'),
             'elements' => ['north', 'west'],
-            'default' => 'NORTH'
+            'default' => 'NORTH',
         ]);
 
-        $goodDatetime = $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $collectionId) . '/datetime', array_merge([
+        $goodDatetime = $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $collectionId).'/datetime', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
+            'x-appwrite-key' => $this->getProject()['apiKey'],
         ]), [
             'key' => 'birthDay',
             'required' => false,
-            'default' => null
+            'default' => null,
         ]);
 
-        $datetimeDefault = $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $collectionId) . '/datetime', array_merge([
+        $datetimeDefault = $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $collectionId).'/datetime', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
+            'x-appwrite-key' => $this->getProject()['apiKey'],
         ]), [
             'key' => 'badBirthDay',
             'required' => false,
-            'default' => 'bad'
+            'default' => 'bad',
         ]);
 
         $this->assertEquals(202, $email['headers']['status-code']);
@@ -5218,7 +5250,7 @@ trait DatabasesBase
         $this->assertEquals(400, $enumDefault['headers']['status-code']);
         $this->assertEquals(400, $enumDefaultStrict['headers']['status-code']);
         $this->assertEquals('Minimum value must be lesser than maximum value', $invalidRange['body']['message']);
-        $this->assertEquals('Cannot set default value for array ' . $this->getSchemaResource(), $defaultArray['body']['message']);
+        $this->assertEquals('Cannot set default value for array '.$this->getSchemaResource(), $defaultArray['body']['message']);
         $this->assertEquals(400, $datetimeDefault['headers']['status-code']);
         // wait for worker to add attributes
         $this->waitForAllAttributes($databaseId, $collectionId);
@@ -5234,7 +5266,6 @@ trait DatabasesBase
         /**
          * Test for successful validation
          */
-
         $goodEmail = $this->client->call(Client::METHOD_POST, $this->getRecordUrl($databaseId, $collectionId), array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
@@ -5247,7 +5278,7 @@ trait DatabasesBase
                 Permission::read(Role::user(ID::custom($this->getUser()['$id']))),
                 Permission::update(Role::user(ID::custom($this->getUser()['$id']))),
                 Permission::delete(Role::user(ID::custom($this->getUser()['$id']))),
-            ]
+            ],
         ]);
 
         $goodEnum = $this->client->call(Client::METHOD_POST, $this->getRecordUrl($databaseId, $collectionId), array_merge([
@@ -5262,7 +5293,7 @@ trait DatabasesBase
                 Permission::read(Role::user(ID::custom($this->getUser()['$id']))),
                 Permission::update(Role::user(ID::custom($this->getUser()['$id']))),
                 Permission::delete(Role::user(ID::custom($this->getUser()['$id']))),
-            ]
+            ],
         ]);
 
         $goodIp = $this->client->call(Client::METHOD_POST, $this->getRecordUrl($databaseId, $collectionId), array_merge([
@@ -5277,7 +5308,7 @@ trait DatabasesBase
                 Permission::read(Role::user(ID::custom($this->getUser()['$id']))),
                 Permission::update(Role::user(ID::custom($this->getUser()['$id']))),
                 Permission::delete(Role::user(ID::custom($this->getUser()['$id']))),
-            ]
+            ],
         ]);
 
         $goodUrl = $this->client->call(Client::METHOD_POST, $this->getRecordUrl($databaseId, $collectionId), array_merge([
@@ -5292,7 +5323,7 @@ trait DatabasesBase
                 Permission::read(Role::user(ID::custom($this->getUser()['$id']))),
                 Permission::update(Role::user(ID::custom($this->getUser()['$id']))),
                 Permission::delete(Role::user(ID::custom($this->getUser()['$id']))),
-            ]
+            ],
         ]);
 
         $goodRange = $this->client->call(Client::METHOD_POST, $this->getRecordUrl($databaseId, $collectionId), array_merge([
@@ -5307,7 +5338,7 @@ trait DatabasesBase
                 Permission::read(Role::user(ID::custom($this->getUser()['$id']))),
                 Permission::update(Role::user(ID::custom($this->getUser()['$id']))),
                 Permission::delete(Role::user(ID::custom($this->getUser()['$id']))),
-            ]
+            ],
         ]);
 
         $goodFloatRange = $this->client->call(Client::METHOD_POST, $this->getRecordUrl($databaseId, $collectionId), array_merge([
@@ -5322,7 +5353,7 @@ trait DatabasesBase
                 Permission::read(Role::user(ID::custom($this->getUser()['$id']))),
                 Permission::update(Role::user(ID::custom($this->getUser()['$id']))),
                 Permission::delete(Role::user(ID::custom($this->getUser()['$id']))),
-            ]
+            ],
         ]);
 
         $goodProbability = $this->client->call(Client::METHOD_POST, $this->getRecordUrl($databaseId, $collectionId), array_merge([
@@ -5337,7 +5368,7 @@ trait DatabasesBase
                 Permission::read(Role::user(ID::custom($this->getUser()['$id']))),
                 Permission::update(Role::user(ID::custom($this->getUser()['$id']))),
                 Permission::delete(Role::user(ID::custom($this->getUser()['$id']))),
-            ]
+            ],
         ]);
 
         $notTooHigh = $this->client->call(Client::METHOD_POST, $this->getRecordUrl($databaseId, $collectionId), array_merge([
@@ -5352,7 +5383,7 @@ trait DatabasesBase
                 Permission::read(Role::user(ID::custom($this->getUser()['$id']))),
                 Permission::update(Role::user(ID::custom($this->getUser()['$id']))),
                 Permission::delete(Role::user(ID::custom($this->getUser()['$id']))),
-            ]
+            ],
         ]);
 
         $notTooLow = $this->client->call(Client::METHOD_POST, $this->getRecordUrl($databaseId, $collectionId), array_merge([
@@ -5367,7 +5398,7 @@ trait DatabasesBase
                 Permission::read(Role::user(ID::custom($this->getUser()['$id']))),
                 Permission::update(Role::user(ID::custom($this->getUser()['$id']))),
                 Permission::delete(Role::user(ID::custom($this->getUser()['$id']))),
-            ]
+            ],
         ]);
 
         $this->assertEquals(201, $goodEmail['headers']['status-code']);
@@ -5396,7 +5427,7 @@ trait DatabasesBase
                 Permission::read(Role::user(ID::custom($this->getUser()['$id']))),
                 Permission::update(Role::user(ID::custom($this->getUser()['$id']))),
                 Permission::delete(Role::user(ID::custom($this->getUser()['$id']))),
-            ]
+            ],
         ]);
 
         $badEnum = $this->client->call(Client::METHOD_POST, $this->getRecordUrl($databaseId, $collectionId), array_merge([
@@ -5411,7 +5442,7 @@ trait DatabasesBase
                 Permission::read(Role::user(ID::custom($this->getUser()['$id']))),
                 Permission::update(Role::user(ID::custom($this->getUser()['$id']))),
                 Permission::delete(Role::user(ID::custom($this->getUser()['$id']))),
-            ]
+            ],
         ]);
 
         $badIp = $this->client->call(Client::METHOD_POST, $this->getRecordUrl($databaseId, $collectionId), array_merge([
@@ -5426,7 +5457,7 @@ trait DatabasesBase
                 Permission::read(Role::user(ID::custom($this->getUser()['$id']))),
                 Permission::update(Role::user(ID::custom($this->getUser()['$id']))),
                 Permission::delete(Role::user(ID::custom($this->getUser()['$id']))),
-            ]
+            ],
         ]);
 
         $badUrl = $this->client->call(Client::METHOD_POST, $this->getRecordUrl($databaseId, $collectionId), array_merge([
@@ -5441,7 +5472,7 @@ trait DatabasesBase
                 Permission::read(Role::user(ID::custom($this->getUser()['$id']))),
                 Permission::update(Role::user(ID::custom($this->getUser()['$id']))),
                 Permission::delete(Role::user(ID::custom($this->getUser()['$id']))),
-            ]
+            ],
         ]);
 
         $badRange = $this->client->call(Client::METHOD_POST, $this->getRecordUrl($databaseId, $collectionId), array_merge([
@@ -5456,7 +5487,7 @@ trait DatabasesBase
                 Permission::read(Role::user(ID::custom($this->getUser()['$id']))),
                 Permission::update(Role::user(ID::custom($this->getUser()['$id']))),
                 Permission::delete(Role::user(ID::custom($this->getUser()['$id']))),
-            ]
+            ],
         ]);
 
         $badFloatRange = $this->client->call(Client::METHOD_POST, $this->getRecordUrl($databaseId, $collectionId), array_merge([
@@ -5471,7 +5502,7 @@ trait DatabasesBase
                 Permission::read(Role::user(ID::custom($this->getUser()['$id']))),
                 Permission::update(Role::user(ID::custom($this->getUser()['$id']))),
                 Permission::delete(Role::user(ID::custom($this->getUser()['$id']))),
-            ]
+            ],
         ]);
 
         $badProbability = $this->client->call(Client::METHOD_POST, $this->getRecordUrl($databaseId, $collectionId), array_merge([
@@ -5486,7 +5517,7 @@ trait DatabasesBase
                 Permission::read(Role::user(ID::custom($this->getUser()['$id']))),
                 Permission::update(Role::user(ID::custom($this->getUser()['$id']))),
                 Permission::delete(Role::user(ID::custom($this->getUser()['$id']))),
-            ]
+            ],
         ]);
 
         $tooHigh = $this->client->call(Client::METHOD_POST, $this->getRecordUrl($databaseId, $collectionId), array_merge([
@@ -5501,7 +5532,7 @@ trait DatabasesBase
                 Permission::read(Role::user(ID::custom($this->getUser()['$id']))),
                 Permission::update(Role::user(ID::custom($this->getUser()['$id']))),
                 Permission::delete(Role::user(ID::custom($this->getUser()['$id']))),
-            ]
+            ],
         ]);
 
         $tooLow = $this->client->call(Client::METHOD_POST, $this->getRecordUrl($databaseId, $collectionId), array_merge([
@@ -5516,7 +5547,7 @@ trait DatabasesBase
                 Permission::read(Role::user(ID::custom($this->getUser()['$id']))),
                 Permission::update(Role::user(ID::custom($this->getUser()['$id']))),
                 Permission::delete(Role::user(ID::custom($this->getUser()['$id']))),
-            ]
+            ],
         ]);
 
         $badTime = $this->client->call(Client::METHOD_POST, $this->getRecordUrl($databaseId, $collectionId), array_merge([
@@ -5527,8 +5558,8 @@ trait DatabasesBase
             'data' => [
                 'birthDay' => '2020-10-10 27:30:10+01:00',
             ],
-            'read' => ['user:' . $this->getUser()['$id']],
-            'write' => ['user:' . $this->getUser()['$id']],
+            'read' => ['user:'.$this->getUser()['$id']],
+            'write' => ['user:'.$this->getUser()['$id']],
         ]);
 
         $this->assertEquals(400, $badEmail['headers']['status-code']);
@@ -5589,7 +5620,7 @@ trait DatabasesBase
 
         // Updated Permissions
 
-        $document = $this->client->call(Client::METHOD_PATCH, $this->getContainerUrl($databaseId, $data['moviesId']) . '/' . $this->getRecordResource() . '/' . $id, array_merge([
+        $document = $this->client->call(Client::METHOD_PATCH, $this->getContainerUrl($databaseId, $data['moviesId']).'/'.$this->getRecordResource().'/'.$id, array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
@@ -5600,7 +5631,7 @@ trait DatabasesBase
             ],
             'permissions' => [
                 Permission::read(Role::user($this->getUser()['$id'])),
-                Permission::update(Role::user($this->getUser()['$id']))
+                Permission::update(Role::user($this->getUser()['$id'])),
             ],
         ]);
 
@@ -5617,7 +5648,7 @@ trait DatabasesBase
             Permission::update(Role::user($this->getUser()['$id'])),
         ], $document['body']['$permissions']);
 
-        $document = $this->client->call(Client::METHOD_GET, $this->getContainerUrl($databaseId, $data['moviesId']) . '/' . $this->getRecordResource() . '/' . $id, array_merge([
+        $document = $this->client->call(Client::METHOD_GET, $this->getContainerUrl($databaseId, $data['moviesId']).'/'.$this->getRecordResource().'/'.$id, array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()));
@@ -5634,7 +5665,7 @@ trait DatabasesBase
 
         // Reset Permissions
 
-        $document = $this->client->call(Client::METHOD_PATCH, $this->getContainerUrl($databaseId, $data['moviesId']) . '/' . $this->getRecordResource() . '/' . $id, array_merge([
+        $document = $this->client->call(Client::METHOD_PATCH, $this->getContainerUrl($databaseId, $data['moviesId']).'/'.$this->getRecordResource().'/'.$id, array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
@@ -5653,7 +5684,7 @@ trait DatabasesBase
         $this->assertEquals([], $document['body']['$permissions']);
 
         // Check client side can no longer read the document.
-        $document = $this->client->call(Client::METHOD_GET, $this->getContainerUrl($databaseId, $data['moviesId']) . '/' . $this->getRecordResource() . '/' . $id, array_merge([
+        $document = $this->client->call(Client::METHOD_GET, $this->getContainerUrl($databaseId, $data['moviesId']).'/'.$this->getRecordResource().'/'.$id, array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()));
@@ -5673,7 +5704,7 @@ trait DatabasesBase
         $database = $this->client->call(Client::METHOD_POST, $this->getApiBasePath(), array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
+            'x-appwrite-key' => $this->getProject()['apiKey'],
         ]), [
             'databaseId' => ID::unique(),
             'name' => 'EnforceCollectionAndDocumentPermissions',
@@ -5686,7 +5717,7 @@ trait DatabasesBase
         $collection = $this->client->call(Client::METHOD_POST, $this->getContainerUrl($databaseId), array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
+            'x-appwrite-key' => $this->getProject()['apiKey'],
         ]), [
             $this->getContainerIdParam() => ID::unique(),
             'name' => 'enforceCollectionAndDocumentPermissions',
@@ -5720,7 +5751,7 @@ trait DatabasesBase
         $index = $this->client->call(Client::METHOD_POST, $this->getIndexUrl($databaseId, $collectionId), array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
+            'x-appwrite-key' => $this->getProject()['apiKey'],
         ]), [
             'key' => 'key_attribute',
             'type' => 'key',
@@ -5745,7 +5776,7 @@ trait DatabasesBase
                 Permission::read(Role::user($user)),
                 Permission::update(Role::user($user)),
                 Permission::delete(Role::user($user)),
-            ]
+            ],
         ]);
 
         $this->assertEquals(201, $document1['headers']['status-code']);
@@ -5761,7 +5792,7 @@ trait DatabasesBase
             'permissions' => [
                 Permission::update(Role::user($user)),
                 Permission::delete(Role::user($user)),
-            ]
+            ],
         ]);
 
         $this->assertEquals(201, $document2['headers']['status-code']);
@@ -5769,7 +5800,7 @@ trait DatabasesBase
         $document3 = $this->client->call(Client::METHOD_POST, $this->getRecordUrl($databaseId, $collectionId), [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
+            'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
             $this->getRecordIdParam() => ID::unique(),
             'data' => [
@@ -5792,7 +5823,7 @@ trait DatabasesBase
         $this->assertEquals(3, $documentsUser1['body']['total']);
         $this->assertCount(3, $documentsUser1['body'][$this->getRecordResource()]);
 
-        $document3GetWithCollectionRead = $this->client->call(Client::METHOD_GET, $this->getContainerUrl($databaseId, $collectionId) . '/' . $this->getRecordResource() . '/' . $document3['body']['$id'], array_merge([
+        $document3GetWithCollectionRead = $this->client->call(Client::METHOD_GET, $this->getContainerUrl($databaseId, $collectionId).'/'.$this->getRecordResource().'/'.$document3['body']['$id'], array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()));
@@ -5800,7 +5831,7 @@ trait DatabasesBase
         // Current user has read permission on the collection so can get any document
         $this->assertEquals(200, $document3GetWithCollectionRead['headers']['status-code']);
 
-        $email = uniqid() . 'user@localhost.test';
+        $email = uniqid().'user@localhost.test';
         $password = 'password';
         $name = 'User Name';
         $this->client->call(Client::METHOD_POST, '/account', [
@@ -5821,23 +5852,23 @@ trait DatabasesBase
             'email' => $email,
             'password' => $password,
         ]);
-        $session2 = $session2['cookies']['a_session_' . $this->getProject()['$id']];
+        $session2 = $session2['cookies']['a_session_'.$this->getProject()['$id']];
 
-        $document3GetWithDocumentRead = $this->client->call(Client::METHOD_GET, $this->getContainerUrl($databaseId, $collectionId) . '/' . $this->getRecordResource() . '/' . $document3['body']['$id'], [
+        $document3GetWithDocumentRead = $this->client->call(Client::METHOD_GET, $this->getContainerUrl($databaseId, $collectionId).'/'.$this->getRecordResource().'/'.$document3['body']['$id'], [
             'origin' => 'http://localhost',
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $session2,
+            'cookie' => 'a_session_'.$this->getProject()['$id'].'='.$session2,
         ]);
 
         // Current user has no collection permissions but has read permission for this document
         $this->assertEquals(200, $document3GetWithDocumentRead['headers']['status-code']);
 
-        $document2GetFailure = $this->client->call(Client::METHOD_GET, $this->getContainerUrl($databaseId, $collectionId) . '/' . $this->getRecordResource() . '/' . $document2['body']['$id'], [
+        $document2GetFailure = $this->client->call(Client::METHOD_GET, $this->getContainerUrl($databaseId, $collectionId).'/'.$this->getRecordResource().'/'.$document2['body']['$id'], [
             'origin' => 'http://localhost',
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $session2,
+            'cookie' => 'a_session_'.$this->getProject()['$id'].'='.$session2,
         ]);
 
         // Current user has no collection or document permissions for this document
@@ -5847,7 +5878,7 @@ trait DatabasesBase
             'origin' => 'http://localhost',
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $session2,
+            'cookie' => 'a_session_'.$this->getProject()['$id'].'='.$session2,
         ]);
 
         // Current user has no collection permissions but has read permission for one document
@@ -5860,7 +5891,7 @@ trait DatabasesBase
         $database = $this->client->call(Client::METHOD_POST, $this->getApiBasePath(), array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
+            'x-appwrite-key' => $this->getProject()['apiKey'],
         ]), [
             'databaseId' => ID::unique(),
             'name' => 'EnforceCollectionPermissions',
@@ -5873,7 +5904,7 @@ trait DatabasesBase
         $collection = $this->client->call(Client::METHOD_POST, $this->getContainerUrl($databaseId), array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
+            'x-appwrite-key' => $this->getProject()['apiKey'],
         ]), [
             $this->getContainerIdParam() => ID::unique(),
             'name' => 'enforceCollectionPermissions',
@@ -5905,14 +5936,14 @@ trait DatabasesBase
         $index = $this->client->call(Client::METHOD_POST, $this->getIndexUrl($databaseId, $collectionId), array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
+            'x-appwrite-key' => $this->getProject()['apiKey'],
         ]), [
             'key' => 'key_attribute',
             'type' => 'key',
             $this->getIndexAttributesParam() => ['attribute'],
         ]);
 
-        $this->assertEquals(202, $index['headers']['status-code'], 'Index creation failed: ' . json_encode($index['body'] ?? []));
+        $this->assertEquals(202, $index['headers']['status-code'], 'Index creation failed: '.json_encode($index['body'] ?? []));
         $this->assertEquals('key_attribute', $index['body']['key']);
 
         $this->waitForIndex($databaseId, $collectionId, 'key_attribute');
@@ -5929,7 +5960,7 @@ trait DatabasesBase
                 Permission::read(Role::user($user)),
                 Permission::update(Role::user($user)),
                 Permission::delete(Role::user($user)),
-            ]
+            ],
         ]);
 
         $this->assertEquals(201, $document1['headers']['status-code']);
@@ -5945,7 +5976,7 @@ trait DatabasesBase
             'permissions' => [
                 Permission::update(Role::user($user)),
                 Permission::delete(Role::user($user)),
-            ]
+            ],
         ]);
 
         $this->assertEquals(201, $document2['headers']['status-code']);
@@ -5953,7 +5984,7 @@ trait DatabasesBase
         $document3 = $this->client->call(Client::METHOD_POST, $this->getRecordUrl($databaseId, $collectionId), [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
+            'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
             $this->getRecordIdParam() => ID::unique(),
             'data' => [
@@ -5976,7 +6007,7 @@ trait DatabasesBase
         $this->assertEquals(3, $documentsUser1['body']['total']);
         $this->assertCount(3, $documentsUser1['body'][$this->getRecordResource()]);
 
-        $document3GetWithCollectionRead = $this->client->call(Client::METHOD_GET, $this->getContainerUrl($databaseId, $collectionId) . '/' . $this->getRecordResource() . '/' . $document3['body']['$id'], array_merge([
+        $document3GetWithCollectionRead = $this->client->call(Client::METHOD_GET, $this->getContainerUrl($databaseId, $collectionId).'/'.$this->getRecordResource().'/'.$document3['body']['$id'], array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()));
@@ -5984,7 +6015,7 @@ trait DatabasesBase
         // Current user has read permission on the collection so can get any document
         $this->assertEquals(200, $document3GetWithCollectionRead['headers']['status-code']);
 
-        $email = uniqid() . 'user2@localhost.test';
+        $email = uniqid().'user2@localhost.test';
         $password = 'password';
         $name = 'User Name';
         $this->client->call(Client::METHOD_POST, '/account', [
@@ -6005,13 +6036,13 @@ trait DatabasesBase
             'email' => $email,
             'password' => $password,
         ]);
-        $session2 = $session2['cookies']['a_session_' . $this->getProject()['$id']];
+        $session2 = $session2['cookies']['a_session_'.$this->getProject()['$id']];
 
-        $document3GetWithDocumentRead = $this->client->call(Client::METHOD_GET, $this->getContainerUrl($databaseId, $collectionId) . '/' . $this->getRecordResource() . '/' . $document3['body']['$id'], [
+        $document3GetWithDocumentRead = $this->client->call(Client::METHOD_GET, $this->getContainerUrl($databaseId, $collectionId).'/'.$this->getRecordResource().'/'.$document3['body']['$id'], [
             'origin' => 'http://localhost',
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $session2,
+            'cookie' => 'a_session_'.$this->getProject()['$id'].'='.$session2,
         ]);
 
         // other2 has no collection permissions and document permissions are disabled
@@ -6021,7 +6052,7 @@ trait DatabasesBase
             'origin' => 'http://localhost',
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $session2,
+            'cookie' => 'a_session_'.$this->getProject()['$id'].'='.$session2,
         ]);
 
         // other2 has no collection permissions and document permissions are disabled
@@ -6031,7 +6062,7 @@ trait DatabasesBase
         $collection = $this->client->call(Client::METHOD_PUT, $this->getContainerUrl($databaseId, $collectionId), [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
+            'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
             'name' => $collection['body']['name'],
             $this->getSecurityParam() => true,
@@ -6041,7 +6072,7 @@ trait DatabasesBase
             'origin' => 'http://localhost',
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $session2,
+            'cookie' => 'a_session_'.$this->getProject()['$id'].'='.$session2,
         ]);
 
         // Current user has no collection permissions read access to one document
@@ -6077,7 +6108,7 @@ trait DatabasesBase
         $collectionId = $collection['body']['$id'];
 
         // Add a title attribute
-        $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $collectionId) . '/string', $serverHeaders, [
+        $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $collectionId).'/string', $serverHeaders, [
             'key' => 'title',
             'size' => 256,
             'required' => true,
@@ -6095,7 +6126,7 @@ trait DatabasesBase
                 Permission::read(Role::user(ID::custom($this->getUser()['$id']))),
                 Permission::update(Role::user(ID::custom($this->getUser()['$id']))),
                 Permission::delete(Role::user(ID::custom($this->getUser()['$id']))),
-            ]
+            ],
         ]);
         $this->client->call(Client::METHOD_POST, $this->getRecordUrl($databaseId, $collectionId), array_merge([
             'content-type' => 'application/json',
@@ -6107,7 +6138,7 @@ trait DatabasesBase
                 Permission::read(Role::user(ID::custom($this->getUser()['$id']))),
                 Permission::update(Role::user(ID::custom($this->getUser()['$id']))),
                 Permission::delete(Role::user(ID::custom($this->getUser()['$id']))),
-            ]
+            ],
         ]);
 
         // Create unique index on title
@@ -6135,7 +6166,7 @@ trait DatabasesBase
                 Permission::read(Role::user(ID::custom($this->getUser()['$id']))),
                 Permission::update(Role::user(ID::custom($this->getUser()['$id']))),
                 Permission::delete(Role::user(ID::custom($this->getUser()['$id']))),
-            ]
+            ],
         ]);
 
         $this->assertEquals(409, $duplicate['headers']['status-code']);
@@ -6153,13 +6184,13 @@ trait DatabasesBase
                 Permission::read(Role::user(ID::custom($this->getUser()['$id']))),
                 Permission::update(Role::user(ID::custom($this->getUser()['$id']))),
                 Permission::delete(Role::user(ID::custom($this->getUser()['$id']))),
-            ]
+            ],
         ]);
 
         $this->assertEquals(201, $document['headers']['status-code']);
 
         // Test for exception when updating document to conflict
-        $duplicate = $this->client->call(Client::METHOD_PATCH, $this->getContainerUrl($databaseId, $collectionId) . '/' . $this->getRecordResource() . '/' . $document['body']['$id'], array_merge([
+        $duplicate = $this->client->call(Client::METHOD_PATCH, $this->getContainerUrl($databaseId, $collectionId).'/'.$this->getRecordResource().'/'.$document['body']['$id'], array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
@@ -6171,7 +6202,7 @@ trait DatabasesBase
                 Permission::read(Role::user(ID::custom($this->getUser()['$id']))),
                 Permission::update(Role::user(ID::custom($this->getUser()['$id']))),
                 Permission::delete(Role::user(ID::custom($this->getUser()['$id']))),
-            ]
+            ],
         ]);
 
         $this->assertEquals(409, $duplicate['headers']['status-code']);
@@ -6186,15 +6217,15 @@ trait DatabasesBase
         ], $this->getHeaders()) : [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
+            'x-appwrite-key' => $this->getProject()['apiKey'],
         ];
 
         $document = $this->client->call(Client::METHOD_POST, $this->getRecordUrl($data['databaseId'], $data['moviesId']), $headers, [
             $this->getRecordIdParam() => ID::unique(),
             'data' => [
                 'title' => 'Creation Date Test',
-                'releaseYear' => 2000
-            ]
+                'releaseYear' => 2000,
+            ],
         ]);
 
         $this->assertEquals($document['body']['title'], 'Creation Date Test');
@@ -6208,7 +6239,7 @@ trait DatabasesBase
         $document = $this->client->call(Client::METHOD_PATCH, $this->getRecordUrl($data['databaseId'], $data['moviesId'], $documentId), $headers, [
             'data' => [
                 'title' => 'Updated Date Test',
-            ]
+            ],
         ]);
 
         $updatedAtSecond = $document['body']['$updatedAt'];
@@ -6223,8 +6254,8 @@ trait DatabasesBase
             'data' => [
                 'title' => 'Again Updated Date Test',
                 '$createdAt' => '2022-08-01 13:09:23.040',
-                '$updatedAt' => '2022-08-01 13:09:23.050'
-            ]
+                '$updatedAt' => '2022-08-01 13:09:23.050',
+            ],
         ]);
         if ($this->getSide() === 'client') {
             $this->assertEquals($document['body']['title'], 'Again Updated Date Test');
@@ -6244,7 +6275,7 @@ trait DatabasesBase
         $database = $this->client->call(Client::METHOD_POST, $this->getApiBasePath(), array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
+            'x-appwrite-key' => $this->getProject()['apiKey'],
         ]), [
             'databaseId' => ID::unique(),
             'name' => 'Empty Permissions',
@@ -6257,7 +6288,7 @@ trait DatabasesBase
         $movies = $this->client->call(Client::METHOD_POST, $this->getContainerUrl($databaseId), array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
+            'x-appwrite-key' => $this->getProject()['apiKey'],
         ]), [
             $this->getContainerIdParam() => ID::unique(),
             'name' => 'Movies',
@@ -6319,7 +6350,7 @@ trait DatabasesBase
         ], $this->getHeaders()), [
             'permissions' => [
                 Permission::read(Role::user(ID::custom($this->getUser()['$id']))),
-            ]
+            ],
         ]);
 
         $this->assertEquals(200, $document['headers']['status-code']);
@@ -6352,8 +6383,9 @@ trait DatabasesBase
 
     public function testAttributeBooleanDefault(): void
     {
-        if (!$this->getSupportForAttributes()) {
+        if (! $this->getSupportForAttributes()) {
             $this->expectNotToPerformAssertions();
+
             return;
         }
 
@@ -6366,36 +6398,36 @@ trait DatabasesBase
         $collection = $this->client->call(Client::METHOD_POST, $this->getContainerUrl($databaseId), array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
+            'x-appwrite-key' => $this->getProject()['apiKey'],
         ]), [
             $this->getContainerIdParam() => ID::unique(),
-            'name' => 'Boolean'
+            'name' => 'Boolean',
         ]);
 
         $this->assertEquals(201, $collection['headers']['status-code']);
 
         $collectionId = $collection['body']['$id'];
 
-        $true = $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $collectionId) . '/boolean', array_merge([
+        $true = $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $collectionId).'/boolean', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
+            'x-appwrite-key' => $this->getProject()['apiKey'],
         ]), [
             'key' => 'true',
             'required' => false,
-            'default' => true
+            'default' => true,
         ]);
 
         $this->assertEquals(202, $true['headers']['status-code']);
 
-        $false = $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $collectionId) . '/boolean', array_merge([
+        $false = $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $collectionId).'/boolean', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
+            'x-appwrite-key' => $this->getProject()['apiKey'],
         ]), [
             'key' => 'false',
             'required' => false,
-            'default' => false
+            'default' => false,
         ]);
 
         $this->assertEquals(202, $false['headers']['status-code']);
@@ -6403,8 +6435,9 @@ trait DatabasesBase
 
     public function testOneToOneRelationship(): void
     {
-        if (!$this->getSupportForRelationships()) {
+        if (! $this->getSupportForRelationships()) {
             $this->expectNotToPerformAssertions();
+
             return;
         }
 
@@ -6414,7 +6447,7 @@ trait DatabasesBase
         $person = $this->client->call(Client::METHOD_POST, $this->getContainerUrl($databaseId), array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
+            'x-appwrite-key' => $this->getProject()['apiKey'],
         ]), [
             $this->getContainerIdParam() => ID::unique(),
             'name' => 'person',
@@ -6432,7 +6465,7 @@ trait DatabasesBase
         $library = $this->client->call(Client::METHOD_POST, $this->getContainerUrl($databaseId), array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
+            'x-appwrite-key' => $this->getProject()['apiKey'],
         ]), [
             $this->getContainerIdParam() => ID::unique(),
             'name' => 'library',
@@ -6446,10 +6479,10 @@ trait DatabasesBase
 
         $this->assertEquals(201, $library['headers']['status-code']);
 
-        $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $person['body']['$id']) . '/string', array_merge([
+        $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $person['body']['$id']).'/string', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
+            'x-appwrite-key' => $this->getProject()['apiKey'],
         ]), [
             'key' => 'fullName',
             'size' => 255,
@@ -6458,10 +6491,10 @@ trait DatabasesBase
 
         $this->waitForAttribute($databaseId, $person['body']['$id'], 'fullName');
 
-        $relation = $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $person['body']['$id']) . '/relationship', array_merge([
+        $relation = $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $person['body']['$id']).'/relationship', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
+            'x-appwrite-key' => $this->getProject()['apiKey'],
         ]), [
             $this->getRelatedIdParam() => $library['body']['$id'],
             'type' => Database::RELATION_ONE_TO_ONE,
@@ -6473,10 +6506,10 @@ trait DatabasesBase
 
         $this->waitForAttribute($databaseId, $person['body']['$id'], 'library');
 
-        $libraryName = $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $library['body']['$id']) . '/string', array_merge([
+        $libraryName = $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $library['body']['$id']).'/string', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
+            'x-appwrite-key' => $this->getProject()['apiKey'],
         ]), [
             'key' => 'libraryName',
             'size' => 255,
@@ -6494,7 +6527,7 @@ trait DatabasesBase
         $attributes = $this->client->call(Client::METHOD_GET, $this->getSchemaUrl($databaseId, $person['body']['$id']), array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
+            'x-appwrite-key' => $this->getProject()['apiKey'],
         ]));
 
         $this->assertEquals(200, $attributes['headers']['status-code']);
@@ -6509,7 +6542,7 @@ trait DatabasesBase
         $attribute = $this->client->call(Client::METHOD_GET, $this->getSchemaUrl($databaseId, $person['body']['$id'], '', 'library'), array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
+            'x-appwrite-key' => $this->getProject()['apiKey'],
         ]));
 
         $this->assertEquals(200, $attribute['headers']['status-code']);
@@ -6541,7 +6574,7 @@ trait DatabasesBase
                 Permission::read(Role::user($this->getUser()['$id'])),
                 Permission::update(Role::user($this->getUser()['$id'])),
                 Permission::delete(Role::user($this->getUser()['$id'])),
-            ]
+            ],
         ]);
 
         $this->assertEquals('Library 1', $person1['body']['library']['libraryName']);
@@ -6561,7 +6594,7 @@ trait DatabasesBase
                 Permission::read(Role::user($this->getUser()['$id'])),
                 Permission::update(Role::user($this->getUser()['$id'])),
                 Permission::delete(Role::user($this->getUser()['$id'])),
-            ]
+            ],
         ]);
 
         $this->assertEquals('Library 2', $person2['body']['library']['libraryName']);
@@ -6611,7 +6644,7 @@ trait DatabasesBase
         $response = $this->client->call(Client::METHOD_DELETE, $this->getSchemaUrl($databaseId, $person['body']['$id'], '', 'library'), array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
+            'x-appwrite-key' => $this->getProject()['apiKey'],
         ]));
 
         $this->assertEquals(204, $response['headers']['status-code']);
@@ -6620,32 +6653,33 @@ trait DatabasesBase
             $attribute = $this->client->call(Client::METHOD_GET, $this->getSchemaUrl($databaseId, $person['body']['$id'], '', 'library'), array_merge([
                 'content-type' => 'application/json',
                 'x-appwrite-project' => $this->getProject()['$id'],
-                'x-appwrite-key' => $this->getProject()['apiKey']
+                'x-appwrite-key' => $this->getProject()['apiKey'],
             ]));
             $this->assertEquals(404, $attribute['headers']['status-code']);
+
             return true;
         }, 60000, 500);
 
         $attribute = $this->client->call(Client::METHOD_GET, $this->getSchemaUrl($databaseId, $person['body']['$id'], '', 'library'), array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
+            'x-appwrite-key' => $this->getProject()['apiKey'],
         ]));
 
         $this->assertEquals(404, $attribute['headers']['status-code']);
 
-        $person1 = $this->client->call(Client::METHOD_GET, $this->getContainerUrl($databaseId, $person['body']['$id']) . '/' . $this->getRecordResource() . '/' . $person1['body']['$id'], array_merge([
+        $person1 = $this->client->call(Client::METHOD_GET, $this->getContainerUrl($databaseId, $person['body']['$id']).'/'.$this->getRecordResource().'/'.$person1['body']['$id'], array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()));
 
         $this->assertArrayNotHasKey('library', $person1['body']);
 
-        //Test Deletion of related twoKey
+        // Test Deletion of related twoKey
         $attributes = $this->client->call(Client::METHOD_GET, $this->getSchemaUrl($databaseId, $library['body']['$id']), array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
+            'x-appwrite-key' => $this->getProject()['apiKey'],
         ]));
 
         $this->assertEquals(200, $attributes['headers']['status-code']);
@@ -6655,8 +6689,9 @@ trait DatabasesBase
 
     public function testOneToManyRelationship(): void
     {
-        if (!$this->getSupportForRelationships()) {
+        if (! $this->getSupportForRelationships()) {
             $this->expectNotToPerformAssertions();
+
             return;
         }
 
@@ -6668,7 +6703,7 @@ trait DatabasesBase
         $libraryAttributesResponse = $this->client->call(Client::METHOD_GET, $this->getSchemaUrl($databaseId, $libraryCollection), array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
+            'x-appwrite-key' => $this->getProject()['apiKey'],
         ]));
 
         $this->assertIsArray($libraryAttributesResponse['body'][$this->getSchemaResource()]);
@@ -6677,7 +6712,7 @@ trait DatabasesBase
         $libraryCollectionResponse = $this->client->call(Client::METHOD_GET, $this->getContainerUrl($databaseId, $libraryCollection), array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
+            'x-appwrite-key' => $this->getProject()['apiKey'],
         ]));
 
         $this->assertIsArray($libraryCollectionResponse['body'][$this->getSchemaResource()]);
@@ -6686,7 +6721,7 @@ trait DatabasesBase
         $attribute = $this->client->call(Client::METHOD_GET, $this->getSchemaUrl($databaseId, $personCollection, '', 'libraries'), array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
+            'x-appwrite-key' => $this->getProject()['apiKey'],
         ]));
 
         $this->assertEquals(200, $attribute['headers']['status-code']);
@@ -6728,14 +6763,14 @@ trait DatabasesBase
                             Permission::delete(Role::any()),
                         ],
                         'libraryName' => 'Library 11',
-                    ]
+                    ],
                 ],
             ],
             'permissions' => [
                 Permission::read(Role::any()),
                 Permission::update(Role::any()),
                 Permission::delete(Role::any()),
-            ]
+            ],
         ]);
 
         $this->assertEquals(201, $person2['headers']['status-code']);
@@ -6747,8 +6782,8 @@ trait DatabasesBase
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
             'queries' => [
-                Query::select(['*', 'libraries.*'])->toString()
-            ]
+                Query::select(['*', 'libraries.*'])->toString(),
+            ],
         ]);
 
         $this->assertEquals(200, $response['headers']['status-code']);
@@ -6761,8 +6796,8 @@ trait DatabasesBase
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
             'queries' => [
-                Query::select(['person_one_to_many.$id'])->toString()
-            ]
+                Query::select(['person_one_to_many.$id'])->toString(),
+            ],
         ]);
 
         $this->assertEquals(200, $response['headers']['status-code']);
@@ -6772,7 +6807,7 @@ trait DatabasesBase
         $response = $this->client->call(Client::METHOD_PATCH, $this->getSchemaUrl($databaseId, $personCollection, 'relationship', 'libraries'), array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
+            'x-appwrite-key' => $this->getProject()['apiKey'],
         ]), [
             'onDelete' => Database::RELATION_MUTATE_CASCADE,
         ]);
@@ -6782,7 +6817,7 @@ trait DatabasesBase
         $attribute = $this->client->call(Client::METHOD_GET, $this->getSchemaUrl($databaseId, $personCollection, '', 'libraries'), array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
+            'x-appwrite-key' => $this->getProject()['apiKey'],
         ]));
 
         $this->assertEquals(200, $attribute['headers']['status-code']);
@@ -6798,8 +6833,9 @@ trait DatabasesBase
 
     public function testManyToOneRelationship(): void
     {
-        if (!$this->getSupportForRelationships()) {
+        if (! $this->getSupportForRelationships()) {
             $this->expectNotToPerformAssertions();
+
             return;
         }
 
@@ -6810,7 +6846,7 @@ trait DatabasesBase
         $albums = $this->client->call(Client::METHOD_POST, $this->getContainerUrl($databaseId), array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
+            'x-appwrite-key' => $this->getProject()['apiKey'],
         ]), [
             $this->getContainerIdParam() => ID::unique(),
             'name' => 'Albums',
@@ -6822,10 +6858,10 @@ trait DatabasesBase
         ]);
 
         // Create album name attribute
-        $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $albums['body']['$id']) . '/string', array_merge([
+        $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $albums['body']['$id']).'/string', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
+            'x-appwrite-key' => $this->getProject()['apiKey'],
         ]), [
             'key' => 'name',
             'size' => 255,
@@ -6836,7 +6872,7 @@ trait DatabasesBase
         $artists = $this->client->call(Client::METHOD_POST, $this->getContainerUrl($databaseId), array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
+            'x-appwrite-key' => $this->getProject()['apiKey'],
         ]), [
             $this->getContainerIdParam() => ID::unique(),
             'name' => 'Artists',
@@ -6848,10 +6884,10 @@ trait DatabasesBase
         ]);
 
         // Create artist name attribute
-        $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $artists['body']['$id']) . '/string', array_merge([
+        $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $artists['body']['$id']).'/string', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
+            'x-appwrite-key' => $this->getProject()['apiKey'],
         ]), [
             'key' => 'name',
             'size' => 255,
@@ -6859,10 +6895,10 @@ trait DatabasesBase
         ]);
 
         // Create relationship
-        $response = $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $albums['body']['$id']) . '/relationship', array_merge([
+        $response = $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $albums['body']['$id']).'/relationship', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
+            'x-appwrite-key' => $this->getProject()['apiKey'],
         ]), [
             $this->getRelatedIdParam() => $artists['body']['$id'],
             'type' => Database::RELATION_MANY_TO_ONE,
@@ -6916,8 +6952,8 @@ trait DatabasesBase
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
             'queries' => [
-                Query::select(['*', 'artist.name', 'artist.$permissions'])->toString()
-            ]
+                Query::select(['*', 'artist.name', 'artist.$permissions'])->toString(),
+            ],
         ]);
 
         $this->assertEquals(200, $album['headers']['status-code']);
@@ -6932,8 +6968,8 @@ trait DatabasesBase
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
             'queries' => [
-                Query::select(['*', 'albums.$id', 'albums.name', 'albums.$permissions'])->toString()
-            ]
+                Query::select(['*', 'albums.$id', 'albums.name', 'albums.$permissions'])->toString(),
+            ],
         ]);
 
         $this->assertEquals(200, $artist['headers']['status-code']);
@@ -6947,8 +6983,9 @@ trait DatabasesBase
 
     public function testManyToManyRelationship(): void
     {
-        if (!$this->getSupportForRelationships()) {
+        if (! $this->getSupportForRelationships()) {
             $this->expectNotToPerformAssertions();
+
             return;
         }
 
@@ -6959,7 +6996,7 @@ trait DatabasesBase
         $sports = $this->client->call(Client::METHOD_POST, $this->getContainerUrl($databaseId), array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
+            'x-appwrite-key' => $this->getProject()['apiKey'],
         ]), [
             $this->getContainerIdParam() => ID::unique(),
             'name' => 'Sports',
@@ -6971,10 +7008,10 @@ trait DatabasesBase
         ]);
 
         // Create sport name attribute
-        $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $sports['body']['$id']) . '/string', array_merge([
+        $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $sports['body']['$id']).'/string', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
+            'x-appwrite-key' => $this->getProject()['apiKey'],
         ]), [
             'key' => 'name',
             'size' => 255,
@@ -6985,7 +7022,7 @@ trait DatabasesBase
         $players = $this->client->call(Client::METHOD_POST, $this->getContainerUrl($databaseId), array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
+            'x-appwrite-key' => $this->getProject()['apiKey'],
         ]), [
             $this->getContainerIdParam() => ID::unique(),
             'name' => 'Players',
@@ -6997,10 +7034,10 @@ trait DatabasesBase
         ]);
 
         // Create player name attribute
-        $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $players['body']['$id']) . '/string', array_merge([
+        $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $players['body']['$id']).'/string', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
+            'x-appwrite-key' => $this->getProject()['apiKey'],
         ]), [
             'key' => 'name',
             'size' => 255,
@@ -7008,10 +7045,10 @@ trait DatabasesBase
         ]);
 
         // Create relationship
-        $response = $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $sports['body']['$id']) . '/relationship', array_merge([
+        $response = $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $sports['body']['$id']).'/relationship', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
+            'x-appwrite-key' => $this->getProject()['apiKey'],
         ]), [
             $this->getRelatedIdParam() => $players['body']['$id'],
             'type' => Database::RELATION_MANY_TO_MANY,
@@ -7055,7 +7092,7 @@ trait DatabasesBase
                     [
                         '$id' => 'player2',
                         'name' => 'Player 2',
-                    ]
+                    ],
                 ],
             ],
         ]);
@@ -7074,8 +7111,8 @@ trait DatabasesBase
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
             'queries' => [
-                Query::select(['*', 'players.name', 'players.$permissions'])->toString()
-            ]
+                Query::select(['*', 'players.name', 'players.$permissions'])->toString(),
+            ],
         ]);
 
         $this->assertEquals(200, $sport['headers']['status-code']);
@@ -7092,8 +7129,8 @@ trait DatabasesBase
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
             'queries' => [
-                Query::select(['*', 'sports.$id', 'sports.name', 'sports.$permissions'])->toString()
-            ]
+                Query::select(['*', 'sports.$id', 'sports.name', 'sports.$permissions'])->toString(),
+            ],
         ]);
 
         $this->assertEquals(200, $player['headers']['status-code']);
@@ -7107,8 +7144,9 @@ trait DatabasesBase
 
     public function testValidateOperators(): void
     {
-        if (!$this->getSupportForRelationships()) {
+        if (! $this->getSupportForRelationships()) {
             $this->expectNotToPerformAssertions();
+
             return;
         }
 
@@ -7147,15 +7185,16 @@ trait DatabasesBase
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertGreaterThanOrEqual(2, count($response['body'][$this->getRecordResource()]));
         $this->assertEquals(null, $response['body'][$this->getRecordResource()][0]['fullName']);
-        $this->assertArrayNotHasKey("libraries", $response['body'][$this->getRecordResource()][0]);
+        $this->assertArrayNotHasKey('libraries', $response['body'][$this->getRecordResource()][0]);
         $this->assertArrayHasKey('$databaseId', $response['body'][$this->getRecordResource()][0]);
         $this->assertArrayHasKey($this->getContainerIdResponseKey(), $response['body'][$this->getRecordResource()][0]);
     }
 
     public function testSelectQueries(): void
     {
-        if (!$this->getSupportForRelationships()) {
+        if (! $this->getSupportForRelationships()) {
             $this->expectNotToPerformAssertions();
+
             return;
         }
 
@@ -7214,10 +7253,10 @@ trait DatabasesBase
         $database = $this->client->call(Client::METHOD_POST, $this->getApiBasePath(), [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
+            'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
             'databaseId' => ID::unique(),
-            'name' => 'Or queries'
+            'name' => 'Or queries',
         ]);
 
         $this->assertNotEmpty($database['body']['$id']);
@@ -7230,7 +7269,7 @@ trait DatabasesBase
         $presidents = $this->client->call(Client::METHOD_POST, $this->getContainerUrl($databaseId), array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
+            'x-appwrite-key' => $this->getProject()['apiKey'],
         ]), [
             $this->getContainerIdParam() => ID::unique(),
             'name' => 'USA Presidents',
@@ -7274,7 +7313,7 @@ trait DatabasesBase
             ],
             'permissions' => [
                 Permission::read(Role::user($this->getUser()['$id'])),
-            ]
+            ],
         ]);
         $this->assertEquals(201, $document1['headers']['status-code']);
 
@@ -7289,7 +7328,7 @@ trait DatabasesBase
             ],
             'permissions' => [
                 Permission::read(Role::user($this->getUser()['$id'])),
-            ]
+            ],
         ]);
         $this->assertEquals(201, $document2['headers']['status-code']);
 
@@ -7304,7 +7343,7 @@ trait DatabasesBase
             ],
             'permissions' => [
                 Permission::read(Role::user($this->getUser()['$id'])),
-            ]
+            ],
         ]);
 
         $this->assertEquals(201, $document3['headers']['status-code']);
@@ -7321,10 +7360,10 @@ trait DatabasesBase
                     Query::select(['first_name', 'last_name'])->toString(),
                     Query::or([
                         Query::equal('first_name', ['Donald']),
-                        Query::equal('last_name', ['Bush'])
+                        Query::equal('last_name', ['Bush']),
                     ])->toString(),
                     Query::limit(999)->toString(),
-                    Query::offset(0)->toString()
+                    Query::offset(0)->toString(),
                 ],
             ]
         );
@@ -7334,13 +7373,13 @@ trait DatabasesBase
     }
 
     /**
-     * @return void
      * @throws \Exception
      */
     public function testUpdateWithExistingRelationships(): void
     {
-        if (!$this->getSupportForRelationships()) {
+        if (! $this->getSupportForRelationships()) {
             $this->expectNotToPerformAssertions();
+
             return;
         }
 
@@ -7350,7 +7389,7 @@ trait DatabasesBase
         $collection1 = $this->client->call(Client::METHOD_POST, $this->getContainerUrl($databaseId), array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
+            'x-appwrite-key' => $this->getProject()['apiKey'],
         ]), [
             $this->getContainerIdParam() => ID::unique(),
             'name' => 'Collection1',
@@ -7364,7 +7403,7 @@ trait DatabasesBase
         $collection2 = $this->client->call(Client::METHOD_POST, $this->getContainerUrl($databaseId), array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
+            'x-appwrite-key' => $this->getProject()['apiKey'],
         ]), [
             $this->getContainerIdParam() => ID::unique(),
             'name' => 'Collection2',
@@ -7378,20 +7417,20 @@ trait DatabasesBase
         $collection1 = $collection1['body']['$id'];
         $collection2 = $collection2['body']['$id'];
 
-        $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $collection1) . '/string', array_merge([
+        $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $collection1).'/string', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
+            'x-appwrite-key' => $this->getProject()['apiKey'],
         ]), [
             'key' => 'name',
             'size' => '49',
             'required' => true,
         ]);
 
-        $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $collection2) . '/string', array_merge([
+        $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $collection2).'/string', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
+            'x-appwrite-key' => $this->getProject()['apiKey'],
         ]), [
             'key' => 'name',
             'size' => '49',
@@ -7401,22 +7440,22 @@ trait DatabasesBase
         $this->waitForAttribute($databaseId, $collection1, 'name');
         $this->waitForAttribute($databaseId, $collection2, 'name');
 
-        $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $collection1) . '/relationship', array_merge([
+        $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $collection1).'/relationship', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
+            'x-appwrite-key' => $this->getProject()['apiKey'],
         ]), [
             $this->getRelatedIdParam() => $collection2,
             'type' => Database::RELATION_ONE_TO_MANY,
             'twoWay' => true,
-            'key' => 'collection2'
+            'key' => 'collection2',
         ]);
 
         $this->waitForAttribute($databaseId, $collection1, 'collection2');
 
         $document = $this->client->call(Client::METHOD_POST, $this->getRecordUrl($databaseId, $collection1), array_merge([
             'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id']
+            'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
             $this->getRecordIdParam() => ID::unique(),
             'data' => [
@@ -7431,7 +7470,7 @@ trait DatabasesBase
 
         $update = $this->client->call(Client::METHOD_PATCH, $this->getRecordUrl($databaseId, $collection1, $document['body']['$id']), array_merge([
             'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id']
+            'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
             'data' => [
                 'name' => 'Document 1 Updated',
@@ -7449,7 +7488,7 @@ trait DatabasesBase
         $collection = $this->client->call(Client::METHOD_POST, $this->getContainerUrl($databaseId), array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
+            'x-appwrite-key' => $this->getProject()['apiKey'],
         ]), [
             $this->getContainerIdParam() => ID::unique(),
             'name' => 'Slow Queries',
@@ -7487,13 +7526,13 @@ trait DatabasesBase
             ], $this->getHeaders()), [
                 $this->getRecordIdParam() => ID::unique(),
                 'data' => [
-                    'longtext' => file_get_contents(__DIR__ . '/../../../resources/longtext.txt'),
+                    'longtext' => file_get_contents(__DIR__.'/../../../resources/longtext.txt'),
                 ],
                 'permissions' => [
                     Permission::read(Role::user($this->getUser()['$id'])),
                     Permission::update(Role::user($this->getUser()['$id'])),
                     Permission::delete(Role::user($this->getUser()['$id'])),
-                ]
+                ],
             ]);
         }
 
@@ -7512,7 +7551,7 @@ trait DatabasesBase
         $this->client->call(Client::METHOD_DELETE, $this->getContainerUrl($data['databaseId'], $data['$id']), array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
+            'x-appwrite-key' => $this->getProject()['apiKey'],
         ]));
     }
 
@@ -7524,17 +7563,17 @@ trait DatabasesBase
         $database = $this->client->call(Client::METHOD_POST, $this->getApiBasePath(), [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
+            'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
             'databaseId' => ID::unique(),
-            'name' => 'CounterDatabase'
+            'name' => 'CounterDatabase',
         ]);
         $databaseId = $database['body']['$id'];
 
         $collection = $this->client->call(Client::METHOD_POST, $this->getContainerUrl($databaseId), array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
+            'x-appwrite-key' => $this->getProject()['apiKey'],
         ]), [
             $this->getContainerIdParam() => ID::unique(),
             'name' => 'CounterCollection',
@@ -7549,10 +7588,10 @@ trait DatabasesBase
         // Add integer attribute only when supported; schemaless adapters (e.g. documentsdb)
         // can still store the field without a predefined attribute.
         if ($this->getSupportForAttributes()) {
-            $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $collectionId) . '/integer', array_merge([
+            $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $collectionId).'/integer', array_merge([
                 'content-type' => 'application/json',
                 'x-appwrite-project' => $this->getProject()['$id'],
-                'x-appwrite-key' => $this->getProject()['apiKey']
+                'x-appwrite-key' => $this->getProject()['apiKey'],
             ]), [
                 'key' => 'count',
                 'required' => true,
@@ -7568,7 +7607,7 @@ trait DatabasesBase
         ], $this->getHeaders()), [
             $this->getRecordIdParam() => ID::unique(),
             'data' => [
-                'count' => 5
+                'count' => 5,
             ],
             'permissions' => [
                 Permission::read(Role::any()),
@@ -7580,7 +7619,7 @@ trait DatabasesBase
         $docId = $doc['body']['$id'];
 
         // Increment by default 1
-        $inc = $this->client->call(Client::METHOD_PATCH, $this->getRecordUrl($databaseId, $collectionId, $docId) . "/count/increment", array_merge([
+        $inc = $this->client->call(Client::METHOD_PATCH, $this->getRecordUrl($databaseId, $collectionId, $docId).'/count/increment', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ]));
@@ -7597,11 +7636,11 @@ trait DatabasesBase
         $this->assertEquals(6, $get['body']['count']);
 
         // Increment by custom value 4
-        $inc2 = $this->client->call(Client::METHOD_PATCH, $this->getRecordUrl($databaseId, $collectionId, $docId) . "/count/increment", array_merge([
+        $inc2 = $this->client->call(Client::METHOD_PATCH, $this->getRecordUrl($databaseId, $collectionId, $docId).'/count/increment', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ]), [
-            'value' => 4
+            'value' => 4,
         ]);
         $this->assertEquals(200, $inc2['headers']['status-code']);
         $this->assertEquals(10, $inc2['body']['count']);
@@ -7613,14 +7652,14 @@ trait DatabasesBase
         $this->assertEquals(10, $get2['body']['count']);
 
         // Test max limit exceeded
-        $err = $this->client->call(Client::METHOD_PATCH, $this->getRecordUrl($databaseId, $collectionId, $docId) . "/count/increment", array_merge([
+        $err = $this->client->call(Client::METHOD_PATCH, $this->getRecordUrl($databaseId, $collectionId, $docId).'/count/increment', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ]), ['max' => 8]);
         $this->assertEquals(400, $err['headers']['status-code']);
 
         // Test attribute not found
-        $notFound = $this->client->call(Client::METHOD_PATCH, $this->getRecordUrl($databaseId, $collectionId, $docId) . "/unknown/increment", array_merge([
+        $notFound = $this->client->call(Client::METHOD_PATCH, $this->getRecordUrl($databaseId, $collectionId, $docId).'/unknown/increment', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ]));
@@ -7630,11 +7669,11 @@ trait DatabasesBase
         );
 
         // Test increment with value 0
-        $inc3 = $this->client->call(Client::METHOD_PATCH, $this->getRecordUrl($databaseId, $collectionId, $docId) . "/count/increment", array_merge([
+        $inc3 = $this->client->call(Client::METHOD_PATCH, $this->getRecordUrl($databaseId, $collectionId, $docId).'/count/increment', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ]), [
-            'value' => 0
+            'value' => 0,
         ]);
         $this->assertEquals(400, $inc3['headers']['status-code']);
     }
@@ -7644,10 +7683,10 @@ trait DatabasesBase
         $database = $this->client->call(Client::METHOD_POST, $this->getApiBasePath(), [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
+            'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
             'databaseId' => ID::unique(),
-            'name' => 'CounterDatabase'
+            'name' => 'CounterDatabase',
         ]);
 
         $databaseId = $database['body']['$id'];
@@ -7655,7 +7694,7 @@ trait DatabasesBase
         $collection = $this->client->call(Client::METHOD_POST, $this->getContainerUrl($databaseId), array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
+            'x-appwrite-key' => $this->getProject()['apiKey'],
         ]), [
             $this->getContainerIdParam() => ID::unique(),
             'name' => 'CounterCollection',
@@ -7671,10 +7710,10 @@ trait DatabasesBase
         // Add integer attribute only when supported; schemaless adapters can still
         // store the field without a predefined attribute.
         if ($this->getSupportForAttributes()) {
-            $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $collectionId) . '/integer', array_merge([
+            $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $collectionId).'/integer', array_merge([
                 'content-type' => 'application/json',
                 'x-appwrite-project' => $this->getProject()['$id'],
-                'x-appwrite-key' => $this->getProject()['apiKey']
+                'x-appwrite-key' => $this->getProject()['apiKey'],
             ]), [
                 'key' => 'count',
                 'required' => true,
@@ -7699,7 +7738,7 @@ trait DatabasesBase
         $documentId = $doc['body']['$id'];
 
         // Decrement by default 1 (count = 10 -> 9)
-        $dec = $this->client->call(Client::METHOD_PATCH, $this->getRecordUrl($databaseId, $collectionId, $documentId) . '/count/decrement', array_merge([
+        $dec = $this->client->call(Client::METHOD_PATCH, $this->getRecordUrl($databaseId, $collectionId, $documentId).'/count/decrement', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ]));
@@ -7715,11 +7754,11 @@ trait DatabasesBase
         $this->assertEquals(9, $get['body']['count']);
 
         // Decrement by custom value 3 (count 9 -> 6)
-        $dec2 = $this->client->call(Client::METHOD_PATCH, $this->getRecordUrl($databaseId, $collectionId, $documentId) . '/count/decrement', array_merge([
+        $dec2 = $this->client->call(Client::METHOD_PATCH, $this->getRecordUrl($databaseId, $collectionId, $documentId).'/count/decrement', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ]), [
-            'value' => 3
+            'value' => 3,
         ]);
         $this->assertEquals(200, $dec2['headers']['status-code']);
         $this->assertEquals(6, $dec2['body']['count']);
@@ -7731,14 +7770,14 @@ trait DatabasesBase
         $this->assertEquals(6, $get2['body']['count']);
 
         // Test min limit exceeded
-        $err = $this->client->call(Client::METHOD_PATCH, $this->getRecordUrl($databaseId, $collectionId, $documentId) . '/count/decrement', array_merge([
+        $err = $this->client->call(Client::METHOD_PATCH, $this->getRecordUrl($databaseId, $collectionId, $documentId).'/count/decrement', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ]), ['min' => 7]);
         $this->assertEquals(400, $err['headers']['status-code']);
 
         // Test min limit exceeded with custom value
-        $err = $this->client->call(Client::METHOD_PATCH, $this->getRecordUrl($databaseId, $collectionId, $documentId) . '/count/decrement', array_merge([
+        $err = $this->client->call(Client::METHOD_PATCH, $this->getRecordUrl($databaseId, $collectionId, $documentId).'/count/decrement', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ]), [
@@ -7748,7 +7787,7 @@ trait DatabasesBase
         $this->assertEquals(400, $err['headers']['status-code']);
 
         // Test min limit 0
-        $err = $this->client->call(Client::METHOD_PATCH, $this->getRecordUrl($databaseId, $collectionId, $documentId) . '/count/decrement', array_merge([
+        $err = $this->client->call(Client::METHOD_PATCH, $this->getRecordUrl($databaseId, $collectionId, $documentId).'/count/decrement', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ]), [
@@ -7758,18 +7797,18 @@ trait DatabasesBase
         $this->assertEquals(400, $err['headers']['status-code']);
 
         // Test type error on non-numeric attribute
-        $typeErr = $this->client->call(Client::METHOD_PATCH, $this->getRecordUrl($databaseId, $collectionId, $documentId) . '/count/decrement', array_merge([
+        $typeErr = $this->client->call(Client::METHOD_PATCH, $this->getRecordUrl($databaseId, $collectionId, $documentId).'/count/decrement', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ]), ['value' => 'not-a-number']);
         $this->assertEquals(400, $typeErr['headers']['status-code']);
 
         // Test decrement with value 0
-        $inc3 = $this->client->call(Client::METHOD_PATCH, $this->getRecordUrl($databaseId, $collectionId, $documentId) . "/count/increment", array_merge([
+        $inc3 = $this->client->call(Client::METHOD_PATCH, $this->getRecordUrl($databaseId, $collectionId, $documentId).'/count/increment', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ]), [
-            'value' => 0
+            'value' => 0,
         ]);
         $this->assertEquals(400, $inc3['headers']['status-code']);
     }
@@ -7777,18 +7816,19 @@ trait DatabasesBase
     public function testSpatialPointAttributes(): void
     {
 
-        if (!$this->getSupportForSpatials()) {
+        if (! $this->getSupportForSpatials()) {
             $this->expectNotToPerformAssertions();
+
             return;
         }
 
         $database = $this->client->call(Client::METHOD_POST, '/databases', [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
+            'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
             'databaseId' => ID::unique(),
-            'name' => 'Spatial Point Test Database'
+            'name' => 'Spatial Point Test Database',
         ]);
 
         $databaseId = $database['body']['$id'];
@@ -7797,7 +7837,7 @@ trait DatabasesBase
         $collection = $this->client->call(Client::METHOD_POST, $this->getContainerUrl($databaseId), array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
+            'x-appwrite-key' => $this->getProject()['apiKey'],
         ]), [
             $this->getContainerIdParam() => ID::unique(),
             'name' => 'Spatial Point Collection',
@@ -7813,10 +7853,10 @@ trait DatabasesBase
         $collectionId = $collection['body']['$id'];
 
         // Create string attribute
-        $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $collectionId) . '/string', array_merge([
+        $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $collectionId).'/string', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
+            'x-appwrite-key' => $this->getProject()['apiKey'],
         ]), [
             'key' => 'name',
             'size' => 256,
@@ -7824,10 +7864,10 @@ trait DatabasesBase
         ]);
 
         // Create point attribute - handle both 201 (created) and 200 (already exists)
-        $response = $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $collectionId) . '/point', array_merge([
+        $response = $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $collectionId).'/point', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
+            'x-appwrite-key' => $this->getProject()['apiKey'],
         ]), [
             'key' => 'location',
             'required' => true,
@@ -7845,8 +7885,8 @@ trait DatabasesBase
             $this->getRecordIdParam() => ID::unique(),
             'data' => [
                 'name' => 'Test Location',
-                'location' => [40.7128, -74.0060] // New York coordinates
-            ]
+                'location' => [40.7128, -74.0060], // New York coordinates
+            ],
         ]);
 
         $this->assertEquals(201, $response['headers']['status-code']);
@@ -7868,23 +7908,23 @@ trait DatabasesBase
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
             'data' => [
-                'location' => [40.7589, -73.9851] // Times Square coordinates
-            ]
+                'location' => [40.7589, -73.9851], // Times Square coordinates
+            ],
         ]);
 
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertEquals([40.7589, -73.9851], $response['body']['location']);
 
         // Test 4: Upsert document with point attribute
-        $response = $this->client->call(Client::METHOD_PUT, $this->getContainerUrl($databaseId, $collectionId) . '/' . $this->getRecordResource() . '/' . ID::unique(), array_merge([
+        $response = $this->client->call(Client::METHOD_PUT, $this->getContainerUrl($databaseId, $collectionId).'/'.$this->getRecordResource().'/'.ID::unique(), array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
             $this->getRecordIdParam() => ID::unique(),
             'data' => [
                 'name' => 'Upserted Location',
-                'location' => [34.0522, -80] // Los Angeles coordinates
-            ]
+                'location' => [34.0522, -80], // Los Angeles coordinates
+            ],
         ]);
 
         $this->assertEquals(200, $response['headers']['status-code']);
@@ -7898,8 +7938,8 @@ trait DatabasesBase
             $this->getRecordIdParam() => ID::unique(),
             'data' => [
                 'name' => 'Unauthorized Location',
-                'location' => [0, 0]
-            ]
+                'location' => [0, 0],
+            ],
         ]);
 
         $this->assertEquals(401, $response['headers']['status-code']);
@@ -7908,31 +7948,32 @@ trait DatabasesBase
         $this->client->call(Client::METHOD_DELETE, $this->getContainerUrl($databaseId, $collectionId), array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
+            'x-appwrite-key' => $this->getProject()['apiKey'],
         ]));
 
         $this->client->call(Client::METHOD_DELETE, $this->getDatabaseUrl($databaseId), array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
+            'x-appwrite-key' => $this->getProject()['apiKey'],
         ]));
     }
 
     public function testSpatialLineAttributes(): void
     {
 
-        if (!$this->getSupportForSpatials()) {
+        if (! $this->getSupportForSpatials()) {
             $this->expectNotToPerformAssertions();
+
             return;
         }
 
         $database = $this->client->call(Client::METHOD_POST, '/databases', [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
+            'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
             'databaseId' => ID::unique(),
-            'name' => 'Spatial Line Test Database'
+            'name' => 'Spatial Line Test Database',
         ]);
 
         $databaseId = $database['body']['$id'];
@@ -7941,7 +7982,7 @@ trait DatabasesBase
         $collection = $this->client->call(Client::METHOD_POST, $this->getContainerUrl($databaseId), array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
+            'x-appwrite-key' => $this->getProject()['apiKey'],
         ]), [
             $this->getContainerIdParam() => ID::unique(),
             'name' => 'Spatial Line Collection',
@@ -7957,20 +7998,20 @@ trait DatabasesBase
         $collectionId = $collection['body']['$id'];
 
         // Create integer attribute
-        $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $collectionId) . '/integer', array_merge([
+        $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $collectionId).'/integer', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
+            'x-appwrite-key' => $this->getProject()['apiKey'],
         ]), [
             'key' => 'distance',
             'required' => true,
         ]);
 
         // Create line attribute
-        $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $collectionId) . '/line', array_merge([
+        $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $collectionId).'/line', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
+            'x-appwrite-key' => $this->getProject()['apiKey'],
         ]), [
             'key' => 'route',
             'required' => true,
@@ -7986,8 +8027,8 @@ trait DatabasesBase
             $this->getRecordIdParam() => ID::unique(),
             'data' => [
                 'distance' => 100,
-                'route' => [[40.7128, -74.0060], [40.7589, -73.9851]] // Line from Downtown to Times Square
-            ]
+                'route' => [[40.7128, -74.0060], [40.7589, -73.9851]], // Line from Downtown to Times Square
+            ],
         ]);
 
         $this->assertEquals(201, $response['headers']['status-code']);
@@ -8009,23 +8050,23 @@ trait DatabasesBase
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
             'data' => [
-                'route' => [[40.7128, -74.0060], [40.7589, -73.9851], [40.7505, -73.9934]] // Extended route
-            ]
+                'route' => [[40.7128, -74.0060], [40.7589, -73.9851], [40.7505, -73.9934]], // Extended route
+            ],
         ]);
 
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertEquals([[40.7128, -74.0060], [40.7589, -73.9851], [40.7505, -73.9934]], $response['body']['route']);
 
         // Test 4: Upsert document with line attribute
-        $response = $this->client->call(Client::METHOD_PUT, $this->getContainerUrl($databaseId, $collectionId) . '/' . $this->getRecordResource() . '/' . ID::unique(), array_merge([
+        $response = $this->client->call(Client::METHOD_PUT, $this->getContainerUrl($databaseId, $collectionId).'/'.$this->getRecordResource().'/'.ID::unique(), array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
             $this->getRecordIdParam() => ID::unique(),
             'data' => [
                 'distance' => 200,
-                'route' => [[34.0522, -80], [34.0736, -90]] // LA route
-            ]
+                'route' => [[34.0522, -80], [34.0736, -90]], // LA route
+            ],
         ]);
 
         $this->assertEquals(200, $response['headers']['status-code']);
@@ -8051,31 +8092,32 @@ trait DatabasesBase
         $this->client->call(Client::METHOD_DELETE, $this->getContainerUrl($databaseId, $collectionId), array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
+            'x-appwrite-key' => $this->getProject()['apiKey'],
         ]));
 
         $this->client->call(Client::METHOD_DELETE, $this->getDatabaseUrl($databaseId), array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
+            'x-appwrite-key' => $this->getProject()['apiKey'],
         ]));
     }
 
     public function testSpatialPolygonAttributes(): void
     {
 
-        if (!$this->getSupportForSpatials()) {
+        if (! $this->getSupportForSpatials()) {
             $this->expectNotToPerformAssertions();
+
             return;
         }
 
         $database = $this->client->call(Client::METHOD_POST, '/databases', [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
+            'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
             'databaseId' => ID::unique(),
-            'name' => 'Spatial Polygon Test Database'
+            'name' => 'Spatial Polygon Test Database',
         ]);
 
         $databaseId = $database['body']['$id'];
@@ -8084,7 +8126,7 @@ trait DatabasesBase
         $collection = $this->client->call(Client::METHOD_POST, $this->getContainerUrl($databaseId), array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
+            'x-appwrite-key' => $this->getProject()['apiKey'],
         ]), [
             $this->getContainerIdParam() => ID::unique(),
             'name' => 'Spatial Polygon Collection',
@@ -8100,10 +8142,10 @@ trait DatabasesBase
         $collectionId = $collection['body']['$id'];
 
         // Create boolean attribute
-        $boolResponse = $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $collectionId) . '/boolean', array_merge([
+        $boolResponse = $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $collectionId).'/boolean', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
+            'x-appwrite-key' => $this->getProject()['apiKey'],
         ]), [
             'key' => 'active',
             'required' => true,
@@ -8112,10 +8154,10 @@ trait DatabasesBase
         $this->assertEquals(202, $boolResponse['headers']['status-code']);
 
         // Create polygon attribute
-        $polyResponse = $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $collectionId) . '/polygon', array_merge([
+        $polyResponse = $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $collectionId).'/polygon', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
+            'x-appwrite-key' => $this->getProject()['apiKey'],
         ]), [
             'key' => 'area',
             'required' => true,
@@ -8133,8 +8175,8 @@ trait DatabasesBase
             $this->getRecordIdParam() => ID::unique(),
             'data' => [
                 'active' => true,
-                'area' => [[[40.7128, -74.0060], [40.7589, -74.0060], [40.7589, -73.9851], [40.7128, -73.9851], [40.7128, -74.0060]]] // Manhattan area
-            ]
+                'area' => [[[40.7128, -74.0060], [40.7589, -74.0060], [40.7589, -73.9851], [40.7128, -73.9851], [40.7128, -74.0060]]], // Manhattan area
+            ],
         ]);
 
         $this->assertEquals(201, $response['headers']['status-code']);
@@ -8156,23 +8198,23 @@ trait DatabasesBase
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
             'data' => [
-                'area' => [[[40.7128, -74.0060], [40.7589, -74.0060], [40.7589, -73.9851], [40.7128, -73.9851], [40.7505, -73.9934], [40.7128, -74.0060]]] // Extended area
-            ]
+                'area' => [[[40.7128, -74.0060], [40.7589, -74.0060], [40.7589, -73.9851], [40.7128, -73.9851], [40.7505, -73.9934], [40.7128, -74.0060]]], // Extended area
+            ],
         ]);
 
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertEquals([[[40.7128, -74.0060], [40.7589, -74.0060], [40.7589, -73.9851], [40.7128, -73.9851], [40.7505, -73.9934], [40.7128, -74.0060]]], $response['body']['area']);
 
         // Test 4: Upsert document with polygon attribute
-        $response = $this->client->call(Client::METHOD_PUT, $this->getContainerUrl($databaseId, $collectionId) . '/' . $this->getRecordResource() . '/' . ID::unique(), array_merge([
+        $response = $this->client->call(Client::METHOD_PUT, $this->getContainerUrl($databaseId, $collectionId).'/'.$this->getRecordResource().'/'.ID::unique(), array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
             $this->getRecordIdParam() => ID::unique(),
             'data' => [
                 'active' => false,
-                'area' => [[[34.0522, -80], [34.0736, -80], [34.0736, -90], [34.0522, -90], [34.0522, -80]]] // LA area
-            ]
+                'area' => [[[34.0522, -80], [34.0736, -80], [34.0736, -90], [34.0522, -90], [34.0522, -80]]], // LA area
+            ],
         ]);
 
         $this->assertEquals(200, $response['headers']['status-code']);
@@ -8185,9 +8227,9 @@ trait DatabasesBase
         ], $this->getHeaders()), [
             $this->getRecordIdParam() => ID::unique(),
             'data' => [
-                'active' => true
+                'active' => true,
                 // Missing required 'area' attribute
-            ]
+            ],
         ]);
 
         $this->assertEquals(400, $response['headers']['status-code']);
@@ -8196,31 +8238,32 @@ trait DatabasesBase
         $this->client->call(Client::METHOD_DELETE, $this->getContainerUrl($databaseId, $collectionId), array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
+            'x-appwrite-key' => $this->getProject()['apiKey'],
         ]));
 
         $this->client->call(Client::METHOD_DELETE, $this->getDatabaseUrl($databaseId), array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
+            'x-appwrite-key' => $this->getProject()['apiKey'],
         ]));
     }
 
     public function testSpatialAttributesMixedCollection(): void
     {
 
-        if (!$this->getSupportForSpatials()) {
+        if (! $this->getSupportForSpatials()) {
             $this->expectNotToPerformAssertions();
+
             return;
         }
 
         $database = $this->client->call(Client::METHOD_POST, '/databases', [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
+            'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
             'databaseId' => ID::unique(),
-            'name' => 'Mixed Spatial Test Database'
+            'name' => 'Mixed Spatial Test Database',
         ]);
 
         $databaseId = $database['body']['$id'];
@@ -8229,7 +8272,7 @@ trait DatabasesBase
         $collection = $this->client->call(Client::METHOD_POST, $this->getContainerUrl($databaseId), array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
+            'x-appwrite-key' => $this->getProject()['apiKey'],
         ]), [
             $this->getContainerIdParam() => ID::unique(),
             'name' => 'Mixed Spatial Collection',
@@ -8245,10 +8288,10 @@ trait DatabasesBase
         $collectionId = $collection['body']['$id'];
 
         // Create multiple attributes
-        $nameAttr = $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $collectionId) . '/string', array_merge([
+        $nameAttr = $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $collectionId).'/string', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
+            'x-appwrite-key' => $this->getProject()['apiKey'],
         ]), [
             'key' => 'name',
             'size' => 256,
@@ -8256,30 +8299,30 @@ trait DatabasesBase
         ]);
         $this->assertEquals(202, $nameAttr['headers']['status-code']);
 
-        $centerAttr = $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $collectionId) . '/point', array_merge([
+        $centerAttr = $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $collectionId).'/point', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
+            'x-appwrite-key' => $this->getProject()['apiKey'],
         ]), [
             'key' => 'center',
             'required' => true,
         ]);
         $this->assertEquals(202, $centerAttr['headers']['status-code']);
 
-        $boundaryAttr = $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $collectionId) . '/line', array_merge([
+        $boundaryAttr = $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $collectionId).'/line', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
+            'x-appwrite-key' => $this->getProject()['apiKey'],
         ]), [
             'key' => 'boundary',
             'required' => false,
         ]);
         $this->assertEquals(202, $boundaryAttr['headers']['status-code']);
 
-        $coverageAttr = $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $collectionId) . '/polygon', array_merge([
+        $coverageAttr = $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $collectionId).'/polygon', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
+            'x-appwrite-key' => $this->getProject()['apiKey'],
         ]), [
             'key' => 'coverage',
             'required' => true,
@@ -8298,8 +8341,8 @@ trait DatabasesBase
                 'name' => 'Central Park',
                 'center' => [40.7829, -73.9654],
                 'boundary' => [[40.7649, -73.9814], [40.8009, -73.9494]],
-                'coverage' => [[[40.7649, -73.9814], [40.8009, -73.9814], [40.8009, -73.9494], [40.7649, -73.9494], [40.7649, -73.9814]]]
-            ]
+                'coverage' => [[[40.7649, -73.9814], [40.8009, -73.9814], [40.8009, -73.9494], [40.7649, -73.9494], [40.7649, -73.9814]]],
+            ],
         ]);
 
         $this->assertEquals(201, $response['headers']['status-code']);
@@ -8316,8 +8359,8 @@ trait DatabasesBase
             'data' => [
                 'center' => [40.7505, -73.9934],
                 'boundary' => [[40.7305, -74.0134], [40.7705, -73.9734]],
-                'coverage' => [[[40.7305, -74.0134], [40.7705, -74.0134], [40.7705, -73.9734], [40.7305, -73.9734], [40.7305, -74.0134]]]
-            ]
+                'coverage' => [[[40.7305, -74.0134], [40.7705, -74.0134], [40.7705, -73.9734], [40.7305, -73.9734], [40.7305, -74.0134]]],
+            ],
         ]);
 
         $this->assertEquals(200, $response['headers']['status-code']);
@@ -8334,8 +8377,8 @@ trait DatabasesBase
             'data' => [
                 'name' => 'Minimal Location',
                 'center' => [0, 0],
-                'coverage' => [[[0, 0], [1, 0], [1, 1], [0, 1], [0, 0]]]
-            ]
+                'coverage' => [[[0, 0], [1, 0], [1, 1], [0, 1], [0, 0]]],
+            ],
         ]);
 
         $this->assertEquals(201, $response['headers']['status-code']);
@@ -8350,8 +8393,8 @@ trait DatabasesBase
             'data' => [
                 'name' => 'Unauthorized Location',
                 'center' => [0, 0],
-                'coverage' => [[[0, 0], [1, 0], [1, 1], [0, 1], [0, 0]]]
-            ]
+                'coverage' => [[[0, 0], [1, 0], [1, 1], [0, 1], [0, 0]]],
+            ],
         ]);
 
         $this->assertEquals(401, $response['headers']['status-code']);
@@ -8360,31 +8403,32 @@ trait DatabasesBase
         $this->client->call(Client::METHOD_DELETE, $this->getContainerUrl($databaseId, $collectionId), array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
+            'x-appwrite-key' => $this->getProject()['apiKey'],
         ]));
 
         $this->client->call(Client::METHOD_DELETE, $this->getDatabaseUrl($databaseId), array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
+            'x-appwrite-key' => $this->getProject()['apiKey'],
         ]));
     }
 
     public function testUpdateSpatialAttributes(): void
     {
 
-        if (!$this->getSupportForSpatials()) {
+        if (! $this->getSupportForSpatials()) {
             $this->expectNotToPerformAssertions();
+
             return;
         }
 
         $database = $this->client->call(Client::METHOD_POST, '/databases', [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
+            'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
             'databaseId' => ID::unique(),
-            'name' => 'Update Spatial Attributes Test Database'
+            'name' => 'Update Spatial Attributes Test Database',
         ]);
 
         $databaseId = $database['body']['$id'];
@@ -8393,7 +8437,7 @@ trait DatabasesBase
         $collection = $this->client->call(Client::METHOD_POST, $this->getContainerUrl($databaseId), array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
+            'x-appwrite-key' => $this->getProject()['apiKey'],
         ]), [
             $this->getContainerIdParam() => ID::unique(),
             'name' => 'Update Spatial Attributes Collection',
@@ -8409,10 +8453,10 @@ trait DatabasesBase
         $collectionId = $collection['body']['$id'];
 
         // Create string attribute
-        $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $collectionId) . '/string', array_merge([
+        $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $collectionId).'/string', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
+            'x-appwrite-key' => $this->getProject()['apiKey'],
         ]), [
             'key' => 'name',
             'size' => 256,
@@ -8420,30 +8464,30 @@ trait DatabasesBase
         ]);
 
         // Create point attribute
-        $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $collectionId) . '/point', array_merge([
+        $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $collectionId).'/point', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
+            'x-appwrite-key' => $this->getProject()['apiKey'],
         ]), [
             'key' => 'location',
             'required' => true,
         ]);
 
         // Create line attribute
-        $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $collectionId) . '/line', array_merge([
+        $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $collectionId).'/line', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
+            'x-appwrite-key' => $this->getProject()['apiKey'],
         ]), [
             'key' => 'route',
             'required' => false,
         ]);
 
         // Create polygon attribute
-        $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $collectionId) . '/polygon', array_merge([
+        $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $collectionId).'/polygon', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
+            'x-appwrite-key' => $this->getProject()['apiKey'],
         ]), [
             'key' => 'area',
             'required' => true,
@@ -8452,10 +8496,10 @@ trait DatabasesBase
         $this->waitForAllAttributes($databaseId, $collectionId);
 
         // Test 1: Update point attribute - change required status
-        $response = $this->client->call(Client::METHOD_PATCH, $this->getSchemaUrl($databaseId, $collectionId) . '/point/location', array_merge([
+        $response = $this->client->call(Client::METHOD_PATCH, $this->getSchemaUrl($databaseId, $collectionId).'/point/location', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
+            'x-appwrite-key' => $this->getProject()['apiKey'],
         ]), [
             'required' => false,
             'default' => null,
@@ -8465,10 +8509,10 @@ trait DatabasesBase
         $this->assertEquals(false, $response['body']['required']);
 
         // Test 2: Update line attribute - change required status and add default value
-        $response = $this->client->call(Client::METHOD_PATCH, $this->getSchemaUrl($databaseId, $collectionId) . '/line/route', array_merge([
+        $response = $this->client->call(Client::METHOD_PATCH, $this->getSchemaUrl($databaseId, $collectionId).'/line/route', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
+            'x-appwrite-key' => $this->getProject()['apiKey'],
         ]), [
             'required' => false,
             'default' => [[0, 0], [1, 1]],
@@ -8479,27 +8523,27 @@ trait DatabasesBase
         $this->assertEquals([[0, 0], [1, 1]], $response['body']['default']);
 
         // Test 3: Update polygon attribute - change key name
-        $response = $this->client->call(Client::METHOD_PATCH, $this->getSchemaUrl($databaseId, $collectionId) . '/polygon/area', array_merge([
+        $response = $this->client->call(Client::METHOD_PATCH, $this->getSchemaUrl($databaseId, $collectionId).'/polygon/area', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
+            'x-appwrite-key' => $this->getProject()['apiKey'],
         ]), [
             'newKey' => 'coverage',
             'default' => null,
-            'required' => false
+            'required' => false,
         ]);
 
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertEquals('coverage', $response['body']['key']);
 
         // Test 4: Update point attribute - add default value
-        $response = $this->client->call(Client::METHOD_PATCH, $this->getSchemaUrl($databaseId, $collectionId) . '/point/location', array_merge([
+        $response = $this->client->call(Client::METHOD_PATCH, $this->getSchemaUrl($databaseId, $collectionId).'/point/location', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
+            'x-appwrite-key' => $this->getProject()['apiKey'],
         ]), [
             'default' => [0, 0],
-            'required' => false
+            'required' => false,
         ]);
 
         $this->assertEquals(200, $response['headers']['status-code']);
@@ -8513,8 +8557,8 @@ trait DatabasesBase
             $this->getRecordIdParam() => ID::unique(),
             'data' => [
                 'name' => 'Test Location',
-                'coverage' => [[[0, 0], [10, 0], [10, 10], [0, 10], [0, 0]]]
-            ]
+                'coverage' => [[[0, 0], [10, 0], [10, 10], [0, 10], [0, 0]]],
+            ],
         ]);
 
         $this->assertEquals(201, $response['headers']['status-code']);
@@ -8525,31 +8569,32 @@ trait DatabasesBase
         $this->client->call(Client::METHOD_DELETE, $this->getContainerUrl($databaseId, $collectionId), array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
+            'x-appwrite-key' => $this->getProject()['apiKey'],
         ]));
 
         $this->client->call(Client::METHOD_DELETE, $this->getDatabaseUrl($databaseId), array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
+            'x-appwrite-key' => $this->getProject()['apiKey'],
         ]));
     }
 
     public function testSpatialQuery(): void
     {
 
-        if (!$this->getSupportForSpatials()) {
+        if (! $this->getSupportForSpatials()) {
             $this->expectNotToPerformAssertions();
+
             return;
         }
 
         $database = $this->client->call(Client::METHOD_POST, '/databases', [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
+            'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
             'databaseId' => ID::unique(),
-            'name' => 'Spatial Query Test Database'
+            'name' => 'Spatial Query Test Database',
         ]);
 
         $this->assertNotEmpty($database['body']['$id']);
@@ -8559,7 +8604,7 @@ trait DatabasesBase
         $collection = $this->client->call(Client::METHOD_POST, $this->getContainerUrl($databaseId), array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
+            'x-appwrite-key' => $this->getProject()['apiKey'],
         ]), [
             $this->getContainerIdParam() => ID::unique(),
             'name' => 'Spatial Query Collection',
@@ -8576,10 +8621,10 @@ trait DatabasesBase
         $collectionId = $collection['body']['$id'];
 
         // Create string attribute
-        $nameAttribute = $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $collectionId) . '/string', array_merge([
+        $nameAttribute = $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $collectionId).'/string', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
+            'x-appwrite-key' => $this->getProject()['apiKey'],
         ]), [
             'key' => 'name',
             'size' => 256,
@@ -8589,10 +8634,10 @@ trait DatabasesBase
         $this->assertEquals(202, $nameAttribute['headers']['status-code']);
 
         // Create point attribute
-        $pointAttribute = $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $collectionId) . '/point', array_merge([
+        $pointAttribute = $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $collectionId).'/point', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
+            'x-appwrite-key' => $this->getProject()['apiKey'],
         ]), [
             'key' => 'pointAttr',
             'required' => true,
@@ -8601,10 +8646,10 @@ trait DatabasesBase
         $this->assertEquals(202, $pointAttribute['headers']['status-code']);
 
         // Create line attribute
-        $lineAttribute = $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $collectionId) . '/line', array_merge([
+        $lineAttribute = $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $collectionId).'/line', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
+            'x-appwrite-key' => $this->getProject()['apiKey'],
         ]), [
             'key' => 'lineAttr',
             'required' => true,
@@ -8613,10 +8658,10 @@ trait DatabasesBase
         $this->assertEquals(202, $lineAttribute['headers']['status-code']);
 
         // Create polygon attribute
-        $polygonAttribute = $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $collectionId) . '/polygon', array_merge([
+        $polygonAttribute = $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $collectionId).'/polygon', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
+            'x-appwrite-key' => $this->getProject()['apiKey'],
         ]), [
             'key' => 'polyAttr',
             'required' => true,
@@ -8633,23 +8678,23 @@ trait DatabasesBase
                 '$id' => 'doc1',
                 'name' => 'Test Document 1',
                 'pointAttr' => [6.0, 6.0],
-                'lineAttr' => [[1.0, 1.0], [1.1,1.1] , [2.0, 2.0]],
-                'polyAttr' => [[[0.0, 0.0], [10.0, 0.0], [10.0, 10.0], [0.0, 10.0], [0.0, 0.0]]]
+                'lineAttr' => [[1.0, 1.0], [1.1, 1.1], [2.0, 2.0]],
+                'polyAttr' => [[[0.0, 0.0], [10.0, 0.0], [10.0, 10.0], [0.0, 10.0], [0.0, 0.0]]],
             ],
             [
                 '$id' => 'doc2',
                 'name' => 'Test Document 2',
                 'pointAttr' => [7.0, 6.0],
                 'lineAttr' => [[10.0, 10.0], [20.0, 20.0]],
-                'polyAttr' => [[[20.0, 20.0], [30.0, 20.0], [30.0, 30.0], [20.0, 30.0], [20.0, 20.0]]]
+                'polyAttr' => [[[20.0, 20.0], [30.0, 20.0], [30.0, 30.0], [20.0, 30.0], [20.0, 20.0]]],
             ],
             [
                 '$id' => 'doc3',
                 'name' => 'Test Document 3',
                 'pointAttr' => [25.0, 25.0],
                 'lineAttr' => [[25.0, 25.0], [35.0, 35.0]],
-                'polyAttr' => [[[40.0, 40.0], [50.0, 40.0], [50.0, 50.0], [40.0, 50.0], [40.0, 40.0]]]
-            ]
+                'polyAttr' => [[[40.0, 40.0], [50.0, 40.0], [50.0, 50.0], [40.0, 50.0], [40.0, 40.0]]],
+            ],
         ];
 
         foreach ($documents as $doc) {
@@ -8662,8 +8707,8 @@ trait DatabasesBase
                     'name' => $doc['name'],
                     'pointAttr' => $doc['pointAttr'],
                     'lineAttr' => $doc['lineAttr'],
-                    'polyAttr' => $doc['polyAttr']
-                ]
+                    'polyAttr' => $doc['polyAttr'],
+                ],
             ]);
 
             $this->assertEquals(201, $response['headers']['status-code']);
@@ -8674,7 +8719,7 @@ trait DatabasesBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'queries' => [Query::equal('name', ['Test Document 1'])->toString()]
+            'queries' => [Query::equal('name', ['Test Document 1'])->toString()],
         ]);
 
         $this->assertEquals(200, $response['headers']['status-code']);
@@ -8686,7 +8731,7 @@ trait DatabasesBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'queries' => [Query::equal('polyAttr', [[[[0.0, 0.0], [10.0, 0.0], [10.0, 10.0], [0.0, 10.0], [0.0, 0.0]]]])->toString()]
+            'queries' => [Query::equal('polyAttr', [[[[0.0, 0.0], [10.0, 0.0], [10.0, 10.0], [0.0, 10.0], [0.0, 0.0]]]])->toString()],
         ]);
 
         $this->assertEquals(200, $response['headers']['status-code']);
@@ -8698,7 +8743,7 @@ trait DatabasesBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'queries' => [Query::notEqual('pointAttr', [[6.0, 6.0]])->toString()]
+            'queries' => [Query::notEqual('pointAttr', [[6.0, 6.0]])->toString()],
         ]);
 
         $this->assertEquals(200, $response['headers']['status-code']);
@@ -8709,19 +8754,18 @@ trait DatabasesBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'queries' => [Query::contains('lineAttr', [[1.1, 1.1]])->toString()]
+            'queries' => [Query::contains('lineAttr', [[1.1, 1.1]])->toString()],
         ]);
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertCount(1, $response['body'][$this->getRecordResource()]);
         $this->assertEquals('doc1', $response['body'][$this->getRecordResource()][0]['$id']);
-
 
         // Test 4.2: notContains on polygon (point outside all polygons)
         $response = $this->client->call(Client::METHOD_GET, $this->getRecordUrl($databaseId, $collectionId), array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'queries' => [Query::notContains('polyAttr', [[15.0, 15.0]])->toString()]
+            'queries' => [Query::notContains('polyAttr', [[15.0, 15.0]])->toString()],
         ]);
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertEquals(3, $response['body']['total']);
@@ -8731,7 +8775,7 @@ trait DatabasesBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'queries' => [Query::intersects('polyAttr', [5.0, 5.0])->toString()]
+            'queries' => [Query::intersects('polyAttr', [5.0, 5.0])->toString()],
         ]);
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertEquals(1, $response['body']['total']);
@@ -8742,7 +8786,7 @@ trait DatabasesBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'queries' => [Query::notIntersects('polyAttr', [60.0, 60.0])->toString()]
+            'queries' => [Query::notIntersects('polyAttr', [60.0, 60.0])->toString()],
         ]);
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertEquals(3, $response['body']['total']);
@@ -8753,7 +8797,7 @@ trait DatabasesBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'queries' => [Query::overlaps('polyAttr', $overlapPoly)->toString()]
+            'queries' => [Query::overlaps('polyAttr', $overlapPoly)->toString()],
         ]);
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertEquals(1, $response['body']['total']);
@@ -8765,7 +8809,7 @@ trait DatabasesBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'queries' => [Query::notOverlaps('polyAttr', $noOverlapPoly)->toString()]
+            'queries' => [Query::notOverlaps('polyAttr', $noOverlapPoly)->toString()],
         ]);
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertEquals(3, $response['body']['total']);
@@ -8775,7 +8819,7 @@ trait DatabasesBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'queries' => [Query::distanceEqual('pointAttr', [6.0, 6.0], 1.0)->toString()]
+            'queries' => [Query::distanceEqual('pointAttr', [6.0, 6.0], 1.0)->toString()],
         ]);
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertEquals(1, $response['body']['total']);
@@ -8786,7 +8830,7 @@ trait DatabasesBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'queries' => [Query::distanceNotEqual('pointAttr', [6.0, 6.0], 1.0)->toString()]
+            'queries' => [Query::distanceNotEqual('pointAttr', [6.0, 6.0], 1.0)->toString()],
         ]);
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertEquals(2, $response['body']['total']);
@@ -8796,7 +8840,7 @@ trait DatabasesBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'queries' => [Query::distanceGreaterThan('pointAttr', [6.0, 6.0], 5.0)->toString()]
+            'queries' => [Query::distanceGreaterThan('pointAttr', [6.0, 6.0], 5.0)->toString()],
         ]);
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertEquals(1, $response['body']['total']);
@@ -8806,7 +8850,7 @@ trait DatabasesBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'queries' => [Query::distanceLessThan('pointAttr', [6.0, 6.0], 0.5)->toString()]
+            'queries' => [Query::distanceLessThan('pointAttr', [6.0, 6.0], 0.5)->toString()],
         ]);
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertEquals(1, $response['body']['total']);
@@ -8817,7 +8861,7 @@ trait DatabasesBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'queries' => [Query::crosses('lineAttr', $crossLine)->toString()]
+            'queries' => [Query::crosses('lineAttr', $crossLine)->toString()],
         ]);
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertEquals(1, $response['body']['total']);
@@ -8829,7 +8873,7 @@ trait DatabasesBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'queries' => [Query::notCrosses('lineAttr', $nonCrossLine)->toString()]
+            'queries' => [Query::notCrosses('lineAttr', $nonCrossLine)->toString()],
         ]);
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertEquals(3, $response['body']['total']);
@@ -8840,7 +8884,7 @@ trait DatabasesBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'queries' => [Query::touches('polyAttr', $touchPoly)->toString()]
+            'queries' => [Query::touches('polyAttr', $touchPoly)->toString()],
         ]);
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertEquals(2, $response['body']['total']);
@@ -8852,7 +8896,7 @@ trait DatabasesBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'queries' => [Query::notTouches('polyAttr', $farPoly)->toString()]
+            'queries' => [Query::notTouches('polyAttr', $farPoly)->toString()],
         ]);
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertEquals(3, $response['body']['total']);
@@ -8862,7 +8906,7 @@ trait DatabasesBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'queries' => [Query::select(['name', 'pointAttr'])->toString()]
+            'queries' => [Query::select(['name', 'pointAttr'])->toString()],
         ]);
 
         $this->assertEquals(200, $response['headers']['status-code']);
@@ -8880,7 +8924,7 @@ trait DatabasesBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'queries' => [Query::orderAsc('name')->toString()]
+            'queries' => [Query::orderAsc('name')->toString()],
         ]);
 
         $this->assertEquals(200, $response['headers']['status-code']);
@@ -8894,7 +8938,7 @@ trait DatabasesBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'queries' => [Query::limit(2)->toString()]
+            'queries' => [Query::limit(2)->toString()],
         ]);
 
         $this->assertEquals(200, $response['headers']['status-code']);
@@ -8905,7 +8949,7 @@ trait DatabasesBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'queries' => [Query::offset(1)->toString(), Query::limit(2)->toString()]
+            'queries' => [Query::offset(1)->toString(), Query::limit(2)->toString()],
         ]);
 
         $this->assertEquals(200, $response['headers']['status-code']);
@@ -8919,8 +8963,8 @@ trait DatabasesBase
             'queries' => [
                 Query::select(['name', 'pointAttr'])->toString(),
                 Query::orderAsc('name')->toString(),
-                Query::limit(1)->toString()
-            ]
+                Query::limit(1)->toString(),
+            ],
         ]);
 
         $this->assertEquals(200, $response['headers']['status-code']);
@@ -8932,7 +8976,7 @@ trait DatabasesBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'queries' => [Query::equal('name', ['Non-existent Document'])->toString()]
+            'queries' => [Query::equal('name', ['Non-existent Document'])->toString()],
         ]);
 
         $this->assertEquals(200, $response['headers']['status-code']);
@@ -8942,30 +8986,31 @@ trait DatabasesBase
         $this->client->call(Client::METHOD_DELETE, $this->getContainerUrl($databaseId, $collectionId), array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
+            'x-appwrite-key' => $this->getProject()['apiKey'],
         ]));
 
         $this->client->call(Client::METHOD_DELETE, $this->getDatabaseUrl($databaseId), array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
+            'x-appwrite-key' => $this->getProject()['apiKey'],
         ]));
     }
 
     public function testSpatialRelationshipOneToOne(): void
     {
-        if (!$this->getSupportForRelationships() || !$this->getSupportForSpatials()) {
+        if (! $this->getSupportForRelationships() || ! $this->getSupportForSpatials()) {
             $this->expectNotToPerformAssertions();
+
             return;
         }
 
         $database = $this->client->call(Client::METHOD_POST, '/databases', [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
+            'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
             'databaseId' => ID::unique(),
-            'name' => 'Spatial OneToOne Test DB'
+            'name' => 'Spatial OneToOne Test DB',
         ]);
 
         $databaseId = $database['body']['$id'];
@@ -8973,7 +9018,7 @@ trait DatabasesBase
         $place = $this->client->call(Client::METHOD_POST, $this->getContainerUrl($databaseId), array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
+            'x-appwrite-key' => $this->getProject()['apiKey'],
         ]), [
             $this->getContainerIdParam() => ID::unique(),
             'name' => 'Place',
@@ -8990,7 +9035,7 @@ trait DatabasesBase
         $location = $this->client->call(Client::METHOD_POST, $this->getContainerUrl($databaseId), array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
+            'x-appwrite-key' => $this->getProject()['apiKey'],
         ]), [
             $this->getContainerIdParam() => ID::unique(),
             'name' => 'Location',
@@ -9005,20 +9050,20 @@ trait DatabasesBase
         $locationId = $location['body']['$id'];
 
         // attributes
-        $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $placeId) . '/string', array_merge([
+        $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $placeId).'/string', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
+            'x-appwrite-key' => $this->getProject()['apiKey'],
         ]), [
             'key' => 'name',
             'size' => 255,
             'required' => true,
         ]);
 
-        $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $locationId) . '/point', array_merge([
+        $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $locationId).'/point', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
+            'x-appwrite-key' => $this->getProject()['apiKey'],
         ]), [
             'key' => 'coordinates',
             'required' => true,
@@ -9027,10 +9072,10 @@ trait DatabasesBase
         $this->waitForAttribute($databaseId, $locationId, 'coordinates');
 
         // relationship: place.oneToOne -> location
-        $relation = $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $placeId) . '/relationship', array_merge([
+        $relation = $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $placeId).'/relationship', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
+            'x-appwrite-key' => $this->getProject()['apiKey'],
         ]), [
             $this->getRelatedIdParam() => $locationId,
             'type' => Database::RELATION_ONE_TO_ONE,
@@ -9060,19 +9105,19 @@ trait DatabasesBase
                 Permission::read(Role::user($this->getUser()['$id'])),
                 Permission::update(Role::user($this->getUser()['$id'])),
                 Permission::delete(Role::user($this->getUser()['$id'])),
-            ]
+            ],
         ]);
         $this->assertEquals(201, $doc['headers']['status-code']);
         $this->assertEquals([40.7794, -73.9632], $doc['body']['location']['coordinates']);
 
         // fetch with select to ensure relationship shape
-        $fetched = $this->client->call(Client::METHOD_GET, $this->getContainerUrl($databaseId, $placeId) . '/' . $this->getRecordResource() . '/' . $doc['body']['$id'], array_merge([
+        $fetched = $this->client->call(Client::METHOD_GET, $this->getContainerUrl($databaseId, $placeId).'/'.$this->getRecordResource().'/'.$doc['body']['$id'], array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
             'queries' => [
-                Query::select(['name', 'location.coordinates'])->toString()
-            ]
+                Query::select(['name', 'location.coordinates'])->toString(),
+            ],
         ]);
         $this->assertEquals(200, $fetched['headers']['status-code']);
         $this->assertEquals([40.7794, -73.9632], $fetched['body']['location']['coordinates']);
@@ -9081,41 +9126,42 @@ trait DatabasesBase
         $this->client->call(Client::METHOD_DELETE, $this->getContainerUrl($databaseId, $placeId), array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
+            'x-appwrite-key' => $this->getProject()['apiKey'],
         ]));
         $this->client->call(Client::METHOD_DELETE, $this->getContainerUrl($databaseId, $locationId), array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
+            'x-appwrite-key' => $this->getProject()['apiKey'],
         ]));
         $this->client->call(Client::METHOD_DELETE, $this->getDatabaseUrl($databaseId), array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
+            'x-appwrite-key' => $this->getProject()['apiKey'],
         ]));
     }
 
     public function testSpatialRelationshipOneToMany(): void
     {
-        if (!$this->getSupportForRelationships() || !$this->getSupportForSpatials()) {
+        if (! $this->getSupportForRelationships() || ! $this->getSupportForSpatials()) {
             $this->expectNotToPerformAssertions();
+
             return;
         }
 
         $database = $this->client->call(Client::METHOD_POST, '/databases', [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
+            'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
             'databaseId' => ID::unique(),
-            'name' => 'Spatial OneToMany Test DB'
+            'name' => 'Spatial OneToMany Test DB',
         ]);
         $databaseId = $database['body']['$id'];
 
         $person = $this->client->call(Client::METHOD_POST, $this->getContainerUrl($databaseId), array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
+            'x-appwrite-key' => $this->getProject()['apiKey'],
         ]), [
             $this->getContainerIdParam() => ID::unique(),
             'name' => 'Person',
@@ -9132,7 +9178,7 @@ trait DatabasesBase
         $visit = $this->client->call(Client::METHOD_POST, $this->getContainerUrl($databaseId), array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
+            'x-appwrite-key' => $this->getProject()['apiKey'],
         ]), [
             $this->getContainerIdParam() => ID::unique(),
             'name' => 'Visit',
@@ -9147,19 +9193,19 @@ trait DatabasesBase
         $visitId = $visit['body']['$id'];
 
         // attributes
-        $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $personId) . '/string', array_merge([
+        $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $personId).'/string', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
+            'x-appwrite-key' => $this->getProject()['apiKey'],
         ]), [
             'key' => 'fullName',
             'size' => 255,
             'required' => true,
         ]);
-        $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $visitId) . '/point', array_merge([
+        $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $visitId).'/point', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
+            'x-appwrite-key' => $this->getProject()['apiKey'],
         ]), [
             'key' => 'point',
             'required' => true,
@@ -9168,10 +9214,10 @@ trait DatabasesBase
         $this->waitForAttribute($databaseId, $visitId, 'point');
 
         // relationship person.oneToMany -> visit
-        $rel = $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $personId) . '/relationship', array_merge([
+        $rel = $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $personId).'/relationship', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
+            'x-appwrite-key' => $this->getProject()['apiKey'],
         ]), [
             $this->getRelatedIdParam() => $visitId,
             'type' => Database::RELATION_ONE_TO_MANY,
@@ -9191,27 +9237,27 @@ trait DatabasesBase
             'data' => [
                 'fullName' => 'Alice',
                 'visits' => [
-                    [ '$id' => 'visit-1', 'point' => [40.7589, -73.9851] ],
-                    [ '$id' => 'visit-2', 'point' => [40.7505, -73.9934] ],
+                    ['$id' => 'visit-1', 'point' => [40.7589, -73.9851]],
+                    ['$id' => 'visit-2', 'point' => [40.7505, -73.9934]],
                 ],
             ],
             'permissions' => [
                 Permission::read(Role::user($this->getUser()['$id'])),
                 Permission::update(Role::user($this->getUser()['$id'])),
                 Permission::delete(Role::user($this->getUser()['$id'])),
-            ]
+            ],
         ]);
         $this->assertEquals(201, $personDoc['headers']['status-code']);
         $this->assertCount(2, $personDoc['body']['visits']);
         $this->assertEquals([40.7589, -73.9851], $personDoc['body']['visits'][0]['point']);
 
-        $visitDoc = $this->client->call(Client::METHOD_GET, $this->getContainerUrl($databaseId, $visitId) . '/' . $this->getRecordResource() . '/visit-2', array_merge([
+        $visitDoc = $this->client->call(Client::METHOD_GET, $this->getContainerUrl($databaseId, $visitId).'/'.$this->getRecordResource().'/visit-2', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
             'queries' => [
-                Query::select(['point', 'person.$id'])->toString()
-            ]
+                Query::select(['point', 'person.$id'])->toString(),
+            ],
         ]);
         $this->assertEquals(200, $visitDoc['headers']['status-code']);
         $this->assertEquals('person-spatial-1', $visitDoc['body']['person']['$id']);
@@ -9220,42 +9266,43 @@ trait DatabasesBase
         $this->client->call(Client::METHOD_DELETE, $this->getContainerUrl($databaseId, $personId), array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
+            'x-appwrite-key' => $this->getProject()['apiKey'],
         ]));
         $this->client->call(Client::METHOD_DELETE, $this->getContainerUrl($databaseId, $visitId), array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
+            'x-appwrite-key' => $this->getProject()['apiKey'],
         ]));
         $this->client->call(Client::METHOD_DELETE, $this->getDatabaseUrl($databaseId), array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
+            'x-appwrite-key' => $this->getProject()['apiKey'],
         ]));
     }
 
     public function testSpatialRelationshipManyToOne(): void
     {
 
-        if (!$this->getSupportForRelationships() || !$this->getSupportForSpatials()) {
+        if (! $this->getSupportForRelationships() || ! $this->getSupportForSpatials()) {
             $this->expectNotToPerformAssertions();
+
             return;
         }
 
         $database = $this->client->call(Client::METHOD_POST, '/databases', [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
+            'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
             'databaseId' => ID::unique(),
-            'name' => 'Spatial ManyToOne Test DB'
+            'name' => 'Spatial ManyToOne Test DB',
         ]);
         $databaseId = $database['body']['$id'];
 
         $cities = $this->client->call(Client::METHOD_POST, $this->getContainerUrl($databaseId), array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
+            'x-appwrite-key' => $this->getProject()['apiKey'],
         ]), [
             $this->getContainerIdParam() => ID::unique(),
             'name' => 'City',
@@ -9270,7 +9317,7 @@ trait DatabasesBase
         $stores = $this->client->call(Client::METHOD_POST, $this->getContainerUrl($databaseId), array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
+            'x-appwrite-key' => $this->getProject()['apiKey'],
         ]), [
             $this->getContainerIdParam() => ID::unique(),
             'name' => 'Store',
@@ -9283,18 +9330,18 @@ trait DatabasesBase
         $storesId = $stores['body']['$id'];
 
         // attributes
-        $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $citiesId) . '/polygon', array_merge([
+        $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $citiesId).'/polygon', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
+            'x-appwrite-key' => $this->getProject()['apiKey'],
         ]), [
             'key' => 'area',
             'required' => true,
         ]);
-        $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $storesId) . '/string', array_merge([
+        $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $storesId).'/string', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
+            'x-appwrite-key' => $this->getProject()['apiKey'],
         ]), [
             'key' => 'name',
             'size' => 255,
@@ -9304,10 +9351,10 @@ trait DatabasesBase
         $this->waitForAttribute($databaseId, $storesId, 'name');
 
         // relationship stores.manyToOne -> cities
-        $rel = $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $storesId) . '/relationship', array_merge([
+        $rel = $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $storesId).'/relationship', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
+            'x-appwrite-key' => $this->getProject()['apiKey'],
         ]), [
             $this->getRelatedIdParam() => $citiesId,
             'type' => Database::RELATION_MANY_TO_ONE,
@@ -9328,21 +9375,21 @@ trait DatabasesBase
                 'name' => 'Main Store',
                 'city' => [
                     '$id' => ID::unique(),
-                    'area' => [[[40.7128, -74.0060], [40.7589, -74.0060], [40.7589, -73.9851], [40.7128, -73.9851], [40.7128, -74.0060]]]
+                    'area' => [[[40.7128, -74.0060], [40.7589, -74.0060], [40.7589, -73.9851], [40.7128, -73.9851], [40.7128, -74.0060]]],
                 ],
-            ]
+            ],
         ]);
         $this->assertEquals(201, $store['headers']['status-code']);
         $this->assertEquals('Main Store', $store['body']['name']);
         $this->assertEquals([[[40.7128, -74.0060], [40.7589, -74.0060], [40.7589, -73.9851], [40.7128, -73.9851], [40.7128, -74.0060]]], $store['body']['city']['area']);
 
-        $city = $this->client->call(Client::METHOD_GET, $this->getContainerUrl($databaseId, $citiesId) . '/' . $this->getRecordResource() . '/' . $store['body']['city']['$id'], array_merge([
+        $city = $this->client->call(Client::METHOD_GET, $this->getContainerUrl($databaseId, $citiesId).'/'.$this->getRecordResource().'/'.$store['body']['city']['$id'], array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
             'queries' => [
-                Query::select(['stores.$id'])->toString()
-            ]
+                Query::select(['stores.$id'])->toString(),
+            ],
         ]);
         $this->assertEquals(200, $city['headers']['status-code']);
         $this->assertEquals('store-1', $city['body']['stores'][0]['$id']);
@@ -9351,41 +9398,42 @@ trait DatabasesBase
         $this->client->call(Client::METHOD_DELETE, $this->getContainerUrl($databaseId, $storesId), array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
+            'x-appwrite-key' => $this->getProject()['apiKey'],
         ]));
         $this->client->call(Client::METHOD_DELETE, $this->getContainerUrl($databaseId, $citiesId), array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
+            'x-appwrite-key' => $this->getProject()['apiKey'],
         ]));
         $this->client->call(Client::METHOD_DELETE, $this->getDatabaseUrl($databaseId), array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
+            'x-appwrite-key' => $this->getProject()['apiKey'],
         ]));
     }
 
     public function testSpatialRelationshipManyToMany(): void
     {
-        if (!$this->getSupportForRelationships() || !$this->getSupportForSpatials()) {
+        if (! $this->getSupportForRelationships() || ! $this->getSupportForSpatials()) {
             $this->expectNotToPerformAssertions();
+
             return;
         }
 
         $database = $this->client->call(Client::METHOD_POST, '/databases', [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
+            'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
             'databaseId' => ID::unique(),
-            'name' => 'Spatial ManyToMany Test DB'
+            'name' => 'Spatial ManyToMany Test DB',
         ]);
         $databaseId = $database['body']['$id'];
 
         $drivers = $this->client->call(Client::METHOD_POST, $this->getContainerUrl($databaseId), array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
+            'x-appwrite-key' => $this->getProject()['apiKey'],
         ]), [
             $this->getContainerIdParam() => ID::unique(),
             'name' => 'Drivers',
@@ -9400,7 +9448,7 @@ trait DatabasesBase
         $zones = $this->client->call(Client::METHOD_POST, $this->getContainerUrl($databaseId), array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
+            'x-appwrite-key' => $this->getProject()['apiKey'],
         ]), [
             $this->getContainerIdParam() => ID::unique(),
             'name' => 'Zones',
@@ -9413,18 +9461,18 @@ trait DatabasesBase
         $zonesId = $zones['body']['$id'];
 
         // attributes
-        $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $driversId) . '/point', array_merge([
+        $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $driversId).'/point', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
+            'x-appwrite-key' => $this->getProject()['apiKey'],
         ]), [
             'key' => 'home',
             'required' => true,
         ]);
-        $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $zonesId) . '/polygon', array_merge([
+        $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $zonesId).'/polygon', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
+            'x-appwrite-key' => $this->getProject()['apiKey'],
         ]), [
             'key' => 'area',
             'required' => true,
@@ -9433,10 +9481,10 @@ trait DatabasesBase
         $this->waitForAttribute($databaseId, $zonesId, 'area');
 
         // relationship drivers.manyToMany <-> zones
-        $rel = $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $driversId) . '/relationship', array_merge([
+        $rel = $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $driversId).'/relationship', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
+            'x-appwrite-key' => $this->getProject()['apiKey'],
         ]), [
             $this->getRelatedIdParam() => $zonesId,
             'type' => Database::RELATION_MANY_TO_MANY,
@@ -9457,22 +9505,22 @@ trait DatabasesBase
             'data' => [
                 'home' => [40.7128, -74.0060],
                 'zones' => [
-                    [ '$id' => 'zone-1', 'area' => [[[0,0],[10,0],[10,10],[0,10],[0,0]]]],
-                    [ '$id' => 'zone-2', 'area' => [[[20,20],[30,20],[30,30],[20,30],[20,20]]]],
+                    ['$id' => 'zone-1', 'area' => [[[0, 0], [10, 0], [10, 10], [0, 10], [0, 0]]]],
+                    ['$id' => 'zone-2', 'area' => [[[20, 20], [30, 20], [30, 30], [20, 30], [20, 20]]]],
                 ],
-            ]
+            ],
         ]);
         $this->assertEquals(201, $driver['headers']['status-code']);
         $this->assertCount(2, $driver['body']['zones']);
         $this->assertEquals([40.7128, -74.0060], $driver['body']['home']);
 
-        $zone = $this->client->call(Client::METHOD_GET, $this->getContainerUrl($databaseId, $zonesId) . '/' . $this->getRecordResource() . '/zone-1', array_merge([
+        $zone = $this->client->call(Client::METHOD_GET, $this->getContainerUrl($databaseId, $zonesId).'/'.$this->getRecordResource().'/zone-1', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
             'queries' => [
-                Query::select(['drivers.$id'])->toString()
-            ]
+                Query::select(['drivers.$id'])->toString(),
+            ],
         ]);
         $this->assertEquals(200, $zone['headers']['status-code']);
         $this->assertEquals('driver-1', $zone['body']['drivers'][0]['$id']);
@@ -9481,35 +9529,36 @@ trait DatabasesBase
         $this->client->call(Client::METHOD_DELETE, $this->getContainerUrl($databaseId, $driversId), array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
+            'x-appwrite-key' => $this->getProject()['apiKey'],
         ]));
         $this->client->call(Client::METHOD_DELETE, $this->getContainerUrl($databaseId, $zonesId), array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
+            'x-appwrite-key' => $this->getProject()['apiKey'],
         ]));
         $this->client->call(Client::METHOD_DELETE, $this->getDatabaseUrl($databaseId), array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
+            'x-appwrite-key' => $this->getProject()['apiKey'],
         ]));
     }
 
     public function testSpatialIndex(): void
     {
 
-        if (!$this->getSupportForSpatials()) {
+        if (! $this->getSupportForSpatials()) {
             $this->expectNotToPerformAssertions();
+
             return;
         }
 
         $database = $this->client->call(Client::METHOD_POST, '/databases', [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
+            'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
             'databaseId' => ID::unique(),
-            'name' => 'Spatial Index Test DB'
+            'name' => 'Spatial Index Test DB',
         ]);
         $this->assertEquals(201, $database['headers']['status-code']);
         $databaseId = $database['body']['$id'];
@@ -9517,7 +9566,7 @@ trait DatabasesBase
         $collection = $this->client->call(Client::METHOD_POST, $this->getContainerUrl($databaseId), array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
+            'x-appwrite-key' => $this->getProject()['apiKey'],
         ]), [
             $this->getContainerIdParam() => ID::unique(),
             'name' => 'SpatialIdx',
@@ -9533,20 +9582,20 @@ trait DatabasesBase
         $collectionId = $collection['body']['$id'];
 
         // Create spatial attributes: one required, one optional
-        $reqPoint = $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $collectionId) . '/point', array_merge([
+        $reqPoint = $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $collectionId).'/point', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
+            'x-appwrite-key' => $this->getProject()['apiKey'],
         ]), [
             'key' => 'pRequired',
             'required' => true,
         ]);
         $this->assertEquals(202, $reqPoint['headers']['status-code']);
 
-        $optPoint = $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $collectionId) . '/point', array_merge([
+        $optPoint = $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $collectionId).'/point', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
+            'x-appwrite-key' => $this->getProject()['apiKey'],
         ]), [
             'key' => 'pOptional',
             'required' => false,
@@ -9560,7 +9609,7 @@ trait DatabasesBase
         $okIndex = $this->client->call(Client::METHOD_POST, $this->getIndexUrl($databaseId, $collectionId), array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
+            'x-appwrite-key' => $this->getProject()['apiKey'],
         ]), [
             'key' => 'idx_required_point',
             'type' => Database::INDEX_SPATIAL,
@@ -9572,7 +9621,7 @@ trait DatabasesBase
         $badIndex = $this->client->call(Client::METHOD_POST, $this->getIndexUrl($databaseId, $collectionId), array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
+            'x-appwrite-key' => $this->getProject()['apiKey'],
         ]), [
             'key' => 'idx_optional_point',
             'type' => Database::INDEX_SPATIAL,
@@ -9590,10 +9639,10 @@ trait DatabasesBase
             $updated = $this->client->call(Client::METHOD_PATCH, $this->getSchemaUrl($databaseId, $collectionId, 'point', 'pOptional'), array_merge([
                 'content-type' => 'application/json',
                 'x-appwrite-project' => $this->getProject()['$id'],
-                'x-appwrite-key' => $this->getProject()['apiKey']
+                'x-appwrite-key' => $this->getProject()['apiKey'],
             ]), [
                 'required' => true,
-                'default' => null
+                'default' => null,
             ]);
             $this->assertEquals(200, $updated['headers']['status-code']);
 
@@ -9602,7 +9651,7 @@ trait DatabasesBase
             $retriedIndex = $this->client->call(Client::METHOD_POST, $this->getIndexUrl($databaseId, $collectionId), array_merge([
                 'content-type' => 'application/json',
                 'x-appwrite-project' => $this->getProject()['$id'],
-                'x-appwrite-key' => $this->getProject()['apiKey']
+                'x-appwrite-key' => $this->getProject()['apiKey'],
             ]), [
                 'key' => 'idx_optional_point',
                 'type' => Database::INDEX_SPATIAL,
@@ -9615,25 +9664,26 @@ trait DatabasesBase
         $this->client->call(Client::METHOD_DELETE, $this->getContainerUrl($databaseId, $collectionId), array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
+            'x-appwrite-key' => $this->getProject()['apiKey'],
         ]));
     }
 
     public function testSpatialDistanceInMeter(): void
     {
 
-        if (!$this->getSupportForSpatials()) {
+        if (! $this->getSupportForSpatials()) {
             $this->expectNotToPerformAssertions();
+
             return;
         }
 
         $database = $this->client->call(Client::METHOD_POST, '/databases', [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
+            'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
             'databaseId' => ID::unique(),
-            'name' => 'Spatial Distance Meters Database'
+            'name' => 'Spatial Distance Meters Database',
         ]);
 
         $databaseId = $database['body']['$id'];
@@ -9642,7 +9692,7 @@ trait DatabasesBase
         $collection = $this->client->call(Client::METHOD_POST, $this->getContainerUrl($databaseId), array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
+            'x-appwrite-key' => $this->getProject()['apiKey'],
         ]), [
             $this->getContainerIdParam() => ID::unique(),
             'name' => 'Spatial Distance Meters Collection',
@@ -9658,10 +9708,10 @@ trait DatabasesBase
         $collectionId = $collection['body']['$id'];
 
         // Create point attribute
-        $response = $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $collectionId) . '/point', array_merge([
+        $response = $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $collectionId).'/point', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
+            'x-appwrite-key' => $this->getProject()['apiKey'],
         ]), [
             'key' => 'loc',
             'required' => true,
@@ -9674,7 +9724,7 @@ trait DatabasesBase
         $indexResponse = $this->client->call(Client::METHOD_POST, $this->getIndexUrl($databaseId, $collectionId), array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
+            'x-appwrite-key' => $this->getProject()['apiKey'],
         ]), [
             'key' => 'idx_loc',
             'type' => Database::INDEX_SPATIAL,
@@ -9684,7 +9734,6 @@ trait DatabasesBase
         $this->assertEquals(202, $indexResponse['headers']['status-code']);
         $this->waitForIndex($databaseId, $collectionId, 'idx_loc');
 
-
         // Two points roughly ~1000 meters apart by latitude delta (~0.009 deg ≈ 1km)
         $p0 = $this->client->call(Client::METHOD_POST, $this->getRecordUrl($databaseId, $collectionId), array_merge([
             'content-type' => 'application/json',
@@ -9692,8 +9741,8 @@ trait DatabasesBase
         ], $this->getHeaders()), [
             $this->getRecordIdParam() => 'p0',
             'data' => [
-                'loc' => [0.0000, 0.0000]
-            ]
+                'loc' => [0.0000, 0.0000],
+            ],
         ]);
 
         $p1 = $this->client->call(Client::METHOD_POST, $this->getRecordUrl($databaseId, $collectionId), array_merge([
@@ -9702,8 +9751,8 @@ trait DatabasesBase
         ], $this->getHeaders()), [
             $this->getRecordIdParam() => 'p1',
             'data' => [
-                'loc' => [0.0090, 0.0000]
-            ]
+                'loc' => [0.0090, 0.0000],
+            ],
         ]);
 
         $this->assertEquals(201, $p0['headers']['status-code']);
@@ -9714,7 +9763,7 @@ trait DatabasesBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'queries' => [Query::distanceLessThan('loc', [0.0000, 0.0000], 1500, true)->toString()]
+            'queries' => [Query::distanceLessThan('loc', [0.0000, 0.0000], 1500, true)->toString()],
         ]);
 
         $this->assertEquals(200, $within1_5km['headers']['status-code']);
@@ -9725,7 +9774,7 @@ trait DatabasesBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'queries' => [Query::distanceLessThan('loc', [0.0000, 0.0000], 500, true)->toString()]
+            'queries' => [Query::distanceLessThan('loc', [0.0000, 0.0000], 500, true)->toString()],
         ]);
 
         $this->assertEquals(200, $within500m['headers']['status-code']);
@@ -9737,7 +9786,7 @@ trait DatabasesBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'queries' => [Query::distanceGreaterThan('loc', [0.0000, 0.0000], 500, true)->toString()]
+            'queries' => [Query::distanceGreaterThan('loc', [0.0000, 0.0000], 500, true)->toString()],
         ]);
 
         $this->assertEquals(200, $greater500m['headers']['status-code']);
@@ -9749,7 +9798,7 @@ trait DatabasesBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'queries' => [Query::distanceEqual('loc', [0.0000, 0.0000], 0, true)->toString()]
+            'queries' => [Query::distanceEqual('loc', [0.0000, 0.0000], 0, true)->toString()],
         ]);
 
         $this->assertEquals(200, $equalZero['headers']['status-code']);
@@ -9760,7 +9809,7 @@ trait DatabasesBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'queries' => [Query::distanceNotEqual('loc', [0.0000, 0.0000], 0, true)->toString()]
+            'queries' => [Query::distanceNotEqual('loc', [0.0000, 0.0000], 0, true)->toString()],
         ]);
 
         $this->assertEquals(200, $notEqualZero['headers']['status-code']);
@@ -9770,31 +9819,32 @@ trait DatabasesBase
         $this->client->call(Client::METHOD_DELETE, $this->getContainerUrl($databaseId, $collectionId), array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
+            'x-appwrite-key' => $this->getProject()['apiKey'],
         ]));
 
         $this->client->call(Client::METHOD_DELETE, $this->getDatabaseUrl($databaseId), array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
+            'x-appwrite-key' => $this->getProject()['apiKey'],
         ]));
     }
 
     public function testSpatialColCreateOnExistingData(): void
     {
 
-        if (!$this->getSupportForSpatials()) {
+        if (! $this->getSupportForSpatials()) {
             $this->expectNotToPerformAssertions();
+
             return;
         }
 
         $database = $this->client->call(Client::METHOD_POST, '/databases', [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
+            'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
             'databaseId' => ID::unique(),
-            'name' => 'Spatial Distance Meters Database'
+            'name' => 'Spatial Distance Meters Database',
         ]);
 
         $databaseId = $database['body']['$id'];
@@ -9803,7 +9853,7 @@ trait DatabasesBase
         $collection = $this->client->call(Client::METHOD_POST, $this->getContainerUrl($databaseId), array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
+            'x-appwrite-key' => $this->getProject()['apiKey'],
         ]), [
             $this->getContainerIdParam() => $colId,
             'name' => 'spatial-test',
@@ -9816,10 +9866,10 @@ trait DatabasesBase
 
         $this->assertEquals(201, $collection['headers']['status-code']);
 
-        $description = $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $colId) . '/string', array_merge([
+        $description = $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $colId).'/string', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
+            'x-appwrite-key' => $this->getProject()['apiKey'],
         ]), [
             'key' => 'description',
             'size' => 512,
@@ -9836,20 +9886,20 @@ trait DatabasesBase
         ], $this->getHeaders()), [
             $this->getRecordIdParam() => ID::unique(),
             'data' => [
-                'description' => 'description'
+                'description' => 'description',
             ],
             'permissions' => [
                 Permission::read(Role::user($this->getUser()['$id'])),
                 Permission::update(Role::user($this->getUser()['$id'])),
                 Permission::delete(Role::user($this->getUser()['$id'])),
-            ]
+            ],
         ]);
         $this->assertEquals(201, $document['headers']['status-code']);
 
-        $point = $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $colId) . '/point', array_merge([
+        $point = $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $colId).'/point', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
+            'x-appwrite-key' => $this->getProject()['apiKey'],
         ]), [
             'key' => 'loc',
             'required' => true,
@@ -9860,23 +9910,23 @@ trait DatabasesBase
         } else {
             $this->assertEquals(400, $point['headers']['status-code']);
 
-            $point = $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $colId) . '/point', array_merge([
+            $point = $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $colId).'/point', array_merge([
                 'content-type' => 'application/json',
                 'x-appwrite-project' => $this->getProject()['$id'],
-                'x-appwrite-key' => $this->getProject()['apiKey']
+                'x-appwrite-key' => $this->getProject()['apiKey'],
             ]), [
                 'key' => 'loc',
                 'required' => false,
-                'default' => null
+                'default' => null,
             ]);
 
             $this->assertEquals(202, $point['headers']['status-code']);
         }
 
-        $line = $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $colId) . '/line', array_merge([
+        $line = $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $colId).'/line', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
+            'x-appwrite-key' => $this->getProject()['apiKey'],
         ]), [
             'key' => 'route',
             'required' => true,
@@ -9887,23 +9937,23 @@ trait DatabasesBase
         } else {
             $this->assertEquals(400, $line['headers']['status-code']);
 
-            $line = $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $colId) . '/line', array_merge([
+            $line = $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $colId).'/line', array_merge([
                 'content-type' => 'application/json',
                 'x-appwrite-project' => $this->getProject()['$id'],
-                'x-appwrite-key' => $this->getProject()['apiKey']
+                'x-appwrite-key' => $this->getProject()['apiKey'],
             ]), [
                 'key' => 'route',
                 'required' => false,
-                'default' => null
+                'default' => null,
             ]);
 
             $this->assertEquals(202, $line['headers']['status-code']);
         }
 
-        $poly = $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $colId) . '/polygon', array_merge([
+        $poly = $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $colId).'/polygon', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
+            'x-appwrite-key' => $this->getProject()['apiKey'],
         ]), [
             'key' => 'area',
             'required' => true,
@@ -9914,14 +9964,14 @@ trait DatabasesBase
         } else {
             $this->assertEquals(400, $poly['headers']['status-code']);
 
-            $poly = $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $colId) . '/polygon', array_merge([
+            $poly = $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $colId).'/polygon', array_merge([
                 'content-type' => 'application/json',
                 'x-appwrite-project' => $this->getProject()['$id'],
-                'x-appwrite-key' => $this->getProject()['apiKey']
+                'x-appwrite-key' => $this->getProject()['apiKey'],
             ]), [
                 'key' => 'area',
                 'required' => false,
-                'default' => null
+                'default' => null,
             ]);
 
             $this->assertEquals(202, $poly['headers']['status-code']);
@@ -9931,17 +9981,18 @@ trait DatabasesBase
     public function testSpatialColCreateOnExistingDataWithDefaults(): void
     {
 
-        if (!$this->getSupportForSpatials()) {
+        if (! $this->getSupportForSpatials()) {
             $this->expectNotToPerformAssertions();
+
             return;
         }
         $database = $this->client->call(Client::METHOD_POST, '/databases', [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
+            'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
             'databaseId' => ID::unique(),
-            'name' => 'Spatial With Defaults Database'
+            'name' => 'Spatial With Defaults Database',
         ]);
 
         $databaseId = $database['body']['$id'];
@@ -9950,7 +10001,7 @@ trait DatabasesBase
         $collection = $this->client->call(Client::METHOD_POST, $this->getContainerUrl($databaseId), array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
+            'x-appwrite-key' => $this->getProject()['apiKey'],
         ]), [
             $this->getContainerIdParam() => $colId,
             'name' => 'spatial-test-defaults',
@@ -9963,10 +10014,10 @@ trait DatabasesBase
 
         $this->assertEquals(201, $collection['headers']['status-code']);
 
-        $description = $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $colId) . '/string', array_merge([
+        $description = $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $colId).'/string', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
+            'x-appwrite-key' => $this->getProject()['apiKey'],
         ]), [
             'key' => 'description',
             'size' => 512,
@@ -9983,51 +10034,51 @@ trait DatabasesBase
         ], $this->getHeaders()), [
             $this->getRecordIdParam() => ID::unique(),
             'data' => [
-                'description' => 'description'
+                'description' => 'description',
             ],
             'permissions' => [
                 Permission::read(Role::user($this->getUser()['$id'])),
                 Permission::update(Role::user($this->getUser()['$id'])),
                 Permission::delete(Role::user($this->getUser()['$id'])),
-            ]
+            ],
         ]);
         $this->assertEquals(201, $document['headers']['status-code']);
 
         // Test point with default value
-        $point = $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $colId) . '/point', array_merge([
+        $point = $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $colId).'/point', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
+            'x-appwrite-key' => $this->getProject()['apiKey'],
         ]), [
             'key' => 'loc',
             'required' => false,
-            'default' => [0.0, 0.0]
+            'default' => [0.0, 0.0],
         ]);
 
         $this->assertEquals(202, $point['headers']['status-code']);
 
         // Test line with default value
-        $line = $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $colId) . '/line', array_merge([
+        $line = $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $colId).'/line', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
+            'x-appwrite-key' => $this->getProject()['apiKey'],
         ]), [
             'key' => 'route',
             'required' => false,
-            'default' => [[0.0, 0.0], [1.0, 1.0]]
+            'default' => [[0.0, 0.0], [1.0, 1.0]],
         ]);
 
         $this->assertEquals(202, $line['headers']['status-code']);
 
         // Test polygon with default value
-        $poly = $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $colId) . '/polygon', array_merge([
+        $poly = $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $colId).'/polygon', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
+            'x-appwrite-key' => $this->getProject()['apiKey'],
         ]), [
             'key' => 'area',
             'required' => false,
-            'default' => [[[0.0, 0.0], [1.0, 0.0], [1.0, 1.0], [0.0, 1.0], [0.0, 0.0]]]
+            'default' => [[[0.0, 0.0], [1.0, 0.0], [1.0, 1.0], [0.0, 1.0], [0.0, 0.0]]],
         ]);
 
         $this->assertEquals(202, $poly['headers']['status-code']);
@@ -10042,20 +10093,20 @@ trait DatabasesBase
         ], $this->getHeaders()), [
             $this->getRecordIdParam() => ID::unique(),
             'data' => [
-                'description' => 'test default values'
+                'description' => 'test default values',
             ],
             'permissions' => [
                 Permission::read(Role::user($this->getUser()['$id'])),
                 Permission::update(Role::user($this->getUser()['$id'])),
                 Permission::delete(Role::user($this->getUser()['$id'])),
-            ]
+            ],
         ]);
         $this->assertEquals(201, $newDocument['headers']['status-code']);
 
         $newDocumentId = $newDocument['body']['$id'];
 
         // Fetch the document to verify default values are applied
-        $fetchedDocument = $this->client->call(Client::METHOD_GET, $this->getContainerUrl($databaseId, $colId) . '/' . $this->getRecordResource() . '/' . $newDocumentId, array_merge([
+        $fetchedDocument = $this->client->call(Client::METHOD_GET, $this->getContainerUrl($databaseId, $colId).'/'.$this->getRecordResource().'/'.$newDocumentId, array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()));
@@ -10074,10 +10125,10 @@ trait DatabasesBase
         $database = $this->client->call(Client::METHOD_POST, $this->getApiBasePath(), [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
+            'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
             'databaseId' => ID::unique(),
-            'name' => 'NotContains test'
+            'name' => 'NotContains test',
         ]);
 
         $this->assertNotEmpty($database['body']['$id']);
@@ -10090,7 +10141,7 @@ trait DatabasesBase
         $movies = $this->client->call(Client::METHOD_POST, $this->getContainerUrl($databaseId), array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
+            'x-appwrite-key' => $this->getProject()['apiKey'],
         ]), [
             $this->getContainerIdParam() => ID::unique(),
             'name' => 'Movies',
@@ -10134,7 +10185,7 @@ trait DatabasesBase
             ],
             'permissions' => [
                 Permission::read(Role::user($this->getUser()['$id'])),
-            ]
+            ],
         ]);
         $this->assertEquals(201, $row1['headers']['status-code']);
 
@@ -10149,7 +10200,7 @@ trait DatabasesBase
             ],
             'permissions' => [
                 Permission::read(Role::user($this->getUser()['$id'])),
-            ]
+            ],
         ]);
         $this->assertEquals(201, $row2['headers']['status-code']);
 
@@ -10164,7 +10215,7 @@ trait DatabasesBase
             ],
             'permissions' => [
                 Permission::read(Role::user($this->getUser()['$id'])),
-            ]
+            ],
         ]);
 
         $this->assertEquals(201, $row3['headers']['status-code']);
@@ -10182,7 +10233,7 @@ trait DatabasesBase
                     Query::select(['title', 'genre'])->toString(),
                     Query::notContains('title', ['Spider'])->toString(),
                     Query::limit(999)->toString(),
-                    Query::offset(0)->toString()
+                    Query::offset(0)->toString(),
                 ],
             ]
         );
@@ -10210,7 +10261,7 @@ trait DatabasesBase
             array_merge([
                 'content-type' => 'application/json',
                 'x-appwrite-project' => $this->getProject()['$id'],
-                'x-appwrite-key' => $this->getProject()['apiKey']
+                'x-appwrite-key' => $this->getProject()['apiKey'],
             ]),
             [
                 'queries' => [
@@ -10235,10 +10286,10 @@ trait DatabasesBase
         $database = $this->client->call(Client::METHOD_POST, $this->getApiBasePath(), [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
+            'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
             'databaseId' => ID::unique(),
-            'name' => 'NotBetween test'
+            'name' => 'NotBetween test',
         ]);
 
         $this->assertNotEmpty($database['body']['$id']);
@@ -10251,7 +10302,7 @@ trait DatabasesBase
         $products = $this->client->call(Client::METHOD_POST, $this->getContainerUrl($databaseId), array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
+            'x-appwrite-key' => $this->getProject()['apiKey'],
         ]), [
             $this->getContainerIdParam() => ID::unique(),
             'name' => 'Products',
@@ -10294,7 +10345,7 @@ trait DatabasesBase
             ],
             'permissions' => [
                 Permission::read(Role::user($this->getUser()['$id'])),
-            ]
+            ],
         ]);
         $this->assertEquals(201, $row1['headers']['status-code']);
 
@@ -10309,7 +10360,7 @@ trait DatabasesBase
             ],
             'permissions' => [
                 Permission::read(Role::user($this->getUser()['$id'])),
-            ]
+            ],
         ]);
         $this->assertEquals(201, $row2['headers']['status-code']);
 
@@ -10324,7 +10375,7 @@ trait DatabasesBase
             ],
             'permissions' => [
                 Permission::read(Role::user($this->getUser()['$id'])),
-            ]
+            ],
         ]);
 
         $this->assertEquals(201, $row3['headers']['status-code']);
@@ -10360,10 +10411,10 @@ trait DatabasesBase
         $database = $this->client->call(Client::METHOD_POST, $this->getApiBasePath(), [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
+            'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
             'databaseId' => ID::unique(),
-            'name' => 'NotStartsWith test'
+            'name' => 'NotStartsWith test',
         ]);
 
         $this->assertNotEmpty($database['body']['$id']);
@@ -10376,7 +10427,7 @@ trait DatabasesBase
         $employees = $this->client->call(Client::METHOD_POST, $this->getContainerUrl($databaseId), array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
+            'x-appwrite-key' => $this->getProject()['apiKey'],
         ]), [
             $this->getContainerIdParam() => ID::unique(),
             'name' => 'Employees',
@@ -10420,7 +10471,7 @@ trait DatabasesBase
             ],
             'permissions' => [
                 Permission::read(Role::user($this->getUser()['$id'])),
-            ]
+            ],
         ]);
         $this->assertEquals(201, $row1['headers']['status-code']);
 
@@ -10435,7 +10486,7 @@ trait DatabasesBase
             ],
             'permissions' => [
                 Permission::read(Role::user($this->getUser()['$id'])),
-            ]
+            ],
         ]);
         $this->assertEquals(201, $row2['headers']['status-code']);
 
@@ -10450,7 +10501,7 @@ trait DatabasesBase
             ],
             'permissions' => [
                 Permission::read(Role::user($this->getUser()['$id'])),
-            ]
+            ],
         ]);
 
         $this->assertEquals(201, $row3['headers']['status-code']);
@@ -10486,10 +10537,10 @@ trait DatabasesBase
         $database = $this->client->call(Client::METHOD_POST, $this->getApiBasePath(), [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
+            'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
             'databaseId' => ID::unique(),
-            'name' => 'NotEndsWith test'
+            'name' => 'NotEndsWith test',
         ]);
 
         $this->assertNotEmpty($database['body']['$id']);
@@ -10502,7 +10553,7 @@ trait DatabasesBase
         $files = $this->client->call(Client::METHOD_POST, $this->getContainerUrl($databaseId), array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
+            'x-appwrite-key' => $this->getProject()['apiKey'],
         ]), [
             $this->getContainerIdParam() => ID::unique(),
             'name' => 'Files',
@@ -10546,7 +10597,7 @@ trait DatabasesBase
             ],
             'permissions' => [
                 Permission::read(Role::user($this->getUser()['$id'])),
-            ]
+            ],
         ]);
         $this->assertEquals(201, $row1['headers']['status-code']);
 
@@ -10561,7 +10612,7 @@ trait DatabasesBase
             ],
             'permissions' => [
                 Permission::read(Role::user($this->getUser()['$id'])),
-            ]
+            ],
         ]);
         $this->assertEquals(201, $row2['headers']['status-code']);
 
@@ -10576,7 +10627,7 @@ trait DatabasesBase
             ],
             'permissions' => [
                 Permission::read(Role::user($this->getUser()['$id'])),
-            ]
+            ],
         ]);
 
         $this->assertEquals(201, $row3['headers']['status-code']);
@@ -10612,10 +10663,10 @@ trait DatabasesBase
         $database = $this->client->call(Client::METHOD_POST, $this->getApiBasePath(), [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
+            'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
             'databaseId' => ID::unique(),
-            'name' => 'CreatedBefore test'
+            'name' => 'CreatedBefore test',
         ]);
 
         $this->assertNotEmpty($database['body']['$id']);
@@ -10628,7 +10679,7 @@ trait DatabasesBase
         $posts = $this->client->call(Client::METHOD_POST, $this->getContainerUrl($databaseId), array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
+            'x-appwrite-key' => $this->getProject()['apiKey'],
         ]), [
             $this->getContainerIdParam() => ID::unique(),
             'name' => 'Posts',
@@ -10672,7 +10723,7 @@ trait DatabasesBase
             ],
             'permissions' => [
                 Permission::read(Role::user($this->getUser()['$id'])),
-            ]
+            ],
         ]);
         $this->assertEquals(201, $row1['headers']['status-code']);
 
@@ -10690,7 +10741,7 @@ trait DatabasesBase
             ],
             'permissions' => [
                 Permission::read(Role::user($this->getUser()['$id'])),
-            ]
+            ],
         ]);
         $this->assertEquals(201, $row2['headers']['status-code']);
 
@@ -10710,7 +10761,7 @@ trait DatabasesBase
             ],
             'permissions' => [
                 Permission::read(Role::user($this->getUser()['$id'])),
-            ]
+            ],
         ]);
 
         $this->assertEquals(201, $row3['headers']['status-code']);
@@ -10745,10 +10796,10 @@ trait DatabasesBase
         $database = $this->client->call(Client::METHOD_POST, $this->getApiBasePath(), [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
+            'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
             'databaseId' => ID::unique(),
-            'name' => 'CreatedAfter test'
+            'name' => 'CreatedAfter test',
         ]);
 
         $this->assertNotEmpty($database['body']['$id']);
@@ -10761,7 +10812,7 @@ trait DatabasesBase
         $events = $this->client->call(Client::METHOD_POST, $this->getContainerUrl($databaseId), array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
+            'x-appwrite-key' => $this->getProject()['apiKey'],
         ]), [
             $this->getContainerIdParam() => ID::unique(),
             'name' => 'Events',
@@ -10805,7 +10856,7 @@ trait DatabasesBase
             ],
             'permissions' => [
                 Permission::read(Role::user($this->getUser()['$id'])),
-            ]
+            ],
         ]);
         $this->assertEquals(201, $row1['headers']['status-code']);
 
@@ -10823,7 +10874,7 @@ trait DatabasesBase
             ],
             'permissions' => [
                 Permission::read(Role::user($this->getUser()['$id'])),
-            ]
+            ],
         ]);
         $this->assertEquals(201, $row2['headers']['status-code']);
 
@@ -10843,7 +10894,7 @@ trait DatabasesBase
             ],
             'permissions' => [
                 Permission::read(Role::user($this->getUser()['$id'])),
-            ]
+            ],
         ]);
 
         $this->assertEquals(201, $row3['headers']['status-code']);
@@ -10878,10 +10929,10 @@ trait DatabasesBase
         $database = $this->client->call(Client::METHOD_POST, $this->getApiBasePath(), [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
+            'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
             'databaseId' => ID::unique(),
-            'name' => 'CreatedBetween test'
+            'name' => 'CreatedBetween test',
         ]);
 
         $this->assertNotEmpty($database['body']['$id']);
@@ -10894,7 +10945,7 @@ trait DatabasesBase
         $articles = $this->client->call(Client::METHOD_POST, $this->getContainerUrl($databaseId), array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
+            'x-appwrite-key' => $this->getProject()['apiKey'],
         ]), [
             $this->getContainerIdParam() => ID::unique(),
             'name' => 'Articles',
@@ -10939,7 +10990,7 @@ trait DatabasesBase
             ],
             'permissions' => [
                 Permission::read(Role::user($this->getUser()['$id'])),
-            ]
+            ],
         ]);
         $this->assertEquals(201, $row1['headers']['status-code']);
         $firstArticleCreatedAt = $row1['body']['$createdAt'];
@@ -10959,7 +11010,7 @@ trait DatabasesBase
             ],
             'permissions' => [
                 Permission::read(Role::user($this->getUser()['$id'])),
-            ]
+            ],
         ]);
         $this->assertEquals(201, $row2['headers']['status-code']);
         $secondArticleCreatedAt = $row2['body']['$createdAt'];
@@ -10978,7 +11029,7 @@ trait DatabasesBase
             ],
             'permissions' => [
                 Permission::read(Role::user($this->getUser()['$id'])),
-            ]
+            ],
         ]);
         $this->assertEquals(201, $row3['headers']['status-code']);
         $thirdArticleCreatedAt = $row3['body']['$createdAt'];
@@ -10997,7 +11048,7 @@ trait DatabasesBase
             ],
             'permissions' => [
                 Permission::read(Role::user($this->getUser()['$id'])),
-            ]
+            ],
         ]);
         $this->assertEquals(201, $row4['headers']['status-code']);
 
@@ -11056,10 +11107,10 @@ trait DatabasesBase
         $database = $this->client->call(Client::METHOD_POST, $this->getApiBasePath(), [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
+            'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
             'databaseId' => ID::unique(),
-            'name' => 'UpdatedBefore test'
+            'name' => 'UpdatedBefore test',
         ]);
 
         $this->assertNotEmpty($database['body']['$id']);
@@ -11072,7 +11123,7 @@ trait DatabasesBase
         $tasks = $this->client->call(Client::METHOD_POST, $this->getContainerUrl($databaseId), array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
+            'x-appwrite-key' => $this->getProject()['apiKey'],
         ]), [
             $this->getContainerIdParam() => ID::unique(),
             'name' => 'Tasks',
@@ -11118,7 +11169,7 @@ trait DatabasesBase
             'permissions' => [
                 Permission::read(Role::user($this->getUser()['$id'])),
                 Permission::update(Role::user($this->getUser()['$id'])),
-            ]
+            ],
         ]);
         $this->assertEquals(201, $row1['headers']['status-code']);
         $taskOneId = $row1['body']['$id'];
@@ -11135,7 +11186,7 @@ trait DatabasesBase
             'permissions' => [
                 Permission::read(Role::user($this->getUser()['$id'])),
                 Permission::update(Role::user($this->getUser()['$id'])),
-            ]
+            ],
         ]);
         $this->assertEquals(201, $row2['headers']['status-code']);
         $taskTwoId = $row2['body']['$id'];
@@ -11152,43 +11203,43 @@ trait DatabasesBase
             'permissions' => [
                 Permission::read(Role::user($this->getUser()['$id'])),
                 Permission::update(Role::user($this->getUser()['$id'])),
-            ]
+            ],
         ]);
         $this->assertEquals(201, $row3['headers']['status-code']);
         $taskThreeId = $row3['body']['$id'];
 
         // Update first task
         usleep(500000);
-        $this->client->call(Client::METHOD_PATCH, $this->getContainerUrl($databaseId, $tasks['body']['$id']) . '/' . $this->getRecordResource() . '/' . $taskOneId, array_merge([
+        $this->client->call(Client::METHOD_PATCH, $this->getContainerUrl($databaseId, $tasks['body']['$id']).'/'.$this->getRecordResource().'/'.$taskOneId, array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
             'data' => [
                 'status' => 'completed',
-            ]
+            ],
         ]);
 
         // Update second task and get its updated time
         usleep(500000);
-        $updatedTaskTwo = $this->client->call(Client::METHOD_PATCH, $this->getContainerUrl($databaseId, $tasks['body']['$id']) . '/' . $this->getRecordResource() . '/' . $taskTwoId, array_merge([
+        $updatedTaskTwo = $this->client->call(Client::METHOD_PATCH, $this->getContainerUrl($databaseId, $tasks['body']['$id']).'/'.$this->getRecordResource().'/'.$taskTwoId, array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
             'data' => [
                 'status' => 'in_progress',
-            ]
+            ],
         ]);
         $secondTaskUpdatedAt = $updatedTaskTwo['body']['$updatedAt'];
 
         // Update third task
         usleep(500000);
-        $this->client->call(Client::METHOD_PATCH, $this->getContainerUrl($databaseId, $tasks['body']['$id']) . '/' . $this->getRecordResource() . '/' . $taskThreeId, array_merge([
+        $this->client->call(Client::METHOD_PATCH, $this->getContainerUrl($databaseId, $tasks['body']['$id']).'/'.$this->getRecordResource().'/'.$taskThreeId, array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
             'data' => [
                 'status' => 'review',
-            ]
+            ],
         ]);
 
         // Test updatedBefore query - should return tasks updated before the second task's update time
@@ -11222,10 +11273,10 @@ trait DatabasesBase
         $database = $this->client->call(Client::METHOD_POST, $this->getApiBasePath(), [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
+            'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
             'databaseId' => ID::unique(),
-            'name' => 'UpdatedAfter test'
+            'name' => 'UpdatedAfter test',
         ]);
 
         $this->assertNotEmpty($database['body']['$id']);
@@ -11238,7 +11289,7 @@ trait DatabasesBase
         $orders = $this->client->call(Client::METHOD_POST, $this->getContainerUrl($databaseId), array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
+            'x-appwrite-key' => $this->getProject()['apiKey'],
         ]), [
             $this->getContainerIdParam() => ID::unique(),
             'name' => 'Orders',
@@ -11284,7 +11335,7 @@ trait DatabasesBase
             'permissions' => [
                 Permission::read(Role::user($this->getUser()['$id'])),
                 Permission::update(Role::user($this->getUser()['$id'])),
-            ]
+            ],
         ]);
         $this->assertEquals(201, $row1['headers']['status-code']);
         $orderOneId = $row1['body']['$id'];
@@ -11301,7 +11352,7 @@ trait DatabasesBase
             'permissions' => [
                 Permission::read(Role::user($this->getUser()['$id'])),
                 Permission::update(Role::user($this->getUser()['$id'])),
-            ]
+            ],
         ]);
         $this->assertEquals(201, $row2['headers']['status-code']);
         $orderTwoId = $row2['body']['$id'];
@@ -11318,43 +11369,43 @@ trait DatabasesBase
             'permissions' => [
                 Permission::read(Role::user($this->getUser()['$id'])),
                 Permission::update(Role::user($this->getUser()['$id'])),
-            ]
+            ],
         ]);
         $this->assertEquals(201, $row3['headers']['status-code']);
         $orderThreeId = $row3['body']['$id'];
 
         // Update first order
         usleep(500000);
-        $this->client->call(Client::METHOD_PATCH, $this->getContainerUrl($databaseId, $orders['body']['$id']) . '/' . $this->getRecordResource() . '/' . $orderOneId, array_merge([
+        $this->client->call(Client::METHOD_PATCH, $this->getContainerUrl($databaseId, $orders['body']['$id']).'/'.$this->getRecordResource().'/'.$orderOneId, array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
             'data' => [
                 'status' => 'processing',
-            ]
+            ],
         ]);
 
         // Update second order and get its updated time
         usleep(500000);
-        $updatedOrderTwo = $this->client->call(Client::METHOD_PATCH, $this->getContainerUrl($databaseId, $orders['body']['$id']) . '/' . $this->getRecordResource() . '/' . $orderTwoId, array_merge([
+        $updatedOrderTwo = $this->client->call(Client::METHOD_PATCH, $this->getContainerUrl($databaseId, $orders['body']['$id']).'/'.$this->getRecordResource().'/'.$orderTwoId, array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
             'data' => [
                 'status' => 'shipped',
-            ]
+            ],
         ]);
         $secondOrderUpdatedAt = $updatedOrderTwo['body']['$updatedAt'];
 
         // Update third order
         usleep(500000);
-        $this->client->call(Client::METHOD_PATCH, $this->getContainerUrl($databaseId, $orders['body']['$id']) . '/' . $this->getRecordResource() . '/' . $orderThreeId, array_merge([
+        $this->client->call(Client::METHOD_PATCH, $this->getContainerUrl($databaseId, $orders['body']['$id']).'/'.$this->getRecordResource().'/'.$orderThreeId, array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
             'data' => [
                 'status' => 'delivered',
-            ]
+            ],
         ]);
 
         // Test updatedAfter query - should return orders updated after the second order's update time
@@ -11388,10 +11439,10 @@ trait DatabasesBase
         $database = $this->client->call(Client::METHOD_POST, $this->getApiBasePath(), [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
+            'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
             'databaseId' => ID::unique(),
-            'name' => 'UpdatedBetween test'
+            'name' => 'UpdatedBetween test',
         ]);
 
         $this->assertNotEmpty($database['body']['$id']);
@@ -11404,7 +11455,7 @@ trait DatabasesBase
         $products = $this->client->call(Client::METHOD_POST, $this->getContainerUrl($databaseId), array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
+            'x-appwrite-key' => $this->getProject()['apiKey'],
         ]), [
             $this->getContainerIdParam() => ID::unique(),
             'name' => 'Products',
@@ -11449,7 +11500,7 @@ trait DatabasesBase
             'permissions' => [
                 Permission::read(Role::user($this->getUser()['$id'])),
                 Permission::update(Role::user($this->getUser()['$id'])),
-            ]
+            ],
         ]);
         $this->assertEquals(201, $row1['headers']['status-code']);
 
@@ -11469,7 +11520,7 @@ trait DatabasesBase
             'permissions' => [
                 Permission::read(Role::user($this->getUser()['$id'])),
                 Permission::update(Role::user($this->getUser()['$id'])),
-            ]
+            ],
         ]);
         $this->assertEquals(201, $row2['headers']['status-code']);
 
@@ -11488,7 +11539,7 @@ trait DatabasesBase
             'permissions' => [
                 Permission::read(Role::user($this->getUser()['$id'])),
                 Permission::update(Role::user($this->getUser()['$id'])),
-            ]
+            ],
         ]);
         $this->assertEquals(201, $row3['headers']['status-code']);
 
@@ -11507,7 +11558,7 @@ trait DatabasesBase
             'permissions' => [
                 Permission::read(Role::user($this->getUser()['$id'])),
                 Permission::update(Role::user($this->getUser()['$id'])),
-            ]
+            ],
         ]);
         $this->assertEquals(201, $row4['headers']['status-code']);
 
@@ -11515,13 +11566,13 @@ trait DatabasesBase
         usleep(500000);
 
         // Update first product
-        $update1 = $this->client->call(Client::METHOD_PATCH, $this->getContainerUrl($databaseId, $products['body']['$id']) . '/' . $this->getRecordResource() . '/' . $row1['body']['$id'], array_merge([
+        $update1 = $this->client->call(Client::METHOD_PATCH, $this->getContainerUrl($databaseId, $products['body']['$id']).'/'.$this->getRecordResource().'/'.$row1['body']['$id'], array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
             'data' => [
                 'price' => 89.99,
-            ]
+            ],
         ]);
         $this->assertEquals(200, $update1['headers']['status-code']);
         $firstProductUpdatedAt = $update1['body']['$updatedAt'];
@@ -11529,13 +11580,13 @@ trait DatabasesBase
         usleep(500000);
 
         // Update second product
-        $update2 = $this->client->call(Client::METHOD_PATCH, $this->getContainerUrl($databaseId, $products['body']['$id']) . '/' . $this->getRecordResource() . '/' . $row2['body']['$id'], array_merge([
+        $update2 = $this->client->call(Client::METHOD_PATCH, $this->getContainerUrl($databaseId, $products['body']['$id']).'/'.$this->getRecordResource().'/'.$row2['body']['$id'], array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
             'data' => [
                 'price' => 139.99,
-            ]
+            ],
         ]);
         $this->assertEquals(200, $update2['headers']['status-code']);
         $secondProductUpdatedAt = $update2['body']['$updatedAt'];
@@ -11543,13 +11594,13 @@ trait DatabasesBase
         usleep(500000);
 
         // Update third product
-        $update3 = $this->client->call(Client::METHOD_PATCH, $this->getContainerUrl($databaseId, $products['body']['$id']) . '/' . $this->getRecordResource() . '/' . $row3['body']['$id'], array_merge([
+        $update3 = $this->client->call(Client::METHOD_PATCH, $this->getContainerUrl($databaseId, $products['body']['$id']).'/'.$this->getRecordResource().'/'.$row3['body']['$id'], array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
             'data' => [
                 'price' => 189.99,
-            ]
+            ],
         ]);
         $this->assertEquals(200, $update3['headers']['status-code']);
         $thirdProductUpdatedAt = $update3['body']['$updatedAt'];
@@ -11557,13 +11608,13 @@ trait DatabasesBase
         usleep(500000);
 
         // Update fourth product
-        $update4 = $this->client->call(Client::METHOD_PATCH, $this->getContainerUrl($databaseId, $products['body']['$id']) . '/' . $this->getRecordResource() . '/' . $row4['body']['$id'], array_merge([
+        $update4 = $this->client->call(Client::METHOD_PATCH, $this->getContainerUrl($databaseId, $products['body']['$id']).'/'.$this->getRecordResource().'/'.$row4['body']['$id'], array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
             'data' => [
                 'price' => 239.99,
-            ]
+            ],
         ]);
         $this->assertEquals(200, $update4['headers']['status-code']);
 
@@ -11612,6 +11663,7 @@ trait DatabasesBase
         $this->assertEquals('Product B', $rows['body'][$this->getRecordResource()][0]['name']);
         $this->assertEquals(139.99, $rows['body'][$this->getRecordResource()][0]['price']);
     }
+
     public function testDocumentWithEmptyPayload(): void
     {
         $data = $this->setupCollection();
@@ -11626,7 +11678,7 @@ trait DatabasesBase
                 Permission::read(Role::user($this->getUser()['$id'])),
                 Permission::update(Role::user($this->getUser()['$id'])),
                 Permission::delete(Role::user($this->getUser()['$id'])),
-            ]
+            ],
         ]);
         if ($this->getSupportForAttributes()) {
             $this->assertEquals(400, $document['headers']['status-code']);

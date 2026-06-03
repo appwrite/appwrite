@@ -19,8 +19,6 @@ class QueryPlanDetail extends Model
 
     public function __construct()
     {
-        // The library plan also carries backend identity; it is omitted here so
-        // the public DTO does not advertise the backing database.
         $this
             ->addRule('rowsScanned', [
                 'type' => self::TYPE_INTEGER,
@@ -43,7 +41,7 @@ class QueryPlanDetail extends Model
             ])
             ->addRule('access', [
                 'type' => self::TYPE_JSON,
-                'description' => 'Stable Appwrite-level access path summary. Backend-specific detail remains in tree.',
+                'description' => 'Stable Appwrite-level access path summary. Backend-specific detail is only populated when the request sets tree to true.',
                 'default' => new \stdClass,
                 'required' => false,
                 'example' => [
@@ -81,7 +79,7 @@ class QueryPlanDetail extends Model
             ])
             ->addRule('tree', [
                 'type' => self::TYPE_JSON,
-                'description' => 'Sanitized query plan from the backend, with internal storage identifiers and runtime metadata stripped. Carries access-path detail such as scan type, candidate indexes, filter conditions, sort, and bounds for deep diagnosis. Shape varies by backend.',
+                'description' => 'Sanitized query plan from the backend. Only populated when tree is true. Internal storage identifiers and runtime metadata are stripped. Carries access-path detail such as scan type, candidate indexes, filter conditions, sort, and bounds for deep diagnosis. Shape varies by backend.',
                 'default' => new \stdClass,
                 'required' => false,
                 'example' => ['query_block' => ['select_id' => 1]],

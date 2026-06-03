@@ -20,10 +20,10 @@ trait DatabasesBase
         $database = $this->client->call(Client::METHOD_POST, '/vectorsdb', [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
+            'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
             'databaseId' => ID::unique(),
-            'name' => 'Test Database'
+            'name' => 'Test Database',
         ]);
 
         $this->assertNotEmpty($database['body']['$id']);
@@ -47,18 +47,18 @@ trait DatabasesBase
         $res = $this->client->call(Client::METHOD_POST, "/vectorsdb/{$databaseId}/collections/{$collectionId}/documents", [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
+            'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
             'documentId' => ID::unique(),
             'data' => [
                 'embeddings' => $vector,
-                'metadata' => ['type' => 'sample', 'rank' => 1]
+                'metadata' => ['type' => 'sample', 'rank' => 1],
             ],
             'permissions' => [
                 Permission::read(Role::any()),
                 Permission::update(Role::any()),
                 Permission::delete(Role::any()),
-            ]
+            ],
         ]);
 
         $this->assertEquals(201, $res['headers']['status-code']);
@@ -77,12 +77,12 @@ trait DatabasesBase
         $bad = $this->client->call(Client::METHOD_POST, "/vectorsdb/{$databaseId}/collections/{$collectionId}/documents", [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
+            'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
             'documentId' => ID::unique(),
             'data' => [
                 'embeddings' => $badVec,
-                'metadata' => ['type' => 'bad']
+                'metadata' => ['type' => 'bad'],
             ],
         ]);
         $this->assertGreaterThanOrEqual(400, $bad['headers']['status-code']);
@@ -93,12 +93,12 @@ trait DatabasesBase
         $bad2 = $this->client->call(Client::METHOD_POST, "/vectorsdb/{$databaseId}/collections/{$collectionId}/documents", [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
+            'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
             'documentId' => ID::unique(),
             'data' => [
                 'embeddings' => $strVec,
-                'metadata' => ['type' => 'bad-strings']
+                'metadata' => ['type' => 'bad-strings'],
             ],
         ]);
         $this->assertGreaterThanOrEqual(400, $bad2['headers']['status-code']);
@@ -108,14 +108,14 @@ trait DatabasesBase
         $res2 = $this->client->call(Client::METHOD_POST, "/vectorsdb/{$databaseId}/collections/{$collectionId}/documents", [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
+            'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
             'documentId' => ID::unique(),
             'data' => [
                 'embeddings' => $vector,
-                'metadata' => ['type' => 'sample', 'rank' => 99]
+                'metadata' => ['type' => 'sample', 'rank' => 99],
             ],
-            'permissions' => [Permission::read(Role::any())]
+            'permissions' => [Permission::read(Role::any())],
         ]);
         $this->assertEquals(201, $res2['headers']['status-code']);
         $documentId2 = $res2['body']['$id'];
@@ -140,17 +140,17 @@ trait DatabasesBase
         $res = $this->client->call(Client::METHOD_GET, "/vectorsdb/{$databaseId}/collections/{$collectionId}/documents/{$documentId}", [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
+            'x-appwrite-key' => $this->getProject()['apiKey'],
         ]);
 
         $this->assertEquals(200, $res['headers']['status-code']);
         $this->assertEquals($documentId, $res['body']['$id']);
 
         // Edge: missing document should return 404
-        $missing = $this->client->call(Client::METHOD_GET, "/vectorsdb/{$databaseId}/collections/{$collectionId}/documents/" . ID::unique(), [
+        $missing = $this->client->call(Client::METHOD_GET, "/vectorsdb/{$databaseId}/collections/{$collectionId}/documents/".ID::unique(), [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
+            'x-appwrite-key' => $this->getProject()['apiKey'],
         ]);
         $this->assertEquals(404, $missing['headers']['status-code']);
 
@@ -166,9 +166,9 @@ trait DatabasesBase
         $list = $this->client->call(Client::METHOD_GET, "/vectorsdb/{$databaseId}/collections/{$collectionId}/documents", [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
+            'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
-            'queries' => [Query::limit(5)->toString()]
+            'queries' => [Query::limit(5)->toString()],
         ]);
 
         $this->assertEquals(200, $list['headers']['status-code']);
@@ -179,12 +179,12 @@ trait DatabasesBase
         $page1 = $this->client->call(Client::METHOD_GET, "/vectorsdb/{$databaseId}/collections/{$collectionId}/documents", [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
+            'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
             'queries' => [
                 Query::limit(1)->toString(),
-                Query::orderAsc('$id')->toString()
-            ]
+                Query::orderAsc('$id')->toString(),
+            ],
         ]);
         $this->assertEquals(200, $page1['headers']['status-code']);
         $this->assertEquals(1, \count($page1['body']['documents'] ?? []));
@@ -192,13 +192,13 @@ trait DatabasesBase
         $page2 = $this->client->call(Client::METHOD_GET, "/vectorsdb/{$databaseId}/collections/{$collectionId}/documents", [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
+            'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
             'queries' => [
                 Query::limit(1)->toString(),
                 Query::offset(1)->toString(),
-                Query::orderAsc('$id')->toString()
-            ]
+                Query::orderAsc('$id')->toString(),
+            ],
         ]);
         $this->assertEquals(200, $page2['headers']['status-code']);
         $this->assertEquals(1, \count($page2['body']['documents'] ?? []));
@@ -219,12 +219,12 @@ trait DatabasesBase
         $upd = $this->client->call(Client::METHOD_PUT, "/vectorsdb/{$databaseId}/collections/{$collectionId}/documents/{$documentId}", [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
+            'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
             'data' => [
                 'embeddings' => $vector,
-                'metadata' => ['type' => 'sample', 'rank' => 2]
-            ]
+                'metadata' => ['type' => 'sample', 'rank' => 2],
+            ],
         ]);
 
         $this->assertEquals(200, $upd['headers']['status-code']);
@@ -233,7 +233,7 @@ trait DatabasesBase
         $get = $this->client->call(Client::METHOD_GET, "/vectorsdb/{$databaseId}/collections/{$collectionId}/documents/{$documentId}", [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
+            'x-appwrite-key' => $this->getProject()['apiKey'],
         ]);
         $this->assertEquals(200, $get['headers']['status-code']);
         $this->assertEquals(2, $get['body']['metadata']['rank']);
@@ -257,12 +257,12 @@ trait DatabasesBase
         $upd = $this->client->call(Client::METHOD_PUT, "/vectorsdb/{$databaseId}/collections/{$collectionId}/documents/{$documentId}", [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
+            'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
             'data' => [
                 'embeddings' => $vector,
-                'metadata' => ['type' => 'sample', 'rank' => 3]
-            ]
+                'metadata' => ['type' => 'sample', 'rank' => 3],
+            ],
         ]);
 
         $this->assertEquals(200, $upd['headers']['status-code']);
@@ -273,12 +273,12 @@ trait DatabasesBase
         $upd2 = $this->client->call(Client::METHOD_PUT, "/vectorsdb/{$databaseId}/collections/{$collectionId}/documents/{$documentId}", [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
+            'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
             'data' => [
                 'embeddings' => $vector2,
-                'metadata' => ['type' => 'sample', 'rank' => 4]
-            ]
+                'metadata' => ['type' => 'sample', 'rank' => 4],
+            ],
         ]);
         $this->assertEquals(200, $upd2['headers']['status-code']);
 
@@ -286,7 +286,7 @@ trait DatabasesBase
         $get2 = $this->client->call(Client::METHOD_GET, "/vectorsdb/{$databaseId}/collections/{$collectionId}/documents/{$documentId}", [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
+            'x-appwrite-key' => $this->getProject()['apiKey'],
         ]);
         $this->assertEquals(200, $get2['headers']['status-code']);
         $this->assertArrayHasKey('$updatedAt', $get2['body']);
@@ -305,14 +305,14 @@ trait DatabasesBase
             $this->client->call(Client::METHOD_POST, "/vectorsdb/{$databaseId}/collections/{$collectionId}/documents", [
                 'content-type' => 'application/json',
                 'x-appwrite-project' => $this->getProject()['$id'],
-                'x-appwrite-key' => $this->getProject()['apiKey']
+                'x-appwrite-key' => $this->getProject()['apiKey'],
             ], [
                 'documentId' => ID::unique(),
                 'data' => [
                     'embeddings' => $vec,
-                    'metadata' => ['name' => $name]
+                    'metadata' => ['name' => $name],
                 ],
-                'permissions' => [Permission::read(Role::any())]
+                'permissions' => [Permission::read(Role::any())],
             ]);
         };
 
@@ -328,12 +328,12 @@ trait DatabasesBase
         $dot = $this->client->call(Client::METHOD_GET, "/vectorsdb/{$databaseId}/collections/{$collectionId}/documents", [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
+            'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
             'queries' => [
                 Query::vectorDot('embeddings', $vA)->toString(),
-                Query::limit(2)->toString()
-            ]
+                Query::limit(2)->toString(),
+            ],
         ]);
         $this->assertEquals(200, $dot['headers']['status-code']);
         $this->assertGreaterThanOrEqual(1, $dot['body']['total']);
@@ -342,12 +342,12 @@ trait DatabasesBase
         $cos = $this->client->call(Client::METHOD_GET, "/vectorsdb/{$databaseId}/collections/{$collectionId}/documents", [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
+            'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
             'queries' => [
                 Query::vectorCosine('embeddings', $vB)->toString(),
-                Query::limit(2)->toString()
-            ]
+                Query::limit(2)->toString(),
+            ],
         ]);
         $this->assertEquals(200, $cos['headers']['status-code']);
         $this->assertGreaterThanOrEqual(1, $cos['body']['total']);
@@ -356,12 +356,12 @@ trait DatabasesBase
         $eu = $this->client->call(Client::METHOD_GET, "/vectorsdb/{$databaseId}/collections/{$collectionId}/documents", [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
+            'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
             'queries' => [
                 Query::vectorEuclidean('embeddings', $vA)->toString(),
-                Query::limit(2)->toString()
-            ]
+                Query::limit(2)->toString(),
+            ],
         ]);
         $this->assertEquals(200, $eu['headers']['status-code']);
         $this->assertGreaterThanOrEqual(1, $eu['body']['total']);
@@ -370,13 +370,13 @@ trait DatabasesBase
         $combo = $this->client->call(Client::METHOD_GET, "/vectorsdb/{$databaseId}/collections/{$collectionId}/documents", [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
+            'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
             'queries' => [
                 Query::vectorCosine('embeddings', $vA)->toString(),
                 Query::notEqual('metadata', [['name' => 'B']])->toString(),
-                Query::limit(2)->toString()
-            ]
+                Query::limit(2)->toString(),
+            ],
         ]);
         $this->assertEquals(200, $combo['headers']['status-code']);
         $this->assertGreaterThanOrEqual(1, $combo['body']['total']);
@@ -385,13 +385,13 @@ trait DatabasesBase
         $ordered = $this->client->call(Client::METHOD_GET, "/vectorsdb/{$databaseId}/collections/{$collectionId}/documents", [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
+            'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
             'queries' => [
                 Query::vectorDot('embeddings', $vA)->toString(),
                 Query::orderAsc('$id')->toString(),
-                Query::limit(3)->toString()
-            ]
+                Query::limit(3)->toString(),
+            ],
         ]);
         $this->assertEquals(200, $ordered['headers']['status-code']);
 
@@ -410,7 +410,7 @@ trait DatabasesBase
         $response = $this->client->call(Client::METHOD_GET, "/vectorsdb/{$databaseId}/collections/{$collectionId}/documents/explain", [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
+            'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
             'queries' => [
                 Query::vectorCosine('embeddings', $vector)->toString(),
@@ -422,6 +422,21 @@ trait DatabasesBase
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertArrayHasKey('queries', $response['body']);
         $this->assertNotEmpty($response['body']['queries']);
+
+        $assertNoInternalIdentifiers = function (array $queries): void {
+            $rawPlan = json_encode($queries) ?: '';
+
+            $this->assertDoesNotMatchRegularExpression('/_[\w-]{16,}_[\w-]{16,}/', $rawPlan);
+            $this->assertDoesNotMatchRegularExpression('/[a-f0-9]{32}_[A-Za-z][\w-]*/', $rawPlan);
+            $this->assertDoesNotMatchRegularExpression('/"Relation Name":"[a-f0-9]{32}"/', $rawPlan);
+            $this->assertDoesNotMatchRegularExpression('/"Index Name":"[a-f0-9]{32}"/', $rawPlan);
+            $this->assertStringNotContainsString('$db', $rawPlan);
+            $this->assertStringNotContainsString('serverInfo', $rawPlan);
+            $this->assertStringNotContainsString('serverParameters', $rawPlan);
+            $this->assertStringNotContainsString('$clusterTime', $rawPlan);
+            $this->assertStringNotContainsString('operationTime', $rawPlan);
+            $this->assertStringNotContainsString('slotBasedPlan', $rawPlan);
+        };
 
         $first = $response['body']['queries'][0];
         $this->assertEquals('find', $first['purpose']);
@@ -436,16 +451,37 @@ trait DatabasesBase
         $this->assertArrayHasKey('type', $first['plan']['access']);
         $this->assertArrayHasKey('index', $first['plan']['access']);
         $this->assertContains($first['plan']['access']['type'], ['index_scan', 'full_scan', 'unknown']);
-        $this->assertArrayNotHasKey('engine', $first['plan']);
+        $this->assertFalse(isset($first['plan']['tree']));
 
-        $rawPlan = json_encode($response['body']['queries']);
-        $this->assertDoesNotMatchRegularExpression('/_[\w-]{16,}_[\w-]{16,}/', $rawPlan);
-        $this->assertStringNotContainsString('$db', $rawPlan);
-        $this->assertStringNotContainsString('serverInfo', $rawPlan);
-        $this->assertStringNotContainsString('serverParameters', $rawPlan);
-        $this->assertStringNotContainsString('$clusterTime', $rawPlan);
-        $this->assertStringNotContainsString('operationTime', $rawPlan);
-        $this->assertStringNotContainsString('slotBasedPlan', $rawPlan);
+        foreach ($response['body']['queries'] as $entry) {
+            $this->assertArrayNotHasKey('engine', $entry['plan']);
+            $this->assertFalse(isset($entry['plan']['tree']));
+        }
+
+        $assertNoInternalIdentifiers($response['body']['queries']);
+
+        $treeResponse = $this->client->call(Client::METHOD_GET, "/vectorsdb/{$databaseId}/collections/{$collectionId}/documents/explain", [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            'queries' => [
+                Query::vectorCosine('embeddings', $vector)->toString(),
+                Query::limit(2)->toString(),
+            ],
+            'total' => false,
+            'tree' => true,
+        ]);
+
+        $this->assertEquals(200, $treeResponse['headers']['status-code']);
+        $this->assertArrayHasKey('tree', $treeResponse['body']['queries'][0]['plan']);
+        $this->assertNotNull($treeResponse['body']['queries'][0]['plan']['tree']);
+
+        foreach ($treeResponse['body']['queries'] as $entry) {
+            $this->assertArrayNotHasKey('engine', $entry['plan']);
+        }
+
+        $assertNoInternalIdentifiers($treeResponse['body']['queries']);
     }
 
     #[Depends('testDocumentsVectorQueries')]
@@ -458,7 +494,7 @@ trait DatabasesBase
         $del = $this->client->call(Client::METHOD_DELETE, "/vectorsdb/{$databaseId}/collections/{$collectionId}/documents/{$documentId}", [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
+            'x-appwrite-key' => $this->getProject()['apiKey'],
         ]);
         $this->assertEquals(204, $del['headers']['status-code']);
 
@@ -466,7 +502,7 @@ trait DatabasesBase
         $getMissing = $this->client->call(Client::METHOD_GET, "/vectorsdb/{$databaseId}/collections/{$collectionId}/documents/{$documentId}", [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
+            'x-appwrite-key' => $this->getProject()['apiKey'],
         ]);
         $this->assertEquals(404, $getMissing['headers']['status-code']);
 
@@ -474,9 +510,9 @@ trait DatabasesBase
         $list = $this->client->call(Client::METHOD_GET, "/vectorsdb/{$databaseId}/collections/{$collectionId}/documents", [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
+            'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
-            'queries' => [Query::limit(5)->toString()]
+            'queries' => [Query::limit(5)->toString()],
         ]);
         $this->assertEquals(200, $list['headers']['status-code']);
     }
@@ -494,22 +530,22 @@ trait DatabasesBase
         $create = $this->client->call(Client::METHOD_POST, "/vectorsdb/{$databaseId}/collections/{$collectionId}/documents", [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
+            'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
             'documentId' => $docId,
             'data' => [
                 'embeddings' => $vector,
-                'metadata' => ['scope' => 'private']
+                'metadata' => ['scope' => 'private'],
             ],
             'permissions' => [
-                Permission::read(Role::user($this->getUser()['$id']))
-            ]
+                Permission::read(Role::user($this->getUser()['$id'])),
+            ],
         ]);
         $this->assertEquals(201, $create['headers']['status-code']);
 
         $guest = $this->client->call(Client::METHOD_GET, "/vectorsdb/{$databaseId}/collections/{$collectionId}/documents/{$docId}", [
             'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id']
+            'x-appwrite-project' => $this->getProject()['$id'],
         ]);
         $this->assertEquals(404, $guest['headers']['status-code']);
 
@@ -517,7 +553,7 @@ trait DatabasesBase
         $withKey = $this->client->call(Client::METHOD_GET, "/vectorsdb/{$databaseId}/collections/{$collectionId}/documents/{$docId}", [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
+            'x-appwrite-key' => $this->getProject()['apiKey'],
         ]);
         $this->assertEquals(200, $withKey['headers']['status-code']);
     }
@@ -529,10 +565,10 @@ trait DatabasesBase
         /**
          * Test for SUCCESS
          */
-        $movies = $this->client->call(Client::METHOD_POST, '/vectorsdb/' . $databaseId . '/collections', array_merge([
+        $movies = $this->client->call(Client::METHOD_POST, '/vectorsdb/'.$databaseId.'/collections', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
+            'x-appwrite-key' => $this->getProject()['apiKey'],
         ]), [
             'collectionId' => ID::unique(),
             'name' => 'Movies',
@@ -546,10 +582,10 @@ trait DatabasesBase
         $this->assertEquals(201, $movies['headers']['status-code']);
         $this->assertEquals($movies['body']['name'], 'Movies');
 
-        $actors = $this->client->call(Client::METHOD_POST, '/vectorsdb/' . $databaseId . '/collections', array_merge([
+        $actors = $this->client->call(Client::METHOD_POST, '/vectorsdb/'.$databaseId.'/collections', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
+            'x-appwrite-key' => $this->getProject()['apiKey'],
         ]), [
             'collectionId' => ID::unique(),
             'name' => 'Actors',
@@ -575,10 +611,10 @@ trait DatabasesBase
         $database = $this->client->call(Client::METHOD_POST, '/vectorsdb', [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
+            'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
             'databaseId' => ID::unique(),
-            'name' => 'Sample VectorsDB'
+            'name' => 'Sample VectorsDB',
         ]);
 
         $this->assertNotEmpty($database['body']['$id']);
@@ -594,10 +630,10 @@ trait DatabasesBase
     {
         $databaseId = $data['databaseId'];
 
-        $collection = $this->client->call(Client::METHOD_POST, '/vectorsdb/' . $databaseId . '/collections', array_merge([
+        $collection = $this->client->call(Client::METHOD_POST, '/vectorsdb/'.$databaseId.'/collections', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
+            'x-appwrite-key' => $this->getProject()['apiKey'],
         ]), [
             'collectionId' => ID::unique(),
             'name' => 'Sample Collection',
@@ -631,10 +667,10 @@ trait DatabasesBase
             $db = $this->client->call(Client::METHOD_POST, '/vectorsdb', [
                 'content-type' => 'application/json',
                 'x-appwrite-project' => $projectId,
-                'x-appwrite-key' => $apiKey
+                'x-appwrite-key' => $apiKey,
             ], [
                 'databaseId' => ID::unique(),
-                'name' => $name
+                'name' => $name,
             ]);
 
             $this->assertEquals(201, $db['headers']['status-code']);
@@ -649,10 +685,10 @@ trait DatabasesBase
          * Helper to create a collection
          */
         $createCollection = function (string $databaseId, string $name, int $dimensions = 1536) use ($projectId, $apiKey, $userId) {
-            $res = $this->client->call(Client::METHOD_POST, '/vectorsdb/' . $databaseId . '/collections', [
+            $res = $this->client->call(Client::METHOD_POST, '/vectorsdb/'.$databaseId.'/collections', [
                 'content-type' => 'application/json',
                 'x-appwrite-project' => $projectId,
-                'x-appwrite-key' => $apiKey
+                'x-appwrite-key' => $apiKey,
             ], [
                 'collectionId' => ID::unique(),
                 'name' => $name,
@@ -708,7 +744,7 @@ trait DatabasesBase
                     'id' => $contentDbId,
                     'collections' => $contentCollectionIds,
                 ],
-            ]
+            ],
         ];
     }
 
@@ -718,17 +754,17 @@ trait DatabasesBase
         $bad0 = $this->client->call(Client::METHOD_POST, '/vectorsdb', [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
+            'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
             'databaseId' => ID::unique(),
-            'name' => 'BadDims0'
+            'name' => 'BadDims0',
         ]);
         $this->assertEquals(201, $bad0['headers']['status-code']);
         $dbId = $bad0['body']['$id'];
-        $col = $this->client->call(Client::METHOD_POST, '/vectorsdb/' . $dbId . '/collections', [
+        $col = $this->client->call(Client::METHOD_POST, '/vectorsdb/'.$dbId.'/collections', [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
+            'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
             'collectionId' => ID::unique(),
             'name' => 'ZeroDims',
@@ -740,10 +776,10 @@ trait DatabasesBase
         $this->assertLessThan(500, $col['headers']['status-code']);
 
         // dimensions too large -> expect 4xx
-        $col2 = $this->client->call(Client::METHOD_POST, '/vectorsdb/' . $dbId . '/collections', [
+        $col2 = $this->client->call(Client::METHOD_POST, '/vectorsdb/'.$dbId.'/collections', [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
+            'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
             'collectionId' => ID::unique(),
             'name' => 'HugeDims',
@@ -760,18 +796,18 @@ trait DatabasesBase
         $db = $this->client->call(Client::METHOD_POST, '/vectorsdb', [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
+            'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
             'databaseId' => ID::unique(),
-            'name' => 'SingleDim'
+            'name' => 'SingleDim',
         ]);
         $this->assertEquals(201, $db['headers']['status-code']);
         $databaseId = $db['body']['$id'];
 
-        $col = $this->client->call(Client::METHOD_POST, '/vectorsdb/' . $databaseId . '/collections', [
+        $col = $this->client->call(Client::METHOD_POST, '/vectorsdb/'.$databaseId.'/collections', [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
+            'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
             'collectionId' => ID::unique(),
             'name' => 'OneDim',
@@ -787,26 +823,26 @@ trait DatabasesBase
         $this->client->call(Client::METHOD_PUT, "/vectorsdb/{$databaseId}/collections/{$collectionId}/documents/{$id1}", [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
+            'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
-            'data' => ['embeddings' => [1.0]]
+            'data' => ['embeddings' => [1.0]],
         ]);
         $id2 = ID::unique();
         $this->client->call(Client::METHOD_PUT, "/vectorsdb/{$databaseId}/collections/{$collectionId}/documents/{$id2}", [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
+            'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
-            'data' => ['embeddings' => [0.5]]
+            'data' => ['embeddings' => [0.5]],
         ]);
 
         // Query with vectorCosine
         $res = $this->client->call(Client::METHOD_GET, "/vectorsdb/{$databaseId}/collections/{$collectionId}/documents", [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
+            'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
-            'queries' => [Query::vectorCosine('embeddings', [1.0])->toString(), Query::limit(2)->toString()]
+            'queries' => [Query::vectorCosine('embeddings', [1.0])->toString(), Query::limit(2)->toString()],
         ]);
         $this->assertEquals(200, $res['headers']['status-code']);
         $this->assertGreaterThanOrEqual(1, $res['body']['total']);
@@ -817,18 +853,18 @@ trait DatabasesBase
         $db = $this->client->call(Client::METHOD_POST, '/vectorsdb', [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
+            'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
             'databaseId' => ID::unique(),
-            'name' => 'InvalidVals'
+            'name' => 'InvalidVals',
         ]);
         $this->assertEquals(201, $db['headers']['status-code']);
         $databaseId = $db['body']['$id'];
 
-        $col = $this->client->call(Client::METHOD_POST, '/vectorsdb/' . $databaseId . '/collections', [
+        $col = $this->client->call(Client::METHOD_POST, '/vectorsdb/'.$databaseId.'/collections', [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
+            'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
             'collectionId' => ID::unique(),
             'name' => 'Docs',
@@ -852,17 +888,18 @@ trait DatabasesBase
                 $v = [];
                 $v[0] = 1.0;
                 $v[2] = 1.0;
+
                 return ['embeddings' => $v];
             })(),
         ];
 
         foreach ($badPayloads as $payload) {
-            $resp = $this->client->call(Client::METHOD_PUT, "/vectorsdb/{$databaseId}/collections/{$collectionId}/documents/" . ID::unique(), [
+            $resp = $this->client->call(Client::METHOD_PUT, "/vectorsdb/{$databaseId}/collections/{$collectionId}/documents/".ID::unique(), [
                 'content-type' => 'application/json',
                 'x-appwrite-project' => $this->getProject()['$id'],
-                'x-appwrite-key' => $this->getProject()['apiKey']
+                'x-appwrite-key' => $this->getProject()['apiKey'],
             ], [
-                'data' => $payload
+                'data' => $payload,
             ]);
             $this->assertGreaterThanOrEqual(400, $resp['headers']['status-code']);
             $this->assertLessThan(500, $resp['headers']['status-code']);
@@ -874,18 +911,18 @@ trait DatabasesBase
         $db = $this->client->call(Client::METHOD_POST, '/vectorsdb', [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
+            'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
             'databaseId' => ID::unique(),
-            'name' => 'ZerosDB'
+            'name' => 'ZerosDB',
         ]);
         $this->assertEquals(201, $db['headers']['status-code']);
         $databaseId = $db['body']['$id'];
 
-        $col = $this->client->call(Client::METHOD_POST, '/vectorsdb/' . $databaseId . '/collections', [
+        $col = $this->client->call(Client::METHOD_POST, '/vectorsdb/'.$databaseId.'/collections', [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
+            'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
             'collectionId' => ID::unique(),
             'name' => 'Zeros',
@@ -896,23 +933,23 @@ trait DatabasesBase
         $this->assertEquals(201, $col['headers']['status-code']);
         $collectionId = $col['body']['$id'];
 
-        $this->client->call(Client::METHOD_PUT, "/vectorsdb/{$databaseId}/collections/{$collectionId}/documents/" . ID::unique(), [
+        $this->client->call(Client::METHOD_PUT, "/vectorsdb/{$databaseId}/collections/{$collectionId}/documents/".ID::unique(), [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
-        ], [ 'data' => ['embeddings' => [0.0, 0.0, 0.0]] ]);
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], ['data' => ['embeddings' => [0.0, 0.0, 0.0]]]);
 
-        $this->client->call(Client::METHOD_PUT, "/vectorsdb/{$databaseId}/collections/{$collectionId}/documents/" . ID::unique(), [
+        $this->client->call(Client::METHOD_PUT, "/vectorsdb/{$databaseId}/collections/{$collectionId}/documents/".ID::unique(), [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
-        ], [ 'data' => ['embeddings' => [1.0, 0.0, 0.0]] ]);
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], ['data' => ['embeddings' => [1.0, 0.0, 0.0]]]);
 
         $results = $this->client->call(Client::METHOD_GET, "/vectorsdb/{$databaseId}/collections/{$collectionId}/documents", [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
-        ], [ 'queries' => [Query::vectorCosine('embeddings', [1.0, 0.0, 0.0])->toString()] ]);
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], ['queries' => [Query::vectorCosine('embeddings', [1.0, 0.0, 0.0])->toString()]]);
         $this->assertEquals(200, $results['headers']['status-code']);
         $this->assertGreaterThan(0, $results['body']['total']);
     }
@@ -923,15 +960,15 @@ trait DatabasesBase
         $db = $this->client->call(Client::METHOD_POST, '/vectorsdb', [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
-        ], [ 'databaseId' => ID::unique(), 'name' => 'MultiQueryDB' ]);
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], ['databaseId' => ID::unique(), 'name' => 'MultiQueryDB']);
         $this->assertEquals(201, $db['headers']['status-code']);
         $databaseId = $db['body']['$id'];
-        $col = $this->client->call(Client::METHOD_POST, '/vectorsdb/' . $databaseId . '/collections', [
+        $col = $this->client->call(Client::METHOD_POST, '/vectorsdb/'.$databaseId.'/collections', [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
-        ], [ 'collectionId' => ID::unique(), 'name' => 'Docs', 'documentSecurity' => true, 'dimension' => 3, 'permissions' => [Permission::create(Role::user($this->getUser()['$id']))] ]);
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], ['collectionId' => ID::unique(), 'name' => 'Docs', 'documentSecurity' => true, 'dimension' => 3, 'permissions' => [Permission::create(Role::user($this->getUser()['$id']))]]);
         $this->assertEquals(201, $col['headers']['status-code']);
         $collectionId = $col['body']['$id'];
 
@@ -939,12 +976,12 @@ trait DatabasesBase
         $fail = $this->client->call(Client::METHOD_GET, "/vectorsdb/{$databaseId}/collections/{$collectionId}/documents", [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
+            'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
             'queries' => [
                 Query::vectorCosine('embeddings', [1.0, 0.0, 0.0])->toString(),
-                Query::vectorEuclidean('embeddings', [1.0, 0.0, 0.0])->toString()
-            ]
+                Query::vectorEuclidean('embeddings', [1.0, 0.0, 0.0])->toString(),
+            ],
         ]);
         $this->assertGreaterThanOrEqual(400, $fail['headers']['status-code']);
         $this->assertLessThan(500, $fail['headers']['status-code']);
@@ -955,15 +992,15 @@ trait DatabasesBase
         $db = $this->client->call(Client::METHOD_POST, '/vectorsdb', [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
-        ], [ 'databaseId' => ID::unique(), 'name' => 'NonVec' ]);
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], ['databaseId' => ID::unique(), 'name' => 'NonVec']);
         $this->assertEquals(201, $db['headers']['status-code']);
         $databaseId = $db['body']['$id'];
-        $col = $this->client->call(Client::METHOD_POST, '/vectorsdb/' . $databaseId . '/collections', [
+        $col = $this->client->call(Client::METHOD_POST, '/vectorsdb/'.$databaseId.'/collections', [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
-        ], [ 'collectionId' => ID::unique(), 'name' => 'Docs', 'documentSecurity' => true, 'dimension' => 3, 'permissions' => [Permission::create(Role::user($this->getUser()['$id']))] ]);
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], ['collectionId' => ID::unique(), 'name' => 'Docs', 'documentSecurity' => true, 'dimension' => 3, 'permissions' => [Permission::create(Role::user($this->getUser()['$id']))]]);
         $this->assertEquals(201, $col['headers']['status-code']);
         $collectionId = $col['body']['$id'];
 
@@ -971,8 +1008,8 @@ trait DatabasesBase
         $fail = $this->client->call(Client::METHOD_GET, "/vectorsdb/{$databaseId}/collections/{$collectionId}/documents", [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
-        ], [ 'queries' => [Query::vectorCosine('metadata', [1.0, 0.0, 0.0])->toString()] ]);
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], ['queries' => [Query::vectorCosine('metadata', [1.0, 0.0, 0.0])->toString()]]);
         $this->assertGreaterThanOrEqual(400, $fail['headers']['status-code']);
         $this->assertLessThan(500, $fail['headers']['status-code']);
     }
@@ -982,23 +1019,23 @@ trait DatabasesBase
         $db = $this->client->call(Client::METHOD_POST, '/vectorsdb', [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
-        ], [ 'databaseId' => ID::unique(), 'name' => 'EmptyQ' ]);
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], ['databaseId' => ID::unique(), 'name' => 'EmptyQ']);
         $this->assertEquals(201, $db['headers']['status-code']);
         $databaseId = $db['body']['$id'];
-        $col = $this->client->call(Client::METHOD_POST, '/vectorsdb/' . $databaseId . '/collections', [
+        $col = $this->client->call(Client::METHOD_POST, '/vectorsdb/'.$databaseId.'/collections', [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
-        ], [ 'collectionId' => ID::unique(), 'name' => 'Docs', 'documentSecurity' => true, 'dimension' => 3, 'permissions' => [Permission::create(Role::user($this->getUser()['$id']))] ]);
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], ['collectionId' => ID::unique(), 'name' => 'Docs', 'documentSecurity' => true, 'dimension' => 3, 'permissions' => [Permission::create(Role::user($this->getUser()['$id']))]]);
         $this->assertEquals(201, $col['headers']['status-code']);
         $collectionId = $col['body']['$id'];
 
         $res = $this->client->call(Client::METHOD_GET, "/vectorsdb/{$databaseId}/collections/{$collectionId}/documents", [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
-        ], [ 'queries' => [Query::vectorCosine('embeddings', [1.0, 0.0, 0.0])->toString()] ]);
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], ['queries' => [Query::vectorCosine('embeddings', [1.0, 0.0, 0.0])->toString()]]);
         $this->assertEquals(200, $res['headers']['status-code']);
         $this->assertEquals(0, $res['body']['total']);
     }
@@ -1013,11 +1050,11 @@ trait DatabasesBase
         $idxEuclidean = $this->client->call(Client::METHOD_POST, "/vectorsdb/{$databaseId}/collections/{$collectionId}/indexes", [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
+            'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
             'key' => 'embedding_euclidean',
             'type' => Database::INDEX_HNSW_EUCLIDEAN,
-            'attributes' => ['embeddings']
+            'attributes' => ['embeddings'],
         ]);
         $this->assertEquals(202, $idxEuclidean['headers']['status-code']);
 
@@ -1025,11 +1062,11 @@ trait DatabasesBase
         $idxDot = $this->client->call(Client::METHOD_POST, "/vectorsdb/{$databaseId}/collections/{$collectionId}/indexes", [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
+            'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
             'key' => 'embedding_dot',
             'type' => Database::INDEX_HNSW_DOT,
-            'attributes' => ['embeddings']
+            'attributes' => ['embeddings'],
         ]);
         $this->assertEquals(202, $idxDot['headers']['status-code']);
 
@@ -1037,18 +1074,18 @@ trait DatabasesBase
         $idxCosine = $this->client->call(Client::METHOD_POST, "/vectorsdb/{$databaseId}/collections/{$collectionId}/indexes", [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
+            'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
             'key' => 'embedding_cosine',
             'type' => Database::INDEX_HNSW_COSINE,
-            'attributes' => ['embeddings']
+            'attributes' => ['embeddings'],
         ]);
         $this->assertEquals(202, $idxCosine['headers']['status-code']);
 
         return [
             'databaseId' => $databaseId,
             'collectionId' => $collectionId,
-            'indexes' => ['embedding_euclidean', 'embedding_dot', 'embedding_cosine']
+            'indexes' => ['embedding_euclidean', 'embedding_dot', 'embedding_cosine'],
         ];
     }
 
@@ -1061,7 +1098,7 @@ trait DatabasesBase
         $list = $this->client->call(Client::METHOD_GET, "/vectorsdb/{$databaseId}/collections/{$collectionId}/indexes", [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
+            'x-appwrite-key' => $this->getProject()['apiKey'],
         ]);
 
         $this->assertEquals(200, $list['headers']['status-code']);
@@ -1087,12 +1124,11 @@ trait DatabasesBase
             $res = $this->client->call(Client::METHOD_GET, "/vectorsdb/{$databaseId}/collections/{$collectionId}/indexes/{$key}", [
                 'content-type' => 'application/json',
                 'x-appwrite-project' => $this->getProject()['$id'],
-                'x-appwrite-key' => $this->getProject()['apiKey']
+                'x-appwrite-key' => $this->getProject()['apiKey'],
             ]);
             $this->assertEquals(200, $res['headers']['status-code']);
             $this->assertEquals($key, $res['body']['key']);
             $this->assertEquals($type, $res['body']['type']);
         }
     }
-
 }

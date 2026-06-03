@@ -49,10 +49,11 @@ class Get extends DocumentExplain
                 ],
                 contentType: ContentType::JSON,
             ))
-            ->param('databaseId', '', new UID(), 'Database ID.')
-            ->param('collectionId', '', new UID(), 'Collection ID.')
+            ->param('databaseId', '', new UID, 'Database ID.')
+            ->param('collectionId', '', new UID, 'Collection ID.')
             ->param('queries', [], new ArrayList(new Text(APP_LIMIT_ARRAY_ELEMENT_SIZE), APP_LIMIT_ARRAY_PARAMS_SIZE), 'Array of query strings generated using the Query class provided by the SDK. Same shape as listDocuments.', true)
             ->param('total', true, new Boolean(true), 'When true, the explain captures the COUNT(*) call listDocuments fires for the total field as a second entry. Mirrors listDocuments default behavior.', true)
+            ->param('tree', false, new Boolean(true), 'When true, populate the sanitized backend-specific query plan tree. Defaults to false so the tree field is null.', true)
             ->inject('response')
             ->inject('dbForProject')
             ->inject('user')
