@@ -3377,11 +3377,6 @@ trait MigrationsBase
             'x-appwrite-key' => $this->getDestinationProject()['apiKey'],
         ];
 
-        // Configure a GitHub OAuth2 provider on the source. enabled=false keeps the
-        // PATCH from triggering live credential verification (enabling fires a real
-        // network call to the provider). The migration carries the readable clientId
-        // and the enabled flag; the clientSecret is write-only on the source API and
-        // is never migrated.
         $clientId = 'gh-client-' . ID::unique();
         $configure = $this->client->call(Client::METHOD_PATCH, '/project/oauth2/github', $sourceKeyHeaders, [
             'clientId' => $clientId,
@@ -3390,6 +3385,35 @@ trait MigrationsBase
         ]);
         $this->assertEquals(200, $configure['headers']['status-code']);
         $this->assertSame($clientId, $configure['body']['clientId']);
+
+        $keycloak = $this->client->call(Client::METHOD_PATCH, '/project/oauth2/keycloak', $sourceKeyHeaders, [
+            'clientId' => 'keycloak-client-' . ID::unique(),
+            'clientSecret' => 'keycloak-secret-not-migrated',
+            'endpoint' => 'keycloak.example.com',
+            'realmName' => 'appwrite',
+            'enabled' => false,
+        ]);
+        $this->assertEquals(200, $keycloak['headers']['status-code']);
+
+        $oidc = $this->client->call(Client::METHOD_PATCH, '/project/oauth2/oidc', $sourceKeyHeaders, [
+            'clientId' => 'oidc-client-' . ID::unique(),
+            'clientSecret' => 'oidc-secret-not-migrated',
+            'wellKnownURL' => 'https://idp.example.com/.well-known/openid-configuration',
+            'authorizationURL' => 'https://idp.example.com/oauth2/authorize',
+            'tokenURL' => 'https://idp.example.com/oauth2/token',
+            'userInfoURL' => 'https://idp.example.com/oauth2/userinfo',
+            'enabled' => false,
+        ]);
+        $this->assertEquals(200, $oidc['headers']['status-code']);
+
+        $okta = $this->client->call(Client::METHOD_PATCH, '/project/oauth2/okta', $sourceKeyHeaders, [
+            'clientId' => 'okta-client-' . ID::unique(),
+            'clientSecret' => 'okta-secret-not-migrated',
+            'domain' => 'trial-6400025.okta.com',
+            'authorizationServerId' => 'aus000000000000000h7z',
+            'enabled' => false,
+        ]);
+        $this->assertEquals(200, $okta['headers']['status-code']);
 
         $result = $this->performMigrationSync([
             'resources' => [
@@ -3408,19 +3432,40 @@ trait MigrationsBase
         $this->assertEquals(0, $oauthCounters['pending']);
         $this->assertEquals(0, $oauthCounters['processing']);
         $this->assertEquals(0, $oauthCounters['warning']);
-        // Only configured providers migrate; this project set up GitHub alone.
-        $this->assertEquals(1, $oauthCounters['success']);
+        $this->assertEquals(4, $oauthCounters['success']);
 
-        // The GitHub provider must round-trip to the destination: the readable
-        // clientId and enabled flag are carried; the secret is write-only and reads
-        // back empty on every path.
         $fetched = $this->client->call(Client::METHOD_GET, '/project/oauth2/github', $destinationKeyHeaders);
         $this->assertEquals(200, $fetched['headers']['status-code']);
         $this->assertSame($clientId, $fetched['body']['clientId']);
         $this->assertFalse($fetched['body']['enabled']);
         $this->assertSame('', $fetched['body']['clientSecret']);
 
-        // Reset both projects so the test is idempotent.
+        $fetched = $this->client->call(Client::METHOD_GET, '/project/oauth2/keycloak', $destinationKeyHeaders);
+        $this->assertEquals(200, $fetched['headers']['status-code']);
+        $this->assertSame($keycloak['body']['clientId'], $fetched['body']['clientId']);
+        $this->assertSame('keycloak.example.com', $fetched['body']['endpoint']);
+        $this->assertSame('appwrite', $fetched['body']['realmName']);
+        $this->assertFalse($fetched['body']['enabled']);
+        $this->assertSame('', $fetched['body']['clientSecret']);
+
+        $fetched = $this->client->call(Client::METHOD_GET, '/project/oauth2/oidc', $destinationKeyHeaders);
+        $this->assertEquals(200, $fetched['headers']['status-code']);
+        $this->assertSame($oidc['body']['clientId'], $fetched['body']['clientId']);
+        $this->assertSame('https://idp.example.com/.well-known/openid-configuration', $fetched['body']['wellKnownURL']);
+        $this->assertSame('https://idp.example.com/oauth2/authorize', $fetched['body']['authorizationURL']);
+        $this->assertSame('https://idp.example.com/oauth2/token', $fetched['body']['tokenURL']);
+        $this->assertSame('https://idp.example.com/oauth2/userinfo', $fetched['body']['userInfoURL']);
+        $this->assertFalse($fetched['body']['enabled']);
+        $this->assertSame('', $fetched['body']['clientSecret']);
+
+        $fetched = $this->client->call(Client::METHOD_GET, '/project/oauth2/okta', $destinationKeyHeaders);
+        $this->assertEquals(200, $fetched['headers']['status-code']);
+        $this->assertSame($okta['body']['clientId'], $fetched['body']['clientId']);
+        $this->assertSame('trial-6400025.okta.com', $fetched['body']['domain']);
+        $this->assertSame('aus000000000000000h7z', $fetched['body']['authorizationServerId']);
+        $this->assertFalse($fetched['body']['enabled']);
+        $this->assertSame('', $fetched['body']['clientSecret']);
+
         $this->client->call(Client::METHOD_PATCH, '/project/oauth2/github', $sourceKeyHeaders, [
             'clientId' => '',
             'clientSecret' => '',
@@ -3431,6 +3476,31 @@ trait MigrationsBase
             'clientSecret' => '',
             'enabled' => false,
         ]);
+        foreach ([$sourceKeyHeaders, $destinationKeyHeaders] as $headers) {
+            $this->client->call(Client::METHOD_PATCH, '/project/oauth2/keycloak', $headers, [
+                'clientId' => '',
+                'clientSecret' => '',
+                'endpoint' => '',
+                'realmName' => '',
+                'enabled' => false,
+            ]);
+            $this->client->call(Client::METHOD_PATCH, '/project/oauth2/oidc', $headers, [
+                'clientId' => '',
+                'clientSecret' => '',
+                'wellKnownURL' => '',
+                'authorizationURL' => '',
+                'tokenURL' => '',
+                'userInfoURL' => '',
+                'enabled' => false,
+            ]);
+            $this->client->call(Client::METHOD_PATCH, '/project/oauth2/okta', $headers, [
+                'clientId' => '',
+                'clientSecret' => '',
+                'domain' => '',
+                'authorizationServerId' => '',
+                'enabled' => false,
+            ]);
+        }
     }
 
     /**

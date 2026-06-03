@@ -75,7 +75,7 @@
         "utopia-php/lock": "0.2.*",
         "utopia-php/logger": "0.8.*",
         "utopia-php/messaging": "1.0.*",
-        "utopia-php/migration": "1.*",
+        "utopia-php/migration": "dev-add-oauth-providers-migration",
         "utopia-php/platform": "1.0.0-rc4",
         "utopia-php/pools": "1.*",
         "utopia-php/span": "1.1.*",
