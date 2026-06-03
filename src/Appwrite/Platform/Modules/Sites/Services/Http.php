@@ -12,6 +12,7 @@ use Appwrite\Platform\Modules\Sites\Http\Deployments\Template\Create as CreateTe
 use Appwrite\Platform\Modules\Sites\Http\Deployments\Vcs\Create as CreateVcsDeployment;
 use Appwrite\Platform\Modules\Sites\Http\Deployments\XList as ListDeployments;
 use Appwrite\Platform\Modules\Sites\Http\Frameworks\XList as ListFrameworks;
+use Appwrite\Platform\Modules\Sites\Http\Runtimes\XList as ListRuntimes;
 use Appwrite\Platform\Modules\Sites\Http\Logs\Delete as DeleteLog;
 use Appwrite\Platform\Modules\Sites\Http\Logs\Get as GetLog;
 use Appwrite\Platform\Modules\Sites\Http\Logs\XList as ListLogs;
@@ -47,6 +48,9 @@ class Http extends Service
 
         // Frameworks
         $this->addAction(ListFrameworks::getName(), new ListFrameworks());
+
+        // Runtimes
+        $this->addAction(ListRuntimes::getName(), new ListRuntimes());
 
 
         // Deployments
