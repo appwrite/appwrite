@@ -244,7 +244,7 @@ export function WizardLayout({
     : 'border-t border-border/30 bg-background/95 backdrop-blur-xl supports-[backdrop-filter]:bg-background/80 px-4 py-4 sm:px-6'
 
   const wizardContent = (
-    <div className={containerClasses} data-analytics-surface="wizard_layout">
+    <div className={containerClasses}>
       {/* Header */}
       <div className={headerClasses}>
         <div className={cn('mx-auto w-full', constrainWidth && maxWidth)}>
@@ -253,7 +253,9 @@ export function WizardLayout({
             className={cn(
               'h-14 flex items-center shrink-0',
               headerBottom &&
-                (fullscreen ? 'border-b border-border' : 'border-b border-border/30'),
+                (fullscreen
+                  ? 'border-b border-border'
+                  : 'border-b border-border/30'),
               fullscreen ? 'px-6' : 'px-4 @[1000px]:px-6',
             )}
           >
@@ -266,8 +268,6 @@ export function WizardLayout({
                     onClick={handleBack}
                     className="h-8 w-8 p-0 shrink-0"
                     aria-label={backButtonLabel}
-                    data-analytics-id="wizard_back"
-                    data-analytics-surface="wizard_layout"
                   >
                     <ArrowLeft className="h-4 w-4" />
                   </Button>
@@ -308,8 +308,6 @@ export function WizardLayout({
                   onClick={handleClose}
                   className="h-8 w-8 p-0"
                   aria-label="Close wizard"
-                  data-analytics-id="wizard_close"
-                  data-analytics-surface="wizard_layout"
                 >
                   <X className="h-4 w-4" />
                 </Button>

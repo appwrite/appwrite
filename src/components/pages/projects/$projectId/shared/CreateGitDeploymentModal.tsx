@@ -235,11 +235,7 @@ export function CreateGitDeploymentModal({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent
-        className="sm:max-w-lg p-0"
-        data-analytics-surface="create_git_deployment"
-        data-analytics-resource={resourceType}
-      >
+      <DialogContent className="sm:max-w-lg p-0">
         <DialogHeader className="px-6 pt-6 pb-4 text-left">
           <DialogTitle>Create git deployment</DialogTitle>
           <DialogDescription className="text-[13px] mt-2">
@@ -285,9 +281,6 @@ export function CreateGitDeploymentModal({
                       href={repository.url}
                       target="_blank"
                       rel="noopener noreferrer"
-                      data-analytics-id="create_git_deployment_open_repository"
-                      data-analytics-surface="create_git_deployment"
-                      data-analytics-resource={resourceType}
                       className="inline-flex items-center gap-1 text-[12px] text-primary hover:underline mt-1"
                     >
                       Open <ExternalLink className="h-3 w-3" />
@@ -311,9 +304,6 @@ export function CreateGitDeploymentModal({
                     size="sm"
                     className="h-7 text-[12px] text-muted-foreground hover:text-foreground mt-1 -ml-1"
                     onClick={handleBackToRepoPicker}
-                    data-analytics-id="create_git_deployment_change_repository"
-                    data-analytics-surface="create_git_deployment"
-                    data-analytics-resource={resourceType}
                   >
                     <ArrowLeft className="h-3 w-3 mr-1" />
                     Change repository
@@ -334,9 +324,6 @@ export function CreateGitDeploymentModal({
                   id="activate-after-build"
                   checked={activate}
                   onCheckedChange={(v) => setActivate(v === true)}
-                  data-analytics-id="create_git_deployment_activate_toggle"
-                  data-analytics-surface="create_git_deployment"
-                  data-analytics-resource={resourceType}
                 />
                 <Label
                   htmlFor="activate-after-build"
@@ -349,9 +336,6 @@ export function CreateGitDeploymentModal({
                 href={docsUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                data-analytics-id="create_git_deployment_docs"
-                data-analytics-surface="create_git_deployment"
-                data-analytics-resource={resourceType}
                 className="inline-flex items-center gap-1 text-[12px] text-primary hover:underline"
               >
                 Deployment docs <ExternalLink className="h-3 w-3" />
@@ -367,9 +351,6 @@ export function CreateGitDeploymentModal({
                   variant="ghost"
                   onClick={handleBackToRepoPicker}
                   disabled={isPending}
-                  data-analytics-id="create_git_deployment_back"
-                  data-analytics-surface="create_git_deployment"
-                  data-analytics-resource={resourceType}
                   className="h-9 text-[13px] mr-auto sm:mr-0 sm:order-first"
                 >
                   <ArrowLeft className="h-3.5 w-3.5 mr-1.5" />
@@ -380,9 +361,6 @@ export function CreateGitDeploymentModal({
                 variant="outline"
                 onClick={() => onOpenChange(false)}
                 disabled={isPending}
-                data-analytics-id="create_git_deployment_cancel"
-                data-analytics-surface="create_git_deployment"
-                data-analytics-resource={resourceType}
                 className="h-9 text-[13px]"
               >
                 Cancel
@@ -390,10 +368,6 @@ export function CreateGitDeploymentModal({
               <Button
                 onClick={handleSubmit}
                 disabled={isPending || !branch?.trim()}
-                data-analytics-id="create_git_deployment_submit"
-                data-analytics-surface="create_git_deployment"
-                data-analytics-resource={resourceType}
-                data-analytics-prop-linked_repo={hasLinkedRepo}
                 className="h-9 text-[13px]"
               >
                 Create deployment
@@ -404,9 +378,6 @@ export function CreateGitDeploymentModal({
             <Button
               variant="outline"
               onClick={() => onOpenChange(false)}
-              data-analytics-id="create_git_deployment_cancel"
-              data-analytics-surface="create_git_deployment"
-              data-analytics-resource={resourceType}
               className="h-9 text-[13px] ml-auto"
             >
               Cancel

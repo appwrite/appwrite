@@ -167,11 +167,7 @@ export function CreateManualDeploymentModal({
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
-      <DialogContent
-        className="sm:max-w-lg p-0"
-        data-analytics-surface="create_manual_deployment"
-        data-analytics-resource={resourceType}
-      >
+      <DialogContent className="sm:max-w-lg p-0">
         <DialogHeader className="px-6 pt-6 pb-4 text-left">
           <DialogTitle>Create manual deployment</DialogTitle>
           <DialogDescription className="text-[13px] mt-2">
@@ -187,15 +183,9 @@ export function CreateManualDeploymentModal({
             accept=".tar.gz,.tgz,application/gzip"
             className="hidden"
             onChange={handleFileChange}
-            data-analytics-id="create_manual_deployment_file_input"
-            data-analytics-surface="create_manual_deployment"
-            data-analytics-resource={resourceType}
           />
           <div
             onClick={() => inputRef.current?.click()}
-            data-analytics-id="create_manual_deployment_file_select"
-            data-analytics-surface="create_manual_deployment"
-            data-analytics-resource={resourceType}
             className="flex flex-col items-center justify-center rounded-lg border border-dashed border-border bg-muted/20 py-8 px-4 cursor-pointer hover:bg-muted/30 transition-colors"
           >
             {file ? (
@@ -236,9 +226,6 @@ export function CreateManualDeploymentModal({
             variant="outline"
             onClick={() => handleClose(false)}
             disabled={mutation.isPending}
-            data-analytics-id="create_manual_deployment_cancel"
-            data-analytics-surface="create_manual_deployment"
-            data-analytics-resource={resourceType}
             className="h-9 text-[13px]"
           >
             Cancel
@@ -246,9 +233,6 @@ export function CreateManualDeploymentModal({
           <Button
             onClick={handleSubmit}
             disabled={!file || mutation.isPending}
-            data-analytics-id="create_manual_deployment_submit"
-            data-analytics-surface="create_manual_deployment"
-            data-analytics-resource={resourceType}
             className="h-9 text-[13px]"
           >
             Create deployment

@@ -29,7 +29,10 @@ import {
   DatabaseZap,
   ShieldAlert,
 } from 'lucide-react'
-import { useAuth, isOptionalAuthPage } from '@/components/global/auth/RequireAuth'
+import {
+  useAuth,
+  isOptionalAuthPage,
+} from '@/components/global/auth/RequireAuth'
 import { ProjectSelector } from '@/components/pages/projects/$projectId/shared/ProjectSelector'
 import { InitialsAvatar } from '@/components/global/shared/Avatar'
 import { useLocation, useNavigate, useParams } from '@tanstack/react-router'
@@ -68,10 +71,7 @@ import { useOrganizationPlan } from '@/lib/react-query/hooks'
 import { useConsoleProfile } from '@/hooks/use-console-profile'
 import { useDebugOverrides } from '@/lib/debug-overrides'
 import { ImpersonateConsoleUserPopover } from '@/components/global/shared/ImpersonateConsoleUserPopover'
-import {
-  isOperatorAccount,
-  type OperatorAccount,
-} from '@/lib/operator-account'
+import { isOperatorAccount, type OperatorAccount } from '@/lib/operator-account'
 import { openCreateOrganizationFlow } from '@/lib/open-create-organization-flow'
 import { useTheme } from 'next-themes'
 import { getConsoleHeaderLogoClass } from '@/lib/html-theme'
@@ -99,7 +99,12 @@ export function ConsoleHeader({
   const { openCommandCenter: contextOpenCommandCenter } =
     useKeyboardShortcutsContext()
   const { toggleChat } = useAIChat()
-  const { account, signOut, isAuthenticated, isLoading: isAuthLoading } = useAuth()
+  const {
+    account,
+    signOut,
+    isAuthenticated,
+    isLoading: isAuthLoading,
+  } = useAuth()
   const operatorAccount = account as OperatorAccount | undefined
   const showAdminSection = isOperatorAccount(operatorAccount)
   const location = useLocation()
@@ -211,8 +216,6 @@ export function ConsoleHeader({
             <button
               type="button"
               onClick={onMenuClick}
-              data-analytics-id="header_mobile_menu_open"
-              data-analytics-surface="header"
               className="flex h-8 w-8 shrink-0 cursor-pointer items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-accent hover:text-foreground @[1024px]:hidden"
               aria-label="Open navigation"
             >
@@ -228,14 +231,15 @@ export function ConsoleHeader({
             const logoDestination = showGuestHeader
               ? ({ to: '/init' } as const)
               : linkOrgId
-                ? ({ to: '/organizations/$orgId', params: { orgId: linkOrgId } } as const)
+                ? ({
+                    to: '/organizations/$orgId',
+                    params: { orgId: linkOrgId },
+                  } as const)
                 : ({ to: '/' } as const)
             const logoLink = (childClassName?: string) => (
               <Link
                 {...logoDestination}
                 aria-label="Appwrite"
-                data-analytics-id="header_logo"
-                data-analytics-surface="header"
                 className={cn(
                   'group inline-flex size-10 shrink-0 items-center justify-center rounded-lg transition-transform duration-150 ease-out active:scale-[0.94] active:bg-muted/40 motion-reduce:active:scale-100 motion-reduce:active:bg-transparent focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1 focus-visible:ring-offset-background',
                   childClassName,
@@ -288,12 +292,7 @@ export function ConsoleHeader({
               size="sm"
               className="hidden h-9 shrink-0 gap-1.5 px-2.5 text-[13px] @[850px]:inline-flex"
             >
-              <Link
-                to="/organizations/$orgId"
-                params={{ orgId }}
-                data-analytics-id="header_back_to_organization"
-                data-analytics-surface="header"
-              >
+              <Link to="/organizations/$orgId" params={{ orgId }}>
                 <ArrowLeft className="h-4 w-4" />
                 Back to organization
               </Link>
@@ -309,11 +308,7 @@ export function ConsoleHeader({
               className="hidden h-9 shrink-0 gap-1.5 px-2.5 text-[13px] @[850px]:inline-flex"
             >
               {initHeaderNavCta.to ? (
-                <Link
-                  to={initHeaderNavCta.to}
-                  data-analytics-id="header_init_cta"
-                  data-analytics-surface="header"
-                >
+                <Link to={initHeaderNavCta.to}>
                   <ArrowLeft className="h-4 w-4" />
                   {initHeaderNavCta.label}
                 </Link>
@@ -322,10 +317,10 @@ export function ConsoleHeader({
                   href={initHeaderNavCta.href}
                   target={initHeaderNavCta.external ? '_blank' : undefined}
                   rel={
-                    initHeaderNavCta.external ? 'noopener noreferrer' : undefined
+                    initHeaderNavCta.external
+                      ? 'noopener noreferrer'
+                      : undefined
                   }
-                  data-analytics-id="header_init_cta"
-                  data-analytics-surface="header"
                 >
                   <ArrowLeft className="h-4 w-4" />
                   {initHeaderNavCta.label}
@@ -350,8 +345,6 @@ export function ConsoleHeader({
               {showConnectAndCreate && projectId && (
                 <button
                   type="button"
-                  data-analytics-id="header_connect"
-                  data-analytics-surface="header"
                   className="flex h-9 shrink-0 items-center justify-center gap-1.5 rounded-md border border-border bg-background px-2.5 text-muted-foreground transition-colors hover:bg-accent hover:text-foreground cursor-pointer hidden @[700px]:flex text-[13px]"
                   onClick={() => projectConnectDialog?.openConnect('app')}
                 >
@@ -367,11 +360,7 @@ export function ConsoleHeader({
                     <Tooltip>
                       <TooltipTrigger asChild>
                         <DropdownMenuTrigger asChild>
-                          <button
-                            data-analytics-id="header_create_menu_open"
-                            data-analytics-surface="header"
-                            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md border border-border bg-background text-muted-foreground transition-colors hover:bg-accent hover:text-foreground cursor-pointer"
-                          >
+                          <button className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md border border-border bg-background text-muted-foreground transition-colors hover:bg-accent hover:text-foreground cursor-pointer">
                             <Plus className="h-4 w-4" />
                           </button>
                         </DropdownMenuTrigger>
@@ -419,8 +408,6 @@ export function ConsoleHeader({
                               })
                             }
                           }}
-                          data-analytics-id="header_create_project"
-                          data-analytics-surface="header"
                           className="flex cursor-pointer items-center gap-2 rounded px-2 py-1.5 text-[13px] text-foreground hover:bg-accent hover:text-foreground focus:bg-accent focus:text-foreground"
                         >
                           <FolderPlus className="h-4 w-4" />
@@ -437,8 +424,6 @@ export function ConsoleHeader({
                             orgId,
                           })
                         }}
-                        data-analytics-id="header_create_organization"
-                        data-analytics-surface="header"
                         className="flex cursor-pointer items-center gap-2 rounded px-2 py-1.5 text-[13px] text-foreground hover:bg-accent hover:text-foreground focus:bg-accent focus:text-foreground"
                       >
                         <Building2 className="h-4 w-4" />
@@ -484,8 +469,6 @@ export function ConsoleHeader({
                                   >,
                                 })
                               }}
-                              data-analytics-id="header_create_database"
-                              data-analytics-surface="header"
                               className="flex cursor-pointer items-center gap-2 rounded px-2 py-1.5 text-[13px] text-foreground hover:bg-accent hover:text-foreground focus:bg-accent focus:text-foreground"
                             >
                               <Database className="h-4 w-4" />
@@ -524,8 +507,6 @@ export function ConsoleHeader({
                                   >,
                                 })
                               }}
-                              data-analytics-id="header_create_user"
-                              data-analytics-surface="header"
                               className="flex cursor-pointer items-center gap-2 rounded px-2 py-1.5 text-[13px] text-foreground hover:bg-accent hover:text-foreground focus:bg-accent focus:text-foreground"
                             >
                               <Users className="h-4 w-4" />
@@ -564,8 +545,6 @@ export function ConsoleHeader({
                                   >,
                                 })
                               }}
-                              data-analytics-id="header_create_bucket"
-                              data-analytics-surface="header"
                               className="flex cursor-pointer items-center gap-2 rounded px-2 py-1.5 text-[13px] text-foreground hover:bg-accent hover:text-foreground focus:bg-accent focus:text-foreground"
                             >
                               <Folder className="h-4 w-4" />
@@ -600,8 +579,6 @@ export function ConsoleHeader({
                                   params: { projectId },
                                 })
                               }}
-                              data-analytics-id="header_create_function"
-                              data-analytics-surface="header"
                               className="flex cursor-pointer items-center gap-2 rounded px-2 py-1.5 text-[13px] text-foreground hover:bg-accent hover:text-foreground focus:bg-accent focus:text-foreground"
                             >
                               <Zap className="h-4 w-4" />
@@ -640,8 +617,6 @@ export function ConsoleHeader({
                                   >,
                                 })
                               }}
-                              data-analytics-id="header_create_topic"
-                              data-analytics-surface="header"
                               className="flex cursor-pointer items-center gap-2 rounded px-2 py-1.5 text-[13px] text-foreground hover:bg-accent hover:text-foreground focus:bg-accent focus:text-foreground"
                             >
                               <MessageSquare className="h-4 w-4" />
@@ -682,8 +657,6 @@ export function ConsoleHeader({
                                   params: { projectId },
                                 })
                               }}
-                              data-analytics-id="header_create_site"
-                              data-analytics-surface="header"
                               className="flex cursor-pointer items-center gap-2 rounded px-2 py-1.5 text-[13px] text-foreground hover:bg-accent hover:text-foreground focus:bg-accent focus:text-foreground"
                             >
                               <Globe className="h-4 w-4" />
@@ -712,332 +685,309 @@ export function ConsoleHeader({
             </div>
           ) : showGuestHeader ? (
             <>
-              <Button asChild variant="outline" size="sm" className="h-9 text-[13px]">
-                <Link
-                  to="/sign-in"
-                  search={{ redirect: authRedirect }}
-                  data-analytics-id="header_sign_in"
-                  data-analytics-surface="header"
-                >
+              <Button
+                asChild
+                variant="outline"
+                size="sm"
+                className="h-9 text-[13px]"
+              >
+                <Link to="/sign-in" search={{ redirect: authRedirect }}>
                   Sign in
                 </Link>
               </Button>
-              <Button asChild size="sm" variant="brandCta" className="h-9 text-[13px]">
-                <Link
-                  to="/sign-up"
-                  search={{ redirect: authRedirect }}
-                  data-analytics-id="header_sign_up"
-                  data-analytics-surface="header"
-                >
+              <Button
+                asChild
+                size="sm"
+                variant="brandCta"
+                className="h-9 text-[13px]"
+              >
+                <Link to="/sign-up" search={{ redirect: authRedirect }}>
                   Sign up
                 </Link>
               </Button>
             </>
           ) : (
             <>
-          {/* Search - hidden on small containers or when hideSearch (e.g. native app bar) */}
-          {!hideSearch && (
-            <>
-              <button
-                onClick={openCommandCenter}
-                data-analytics-id="header_command_center_open"
-                data-analytics-surface="header"
-                className="hidden h-9 cursor-pointer items-center gap-2 rounded-md border border-border bg-accent/50 px-3 text-[13px] text-muted-foreground transition-colors hover:border-border hover:bg-accent @[700px]:flex shrink-0"
-              >
-                <Search className="h-3.5 w-3.5 shrink-0" />
-                <span className="hidden @[850px]:inline">Search...</span>
-                <kbd className="ml-2 hidden rounded bg-muted px-1.5 py-0.5 text-[10px] font-medium text-foreground/85 @[850px]:inline shrink-0">
-                  ⌘K
-                </kbd>
-              </button>
-
-              {/* Mobile search icon */}
-              <button
-                onClick={openCommandCenter}
-                data-analytics-id="header_command_center_open_mobile"
-                data-analytics-surface="header"
-                className="flex h-9 w-9 shrink-0 cursor-pointer items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-accent hover:text-foreground @[700px]:hidden"
-              >
-                <Search className="h-4 w-4" />
-              </button>
-            </>
-          )}
-
-          {/* Feedback - hidden on small containers */}
-          <div className="hidden @[800px]:flex shrink-0">
-            <FeedbackPopover
-              source="navbar"
-              orgId={orgId}
-              projectId={projectId ?? ''}
-              billingPlanId={organizationPlan?.$id}
-            />
-          </div>
-
-          {/* Support - hidden on small containers */}
-          <div className="hidden @[900px]:flex shrink-0">
-            <SupportPopover orgId={orgId} />
-          </div>
-
-          {/* Operator tools (render nothing when account is not an impersonator) */}
-          <ImpersonateConsoleUserPopover />
-
-          {/* Help/Assistant - hidden on small containers; enabled by profile or experimental override */}
-          {showAIAssistant && (
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <button
-                  onClick={toggleChat}
-                  data-analytics-id="header_ai_chat_toggle"
-                  data-analytics-surface="header"
-                  className="hidden h-9 w-9 shrink-0 cursor-pointer items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-accent hover:text-foreground @[1000px]:flex"
-                >
-                  <Bot className="h-4 w-4" />
-                </button>
-              </TooltipTrigger>
-              <TooltipContent>
-                <p>Assistant</p>
-              </TooltipContent>
-            </Tooltip>
-          )}
-
-          {/* Divider before Upgrade Button - hidden on small containers */}
-          {showUpgradeButton && (
-            <div className="mx-1 hidden h-5 w-px shrink-0 bg-border @[640px]:mx-2 @[850px]:block" />
-          )}
-
-          {/* Upgrade Button - hidden on small containers; only when plan cost is 0 */}
-          {showUpgradeButton && (
-            <div className="hidden @[850px]:flex shrink-0 rounded-md focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-1 focus-within:ring-offset-background">
-              <div className="upgrade-button-wrapper">
-                <Button
-                  asChild
-                  size="sm"
-                  variant="brandCta"
-                  className="h-9 shrink-0 cursor-pointer gap-1.5 px-3 text-[12px] font-semibold relative z-10 rounded-[calc(0.375rem-1px)]"
-                >
-                  <Link
-                    to="/upgrade"
-                    search={{ orgId }}
-                    data-analytics-id="header_upgrade"
-                    data-analytics-surface="header"
-                  >
-                    <ArrowUpCircle className="h-4 w-4" />
-                    Upgrade
-                  </Link>
-                </Button>
-              </div>
-            </div>
-          )}
-
-          {/* Divider - hidden on small containers */}
-          <div className="mx-1 hidden h-5 w-px shrink-0 bg-border @[640px]:mx-2 @[700px]:block" />
-
-          {/* User Menu */}
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <button
-                data-analytics-id="header_user_menu_open"
-                data-analytics-surface="header"
-                className="flex shrink-0 cursor-pointer items-center gap-2 rounded-md px-2 py-1.5 transition-colors hover:bg-accent min-w-0"
-              >
-                <InitialsAvatar
-                  name={displayName}
-                  size="sm"
-                  className="shrink-0"
-                />
-                <div className="hidden text-left @[800px]:block min-w-0">
-                  <p className="text-[13px] font-medium text-foreground truncate">
-                    {displayName}
-                  </p>
-                </div>
-                <ChevronDown className="hidden h-3.5 w-3.5 shrink-0 text-muted-foreground @[800px]:block" />
-              </button>
-            </DropdownMenuTrigger>
-
-            <DropdownMenuContent
-              align="end"
-              className="w-64 border-border bg-popover p-1"
-            >
-              <div className="px-3 py-3">
-                <p className="text-[13px] font-medium text-foreground">
-                  {displayName}
-                </p>
-                {userEmail && (
-                  <p className="text-[12px] text-muted-foreground">
-                    {userEmail}
-                  </p>
-                )}
-              </div>
-
-              <DropdownMenuSeparator className="my-1 bg-border" />
-
-              {/* Account Details */}
-              <div className="px-3 py-2 space-y-4">
-                {/* Member Since */}
-                {account?.registration && (
-                  <div>
-                    <p className="text-[11px] text-muted-foreground mb-1.5">
-                      Member since
-                    </p>
-                    <p className="text-[14px] text-foreground">{memberSince}</p>
-                  </div>
-                )}
-
-                {/* Account Status */}
-                <div>
-                  <p className="text-[11px] text-muted-foreground mb-1.5">
-                    Account status
-                  </p>
-                  <div className="flex items-center gap-2">
-                    <div className="h-2 w-2 rounded-full bg-emerald-500" />
-                    <p className="text-[14px] text-foreground">
-                      {accountStatus}
-                    </p>
-                  </div>
-                </div>
-
-                {features.accountMfa && (
-                  <div>
-                    <p className="text-[11px] text-muted-foreground mb-1.5">
-                      2FA
-                    </p>
-                    <div className="flex items-center gap-2">
-                      {is2FAEnabled ? (
-                        <>
-                          <Shield className="h-3.5 w-3.5 text-emerald-500" />
-                          <p className="text-[14px] text-foreground">Enabled</p>
-                        </>
-                      ) : (
-                        <>
-                          <Shield className="h-3.5 w-3.5 text-muted-foreground" />
-                          <p className="text-[14px] text-muted-foreground">
-                            Disabled
-                          </p>
-                        </>
-                      )}
-                    </div>
-                  </div>
-                )}
-
-                {/* Account ID */}
-                {accountId && (
-                  <div>
-                    <p className="text-[11px] text-muted-foreground mb-1.5">
-                      Account ID
-                    </p>
-                    <TooltipProvider delayDuration={0}>
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <button
-                            onClick={() =>
-                              copyToClipboard(accountId, 'accountId')
-                            }
-                            data-analytics-id="header_copy_account_id"
-                            data-analytics-surface="header"
-                            className="flex cursor-pointer items-center gap-1.5 group"
-                          >
-                            <p className="text-[14px] text-foreground font-mono">
-                              {accountId}
-                            </p>
-                            {copiedField === 'accountId' ? (
-                              <Check className="h-3.5 w-3.5 text-emerald-500" />
-                            ) : (
-                              <Copy className="h-3.5 w-3.5 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
-                            )}
-                          </button>
-                        </TooltipTrigger>
-                        <TooltipContent side="left">
-                          <p>
-                            {copiedField === 'accountId'
-                              ? 'Copied!'
-                              : 'Copy account ID'}
-                          </p>
-                        </TooltipContent>
-                      </Tooltip>
-                    </TooltipProvider>
-                  </div>
-                )}
-              </div>
-
-              <DropdownMenuSeparator className="my-1 bg-border" />
-
-              <DropdownMenuItem asChild>
-                <Link
-                  to="/account"
-                  data-analytics-id="header_account"
-                  data-analytics-surface="header"
-                  className="flex cursor-pointer items-center gap-2 rounded px-2 py-1.5 text-[13px] text-muted-foreground hover:bg-accent hover:text-foreground focus:bg-accent focus:text-foreground"
-                >
-                  <User className="h-4 w-4" />
-                  <span>Account</span>
-                </Link>
-              </DropdownMenuItem>
-
-              {features.billing && (
-                <DropdownMenuItem asChild>
-                  <Link
-                    to="/account/payments"
-                    data-analytics-id="header_payments"
-                    data-analytics-surface="header"
-                    className="flex cursor-pointer items-center gap-2 rounded px-2 py-1.5 text-[13px] text-muted-foreground hover:bg-accent hover:text-foreground focus:bg-accent focus:text-foreground"
-                  >
-                    <CreditCard className="h-4 w-4" />
-                    <span>Payments</span>
-                  </Link>
-                </DropdownMenuItem>
-              )}
-
-              {showAdminSection && (
+              {/* Search - hidden on small containers or when hideSearch (e.g. native app bar) */}
+              {!hideSearch && (
                 <>
-                  <DropdownMenuSeparator className="my-1 bg-border" />
+                  <button
+                    onClick={openCommandCenter}
+                    className="hidden h-9 cursor-pointer items-center gap-2 rounded-md border border-border bg-accent/50 px-3 text-[13px] text-muted-foreground transition-colors hover:border-border hover:bg-accent @[700px]:flex shrink-0"
+                  >
+                    <Search className="h-3.5 w-3.5 shrink-0" />
+                    <span className="hidden @[850px]:inline">Search...</span>
+                    <kbd className="ml-2 hidden rounded bg-muted px-1.5 py-0.5 text-[10px] font-medium text-foreground/85 @[850px]:inline shrink-0">
+                      ⌘K
+                    </kbd>
+                  </button>
 
-                  <DropdownMenuLabel className="px-2 py-1.5 text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
-                    Admin
-                  </DropdownMenuLabel>
-
-                  <DropdownMenuItem asChild>
-                    <Link
-                      to="/cache"
-                      data-analytics-id="header_admin_cache"
-                      data-analytics-surface="header"
-                      className="flex cursor-pointer items-center gap-2 rounded px-2 py-1.5 text-[13px] text-muted-foreground hover:bg-accent hover:text-foreground focus:bg-accent focus:text-foreground"
-                    >
-                      <DatabaseZap className="h-4 w-4" />
-                      <span>Cache</span>
-                    </Link>
-                  </DropdownMenuItem>
-
-                  <DropdownMenuItem asChild>
-                    <Link
-                      to="/blocks"
-                      data-analytics-id="header_admin_blocks"
-                      data-analytics-surface="header"
-                      className="flex cursor-pointer items-center gap-2 rounded px-2 py-1.5 text-[13px] text-muted-foreground hover:bg-accent hover:text-foreground focus:bg-accent focus:text-foreground"
-                    >
-                      <ShieldAlert className="h-4 w-4" />
-                      <span>Blocks</span>
-                    </Link>
-                  </DropdownMenuItem>
+                  {/* Mobile search icon */}
+                  <button
+                    onClick={openCommandCenter}
+                    className="flex h-9 w-9 shrink-0 cursor-pointer items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-accent hover:text-foreground @[700px]:hidden"
+                  >
+                    <Search className="h-4 w-4" />
+                  </button>
                 </>
               )}
 
-              <DropdownMenuSeparator className="my-1 bg-border" />
+              {/* Feedback - hidden on small containers */}
+              <div className="hidden @[800px]:flex shrink-0">
+                <FeedbackPopover
+                  source="navbar"
+                  orgId={orgId}
+                  projectId={projectId ?? ''}
+                  billingPlanId={organizationPlan?.$id}
+                />
+              </div>
 
-              <ThemeToggle />
+              {/* Support - hidden on small containers */}
+              <div className="hidden @[900px]:flex shrink-0">
+                <SupportPopover orgId={orgId} />
+              </div>
 
-              <DropdownMenuSeparator className="my-1 bg-border" />
+              {/* Operator tools (render nothing when account is not an impersonator) */}
+              <ImpersonateConsoleUserPopover />
 
-              <DropdownMenuItem
-                onClick={() => signOut()}
-                data-analytics-id="header_sign_out"
-                data-analytics-surface="header"
-                className="flex cursor-pointer items-center gap-2 rounded px-2 py-1.5 text-[13px] text-muted-foreground hover:bg-accent hover:text-foreground focus:bg-accent focus:text-foreground"
-              >
-                <LogOut className="h-4 w-4" />
-                <span>Sign out</span>
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+              {/* Help/Assistant - hidden on small containers; enabled by profile or experimental override */}
+              {showAIAssistant && (
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <button
+                      onClick={toggleChat}
+                      className="hidden h-9 w-9 shrink-0 cursor-pointer items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-accent hover:text-foreground @[1000px]:flex"
+                    >
+                      <Bot className="h-4 w-4" />
+                    </button>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>Assistant</p>
+                  </TooltipContent>
+                </Tooltip>
+              )}
+
+              {/* Divider before Upgrade Button - hidden on small containers */}
+              {showUpgradeButton && (
+                <div className="mx-1 hidden h-5 w-px shrink-0 bg-border @[640px]:mx-2 @[850px]:block" />
+              )}
+
+              {/* Upgrade Button - hidden on small containers; only when plan cost is 0 */}
+              {showUpgradeButton && (
+                <div className="hidden @[850px]:flex shrink-0 rounded-md focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-1 focus-within:ring-offset-background">
+                  <div className="upgrade-button-wrapper">
+                    <Button
+                      asChild
+                      size="sm"
+                      variant="brandCta"
+                      className="h-9 shrink-0 cursor-pointer gap-1.5 px-3 text-[12px] font-semibold relative z-10 rounded-[calc(0.375rem-1px)]"
+                    >
+                      <Link to="/upgrade" search={{ orgId }}>
+                        <ArrowUpCircle className="h-4 w-4" />
+                        Upgrade
+                      </Link>
+                    </Button>
+                  </div>
+                </div>
+              )}
+
+              {/* Divider - hidden on small containers */}
+              <div className="mx-1 hidden h-5 w-px shrink-0 bg-border @[640px]:mx-2 @[700px]:block" />
+
+              {/* User Menu */}
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <button className="flex shrink-0 cursor-pointer items-center gap-2 rounded-md px-2 py-1.5 transition-colors hover:bg-accent min-w-0">
+                    <InitialsAvatar
+                      name={displayName}
+                      size="sm"
+                      className="shrink-0"
+                    />
+                    <div className="hidden text-left @[800px]:block min-w-0">
+                      <p className="text-[13px] font-medium text-foreground truncate">
+                        {displayName}
+                      </p>
+                    </div>
+                    <ChevronDown className="hidden h-3.5 w-3.5 shrink-0 text-muted-foreground @[800px]:block" />
+                  </button>
+                </DropdownMenuTrigger>
+
+                <DropdownMenuContent
+                  align="end"
+                  className="w-64 border-border bg-popover p-1"
+                >
+                  <div className="px-3 py-3">
+                    <p className="text-[13px] font-medium text-foreground">
+                      {displayName}
+                    </p>
+                    {userEmail && (
+                      <p className="text-[12px] text-muted-foreground">
+                        {userEmail}
+                      </p>
+                    )}
+                  </div>
+
+                  <DropdownMenuSeparator className="my-1 bg-border" />
+
+                  {/* Account Details */}
+                  <div className="px-3 py-2 space-y-4">
+                    {/* Member Since */}
+                    {account?.registration && (
+                      <div>
+                        <p className="text-[11px] text-muted-foreground mb-1.5">
+                          Member since
+                        </p>
+                        <p className="text-[14px] text-foreground">
+                          {memberSince}
+                        </p>
+                      </div>
+                    )}
+
+                    {/* Account Status */}
+                    <div>
+                      <p className="text-[11px] text-muted-foreground mb-1.5">
+                        Account status
+                      </p>
+                      <div className="flex items-center gap-2">
+                        <div className="h-2 w-2 rounded-full bg-emerald-500" />
+                        <p className="text-[14px] text-foreground">
+                          {accountStatus}
+                        </p>
+                      </div>
+                    </div>
+
+                    {features.accountMfa && (
+                      <div>
+                        <p className="text-[11px] text-muted-foreground mb-1.5">
+                          2FA
+                        </p>
+                        <div className="flex items-center gap-2">
+                          {is2FAEnabled ? (
+                            <>
+                              <Shield className="h-3.5 w-3.5 text-emerald-500" />
+                              <p className="text-[14px] text-foreground">
+                                Enabled
+                              </p>
+                            </>
+                          ) : (
+                            <>
+                              <Shield className="h-3.5 w-3.5 text-muted-foreground" />
+                              <p className="text-[14px] text-muted-foreground">
+                                Disabled
+                              </p>
+                            </>
+                          )}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Account ID */}
+                    {accountId && (
+                      <div>
+                        <p className="text-[11px] text-muted-foreground mb-1.5">
+                          Account ID
+                        </p>
+                        <TooltipProvider delayDuration={0}>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <button
+                                onClick={() =>
+                                  copyToClipboard(accountId, 'accountId')
+                                }
+                                className="flex cursor-pointer items-center gap-1.5 group"
+                              >
+                                <p className="text-[14px] text-foreground font-mono">
+                                  {accountId}
+                                </p>
+                                {copiedField === 'accountId' ? (
+                                  <Check className="h-3.5 w-3.5 text-emerald-500" />
+                                ) : (
+                                  <Copy className="h-3.5 w-3.5 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
+                                )}
+                              </button>
+                            </TooltipTrigger>
+                            <TooltipContent side="left">
+                              <p>
+                                {copiedField === 'accountId'
+                                  ? 'Copied!'
+                                  : 'Copy account ID'}
+                              </p>
+                            </TooltipContent>
+                          </Tooltip>
+                        </TooltipProvider>
+                      </div>
+                    )}
+                  </div>
+
+                  <DropdownMenuSeparator className="my-1 bg-border" />
+
+                  <DropdownMenuItem asChild>
+                    <Link
+                      to="/account"
+                      className="flex cursor-pointer items-center gap-2 rounded px-2 py-1.5 text-[13px] text-muted-foreground hover:bg-accent hover:text-foreground focus:bg-accent focus:text-foreground"
+                    >
+                      <User className="h-4 w-4" />
+                      <span>Account</span>
+                    </Link>
+                  </DropdownMenuItem>
+
+                  {features.billing && (
+                    <DropdownMenuItem asChild>
+                      <Link
+                        to="/account/payments"
+                        className="flex cursor-pointer items-center gap-2 rounded px-2 py-1.5 text-[13px] text-muted-foreground hover:bg-accent hover:text-foreground focus:bg-accent focus:text-foreground"
+                      >
+                        <CreditCard className="h-4 w-4" />
+                        <span>Payments</span>
+                      </Link>
+                    </DropdownMenuItem>
+                  )}
+
+                  {showAdminSection && (
+                    <>
+                      <DropdownMenuSeparator className="my-1 bg-border" />
+
+                      <DropdownMenuLabel className="px-2 py-1.5 text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
+                        Admin
+                      </DropdownMenuLabel>
+
+                      <DropdownMenuItem asChild>
+                        <Link
+                          to="/cache"
+                          className="flex cursor-pointer items-center gap-2 rounded px-2 py-1.5 text-[13px] text-muted-foreground hover:bg-accent hover:text-foreground focus:bg-accent focus:text-foreground"
+                        >
+                          <DatabaseZap className="h-4 w-4" />
+                          <span>Cache</span>
+                        </Link>
+                      </DropdownMenuItem>
+
+                      <DropdownMenuItem asChild>
+                        <Link
+                          to="/blocks"
+                          className="flex cursor-pointer items-center gap-2 rounded px-2 py-1.5 text-[13px] text-muted-foreground hover:bg-accent hover:text-foreground focus:bg-accent focus:text-foreground"
+                        >
+                          <ShieldAlert className="h-4 w-4" />
+                          <span>Blocks</span>
+                        </Link>
+                      </DropdownMenuItem>
+                    </>
+                  )}
+
+                  <DropdownMenuSeparator className="my-1 bg-border" />
+
+                  <ThemeToggle />
+
+                  <DropdownMenuSeparator className="my-1 bg-border" />
+
+                  <DropdownMenuItem
+                    onClick={() => signOut()}
+                    className="flex cursor-pointer items-center gap-2 rounded px-2 py-1.5 text-[13px] text-muted-foreground hover:bg-accent hover:text-foreground focus:bg-accent focus:text-foreground"
+                  >
+                    <LogOut className="h-4 w-4" />
+                    <span>Sign out</span>
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
             </>
           )}
         </div>

@@ -228,9 +228,11 @@ export function TerraformConnectSection({
           <p className="text-[13px] text-muted-foreground leading-relaxed">
             The official Appwrite Terraform provider lets you create and update
             project resources from{' '}
-            <code className="rounded bg-muted px-1 py-0.5 text-[12px]">.tf</code>{' '}
-            files instead of clicking through the console - ideal for staging and
-            production parity, code review, and automated pipelines.
+            <code className="rounded bg-muted px-1 py-0.5 text-[12px]">
+              .tf
+            </code>{' '}
+            files instead of clicking through the console - ideal for staging
+            and production parity, code review, and automated pipelines.
           </p>
           <p className="text-[13px] text-muted-foreground leading-relaxed">
             Use it when you want repeatable environments, documented changes in
@@ -275,8 +277,6 @@ export function TerraformConnectSection({
               size="sm"
               className="h-9 text-[13px] gap-1.5"
               onClick={onViewApiKeys}
-              data-analytics-id="terraform_view_api_keys"
-              data-analytics-surface="terraform_connect"
             >
               <Key className="h-4 w-4" />
               View API keys
@@ -288,8 +288,6 @@ export function TerraformConnectSection({
             href={TERRAFORM_REGISTRY_PROVIDER_DOCS}
             target="_blank"
             rel="noopener noreferrer"
-            data-analytics-id="terraform_registry_docs"
-            data-analytics-surface="terraform_connect"
             className="inline-flex items-center gap-1.5 text-[13px] text-primary hover:underline"
           >
             <TerraformIcon />
@@ -300,8 +298,6 @@ export function TerraformConnectSection({
             href={TERRAFORM_PROVIDER_REPO}
             target="_blank"
             rel="noopener noreferrer"
-            data-analytics-id="terraform_provider_repo"
-            data-analytics-surface="terraform_connect"
             className="inline-flex items-center gap-1.5 text-[13px] text-primary hover:underline"
           >
             <GitHubIcon className="h-4 w-4" />
@@ -323,9 +319,6 @@ export function TerraformConnectSection({
                     setSelectedFileIndex(i)
                     setCopied(false)
                   }}
-                  data-analytics-id="terraform_file_select"
-                  data-analytics-surface="terraform_connect"
-                  data-analytics-prop-file={file.label}
                   className={cn(
                     'cursor-pointer rounded-md px-2.5 py-1 text-[12px] font-medium transition-colors',
                     i === selectedFileIndex
@@ -348,9 +341,6 @@ export function TerraformConnectSection({
               size="sm"
               className="h-7 gap-1 text-[12px] text-muted-foreground shrink-0"
               onClick={handleCopyCode}
-              data-analytics-id="terraform_code_copy"
-              data-analytics-surface="terraform_connect"
-              data-analytics-prop-file={selectedFile.label}
             >
               {copied ? (
                 <Check className="h-3.5 w-3.5" />
@@ -387,7 +377,7 @@ export function TerraformConnectSection({
                 .
               </>
             ) : (
-              selectedFile.footerHint ?? null
+              (selectedFile.footerHint ?? null)
             )}
           </p>
         )}

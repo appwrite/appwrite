@@ -499,12 +499,7 @@ export function BuyDomainWizard({
             {isDomainLimitReached ? (
               <p className="text-[12px] text-amber-600 dark:text-amber-400">
                 Your current plan includes up to {domainsLimit} domains.{' '}
-                <UpgradePlanLink
-                  orgId={orgId}
-                  analyticsSurface="buy_domain_wizard"
-                  data-analytics-resource="domain"
-                />{' '}
-                to buy another domain.
+                <UpgradePlanLink orgId={orgId} /> to buy another domain.
               </p>
             ) : null}
           </div>
@@ -619,9 +614,9 @@ function DomainCard({
           ? `${full} is taken`
           : limitReached
             ? 'Domain limit reached'
-          : canSelect
-            ? `Add ${full} to cart`
-            : `Loading price for ${full}`
+            : canSelect
+              ? `Add ${full} to cart`
+              : `Loading price for ${full}`
       }
       onClick={() => {
         if (canSelect) onSelect(full)
@@ -635,7 +630,9 @@ function DomainCard({
           : isPerfectMatch
             ? 'border-blue-500/25 bg-blue-500/5 dark:bg-blue-500/10 ring-1 ring-blue-500/20 shadow-sm transition-all duration-150 enabled:hover:border-blue-500/35 enabled:hover:bg-blue-500/10 dark:enabled:hover:bg-blue-500/15 enabled:cursor-pointer'
             : 'border-border/60 bg-card/40 transition-all duration-150 enabled:hover:border-foreground/15 enabled:hover:bg-muted/30 enabled:cursor-pointer',
-        !canSelect && !taken && (limitReached ? 'cursor-not-allowed' : 'cursor-wait'),
+        !canSelect &&
+          !taken &&
+          (limitReached ? 'cursor-not-allowed' : 'cursor-wait'),
         taken && 'cursor-not-allowed',
       )}
     >

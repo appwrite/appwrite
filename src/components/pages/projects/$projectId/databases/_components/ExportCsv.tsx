@@ -147,11 +147,7 @@ export function ExportCsv({
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogContent
-        className="sm:max-w-xl max-h-[90dvh] flex flex-col p-0"
-        data-analytics-surface="export_csv_dialog"
-        data-analytics-resource="csv_export"
-      >
+      <DialogContent className="sm:max-w-xl max-h-[90dvh] flex flex-col p-0">
         <DialogHeader className="px-6 pt-6 pb-4 text-left shrink-0">
           <DialogTitle>Export CSV</DialogTitle>
           <DialogDescription className="text-[13px] mt-2">
@@ -178,8 +174,6 @@ export function ExportCsv({
                     size="sm"
                     className="h-8 text-[13px]"
                     onClick={selectAll}
-                    data-analytics-id="export_csv_select_all_columns"
-                    data-analytics-surface="export_csv_dialog"
                   >
                     Select all
                   </Button>
@@ -188,8 +182,6 @@ export function ExportCsv({
                     size="sm"
                     className="h-8 text-[13px]"
                     onClick={deselectAll}
-                    data-analytics-id="export_csv_deselect_all_columns"
-                    data-analytics-surface="export_csv_dialog"
                   >
                     Deselect all
                   </Button>
@@ -203,8 +195,6 @@ export function ExportCsv({
                       <Checkbox
                         checked={selectedColumns.has(key)}
                         onCheckedChange={() => toggleColumn(key)}
-                        data-analytics-id="export_csv_column_toggle"
-                        data-analytics-surface="export_csv_dialog"
                       />
                       <span className="text-[13px] truncate" title={key}>
                         {key}
@@ -218,9 +208,6 @@ export function ExportCsv({
                     size="sm"
                     className="mt-2 h-8 text-[13px] text-muted-foreground"
                     onClick={() => setShowMoreColumns(!showMoreColumns)}
-                    data-analytics-id="export_csv_show_columns_toggle"
-                    data-analytics-surface="export_csv_dialog"
-                    data-analytics-prop-state={showMoreColumns ? 'less' : 'more'}
                   >
                     {showMoreColumns ? 'Show less' : 'Show more'}
                   </Button>
@@ -252,22 +239,12 @@ export function ExportCsv({
                     </Tooltip>
                   </TooltipProvider>
                   <Select value={delimiter} onValueChange={setDelimiter}>
-                    <SelectTrigger
-                      className="w-[180px] h-9"
-                      data-analytics-id="export_csv_delimiter_select"
-                      data-analytics-surface="export_csv_dialog"
-                    >
+                    <SelectTrigger className="w-[180px] h-9">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
                       {DELIMITERS.map((d) => (
-                        <SelectItem
-                          key={d.value}
-                          value={d.value}
-                          data-analytics-id="export_csv_delimiter_option"
-                          data-analytics-surface="export_csv_dialog"
-                          data-analytics-prop-delimiter={d.label.toLowerCase()}
-                        >
+                        <SelectItem key={d.value} value={d.value}>
                           {d.label}
                         </SelectItem>
                       ))}
@@ -279,8 +256,6 @@ export function ExportCsv({
                     checked={includeHeader}
                     onCheckedChange={(v) => setIncludeHeader(v === true)}
                     className="mt-0.5"
-                    data-analytics-id="export_csv_header_toggle"
-                    data-analytics-surface="export_csv_dialog"
                   />
                   <span className="text-[13px] text-foreground">
                     Include header row - Column names as the first row.
@@ -292,8 +267,6 @@ export function ExportCsv({
                     onCheckedChange={(v) => setExportWithFilters(v === true)}
                     disabled={!hasActiveFilters}
                     className="mt-0.5"
-                    data-analytics-id="export_csv_filters_toggle"
-                    data-analytics-surface="export_csv_dialog"
                   />
                   <span className="text-[13px] text-foreground">
                     Export with filters - Export rows matching current table
@@ -314,19 +287,10 @@ export function ExportCsv({
             variant="outline"
             onClick={() => handleOpenChange(false)}
             disabled={createExport.isPending}
-            data-analytics-id="export_csv_cancel"
-            data-analytics-surface="export_csv_dialog"
           >
             Cancel
           </Button>
-          <Button
-            onClick={handleExport}
-            disabled={!canExport}
-            data-analytics-id="export_csv_submit"
-            data-analytics-surface="export_csv_dialog"
-            data-analytics-prop-column_count={selectedColumns.size}
-            data-analytics-prop-include_header={includeHeader}
-          >
+          <Button onClick={handleExport} disabled={!canExport}>
             Export
           </Button>
         </div>

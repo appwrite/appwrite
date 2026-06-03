@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, type FormEvent } from 'react'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
 import { sdk } from '@/lib/appwrite/sdk'
@@ -48,6 +48,11 @@ import {
   fetchAuthenticatedImageBlobUrl,
   revokeAuthenticatedImageBlobUrl,
 } from '@/lib/appwrite/fetch-authenticated-image'
+import {
+  MfaReauthForm,
+  useMfaReauth,
+  verifyMfaReauth,
+} from '@/components/global/auth/MfaReauthForm'
 
 // Dependencies for query invalidation
 const Dependencies = {
@@ -1079,6 +1084,17 @@ function SMSMFAMethod({
 }
 
 // Recovery Codes Method Component
+function readOtpFromForm(form: HTMLFormElement, fallback: string) {
+  const otpInput = form.querySelector(
+    'input[data-input-otp]',
+  ) as HTMLInputElement | null
+  return (otpInput?.value ?? fallback).trim()
+}
+
+function parseRecoveryCodes(data: Models.MfaRecoveryCodes) {
+  return data.recoveryCodes ?? []
+}
+
 function RecoveryCodesMethod({
   factors,
   hasAnyMfaMethod,
@@ -1088,16 +1104,22 @@ function RecoveryCodesMethod({
 }) {
   const queryClient = useQueryClient()
   const [codesDialogOpen, setCodesDialogOpen] = useState(false)
+  const [regenerateDialogOpen, setRegenerateDialogOpen] = useState(false)
+  const [regenerateError, setRegenerateError] = useState<string | null>(null)
+  const [isRegenerating, setIsRegenerating] = useState(false)
   const [recoveryCodes, setRecoveryCodes] = useState<string[]>([])
+  const reauth = useMfaReauth({
+    factors,
+    excludeRecoveryCode: true,
+    open: regenerateDialogOpen,
+  })
 
   const createRecoveryCodesMutation = useMutation({
     mutationFn: async () => {
       return await sdk.forConsole.account.createMFARecoveryCodes()
     },
     onSuccess: (data) => {
-      setRecoveryCodes(
-        ('codes' in data && Array.isArray(data.codes) ? data.codes : []) || [],
-      )
+      setRecoveryCodes(parseRecoveryCodes(data))
       setCodesDialogOpen(true)
       queryClient.invalidateQueries({ queryKey: Dependencies.FACTORS })
     },
@@ -1106,36 +1128,51 @@ function RecoveryCodesMethod({
     },
   })
 
-  const regenerateRecoveryCodesMutation = useMutation({
-    mutationFn: async () => {
-      return await sdk.forConsole.account.updateMFARecoveryCodes()
-    },
-    onSuccess: (data) => {
-      setRecoveryCodes(
-        ('codes' in data && Array.isArray(data.codes) ? data.codes : []) || [],
-      )
+  const handleRegenerateSubmit = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault()
+    setRegenerateError(null)
+    setIsRegenerating(true)
+
+    try {
+      const otp = readOtpFromForm(event.currentTarget, reauth.code)
+      await verifyMfaReauth(reauth.challenge, otp)
+      const data = await sdk.forConsole.account.updateMFARecoveryCodes()
+      setRecoveryCodes(parseRecoveryCodes(data))
+      setRegenerateDialogOpen(false)
+      reauth.reset()
       setCodesDialogOpen(true)
-      queryClient.invalidateQueries({ queryKey: Dependencies.FACTORS })
-    },
-    onError: (error: Error) => {
-      toast.error(error.message || 'Failed to regenerate recovery codes')
-    },
-  })
+      await queryClient.invalidateQueries({ queryKey: Dependencies.FACTORS })
+    } catch (error: unknown) {
+      const message =
+        error instanceof Error
+          ? error.message
+          : 'Failed to regenerate recovery codes'
+      setRegenerateError(message)
+      reauth.setCode('')
+    } finally {
+      setIsRegenerating(false)
+    }
+  }
 
   const handleView = async () => {
     try {
       const data = await sdk.forConsole.account.getMFARecoveryCodes()
-      setRecoveryCodes(
-        ('codes' in data && Array.isArray(data.codes) ? data.codes : []) || [],
-      )
+      setRecoveryCodes(parseRecoveryCodes(data))
       setCodesDialogOpen(true)
     } catch (error: unknown) {
-      // If codes don't exist, create them
-      if (error.code === 404 || error.message?.includes('not found')) {
+      const err = error as { code?: number; message?: string }
+      if (err.code === 404 || err.message?.includes('not found')) {
         createRecoveryCodesMutation.mutate()
       } else {
-        toast.error(error.message || 'Failed to get recovery codes')
+        toast.error(err.message || 'Failed to get recovery codes')
       }
+    }
+  }
+
+  const handleRegenerateDialogOpenChange = (open: boolean) => {
+    setRegenerateDialogOpen(open)
+    if (!open) {
+      setRegenerateError(null)
     }
   }
 
@@ -1159,10 +1196,8 @@ function RecoveryCodesMethod({
               variant="outline"
               size="sm"
               className="h-9 text-[13px]"
-              onClick={() => regenerateRecoveryCodesMutation.mutate()}
-              disabled={
-                !hasAnyMfaMethod || regenerateRecoveryCodesMutation.isPending
-              }
+              onClick={() => handleRegenerateDialogOpenChange(true)}
+              disabled={!hasAnyMfaMethod}
             >
               Regenerate
             </Button>
@@ -1179,6 +1214,55 @@ function RecoveryCodesMethod({
           )}
         </div>
       </div>
+
+      <Dialog
+        open={regenerateDialogOpen}
+        onOpenChange={handleRegenerateDialogOpenChange}
+      >
+        <DialogContent className="sm:max-w-md p-0">
+          <DialogHeader className="px-6 pt-6 text-left">
+            <DialogTitle>Regenerate recovery codes</DialogTitle>
+            <DialogDescription className="text-[13px] mt-2">
+              Are you sure you want to regenerate all recovery codes? All
+              previously generated recovery codes will become invalid.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="border-t border-border" />
+          <form onSubmit={handleRegenerateSubmit}>
+            <div className="px-6 py-4">
+              <MfaReauthForm reauth={reauth} />
+              {regenerateError && (
+                <p className="mt-3 text-[13px] text-destructive">
+                  {regenerateError}
+                </p>
+              )}
+            </div>
+            <div className="px-6 py-4 border-t border-border bg-muted/30 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                className="h-9 text-[13px]"
+                onClick={() => handleRegenerateDialogOpenChange(false)}
+              >
+                Cancel
+              </Button>
+              <Button
+                type="submit"
+                size="sm"
+                className="h-9 text-[13px]"
+                disabled={
+                  !reauth.isCodeValid ||
+                  !reauth.isChallengeReady ||
+                  isRegenerating
+                }
+              >
+                Regenerate
+              </Button>
+            </div>
+          </form>
+        </DialogContent>
+      </Dialog>
 
       {/* Recovery Codes Dialog */}
       <Dialog open={codesDialogOpen} onOpenChange={setCodesDialogOpen}>

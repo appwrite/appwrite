@@ -70,18 +70,14 @@ export function SiteRuntimeSpecificationCard({
     })
   }
 
-  const hasChanges =
-    runtimeSpecification !== (site?.runtimeSpecification || '')
+  const hasChanges = runtimeSpecification !== (site?.runtimeSpecification || '')
 
   if (!isCloud || specifications.length === 0) {
     return null
   }
 
   const footerNote = hasUnavailableSpecifications(specifications) ? (
-    <SpecificationsUpgradeNote
-      orgId={project?.teamId}
-      analyticsSurface="site_runtime_specification"
-    />
+    <SpecificationsUpgradeNote orgId={project?.teamId} />
   ) : undefined
 
   return (

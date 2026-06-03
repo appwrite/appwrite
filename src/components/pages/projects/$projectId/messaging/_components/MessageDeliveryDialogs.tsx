@@ -97,7 +97,9 @@ export function MessageSendDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md p-0">
+      <DialogContent
+        className="sm:max-w-md p-0"
+>
         <DialogHeader className="px-6 pt-6 pb-4 text-left">
           <DialogTitle>Confirm sending message</DialogTitle>
           <DialogDescription className="text-[13px] mt-2">
@@ -115,13 +117,13 @@ export function MessageSendDialog({
             variant="outline"
             onClick={() => onOpenChange(false)}
             disabled={sendMutation.isPending}
-          >
+>
             Cancel
           </Button>
           <Button
             onClick={() => sendMutation.mutate()}
             disabled={sendMutation.isPending}
-          >
+>
             Send
           </Button>
         </div>
@@ -229,7 +231,9 @@ export function MessageScheduleDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md p-0">
+      <DialogContent
+        className="sm:max-w-md p-0"
+>
         <DialogHeader className="px-6 pt-6 pb-4 text-left">
           <DialogTitle>Schedule message</DialogTitle>
           <DialogDescription className="text-[13px] mt-2">
@@ -257,13 +261,13 @@ export function MessageScheduleDialog({
             variant="outline"
             onClick={() => onOpenChange(false)}
             disabled={scheduleMutation.isPending}
-          >
+>
             Cancel
           </Button>
           <Button
             onClick={handleSubmit}
             disabled={scheduleMutation.isPending}
-          >
+>
             Schedule
           </Button>
         </div>
@@ -332,7 +336,9 @@ export function MessageCancelScheduleDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md p-0">
+      <DialogContent
+        className="sm:max-w-md p-0"
+>
         <DialogHeader className="px-6 pt-6 pb-4 text-left">
           <DialogTitle>Cancel scheduling</DialogTitle>
           <DialogDescription className="text-[13px] mt-2">
@@ -347,14 +353,14 @@ export function MessageCancelScheduleDialog({
             variant="outline"
             onClick={() => onOpenChange(false)}
             disabled={cancelMutation.isPending}
-          >
+>
             Keep scheduled
           </Button>
           <Button
             variant="secondary"
             onClick={() => cancelMutation.mutate()}
             disabled={cancelMutation.isPending}
-          >
+>
             Cancel scheduling
           </Button>
         </div>

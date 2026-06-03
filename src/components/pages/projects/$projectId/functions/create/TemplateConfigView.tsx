@@ -26,7 +26,11 @@ import { Loader2, Key, Tag, GitBranch } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
-import { ID, TemplateReferenceType, type FunctionRuntime } from '@appwrite.io/console'
+import {
+  ID,
+  TemplateReferenceType,
+  type FunctionRuntime,
+} from '@appwrite.io/console'
 import { sdk } from '@/lib/appwrite/sdk'
 import {
   useFunctionTemplate,
@@ -596,12 +600,8 @@ export function TemplateConfigView({
               </p>
               {hasUnavailableSpecifications(specifications) && (
                 <p className="text-[11px] text-muted-foreground">
-                  <UpgradePlanLink
-                    orgId={project?.teamId}
-                    analyticsSurface="function_create_template"
-                    data-analytics-resource="function"
-                  />{' '}
-                  to unlock additional specifications.
+                  <UpgradePlanLink orgId={project?.teamId} /> to unlock
+                  additional specifications.
                 </p>
               )}
             </div>

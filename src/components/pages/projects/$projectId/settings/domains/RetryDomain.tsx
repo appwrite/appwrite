@@ -68,7 +68,9 @@ export function RetryDomainDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-4xl p-0">
+      <DialogContent
+        className="sm:max-w-4xl p-0"
+>
         <DialogHeader className="px-6 pt-6 text-left">
           <DialogTitle>Retry verification</DialogTitle>
           <DialogDescription className="text-[13px] mt-2">
@@ -92,14 +94,14 @@ export function RetryDomainDialog({
             variant="outline"
             onClick={() => onOpenChange(false)}
             disabled={verifyDomainMutation.isPending}
-          >
+>
             Cancel
           </Button>
           <Button
             type="button"
             onClick={handleRetry}
             disabled={verifyDomainMutation.isPending}
-          >
+>
             Retry
           </Button>
         </div>

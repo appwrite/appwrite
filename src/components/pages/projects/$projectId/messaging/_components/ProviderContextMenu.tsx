@@ -112,12 +112,18 @@ export function ProviderContextMenu({
     <>
       <ContextMenu>
         <ContextMenuTrigger asChild>{children}</ContextMenuTrigger>
-        <ContextMenuContent className="w-56">
-          <ContextMenuItem onSelect={navigateToOverview}>
+        <ContextMenuContent
+          className="w-56"
+>
+          <ContextMenuItem
+            onSelect={navigateToOverview}
+>
             <ContextMenuIcon icon={LayoutList} />
             Overview
           </ContextMenuItem>
-          <ContextMenuItem onSelect={navigateToSettings}>
+          <ContextMenuItem
+            onSelect={navigateToSettings}
+>
             <ContextMenuIcon icon={Settings} />
             Settings
           </ContextMenuItem>
@@ -130,21 +136,21 @@ export function ProviderContextMenu({
             <ContextMenuSubContent>
               <ContextMenuItem
                 onSelect={() => copyToClipboard('ID', provider.$id)}
-              >
+>
                 <ContextMenuIcon icon={Copy} />
                 Copy ID
               </ContextMenuItem>
               {hasName && (
                 <ContextMenuItem
                   onSelect={() => copyToClipboard('Name', provider.name)}
-                >
+>
                   <ContextMenuIcon icon={Copy} />
                   Copy name
                 </ContextMenuItem>
               )}
               <ContextMenuItem
                 onSelect={() => copyToClipboard('Link', providerHref)}
-              >
+>
                 <ContextMenuIcon icon={Link2} />
                 Copy link
               </ContextMenuItem>
@@ -154,23 +160,29 @@ export function ProviderContextMenu({
                     fetchProvider(projectId, provider.$id),
                   )
                 }
-              >
+>
                 <ContextMenuIcon icon={FileJson} />
                 Copy as JSON
               </ContextMenuItem>
             </ContextMenuSubContent>
           </ContextMenuSub>
           <ContextMenuSeparator />
-          <ContextMenuItem onSelect={() => openInNewTab(providerHref)}>
+          <ContextMenuItem
+            onSelect={() => openInNewTab(providerHref)}
+>
             <ContextMenuIcon icon={ExternalLink} />
             Open in new tab
           </ContextMenuItem>
-          <ContextMenuItem onSelect={() => openInNewWindow(providerHref)}>
+          <ContextMenuItem
+            onSelect={() => openInNewWindow(providerHref)}
+>
             <ContextMenuIcon icon={Square} />
             Open in new window
           </ContextMenuItem>
           <ContextMenuSeparator />
-          <ContextMenuItem onSelect={handleDeleteClick}>
+          <ContextMenuItem
+            onSelect={handleDeleteClick}
+>
             <ContextMenuIcon icon={Trash2} />
             Delete
           </ContextMenuItem>
@@ -178,7 +190,9 @@ export function ProviderContextMenu({
       </ContextMenu>
 
       <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
-        <DialogContent className="sm:max-w-md p-0">
+        <DialogContent
+          className="sm:max-w-md p-0"
+>
           <DialogHeader className="px-6 pt-6 pb-4 text-left">
             <DialogTitle>Delete provider</DialogTitle>
             <DialogDescription className="text-[13px] mt-2">
@@ -191,14 +205,14 @@ export function ProviderContextMenu({
               variant="outline"
               onClick={() => setDeleteDialogOpen(false)}
               disabled={deleteMutation.isPending}
-            >
+>
               Cancel
             </Button>
             <Button
               variant="destructive"
               onClick={() => deleteMutation.mutate()}
               disabled={deleteMutation.isPending}
-            >
+>
               Delete
             </Button>
           </div>

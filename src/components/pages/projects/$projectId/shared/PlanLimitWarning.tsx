@@ -69,9 +69,6 @@ export function PlanLimitWarning({
                         <Link
                           to="/upgrade"
                           search={{ orgId }}
-                          data-analytics-id="plan_limit_upgrade_link"
-                          data-analytics-surface="plan_limit_warning"
-                          data-analytics-resource={resourceName}
                           className="font-medium underline hover:no-underline"
                         >
                           Upgrade
@@ -87,9 +84,6 @@ export function PlanLimitWarning({
                         <Link
                           to="/upgrade"
                           search={{ orgId }}
-                          data-analytics-id="plan_limit_upgrade_link"
-                          data-analytics-surface="plan_limit_warning"
-                          data-analytics-resource={resourceName}
                           className="font-medium underline hover:no-underline"
                         >
                           Upgrade
@@ -107,13 +101,7 @@ export function PlanLimitWarning({
                 size="sm"
                 className="h-8 shrink-0 bg-amber-500 px-3 text-[12px] font-medium text-amber-950 hover:bg-amber-400 dark:bg-amber-500 dark:text-amber-950 dark:hover:bg-amber-400"
               >
-                <Link
-                  to="/upgrade"
-                  search={{ orgId }}
-                  data-analytics-id="plan_limit_upgrade_button"
-                  data-analytics-surface="plan_limit_warning"
-                  data-analytics-resource={resourceName}
-                >
+                <Link to="/upgrade" search={{ orgId }}>
                   Upgrade
                 </Link>
               </Button>

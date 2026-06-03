@@ -1,6 +1,6 @@
 import { useState, useMemo } from 'react'
 import { useParams, useNavigate, useLocation } from '@tanstack/react-router'
-import { ArrowLeft, Hash, Trash2 } from 'lucide-react'
+import { Hash, Trash2 } from 'lucide-react'
 import {
   useTopic,
   useProject,
@@ -233,7 +233,7 @@ export function View({
                   updateNameMutation.isPending
                 }
                 onClick={() => updateNameMutation.mutate(name)}
-              >
+>
                 Update
               </Button>
             </div>
@@ -341,7 +341,7 @@ export function View({
                 className="h-9 text-[13px]"
                 onClick={() => setDeleteDialogOpen(true)}
                 disabled={deleteTopicMutation.isPending}
-              >
+>
                 <Trash2 className="mr-1.5 h-4 w-4" />
                 Delete topic
               </Button>
@@ -351,7 +351,9 @@ export function View({
 
         {/* Delete Confirmation Dialog */}
         <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
-          <DialogContent className="sm:max-w-md p-0">
+          <DialogContent
+            className="sm:max-w-md p-0"
+>
             <DialogHeader className="px-6 pt-6 text-left">
               <DialogTitle>Delete topic</DialogTitle>
               <DialogDescription className="text-[13px] mt-2">
@@ -365,14 +367,14 @@ export function View({
                 variant="outline"
                 onClick={() => setDeleteDialogOpen(false)}
                 disabled={deleteTopicMutation.isPending}
-              >
+>
                 Cancel
               </Button>
               <Button
                 variant="destructive"
                 onClick={() => deleteTopicMutation.mutate()}
                 disabled={deleteTopicMutation.isPending}
-              >
+>
                 Delete
               </Button>
             </div>

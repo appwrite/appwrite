@@ -115,13 +115,19 @@ export function MessageContextMenu({
     <>
       <ContextMenu>
         <ContextMenuTrigger asChild>{children}</ContextMenuTrigger>
-        <ContextMenuContent className="w-56">
-          <ContextMenuItem onSelect={navigateToCompose}>
+        <ContextMenuContent
+          className="w-56"
+>
+          <ContextMenuItem
+            onSelect={navigateToCompose}
+>
             <ContextMenuIcon icon={LayoutList} />
             Compose
           </ContextMenuItem>
           {hasComposeSettingsTabs ? (
-            <ContextMenuItem onSelect={navigateToSettings}>
+            <ContextMenuItem
+              onSelect={navigateToSettings}
+>
               <ContextMenuIcon icon={Settings} />
               Settings
             </ContextMenuItem>
@@ -135,13 +141,13 @@ export function MessageContextMenu({
             <ContextMenuSubContent>
               <ContextMenuItem
                 onSelect={() => copyToClipboard('ID', message.$id)}
-              >
+>
                 <ContextMenuIcon icon={Copy} />
                 Copy ID
               </ContextMenuItem>
               <ContextMenuItem
                 onSelect={() => copyToClipboard('Link', messageHref)}
-              >
+>
                 <ContextMenuIcon icon={Link2} />
                 Copy link
               </ContextMenuItem>
@@ -151,23 +157,29 @@ export function MessageContextMenu({
                     fetchMessage(projectId, message.$id),
                   )
                 }
-              >
+>
                 <ContextMenuIcon icon={FileJson} />
                 Copy as JSON
               </ContextMenuItem>
             </ContextMenuSubContent>
           </ContextMenuSub>
           <ContextMenuSeparator />
-          <ContextMenuItem onSelect={() => openInNewTab(messageHref)}>
+          <ContextMenuItem
+            onSelect={() => openInNewTab(messageHref)}
+>
             <ContextMenuIcon icon={ExternalLink} />
             Open in new tab
           </ContextMenuItem>
-          <ContextMenuItem onSelect={() => openInNewWindow(messageHref)}>
+          <ContextMenuItem
+            onSelect={() => openInNewWindow(messageHref)}
+>
             <ContextMenuIcon icon={Square} />
             Open in new window
           </ContextMenuItem>
           <ContextMenuSeparator />
-          <ContextMenuItem onSelect={handleDeleteClick}>
+          <ContextMenuItem
+            onSelect={handleDeleteClick}
+>
             <ContextMenuIcon icon={Trash2} />
             Delete
           </ContextMenuItem>
@@ -175,7 +187,9 @@ export function MessageContextMenu({
       </ContextMenu>
 
       <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
-        <DialogContent className="sm:max-w-md p-0">
+        <DialogContent
+          className="sm:max-w-md p-0"
+>
           <DialogHeader className="px-6 pt-6 pb-4 text-left">
             <DialogTitle>Delete message</DialogTitle>
             <DialogDescription className="text-[13px] mt-2">
@@ -188,14 +202,14 @@ export function MessageContextMenu({
               variant="outline"
               onClick={() => setDeleteDialogOpen(false)}
               disabled={deleteMutation.isPending}
-            >
+>
               Cancel
             </Button>
             <Button
               variant="destructive"
               onClick={() => deleteMutation.mutate()}
               disabled={deleteMutation.isPending}
-            >
+>
               Delete
             </Button>
           </div>

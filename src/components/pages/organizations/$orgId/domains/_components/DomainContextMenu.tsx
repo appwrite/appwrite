@@ -117,12 +117,14 @@ export function DomainContextMenu({
     <>
       <ContextMenu>
         <ContextMenuTrigger asChild>{children}</ContextMenuTrigger>
-        <ContextMenuContent className="w-56">
+        <ContextMenuContent
+          className="w-56"
+>
           <ContextMenuItem
             onSelect={() =>
               navigateToTab('/organizations/$orgId/domains/$domainId')
             }
-          >
+>
             <ContextMenuIcon icon={Globe} />
             DNS Records
           </ContextMenuItem>
@@ -130,12 +132,14 @@ export function DomainContextMenu({
             onSelect={() =>
               navigateToTab('/organizations/$orgId/domains/$domainId/settings')
             }
-          >
+>
             <ContextMenuIcon icon={Settings} />
             Settings
           </ContextMenuItem>
           {!isVerified && (
-            <ContextMenuItem onSelect={handleRetryVerification}>
+            <ContextMenuItem
+              onSelect={handleRetryVerification}
+>
               <ContextMenuIcon icon={RefreshCw} />
               Retry verification
             </ContextMenuItem>
@@ -149,19 +153,19 @@ export function DomainContextMenu({
             <ContextMenuSubContent>
               <ContextMenuItem
                 onSelect={() => copyToClipboard('ID', domain.$id)}
-              >
+>
                 <ContextMenuIcon icon={Copy} />
                 Copy ID
               </ContextMenuItem>
               <ContextMenuItem
                 onSelect={() => copyToClipboard('Domain', domain.domain)}
-              >
+>
                 <ContextMenuIcon icon={Copy} />
                 Copy domain
               </ContextMenuItem>
               <ContextMenuItem
                 onSelect={() => copyToClipboard('Link', domainHref)}
-              >
+>
                 <ContextMenuIcon icon={Link2} />
                 Copy link
               </ContextMenuItem>
@@ -169,23 +173,29 @@ export function DomainContextMenu({
                 onSelect={() =>
                   void copyResourceAsJson(() => fetchDomain(domain.$id))
                 }
-              >
+>
                 <ContextMenuIcon icon={FileJson} />
                 Copy as JSON
               </ContextMenuItem>
             </ContextMenuSubContent>
           </ContextMenuSub>
           <ContextMenuSeparator />
-          <ContextMenuItem onSelect={() => openInNewTab(domainHref)}>
+          <ContextMenuItem
+            onSelect={() => openInNewTab(domainHref)}
+>
             <ContextMenuIcon icon={ExternalLink} />
             Open in new tab
           </ContextMenuItem>
-          <ContextMenuItem onSelect={() => openInNewWindow(domainHref)}>
+          <ContextMenuItem
+            onSelect={() => openInNewWindow(domainHref)}
+>
             <ContextMenuIcon icon={Square} />
             Open in new window
           </ContextMenuItem>
           <ContextMenuSeparator />
-          <ContextMenuItem onSelect={() => setDeleteDialogOpen(true)}>
+          <ContextMenuItem
+            onSelect={() => setDeleteDialogOpen(true)}
+>
             <ContextMenuIcon icon={Trash2} />
             Delete
           </ContextMenuItem>
@@ -193,7 +203,9 @@ export function DomainContextMenu({
       </ContextMenu>
 
       <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
-        <DialogContent className="sm:max-w-md p-0">
+        <DialogContent
+          className="sm:max-w-md p-0"
+>
           <DialogHeader className="px-6 pt-6 pb-4 text-left">
             <DialogTitle>Delete domain</DialogTitle>
             <DialogDescription className="text-[13px] mt-2">
@@ -206,14 +218,14 @@ export function DomainContextMenu({
               variant="outline"
               onClick={() => setDeleteDialogOpen(false)}
               disabled={deleteMutation.isPending}
-            >
+>
               Cancel
             </Button>
             <Button
               variant="destructive"
               onClick={() => deleteMutation.mutate()}
               disabled={deleteMutation.isPending}
-            >
+>
               Delete
             </Button>
           </div>

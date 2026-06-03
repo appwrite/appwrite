@@ -80,7 +80,9 @@ export function SendSMTPTestDialog({
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogContent className="sm:max-w-md p-0">
+      <DialogContent
+        className="sm:max-w-md p-0"
+>
         <DialogHeader className="px-6 pt-6 text-left">
           <DialogTitle>Send test email</DialogTitle>
           <DialogDescription className="text-[13px] mt-2">
@@ -157,7 +159,7 @@ export function SendSMTPTestDialog({
                 className="h-9 text-[13px]"
                 disabled={emails.length === 0 || isSending}
                 onClick={handleSend}
-              >
+>
                 {isSending ? (
                   <Loader2 className="mr-1.5 h-3.5 w-3.5 shrink-0 animate-spin" />
                 ) : null}
@@ -170,7 +172,7 @@ export function SendSMTPTestDialog({
                 className="h-9 text-[13px]"
                 onClick={() => handleOpenChange(false)}
                 disabled={isSending}
-              >
+>
                 Cancel
               </Button>
             </>
@@ -182,7 +184,7 @@ export function SendSMTPTestDialog({
               size="sm"
               className="h-9 text-[13px]"
               onClick={() => handleOpenChange(false)}
-            >
+>
               Close
             </Button>
           ) : null}
@@ -194,7 +196,7 @@ export function SendSMTPTestDialog({
                 size="sm"
                 className="h-9 text-[13px]"
                 onClick={() => setPhase('form')}
-              >
+>
                 Try again
               </Button>
               <Button
@@ -203,7 +205,7 @@ export function SendSMTPTestDialog({
                 size="sm"
                 className="h-9 text-[13px]"
                 onClick={() => handleOpenChange(false)}
-              >
+>
                 Close
               </Button>
             </>

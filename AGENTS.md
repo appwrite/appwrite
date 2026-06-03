@@ -1210,7 +1210,7 @@ Product analytics uses Plausible and must stay privacy-friendly. Add tracking fo
 
 - **Use the shared helper**: Import `useAnalytics` from `@/hooks/use-analytics` in components, or use `trackEvent` / `trackPageView` from `@/lib/analytics` outside React.
 - **Use automatic tracking by default**: `useGlobalAnalyticsTracker` in the root tracks generic links, buttons, menu items, tabs, non-text controls, form submits, and dialog open/close events across the app.
-- **Add proactive metadata**: Important shared controls and feature-specific buttons must include stable `data-analytics-id` and, when useful, `data-analytics-surface`, `data-analytics-resource`, or `data-analytics-prop-*` attributes so same-context clicks can be distinguished.
+- **Prefer automatic tracking**: Do not add explicit `data-analytics-id` names to every button. Let the root tracker infer generic link, button, menu, tab, control, submit, and dialog events unless a flow needs richer manual tracking.
 - **Never send raw IDs or user-entered values**: Do not send project IDs, organization IDs, resource IDs, names, emails, domains, search terms, query strings, or full URLs.
 - **Use route templates**: Page views and events should use sanitized routes such as `/projects/$projectId/databases/$databaseId`, not concrete paths.
 - **Keep event names stable and finite**: Use a small set of generic event names and put context in props.
@@ -1264,7 +1264,6 @@ track('Resource Created', {
 Common props:
 
 - `surface`: UI surface or component, e.g. `sidebar`, `create_database_wizard`
-- `analytics_id`: stable component/action id from `data-analytics-id`
 - `resource`: resource type, e.g. `database`, `bucket`, `function`
 - `step`: wizard/form step, e.g. `database_type`, `specification`
 - `option`: selected fixed option, e.g. `TablesDB`, `shared`
@@ -1274,31 +1273,16 @@ Common props:
 - `error_count`, `filter_count`, `page_size`: numeric summaries
 - `mobile`, `has_search`, `has_custom_id`: booleans
 
-### Automatic tracking attributes
+### Optional tracking attributes
 
-The root tracker intentionally does not read text labels, input values, hrefs, form values, or resource names. Add safe metadata with data attributes when a generic automatic event needs more context:
-
-```tsx
-<Button
-  data-analytics-id="create_database"
-  data-analytics-surface="databases_list"
-  data-analytics-resource="database"
->
-  Create database
-</Button>
-```
+The root tracker intentionally does not read text labels, input values, hrefs, form values, or resource names. Use attributes sparingly, mostly to opt out of automatic tracking when a component has richer manual tracking.
 
 Supported attributes:
 
 - `data-analytics-track="manual"`: skip automatic tracking because the component tracks explicitly.
 - `data-analytics-track="false"`: skip tracking entirely for this element subtree.
 - `data-analytics-event="Button Clicked"`: override the automatic event name. Use only names listed in `AnalyticsEventName`.
-- `data-analytics-id`: stable low-cardinality action/component id.
-- `data-analytics-surface`: stable surface name. Child elements inherit the closest parent surface.
-- `data-analytics-resource`: stable resource type.
-- `data-analytics-prop-*`: additional safe enum/boolean/count props, e.g. `data-analytics-prop-step="database_type"`.
-
-Add these attributes proactively to reusable primitives and shared surfaces such as `ServiceHeader`, `Pagination`, `WizardLayout`, filters, row action triggers, view toggles, and create/delete/confirm buttons. Prefer a generic ID like `service_header_create`, `pagination_next`, or `filters_clear_all` over copying visible button text.
+- `data-analytics-id`, `data-analytics-surface`, `data-analytics-resource`, and `data-analytics-prop-*`: supported for rare cases where generic automatic tracking is insufficient, but do not add them broadly to buttons or shared primitives.
 
 ### What to track in new features
 

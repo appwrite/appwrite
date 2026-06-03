@@ -8,7 +8,6 @@ type SpecificationsUpgradeNoteProps = {
   orgId?: string | null
   /** When true, appends "or contact sales" before the unlock suffix. */
   showContactSales?: boolean
-  analyticsSurface?: string
 }
 
 /**
@@ -17,17 +16,11 @@ type SpecificationsUpgradeNoteProps = {
 export function SpecificationsUpgradeNote({
   orgId,
   showContactSales = false,
-  analyticsSurface,
 }: SpecificationsUpgradeNoteProps) {
   return (
     <div className="rounded-lg border border-border bg-muted/30 px-3 py-2.5">
       <p className="text-[12px] text-muted-foreground">
-        Need more resources?{' '}
-        <UpgradePlanLink
-          orgId={orgId}
-          analyticsSurface={analyticsSurface}
-          data-analytics-resource="specification"
-        />{' '}
+        Need more resources? <UpgradePlanLink orgId={orgId} />{' '}
         {showContactSales ? (
           <>
             or{' '}

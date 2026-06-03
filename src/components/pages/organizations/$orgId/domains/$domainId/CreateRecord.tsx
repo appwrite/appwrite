@@ -122,11 +122,14 @@ export function CreateRecordDialog({
       onOpenChange={handleOpenChange}
       title="Create DNS Record"
       maxWidth="sm:max-w-lg"
-    >
+>
       <>
         <div className="border-t border-border shrink-0" />
 
-        <form onSubmit={handleSubmit} className="flex flex-1 flex-col min-h-0">
+        <form
+          onSubmit={handleSubmit}
+          className="flex flex-1 flex-col min-h-0"
+>
           <div className="flex-1 overflow-y-auto">
             <div className="px-6 py-6">
               <div className="space-y-5">
@@ -138,13 +141,18 @@ export function CreateRecordDialog({
                     value={type}
                     onValueChange={setType}
                     disabled={isLoading}
-                  >
-                    <SelectTrigger id="type">
+>
+                    <SelectTrigger
+                      id="type"
+>
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
                       {DNS_RECORD_TYPES.map((recordType) => (
-                        <SelectItem key={recordType} value={recordType}>
+                        <SelectItem
+                          key={recordType}
+                          value={recordType}
+>
                           {recordType}
                         </SelectItem>
                       ))}
@@ -293,7 +301,7 @@ export function CreateRecordDialog({
             <Button
               type="submit"
               disabled={isLoading || !name.trim() || !value.trim()}
-            >
+>
               Create Record
             </Button>
             <Button
@@ -301,7 +309,7 @@ export function CreateRecordDialog({
               variant="outline"
               onClick={() => handleOpenChange(false)}
               disabled={isLoading}
-            >
+>
               Cancel
             </Button>
           </div>

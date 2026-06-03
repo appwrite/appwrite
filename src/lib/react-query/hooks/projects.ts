@@ -16,7 +16,7 @@ import { useMemo } from 'react'
 import {
   Query,
   ID,
-  ProjectStatus,
+  Status,
   Region,
   ProjectKeyScopes,
 } from '@appwrite.io/console'
@@ -654,7 +654,7 @@ export function useResumeProject(projectId: string | undefined) {
       try {
         await sdk.forConsole.projects.updateStatus({
           projectId,
-          status: ProjectStatus.Active,
+          status: Status.Active,
         })
       } finally {
         if (client.headers) delete client.headers[CONSOLE_FINGERPRINT_HEADER]

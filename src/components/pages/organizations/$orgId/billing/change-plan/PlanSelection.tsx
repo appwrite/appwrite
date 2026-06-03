@@ -81,7 +81,7 @@ export function PlanSelection({
   const planCatalog = plans as Record<
     string,
     { $id?: string; name?: string; order?: number; price?: number }
-  >
+>
 
   const isOrganizationOnFreePlan =
     !isCreateMode && isFreePlanRef(currentPlan as string, planCatalog)
@@ -159,12 +159,12 @@ export function PlanSelection({
       size="sm"
       className="h-8 shrink-0 text-[13px]"
       asChild
-    >
+>
       <a
         href={CONTACT_SALES_URL}
         target="_blank"
         rel="noopener noreferrer"
-      >
+>
         Contact sales
       </a>
     </Button>
@@ -175,7 +175,7 @@ export function PlanSelection({
       open={enterpriseOpen}
       onOpenChange={setEnterpriseOpen}
       className="mt-8 rounded-xl border border-border bg-card/50 overflow-hidden"
-    >
+>
       <div className="px-6 py-5">
         <div className="flex items-start justify-between gap-6">
           <div className="min-w-0 flex-1 space-y-2">
@@ -203,7 +203,7 @@ export function PlanSelection({
         <button
           type="button"
           className="flex w-full cursor-pointer items-center justify-between gap-3 border-t border-border px-6 py-3 text-[13px] text-muted-foreground transition-colors hover:bg-muted/30 hover:text-foreground"
-        >
+>
           <span>
             {enterpriseOpen ? 'Show less' : 'Learn more'}
           </span>
@@ -229,7 +229,7 @@ export function PlanSelection({
                 <Badge
                   variant="info"
                   className="text-[10px] font-medium px-2 py-0.5 h-5 shrink-0"
-                >
+>
                   Current plan
                 </Badge>
               )}
@@ -263,7 +263,7 @@ export function PlanSelection({
         value={selectedPlan || undefined}
         onValueChange={(value) => onPlanSelect(value as BillingPlanTier)}
         className={planListClassName}
-      >
+>
         {availablePlans.map(([planTier, planData]) => {
             // Use plan name from API response, fallback to derived name
             const planName = resolveOrganizationPlanDisplayLabel({
@@ -316,7 +316,7 @@ export function PlanSelection({
                     ? 'cursor-not-allowed opacity-50'
                     : 'cursor-pointer',
                 )}
-              >
+>
                 <RadioGroupItem
                   value={planTier}
                   id={planTier}
@@ -330,7 +330,7 @@ export function PlanSelection({
                     'pointer-events-none',
                     disabled ? 'cursor-not-allowed' : 'cursor-pointer',
                   )}
-                >
+>
                   <div className={planCardContentClassName}>
                     <div className={planTitleRowClassName}>
                       <span className="text-[15px] font-semibold text-foreground">
@@ -340,7 +340,7 @@ export function PlanSelection({
                         <Badge
                           variant="success"
                           className="text-[10px] font-medium px-2 py-0.5 h-5 shrink-0"
-                        >
+>
                           Recommended
                         </Badge>
                       )}
@@ -348,7 +348,7 @@ export function PlanSelection({
                         <Badge
                           variant="info"
                           className="text-[10px] font-medium px-2 py-0.5 h-5 shrink-0"
-                        >
+>
                           Current plan
                         </Badge>
                       )}
@@ -383,12 +383,12 @@ export function PlanSelection({
             size="sm"
             className="text-[13px] text-muted-foreground"
             asChild
-          >
+>
             <a
               href="https://appwrite.io/pricing"
               target="_blank"
               rel="noopener noreferrer"
-            >
+>
               View detailed pricing
               <ExternalLink className="ml-1.5 h-3.5 w-3.5" />
             </a>

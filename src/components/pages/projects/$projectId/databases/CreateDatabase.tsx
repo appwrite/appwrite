@@ -169,12 +169,7 @@ export function CreateDatabase({
                 </AlertTitle>
                 <AlertDescription className="text-[12px] text-amber-600/80 dark:text-amber-400/80">
                   This database will not be backed up on your current plan.{' '}
-                  <UpgradePlanLink
-                    orgId={orgId}
-                    analyticsSurface="create_database_dialog"
-                    data-analytics-resource="database"
-                  />{' '}
-                  to enable automated backups.
+                  <UpgradePlanLink orgId={orgId} /> to enable automated backups.
                 </AlertDescription>
               </Alert>
             )}

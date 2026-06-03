@@ -110,8 +110,6 @@ export function DatabaseSelector({
         <PopoverTrigger asChild>
           <Button
             variant="outline"
-            data-analytics-id="database_selector_open"
-            data-analytics-surface="database_selector"
             className={cn(
               'h-8 min-w-0 flex-1 justify-between gap-1.5 text-[13px] font-normal',
               !value && 'text-muted-foreground',
@@ -128,7 +126,6 @@ export function DatabaseSelector({
         <PopoverContent
           className="min-w-[var(--radix-popover-trigger-width)] max-w-[320px] p-0"
           align="start"
-          data-analytics-surface="database_selector"
         >
           <Command shouldFilter={false}>
             <div className="relative">
@@ -136,8 +133,6 @@ export function DatabaseSelector({
                 placeholder="Search databases..."
                 value={search}
                 onValueChange={setSearch}
-                data-analytics-id="database_selector_search"
-                data-analytics-surface="database_selector"
                 className={cn('h-9', isFetching && 'pr-8')}
               />
               <div
@@ -165,8 +160,6 @@ export function DatabaseSelector({
                       onSelect(db.$id)
                       setOpen(false)
                     }}
-                    data-analytics-id="database_selector_select"
-                    data-analytics-surface="database_selector"
                     className="flex w-full cursor-pointer items-center gap-1.5 rounded-sm px-2 py-1.5 text-left text-[13px] outline-none transition-colors hover:bg-accent hover:text-accent-foreground"
                   >
                     <Database className="h-4 w-4 shrink-0 text-muted-foreground" />
@@ -193,7 +186,9 @@ export function DatabaseSelector({
               </Button>
             </span>
           </TooltipTrigger>
-          <TooltipContent side="bottom">{triggerDisabledTooltip}</TooltipContent>
+          <TooltipContent side="bottom">
+            {triggerDisabledTooltip}
+          </TooltipContent>
         </Tooltip>
       ) : (
         <DropdownMenu>
@@ -204,17 +199,11 @@ export function DatabaseSelector({
               className="h-8 w-8 shrink-0"
               aria-label="Create database or table"
               aria-haspopup="menu"
-              data-analytics-id="database_selector_create_menu_open"
-              data-analytics-surface="database_selector"
             >
               <Plus className="h-4 w-4" />
             </Button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent
-            align="end"
-            className="w-52"
-            data-analytics-surface="database_selector"
-          >
+          <DropdownMenuContent align="end" className="w-52">
             <DropdownMenuItem
               disabled={createDatabaseDisabled}
               title={
@@ -224,8 +213,6 @@ export function DatabaseSelector({
               }
               className="gap-2 text-[13px]"
               onSelect={() => onCreateDatabaseClick()}
-              data-analytics-id="database_selector_create_database"
-              data-analytics-surface="database_selector"
             >
               <Database className="h-4 w-4 shrink-0 text-muted-foreground" />
               Create database
@@ -237,8 +224,6 @@ export function DatabaseSelector({
               }
               className="gap-2 text-[13px]"
               onSelect={() => onCreateTableClick()}
-              data-analytics-id="database_selector_create_table"
-              data-analytics-surface="database_selector"
             >
               <Table2 className="h-4 w-4 shrink-0 text-muted-foreground" />
               {createTableMenuLabel}

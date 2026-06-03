@@ -258,12 +258,7 @@ export function TransferDomainInWizard({
           {isDomainLimitReached ? (
             <p className="mt-2 text-[12px] text-amber-600 dark:text-amber-400">
               Your current plan includes up to {domainsLimit} domains.{' '}
-              <UpgradePlanLink
-                orgId={orgId}
-                analyticsSurface="transfer_domain_wizard"
-                data-analytics-resource="domain"
-              />{' '}
-              to transfer another domain.
+              <UpgradePlanLink orgId={orgId} /> to transfer another domain.
             </p>
           ) : null}
         </div>

@@ -126,7 +126,7 @@ export function BucketSecurity() {
                 target="_blank"
                 rel="noopener noreferrer"
                 className="text-primary hover:underline"
-              >
+>
                 Learn more
               </a>
               .
@@ -150,7 +150,7 @@ export function BucketSecurity() {
                 updateBucketPermissionsMutation.isPending
               }
               onClick={handleBucketPermissionsUpdate}
-            >
+>
               Update
             </Button>
           </div>
@@ -176,7 +176,7 @@ export function BucketSecurity() {
                 <Label
                   htmlFor="file-security"
                   className="text-[13px] text-foreground"
-                >
+>
                   File level security
                 </Label>
               </div>
@@ -212,7 +212,7 @@ export function BucketSecurity() {
                   updateFileSecurityMutation.mutate(fileSecurity)
                 }
               }}
-            >
+>
               Update
             </Button>
           </div>

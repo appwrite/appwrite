@@ -106,58 +106,24 @@ export function UserContextMenu({
     <>
       <ContextMenu>
         <ContextMenuTrigger asChild>{children}</ContextMenuTrigger>
-        <ContextMenuContent
-          className="w-56"
-          data-analytics-surface="user_context_menu"
-          data-analytics-resource="user"
-        >
-          <ContextMenuItem
-            onSelect={() => navigateToTab('overview')}
-            data-analytics-id="user_context_tab"
-            data-analytics-surface="user_context_menu"
-            data-analytics-resource="user"
-            data-analytics-prop-tab="overview"
-          >
+        <ContextMenuContent className="w-56">
+          <ContextMenuItem onSelect={() => navigateToTab('overview')}>
             <ContextMenuIcon icon={LayoutList} />
             Overview
           </ContextMenuItem>
-          <ContextMenuItem
-            onSelect={() => navigateToTab('memberships')}
-            data-analytics-id="user_context_tab"
-            data-analytics-surface="user_context_menu"
-            data-analytics-resource="user"
-            data-analytics-prop-tab="memberships"
-          >
+          <ContextMenuItem onSelect={() => navigateToTab('memberships')}>
             <ContextMenuIcon icon={Users} />
             Memberships
           </ContextMenuItem>
-          <ContextMenuItem
-            onSelect={() => navigateToTab('identities')}
-            data-analytics-id="user_context_tab"
-            data-analytics-surface="user_context_menu"
-            data-analytics-resource="user"
-            data-analytics-prop-tab="identities"
-          >
+          <ContextMenuItem onSelect={() => navigateToTab('identities')}>
             <ContextMenuIcon icon={Shield} />
             Identities
           </ContextMenuItem>
-          <ContextMenuItem
-            onSelect={() => navigateToTab('targets')}
-            data-analytics-id="user_context_tab"
-            data-analytics-surface="user_context_menu"
-            data-analytics-resource="user"
-            data-analytics-prop-tab="targets"
-          >
+          <ContextMenuItem onSelect={() => navigateToTab('targets')}>
             <ContextMenuIcon icon={Target} />
             Targets
           </ContextMenuItem>
-          <ContextMenuItem
-            onSelect={() => navigateToTab('sessions')}
-            data-analytics-id="user_context_tab"
-            data-analytics-surface="user_context_menu"
-            data-analytics-resource="user"
-            data-analytics-prop-tab="sessions"
-          >
+          <ContextMenuItem onSelect={() => navigateToTab('sessions')}>
             <ContextMenuIcon icon={Activity} />
             Sessions
           </ContextMenuItem>
@@ -168,21 +134,13 @@ export function UserContextMenu({
               Copy
             </ContextMenuSubTrigger>
             <ContextMenuSubContent>
-              <ContextMenuItem
-                onSelect={() => copyToClipboard('ID', user.$id)}
-                data-analytics-id="user_context_copy_id"
-                data-analytics-surface="user_context_menu"
-                data-analytics-resource="user"
-              >
+              <ContextMenuItem onSelect={() => copyToClipboard('ID', user.$id)}>
                 <ContextMenuIcon icon={Copy} />
                 Copy ID
               </ContextMenuItem>
               {hasName && (
                 <ContextMenuItem
                   onSelect={() => copyToClipboard('Name', user.name)}
-                  data-analytics-id="user_context_copy_name"
-                  data-analytics-surface="user_context_menu"
-                  data-analytics-resource="user"
                 >
                   <ContextMenuIcon icon={User2} />
                   Copy name
@@ -190,22 +148,14 @@ export function UserContextMenu({
               )}
               <ContextMenuItem
                 onSelect={() => copyToClipboard('Link', userHref)}
-                data-analytics-id="user_context_copy_link"
-                data-analytics-surface="user_context_menu"
-                data-analytics-resource="user"
               >
                 <ContextMenuIcon icon={Link2} />
                 Copy link
               </ContextMenuItem>
               <ContextMenuItem
                 onSelect={() =>
-                  void copyResourceAsJson(() =>
-                    fetchUser(projectId, user.$id),
-                  )
+                  void copyResourceAsJson(() => fetchUser(projectId, user.$id))
                 }
-                data-analytics-id="user_context_copy_json"
-                data-analytics-surface="user_context_menu"
-                data-analytics-resource="user"
               >
                 <ContextMenuIcon icon={FileJson} />
                 Copy as JSON
@@ -213,31 +163,16 @@ export function UserContextMenu({
             </ContextMenuSubContent>
           </ContextMenuSub>
           <ContextMenuSeparator />
-          <ContextMenuItem
-            onSelect={() => openInNewTab(userHref)}
-            data-analytics-id="user_context_open_new_tab"
-            data-analytics-surface="user_context_menu"
-            data-analytics-resource="user"
-          >
+          <ContextMenuItem onSelect={() => openInNewTab(userHref)}>
             <ContextMenuIcon icon={ExternalLink} />
             Open in new tab
           </ContextMenuItem>
-          <ContextMenuItem
-            onSelect={() => openInNewWindow(userHref)}
-            data-analytics-id="user_context_open_new_window"
-            data-analytics-surface="user_context_menu"
-            data-analytics-resource="user"
-          >
+          <ContextMenuItem onSelect={() => openInNewWindow(userHref)}>
             <ContextMenuIcon icon={Square} />
             Open in new window
           </ContextMenuItem>
           <ContextMenuSeparator />
-          <ContextMenuItem
-            onSelect={handleDeleteClick}
-            data-analytics-id="user_context_delete_open"
-            data-analytics-surface="user_context_menu"
-            data-analytics-resource="user"
-          >
+          <ContextMenuItem onSelect={handleDeleteClick}>
             <ContextMenuIcon icon={Trash2} />
             Delete
           </ContextMenuItem>
@@ -245,11 +180,7 @@ export function UserContextMenu({
       </ContextMenu>
 
       <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
-        <DialogContent
-          className="sm:max-w-md p-0"
-          data-analytics-surface="user_delete_dialog"
-          data-analytics-resource="user"
-        >
+        <DialogContent className="sm:max-w-md p-0">
           <DialogHeader className="px-6 pt-6 pb-4 text-left">
             <DialogTitle>Delete user</DialogTitle>
             <DialogDescription className="text-[13px] mt-2">
@@ -262,9 +193,6 @@ export function UserContextMenu({
               variant="outline"
               onClick={() => setDeleteDialogOpen(false)}
               disabled={deleteMutation.isPending}
-              data-analytics-id="user_delete_cancel"
-              data-analytics-surface="user_delete_dialog"
-              data-analytics-resource="user"
             >
               Cancel
             </Button>
@@ -272,9 +200,6 @@ export function UserContextMenu({
               variant="destructive"
               onClick={() => deleteMutation.mutate()}
               disabled={deleteMutation.isPending}
-              data-analytics-id="user_delete_confirm"
-              data-analytics-surface="user_delete_dialog"
-              data-analytics-resource="user"
             >
               Delete
             </Button>

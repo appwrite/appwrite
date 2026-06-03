@@ -1,7 +1,10 @@
 import { useState, useEffect, useMemo, useCallback, useRef } from 'react'
 import { cn } from '@/lib/utils'
 import { useIsMobile } from '@/hooks/use-mobile'
-import { useKeyboardShortcut, usePlatform } from '@/hooks/use-keyboard-shortcuts'
+import {
+  useKeyboardShortcut,
+  usePlatform,
+} from '@/hooks/use-keyboard-shortcuts'
 import { formatDisplayKeys } from '@/lib/keyboard-shortcuts/display'
 import {
   KeyboardShortcutsView,
@@ -227,7 +230,10 @@ function toRegistryScope(ctx: CommandCenterContext): CommandScope {
   return 'project'
 }
 
-function navigateToHref(navigate: ReturnType<typeof useNavigate>, href: string) {
+function navigateToHref(
+  navigate: ReturnType<typeof useNavigate>,
+  href: string,
+) {
   // Use TanStack Router's navigate when possible to keep history nice. We pass
   // raw paths; hash-only changes still trigger `hashchange` for our scroll hook.
   navigate({ to: href as never, replace: false }).catch(() => {
@@ -273,7 +279,10 @@ export function CommandCenter({
   const access = rbacAccess ?? FULL_ACCESS
 
   // Build the runtime CommandContext used by registry entries.
-  const closeCommandCenter = useCallback(() => onOpenChange(false), [onOpenChange])
+  const closeCommandCenter = useCallback(
+    () => onOpenChange(false),
+    [onOpenChange],
+  )
   const openShortcutsPage = useCallback(
     () => setPages((p) => [...p, 'shortcuts']),
     [],
@@ -340,7 +349,8 @@ export function CommandCenter({
 
   // Load entries from registry, lift them into runtime commands.
   const registryCommands: RuntimeCommand[] = useMemo(
-    () => getCommandsForContext(ctx).map((entry) => toRuntimeCommand(entry, ctx)),
+    () =>
+      getCommandsForContext(ctx).map((entry) => toRuntimeCommand(entry, ctx)),
     [ctx],
   )
 
@@ -438,7 +448,8 @@ export function CommandCenter({
         group: 'Recent',
         select: () => {
           onOpenChange(false)
-          if (projectId) navigateToHref(navigate, `/projects/${projectId}/databases`)
+          if (projectId)
+            navigateToHref(navigate, `/projects/${projectId}/databases`)
         },
       },
     ]
@@ -461,7 +472,10 @@ export function CommandCenter({
 
   const { databases: projectDatabases, isLoading: databasesLoading } =
     useProjectDatabases(
-      isProjectContext && projectId && shouldFetch && searchScope === 'databases'
+      isProjectContext &&
+        projectId &&
+        shouldFetch &&
+        searchScope === 'databases'
         ? projectId
         : null,
       0,
@@ -555,9 +569,11 @@ export function CommandCenter({
     const kinds = new Set<ProjectResourceKind>()
     if (!isProjectContext) return kinds
 
-    if (canSeeProjectNavItem(access, features, 'databases')) kinds.add('database')
+    if (canSeeProjectNavItem(access, features, 'databases'))
+      kinds.add('database')
     if (canSeeProjectNavItem(access, features, 'storage')) kinds.add('bucket')
-    if (canSeeProjectNavItem(access, features, 'functions')) kinds.add('function')
+    if (canSeeProjectNavItem(access, features, 'functions'))
+      kinds.add('function')
     if (canSeeProjectNavItem(access, features, 'sites')) kinds.add('site')
     if (canSeeProjectNavItem(access, features, 'messaging')) {
       kinds.add('message')
@@ -598,7 +614,8 @@ export function CommandCenter({
     unifiedResourceHits,
   ])
   const stableUnifiedResourceHits =
-    unifiedResourceFetching && displayedUnifiedResourceHitsRef.current.length > 0
+    unifiedResourceFetching &&
+    displayedUnifiedResourceHitsRef.current.length > 0
       ? displayedUnifiedResourceHitsRef.current
       : unifiedResourceHits
 
@@ -690,7 +707,8 @@ export function CommandCenter({
           icon: Users,
           kind: 'action',
           select: () => {
-            if (onNavigateToResource) onNavigateToResource('auth/users', user.$id)
+            if (onNavigateToResource)
+              onNavigateToResource('auth/users', user.$id)
             else onNavigate?.('auth')
             onOpenChange(false)
           },
@@ -706,7 +724,8 @@ export function CommandCenter({
           icon: Building2,
           kind: 'action',
           select: () => {
-            if (onNavigateToResource) onNavigateToResource('auth/teams', team.id)
+            if (onNavigateToResource)
+              onNavigateToResource('auth/teams', team.id)
             else onNavigate?.('auth')
             onOpenChange(false)
           },
@@ -722,7 +741,8 @@ export function CommandCenter({
           icon: Folder,
           kind: 'action',
           select: () => {
-            if (onNavigateToResource) onNavigateToResource('storage', bucket.$id)
+            if (onNavigateToResource)
+              onNavigateToResource('storage', bucket.$id)
             else onNavigate?.('storage')
             onOpenChange(false)
           },
@@ -940,7 +960,10 @@ export function CommandCenter({
       if (!href || !orgId) return cmd
       const prefix = `/organizations/${orgId}`
       if (!href.startsWith(prefix)) return cmd
-      const tail = href.slice(prefix.length).replace(/^\//, '').replace(/\/$/, '')
+      const tail = href
+        .slice(prefix.length)
+        .replace(/^\//, '')
+        .replace(/\/$/, '')
       // Only the top-level org tabs are forwarded to the legacy callback.
       // Settings sub-tabs and other deep links route directly so we don't
       // depend on the host knowing every key.
@@ -959,7 +982,8 @@ export function CommandCenter({
   )
 
   const enrichedRegistryCommands = useMemo(
-    () => registryCommands.map(wrapOrgLegacyNavigate).map(wrapWithLegacyNavigate),
+    () =>
+      registryCommands.map(wrapOrgLegacyNavigate).map(wrapWithLegacyNavigate),
     [registryCommands, wrapWithLegacyNavigate, wrapOrgLegacyNavigate],
   )
 
@@ -986,7 +1010,11 @@ export function CommandCenter({
   // landing list with deep-link variants of pages already visible under
   // Navigation. They remain reachable via the search box.
   const defaultGroups = useMemo(() => {
-    const sections: Array<{ id: string; label: string; commands: RuntimeCommand[] }> = []
+    const sections: Array<{
+      id: string
+      label: string
+      commands: RuntimeCommand[]
+    }> = []
 
     if (recentCommands.length > 0) {
       sections.push({ id: 'recent', label: 'Recent', commands: recentCommands })
@@ -1113,7 +1141,13 @@ export function CommandCenter({
         providers: 'Providers',
         projects: 'Projects',
       }
-      return [{ id: 'resources', label: labels[searchScope], commands: resourceCommands }]
+      return [
+        {
+          id: 'resources',
+          label: labels[searchScope],
+          commands: resourceCommands,
+        },
+      ]
     }
 
     if (!search.trim()) {
@@ -1259,7 +1293,6 @@ export function CommandCenter({
         className={commandCenterDialogClass(isMobile, currentPage)}
         showCloseButton={false}
         aria-describedby={undefined}
-        data-analytics-surface="command_center"
         onEscapeKeyDown={(e) => {
           if (handleEscape(e)) return
         }}
@@ -1284,8 +1317,6 @@ export function CommandCenter({
             <div className="flex items-center border-b border-border [&_[data-slot=command-input-wrapper]]:h-14 [&_[data-slot=command-input-wrapper]]:border-transparent">
               <button
                 onClick={() => setPages([])}
-                data-analytics-id="command_center_back"
-                data-analytics-surface="command_center"
                 className="ml-3 flex h-6 items-center gap-1 rounded bg-accent px-2 text-[11px] font-medium text-muted-foreground hover:bg-accent/80 hover:text-foreground"
               >
                 ← Back
@@ -1294,22 +1325,20 @@ export function CommandCenter({
                 placeholder="Select function to execute..."
                 value={search}
                 onValueChange={setSearch}
-                data-analytics-id="command_center_function_search"
-                data-analytics-surface="command_center"
                 className="h-14 border-0 text-foreground placeholder:text-muted-foreground"
               />
               {isMobile && (
                 <button
                   onClick={() => onOpenChange(false)}
-                  data-analytics-id="command_center_close"
-                  data-analytics-surface="command_center"
                   className="mr-3 flex h-8 w-8 items-center justify-center rounded-md text-muted-foreground hover:bg-accent hover:text-foreground"
                 >
                   <X className="h-5 w-5" />
                 </button>
               )}
             </div>
-            <CommandList className={cn('p-2', commandCenterListHeightClass(isMobile))}>
+            <CommandList
+              className={cn('p-2', commandCenterListHeightClass(isMobile))}
+            >
               <CommandEmpty className="py-6 text-center text-[13px] text-muted-foreground">
                 No functions found.
               </CommandEmpty>
@@ -1322,9 +1351,6 @@ export function CommandCenter({
                     <CommandItem
                       key={fn.$id}
                       value={fn.name}
-                      data-analytics-id="command_center_function_selected"
-                      data-analytics-surface="command_center"
-                      data-analytics-resource="function"
                       onSelect={() => {
                         onOpenChange(false)
                       }}
@@ -1376,8 +1402,6 @@ export function CommandCenter({
                       setSearchScope(null)
                       setSearch('')
                     }}
-                    data-analytics-id="command_center_scope_clear"
-                    data-analytics-surface="command_center"
                     className="ml-0.5 rounded-sm hover:bg-accent/80 p-0.5 -mr-0.5"
                     aria-label="Remove scope"
                   >
@@ -1391,32 +1415,30 @@ export function CommandCenter({
                 value={search}
                 onValueChange={setSearch}
                 autoFocus
-                data-analytics-id="command_center_search"
-                data-analytics-surface="command_center"
-                data-analytics-prop-context={context}
                 className="h-14 border-0 text-[14px] text-foreground placeholder:text-muted-foreground"
               />
               {isMobile && (
                 <button
                   onClick={() => onOpenChange(false)}
-                  data-analytics-id="command_center_close"
-                  data-analytics-surface="command_center"
                   className="shrink-0 flex h-8 w-8 items-center justify-center rounded-md text-muted-foreground hover:bg-accent hover:text-foreground"
                 >
                   <X className="h-5 w-5" />
                 </button>
               )}
             </div>
-            <CommandList className={cn('p-2', commandCenterListHeightClass(isMobile))}>
-              {nonEmptyGroups.length === 0 && (search.trim() || searchScope) && (
-                <div className="py-6 text-center text-[13px] text-muted-foreground">
-                  {searchScope && isScopeLoading
-                    ? `Searching ${searchScope}…`
-                    : shouldRunUnifiedResourceSearch && unifiedResourceLoading
-                      ? 'Searching resources…'
-                      : 'No results found.'}
-                </div>
-              )}
+            <CommandList
+              className={cn('p-2', commandCenterListHeightClass(isMobile))}
+            >
+              {nonEmptyGroups.length === 0 &&
+                (search.trim() || searchScope) && (
+                  <div className="py-6 text-center text-[13px] text-muted-foreground">
+                    {searchScope && isScopeLoading
+                      ? `Searching ${searchScope}…`
+                      : shouldRunUnifiedResourceSearch && unifiedResourceLoading
+                        ? 'Searching resources…'
+                        : 'No results found.'}
+                  </div>
+                )}
 
               {nonEmptyGroups.map((group, groupIndex) => (
                 <div key={group.id}>
@@ -1433,11 +1455,6 @@ export function CommandCenter({
                         <CommandItem
                           key={cmd.id}
                           value={`${cmd.id}-${cmd.label}`}
-                          data-analytics-id="command_center_command"
-                          data-analytics-surface="command_center"
-                          data-analytics-prop-command={cmd.id}
-                          data-analytics-prop-kind={cmd.kind}
-                          data-analytics-prop-group={group.id}
                           onSelect={cmd.select}
                           disabled={cmd.disabled}
                           className="group flex cursor-pointer items-center gap-3 rounded-md px-2 py-2 text-muted-foreground data-[selected=true]:bg-accent data-[selected=true]:text-foreground"
@@ -1458,7 +1475,10 @@ export function CommandCenter({
                           {cmd.shortcut && !isMobile && (
                             <ShortcutKeyBadges
                               keys={formatDisplayKeys(cmd.shortcut, isMac)}
-                              isSequential={!cmd.shortcut.includes('+') && cmd.shortcut.split(/\s+/).length > 1}
+                              isSequential={
+                                !cmd.shortcut.includes('+') &&
+                                cmd.shortcut.split(/\s+/).length > 1
+                              }
                             />
                           )}
                           {cmd.isResourceSearch && (
@@ -1506,8 +1526,6 @@ export function CommandCenter({
                 </div>
                 <button
                   onClick={() => setPages([...pages, 'shortcuts'])}
-                  data-analytics-id="command_center_shortcuts"
-                  data-analytics-surface="command_center"
                   className="flex items-center gap-1 text-[11px] text-muted-foreground hover:text-foreground"
                 >
                   <Keyboard className="h-3 w-3" />
@@ -1573,7 +1591,10 @@ function projectResourceHitToRuntimeCommand(
   }
 }
 
-function toRuntimeCommand(entry: CommandEntry, ctx: CommandContext): RuntimeCommand {
+function toRuntimeCommand(
+  entry: CommandEntry,
+  ctx: CommandContext,
+): RuntimeCommand {
   const disabled = entry.disabled?.(ctx) ?? false
   const reason = disabled ? entry.disabledReason?.(ctx) : undefined
   const href = entry.to?.(ctx) ?? null

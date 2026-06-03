@@ -38,8 +38,6 @@ export const RowActionsMenuTrigger = forwardRef<
       type="button"
       variant={variant}
       size={size}
-      data-analytics-id="row_actions_open"
-      data-analytics-surface="row_actions"
       className={cn(
         compact
           ? rowActionsMenuTriggerCompactClassName

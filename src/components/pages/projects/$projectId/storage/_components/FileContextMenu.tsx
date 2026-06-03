@@ -131,11 +131,7 @@ function FileDeleteDialog({
 }) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent
-        className="sm:max-w-md p-0"
-        data-analytics-surface="file_delete_dialog"
-        data-analytics-resource="file"
-      >
+      <DialogContent className="sm:max-w-md p-0">
         <DialogHeader className="px-6 pt-6 pb-4 text-left">
           <DialogTitle>Delete file</DialogTitle>
           <DialogDescription className="text-[13px] mt-2">
@@ -148,9 +144,6 @@ function FileDeleteDialog({
             variant="outline"
             onClick={() => onOpenChange(false)}
             disabled={deleteMutation.isPending}
-            data-analytics-id="file_delete_cancel"
-            data-analytics-surface="file_delete_dialog"
-            data-analytics-resource="file"
           >
             Cancel
           </Button>
@@ -158,9 +151,6 @@ function FileDeleteDialog({
             variant="destructive"
             onClick={() => deleteMutation.mutate()}
             disabled={deleteMutation.isPending}
-            data-analytics-id="file_delete_confirm"
-            data-analytics-surface="file_delete_dialog"
-            data-analytics-resource="file"
           >
             Delete
           </Button>
@@ -197,38 +187,16 @@ export function FileContextMenu({
     <>
       <ContextMenu>
         <ContextMenuTrigger asChild>{children}</ContextMenuTrigger>
-        <ContextMenuContent
-          className="w-56"
-          data-analytics-surface="file_context_menu"
-          data-analytics-resource="file"
-        >
-          <ContextMenuItem
-            onSelect={() => navigateToTab('overview')}
-            data-analytics-id="file_context_tab"
-            data-analytics-surface="file_context_menu"
-            data-analytics-resource="file"
-            data-analytics-prop-tab="overview"
-          >
+        <ContextMenuContent className="w-56">
+          <ContextMenuItem onSelect={() => navigateToTab('overview')}>
             <ContextMenuIcon icon={LayoutList} />
             Overview
           </ContextMenuItem>
-          <ContextMenuItem
-            onSelect={() => navigateToTab('permissions')}
-            data-analytics-id="file_context_tab"
-            data-analytics-surface="file_context_menu"
-            data-analytics-resource="file"
-            data-analytics-prop-tab="permissions"
-          >
+          <ContextMenuItem onSelect={() => navigateToTab('permissions')}>
             <ContextMenuIcon icon={Shield} />
             Permissions
           </ContextMenuItem>
-          <ContextMenuItem
-            onSelect={() => navigateToTab('tokens')}
-            data-analytics-id="file_context_tab"
-            data-analytics-surface="file_context_menu"
-            data-analytics-resource="file"
-            data-analytics-prop-tab="tokens"
-          >
+          <ContextMenuItem onSelect={() => navigateToTab('tokens')}>
             <ContextMenuIcon icon={KeyRound} />
             Tokens
           </ContextMenuItem>
@@ -239,21 +207,13 @@ export function FileContextMenu({
               Copy
             </ContextMenuSubTrigger>
             <ContextMenuSubContent>
-              <ContextMenuItem
-                onSelect={() => copyToClipboard('ID', file.id)}
-                data-analytics-id="file_context_copy_id"
-                data-analytics-surface="file_context_menu"
-                data-analytics-resource="file"
-              >
+              <ContextMenuItem onSelect={() => copyToClipboard('ID', file.id)}>
                 <ContextMenuIcon icon={Copy} />
                 Copy ID
               </ContextMenuItem>
               {hasName && (
                 <ContextMenuItem
                   onSelect={() => copyToClipboard('Name', file.name)}
-                  data-analytics-id="file_context_copy_name"
-                  data-analytics-surface="file_context_menu"
-                  data-analytics-resource="file"
                 >
                   <ContextMenuIcon icon={Copy} />
                   Copy name
@@ -261,9 +221,6 @@ export function FileContextMenu({
               )}
               <ContextMenuItem
                 onSelect={() => copyToClipboard('Link', fileHref)}
-                data-analytics-id="file_context_copy_link"
-                data-analytics-surface="file_context_menu"
-                data-analytics-resource="file"
               >
                 <ContextMenuIcon icon={Link2} />
                 Copy link
@@ -274,9 +231,6 @@ export function FileContextMenu({
                     fetchFile(projectId, bucketId, file.id),
                   )
                 }
-                data-analytics-id="file_context_copy_json"
-                data-analytics-surface="file_context_menu"
-                data-analytics-resource="file"
               >
                 <ContextMenuIcon icon={FileJson} />
                 Copy as JSON
@@ -284,31 +238,16 @@ export function FileContextMenu({
             </ContextMenuSubContent>
           </ContextMenuSub>
           <ContextMenuSeparator />
-          <ContextMenuItem
-            onSelect={() => openInNewTab(fileHref)}
-            data-analytics-id="file_context_open_new_tab"
-            data-analytics-surface="file_context_menu"
-            data-analytics-resource="file"
-          >
+          <ContextMenuItem onSelect={() => openInNewTab(fileHref)}>
             <ContextMenuIcon icon={ExternalLink} />
             Open in new tab
           </ContextMenuItem>
-          <ContextMenuItem
-            onSelect={() => openInNewWindow(fileHref)}
-            data-analytics-id="file_context_open_new_window"
-            data-analytics-surface="file_context_menu"
-            data-analytics-resource="file"
-          >
+          <ContextMenuItem onSelect={() => openInNewWindow(fileHref)}>
             <ContextMenuIcon icon={Square} />
             Open in new window
           </ContextMenuItem>
           <ContextMenuSeparator />
-          <ContextMenuItem
-            onSelect={handleDeleteClick}
-            data-analytics-id="file_context_delete_open"
-            data-analytics-surface="file_context_menu"
-            data-analytics-resource="file"
-          >
+          <ContextMenuItem onSelect={handleDeleteClick}>
             <ContextMenuIcon icon={Trash2} />
             Delete
           </ContextMenuItem>
@@ -356,21 +295,12 @@ export function FileRowActionsMenu({
         <DropdownMenuTrigger asChild>
           <RowActionsMenuTrigger onClick={(e) => e.stopPropagation()} />
         </DropdownMenuTrigger>
-        <DropdownMenuContent
-          align="end"
-          className="w-56"
-          data-analytics-surface="file_row_actions"
-          data-analytics-resource="file"
-        >
+        <DropdownMenuContent align="end" className="w-56">
           <DropdownMenuItem
             onClick={(e) => {
               e.stopPropagation()
               navigateToTab('overview')
             }}
-            data-analytics-id="file_row_action_tab"
-            data-analytics-surface="file_row_actions"
-            data-analytics-resource="file"
-            data-analytics-prop-tab="overview"
           >
             <MenuItemContent icon={LayoutList}>Overview</MenuItemContent>
           </DropdownMenuItem>
@@ -379,10 +309,6 @@ export function FileRowActionsMenu({
               e.stopPropagation()
               navigateToTab('permissions')
             }}
-            data-analytics-id="file_row_action_tab"
-            data-analytics-surface="file_row_actions"
-            data-analytics-resource="file"
-            data-analytics-prop-tab="permissions"
           >
             <MenuItemContent icon={Shield}>Permissions</MenuItemContent>
           </DropdownMenuItem>
@@ -391,10 +317,6 @@ export function FileRowActionsMenu({
               e.stopPropagation()
               navigateToTab('tokens')
             }}
-            data-analytics-id="file_row_action_tab"
-            data-analytics-surface="file_row_actions"
-            data-analytics-resource="file"
-            data-analytics-prop-tab="tokens"
           >
             <MenuItemContent icon={KeyRound}>Tokens</MenuItemContent>
           </DropdownMenuItem>
@@ -409,9 +331,6 @@ export function FileRowActionsMenu({
                   e.stopPropagation()
                   copyToClipboard('ID', file.id)
                 }}
-                data-analytics-id="file_row_action_copy_id"
-                data-analytics-surface="file_row_actions"
-                data-analytics-resource="file"
               >
                 <MenuItemContent icon={Copy}>Copy ID</MenuItemContent>
               </DropdownMenuItem>
@@ -421,9 +340,6 @@ export function FileRowActionsMenu({
                     e.stopPropagation()
                     copyToClipboard('Name', file.name)
                   }}
-                  data-analytics-id="file_row_action_copy_name"
-                  data-analytics-surface="file_row_actions"
-                  data-analytics-resource="file"
                 >
                   <MenuItemContent icon={Copy}>Copy name</MenuItemContent>
                 </DropdownMenuItem>
@@ -433,9 +349,6 @@ export function FileRowActionsMenu({
                   e.stopPropagation()
                   copyToClipboard('Link', fileHref)
                 }}
-                data-analytics-id="file_row_action_copy_link"
-                data-analytics-surface="file_row_actions"
-                data-analytics-resource="file"
               >
                 <MenuItemContent icon={Link2}>Copy link</MenuItemContent>
               </DropdownMenuItem>
@@ -446,9 +359,6 @@ export function FileRowActionsMenu({
                     fetchFile(projectId, bucketId, file.id),
                   )
                 }}
-                data-analytics-id="file_row_action_copy_json"
-                data-analytics-surface="file_row_actions"
-                data-analytics-resource="file"
               >
                 <MenuItemContent icon={FileJson}>Copy as JSON</MenuItemContent>
               </DropdownMenuItem>
@@ -460,20 +370,16 @@ export function FileRowActionsMenu({
               e.stopPropagation()
               openInNewTab(fileHref)
             }}
-            data-analytics-id="file_row_action_open_new_tab"
-            data-analytics-surface="file_row_actions"
-            data-analytics-resource="file"
           >
-            <MenuItemContent icon={ExternalLink}>Open in new tab</MenuItemContent>
+            <MenuItemContent icon={ExternalLink}>
+              Open in new tab
+            </MenuItemContent>
           </DropdownMenuItem>
           <DropdownMenuItem
             onClick={(e) => {
               e.stopPropagation()
               openInNewWindow(fileHref)
             }}
-            data-analytics-id="file_row_action_open_new_window"
-            data-analytics-surface="file_row_actions"
-            data-analytics-resource="file"
           >
             <MenuItemContent icon={Square}>Open in new window</MenuItemContent>
           </DropdownMenuItem>
@@ -483,9 +389,6 @@ export function FileRowActionsMenu({
               e.stopPropagation()
               handleDeleteClick()
             }}
-            data-analytics-id="file_row_action_delete_open"
-            data-analytics-surface="file_row_actions"
-            data-analytics-resource="file"
           >
             <MenuItemContent icon={Trash2}>Delete</MenuItemContent>
           </DropdownMenuItem>

@@ -119,3 +119,8 @@ export function isServerlessDatabaseMonitoring(
 export function getSpecOptionById(specId: string): SpecOption | undefined {
   return TABLE_DB_SPEC_OPTIONS.find((s) => s.id === specId)
 }
+
+/** True when the spec list includes tiers that are not yet selectable. */
+export function hasLockedDatabaseSpecifications(specs: SpecOption[]): boolean {
+  return specs.some((s) => s.comingSoon === true)
+}

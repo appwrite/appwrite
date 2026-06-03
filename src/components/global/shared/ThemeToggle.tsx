@@ -23,9 +23,6 @@ function ThemeToggleGroup({ className }: { className?: string }) {
       <ToggleGroupItem
         value="light"
         aria-label="Light theme"
-        data-analytics-id="theme_select"
-        data-analytics-surface="theme_toggle"
-        data-analytics-prop-theme="light"
         className="h-7 w-7 rounded-md data-[state=on]:bg-accent data-[state=on]:text-foreground"
       >
         <Sun className="h-4 w-4" />
@@ -33,9 +30,6 @@ function ThemeToggleGroup({ className }: { className?: string }) {
       <ToggleGroupItem
         value="dark"
         aria-label="Dark theme"
-        data-analytics-id="theme_select"
-        data-analytics-surface="theme_toggle"
-        data-analytics-prop-theme="dark"
         className="h-7 w-7 rounded-md data-[state=on]:bg-accent data-[state=on]:text-foreground"
       >
         <Moon className="h-4 w-4" />
@@ -43,9 +37,6 @@ function ThemeToggleGroup({ className }: { className?: string }) {
       <ToggleGroupItem
         value="system"
         aria-label="System theme"
-        data-analytics-id="theme_select"
-        data-analytics-surface="theme_toggle"
-        data-analytics-prop-theme="system"
         className="h-7 w-7 rounded-md data-[state=on]:bg-accent data-[state=on]:text-foreground"
       >
         <Contrast className="h-4 w-4" />

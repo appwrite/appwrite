@@ -62,7 +62,7 @@ function CopyableSecret({ value }: { value: string }) {
         className="h-7 w-7 shrink-0"
         onClick={handleCopy}
         aria-label="Copy secret"
-      >
+>
         {copied ? (
           <Check className="h-3.5 w-3.5 text-emerald-500" />
         ) : (
@@ -291,21 +291,21 @@ export function WebhookDrawer({
         onOpenChange={handleOpenChange}
         title={isEditing ? 'Update webhook' : 'Create webhook'}
         maxWidth="sm:max-w-2xl"
-      >
+>
         <>
           <div className="border-t border-border shrink-0" />
 
           <form
             onSubmit={handleSubmit}
             className="flex flex-1 flex-col min-h-0"
-          >
+>
             <div className="flex-1 overflow-y-auto">
               <div className="px-6 py-6 space-y-5">
                 <div className="space-y-2">
                   <Label
                     htmlFor="webhook-name"
                     className="text-[12px] font-medium"
-                  >
+>
                     Name <span className="text-destructive">*</span>
                   </Label>
                   <Input
@@ -331,7 +331,7 @@ export function WebhookDrawer({
                   <Label
                     htmlFor="webhook-url"
                     className="text-[12px] font-medium"
-                  >
+>
                     POST URL <span className="text-destructive">*</span>
                   </Label>
                   <Input
@@ -386,7 +386,7 @@ export function WebhookDrawer({
                     <Label
                       htmlFor="webhook-enabled"
                       className="text-[13px] font-normal leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-                    >
+>
                       Enabled
                     </Label>
                   </div>
@@ -404,7 +404,7 @@ export function WebhookDrawer({
                       <Label
                         htmlFor="webhook-authUsername"
                         className="text-[12px] font-medium text-muted-foreground"
-                      >
+>
                         User
                       </Label>
                       <Input
@@ -419,7 +419,7 @@ export function WebhookDrawer({
                       <Label
                         htmlFor="webhook-authPassword"
                         className="text-[12px] font-medium text-muted-foreground"
-                      >
+>
                         Password
                       </Label>
                       <Input
@@ -445,7 +445,7 @@ export function WebhookDrawer({
                       <Label
                         htmlFor="webhook-tls"
                         className="text-[13px] font-normal leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-                      >
+>
                         Certificate verification (SSL/TLS)
                       </Label>
                     </div>
@@ -471,7 +471,7 @@ export function WebhookDrawer({
                           target="_blank"
                           rel="noopener noreferrer"
                           className="text-primary hover:underline inline-flex items-center gap-1"
-                        >
+>
                           Learn more
                           <ExternalLink className="h-3 w-3 shrink-0" />
                         </a>
@@ -495,7 +495,7 @@ export function WebhookDrawer({
                         className="h-9 text-[13px]"
                         onClick={openRotateSecretDialog}
                         disabled={regenerateSignatureMutation.isPending}
-                      >
+>
                         <RefreshCw
                           className={`mr-1.5 h-4 w-4 ${regenerateSignatureMutation.isPending ? 'animate-spin' : ''}`}
                         />
@@ -527,7 +527,7 @@ export function WebhookDrawer({
                         className="h-9 text-[13px]"
                         onClick={handleRequestDelete}
                         disabled={isPending}
-                      >
+>
                         <Trash2 className="mr-1.5 h-4 w-4" />
                         Delete webhook
                       </Button>
@@ -546,7 +546,7 @@ export function WebhookDrawer({
                         type="submit"
                         disabled
                         aria-describedby="webhook-submit-disabled-reason"
-                      >
+>
                         {isEditing ? 'Update' : 'Create webhook'}
                       </Button>
                     </span>
@@ -554,12 +554,15 @@ export function WebhookDrawer({
                   <TooltipContent
                     id="webhook-submit-disabled-reason"
                     side="top"
-                  >
+>
                     {submitDisabledReason}
                   </TooltipContent>
                 </Tooltip>
               ) : (
-                <Button type="submit" disabled={isPending}>
+                <Button
+                  type="submit"
+                  disabled={isPending}
+>
                   {isEditing ? 'Update' : 'Create webhook'}
                 </Button>
               )}
@@ -568,7 +571,7 @@ export function WebhookDrawer({
                 variant="outline"
                 onClick={() => handleOpenChange(false)}
                 disabled={isPending}
-              >
+>
                 Cancel
               </Button>
             </div>
@@ -583,11 +586,11 @@ export function WebhookDrawer({
             setSecretDialogOpen(nextOpen)
           }
         }}
-      >
+>
         <DialogContent
           className="sm:max-w-md p-0 z-[130] overflow-hidden"
           overlayClassName="z-[130]"
-        >
+>
           <DialogHeader className="px-6 pt-6 pb-4 text-left">
             <DialogTitle>
               {revealedSecret
@@ -611,7 +614,7 @@ export function WebhookDrawer({
                 <Label
                   htmlFor="webhook-secret"
                   className="text-[12px] font-medium"
-                >
+>
                   Secret
                 </Label>
                 <Input
@@ -636,7 +639,7 @@ export function WebhookDrawer({
                 size="sm"
                 className="h-9 text-[13px]"
                 onClick={handleSecretContinue}
-              >
+>
                 Continue
               </Button>
             ) : (
@@ -648,7 +651,7 @@ export function WebhookDrawer({
                   className="h-9 text-[13px]"
                   onClick={() => setSecretDialogOpen(false)}
                   disabled={regenerateSignatureMutation.isPending}
-                >
+>
                   Cancel
                 </Button>
                 <Button
@@ -657,7 +660,7 @@ export function WebhookDrawer({
                   className="h-9 text-[13px]"
                   onClick={handleRotateSecret}
                   disabled={regenerateSignatureMutation.isPending}
-                >
+>
                   {customSecret.trim() ? 'Set custom secret' : 'Rotate secret'}
                 </Button>
               </>

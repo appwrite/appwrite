@@ -559,12 +559,8 @@ export function RepositoryConfigView({
               </p>
               {hasUnavailableSpecifications(specifications) && (
                 <p className="text-[11px] text-muted-foreground">
-                  <UpgradePlanLink
-                    orgId={project?.teamId}
-                    analyticsSurface="function_create_repository"
-                    data-analytics-resource="function"
-                  />{' '}
-                  to unlock additional specifications.
+                  <UpgradePlanLink orgId={project?.teamId} /> to unlock
+                  additional specifications.
                 </p>
               )}
             </div>

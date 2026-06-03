@@ -381,12 +381,7 @@ export function BuyDomainCheckout({
           {isDomainLimitReached ? (
             <p className="mt-2 text-[12px] text-amber-600 dark:text-amber-400">
               Your current plan includes up to {domainsLimit} domains.{' '}
-              <UpgradePlanLink
-                orgId={orgId}
-                analyticsSurface="buy_domain_checkout"
-                data-analytics-resource="domain"
-              />{' '}
-              to register another domain.
+              <UpgradePlanLink orgId={orgId} /> to register another domain.
             </p>
           ) : null}
         </div>

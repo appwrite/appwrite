@@ -74,7 +74,9 @@ export function AddDomainDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md p-0">
+      <DialogContent
+        className="sm:max-w-md p-0"
+>
         <DialogHeader className="px-6 pt-6 text-left">
           <DialogTitle>Add domain</DialogTitle>
           <DialogDescription className="text-[13px] mt-2">
@@ -83,7 +85,9 @@ export function AddDomainDialog({
         </DialogHeader>
         <div className="border-t border-border" />
 
-        <form onSubmit={handleSubmit}>
+        <form
+          onSubmit={handleSubmit}
+>
           <div className="px-6 pb-4 pt-0">
             <div className="space-y-2">
               <Label htmlFor="domain" className="text-[12px] font-medium">
@@ -106,10 +110,13 @@ export function AddDomainDialog({
               variant="outline"
               onClick={() => onOpenChange(false)}
               disabled={isSubmitting}
-            >
+>
               Cancel
             </Button>
-            <Button type="submit" disabled={isSubmitting || !domainName.trim()}>
+            <Button
+              type="submit"
+              disabled={isSubmitting || !domainName.trim()}
+>
               {isSubmitting ? (
                 <>
                   <span className="mr-2">Adding...</span>

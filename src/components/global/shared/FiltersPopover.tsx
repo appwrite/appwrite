@@ -81,10 +81,6 @@ export function FiltersPopover({
         <Button
           variant="outline"
           size="sm"
-          data-analytics-id="filters_open"
-          data-analytics-surface="filters_popover"
-          data-analytics-resource={resourceLabel}
-          data-analytics-prop-active_count={filterMap.size}
           className={cn(
             'border-border bg-transparent text-[13px] text-muted-foreground hover:bg-accent hover:text-foreground',
             serviceHeaderFiltersButton,
@@ -102,8 +98,6 @@ export function FiltersPopover({
         </Button>
       </PopoverTrigger>
       <PopoverContent
-        data-analytics-surface="filters_popover"
-        data-analytics-resource={resourceLabel}
         className="z-[200] max-h-[calc(100dvh-4rem)] w-[380px] overflow-hidden rounded-xl border-border p-0 shadow-lg"
         align="start"
         side="bottom"

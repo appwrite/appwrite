@@ -13,8 +13,8 @@ importers:
   .:
     dependencies:
       '@appwrite.io/console':
-        specifier: https://pkg.vc/-/@appwrite/@appwrite.io/console@9a14a79
-        version: https://pkg.vc/-/@appwrite/@appwrite.io/console@9a14a79
+        specifier: https://pkg.vc/-/@appwrite/@appwrite.io/console@bc990c4
+        version: https://pkg.vc/-/@appwrite/@appwrite.io/console@bc990c4
       '@dnd-kit/core':
         specifier: ^6.3.1
         version: 6.3.1(react-dom@19.2.6(react@19.2.6))(react@19.2.6)
@@ -367,9 +367,9 @@ packages:
   '@adobe/css-tools@4.5.0':
     resolution: {integrity: sha512-6OzddxPio9UiWTCemp4N8cYLV2ZN1ncRnV1cVGtve7dhPOtRkleRyx32GQCYSwDYgaHU3USMm84tNsvKzRCa1Q==}
 
-  '@appwrite.io/console@https://pkg.vc/-/@appwrite/@appwrite.io/console@9a14a79':
-    resolution: {tarball: https://pkg.vc/-/@appwrite/@appwrite.io/console@9a14a79}
-    version: 13.0.0
+  '@appwrite.io/console@https://pkg.vc/-/@appwrite/@appwrite.io/console@bc990c4':
+    resolution: {tarball: https://pkg.vc/-/@appwrite/@appwrite.io/console@bc990c4}
+    version: 13.1.0
     engines: {node: '>=18.0.0'}
 
   '@asamuzakjp/css-color@3.2.0':
@@ -6730,7 +6730,7 @@ snapshots:
 
   '@adobe/css-tools@4.5.0': {}
 
-  '@appwrite.io/console@https://pkg.vc/-/@appwrite/@appwrite.io/console@9a14a79':
+  '@appwrite.io/console@https://pkg.vc/-/@appwrite/@appwrite.io/console@bc990c4':
     dependencies:
       json-bigint: 1.0.0
 

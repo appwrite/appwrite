@@ -42,8 +42,6 @@ export function CreateDeploymentDropdown({
       variant="brandCta"
       size="sm"
       disabled={disabled}
-      data-analytics-id="create_deployment_menu_open"
-      data-analytics-surface="create_deployment_dropdown"
       className={`h-9 gap-2 text-[13px] font-medium disabled:opacity-50 disabled:cursor-not-allowed ${className ?? ''}`}
     >
       <Plus className="h-4 w-4" />
@@ -70,16 +68,9 @@ export function CreateDeploymentDropdown({
           trigger
         )}
       </DropdownMenuTrigger>
-      <DropdownMenuContent
-        align="end"
-        className="w-[220px]"
-        data-analytics-surface="create_deployment_dropdown"
-      >
+      <DropdownMenuContent align="end" className="w-[220px]">
         <DropdownMenuItem
           onClick={onSelectGit}
-          data-analytics-id="create_deployment_select"
-          data-analytics-surface="create_deployment_dropdown"
-          data-analytics-prop-source="git"
           className="flex cursor-pointer items-center gap-2 rounded px-2 py-1.5 text-[13px] text-foreground hover:bg-accent hover:text-foreground focus:bg-accent focus:text-foreground"
         >
           <GitBranch className="h-4 w-4" />
@@ -90,9 +81,6 @@ export function CreateDeploymentDropdown({
         </DropdownMenuItem>
         <DropdownMenuItem
           onClick={onSelectCli}
-          data-analytics-id="create_deployment_select"
-          data-analytics-surface="create_deployment_dropdown"
-          data-analytics-prop-source="cli"
           className="flex cursor-pointer items-center gap-2 rounded px-2 py-1.5 text-[13px] text-foreground hover:bg-accent hover:text-foreground focus:bg-accent focus:text-foreground"
         >
           <Terminal className="h-4 w-4" />
@@ -100,9 +88,6 @@ export function CreateDeploymentDropdown({
         </DropdownMenuItem>
         <DropdownMenuItem
           onClick={onSelectManual}
-          data-analytics-id="create_deployment_select"
-          data-analytics-surface="create_deployment_dropdown"
-          data-analytics-prop-source="manual"
           className="flex cursor-pointer items-center gap-2 rounded px-2 py-1.5 text-[13px] text-foreground hover:bg-accent hover:text-foreground focus:bg-accent focus:text-foreground"
         >
           <Upload className="h-4 w-4" />

@@ -76,8 +76,7 @@ export function View() {
     })
   }
 
-  const specDirty =
-    runtimeSpecification !== (func?.runtimeSpecification || '')
+  const specDirty = runtimeSpecification !== (func?.runtimeSpecification || '')
 
   if (funcLoading) {
     return (
@@ -149,7 +148,6 @@ export function View() {
                     <SpecificationsUpgradeNote
                       orgId={project?.teamId}
                       showContactSales
-                      analyticsSurface="function_runtime_settings"
                     />
                   ) : undefined
                 }

@@ -2,7 +2,7 @@
  * Fullscreen import data wizard: provider → credentials → get report → resource selection → create migration.
  */
 
-import { useState, useMemo, useEffect } from 'react'
+import { useState, useMemo, useEffect, useCallback } from 'react'
 import { useParams, useNavigate } from '@tanstack/react-router'
 import { ArrowRightLeft, Database, Info, Zap } from 'lucide-react'
 import { PUBLIC_ICON_MUTED_CLASSES } from '@/lib/public-icon-classes'
@@ -195,11 +195,11 @@ export function ImportWizardView() {
     return typeof value === 'number' ? value : null
   }
 
-  function resourceFormToResources(): (
+  const resourceFormToResources = useCallback((): (
     | AppwriteMigrationResource
     | SupabaseMigrationResource
     | FirebaseMigrationResource
-  )[] {
+  )[] => {
     const allowed = supportsFunctions
       ? APPWRITE_RESOURCES
       : provider === 'Firebase'
@@ -252,11 +252,11 @@ export function ImportWizardView() {
     }
     const allowedSet = new Set<string>(allowed as readonly string[])
     return out.filter((r) => allowedSet.has(r))
-  }
+  }, [resourceForm, provider, supportsFunctions])
 
   const selectedResourcesList = useMemo(
     () => resourceFormToResources(),
-    [resourceForm, provider, supportsFunctions],
+    [resourceFormToResources],
   )
   const hasSelection = selectedResourcesList.length > 0
 
@@ -489,6 +489,10 @@ export function ImportWizardView() {
                   setProvider(p.id)
                   setStep(2)
                 }}
+                data-analytics-id="migration_provider_select"
+                data-analytics-surface="import_migration_wizard"
+                data-analytics-resource="migration"
+                data-analytics-prop-provider={p.id}
                 className="flex w-full cursor-pointer items-center gap-3 rounded-xl border border-border bg-card/50 p-5 text-left transition-all hover:border-border/80 hover:bg-card/60"
               >
                 <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-muted text-muted-foreground overflow-hidden">
@@ -550,6 +554,9 @@ export function ImportWizardView() {
                     hash: 'card-transfer-project',
                   })
                 }
+                data-analytics-id="migration_transfer_project"
+                data-analytics-surface="import_migration_wizard"
+                data-analytics-resource="migration"
               >
                 Transfer project
               </Button>
@@ -897,6 +904,10 @@ export function ImportWizardView() {
                     variant={onDuplicate === value ? 'default' : 'outline'}
                     className="h-8 text-[13px]"
                     onClick={() => setOnDuplicate(value)}
+                    data-analytics-id="migration_duplicate_behavior_select"
+                    data-analytics-surface="import_migration_wizard"
+                    data-analytics-resource="migration"
+                    data-analytics-prop-behavior={value}
                   >
                     {label}
                   </Button>
@@ -923,6 +934,9 @@ export function ImportWizardView() {
                   variant="outline"
                   size="sm"
                   onClick={selectAll}
+                  data-analytics-id="migration_select_all_resources"
+                  data-analytics-surface="import_migration_wizard"
+                  data-analytics-resource="migration"
                 >
                   Select all
                 </Button>
@@ -931,6 +945,9 @@ export function ImportWizardView() {
                   variant="outline"
                   size="sm"
                   onClick={selectNone}
+                  data-analytics-id="migration_deselect_all_resources"
+                  data-analytics-surface="import_migration_wizard"
+                  data-analytics-resource="migration"
                 >
                   Deselect all
                 </Button>
@@ -1163,6 +1180,10 @@ export function ImportWizardView() {
           variant="outline"
           onClick={() => setStep((s) => s - 1)}
           disabled={loadingReport || isCreatePending}
+          data-analytics-id="migration_wizard_back"
+          data-analytics-surface="import_migration_wizard"
+          data-analytics-resource="migration"
+          data-analytics-prop-step={step}
         >
           Back
         </Button>
@@ -1172,6 +1193,10 @@ export function ImportWizardView() {
           type="button"
           disabled={loadingReport}
           onClick={handleFetchReport}
+          data-analytics-id="migration_fetch_report"
+          data-analytics-surface="import_migration_wizard"
+          data-analytics-resource="migration"
+          data-analytics-prop-provider={provider ?? 'unknown'}
         >
           Continue
         </Button>
@@ -1181,6 +1206,12 @@ export function ImportWizardView() {
           type="button"
           disabled={!hasSelection || isCreatePending}
           onClick={handleCreate}
+          data-analytics-id="migration_start"
+          data-analytics-surface="import_migration_wizard"
+          data-analytics-resource="migration"
+          data-analytics-prop-provider={provider ?? 'unknown'}
+          data-analytics-prop-resource_count={selectedResourcesList.length}
+          data-analytics-prop-on_duplicate={onDuplicate}
         >
           {isCreatePending ? 'Starting...' : 'Start migration'}
         </Button>

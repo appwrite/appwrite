@@ -193,7 +193,10 @@ function NullablePxInput({
 }
 
 function sanitizeHexDigits(raw: string, maxLen: number): string {
-  return raw.replace(/#/g, '').replace(/[^0-9a-fA-F]/g, '').slice(0, maxLen)
+  return raw
+    .replace(/#/g, '')
+    .replace(/[^0-9a-fA-F]/g, '')
+    .slice(0, maxLen)
 }
 
 /** Stored hex (no `#`) → `#rrggbb` for `<input type="color" />` */
@@ -590,8 +593,7 @@ export function TransformImageWizard({
   )
 
   const designCanvasPreviewUrl = useMemo(
-    () =>
-      buildAdminDesignCanvasPreviewUrl(projectId, bucketId, fileId, state),
+    () => buildAdminDesignCanvasPreviewUrl(projectId, bucketId, fileId, state),
     [projectId, bucketId, fileId, state],
   )
 
@@ -695,11 +697,7 @@ export function TransformImageWizard({
         return
       }
       const blob = await res.blob()
-      const ext = previewDownloadExtension(
-        state.output,
-        blob.type,
-        fileName,
-      )
+      const ext = previewDownloadExtension(state.output, blob.type, fileName)
       const base = previewDownloadBasename(fileName)
       const downloadName = `${base}-preview.${ext}`
       const objectUrl = URL.createObjectURL(blob)
@@ -764,7 +762,8 @@ export function TransformImageWizard({
 
   const sizeComparison = useMemo(() => {
     if (originalSizeBytes <= 0) return null
-    if (previewBytesLoading || !previewMeasureDone) return { kind: 'loading' as const }
+    if (previewBytesLoading || !previewMeasureDone)
+      return { kind: 'loading' as const }
     if (previewBytes === null) return { kind: 'unavailable' as const }
     const original = originalSizeBytes
     const preview = previewBytes
@@ -773,9 +772,7 @@ export function TransformImageWizard({
     const pctSaved =
       original > 0 ? Math.round((Math.max(0, delta) / original) * 100) : 0
     const pctLarger =
-      original > 0 && delta < 0
-        ? Math.round(((-delta) / original) * 100)
-        : 0
+      original > 0 && delta < 0 ? Math.round((-delta / original) * 100) : 0
     return {
       kind: 'ready' as const,
       original,
@@ -785,12 +782,7 @@ export function TransformImageWizard({
       pctSaved,
       pctLarger,
     }
-  }, [
-    originalSizeBytes,
-    previewBytes,
-    previewBytesLoading,
-    previewMeasureDone,
-  ])
+  }, [originalSizeBytes, previewBytes, previewBytesLoading, previewMeasureDone])
 
   void historyTick
   const canUndo = undoStackRef.current.length > 0
@@ -840,18 +832,12 @@ export function TransformImageWizard({
               <TabsList className="grid h-9 w-full max-w-xs grid-cols-2 shadow-none">
                 <TabsTrigger
                   value="design"
-                  data-analytics-id="transform_image_main_view"
-                  data-analytics-surface="transform_image_wizard"
-                  data-analytics-prop-view="design"
                   className="text-[13px] shadow-none data-[state=active]:shadow-none"
                 >
                   Design
                 </TabsTrigger>
                 <TabsTrigger
                   value="code"
-                  data-analytics-id="transform_image_main_view"
-                  data-analytics-surface="transform_image_wizard"
-                  data-analytics-prop-view="code"
                   className="text-[13px] shadow-none data-[state=active]:shadow-none"
                 >
                   Code
@@ -867,8 +853,6 @@ export function TransformImageWizard({
               className="h-8 gap-1.5 px-2.5 text-[12px]"
               disabled={!canUndo}
               onClick={undo}
-              data-analytics-id="transform_image_undo"
-              data-analytics-surface="transform_image_wizard"
               aria-label="Undo"
               title="Undo (⌘Z)"
             >
@@ -882,8 +866,6 @@ export function TransformImageWizard({
               className="h-8 gap-1.5 px-2.5 text-[12px]"
               disabled={!canRedo}
               onClick={redo}
-              data-analytics-id="transform_image_redo"
-              data-analytics-surface="transform_image_wizard"
               aria-label="Redo"
               title="Redo (⌘⇧Z)"
             >
@@ -896,8 +878,6 @@ export function TransformImageWizard({
               size="sm"
               className="h-8 gap-1.5 px-2.5 text-[12px]"
               onClick={resetAllToDefaults}
-              data-analytics-id="transform_image_reset_all"
-              data-analytics-surface="transform_image_wizard"
             >
               <RotateCcw className="h-3.5 w-3.5" />
               Reset all
@@ -1047,8 +1027,6 @@ export function TransformImageWizard({
               size="sm"
               disabled={previewDownloadBusy}
               onClick={() => void downloadPreview()}
-              data-analytics-id="transform_image_download_preview"
-              data-analytics-surface="transform_image_wizard"
             >
               {previewDownloadBusy ? (
                 <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />
@@ -1062,8 +1040,6 @@ export function TransformImageWizard({
               variant="outline"
               size="sm"
               onClick={copyPreviewUrl}
-              data-analytics-id="transform_image_copy_preview_url"
-              data-analytics-surface="transform_image_wizard"
             >
               <Copy className="mr-1.5 h-3.5 w-3.5" />
               Copy URL
@@ -1073,8 +1049,6 @@ export function TransformImageWizard({
               variant="outline"
               size="sm"
               onClick={openPreviewInNewTab}
-              data-analytics-id="transform_image_open_preview"
-              data-analytics-surface="transform_image_wizard"
             >
               <ExternalLink className="mr-1.5 h-3.5 w-3.5" />
               Open
@@ -1122,9 +1096,7 @@ export function TransformImageWizard({
                           onTransformInteractionStart={
                             onTransformInteractionStart
                           }
-                          onTransformInteractionEnd={
-                            onTransformInteractionEnd
-                          }
+                          onTransformInteractionEnd={onTransformInteractionEnd}
                         />
                       </div>
                     </div>
@@ -1138,8 +1110,6 @@ export function TransformImageWizard({
                         className="h-8 w-8 border-border bg-card/95 p-0 backdrop-blur-sm"
                         onClick={zoomIn}
                         disabled={zoomInDisabled}
-                        data-analytics-id="transform_image_zoom_in"
-                        data-analytics-surface="transform_image_wizard"
                         aria-label="Zoom in"
                       >
                         <ZoomIn className="h-4 w-4" />
@@ -1156,8 +1126,6 @@ export function TransformImageWizard({
                         className="h-8 w-8 border-border bg-card/95 p-0 backdrop-blur-sm"
                         onClick={zoomOut}
                         disabled={zoomOutDisabled}
-                        data-analytics-id="transform_image_zoom_out"
-                        data-analytics-surface="transform_image_wizard"
                         aria-label="Zoom out"
                       >
                         <ZoomOut className="h-4 w-4" />
@@ -1168,8 +1136,6 @@ export function TransformImageWizard({
                         size="sm"
                         className="h-8 w-8 border-border bg-card/95 p-0 backdrop-blur-sm"
                         onClick={resetView}
-                        data-analytics-id="transform_image_reset_view"
-                        data-analytics-surface="transform_image_wizard"
                         aria-label="Reset pan and zoom"
                       >
                         <Maximize2 className="h-4 w-4" />
@@ -1191,18 +1157,12 @@ export function TransformImageWizard({
                       >
                         <ToggleGroupItem
                           value="edit"
-                          data-analytics-id="transform_image_canvas_mode"
-                          data-analytics-surface="transform_image_wizard"
-                          data-analytics-prop-mode="edit"
                           className="h-8 px-3 text-[12px] data-[state=on]:bg-muted"
                         >
                           Edit
                         </ToggleGroupItem>
                         <ToggleGroupItem
                           value="compare"
-                          data-analytics-id="transform_image_canvas_mode"
-                          data-analytics-surface="transform_image_wizard"
-                          data-analytics-prop-mode="compare"
                           className="h-8 px-3 text-[12px] data-[state=on]:bg-muted"
                         >
                           Compare
@@ -1231,15 +1191,10 @@ export function TransformImageWizard({
                 </div>
                 <div className="pointer-events-none absolute inset-x-0 top-0 z-20 flex justify-end p-3 sm:p-4">
                   <div className="pointer-events-auto flex max-w-full flex-wrap items-center justify-end gap-2">
-                    <Select
-                      value={codeTab}
-                      onValueChange={handleCodeTabChange}
-                    >
+                    <Select value={codeTab} onValueChange={handleCodeTabChange}>
                       <SelectTrigger
                         className="h-8 w-[min(200px,calc(100vw-8rem))] shrink-0 border-border bg-card/95 text-[12px] shadow-none backdrop-blur-sm"
                         aria-label="SDK example"
-                        data-analytics-id="transform_image_sdk_select"
-                        data-analytics-surface="transform_image_wizard"
                       >
                         <SelectValue placeholder="SDK" />
                       </SelectTrigger>
@@ -1251,9 +1206,6 @@ export function TransformImageWizard({
                           <SelectItem
                             key={opt.id}
                             value={opt.id}
-                            data-analytics-id="transform_image_sdk_option"
-                            data-analytics-surface="transform_image_wizard"
-                            data-analytics-prop-sdk={opt.id}
                             className="text-[13px]"
                           >
                             {opt.label}
@@ -1267,9 +1219,6 @@ export function TransformImageWizard({
                       size="sm"
                       className="h-8 w-8 shrink-0 border-border bg-card/95 p-0 shadow-none backdrop-blur-sm mr-2"
                       onClick={copyActiveCode}
-                      data-analytics-id="transform_image_copy_code"
-                      data-analytics-surface="transform_image_wizard"
-                      data-analytics-prop-sdk={codeTab}
                       aria-label={copiedSdk ? 'Copied' : 'Copy code example'}
                     >
                       {copiedSdk ? (
@@ -1294,7 +1243,9 @@ export function TransformImageWizard({
             >
               <AccordionItem value="size">
                 <AccordionTrigger
-                  className={cn('text-[13px] hover:no-underline [&>span]:min-w-0')}
+                  className={cn(
+                    'text-[13px] hover:no-underline [&>span]:min-w-0',
+                  )}
                 >
                   <span className="flex min-w-0 flex-1 items-center gap-2 pr-1">
                     <span className="min-w-0 flex-1 truncate py-0.5">
@@ -1309,12 +1260,11 @@ export function TransformImageWizard({
                         !sizeSectionDirty && 'invisible pointer-events-none',
                       )}
                       aria-label="Reset size and crop"
-                      title={sizeSectionDirty ? 'Reset size and crop' : undefined}
+                      title={
+                        sizeSectionDirty ? 'Reset size and crop' : undefined
+                      }
                       tabIndex={sizeSectionDirty ? 0 : -1}
                       aria-hidden={!sizeSectionDirty}
-                      data-analytics-id="transform_image_section_reset"
-                      data-analytics-surface="transform_image_wizard"
-                      data-analytics-prop-section="size"
                       onPointerDown={(e) => {
                         if (!sizeSectionDirty) return
                         e.stopPropagation()
@@ -1352,7 +1302,7 @@ export function TransformImageWizard({
                         onValueChange={([v]) =>
                           setState((s) => ({
                             ...s,
-                            width: Math.round(v ?? (s.width ?? 480)),
+                            width: Math.round(v ?? s.width ?? 480),
                           }))
                         }
                         className="py-1"
@@ -1388,7 +1338,7 @@ export function TransformImageWizard({
                         onValueChange={([v]) =>
                           setState((s) => ({
                             ...s,
-                            height: Math.round(v ?? (s.height ?? 480)),
+                            height: Math.round(v ?? s.height ?? 480),
                           }))
                         }
                         className="py-1"
@@ -1404,9 +1354,9 @@ export function TransformImageWizard({
                     />
                   </div>
                   <p className="text-[11px] leading-snug text-muted-foreground">
-                    Null width or height omits that dimension from the preview URL
-                    so the API derives sizing (often from the other side). A number
-                    is an explicit pixel target.
+                    Null width or height omits that dimension from the preview
+                    URL so the API derives sizing (often from the other side). A
+                    number is an explicit pixel target.
                   </p>
                   <div className="min-w-0 space-y-2">
                     <div className="flex items-center gap-2">
@@ -1459,9 +1409,6 @@ export function TransformImageWizard({
                                 aria-label={g}
                                 aria-pressed={selected}
                                 title={g}
-                                data-analytics-id="transform_image_gravity_select"
-                                data-analytics-surface="transform_image_wizard"
-                                data-analytics-prop-gravity={g}
                                 onClick={() =>
                                   setState((s) => ({ ...s, gravity: g }))
                                 }
@@ -1469,9 +1416,7 @@ export function TransformImageWizard({
                                 <Icon
                                   className={cn(
                                     'size-[15px] shrink-0',
-                                    selected
-                                      ? 'opacity-100'
-                                      : 'opacity-[0.72]',
+                                    selected ? 'opacity-100' : 'opacity-[0.72]',
                                   )}
                                   strokeWidth={selected ? 2.25 : 1.85}
                                   aria-hidden
@@ -1488,7 +1433,9 @@ export function TransformImageWizard({
 
               <AccordionItem value="quality">
                 <AccordionTrigger
-                  className={cn('text-[13px] hover:no-underline [&>span]:min-w-0')}
+                  className={cn(
+                    'text-[13px] hover:no-underline [&>span]:min-w-0',
+                  )}
                 >
                   <span className="flex min-w-0 flex-1 items-center gap-2 pr-1">
                     <span className="min-w-0 flex-1 truncate py-0.5">
@@ -1504,13 +1451,12 @@ export function TransformImageWizard({
                       )}
                       aria-label="Reset quality and format"
                       title={
-                        qualitySectionDirty ? 'Reset quality and format' : undefined
+                        qualitySectionDirty
+                          ? 'Reset quality and format'
+                          : undefined
                       }
                       tabIndex={qualitySectionDirty ? 0 : -1}
                       aria-hidden={!qualitySectionDirty}
-                      data-analytics-id="transform_image_section_reset"
-                      data-analytics-surface="transform_image_wizard"
-                      data-analytics-prop-section="quality"
                       onPointerDown={(e) => {
                         if (!qualitySectionDirty) return
                         e.stopPropagation()
@@ -1562,30 +1508,17 @@ export function TransformImageWizard({
                         }))
                       }
                     >
-                      <SelectTrigger
-                        className="h-9 text-[13px]"
-                        data-analytics-id="transform_image_output_select"
-                        data-analytics-surface="transform_image_wizard"
-                      >
+                      <SelectTrigger className="h-9 text-[13px]">
                         <SelectValue placeholder="Original" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem
-                          value="original"
-                          className="text-[13px]"
-                          data-analytics-id="transform_image_output_option"
-                          data-analytics-surface="transform_image_wizard"
-                          data-analytics-prop-output="original"
-                        >
+                        <SelectItem value="original" className="text-[13px]">
                           Original (no conversion)
                         </SelectItem>
                         {OUTPUT_FORMAT_LABELS.map(({ value, label }) => (
                           <SelectItem
                             key={value}
                             value={value}
-                            data-analytics-id="transform_image_output_option"
-                            data-analytics-surface="transform_image_wizard"
-                            data-analytics-prop-output={value}
                             className="text-[13px]"
                           >
                             {label}
@@ -1599,7 +1532,9 @@ export function TransformImageWizard({
 
               <AccordionItem value="style">
                 <AccordionTrigger
-                  className={cn('text-[13px] hover:no-underline [&>span]:min-w-0')}
+                  className={cn(
+                    'text-[13px] hover:no-underline [&>span]:min-w-0',
+                  )}
                 >
                   <span className="flex min-w-0 flex-1 items-center gap-2 pr-1">
                     <span className="min-w-0 flex-1 truncate py-0.5">
@@ -1614,12 +1549,13 @@ export function TransformImageWizard({
                         !styleSectionDirty && 'invisible pointer-events-none',
                       )}
                       aria-label="Reset style and effects"
-                      title={styleSectionDirty ? 'Reset style and effects' : undefined}
+                      title={
+                        styleSectionDirty
+                          ? 'Reset style and effects'
+                          : undefined
+                      }
                       tabIndex={styleSectionDirty ? 0 : -1}
                       aria-hidden={!styleSectionDirty}
-                      data-analytics-id="transform_image_section_reset"
-                      data-analytics-surface="transform_image_wizard"
-                      data-analytics-prop-section="style"
                       onPointerDown={(e) => {
                         if (!styleSectionDirty) return
                         e.stopPropagation()
@@ -1658,8 +1594,8 @@ export function TransformImageWizard({
                       }
                     />
                     <p className="text-[11px] text-muted-foreground">
-                      The preview reflects opacity when the output format supports
-                      transparency.
+                      The preview reflects opacity when the output format
+                      supports transparency.
                     </p>
                   </div>
                   <div className="space-y-2">

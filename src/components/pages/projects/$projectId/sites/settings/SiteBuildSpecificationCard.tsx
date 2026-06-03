@@ -60,9 +60,7 @@ export function SiteBuildSpecificationCard({
       })
     },
     onError: (error: unknown) => {
-      toast.error(
-        getErrorMessage(error, 'Failed to update specification'),
-      )
+      toast.error(getErrorMessage(error, 'Failed to update specification'))
     },
   })
 
@@ -72,18 +70,14 @@ export function SiteBuildSpecificationCard({
     })
   }
 
-  const hasChanges =
-    buildSpecification !== (site?.buildSpecification || '')
+  const hasChanges = buildSpecification !== (site?.buildSpecification || '')
 
   if (!isCloud || specifications.length === 0) {
     return null
   }
 
   const footerNote = hasUnavailableSpecifications(specifications) ? (
-    <SpecificationsUpgradeNote
-      orgId={project?.teamId}
-      analyticsSurface="site_build_specification"
-    />
+    <SpecificationsUpgradeNote orgId={project?.teamId} />
   ) : undefined
 
   return (

@@ -216,11 +216,19 @@ export function CreateDatabaseSummary({
             canCreate ? 'text-foreground' : 'text-muted-foreground',
           )}
         >
-          {canCreate
-            ? 'Your database is ready to create.'
-            : hasType && selectedDbType?.comingSoon
-              ? 'This database type is not available yet.'
-              : 'Complete the required fields to create your database.'}
+          {canCreate ? (
+            <span className="inline-flex items-center gap-2">
+              <span
+                className="h-2 w-2 shrink-0 rounded-full bg-green-500"
+                aria-hidden
+              />
+              Your database is ready to create.
+            </span>
+          ) : hasType && selectedDbType?.comingSoon ? (
+            'This database type is not available yet.'
+          ) : (
+            'Complete the required fields to create your database.'
+          )}
         </p>
       </div>
     </div>

@@ -75,8 +75,7 @@ export function View() {
   })
 
   const commandsDirty = commands !== (func?.commands || '')
-  const specDirty =
-    buildSpecification !== (func?.buildSpecification || '')
+  const specDirty = buildSpecification !== (func?.buildSpecification || '')
 
   const handleSaveCommands = () => {
     updateFunctionMutation.mutate({ commands })
@@ -99,11 +98,7 @@ export function View() {
   if (!func) return null
 
   const specFooterNote = hasUnavailableSpecifications(specifications) ? (
-    <SpecificationsUpgradeNote
-      orgId={project?.teamId}
-      showContactSales
-      analyticsSurface="function_build_settings"
-    />
+    <SpecificationsUpgradeNote orgId={project?.teamId} showContactSales />
   ) : undefined
 
   const cards: SettingsCardItem[] = [
@@ -116,41 +111,43 @@ export function View() {
         keywords: ['install', 'build', 'package', 'npm'],
       },
       node: (
-      <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
-        <div className="px-6 py-4">
-          <h3 className="text-[15px] font-semibold text-foreground">Commands</h3>
-          <p className="text-[13px] text-muted-foreground mt-2">
-            Commands run while your function deployment is being built and
-            packaged.
-          </p>
+        <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
+          <div className="px-6 py-4">
+            <h3 className="text-[15px] font-semibold text-foreground">
+              Commands
+            </h3>
+            <p className="text-[13px] text-muted-foreground mt-2">
+              Commands run while your function deployment is being built and
+              packaged.
+            </p>
+          </div>
+          <div className="border-t border-border" />
+          <div className="px-6 py-4">
+            <Label htmlFor="build-commands" className="text-[13px]">
+              Commands
+            </Label>
+            <Input
+              id="build-commands"
+              value={commands}
+              onChange={(e) => setCommands(e.target.value)}
+              placeholder="npm install"
+              className="mt-2 h-9 font-mono text-[13px]"
+            />
+            <p className="mt-1 text-[12px] text-muted-foreground">
+              Commands to run during function build.
+            </p>
+          </div>
+          <div className="px-6 py-4 border-t border-border bg-muted/30">
+            <Button
+              size="sm"
+              className="h-9 text-[13px]"
+              disabled={!commandsDirty || updateFunctionMutation.isPending}
+              onClick={handleSaveCommands}
+            >
+              Update
+            </Button>
+          </div>
         </div>
-        <div className="border-t border-border" />
-        <div className="px-6 py-4">
-          <Label htmlFor="build-commands" className="text-[13px]">
-            Commands
-          </Label>
-          <Input
-            id="build-commands"
-            value={commands}
-            onChange={(e) => setCommands(e.target.value)}
-            placeholder="npm install"
-            className="mt-2 h-9 font-mono text-[13px]"
-          />
-          <p className="mt-1 text-[12px] text-muted-foreground">
-            Commands to run during function build.
-          </p>
-        </div>
-        <div className="px-6 py-4 border-t border-border bg-muted/30">
-          <Button
-            size="sm"
-            className="h-9 text-[13px]"
-            disabled={!commandsDirty || updateFunctionMutation.isPending}
-            onClick={handleSaveCommands}
-          >
-            Update
-          </Button>
-        </div>
-      </div>
       ),
     },
     {
@@ -205,18 +202,18 @@ export function View() {
               keywords: ['vcpu', 'memory', 'worker', 'cpu'],
             },
             node: (
-        <SpecificationTableCard
-          title="Specification"
-          description="CPU and memory allocated on the build worker while your function image is produced."
-          scope="build"
-          specs={specifications}
-          selectedSlug={buildSpecification}
-          onSelectedSlugChange={setBuildSpecification}
-          hasChanges={specDirty}
-          isSaving={updateFunctionMutation.isPending}
-          onSave={handleSaveSpecification}
-          footerNote={specFooterNote}
-        />
+              <SpecificationTableCard
+                title="Specification"
+                description="CPU and memory allocated on the build worker while your function image is produced."
+                scope="build"
+                specs={specifications}
+                selectedSlug={buildSpecification}
+                onSelectedSlugChange={setBuildSpecification}
+                hasChanges={specDirty}
+                isSaving={updateFunctionMutation.isPending}
+                onSave={handleSaveSpecification}
+                footerNote={specFooterNote}
+              />
             ),
           } satisfies SettingsCardItem,
         ]

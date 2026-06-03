@@ -7,9 +7,6 @@ type UpgradePlanLinkProps = {
   orgId?: string | null
   children?: ReactNode
   className?: string
-  'data-analytics-id'?: string
-  'data-analytics-surface'?: string
-  'data-analytics-resource'?: string
 }
 
 /**
@@ -20,9 +17,6 @@ export function UpgradePlanLink({
   orgId,
   children = 'Upgrade your plan',
   className,
-  'data-analytics-id': analyticsId = 'upgrade_plan_link',
-  'data-analytics-surface': analyticsSurface,
-  'data-analytics-resource': analyticsResource,
 }: UpgradePlanLinkProps) {
   const linkClassName = cn(
     'font-medium text-foreground underline hover:no-underline',
@@ -33,31 +27,16 @@ export function UpgradePlanLink({
     return <span className={linkClassName}>{children}</span>
   }
 
-  const analyticsProps = {
-    'data-analytics-id': analyticsId,
-    ...(analyticsSurface
-      ? { 'data-analytics-surface': analyticsSurface }
-      : {}),
-    ...(analyticsResource
-      ? { 'data-analytics-resource': analyticsResource }
-      : {}),
-  }
-
   if (orgId) {
     return (
-      <Link
-        to="/upgrade"
-        search={{ orgId }}
-        className={linkClassName}
-        {...analyticsProps}
-      >
+      <Link to="/upgrade" search={{ orgId }} className={linkClassName}>
         {children}
       </Link>
     )
   }
 
   return (
-    <Link to="/upgrade" className={linkClassName} {...analyticsProps}>
+    <Link to="/upgrade" className={linkClassName}>
       {children}
     </Link>
   )

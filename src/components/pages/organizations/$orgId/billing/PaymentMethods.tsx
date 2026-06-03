@@ -6,7 +6,7 @@ import {
   warningAlertTextClassName,
 } from '@/components/global/shared/WarningAlert'
 import { Trash2, Star, ArrowLeftRight } from 'lucide-react'
-import { MenuItemContent, MenuItemIcon } from '@/components/global/shared/ContextMenuIcon'
+import { MenuItemContent } from '@/components/global/shared/ContextMenuIcon'
 import { RowActionsMenuTrigger } from '@/components/global/shared/RowActionsMenuTrigger'
 import { Button } from '@/components/ui/button'
 import {
@@ -248,7 +248,7 @@ export function PaymentMethods({
             size="sm"
             className="h-9 gap-2 text-[13px] shrink-0"
             onClick={() => onAddPaymentMethod?.()}
-          >
+>
             <Plus className="h-4 w-4" />
             Add payment method
           </Button>
@@ -269,7 +269,7 @@ export function PaymentMethods({
               size="sm"
               className="h-9 gap-2 text-[13px]"
               onClick={() => onAddPaymentMethod?.()}
-            >
+>
               <Plus className="h-4 w-4" />
               Add payment method
             </Button>
@@ -293,7 +293,7 @@ export function PaymentMethods({
             size="sm"
             className="h-9 gap-2 text-[13px] shrink-0"
             onClick={() => onAddPaymentMethod?.()}
-          >
+>
             <Plus className="h-4 w-4" />
             Add payment method
           </Button>
@@ -322,7 +322,7 @@ export function PaymentMethods({
                   <div
                     key={pm.$id}
                     className="flex items-center justify-between rounded-lg border border-border bg-muted/20 px-4 py-3"
-                  >
+>
                     <div className="flex items-center gap-3 min-w-0">
                       <PaymentMethodBrandAvatar brand={pm.brand} />
                       <div className="min-w-0">
@@ -342,7 +342,7 @@ export function PaymentMethods({
                       className="h-8 text-[12px] shrink-0"
                       onClick={() => handleSetPrimary(pm.$id)}
                       disabled={updatePaymentMethodMutation.isPending}
-                    >
+>
                       Use as primary
                     </Button>
                   </div>
@@ -356,7 +356,7 @@ export function PaymentMethods({
                 size="sm"
                 className="h-9 gap-2 text-[13px] w-full"
                 onClick={() => onAddPaymentMethod?.()}
-              >
+>
                 <Plus className="h-4 w-4" />
                 Add new card
               </Button>
@@ -368,7 +368,7 @@ export function PaymentMethods({
                 size="sm"
                 className="h-9 gap-2 text-[13px]"
                 onClick={() => onAddPaymentMethod?.()}
-              >
+>
                 <Plus className="h-4 w-4" />
                 Add payment method
               </Button>
@@ -452,12 +452,15 @@ export function PaymentMethods({
                     variant="outline"
                     size="sm"
                     className="h-9 gap-2 text-[13px]"
-                  >
+>
                     <Plus className="h-4 w-4" />
                     Add backup
                   </Button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-52">
+                <DropdownMenuContent
+                  align="end"
+                  className="w-52"
+>
                   <div className="px-2 py-1.5">
                     <p className="text-[11px] font-medium text-muted-foreground mb-1">
                       Choose existing card
@@ -468,7 +471,7 @@ export function PaymentMethods({
                       key={availableMethod.$id}
                       className="text-[13px]"
                       onClick={() => handleSetBackup(availableMethod.$id)}
-                    >
+>
                       <MenuItemContent icon={CreditCard}>
                         <span className="whitespace-nowrap">
                           {availableMethod.brand} ••••{availableMethod.last4}
@@ -480,7 +483,7 @@ export function PaymentMethods({
                   <DropdownMenuItem
                     className="text-[13px]"
                     onClick={() => onAddPaymentMethod?.(true)}
-                  >
+>
                     <MenuItemContent icon={Plus}>Add</MenuItemContent>
                   </DropdownMenuItem>
                 </DropdownMenuContent>
@@ -491,7 +494,7 @@ export function PaymentMethods({
                 size="sm"
                 className="h-9 gap-2 text-[13px]"
                 onClick={() => onAddPaymentMethod?.(true)}
-              >
+>
                 <Plus className="h-4 w-4" />
                 Add backup
               </Button>
@@ -581,7 +584,7 @@ function PaymentMethodCard({
                 'mt-1.5 rounded-md border px-2 py-1',
                 warningAlertContainerClassName,
               )}
-            >
+>
               <p className={cn('text-[11px]', warningAlertTextClassName)}>
                 {errorMessage}
               </p>
@@ -594,12 +597,15 @@ function PaymentMethodCard({
         <DropdownMenuTrigger asChild>
           <RowActionsMenuTrigger />
         </DropdownMenuTrigger>
-        <DropdownMenuContent align="end" className="w-52">
+        <DropdownMenuContent
+          align="end"
+          className="w-52"
+>
           {!isPrimary && onSetPrimary && (
             <DropdownMenuItem
               className="text-[13px]"
               onClick={() => onSetPrimary(method.$id)}
-            >
+>
               <MenuItemContent icon={Star}>Primary</MenuItemContent>
             </DropdownMenuItem>
           )}
@@ -611,7 +617,9 @@ function PaymentMethodCard({
                 <DropdownMenuSubTrigger className="text-[13px]">
                   <MenuItemContent icon={ArrowLeftRight}>Replace</MenuItemContent>
                 </DropdownMenuSubTrigger>
-                <DropdownMenuSubContent className="w-52">
+                <DropdownMenuSubContent
+                  className="w-52"
+>
                   {availableMethods.length > 0 && (
                     <>
                       <div className="px-2 py-1.5">
@@ -630,7 +638,7 @@ function PaymentMethodCard({
                               onReplaceBackup(availableMethod.$id)
                             }
                           }}
-                        >
+>
                           <MenuItemContent icon={CreditCard}>
                             <span className="whitespace-nowrap">
                               {availableMethod.brand} ••••{availableMethod.last4}
@@ -644,7 +652,7 @@ function PaymentMethodCard({
                   <DropdownMenuItem
                     className="text-[13px]"
                     onClick={() => onAddPaymentMethod?.(!isPrimary)}
-                  >
+>
                     <MenuItemContent icon={Plus}>Add</MenuItemContent>
                   </DropdownMenuItem>
                 </DropdownMenuSubContent>
@@ -655,7 +663,7 @@ function PaymentMethodCard({
           <DropdownMenuItem
             className="text-[13px]"
             onClick={onRemove}
-          >
+>
             <MenuItemContent icon={Trash2}>Remove</MenuItemContent>
           </DropdownMenuItem>
         </DropdownMenuContent>

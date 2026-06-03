@@ -182,7 +182,7 @@ export function MessagingCreateControls({
                 serviceHeaderIconOnlyButton,
                 'inline-flex cursor-not-allowed items-center justify-center text-[13px] font-medium opacity-50 pointer-events-none',
               )}
-            >
+>
               <Plus className="h-4 w-4 shrink-0" />
               <span className={serviceHeaderShowLabel}>{label}</span>
               <span className="sr-only @[640px]:hidden">{label}</span>
@@ -204,13 +204,15 @@ export function MessagingCreateControls({
           className={cn(serviceHeaderIconOnlyButton, 'text-[13px] font-medium')}
           onClick={() => setTopicDialogOpen(true)}
           aria-label="Create topic"
-        >
+>
           <Plus className="h-4 w-4 shrink-0" />
           <span className={serviceHeaderShowLabel}>Create topic</span>
           <span className="sr-only @[640px]:hidden">Create topic</span>
         </Button>
         <Dialog open={topicDialogOpen} onOpenChange={setTopicDialogOpen}>
-          <DialogContent className="sm:max-w-md p-0">
+          <DialogContent
+            className="sm:max-w-md p-0"
+>
             <DialogHeader className="px-6 pt-6 pb-4 text-left">
               <DialogTitle>Create topic</DialogTitle>
               <DialogDescription className="text-[13px] mt-2">
@@ -242,13 +244,13 @@ export function MessagingCreateControls({
                 variant="outline"
                 onClick={() => setTopicDialogOpen(false)}
                 disabled={createTopicMutation.isPending}
-              >
+>
                 Cancel
               </Button>
               <Button
                 onClick={() => createTopicMutation.mutate(topicName)}
                 disabled={!topicName.trim() || createTopicMutation.isPending}
-              >
+>
                 Create
               </Button>
             </div>
@@ -270,7 +272,7 @@ export function MessagingCreateControls({
           })
         }
         aria-label="Create provider"
-      >
+>
         <Plus className="h-4 w-4 shrink-0" />
         <span className={serviceHeaderShowLabel}>Create provider</span>
         <span className="sr-only @[640px]:hidden">Create provider</span>
@@ -289,32 +291,35 @@ export function MessagingCreateControls({
           )}
           disabled={busy}
           aria-label="Create message"
-        >
+>
           <Plus className="h-4 w-4 shrink-0" />
           <span className={serviceHeaderShowLabel}>Create message</span>
           <span className="sr-only @[640px]:hidden">Create message</span>
           <ChevronDown className="h-3.5 w-3.5 shrink-0 opacity-70" />
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="w-48">
+      <DropdownMenuContent
+        align="end"
+        className="w-48"
+>
         <DropdownMenuItem
           onSelect={() => createDraftEmail.mutate()}
           disabled={busy}
-        >
+>
           <Mail className="mr-2 h-4 w-4 text-muted-foreground" />
           Email
         </DropdownMenuItem>
         <DropdownMenuItem
           onSelect={() => createDraftSms.mutate()}
           disabled={busy}
-        >
+>
           <Phone className="mr-2 h-4 w-4 text-muted-foreground" />
           SMS
         </DropdownMenuItem>
         <DropdownMenuItem
           onSelect={() => createDraftPush.mutate()}
           disabled={busy}
-        >
+>
           <Bell className="mr-2 h-4 w-4 text-muted-foreground" />
           Push
         </DropdownMenuItem>

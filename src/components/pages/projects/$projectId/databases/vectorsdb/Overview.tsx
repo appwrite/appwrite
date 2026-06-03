@@ -74,7 +74,11 @@ import {
   canShowDatabaseSecuritySettings,
 } from '@/lib/console-access-checks'
 import { useConsoleProfile } from '@/hooks/use-console-profile'
-import { TABLE_DB_SPEC_OPTIONS } from '@/lib/database-specs'
+import {
+  TABLE_DB_SPEC_OPTIONS,
+  hasLockedDatabaseSpecifications,
+} from '@/lib/database-specs'
+import { SpecificationsUpgradeNote } from '@/components/global/shared/SpecificationsUpgradeNote'
 import type { Models } from '@appwrite.io/console'
 import { dbNavLink, type DatabaseRouteKind } from '@/lib/database-routes'
 import { getDatabaseConsoleLabels } from '@/lib/database-console-labels'
@@ -1630,6 +1634,14 @@ export function Overview({
                         </TableBody>
                       </Table>
                     </div>
+                    {hasLockedDatabaseSpecifications(TABLE_DB_SPEC_OPTIONS) && (
+                      <div className="mt-3">
+                        <SpecificationsUpgradeNote
+                          orgId={project?.teamId}
+                          showContactSales
+                        />
+                      </div>
+                    )}
                   </div>
                 </div>
               )}

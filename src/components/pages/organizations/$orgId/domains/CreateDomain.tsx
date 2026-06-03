@@ -40,7 +40,9 @@ export function CreateDomainDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md p-0">
+      <DialogContent
+        className="sm:max-w-md p-0"
+>
         <DialogHeader className="px-6 pt-6 text-left">
           <DialogTitle>Add Domain</DialogTitle>
           <DialogDescription className="text-[13px] mt-2">
@@ -49,7 +51,9 @@ export function CreateDomainDialog({
         </DialogHeader>
         <div className="border-t border-border" />
 
-        <form onSubmit={handleSubmit}>
+        <form
+          onSubmit={handleSubmit}
+>
           <div className="px-6 pb-4 pt-0">
             <div className="space-y-2">
               <Label htmlFor="domain">Domain</Label>
@@ -72,10 +76,13 @@ export function CreateDomainDialog({
               variant="outline"
               onClick={() => onOpenChange(false)}
               disabled={isLoading}
-            >
+>
               Cancel
             </Button>
-            <Button type="submit" disabled={isLoading || !domain.trim()}>
+            <Button
+              type="submit"
+              disabled={isLoading || !domain.trim()}
+>
               Add Domain
             </Button>
           </div>

@@ -107,12 +107,18 @@ export function TopicContextMenu({
     <>
       <ContextMenu>
         <ContextMenuTrigger asChild>{children}</ContextMenuTrigger>
-        <ContextMenuContent className="w-56">
-          <ContextMenuItem onSelect={() => navigateToTab('overview')}>
+        <ContextMenuContent
+          className="w-56"
+>
+          <ContextMenuItem
+            onSelect={() => navigateToTab('overview')}
+>
             <ContextMenuIcon icon={LayoutList} />
             Overview
           </ContextMenuItem>
-          <ContextMenuItem onSelect={() => navigateToTab('settings')}>
+          <ContextMenuItem
+            onSelect={() => navigateToTab('settings')}
+>
             <ContextMenuIcon icon={Settings} />
             Settings
           </ContextMenuItem>
@@ -125,21 +131,21 @@ export function TopicContextMenu({
             <ContextMenuSubContent>
               <ContextMenuItem
                 onSelect={() => copyToClipboard('ID', topic.$id)}
-              >
+>
                 <ContextMenuIcon icon={Copy} />
                 Copy ID
               </ContextMenuItem>
               {hasName && (
                 <ContextMenuItem
                   onSelect={() => copyToClipboard('Name', topic.name)}
-                >
+>
                   <ContextMenuIcon icon={Copy} />
                   Copy name
                 </ContextMenuItem>
               )}
               <ContextMenuItem
                 onSelect={() => copyToClipboard('Link', topicHref)}
-              >
+>
                 <ContextMenuIcon icon={Link2} />
                 Copy link
               </ContextMenuItem>
@@ -149,23 +155,29 @@ export function TopicContextMenu({
                     fetchTopic(projectId, topic.$id),
                   )
                 }
-              >
+>
                 <ContextMenuIcon icon={FileJson} />
                 Copy as JSON
               </ContextMenuItem>
             </ContextMenuSubContent>
           </ContextMenuSub>
           <ContextMenuSeparator />
-          <ContextMenuItem onSelect={() => openInNewTab(topicHref)}>
+          <ContextMenuItem
+            onSelect={() => openInNewTab(topicHref)}
+>
             <ContextMenuIcon icon={ExternalLink} />
             Open in new tab
           </ContextMenuItem>
-          <ContextMenuItem onSelect={() => openInNewWindow(topicHref)}>
+          <ContextMenuItem
+            onSelect={() => openInNewWindow(topicHref)}
+>
             <ContextMenuIcon icon={Square} />
             Open in new window
           </ContextMenuItem>
           <ContextMenuSeparator />
-          <ContextMenuItem onSelect={handleDeleteClick}>
+          <ContextMenuItem
+            onSelect={handleDeleteClick}
+>
             <ContextMenuIcon icon={Trash2} />
             Delete
           </ContextMenuItem>
@@ -173,7 +185,9 @@ export function TopicContextMenu({
       </ContextMenu>
 
       <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
-        <DialogContent className="sm:max-w-md p-0">
+        <DialogContent
+          className="sm:max-w-md p-0"
+>
           <DialogHeader className="px-6 pt-6 pb-4 text-left">
             <DialogTitle>Delete topic</DialogTitle>
             <DialogDescription className="text-[13px] mt-2">
@@ -186,14 +200,14 @@ export function TopicContextMenu({
               variant="outline"
               onClick={() => setDeleteDialogOpen(false)}
               disabled={deleteMutation.isPending}
-            >
+>
               Cancel
             </Button>
             <Button
               variant="destructive"
               onClick={() => deleteMutation.mutate()}
               disabled={deleteMutation.isPending}
-            >
+>
               Delete
             </Button>
           </div>

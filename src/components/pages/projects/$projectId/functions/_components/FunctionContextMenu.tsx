@@ -115,70 +115,30 @@ export function FunctionContextMenu({
     <>
       <ContextMenu>
         <ContextMenuTrigger asChild>{children}</ContextMenuTrigger>
-        <ContextMenuContent
-          className="w-56"
-          data-analytics-surface="function_context_menu"
-          data-analytics-resource="function"
-        >
-          <ContextMenuItem
-            onSelect={() => navigateToTab('deployments')}
-            data-analytics-id="function_context_tab"
-            data-analytics-surface="function_context_menu"
-            data-analytics-resource="function"
-            data-analytics-prop-tab="deployments"
-          >
+        <ContextMenuContent className="w-56">
+          <ContextMenuItem onSelect={() => navigateToTab('deployments')}>
             <ContextMenuIcon icon={FolderGit} />
             Deployments
           </ContextMenuItem>
-          <ContextMenuItem
-            onSelect={() => navigateToTab('domains')}
-            data-analytics-id="function_context_tab"
-            data-analytics-surface="function_context_menu"
-            data-analytics-resource="function"
-            data-analytics-prop-tab="domains"
-          >
+          <ContextMenuItem onSelect={() => navigateToTab('domains')}>
             <ContextMenuIcon icon={Globe} />
             Domains
           </ContextMenuItem>
-          <ContextMenuItem
-            onSelect={() => navigateToTab('executions')}
-            data-analytics-id="function_context_tab"
-            data-analytics-surface="function_context_menu"
-            data-analytics-resource="function"
-            data-analytics-prop-tab="executions"
-          >
+          <ContextMenuItem onSelect={() => navigateToTab('executions')}>
             <ContextMenuIcon icon={Play} />
             Executions
           </ContextMenuItem>
           {showSecuritySettings && (
             <>
-              <ContextMenuItem
-                onSelect={() => navigateToTab('variables')}
-                data-analytics-id="function_context_tab"
-                data-analytics-surface="function_context_menu"
-                data-analytics-resource="function"
-                data-analytics-prop-tab="variables"
-              >
+              <ContextMenuItem onSelect={() => navigateToTab('variables')}>
                 <ContextMenuIcon icon={Variable} />
                 Variables
               </ContextMenuItem>
-              <ContextMenuItem
-                onSelect={() => navigateToTab('security')}
-                data-analytics-id="function_context_tab"
-                data-analytics-surface="function_context_menu"
-                data-analytics-resource="function"
-                data-analytics-prop-tab="security"
-              >
+              <ContextMenuItem onSelect={() => navigateToTab('security')}>
                 <ContextMenuIcon icon={Shield} />
                 Security
               </ContextMenuItem>
-              <ContextMenuItem
-                onSelect={() => navigateToTab('settings')}
-                data-analytics-id="function_context_tab"
-                data-analytics-surface="function_context_menu"
-                data-analytics-resource="function"
-                data-analytics-prop-tab="settings"
-              >
+              <ContextMenuItem onSelect={() => navigateToTab('settings')}>
                 <ContextMenuIcon icon={Settings} />
                 Settings
               </ContextMenuItem>
@@ -191,21 +151,13 @@ export function FunctionContextMenu({
               Copy
             </ContextMenuSubTrigger>
             <ContextMenuSubContent>
-              <ContextMenuItem
-                onSelect={() => copyToClipboard('ID', func.$id)}
-                data-analytics-id="function_context_copy_id"
-                data-analytics-surface="function_context_menu"
-                data-analytics-resource="function"
-              >
+              <ContextMenuItem onSelect={() => copyToClipboard('ID', func.$id)}>
                 <ContextMenuIcon icon={Copy} />
                 Copy ID
               </ContextMenuItem>
               {hasName && (
                 <ContextMenuItem
                   onSelect={() => copyToClipboard('Name', func.name)}
-                  data-analytics-id="function_context_copy_name"
-                  data-analytics-surface="function_context_menu"
-                  data-analytics-resource="function"
                 >
                   <ContextMenuIcon icon={Copy} />
                   Copy name
@@ -213,9 +165,6 @@ export function FunctionContextMenu({
               )}
               <ContextMenuItem
                 onSelect={() => copyToClipboard('Link', functionHref)}
-                data-analytics-id="function_context_copy_link"
-                data-analytics-surface="function_context_menu"
-                data-analytics-resource="function"
               >
                 <ContextMenuIcon icon={Link2} />
                 Copy link
@@ -226,9 +175,6 @@ export function FunctionContextMenu({
                     fetchProjectFunction(projectId, func.$id),
                   )
                 }
-                data-analytics-id="function_context_copy_json"
-                data-analytics-surface="function_context_menu"
-                data-analytics-resource="function"
               >
                 <ContextMenuIcon icon={FileJson} />
                 Copy as JSON
@@ -236,31 +182,16 @@ export function FunctionContextMenu({
             </ContextMenuSubContent>
           </ContextMenuSub>
           <ContextMenuSeparator />
-          <ContextMenuItem
-            onSelect={() => openInNewTab(functionHref)}
-            data-analytics-id="function_context_open_new_tab"
-            data-analytics-surface="function_context_menu"
-            data-analytics-resource="function"
-          >
+          <ContextMenuItem onSelect={() => openInNewTab(functionHref)}>
             <ContextMenuIcon icon={ExternalLink} />
             Open in new tab
           </ContextMenuItem>
-          <ContextMenuItem
-            onSelect={() => openInNewWindow(functionHref)}
-            data-analytics-id="function_context_open_new_window"
-            data-analytics-surface="function_context_menu"
-            data-analytics-resource="function"
-          >
+          <ContextMenuItem onSelect={() => openInNewWindow(functionHref)}>
             <ContextMenuIcon icon={Square} />
             Open in new window
           </ContextMenuItem>
           <ContextMenuSeparator />
-          <ContextMenuItem
-            onSelect={handleDeleteClick}
-            data-analytics-id="function_context_delete_open"
-            data-analytics-surface="function_context_menu"
-            data-analytics-resource="function"
-          >
+          <ContextMenuItem onSelect={handleDeleteClick}>
             <ContextMenuIcon icon={Trash2} />
             Delete
           </ContextMenuItem>
@@ -268,11 +199,7 @@ export function FunctionContextMenu({
       </ContextMenu>
 
       <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
-        <DialogContent
-          className="sm:max-w-md p-0"
-          data-analytics-surface="function_delete_dialog"
-          data-analytics-resource="function"
-        >
+        <DialogContent className="sm:max-w-md p-0">
           <DialogHeader className="px-6 pt-6 pb-4 text-left">
             <DialogTitle>Delete function</DialogTitle>
             <DialogDescription className="text-[13px] mt-2">
@@ -285,9 +212,6 @@ export function FunctionContextMenu({
               variant="outline"
               onClick={() => setDeleteDialogOpen(false)}
               disabled={deleteMutation.isPending}
-              data-analytics-id="function_delete_cancel"
-              data-analytics-surface="function_delete_dialog"
-              data-analytics-resource="function"
             >
               Cancel
             </Button>
@@ -295,9 +219,6 @@ export function FunctionContextMenu({
               variant="destructive"
               onClick={handleConfirmDelete}
               disabled={deleteMutation.isPending}
-              data-analytics-id="function_delete_confirm"
-              data-analytics-surface="function_delete_dialog"
-              data-analytics-resource="function"
             >
               Delete
             </Button>

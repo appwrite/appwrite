@@ -27,8 +27,7 @@ export const RESOURCE_CARD_GRID_WIDE_CLASSNAME =
   'grid min-w-0 gap-4 grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 [&>*]:min-w-0'
 
 /** Apply to custom card shells inside resource grids when not using ResourceCard. */
-export const RESOURCE_CARD_SHELL_CLASSNAME =
-  'min-w-0 overflow-hidden'
+export const RESOURCE_CARD_SHELL_CLASSNAME = 'min-w-0 overflow-hidden'
 
 interface ResourceCardProps {
   title: string
@@ -82,8 +81,6 @@ export function ResourceCard({
   return (
     <div
       onClick={onClick}
-      data-analytics-id={onClick ? 'resource_card_open' : undefined}
-      data-analytics-surface="resource_card"
       className={cn(
         'group min-w-0 overflow-hidden rounded-lg border border-border bg-card p-4 transition-all',
         onClick && 'cursor-pointer hover:border-border hover:bg-accent/50',
@@ -154,11 +151,7 @@ export function ResourceCard({
             {/* Resource ID Tag */}
             {resourceId && (
               <div className="mt-1.5">
-                <CopyableId
-                  id={resourceId}
-                  size="xs"
-                  maxWidth={120}
-                />
+                <CopyableId id={resourceId} size="xs" maxWidth={120} />
               </div>
             )}
           </div>

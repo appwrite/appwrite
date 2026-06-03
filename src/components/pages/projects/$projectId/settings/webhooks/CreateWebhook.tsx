@@ -37,7 +37,7 @@ function CopyableSecret({ value }: { value: string }) {
         className="h-7 w-7 shrink-0"
         onClick={handleCopy}
         aria-label="Copy secret"
-      >
+>
         {copied ? (
           <Check className="h-3.5 w-3.5 text-emerald-500" />
         ) : (
@@ -158,7 +158,9 @@ export function CreateWebhookDialog({
   return (
     <>
       <Dialog open={open} onOpenChange={onOpenChange}>
-        <DialogContent className="sm:max-w-2xl p-0">
+        <DialogContent
+          className="sm:max-w-2xl p-0"
+>
           <DialogHeader className="px-6 pt-6 text-left">
             <DialogTitle>Create webhook</DialogTitle>
             <DialogDescription className="text-[13px] mt-2">
@@ -218,7 +220,7 @@ export function CreateWebhookDialog({
                   <Label
                     htmlFor="authUsername"
                     className="text-[12px] font-medium"
-                  >
+>
                     User
                   </Label>
                   <Input
@@ -232,7 +234,7 @@ export function CreateWebhookDialog({
                   <Label
                     htmlFor="authPassword"
                     className="text-[12px] font-medium"
-                  >
+>
                     Password
                   </Label>
                   <Input
@@ -252,7 +254,7 @@ export function CreateWebhookDialog({
                   <Label
                     htmlFor="tls"
                     className="text-[13px] font-normal leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-                  >
+>
                     Certificate verification (SSL/TLS)
                   </Label>
                 </div>
@@ -271,7 +273,7 @@ export function CreateWebhookDialog({
                 variant="outline"
                 onClick={handleBack}
                 disabled={createWebhookMutation.isPending}
-              >
+>
                 <ChevronLeft className="mr-1.5 h-4 w-4" />
                 Back
               </Button>
@@ -284,7 +286,7 @@ export function CreateWebhookDialog({
                   (currentStep === 'name-url' && !canProceedFromStep1) ||
                   (currentStep === 'events' && !canProceedFromStep2)
                 }
-              >
+>
                 Next
                 <ChevronRight className="ml-1.5 h-4 w-4" />
               </Button>
@@ -293,7 +295,7 @@ export function CreateWebhookDialog({
                 type="button"
                 onClick={handleCreate}
                 disabled={!canCreate || createWebhookMutation.isPending}
-              >
+>
                 Create webhook
               </Button>
             )}
@@ -302,7 +304,9 @@ export function CreateWebhookDialog({
       </Dialog>
 
       <Dialog open={showSecretDialog} onOpenChange={setShowSecretDialog}>
-        <DialogContent className="sm:max-w-md p-0">
+        <DialogContent
+          className="sm:max-w-md p-0"
+>
           <DialogHeader className="px-6 pt-6 pb-4 text-left">
             <DialogTitle>Webhook created</DialogTitle>
             <DialogDescription className="text-[13px] mt-2">
@@ -320,7 +324,7 @@ export function CreateWebhookDialog({
               size="sm"
               className="h-9 text-[13px]"
               onClick={handleContinue}
-            >
+>
               Continue
             </Button>
           </div>

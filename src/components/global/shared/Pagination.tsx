@@ -85,9 +85,6 @@ export function SimplePagination({
           onClick={handlePreviousPage}
           disabled={!canGoPrevious || disabled}
           aria-label="Go to previous page"
-          data-analytics-id="pagination_previous"
-          data-analytics-surface="pagination"
-          data-analytics-prop-kind="simple"
         >
           <ChevronLeft className="h-4 w-4" />
         </Button>
@@ -101,9 +98,6 @@ export function SimplePagination({
           onClick={handleNextPage}
           disabled={!canGoNext || disabled}
           aria-label="Go to next page"
-          data-analytics-id="pagination_next"
-          data-analytics-surface="pagination"
-          data-analytics-prop-kind="simple"
         >
           <ChevronRight className="h-4 w-4" />
         </Button>
@@ -269,22 +263,12 @@ export function Pagination({
               value={pageSize.toString()}
               onValueChange={handlePageSizeChange}
             >
-            <SelectTrigger
-              className="h-8 w-[72px] text-[12px]"
-              data-analytics-id="pagination_page_size"
-              data-analytics-surface="pagination"
-            >
+              <SelectTrigger className="h-8 w-[72px] text-[12px]">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
                 {pageSizeOptions.map((size) => (
-                <SelectItem
-                  key={size}
-                  value={size.toString()}
-                  data-analytics-id="pagination_page_size_option"
-                  data-analytics-surface="pagination"
-                  data-analytics-prop-page_size={size}
-                >
+                  <SelectItem key={size} value={size.toString()}>
                     {size}
                   </SelectItem>
                 ))}
@@ -307,8 +291,6 @@ export function Pagination({
             onClick={handleFirstPage}
             disabled={!canGoPrevious}
             aria-label="Go to first page"
-            data-analytics-id="pagination_first"
-            data-analytics-surface="pagination"
           >
             <ChevronsLeft className="h-4 w-4" />
           </Button>
@@ -319,8 +301,6 @@ export function Pagination({
             onClick={handlePreviousPage}
             disabled={!canGoPrevious}
             aria-label="Go to previous page"
-            data-analytics-id="pagination_previous"
-            data-analytics-surface="pagination"
           >
             <ChevronLeft className="h-4 w-4" />
           </Button>
@@ -344,8 +324,6 @@ export function Pagination({
             onClick={handleNextPage}
             disabled={!canGoNext}
             aria-label="Go to next page"
-            data-analytics-id="pagination_next"
-            data-analytics-surface="pagination"
           >
             <ChevronRight className="h-4 w-4" />
           </Button>
@@ -356,8 +334,6 @@ export function Pagination({
             onClick={handleLastPage}
             disabled={!totalKnown || !canGoNext}
             aria-label="Go to last page"
-            data-analytics-id="pagination_last"
-            data-analytics-surface="pagination"
           >
             <ChevronsRight className="h-4 w-4" />
           </Button>

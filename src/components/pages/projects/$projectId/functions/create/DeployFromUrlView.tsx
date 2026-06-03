@@ -23,7 +23,11 @@ import { WizardLayout } from '@/components/global/shared/WizardLayout'
 import { RuntimeIcon } from '@/components/global/shared/RuntimeIcon'
 import { useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
-import { ID, FunctionRuntime, TemplateReferenceType } from '@appwrite.io/console'
+import {
+  ID,
+  FunctionRuntime,
+  TemplateReferenceType,
+} from '@appwrite.io/console'
 import { sdk } from '@/lib/appwrite/sdk'
 import {
   useProject,
@@ -394,12 +398,8 @@ export function DeployFromUrlView({
               </p>
               {hasUnavailableSpecifications(specifications) && (
                 <p className="text-[11px] text-muted-foreground">
-                  <UpgradePlanLink
-                    orgId={project?.teamId}
-                    analyticsSurface="function_create_deploy_url"
-                    data-analytics-resource="function"
-                  />{' '}
-                  to unlock additional specifications.
+                  <UpgradePlanLink orgId={project?.teamId} /> to unlock
+                  additional specifications.
                 </p>
               )}
             </div>

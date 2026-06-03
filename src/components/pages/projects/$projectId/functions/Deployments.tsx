@@ -32,7 +32,10 @@ import {
   ChevronDown,
   ExternalLink,
 } from 'lucide-react'
-import { MenuItemContent, MenuItemIcon } from '@/components/global/shared/ContextMenuIcon'
+import {
+  MenuItemContent,
+  MenuItemIcon,
+} from '@/components/global/shared/ContextMenuIcon'
 import { RowActionsMenuTrigger } from '@/components/global/shared/RowActionsMenuTrigger'
 import {
   getDeploymentStatusBadge,
@@ -890,9 +893,8 @@ export function View() {
                         <div className="flex items-center gap-1.5 text-[13px] text-foreground min-w-0">
                           {vcsProvider.icon}
                           {(() => {
-                            const repoUrl = getDeploymentRepositoryWebUrl(
-                              activeDeployment,
-                            )
+                            const repoUrl =
+                              getDeploymentRepositoryWebUrl(activeDeployment)
                             const label = `${activeDeployment.providerRepositoryOwner}/${activeDeployment.providerRepositoryName}`
                             return repoUrl ? (
                               <a
@@ -1171,7 +1173,9 @@ export function View() {
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end" className="z-[200]">
                     <DropdownMenuItem onClick={handleDownloadSource}>
-                      <MenuItemContent icon={FileCode}>Source code</MenuItemContent>
+                      <MenuItemContent icon={FileCode}>
+                        Source code
+                      </MenuItemContent>
                     </DropdownMenuItem>
                     <DropdownMenuItem
                       onClick={handleDownloadBuild}
@@ -1184,7 +1188,9 @@ export function View() {
                           : undefined
                       }
                     >
-                      <MenuItemContent icon={Package}>Build output</MenuItemContent>
+                      <MenuItemContent icon={Package}>
+                        Build output
+                      </MenuItemContent>
                     </DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>
@@ -1391,277 +1397,324 @@ export function View() {
                               })
                             }}
                           >
-                          <TableCell
-                            className="px-4 py-3"
-                            onClick={(e) => e.stopPropagation()}
-                          >
-                            <Checkbox
-                              checked={selectedDeployments.has(deployment.$id)}
-                              onCheckedChange={() =>
-                                toggleDeployment(deployment.$id)
-                              }
-                              disabled={isActive}
-                            />
-                          </TableCell>
-                          <TableCell className="px-4 py-3">
-                            <CopyableId
-                              id={deployment.$id}
-                              size="sm"
-                              maxWidth={180}
-                            />
-                          </TableCell>
-                          <TableCell
-                            className={cn(
-                              'px-4 py-3',
-                              DEPLOYMENT_TABLE_STATUS_COLUMN_CLASS,
-                            )}
-                          >
-                            {isActive ? (
-                              <Badge
-                                variant="active"
-                                className="gap-1.5 text-[11px] font-medium"
-                              >
-                                <CheckCircle2 className="h-3 w-3" />
-                                Active
-                              </Badge>
-                            ) : (
-                              <Badge
-                                variant={statusBadge.badgeVariant}
-                                className="gap-1.5 text-[11px] font-medium"
-                              >
-                                {(() => {
-                                  const StatusIcon = statusBadge.icon
-                                  return <StatusIcon className="h-3 w-3" />
-                                })()}
-                                {statusBadge.label}
-                              </Badge>
-                            )}
-                          </TableCell>
-                          <TableCell className="px-4 py-3">
-                            {(() => {
-                              const vcsProvider = getVcsProvider(deployment)
-                              if (vcsProvider) {
-                                const repositoryOwner =
-                                  deployment.providerRepositoryOwner
-                                const repositoryName =
-                                  deployment.providerRepositoryName
-                                const hasRepository =
-                                  repositoryOwner && repositoryName
+                            <TableCell
+                              className="px-4 py-3"
+                              onClick={(e) => e.stopPropagation()}
+                            >
+                              <Checkbox
+                                checked={selectedDeployments.has(
+                                  deployment.$id,
+                                )}
+                                onCheckedChange={() =>
+                                  toggleDeployment(deployment.$id)
+                                }
+                                disabled={isActive}
+                              />
+                            </TableCell>
+                            <TableCell className="px-4 py-3">
+                              <CopyableId
+                                id={deployment.$id}
+                                size="sm"
+                                maxWidth={180}
+                              />
+                            </TableCell>
+                            <TableCell
+                              className={cn(
+                                'px-4 py-3',
+                                DEPLOYMENT_TABLE_STATUS_COLUMN_CLASS,
+                              )}
+                            >
+                              {isActive ? (
+                                <Badge
+                                  variant="active"
+                                  className="gap-1.5 text-[11px] font-medium"
+                                >
+                                  <CheckCircle2 className="h-3 w-3" />
+                                  Active
+                                </Badge>
+                              ) : (
+                                <Badge
+                                  variant={statusBadge.badgeVariant}
+                                  className="gap-1.5 text-[11px] font-medium"
+                                >
+                                  {(() => {
+                                    const StatusIcon = statusBadge.icon
+                                    return <StatusIcon className="h-3 w-3" />
+                                  })()}
+                                  {statusBadge.label}
+                                </Badge>
+                              )}
+                            </TableCell>
+                            <TableCell className="px-4 py-3">
+                              {(() => {
+                                const vcsProvider = getVcsProvider(deployment)
+                                if (vcsProvider) {
+                                  const repositoryOwner =
+                                    deployment.providerRepositoryOwner
+                                  const repositoryName =
+                                    deployment.providerRepositoryName
+                                  const hasRepository =
+                                    repositoryOwner && repositoryName
 
-                                if (hasRepository) {
-                                  const repoUrl = getDeploymentRepositoryWebUrl(
-                                    deployment,
-                                  )
-                                  const label = `${repositoryOwner}/${repositoryName}`
+                                  if (hasRepository) {
+                                    const repoUrl =
+                                      getDeploymentRepositoryWebUrl(deployment)
+                                    const label = `${repositoryOwner}/${repositoryName}`
+                                    return (
+                                      <Badge
+                                        variant="outline"
+                                        className="text-[11px] h-6 px-2.5 gap-1.5 max-w-full"
+                                      >
+                                        {vcsProvider.icon}
+                                        {repoUrl ? (
+                                          <a
+                                            href={repoUrl}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            className="truncate hover:underline"
+                                            onClick={(e) => e.stopPropagation()}
+                                          >
+                                            {label}
+                                          </a>
+                                        ) : (
+                                          <span className="truncate">
+                                            {label}
+                                          </span>
+                                        )}
+                                      </Badge>
+                                    )
+                                  }
+                                  // Fallback if no repository info
                                   return (
-                                    <Badge
-                                      variant="outline"
-                                      className="text-[11px] h-6 px-2.5 gap-1.5 max-w-full"
-                                    >
+                                    <div className="flex items-center gap-1.5 text-[12px] text-foreground">
                                       {vcsProvider.icon}
-                                      {repoUrl ? (
-                                        <a
-                                          href={repoUrl}
-                                          target="_blank"
-                                          rel="noopener noreferrer"
-                                          className="truncate hover:underline"
-                                          onClick={(e) => e.stopPropagation()}
-                                        >
-                                          {label}
-                                        </a>
-                                      ) : (
-                                        <span className="truncate">{label}</span>
-                                      )}
-                                    </Badge>
+                                      <span>{vcsProvider.name}</span>
+                                    </div>
                                   )
                                 }
-                                // Fallback if no repository info
+                                // Show deployment type for non-VCS deployments
+                                const typeLabel =
+                                  deployment.type === 'cli'
+                                    ? 'CLI'
+                                    : deployment.type === 'manual'
+                                      ? 'Manual'
+                                      : deployment.type || 'N/A'
                                 return (
                                   <div className="flex items-center gap-1.5 text-[12px] text-foreground">
-                                    {vcsProvider.icon}
-                                    <span>{vcsProvider.name}</span>
+                                    {deployment.type === 'cli' && (
+                                      <GitBranch className="h-3.5 w-3.5" />
+                                    )}
+                                    <span>{typeLabel}</span>
                                   </div>
                                 )
-                              }
-                              // Show deployment type for non-VCS deployments
-                              const typeLabel =
-                                deployment.type === 'cli'
-                                  ? 'CLI'
-                                  : deployment.type === 'manual'
-                                    ? 'Manual'
-                                    : deployment.type || 'N/A'
-                              return (
-                                <div className="flex items-center gap-1.5 text-[12px] text-foreground">
-                                  {deployment.type === 'cli' && (
-                                    <GitBranch className="h-3.5 w-3.5" />
-                                  )}
-                                  <span>{typeLabel}</span>
-                                </div>
-                              )
-                            })()}
-                          </TableCell>
-                          <TableCell className="px-4 py-3">
-                            {(() => {
-                              const vcsProvider = getVcsProvider(deployment)
-                              if (!vcsProvider) {
+                              })()}
+                            </TableCell>
+                            <TableCell className="px-4 py-3">
+                              {(() => {
+                                const vcsProvider = getVcsProvider(deployment)
+                                if (!vcsProvider) {
+                                  return (
+                                    <span className="text-[12px] text-muted-foreground">
+                                      -
+                                    </span>
+                                  )
+                                }
+
+                                const commitMessage =
+                                  deployment.providerCommitMessage
+                                const commitHash = deployment.providerCommitHash
+                                const commitUrl = deployment.providerCommitUrl
+                                const branch = deployment.providerBranch
+
+                                if (!commitMessage && !branch && !commitHash) {
+                                  return (
+                                    <span className="text-[12px] text-muted-foreground">
+                                      -
+                                    </span>
+                                  )
+                                }
+
                                 return (
-                                  <span className="text-[12px] text-muted-foreground">
-                                     - 
-                                  </span>
-                                )
-                              }
-
-                              const commitMessage =
-                                deployment.providerCommitMessage
-                              const commitHash = deployment.providerCommitHash
-                              const commitUrl = deployment.providerCommitUrl
-                              const branch = deployment.providerBranch
-
-                              if (!commitMessage && !branch && !commitHash) {
-                                return (
-                                  <span className="text-[12px] text-muted-foreground">
-                                     - 
-                                  </span>
-                                )
-                              }
-
-                              return (
-                                <div className="space-y-1.5 min-w-0">
-                                  {commitMessage && (
-                                    <div className="text-[12px] text-foreground line-clamp-1 font-mono">
-                                      {commitUrl ? (
-                                        <a
-                                          href={commitUrl}
-                                          target="_blank"
-                                          rel="noopener noreferrer"
-                                          className="hover:underline"
-                                          onClick={(e) => e.stopPropagation()}
-                                          title={
-                                            commitMessage.length > 30
-                                              ? commitMessage
-                                              : undefined
-                                          }
-                                        >
-                                          {commitMessage.length > 30
-                                            ? `${commitMessage.slice(0, 30)}...`
-                                            : commitMessage}
-                                        </a>
-                                      ) : (
-                                        <span
-                                          title={
-                                            commitMessage.length > 30
-                                              ? commitMessage
-                                              : undefined
-                                          }
-                                        >
-                                          {commitMessage.length > 30
-                                            ? `${commitMessage.slice(0, 30)}...`
-                                            : commitMessage}
-                                        </span>
-                                      )}
-                                    </div>
-                                  )}
-                                  {(branch || commitHash) && (
-                                    <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground flex-wrap">
-                                      {branch && (
-                                        <div className="flex items-center gap-1">
-                                          <GitBranch className="h-3 w-3" />
-                                          <span className="font-mono">
-                                            {branch}
+                                  <div className="space-y-1.5 min-w-0">
+                                    {commitMessage && (
+                                      <div className="text-[12px] text-foreground line-clamp-1 font-mono">
+                                        {commitUrl ? (
+                                          <a
+                                            href={commitUrl}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            className="hover:underline"
+                                            onClick={(e) => e.stopPropagation()}
+                                            title={
+                                              commitMessage.length > 30
+                                                ? commitMessage
+                                                : undefined
+                                            }
+                                          >
+                                            {commitMessage.length > 30
+                                              ? `${commitMessage.slice(0, 30)}...`
+                                              : commitMessage}
+                                          </a>
+                                        ) : (
+                                          <span
+                                            title={
+                                              commitMessage.length > 30
+                                                ? commitMessage
+                                                : undefined
+                                            }
+                                          >
+                                            {commitMessage.length > 30
+                                              ? `${commitMessage.slice(0, 30)}...`
+                                              : commitMessage}
                                           </span>
-                                        </div>
-                                      )}
-                                      {commitHash && (
-                                        <>
-                                          {branch && <span>•</span>}
+                                        )}
+                                      </div>
+                                    )}
+                                    {(branch || commitHash) && (
+                                      <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground flex-wrap">
+                                        {branch && (
                                           <div className="flex items-center gap-1">
-                                            <GitCommit className="h-3 w-3" />
+                                            <GitBranch className="h-3 w-3" />
                                             <span className="font-mono">
-                                              {commitHash.slice(0, 7)}
+                                              {branch}
                                             </span>
                                           </div>
-                                        </>
-                                      )}
-                                    </div>
-                                  )}
-                                </div>
-                              )
-                            })()}
-                          </TableCell>
-                          <TableCell className="px-4 py-3">
-                            <code className="text-[12px] font-mono text-muted-foreground">
-                              {formatSize(
-                                (deployment.buildSize || 0) +
-                                  (deployment.sourceSize || 0),
-                              )}
-                            </code>
-                          </TableCell>
-                          <TableCell className="px-4 py-3">
-                            <code className="text-[12px] font-mono text-muted-foreground">
-                              {isDeploymentInProgress(deployment.status) &&
-                              !isDeploymentTimeout(
-                                deployment.status,
-                                deployment.$createdAt,
-                              )
-                                ? formatDuration(
-                                    Math.max(
-                                      0,
-                                      Math.floor(
-                                        (Date.now() -
-                                          new Date(
-                                            deployment.$createdAt,
-                                          ).getTime()) /
-                                          1000,
+                                        )}
+                                        {commitHash && (
+                                          <>
+                                            {branch && <span>•</span>}
+                                            <div className="flex items-center gap-1">
+                                              <GitCommit className="h-3 w-3" />
+                                              <span className="font-mono">
+                                                {commitHash.slice(0, 7)}
+                                              </span>
+                                            </div>
+                                          </>
+                                        )}
+                                      </div>
+                                    )}
+                                  </div>
+                                )
+                              })()}
+                            </TableCell>
+                            <TableCell className="px-4 py-3">
+                              <code className="text-[12px] font-mono text-muted-foreground">
+                                {formatSize(
+                                  (deployment.buildSize || 0) +
+                                    (deployment.sourceSize || 0),
+                                )}
+                              </code>
+                            </TableCell>
+                            <TableCell className="px-4 py-3">
+                              <code className="text-[12px] font-mono text-muted-foreground">
+                                {isDeploymentInProgress(deployment.status) &&
+                                !isDeploymentTimeout(
+                                  deployment.status,
+                                  deployment.$createdAt,
+                                )
+                                  ? formatDuration(
+                                      Math.max(
+                                        0,
+                                        Math.floor(
+                                          (Date.now() -
+                                            new Date(
+                                              deployment.$createdAt,
+                                            ).getTime()) /
+                                            1000,
+                                        ),
                                       ),
-                                    ),
-                                  )
-                                : deployment.buildDuration &&
-                                    !isDeploymentTimeout(
-                                      deployment.status,
-                                      deployment.$createdAt,
                                     )
-                                  ? formatDuration(deployment.buildDuration)
-                                  : '-'}
-                            </code>
-                          </TableCell>
-                          <TableCell className="px-4 py-3">
-                            <DateTooltip
-                              date={deployment.$createdAt}
-                              className="text-[12px] font-medium text-muted-foreground"
-                            />
-                          </TableCell>
-                          <TableCell
-                            className="px-4 py-3 text-right"
-                            onClick={(e) => e.stopPropagation()}
-                          >
-                            <DropdownMenu>
-                              <DropdownMenuTrigger asChild>
-                                <RowActionsMenuTrigger
-                                  onClick={(e) => e.stopPropagation()}
-                                  onPointerDown={(e) => e.stopPropagation()}
-                                />
-                              </DropdownMenuTrigger>
-                              <DropdownMenuContent
-                                align="end"
-                                className="z-[200]"
-                              >
-                                {!isActive && (
+                                  : deployment.buildDuration &&
+                                      !isDeploymentTimeout(
+                                        deployment.status,
+                                        deployment.$createdAt,
+                                      )
+                                    ? formatDuration(deployment.buildDuration)
+                                    : '-'}
+                              </code>
+                            </TableCell>
+                            <TableCell className="px-4 py-3">
+                              <DateTooltip
+                                date={deployment.$createdAt}
+                                className="text-[12px] font-medium text-muted-foreground"
+                              />
+                            </TableCell>
+                            <TableCell
+                              className="px-4 py-3 text-right"
+                              onClick={(e) => e.stopPropagation()}
+                            >
+                              <DropdownMenu>
+                                <DropdownMenuTrigger asChild>
+                                  <RowActionsMenuTrigger
+                                    onClick={(e) => e.stopPropagation()}
+                                    onPointerDown={(e) => e.stopPropagation()}
+                                  />
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent
+                                  align="end"
+                                  className="z-[200]"
+                                >
+                                  {!isActive && (
+                                    <DropdownMenuItem
+                                      disabled={deployment.status !== 'ready'}
+                                      title={
+                                        deployment.status !== 'ready'
+                                          ? 'Build must be ready before activating'
+                                          : undefined
+                                      }
+                                      onClick={async (e) => {
+                                        e.stopPropagation()
+                                        if (deployment.status !== 'ready')
+                                          return
+                                        try {
+                                          const projectSdk = sdk.forProject(
+                                            projectId!,
+                                          )
+                                          await projectSdk.functions.updateFunctionDeployment(
+                                            {
+                                              functionId: functionId!,
+                                              deploymentId: deployment.$id,
+                                            },
+                                          )
+                                          queryClient.invalidateQueries({
+                                            queryKey: [
+                                              'deployments',
+                                              'project',
+                                              projectId,
+                                              functionId,
+                                            ],
+                                          })
+                                          queryClient.invalidateQueries({
+                                            queryKey: [
+                                              'function',
+                                              'project',
+                                              projectId,
+                                              functionId,
+                                            ],
+                                          })
+                                          toast.success(
+                                            'Deployment activated successfully',
+                                          )
+                                        } catch {
+                                          toast.error(
+                                            'Failed to activate deployment',
+                                          )
+                                        }
+                                      }}
+                                    >
+                                      <MenuItemContent icon={Play}>
+                                        Activate
+                                      </MenuItemContent>
+                                    </DropdownMenuItem>
+                                  )}
                                   <DropdownMenuItem
-                                    disabled={deployment.status !== 'ready'}
-                                    title={
-                                      deployment.status !== 'ready'
-                                        ? 'Build must be ready before activating'
-                                        : undefined
-                                    }
                                     onClick={async (e) => {
                                       e.stopPropagation()
-                                      if (deployment.status !== 'ready')
-                                        return
                                       try {
                                         const projectSdk = sdk.forProject(
                                           projectId!,
                                         )
-                                        await projectSdk.functions.updateFunctionDeployment(
+                                        await projectSdk.functions.createDuplicateDeployment(
                                           {
                                             functionId: functionId!,
                                             deploymentId: deployment.$id,
@@ -1675,7 +1728,144 @@ export function View() {
                                             functionId,
                                           ],
                                         })
-                                        queryClient.invalidateQueries({
+                                        toast.success(
+                                          'Deployment rebuild started',
+                                        )
+                                      } catch {
+                                        toast.error('Failed to redeploy')
+                                      }
+                                    }}
+                                  >
+                                    <MenuItemContent icon={RefreshCw}>
+                                      Redeploy
+                                    </MenuItemContent>
+                                  </DropdownMenuItem>
+                                  <DropdownMenuSub>
+                                    <DropdownMenuSubTrigger
+                                      onClick={(e) => e.stopPropagation()}
+                                      onPointerDown={(e) => e.stopPropagation()}
+                                    >
+                                      <MenuItemContent icon={Download}>
+                                        Download
+                                      </MenuItemContent>
+                                    </DropdownMenuSubTrigger>
+                                    <DropdownMenuSubContent className="z-[200]">
+                                      <DropdownMenuItem
+                                        onClick={(e) => {
+                                          e.stopPropagation()
+                                          if (!projectId || !functionId) return
+                                          try {
+                                            const projectSdk =
+                                              sdk.forProject(projectId)
+                                            const url =
+                                              projectSdk.functions.getDeploymentDownload(
+                                                {
+                                                  functionId,
+                                                  deploymentId: deployment.$id,
+                                                  type: DeploymentDownloadType.Source,
+                                                },
+                                              )
+                                            const urlWithMode =
+                                              url +
+                                              (url.includes('?') ? '&' : '?') +
+                                              'mode=admin'
+                                            window.open(urlWithMode, '_blank')
+                                            toast.success('Download started')
+                                          } catch {
+                                            toast.error(
+                                              'Failed to download source code',
+                                            )
+                                          }
+                                        }}
+                                      >
+                                        <MenuItemContent icon={FileCode}>
+                                          Source code
+                                        </MenuItemContent>
+                                      </DropdownMenuItem>
+                                      <DropdownMenuItem
+                                        disabled={
+                                          !isDeploymentCompleted(
+                                            deployment.status,
+                                          )
+                                        }
+                                        title={
+                                          !isDeploymentCompleted(
+                                            deployment.status,
+                                          )
+                                            ? 'Build output is available after the deployment has completed.'
+                                            : undefined
+                                        }
+                                        onClick={(e) => {
+                                          e.stopPropagation()
+                                          if (
+                                            !isDeploymentCompleted(
+                                              deployment.status,
+                                            )
+                                          )
+                                            return
+                                          if (!projectId || !functionId) return
+                                          try {
+                                            const projectSdk =
+                                              sdk.forProject(projectId)
+                                            const url =
+                                              projectSdk.functions.getDeploymentDownload(
+                                                {
+                                                  functionId,
+                                                  deploymentId: deployment.$id,
+                                                  type: DeploymentDownloadType.Output,
+                                                },
+                                              )
+                                            const urlWithMode =
+                                              url +
+                                              (url.includes('?') ? '&' : '?') +
+                                              'mode=admin'
+                                            window.open(urlWithMode, '_blank')
+                                            toast.success('Download started')
+                                          } catch {
+                                            toast.error(
+                                              'Failed to download build output',
+                                            )
+                                          }
+                                        }}
+                                      >
+                                        <MenuItemContent icon={Package}>
+                                          Build output
+                                        </MenuItemContent>
+                                      </DropdownMenuItem>
+                                    </DropdownMenuSubContent>
+                                  </DropdownMenuSub>
+                                  <DropdownMenuSeparator />
+                                  <DropdownMenuItem
+                                    disabled={!canDeleteFromMenu}
+                                    title={
+                                      !canDeleteFromMenu
+                                        ? isActive
+                                          ? 'The active deployment cannot be deleted from the list'
+                                          : isDeploymentInProgress(
+                                                deployment.status,
+                                              )
+                                            ? 'Wait for the build to finish or cancel it first'
+                                            : undefined
+                                        : undefined
+                                    }
+                                    onClick={async (e) => {
+                                      e.stopPropagation()
+                                      if (!canDeleteFromMenu) return
+                                      try {
+                                        await deleteFunctionDeployment(
+                                          projectId!,
+                                          functionId!,
+                                          deployment.$id,
+                                        )
+                                        await queryClient.refetchQueries({
+                                          queryKey: [
+                                            'deployments',
+                                            'project',
+                                            projectId,
+                                            functionId,
+                                          ],
+                                        })
+                                        await queryClient.refetchQueries({
                                           queryKey: [
                                             'function',
                                             'project',
@@ -1684,204 +1874,41 @@ export function View() {
                                           ],
                                         })
                                         toast.success(
-                                          'Deployment activated successfully',
+                                          'Deployment deleted successfully',
                                         )
-                                      } catch {
+                                      } catch (error) {
                                         toast.error(
-                                          'Failed to activate deployment',
+                                          error instanceof Error
+                                            ? error.message
+                                            : 'Failed to delete deployment',
                                         )
                                       }
                                     }}
                                   >
-                                    <MenuItemContent icon={Play}>Activate</MenuItemContent>
+                                    <MenuItemContent icon={Trash2}>
+                                      Delete
+                                    </MenuItemContent>
                                   </DropdownMenuItem>
-                                )}
-                                <DropdownMenuItem
-                                  onClick={async (e) => {
-                                    e.stopPropagation()
-                                    try {
-                                      const projectSdk = sdk.forProject(
-                                        projectId!,
-                                      )
-                                      await projectSdk.functions.createDuplicateDeployment(
-                                        {
-                                          functionId: functionId!,
-                                          deploymentId: deployment.$id,
-                                        },
-                                      )
-                                      queryClient.invalidateQueries({
-                                        queryKey: [
-                                          'deployments',
-                                          'project',
-                                          projectId,
-                                          functionId,
-                                        ],
-                                      })
-                                      toast.success(
-                                        'Deployment rebuild started',
-                                      )
-                                    } catch {
-                                      toast.error('Failed to redeploy')
-                                    }
-                                  }}
-                                >
-                                  <MenuItemContent icon={RefreshCw}>Redeploy</MenuItemContent>
-                                </DropdownMenuItem>
-                                <DropdownMenuSub>
-                                  <DropdownMenuSubTrigger
-                                    onClick={(e) => e.stopPropagation()}
-                                    onPointerDown={(e) => e.stopPropagation()}
-                                  >
-                                    <MenuItemContent icon={Download}>Download</MenuItemContent>
-                                  </DropdownMenuSubTrigger>
-                                  <DropdownMenuSubContent className="z-[200]">
+                                  {isDeploymentInProgress(
+                                    deployment.status,
+                                  ) && (
                                     <DropdownMenuItem
                                       onClick={(e) => {
                                         e.stopPropagation()
-                                        if (!projectId || !functionId) return
-                                        try {
-                                          const projectSdk =
-                                            sdk.forProject(projectId)
-                                          const url =
-                                            projectSdk.functions.getDeploymentDownload(
-                                              {
-                                                functionId,
-                                                deploymentId: deployment.$id,
-                                                type: DeploymentDownloadType.Source,
-                                              },
-                                            )
-                                          const urlWithMode =
-                                            url +
-                                            (url.includes('?') ? '&' : '?') +
-                                            'mode=admin'
-                                          window.open(urlWithMode, '_blank')
-                                          toast.success('Download started')
-                                        } catch {
-                                          toast.error(
-                                            'Failed to download source code',
-                                          )
-                                        }
+                                        setCancelTargetDeploymentId(
+                                          deployment.$id,
+                                        )
+                                        setCancelBuildDialogOpen(true)
                                       }}
                                     >
-                                      <MenuItemContent icon={FileCode}>Source code</MenuItemContent>
+                                      <MenuItemContent icon={XCircle}>
+                                        Cancel
+                                      </MenuItemContent>
                                     </DropdownMenuItem>
-                                    <DropdownMenuItem
-                                      disabled={
-                                        !isDeploymentCompleted(
-                                          deployment.status,
-                                        )
-                                      }
-                                      title={
-                                        !isDeploymentCompleted(
-                                          deployment.status,
-                                        )
-                                          ? 'Build output is available after the deployment has completed.'
-                                          : undefined
-                                      }
-                                      onClick={(e) => {
-                                        e.stopPropagation()
-                                        if (
-                                          !isDeploymentCompleted(
-                                            deployment.status,
-                                          )
-                                        )
-                                          return
-                                        if (!projectId || !functionId) return
-                                        try {
-                                          const projectSdk =
-                                            sdk.forProject(projectId)
-                                          const url =
-                                            projectSdk.functions.getDeploymentDownload(
-                                              {
-                                                functionId,
-                                                deploymentId: deployment.$id,
-                                                type: DeploymentDownloadType.Output,
-                                              },
-                                            )
-                                          const urlWithMode =
-                                            url +
-                                            (url.includes('?') ? '&' : '?') +
-                                            'mode=admin'
-                                          window.open(urlWithMode, '_blank')
-                                          toast.success('Download started')
-                                        } catch {
-                                          toast.error(
-                                            'Failed to download build output',
-                                          )
-                                        }
-                                      }}
-                                    >
-                                      <MenuItemContent icon={Package}>Build output</MenuItemContent>
-                                    </DropdownMenuItem>
-                                  </DropdownMenuSubContent>
-                                </DropdownMenuSub>
-                                <DropdownMenuSeparator />
-                                <DropdownMenuItem
-                                  disabled={!canDeleteFromMenu}
-                                  title={
-                                    !canDeleteFromMenu
-                                      ? isActive
-                                        ? 'The active deployment cannot be deleted from the list'
-                                        : isDeploymentInProgress(deployment.status)
-                                          ? 'Wait for the build to finish or cancel it first'
-                                          : undefined
-                                      : undefined
-                                  }
-                                  onClick={async (e) => {
-                                    e.stopPropagation()
-                                    if (!canDeleteFromMenu) return
-                                    try {
-                                      await deleteFunctionDeployment(
-                                        projectId!,
-                                        functionId!,
-                                        deployment.$id,
-                                      )
-                                      await queryClient.refetchQueries({
-                                        queryKey: [
-                                          'deployments',
-                                          'project',
-                                          projectId,
-                                          functionId,
-                                        ],
-                                      })
-                                      await queryClient.refetchQueries({
-                                        queryKey: [
-                                          'function',
-                                          'project',
-                                          projectId,
-                                          functionId,
-                                        ],
-                                      })
-                                      toast.success(
-                                        'Deployment deleted successfully',
-                                      )
-                                    } catch (error) {
-                                      toast.error(
-                                        error instanceof Error
-                                          ? error.message
-                                          : 'Failed to delete deployment',
-                                      )
-                                    }
-                                  }}
-                                >
-                                  <MenuItemContent icon={Trash2}>Delete</MenuItemContent>
-                                </DropdownMenuItem>
-                                {isDeploymentInProgress(deployment.status) && (
-                                  <DropdownMenuItem
-                                    onClick={(e) => {
-                                      e.stopPropagation()
-                                      setCancelTargetDeploymentId(
-                                        deployment.$id,
-                                      )
-                                      setCancelBuildDialogOpen(true)
-                                    }}
-                                  >
-                                    <MenuItemContent icon={XCircle}>Cancel</MenuItemContent>
-                                  </DropdownMenuItem>
-                                )}
-                              </DropdownMenuContent>
-                            </DropdownMenu>
-                          </TableCell>
+                                  )}
+                                </DropdownMenuContent>
+                              </DropdownMenu>
+                            </TableCell>
                           </tr>
                         </DeploymentListRowContextMenu>
                       )
@@ -2066,7 +2093,6 @@ export function View() {
                   <SpecificationsUpgradeNote
                     orgId={project?.teamId}
                     showContactSales
-                    analyticsSurface="function_deployments"
                   />
                 </div>
               )}

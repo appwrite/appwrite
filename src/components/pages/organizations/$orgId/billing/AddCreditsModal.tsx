@@ -72,7 +72,9 @@ export function AddCreditsModal({
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogContent className="sm:max-w-md p-0">
+      <DialogContent
+        className="sm:max-w-md p-0"
+>
         <DialogHeader className="px-6 pt-6 text-left">
           <DialogTitle>Add credits</DialogTitle>
           <DialogDescription className="text-[13px] mt-2">
@@ -82,7 +84,9 @@ export function AddCreditsModal({
         </DialogHeader>
         <div className="border-t border-border" />
 
-        <form onSubmit={handleSubmit}>
+        <form
+          onSubmit={handleSubmit}
+>
           <div className="px-6 pb-4 pt-4">
             <Label htmlFor="add-credits-code" className="text-[13px]">
               Add promo code
@@ -106,13 +110,13 @@ export function AddCreditsModal({
               variant="outline"
               onClick={() => handleOpenChange(false)}
               disabled={addCreditMutation.isPending}
-            >
+>
               Cancel
             </Button>
             <Button
               type="submit"
               disabled={!trimmedCode || addCreditMutation.isPending}
-            >
+>
               Add credits
             </Button>
           </div>

@@ -4,6 +4,7 @@ import {
   useLocation,
 } from '@tanstack/react-router'
 import { useEffect, useRef } from 'react'
+import { Loader2 } from 'lucide-react'
 import { AccountAccessBlockedScreen } from '@/components/global/auth/AccountAccessBlockedScreen'
 import { useAuth } from '@/components/global/auth/RequireAuth'
 import { ConsoleImpersonationBanner } from '@/components/global/shared/ConsoleImpersonationBanner'
@@ -16,7 +17,7 @@ export const Route = createFileRoute('/_public/')({
 })
 
 function RootRedirect() {
-  const { account, accountAccessBlocked, isLoading } = useAuth()
+  const { account, accountAccessBlocked, isLoading, isMfaRequired } = useAuth()
   const navigate = useNavigate()
   const location = useLocation()
   const hasRedirectedRef = useRef(false)
@@ -85,6 +86,14 @@ function RootRedirect() {
       <div className="flex min-h-svh w-full flex-col bg-background">
         <ConsoleImpersonationBanner sessionOnly />
         <AccountAccessBlockedScreen layout="fill" />
+      </div>
+    )
+  }
+
+  if (!isLoading && isMfaRequired) {
+    return (
+      <div className="flex min-h-svh items-center justify-center bg-background">
+        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
       </div>
     )
   }

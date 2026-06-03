@@ -124,8 +124,6 @@ export function TableSelector({
                 onClick={onCreateClick}
                 disabled={createDisabled}
                 aria-label={createTooltip}
-                data-analytics-id="table_selector_create"
-                data-analytics-surface="table_selector"
               >
                 <Plus className="h-4 w-4" />
               </Button>
@@ -145,8 +143,6 @@ export function TableSelector({
         <PopoverTrigger asChild>
           <Button
             variant="outline"
-            data-analytics-id="table_selector_open"
-            data-analytics-surface="table_selector"
             className={cn(
               'h-8 min-w-0 flex-1 justify-between gap-1.5 text-[13px] font-normal',
               (!value || value === '-') && 'text-muted-foreground',
@@ -163,7 +159,6 @@ export function TableSelector({
         <PopoverContent
           className="min-w-[var(--radix-popover-trigger-width)] max-w-[320px] p-0"
           align="start"
-          data-analytics-surface="table_selector"
         >
           <Command shouldFilter={false}>
             <div className="relative">
@@ -171,8 +166,6 @@ export function TableSelector({
                 placeholder="Search"
                 value={search}
                 onValueChange={setSearch}
-                data-analytics-id="table_selector_search"
-                data-analytics-surface="table_selector"
                 className={cn('h-9', isFetching && 'pr-8')}
               />
               <div
@@ -187,9 +180,7 @@ export function TableSelector({
             </div>
             <CommandList className="max-h-[240px]">
               {tables.length === 0 && (
-                <CommandEmpty>
-                  {isFetching ? '' : noResultsLabel}
-                </CommandEmpty>
+                <CommandEmpty>{isFetching ? '' : noResultsLabel}</CommandEmpty>
               )}
               <CommandGroup>
                 {tables.map((table) => (
@@ -200,8 +191,6 @@ export function TableSelector({
                       onSelect(table.$id)
                       setOpen(false)
                     }}
-                    data-analytics-id="table_selector_select"
-                    data-analytics-surface="table_selector"
                     className="flex w-full cursor-pointer items-center gap-1.5 rounded-sm px-2 py-1.5 text-left text-[13px] outline-none transition-colors hover:bg-accent hover:text-accent-foreground"
                   >
                     <ItemIcon className="h-4 w-4 shrink-0 text-muted-foreground" />
@@ -223,8 +212,6 @@ export function TableSelector({
               onClick={onCreateClick}
               disabled={createDisabled}
               aria-label={createTooltip}
-              data-analytics-id="table_selector_create"
-              data-analytics-surface="table_selector"
             >
               <Plus className="h-4 w-4" />
             </Button>

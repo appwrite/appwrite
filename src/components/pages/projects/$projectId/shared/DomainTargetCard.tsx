@@ -73,9 +73,6 @@ export function DomainTargetCard({
             type="button"
             onClick={() => onBehaviourChange('active')}
             disabled={disabled}
-            data-analytics-id="domain_target_select"
-            data-analytics-surface="domain_target_card"
-            data-analytics-prop-target="active"
             className={cn(
               'text-left rounded-lg border p-4 transition-all cursor-pointer',
               behaviour === 'active'
@@ -96,9 +93,6 @@ export function DomainTargetCard({
             onClick={() => !branchDisabled && onBehaviourChange('branch')}
             disabled={disabled || branchDisabled}
             title={branchDisabled ? 'Connect repository first' : undefined}
-            data-analytics-id="domain_target_select"
-            data-analytics-surface="domain_target_card"
-            data-analytics-prop-target="branch"
             className={cn(
               'text-left rounded-lg border p-4 transition-all cursor-pointer',
               behaviour === 'branch'
@@ -118,9 +112,6 @@ export function DomainTargetCard({
             type="button"
             onClick={() => onBehaviourChange('redirect')}
             disabled={disabled || redirectDisabled}
-            data-analytics-id="domain_target_select"
-            data-analytics-surface="domain_target_card"
-            data-analytics-prop-target="redirect"
             className={cn(
               'text-left rounded-lg border p-4 transition-all cursor-pointer',
               behaviour === 'redirect'
@@ -145,11 +136,7 @@ export function DomainTargetCard({
               onValueChange={onBranchChange}
               disabled={disabled}
             >
-              <SelectTrigger
-                className="mt-1.5 h-9 w-full max-w-[200px]"
-                data-analytics-id="domain_target_branch_select"
-                data-analytics-surface="domain_target_card"
-              >
+              <SelectTrigger className="mt-1.5 h-9 w-full max-w-[200px]">
                 <SelectValue placeholder="Select branch" />
               </SelectTrigger>
               <SelectContent>
@@ -175,8 +162,6 @@ export function DomainTargetCard({
                   onChange={(e) => onRedirectUrlChange(e.target.value)}
                   className="font-mono mt-1.5"
                   disabled={disabled}
-                  data-analytics-id="domain_target_redirect_url"
-                  data-analytics-surface="domain_target_card"
                 />
               </div>
               <div>
@@ -189,22 +174,12 @@ export function DomainTargetCard({
                   onValueChange={onStatusCodeChange}
                   disabled={disabled}
                 >
-                  <SelectTrigger
-                    className="mt-1.5 h-9 min-w-[240px] [&_[data-slot=select-value]]:line-clamp-none"
-                    data-analytics-id="domain_target_status_code_select"
-                    data-analytics-surface="domain_target_card"
-                  >
+                  <SelectTrigger className="mt-1.5 h-9 min-w-[240px] [&_[data-slot=select-value]]:line-clamp-none">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
                     {STATUS_CODES.map((s) => (
-                      <SelectItem
-                        key={s.value}
-                        value={s.value}
-                        data-analytics-id="domain_target_status_code_option"
-                        data-analytics-surface="domain_target_card"
-                        data-analytics-prop-status_code={s.value}
-                      >
+                      <SelectItem key={s.value} value={s.value}>
                         {s.label} - {s.description}
                       </SelectItem>
                     ))}

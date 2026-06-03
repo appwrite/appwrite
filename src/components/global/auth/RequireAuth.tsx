@@ -7,6 +7,7 @@ import {
 } from '@/lib/appwrite/sdk'
 import { AppwriteException } from '@appwrite.io/console'
 import { ReactNode, useEffect, useRef } from 'react'
+import { Loader2 } from 'lucide-react'
 import { useConsoleImpersonationRevision } from '@/hooks/use-console-impersonation-revision'
 import { clearConsoleImpersonationSession } from '@/lib/console-impersonation'
 import { isHttpForbiddenError } from '@/lib/utils/error-formatting'
@@ -168,9 +169,17 @@ export interface AuthData {
   account: unknown
   isLoading: boolean
   isAuthenticated: boolean
+  isMfaRequired: boolean
   /** Present when `account.get` returned 403 (blocked / forbidden console access). */
   accountAccessBlocked?: boolean
   signOut: (navigate?: (options: { to: string }) => void) => Promise<void>
+}
+
+function isMfaRequiredError(error: unknown) {
+  return (
+    error instanceof AppwriteException &&
+    error.type === 'user_more_factors_required'
+  )
 }
 
 // Client-side sign out function - deletes only the current session
@@ -274,12 +283,14 @@ export function RequireAuth({
   useAuthErrorNavigation(error, location)
 
   const accountAccessBlocked = !!error && isHttpForbiddenError(error)
+  const isMfaRequired = isMfaRequiredError(error)
   const isAuthenticated = !!account && !error
   const authData: AuthData = {
     currentUser,
     account,
     isLoading,
     isAuthenticated,
+    isMfaRequired,
     accountAccessBlocked,
     signOut: () => signOut(navigate),
   }
@@ -301,6 +312,15 @@ export function RequireAuth({
   // If not authenticated, the hook will redirect to /sign-in
   // But we can also show a fallback here
   if (!isAuthenticated) {
+    if (isMfaRequired && location.pathname !== '/mfa') {
+      return (
+        loadingComponent ?? (
+          <div className="flex min-h-svh items-center justify-center bg-background">
+            <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+          </div>
+        )
+      )
+    }
     return <>{fallback}</>
   }
 
@@ -351,6 +371,7 @@ export function useAuth(): AuthData {
     account,
     isLoading,
     isAuthenticated: !!account && !error,
+    isMfaRequired: isMfaRequiredError(error),
     accountAccessBlocked,
     signOut: () => signOut(navigate),
   }

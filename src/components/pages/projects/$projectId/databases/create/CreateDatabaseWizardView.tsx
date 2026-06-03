@@ -28,12 +28,16 @@ import {
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
-import { createProjectDatabase } from '@/lib/react-query/hooks'
+import { createProjectDatabase, useProject } from '@/lib/react-query/hooks'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
 import { DatabaseType } from '@appwrite.io/console'
 import { cn } from '@/lib/utils'
 import { useConsoleProfile } from '@/hooks/use-console-profile'
-import { TABLE_DB_SPEC_OPTIONS as SPEC_OPTIONS } from '@/lib/database-specs'
+import {
+  TABLE_DB_SPEC_OPTIONS as SPEC_OPTIONS,
+  hasLockedDatabaseSpecifications,
+} from '@/lib/database-specs'
+import { SpecificationsUpgradeNote } from '@/components/global/shared/SpecificationsUpgradeNote'
 import { DEFAULT_NEW_DATABASE_NAME } from '@/lib/default-new-database-name'
 import { useAnalytics } from '@/hooks/use-analytics'
 
@@ -60,7 +64,7 @@ const DB_TYPE_GROUPS: {
   {
     title: 'Appwrite databases',
     description:
-      'Managed Appwrite-native databases for app data, documents, and AI workloads.',
+      'Managed databases built into Appwrite for app data, documents, and AI workloads.',
     options: [
       {
         id: 'TablesDB',
@@ -80,15 +84,15 @@ const DB_TYPE_GROUPS: {
         id: 'VectorsDB',
         label: 'VectorsDB',
         description:
-          'Vector database for embeddings and similarity search. Power AI features like semantic search and recommendations.',
+          'Vector database for embeddings and similarity search. Ideal for semantic search and AI.',
         icon: 'layers',
       },
     ],
   },
   {
-    title: 'Raw databases',
+    title: 'Native databases',
     description:
-      'Dedicated SQL engines for teams that need direct Postgres or MySQL compatibility.',
+      'Dedicated Postgres and MySQL engines for teams that need direct SQL compatibility.',
     options: [
       {
         id: 'Postgres',
@@ -132,6 +136,7 @@ export function CreateDatabaseWizardView() {
   const pid = projectId as string
   const { features } = useConsoleProfile()
   const { track } = useAnalytics()
+  const { project } = useProject(pid)
 
   const [dbType, setDbType] = useState<DatabaseTypeOption | null>(null)
   const [specId, setSpecId] = useState<string | null>(null)
@@ -364,7 +369,7 @@ export function CreateDatabaseWizardView() {
               Choose database type
             </h2>
             <p className="text-[13px] text-muted-foreground">
-              Pick an Appwrite-native database or a raw database engine.
+              Pick an Appwrite database or a native SQL engine.
             </p>
           </div>
           <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
@@ -558,6 +563,14 @@ export function CreateDatabaseWizardView() {
                 </Table>
               </RadioGroup>
             </div>
+            {hasLockedDatabaseSpecifications(selectableSpecs) && (
+              <div className="mt-3">
+                <SpecificationsUpgradeNote
+                  orgId={project?.teamId}
+                  showContactSales
+                />
+              </div>
+            )}
           </section>
         )}
       </div>

@@ -59,8 +59,7 @@ export function CopyableId({
   const [copied, setCopied] = useState(false)
   const shown = displayText ?? id
   const copyOnHover = showCopyOnHover ?? variant === 'inline'
-  const nativeTitle =
-    displayText && displayText !== id ? id : undefined
+  const nativeTitle = displayText && displayText !== id ? id : undefined
 
   const handleCopy = (e: React.MouseEvent) => {
     e.stopPropagation()
@@ -78,8 +77,6 @@ export function CopyableId({
       type="button"
       onClick={handleCopy}
       title={nativeTitle}
-      data-analytics-id="copyable_id_copy"
-      data-analytics-surface="copyable_id"
       className={cn(
         'group/copyable inline-flex items-center cursor-pointer font-mono transition-colors',
         variant === 'badge'

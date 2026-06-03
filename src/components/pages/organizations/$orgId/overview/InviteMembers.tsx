@@ -265,12 +265,8 @@ export function InviteMembersDialog({
                   {remainingSlots === 0 ? (
                     <>
                       You have reached your member limit.{' '}
-                      <UpgradePlanLink
-                        orgId={organizationId}
-                        analyticsSurface="invite_members_dialog"
-                        data-analytics-resource="organization"
-                      />{' '}
-                      to invite more members.
+                      <UpgradePlanLink orgId={organizationId} /> to invite more
+                      members.
                     </>
                   ) : (
                     `You have ${remainingSlots} member slot${remainingSlots !== 1 ? 's' : ''} remaining.`

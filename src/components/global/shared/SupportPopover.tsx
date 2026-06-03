@@ -205,8 +205,6 @@ export function SupportPopover({ orgId }: SupportPopoverProps) {
               size="icon"
               className="h-9 w-9 text-muted-foreground hover:bg-accent hover:text-foreground"
               aria-label="Support"
-              data-analytics-id="support_open"
-              data-analytics-surface="support_popover"
             >
               <Headphones className="h-4 w-4" />
             </Button>
@@ -216,11 +214,7 @@ export function SupportPopover({ orgId }: SupportPopoverProps) {
           <p>Support</p>
         </TooltipContent>
       </Tooltip>
-      <PopoverContent
-        align="end"
-        className="w-80 p-0"
-        data-analytics-surface="support_popover"
-      >
+      <PopoverContent align="end" className="w-80 p-0">
         {/* Contact Support Section */}
         <div className="p-4">
           <div className="flex items-start gap-3">
@@ -270,12 +264,7 @@ export function SupportPopover({ orgId }: SupportPopoverProps) {
           {hasPremiumSupport ? (
             orgId ? (
               <Button className="mt-3 w-full" size="sm" asChild>
-                <Link
-                  to="/organizations/$orgId/support"
-                  params={{ orgId }}
-                  data-analytics-id="support_contact"
-                  data-analytics-surface="support_popover"
-                >
+                <Link to="/organizations/$orgId/support" params={{ orgId }}>
                   <MessageCircle className="mr-1.5 h-4 w-4" />
                   Contact Support
                 </Link>
@@ -291,13 +280,7 @@ export function SupportPopover({ orgId }: SupportPopoverProps) {
               <p className="mt-3 text-xs text-muted-foreground">
                 Upgrade your plan to get email support.
               </p>
-              <Button
-                className="mt-2 w-full"
-                size="sm"
-                onClick={handleUpgrade}
-                data-analytics-id="support_upgrade"
-                data-analytics-surface="support_popover"
-              >
+              <Button className="mt-2 w-full" size="sm" onClick={handleUpgrade}>
                 Upgrade
               </Button>
             </>
@@ -317,8 +300,6 @@ export function SupportPopover({ orgId }: SupportPopoverProps) {
               href={CONTACT_SALES_URL}
               target="_blank"
               rel="noopener noreferrer"
-              data-analytics-id="support_contact_sales"
-              data-analytics-surface="support_popover"
               className="flex items-center gap-3 rounded-md px-3 py-2 text-sm transition-colors hover:bg-muted"
             >
               <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-muted text-muted-foreground">
@@ -337,8 +318,6 @@ export function SupportPopover({ orgId }: SupportPopoverProps) {
               href="https://appwrite.io/discord"
               target="_blank"
               rel="noopener noreferrer"
-              data-analytics-id="support_discord"
-              data-analytics-surface="support_popover"
               className="flex items-center gap-3 rounded-md px-3 py-2 text-sm transition-colors hover:bg-muted"
             >
               <div className="flex h-8 w-8 items-center justify-center rounded-md bg-[#5865F2]/10">
@@ -363,8 +342,6 @@ export function SupportPopover({ orgId }: SupportPopoverProps) {
               href="https://github.com/appwrite/appwrite/issues/new/choose"
               target="_blank"
               rel="noopener noreferrer"
-              data-analytics-id="support_github_issue"
-              data-analytics-surface="support_popover"
               className="flex items-center gap-3 rounded-md px-3 py-2 text-sm transition-colors hover:bg-muted"
             >
               <div className="flex h-8 w-8 items-center justify-center rounded-md bg-foreground/10">
@@ -395,8 +372,6 @@ export function SupportPopover({ orgId }: SupportPopoverProps) {
                 href="https://status.appwrite.online"
                 target="_blank"
                 rel="noopener noreferrer"
-                data-analytics-id="support_status_page"
-                data-analytics-surface="support_popover"
                 className="flex cursor-pointer items-start gap-3 rounded-md px-3 py-2 text-sm transition-colors hover:bg-muted"
               >
                 <div
