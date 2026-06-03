@@ -8,6 +8,7 @@ import {
   ShortcutKeyBadges,
 } from '@/components/global/shared/KeyboardShortcutsView'
 import {
+  Bell,
   Building2,
   Clock,
   Database,
@@ -15,7 +16,9 @@ import {
   FolderOpen,
   Globe,
   Keyboard,
+  Megaphone,
   Play,
+  Send,
   Terminal,
   Users,
   X,
@@ -43,6 +46,9 @@ import {
   useProjectBuckets,
   useProjectFunctions,
   useProjectSites,
+  useProjectMessages,
+  useProjectTopics,
+  useProjectProviders,
   useProject,
   useOrganizationScopes,
 } from '@/lib/react-query/hooks'
@@ -51,13 +57,20 @@ import { useConsoleProfile } from '@/hooks/use-console-profile'
 import {
   DEFAULT_GROUP_LABELS,
   getCommandsForContext,
+  PROJECT_RESOURCE_KIND_LABELS,
   searchCommands,
+  searchCommandsWithScores,
+  getMessageSearchLabel,
   type CommandContext,
   type CommandEntry,
   type CommandKind,
   type CommandScope,
+  type ProjectResourceHit,
+  type ProjectResourceKind,
 } from '@/lib/command-center'
+import { canSeeProjectNavItem } from '@/lib/console-access-checks'
 import { FULL_ACCESS } from '@/lib/console-roles'
+import { useCommandCenterResourceSearch } from '@/hooks/use-command-center-resource-search'
 import type {
   CommandCenterContext,
   CreateResourceType,
@@ -72,7 +85,22 @@ type ResourceScope =
   | 'buckets'
   | 'functions'
   | 'sites'
+  | 'messages'
+  | 'topics'
+  | 'providers'
   | 'projects'
+
+const RESOURCE_KIND_ICONS: Record<ProjectResourceKind, LucideIcon> = {
+  database: Database,
+  user: Users,
+  team: Building2,
+  bucket: Folder,
+  function: Zap,
+  site: Globe,
+  message: Send,
+  topic: Megaphone,
+  provider: Bell,
+}
 
 interface ResourceSearchSpec {
   scope: ResourceScope
@@ -123,6 +151,27 @@ const RESOURCE_SEARCH_SPECS: ResourceSearchSpec[] = [
     label: 'Search sites',
     description: 'Find a site by name or ID',
     icon: Globe,
+    availableScopes: ['project'],
+  },
+  {
+    scope: 'messages',
+    label: 'Search messages',
+    description: 'Find a message by content or ID',
+    icon: Send,
+    availableScopes: ['project'],
+  },
+  {
+    scope: 'topics',
+    label: 'Search topics',
+    description: 'Find a topic by name or ID',
+    icon: Megaphone,
+    availableScopes: ['project'],
+  },
+  {
+    scope: 'providers',
+    label: 'Search providers',
+    description: 'Find a provider by name or ID',
+    icon: Bell,
     availableScopes: ['project'],
   },
   {
@@ -470,6 +519,89 @@ export function CommandCenter({
     shouldFetch && searchScope === 'sites' ? search : undefined,
   )
 
+  const { messages: projectMessages, isLoading: messagesLoading } =
+    useProjectMessages(
+      isProjectContext && projectId && shouldFetch && searchScope === 'messages'
+        ? projectId
+        : null,
+      0,
+      100,
+      shouldFetch && searchScope === 'messages' ? search : undefined,
+    )
+
+  const { topics: projectTopics, isLoading: topicsLoading } = useProjectTopics(
+    isProjectContext && projectId && shouldFetch && searchScope === 'topics'
+      ? projectId
+      : null,
+    0,
+    100,
+    shouldFetch && searchScope === 'topics' ? search : undefined,
+  )
+
+  const { providers: projectProviders, isLoading: providersLoading } =
+    useProjectProviders(
+      isProjectContext &&
+        projectId &&
+        shouldFetch &&
+        searchScope === 'providers'
+        ? projectId
+        : null,
+      0,
+      100,
+      shouldFetch && searchScope === 'providers' ? search : undefined,
+    )
+
+  const searchableResourceKinds = useMemo(() => {
+    const kinds = new Set<ProjectResourceKind>()
+    if (!isProjectContext) return kinds
+
+    if (canSeeProjectNavItem(access, features, 'databases')) kinds.add('database')
+    if (canSeeProjectNavItem(access, features, 'storage')) kinds.add('bucket')
+    if (canSeeProjectNavItem(access, features, 'functions')) kinds.add('function')
+    if (canSeeProjectNavItem(access, features, 'sites')) kinds.add('site')
+    if (canSeeProjectNavItem(access, features, 'messaging')) {
+      kinds.add('message')
+      kinds.add('topic')
+      kinds.add('provider')
+    }
+    kinds.add('user')
+    kinds.add('team')
+    return kinds
+  }, [isProjectContext, access, features])
+
+  const shouldRunUnifiedResourceSearch =
+    isProjectContext &&
+    !!projectId &&
+    hasSearch &&
+    !searchScope &&
+    searchableResourceKinds.size > 0
+
+  const {
+    hits: unifiedResourceHits,
+    isLoading: unifiedResourceLoading,
+    isFetching: unifiedResourceFetching,
+  } = useCommandCenterResourceSearch({
+    projectId,
+    query: search,
+    enabled: shouldRunUnifiedResourceSearch,
+    kinds: searchableResourceKinds,
+  })
+
+  const displayedUnifiedResourceHitsRef = useRef<ProjectResourceHit[]>([])
+  useEffect(() => {
+    if (!unifiedResourceFetching && shouldRunUnifiedResourceSearch) {
+      displayedUnifiedResourceHitsRef.current = unifiedResourceHits
+    }
+  }, [
+    unifiedResourceFetching,
+    shouldRunUnifiedResourceSearch,
+    unifiedResourceHits,
+  ])
+  const stableUnifiedResourceHits =
+    unifiedResourceFetching && displayedUnifiedResourceHitsRef.current.length > 0
+      ? displayedUnifiedResourceHitsRef.current
+      : unifiedResourceHits
+
   // Reset state when dialog closes
   useEffect(() => {
     if (!open) {
@@ -500,6 +632,12 @@ export function CommandCenter({
         return functionsLoading
       case 'sites':
         return sitesLoading
+      case 'messages':
+        return messagesLoading
+      case 'topics':
+        return topicsLoading
+      case 'providers':
+        return providersLoading
       case 'projects':
         return orgProjectsLoading
       default:
@@ -513,6 +651,9 @@ export function CommandCenter({
     bucketsLoading,
     functionsLoading,
     sitesLoading,
+    messagesLoading,
+    topicsLoading,
+    providersLoading,
     orgProjectsLoading,
   ])
 
@@ -606,18 +747,90 @@ export function CommandCenter({
     }
     if (searchScope === 'sites' && projectSites && !sitesLoading) {
       projectSites.forEach((site: { $id: string; name: string }) => {
-        items.push({
-          id: `site-${site.$id}`,
-          label: site.name,
-          description: `Site · ${site.$id}`,
-          icon: Globe,
-          kind: 'action',
-          select: () => {
-            if (onNavigateToResource) onNavigateToResource('sites', site.$id)
-            else onNavigate?.('sites')
-            onOpenChange(false)
-          },
-        })
+        items.push(
+          projectResourceHitToRuntimeCommand(
+            {
+              id: `site-${site.$id}`,
+              kind: 'site',
+              label: site.name,
+              description: site.$id,
+              section: 'sites',
+              resourceId: site.$id,
+              score: 0,
+            },
+            {
+              onNavigateToResource,
+              onNavigate,
+              onOpenChange,
+            },
+          ),
+        )
+      })
+    }
+    if (searchScope === 'messages' && projectMessages && !messagesLoading) {
+      projectMessages.forEach((message) => {
+        items.push(
+          projectResourceHitToRuntimeCommand(
+            {
+              id: `message-${message.$id}`,
+              kind: 'message',
+              label: getMessageSearchLabel(message),
+              description: `${message.providerType} · ${message.$id}`,
+              section: 'messaging/messages',
+              resourceId: message.$id,
+              score: 0,
+            },
+            {
+              onNavigateToResource,
+              onNavigate,
+              onOpenChange,
+            },
+          ),
+        )
+      })
+    }
+    if (searchScope === 'topics' && projectTopics && !topicsLoading) {
+      projectTopics.forEach((topic) => {
+        items.push(
+          projectResourceHitToRuntimeCommand(
+            {
+              id: `topic-${topic.$id}`,
+              kind: 'topic',
+              label: topic.name,
+              description: topic.$id,
+              section: 'messaging/topics',
+              resourceId: topic.$id,
+              score: 0,
+            },
+            {
+              onNavigateToResource,
+              onNavigate,
+              onOpenChange,
+            },
+          ),
+        )
+      })
+    }
+    if (searchScope === 'providers' && projectProviders && !providersLoading) {
+      projectProviders.forEach((provider) => {
+        items.push(
+          projectResourceHitToRuntimeCommand(
+            {
+              id: `provider-${provider.$id}`,
+              kind: 'provider',
+              label: provider.name,
+              description: `${provider.type} · ${provider.$id}`,
+              section: 'messaging/providers',
+              resourceId: provider.$id,
+              score: 0,
+            },
+            {
+              onNavigateToResource,
+              onNavigate,
+              onOpenChange,
+            },
+          ),
+        )
       })
     }
     if (searchScope === 'projects' && orgProjects && !orgProjectsLoading) {
@@ -652,6 +865,12 @@ export function CommandCenter({
     functionsLoading,
     projectSites,
     sitesLoading,
+    projectMessages,
+    messagesLoading,
+    projectTopics,
+    topicsLoading,
+    projectProviders,
+    providersLoading,
     orgProjects,
     orgProjectsLoading,
     features.multiRegion,
@@ -830,6 +1049,55 @@ export function CommandCenter({
   // Memoize the visible groups (drops empty buckets so an empty resource
   // scope doesn't render a stray "Databases" heading underneath the empty
   // state text).
+  const unifiedSearchCommands = useMemo(() => {
+    if (!shouldRunUnifiedResourceSearch || !search.trim()) return []
+
+    const scoredCommands = searchCommandsWithScores(
+      search,
+      allCommands.map((cmd) => ({
+        id: cmd.id,
+        label: cmd.label,
+        description: cmd.description,
+        keywords: cmd.keywords,
+        kind: cmd.kind,
+        group: cmd.group,
+      })),
+    )
+    const commandById = new Map(allCommands.map((cmd) => [cmd.id, cmd]))
+
+    const merged = [
+      ...scoredCommands.map(({ entry, score }) => ({
+        command: commandById.get(entry.id)!,
+        score,
+      })),
+      ...stableUnifiedResourceHits.map((hit) => ({
+        command: projectResourceHitToRuntimeCommand(hit, {
+          onNavigateToResource,
+          onNavigate,
+          onOpenChange,
+        }),
+        score: hit.score,
+      })),
+    ]
+      .filter((item): item is { command: RuntimeCommand; score: number } =>
+        Boolean(item.command),
+      )
+      .sort((a, b) => {
+        if (b.score !== a.score) return b.score - a.score
+        return a.command.label.localeCompare(b.command.label)
+      })
+
+    return merged.map((item) => item.command)
+  }, [
+    shouldRunUnifiedResourceSearch,
+    search,
+    allCommands,
+    stableUnifiedResourceHits,
+    onNavigateToResource,
+    onNavigate,
+    onOpenChange,
+  ])
+
   const filteredGroups = useMemo(() => {
     // When user is in a resource search scope, just show the dynamic results.
     if (searchScope) {
@@ -840,6 +1108,9 @@ export function CommandCenter({
         buckets: 'Buckets',
         functions: 'Functions',
         sites: 'Sites',
+        messages: 'Messages',
+        topics: 'Topics',
+        providers: 'Providers',
         projects: 'Projects',
       }
       return [{ id: 'resources', label: labels[searchScope], commands: resourceCommands }]
@@ -847,6 +1118,17 @@ export function CommandCenter({
 
     if (!search.trim()) {
       return defaultGroups
+    }
+
+    if (shouldRunUnifiedResourceSearch) {
+      if (unifiedSearchCommands.length === 0) return []
+      return [
+        {
+          id: 'results',
+          label: 'Results',
+          commands: unifiedSearchCommands,
+        },
+      ]
     }
 
     const matched = searchCommandsRuntime(search, allCommands)
@@ -865,7 +1147,15 @@ export function CommandCenter({
       label,
       commands,
     }))
-  }, [search, searchScope, defaultGroups, allCommands, resourceCommands])
+  }, [
+    search,
+    searchScope,
+    defaultGroups,
+    allCommands,
+    resourceCommands,
+    shouldRunUnifiedResourceSearch,
+    unifiedSearchCommands,
+  ])
 
   const nonEmptyGroups = useMemo(
     () => filteredGroups.filter((group) => group.commands.length > 0),
@@ -1122,7 +1412,9 @@ export function CommandCenter({
                 <div className="py-6 text-center text-[13px] text-muted-foreground">
                   {searchScope && isScopeLoading
                     ? `Searching ${searchScope}…`
-                    : 'No results found.'}
+                    : shouldRunUnifiedResourceSearch && unifiedResourceLoading
+                      ? 'Searching resources…'
+                      : 'No results found.'}
                 </div>
               )}
 
@@ -1171,6 +1463,16 @@ export function CommandCenter({
                           )}
                           {cmd.isResourceSearch && (
                             <ArrowRight className="h-3.5 w-3.5 text-muted-foreground/50" />
+                          )}
+                          {cmd.resourceKind && (
+                            <span
+                              className={cn(
+                                'shrink-0 rounded-full px-2 py-0.5 text-[10px] font-medium',
+                                'bg-muted text-muted-foreground',
+                              )}
+                            >
+                              {PROJECT_RESOURCE_KIND_LABELS[cmd.resourceKind]}
+                            </span>
                           )}
                         </CommandItem>
                       )
@@ -1235,8 +1537,40 @@ interface RuntimeCommand {
   disabled?: boolean
   /** Used for the "Search X" CTAs to render the right arrow chevron. */
   isResourceSearch?: boolean
+  /** Resource type badge for unified project resource search results. */
+  resourceKind?: ProjectResourceKind
   /** Internal: navigation target (used by legacy callback bridges). */
   href?: string
+}
+
+interface ProjectResourceNavigationHandlers {
+  onNavigateToResource?: (section: string, resourceId: string) => void
+  onNavigate?: (section: string) => void
+  onOpenChange: (open: boolean) => void
+}
+
+function projectResourceHitToRuntimeCommand(
+  hit: ProjectResourceHit,
+  handlers: ProjectResourceNavigationHandlers,
+): RuntimeCommand {
+  const fallbackSection = hit.section.split('/')[0] ?? hit.section
+
+  return {
+    id: hit.id,
+    label: hit.label,
+    description: hit.description,
+    icon: RESOURCE_KIND_ICONS[hit.kind],
+    kind: 'action',
+    resourceKind: hit.kind,
+    select: () => {
+      if (handlers.onNavigateToResource) {
+        handlers.onNavigateToResource(hit.section, hit.resourceId)
+      } else {
+        handlers.onNavigate?.(fallbackSection)
+      }
+      handlers.onOpenChange(false)
+    },
+  }
 }
 
 function toRuntimeCommand(entry: CommandEntry, ctx: CommandContext): RuntimeCommand {

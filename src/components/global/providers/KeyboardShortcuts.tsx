@@ -158,6 +158,21 @@ export function KeyboardShortcutsProvider({
           to: '/projects/$projectId/sites/$siteId',
           params: { projectId, siteId: resourceId },
         })
+      } else if (section === 'messaging/messages') {
+        navigate({
+          to: '/projects/$projectId/messaging/$messageId',
+          params: { projectId, messageId: resourceId },
+        })
+      } else if (section === 'messaging/topics') {
+        navigate({
+          to: '/projects/$projectId/messaging/topics/$topicId',
+          params: { projectId, topicId: resourceId },
+        })
+      } else if (section === 'messaging/providers') {
+        navigate({
+          to: '/projects/$projectId/messaging/providers/$providerId',
+          params: { projectId, providerId: resourceId },
+        })
       }
     },
     [navigate, projectId],

@@ -14,6 +14,16 @@ export {
   registerCommands,
 } from './registry'
 export { searchCommands, type ScoredCommand } from './search'
+export {
+  COMMAND_CENTER_MAX_RESOURCE_HITS,
+  COMMAND_CENTER_RESOURCE_LIMIT,
+  PROJECT_RESOURCE_KIND_LABELS,
+  getMessageSearchLabel,
+  searchCommandsWithScores,
+  type ProjectResourceHit,
+  type ProjectResourceKind,
+  type ProjectResourceSection,
+} from './resource-search'
 
 // Eager registration of built-in entries.
 import './entries'
