@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "0c23c30bba86ad84377d4d1abce0992a",
+    "content-hash": "3741a6417a090af9c7dae4c76a15d83f",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -3924,16 +3924,16 @@
         },
         {
             "name": "utopia-php/database",
-            "version": "5.9.0",
+            "version": "dev-feat/explain",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/database.git",
-                "reference": "477bae83e27631f78c159f45b0441c0c7dc69050"
+                "reference": "9164948e358859a719b8d513eb3388846dce641a"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/database/zipball/477bae83e27631f78c159f45b0441c0c7dc69050",
-                "reference": "477bae83e27631f78c159f45b0441c0c7dc69050",
+                "url": "https://api.github.com/repos/utopia-php/database/zipball/9164948e358859a719b8d513eb3388846dce641a",
+                "reference": "9164948e358859a719b8d513eb3388846dce641a",
                 "shasum": ""
             },
             "require": {
@@ -3978,9 +3978,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/database/issues",
-                "source": "https://github.com/utopia-php/database/tree/5.9.0"
+                "source": "https://github.com/utopia-php/database/tree/feat/explain"
             },
-            "time": "2026-05-17T15:57:21+00:00"
+            "time": "2026-06-03T18:00:49+00:00"
         },
         {
             "name": "utopia-php/detector",
@@ -8571,9 +8571,17 @@
             "time": "2026-05-30T17:09:26+00:00"
         }
     ],
-    "aliases": [],
+    "aliases": [
+        {
+            "package": "utopia-php/database",
+            "version": "dev-feat/explain",
+            "alias": "5.9.0",
+            "alias_normalized": "5.9.0.0"
+        }
+    ],
     "minimum-stability": "dev",
     "stability-flags": {
+        "utopia-php/database": 20,
         "utopia-php/http": 5
     },
     "prefer-stable": true,
