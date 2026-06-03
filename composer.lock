@@ -5640,16 +5640,16 @@
     "packages-dev": [
         {
             "name": "appwrite/sdk-generator",
-            "version": "1.31.9",
+            "version": "1.32.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/appwrite/sdk-generator.git",
-                "reference": "e7fa2eb215091df41a4535b306f60dad92652426"
+                "reference": "7ec48fd30746e9fbc3a9bd7d3af8052acf400ff8"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/appwrite/sdk-generator/zipball/e7fa2eb215091df41a4535b306f60dad92652426",
-                "reference": "e7fa2eb215091df41a4535b306f60dad92652426",
+                "url": "https://api.github.com/repos/appwrite/sdk-generator/zipball/7ec48fd30746e9fbc3a9bd7d3af8052acf400ff8",
+                "reference": "7ec48fd30746e9fbc3a9bd7d3af8052acf400ff8",
                 "shasum": ""
             },
             "require": {
@@ -5685,9 +5685,9 @@
             "description": "Appwrite PHP library for generating API SDKs for multiple programming languages and platforms",
             "support": {
                 "issues": "https://github.com/appwrite/sdk-generator/issues",
-                "source": "https://github.com/appwrite/sdk-generator/tree/1.31.9"
+                "source": "https://github.com/appwrite/sdk-generator/tree/1.32.0"
             },
-            "time": "2026-05-31T06:40:47+00:00"
+            "time": "2026-06-03T08:49:57+00:00"
         },
         {
             "name": "brianium/paratest",
