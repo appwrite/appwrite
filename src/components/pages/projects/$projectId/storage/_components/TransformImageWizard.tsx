@@ -840,12 +840,18 @@ export function TransformImageWizard({
               <TabsList className="grid h-9 w-full max-w-xs grid-cols-2 shadow-none">
                 <TabsTrigger
                   value="design"
+                  data-analytics-id="transform_image_main_view"
+                  data-analytics-surface="transform_image_wizard"
+                  data-analytics-prop-view="design"
                   className="text-[13px] shadow-none data-[state=active]:shadow-none"
                 >
                   Design
                 </TabsTrigger>
                 <TabsTrigger
                   value="code"
+                  data-analytics-id="transform_image_main_view"
+                  data-analytics-surface="transform_image_wizard"
+                  data-analytics-prop-view="code"
                   className="text-[13px] shadow-none data-[state=active]:shadow-none"
                 >
                   Code
@@ -861,6 +867,8 @@ export function TransformImageWizard({
               className="h-8 gap-1.5 px-2.5 text-[12px]"
               disabled={!canUndo}
               onClick={undo}
+              data-analytics-id="transform_image_undo"
+              data-analytics-surface="transform_image_wizard"
               aria-label="Undo"
               title="Undo (⌘Z)"
             >
@@ -874,6 +882,8 @@ export function TransformImageWizard({
               className="h-8 gap-1.5 px-2.5 text-[12px]"
               disabled={!canRedo}
               onClick={redo}
+              data-analytics-id="transform_image_redo"
+              data-analytics-surface="transform_image_wizard"
               aria-label="Redo"
               title="Redo (⌘⇧Z)"
             >
@@ -886,6 +896,8 @@ export function TransformImageWizard({
               size="sm"
               className="h-8 gap-1.5 px-2.5 text-[12px]"
               onClick={resetAllToDefaults}
+              data-analytics-id="transform_image_reset_all"
+              data-analytics-surface="transform_image_wizard"
             >
               <RotateCcw className="h-3.5 w-3.5" />
               Reset all
@@ -1035,6 +1047,8 @@ export function TransformImageWizard({
               size="sm"
               disabled={previewDownloadBusy}
               onClick={() => void downloadPreview()}
+              data-analytics-id="transform_image_download_preview"
+              data-analytics-surface="transform_image_wizard"
             >
               {previewDownloadBusy ? (
                 <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />
@@ -1043,7 +1057,14 @@ export function TransformImageWizard({
               )}
               Download
             </Button>
-            <Button type="button" variant="outline" size="sm" onClick={copyPreviewUrl}>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={copyPreviewUrl}
+              data-analytics-id="transform_image_copy_preview_url"
+              data-analytics-surface="transform_image_wizard"
+            >
               <Copy className="mr-1.5 h-3.5 w-3.5" />
               Copy URL
             </Button>
@@ -1052,6 +1073,8 @@ export function TransformImageWizard({
               variant="outline"
               size="sm"
               onClick={openPreviewInNewTab}
+              data-analytics-id="transform_image_open_preview"
+              data-analytics-surface="transform_image_wizard"
             >
               <ExternalLink className="mr-1.5 h-3.5 w-3.5" />
               Open
@@ -1115,6 +1138,8 @@ export function TransformImageWizard({
                         className="h-8 w-8 border-border bg-card/95 p-0 backdrop-blur-sm"
                         onClick={zoomIn}
                         disabled={zoomInDisabled}
+                        data-analytics-id="transform_image_zoom_in"
+                        data-analytics-surface="transform_image_wizard"
                         aria-label="Zoom in"
                       >
                         <ZoomIn className="h-4 w-4" />
@@ -1131,6 +1156,8 @@ export function TransformImageWizard({
                         className="h-8 w-8 border-border bg-card/95 p-0 backdrop-blur-sm"
                         onClick={zoomOut}
                         disabled={zoomOutDisabled}
+                        data-analytics-id="transform_image_zoom_out"
+                        data-analytics-surface="transform_image_wizard"
                         aria-label="Zoom out"
                       >
                         <ZoomOut className="h-4 w-4" />
@@ -1141,6 +1168,8 @@ export function TransformImageWizard({
                         size="sm"
                         className="h-8 w-8 border-border bg-card/95 p-0 backdrop-blur-sm"
                         onClick={resetView}
+                        data-analytics-id="transform_image_reset_view"
+                        data-analytics-surface="transform_image_wizard"
                         aria-label="Reset pan and zoom"
                       >
                         <Maximize2 className="h-4 w-4" />
@@ -1162,12 +1191,18 @@ export function TransformImageWizard({
                       >
                         <ToggleGroupItem
                           value="edit"
+                          data-analytics-id="transform_image_canvas_mode"
+                          data-analytics-surface="transform_image_wizard"
+                          data-analytics-prop-mode="edit"
                           className="h-8 px-3 text-[12px] data-[state=on]:bg-muted"
                         >
                           Edit
                         </ToggleGroupItem>
                         <ToggleGroupItem
                           value="compare"
+                          data-analytics-id="transform_image_canvas_mode"
+                          data-analytics-surface="transform_image_wizard"
+                          data-analytics-prop-mode="compare"
                           className="h-8 px-3 text-[12px] data-[state=on]:bg-muted"
                         >
                           Compare
@@ -1203,6 +1238,8 @@ export function TransformImageWizard({
                       <SelectTrigger
                         className="h-8 w-[min(200px,calc(100vw-8rem))] shrink-0 border-border bg-card/95 text-[12px] shadow-none backdrop-blur-sm"
                         aria-label="SDK example"
+                        data-analytics-id="transform_image_sdk_select"
+                        data-analytics-surface="transform_image_wizard"
                       >
                         <SelectValue placeholder="SDK" />
                       </SelectTrigger>
@@ -1214,6 +1251,9 @@ export function TransformImageWizard({
                           <SelectItem
                             key={opt.id}
                             value={opt.id}
+                            data-analytics-id="transform_image_sdk_option"
+                            data-analytics-surface="transform_image_wizard"
+                            data-analytics-prop-sdk={opt.id}
                             className="text-[13px]"
                           >
                             {opt.label}
@@ -1227,6 +1267,9 @@ export function TransformImageWizard({
                       size="sm"
                       className="h-8 w-8 shrink-0 border-border bg-card/95 p-0 shadow-none backdrop-blur-sm mr-2"
                       onClick={copyActiveCode}
+                      data-analytics-id="transform_image_copy_code"
+                      data-analytics-surface="transform_image_wizard"
+                      data-analytics-prop-sdk={codeTab}
                       aria-label={copiedSdk ? 'Copied' : 'Copy code example'}
                     >
                       {copiedSdk ? (
@@ -1269,6 +1312,9 @@ export function TransformImageWizard({
                       title={sizeSectionDirty ? 'Reset size and crop' : undefined}
                       tabIndex={sizeSectionDirty ? 0 : -1}
                       aria-hidden={!sizeSectionDirty}
+                      data-analytics-id="transform_image_section_reset"
+                      data-analytics-surface="transform_image_wizard"
+                      data-analytics-prop-section="size"
                       onPointerDown={(e) => {
                         if (!sizeSectionDirty) return
                         e.stopPropagation()
@@ -1413,6 +1459,9 @@ export function TransformImageWizard({
                                 aria-label={g}
                                 aria-pressed={selected}
                                 title={g}
+                                data-analytics-id="transform_image_gravity_select"
+                                data-analytics-surface="transform_image_wizard"
+                                data-analytics-prop-gravity={g}
                                 onClick={() =>
                                   setState((s) => ({ ...s, gravity: g }))
                                 }
@@ -1459,6 +1508,9 @@ export function TransformImageWizard({
                       }
                       tabIndex={qualitySectionDirty ? 0 : -1}
                       aria-hidden={!qualitySectionDirty}
+                      data-analytics-id="transform_image_section_reset"
+                      data-analytics-surface="transform_image_wizard"
+                      data-analytics-prop-section="quality"
                       onPointerDown={(e) => {
                         if (!qualitySectionDirty) return
                         e.stopPropagation()
@@ -1510,17 +1562,30 @@ export function TransformImageWizard({
                         }))
                       }
                     >
-                      <SelectTrigger className="h-9 text-[13px]">
+                      <SelectTrigger
+                        className="h-9 text-[13px]"
+                        data-analytics-id="transform_image_output_select"
+                        data-analytics-surface="transform_image_wizard"
+                      >
                         <SelectValue placeholder="Original" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="original" className="text-[13px]">
+                        <SelectItem
+                          value="original"
+                          className="text-[13px]"
+                          data-analytics-id="transform_image_output_option"
+                          data-analytics-surface="transform_image_wizard"
+                          data-analytics-prop-output="original"
+                        >
                           Original (no conversion)
                         </SelectItem>
                         {OUTPUT_FORMAT_LABELS.map(({ value, label }) => (
                           <SelectItem
                             key={value}
                             value={value}
+                            data-analytics-id="transform_image_output_option"
+                            data-analytics-surface="transform_image_wizard"
+                            data-analytics-prop-output={value}
                             className="text-[13px]"
                           >
                             {label}
@@ -1552,6 +1617,9 @@ export function TransformImageWizard({
                       title={styleSectionDirty ? 'Reset style and effects' : undefined}
                       tabIndex={styleSectionDirty ? 0 : -1}
                       aria-hidden={!styleSectionDirty}
+                      data-analytics-id="transform_image_section_reset"
+                      data-analytics-surface="transform_image_wizard"
+                      data-analytics-prop-section="style"
                       onPointerDown={(e) => {
                         if (!styleSectionDirty) return
                         e.stopPropagation()

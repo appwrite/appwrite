@@ -364,6 +364,8 @@ export function ImportCsv({
       <DialogContent
         className="!flex flex-col gap-0 p-0 max-h-[90dvh] !max-w-[min(95vw,1100px)] w-full overflow-hidden"
         style={{ width: MODAL_WIDTH, height: MODAL_HEIGHT }}
+        data-analytics-surface="import_csv_dialog"
+        data-analytics-resource="csv_import"
       >
         <DialogHeader className="px-6 pt-6 pb-4 text-left shrink-0">
           <DialogTitle>Import CSV</DialogTitle>
@@ -385,6 +387,9 @@ export function ImportCsv({
                   setDisplayedBucketId(null)
                   setSelectedStorageFile(null)
                 }}
+                data-analytics-id="import_csv_source_select"
+                data-analytics-surface="import_csv_dialog"
+                data-analytics-prop-source="local"
                 className={cn(
                   'w-full flex items-center gap-2 px-3 py-2.5 text-left text-[13px] transition-colors',
                   isLocal
@@ -414,6 +419,9 @@ export function ImportCsv({
                     setStorageSearch('')
                     if (fileInputRef.current) fileInputRef.current.value = ''
                   }}
+                  data-analytics-id="import_csv_source_select"
+                  data-analytics-surface="import_csv_dialog"
+                  data-analytics-prop-source="bucket"
                   className={cn(
                     'w-full px-3 py-2 text-left text-[13px] truncate transition-colors',
                     selectedBucketId === b.$id
@@ -449,11 +457,15 @@ export function ImportCsv({
                   className="sr-only"
                   id="import-csv-file"
                   onChange={handleFileChange}
+                  data-analytics-id="import_csv_local_file_input"
+                  data-analytics-surface="import_csv_dialog"
                 />
                 <div
                   onDrop={handleDrop}
                   onDragOver={handleDragOver}
                   onDragLeave={handleDragLeave}
+                  data-analytics-id="import_csv_local_dropzone"
+                  data-analytics-surface="import_csv_dialog"
                   className={cn(
                     'w-full max-w-md rounded-xl border-2 border-dashed p-8 text-center transition-colors',
                     dragOver
@@ -472,6 +484,8 @@ export function ImportCsv({
                     className="mt-3"
                     onClick={() => fileInputRef.current?.click()}
                     disabled={isPending}
+                    data-analytics-id="import_csv_choose_local_file"
+                    data-analytics-surface="import_csv_dialog"
                   >
                     Choose file
                   </Button>
@@ -508,6 +522,8 @@ export function ImportCsv({
                             onChange={(e) =>
                               setStorageSearch(e.target.value.trim())
                             }
+                            data-analytics-id="import_csv_storage_search"
+                            data-analytics-surface="import_csv_dialog"
                             className="pl-8 h-8 text-[13px]"
                           />
                         </div>
@@ -522,6 +538,9 @@ export function ImportCsv({
                                 : 'hover:bg-transparent',
                             )}
                             onClick={() => setStorageViewMode('list')}
+                            data-analytics-id="import_csv_view_mode"
+                            data-analytics-surface="import_csv_dialog"
+                            data-analytics-prop-mode="list"
                           >
                             <List className="h-4 w-4" />
                           </Button>
@@ -535,6 +554,9 @@ export function ImportCsv({
                                 : 'hover:bg-transparent',
                             )}
                             onClick={() => setStorageViewMode('grid')}
+                            data-analytics-id="import_csv_view_mode"
+                            data-analytics-surface="import_csv_dialog"
+                            data-analytics-prop-mode="grid"
                           >
                             <LayoutGrid className="h-4 w-4" />
                           </Button>
@@ -562,6 +584,8 @@ export function ImportCsv({
                           className="sr-only"
                           onChange={handleBucketUpload}
                           disabled={bucketUploading}
+                          data-analytics-id="import_csv_bucket_upload_input"
+                          data-analytics-surface="import_csv_dialog"
                         />
                       </div>
                     </>
@@ -597,6 +621,8 @@ export function ImportCsv({
                                   href={STORAGE_DOCS_URL}
                                   target="_blank"
                                   rel="noopener noreferrer"
+                                  data-analytics-id="import_csv_storage_docs"
+                                  data-analytics-surface="import_csv_dialog"
                                 >
                                   Documentation
                                 </a>
@@ -609,6 +635,8 @@ export function ImportCsv({
                                 <label
                                   htmlFor="import-csv-bucket-upload"
                                   className="cursor-pointer"
+                                  data-analytics-id="import_csv_bucket_upload"
+                                  data-analytics-surface="import_csv_dialog"
                                 >
                                   Upload file
                                 </label>
@@ -634,6 +662,9 @@ export function ImportCsv({
                                         fileId: f.$id,
                                       })
                                     }
+                                    data-analytics-id="import_csv_storage_file_select"
+                                    data-analytics-surface="import_csv_dialog"
+                                    data-analytics-prop-view="list"
                                     className={cn(
                                       'w-full flex items-center gap-3 px-3 py-2.5 text-left text-[13px] transition-colors hover:bg-accent cursor-pointer',
                                       isSelected && 'bg-accent',
@@ -685,6 +716,9 @@ export function ImportCsv({
                                       fileId: f.$id,
                                     })
                                   }
+                                  data-analytics-id="import_csv_storage_file_select"
+                                  data-analytics-surface="import_csv_dialog"
+                                  data-analytics-prop-view="grid"
                                   className={cn(
                                     'rounded-lg border border-border bg-card p-3 text-left transition-colors hover:border-primary/40 cursor-pointer',
                                     isSelected &&
@@ -729,10 +763,18 @@ export function ImportCsv({
             variant="outline"
             onClick={() => handleOpenChange(false)}
             disabled={isPending}
+            data-analytics-id="import_csv_cancel"
+            data-analytics-surface="import_csv_dialog"
           >
             Cancel
           </Button>
-          <Button onClick={handleImport} disabled={!canImport}>
+          <Button
+            onClick={handleImport}
+            disabled={!canImport}
+            data-analytics-id="import_csv_submit"
+            data-analytics-surface="import_csv_dialog"
+            data-analytics-prop-source={isLocal ? 'local' : 'bucket'}
+          >
             Import
           </Button>
         </div>

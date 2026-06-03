@@ -189,7 +189,11 @@ export function RowContextMenu({
     <>
       <ContextMenu>
         <ContextMenuTrigger asChild>{children}</ContextMenuTrigger>
-        <ContextMenuContent className="w-52">
+        <ContextMenuContent
+          className="w-52"
+          data-analytics-surface="row_context_menu"
+          data-analytics-resource="database_row"
+        >
           <ContextMenuSub>
             <ContextMenuSubTrigger>
               <span className="flex h-4 w-4 shrink-0 items-center justify-center">
@@ -198,27 +202,47 @@ export function RowContextMenu({
               Copy
             </ContextMenuSubTrigger>
             <ContextMenuSubContent>
-              <ContextMenuItem onSelect={handleCopyId}>
+              <ContextMenuItem
+                onSelect={handleCopyId}
+                data-analytics-id="row_context_copy_id"
+                data-analytics-surface="row_context_menu"
+                data-analytics-resource="database_row"
+              >
                 <span className="flex h-4 w-4 shrink-0 items-center justify-center">
                   <Copy className="size-4" />
                 </span>
                 Copy ID
               </ContextMenuItem>
-              <ContextMenuItem onSelect={handleCopyLink}>
+              <ContextMenuItem
+                onSelect={handleCopyLink}
+                data-analytics-id="row_context_copy_link"
+                data-analytics-surface="row_context_menu"
+                data-analytics-resource="database_row"
+              >
                 <span className="flex h-4 w-4 shrink-0 items-center justify-center">
                   <Link2 className="size-4" />
                 </span>
                 Copy link
               </ContextMenuItem>
               {contextColumnKey != null && contextColumnKey !== '' && (
-                <ContextMenuItem onSelect={handleCopyValue}>
+                <ContextMenuItem
+                  onSelect={handleCopyValue}
+                  data-analytics-id="row_context_copy_value"
+                  data-analytics-surface="row_context_menu"
+                  data-analytics-resource="database_row"
+                >
                   <span className="flex h-4 w-4 shrink-0 items-center justify-center">
                     <Copy className="size-4" />
                   </span>
                   Copy value
                 </ContextMenuItem>
               )}
-              <ContextMenuItem onSelect={handleCopyAsJson}>
+              <ContextMenuItem
+                onSelect={handleCopyAsJson}
+                data-analytics-id="row_context_copy_json"
+                data-analytics-surface="row_context_menu"
+                data-analytics-resource="database_row"
+              >
                 <span className="flex h-4 w-4 shrink-0 items-center justify-center">
                   <FileJson className="size-4" />
                 </span>
@@ -229,6 +253,9 @@ export function RowContextMenu({
           <ContextMenuItem
             onSelect={handleDuplicate}
             disabled={duplicateMutation.isPending}
+            data-analytics-id="row_context_duplicate"
+            data-analytics-surface="row_context_menu"
+            data-analytics-resource="database_row"
           >
             <span className="flex h-4 w-4 shrink-0 items-center justify-center">
               <CopyPlus className="size-4" />
@@ -236,20 +263,35 @@ export function RowContextMenu({
             Duplicate
           </ContextMenuItem>
           <ContextMenuSeparator />
-          <ContextMenuItem onSelect={handleOpenInNewTab}>
+          <ContextMenuItem
+            onSelect={handleOpenInNewTab}
+            data-analytics-id="row_context_open_new_tab"
+            data-analytics-surface="row_context_menu"
+            data-analytics-resource="database_row"
+          >
             <span className="flex h-4 w-4 shrink-0 items-center justify-center">
               <ExternalLink className="size-4" />
             </span>
             Open in new tab
           </ContextMenuItem>
-          <ContextMenuItem onSelect={handleOpenInNewWindow}>
+          <ContextMenuItem
+            onSelect={handleOpenInNewWindow}
+            data-analytics-id="row_context_open_new_window"
+            data-analytics-surface="row_context_menu"
+            data-analytics-resource="database_row"
+          >
             <span className="flex h-4 w-4 shrink-0 items-center justify-center">
               <Square className="size-4" />
             </span>
             Open in new window
           </ContextMenuItem>
           <ContextMenuSeparator />
-          <ContextMenuItem onSelect={handleDeleteClick}>
+          <ContextMenuItem
+            onSelect={handleDeleteClick}
+            data-analytics-id="row_context_delete_open"
+            data-analytics-surface="row_context_menu"
+            data-analytics-resource="database_row"
+          >
             <span className="flex h-4 w-4 shrink-0 items-center justify-center">
               <Trash2 className="size-4" />
             </span>
@@ -259,7 +301,11 @@ export function RowContextMenu({
       </ContextMenu>
 
       <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
-        <DialogContent className="sm:max-w-md p-0">
+        <DialogContent
+          className="sm:max-w-md p-0"
+          data-analytics-surface="row_delete_dialog"
+          data-analytics-resource="database_row"
+        >
           <DialogHeader className="px-6 pt-6 pb-4 text-left">
             <DialogTitle>Delete row</DialogTitle>
             <DialogDescription className="text-[13px] mt-2">
@@ -272,6 +318,9 @@ export function RowContextMenu({
               variant="outline"
               onClick={() => setDeleteDialogOpen(false)}
               disabled={deleteMutation.isPending}
+              data-analytics-id="row_delete_cancel"
+              data-analytics-surface="row_delete_dialog"
+              data-analytics-resource="database_row"
             >
               Cancel
             </Button>
@@ -279,6 +328,9 @@ export function RowContextMenu({
               variant="destructive"
               onClick={() => deleteMutation.mutate()}
               disabled={deleteMutation.isPending}
+              data-analytics-id="row_delete_confirm"
+              data-analytics-surface="row_delete_dialog"
+              data-analytics-resource="database_row"
             >
               Delete
             </Button>

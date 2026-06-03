@@ -1246,7 +1246,7 @@ export function MockPhoneNumbersCard({
         message="Mock phone numbers are available on Appwrite Cloud Pro and higher plans."
       >
         <div>
-          <div className="px-6 py-4">
+          <div className="px-4 py-4 sm:px-6">
             {numbers.length === 0 ? (
               <div className="text-center py-8">
                 <p className="text-[13px] text-muted-foreground mb-4">
@@ -1267,12 +1267,12 @@ export function MockPhoneNumbersCard({
                 {numbers.map((number) => (
                   <div
                     key={number.id}
-                    className="flex items-start gap-3 p-3 rounded-lg border border-border bg-muted/30"
+                    className="relative rounded-lg border border-border bg-muted/30 p-3 pr-11"
                   >
-                    <div className="flex-1 space-y-3">
+                    <div className="min-w-0 space-y-3">
                       <div className="space-y-2">
                         <Label className="text-[12px]">Phone number</Label>
-                        <div className="flex items-center gap-2">
+                        <div className="flex min-w-0 flex-wrap items-center gap-2">
                           <Input
                             type="tel"
                             value={number.phone}
@@ -1283,40 +1283,42 @@ export function MockPhoneNumbersCard({
                             minLength={9}
                             maxLength={16}
                             disabled={mutation.isPending}
-                            className="flex-1"
+                            className="min-w-0 w-full sm:w-auto sm:flex-1"
                           />
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() =>
-                              handleCopy(number.id, 'phone', number.phone)
-                            }
-                            disabled={mutation.isPending}
-                            className="h-9 w-9 p-0"
-                            title="Copy phone number"
-                          >
-                            {copiedItem?.id === number.id &&
-                            copiedItem?.type === 'phone' ? (
-                              <Check className="h-4 w-4 text-emerald-500" />
-                            ) : (
-                              <Copy className="h-4 w-4" />
-                            )}
-                          </Button>
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() => handleRegeneratePhone(number.id)}
-                            disabled={mutation.isPending}
-                            className="h-9 w-9 p-0"
-                            title="Regenerate phone number"
-                          >
-                            <RefreshCw className="h-4 w-4" />
-                          </Button>
+                          <div className="flex shrink-0 items-center gap-2">
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() =>
+                                handleCopy(number.id, 'phone', number.phone)
+                              }
+                              disabled={mutation.isPending}
+                              className="h-9 w-9 p-0"
+                              title="Copy phone number"
+                            >
+                              {copiedItem?.id === number.id &&
+                              copiedItem?.type === 'phone' ? (
+                                <Check className="h-4 w-4 text-emerald-500" />
+                              ) : (
+                                <Copy className="h-4 w-4" />
+                              )}
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => handleRegeneratePhone(number.id)}
+                              disabled={mutation.isPending}
+                              className="h-9 w-9 p-0"
+                              title="Regenerate phone number"
+                            >
+                              <RefreshCw className="h-4 w-4" />
+                            </Button>
+                          </div>
                         </div>
                       </div>
                       <div className="space-y-2">
                         <Label className="text-[12px]">Verification code</Label>
-                        <div className="flex items-center gap-2">
+                        <div className="flex min-w-0 flex-wrap items-center gap-2">
                           <InputOTP
                             maxLength={6}
                             value={number.otp}
@@ -1324,40 +1326,47 @@ export function MockPhoneNumbersCard({
                               handleOTPChange(number.id, value)
                             }
                             disabled={mutation.isPending}
+                            containerClassName="min-w-0"
                           >
                             <InputOTPGroup>
                               {Array.from({ length: 6 }).map((_, i) => (
-                                <InputOTPSlot key={i} index={i} />
+                                <InputOTPSlot
+                                  key={i}
+                                  index={i}
+                                  className="h-8 w-8 text-xs sm:h-9 sm:w-9 sm:text-sm"
+                                />
                               ))}
                             </InputOTPGroup>
                           </InputOTP>
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() =>
-                              handleCopy(number.id, 'otp', number.otp)
-                            }
-                            disabled={mutation.isPending}
-                            className="h-9 w-9 p-0"
-                            title="Copy verification code"
-                          >
-                            {copiedItem?.id === number.id &&
-                            copiedItem?.type === 'otp' ? (
-                              <Check className="h-4 w-4 text-emerald-500" />
-                            ) : (
-                              <Copy className="h-4 w-4" />
-                            )}
-                          </Button>
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() => handleRegenerateOTP(number.id)}
-                            disabled={mutation.isPending}
-                            className="h-9 w-9 p-0"
-                            title="Regenerate verification code"
-                          >
-                            <RefreshCw className="h-4 w-4" />
-                          </Button>
+                          <div className="flex shrink-0 items-center gap-2">
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() =>
+                                handleCopy(number.id, 'otp', number.otp)
+                              }
+                              disabled={mutation.isPending}
+                              className="h-9 w-9 p-0"
+                              title="Copy verification code"
+                            >
+                              {copiedItem?.id === number.id &&
+                              copiedItem?.type === 'otp' ? (
+                                <Check className="h-4 w-4 text-emerald-500" />
+                              ) : (
+                                <Copy className="h-4 w-4" />
+                              )}
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => handleRegenerateOTP(number.id)}
+                              disabled={mutation.isPending}
+                              className="h-9 w-9 p-0"
+                              title="Regenerate verification code"
+                            >
+                              <RefreshCw className="h-4 w-4" />
+                            </Button>
+                          </div>
                         </div>
                       </div>
                     </div>
@@ -1366,7 +1375,8 @@ export function MockPhoneNumbersCard({
                       variant="ghost"
                       onClick={() => handleDeleteNumber(number.id)}
                       disabled={mutation.isPending}
-                      className="h-9 w-9 p-0"
+                      className="absolute right-1 top-1 h-8 w-8 shrink-0 p-0"
+                      aria-label="Remove mock phone number"
                     >
                       <X className="h-4 w-4" />
                     </Button>
@@ -1387,7 +1397,7 @@ export function MockPhoneNumbersCard({
               </div>
             )}
           </div>
-          <div className="px-6 py-4 border-t border-border bg-muted/30">
+          <div className="border-t border-border px-4 py-4 sm:px-6 bg-muted/30">
             <Button
               size="sm"
               className="h-9 text-[13px]"

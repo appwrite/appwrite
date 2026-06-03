@@ -181,7 +181,11 @@ export function CreateCliDeploymentModal({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-xl p-0">
+      <DialogContent
+        className="sm:max-w-xl p-0"
+        data-analytics-surface="create_cli_deployment"
+        data-analytics-resource={resourceType}
+      >
         <DialogHeader className="px-6 pt-6 pb-4 text-left">
           <DialogTitle>Create CLI deployment</DialogTitle>
           <DialogDescription className="text-[13px] mt-2">
@@ -192,13 +196,34 @@ export function CreateCliDeploymentModal({
         <div className="px-6 pb-4 pt-4">
           <Tabs value={activeTab} onValueChange={setActiveTab}>
             <TabsList className="mb-3 w-full grid grid-cols-3">
-              <TabsTrigger value="unix" className="text-[13px]">
+              <TabsTrigger
+                value="unix"
+                className="text-[13px]"
+                data-analytics-id="create_cli_deployment_tab"
+                data-analytics-surface="create_cli_deployment"
+                data-analytics-resource={resourceType}
+                data-analytics-prop-tab="unix"
+              >
                 Unix
               </TabsTrigger>
-              <TabsTrigger value="cmd" className="text-[13px]">
+              <TabsTrigger
+                value="cmd"
+                className="text-[13px]"
+                data-analytics-id="create_cli_deployment_tab"
+                data-analytics-surface="create_cli_deployment"
+                data-analytics-resource={resourceType}
+                data-analytics-prop-tab="cmd"
+              >
                 CMD
               </TabsTrigger>
-              <TabsTrigger value="powershell" className="text-[13px]">
+              <TabsTrigger
+                value="powershell"
+                className="text-[13px]"
+                data-analytics-id="create_cli_deployment_tab"
+                data-analytics-surface="create_cli_deployment"
+                data-analytics-resource={resourceType}
+                data-analytics-prop-tab="powershell"
+              >
                 PowerShell
               </TabsTrigger>
             </TabsList>
@@ -250,6 +275,9 @@ export function CreateCliDeploymentModal({
                 href={CLI_INSTALL_URL}
                 target="_blank"
                 rel="noopener noreferrer"
+                data-analytics-id="create_cli_deployment_install_docs"
+                data-analytics-surface="create_cli_deployment"
+                data-analytics-resource={resourceType}
                 className="text-primary hover:underline"
               >
                 install the CLI
@@ -259,6 +287,9 @@ export function CreateCliDeploymentModal({
                 href={CLI_LOGIN_URL}
                 target="_blank"
                 rel="noopener noreferrer"
+                data-analytics-id="create_cli_deployment_login_docs"
+                data-analytics-surface="create_cli_deployment"
+                data-analytics-resource={resourceType}
                 className="text-primary hover:underline"
               >
                 log in to your account
@@ -271,6 +302,9 @@ export function CreateCliDeploymentModal({
           <Button
             variant="outline"
             onClick={() => onOpenChange(false)}
+            data-analytics-id="create_cli_deployment_close"
+            data-analytics-surface="create_cli_deployment"
+            data-analytics-resource={resourceType}
             className="h-9 text-[13px]"
           >
             Close

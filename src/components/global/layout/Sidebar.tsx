@@ -43,6 +43,7 @@ import {
   type LucideIcon,
 } from 'lucide-react'
 import { ProjectSelector } from '@/components/pages/projects/$projectId/shared/ProjectSelector'
+import { useAnalytics } from '@/hooks/use-analytics'
 import {
   Tooltip,
   TooltipContent,
@@ -234,10 +235,12 @@ export function ConsoleSidebar({
   className,
 }: ConsoleSidebarProps) {
   const { account } = useAuth()
-  const { collapsed, setCollapsed } = useSidebarCollapsed(account)
+  const accountWithPrefs = account as { prefs?: Record<string, unknown> } | undefined
+  const { collapsed, setCollapsed } = useSidebarCollapsed(accountWithPrefs)
   const navRef = useRef<HTMLElement>(null)
   const { isDebugModeOpen } = useDebugMode()
   const { features } = useConsoleProfile()
+  const { track } = useAnalytics()
   const { project } = useProject(projectId)
   const { access, isLoading: scopesLoading } = useOrganizationScopes(
     project?.teamId,
@@ -304,6 +307,18 @@ export function ConsoleSidebar({
       items[items.length - 1]?.focus()
     }
   }, [])
+
+  const handleNavClick = useCallback(
+    (item: NavItem, isMobile: boolean) => {
+      track('Navigation Clicked', {
+        surface: 'sidebar',
+        destination: item.id,
+        mobile: isMobile,
+      })
+      if (isMobile) onMobileClose?.()
+    },
+    [onMobileClose, track],
+  )
 
   const renderNavItem = (item: NavItem, isMobile = false) => {
     const isActive = activeSection === item.id
@@ -378,7 +393,8 @@ export function ConsoleSidebar({
         key={item.id}
         to={item.path}
         data-nav-item
-        onClick={isMobile ? onMobileClose : undefined}
+        data-analytics-track="manual"
+        onClick={() => handleNavClick(item, isMobile)}
         className={cn(
           'flex w-full items-center gap-2.5 rounded-md px-2.5 py-1.5 text-[13px] font-medium transition-colors duration-150',
           'focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1 focus-visible:ring-offset-background',
@@ -481,7 +497,15 @@ export function ConsoleSidebar({
         {/* Collapse Toggle - sibling of <aside>, positioned against the
             wrapper so it isn't clipped by the aside's GPU layer on iOS. */}
         <button
-          onClick={() => setCollapsed(!collapsed)}
+          data-analytics-track="manual"
+          onClick={() => {
+            const nextCollapsed = !collapsed
+            setCollapsed(nextCollapsed)
+            track('View Mode Changed', {
+              surface: 'sidebar',
+              mode: nextCollapsed ? 'collapsed' : 'expanded',
+            })
+          }}
           className="absolute right-0 top-1/2 z-10 flex h-6 w-6 shrink-0 -translate-y-1/2 translate-x-1/2 cursor-pointer items-center justify-center rounded-md border border-border bg-card text-muted-foreground transition-colors hover:bg-accent hover:text-foreground focus:outline-none focus-visible:ring-2 focus-visible:ring-ring"
           aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
         >

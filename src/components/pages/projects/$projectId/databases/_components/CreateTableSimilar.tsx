@@ -124,7 +124,11 @@ export function CreateTableSimilar({
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogContent className="sm:max-w-md p-0">
+      <DialogContent
+        className="sm:max-w-md p-0"
+        data-analytics-surface="create_table_similar_dialog"
+        data-analytics-resource="table"
+      >
         <DialogHeader className="px-6 pt-6 pb-4 text-left">
           <DialogTitle>
             Duplicate structure: "{sourceTable.name ?? sourceTable.$id}"
@@ -136,7 +140,12 @@ export function CreateTableSimilar({
         </DialogHeader>
         <div className="border-t border-border" />
 
-        <form onSubmit={handleSubmit}>
+        <form
+          onSubmit={handleSubmit}
+          data-analytics-id="create_table_similar_form"
+          data-analytics-surface="create_table_similar_dialog"
+          data-analytics-resource="table"
+        >
           <div className="px-6 pb-4 pt-0 space-y-4">
             <div className="space-y-2">
               <Label htmlFor="name">
@@ -153,6 +162,8 @@ export function CreateTableSimilar({
                 }}
                 disabled={isSubmitting}
                 className={errors.name ? 'border-destructive' : ''}
+                data-analytics-id="create_table_similar_name"
+                data-analytics-surface="create_table_similar_dialog"
               />
               {errors.name && (
                 <p className="text-[12px] text-destructive">{errors.name}</p>
@@ -181,6 +192,8 @@ export function CreateTableSimilar({
                 onCheckedChange={(v) => setCopyStructure(v === true)}
                 disabled={isSubmitting || structureLoading}
                 className="mt-0.5"
+                data-analytics-id="create_table_similar_copy_structure"
+                data-analytics-surface="create_table_similar_dialog"
               />
               <div className="flex-1 min-w-0">
                 <Label
@@ -219,10 +232,20 @@ export function CreateTableSimilar({
               variant="outline"
               onClick={() => handleOpenChange(false)}
               disabled={isSubmitting}
+              data-analytics-id="create_table_similar_cancel"
+              data-analytics-surface="create_table_similar_dialog"
+              data-analytics-resource="table"
             >
               Cancel
             </Button>
-            <Button type="submit" disabled={isSubmitting || !name.trim()}>
+            <Button
+              type="submit"
+              disabled={isSubmitting || !name.trim()}
+              data-analytics-id="create_table_similar_submit"
+              data-analytics-surface="create_table_similar_dialog"
+              data-analytics-resource="table"
+              data-analytics-prop-copy_structure={copyStructure}
+            >
               {isSubmitting ? 'Creating…' : 'Create'}
             </Button>
           </div>

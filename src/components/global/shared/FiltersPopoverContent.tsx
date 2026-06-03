@@ -152,7 +152,7 @@ export function FiltersPopoverContent({
   onClearAll,
   onApplyFilter,
   onClose,
-  resourceLabel: _resourceLabel = 'items',
+  resourceLabel = 'items',
   filterScope,
   onApplyQuery,
   teamId,
@@ -825,6 +825,8 @@ export function FiltersPopoverContent({
             <CollapsibleTrigger asChild>
               <button
                 type="button"
+                data-analytics-id="filters_sort_toggle"
+                data-analytics-surface="filters_popover"
                 className="flex w-full cursor-pointer items-center gap-2 px-4 py-2 text-left transition-colors hover:bg-muted/50"
               >
                 <ChevronDown
@@ -864,6 +866,8 @@ export function FiltersPopoverContent({
                         onReset()
                         onClose?.()
                       }}
+                      data-analytics-id="filters_reset"
+                      data-analytics-surface="filters_popover"
                       className="cursor-pointer shrink-0 text-[12px] font-medium text-muted-foreground hover:text-foreground transition-colors"
                     >
                       Reset
@@ -888,6 +892,8 @@ export function FiltersPopoverContent({
                     searchPlaceholder="Search columns…"
                     emptyMessage="No columns"
                     triggerClassName="h-9 min-w-0 flex-1 text-[13px]"
+                    analyticsId="filters_sort_field"
+                    analyticsSurface="filters_popover"
                   />
                   <div
                     className={cn(
@@ -898,6 +904,9 @@ export function FiltersPopoverContent({
                     <button
                       type="button"
                       onClick={() => onSortChange!(sortBy!, 'asc')}
+                      data-analytics-id="filters_sort_direction"
+                      data-analytics-surface="filters_popover"
+                      data-analytics-prop-direction="asc"
                       className={cn(
                         'flex h-9 cursor-pointer items-center gap-1 px-2 text-[12px] transition-colors',
                         sortOrder === 'asc'
@@ -913,6 +922,9 @@ export function FiltersPopoverContent({
                     <button
                       type="button"
                       onClick={() => onSortChange!(sortBy!, 'desc')}
+                      data-analytics-id="filters_sort_direction"
+                      data-analytics-surface="filters_popover"
+                      data-analytics-prop-direction="desc"
                       className={cn(
                         'flex h-9 cursor-pointer items-center gap-1 px-2 text-[12px] transition-colors',
                         SEGMENT_DIVIDE,
@@ -939,6 +951,8 @@ export function FiltersPopoverContent({
           e.preventDefault()
           applyFilter()
         }}
+        data-analytics-id="filters_apply_form"
+        data-analytics-surface="filters_popover"
         className={cn(
           'px-4 pb-3',
           sortEnabled && sortOptionsFromColumns.length > 0 ? 'pt-2' : 'pt-3',
@@ -982,6 +996,8 @@ export function FiltersPopoverContent({
                 placeholder="Column"
                 searchPlaceholder="Search columns…"
                 emptyMessage="No columns found"
+                analyticsId="filters_column"
+                analyticsSurface="filters_popover"
               />
             </div>
             <div className="space-y-1">
@@ -1018,6 +1034,8 @@ export function FiltersPopoverContent({
                 placeholder="Operator"
                 searchPlaceholder="Search operators…"
                 emptyMessage="No operators found"
+                analyticsId="filters_operator"
+                analyticsSurface="filters_popover"
               />
             </div>
           </div>
@@ -1055,6 +1073,8 @@ export function FiltersPopoverContent({
                   searchPlaceholder="Search…"
                   emptyMessage="No types"
                   triggerClassName="h-9 w-full text-[13px]"
+                  analyticsId="filters_custom_attribute_type"
+                  analyticsSurface="filters_popover"
                 />
               </div>
             </div>
@@ -1064,6 +1084,10 @@ export function FiltersPopoverContent({
             <Button
               type="submit"
               size="sm"
+              data-analytics-id={
+                editingReplaceKey ? 'filters_update_filter' : 'filters_add_filter'
+              }
+              data-analytics-surface="filters_popover"
               className="h-9 min-w-0 flex-1 text-[13px]"
               disabled={isApplyDisabled}
             >
@@ -1076,6 +1100,8 @@ export function FiltersPopoverContent({
                 size="sm"
                 className="h-9 shrink-0 text-[13px]"
                 onClick={cancelFilterEdit}
+                data-analytics-id="filters_cancel_edit"
+                data-analytics-surface="filters_popover"
               >
                 Cancel
               </Button>
@@ -1098,12 +1124,14 @@ export function FiltersPopoverContent({
                 size="sm"
                 className="h-7 text-[12px] text-muted-foreground hover:text-foreground -mr-1"
                 onClick={handleClearAll}
+                data-analytics-id="filters_clear_all"
+                data-analytics-surface="filters_popover"
               >
                 Clear all
               </Button>
             </div>
             <div className="max-h-40 overflow-y-auto space-y-1">
-              {filterEntries.map(([key, _queryStr]) => {
+              {filterEntries.map(([key]) => {
                 const tag = buildFilterTagFromCompactKey(key, columns)
                 const parts = tag.tag.split(/\*\*/)
                 const column = parts[1] ?? ''
@@ -1123,6 +1151,8 @@ export function FiltersPopoverContent({
                     <button
                       type="button"
                       onClick={() => beginEditFilter(key)}
+                      data-analytics-id="filters_edit_active"
+                      data-analytics-surface="filters_popover"
                       className="flex min-w-0 flex-1 cursor-pointer items-center gap-1.5 truncate text-left text-[12px] rounded-md outline-none hover:bg-muted/50 focus-visible:ring-2 focus-visible:ring-ring -mx-1 px-1 -my-0.5 py-0.5"
                     >
                       <span className="shrink-0 font-medium text-foreground">
@@ -1140,6 +1170,8 @@ export function FiltersPopoverContent({
                     <button
                       type="button"
                       onClick={() => onRemoveFilter(key)}
+                      data-analytics-id="filters_remove_active"
+                      data-analytics-surface="filters_popover"
                       className="cursor-pointer shrink-0 rounded p-1 text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
                       aria-label="Remove filter"
                     >
@@ -1176,6 +1208,9 @@ export function FiltersPopoverContent({
                     <button
                       type="button"
                       onClick={() => setSaveLevel('user')}
+                      data-analytics-id="filters_save_level"
+                      data-analytics-surface="filters_popover"
+                      data-analytics-prop-level="user"
                       className={cn(
                         'flex h-9 cursor-pointer items-center gap-1 px-2 text-[12px] transition-colors',
                         saveLevel === 'user'
@@ -1194,6 +1229,9 @@ export function FiltersPopoverContent({
                             canSaveTeamFiltersResult && setSaveLevel('team')
                           }
                           disabled={!canSaveTeamFiltersResult}
+                          data-analytics-id="filters_save_level"
+                          data-analytics-surface="filters_popover"
+                          data-analytics-prop-level="team"
                           className={cn(
                             'flex h-9 cursor-pointer items-center gap-1 px-2 text-[12px] transition-colors disabled:cursor-not-allowed',
                             SEGMENT_DIVIDE,
@@ -1259,6 +1297,9 @@ export function FiltersPopoverContent({
                         className="h-9 w-9 shrink-0"
                         title="Save filter"
                         aria-label="Save filter"
+                        data-analytics-id="filters_save_current"
+                        data-analytics-surface="filters_popover"
+                        data-analytics-prop-level={saveLevel}
                         disabled={
                           !saveName.trim() ||
                           isAdding ||
@@ -1512,6 +1553,9 @@ export function FiltersPopoverContent({
                   <button
                     type="button"
                     onClick={() => setSaveLevel('user')}
+                    data-analytics-id="filters_save_level"
+                    data-analytics-surface="filters_popover"
+                    data-analytics-prop-level="user"
                     className={cn(
                       'flex h-9 cursor-pointer items-center gap-1 px-2 text-[12px] transition-colors',
                       saveLevel === 'user'
@@ -1530,6 +1574,9 @@ export function FiltersPopoverContent({
                           canSaveTeamFiltersResult && setSaveLevel('team')
                         }
                         disabled={!canSaveTeamFiltersResult}
+                        data-analytics-id="filters_save_level"
+                        data-analytics-surface="filters_popover"
+                        data-analytics-prop-level="team"
                         className={cn(
                           'flex h-9 cursor-pointer items-center gap-1 px-2 text-[12px] transition-colors disabled:cursor-not-allowed',
                           SEGMENT_DIVIDE,
@@ -1594,6 +1641,9 @@ export function FiltersPopoverContent({
                       className="h-9 w-9 shrink-0"
                       title="Save filter"
                       aria-label="Save filter"
+                      data-analytics-id="filters_save_current"
+                      data-analytics-surface="filters_popover"
+                      data-analytics-prop-level={saveLevel}
                       disabled={
                         !saveName.trim() ||
                         isAdding ||
@@ -1646,7 +1696,11 @@ export function FiltersPopoverContent({
   )
 
   return (
-    <div className="flex max-h-[calc(100dvh-4rem)] flex-col pt-4">
+    <div
+      className="flex max-h-[calc(100dvh-4rem)] flex-col pt-4"
+      data-analytics-surface="filters_popover"
+      data-analytics-resource={resourceLabel}
+    >
       {hasSavedFiltersFeature ? (
         <Tabs
           defaultValue="filters"
@@ -1654,13 +1708,25 @@ export function FiltersPopoverContent({
         >
           <div className="shrink-0 px-4">
             <TabsList className="w-full grid grid-cols-2 h-9">
-              <TabsTrigger value="filters" className="text-[13px]">
+              <TabsTrigger
+                value="filters"
+                className="text-[13px]"
+                data-analytics-id="filters_tab"
+                data-analytics-surface="filters_popover"
+                data-analytics-prop-tab="filters"
+              >
                 Filters
                 {filterMap.size > 0 ? (
                   <ToolbarCountBadge count={filterMap.size} placement="inline" />
                 ) : null}
               </TabsTrigger>
-              <TabsTrigger value="saved" className="text-[13px]">
+              <TabsTrigger
+                value="saved"
+                className="text-[13px]"
+                data-analytics-id="filters_tab"
+                data-analytics-surface="filters_popover"
+                data-analytics-prop-tab="saved"
+              >
                 Saved
                 {savedFilters.length > 0 ? (
                   <ToolbarCountBadge

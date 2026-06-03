@@ -1414,7 +1414,10 @@ export function ConnectProject({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-6xl h-[70dvh] max-h-[70dvh] p-0 gap-0 flex flex-col overflow-hidden">
+      <DialogContent
+        className="sm:max-w-6xl h-[70dvh] max-h-[70dvh] p-0 gap-0 flex flex-col overflow-hidden"
+        data-analytics-surface="connect_project"
+      >
         <DialogHeader className="shrink-0 px-6 pt-6 pb-4 text-left">
           <DialogTitle>Connect to your project</DialogTitle>
         </DialogHeader>
@@ -1448,6 +1451,9 @@ export function ConnectProject({
                   role="tab"
                   aria-selected={isActive}
                   onClick={() => setConnectTab(tabId)}
+                  data-analytics-id="connect_project_tab"
+                  data-analytics-surface="connect_project"
+                  data-analytics-prop-tab={tabId}
                   className={cn(
                     'relative flex shrink-0 cursor-pointer focus:cursor-pointer focus-visible:cursor-pointer items-center gap-1.5 px-3 py-2.5 text-[13px] font-medium transition-colors rounded-sm',
                     'focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset',
@@ -1484,7 +1490,11 @@ export function ConnectProject({
                   }
                   onValueChange={setSdkId}
                 >
-                  <SelectTrigger className="w-full h-9 text-[13px]">
+                  <SelectTrigger
+                    className="w-full h-9 text-[13px]"
+                    data-analytics-id="connect_project_sdk_select"
+                    data-analytics-surface="connect_project"
+                  >
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -1496,6 +1506,10 @@ export function ConnectProject({
                         <SelectItem
                           key={opt.id}
                           value={opt.id}
+                          data-analytics-id="connect_project_sdk_option"
+                          data-analytics-surface="connect_project"
+                          data-analytics-prop-sdk={opt.id}
+                          data-analytics-prop-runtime="client"
                           className="text-[13px]"
                         >
                           <span className="flex items-center gap-1.5">
@@ -1513,6 +1527,10 @@ export function ConnectProject({
                         <SelectItem
                           key={opt.id}
                           value={opt.id}
+                          data-analytics-id="connect_project_sdk_option"
+                          data-analytics-surface="connect_project"
+                          data-analytics-prop-sdk={opt.id}
+                          data-analytics-prop-runtime="server"
                           className="text-[13px]"
                         >
                           <span className="flex items-center gap-1.5">
@@ -1531,7 +1549,12 @@ export function ConnectProject({
                     Framework
                   </label>
                   <Select value={frameworkId} onValueChange={setFrameworkId}>
-                    <SelectTrigger className="w-full h-9 text-[13px]">
+                    <SelectTrigger
+                      className="w-full h-9 text-[13px]"
+                      data-analytics-id="connect_project_framework_select"
+                      data-analytics-surface="connect_project"
+                      data-analytics-prop-sdk={sdkId}
+                    >
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
@@ -1539,6 +1562,10 @@ export function ConnectProject({
                         <SelectItem
                           key={fw.id}
                           value={fw.id}
+                          data-analytics-id="connect_project_framework_option"
+                          data-analytics-surface="connect_project"
+                          data-analytics-prop-framework={fw.id}
+                          data-analytics-prop-sdk={sdkId}
                           className="text-[13px]"
                         >
                           <span className="flex items-center gap-1.5">
@@ -1557,7 +1584,12 @@ export function ConnectProject({
                     Using
                   </label>
                   <Select value={usingId} onValueChange={setUsingId}>
-                    <SelectTrigger className="w-full h-9 text-[13px]">
+                    <SelectTrigger
+                      className="w-full h-9 text-[13px]"
+                      data-analytics-id="connect_project_using_select"
+                      data-analytics-surface="connect_project"
+                      data-analytics-prop-framework={frameworkId}
+                    >
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
@@ -1565,6 +1597,10 @@ export function ConnectProject({
                         <SelectItem
                           key={v.id}
                           value={v.id}
+                          data-analytics-id="connect_project_using_option"
+                          data-analytics-surface="connect_project"
+                          data-analytics-prop-using={v.id}
+                          data-analytics-prop-framework={frameworkId}
                           className="text-[13px]"
                         >
                           {v.label}
@@ -1583,7 +1619,12 @@ export function ConnectProject({
                     value={packageManagerId}
                     onValueChange={setPackageManagerId}
                   >
-                    <SelectTrigger className="w-full h-9 text-[13px]">
+                    <SelectTrigger
+                      className="w-full h-9 text-[13px]"
+                      data-analytics-id="connect_project_package_manager_select"
+                      data-analytics-surface="connect_project"
+                      data-analytics-prop-sdk={sdkId}
+                    >
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
@@ -1591,6 +1632,10 @@ export function ConnectProject({
                         <SelectItem
                           key={pm.id}
                           value={pm.id}
+                          data-analytics-id="connect_project_package_manager_option"
+                          data-analytics-surface="connect_project"
+                          data-analytics-prop-package_manager={pm.id}
+                          data-analytics-prop-sdk={sdkId}
                           className="text-[13px]"
                         >
                           <span className="flex items-center gap-1.5">
@@ -1645,6 +1690,9 @@ export function ConnectProject({
                           size="sm"
                           className="h-9 text-[13px] gap-1.5"
                           onClick={handleViewApiKeys}
+                          data-analytics-id="connect_project_view_api_keys"
+                          data-analytics-surface="connect_project"
+                          data-analytics-prop-source="sdk"
                         >
                           <Key className="h-4 w-4" />
                           View API keys
@@ -1653,6 +1701,8 @@ export function ConnectProject({
                           href={`${APPWRITE_DOCS_URL}/getting-started-for-server`}
                           target="_blank"
                           rel="noopener noreferrer"
+                          data-analytics-id="connect_project_server_setup_docs"
+                          data-analytics-surface="connect_project"
                           className="inline-flex items-center gap-1.5 text-[13px] text-primary hover:underline"
                         >
                           Server setup guide
@@ -1666,6 +1716,9 @@ export function ConnectProject({
                   href={APPWRITE_DOCS_URL}
                   target="_blank"
                   rel="noopener noreferrer"
+                  data-analytics-id="connect_project_docs"
+                  data-analytics-surface="connect_project"
+                  data-analytics-prop-tab="app"
                   className="inline-flex items-center gap-1.5 text-[13px] text-primary hover:underline"
                 >
                   Read the docs
@@ -1682,6 +1735,9 @@ export function ConnectProject({
                           key={file.label}
                           type="button"
                           onClick={() => setSelectedFileIndex(i)}
+                          data-analytics-id="connect_project_code_file_select"
+                          data-analytics-surface="connect_project"
+                          data-analytics-prop-file={file.label}
                           className={cn(
                             'cursor-pointer rounded-md px-2.5 py-1 text-[12px] font-medium transition-colors',
                             i === selectedFileIndex
@@ -1702,6 +1758,9 @@ export function ConnectProject({
                       size="sm"
                       className="h-7 gap-1 text-[12px] text-muted-foreground shrink-0"
                       onClick={handleCopyCode}
+                      data-analytics-id="connect_project_code_copy"
+                      data-analytics-surface="connect_project"
+                      data-analytics-prop-sdk={sdkId}
                     >
                       {copied ? (
                         <Check className="h-3.5 w-3.5" />
@@ -1745,6 +1804,9 @@ export function ConnectProject({
                       key={os}
                       type="button"
                       onClick={() => setCliInstallOs(os)}
+                      data-analytics-id="connect_project_cli_os_select"
+                      data-analytics-surface="connect_project"
+                      data-analytics-prop-os={os}
                       className={cn(
                         'cursor-pointer rounded-md px-3 py-1.5 text-[12px] font-medium transition-colors',
                         cliInstallOs === os
@@ -1826,6 +1888,8 @@ export function ConnectProject({
                   href={APPWRITE_CLI_INSTALL_URL}
                   target="_blank"
                   rel="noopener noreferrer"
+                  data-analytics-id="connect_project_cli_install_docs"
+                  data-analytics-surface="connect_project"
                   className="inline-flex items-center gap-1.5 text-[13px] text-primary hover:underline"
                 >
                   Full installation guide
@@ -1846,6 +1910,8 @@ export function ConnectProject({
                       size="sm"
                       className="h-7 gap-1 text-[12px] text-muted-foreground hover:text-foreground"
                       onClick={handleCopyCliLogin}
+                      data-analytics-id="connect_project_cli_login_copy"
+                      data-analytics-surface="connect_project"
                     >
                       {cliLoginCopied ? (
                         <Check className="h-3.5 w-3.5" />
@@ -1893,6 +1959,8 @@ export function ConnectProject({
                 href={APPWRITE_CLI_DOCS_URL}
                 target="_blank"
                 rel="noopener noreferrer"
+                data-analytics-id="connect_project_cli_docs"
+                data-analytics-surface="connect_project"
                 className="inline-flex items-center gap-1.5 text-[13px] text-primary hover:underline"
               >
                 CLI commands
@@ -1947,6 +2015,8 @@ export function ConnectProject({
                     href={APPWRITE_SKILLS_DOCS_URL}
                     target="_blank"
                     rel="noopener noreferrer"
+                    data-analytics-id="connect_project_skills_docs"
+                    data-analytics-surface="connect_project"
                     className="inline-flex items-center gap-1.5 text-[13px] text-primary hover:underline"
                   >
                     Docs
@@ -2009,6 +2079,8 @@ export function ConnectProject({
                       href={APPWRITE_AGENT_SKILLS_REPO}
                       target="_blank"
                       rel="noopener noreferrer"
+                      data-analytics-id="connect_project_skills_repo"
+                      data-analytics-surface="connect_project"
                       className="inline-flex items-center gap-1.5 text-[13px] text-primary hover:underline"
                     >
                       <GitHubIcon className="h-4 w-4" />
@@ -2051,6 +2123,8 @@ export function ConnectProject({
             variant="outline"
             size="sm"
             onClick={() => onOpenChange(false)}
+            data-analytics-id="connect_project_close"
+            data-analytics-surface="connect_project"
           >
             Close
           </Button>

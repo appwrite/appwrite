@@ -82,6 +82,8 @@ export function ResourceCard({
   return (
     <div
       onClick={onClick}
+      data-analytics-id={onClick ? 'resource_card_open' : undefined}
+      data-analytics-surface="resource_card"
       className={cn(
         'group min-w-0 overflow-hidden rounded-lg border border-border bg-card p-4 transition-all',
         onClick && 'cursor-pointer hover:border-border hover:bg-accent/50',

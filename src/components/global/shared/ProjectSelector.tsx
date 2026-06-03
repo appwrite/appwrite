@@ -100,6 +100,8 @@ export function ProjectSelector({
       <PopoverTrigger asChild>
         <Button
           variant="outline"
+          data-analytics-id="project_picker_open"
+          data-analytics-surface="project_picker"
           className={cn(
             'h-9 w-full justify-between text-[13px] font-normal',
             triggerClassName,
@@ -110,6 +112,7 @@ export function ProjectSelector({
         </Button>
       </PopoverTrigger>
       <PopoverContent
+        data-analytics-surface="project_picker"
         className={cn(
           'min-w-[240px] w-[var(--radix-popover-trigger-width)] max-w-[320px] p-0',
           contentClassName,
@@ -122,6 +125,8 @@ export function ProjectSelector({
               placeholder="Search projects..."
               value={search}
               onValueChange={setSearch}
+              data-analytics-id="project_picker_search"
+              data-analytics-surface="project_picker"
               className={cn('h-9', isFetching && 'pr-8')}
             />
             <div
@@ -171,6 +176,8 @@ export function ProjectSelector({
                       to={link.to}
                       params={link.params}
                       onClick={() => setOpen(false)}
+                      data-analytics-id="project_picker_select"
+                      data-analytics-surface="project_picker"
                       className={itemClassName}
                     >
                       {content}
@@ -185,6 +192,8 @@ export function ProjectSelector({
                       onSelectProject?.(p.$id)
                       setOpen(false)
                     }}
+                    data-analytics-id="project_picker_select"
+                    data-analytics-surface="project_picker"
                     className={itemClassName}
                   >
                     {content}

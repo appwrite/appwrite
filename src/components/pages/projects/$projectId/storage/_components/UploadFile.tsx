@@ -188,7 +188,11 @@ export function UploadFile({
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogContent className="min-w-0 sm:max-w-md p-0 max-h-[85dvh] overflow-hidden">
+      <DialogContent
+        className="min-w-0 sm:max-w-md p-0 max-h-[85dvh] overflow-hidden"
+        data-analytics-surface="upload_file_dialog"
+        data-analytics-resource="file"
+      >
         <DialogHeader className="px-6 pt-6 pb-4 text-left">
           <DialogTitle>
             {files.length > 1 ? 'Create files' : 'Create file'}
@@ -199,7 +203,13 @@ export function UploadFile({
         </DialogHeader>
         <div className="border-t border-border" />
 
-        <form onSubmit={handleSubmit} className="min-w-0">
+        <form
+          onSubmit={handleSubmit}
+          className="min-w-0"
+          data-analytics-id="upload_file_form"
+          data-analytics-surface="upload_file_dialog"
+          data-analytics-resource="file"
+        >
           <div className="min-w-0 space-y-4 overflow-x-hidden overflow-y-auto px-6 pb-4 pt-0 max-h-[60dvh]">
             {/* File Upload */}
             <div className="min-w-0 space-y-2">
@@ -211,6 +221,9 @@ export function UploadFile({
                 onDragOver={handleDragOver}
                 onDragLeave={handleDragLeave}
                 onDrop={handleDrop}
+                data-analytics-id="upload_file_dropzone"
+                data-analytics-surface="upload_file_dialog"
+                data-analytics-resource="file"
                 className={cn(
                   'min-w-0 overflow-hidden border-2 border-dashed rounded-lg p-6 text-center transition-colors',
                   isDragging
@@ -227,6 +240,9 @@ export function UploadFile({
                   onChange={handleFileInputChange}
                   className="hidden"
                   disabled={isLoading}
+                  data-analytics-id="upload_file_input"
+                  data-analytics-surface="upload_file_dialog"
+                  data-analytics-resource="file"
                 />
                 <label
                   htmlFor="file-upload"
@@ -287,6 +303,9 @@ export function UploadFile({
                             fileInputRef.current.value = ''
                           }
                         }}
+                        data-analytics-id="upload_file_remove_selected"
+                        data-analytics-surface="upload_file_dialog"
+                        data-analytics-resource="file"
                       >
                         <X className="h-3.5 w-3.5" />
                       </Button>
@@ -346,10 +365,20 @@ export function UploadFile({
               variant="outline"
               onClick={() => handleOpenChange(false)}
               disabled={isLoading}
+              data-analytics-id="upload_file_cancel"
+              data-analytics-surface="upload_file_dialog"
+              data-analytics-resource="file"
             >
               Cancel
             </Button>
-            <Button type="submit" disabled={isLoading || files.length === 0}>
+            <Button
+              type="submit"
+              disabled={isLoading || files.length === 0}
+              data-analytics-id="upload_file_submit"
+              data-analytics-surface="upload_file_dialog"
+              data-analytics-resource="file"
+              data-analytics-prop-file_count={files.length}
+            >
               Create
             </Button>
           </div>

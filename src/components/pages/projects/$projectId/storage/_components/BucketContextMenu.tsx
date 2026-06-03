@@ -132,16 +132,38 @@ export function BucketContextMenu({
     <>
       <ContextMenu>
         <ContextMenuTrigger asChild>{children}</ContextMenuTrigger>
-        <ContextMenuContent className="w-56">
-          <ContextMenuItem onSelect={() => navigateToTab('files')}>
+        <ContextMenuContent
+          className="w-56"
+          data-analytics-surface="bucket_context_menu"
+          data-analytics-resource="bucket"
+        >
+          <ContextMenuItem
+            onSelect={() => navigateToTab('files')}
+            data-analytics-id="bucket_context_tab"
+            data-analytics-surface="bucket_context_menu"
+            data-analytics-resource="bucket"
+            data-analytics-prop-tab="files"
+          >
             <ContextMenuIcon icon={Folder} />
             Files
           </ContextMenuItem>
-          <ContextMenuItem onSelect={() => navigateToTab('security')}>
+          <ContextMenuItem
+            onSelect={() => navigateToTab('security')}
+            data-analytics-id="bucket_context_tab"
+            data-analytics-surface="bucket_context_menu"
+            data-analytics-resource="bucket"
+            data-analytics-prop-tab="security"
+          >
             <ContextMenuIcon icon={Shield} />
             Security
           </ContextMenuItem>
-          <ContextMenuItem onSelect={() => navigateToTab('settings')}>
+          <ContextMenuItem
+            onSelect={() => navigateToTab('settings')}
+            data-analytics-id="bucket_context_tab"
+            data-analytics-surface="bucket_context_menu"
+            data-analytics-resource="bucket"
+            data-analytics-prop-tab="settings"
+          >
             <ContextMenuIcon icon={Settings} />
             Settings
           </ContextMenuItem>
@@ -154,6 +176,9 @@ export function BucketContextMenu({
             <ContextMenuSubContent>
               <ContextMenuItem
                 onSelect={() => copyToClipboard('ID', bucket.id)}
+                data-analytics-id="bucket_context_copy_id"
+                data-analytics-surface="bucket_context_menu"
+                data-analytics-resource="bucket"
               >
                 <ContextMenuIcon icon={Copy} />
                 Copy ID
@@ -161,6 +186,9 @@ export function BucketContextMenu({
               {hasName && (
                 <ContextMenuItem
                   onSelect={() => copyToClipboard('Name', bucket.name)}
+                  data-analytics-id="bucket_context_copy_name"
+                  data-analytics-surface="bucket_context_menu"
+                  data-analytics-resource="bucket"
                 >
                   <ContextMenuIcon icon={Copy} />
                   Copy name
@@ -168,6 +196,9 @@ export function BucketContextMenu({
               )}
               <ContextMenuItem
                 onSelect={() => copyToClipboard('Link', bucketHref)}
+                data-analytics-id="bucket_context_copy_link"
+                data-analytics-surface="bucket_context_menu"
+                data-analytics-resource="bucket"
               >
                 <ContextMenuIcon icon={Link2} />
                 Copy link
@@ -178,6 +209,9 @@ export function BucketContextMenu({
                     fetchBucket(projectId, bucket.id),
                   )
                 }
+                data-analytics-id="bucket_context_copy_json"
+                data-analytics-surface="bucket_context_menu"
+                data-analytics-resource="bucket"
               >
                 <ContextMenuIcon icon={FileJson} />
                 Copy as JSON
@@ -185,16 +219,31 @@ export function BucketContextMenu({
             </ContextMenuSubContent>
           </ContextMenuSub>
           <ContextMenuSeparator />
-          <ContextMenuItem onSelect={() => openInNewTab(bucketHref)}>
+          <ContextMenuItem
+            onSelect={() => openInNewTab(bucketHref)}
+            data-analytics-id="bucket_context_open_new_tab"
+            data-analytics-surface="bucket_context_menu"
+            data-analytics-resource="bucket"
+          >
             <ContextMenuIcon icon={ExternalLink} />
             Open in new tab
           </ContextMenuItem>
-          <ContextMenuItem onSelect={() => openInNewWindow(bucketHref)}>
+          <ContextMenuItem
+            onSelect={() => openInNewWindow(bucketHref)}
+            data-analytics-id="bucket_context_open_new_window"
+            data-analytics-surface="bucket_context_menu"
+            data-analytics-resource="bucket"
+          >
             <ContextMenuIcon icon={Square} />
             Open in new window
           </ContextMenuItem>
           <ContextMenuSeparator />
-          <ContextMenuItem onSelect={handleDeleteClick}>
+          <ContextMenuItem
+            onSelect={handleDeleteClick}
+            data-analytics-id="bucket_context_delete_open"
+            data-analytics-surface="bucket_context_menu"
+            data-analytics-resource="bucket"
+          >
             <ContextMenuIcon icon={Trash2} />
             Delete
           </ContextMenuItem>
@@ -202,7 +251,11 @@ export function BucketContextMenu({
       </ContextMenu>
 
       <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
-        <DialogContent className="sm:max-w-md p-0">
+        <DialogContent
+          className="sm:max-w-md p-0"
+          data-analytics-surface="bucket_delete_dialog"
+          data-analytics-resource="bucket"
+        >
           <DialogHeader className="px-6 pt-6 pb-4 text-left">
             <DialogTitle>Delete bucket</DialogTitle>
             <DialogDescription className="text-[13px] mt-2">
@@ -215,6 +268,9 @@ export function BucketContextMenu({
               variant="outline"
               onClick={() => setDeleteDialogOpen(false)}
               disabled={deleteMutation.isPending}
+              data-analytics-id="bucket_delete_cancel"
+              data-analytics-surface="bucket_delete_dialog"
+              data-analytics-resource="bucket"
             >
               Cancel
             </Button>
@@ -222,6 +278,9 @@ export function BucketContextMenu({
               variant="destructive"
               onClick={() => deleteMutation.mutate()}
               disabled={deleteMutation.isPending}
+              data-analytics-id="bucket_delete_confirm"
+              data-analytics-surface="bucket_delete_dialog"
+              data-analytics-resource="bucket"
             >
               Delete
             </Button>

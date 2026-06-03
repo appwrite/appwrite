@@ -1,6 +1,6 @@
 import { useState, Fragment } from 'react'
 import { Key, Eye, Copy, Check, Pencil, Trash2 } from 'lucide-react'
-import { MenuItemContent, MenuItemIcon } from '@/components/global/shared/ContextMenuIcon'
+import { MenuItemContent } from '@/components/global/shared/ContextMenuIcon'
 import { RowActionsMenuTrigger } from '@/components/global/shared/RowActionsMenuTrigger'
 import { DateTooltip } from '@/components/global/shared/DateTooltip'
 import { Badge } from '@/components/ui/badge'
@@ -123,6 +123,9 @@ export function ApiKeysList({
               <div
                 role={onUpdate ? 'button' : undefined}
                 tabIndex={onUpdate ? 0 : undefined}
+                data-analytics-id={onUpdate ? 'api_key_row_update' : undefined}
+                data-analytics-surface="api_keys_list"
+                data-analytics-resource="api_key"
                 onClick={onUpdate ? () => onUpdate(apiKey.id) : undefined}
                 onKeyDown={
                   onUpdate
@@ -169,6 +172,9 @@ export function ApiKeysList({
                       <button
                         type="button"
                         data-api-key-action
+                        data-analytics-id="api_key_view"
+                        data-analytics-surface="api_keys_list"
+                        data-analytics-resource="api_key"
                         onClick={(e) => {
                           e.stopPropagation()
                           handleView(apiKey.id)
@@ -181,6 +187,9 @@ export function ApiKeysList({
                       <button
                         type="button"
                         data-api-key-action
+                        data-analytics-id="api_key_copy"
+                        data-analytics-surface="api_keys_list"
+                        data-analytics-resource="api_key"
                         onClick={(e) => {
                           e.stopPropagation()
                           handleCopy(apiKey.key, `apiKey-${apiKey.id}`)
@@ -242,15 +251,26 @@ export function ApiKeysList({
                           onClick={(e) => e.stopPropagation()}
                         />
                       </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
+                      <DropdownMenuContent
+                        align="end"
+                        data-analytics-surface="api_keys_list"
+                      >
                         {onUpdate && (
-                          <DropdownMenuItem onClick={() => onUpdate(apiKey.id)}>
+                          <DropdownMenuItem
+                            onClick={() => onUpdate(apiKey.id)}
+                            data-analytics-id="api_key_update"
+                            data-analytics-surface="api_keys_list"
+                            data-analytics-resource="api_key"
+                          >
                             <MenuItemContent icon={Pencil}>Update</MenuItemContent>
                           </DropdownMenuItem>
                         )}
                         {onDelete && (
                           <DropdownMenuItem
                             onClick={() => onDelete(apiKey.id)}
+                            data-analytics-id="api_key_delete"
+                            data-analytics-surface="api_keys_list"
+                            data-analytics-resource="api_key"
                           >
                             <MenuItemContent icon={Trash2}>Delete</MenuItemContent>
                           </DropdownMenuItem>
@@ -289,7 +309,11 @@ export function ApiKeysList({
         open={viewingKeyId !== null}
         onOpenChange={(open) => !open && setViewingKeyId(null)}
       >
-        <DialogContent className="sm:max-w-[600px] p-0">
+        <DialogContent
+          className="sm:max-w-[600px] p-0"
+          data-analytics-surface="api_key_view_dialog"
+          data-analytics-resource="api_key"
+        >
           <DialogHeader className="px-6 pt-6 text-left">
             <DialogTitle>{viewingKey?.name || 'API Key'}</DialogTitle>
             <DialogDescription className="text-[13px] mt-2">
@@ -353,11 +377,20 @@ export function ApiKeysList({
           </div>
 
           <div className="px-6 py-4 border-t border-border bg-muted/30 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
-            <Button variant="outline" onClick={() => setViewingKeyId(null)}>
+            <Button
+              variant="outline"
+              onClick={() => setViewingKeyId(null)}
+              data-analytics-id="api_key_view_close"
+              data-analytics-surface="api_key_view_dialog"
+              data-analytics-resource="api_key"
+            >
               Close
             </Button>
             <Button
               variant="outline"
+              data-analytics-id="api_key_view_copy"
+              data-analytics-surface="api_key_view_dialog"
+              data-analytics-resource="api_key"
               onClick={() => {
                 if (viewingKey?.key) {
                   handleCopy(viewingKey.key, 'apiKeyModal')

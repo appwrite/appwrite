@@ -1202,6 +1202,116 @@ Use `console-access-checks` (e.g. `canShowProjectSettings`, `canShowConnectSecti
 
 ---
 
+## Product Analytics
+
+Product analytics uses Plausible and must stay privacy-friendly. Add tracking for new user-facing features as part of the feature work, especially for navigation, wizards, forms, dialogs, list controls, and CRUD actions.
+
+### Rules
+
+- **Use the shared helper**: Import `useAnalytics` from `@/hooks/use-analytics` in components, or use `trackEvent` / `trackPageView` from `@/lib/analytics` outside React.
+- **Use automatic tracking by default**: `useGlobalAnalyticsTracker` in the root tracks generic links, buttons, menu items, tabs, non-text controls, form submits, and dialog open/close events across the app.
+- **Add proactive metadata**: Important shared controls and feature-specific buttons must include stable `data-analytics-id` and, when useful, `data-analytics-surface`, `data-analytics-resource`, or `data-analytics-prop-*` attributes so same-context clicks can be distinguished.
+- **Never send raw IDs or user-entered values**: Do not send project IDs, organization IDs, resource IDs, names, emails, domains, search terms, query strings, or full URLs.
+- **Use route templates**: Page views and events should use sanitized routes such as `/projects/$projectId/databases/$databaseId`, not concrete paths.
+- **Keep event names stable and finite**: Use a small set of generic event names and put context in props.
+- **Keep props low-cardinality**: Props should be booleans, counts, fixed enums, route templates, resource types, surfaces, steps, results, or error names. Avoid labels or arbitrary strings from the UI.
+- **Track outcomes**: For create/update/delete flows, track submit attempt, validation failure, success, and API failure when applicable.
+- **Avoid duplicates**: When a component has richer explicit tracking for a click or form, add `data-analytics-track="manual"` to the generic DOM element so the root tracker skips it.
+
+### Event names
+
+Use title case names from this taxonomy:
+
+- `Page Viewed` (implemented through Plausible `pageview`)
+- `Navigation Clicked`
+- `Button Clicked`
+- `Menu Item Clicked`
+- `Control Changed`
+- `Command Executed`
+- `Dialog Opened`
+- `Dialog Closed`
+- `Wizard Opened`
+- `Wizard Option Selected`
+- `Form Submitted`
+- `Form Validation Failed`
+- `Resource Created`
+- `Resource Creation Failed`
+- `Search Performed`
+- `Filter Applied`
+- `Sort Changed`
+- `Pagination Changed`
+- `Tab Changed`
+- `View Mode Changed`
+- `External Link Opened`
+- `Error Shown`
+
+Add a new event name only when the existing names cannot describe the interaction without awkward props. If you add one, update `AnalyticsEventName` in `src/lib/analytics.ts` and this section.
+
+### Standard props
+
+Prefer these prop names:
+
+```typescript
+track('Resource Created', {
+  surface: 'create_database_wizard',
+  resource: 'database',
+  database_type: 'TablesDB',
+  spec: 'shared',
+  has_custom_id: false,
+})
+```
+
+Common props:
+
+- `surface`: UI surface or component, e.g. `sidebar`, `create_database_wizard`
+- `analytics_id`: stable component/action id from `data-analytics-id`
+- `resource`: resource type, e.g. `database`, `bucket`, `function`
+- `step`: wizard/form step, e.g. `database_type`, `specification`
+- `option`: selected fixed option, e.g. `TablesDB`, `shared`
+- `result`: `success`, `failed`, `cancelled`, etc.
+- `error_name`: JavaScript or API error class/name only, not the full message
+- `fields`: comma-separated field keys for validation failures, never field values
+- `error_count`, `filter_count`, `page_size`: numeric summaries
+- `mobile`, `has_search`, `has_custom_id`: booleans
+
+### Automatic tracking attributes
+
+The root tracker intentionally does not read text labels, input values, hrefs, form values, or resource names. Add safe metadata with data attributes when a generic automatic event needs more context:
+
+```tsx
+<Button
+  data-analytics-id="create_database"
+  data-analytics-surface="databases_list"
+  data-analytics-resource="database"
+>
+  Create database
+</Button>
+```
+
+Supported attributes:
+
+- `data-analytics-track="manual"`: skip automatic tracking because the component tracks explicitly.
+- `data-analytics-track="false"`: skip tracking entirely for this element subtree.
+- `data-analytics-event="Button Clicked"`: override the automatic event name. Use only names listed in `AnalyticsEventName`.
+- `data-analytics-id`: stable low-cardinality action/component id.
+- `data-analytics-surface`: stable surface name. Child elements inherit the closest parent surface.
+- `data-analytics-resource`: stable resource type.
+- `data-analytics-prop-*`: additional safe enum/boolean/count props, e.g. `data-analytics-prop-step="database_type"`.
+
+Add these attributes proactively to reusable primitives and shared surfaces such as `ServiceHeader`, `Pagination`, `WizardLayout`, filters, row action triggers, view toggles, and create/delete/confirm buttons. Prefer a generic ID like `service_header_create`, `pagination_next`, or `filters_clear_all` over copying visible button text.
+
+### What to track in new features
+
+- **Pages and tabs**: Page views are automatic. Track tab changes with `Tab Changed` when tabs do not change route.
+- **Navigation**: Track sidebar, command center, breadcrumbs, back buttons, and important in-page links with `Navigation Clicked`.
+- **Wizards**: Track `Wizard Opened`, meaningful `Wizard Option Selected` events, `Form Submitted`, validation failures, success, and API failure.
+- **Forms**: Track submit, validation failure, success, and API failure. Do not track typed input values.
+- **Lists and tables**: Track search with `has_search`, filters with `filter_count`, sort changes with enum field keys, pagination changes, and view mode changes.
+- **Dialogs and drawers**: Track opened, closed, confirmed, and cancelled actions using stable surface names.
+- **CRUD**: Track create/update/delete success and failure using resource type and result. Never include resource IDs or names.
+
+---
+
 ## Team and user preferences (key-value format)
 
 Console uses **team** (organization) and **user** (account) preferences to store small key-value settings. Use a consistent, extendable format so new features can add keys without collisions.

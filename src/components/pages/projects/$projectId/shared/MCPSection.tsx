@@ -24,6 +24,8 @@ export function MCPSection({ compact = false }: MCPSectionProps) {
         href="https://appwrite.io/docs/tooling/mcp"
         target="_blank"
         rel="noreferrer"
+        data-analytics-id="mcp_docs"
+        data-analytics-surface="mcp_section"
         className="text-foreground underline hover:no-underline"
       >
         docs
@@ -40,6 +42,9 @@ export function MCPSection({ compact = false }: MCPSectionProps) {
           href="https://appwrite.io/docs/tooling/mcp/api"
           target="_blank"
           rel="noreferrer"
+          data-analytics-id="mcp_type_open"
+          data-analytics-surface="mcp_section"
+          data-analytics-prop-type="api"
           className="rounded-lg border border-border bg-muted/30 p-3 transition-colors hover:bg-muted/50 hover:border-border cursor-pointer"
         >
           <div className="flex items-start gap-2">
@@ -61,6 +66,9 @@ export function MCPSection({ compact = false }: MCPSectionProps) {
           href="https://appwrite.io/docs/tooling/mcp/docs"
           target="_blank"
           rel="noreferrer"
+          data-analytics-id="mcp_type_open"
+          data-analytics-surface="mcp_section"
+          data-analytics-prop-type="docs"
           className="rounded-lg border border-border bg-muted/30 p-3 transition-colors hover:bg-muted/50 hover:border-border cursor-pointer"
         >
           <div className="flex items-start gap-2">
@@ -97,7 +105,14 @@ export function MCPSection({ compact = false }: MCPSectionProps) {
                 className="h-9 text-[13px]"
                 asChild
               >
-                <a href={ide.mcpDocsUrl} target="_blank" rel="noreferrer">
+                <a
+                  href={ide.mcpDocsUrl}
+                  target="_blank"
+                  rel="noreferrer"
+                  data-analytics-id="mcp_ide_open"
+                  data-analytics-surface="mcp_section"
+                  data-analytics-prop-ide={ide.id}
+                >
                   <img
                     src={ide.iconPath}
                     alt=""

@@ -100,24 +100,58 @@ export function SiteContextMenu({
     <>
       <ContextMenu>
         <ContextMenuTrigger asChild>{children}</ContextMenuTrigger>
-        <ContextMenuContent className="w-56">
-          <ContextMenuItem onSelect={() => navigateToTab('deployments')}>
+        <ContextMenuContent
+          className="w-56"
+          data-analytics-surface="site_context_menu"
+          data-analytics-resource="site"
+        >
+          <ContextMenuItem
+            onSelect={() => navigateToTab('deployments')}
+            data-analytics-id="site_context_tab"
+            data-analytics-surface="site_context_menu"
+            data-analytics-resource="site"
+            data-analytics-prop-tab="deployments"
+          >
             <ContextMenuIcon icon={FolderGit} />
             Deployments
           </ContextMenuItem>
-          <ContextMenuItem onSelect={() => navigateToTab('domains')}>
+          <ContextMenuItem
+            onSelect={() => navigateToTab('domains')}
+            data-analytics-id="site_context_tab"
+            data-analytics-surface="site_context_menu"
+            data-analytics-resource="site"
+            data-analytics-prop-tab="domains"
+          >
             <ContextMenuIcon icon={Globe} />
             Domains
           </ContextMenuItem>
-          <ContextMenuItem onSelect={() => navigateToTab('logs')}>
+          <ContextMenuItem
+            onSelect={() => navigateToTab('logs')}
+            data-analytics-id="site_context_tab"
+            data-analytics-surface="site_context_menu"
+            data-analytics-resource="site"
+            data-analytics-prop-tab="logs"
+          >
             <ContextMenuIcon icon={ScrollText} />
             Logs
           </ContextMenuItem>
-          <ContextMenuItem onSelect={() => navigateToTab('variables')}>
+          <ContextMenuItem
+            onSelect={() => navigateToTab('variables')}
+            data-analytics-id="site_context_tab"
+            data-analytics-surface="site_context_menu"
+            data-analytics-resource="site"
+            data-analytics-prop-tab="variables"
+          >
             <ContextMenuIcon icon={Variable} />
             Variables
           </ContextMenuItem>
-          <ContextMenuItem onSelect={() => navigateToTab('settings')}>
+          <ContextMenuItem
+            onSelect={() => navigateToTab('settings')}
+            data-analytics-id="site_context_tab"
+            data-analytics-surface="site_context_menu"
+            data-analytics-resource="site"
+            data-analytics-prop-tab="settings"
+          >
             <ContextMenuIcon icon={Settings} />
             Settings
           </ContextMenuItem>
@@ -128,13 +162,21 @@ export function SiteContextMenu({
               Copy
             </ContextMenuSubTrigger>
             <ContextMenuSubContent>
-              <ContextMenuItem onSelect={() => copyToClipboard('ID', site.$id)}>
+              <ContextMenuItem
+                onSelect={() => copyToClipboard('ID', site.$id)}
+                data-analytics-id="site_context_copy_id"
+                data-analytics-surface="site_context_menu"
+                data-analytics-resource="site"
+              >
                 <ContextMenuIcon icon={Copy} />
                 Copy ID
               </ContextMenuItem>
               {hasName && (
                 <ContextMenuItem
                   onSelect={() => copyToClipboard('Name', site.name)}
+                  data-analytics-id="site_context_copy_name"
+                  data-analytics-surface="site_context_menu"
+                  data-analytics-resource="site"
                 >
                   <ContextMenuIcon icon={Copy} />
                   Copy name
@@ -142,6 +184,9 @@ export function SiteContextMenu({
               )}
               <ContextMenuItem
                 onSelect={() => copyToClipboard('Link', siteHref)}
+                data-analytics-id="site_context_copy_link"
+                data-analytics-surface="site_context_menu"
+                data-analytics-resource="site"
               >
                 <ContextMenuIcon icon={Link2} />
                 Copy link
@@ -152,6 +197,9 @@ export function SiteContextMenu({
                     fetchProjectSite(projectId, site.$id),
                   )
                 }
+                data-analytics-id="site_context_copy_json"
+                data-analytics-surface="site_context_menu"
+                data-analytics-resource="site"
               >
                 <ContextMenuIcon icon={FileJson} />
                 Copy as JSON
@@ -159,16 +207,31 @@ export function SiteContextMenu({
             </ContextMenuSubContent>
           </ContextMenuSub>
           <ContextMenuSeparator />
-          <ContextMenuItem onSelect={() => openInNewTab(siteHref)}>
+          <ContextMenuItem
+            onSelect={() => openInNewTab(siteHref)}
+            data-analytics-id="site_context_open_new_tab"
+            data-analytics-surface="site_context_menu"
+            data-analytics-resource="site"
+          >
             <ContextMenuIcon icon={ExternalLink} />
             Open in new tab
           </ContextMenuItem>
-          <ContextMenuItem onSelect={() => openInNewWindow(siteHref)}>
+          <ContextMenuItem
+            onSelect={() => openInNewWindow(siteHref)}
+            data-analytics-id="site_context_open_new_window"
+            data-analytics-surface="site_context_menu"
+            data-analytics-resource="site"
+          >
             <ContextMenuIcon icon={Square} />
             Open in new window
           </ContextMenuItem>
           <ContextMenuSeparator />
-          <ContextMenuItem onSelect={handleDeleteClick}>
+          <ContextMenuItem
+            onSelect={handleDeleteClick}
+            data-analytics-id="site_context_delete_open"
+            data-analytics-surface="site_context_menu"
+            data-analytics-resource="site"
+          >
             <ContextMenuIcon icon={Trash2} />
             Delete
           </ContextMenuItem>
@@ -176,7 +239,11 @@ export function SiteContextMenu({
       </ContextMenu>
 
       <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
-        <DialogContent className="sm:max-w-md p-0">
+        <DialogContent
+          className="sm:max-w-md p-0"
+          data-analytics-surface="site_delete_dialog"
+          data-analytics-resource="site"
+        >
           <DialogHeader className="px-6 pt-6 pb-4 text-left">
             <DialogTitle>Delete site</DialogTitle>
             <DialogDescription className="text-[13px] mt-2">
@@ -189,6 +256,9 @@ export function SiteContextMenu({
               variant="outline"
               onClick={() => setDeleteDialogOpen(false)}
               disabled={deleteMutation.isPending}
+              data-analytics-id="site_delete_cancel"
+              data-analytics-surface="site_delete_dialog"
+              data-analytics-resource="site"
             >
               Cancel
             </Button>
@@ -196,6 +266,9 @@ export function SiteContextMenu({
               variant="destructive"
               onClick={handleConfirmDelete}
               disabled={deleteMutation.isPending}
+              data-analytics-id="site_delete_confirm"
+              data-analytics-surface="site_delete_dialog"
+              data-analytics-resource="site"
             >
               Delete
             </Button>

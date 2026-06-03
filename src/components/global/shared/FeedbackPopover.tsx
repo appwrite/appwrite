@@ -111,6 +111,9 @@ export function FeedbackPopover({
               size="icon"
               className="h-9 w-9 text-muted-foreground hover:bg-accent hover:text-foreground"
               aria-label="Feedback"
+              data-analytics-id="feedback_open"
+              data-analytics-surface="feedback_popover"
+              data-analytics-prop-source={source}
             >
               <MessageSquarePlus className="h-4 w-4" />
             </Button>
@@ -120,7 +123,12 @@ export function FeedbackPopover({
           <p>Feedback</p>
         </TooltipContent>
       </Tooltip>
-      <PopoverContent align="end" className="w-80 p-0">
+      <PopoverContent
+        align="end"
+        className="w-80 p-0"
+        data-analytics-surface="feedback_popover"
+        data-analytics-prop-source={source}
+      >
         {isSubmitted ? (
           <div className="flex flex-col items-center justify-center gap-3 p-8">
             <div className="flex h-12 w-12 items-center justify-center rounded-full bg-green-500/10">
@@ -155,6 +163,9 @@ export function FeedbackPopover({
               <Button
                 size="sm"
                 onClick={handleSubmit}
+                data-analytics-id="feedback_submit"
+                data-analytics-surface="feedback_popover"
+                data-analytics-prop-source={source}
                 disabled={
                   !message.trim() || message.length > 500 || isSubmitting
                 }

@@ -34,6 +34,13 @@ import { DynamicFavicon } from '@/components/global/shared/DynamicFavicon'
 import { UploadWarning } from '@/components/global/providers/UploadWarning'
 import { GlobalUploadProgress } from '@/components/global/shared/GlobalUploadProgress'
 import { useLocation, useMatches } from '@tanstack/react-router'
+import {
+  PLAUSIBLE_INIT_SCRIPT,
+  PLAUSIBLE_SCRIPT_SRC,
+  getAnalyticsRoutePath,
+  trackPageView,
+} from '@/lib/analytics'
+import { useGlobalAnalyticsTracker } from '@/hooks/use-global-analytics-tracker'
 
 interface MyRouterContext {
   queryClient: QueryClient
@@ -59,21 +66,6 @@ const scripts: React.DetailedHTMLProps<
   React.ScriptHTMLAttributes<HTMLScriptElement>,
   HTMLScriptElement
 >[] = []
-
-const PLAUSIBLE_SCRIPT_SRC = (
-  import.meta.env.VITE_PLAUSIBLE_SCRIPT_SRC as string | undefined
-)?.trim()
-const PLAUSIBLE_INIT_SCRIPT = `window.plausible=window.plausible||function(){(plausible.q=plausible.q||[]).push(arguments)},plausible.init=plausible.init||function(i){plausible.o=i||{}};
-plausible.init({ autoCapturePageviews: false })`
-
-declare global {
-  interface Window {
-    plausible?: (
-      eventName: 'pageview' | string,
-      options?: { url?: string; u?: string; props?: Record<string, unknown> },
-    ) => void
-  }
-}
 
 /**
  * `type="module"` script URLs must not be path-relative: the browser resolves them
@@ -263,16 +255,6 @@ function ClientOnly({ children }: { children: React.ReactNode }) {
   return <>{children}</>
 }
 
-function getPlausibleRoutePath(routeId: string | undefined, pathname: string) {
-  const routePath = routeId
-    ?.split('/')
-    .filter(Boolean)
-    .filter((part) => !part.startsWith('_'))
-    .join('/')
-
-  return routePath ? `/${routePath}` : pathname || '/'
-}
-
 function PlausibleRouteTracker() {
   const location = useLocation()
   const matches = useMatches()
@@ -281,8 +263,8 @@ function PlausibleRouteTracker() {
   useEffect(() => {
     if (!PLAUSIBLE_SCRIPT_SRC || typeof window === 'undefined') return
 
-    const routePath = getPlausibleRoutePath(leafRoute?.routeId, location.pathname)
-    window.plausible?.('pageview', { url: `${window.location.origin}${routePath}` })
+    const routePath = getAnalyticsRoutePath(leafRoute?.routeId, location.pathname)
+    trackPageView(routePath)
   }, [leafRoute?.routeId, location.pathname])
 
   return null
@@ -306,6 +288,7 @@ function RootDocument({ children }: { children: React.ReactNode }) {
   const { data: statusData, isSuccess: isStatusSuccess } =
     useAppwriteCloudStatus(cloudStatusEnabled)
   const { showFullscreenLoader } = useDebugOverrides()
+  useGlobalAnalyticsTracker()
 
   useEffect(() => {
     setClientMounted(true)

@@ -137,6 +137,8 @@ function ServiceHeaderCreateButton({
             <div>
               {createTo && createParams ? (
                 <span
+                  data-analytics-id="service_header_create_disabled"
+                  data-analytics-surface="service_header"
                   className={cn(
                     buttonVariants({ variant: 'brandCta' }),
                     createButtonClassName,
@@ -153,6 +155,8 @@ function ServiceHeaderCreateButton({
                   variant="brandCta"
                   onClick={onCreate}
                   disabled
+                  data-analytics-id="service_header_create_disabled"
+                  data-analytics-surface="service_header"
                   className={createButtonClassName}
                   aria-label={createLabel}
                 >
@@ -181,6 +185,8 @@ function ServiceHeaderCreateButton({
           to={createTo as unknown}
           params={createParams}
           aria-label={createLabel}
+          data-analytics-id="service_header_create"
+          data-analytics-surface="service_header"
         >
           <Plus className="h-4 w-4 shrink-0" />
           {label}
@@ -194,6 +200,8 @@ function ServiceHeaderCreateButton({
     <Button
       variant="brandCta"
       onClick={onCreate}
+      data-analytics-id="service_header_create"
+      data-analytics-surface="service_header"
       className={createButtonClassName}
       aria-label={createLabel}
     >
@@ -319,6 +327,9 @@ export const ServiceHeader = forwardRef<ServiceHeaderRef, ServiceHeaderProps>(
                 onMouseDown={(e) => e.preventDefault()}
                 role="tab"
                 aria-selected={isActive}
+                data-analytics-id="service_header_tab"
+                data-analytics-surface="service_header"
+                data-analytics-prop-tab={tab.id}
                 className={cn(
                   'relative flex shrink-0 cursor-pointer items-center gap-1.5 px-3 py-2.5 text-[13px] font-medium transition-colors rounded-sm',
                   'focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset',
@@ -340,6 +351,9 @@ export const ServiceHeader = forwardRef<ServiceHeaderRef, ServiceHeaderProps>(
               aria-selected={isActive}
               onMouseDown={(e) => e.preventDefault()}
               onClick={() => onTabChange?.(tab.id)}
+              data-analytics-id="service_header_tab"
+              data-analytics-surface="service_header"
+              data-analytics-prop-tab={tab.id}
               className={cn(
                 'relative flex shrink-0 cursor-pointer focus:cursor-pointer focus-visible:cursor-pointer items-center gap-1.5 px-3 py-2.5 text-[13px] font-medium transition-colors rounded-sm',
                 'focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset',
@@ -374,6 +388,9 @@ export const ServiceHeader = forwardRef<ServiceHeaderRef, ServiceHeaderProps>(
                     {breadcrumb.href ? (
                       <Link
                         to={breadcrumb.href}
+                        data-analytics-id="service_header_breadcrumb"
+                        data-analytics-surface="service_header"
+                        data-analytics-prop-position={index}
                         className="text-muted-foreground transition-colors hover:text-foreground"
                       >
                         {breadcrumb.label}
@@ -440,6 +457,9 @@ export const ServiceHeader = forwardRef<ServiceHeaderRef, ServiceHeaderProps>(
                         onMouseDown={(e) => e.preventDefault()}
                         role="tab"
                         aria-selected={isActive}
+                        data-analytics-id="service_header_tab"
+                        data-analytics-surface="service_header"
+                        data-analytics-prop-tab={tab.id}
                         className={cn(
                           'relative flex shrink-0 cursor-pointer items-center gap-1.5 px-3 py-2.5 text-[13px] font-medium transition-colors rounded-sm',
                           'focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset',
@@ -461,6 +481,9 @@ export const ServiceHeader = forwardRef<ServiceHeaderRef, ServiceHeaderProps>(
                       aria-selected={isActive}
                       onMouseDown={(e) => e.preventDefault()}
                       onClick={() => onTabChange?.(tab.id)}
+                      data-analytics-id="service_header_tab"
+                      data-analytics-surface="service_header"
+                      data-analytics-prop-tab={tab.id}
                       className={cn(
                         'relative flex shrink-0 cursor-pointer items-center gap-1.5 px-3 py-2.5 text-[13px] font-medium transition-colors rounded-sm',
                         'focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset',
@@ -505,6 +528,8 @@ export const ServiceHeader = forwardRef<ServiceHeaderRef, ServiceHeaderProps>(
                   placeholder={searchPlaceholder}
                   value={searchValue}
                   onChange={(e) => onSearchChange(e.target.value)}
+                  data-analytics-id="service_header_search"
+                  data-analytics-surface="service_header"
                   className="h-9 w-full min-w-0 rounded-md border border-border bg-accent/50 pl-10 pr-4 text-[13px] text-foreground placeholder:text-muted-foreground outline-none transition-[color,box-shadow] focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50"
                 />
               </div>
@@ -517,6 +542,8 @@ export const ServiceHeader = forwardRef<ServiceHeaderRef, ServiceHeaderProps>(
                   variant="outline"
                   size="sm"
                   onClick={onFilterClick}
+                  data-analytics-id="service_header_filters"
+                  data-analytics-surface="service_header"
                   className={cn(
                     'border-border bg-transparent text-[13px] text-muted-foreground hover:bg-accent hover:text-foreground',
                     serviceHeaderFiltersButton,
@@ -549,6 +576,8 @@ export const ServiceHeader = forwardRef<ServiceHeaderRef, ServiceHeaderProps>(
                         size="sm"
                         onClick={onRefresh}
                         disabled={isRefreshing}
+                        data-analytics-id="service_header_refresh"
+                        data-analytics-surface="service_header"
                         className="h-9 w-9 shrink-0 p-0 border-border bg-transparent text-muted-foreground hover:bg-accent hover:text-foreground disabled:opacity-50"
                       >
                         <RefreshCw
@@ -574,6 +603,8 @@ export const ServiceHeader = forwardRef<ServiceHeaderRef, ServiceHeaderProps>(
                         size="sm"
                         onClick={onImport}
                         disabled={importDisabled}
+                        data-analytics-id="service_header_import"
+                        data-analytics-surface="service_header"
                         className="h-9 w-9 shrink-0 p-0 border-border bg-transparent text-muted-foreground hover:bg-accent hover:text-foreground disabled:opacity-50"
                       >
                         <Upload className="h-4 w-4" />
@@ -594,6 +625,8 @@ export const ServiceHeader = forwardRef<ServiceHeaderRef, ServiceHeaderProps>(
                         size="sm"
                         onClick={onExport}
                         disabled={exportDisabled}
+                        data-analytics-id="service_header_export"
+                        data-analytics-surface="service_header"
                         className="h-9 w-9 shrink-0 p-0 border-border bg-transparent text-muted-foreground hover:bg-accent hover:text-foreground disabled:opacity-50"
                       >
                         <Download className="h-4 w-4" />
@@ -634,6 +667,11 @@ export const ServiceHeader = forwardRef<ServiceHeaderRef, ServiceHeaderProps>(
                         variant="outline"
                         size="sm"
                         onClick={() => setIsCollapsed(!isCollapsed)}
+                        data-analytics-id="service_header_collapse"
+                        data-analytics-surface="service_header"
+                        data-analytics-prop-mode={
+                          isCollapsed ? 'expanded' : 'collapsed'
+                        }
                         className="h-9 w-9 p-0 border-border bg-transparent text-muted-foreground hover:bg-accent hover:text-foreground"
                       >
                         <ChevronUp

@@ -85,6 +85,10 @@ export function SpecificationTableCard({
               return (
                 <TableRow
                   key={slug}
+                  data-analytics-id="specification_select"
+                  data-analytics-surface="specification_table"
+                  data-analytics-resource={scope}
+                  data-analytics-prop-allowed={allowed}
                   className={cn(
                     'cursor-pointer border-b border-border transition-colors',
                     selected && 'bg-primary/[0.06]',
@@ -103,6 +107,10 @@ export function SpecificationTableCard({
                       checked={selected}
                       disabled={!allowed}
                       onChange={() => allowed && onSelectedSlugChange(slug)}
+                      data-analytics-id="specification_radio_select"
+                      data-analytics-surface="specification_table"
+                      data-analytics-resource={scope}
+                      data-analytics-prop-allowed={allowed}
                       aria-label={`Select specification ${slug}`}
                     />
                   </TableCell>
@@ -147,6 +155,9 @@ export function SpecificationTableCard({
           className="h-9 text-[13px]"
           disabled={!hasChanges || isSaving}
           onClick={onSave}
+          data-analytics-id="specification_update"
+          data-analytics-surface="specification_table"
+          data-analytics-resource={scope}
         >
           Update
         </Button>

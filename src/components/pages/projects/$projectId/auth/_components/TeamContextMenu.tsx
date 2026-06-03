@@ -97,12 +97,28 @@ export function TeamContextMenu({
     <>
       <ContextMenu>
         <ContextMenuTrigger asChild>{children}</ContextMenuTrigger>
-        <ContextMenuContent className="w-56">
-          <ContextMenuItem onSelect={() => navigateToTab('overview')}>
+        <ContextMenuContent
+          className="w-56"
+          data-analytics-surface="team_context_menu"
+          data-analytics-resource="team"
+        >
+          <ContextMenuItem
+            onSelect={() => navigateToTab('overview')}
+            data-analytics-id="team_context_tab"
+            data-analytics-surface="team_context_menu"
+            data-analytics-resource="team"
+            data-analytics-prop-tab="overview"
+          >
             <ContextMenuIcon icon={LayoutList} />
             Overview
           </ContextMenuItem>
-          <ContextMenuItem onSelect={() => navigateToTab('members')}>
+          <ContextMenuItem
+            onSelect={() => navigateToTab('members')}
+            data-analytics-id="team_context_tab"
+            data-analytics-surface="team_context_menu"
+            data-analytics-resource="team"
+            data-analytics-prop-tab="members"
+          >
             <ContextMenuIcon icon={Users} />
             Memberships
           </ContextMenuItem>
@@ -113,13 +129,21 @@ export function TeamContextMenu({
               Copy
             </ContextMenuSubTrigger>
             <ContextMenuSubContent>
-              <ContextMenuItem onSelect={() => copyToClipboard('ID', team.id)}>
+              <ContextMenuItem
+                onSelect={() => copyToClipboard('ID', team.id)}
+                data-analytics-id="team_context_copy_id"
+                data-analytics-surface="team_context_menu"
+                data-analytics-resource="team"
+              >
                 <ContextMenuIcon icon={Copy} />
                 Copy ID
               </ContextMenuItem>
               {hasName && (
                 <ContextMenuItem
                   onSelect={() => copyToClipboard('Name', team.name)}
+                  data-analytics-id="team_context_copy_name"
+                  data-analytics-surface="team_context_menu"
+                  data-analytics-resource="team"
                 >
                   <ContextMenuIcon icon={Users} />
                   Copy name
@@ -127,6 +151,9 @@ export function TeamContextMenu({
               )}
               <ContextMenuItem
                 onSelect={() => copyToClipboard('Link', teamHref)}
+                data-analytics-id="team_context_copy_link"
+                data-analytics-surface="team_context_menu"
+                data-analytics-resource="team"
               >
                 <ContextMenuIcon icon={Link2} />
                 Copy link
@@ -137,6 +164,9 @@ export function TeamContextMenu({
                     fetchTeam(projectId, team.id),
                   )
                 }
+                data-analytics-id="team_context_copy_json"
+                data-analytics-surface="team_context_menu"
+                data-analytics-resource="team"
               >
                 <ContextMenuIcon icon={FileJson} />
                 Copy as JSON
@@ -144,16 +174,31 @@ export function TeamContextMenu({
             </ContextMenuSubContent>
           </ContextMenuSub>
           <ContextMenuSeparator />
-          <ContextMenuItem onSelect={() => openInNewTab(teamHref)}>
+          <ContextMenuItem
+            onSelect={() => openInNewTab(teamHref)}
+            data-analytics-id="team_context_open_new_tab"
+            data-analytics-surface="team_context_menu"
+            data-analytics-resource="team"
+          >
             <ContextMenuIcon icon={ExternalLink} />
             Open in new tab
           </ContextMenuItem>
-          <ContextMenuItem onSelect={() => openInNewWindow(teamHref)}>
+          <ContextMenuItem
+            onSelect={() => openInNewWindow(teamHref)}
+            data-analytics-id="team_context_open_new_window"
+            data-analytics-surface="team_context_menu"
+            data-analytics-resource="team"
+          >
             <ContextMenuIcon icon={Square} />
             Open in new window
           </ContextMenuItem>
           <ContextMenuSeparator />
-          <ContextMenuItem onSelect={handleDeleteClick}>
+          <ContextMenuItem
+            onSelect={handleDeleteClick}
+            data-analytics-id="team_context_delete_open"
+            data-analytics-surface="team_context_menu"
+            data-analytics-resource="team"
+          >
             <ContextMenuIcon icon={Trash2} />
             Delete
           </ContextMenuItem>
@@ -161,7 +206,11 @@ export function TeamContextMenu({
       </ContextMenu>
 
       <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
-        <DialogContent className="sm:max-w-md p-0">
+        <DialogContent
+          className="sm:max-w-md p-0"
+          data-analytics-surface="team_delete_dialog"
+          data-analytics-resource="team"
+        >
           <DialogHeader className="px-6 pt-6 pb-4 text-left">
             <DialogTitle>Delete team</DialogTitle>
             <DialogDescription className="text-[13px] mt-2">
@@ -174,6 +223,9 @@ export function TeamContextMenu({
               variant="outline"
               onClick={() => setDeleteDialogOpen(false)}
               disabled={deleteMutation.isPending}
+              data-analytics-id="team_delete_cancel"
+              data-analytics-surface="team_delete_dialog"
+              data-analytics-resource="team"
             >
               Cancel
             </Button>
@@ -181,6 +233,9 @@ export function TeamContextMenu({
               variant="destructive"
               onClick={() => deleteMutation.mutate()}
               disabled={deleteMutation.isPending}
+              data-analytics-id="team_delete_confirm"
+              data-analytics-surface="team_delete_dialog"
+              data-analytics-resource="team"
             >
               Delete
             </Button>

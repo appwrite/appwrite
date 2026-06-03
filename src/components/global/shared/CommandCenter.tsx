@@ -969,6 +969,7 @@ export function CommandCenter({
         className={commandCenterDialogClass(isMobile, currentPage)}
         showCloseButton={false}
         aria-describedby={undefined}
+        data-analytics-surface="command_center"
         onEscapeKeyDown={(e) => {
           if (handleEscape(e)) return
         }}
@@ -993,6 +994,8 @@ export function CommandCenter({
             <div className="flex items-center border-b border-border [&_[data-slot=command-input-wrapper]]:h-14 [&_[data-slot=command-input-wrapper]]:border-transparent">
               <button
                 onClick={() => setPages([])}
+                data-analytics-id="command_center_back"
+                data-analytics-surface="command_center"
                 className="ml-3 flex h-6 items-center gap-1 rounded bg-accent px-2 text-[11px] font-medium text-muted-foreground hover:bg-accent/80 hover:text-foreground"
               >
                 ← Back
@@ -1001,11 +1004,15 @@ export function CommandCenter({
                 placeholder="Select function to execute..."
                 value={search}
                 onValueChange={setSearch}
+                data-analytics-id="command_center_function_search"
+                data-analytics-surface="command_center"
                 className="h-14 border-0 text-foreground placeholder:text-muted-foreground"
               />
               {isMobile && (
                 <button
                   onClick={() => onOpenChange(false)}
+                  data-analytics-id="command_center_close"
+                  data-analytics-surface="command_center"
                   className="mr-3 flex h-8 w-8 items-center justify-center rounded-md text-muted-foreground hover:bg-accent hover:text-foreground"
                 >
                   <X className="h-5 w-5" />
@@ -1025,6 +1032,9 @@ export function CommandCenter({
                     <CommandItem
                       key={fn.$id}
                       value={fn.name}
+                      data-analytics-id="command_center_function_selected"
+                      data-analytics-surface="command_center"
+                      data-analytics-resource="function"
                       onSelect={() => {
                         onOpenChange(false)
                       }}
@@ -1076,6 +1086,8 @@ export function CommandCenter({
                       setSearchScope(null)
                       setSearch('')
                     }}
+                    data-analytics-id="command_center_scope_clear"
+                    data-analytics-surface="command_center"
                     className="ml-0.5 rounded-sm hover:bg-accent/80 p-0.5 -mr-0.5"
                     aria-label="Remove scope"
                   >
@@ -1089,11 +1101,16 @@ export function CommandCenter({
                 value={search}
                 onValueChange={setSearch}
                 autoFocus
+                data-analytics-id="command_center_search"
+                data-analytics-surface="command_center"
+                data-analytics-prop-context={context}
                 className="h-14 border-0 text-[14px] text-foreground placeholder:text-muted-foreground"
               />
               {isMobile && (
                 <button
                   onClick={() => onOpenChange(false)}
+                  data-analytics-id="command_center_close"
+                  data-analytics-surface="command_center"
                   className="shrink-0 flex h-8 w-8 items-center justify-center rounded-md text-muted-foreground hover:bg-accent hover:text-foreground"
                 >
                   <X className="h-5 w-5" />
@@ -1124,6 +1141,11 @@ export function CommandCenter({
                         <CommandItem
                           key={cmd.id}
                           value={`${cmd.id}-${cmd.label}`}
+                          data-analytics-id="command_center_command"
+                          data-analytics-surface="command_center"
+                          data-analytics-prop-command={cmd.id}
+                          data-analytics-prop-kind={cmd.kind}
+                          data-analytics-prop-group={group.id}
                           onSelect={cmd.select}
                           disabled={cmd.disabled}
                           className="group flex cursor-pointer items-center gap-3 rounded-md px-2 py-2 text-muted-foreground data-[selected=true]:bg-accent data-[selected=true]:text-foreground"
@@ -1182,6 +1204,8 @@ export function CommandCenter({
                 </div>
                 <button
                   onClick={() => setPages([...pages, 'shortcuts'])}
+                  data-analytics-id="command_center_shortcuts"
+                  data-analytics-surface="command_center"
                   className="flex items-center gap-1 text-[11px] text-muted-foreground hover:text-foreground"
                 >
                   <Keyboard className="h-3 w-3" />

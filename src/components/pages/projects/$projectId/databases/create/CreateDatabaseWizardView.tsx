@@ -3,7 +3,7 @@
  * DB type → specifications (table) → name & create.
  */
 
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import { useParams, useNavigate } from '@tanstack/react-router'
 import { Table as TableIcon, Braces, Layers } from 'lucide-react'
 import {
@@ -35,6 +35,7 @@ import { cn } from '@/lib/utils'
 import { useConsoleProfile } from '@/hooks/use-console-profile'
 import { TABLE_DB_SPEC_OPTIONS as SPEC_OPTIONS } from '@/lib/database-specs'
 import { DEFAULT_NEW_DATABASE_NAME } from '@/lib/default-new-database-name'
+import { useAnalytics } from '@/hooks/use-analytics'
 
 export type DatabaseTypeOption =
   | 'TablesDB'
@@ -130,6 +131,7 @@ export function CreateDatabaseWizardView() {
   const queryClient = useQueryClient()
   const pid = projectId as string
   const { features } = useConsoleProfile()
+  const { track } = useAnalytics()
 
   const [dbType, setDbType] = useState<DatabaseTypeOption | null>(null)
   const [specId, setSpecId] = useState<string | null>(null)
@@ -169,6 +171,36 @@ export function CreateDatabaseWizardView() {
     [dbType],
   )
 
+  useEffect(() => {
+    track('Wizard Opened', {
+      surface: 'create_database_wizard',
+      resource: 'database',
+    })
+  }, [track])
+
+  const handleDbTypeSelect = (option: DbTypeChoice) => {
+    setDbType(option.id)
+    setSpecId(option.id === 'TablesDB' ? 'shared' : null)
+    track('Wizard Option Selected', {
+      surface: 'create_database_wizard',
+      resource: 'database',
+      step: 'database_type',
+      option: option.id,
+    })
+  }
+
+  const handleSpecSelect = (value: string | null) => {
+    setSpecId(value)
+    if (!value) return
+    track('Wizard Option Selected', {
+      surface: 'create_database_wizard',
+      resource: 'database',
+      step: 'specification',
+      option: value,
+      database_type: dbType ?? 'unknown',
+    })
+  }
+
   const createMutation = useMutation({
     mutationFn: (data: { databaseId?: string; name: string }) => {
       if (!dbType) {
@@ -181,6 +213,13 @@ export function CreateDatabaseWizardView() {
         queryKey: ['databases', 'project', pid],
         type: 'all',
       })
+      track('Resource Created', {
+        surface: 'create_database_wizard',
+        resource: 'database',
+        database_type: dbType ?? 'unknown',
+        spec: selectedSpec?.id ?? 'none',
+        has_custom_id: Boolean(databaseId?.trim()),
+      })
       toast.success('Database created')
       navigate({
         to: '/projects/$projectId/databases/$databaseId',
@@ -188,6 +227,13 @@ export function CreateDatabaseWizardView() {
       })
     },
     onError: (error) => {
+      track('Resource Creation Failed', {
+        surface: 'create_database_wizard',
+        resource: 'database',
+        database_type: dbType ?? 'unknown',
+        spec: selectedSpec?.id ?? 'none',
+        error_name: error instanceof Error ? error.name : 'unknown',
+      })
       toast.error(getErrorMessage(error) || 'Failed to create database')
     },
   })
@@ -200,7 +246,23 @@ export function CreateDatabaseWizardView() {
         'Database ID must be 1–36 characters, alphanumeric, underscore, hyphen, or period. Cannot start with a special character.'
     }
     setErrors(newErrors)
-    if (Object.keys(newErrors).length > 0) return
+    const invalidFields = Object.keys(newErrors)
+    if (invalidFields.length > 0) {
+      track('Form Validation Failed', {
+        surface: 'create_database_wizard',
+        resource: 'database',
+        fields: invalidFields.join(','),
+        error_count: invalidFields.length,
+      })
+      return
+    }
+    track('Form Submitted', {
+      surface: 'create_database_wizard',
+      resource: 'database',
+      database_type: dbType ?? 'unknown',
+      spec: selectedSpec?.id ?? 'none',
+      has_custom_id: Boolean(databaseId?.trim()),
+    })
     createMutation.mutate({
       databaseId: databaseId?.trim() || undefined,
       name: name.trim(),
@@ -227,6 +289,7 @@ export function CreateDatabaseWizardView() {
         type="button"
         disabled={!canCreate || isCreatePending}
         onClick={handleCreate}
+        data-analytics-track="manual"
       >
         Create database
       </Button>
@@ -328,10 +391,8 @@ export function CreateDatabaseWizardView() {
                       key={opt.id}
                       type="button"
                       disabled={opt.comingSoon}
-                      onClick={() => {
-                        setDbType(opt.id)
-                        setSpecId(opt.id === 'TablesDB' ? 'shared' : null)
-                      }}
+                      onClick={() => handleDbTypeSelect(opt)}
+                      data-analytics-track="manual"
                       className={cn(
                         'flex w-full cursor-pointer items-start gap-4 rounded-xl border border-border bg-card/50 p-4 text-left transition-all hover:border-border/80 hover:bg-card/60 disabled:cursor-not-allowed disabled:opacity-60 disabled:hover:border-border disabled:hover:bg-card/50',
                         dbType === opt.id &&
@@ -410,7 +471,7 @@ export function CreateDatabaseWizardView() {
             <div className="rounded-xl border border-border bg-card overflow-hidden">
               <RadioGroup
                 value={specId ?? ''}
-                onValueChange={(value) => setSpecId(value || null)}
+                onValueChange={(value) => handleSpecSelect(value || null)}
                 className="w-full"
               >
                 <Table>
@@ -452,7 +513,8 @@ export function CreateDatabaseWizardView() {
                               !locked &&
                               'bg-primary/5 hover:bg-primary/5',
                           )}
-                          onClick={() => !locked && setSpecId(spec.id)}
+                          onClick={() => !locked && handleSpecSelect(spec.id)}
+                          data-analytics-track="manual"
                         >
                           <TableCell className="w-[48px] px-4 py-3.5">
                             <RadioGroupItem

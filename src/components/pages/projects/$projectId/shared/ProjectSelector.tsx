@@ -462,6 +462,9 @@ export function ProjectSelector({
         <Popover open={open} onOpenChange={setOpen}>
           <PopoverTrigger asChild>
             <button
+              data-analytics-id="project_selector_open"
+              data-analytics-surface="project_selector"
+              data-analytics-prop-variant="collapsed"
               className={cn(
                 'flex h-8 w-8 items-center justify-center rounded-md bg-accent text-[11px] font-medium text-muted-foreground transition-colors hover:bg-accent/80 cursor-pointer',
                 className,
@@ -474,6 +477,7 @@ export function ProjectSelector({
             side="right"
             align="start"
             sideOffset={12}
+            data-analytics-surface="project_selector"
             className="w-[520px] border-border bg-popover p-0"
           >
             <ProjectSelectorContent
@@ -519,6 +523,9 @@ export function ProjectSelector({
       <>
         <button
           onClick={() => setOpen(true)}
+          data-analytics-id="project_selector_open"
+          data-analytics-surface="project_selector"
+          data-analytics-prop-variant="mobile"
           className={cn(
             'flex w-full items-center gap-2 overflow-visible rounded-md border border-border bg-background px-2.5 py-2 text-left transition-colors hover:bg-accent cursor-pointer',
             className,
@@ -568,6 +575,8 @@ export function ProjectSelector({
               </h2>
               <button
                 onClick={() => setOpen(false)}
+                data-analytics-id="project_selector_close"
+                data-analytics-surface="project_selector"
                 className="flex h-8 w-8 cursor-pointer items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
               >
                 <X className="h-5 w-5" />
@@ -617,6 +626,9 @@ export function ProjectSelector({
       <Popover open={open} onOpenChange={setOpen}>
         <PopoverTrigger asChild>
           <button
+            data-analytics-id="project_selector_open"
+            data-analytics-surface="project_selector"
+            data-analytics-prop-variant="desktop"
             className={cn(
               'flex h-9 max-w-full min-w-0 items-center gap-2 overflow-visible rounded-md px-2 py-1.5 text-left transition-colors hover:bg-accent cursor-pointer',
               className,
@@ -649,6 +661,7 @@ export function ProjectSelector({
           side="bottom"
           align="start"
           sideOffset={8}
+          data-analytics-surface="project_selector"
           className="w-[520px] border-border bg-popover p-0"
         >
           <ProjectSelectorContent
@@ -794,6 +807,8 @@ function ProjectSelectorContent({
             placeholder="Find Organization..."
             value={teamSearch}
             onChange={(e) => setTeamSearch(e.target.value)}
+            data-analytics-id="project_selector_organization_search"
+            data-analytics-surface="project_selector"
             className="flex-1 bg-transparent text-[13px] text-foreground placeholder:text-muted-foreground focus:outline-none"
           />
         </div>
@@ -819,6 +834,8 @@ function ProjectSelectorContent({
                     type="button"
                     onClick={() => onSelectTeam(team)}
                     onMouseEnter={() => prefetchTeamProjects(team.$id)}
+                    data-analytics-id="project_selector_organization_select"
+                    data-analytics-surface="project_selector"
                     className={cn(
                       'flex w-full cursor-pointer items-center gap-2.5 rounded-md px-2 py-1.5 text-left transition-colors',
                       selectedTeam.$id === team.$id
@@ -861,6 +878,8 @@ function ProjectSelectorContent({
           <button
             type="button"
             onClick={onCreateOrganization}
+            data-analytics-id="project_selector_create_organization"
+            data-analytics-surface="project_selector"
             className="flex w-full cursor-pointer items-center gap-2.5 rounded-md px-2 py-1.5 text-left text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
           >
             <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full border border-dashed border-muted-foreground/50">
@@ -881,6 +900,8 @@ function ProjectSelectorContent({
             placeholder="Find Project..."
             value={projectSearch}
             onChange={(e) => setProjectSearch(e.target.value)}
+            data-analytics-id="project_selector_project_search"
+            data-analytics-surface="project_selector"
             className="flex-1 bg-transparent text-[13px] text-foreground placeholder:text-muted-foreground focus:outline-none"
           />
         </div>
@@ -909,6 +930,8 @@ function ProjectSelectorContent({
                       to="/projects/$projectId"
                       params={{ projectId: project.$id }}
                       onClick={(e) => handleSelectProject(project, e)}
+                      data-analytics-id="project_selector_project_select"
+                      data-analytics-surface="project_selector"
                       className={cn(
                         'group flex w-full cursor-pointer items-center gap-2.5 rounded-md px-2 py-1.5 text-left transition-colors',
                         selectedProject?.$id === project.$id
@@ -971,6 +994,8 @@ function ProjectSelectorContent({
         <div className="border-t border-border p-1.5">
           <button
             onClick={onCreateProject}
+            data-analytics-id="project_selector_create_project"
+            data-analytics-surface="project_selector"
             className="flex w-full cursor-pointer items-center gap-2.5 rounded-md px-2 py-1.5 text-left text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
           >
             <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full border border-dashed border-muted-foreground/50">
@@ -1065,6 +1090,9 @@ function MobileProjectSelectorContent({
       <div className="flex border-b border-border">
         <button
           onClick={() => setActiveTab('teams')}
+          data-analytics-id="project_selector_tab"
+          data-analytics-surface="project_selector"
+          data-analytics-prop-tab="organizations"
           className={cn(
             'flex-1 cursor-pointer px-4 py-2.5 text-[13px] font-medium transition-colors',
             activeTab === 'teams'
@@ -1076,6 +1104,9 @@ function MobileProjectSelectorContent({
         </button>
         <button
           onClick={() => setActiveTab('projects')}
+          data-analytics-id="project_selector_tab"
+          data-analytics-surface="project_selector"
+          data-analytics-prop-tab="projects"
           className={cn(
             'flex-1 cursor-pointer px-4 py-2.5 text-[13px] font-medium transition-colors',
             activeTab === 'projects'
@@ -1097,6 +1128,8 @@ function MobileProjectSelectorContent({
               placeholder="Find Organization..."
               value={teamSearch}
               onChange={(e) => setTeamSearch(e.target.value)}
+              data-analytics-id="project_selector_organization_search"
+              data-analytics-surface="project_selector"
               className="flex-1 bg-transparent text-[14px] text-foreground placeholder:text-muted-foreground focus:outline-none"
             />
           </div>
@@ -1122,6 +1155,8 @@ function MobileProjectSelectorContent({
                         setActiveTab('projects')
                       }}
                       onMouseEnter={() => prefetchTeamProjects(team.$id)}
+                      data-analytics-id="project_selector_organization_select"
+                      data-analytics-surface="project_selector"
                       className={cn(
                         'flex w-full cursor-pointer items-center gap-3 rounded-md px-3 py-2.5 text-left transition-colors',
                         selectedTeam.$id === team.$id
@@ -1164,6 +1199,8 @@ function MobileProjectSelectorContent({
             <button
               type="button"
               onClick={onCreateOrganization}
+              data-analytics-id="project_selector_create_organization"
+              data-analytics-surface="project_selector"
               className="flex w-full cursor-pointer items-center gap-3 rounded-md px-3 py-2.5 text-left text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
             >
               <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full border border-dashed border-muted-foreground/50">
@@ -1185,6 +1222,8 @@ function MobileProjectSelectorContent({
             </span>
             <button
               onClick={() => setActiveTab('teams')}
+              data-analytics-id="project_selector_change_organization"
+              data-analytics-surface="project_selector"
               className="ml-auto cursor-pointer text-[12px] text-primary hover:underline dark:text-muted-foreground"
             >
               Change
@@ -1199,6 +1238,8 @@ function MobileProjectSelectorContent({
               placeholder="Find Project..."
               value={projectSearch}
               onChange={(e) => setProjectSearch(e.target.value)}
+              data-analytics-id="project_selector_project_search"
+              data-analytics-surface="project_selector"
               className="flex-1 bg-transparent text-[14px] text-foreground placeholder:text-muted-foreground focus:outline-none"
             />
           </div>
@@ -1226,6 +1267,8 @@ function MobileProjectSelectorContent({
                         to="/projects/$projectId"
                         params={{ projectId: project.$id }}
                         onClick={(e) => handleSelectProject(project, e)}
+                        data-analytics-id="project_selector_project_select"
+                        data-analytics-surface="project_selector"
                         className={cn(
                           'flex w-full cursor-pointer items-center gap-3 rounded-md px-3 py-2.5 text-left transition-colors',
                           selectedProject?.$id === project.$id
@@ -1291,6 +1334,8 @@ function MobileProjectSelectorContent({
           <div className="border-t border-border p-2">
             <button
               onClick={onCreateProject}
+              data-analytics-id="project_selector_create_project"
+              data-analytics-surface="project_selector"
               className="flex w-full cursor-pointer items-center gap-3 rounded-md px-3 py-2.5 text-left text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
             >
               <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full border border-dashed border-muted-foreground/50">

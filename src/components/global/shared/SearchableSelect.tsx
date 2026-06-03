@@ -38,6 +38,9 @@ export interface SearchableSelectProps {
   emptyMessage?: string
   /** When true, trigger shows placeholder-style text when no value selected */
   showPlaceholderWhenEmpty?: boolean
+  analyticsId?: string
+  analyticsSurface?: string
+  analyticsResource?: string
 }
 
 export function SearchableSelect({
@@ -51,6 +54,9 @@ export function SearchableSelect({
   contentClassName,
   emptyMessage = 'No results',
   showPlaceholderWhenEmpty = true,
+  analyticsId,
+  analyticsSurface,
+  analyticsResource,
 }: SearchableSelectProps) {
   const [open, setOpen] = useState(false)
   const selectedLabel = items.find((i) => i.value === value)?.label ?? ''
@@ -69,6 +75,9 @@ export function SearchableSelect({
           role="combobox"
           aria-expanded={open}
           disabled={disabled}
+          data-analytics-id={analyticsId}
+          data-analytics-surface={analyticsSurface}
+          data-analytics-resource={analyticsResource}
           className={cn(
             'h-9 w-full justify-between gap-2 text-[13px] font-normal',
             !value && showPlaceholderWhenEmpty && 'text-muted-foreground',
@@ -103,6 +112,12 @@ export function SearchableSelect({
                 <CommandItem
                   key={item.value}
                   value={item.label}
+                  data-analytics-id={
+                    analyticsId ? `${analyticsId}_option_selected` : undefined
+                  }
+                  data-analytics-surface={analyticsSurface}
+                  data-analytics-resource={analyticsResource}
+                  data-analytics-prop-option={item.value}
                   className="text-[13px]"
                   onSelect={() => {
                     onValueChange(item.value)
