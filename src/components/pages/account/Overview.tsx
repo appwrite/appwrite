@@ -36,6 +36,8 @@ import {
   Copy,
   Check,
   Loader2,
+  AlertTriangle,
+  Download,
 } from 'lucide-react'
 import { PUBLIC_ICON_MUTED_CLASSES } from '@/lib/public-icon-classes'
 import { DateTooltip } from '@/components/global/shared/DateTooltip'
@@ -709,6 +711,7 @@ function MFASection() {
 function TOTPMethod({ factors }: { factors: Models.MfaFactors }) {
   const queryClient = useQueryClient()
   const [setupDialogOpen, setSetupDialogOpen] = useState(false)
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
   const [, setVerifyDialogOpen] = useState(false)
   const [qrCodeUrl, setQrCodeUrl] = useState<string | null>(null)
   const [secret, setSecret] = useState<string | null>(null)
@@ -788,6 +791,7 @@ function TOTPMethod({ factors }: { factors: Models.MfaFactors }) {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: Dependencies.FACTORS })
+      setDeleteDialogOpen(false)
       toast.success('Authenticator app has been deleted')
     },
     onError: (error: Error) => {
@@ -819,9 +823,7 @@ function TOTPMethod({ factors }: { factors: Models.MfaFactors }) {
   }
 
   const handleDelete = () => {
-    if (confirm('Are you sure you want to delete the authenticator app?')) {
-      deleteAuthenticatorMutation.mutate()
-    }
+    setDeleteDialogOpen(true)
   }
 
   return (
@@ -977,6 +979,37 @@ function TOTPMethod({ factors }: { factors: Models.MfaFactors }) {
               }
             >
               Continue
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <DialogContent className="sm:max-w-md p-0">
+          <DialogHeader className="px-6 pt-6 pb-4 text-left">
+            <DialogTitle>Delete authenticator app</DialogTitle>
+            <DialogDescription className="text-[13px] mt-2">
+              This removes authenticator app codes from your account.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="px-6 py-4 border-t border-border bg-muted/30 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+            <Button
+              variant="outline"
+              size="sm"
+              className="h-9 text-[13px]"
+              onClick={() => setDeleteDialogOpen(false)}
+              disabled={deleteAuthenticatorMutation.isPending}
+            >
+              Cancel
+            </Button>
+            <Button
+              variant="destructive"
+              size="sm"
+              className="h-9 text-[13px]"
+              onClick={() => deleteAuthenticatorMutation.mutate()}
+              disabled={deleteAuthenticatorMutation.isPending}
+            >
+              Delete
             </Button>
           </div>
         </DialogContent>
@@ -1176,6 +1209,25 @@ function RecoveryCodesMethod({
     }
   }
 
+  const recoveryCodesText = recoveryCodes.join('\n')
+
+  const handleCopyAll = async () => {
+    await navigator.clipboard.writeText(recoveryCodesText)
+    toast.success('Recovery codes copied')
+  }
+
+  const handleDownload = () => {
+    const blob = new Blob([recoveryCodesText], { type: 'text/plain' })
+    const url = URL.createObjectURL(blob)
+    const link = document.createElement('a')
+    link.href = url
+    link.download = 'recovery-codes.txt'
+    document.body.appendChild(link)
+    link.click()
+    link.remove()
+    URL.revokeObjectURL(url)
+  }
+
   return (
     <>
       <div className="flex items-start gap-4 rounded-lg border border-border bg-card/50 p-4">
@@ -1220,7 +1272,7 @@ function RecoveryCodesMethod({
         onOpenChange={handleRegenerateDialogOpenChange}
       >
         <DialogContent className="sm:max-w-md p-0">
-          <DialogHeader className="px-6 pt-6 text-left">
+          <DialogHeader className="px-6 pt-6 pb-4 text-left">
             <DialogTitle>Regenerate recovery codes</DialogTitle>
             <DialogDescription className="text-[13px] mt-2">
               Are you sure you want to regenerate all recovery codes? All
@@ -1266,17 +1318,50 @@ function RecoveryCodesMethod({
 
       {/* Recovery Codes Dialog */}
       <Dialog open={codesDialogOpen} onOpenChange={setCodesDialogOpen}>
-        <DialogContent className="sm:max-w-md p-0">
-          <DialogHeader className="px-6 pt-6 text-left">
+        <DialogContent className="sm:max-w-lg p-0">
+          <DialogHeader className="px-6 pt-6 pb-4 text-left">
             <DialogTitle>Recovery codes</DialogTitle>
             <DialogDescription className="text-[13px] mt-2">
-              Save these codes in a safe place. You can use them to access your
-              account if you lose access to your authenticator device.
+              Use these codes to access your account if you lose your
+              authenticator.
             </DialogDescription>
           </DialogHeader>
           <div className="border-t border-border" />
-          <div className="px-6 pb-4 pt-0">
-            <div className="space-y-2">
+          <div className="px-6 py-4 space-y-4">
+            <div className="flex gap-3 rounded-lg border border-orange-500/30 bg-orange-500/10 p-3">
+              <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-orange-600 dark:text-orange-400" />
+              <div className="space-y-1">
+                <p className="text-[13px] font-medium text-orange-700 dark:text-orange-300">
+                  Save these recovery codes now. They won't be shown again.
+                </p>
+                <p className="text-[13px] text-muted-foreground">
+                  Each code can only be used once.
+                </p>
+              </div>
+            </div>
+            <div className="flex flex-col gap-2 sm:flex-row sm:justify-end">
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-9 justify-start text-[13px]"
+                onClick={handleCopyAll}
+                disabled={recoveryCodes.length === 0}
+              >
+                <Copy className="mr-1.5 h-4 w-4" />
+                Copy all
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                className="h-9 justify-start text-[13px]"
+                onClick={handleDownload}
+                disabled={recoveryCodes.length === 0}
+              >
+                <Download className="mr-1.5 h-4 w-4" />
+                Download .txt
+              </Button>
+            </div>
+            <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
               {recoveryCodes.map((code, index) => (
                 <div
                   key={index}

@@ -66,6 +66,7 @@ import {
 import type { CompactFilterKey } from '@/lib/table-filters'
 import { FiltersPopover } from '@/components/global/shared/FiltersPopover'
 import { DateRangePicker } from '@/components/pages/projects/$projectId/analytics/DateRangePicker'
+import { useDebugOverrides } from '@/lib/debug-overrides'
 
 import type { PlanType } from '@/server/functions/activities'
 import { ActivityLogDrawer } from '@/components/pages/projects/$projectId/activity/ActivityLogDrawer'
@@ -80,7 +81,7 @@ import { UserTypeAvatar } from '@/components/pages/projects/$projectId/activity/
 const activityRouteApi = getRouteApi('/_public/projects/$projectId/activity')
 
 /** Skeleton row count caps page size so default 150 does not render hundreds of placeholders. */
-const ACTIVITY_TABLE_SKELETON_ROWS_CAP = 14
+const ACTIVITY_TABLE_SKELETON_ROWS_CAP = 24
 
 /** Max characters for resource id/name in the table before middle ellipsis. */
 const ACTIVITY_RESOURCE_DISPLAY_MAX = 56
@@ -473,6 +474,7 @@ export function View({ projectId, plan = 'pro' }: ViewProps) {
     activityRouteApi.useSearch()
 
   const { project } = useProject(projectId)
+  const { showActivityChart } = useDebugOverrides()
   const { data: countriesData } = useCountries()
   const [filtersOpen, setFiltersOpen] = useState(false)
   const [drawerOpen, setDrawerOpen] = useState(false)
@@ -500,7 +502,7 @@ export function View({ projectId, plan = 'pro' }: ViewProps) {
   )
 
   /** Default window when no URL `time` filter: last 30 days, floored by plan retention. */
-  const defaultActivityDateRange = useMemo((): DateRange => {
+  const defaultActivityDateRange = useMemo(() => {
     const thirtyDaysStart = startOfDay(subDays(new Date(), 29))
     const planFloor = new Date(planSinceIso)
     const from = max([thirtyDaysStart, startOfDay(planFloor)])
@@ -943,14 +945,16 @@ export function View({ projectId, plan = 'pro' }: ViewProps) {
           </div>
         )}
 
-        <div className="shrink-0 pb-4">
-          <ActivityLogVolumeChart
-            rangeFrom={volumeChartRange.from}
-            rangeTo={volumeChartRange.to}
-            activeResourceTypeFilter={activeResourceTypeFilter}
-            onLegendResourceTypeClick={handleLegendResourceTypeClick}
-          />
-        </div>
+        {showActivityChart && (
+          <div className="shrink-0 pb-4">
+            <ActivityLogVolumeChart
+              rangeFrom={volumeChartRange.from}
+              rangeTo={volumeChartRange.to}
+              activeResourceTypeFilter={activeResourceTypeFilter}
+              onLegendResourceTypeClick={handleLegendResourceTypeClick}
+            />
+          </div>
+        )}
 
         {activityListRefreshing ? (
           <ActivityLogsLoadingTable rowCount={pageSize} />

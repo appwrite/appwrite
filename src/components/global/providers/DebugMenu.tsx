@@ -957,6 +957,20 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
                 },
               },
               {
+                label: 'Activity chart',
+                description:
+                  'Show the activity log volume chart above the activity table.',
+                variant: 'switch' as const,
+                switchValue: overrides.showActivityChart,
+                switchOnChange: (checked: boolean) => {
+                  setOverrides((prev) => ({
+                    ...prev,
+                    showActivityChart: checked,
+                  }))
+                  setDebugOverride('showActivityChart', checked)
+                },
+              },
+              {
                 label: 'AI assistant',
                 description:
                   'In-app AI assistant chat panel and header button.',
@@ -1014,7 +1028,7 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
               {
                 label: 'Reset feature flags',
                 description:
-                  'Restore profile toggles on this list to canonical defaults and clear local switches (marketplace, AI assistant, native app bar, success team card, functions local editor).',
+                  'Restore profile toggles on this list to canonical defaults and clear local switches (marketplace, activity chart, AI assistant, native app bar, success team card, functions local editor).',
                 onClick: () => {
                   resetDebugProfileFeatureOverrides()
                   resetFeatureFlagsMenuDebugOverrides()

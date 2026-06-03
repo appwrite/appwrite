@@ -12,6 +12,7 @@ const DEBUG_OVERRIDE_EVENT = 'debugOverridesChange'
 export const DEBUG_OVERRIDE_KEYS = {
   showNativeAppBar: 'debug:showNativeAppBar',
   showAIAssistant: 'debug:showAIAssistant',
+  showActivityChart: 'debug:showActivityChart',
   showSuccessTeamCard: 'debug:showSuccessTeamCard',
   mockCloudStatusAlert: 'debug:mockCloudStatusAlert',
   showFullscreenLoader: 'debug:showFullscreenLoader',
@@ -45,6 +46,8 @@ export type DebugOverrides = {
   showNativeAppBar: boolean
   /** When true, the AI assistant is shown regardless of profile (experimental). Default false. */
   showAIAssistant: boolean
+  /** When true, the activity log volume chart is shown above activity events. Default false. */
+  showActivityChart: boolean
   /** When true, the success team card is shown on organization overview (custom plans). Default false. */
   showSuccessTeamCard: boolean
   /** Mock Appwrite Cloud status alert state for design review in debug mode. */
@@ -114,6 +117,10 @@ export function loadDebugOverrides(): DebugOverrides {
     ),
     showAIAssistant: readBooleanFromStorage(
       DEBUG_OVERRIDE_KEYS.showAIAssistant,
+      false,
+    ),
+    showActivityChart: readBooleanFromStorage(
+      DEBUG_OVERRIDE_KEYS.showActivityChart,
       false,
     ),
     showSuccessTeamCard: readBooleanFromStorage(
@@ -194,6 +201,7 @@ export function resetDebugOverrides() {
 /** Keys toggled from Debug → Settings → Feature flags (not other debug sections). */
 const FEATURE_FLAGS_MENU_DEBUG_KEYS: (keyof DebugOverrides)[] = [
   'showAIAssistant',
+  'showActivityChart',
   'showNativeAppBar',
   'showSuccessTeamCard',
   'showFunctionsLocalEditor',
