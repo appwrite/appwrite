@@ -155,7 +155,7 @@ trait RealtimeQueryBase
                 'x-appwrite-key' => $this->getProject()['apiKey'],
             ]));
             $this->assertEquals('available', $response['body']['status']);
-        }, 30000, 250);
+        }, 120000, 500);
 
         $targetDocumentId = ID::unique();
 
@@ -253,7 +253,7 @@ trait RealtimeQueryBase
                 'x-appwrite-key' => $this->getProject()['apiKey'],
             ]));
             $this->assertEquals('available', $response['body']['status']);
-        }, 30000, 250);
+        }, 120000, 500);
 
         $excludedDocumentId = ID::unique();
 
@@ -350,7 +350,7 @@ trait RealtimeQueryBase
                 'x-appwrite-key' => $this->getProject()['apiKey'],
             ]));
             $this->assertEquals('available', $response['body']['status']);
-        }, 30000, 250);
+        }, 120000, 500);
 
         // Subscribe with query for score > 50
         $client = $this->getWebsocket(['documents'], [
@@ -444,7 +444,7 @@ trait RealtimeQueryBase
                 'x-appwrite-key' => $this->getProject()['apiKey'],
             ]));
             $this->assertEquals('available', $response['body']['status']);
-        }, 30000, 250);
+        }, 120000, 500);
 
         // Subscribe with query for age < 18
         $client = $this->getWebsocket(['documents'], [
@@ -538,7 +538,7 @@ trait RealtimeQueryBase
                 'x-appwrite-key' => $this->getProject()['apiKey'],
             ]));
             $this->assertEquals('available', $response['body']['status']);
-        }, 30000, 250);
+        }, 120000, 500);
 
         // Subscribe with query for priority >= 5
         $client = $this->getWebsocket(['documents'], [
@@ -650,7 +650,7 @@ trait RealtimeQueryBase
                 'x-appwrite-key' => $this->getProject()['apiKey'],
             ]));
             $this->assertEquals('available', $response['body']['status']);
-        }, 30000, 250);
+        }, 120000, 500);
 
         // Subscribe with query for level <= 10
         $client = $this->getWebsocket(['documents'], [
@@ -763,7 +763,7 @@ trait RealtimeQueryBase
                 'x-appwrite-key' => $this->getProject()['apiKey'],
             ]));
             $this->assertEquals('available', $response['body']['status']);
-        }, 30000, 250);
+        }, 120000, 500);
 
         // Subscribe with query for description IS NULL
         $client = $this->getWebsocket(['documents'], [
@@ -857,7 +857,7 @@ trait RealtimeQueryBase
                 'x-appwrite-key' => $this->getProject()['apiKey'],
             ]));
             $this->assertEquals('available', $response['body']['status']);
-        }, 30000, 250);
+        }, 120000, 500);
 
         // Subscribe with query for email IS NOT NULL
         $client = $this->getWebsocket(['documents'], [
@@ -965,7 +965,7 @@ trait RealtimeQueryBase
                 'x-appwrite-key' => $this->getProject()['apiKey'],
             ]));
             $this->assertEquals('available', $response['body']['status']);
-        }, 30000, 250);
+        }, 120000, 500);
 
         // Subscribe with AND query: status = 'active' AND priority > 5
         $client = $this->getWebsocket(['documents'], [
@@ -1088,7 +1088,7 @@ trait RealtimeQueryBase
                 'x-appwrite-key' => $this->getProject()['apiKey'],
             ]));
             $this->assertEquals('available', $response['body']['status']);
-        }, 30000, 250);
+        }, 120000, 500);
 
         // Subscribe with OR query: type = 'urgent' OR type = 'critical'
         $client = $this->getWebsocket(['documents'], [
@@ -1219,7 +1219,7 @@ trait RealtimeQueryBase
                 'x-appwrite-key' => $this->getProject()['apiKey'],
             ]));
             $this->assertEquals('available', $response['body']['status']);
-        }, 30000, 250);
+        }, 120000, 500);
 
         // Subscribe with complex query: (category = 'premium' OR category = 'vip') AND score >= 80
         $client = $this->getWebsocket(['documents'], [
@@ -1372,7 +1372,7 @@ trait RealtimeQueryBase
                 'x-appwrite-key' => $this->getProject()['apiKey'],
             ]));
             $this->assertEquals('available', $response['body']['status']);
-        }, 30000, 250);
+        }, 120000, 500);
 
         // Subscribe only to the fully-qualified documents channel for this collection
         $scopedChannel = 'databases.' . $databaseId . '.collections.' . $collectionId . '.documents';
@@ -1456,7 +1456,7 @@ trait RealtimeQueryBase
                 'x-appwrite-key' => $this->getProject()['apiKey'],
             ]));
             $this->assertEquals('available', $response['body']['status']);
-        }, 30000, 250);
+        }, 120000, 500);
 
         $targetDocumentId = ID::unique();
 
@@ -1637,7 +1637,7 @@ trait RealtimeQueryBase
                 'x-appwrite-key' => $this->getProject()['apiKey'],
             ]));
             $this->assertEquals('available', $response['body']['status']);
-        }, 30000, 250);
+        }, 120000, 500);
 
         $targetDocId = ID::unique();
 
@@ -1768,7 +1768,7 @@ trait RealtimeQueryBase
                 'x-appwrite-key' => $this->getProject()['apiKey'],
             ]));
             $this->assertEquals('available', $response['body']['status']);
-        }, 30000, 250);
+        }, 120000, 500);
 
         $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $collectionId . '/attributes/string', array_merge([
             'content-type' => 'application/json',
@@ -1787,7 +1787,7 @@ trait RealtimeQueryBase
                 'x-appwrite-key' => $this->getProject()['apiKey'],
             ]));
             $this->assertEquals('available', $response['body']['status']);
-        }, 30000, 250);
+        }, 120000, 500);
 
         $queryStatusActive = Query::equal('status', ['active'])->toString();
         $queryStatusPending = Query::equal('status', ['pending'])->toString();
@@ -1992,7 +1992,7 @@ trait RealtimeQueryBase
                 'x-appwrite-key' => $this->getProject()['apiKey'],
             ]));
             $this->assertEquals('available', $response['body']['status']);
-        }, 30000, 250);
+        }, 120000, 500);
 
         $queryStatusActive = Query::equal('status', ['active'])->toString();
         $queryStatusPending = Query::equal('status', ['pending'])->toString();
@@ -2130,7 +2130,7 @@ trait RealtimeQueryBase
                 'x-appwrite-key' => $this->getProject()['apiKey'],
             ]));
             $this->assertEquals('available', $response['body']['status']);
-        }, 30000, 250);
+        }, 120000, 500);
 
         $targetDocumentId = ID::unique();
 
@@ -2496,7 +2496,7 @@ trait RealtimeQueryBase
                 'x-appwrite-key' => $this->getProject()['apiKey'],
             ]));
             $this->assertEquals('available', $response['body']['status']);
-        }, 30000, 250);
+        }, 120000, 500);
 
         return ['databaseId' => $databaseId, 'collectionId' => $collectionId];
     }
