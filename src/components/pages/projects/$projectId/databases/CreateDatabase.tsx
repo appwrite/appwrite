@@ -12,6 +12,7 @@ import { Label } from '@/components/ui/label'
 import { IdInput } from '@/components/ui/id-input'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { AlertCircle } from 'lucide-react'
+import { UpgradePlanLink } from '@/components/global/shared/UpgradePlanLink'
 import { DEFAULT_NEW_DATABASE_NAME } from '@/lib/default-new-database-name'
 
 /**
@@ -32,6 +33,8 @@ interface CreateDatabaseProps {
   isLoading?: boolean
   /** When false, a warning is shown that the database will not be backed up. Omit when unknown/loading. */
   backupsEnabled?: boolean
+  /** Organization id for the upgrade wizard link in the backups warning. */
+  orgId?: string | null
 }
 
 export function CreateDatabase({
@@ -40,6 +43,7 @@ export function CreateDatabase({
   onCreate,
   isLoading = false,
   backupsEnabled,
+  orgId,
 }: CreateDatabaseProps) {
   const [databaseId, setDatabaseId] = useState<string | undefined>(undefined)
   const [name, setName] = useState(DEFAULT_NEW_DATABASE_NAME)
@@ -164,8 +168,13 @@ export function CreateDatabase({
                   Backups not enabled
                 </AlertTitle>
                 <AlertDescription className="text-[12px] text-amber-600/80 dark:text-amber-400/80">
-                  This database will not be backed up on your current plan.
-                  Upgrade your plan to enable automated backups.
+                  This database will not be backed up on your current plan.{' '}
+                  <UpgradePlanLink
+                    orgId={orgId}
+                    analyticsSurface="create_database_dialog"
+                    data-analytics-resource="database"
+                  />{' '}
+                  to enable automated backups.
                 </AlertDescription>
               </Alert>
             )}

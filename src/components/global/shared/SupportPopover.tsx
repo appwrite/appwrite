@@ -28,6 +28,7 @@ import {
   useAppwriteCloudStatus,
 } from '@/lib/react-query/hooks'
 import { useConsoleProfile } from '@/hooks/use-console-profile'
+import { navigateToUpgradeWizard } from '@/lib/open-upgrade-wizard'
 import { useDebugOverrides } from '@/lib/debug-overrides'
 import { getSupportHoursInLocalTime } from '@/lib/support'
 
@@ -157,12 +158,7 @@ export function SupportPopover({ orgId }: SupportPopoverProps) {
   const hasContactSupportOptions = hasPremiumSupport || features.billing
 
   const handleUpgrade = () => {
-    if (orgId) {
-      navigate({
-        to: '/upgrade',
-        search: { orgId },
-      })
-    }
+    navigateToUpgradeWizard(navigate, orgId)
   }
 
   useEffect(() => {
@@ -299,7 +295,6 @@ export function SupportPopover({ orgId }: SupportPopoverProps) {
                 className="mt-2 w-full"
                 size="sm"
                 onClick={handleUpgrade}
-                disabled={!orgId}
                 data-analytics-id="support_upgrade"
                 data-analytics-surface="support_popover"
               >

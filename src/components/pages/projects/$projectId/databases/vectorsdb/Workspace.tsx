@@ -1751,6 +1751,7 @@ export function Workspace({
         onCreate={(data) => createDatabaseMutation.mutate(data)}
         isLoading={createDatabaseMutation.isPending}
         backupsEnabled={organizationPlan?.backupsEnabled}
+        orgId={project?.teamId}
       />
       {/* Create Table Dialog */}
       <CreateTable

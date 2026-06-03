@@ -8,7 +8,9 @@ import {
   buildSiteUpdateParams,
   useSiteSpecifications,
 } from '@/lib/react-query/hooks'
+import { useProject } from '@/lib/react-query/hooks'
 import { hasUnavailableSpecifications } from '@/lib/specifications'
+import { SpecificationsUpgradeNote } from '@/components/global/shared/SpecificationsUpgradeNote'
 import { SpecificationTableCard } from '../../shared/SpecificationTableCard'
 
 interface SiteRuntimeSpecificationCardProps {
@@ -25,6 +27,7 @@ export function SiteRuntimeSpecificationCard({
   isCloud = false,
 }: SiteRuntimeSpecificationCardProps) {
   const queryClient = useQueryClient()
+  const { project } = useProject(projectId)
   const { data: specificationsData } = useSiteSpecifications(projectId)
 
   const specifications = useMemo(
@@ -75,21 +78,10 @@ export function SiteRuntimeSpecificationCard({
   }
 
   const footerNote = hasUnavailableSpecifications(specifications) ? (
-    <div className="rounded-lg border border-border bg-muted/30 px-3 py-2.5">
-      <p className="text-[12px] text-muted-foreground">
-        Need more resources?{' '}
-        <a
-          href="#"
-          className="font-medium text-foreground underline hover:no-underline"
-          onClick={(e) => {
-            e.preventDefault()
-          }}
-        >
-          Upgrade your plan
-        </a>{' '}
-        to unlock additional specifications.
-      </p>
-    </div>
+    <SpecificationsUpgradeNote
+      orgId={project?.teamId}
+      analyticsSurface="site_runtime_specification"
+    />
   ) : undefined
 
   return (

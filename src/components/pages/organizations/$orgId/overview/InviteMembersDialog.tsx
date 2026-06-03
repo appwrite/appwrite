@@ -24,6 +24,7 @@ import {
   SelectItem,
   SelectTrigger,
 } from '@/components/ui/select'
+import { UpgradePlanLink } from '@/components/global/shared/UpgradePlanLink'
 import { cn } from '@/lib/utils'
 import { useConsoleProfile } from '@/hooks/use-console-profile'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
@@ -257,9 +258,19 @@ export function InviteMembersDialog({
             remainingSlots <= 3 && (
               <div className="mb-4 rounded-lg border border-amber-500/30 bg-amber-500/5 p-3">
                 <p className="text-[12px] text-amber-600 dark:text-amber-400">
-                  {remainingSlots === 0
-                    ? 'You have reached your member limit. Upgrade your plan to invite more members.'
-                    : `You have ${remainingSlots} member slot${remainingSlots !== 1 ? 's' : ''} remaining.`}
+                  {remainingSlots === 0 ? (
+                    <>
+                      You have reached your member limit.{' '}
+                      <UpgradePlanLink
+                        orgId={organizationId}
+                        analyticsSurface="invite_members_dialog"
+                        data-analytics-resource="organization"
+                      />{' '}
+                      to invite more members.
+                    </>
+                  ) : (
+                    `You have ${remainingSlots} member slot${remainingSlots !== 1 ? 's' : ''} remaining.`
+                  )}
                 </p>
               </div>
             )}

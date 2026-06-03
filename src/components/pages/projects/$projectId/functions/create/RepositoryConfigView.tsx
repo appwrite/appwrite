@@ -48,9 +48,11 @@ import type { Models } from '@appwrite.io/console'
 import { sdk } from '@/lib/appwrite/sdk'
 import {
   useRepository,
+  useProject,
   useProjectRuntimes,
   useFunctionSpecifications,
 } from '@/lib/react-query/hooks'
+import { UpgradePlanLink } from '@/components/global/shared/UpgradePlanLink'
 import {
   getFirstEnabledSpecification,
   isSpecificationAllowedInPlan,
@@ -84,6 +86,7 @@ export function RepositoryConfigView({
   providerRepositoryIdFromSearch,
 }: RepositoryConfigViewProps) {
   const { projectId } = useParams({ strict: false })
+  const { project } = useProject(projectId)
   const navigate = useNavigate()
   const queryClient = useQueryClient()
   const { formData, updateFormData, generateDomain } = useFunctionWizard()
@@ -556,7 +559,12 @@ export function RepositoryConfigView({
               </p>
               {hasUnavailableSpecifications(specifications) && (
                 <p className="text-[11px] text-muted-foreground">
-                  Upgrade your plan to unlock additional specifications.
+                  <UpgradePlanLink
+                    orgId={project?.teamId}
+                    analyticsSurface="function_create_repository"
+                    data-analytics-resource="function"
+                  />{' '}
+                  to unlock additional specifications.
                 </p>
               )}
             </div>

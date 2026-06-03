@@ -885,12 +885,10 @@ export function BucketSettings() {
                     size="sm"
                     className="h-auto p-0 text-[13px] font-medium underline"
                     onClick={() => {
-                      if (orgId) {
-                        navigate({
-                          to: '/organizations/$orgId/settings/billing',
-                          params: { orgId },
-                        })
-                      }
+                      navigate({
+                        to: '/upgrade',
+                        ...(orgId ? { search: { orgId } } : {}),
+                      })
                     }}
                   >
                     Upgrade
@@ -985,8 +983,8 @@ export function BucketSettings() {
                       className="h-auto p-0 text-[12px] font-medium underline"
                       onClick={() => {
                         navigate({
-                          to: '/organizations/$orgId/settings/billing',
-                          params: { orgId },
+                          to: '/upgrade',
+                          search: { orgId },
                         })
                       }}
                     >

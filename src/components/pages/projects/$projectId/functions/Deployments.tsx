@@ -90,6 +90,7 @@ import { RESOURCE_CARD_METADATA_DIVIDER_CLASSNAME } from '@/components/pages/pro
 import { cn } from '@/lib/utils'
 import { proxyRuleServesActiveDeployment } from '@/lib/utils/proxy-domains'
 import {
+  useProject,
   useProjectFunction,
   useFunctionDeployments,
   useFunctionDeployment,
@@ -102,6 +103,7 @@ import {
   DEFAULT_PAGE_SIZE,
   buildFunctionUpdateParams,
 } from '@/lib/react-query/hooks'
+import { SpecificationsUpgradeNote } from '@/components/global/shared/SpecificationsUpgradeNote'
 import { DOMAINS_DEFAULT_PAGE_SIZE } from '@/lib/react-query/hooks/constants'
 import {
   getFirstEnabledSpecification,
@@ -242,6 +244,7 @@ function getVcsProvider(
 export function View() {
   const { projectId, functionId } = useParams({ strict: false })
   const queryClient = useQueryClient()
+  const { project } = useProject(projectId)
   const navigate = useNavigate()
   const location = useLocation()
   const search = Route.useSearch()
@@ -2059,32 +2062,12 @@ export function View() {
                 </div>
               </RadioGroup>
               {hasUnavailableSpecifications(specifications) && (
-                <div className="mt-3 rounded-lg border border-border bg-muted/30 px-3 py-2.5">
-                  <p className="text-[12px] text-muted-foreground">
-                    Need more resources?{' '}
-                    <a
-                      href="#"
-                      className="font-medium text-foreground underline hover:no-underline"
-                      onClick={(e) => {
-                        e.preventDefault()
-                        // TODO: Navigate to upgrade or contact sales
-                      }}
-                    >
-                      Upgrade your plan
-                    </a>{' '}
-                    or{' '}
-                    <a
-                      href="#"
-                      className="font-medium text-foreground underline hover:no-underline"
-                      onClick={(e) => {
-                        e.preventDefault()
-                        // TODO: Navigate to contact sales
-                      }}
-                    >
-                      contact sales
-                    </a>{' '}
-                    to unlock additional specifications.
-                  </p>
+                <div className="mt-3">
+                  <SpecificationsUpgradeNote
+                    orgId={project?.teamId}
+                    showContactSales
+                    analyticsSurface="function_deployments"
+                  />
                 </div>
               )}
             </div>

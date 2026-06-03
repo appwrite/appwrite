@@ -24,6 +24,7 @@ import {
 } from '@/lib/react-query/hooks/domains'
 import { BuyDomainCheckout, type BuyDomainSelection } from './BuyDomainCheckout'
 import type { BuyDomainWizardSearch } from '@/routes/_public/organizations.$orgId.domains.buy'
+import { UpgradePlanLink } from '@/components/global/shared/UpgradePlanLink'
 import { useOrganizationDomainsPlanLimit } from './useOrganizationDomainsPlanLimit'
 
 /** Number of TLDs to fetch on first paint (above the fold) */
@@ -497,7 +498,12 @@ export function BuyDomainWizard({
             </div>
             {isDomainLimitReached ? (
               <p className="text-[12px] text-amber-600 dark:text-amber-400">
-                Your current plan includes up to {domainsLimit} domains. Upgrade
+                Your current plan includes up to {domainsLimit} domains.{' '}
+                <UpgradePlanLink
+                  orgId={orgId}
+                  analyticsSurface="buy_domain_wizard"
+                  data-analytics-resource="domain"
+                />{' '}
                 to buy another domain.
               </p>
             ) : null}

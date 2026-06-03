@@ -71,10 +71,7 @@ export function PausedProjectCurtain({
 
         <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:gap-2">
           <Button asChild variant="brandCta" className="gap-1.5">
-            <Link
-              to="/organizations/$orgId/settings/billing"
-              params={{ orgId: teamId }}
-            >
+            <Link to="/upgrade" search={{ orgId: teamId }}>
               <ArrowUpCircle className="size-4" />
               Upgrade plan
             </Link>

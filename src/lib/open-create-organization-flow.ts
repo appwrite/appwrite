@@ -1,4 +1,5 @@
 import { getActiveProfileFeatures } from '@/lib/console-profiles'
+import { navigateToUpgradeWizard } from '@/lib/open-upgrade-wizard'
 
 /**
  * Starts the create-organization flow:
@@ -17,7 +18,7 @@ export function openCreateOrganizationFlow(
   },
 ): void {
   if (getActiveProfileFeatures().billing) {
-    navigate({ to: '/upgrade' })
+    navigateToUpgradeWizard(navigate)
     return
   }
 

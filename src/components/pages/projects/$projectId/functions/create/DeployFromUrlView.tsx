@@ -26,9 +26,11 @@ import { toast } from 'sonner'
 import { ID, FunctionRuntime, TemplateReferenceType } from '@appwrite.io/console'
 import { sdk } from '@/lib/appwrite/sdk'
 import {
+  useProject,
   useProjectRuntimes,
   useFunctionSpecifications,
 } from '@/lib/react-query/hooks'
+import { UpgradePlanLink } from '@/components/global/shared/UpgradePlanLink'
 import {
   getFirstEnabledSpecification,
   isSpecificationAllowedInPlan,
@@ -68,6 +70,7 @@ export function DeployFromUrlView({
   rootDirFromSearch,
 }: DeployFromUrlViewProps) {
   const { projectId } = useParams({ strict: false })
+  const { project } = useProject(projectId)
   const navigate = useNavigate()
   const queryClient = useQueryClient()
   const { generateDomain, updateFormData } = useFunctionWizard()
@@ -391,7 +394,12 @@ export function DeployFromUrlView({
               </p>
               {hasUnavailableSpecifications(specifications) && (
                 <p className="text-[11px] text-muted-foreground">
-                  Upgrade your plan to unlock additional specifications.
+                  <UpgradePlanLink
+                    orgId={project?.teamId}
+                    analyticsSurface="function_create_deploy_url"
+                    data-analytics-resource="function"
+                  />{' '}
+                  to unlock additional specifications.
                 </p>
               )}
             </div>

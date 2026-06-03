@@ -1197,6 +1197,7 @@ export function View() {
           onCreate={(data) => createDatabaseMutation.mutate(data)}
           isLoading={createDatabaseMutation.isPending}
           backupsEnabled={organizationPlan?.backupsEnabled}
+          orgId={project?.teamId}
         />
       </div>
     </div>

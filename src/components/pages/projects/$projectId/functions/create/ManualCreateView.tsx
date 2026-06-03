@@ -27,9 +27,11 @@ import { toast } from 'sonner'
 import { ID } from '@appwrite.io/console'
 import { sdk } from '@/lib/appwrite/sdk'
 import {
+  useProject,
   useProjectRuntimes,
   useFunctionSpecifications,
 } from '@/lib/react-query/hooks'
+import { UpgradePlanLink } from '@/components/global/shared/UpgradePlanLink'
 import {
   getFirstEnabledSpecification,
   isSpecificationAllowedInPlan,
@@ -46,6 +48,7 @@ interface ManualCreateViewProps {
 
 export function ManualCreateView({ runtimeFromSearch }: ManualCreateViewProps) {
   const { projectId } = useParams({ strict: false })
+  const { project } = useProject(projectId)
   const navigate = useNavigate()
   const queryClient = useQueryClient()
   const fileInputRef = useRef<HTMLInputElement>(null)
@@ -327,7 +330,12 @@ export function ManualCreateView({ runtimeFromSearch }: ManualCreateViewProps) {
               </p>
               {hasUnavailableSpecifications(specifications) && (
                 <p className="text-[11px] text-muted-foreground">
-                  Upgrade your plan to unlock additional specifications.
+                  <UpgradePlanLink
+                    orgId={project?.teamId}
+                    analyticsSurface="function_create_manual"
+                    data-analytics-resource="function"
+                  />{' '}
+                  to unlock additional specifications.
                 </p>
               )}
             </div>

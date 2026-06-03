@@ -20,6 +20,7 @@ import { getErrorMessage } from '@/lib/utils/error-formatting'
 import { toast } from 'sonner'
 import type { TransferInSearch } from '@/routes/_public/organizations.$orgId.domains.transfer-in'
 import { TransferDomainInSummary } from './TransferDomainInSummary'
+import { UpgradePlanLink } from '@/components/global/shared/UpgradePlanLink'
 import { useOrganizationDomainsPlanLimit } from './useOrganizationDomainsPlanLimit'
 
 const PRICE_DEBOUNCE_MS = 500
@@ -256,7 +257,12 @@ export function TransferDomainInWizard({
           </p>
           {isDomainLimitReached ? (
             <p className="mt-2 text-[12px] text-amber-600 dark:text-amber-400">
-              Your current plan includes up to {domainsLimit} domains. Upgrade
+              Your current plan includes up to {domainsLimit} domains.{' '}
+              <UpgradePlanLink
+                orgId={orgId}
+                analyticsSurface="transfer_domain_wizard"
+                data-analytics-resource="domain"
+              />{' '}
               to transfer another domain.
             </p>
           ) : null}

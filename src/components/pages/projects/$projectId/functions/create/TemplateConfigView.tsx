@@ -40,6 +40,7 @@ import {
   isSpecificationAllowedInPlan,
   hasUnavailableSpecifications,
 } from '@/lib/specifications'
+import { UpgradePlanLink } from '@/components/global/shared/UpgradePlanLink'
 import { useFunctionWizard } from './WizardContext'
 import { FunctionDomainCard } from './_components/FunctionDomainCard'
 import { VariablesSettingsCard } from '@/components/global/shared/VariablesSettingsCard'
@@ -595,7 +596,12 @@ export function TemplateConfigView({
               </p>
               {hasUnavailableSpecifications(specifications) && (
                 <p className="text-[11px] text-muted-foreground">
-                  Upgrade your plan to unlock additional specifications.
+                  <UpgradePlanLink
+                    orgId={project?.teamId}
+                    analyticsSurface="function_create_template"
+                    data-analytics-resource="function"
+                  />{' '}
+                  to unlock additional specifications.
                 </p>
               )}
             </div>

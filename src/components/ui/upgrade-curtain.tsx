@@ -2,6 +2,10 @@ import { ReactNode } from 'react'
 import { useNavigate } from '@tanstack/react-router'
 import { Button } from '@/components/ui/button'
 import { Lock } from 'lucide-react'
+import {
+  getOrgIdFromPathname,
+  navigateToUpgradeWizard,
+} from '@/lib/open-upgrade-wizard'
 import { cn } from '@/lib/utils'
 
 interface UpgradeCurtainProps {
@@ -55,27 +59,8 @@ export function UpgradeCurtain({
     return <>{children}</>
   }
 
-  // Try to get orgId from URL if not provided
-  const getOrgIdFromUrl = () => {
-    if (orgId) return orgId
-    const pathParts = window.location.pathname.split('/').filter(Boolean)
-    const orgIndex = pathParts.findIndex((part) => part === 'organizations')
-    if (orgIndex >= 0 && pathParts[orgIndex + 1]) {
-      return pathParts[orgIndex + 1]
-    }
-    return null
-  }
-
   const handleUpgrade = () => {
-    const finalOrgId = getOrgIdFromUrl()
-    if (finalOrgId) {
-      navigate({
-        to: '/upgrade',
-        search: { orgId: finalOrgId },
-      })
-    } else {
-      navigate({ to: '/upgrade' })
-    }
+    navigateToUpgradeWizard(navigate, orgId ?? getOrgIdFromPathname())
   }
 
   return (

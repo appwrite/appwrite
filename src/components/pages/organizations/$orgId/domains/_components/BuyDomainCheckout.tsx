@@ -17,6 +17,7 @@ import {
 import { PaymentMethodDropdown } from '@/components/pages/organizations/$orgId/billing/change-plan/PaymentMethodDropdown'
 import { PaymentModal } from '@/components/pages/organizations/$orgId/billing/Payment'
 import { WizardLayout } from '@/components/global/shared/WizardLayout'
+import { UpgradePlanLink } from '@/components/global/shared/UpgradePlanLink'
 import { useAuth } from '@/components/global/auth/RequireAuth'
 import {
   useOrganizationById,
@@ -379,7 +380,12 @@ export function BuyDomainCheckout({
           </p>
           {isDomainLimitReached ? (
             <p className="mt-2 text-[12px] text-amber-600 dark:text-amber-400">
-              Your current plan includes up to {domainsLimit} domains. Upgrade
+              Your current plan includes up to {domainsLimit} domains.{' '}
+              <UpgradePlanLink
+                orgId={orgId}
+                analyticsSurface="buy_domain_checkout"
+                data-analytics-resource="domain"
+              />{' '}
               to register another domain.
             </p>
           ) : null}

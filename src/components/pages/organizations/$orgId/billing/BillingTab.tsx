@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react'
 import { useParams, useNavigate } from '@tanstack/react-router'
+import { navigateToUpgradeWizard } from '@/lib/open-upgrade-wizard'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { WarningAlert } from '@/components/global/shared/WarningAlert'
 import { Button } from '@/components/ui/button'
@@ -100,12 +101,7 @@ export function BillingTab() {
   }
 
   const handleChangePlan = () => {
-    if (orgId) {
-      navigate({
-        to: '/upgrade',
-        search: { orgId },
-      })
-    }
+    navigateToUpgradeWizard(navigate, orgId)
   }
 
   const handleAddPaymentMethod = (isBackup = false) => {
