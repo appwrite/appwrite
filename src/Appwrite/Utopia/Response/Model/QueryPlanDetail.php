@@ -30,7 +30,7 @@ class QueryPlanDetail extends Model
             ->addRule('metrics', [
                 'type' => self::TYPE_JSON,
                 'description' => 'Stable Appwrite-level execution metrics. Uses records terminology so values stay comparable if the backing database changes.',
-                'default' => new \stdClass,
+                'default' => new \stdClass(),
                 'required' => false,
                 'example' => [
                     'estimatedRecordsScanned' => 1200,
@@ -42,7 +42,7 @@ class QueryPlanDetail extends Model
             ->addRule('access', [
                 'type' => self::TYPE_JSON,
                 'description' => 'Stable Appwrite-level access path summary. Backend-specific detail is only populated when the request sets tree to true.',
-                'default' => new \stdClass,
+                'default' => new \stdClass(),
                 'required' => false,
                 'example' => [
                     'type' => 'index_scan',
@@ -80,7 +80,7 @@ class QueryPlanDetail extends Model
             ->addRule('tree', [
                 'type' => self::TYPE_JSON,
                 'description' => 'Sanitized query plan from the backend. Only populated when tree is true. Internal storage identifiers and runtime metadata are stripped. Carries access-path detail such as scan type, candidate indexes, filter conditions, sort, and bounds for deep diagnosis. Shape varies by backend.',
-                'default' => new \stdClass,
+                'default' => new \stdClass(),
                 'required' => false,
                 'example' => ['query_block' => ['select_id' => 1]],
             ])
