@@ -2314,6 +2314,14 @@ class FunctionsCustomServerTest extends Scope
         $this->assertArrayHasKey('image', $runtime);
         $this->assertArrayHasKey('base', $runtime);
         $this->assertArrayHasKey('supports', $runtime);
+        $this->assertArrayHasKey('services', $runtime);
+        $this->assertIsArray($runtime['services']);
+        $this->assertContains('functions', $runtime['services']);
+
+        // Flutter is a site-only runtime and must not appear in functions list
+        $runtimeIds = array_column($runtimes['body']['runtimes'], '$id');
+        $flutterRuntimes = array_filter($runtimeIds, fn($id) => str_starts_with($id, 'flutter'));
+        $this->assertEmpty($flutterRuntimes, 'Flutter runtimes should not appear in functions list');
     }
 
 

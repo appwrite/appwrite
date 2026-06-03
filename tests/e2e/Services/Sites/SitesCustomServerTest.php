@@ -2134,6 +2134,36 @@ class SitesCustomServerTest extends Scope
         $this->assertArrayHasKey('outputDirectory', $framework['adapters'][0]);
     }
 
+    public function testGetRuntimes(): void
+    {
+        $runtimes = $this->client->call(Client::METHOD_GET, '/sites/runtimes', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ]));
+
+        $this->assertEquals(200, $runtimes['headers']['status-code']);
+        $this->assertGreaterThan(0, $runtimes['body']['total']);
+
+        $runtime = $runtimes['body']['runtimes'][0];
+
+        $this->assertArrayHasKey('$id', $runtime);
+        $this->assertArrayHasKey('name', $runtime);
+        $this->assertArrayHasKey('key', $runtime);
+        $this->assertArrayHasKey('version', $runtime);
+        $this->assertArrayHasKey('logo', $runtime);
+        $this->assertArrayHasKey('image', $runtime);
+        $this->assertArrayHasKey('base', $runtime);
+        $this->assertArrayHasKey('supports', $runtime);
+        $this->assertArrayHasKey('services', $runtime);
+        $this->assertIsArray($runtime['services']);
+        $this->assertContains('sites', $runtime['services']);
+
+        // Flutter is a site-only runtime and must appear in sites list
+        $runtimeIds = array_column($runtimes['body']['runtimes'], '$id');
+        $flutterRuntimes = array_filter($runtimeIds, fn($id) => str_starts_with($id, 'flutter'));
+        $this->assertNotEmpty($flutterRuntimes, 'Flutter runtimes should appear in sites list');
+    }
+
     public function testSiteStatic(): void
     {
         $siteId = $this->setupSite([
