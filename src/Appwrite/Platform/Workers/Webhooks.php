@@ -6,6 +6,7 @@ use Appwrite\Event\Message\Mail as MailMessage;
 use Appwrite\Event\Message\Usage as UsageMessage;
 use Appwrite\Event\Publisher\Mail as MailPublisher;
 use Appwrite\Event\Publisher\Usage as UsagePublisher;
+use Appwrite\Network\Validator\PublicHostname;
 use Appwrite\Template\Template;
 use Appwrite\Usage\Context as UsageContext;
 use Exception;
@@ -101,6 +102,16 @@ class Webhooks extends Action
         }
 
         $url = \rawurldecode($webhook->getAttribute('url'));
+
+        if (System::getEnv('_APP_ENV', 'development') === 'production') {
+            $host = \parse_url($url, PHP_URL_HOST) ?? '';
+            $hostnameValidator = new PublicHostname();
+            if (!$hostnameValidator->isValid($host)) {
+                $this->errors[] = 'Webhook target ' . $host . ' rejected: ' . $hostnameValidator->getDescription();
+                return;
+            }
+        }
+
         $signatureKey = $webhook->getAttribute('signatureKey');
         $signature = base64_encode(hash_hmac('sha1', $url . $payload, $signatureKey, true));
         $httpUser = $webhook->getAttribute('httpUser');
