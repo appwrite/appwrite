@@ -7,6 +7,7 @@ use Exception;
 use Utopia\Database\Database;
 use Utopia\Platform\Action;
 use Utopia\Queue\Message;
+use Utopia\Span\Span;
 
 class Executions extends Action
 {
@@ -32,12 +33,18 @@ class Executions extends Action
         Message $message,
         Database $dbForProject,
     ): void {
-        $executionMessage = Execution::fromArray($message->getPayload() ?? []);
+        $executionMessage = Execution::fromArray($message->getPayload());
         $execution = $executionMessage->execution;
 
         if ($execution->isEmpty()) {
             throw new Exception('Missing execution');
         }
+
+        Span::add('project.id', $executionMessage->project->getId());
+        Span::add('function.id', $execution->getAttribute('resourceId', ''));
+        Span::add('execution.id', $execution->getId());
+        Span::add('deployment.id', $execution->getAttribute('deploymentId', ''));
+        Span::add('resource.type', $execution->getAttribute('resourceType', ''));
 
         $dbForProject->upsertDocument('executions', $execution);
     }

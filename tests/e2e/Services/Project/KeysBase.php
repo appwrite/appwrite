@@ -78,12 +78,12 @@ trait KeysBase
         $this->deleteKey($key['body']['$id']);
     }
 
-    public function testCreateKeyWithNullScopes(): void
+    public function testCreateKeyWithEmptyScopes(): void
     {
         $key = $this->createKey(
             ID::unique(),
-            'Null Scopes Key',
-            null,
+            'Empty Scopes Key',
+            [],
         );
 
         $this->assertSame(201, $key['headers']['status-code']);
@@ -91,6 +91,58 @@ trait KeysBase
 
         // Cleanup
         $this->deleteKey($key['body']['$id']);
+    }
+
+    public function testCreateKeyWithNullScopesV22BackwardCompat(): void
+    {
+        $headers = [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-response-format' => '1.9.0',
+        ];
+        $headers = array_merge($headers, $this->getHeaders());
+
+        $key = $this->client->call(Client::METHOD_POST, '/project/keys', $headers, [
+            'keyId' => ID::unique(),
+            'name' => 'V22 Compat Key',
+            'scopes' => null,
+        ]);
+
+        $this->assertSame(201, $key['headers']['status-code']);
+        $this->assertSame([], $key['body']['scopes']);
+
+        // Cleanup
+        $this->deleteKey($key['body']['$id']);
+    }
+
+    public function testUpdateKeyWithNullScopesV22BackwardCompat(): void
+    {
+        $key = $this->createKey(
+            ID::unique(),
+            'V22 Update Compat Key',
+            ['users.read'],
+        );
+
+        $this->assertSame(201, $key['headers']['status-code']);
+        $keyId = $key['body']['$id'];
+
+        $headers = [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-response-format' => '1.9.0',
+        ];
+        $headers = array_merge($headers, $this->getHeaders());
+
+        $updated = $this->client->call(Client::METHOD_PUT, '/project/keys/' . $keyId, $headers, [
+            'name' => 'V22 Update Compat Key',
+            'scopes' => null,
+        ]);
+
+        $this->assertSame(200, $updated['headers']['status-code']);
+        $this->assertSame([], $updated['body']['scopes']);
+
+        // Cleanup
+        $this->deleteKey($keyId);
     }
 
     public function testCreateKeyWithoutAuthentication(): void
@@ -185,6 +237,125 @@ trait KeysBase
 
         // Cleanup
         $this->deleteKey($customId);
+    }
+
+    // =========================================================================
+    // Create ephemeral key tests
+    // =========================================================================
+
+    public function testCreateEphemeralKey(): void
+    {
+        $duration = 900;
+
+        $key = $this->createEphemeralKey(
+            ['users.read', 'users.write'],
+            $duration,
+        );
+
+        $this->assertSame(201, $key['headers']['status-code']);
+        $this->assertNotEmpty($key['body']['$id']);
+        $this->assertSame('', $key['body']['name']);
+        $this->assertSame(['users.read', 'users.write'], $key['body']['scopes']);
+        $this->assertNotEmpty($key['body']['secret']);
+        $this->assertStringStartsWith(API_KEY_EPHEMERAL . '_', $key['body']['secret']);
+        $this->assertSame([], $key['body']['sdks']);
+        $this->assertSame('', $key['body']['accessedAt']);
+
+        $dateValidator = new DatetimeValidator();
+        $this->assertSame(true, $dateValidator->isValid($key['body']['$createdAt']));
+        $this->assertSame(true, $dateValidator->isValid($key['body']['$updatedAt']));
+        $this->assertSame(true, $dateValidator->isValid($key['body']['expire']));
+
+        // Verify JWT payload
+        $jwt = substr($key['body']['secret'], strlen(API_KEY_EPHEMERAL . '_'));
+        $parts = explode('.', $jwt);
+        $this->assertCount(3, $parts);
+        $payload = json_decode(base64_decode(str_replace(['-', '_'], ['+', '/'], $parts[1])), true);
+        $this->assertNotEmpty($payload['projectId']);
+        $this->assertSame(['users.read', 'users.write'], $payload['scopes']);
+
+        $expireDt = new \DateTime($key['body']['expire']);
+        $now = new \DateTime();
+        $diff = $expireDt->getTimestamp() - $now->getTimestamp();
+        $this->assertGreaterThanOrEqual($duration - 10, $diff);
+        $this->assertLessThanOrEqual($duration + 10, $diff);
+    }
+
+    public function testCreateEphemeralKeyWithDuration(): void
+    {
+        $duration = 1800;
+
+        $key = $this->createEphemeralKey(
+            ['databases.read'],
+            $duration,
+        );
+
+        $this->assertSame(201, $key['headers']['status-code']);
+        $this->assertSame(['databases.read'], $key['body']['scopes']);
+
+        $expireDt = new \DateTime($key['body']['expire']);
+        $now = new \DateTime();
+        $diff = $expireDt->getTimestamp() - $now->getTimestamp();
+        $this->assertGreaterThanOrEqual($duration - 10, $diff);
+        $this->assertLessThanOrEqual($duration + 10, $diff);
+    }
+
+    public function testCreateEphemeralKeyWithEmptyScopes(): void
+    {
+        $key = $this->createEphemeralKey(
+            [],
+            900,
+        );
+
+        $this->assertSame(201, $key['headers']['status-code']);
+        $this->assertSame([], $key['body']['scopes']);
+    }
+
+    public function testCreateEphemeralKeyWithoutAuthentication(): void
+    {
+        $response = $this->createEphemeralKey(
+            ['users.read'],
+            900,
+            false
+        );
+
+        $this->assertSame(401, $response['headers']['status-code']);
+    }
+
+    public function testCreateEphemeralKeyMissingDuration(): void
+    {
+        $response = $this->createEphemeralKey(
+            ['users.read'],
+        );
+
+        $this->assertSame(400, $response['headers']['status-code']);
+    }
+
+    public function testCreateEphemeralKeyInvalidScope(): void
+    {
+        $response = $this->createEphemeralKey(
+            ['invalid.scope'],
+            900,
+        );
+
+        $this->assertSame(400, $response['headers']['status-code']);
+    }
+
+    public function testCreateEphemeralKeyInvalidDuration(): void
+    {
+        $response = $this->createEphemeralKey(
+            ['users.read'],
+            0,
+        );
+
+        $this->assertSame(400, $response['headers']['status-code']);
+
+        $response = $this->createEphemeralKey(
+            ['users.read'],
+            3601,
+        );
+
+        $this->assertSame(400, $response['headers']['status-code']);
     }
 
     // =========================================================================
@@ -802,5 +973,30 @@ trait KeysBase
         }
 
         return $this->client->call(Client::METHOD_DELETE, '/project/keys/' . $keyId, $headers);
+    }
+
+    /**
+     * @param array<string> $scopes
+     */
+    protected function createEphemeralKey(array $scopes, ?int $duration = null, bool $authenticated = true): mixed
+    {
+        $params = [
+            'scopes' => $scopes,
+        ];
+
+        if ($duration !== null) {
+            $params['duration'] = $duration;
+        }
+
+        $headers = [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ];
+
+        if ($authenticated) {
+            $headers = array_merge($headers, $this->getHeaders());
+        }
+
+        return $this->client->call(Client::METHOD_POST, '/project/keys/ephemeral', $headers, $params);
     }
 }

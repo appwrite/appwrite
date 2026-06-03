@@ -6,6 +6,7 @@ use Appwrite\Auth\MFA\Type;
 use Appwrite\Auth\MFA\Type\TOTP;
 use Appwrite\Event\Event;
 use Appwrite\Extend\Exception;
+use Appwrite\Platform\Action;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\ContentType;
 use Appwrite\SDK\Deprecated;
@@ -14,7 +15,7 @@ use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
-use Utopia\Platform\Action;
+use Utopia\Platform\Enum;
 use Utopia\Platform\Scope\HTTP;
 use Utopia\Validator\WhiteList;
 
@@ -37,8 +38,8 @@ class Delete extends Action
             ->label('event', 'users.[userId].delete.mfa')
             ->label('scope', 'account')
             ->label('audits.event', 'user.update')
-            ->label('audits.resource', 'user/{response.$id}')
-            ->label('audits.userId', '{response.$id}')
+            ->label('audits.resource', 'user/{user.$id}')
+            ->label('audits.userId', '{user.$id}')
             ->label('sdk', [
                 new Method(
                     namespace: 'account',
@@ -74,7 +75,7 @@ class Delete extends Action
                     contentType: ContentType::NONE
                 )
             ])
-            ->param('type', null, new WhiteList([Type::TOTP]), 'Type of authenticator.')
+            ->param('type', null, new WhiteList([Type::TOTP]), 'Type of authenticator.', enum: new Enum(name: 'AuthenticatorType'))
             ->inject('response')
             ->inject('user')
             ->inject('dbForProject')

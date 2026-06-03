@@ -5,7 +5,9 @@ namespace Appwrite\Platform\Tasks;
 use Appwrite\SDK\Language\AgentSkills;
 use Appwrite\SDK\Language\Android;
 use Appwrite\SDK\Language\Apple;
+use Appwrite\SDK\Language\ClaudePlugin;
 use Appwrite\SDK\Language\CLI;
+use Appwrite\SDK\Language\CodexPlugin;
 use Appwrite\SDK\Language\CursorPlugin;
 use Appwrite\SDK\Language\Dart;
 use Appwrite\SDK\Language\Deno;
@@ -181,7 +183,7 @@ class SDKs extends Action
 
                 Console::log('');
 
-                if ($createRelease && ! $examplesOnly) {
+                if ($createRelease) {
                     Console::info("━━━ {$language['name']} SDK ({$platform['name']}, {$language['version']}) ━━━");
                     $changelog = $language['changelog'] ?? '';
                     $changelog = ($changelog) ? \file_get_contents($changelog) : '# Change Log';
@@ -451,6 +453,12 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
                     case 'cursor-plugin':
                         $config = new CursorPlugin();
                         break;
+                    case 'claude-plugin':
+                        $config = new ClaudePlugin();
+                        break;
+                    case 'codex-plugin':
+                        $config = new CodexPlugin();
+                        break;
                     default:
                         throw new \Exception('Language "' . $language['key'] . '" not supported');
                 }
@@ -485,7 +493,7 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
                     ->setGitRepo($language['gitUrl'])
                     ->setGitRepoName($language['gitRepoName'])
                     ->setGitUserName($language['gitUserName'])
-                    ->setLogo($cover)
+                    ->setCoverImage($cover)
                     ->setURL('https://appwrite.io')
                     ->setShareText('Appwrite is a backend as a service for building web or mobile apps')
                     ->setShareURL('http://appwrite.io')
@@ -622,29 +630,28 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
             $repo->execute('config', 'advice.defaultBranchName', 'false');
             $repo->addRemote('origin', $gitUrl);
 
-            // Fetch and checkout base branch (or create if new repo)
+            // Fetch and checkout the target branch (e.g. dev) if it exists on remote,
+            // otherwise create it from the base branch (e.g. main).
+            // We build on top of the existing remote branch so a regular push
+            // works without force-pushing against protected branches.
+            $hasBranch = false;
             try {
-                $repo->execute('fetch', 'origin', '--quiet', '--no-tags', '--depth', '1', $repoBranch);
+                $repo->execute('fetch', 'origin', '--quiet', '--no-tags', '--depth', '1', $gitBranch);
+                $hasBranch = true;
+            } catch (\Throwable) {
+                // Branch doesn't exist on remote yet
+            }
+
+            if ($hasBranch) {
+                $repo->execute('checkout', '-f', $gitBranch);
+            } else {
+                // Fetch base branch to create the target branch from it
                 try {
+                    $repo->execute('fetch', 'origin', '--quiet', '--no-tags', '--depth', '1', $repoBranch);
                     $repo->execute('checkout', '-f', $repoBranch);
                 } catch (\Throwable) {
                     $repo->execute('checkout', '-b', $repoBranch);
                 }
-            } catch (\Throwable) {
-                $repo->execute('checkout', '-b', $repoBranch);
-            }
-
-            try {
-                $repo->execute('pull', 'origin', $repoBranch, '--quiet', '--no-tags');
-            } catch (\Throwable) {
-            }
-
-            // Create or checkout dev branch from the base branch
-            // This ensures dev always starts from the latest base branch,
-            // avoiding history divergence caused by squash merges.
-            try {
-                $repo->execute('checkout', '-B', $gitBranch, $repoBranch);
-            } catch (\Throwable) {
                 $repo->execute('checkout', '-b', $gitBranch);
             }
 
@@ -685,7 +692,7 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
                 return true;
             }
 
-            $repo->execute('push', '--force-with-lease', '-u', 'origin', $gitBranch, '--quiet');
+            $repo->execute('push', '-u', 'origin', $gitBranch, '--quiet');
         } catch (\Throwable $e) {
             Console::warning("  Git push failed: " . $e->getMessage());
             return false;
@@ -1147,7 +1154,7 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
 
             if (! empty($prListOutput[0])) {
                 $parts = \explode(' ', trim($prListOutput[0]), 2);
-                $prNumber = $parts[0] ?? '';
+                $prNumber = $parts[0];
                 $prUrl = $parts[1] ?? '';
             }
         }

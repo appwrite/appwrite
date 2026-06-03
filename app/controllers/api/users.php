@@ -11,8 +11,9 @@ use Appwrite\Auth\Validator\Phone;
 use Appwrite\Deletes\Identities as DeleteIdentities;
 use Appwrite\Deletes\Targets as DeleteTargets;
 use Appwrite\Detector\Detector;
-use Appwrite\Event\Delete;
 use Appwrite\Event\Event;
+use Appwrite\Event\Message\Delete as DeleteMessage;
+use Appwrite\Event\Publisher\Delete as DeletePublisher;
 use Appwrite\Extend\Exception;
 use Appwrite\Hooks\Hooks;
 use Appwrite\SDK\AuthType;
@@ -62,6 +63,7 @@ use Utopia\Emails\Email;
 use Utopia\Emails\Validator\Email as EmailValidator;
 use Utopia\Http\Http;
 use Utopia\Locale\Locale;
+use Utopia\Platform\Enum;
 use Utopia\System\System;
 use Utopia\Validator\ArrayList;
 use Utopia\Validator\Assoc;
@@ -131,15 +133,15 @@ function createUser(Hash $hash, string $userId, ?string $email, ?string $passwor
         } catch (\Throwable) {
         }
 
-        if (($plan['supportsDisposableEmailValidation'] ?? false) && ($project->getAttribute('auths', [])['disposableEmails'] ?? false) && ($emailMetadata['emailIsDisposable'] ?? false)) {
+        if ((($project->getId() === 'console') || ($plan['supportsDisposableEmailValidation'] ?? false)) && ($project->getAttribute('auths', [])['disposableEmails'] ?? false) && ($emailMetadata['emailIsDisposable'] ?? false)) {
             throw new Exception(Exception::USER_EMAIL_DISPOSABLE);
         }
 
-        if (($plan['supportsCanonicalEmailValidation'] ?? false) && ($project->getAttribute('auths', [])['canonicalEmails'] ?? false) && ($emailMetadata['emailIsCanonical'] ?? true) === false) {
+        if ((($project->getId() === 'console') || ($plan['supportsCanonicalEmailValidation'] ?? false)) && ($project->getAttribute('auths', [])['canonicalEmails'] ?? false) && ($emailMetadata['emailIsCanonical'] ?? true) === false) {
             throw new Exception(Exception::USER_EMAIL_NOT_CANONICAL);
         }
 
-        if (($plan['supportsFreeEmailValidation'] ?? false) && ($project->getAttribute('auths', [])['freeEmails'] ?? false) && ($emailMetadata['emailIsFree'] ?? false)) {
+        if ((($project->getId() === 'console') || ($plan['supportsFreeEmailValidation'] ?? false)) && ($project->getAttribute('auths', [])['freeEmails'] ?? false) && ($emailMetadata['emailIsFree'] ?? false)) {
             throw new Exception(Exception::USER_EMAIL_FREE);
         }
 
@@ -431,7 +433,7 @@ Http::post('/v1/users/sha')
     ->param('userId', '', fn (Database $dbForProject) => new CustomId(false, $dbForProject->getAdapter()->getMaxUIDLength()), 'User ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.', false, ['dbForProject'])
     ->param('email', '', new EmailValidator(), 'User email.')
     ->param('password', '', new Password(), 'User password hashed using SHA.')
-    ->param('passwordVersion', '', new WhiteList(['sha1', 'sha224', 'sha256', 'sha384', 'sha512/224', 'sha512/256', 'sha512', 'sha3-224', 'sha3-256', 'sha3-384', 'sha3-512']), "Optional SHA version used to hash password. Allowed values are: 'sha1', 'sha224', 'sha256', 'sha384', 'sha512/224', 'sha512/256', 'sha512', 'sha3-224', 'sha3-256', 'sha3-384', 'sha3-512'", true)
+    ->param('passwordVersion', '', new WhiteList(['sha1', 'sha224', 'sha256', 'sha384', 'sha512/224', 'sha512/256', 'sha512', 'sha3-224', 'sha3-256', 'sha3-384', 'sha3-512']), "Optional SHA version used to hash password. Allowed values are: 'sha1', 'sha224', 'sha256', 'sha384', 'sha512/224', 'sha512/256', 'sha512', 'sha3-224', 'sha3-256', 'sha3-384', 'sha3-512'", true, enum: new Enum(name: 'PasswordHash'))
     ->param('name', '', new Text(128), 'User name. Max length: 128 chars.', true)
     ->inject('response')
     ->inject('project')
@@ -589,7 +591,7 @@ Http::post('/v1/users/:userId/targets')
     ->label('audits.event', 'target.create')
     ->label('audits.resource', 'target/response.$id')
     ->label('event', 'users.[userId].targets.[targetId].create')
-    ->label('scope', 'targets.write')
+    ->label('scope', 'users.write')
     ->label('sdk', new Method(
         namespace: 'users',
         group: 'targets',
@@ -605,7 +607,7 @@ Http::post('/v1/users/:userId/targets')
     ))
     ->param('targetId', '', fn (Database $dbForProject) => new CustomId(false, $dbForProject->getAdapter()->getMaxUIDLength()), 'Target ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.', false, ['dbForProject'])
     ->param('userId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'User ID.', false, ['dbForProject'])
-    ->param('providerType', '', new WhiteList([MESSAGE_TYPE_EMAIL, MESSAGE_TYPE_SMS, MESSAGE_TYPE_PUSH]), 'The target provider type. Can be one of the following: `email`, `sms` or `push`.')
+    ->param('providerType', '', new WhiteList([MESSAGE_TYPE_EMAIL, MESSAGE_TYPE_SMS, MESSAGE_TYPE_PUSH]), 'The target provider type. Can be one of the following: `email`, `sms` or `push`.', enum: new Enum(name: 'MessagingProviderType'))
     ->param('identifier', '', new Text(Database::LENGTH_KEY), 'The target identifier (token, email, phone etc.)')
     ->param('providerId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Provider ID. Message will be sent to this target from the specified provider ID. If no provider ID is set the first setup provider will be used.', true, ['dbForProject'])
     ->param('name', '', new Text(128), 'Target name. Max length: 128 chars. For example: My Awesome App Galaxy S23.', true)
@@ -731,6 +733,13 @@ Http::get('/v1/users')
             $cursor->setValue($cursorDocument);
         }
 
+        $skipFilters = ['subQueryAuthenticators', 'subQuerySessions', 'subQueryTokens', 'subQueryChallenges', 'subQueryMemberships'];
+
+        $selects = Query::getByType($queries, [Query::TYPE_SELECT]);
+        if (empty($selects)) {
+            $skipFilters[] = 'subQueryTargets';
+        }
+
         $users = [];
         $total = 0;
 
@@ -743,7 +752,32 @@ Http::get('/v1/users')
             } catch (QueryException $e) {
                 throw new Exception(Exception::GENERAL_QUERY_INVALID, $e->getMessage());
             }
-        }, ['subQueryAuthenticators', 'subQuerySessions', 'subQueryTokens', 'subQueryChallenges', 'subQueryMemberships']);
+        }, $skipFilters);
+
+        if (empty($selects) && !empty($users)) {
+            $sequences = [];
+            foreach ($users as $user) {
+                $sequences[] = $user->getSequence();
+            }
+
+            try {
+                $targets = $dbForProject->getAuthorization()->skip(fn () => $dbForProject->find('targets', [
+                    Query::equal('userInternalId', $sequences),
+                    Query::limit(PHP_INT_MAX),
+                ]));
+            } catch (QueryException $e) {
+                throw new Exception(Exception::GENERAL_QUERY_INVALID, $e->getMessage());
+            }
+
+            $targetsByUser = [];
+            foreach ($targets as $target) {
+                $targetsByUser[$target->getAttribute('userInternalId')][] = $target;
+            }
+
+            foreach ($users as $user) {
+                $user->setAttribute('targets', $targetsByUser[$user->getSequence()] ?? []);
+            }
+        }
 
         $response->dynamic(new Document([
             'users' => $users,
@@ -818,7 +852,7 @@ Http::get('/v1/users/:userId/prefs')
 Http::get('/v1/users/:userId/targets/:targetId')
     ->desc('Get user target')
     ->groups(['api', 'users'])
-    ->label('scope', 'targets.read')
+    ->label('scope', 'users.read')
     ->label('sdk', new Method(
         namespace: 'users',
         group: 'targets',
@@ -856,7 +890,7 @@ Http::get('/v1/users/:userId/targets/:targetId')
 Http::get('/v1/users/:userId/sessions')
     ->desc('List user sessions')
     ->groups(['api', 'users'])
-    ->label('scope', 'users.read')
+    ->label('scope', ['users.read', 'sessions.read'])
     ->label('sdk', new Method(
         namespace: 'users',
         group: 'sessions',
@@ -1044,7 +1078,7 @@ Http::get('/v1/users/:userId/logs')
 Http::get('/v1/users/:userId/targets')
     ->desc('List user targets')
     ->groups(['api', 'users'])
-    ->label('scope', 'targets.read')
+    ->label('scope', 'users.read')
     ->label('sdk', new Method(
         namespace: 'users',
         group: 'targets',
@@ -1535,7 +1569,7 @@ Http::patch('/v1/users/:userId/email')
                 Query::equal('identifier', [$email]),
             ]);
 
-            if ($target instanceof Document && !$target->isEmpty()) {
+            if (!$target->isEmpty()) {
                 throw new Exception(Exception::USER_TARGET_ALREADY_EXISTS);
             }
         }
@@ -1563,15 +1597,15 @@ Http::patch('/v1/users/:userId/email')
         } catch (\Throwable) {
         }
 
-        if (($plan['supportsDisposableEmailValidation'] ?? false) && ($project->getAttribute('auths', [])['disposableEmails'] ?? false) && ($emailMetadata['emailIsDisposable'] ?? false)) {
+        if ((($project->getId() === 'console') || ($plan['supportsDisposableEmailValidation'] ?? false)) && ($project->getAttribute('auths', [])['disposableEmails'] ?? false) && ($emailMetadata['emailIsDisposable'] ?? false)) {
             throw new Exception(Exception::USER_EMAIL_DISPOSABLE);
         }
 
-        if (($plan['supportsCanonicalEmailValidation'] ?? false) && ($project->getAttribute('auths', [])['canonicalEmails'] ?? false) && ($emailMetadata['emailIsCanonical'] ?? true) === false) {
+        if ((($project->getId() === 'console') || ($plan['supportsCanonicalEmailValidation'] ?? false)) && ($project->getAttribute('auths', [])['canonicalEmails'] ?? false) && ($emailMetadata['emailIsCanonical'] ?? true) === false) {
             throw new Exception(Exception::USER_EMAIL_NOT_CANONICAL);
         }
 
-        if (($plan['supportsFreeEmailValidation'] ?? false) && ($project->getAttribute('auths', [])['freeEmails'] ?? false) && ($emailMetadata['emailIsFree'] ?? false)) {
+        if ((($project->getId() === 'console') || ($plan['supportsFreeEmailValidation'] ?? false)) && ($project->getAttribute('auths', [])['freeEmails'] ?? false) && ($emailMetadata['emailIsFree'] ?? false)) {
             throw new Exception(Exception::USER_EMAIL_FREE);
         }
 
@@ -1595,9 +1629,6 @@ Http::patch('/v1/users/:userId/email')
                 'emailIsDisposable' => $user->getAttribute('emailIsDisposable'),
                 'emailIsFree' => $user->getAttribute('emailIsFree'),
             ]));
-            /**
-             * @var Document $oldTarget
-             */
             $oldTarget = $user->find('identifier', $oldEmail, 'targets');
 
             if ($oldTarget instanceof Document && !$oldTarget->isEmpty()) {
@@ -1681,7 +1712,7 @@ Http::patch('/v1/users/:userId/phone')
                 Query::equal('identifier', [$number]),
             ]);
 
-            if ($target instanceof Document && !$target->isEmpty()) {
+            if (!$target->isEmpty()) {
                 throw new Exception(Exception::USER_TARGET_ALREADY_EXISTS);
             }
         }
@@ -1691,9 +1722,6 @@ Http::patch('/v1/users/:userId/phone')
                 'phone' => $phoneValue,
                 'phoneVerification' => $user->getAttribute('phoneVerification'),
             ]));
-            /**
-             * @var Document $oldTarget
-             */
             $oldTarget = $user->find('identifier', $oldPhone, 'targets');
 
             if ($oldTarget instanceof Document && !$oldTarget->isEmpty()) {
@@ -1815,7 +1843,7 @@ Http::patch('/v1/users/:userId/targets/:targetId')
     ->label('audits.event', 'target.update')
     ->label('audits.resource', 'target/{response.$id}')
     ->label('event', 'users.[userId].targets.[targetId].update')
-    ->label('scope', 'targets.write')
+    ->label('scope', 'users.write')
     ->label('sdk', new Method(
         namespace: 'users',
         group: 'targets',
@@ -2252,8 +2280,8 @@ Http::delete('/v1/users/:userId/mfa/authenticators/:type')
     ->label('event', 'users.[userId].delete.mfa')
     ->label('scope', 'users.write')
     ->label('audits.event', 'user.update')
-    ->label('audits.resource', 'user/{response.$id}')
-    ->label('audits.userId', '{response.$id}')
+    ->label('audits.resource', 'user/{request.userId}')
+    ->label('audits.userId', '{request.userId}')
     ->label('usage.metric', 'users.{scope}.requests.update')
     ->label('sdk', [
         new Method(
@@ -2291,7 +2319,7 @@ Http::delete('/v1/users/:userId/mfa/authenticators/:type')
         )
     ])
     ->param('userId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'User ID.', false, ['dbForProject'])
-    ->param('type', null, new WhiteList([Type::TOTP]), 'Type of authenticator.')
+    ->param('type', null, new WhiteList([Type::TOTP]), 'Type of authenticator.', enum: new Enum(name: 'AuthenticatorType'))
     ->inject('response')
     ->inject('dbForProject')
     ->inject('queueForEvents')
@@ -2320,7 +2348,7 @@ Http::post('/v1/users/:userId/sessions')
     ->desc('Create session')
     ->groups(['api', 'users'])
     ->label('event', 'users.[userId].sessions.[sessionId].create')
-    ->label('scope', 'users.write')
+    ->label('scope', ['users.write', 'sessions.write'])
     ->label('audits.event', 'session.create')
     ->label('audits.resource', 'user/{request.userId}')
     ->label('usage.metric', 'sessions.{scope}.requests.create')
@@ -2476,7 +2504,7 @@ Http::delete('/v1/users/:userId/sessions/:sessionId')
     ->desc('Delete user session')
     ->groups(['api', 'users'])
     ->label('event', 'users.[userId].sessions.[sessionId].delete')
-    ->label('scope', 'users.write')
+    ->label('scope', ['users.write', 'sessions.write'])
     ->label('audits.event', 'session.delete')
     ->label('audits.resource', 'user/{request.userId}')
     ->label('sdk', new Method(
@@ -2527,7 +2555,7 @@ Http::delete('/v1/users/:userId/sessions')
     ->desc('Delete user sessions')
     ->groups(['api', 'users'])
     ->label('event', 'users.[userId].sessions.delete')
-    ->label('scope', 'users.write')
+    ->label('scope', ['users.write', 'sessions.write'])
     ->label('audits.event', 'session.delete')
     ->label('audits.resource', 'user/{user.$id}')
     ->label('sdk', new Method(
@@ -2598,8 +2626,8 @@ Http::delete('/v1/users/:userId')
     ->inject('response')
     ->inject('dbForProject')
     ->inject('queueForEvents')
-    ->inject('queueForDeletes')
-    ->action(function (string $userId, Response $response, Database $dbForProject, Event $queueForEvents, Delete $queueForDeletes) {
+    ->inject('publisherForDeletes')
+    ->action(function (string $userId, Response $response, Database $dbForProject, Event $queueForEvents, DeletePublisher $publisherForDeletes) {
 
         $user = $dbForProject->getDocument('users', $userId);
 
@@ -2614,9 +2642,11 @@ Http::delete('/v1/users/:userId')
         DeleteIdentities::delete($dbForProject, Query::equal('userInternalId', [$user->getSequence()]));
         DeleteTargets::delete($dbForProject, Query::equal('userInternalId', [$user->getSequence()]));
 
-        $queueForDeletes
-            ->setType(DELETE_TYPE_DOCUMENT)
-            ->setDocument($clone);
+        $publisherForDeletes->enqueue(new DeleteMessage(
+            project: $queueForEvents->getProject(),
+            type: DELETE_TYPE_DOCUMENT,
+            document: $clone,
+        ));
 
         $queueForEvents
             ->setParam('userId', $user->getId())
@@ -2631,7 +2661,7 @@ Http::delete('/v1/users/:userId/targets/:targetId')
     ->label('audits.event', 'target.delete')
     ->label('audits.resource', 'target/{request.$targetId}')
     ->label('event', 'users.[userId].targets.[targetId].delete')
-    ->label('scope', 'targets.write')
+    ->label('scope', 'users.write')
     ->label('sdk', new Method(
         namespace: 'users',
         group: 'targets',
@@ -2649,10 +2679,10 @@ Http::delete('/v1/users/:userId/targets/:targetId')
     ->param('userId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'User ID.', false, ['dbForProject'])
     ->param('targetId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Target ID.', false, ['dbForProject'])
     ->inject('queueForEvents')
-    ->inject('queueForDeletes')
+    ->inject('publisherForDeletes')
     ->inject('response')
     ->inject('dbForProject')
-    ->action(function (string $userId, string $targetId, Event $queueForEvents, Delete $queueForDeletes, Response $response, Database $dbForProject) {
+    ->action(function (string $userId, string $targetId, Event $queueForEvents, DeletePublisher $publisherForDeletes, Response $response, Database $dbForProject) {
         $user = $dbForProject->getDocument('users', $userId);
 
         if ($user->isEmpty()) {
@@ -2672,9 +2702,11 @@ Http::delete('/v1/users/:userId/targets/:targetId')
         $dbForProject->deleteDocument('targets', $target->getId());
         $dbForProject->purgeCachedDocument('users', $user->getId());
 
-        $queueForDeletes
-            ->setType(DELETE_TYPE_TARGET)
-            ->setDocument($target);
+        $publisherForDeletes->enqueue(new DeleteMessage(
+            project: $queueForEvents->getProject(),
+            type: DELETE_TYPE_TARGET,
+            document: $target,
+        ));
 
         $queueForEvents
             ->setParam('userId', $user->getId())
@@ -2800,7 +2832,7 @@ Http::get('/v1/users/usage')
             )
         ]
     ))
-    ->param('range', '30d', new WhiteList(['24h', '30d', '90d'], true), 'Date range.', true)
+    ->param('range', '30d', new WhiteList(['24h', '30d', '90d'], true), 'Date range.', true, enum: new Enum(name: 'UsageRange'))
     ->inject('response')
     ->inject('dbForProject')
     ->inject('authorization')
@@ -2842,6 +2874,7 @@ Http::get('/v1/users/usage')
         $format = match ($days['period']) {
             '1h' => 'Y-m-d\TH:00:00.000P',
             '1d' => 'Y-m-d\T00:00:00.000P',
+            default => throw new \LogicException('Unsupported period: ' . $days['period']),
         };
 
         foreach ($metrics as $metric) {

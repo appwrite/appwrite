@@ -71,7 +71,7 @@ $register->set('logger', function () {
 
         $providerConfig = match ($providerName) {
             'sentry' => [ 'key' => $configChunks[0], 'projectId' => $configChunks[1] ?? '', 'host' => '',],
-            'logowl' => ['ticket' => $configChunks[0] ?? '', 'host' => ''],
+            'logowl' => ['ticket' => $configChunks[0], 'host' => ''],
             default => ['key' => $providerConfig],
         };
     }
@@ -240,6 +240,12 @@ $register->set('pools', function () {
             'multiple' => true,
             'schemes' => ['redis'],
         ],
+        'lock' => [
+            'type' => 'lock',
+            'dsns' => $fallbackForRedis,
+            'multiple' => false,
+            'schemes' => ['redis'],
+        ],
     ];
 
     $maxConnections = (int) System::getEnv('_APP_CONNECTIONS_MAX', 151);
@@ -248,12 +254,16 @@ $register->set('pools', function () {
     $workerCount = intval(System::getEnv('_APP_CPU_NUM', swoole_cpu_num())) * intval(System::getEnv('_APP_WORKER_PER_CORE', 6));
     $poolSize = max(1, (int)($instanceConnections / $workerCount));
 
+    // Queue workers consume jobs concurrently with coroutines; each in-flight
+    // job may hold a connection, so pools must cover the coroutine count.
+    $poolSize = max($poolSize, (int) System::getEnv('_APP_WORKER_MAX_COROUTINES', 1));
+
     foreach ($connections as $key => $connection) {
-        $type = $connection['type'] ?? '';
-        $multiple = $connection['multiple'] ?? false;
-        $schemes = $connection['schemes'] ?? [];
+        $type = $connection['type'];
+        $multiple = $connection['multiple'];
+        $schemes = $connection['schemes'];
         $config = [];
-        $dsns = explode(',', $connection['dsns'] ?? '');
+        $dsns = explode(',', $connection['dsns']);
         foreach ($dsns as &$dsn) {
             $dsn = explode('=', $dsn);
             $name = ($multiple) ? $key . '_' . $dsn[0] : $key;
@@ -318,7 +328,7 @@ $register->set('pools', function () {
                         ));
                     });
                 },
-                'redis' => function () use ($dsnHost, $dsnPort, $dsnPass) {
+                default => function () use ($dsnHost, $dsnPort, $dsnPass) {
                     $redis = new \Redis();
                     @$redis->pconnect($dsnHost, (int)$dsnPort);
                     if ($dsnPass) {
@@ -328,12 +338,21 @@ $register->set('pools', function () {
 
                     return $redis;
                 },
-                default => throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Invalid scheme'),
             };
 
             $poolAdapter = System::getEnv('_APP_POOL_ADAPTER', default: 'stack') === 'swoole' ? new SwoolePool() : new StackPool();
 
-            $pool = new Pool($poolAdapter, $name, $poolSize, function () use ($type, $resource, $dsn) {
+            // PubSub workers hold one long-lived subscribed connection and also need
+            // spare capacity for publishes from the same process.
+            // Consumer pools lease one connection per consume coroutine for the
+            // lifetime of the worker, plus headroom for queue-size reads.
+            $connectionPoolSize = match ($type) {
+                'pubsub' => max(2, $poolSize),
+                'consumer' => $poolSize + 2,
+                default => $poolSize,
+            };
+
+            $pool = new Pool($poolAdapter, $name, $connectionPoolSize, function () use ($type, $resource, $dsn) {
                 // Get Adapter
                 switch ($type) {
                     case 'database':
@@ -370,6 +389,8 @@ $register->set('pools', function () {
                         }
 
                         return $adapter;
+                    case 'lock':
+                        return $resource();
                     default:
                         throw new Exception(Exception::GENERAL_SERVER_ERROR, "Server error: Missing adapter implementation.");
                 }

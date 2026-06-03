@@ -16,6 +16,7 @@ use Utopia\Pools\Group;
 use Utopia\Queue\Adapter\Swoole;
 use Utopia\Queue\Broker\Pool as BrokerPool;
 use Utopia\Queue\Server;
+use Utopia\Span\Span;
 use Utopia\System\System;
 
 Runtime::enableCoroutine();
@@ -82,22 +83,35 @@ if (\str_starts_with($workerName, 'databases')) {
 /** @var \Utopia\Pools\Group $pools */
 $pools = $container->get('pools');
 
+// Each consume coroutine leases its own broker connection from the pool for
+// the lifetime of its consume loop, so concurrent coroutines never share a
+// connection. The publisher side backs the queue-depth telemetry gauge.
 $adapter = new Swoole(
-    $pools->get('consumer')->pop()->getResource(),
+    new BrokerPool(
+        publisher: $pools->get('consumer'),
+        consumer: $pools->get('consumer'),
+    ),
     System::getEnv('_APP_WORKERS_NUM', 1),
-    $queueName
+    $queueName,
+    maxCoroutines: (int) System::getEnv('_APP_WORKER_MAX_COROUTINES', 1),
+    resources: $container,
 );
 
-$worker = new Server($adapter, $container);
+$worker = new Server($adapter);
 
 try {
-    $worker->init()->action(function () use ($worker, $registerWorkerMessageResources) {
-        $registerWorkerMessageResources($worker->getContainer());
+    $worker->init()->action(function () use ($worker, $registerWorkerMessageResources, $queueName) {
+        $registerWorkerMessageResources($worker->context());
+        Span::init("worker.{$queueName}");
+    });
+
+    $worker->shutdown()->action(function () {
+        Span::current()?->finish();
     });
 
     $container->set('bus', function ($register) use ($worker) {
         return $register->get('bus')->setResolver(
-            fn (string $name) => $worker->getContainer()->get($name)
+            fn (string $name) => $worker->context()->get($name)
         );
     }, ['register']);
 
@@ -120,6 +134,8 @@ $worker
     ->action(function (Throwable $error, ?Logger $logger, Log $log, Document $project, Authorization $authorization) use ($queueName) {
         $version = System::getEnv('_APP_VERSION', 'UNKNOWN');
 
+        Span::error($error);
+
         if ($logger) {
             $log->setNamespace('appwrite-worker');
             $log->setServer(System::getEnv('_APP_LOGGING_SERVICE_IDENTIFIER', \gethostname()));
@@ -129,7 +145,7 @@ $worker
             $log->setAction('appwrite-queue-' . $queueName);
             $log->addTag('verboseType', get_class($error));
             $log->addTag('code', $error->getCode());
-            $log->addTag('projectId', $project->getId() ?? 'n/a');
+            $log->addTag('projectId', $project->getId());
             $log->addExtra('file', $error->getFile());
             $log->addExtra('line', $error->getLine());
             $log->addExtra('trace', $error->getTraceAsString());

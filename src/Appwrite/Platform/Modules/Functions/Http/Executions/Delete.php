@@ -35,7 +35,7 @@ class Delete extends Base
             ->setHttpPath('/v1/functions/:functionId/executions/:executionId')
             ->desc('Delete execution')
             ->groups(['api', 'functions'])
-            ->label('scope', 'execution.write')
+            ->label('scope', ['executions.write', 'execution.write'])
             ->label('resourceType', RESOURCE_TYPE_FUNCTIONS)
             ->label('event', 'functions.[functionId].executions.[executionId].delete')
             ->label('audits.event', 'executions.delete')

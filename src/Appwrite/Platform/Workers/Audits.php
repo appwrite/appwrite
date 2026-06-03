@@ -2,6 +2,7 @@
 
 namespace Appwrite\Platform\Workers;
 
+use Appwrite\Event\Message\Audit;
 use Exception;
 use Throwable;
 use Utopia\Console;
@@ -40,7 +41,6 @@ class Audits extends Action
         $this
             ->desc('Audits worker')
             ->inject('message')
-            ->inject('project')
             ->inject('getAudit')
             ->callback($this->action(...));
 
@@ -50,34 +50,35 @@ class Audits extends Action
 
     /**
      * @param Message $message
-     * @param Document $project
      * @param callable(Document): \Utopia\Audit\Audit $getAudit
      * @return Commit|NoCommit
      * @throws Throwable
      * @throws \Utopia\Database\Exception
      * @throws Structure
      */
-    public function action(Message $message, Document $project, callable $getAudit): Commit|NoCommit
+    public function action(Message $message, callable $getAudit): Commit|NoCommit
     {
-        $payload = $message->getPayload() ?? [];
+        $payload = $message->getPayload();
 
         if (empty($payload)) {
             throw new Exception('Missing payload');
         }
 
+        $auditMessage = Audit::fromArray($payload);
+
         Console::info('Aggregating audit logs');
 
-        $event = $payload['event'] ?? '';
+        $event = $auditMessage->event;
 
         $auditPayload = '';
-        if ($project->getId() === 'console') {
-            $auditPayload = $payload['payload'] ?? '';
+        if ($auditMessage->project->getId() === 'console') {
+            $auditPayload = $auditMessage->payload;
         }
-        $mode = $payload['mode'] ?? '';
-        $resource = $payload['resource'] ?? '';
-        $userAgent = $payload['userAgent'] ?? '';
-        $ip = $payload['ip'] ?? '';
-        $user = new Document($payload['user'] ?? []);
+        $mode = $auditMessage->mode;
+        $resource = $auditMessage->resource;
+        $userAgent = $auditMessage->userAgent;
+        $ip = $auditMessage->ip;
+        $user = $auditMessage->user;
 
         $impersonatorUserId = $user->getAttribute('impersonatorUserId');
         $actorUserId = $impersonatorUserId ?: $user->getId();
@@ -90,7 +91,7 @@ class Audits extends Action
         $actorUserEmail = $impersonatorUserId
             ? $user->getAttribute('impersonatorUserEmail', '')
             : $user->getAttribute('email', '');
-        $userType = $user->getAttribute('type', ACTIVITY_TYPE_USER);
+        $userType = $user->getAttribute('type', ACTOR_TYPE_USER);
 
         // Create event data
         $eventData = [
@@ -99,7 +100,6 @@ class Audits extends Action
             'resource' => $resource,
             'userAgent' => $userAgent,
             'ip' => $ip,
-            'location' => '',
             'data' => [
                 'userId' => $actorUserId,
                 'userName' => $actorUserName,
@@ -126,14 +126,14 @@ class Audits extends Action
                 ];
         }
 
-        if (isset($this->logs[$project->getSequence()])) {
-            $this->logs[$project->getSequence()]['logs'][] = $eventData;
+        if (isset($this->logs[$auditMessage->project->getSequence()])) {
+            $this->logs[$auditMessage->project->getSequence()]['logs'][] = $eventData;
         } else {
-            $this->logs[$project->getSequence()] = [
+            $this->logs[$auditMessage->project->getSequence()] = [
                 'project' => new Document([
-                    '$id' => $project->getId(),
-                    '$sequence' => $project->getSequence(),
-                    'database' => $project->getAttribute('database'),
+                    '$id' => $auditMessage->project->getId(),
+                    '$sequence' => $auditMessage->project->getSequence(),
+                    'database' => $auditMessage->project->getAttribute('database'),
                 ]),
                 'logs' => [$eventData]
             ];

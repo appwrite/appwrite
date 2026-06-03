@@ -264,7 +264,7 @@ class Client
             $strpos = \is_bool($strpos) ? \strlen($responseType) : $strpos;
             switch (substr($responseType, 0, $strpos)) {
                 case 'multipart/form-data':
-                    $boundary = \explode('boundary=', $responseHeaders['content-type'] ?? '')[1] ?? '';
+                    $boundary = \explode('boundary=', $responseHeaders['content-type'])[1] ?? '';
                     $multipartResponse = new BodyMultipart($boundary);
                     $multipartResponse->load(\is_bool($responseBody) ? '' : $responseBody);
 
@@ -293,8 +293,6 @@ class Client
         if ((curl_errno($ch)/* || 200 != $responseStatus*/)) {
             throw new Exception(curl_error($ch) . ' with status code ' . $responseStatus, $responseStatus);
         }
-
-        curl_close($ch);
 
         $responseHeaders['status-code'] = $responseStatus;
 

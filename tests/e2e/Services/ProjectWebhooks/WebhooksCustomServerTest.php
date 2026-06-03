@@ -89,6 +89,7 @@ class WebhooksCustomServerTest extends Scope
         $this->client->call(Client::METHOD_POST, '/functions/' . $functionId . '/variables', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-response-format' => '1.9.3',
         ], $this->getHeaders()), [
             'key' => 'key1',
             'value' => 'value1',
@@ -699,6 +700,7 @@ class WebhooksCustomServerTest extends Scope
         $variable = $this->client->call(Client::METHOD_POST, '/functions/' . $id . '/variables', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-response-format' => '1.9.3',
         ], $this->getHeaders()), [
             'key' => 'key1',
             'value' => 'value1',

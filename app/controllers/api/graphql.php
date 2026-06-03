@@ -39,7 +39,7 @@ Http::init()
         if (
             array_key_exists('graphql', $project->getAttribute('apis', []))
             && !$project->getAttribute('apis', [])['graphql']
-            && !($user->isPrivileged($authorization->getRoles()) || $user->isApp($authorization->getRoles()))
+            && !($user->isPrivileged($authorization->getRoles()) || $user->isKey($authorization->getRoles()))
         ) {
             throw new AppwriteException(AppwriteException::GENERAL_API_DISABLED);
         }
@@ -231,7 +231,7 @@ function execute(
     $validations = GraphQL::getStandardValidationRules();
 
     if (System::getEnv('_APP_GRAPHQL_INTROSPECTION', 'enabled') === 'disabled') {
-        $validations[] = new DisableIntrospection();
+        $validations[] = new DisableIntrospection(DisableIntrospection::ENABLED);
     }
 
     if (System::getEnv('_APP_OPTIONS_ABUSE', 'enabled') !== 'disabled') {

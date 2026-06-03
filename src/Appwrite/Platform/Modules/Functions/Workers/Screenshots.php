@@ -3,6 +3,7 @@
 namespace Appwrite\Platform\Modules\Functions\Workers;
 
 use Ahc\Jwt\JWT;
+use Appwrite\Event\Message\Screenshot;
 use Appwrite\Event\Realtime;
 use Appwrite\Permission;
 use Appwrite\Role;
@@ -19,6 +20,8 @@ use Utopia\Platform\Action;
 use Utopia\Queue\Message;
 use Utopia\Storage\Device;
 use Utopia\System\System;
+use Utopia\Telemetry\Adapter as Telemetry;
+use Utopia\Telemetry\Counter;
 
 use function Swoole\Coroutine\batch;
 
@@ -43,6 +46,7 @@ class Screenshots extends Action
             ->inject('dbForProject')
             ->inject('project')
             ->inject('deviceForFiles')
+            ->inject('telemetry')
             ->callback($this->action(...));
     }
 
@@ -52,19 +56,23 @@ class Screenshots extends Action
         Database $dbForPlatform,
         Database $dbForProject,
         Document $project,
-        Device $deviceForFiles
+        Device $deviceForFiles,
+        Telemetry $telemetry
     ): void {
         Console::log('Screenshot action started');
 
-        $payload = $message->getPayload() ?? [];
+        $payload = $message->getPayload();
 
         if (empty($payload)) {
             throw new \Exception('Missing payload');
         }
 
+        $screenshotMessage = Screenshot::fromArray($payload);
+        $counter = $telemetry->createCounter('worker.screenshots.capture');
+
         Console::log('Site screenshot started');
 
-        $deploymentId = $payload['deploymentId'] ?? null;
+        $deploymentId = $screenshotMessage->deploymentId;
         $deployment = $dbForProject->getDocument('deployments', $deploymentId);
 
         if ($deployment->isEmpty()) {
@@ -101,9 +109,7 @@ class Screenshots extends Action
                 throw new \Exception("Rule for deployment not found");
             }
 
-            $client = new FetchClient();
-            $client->setTimeout(\intval($site->getAttribute('timeout', '15')) * 1000);
-            $client->addHeader('content-type', FetchClient::CONTENT_TYPE_APPLICATION_JSON);
+            $timeout = \intval($site->getAttribute('timeout', '15')) * 1000;
 
             $bucket = $dbForPlatform->getDocument('buckets', 'screenshots');
 
@@ -154,13 +160,13 @@ class Screenshots extends Action
             ]);
 
             $screenshotError = null;
-            $screenshots = batch(\array_map(function ($key) use ($configs, $apiKey, $site, $client, &$screenshotError) {
-                return function () use ($key, $configs, $apiKey, $site, $client, &$screenshotError) {
+            $screenshots = batch(\array_map(function ($key) use ($configs, $apiKey, $site, $timeout, &$screenshotError) {
+                return function () use ($key, $configs, $apiKey, $site, $timeout, &$screenshotError) {
                     try {
                         $config = $configs[$key];
 
-                        $config['headers'] = \array_merge($config['headers'] ?? [], [
-                            'x-appwrite-key' => API_KEY_DYNAMIC . '_' . $apiKey
+                        $config['headers'] = \array_merge($config['headers'], [
+                            'x-appwrite-key' => API_KEY_EPHEMERAL . '_' . $apiKey
                         ]);
                         $config['sleep'] = 3000;
 
@@ -171,6 +177,10 @@ class Screenshots extends Action
                         }
 
                         $browserEndpoint = System::getEnv('_APP_BROWSER_HOST', 'http://appwrite-browser:3000/v1');
+                        $client = new FetchClient();
+                        $client->setTimeout($timeout);
+                        $client->addHeader('content-type', FetchClient::CONTENT_TYPE_APPLICATION_JSON);
+
                         $fetchResponse = $client->fetch(
                             url: $browserEndpoint . '/screenshots',
                             method: 'POST',
@@ -265,7 +275,23 @@ class Screenshots extends Action
             $date = \date('H:i:s');
             $this->appendToLogs($dbForProject, $deployment->getId(), $queueForRealtime, "[90m[$date] [90m[[0mappwrite[90m][33m Screenshot capturing failed. Deployment will continue. [0m\n");
 
+            $this->recordTelemetry($counter, 'failure');
+
             throw $th;
+        }
+
+        $this->recordTelemetry($counter, 'success');
+    }
+
+    protected function recordTelemetry(Counter $counter, string $result): void
+    {
+        try {
+            $counter->add(1, [
+                'resourceType' => RESOURCE_TYPE_SITES,
+                'result' => $result,
+            ]);
+        } catch (\Throwable) {
+            // Telemetry should never affect screenshot processing.
         }
     }
 

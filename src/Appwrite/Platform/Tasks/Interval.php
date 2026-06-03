@@ -2,7 +2,7 @@
 
 namespace Appwrite\Platform\Tasks;
 
-use Appwrite\Event\Certificate;
+use Appwrite\Event\Publisher\Certificate;
 use DateTime;
 use Swoole\Coroutine\Channel;
 use Swoole\Process;
@@ -29,16 +29,16 @@ class Interval extends Action
           ->desc('Schedules tasks on regular intervals by publishing them to our queues')
           ->inject('dbForPlatform')
           ->inject('getProjectDB')
-          ->inject('queueForCertificates')
+          ->inject('publisherForCertificates')
           ->callback($this->action(...));
     }
 
-    public function action(Database $dbForPlatform, callable $getProjectDB, Certificate $queueForCertificates): void
+    public function action(Database $dbForPlatform, callable $getProjectDB, Certificate $publisherForCertificates): void
     {
         Console::title('Interval V1');
         Console::success(APP_NAME . ' interval process v1 has started');
 
-        $timers = $this->runTasks($dbForPlatform, $getProjectDB, $queueForCertificates);
+        $timers = $this->runTasks($dbForPlatform, $getProjectDB, $publisherForCertificates);
 
         $chan = new Channel(1);
         Process::signal(SIGTERM, function () use ($chan) {
@@ -52,16 +52,16 @@ class Interval extends Action
         }
     }
 
-    public function runTasks(Database $dbForPlatform, callable $getProjectDB, Certificate $queueForCertificates): array
+    public function runTasks(Database $dbForPlatform, callable $getProjectDB, Certificate $publisherForCertificates): array
     {
         $timers = [];
         $tasks = $this->getTasks();
         foreach ($tasks as $task) {
-            $timers[] = Timer::tick($task['interval'], function () use ($task, $dbForPlatform, $getProjectDB, $queueForCertificates) {
+            $timers[] = Timer::tick($task['interval'], function () use ($task, $dbForPlatform, $getProjectDB, $publisherForCertificates) {
                 $taskName = $task['name'];
                 Span::init("interval.{$taskName}");
                 try {
-                    $task['callback']($dbForPlatform, $getProjectDB, $queueForCertificates);
+                    $task['callback']($dbForPlatform, $getProjectDB, $publisherForCertificates);
                 } catch (\Exception $e) {
                     Span::error($e);
                 } finally {
@@ -75,20 +75,19 @@ class Interval extends Action
     protected function getTasks(): array
     {
         $intervalDomainVerification = (int) System::getEnv('_APP_INTERVAL_DOMAIN_VERIFICATION', '120'); // 2 minutes
-        $intervalCleanupStaleExecutions = (int) System::getEnv('_APP_INTERVAL_CLEANUP_STALE_EXECUTIONS', '300'); // 5 minutes
 
         return [
             [
                 'name' => 'domainVerification',
-                "callback" => function (Database $dbForPlatform, callable $getProjectDB, Certificate $queueForCertificates) {
-                    $this->verifyDomain($dbForPlatform, $queueForCertificates);
+                "callback" => function (Database $dbForPlatform, callable $getProjectDB, Certificate $publisherForCertificates) {
+                    $this->verifyDomain($dbForPlatform, $publisherForCertificates);
                 },
                 'interval' => $intervalDomainVerification * 1000,
             ]
         ];
     }
 
-    private function verifyDomain(Database $dbForPlatform, Certificate $queueForCertificates): void
+    private function verifyDomain(Database $dbForPlatform, Certificate $publisherForCertificates): void
     {
         $time = DatabaseDateTime::now();
         $fromTime = new DateTime('-3 days'); // Max 3 days old
@@ -102,11 +101,11 @@ class Interval extends Action
         ]);
 
         $scanned = \count($rules);
-        Span::add("interval.domainVerification.scanned", $scanned);
+        Span::add("interval.domain_verification.scanned", $scanned);
 
         if ($scanned === 0) {
-            Span::add("interval.domainVerification.processed", 0);
-            Span::add("interval.domainVerification.failed", 0);
+            Span::add("interval.domain_verification.processed", 0);
+            Span::add("interval.domain_verification.failed", 0);
             return; // No rules to verify
         }
 
@@ -115,66 +114,24 @@ class Interval extends Action
 
         foreach ($rules as $rule) {
             try {
-                $queueForCertificates
-                    ->setDomain(new Document([
+                $publisherForCertificates->enqueue(new \Appwrite\Event\Message\Certificate(
+                    project: new Document([
+                        '$id' => $rule->getAttribute('projectId', ''),
+                        '$sequence' => $rule->getAttribute('projectInternalId', 0),
+                    ]),
+                    domain: new Document([
                         'domain' => $rule->getAttribute('domain'),
                         'domainType' => $rule->getAttribute('deploymentResourceType', $rule->getAttribute('type')),
-                    ]))
-                    ->setAction(Certificate::ACTION_DOMAIN_VERIFICATION)
-                    ->trigger();
+                    ]),
+                    action: \Appwrite\Event\Certificate::ACTION_DOMAIN_VERIFICATION,
+                ));
                 $processed++;
             } catch (\Throwable $th) {
                 $failed++;
             }
         }
 
-        Span::add("interval.domainVerification.processed", $processed);
-        Span::add("interval.domainVerification.failed", $failed);
-    }
-
-    private function cleanupStaleExecutions(Database $dbForPlatform, callable $getProjectDB): void
-    {
-        $staleThreshold = DatabaseDateTime::addSeconds(new DateTime(), -1200); // 20 minutes ago
-
-        $scanned = 0;
-        $processed = 0;
-        $failed = 0;
-
-        $dbForPlatform->foreach(
-            'projects',
-            function (Document $project) use ($getProjectDB, $staleThreshold, &$scanned, &$processed, &$failed) {
-                try {
-                    $dbForProject = $getProjectDB($project);
-
-                    $staleExecutions = $dbForProject->find('executions', [
-                        Query::equal('status', ['processing']),
-                        Query::lessThan('$createdAt', $staleThreshold),
-                        Query::limit(100),
-                    ]);
-
-                    $scanned += \count($staleExecutions);
-
-                    if (\count($staleExecutions) === 0) {
-                        return;
-                    }
-
-                    foreach ($staleExecutions as $execution) {
-                        $dbForProject->updateDocument('executions', $execution->getId(), new Document(['status' => 'failed', 'errors' => 'Execution timed out']));
-                    }
-
-                    $processed++;
-                } catch (\Throwable $th) {
-                    $failed++;
-                }
-            },
-            [
-                Query::equal('region', [System::getEnv('_APP_REGION', 'default')]),
-                Query::limit(100),
-            ]
-        );
-
-        Span::add("interval.cleanupStaleExecutions.scanned", $scanned);
-        Span::add("interval.cleanupStaleExecutions.processed", $processed);
-        Span::add("interval.cleanupStaleExecutions.failed", $failed);
+        Span::add("interval.domain_verification.processed", $processed);
+        Span::add("interval.domain_verification.failed", $failed);
     }
 }

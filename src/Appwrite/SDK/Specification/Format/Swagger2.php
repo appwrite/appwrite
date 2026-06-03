@@ -4,6 +4,7 @@ namespace Appwrite\SDK\Specification\Format;
 
 use Appwrite\Platform\Tasks\Specs;
 use Appwrite\SDK\AuthType;
+use Appwrite\SDK\ContentType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\MethodType;
 use Appwrite\SDK\Response;
@@ -17,6 +18,7 @@ use Utopia\Database\Helpers\Permission;
 use Utopia\Database\Helpers\Role;
 use Utopia\Database\Validator\Spatial;
 use Utopia\Http\Route;
+use Utopia\Platform\Enum;
 use Utopia\Validator;
 use Utopia\Validator\ArrayList;
 use Utopia\Validator\Nullable;
@@ -105,8 +107,9 @@ class Swagger2 extends Format
             $additionalMethods = null;
             if (\is_array($sdk)) {
                 $additionalMethods = $sdk;
+                $sdkValues = \array_values($sdk);
                 /** @var Method $sdk */
-                $sdk = $sdk[0];
+                $sdk = $sdkValues[0];
             }
 
             $consumes = [];
@@ -114,17 +117,17 @@ class Swagger2 extends Format
                 $consumes = [$sdk->getRequestType()->value];
             }
 
-            $methodName = $sdk->getMethodName() ?? \uniqid();
+            $methodName = $sdk->getMethodName();
 
             $desc = $sdk->getDescriptionFilePath() ?: $sdk->getDescription();
             $produces = ($sdk->getContentType())->value;
-            $routeSecurity = $sdk->getAuth() ?? [];
+            $routeSecurity = $sdk->getAuth();
 
             $specs = new Specs();
             $sdkPlatforms = $specs->getSDKPlatformsForRouteSecurity($routeSecurity);
 
             $sdkPlatforms = array_values(array_unique($sdkPlatforms));
-            $namespace = $sdk->getNamespace() ?? 'default';
+            $namespace = $sdk->getNamespace();
 
             $descContents = $this->getDescriptionContents($desc);
 
@@ -140,7 +143,6 @@ class Swagger2 extends Format
                 'x-appwrite' => [ // Appwrite related metadata
                     'method' => $methodName,
                     'group' => $sdk->getGroup(),
-                    'weight' => $route->getOrder(),
                     'cookies' => $route->getLabel('sdk.cookies', false),
                     'type' => $sdk->getType()->value ?? '',
                     'demo' => \strtolower($namespace) . '/' . Template::fromCamelCaseToDash($methodName) . '.md',
@@ -193,7 +195,7 @@ class Swagger2 extends Format
                     $additionalMethod = [
                         'name' => $methodObj->getMethodName(),
                         'namespace' => $methodObj->getNamespace(),
-                        'desc' => $methodObj->getDesc() ?? '',
+                        'desc' => $methodObj->getDesc(),
                         'auth' => \array_slice($methodSecurities, 0, $this->authCount),
                         'parameters' => [],
                         'required' => [],
@@ -298,7 +300,18 @@ class Swagger2 extends Format
                 }
 
                 if (!(\is_array($model)) &&  $model->isNone()) {
-                    $temp['responses'][(string)$response->getCode() ?? '500'] = [
+                    if ($produces === ContentType::TEXT->value && !\in_array($response->getCode(), [204, 301, 302, 308], true)) {
+                        $temp['responses'][(string)$response->getCode()] = [
+                            'description' => 'Text',
+                            'schema' => [
+                                'type' => 'string',
+                            ],
+                        ];
+
+                        continue;
+                    }
+
+                    $temp['responses'][(string)$response->getCode()] = [
                         'description' => in_array($produces, [
                             'image/*',
                             'image/jpeg',
@@ -320,18 +333,19 @@ class Swagger2 extends Format
                         foreach ($model as $m) {
                             $usedModels[] = $m->getType();
                         }
-                        $temp['responses'][(string)$response->getCode() ?? '500'] = [
+                        $temp['responses'][(string)$response->getCode()] = [
                             'description' => $modelDescription,
-                            'schema' => [
+                            'schema' => \array_filter([
                                 'x-oneOf' => \array_map(function ($m) {
                                     return ['$ref' => '#/definitions/' . $m->getType()];
-                                }, $model)
-                            ],
+                                }, $model),
+                                'x-discriminator' => $this->getDiscriminator($model, '#/definitions/'),
+                            ]),
                         ];
                     } else {
                         // Response definition using one type
                         $usedModels[] = $model->getType();
-                        $temp['responses'][(string)$response->getCode() ?? '500'] = [
+                        $temp['responses'][(string)$response->getCode()] = [
                             'description' => $model->getName(),
                             'schema' => [
                                 '$ref' => '#/definitions/' . $model->getType(),
@@ -340,9 +354,9 @@ class Swagger2 extends Format
                     }
                 }
 
-                if (in_array($response->getCode() ?? 500, [204, 301, 302, 308], true)) {
-                    $temp['responses'][(string)$response->getCode() ?? '500']['description'] = 'No content';
-                    unset($temp['responses'][(string)$response->getCode() ?? '500']['schema']);
+                if (in_array($response->getCode(), [204, 301, 302, 308], true)) {
+                    $temp['responses'][(string)$response->getCode()]['description'] = 'No content';
+                    unset($temp['responses'][(string)$response->getCode()]['schema']);
                 }
             }
 
@@ -383,26 +397,30 @@ class Swagger2 extends Format
                 /** @var Validator $validator */
                 $validator = $this->getValidator($param);
 
+                $isNullable = $validator instanceof Nullable;
+
+                $parameter = $this->getRequestParameterConfig(
+                    $param['optional'],
+                    $isNullable,
+                    $param['default'],
+                    $sdk->getNamespace() . '.' . $sdk->getMethodName(),
+                    $name,
+                );
+
                 $node = [
                     'name' => $name,
                     'description' => $param['description'],
-                    'required' => !$param['optional'],
+                    'required' => $parameter['required'],
                 ];
-
-                $isNullable = $validator instanceof Nullable;
 
                 if ($isNullable) {
                     /** @var Nullable $validator */
                     $validator = $validator->getValidator();
                 }
 
-                $class = $validator instanceof Validator
-                    ? \get_class($validator)
-                    : '';
+                $class = \get_class($validator);
 
-                $base = !empty($class)
-                    ? \get_parent_class($class)
-                    : '';
+                $base = \get_parent_class($class);
 
                 switch ($base) {
                     case \Appwrite\Utopia\Database\Validator\Queries\Base::class:
@@ -461,6 +479,7 @@ class Swagger2 extends Format
                             Database::VAR_POINT => '[1, 2]',
                             Database::VAR_LINESTRING => '[[1, 2], [3, 4], [5, 6]]',
                             Database::VAR_POLYGON => '[[[1, 2], [3, 4], [5, 6], [1, 2]]]',
+                            default => '',
                         };
                         break;
                     case \Utopia\Emails\Validator\Email::class:
@@ -504,6 +523,7 @@ class Swagger2 extends Format
                     case \Utopia\Database\Validator\Queries::class:
                     case \Utopia\Database\Validator\Queries\Document::class:
                     case \Utopia\Database\Validator\Queries\Documents::class:
+                    case \Appwrite\Utopia\Database\Validator\Queries\Branches::class:
                     case \Appwrite\Utopia\Database\Validator\Queries\Columns::class:
                     case \Appwrite\Utopia\Database\Validator\Queries\Tables::class:
                         $node['type'] = 'array';
@@ -572,97 +592,75 @@ class Swagger2 extends Format
                                 $node['x-example'] = $param['example'];
                             }
 
-                            $allowed = true;
-                            $excludeKeys = null;
-                            foreach ($this->enumBlacklist as $blacklist) {
-                                if ($blacklist['namespace'] == $namespace && $blacklist['method'] == $methodName && $blacklist['parameter'] == $name) {
-                                    // 'exclude' => true means full exclude
-                                    if (isset($blacklist['exclude']) && $blacklist['exclude'] === true) {
-                                        $allowed = false;
-                                        break;
-                                    }
+                            if ($validator->getType() === 'string') {
+                                $enum = $param['enum'] ?? null;
 
-                                    if (isset($blacklist['excludeKeys'])) {
-                                        $excludeKeys = $blacklist['excludeKeys'];
-                                    }
-                                    break;
-                                }
-                            }
-                            if ($allowed && $validator->getType() === 'string') {
-                                $allValues = \array_values($validator->getList());
-                                $allKeys = $this->getRequestEnumKeys($namespace, $methodName, $name);
+                                if ($enum instanceof Enum) {
+                                    $enumValues = \array_values($validator->getList());
 
-                                if ($excludeKeys !== null) {
-                                    $keepIndices = [];
-                                    foreach ($allValues as $index => $value) {
-                                        if (!\in_array($value, $excludeKeys, true)) {
-                                            $keepIndices[] = $index;
+                                    if (!empty($enum->exclude)) {
+                                        $keepIndices = [];
+                                        foreach ($enumValues as $index => $value) {
+                                            if (!\in_array($value, $enum->exclude, true)) {
+                                                $keepIndices[] = $index;
+                                            }
                                         }
-                                    }
-                                    $enumKeys = \array_values(\array_intersect_key($allKeys, \array_flip($keepIndices)));
-                                    $enumValues = \array_values(\array_intersect_key($allValues, \array_flip($keepIndices)));
-                                } else {
-                                    $enumKeys = $allKeys;
-                                    $enumValues = $allValues;
-                                }
-                                $node['items']['enum'] = $enumValues;
-                                $node['items']['x-enum-name'] = $this->getRequestEnumName($namespace, $methodName, $name);
-                                $node['items']['x-enum-keys'] = $enumKeys;
 
-                                if (!empty($excludeKeys)) {
-                                    $node['description'] = $this->parseDescription($node['description'], $excludeKeys);
+                                        $enumValues = \array_values(\array_intersect_key($enumValues, \array_flip($keepIndices)));
+                                        $node['description'] = $this->parseDescription($node['description'], $enum->exclude);
+                                    }
+
+                                    $enumKeys = [];
+                                    foreach ($enumValues as $enumValue) {
+                                        $enumKeys[] = $enum->map[$enumValue] ?? $enumValue;
+                                    }
+
+                                    $node['items']['enum'] = $enumValues;
+                                    if (!empty($enum->name)) {
+                                        $node['items']['x-enum-name'] = $enum->name;
+                                    }
+                                    $node['items']['x-enum-keys'] = $enumKeys;
                                 }
                             }
                             if ($validator->getType() === 'integer') {
-                                $node['items']['format'] = $validator->getFormat() ?? 'int32';
+                                $node['items']['format'] = $validator->getFormat();
                             }
                         } else {
                             $node['type'] = $validator->getType();
                             $node['x-example'] = ($param['example'] ?? '') ?: $validator->getList()[0];
 
-                            $allowed = true;
-                            $excludeKeys = null;
-                            foreach ($this->enumBlacklist as $blacklist) {
-                                if ($blacklist['namespace'] == $namespace && $blacklist['method'] == $methodName && $blacklist['parameter'] == $name) {
-                                    // 'exclude' => true means full exclude
-                                    if (isset($blacklist['exclude']) && $blacklist['exclude'] === true) {
-                                        $allowed = false;
-                                        break;
-                                    }
+                            if ($validator->getType() === 'string') {
+                                $enum = $param['enum'] ?? null;
 
-                                    if (isset($blacklist['excludeKeys'])) {
-                                        $excludeKeys = $blacklist['excludeKeys'];
-                                    }
-                                    break;
-                                }
-                            }
-                            if ($allowed && $validator->getType() === 'string') {
-                                $allValues = \array_values($validator->getList());
-                                $allKeys = $this->getRequestEnumKeys($namespace, $methodName, $name);
+                                if ($enum instanceof Enum) {
+                                    $enumValues = \array_values($validator->getList());
 
-                                if ($excludeKeys !== null) {
-                                    $keepIndices = [];
-                                    foreach ($allValues as $index => $value) {
-                                        if (!\in_array($value, $excludeKeys, true)) {
-                                            $keepIndices[] = $index;
+                                    if (!empty($enum->exclude)) {
+                                        $keepIndices = [];
+                                        foreach ($enumValues as $index => $value) {
+                                            if (!\in_array($value, $enum->exclude, true)) {
+                                                $keepIndices[] = $index;
+                                            }
                                         }
-                                    }
-                                    $enumKeys = \array_values(\array_intersect_key($allKeys, \array_flip($keepIndices)));
-                                    $enumValues = \array_values(\array_intersect_key($allValues, \array_flip($keepIndices)));
-                                } else {
-                                    $enumKeys = $allKeys;
-                                    $enumValues = $allValues;
-                                }
-                                $node['enum'] = $enumValues;
-                                $node['x-enum-name'] = $this->getRequestEnumName($namespace, $methodName, $name);
-                                $node['x-enum-keys'] = $enumKeys;
 
-                                if (!empty($excludeKeys)) {
-                                    $node['description'] = $this->parseDescription($node['description'], $excludeKeys);
+                                        $enumValues = \array_values(\array_intersect_key($enumValues, \array_flip($keepIndices)));
+                                        $node['description'] = $this->parseDescription($node['description'], $enum->exclude);
+                                    }
+
+                                    $enumKeys = [];
+                                    foreach ($enumValues as $enumValue) {
+                                        $enumKeys[] = $enum->map[$enumValue] ?? $enumValue;
+                                    }
+
+                                    $node['enum'] = $enumValues;
+                                    if (!empty($enum->name)) {
+                                        $node['x-enum-name'] = $enum->name;
+                                    }
+                                    $node['x-enum-keys'] = $enumKeys;
                                 }
                             }
                             if ($validator->getType() === 'integer') {
-                                $node['format'] = $validator->getFormat() ?? 'int32';
+                                $node['format'] = $validator->getFormat();
                             }
                         }
                         break;
@@ -711,11 +709,22 @@ class Swagger2 extends Format
                         break;
                 }
 
-                if ($param['optional'] && !\is_null($param['default'])) { // Param has default value
+                if ($parameter['emitDefault'] && $this->shouldEmitDefaultForSchema($param['default'], $node)) { // Param has default value
                     $node['default'] = $param['default'];
                 }
 
-                if (\str_contains($url, ':' . $name)) { // Param is in URL path
+                $pathAliases = [$name, ...($param['aliases'] ?? [])];
+                $pathAliasMap = \array_flip($pathAliases);
+                $isPathParam = false;
+
+                foreach (\explode('/', $url) as $segment) {
+                    if ($segment !== '' && $segment[0] === ':' && isset($pathAliasMap[\substr($segment, 1)])) {
+                        $isPathParam = true;
+                        break;
+                    }
+                }
+
+                if ($isPathParam) { // Param is in URL path (directly or through alias)
                     $node['in'] = 'path';
                     $temp['parameters'][] = $node;
                 } elseif ($route->getMethod() == 'GET') { // Param is in query
@@ -729,16 +738,20 @@ class Swagger2 extends Format
                         continue;
                     }
 
-                    if (!$param['optional']) {
+                    if ($node['required']) {
                         $bodyRequired[] = $name;
                     }
 
                     $body['schema']['properties'][$name] = [
                         'type' => $node['type'],
                         'description' => $node['description'],
-                        'default' => $node['default'] ?? null,
-                        'x-example' => $node['x-example'] ?? null,
                     ];
+
+                    if (\array_key_exists('default', $node)) {
+                        $body['schema']['properties'][$name]['default'] = $node['default'];
+                    }
+
+                    $body['schema']['properties'][$name]['x-example'] = $node['x-example'] ?? null;
 
                     if (isset($node['format'])) {
                         $body['schema']['properties'][$name]['format'] = $node['format'];
@@ -748,14 +761,10 @@ class Swagger2 extends Format
                         /// If the enum flag is Set, add the enum values to the body
                         $body['schema']['properties'][$name]['enum'] = $node['enum'];
                         $body['schema']['properties'][$name]['x-enum-name'] = $node['x-enum-name'] ?? null;
-                        $body['schema']['properties'][$name]['x-enum-keys'] = $node['x-enum-keys'] ?? null;
+                        $body['schema']['properties'][$name]['x-enum-keys'] = $node['x-enum-keys'];
                     }
 
-                    if ($node['x-global'] ?? false) {
-                        $body['schema']['properties'][$name]['x-global'] = true;
-                    }
-
-                    if ($isNullable) {
+                    if ($parameter['nullable']) {
                         $body['schema']['properties'][$name]['x-nullable'] = true;
                     }
 
@@ -764,7 +773,14 @@ class Swagger2 extends Format
                     }
                 }
 
-                $url = \str_replace(':' . $name, '{' . $name . '}', $url);
+                $segments = \explode('/', $url);
+                foreach ($segments as &$segment) {
+                    if ($segment !== '' && $segment[0] === ':' && isset($pathAliasMap[\substr($segment, 1)])) {
+                        $segment = '{' . $name . '}';
+                    }
+                }
+                unset($segment);
+                $url = \implode('/', $segments);
             }
 
             if (!empty($bodyRequired)) {
@@ -871,14 +887,27 @@ class Swagger2 extends Format
                         $rule['type'] = ($rule['type']) ?: 'none';
 
                         if (\is_array($rule['type'])) {
+                            $resolvedModels = \array_map(function (string $type) {
+                                foreach ($this->models as $model) {
+                                    if ($model->getType() === $type) {
+                                        return $model;
+                                    }
+                                }
+
+                                throw new \RuntimeException("Unresolved model '{$type}'. Ensure the model is registered.");
+                            }, $rule['type']);
+                            $xDiscriminator = $this->getDiscriminator($resolvedModels, '#/definitions/');
+
                             if ($rule['array']) {
-                                $items = [
-                                    'x-anyOf' => \array_map(fn ($type) =>  ['$ref' => '#/definitions/' . $type], $rule['type'])
-                                ];
+                                $items = \array_filter([
+                                    'x-anyOf' => \array_map(fn ($type) =>  ['$ref' => '#/definitions/' . $type], $rule['type']),
+                                    'x-discriminator' => $xDiscriminator,
+                                ]);
                             } else {
-                                $items = [
-                                    'x-oneOf' => \array_map(fn ($type) => ['$ref' => '#/definitions/' . $type], $rule['type'])
-                                ];
+                                $items = \array_filter([
+                                    'x-oneOf' => \array_map(fn ($type) => ['$ref' => '#/definitions/' . $type], $rule['type']),
+                                    'x-discriminator' => $xDiscriminator,
+                                ]);
                             }
                         } else {
                             $items = [
@@ -940,15 +969,13 @@ class Swagger2 extends Format
                 if ($rule['type'] === 'enum' && !empty($rule['enum'])) {
                     if ($rule['array']) {
                         $output['definitions'][$model->getType()]['properties'][$name]['items']['enum'] = \array_values($rule['enum']);
-                        $enumName = $this->getResponseEnumName($model->getType(), $name);
-                        if ($enumName) {
-                            $output['definitions'][$model->getType()]['properties'][$name]['items']['x-enum-name'] = $enumName;
+                        if (!empty($rule['enumSDKName'])) {
+                            $output['definitions'][$model->getType()]['properties'][$name]['items']['x-enum-name'] = $rule['enumSDKName'];
                         }
                     } else {
                         $output['definitions'][$model->getType()]['properties'][$name]['enum'] = \array_values($rule['enum']);
-                        $enumName = $this->getResponseEnumName($model->getType(), $name);
-                        if ($enumName) {
-                            $output['definitions'][$model->getType()]['properties'][$name]['x-enum-name'] = $enumName;
+                        if (!empty($rule['enumSDKName'])) {
+                            $output['definitions'][$model->getType()]['properties'][$name]['x-enum-name'] = $rule['enumSDKName'];
                         }
                     }
                 }

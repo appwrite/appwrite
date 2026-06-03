@@ -39,6 +39,7 @@ class Response extends SwooleResponse
     public const MODEL_USAGE_TABLE = 'usageTable';
     public const MODEL_USAGE_COLLECTION = 'usageCollection';
     public const MODEL_USAGE_USERS = 'usageUsers';
+    public const MODEL_USAGE_PRESENCE = 'usagePresence';
     public const MODEL_USAGE_BUCKETS = 'usageBuckets';
     public const MODEL_USAGE_STORAGE = 'usageStorage';
     public const MODEL_USAGE_FUNCTIONS = 'usageFunctions';
@@ -64,6 +65,8 @@ class Response extends SwooleResponse
     public const MODEL_COLUMN_INDEX_LIST = 'columnIndexList';
     public const MODEL_DOCUMENT = 'document';
     public const MODEL_DOCUMENT_LIST = 'documentList';
+    public const MODEL_PRESENCE = 'presence';
+    public const MODEL_PRESENCE_LIST = 'presenceList';
     public const MODEL_ROW = 'row';
     public const MODEL_ROW_LIST = 'rowList';
 
@@ -72,6 +75,7 @@ class Response extends SwooleResponse
     public const MODEL_ATTRIBUTE_LIST = 'attributeList';
     public const MODEL_ATTRIBUTE_STRING = 'attributeString';
     public const MODEL_ATTRIBUTE_INTEGER = 'attributeInteger';
+    public const MODEL_ATTRIBUTE_BIGINT = 'attributeBigint';
     public const MODEL_ATTRIBUTE_FLOAT = 'attributeFloat';
     public const MODEL_ATTRIBUTE_BOOLEAN = 'attributeBoolean';
     public const MODEL_ATTRIBUTE_EMAIL = 'attributeEmail';
@@ -95,6 +99,7 @@ class Response extends SwooleResponse
     public const MODEL_COLUMN_LIST = 'columnList';
     public const MODEL_COLUMN_STRING = 'columnString';
     public const MODEL_COLUMN_INTEGER = 'columnInteger';
+    public const MODEL_COLUMN_BIGINT = 'columnBigint';
     public const MODEL_COLUMN_FLOAT = 'columnFloat';
     public const MODEL_COLUMN_BOOLEAN = 'columnBoolean';
     public const MODEL_COLUMN_EMAIL = 'columnEmail';
@@ -249,13 +254,28 @@ class Response extends SwooleResponse
     public const MODEL_PROJECT_LIST = 'projectList';
     public const MODEL_STAGE = 'stage';
     public const MODEL_STAGE_LIST = 'stageList';
+    public const MODEL_PROJECT_AUTH_METHOD = 'projectAuthMethod';
+    public const MODEL_PROJECT_SERVICE = 'projectService';
+    public const MODEL_PROJECT_PROTOCOL = 'projectProtocol';
     public const MODEL_WEBHOOK = 'webhook';
     public const MODEL_WEBHOOK_LIST = 'webhookList';
     public const MODEL_KEY = 'key';
     public const MODEL_KEY_LIST = 'keyList';
+    public const MODEL_EPHEMERAL_KEY = 'ephemeralKey';
     public const MODEL_DEV_KEY = 'devKey';
     public const MODEL_DEV_KEY_LIST = 'devKeyList';
     public const MODEL_MOCK_NUMBER = 'mockNumber';
+    public const MODEL_MOCK_NUMBER_LIST = 'mockNumberList';
+    public const MODEL_POLICY_LIST = 'policyList';
+    public const MODEL_POLICY_PASSWORD_DICTIONARY = 'policyPasswordDictionary';
+    public const MODEL_POLICY_PASSWORD_HISTORY = 'policyPasswordHistory';
+    public const MODEL_POLICY_PASSWORD_PERSONAL_DATA = 'policyPasswordPersonalData';
+    public const MODEL_POLICY_SESSION_ALERT = 'policySessionAlert';
+    public const MODEL_POLICY_SESSION_DURATION = 'policySessionDuration';
+    public const MODEL_POLICY_SESSION_INVALIDATION = 'policySessionInvalidation';
+    public const MODEL_POLICY_SESSION_LIMIT = 'policySessionLimit';
+    public const MODEL_POLICY_USER_LIMIT = 'policyUserLimit';
+    public const MODEL_POLICY_MEMBERSHIP_PRIVACY = 'policyMembershipPrivacy';
     public const MODEL_AUTH_PROVIDER = 'authProvider';
     public const MODEL_AUTH_PROVIDER_LIST = 'authProviderList';
     public const MODEL_PLATFORM_APPLE = 'platformApple';
@@ -267,8 +287,49 @@ class Response extends SwooleResponse
     public const MODEL_VARIABLE = 'variable';
     public const MODEL_VARIABLE_LIST = 'variableList';
     public const MODEL_VCS = 'vcs';
-    public const MODEL_SMS_TEMPLATE = 'smsTemplate';
     public const MODEL_EMAIL_TEMPLATE = 'emailTemplate';
+    public const MODEL_EMAIL_TEMPLATE_LIST = 'emailTemplateList';
+    public const MODEL_OAUTH2_GITHUB = 'oAuth2Github';
+    public const MODEL_OAUTH2_DISCORD = 'oAuth2Discord';
+    public const MODEL_OAUTH2_FIGMA = 'oAuth2Figma';
+    public const MODEL_OAUTH2_DROPBOX = 'oAuth2Dropbox';
+    public const MODEL_OAUTH2_DAILYMOTION = 'oAuth2Dailymotion';
+    public const MODEL_OAUTH2_BITBUCKET = 'oAuth2Bitbucket';
+    public const MODEL_OAUTH2_BITLY = 'oAuth2Bitly';
+    public const MODEL_OAUTH2_BOX = 'oAuth2Box';
+    public const MODEL_OAUTH2_AUTODESK = 'oAuth2Autodesk';
+    public const MODEL_OAUTH2_GOOGLE = 'oAuth2Google';
+    public const MODEL_OAUTH2_ZOOM = 'oAuth2Zoom';
+    public const MODEL_OAUTH2_ZOHO = 'oAuth2Zoho';
+    public const MODEL_OAUTH2_YANDEX = 'oAuth2Yandex';
+    public const MODEL_OAUTH2_X = 'oAuth2X';
+    public const MODEL_OAUTH2_WORDPRESS = 'oAuth2WordPress';
+    public const MODEL_OAUTH2_TWITCH = 'oAuth2Twitch';
+    public const MODEL_OAUTH2_STRIPE = 'oAuth2Stripe';
+    public const MODEL_OAUTH2_SPOTIFY = 'oAuth2Spotify';
+    public const MODEL_OAUTH2_SLACK = 'oAuth2Slack';
+    public const MODEL_OAUTH2_PODIO = 'oAuth2Podio';
+    public const MODEL_OAUTH2_NOTION = 'oAuth2Notion';
+    public const MODEL_OAUTH2_SALESFORCE = 'oAuth2Salesforce';
+    public const MODEL_OAUTH2_YAHOO = 'oAuth2Yahoo';
+    public const MODEL_OAUTH2_LINKEDIN = 'oAuth2Linkedin';
+    public const MODEL_OAUTH2_DISQUS = 'oAuth2Disqus';
+    public const MODEL_OAUTH2_AMAZON = 'oAuth2Amazon';
+    public const MODEL_OAUTH2_ETSY = 'oAuth2Etsy';
+    public const MODEL_OAUTH2_FACEBOOK = 'oAuth2Facebook';
+    public const MODEL_OAUTH2_TRADESHIFT = 'oAuth2Tradeshift';
+    public const MODEL_OAUTH2_PAYPAL = 'oAuth2Paypal';
+    public const MODEL_OAUTH2_GITLAB = 'oAuth2Gitlab';
+    public const MODEL_OAUTH2_AUTHENTIK = 'oAuth2Authentik';
+    public const MODEL_OAUTH2_AUTH0 = 'oAuth2Auth0';
+    public const MODEL_OAUTH2_FUSIONAUTH = 'oAuth2FusionAuth';
+    public const MODEL_OAUTH2_KEYCLOAK = 'oAuth2Keycloak';
+    public const MODEL_OAUTH2_OIDC = 'oAuth2Oidc';
+    public const MODEL_OAUTH2_APPLE = 'oAuth2Apple';
+    public const MODEL_OAUTH2_OKTA = 'oAuth2Okta';
+    public const MODEL_OAUTH2_KICK = 'oAuth2Kick';
+    public const MODEL_OAUTH2_MICROSOFT = 'oAuth2Microsoft';
+    public const MODEL_OAUTH2_PROVIDER_LIST = 'oAuth2ProviderList';
 
     // Health
     public const MODEL_HEALTH_STATUS = 'healthStatus';
@@ -279,8 +340,20 @@ class Response extends SwooleResponse
     public const MODEL_HEALTH_CERTIFICATE = 'healthCertificate';
     public const MODEL_HEALTH_STATUS_LIST = 'healthStatusList';
 
+    // Advisor
+    public const MODEL_INSIGHT = 'insight';
+    public const MODEL_INSIGHT_LIST = 'insightList';
+    public const MODEL_INSIGHT_CTA = 'insightCTA';
+    public const MODEL_REPORT = 'report';
+    public const MODEL_REPORT_LIST = 'reportList';
+
     // Console
     public const MODEL_CONSOLE_VARIABLES = 'consoleVariables';
+    public const MODEL_CONSOLE_OAUTH2_PROVIDER_PARAMETER = 'consoleOAuth2ProviderParameter';
+    public const MODEL_CONSOLE_OAUTH2_PROVIDER = 'consoleOAuth2Provider';
+    public const MODEL_CONSOLE_OAUTH2_PROVIDER_LIST = 'consoleOAuth2ProviderList';
+    public const MODEL_CONSOLE_KEY_SCOPE = 'consoleKeyScope';
+    public const MODEL_CONSOLE_KEY_SCOPE_LIST = 'consoleKeyScopeList';
 
     // Deprecated
     public const MODEL_PERMISSIONS = 'permissions';
@@ -377,9 +450,10 @@ class Response extends SwooleResponse
         return isset(self::$models[$key]);
     }
 
-    public function applyFilters(array $data, string $model): array
+    public function applyFilters(array $data, string $model, Document $raw): array
     {
         foreach ($this->filters as $filter) {
+            $filter->setRawContent($raw);
             $data = $filter->parse($data, $model);
         }
 
@@ -399,7 +473,7 @@ class Response extends SwooleResponse
     public function dynamic(Document $document, string $model): void
     {
         $output = $this->output(clone $document, $model);
-        $output = $this->applyFilters($output, $model);
+        $output = $this->applyFilters($output, $model, raw: clone $document);
 
         switch ($this->getContentType()) {
             case self::CONTENT_TYPE_JSON:
@@ -519,7 +593,7 @@ class Response extends SwooleResponse
                 $roles = $this->authorization->getRoles();
                 $user = $this->user ?? new DBUser();
                 $isPrivilegedUser = $user->isPrivileged($roles);
-                $isAppUser = $user->isApp($roles);
+                $isAppUser = $user->isKey($roles);
 
                 if ((!$isPrivilegedUser && !$isAppUser) && !$this->showSensitive) {
                     $data->setAttribute($key, '');
@@ -615,6 +689,8 @@ class Response extends SwooleResponse
             throw new \Exception('Response body is not a valid JSON object.');
         }
 
+        $this->payload = \is_array($data) ? $data : (array) $data;
+
         $this
             ->setContentType(Response::CONTENT_TYPE_JSON, self::CHARSET_UTF8)
             ->send(\json_encode($data, JSON_UNESCAPED_UNICODE | JSON_THROW_ON_ERROR));
@@ -626,6 +702,16 @@ class Response extends SwooleResponse
     public function getPayload(): array
     {
         return $this->payload;
+    }
+
+    /**
+     * Set the sent flag on the response. Pass false to allow reuse
+     * (e.g. batched GraphQL queries), true to prevent further writes.
+     */
+    public function setSent(bool $sent): static
+    {
+        $this->sent = $sent;
+        return $this;
     }
 
     /**
