@@ -11,6 +11,7 @@ use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Services\Functions\FunctionsBase;
 use Utopia\Console;
 use Utopia\Database\Database;
+use Utopia\Database\Document;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Helpers\Permission;
 use Utopia\Database\Helpers\Role;
@@ -2641,6 +2642,35 @@ trait MigrationsBase
             'x-appwrite-key' => $this->getDestinationProject()['apiKey'],
         ];
 
+        $listDestinationVariables = function () use ($destinationHeaders): array {
+            $variables = [];
+            $cursorId = null;
+
+            do {
+                $queries = [
+                    Query::limit(100)->toString(),
+                ];
+
+                if ($cursorId !== null) {
+                    $queries[] = Query::cursorAfter(new Document(['$id' => $cursorId]))->toString();
+                }
+
+                $response = $this->client->call(Client::METHOD_GET, '/project/variables', $destinationHeaders, [
+                    'queries' => $queries,
+                    'total' => false,
+                ]);
+                $this->assertEquals(200, $response['headers']['status-code']);
+
+                $batch = $response['body']['variables'];
+                array_push($variables, ...$batch);
+                $cursorId = !empty($batch) ? $batch[array_key_last($batch)]['$id'] : null;
+            } while (\count($batch) === 100);
+
+            return $variables;
+        };
+
+        $existingDestinationVariableIds = \array_flip(\array_column($listDestinationVariables(), '$id'));
+
         // Source-side variable IDs and keys are uniquified so re-runs and parallel suites
         // can't trip the source-side findOne('variables', [key=...]) skip path.
         $plainKey = 'TEST_PLAIN_' . \strtoupper(ID::unique());
@@ -2685,12 +2715,11 @@ trait MigrationsBase
         $this->assertEquals(0, $result['statusCounters'][Resource::TYPE_PROJECT_VARIABLE]['processing']);
         $this->assertEquals(0, $result['statusCounters'][Resource::TYPE_PROJECT_VARIABLE]['warning']);
 
-        $response = $this->client->call(Client::METHOD_GET, '/project/variables', $destinationHeaders);
-        $this->assertEquals(200, $response['headers']['status-code']);
+        $destinationVariables = $listDestinationVariables();
 
         $foundPlain = null;
         $foundSecret = null;
-        foreach ($response['body']['variables'] as $v) {
+        foreach ($destinationVariables as $v) {
             if ($v['key'] === $plainKey) {
                 $foundPlain = $v;
             } elseif ($v['key'] === $secretKey) {
@@ -2710,9 +2739,13 @@ trait MigrationsBase
         $this->assertEmpty($foundSecret['value']);
         $this->assertTrue($foundSecret['secret']);
 
-        // Cleanup on destination
-        $this->client->call(Client::METHOD_DELETE, '/project/variables/' . $foundPlain['$id'], $destinationHeaders);
-        $this->client->call(Client::METHOD_DELETE, '/project/variables/' . $foundSecret['$id'], $destinationHeaders);
+        // Cleanup every destination variable this migration added, including any
+        // unrelated source variables copied by the resource-level migration.
+        foreach ($destinationVariables as $variable) {
+            if (!isset($existingDestinationVariableIds[$variable['$id']])) {
+                $this->client->call(Client::METHOD_DELETE, '/project/variables/' . $variable['$id'], $destinationHeaders);
+            }
+        }
 
         // Cleanup on source
         $this->client->call(Client::METHOD_DELETE, '/project/variables/' . $plainVariable['$id'], $sourceHeaders);
