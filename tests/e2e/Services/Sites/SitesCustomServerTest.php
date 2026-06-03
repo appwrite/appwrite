@@ -2158,8 +2158,8 @@ class SitesCustomServerTest extends Scope
         $this->assertIsArray($runtime['services']);
 
         // Every runtime in the sites list must support the sites service
-        foreach ($runtimes['body']['runtimes'] as $runtime) {
-            $this->assertContains('sites', $runtime['services'], "Runtime {$runtime['$id']} should not appear in sites list");
+        foreach ($runtimes['body']['runtimes'] as $item) {
+            $this->assertContains('sites', $item['services'], "Runtime {$item['$id']} should not appear in sites list");
         }
     }
 
