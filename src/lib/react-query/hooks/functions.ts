@@ -125,6 +125,10 @@ export function buildFunctionUpdateParams(
     providerBranch: func.providerBranch,
     providerSilentMode: func.providerSilentMode,
     providerRootDirectory: func.providerRootDirectory,
+    providerBranches:
+      (func as { providerBranches?: string[] }).providerBranches || undefined,
+    providerPaths:
+      (func as { providerPaths?: string[] }).providerPaths || undefined,
     buildSpecification: func.buildSpecification,
     runtimeSpecification: func.runtimeSpecification,
     deploymentRetention: func.deploymentRetention,

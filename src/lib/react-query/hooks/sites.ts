@@ -123,6 +123,10 @@ export function buildSiteUpdateParams(
     providerBranch: site.providerBranch,
     providerSilentMode: site.providerSilentMode,
     providerRootDirectory: site.providerRootDirectory,
+    providerBranches:
+      (site as { providerBranches?: string[] }).providerBranches || undefined,
+    providerPaths:
+      (site as { providerPaths?: string[] }).providerPaths || undefined,
     buildSpecification: site.buildSpecification,
     runtimeSpecification: site.runtimeSpecification,
     deploymentRetention: site.deploymentRetention,
