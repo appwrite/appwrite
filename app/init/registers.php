@@ -459,7 +459,7 @@ $register->set('smtp', function () {
     );
 });
 $register->set('geodb', function () {
-    return new Reader(__DIR__ . '/../assets/dbip/dbip-country-lite-2025-12.mmdb');
+    return new Reader(__DIR__ . '/../assets/dbip/dbip-country-lite-2026-06.mmdb');
 });
 $register->set('passwordsDictionary', function () {
     $content = \file_get_contents(__DIR__ . '/../assets/security/10k-common-passwords');
