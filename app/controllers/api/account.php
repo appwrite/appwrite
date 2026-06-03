@@ -21,6 +21,7 @@ use Appwrite\Event\Publisher\Mail as MailPublisher;
 use Appwrite\Event\Publisher\Messaging as MessagingPublisher;
 use Appwrite\Extend\Exception;
 use Appwrite\Hooks\Hooks;
+use Appwrite\Locale\GeoRecord;
 use Appwrite\Network\Validator\Redirect;
 use Appwrite\OpenSSL\OpenSSL;
 use Appwrite\SDK\AuthType;
@@ -40,7 +41,6 @@ use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
 use libphonenumber\NumberParseException;
 use libphonenumber\PhoneNumberUtil;
-use MaxMind\Db\Reader;
 use Utopia\Audit\Audit;
 use Utopia\Auth\Hashes\Sha;
 use Utopia\Auth\Proofs\Code as ProofsCode;
@@ -85,7 +85,7 @@ $oauthDefaultSuccess = '/console/auth/oauth2/success';
 $oauthDefaultFailure = '/console/auth/oauth2/failure';
 
 
-$createSession = function (string $userId, string $secret, Request $request, Response $response, User $user, Database $dbForProject, Document $project, array $platform, Locale $locale, Reader $geodb, Event $queueForEvents, Bus $bus, Store $store, ProofsToken $proofForToken, ProofsCode $proofForCode, bool $domainVerification, ?string $cookieDomain, Authorization $authorization) {
+$createSession = function (string $userId, string $secret, Request $request, Response $response, User $user, Database $dbForProject, Document $project, array $platform, Locale $locale, GeoRecord $geoRecord, Event $queueForEvents, Bus $bus, Store $store, ProofsToken $proofForToken, ProofsCode $proofForCode, bool $domainVerification, ?string $cookieDomain, Authorization $authorization) {
 
     // Attempt to decode secret as a JWT (used by OAuth2 token flow to carry provider info)
     $oauthProvider = null;
@@ -127,7 +127,6 @@ $createSession = function (string $userId, string $secret, Request $request, Res
 
     $duration = $project->getAttribute('auths', [])['duration'] ?? TOKEN_EXPIRATION_LOGIN_LONG;
     $detector = new Detector($request->getUserAgent('UNKNOWN'));
-    $record = $geodb->get($request->getIP());
     $sessionSecret = $proofForToken->generate();
 
     $factor = (match ($verifiedToken->getAttribute('type')) {
@@ -155,7 +154,19 @@ $createSession = function (string $userId, string $secret, Request $request, Res
             'userAgent' => $request->getUserAgent('UNKNOWN'),
             'ip' => $request->getIP(),
             'factors' => [$factor],
-            'countryCode' => ($record) ? \strtolower($record['country']['iso_code']) : '--',
+            'countryCode' => $geoRecord->getCountryCode(),
+            'continentCode' => $geoRecord->getContinentCode() === '--' ? null : $geoRecord->getContinentCode(),
+            'latitude' => $geoRecord->getAttribute('latitude'),
+            'longitude' => $geoRecord->getAttribute('longitude'),
+            'timeZone' => $geoRecord->getAttribute('timeZone'),
+            'weatherCode' => $geoRecord->getAttribute('weatherCode'),
+            'postalCode' => $geoRecord->getAttribute('postalCode'),
+            'autonomousSystemNumber' => $geoRecord->getAttribute('autonomousSystemNumber'),
+            'autonomousSystemOrganization' => $geoRecord->getAttribute('autonomousSystemOrganization'),
+            'geoConnectionType' => $geoRecord->getAttribute('connection'),
+            'geoUserType' => $geoRecord->getAttribute('user'),
+            'geoOrganization' => $geoRecord->getAttribute('organization'),
+            'isp' => $geoRecord->getAttribute('isp'),
             'expire' => DateTime::addSeconds(new \DateTime(), $duration)
         ],
         $detector->getOS(),
@@ -193,12 +204,28 @@ $createSession = function (string $userId, string $secret, Request $request, Res
         throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Failed saving user to DB');
     }
 
-    $bus->dispatch(new SessionCreated(
-        user: $user->getArrayCopy(),
-        project: $project->getArrayCopy(),
-        session: $session->getArrayCopy(),
-        locale: $locale->default,
-    ));
+    $isAllowedTokenType = match ($verifiedToken->getAttribute('type')) {
+        TOKEN_TYPE_MAGIC_URL,
+        TOKEN_TYPE_EMAIL => false,
+        default => true
+    };
+
+    $hasUserEmail = $user->getAttribute('email', false) !== false;
+
+    $isSessionAlertsEnabled = $project->getAttribute('auths', [])['sessionAlerts'] ?? false;
+
+    $isNotFirstSession = $dbForProject->count('sessions', [
+        Query::equal('userId', [$user->getId()]),
+    ]) !== 1;
+
+    if ($isAllowedTokenType && $hasUserEmail && $isSessionAlertsEnabled && $isNotFirstSession) {
+        $bus->dispatch(new SessionCreated(
+            user: $user->getArrayCopy(),
+            project: $project->getArrayCopy(),
+            session: $session->getArrayCopy(),
+            locale: $locale->default,
+        ));
+    }
 
     $queueForEvents
         ->setParam('userId', $user->getId())
@@ -221,11 +248,9 @@ $createSession = function (string $userId, string $secret, Request $request, Res
         ->addCookie($store->getKey(), $encoded, (new \DateTime($expire))->getTimestamp(), '/', $cookieDomain, ('https' == $protocol), true, Config::getParam('cookieSamesite'))
         ->setStatusCode(Response::STATUS_CODE_CREATED);
 
-    $countryName = $locale->getText('countries.' . strtolower($session->getAttribute('countryCode')), $locale->getText('locale.country.unknown'));
-
     $session
         ->setAttribute('current', true)
-        ->setAttribute('countryName', $countryName)
+        ->setAttribute('countryName', $geoRecord->getCountryName())
         ->setAttribute('expire', $expire)
         ->setAttribute('secret', $encoded)
     ;
@@ -540,17 +565,17 @@ Http::get('/v1/account/sessions')
     ))
     ->inject('response')
     ->inject('user')
-    ->inject('locale')
+    ->inject('geoRecord')
     ->inject('store')
     ->inject('proofForToken')
-    ->action(function (Response $response, User $user, Locale $locale, Store $store, ProofsToken $proofForToken) {
+    ->action(function (Response $response, User $user, GeoRecord $geoRecord, Store $store, ProofsToken $proofForToken) {
 
 
         $sessions = $user->getAttribute('sessions', []);
         $current = $user->sessionVerify($store->getProperty('secret', ''), $proofForToken);
 
         foreach ($sessions as $key => $session) {/** @var Document $session */
-            $countryName = $locale->getText('countries.' . strtolower($session->getAttribute('countryCode')), $locale->getText('locale.country.unknown'));
+            $countryName = $geoRecord->getCountryName($session->getAttribute('countryCode'));
 
             $session->setAttribute('countryName', $countryName);
             $session->setAttribute('current', ($current == $session->getId()) ? true : false);
@@ -591,14 +616,14 @@ Http::delete('/v1/account/sessions')
     ->inject('response')
     ->inject('user')
     ->inject('dbForProject')
-    ->inject('locale')
+    ->inject('geoRecord')
     ->inject('queueForEvents')
     ->inject('publisherForDeletes')
     ->inject('store')
     ->inject('proofForToken')
     ->inject('domainVerification')
     ->inject('cookieDomain')
-    ->action(function (Request $request, Response $response, User $user, Database $dbForProject, Locale $locale, Event $queueForEvents, DeletePublisher $publisherForDeletes, Store $store, ProofsToken $proofForToken, bool $domainVerification, ?string $cookieDomain) {
+    ->action(function (Request $request, Response $response, User $user, Database $dbForProject, GeoRecord $geoRecord, Event $queueForEvents, DeletePublisher $publisherForDeletes, Store $store, ProofsToken $proofForToken, bool $domainVerification, ?string $cookieDomain) {
 
         $protocol = $request->getProtocol();
         $sessions = $user->getAttribute('sessions', []);
@@ -613,7 +638,7 @@ Http::delete('/v1/account/sessions')
 
             $session
                 ->setAttribute('current', false)
-                ->setAttribute('countryName', $locale->getText('countries.' . strtolower($session->getAttribute('countryCode')), $locale->getText('locale.country.unknown')));
+                ->setAttribute('countryName', $geoRecord->getCountryName($session->getAttribute('countryCode')));
 
             if ($proofForToken->verify($store->getProperty('secret', ''), $session->getAttribute('secret'))) {
                 $session->setAttribute('current', true);
@@ -668,10 +693,10 @@ Http::get('/v1/account/sessions/:sessionId')
     ->param('sessionId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Session ID. Use the string \'current\' to get the current device session.', false, ['dbForProject'])
     ->inject('response')
     ->inject('user')
-    ->inject('locale')
+    ->inject('geoRecord')
     ->inject('store')
     ->inject('proofForToken')
-    ->action(function (?string $sessionId, Response $response, User $user, Locale $locale, Store $store, ProofsToken $proofForToken) {
+    ->action(function (?string $sessionId, Response $response, User $user, GeoRecord $geoRecord, Store $store, ProofsToken $proofForToken) {
 
         $sessions = $user->getAttribute('sessions', []);
         $sessionId = ($sessionId === 'current')
@@ -680,13 +705,11 @@ Http::get('/v1/account/sessions/:sessionId')
 
         foreach ($sessions as $session) {/** @var Document $session */
             if ($sessionId === $session->getId()) {
-                $countryName = $locale->getText('countries.' . strtolower($session->getAttribute('countryCode')), $locale->getText('locale.country.unknown'));
-
-                $session
-                    ->setAttribute('current', ($proofForToken->verify($store->getProperty('secret', ''), $session->getAttribute('secret'))))
-                    ->setAttribute('countryName', $countryName)
-                    ->setAttribute('secret', $session->getAttribute('secret', ''))
-                ;
+        $session
+            ->setAttribute('current', true)
+            ->setAttribute('countryName', $geoRecord->getCountryName())
+            ->setAttribute('secret', $encoded)
+        ;
 
                 $response->dynamic($session, Response::MODEL_SESSION);
                 return;
@@ -724,14 +747,14 @@ Http::delete('/v1/account/sessions/:sessionId')
     ->inject('response')
     ->inject('user')
     ->inject('dbForProject')
-    ->inject('locale')
+    ->inject('geoRecord')
     ->inject('queueForEvents')
     ->inject('publisherForDeletes')
     ->inject('store')
     ->inject('proofForToken')
     ->inject('domainVerification')
     ->inject('cookieDomain')
-    ->action(function (?string $sessionId, ?\DateTime $requestTimestamp, Request $request, Response $response, User $user, Database $dbForProject, Locale $locale, Event $queueForEvents, DeletePublisher $publisherForDeletes, Store $store, ProofsToken $proofForToken, bool $domainVerification, ?string $cookieDomain) {
+    ->action(function (?string $sessionId, ?\DateTime $requestTimestamp, Request $request, Response $response, User $user, Database $dbForProject, GeoRecord $geoRecord, Event $queueForEvents, DeletePublisher $publisherForDeletes, Store $store, ProofsToken $proofForToken, bool $domainVerification, ?string $cookieDomain) {
 
         $protocol = $request->getProtocol();
         $sessionId = ($sessionId === 'current')
@@ -755,7 +778,7 @@ Http::delete('/v1/account/sessions/:sessionId')
             if ($proofForToken->verify($store->getProperty('secret', ''), $session->getAttribute('secret'))) { // If current session delete the cookies too
                 $session
                     ->setAttribute('current', true)
-                    ->setAttribute('countryName', $locale->getText('countries.' . strtolower($session->getAttribute('countryCode')), $locale->getText('locale.country.unknown')));
+                    ->setAttribute('countryName', $geoRecord->getCountryName($session->getAttribute('countryCode')));
 
                 if (!$domainVerification) {
                     $response->addHeader('X-Fallback-Cookies', \json_encode([]));
@@ -911,7 +934,7 @@ Http::post('/v1/account/sessions/email')
     ->inject('project')
     ->inject('platform')
     ->inject('locale')
-    ->inject('geodb')
+    ->inject('geoRecord')
     ->inject('queueForEvents')
     ->inject('bus')
     ->inject('hooks')
@@ -921,7 +944,7 @@ Http::post('/v1/account/sessions/email')
     ->inject('domainVerification')
     ->inject('cookieDomain')
     ->inject('authorization')
-    ->action(function (string $email, string $password, Request $request, Response $response, User $user, Database $dbForProject, Document $project, array $platform, Locale $locale, Reader $geodb, Event $queueForEvents, Bus $bus, Hooks $hooks, Store $store, ProofsPassword $proofForPassword, ProofsToken $proofForToken, bool $domainVerification, ?string $cookieDomain, Authorization $authorization) {
+    ->action(function (string $email, string $password, Request $request, Response $response, User $user, Database $dbForProject, Document $project, array $platform, Locale $locale, GeoRecord $geoRecord, Event $queueForEvents, Bus $bus, Hooks $hooks, Store $store, ProofsPassword $proofForPassword, ProofsToken $proofForToken, bool $domainVerification, ?string $cookieDomain, Authorization $authorization) {
         $email = \strtolower($email);
         $protocol = $request->getProtocol();
 
@@ -945,7 +968,6 @@ Http::post('/v1/account/sessions/email')
 
         $duration = $project->getAttribute('auths', [])['duration'] ?? TOKEN_EXPIRATION_LOGIN_LONG;
         $detector = new Detector($request->getUserAgent('UNKNOWN'));
-        $record = $geodb->get($request->getIP());
         $secret = $proofForToken->generate();
         $session = new Document(array_merge(
             [
@@ -958,7 +980,19 @@ Http::post('/v1/account/sessions/email')
                 'userAgent' => $request->getUserAgent('UNKNOWN'),
                 'ip' => $request->getIP(),
                 'factors' => ['password'],
-                'countryCode' => ($record) ? \strtolower($record['country']['iso_code']) : '--',
+                'countryCode' => $geoRecord->getCountryCode(),
+                'continentCode' => $geoRecord->getContinentCode() === '--' ? null : $geoRecord->getContinentCode(),
+                'latitude' => $geoRecord->getAttribute('latitude'),
+                'longitude' => $geoRecord->getAttribute('longitude'),
+                'timeZone' => $geoRecord->getAttribute('timeZone'),
+                'weatherCode' => $geoRecord->getAttribute('weatherCode'),
+                'postalCode' => $geoRecord->getAttribute('postalCode'),
+                'autonomousSystemNumber' => $geoRecord->getAttribute('autonomousSystemNumber'),
+                'autonomousSystemOrganization' => $geoRecord->getAttribute('autonomousSystemOrganization'),
+                'geoConnectionType' => $geoRecord->getAttribute('connection'),
+                'geoUserType' => $geoRecord->getAttribute('user'),
+                'geoOrganization' => $geoRecord->getAttribute('organization'),
+                'isp' => $geoRecord->getAttribute('isp'),
                 'expire' => DateTime::addSeconds(new \DateTime(), $duration)
             ],
             $detector->getOS(),
@@ -1007,11 +1041,9 @@ Http::post('/v1/account/sessions/email')
             ->setStatusCode(Response::STATUS_CODE_CREATED)
         ;
 
-        $countryName = $locale->getText('countries.' . strtolower($session->getAttribute('countryCode')), $locale->getText('locale.country.unknown'));
-
         $session
             ->setAttribute('current', true)
-            ->setAttribute('countryName', $countryName)
+            ->setAttribute('countryName', $geoRecord->getCountryName())
             ->setAttribute('secret', $encoded)
         ;
 
@@ -1057,11 +1089,10 @@ Http::post('/v1/account/sessions/anonymous')
     ->label('abuse-key', 'ip:{ip}')
     ->inject('request')
     ->inject('response')
-    ->inject('locale')
+    ->inject('geoRecord')
     ->inject('user')
     ->inject('project')
     ->inject('dbForProject')
-    ->inject('geodb')
     ->inject('queueForEvents')
     ->inject('store')
     ->inject('proofForPassword')
@@ -1069,7 +1100,7 @@ Http::post('/v1/account/sessions/anonymous')
     ->inject('domainVerification')
     ->inject('cookieDomain')
     ->inject('authorization')
-    ->action(function (Request $request, Response $response, Locale $locale, User $user, Document $project, Database $dbForProject, Reader $geodb, Event $queueForEvents, Store $store, ProofsPassword $proofForPassword, ProofsToken $proofForToken, bool $domainVerification, ?string $cookieDomain, Authorization $authorization) {
+    ->action(function (Request $request, Response $response, GeoRecord $geoRecord, User $user, Document $project, Database $dbForProject, Event $queueForEvents, Store $store, ProofsPassword $proofForPassword, ProofsToken $proofForToken, bool $domainVerification, ?string $cookieDomain, Authorization $authorization) {
         $protocol = $request->getProtocol();
 
         if ('console' === $project->getId()) {
@@ -1119,7 +1150,6 @@ Http::post('/v1/account/sessions/anonymous')
         // Create session token
         $duration = $project->getAttribute('auths', [])['duration'] ?? TOKEN_EXPIRATION_LOGIN_LONG;
         $detector = new Detector($request->getUserAgent('UNKNOWN'));
-        $record = $geodb->get($request->getIP());
         $secret = $proofForToken->generate();
 
         $session = new Document(array_merge(
@@ -1132,7 +1162,19 @@ Http::post('/v1/account/sessions/anonymous')
                 'userAgent' => $request->getUserAgent('UNKNOWN'),
                 'ip' => $request->getIP(),
                 'factors' => ['anonymous'],
-                'countryCode' => ($record) ? \strtolower($record['country']['iso_code']) : '--',
+                'countryCode' => $geoRecord->getCountryCode(),
+                'continentCode' => $geoRecord->getContinentCode() === '--' ? null : $geoRecord->getContinentCode(),
+                'latitude' => $geoRecord->getAttribute('latitude'),
+                'longitude' => $geoRecord->getAttribute('longitude'),
+                'timeZone' => $geoRecord->getAttribute('timeZone'),
+                'weatherCode' => $geoRecord->getAttribute('weatherCode'),
+                'postalCode' => $geoRecord->getAttribute('postalCode'),
+                'autonomousSystemNumber' => $geoRecord->getAttribute('autonomousSystemNumber'),
+                'autonomousSystemOrganization' => $geoRecord->getAttribute('autonomousSystemOrganization'),
+                'geoConnectionType' => $geoRecord->getAttribute('connection'),
+                'geoUserType' => $geoRecord->getAttribute('user'),
+                'geoOrganization' => $geoRecord->getAttribute('organization'),
+                'isp' => $geoRecord->getAttribute('isp'),
                 'expire' => DateTime::addSeconds(new \DateTime(), $duration)
             ],
             $detector->getOS(),
@@ -1172,11 +1214,9 @@ Http::post('/v1/account/sessions/anonymous')
             ->setStatusCode(Response::STATUS_CODE_CREATED)
         ;
 
-        $countryName = $locale->getText('countries.' . strtolower($session->getAttribute('countryCode')), $locale->getText('locale.country.unknown'));
-
         $session
             ->setAttribute('current', true)
-            ->setAttribute('countryName', $countryName)
+            ->setAttribute('countryName', $geoRecord->getCountryName())
             ->setAttribute('secret', $encoded)
         ;
 
@@ -1217,7 +1257,7 @@ Http::post('/v1/account/sessions/token')
     ->inject('project')
     ->inject('platform')
     ->inject('locale')
-    ->inject('geodb')
+    ->inject('geoRecord')
     ->inject('queueForEvents')
     ->inject('bus')
     ->inject('store')
@@ -1418,7 +1458,7 @@ Http::get('/v1/account/sessions/oauth2/:provider/redirect')
     ->inject('user')
     ->inject('dbForProject')
     ->inject('dbForPlatform')
-    ->inject('geodb')
+    ->inject('geoRecord')
     ->inject('queueForEvents')
     ->inject('store')
     ->inject('proofForPassword')
@@ -1427,7 +1467,7 @@ Http::get('/v1/account/sessions/oauth2/:provider/redirect')
     ->inject('domainVerification')
     ->inject('cookieDomain')
     ->inject('authorization')
-    ->action(function (string $provider, string $code, string $state, string $error, string $error_description, Request $request, Response $response, Document $project, Validator $redirectValidator, Document $devKey, User $user, Database $dbForProject, Database $dbForPlatform, Reader $geodb, Event $queueForEvents, Store $store, ProofsPassword $proofForPassword, ProofsToken $proofForToken, array $plan, bool $domainVerification, ?string $cookieDomain, Authorization $authorization) use ($oauthDefaultSuccess) {
+    ->action(function (string $provider, string $code, string $state, string $error, string $error_description, Request $request, Response $response, Document $project, Validator $redirectValidator, Document $devKey, User $user, Database $dbForProject, Database $dbForPlatform, GeoRecord $geoRecord, Event $queueForEvents, Store $store, ProofsPassword $proofForPassword, ProofsToken $proofForToken, array $plan, bool $domainVerification, ?string $cookieDomain, Authorization $authorization) use ($oauthDefaultSuccess) {
         $protocol = System::getEnv('_APP_OPTIONS_FORCE_HTTPS') === 'disabled' ? 'http' : 'https';
         $port = $request->getPort();
         $callbackBase = $protocol . '://' . $request->getHostname();
@@ -1918,7 +1958,6 @@ Http::get('/v1/account/sessions/oauth2/:provider/redirect')
             // If the `token` param is not set, we persist the session in a cookie
         } else {
             $detector = new Detector($request->getUserAgent('UNKNOWN'));
-            $record = $geodb->get($request->getIP());
             $secret = $proofForToken->generate();
 
             $session = new Document(array_merge([
@@ -1934,7 +1973,19 @@ Http::get('/v1/account/sessions/oauth2/:provider/redirect')
                 'userAgent' => $request->getUserAgent('UNKNOWN'),
                 'ip' => $request->getIP(),
                 'factors' => [TYPE::EMAIL, 'oauth2'], // include a special oauth2 factor to bypass MFA checks
-                'countryCode' => ($record) ? \strtolower($record['country']['iso_code']) : '--',
+                'countryCode' => $geoRecord->getCountryCode(),
+                'continentCode' => $geoRecord->getContinentCode() === '--' ? null : $geoRecord->getContinentCode(),
+                'latitude' => $geoRecord->getAttribute('latitude'),
+                'longitude' => $geoRecord->getAttribute('longitude'),
+                'timeZone' => $geoRecord->getAttribute('timeZone'),
+                'weatherCode' => $geoRecord->getAttribute('weatherCode'),
+                'postalCode' => $geoRecord->getAttribute('postalCode'),
+                'autonomousSystemNumber' => $geoRecord->getAttribute('autonomousSystemNumber'),
+                'autonomousSystemOrganization' => $geoRecord->getAttribute('autonomousSystemOrganization'),
+                'geoConnectionType' => $geoRecord->getAttribute('connection'),
+                'geoUserType' => $geoRecord->getAttribute('user'),
+                'geoOrganization' => $geoRecord->getAttribute('organization'),
+                'isp' => $geoRecord->getAttribute('isp'),
                 'expire' => DateTime::addSeconds(new \DateTime(), $duration)
             ], $detector->getOS(), $detector->getClient(), $detector->getDevice()));
 
@@ -2814,7 +2865,7 @@ Http::put('/v1/account/sessions/magic-url')
     ->inject('project')
     ->inject('platform')
     ->inject('locale')
-    ->inject('geodb')
+    ->inject('geoRecord')
     ->inject('queueForEvents')
     ->inject('bus')
     ->inject('store')
@@ -2822,10 +2873,10 @@ Http::put('/v1/account/sessions/magic-url')
     ->inject('domainVerification')
     ->inject('cookieDomain')
     ->inject('authorization')
-    ->action(function ($userId, $secret, $request, $response, $user, $dbForProject, $project, $platform, $locale, $geodb, $queueForEvents, $bus, $store, $proofForCode, $domainVerification, $cookieDomain, $authorization) use ($createSession) {
+    ->action(function ($userId, $secret, $request, $response, $user, $dbForProject, $project, $platform, $locale, $geoRecord, $queueForEvents, $bus, $store, $proofForCode, $domainVerification, $cookieDomain, $authorization) use ($createSession) {
         $proofForToken = new ProofsToken(TOKEN_LENGTH_MAGIC_URL);
         $proofForToken->setHash(new Sha());
-        $createSession($userId, $secret, $request, $response, $user, $dbForProject, $project, $platform, $locale, $geodb, $queueForEvents, $bus, $store, $proofForToken, $proofForCode, $domainVerification, $cookieDomain, $authorization);
+        $createSession($userId, $secret, $request, $response, $user, $dbForProject, $project, $platform, $locale, $geoRecord, $queueForEvents, $bus, $store, $proofForToken, $proofForCode, $domainVerification, $cookieDomain, $authorization);
     });
 
 Http::put('/v1/account/sessions/phone')
@@ -2865,7 +2916,7 @@ Http::put('/v1/account/sessions/phone')
     ->inject('project')
     ->inject('platform')
     ->inject('locale')
-    ->inject('geodb')
+    ->inject('geoRecord')
     ->inject('queueForEvents')
     ->inject('bus')
     ->inject('store')
@@ -3185,11 +3236,10 @@ Http::get('/v1/account/logs')
     ->param('total', true, new Boolean(true), 'When set to false, the total count returned will be 0 and will not be calculated.', true)
     ->inject('response')
     ->inject('user')
-    ->inject('locale')
-    ->inject('geodb')
+    ->inject('getGeoForIp')
     ->inject('dbForProject')
     ->inject('audit')
-    ->action(function (array $queries, bool $includeTotal, Response $response, Document $user, Locale $locale, Reader $geodb, Database $dbForProject, Audit $audit) {
+    ->action(function (array $queries, bool $includeTotal, Response $response, Document $user, callable $getGeoForIp, Database $dbForProject, Audit $audit) {
 
         try {
             $queries = Query::parseQueries($queries);
@@ -3217,15 +3267,9 @@ Http::get('/v1/account/logs')
                 $detector->getDevice()
             ));
 
-            $record = $geodb->get($log['ip']);
-
-            if ($record) {
-                $output[$i]['countryCode'] = $locale->getText('countries.' . strtolower($record['country']['iso_code']), false) ? \strtolower($record['country']['iso_code']) : '--';
-                $output[$i]['countryName'] = $locale->getText('countries.' . strtolower($record['country']['iso_code']), $locale->getText('locale.country.unknown'));
-            } else {
-                $output[$i]['countryCode'] = '--';
-                $output[$i]['countryName'] = $locale->getText('locale.country.unknown');
-            }
+            $logGeo = $getGeoForIp($log['ip'] ?? '');
+            $output[$i]['countryCode'] = $logGeo->getCountryCode();
+            $output[$i]['countryName'] = $logGeo->getCountryName();
         }
 
         $response->dynamic(new Document([

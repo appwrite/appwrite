@@ -51,8 +51,7 @@ class XList extends DocumentLogXList
             ->inject('response')
             ->inject('dbForProject')
             ->inject('getDatabasesDB')
-            ->inject('locale')
-            ->inject('geodb')
+            ->inject('getGeoForIp')
             ->inject('authorization')
             ->inject('audit')
             ->callback($this->action(...));

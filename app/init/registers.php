@@ -5,7 +5,7 @@ use Appwrite\GraphQL\Promises\Adapter\Swoole;
 use Appwrite\Hooks\Hooks;
 use Appwrite\PubSub\Adapter\Redis as PubSub;
 use Appwrite\URL\URL as AppwriteURL;
-use MaxMind\Db\Reader;
+use Swoole\Database\PDOProxy;
 use Utopia\Cache\Adapter\Redis as RedisCache;
 use Utopia\Config\Config;
 use Utopia\Console;
@@ -449,9 +449,7 @@ $register->set('smtp', function () {
         timelimit: 30,
     );
 });
-$register->set('geodb', function () {
-    return new Reader(__DIR__ . '/../assets/dbip/dbip-country-lite-2026-06.mmdb');
-});
+
 $register->set('passwordsDictionary', function () {
     $content = \file_get_contents(__DIR__ . '/../assets/security/10k-common-passwords');
     $content = explode("\n", $content);
