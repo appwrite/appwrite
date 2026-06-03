@@ -33,7 +33,7 @@ function isAuthPage(pathname: string): boolean {
 
 /** Console routes that work without sign-in; account is optional. */
 export function isOptionalAuthPage(pathname: string): boolean {
-  return pathname === '/init'
+  return pathname === '/init' || pathname === '/home'
 }
 
 // Helper function to extract redirect from search params
@@ -326,9 +326,7 @@ export function RequireAuth({
 
   // User is authenticated - render children
   // Support both regular children and render prop pattern
-  return (
-    <>{typeof children === 'function' ? children(authData) : children}</>
-  )
+  return <>{typeof children === 'function' ? children(authData) : children}</>
 }
 
 /**

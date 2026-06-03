@@ -6,6 +6,7 @@ import { SiteBuildFrameworkCard } from './settings/SiteBuildFrameworkCard'
 import { SiteBuildCommandsCard } from './settings/SiteBuildCommandsCard'
 import { SiteBuildSpecificationCard } from './settings/SiteBuildSpecificationCard'
 import { SiteRuntimeImageCard } from './settings/SiteRuntimeImageCard'
+import { SiteRuntimeStartCommandCard } from './settings/SiteRuntimeStartCommandCard'
 import { SiteRuntimeTimeoutCard } from './settings/SiteRuntimeTimeoutCard'
 import { SiteRuntimeLoggingCard } from './settings/SiteRuntimeLoggingCard'
 import { SiteRuntimeSpecificationCard } from './settings/SiteRuntimeSpecificationCard'
@@ -83,6 +84,11 @@ export function SiteSettingsView() {
           {site && (
             <>
               <SiteRuntimeImageCard
+                projectId={projectId}
+                siteId={siteId}
+                site={site}
+              />
+              <SiteRuntimeStartCommandCard
                 projectId={projectId}
                 siteId={siteId}
                 site={site}

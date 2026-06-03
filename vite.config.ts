@@ -20,96 +20,95 @@ export default defineConfig(async () => {
       : []
 
   return {
-  plugins: [
-    // this is the plugin that enables path aliases
-    viteTsConfigPaths({
-      projects: ['./tsconfig.json'],
-    }),
-    tailwindcss(),
-    tanstackStart({
-      // Disable SSR - run as SPA (Single Page Application) only
-      spa: {
-        enabled: true,
-      },
-      prerender: {
-        enabled: true,
-        // Enable if you need pages to be at `/page/index.html` instead of `/page.html`
-        // Useful for static hosting platforms
-        autoSubfolderIndex: true,
-        // Automatically discover and prerender static routes
-        autoStaticPathsDiscovery: true,
-        // Disable link crawling to prevent infinite loops on auth routes with redirect params
-        crawlLinks: false,
-        // Don't fail build if prerendering encounters an error (some routes like /reset require search params)
-        failOnError: false,
-        // Filter out routes that require search params or are dynamic
-        filter: ({ path }) => {
-          // Exclude routes that require search params (they'll be handled client-side)
-          if (path === '/reset' || path === '/verify-email') return false
-          // Exclude authentication routes - they handle redirects client-side and cause infinite loops
-          if (
-            path.startsWith('/sign-in') ||
-            path.startsWith('/sign-up') ||
-            path.startsWith('/mfa')
-          ) {
-            return false
-          }
-          // Exclude any routes with query parameters (they're dynamic and shouldn't be prerendered)
-          if (path.includes('?')) return false
-          return true
+    plugins: [
+      // this is the plugin that enables path aliases
+      viteTsConfigPaths({
+        projects: ['./tsconfig.json'],
+      }),
+      tailwindcss(),
+      tanstackStart({
+        spa: {
+          enabled: false,
         },
-      },
-    }),
-    devtoolsJson(),
-    viteReact(),
-    ...sentryPlugins,
-  ],
-  server: {
-    host: '::',
-    allowedHosts: true,
-    hmr: true,
-  },
-  resolve: {
-    dedupe: ['react', 'react-dom', 'use-sync-external-store'],
-  },
-  optimizeDeps: {
-    // Recharts uses decimal.js (via victory-vendor/d3-scale) for tick calculations.
-    // Force ESM interop so `new Decimal()` works when pre-bundled.
-    needsInterop: [
-      'decimal.js',
-      'decimal.js-light',
-      // CJS entry re-exports `useSyncExternalStoreWithSelector`; pre-bundle so named ESM imports work
-      // (recharts).
-      'use-sync-external-store/shim/with-selector.js',
+        prerender: {
+          enabled: true,
+          // Enable if you need pages to be at `/page/index.html` instead of `/page.html`
+          // Useful for static hosting platforms
+          autoSubfolderIndex: true,
+          // Automatically discover and prerender static routes
+          autoStaticPathsDiscovery: true,
+          // Disable link crawling to prevent infinite loops on auth routes with redirect params
+          crawlLinks: false,
+          // Don't fail build if prerendering encounters an error (some routes like /reset require search params)
+          failOnError: false,
+          // Filter out routes that require search params or are dynamic
+          filter: ({ path }) => {
+            // Exclude routes that require search params (they'll be handled client-side)
+            if (path === '/reset' || path === '/verify-email') return false
+            // Exclude authentication routes - they handle redirects client-side and cause infinite loops
+            if (
+              path.startsWith('/sign-in') ||
+              path.startsWith('/sign-up') ||
+              path.startsWith('/mfa')
+            ) {
+              return false
+            }
+            // Exclude any routes with query parameters (they're dynamic and shouldn't be prerendered)
+            if (path.includes('?')) return false
+            return true
+          },
+        },
+      }),
+      devtoolsJson(),
+      viteReact(),
+      ...sentryPlugins,
     ],
-    include: [
-      'decimal.js',
-      'decimal.js-light',
-      'recharts',
-      'use-sync-external-store',
-      'use-sync-external-store/shim/with-selector.js',
-    ],
-    // Serve TanStack store packages as native ESM. Pre-bundling cached an older
-    // @tanstack/react-store without createAtom when router upgraded first.
-    exclude: ['@tanstack/react-store', '@tanstack/store'],
-  },
-  preview: {
-    port: 4173,
-    host: '::',
-  },
-  build: {
-    outDir: 'dist',
-  },
-  test: {
-    globals: true,
-    environment: 'jsdom',
-    setupFiles: ['./vitest.setup.ts'],
-    css: false,
-    include: [
-      'src/**/*.{test,spec}.{ts,tsx}',
-      'tests/**/*.{test,spec}.{ts,tsx}',
-    ],
-    exclude: ['e2e/**', 'node_modules/**'],
-  },
+    server: {
+      host: '::',
+      allowedHosts: true,
+      hmr: true,
+    },
+    resolve: {
+      dedupe: ['react', 'react-dom', 'use-sync-external-store'],
+    },
+    optimizeDeps: {
+      // Recharts uses decimal.js (via victory-vendor/d3-scale) for tick calculations.
+      // Force ESM interop so `new Decimal()` works when pre-bundled.
+      needsInterop: [
+        'decimal.js',
+        'decimal.js-light',
+        // CJS entry re-exports `useSyncExternalStoreWithSelector`; pre-bundle so named ESM imports work
+        // (recharts).
+        'use-sync-external-store/shim/with-selector.js',
+      ],
+      include: [
+        'decimal.js',
+        'decimal.js-light',
+        'recharts',
+        'use-sync-external-store',
+        'use-sync-external-store/shim/with-selector.js',
+      ],
+      // Serve TanStack store packages as native ESM. Pre-bundling cached an older
+      // @tanstack/react-store without createAtom when router upgraded first.
+      exclude: ['@tanstack/react-store', '@tanstack/store'],
+    },
+    preview: {
+      port: 4173,
+      host: '::',
+    },
+    build: {
+      outDir: 'dist',
+    },
+    test: {
+      globals: true,
+      environment: 'jsdom',
+      setupFiles: ['./vitest.setup.ts'],
+      css: false,
+      include: [
+        'src/**/*.{test,spec}.{ts,tsx}',
+        'tests/**/*.{test,spec}.{ts,tsx}',
+      ],
+      exclude: ['e2e/**', 'node_modules/**'],
+    },
   }
 })

@@ -3,6 +3,7 @@ import { isOptionalAuthPage } from '@/components/global/auth/RequireAuth'
 import { consoleAccountQueryOptions } from '@/lib/react-query/hooks/auth'
 
 export const Route = createFileRoute('/_public')({
+  ssr: false,
   loader: async ({ context, location }) => {
     if (typeof window !== 'undefined') {
       const { queryClient } = context
