@@ -20,6 +20,6 @@ class Notifications extends Base
 
     public function __construct()
     {
-        parent::__construct('alerts', self::ALLOWED_ATTRIBUTES);
+        parent::__construct('notifications', self::ALLOWED_ATTRIBUTES);
     }
 }

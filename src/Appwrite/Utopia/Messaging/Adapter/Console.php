@@ -89,7 +89,7 @@ class Console extends Adapter
                     'body' => $message->getBody(),
                 ]);
 
-                $this->database->createDocument('alerts', $document);
+                $this->database->createDocument('notifications', $document);
                 $delivered++;
                 $response->addResult($key);
             } catch (DuplicateException) {

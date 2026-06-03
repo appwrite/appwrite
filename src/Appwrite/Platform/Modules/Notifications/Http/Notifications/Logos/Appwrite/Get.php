@@ -114,7 +114,7 @@ class Get extends Action
             return null;
         }
 
-        $notifications = $dbForPlatform->find('alerts', [
+        $notifications = $dbForPlatform->find('notifications', [
             Query::equal('messageId', [(string) $decoded['messageId']]),
             Query::equal('channel', [(string) $decoded['channel']]),
             Query::equal('recipientHash', [(string) $decoded['recipientHash']]),
@@ -143,7 +143,7 @@ class Get extends Action
             $updates['firstSeen'] = $seenAt;
         }
 
-        $updated = $dbForPlatform->updateDocument('alerts', $notification->getId(), new Document($updates));
+        $updated = $dbForPlatform->updateDocument('notifications', $notification->getId(), new Document($updates));
         $project = $dbForPlatform->getDocument('projects', $notification->getAttribute('projectId'));
 
         if ($project->isEmpty()) {

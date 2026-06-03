@@ -33,24 +33,24 @@ class ConsoleTest extends TestCase
             ->setNamespace('alerts_' . \uniqid());
 
         $this->database->create();
-        $this->database->createCollection('alerts', [], [], [Permission::create(Role::any()), Permission::read(Role::any())], false);
-        $this->database->createAttribute('alerts', 'messageId', Database::VAR_STRING, 255, false);
-        $this->database->createAttribute('alerts', 'recipientHash', Database::VAR_STRING, 64, true);
-        $this->database->createAttribute('alerts', 'type', Database::VAR_STRING, 64, false, 'info');
-        $this->database->createAttribute('alerts', 'channel', Database::VAR_STRING, 64, true);
-        $this->database->createAttribute('alerts', 'projectId', Database::VAR_STRING, 255, true);
-        $this->database->createAttribute('alerts', 'projectInternalId', Database::VAR_ID, 0, true);
-        $this->database->createAttribute('alerts', 'resourceType', Database::VAR_STRING, 64, true);
-        $this->database->createAttribute('alerts', 'resourceId', Database::VAR_STRING, 255, true);
-        $this->database->createAttribute('alerts', 'resourceInternalId', Database::VAR_ID, 0, true);
-        $this->database->createAttribute('alerts', 'parentResourceType', Database::VAR_STRING, 64, true);
-        $this->database->createAttribute('alerts', 'parentResourceId', Database::VAR_STRING, 255, true);
-        $this->database->createAttribute('alerts', 'parentResourceInternalId', Database::VAR_ID, 0, true);
-        $this->database->createAttribute('alerts', 'title', Database::VAR_STRING, 256, true);
-        $this->database->createAttribute('alerts', 'body', Database::VAR_STRING, 16384, true);
-        $this->database->createAttribute('alerts', 'read', Database::VAR_BOOLEAN, 0, false, false);
-        $this->database->createAttribute('alerts', 'firstSeen', Database::VAR_DATETIME, 0, false);
-        $this->database->createAttribute('alerts', 'lastSeen', Database::VAR_DATETIME, 0, false);
+        $this->database->createCollection('notifications', [], [], [Permission::create(Role::any()), Permission::read(Role::any())], false);
+        $this->database->createAttribute('notifications', 'messageId', Database::VAR_STRING, 255, false);
+        $this->database->createAttribute('notifications', 'recipientHash', Database::VAR_STRING, 64, true);
+        $this->database->createAttribute('notifications', 'type', Database::VAR_STRING, 64, false, 'info');
+        $this->database->createAttribute('notifications', 'channel', Database::VAR_STRING, 64, true);
+        $this->database->createAttribute('notifications', 'projectId', Database::VAR_STRING, 255, true);
+        $this->database->createAttribute('notifications', 'projectInternalId', Database::VAR_ID, 0, true);
+        $this->database->createAttribute('notifications', 'resourceType', Database::VAR_STRING, 64, true);
+        $this->database->createAttribute('notifications', 'resourceId', Database::VAR_STRING, 255, true);
+        $this->database->createAttribute('notifications', 'resourceInternalId', Database::VAR_ID, 0, true);
+        $this->database->createAttribute('notifications', 'parentResourceType', Database::VAR_STRING, 64, true);
+        $this->database->createAttribute('notifications', 'parentResourceId', Database::VAR_STRING, 255, true);
+        $this->database->createAttribute('notifications', 'parentResourceInternalId', Database::VAR_ID, 0, true);
+        $this->database->createAttribute('notifications', 'title', Database::VAR_STRING, 256, true);
+        $this->database->createAttribute('notifications', 'body', Database::VAR_STRING, 16384, true);
+        $this->database->createAttribute('notifications', 'read', Database::VAR_BOOLEAN, 0, false, false);
+        $this->database->createAttribute('notifications', 'firstSeen', Database::VAR_DATETIME, 0, false);
+        $this->database->createAttribute('notifications', 'lastSeen', Database::VAR_DATETIME, 0, false);
     }
 
     protected function tearDown(): void
@@ -106,7 +106,7 @@ class ConsoleTest extends TestCase
 
         $this->assertSame(1, $result['deliveredTo']);
 
-        $stored = $this->database->getDocument('alerts', $this->alertId('msg-aaa', 'user-1', RESOURCE_TYPE_USERS, 'user-1'));
+        $stored = $this->database->getDocument('notifications', $this->alertId('msg-aaa', 'user-1', RESOURCE_TYPE_USERS, 'user-1'));
         $this->assertFalse($stored->isEmpty());
         $this->assertSame('msg-aaa', $stored->getAttribute('messageId'));
         $this->assertSame('console', $stored->getAttribute('channel'));
@@ -139,7 +139,7 @@ class ConsoleTest extends TestCase
 
         (new Console($this->database))->send($message);
 
-        $stored = $this->database->getDocument('alerts', $this->alertId('msg-perms-user', 'user-2', RESOURCE_TYPE_USERS, 'user-2'));
+        $stored = $this->database->getDocument('notifications', $this->alertId('msg-perms-user', 'user-2', RESOURCE_TYPE_USERS, 'user-2'));
         $permissions = $stored->getPermissions();
 
         $this->assertContains(Permission::read(Role::user('user-2')), $permissions);
@@ -160,7 +160,7 @@ class ConsoleTest extends TestCase
 
         (new Console($this->database))->send($message);
 
-        $stored = $this->database->getDocument('alerts', $this->alertId('msg-team', 'team-9', RESOURCE_TYPE_TEAMS, 'team-9'));
+        $stored = $this->database->getDocument('notifications', $this->alertId('msg-team', 'team-9', RESOURCE_TYPE_TEAMS, 'team-9'));
         $permissions = $stored->getPermissions();
 
         $this->assertContains(Permission::read(Role::team('team-9')), $permissions);
@@ -195,8 +195,8 @@ class ConsoleTest extends TestCase
 
         $this->assertNotSame($idA, $idB, 'recipient suffixes must be distinct');
 
-        $rowA = $this->database->getDocument('alerts', $idA);
-        $rowB = $this->database->getDocument('alerts', $idB);
+        $rowA = $this->database->getDocument('notifications', $idA);
+        $rowB = $this->database->getDocument('notifications', $idB);
         $this->assertFalse($rowA->isEmpty(), 'first recipient row must exist');
         $this->assertFalse($rowB->isEmpty(), 'second recipient row must exist');
 
@@ -235,7 +235,7 @@ class ConsoleTest extends TestCase
         // Pre-insert an alert with the SAME id the adapter will compute. The
         // adapter's createDocument will hit the primary-key DuplicateException
         // and must treat it as a successful (idempotent) send.
-        $this->database->createDocument('alerts', new Document([
+        $this->database->createDocument('notifications', new Document([
             '$id' => $documentId,
             '$permissions' => [Permission::read(Role::any())],
             'messageId' => $messageId,
@@ -272,7 +272,7 @@ class ConsoleTest extends TestCase
 
         // Still exactly ONE row: the pre-existing one. The adapter must not
         // overwrite it nor create a sibling.
-        $rows = $this->database->find('alerts');
+        $rows = $this->database->find('notifications');
         $this->assertCount(1, $rows);
         $this->assertSame($documentId, $rows[0]->getId());
         $this->assertSame('pre-existing', $rows[0]->getAttribute('title'), 'duplicate path must not overwrite existing row');

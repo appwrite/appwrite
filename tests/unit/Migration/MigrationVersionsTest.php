@@ -60,7 +60,7 @@ class MigrationVersionsTest extends TestCase
             \ob_end_clean();
         }
 
-        $collection = $database->getCollection('alerts');
+        $collection = $database->getCollection('notifications');
         $this->assertFalse($collection->isEmpty());
 
         $attributes = [];
@@ -102,7 +102,7 @@ class MigrationVersionsTest extends TestCase
             ->setDatabase('migrationV24ExistingAlerts')
             ->setNamespace('migration_existing_alerts_' . \uniqid());
         $database->create();
-        $database->createCollection('alerts');
+        $database->createCollection('notifications');
 
         $migration = new V24();
         $migration->setProject(
@@ -120,7 +120,7 @@ class MigrationVersionsTest extends TestCase
             \ob_end_clean();
         }
 
-        $collection = $database->getCollection('alerts');
+        $collection = $database->getCollection('notifications');
         $attributes = [];
         foreach ($collection->getAttribute('attributes', []) as $attribute) {
             $id = $attribute instanceof Document ? $attribute->getAttribute('$id') : ($attribute['$id'] ?? '');

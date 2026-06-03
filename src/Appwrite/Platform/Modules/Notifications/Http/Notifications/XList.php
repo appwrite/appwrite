@@ -88,7 +88,7 @@ class XList extends Action
             }
 
             $notificationId = $cursor->getValue();
-            $cursorDocument = $dbForPlatform->getDocument('alerts', $notificationId);
+            $cursorDocument = $dbForPlatform->getDocument('notifications', $notificationId);
 
             if ($cursorDocument->isEmpty()) {
                 throw new Exception(Exception::GENERAL_CURSOR_NOT_FOUND, "Notification '{$notificationId}' for the 'cursor' value not found.");
@@ -103,8 +103,8 @@ class XList extends Action
         $filterQueries = Query::groupByType($queries)['filters'];
 
         try {
-            $results = $dbForPlatform->find('alerts', $queries);
-            $total = $dbForPlatform->count('alerts', $filterQueries, APP_LIMIT_COUNT);
+            $results = $dbForPlatform->find('notifications', $queries);
+            $total = $dbForPlatform->count('notifications', $filterQueries, APP_LIMIT_COUNT);
         } catch (OrderException $e) {
             throw new Exception(Exception::DATABASE_QUERY_ORDER_NULL, "The order attribute '{$e->getAttribute()}' had a null value. Cursor pagination requires all documents order attribute values are non-null.");
         }

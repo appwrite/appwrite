@@ -90,11 +90,11 @@ class V24 extends Migration
         };
 
         $collections = $this->collections[$collectionType];
-        $alertsCollectionExists = false;
+        $notificationsCollectionExists = false;
 
         if ($collectionType === 'console') {
-            $alertsCollectionExists = !$this->dbForProject->getCollection('alerts')->isEmpty();
-            $this->createCollection('alerts');
+            $notificationsCollectionExists = !$this->dbForProject->getCollection('notifications')->isEmpty();
+            $this->createCollection('notifications');
         }
 
         foreach ($collections as $collection) {
@@ -176,8 +176,8 @@ class V24 extends Migration
                     $this->dbForProject->purgeCachedCollection($id);
                     break;
 
-                case 'alerts':
-                    if ($collectionType === 'console' && $alertsCollectionExists) {
+                case 'notifications':
+                    if ($collectionType === 'console' && $notificationsCollectionExists) {
                         foreach (['firstSeen', 'lastSeen'] as $attribute) {
                             try {
                                 $this->createAttributeFromCollection($this->dbForProject, $id, $attribute);

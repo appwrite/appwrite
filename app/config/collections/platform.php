@@ -1057,10 +1057,10 @@ $platformCollections = [
         ],
     ],
 
-    'alerts' => [
+    'notifications' => [
         '$collection' => ID::custom(Database::METADATA),
-        '$id' => ID::custom('alerts'),
-        'name' => 'Alerts',
+        '$id' => ID::custom('notifications'),
+        'name' => 'Notifications',
         'attributes' => [
             [
                 '$id' => ID::custom('messageId'),
@@ -1088,7 +1088,7 @@ $platformCollections = [
                 '$id' => ID::custom('type'),
                 'type' => Database::VAR_STRING,
                 'format' => '',
-                'size' => 64,
+                'size' => 100,
                 'signed' => true,
                 'required' => false,
                 'default' => 'info',
@@ -1209,7 +1209,7 @@ $platformCollections = [
                 '$id' => ID::custom('body'),
                 'type' => Database::VAR_STRING,
                 'format' => '',
-                'size' => 16384,
+                'size' => 65535,
                 'signed' => true,
                 'required' => true,
                 'default' => null,

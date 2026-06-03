@@ -159,7 +159,7 @@ class Notifications extends Action
 
     private function alreadyDelivered(Database $dbForPlatform, string $alertId): bool
     {
-        return !$dbForPlatform->getDocument('alerts', $alertId)->isEmpty();
+        return !$dbForPlatform->getDocument('notifications', $alertId)->isEmpty();
     }
 
     /**
@@ -500,10 +500,10 @@ class Notifications extends Action
         ]);
 
         try {
-            $dbForPlatform->createDocument('alerts', $document);
+            $dbForPlatform->createDocument('notifications', $document);
             return $alertId;
         } catch (DuplicateException) {
-            $existing = $dbForPlatform->getDocument('alerts', $alertId);
+            $existing = $dbForPlatform->getDocument('notifications', $alertId);
             return $existing->isEmpty() ? $alertId : $existing->getId();
         }
     }

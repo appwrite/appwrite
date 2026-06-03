@@ -738,15 +738,15 @@ class Deletes extends Action
             Console::error('Failed to delete schedules: ' . $th->getMessage());
         }
 
-        // Delete Alerts
+        // Delete Notifications
         try {
-            $this->deleteByGroup('alerts', [
+            $this->deleteByGroup('notifications', [
                 Query::equal('projectId', [$projectId]),
                 Query::equal('projectInternalId', [$projectInternalId]),
                 Query::orderAsc()
             ], $dbForPlatform);
         } catch (Throwable $th) {
-            Console::error('Failed to delete alerts: ' . $th->getMessage());
+            Console::error('Failed to delete notifications: ' . $th->getMessage());
         }
 
         // Delete Advisor insights

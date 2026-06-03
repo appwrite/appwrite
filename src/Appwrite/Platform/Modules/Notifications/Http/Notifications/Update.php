@@ -68,17 +68,17 @@ class Update extends Action
             throw new Exception(Exception::USER_UNAUTHORIZED);
         }
 
-        $notification = $dbForPlatform->getDocument('alerts', $notificationId);
+        $notification = $dbForPlatform->getDocument('notifications', $notificationId);
 
         if ($notification->isEmpty()) {
-            $exists = $authorization->skip(fn () => !$dbForPlatform->getDocument('alerts', $notificationId)->isEmpty());
+            $exists = $authorization->skip(fn () => !$dbForPlatform->getDocument('notifications', $notificationId)->isEmpty());
             if ($exists) {
                 throw new Exception(Exception::USER_UNAUTHORIZED);
             }
             throw new Exception(Exception::DOCUMENT_NOT_FOUND);
         }
 
-        $updated = $dbForPlatform->updateDocument('alerts', $notificationId, new Document([
+        $updated = $dbForPlatform->updateDocument('notifications', $notificationId, new Document([
             'read' => $read,
         ]));
 
