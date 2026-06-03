@@ -26,6 +26,10 @@ use Utopia\System\System;
  *   - PATCH /v1/notifications/:notificationId (happy + unauthorized)
  *   - GET /v1/notifications/logos/appwrite (valid JWT + invalid JWT)
  *
+ * The same webhook-paused fanout drives both channels of a single
+ * Notification, so the email channel is asserted end-to-end through maildev
+ * (Notifications worker → SMTP → maildev inbox) alongside the console alert.
+ *
  * Dedup, per-channel dispatch, and webhook signing are covered by:
  *   - tests/unit/Platform/Workers/NotificationsTest.php
  *   - tests/unit/Utopia/Messaging/Adapter/ConsoleTest.php
@@ -108,6 +112,33 @@ trait NotificationsBase
 
         // Cache the seeded alert id for downstream tests in the same process.
         self::$seededAlertId = $alertId;
+    }
+
+    /**
+     * The webhook-paused fanout enqueues a single Notification with both a
+     * console and an email recipient. The console side is asserted above; this
+     * verifies the email channel travels the full path — Notifications worker
+     * → SMTP → maildev — by polling the maildev inbox for the rendered email
+     * addressed to the project owner.
+     */
+    public function testWebhookFailureSendsEmailNotification(): void
+    {
+        // Reuse the fanout from the console-alert test when it already ran in
+        // this process; otherwise drive a fresh one. Either way the owner email
+        // lands in maildev for the root user this suite created.
+        if (self::$seededAlertId === null) {
+            self::$seededAlertId = $this->seedWebhookFailureAlert();
+        }
+
+        $ownerEmail = $this->getRoot()['email'];
+
+        $this->assertEventually(function () use ($ownerEmail) {
+            $this->assertGreaterThanOrEqual(
+                1,
+                $this->countNotificationEmails($ownerEmail, 'Webhook deliveries have been paused'),
+                'No webhook-paused email observed in maildev for ' . $ownerEmail
+            );
+        }, 30000, 1000);
     }
 
     public function testMarkNotificationReadTogglesFlag(): void
@@ -411,6 +442,35 @@ trait NotificationsBase
             'cookie' => 'a_session_console=' . $this->getRoot()['session'],
             'x-appwrite-project' => 'console',
         ];
+    }
+
+    /**
+     * Count emails sitting in the maildev inbox that are addressed to the given
+     * recipient and carry the given subject. Mirrors the maildev polling used
+     * by the session-alert e2e suite.
+     */
+    protected function countNotificationEmails(string $address, string $subject): int
+    {
+        $host = System::getEnv('_APP_SMTP_HOST', 'maildev');
+        $inbox = \file_get_contents('http://' . $host . ':1080/email');
+        if ($inbox === false) {
+            return 0;
+        }
+
+        $emails = \json_decode($inbox, true) ?? [];
+        $count = 0;
+        foreach ($emails as $email) {
+            if (($email['subject'] ?? '') !== $subject) {
+                continue;
+            }
+            foreach ($email['to'] ?? [] as $recipient) {
+                if (($recipient['address'] ?? '') === $address) {
+                    $count++;
+                }
+            }
+        }
+
+        return $count;
     }
 
     /**
