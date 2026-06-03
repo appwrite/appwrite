@@ -58,6 +58,7 @@ use Appwrite\Platform\Modules\Databases\Http\TablesDB\Tables\Rows\Column\Decreme
 use Appwrite\Platform\Modules\Databases\Http\TablesDB\Tables\Rows\Column\Increment as IncrementRowColumn;
 use Appwrite\Platform\Modules\Databases\Http\TablesDB\Tables\Rows\Create as CreateRow;
 use Appwrite\Platform\Modules\Databases\Http\TablesDB\Tables\Rows\Delete as DeleteRow;
+use Appwrite\Platform\Modules\Databases\Http\TablesDB\Tables\Rows\Explain\Get as ExplainRows;
 use Appwrite\Platform\Modules\Databases\Http\TablesDB\Tables\Rows\Get as GetRow;
 use Appwrite\Platform\Modules\Databases\Http\TablesDB\Tables\Rows\Update as UpdateRow;
 use Appwrite\Platform\Modules\Databases\Http\TablesDB\Tables\Rows\Upsert as UpsertRow;
