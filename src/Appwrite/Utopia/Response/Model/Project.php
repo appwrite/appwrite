@@ -43,6 +43,12 @@ class Project extends Model
                 'default' => '',
                 'example' => '1592981250',
             ])
+            ->addRule('region', [
+                'type' => self::TYPE_STRING,
+                'description' => 'Project region.',
+                'default' => 'default',
+                'example' => 'fra',
+            ])
 
             // Resource: Dev Keys
             ->addRule('devKeys', [
