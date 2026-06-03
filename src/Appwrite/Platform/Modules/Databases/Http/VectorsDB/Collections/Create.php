@@ -105,6 +105,8 @@ class Create extends CollectionAction
                 'name' => $name,
                 'dimension' => $dimension,
                 'search' => \implode(' ', [$collectionId, $name]),
+                'attributes' => null,
+                'indexes' => null,
             ]));
 
         } catch (DuplicateException) {

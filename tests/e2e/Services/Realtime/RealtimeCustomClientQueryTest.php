@@ -145,7 +145,7 @@ class RealtimeCustomClientQueryTest extends Scope
         $client->close();
 
         // Test: project channel with queries, project ID only in header
-        $queryArray = [Query::select(['*'])->toString()];
+        $queryArray = [Query::select('*')->toString()];
         $clientWithQuery = $this->getWebsocketWithCustomQuery(
             [
                 'channels' => ['project'],

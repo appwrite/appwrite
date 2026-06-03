@@ -1386,7 +1386,7 @@ class FunctionsCustomServerTest extends Scope
 
         $deployments = $this->listDeployments($functionId, [
             'queries' => [
-                Query::select(['status'])->toString(),
+                Query::select('status')->toString(),
             ],
         ]);
 
@@ -1401,7 +1401,7 @@ class FunctionsCustomServerTest extends Scope
         // Extra select query check, for attribute not allowed by filter queries
         $deployments = $this->listDeployments($functionId, [
             'queries' => [
-                Query::select(['buildLogs'])->toString(),
+                Query::select('buildLogs')->toString(),
             ],
         ]);
         $this->assertEquals($deployments['headers']['status-code'], 200);

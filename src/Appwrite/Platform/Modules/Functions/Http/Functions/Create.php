@@ -257,6 +257,8 @@ class Create extends Base
                 'providerPaths' => $providerPaths,
                 'buildSpecification' => $buildSpecification,
                 'runtimeSpecification' => $runtimeSpecification,
+                'vars' => null,
+                'varsProject' => null,
             ]));
         } catch (DuplicateException) {
             throw new Exception(Exception::FUNCTION_ALREADY_EXISTS);
