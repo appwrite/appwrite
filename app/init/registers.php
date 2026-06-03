@@ -253,6 +253,10 @@ $register->set('pools', function () {
     $workerCount = intval(System::getEnv('_APP_CPU_NUM', swoole_cpu_num())) * intval(System::getEnv('_APP_WORKER_PER_CORE', 6));
     $poolSize = max(1, (int)($instanceConnections / $workerCount));
 
+    // Queue workers consume jobs concurrently with coroutines; each in-flight
+    // job may hold a connection, so pools must cover the coroutine count.
+    $poolSize = max($poolSize, (int) System::getEnv('_APP_WORKER_MAX_COROUTINES', 1));
+
     foreach ($connections as $key => $connection) {
         $type = $connection['type'];
         $multiple = $connection['multiple'];
@@ -339,9 +343,13 @@ $register->set('pools', function () {
 
             // PubSub workers hold one long-lived subscribed connection and also need
             // spare capacity for publishes from the same process.
-            $connectionPoolSize = $type === 'pubsub'
-                ? max(2, $poolSize)
-                : $poolSize;
+            // Consumer pools lease one connection per consume coroutine for the
+            // lifetime of the worker, plus headroom for queue-size reads.
+            $connectionPoolSize = match ($type) {
+                'pubsub' => max(2, $poolSize),
+                'consumer' => $poolSize + 2,
+                default => $poolSize,
+            };
 
             $pool = new Pool($poolAdapter, $name, $connectionPoolSize, function () use ($type, $resource, $dsn) {
                 // Get Adapter
