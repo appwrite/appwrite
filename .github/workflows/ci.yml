@@ -27,7 +27,7 @@ permissions:
 jobs:
   dependencies:
     name: Checks / Dependencies
-    if: false # TEMP: disabled to iterate on the failing e2e jobs; revert before merge
+    if: github.event_name == 'pull_request'
     permissions:
       actions: read
       security-events: write
@@ -36,7 +36,7 @@ jobs:
 
   security:
     name: Checks / Image
-    if: false # TEMP: disabled to iterate on the failing e2e jobs; revert before merge
+    if: github.event_name == 'pull_request'
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -91,7 +91,6 @@ jobs:
 
   composer:
     name: Checks / Composer
-    if: false # TEMP: disabled to iterate on the failing e2e jobs; revert before merge
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
@@ -142,7 +141,6 @@ jobs:
 
   analyze:
     name: Checks / Analyze
-    if: false # TEMP: disabled to iterate on the failing e2e jobs; revert before merge
     runs-on: ubuntu-latest
     steps:
       - name: Check out the repo
@@ -171,7 +169,6 @@ jobs:
 
   specs:
     name: Checks / Specs
-    if: false # TEMP: disabled to iterate on the failing e2e jobs; revert before merge
     runs-on: ubuntu-latest
     steps:
       - name: Check out the repo
@@ -193,7 +190,6 @@ jobs:
 
   locale:
     name: Checks / Locale
-    if: false # TEMP: disabled to iterate on the failing e2e jobs; revert before merge
     runs-on: ubuntu-latest
     steps:
       - name: Check out the repo
@@ -293,7 +289,6 @@ jobs:
 
   unit:
     name: Tests / Unit
-    if: false # TEMP: disabled to iterate on the failing e2e jobs; revert before merge
     runs-on: ubuntu-latest
     needs: build
     permissions:
@@ -347,7 +342,6 @@ jobs:
 
   e2e_general:
     name: Tests / E2E / General
-    if: false # TEMP: disabled to iterate on the failing e2e jobs; revert before merge
     runs-on: ubuntu-latest
     needs: build
     permissions:
@@ -412,7 +406,7 @@ jobs:
 
   e2e_service:
     name: Tests / E2E / ${{ matrix.database }} (${{ matrix.mode }}) / ${{ matrix.service }}
-    runs-on: ${{ matrix.runner || format('runs-on={0}/runner=4cpu-linux-x64/volume=120g/spot=false', github.run_id) }}
+    runs-on: ${{ matrix.runner || format('runs-on={0}/runner=4cpu-linux-x64/volume=120g/spot=false/extras=otel', github.run_id) }}
     needs: [build, matrix]
     permissions:
       contents: read
@@ -423,23 +417,45 @@ jobs:
       matrix:
         database: ${{ fromJSON(needs.matrix.outputs.databases) }}
         mode: ${{ fromJSON(needs.matrix.outputs.modes) }}
-        # TEMP: narrowed to explain-related services to re-validate this feature.
-        # Revert to the full list before merge.
         service: [
+          Account,
+          Avatars,
+          Console,
           Databases,
-          TablesDB
+          TablesDB,
+          Functions,
+          FunctionsSchedule,
+          GraphQL,
+          Health,
+          Advisor,
+          Locale,
+          Projects,
+          Realtime,
+          Sites,
+          Proxy,
+          Storage,
+          Tokens,
+          Teams,
+          Users,
+          ProjectWebhooks,
+          Webhooks,
+          VCS,
+          Messaging,
+          Migrations,
+          Project,
+          Presences
         ]
         include:
           - service: Databases
-            runner: runs-on=${{ github.run_id }}/runner=8cpu-linux-x64/volume=120g/spot=false
-            paratest_processes: 1
-            test_filter: "testExplain"
+            runner: runs-on=${{ github.run_id }}/runner=8cpu-linux-x64/volume=120g/spot=false/extras=otel
+            paratest_processes: 3
             timeout_minutes: 30
           - service: TablesDB
-            runner: runs-on=${{ github.run_id }}/runner=8cpu-linux-x64/volume=120g/spot=false
-            paratest_processes: 1
-            test_filter: "testExplain"
+            runner: runs-on=${{ github.run_id }}/runner=8cpu-linux-x64/volume=120g/spot=false/extras=otel
+            paratest_processes: 3
             timeout_minutes: 30
+          - service: Migrations
+            paratest_processes: 1
     steps:
       - name: Checkout repository
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
@@ -459,7 +475,6 @@ jobs:
             echo "_APP_DB_HOST=mongodb" >> $GITHUB_ENV
             echo "_APP_DB_PORT=27017" >> $GITHUB_ENV
           elif [ "${{ matrix.database }}" = "PostgreSQL" ]; then
-            echo "COMPOSE_FILE=docker-compose.yml:docker-compose.ci-postgres.yml" >> $GITHUB_ENV
             echo "COMPOSE_PROFILES=postgresql" >> $GITHUB_ENV
             echo "_APP_DB_ADAPTER=postgresql" >> $GITHUB_ENV
             echo "_APP_DB_HOST=postgresql" >> $GITHUB_ENV
@@ -526,17 +541,11 @@ jobs:
               PARATEST_PROCESSES="$(nproc)"
             fi
 
-            TEST_FILTER="${{ matrix.test_filter }}"
-            FILTER_FLAG=""
-            if [ -n "$TEST_FILTER" ]; then
-              FILTER_FLAG="--filter $TEST_FILTER"
-            fi
-
             docker compose exec -T \
               -e _APP_E2E_RESPONSE_FORMAT="${{ github.event.inputs.response_format }}" \
               -e _TESTS_OAUTH2_GITHUB_CLIENT_ID="${{ secrets.TESTS_OAUTH2_GITHUB_CLIENT_ID }}" \
               -e _TESTS_OAUTH2_GITHUB_CLIENT_SECRET="${{ secrets.TESTS_OAUTH2_GITHUB_CLIENT_SECRET }}" \
-              appwrite vendor/bin/paratest --processes "$PARATEST_PROCESSES" $FUNCTIONAL_FLAG $FILTER_FLAG "$SERVICE_PATH" --exclude-group abuseEnabled --exclude-group screenshots --log-junit tests/e2e/Services/${{ matrix.service }}/junit.xml
+              appwrite vendor/bin/paratest --processes "$PARATEST_PROCESSES" $FUNCTIONAL_FLAG "$SERVICE_PATH" --exclude-group abuseEnabled --exclude-group screenshots --log-junit tests/e2e/Services/${{ matrix.service }}/junit.xml
 
       - name: Failure Logs
         if: failure()
@@ -546,7 +555,6 @@ jobs:
 
   e2e_abuse:
     name: Tests / E2E / Abuse (${{ matrix.mode }})
-    if: false # TEMP: disabled to iterate on the failing e2e jobs; revert before merge
     runs-on: ubuntu-latest
     needs: [build, matrix]
     permissions:
@@ -614,7 +622,6 @@ jobs:
 
   e2e_screenshots:
     name: Tests / E2E / Screenshots (${{ matrix.mode }})
-    if: false # TEMP: disabled to iterate on the failing e2e jobs; revert before merge
     runs-on: ubuntu-latest
     needs: [build, matrix]
     permissions:
@@ -687,7 +694,7 @@ jobs:
 
   benchmark:
     name: Benchmark
-    if: false # TEMP: disabled to iterate on the failing e2e jobs; revert before merge
+    if: github.event_name == 'pull_request'
     runs-on: ubuntu-latest
     needs: build
     permissions:
