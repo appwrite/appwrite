@@ -399,6 +399,47 @@ trait DatabasesBase
     }
 
     #[Depends('testDocumentsVectorQueries')]
+    public function testExplainVectorQuery(array $data): void
+    {
+        $databaseId = $data['databaseId'];
+        $collectionId = $data['collectionId'];
+
+        $vector = array_fill(0, 1536, 0.0);
+        $vector[0] = 1.0;
+
+        $response = $this->client->call(Client::METHOD_GET, "/vectorsdb/{$databaseId}/collections/{$collectionId}/documents/explain", [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ], [
+            'queries' => [
+                Query::vectorCosine('embeddings', $vector)->toString(),
+                Query::limit(2)->toString(),
+            ],
+            'total' => false,
+        ]);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertArrayHasKey('queries', $response['body']);
+        $this->assertNotEmpty($response['body']['queries']);
+
+        $first = $response['body']['queries'][0];
+        $this->assertEquals('find', $first['purpose']);
+        $this->assertEquals($collectionId, $first['context']['collection']);
+
+        $this->assertArrayHasKey('metrics', $first['plan']);
+        $this->assertArrayHasKey('access', $first['plan']);
+        $this->assertArrayHasKey('estimatedRecordsScanned', $first['plan']['metrics']);
+        $this->assertArrayHasKey('recordsReturned', $first['plan']['metrics']);
+        $this->assertArrayHasKey('durationMs', $first['plan']['metrics']);
+        $this->assertArrayHasKey('estimatedCost', $first['plan']['metrics']);
+        $this->assertArrayHasKey('type', $first['plan']['access']);
+        $this->assertArrayHasKey('index', $first['plan']['access']);
+        $this->assertContains($first['plan']['access']['type'], ['index_scan', 'full_scan', 'unknown']);
+        $this->assertArrayNotHasKey('engine', $first['plan']);
+    }
+
+    #[Depends('testDocumentsVectorQueries')]
     public function testDeleteDocument(array $data): void
     {
         $databaseId = $data['databaseId'];

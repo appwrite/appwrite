@@ -785,6 +785,15 @@ trait DatabasesBase
         $this->assertArrayHasKey('indexUsed', $first['plan']);
         $this->assertArrayHasKey('estimatedCost', $first['plan']);
         $this->assertArrayHasKey('tree', $first['plan']);
+        $this->assertArrayHasKey('metrics', $first['plan']);
+        $this->assertArrayHasKey('access', $first['plan']);
+        $this->assertArrayHasKey('estimatedRecordsScanned', $first['plan']['metrics']);
+        $this->assertArrayHasKey('recordsReturned', $first['plan']['metrics']);
+        $this->assertArrayHasKey('durationMs', $first['plan']['metrics']);
+        $this->assertArrayHasKey('estimatedCost', $first['plan']['metrics']);
+        $this->assertArrayHasKey('type', $first['plan']['access']);
+        $this->assertArrayHasKey('index', $first['plan']['access']);
+        $this->assertContains($first['plan']['access']['type'], ['index_scan', 'full_scan', 'unknown']);
 
         // The backing engine must not be exposed.
         $this->assertArrayNotHasKey('engine', $first['plan']);

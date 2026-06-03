@@ -220,15 +220,77 @@ class Get extends Action
      */
     protected function normalizePlan(array $plan): array
     {
+        $indexUsed = isset($plan['indexUsed']) ? $this->scrubPhysicalIdentifiers($plan['indexUsed']) : null;
+        $tree = isset($plan['tree']) ? $this->scrubPhysicalIdentifiers($plan['tree']) : null;
+
         return [
+            'metrics' => [
+                'estimatedRecordsScanned' => $plan['rowsScanned'] ?? null,
+                'recordsReturned' => $plan['rowsReturned'] ?? null,
+                'durationMs' => $plan['executionTime'] ?? null,
+                'estimatedCost' => $plan['estimatedCost'] ?? null,
+            ],
+            'access' => [
+                'type' => $this->inferAccessType($indexUsed, $tree),
+                'index' => $indexUsed,
+            ],
             'rowsScanned' => $plan['rowsScanned'] ?? null,
-            'indexUsed' => isset($plan['indexUsed']) ? $this->scrubPhysicalIdentifiers($plan['indexUsed']) : null,
+            'indexUsed' => $indexUsed,
             'estimatedCost' => $plan['estimatedCost'] ?? null,
             'rowsReturned' => $plan['rowsReturned'] ?? null,
             'executionTime' => $plan['executionTime'] ?? null,
-            'tree' => isset($plan['tree']) ? $this->scrubPhysicalIdentifiers($plan['tree']) : null,
+            'tree' => $tree,
             'error' => isset($plan['error']) ? $this->scrubPhysicalIdentifiers($plan['error']) : null,
         ];
+    }
+
+    protected function inferAccessType(mixed $indexUsed, mixed $tree): string
+    {
+        if (\is_string($indexUsed) && $indexUsed !== '') {
+            return 'index_scan';
+        }
+
+        if ($this->containsPlanToken($tree, ['COLLSCAN', 'Seq Scan', 'ALL'])) {
+            return 'full_scan';
+        }
+
+        return 'unknown';
+    }
+
+    /**
+     * @param  array<string>  $needles
+     */
+    protected function containsPlanToken(mixed $node, array $needles): bool
+    {
+        if (\is_array($node)) {
+            foreach ($node as $key => $value) {
+                if ($this->containsPlanToken($key, $needles) || $this->containsPlanToken($value, $needles)) {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        if (! \is_string($node)) {
+            return false;
+        }
+
+        foreach ($needles as $needle) {
+            if ($needle === 'ALL') {
+                if ($node === $needle) {
+                    return true;
+                }
+
+                continue;
+            }
+
+            if (\str_contains($node, $needle)) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     /**

@@ -29,6 +29,28 @@ class QueryPlanDetail extends Model
                 'required' => false,
                 'example' => 1200,
             ])
+            ->addRule('metrics', [
+                'type' => self::TYPE_JSON,
+                'description' => 'Stable Appwrite-level execution metrics. Uses records terminology so values stay comparable if the backing database changes.',
+                'default' => new \stdClass,
+                'required' => false,
+                'example' => [
+                    'estimatedRecordsScanned' => 1200,
+                    'recordsReturned' => 25,
+                    'durationMs' => 1.84,
+                    'estimatedCost' => 4.5,
+                ],
+            ])
+            ->addRule('access', [
+                'type' => self::TYPE_JSON,
+                'description' => 'Stable Appwrite-level access path summary. Engine-specific detail remains in tree.',
+                'default' => new \stdClass,
+                'required' => false,
+                'example' => [
+                    'type' => 'index_scan',
+                    'index' => 'idx_status',
+                ],
+            ])
             ->addRule('indexUsed', [
                 'type' => self::TYPE_STRING,
                 'description' => 'Index the chosen access path uses. Null when the query falls back to a full scan.',
@@ -60,7 +82,7 @@ class QueryPlanDetail extends Model
             ->addRule('tree', [
                 'type' => self::TYPE_JSON,
                 'description' => 'Raw query plan from the engine, with internal storage identifiers stripped. Carries the full access-path detail (scan type, candidate indexes, filter conditions) for deep diagnosis. Shape varies by engine.',
-                'default' => new \stdClass(),
+                'default' => new \stdClass,
                 'required' => false,
                 'example' => ['query_block' => ['select_id' => 1]],
             ])
