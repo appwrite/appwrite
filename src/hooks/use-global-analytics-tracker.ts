@@ -7,7 +7,6 @@ import {
 import { useAnalytics } from './use-analytics'
 
 const CLICK_SELECTOR = [
-  '[data-analytics-event]',
   'a[href]',
   'button',
   'input[type="button"]',
@@ -20,6 +19,8 @@ const CLICK_SELECTOR = [
   '[role="switch"]',
   '[role="checkbox"]',
 ].join(',')
+
+const MAX_DYNAMIC_EVENT_LABEL_LENGTH = 80
 
 const CHANGE_SELECTOR = [
   'select',
@@ -40,7 +41,9 @@ function isFormElement(value: EventTarget | null): value is HTMLFormElement {
 
 function shouldSkipAnalytics(element: Element) {
   return Boolean(
-    element.closest('[data-analytics-track="manual"], [data-analytics-track="false"]'),
+    element.closest(
+      '[data-analytics-track="manual"], [data-analytics-track="false"]',
+    ),
   )
 }
 
@@ -54,37 +57,7 @@ function getElementRole(element: HTMLElement) {
   return element.tagName.toLowerCase()
 }
 
-function getSafeDatasetProps(element: HTMLElement): AnalyticsProps {
-  const props: AnalyticsProps = {}
-  const analyticsId = element.dataset.analyticsId
-  const analyticsSurface =
-    element.dataset.analyticsSurface ??
-    element.closest<HTMLElement>('[data-analytics-surface]')?.dataset
-      .analyticsSurface
-  const analyticsResource = element.dataset.analyticsResource
-
-  if (analyticsId) props.analytics_id = analyticsId
-  if (analyticsSurface) props.surface = analyticsSurface
-  if (analyticsResource) props.resource = analyticsResource
-
-  for (const [key, value] of Object.entries(element.dataset)) {
-    if (!key.startsWith('analyticsProp') || value == null) continue
-    const propName = key
-      .replace(/^analyticsProp/, '')
-      .replace(/[A-Z]/g, (match) => `_${match.toLowerCase()}`)
-      .replace(/^_/, '')
-    if (propName) props[propName] = value
-  }
-
-  return props
-}
-
-function getClickEventName(element: HTMLElement): AnalyticsEventName {
-  const customEvent = element.dataset.analyticsEvent as
-    | AnalyticsEventName
-    | undefined
-  if (customEvent) return customEvent
-
+function getBaseClickEventName(element: HTMLElement): AnalyticsEventName {
   const role = getElementRole(element)
   if (role === 'tab') return 'Tab Changed'
   if (role === 'menuitem') return 'Menu Item Clicked'
@@ -101,6 +74,95 @@ function getClickEventName(element: HTMLElement): AnalyticsEventName {
     }
   }
   return 'Button Clicked'
+}
+
+function normalizeEventDescriptor(value: string | null | undefined) {
+  if (!value) return undefined
+  const normalized = value.replace(/\s+/g, ' ').trim()
+  if (!normalized || normalized.length > MAX_DYNAMIC_EVENT_LABEL_LENGTH) {
+    return undefined
+  }
+  return normalized
+}
+
+function getElementText(element: HTMLElement) {
+  if (element instanceof HTMLInputElement) {
+    return normalizeEventDescriptor(element.value)
+  }
+  return normalizeEventDescriptor(element.textContent)
+}
+
+function getReferencedText(element: HTMLElement, attribute: string) {
+  const ids = element.getAttribute(attribute)?.split(/\s+/).filter(Boolean)
+  if (!ids?.length) return undefined
+
+  for (const id of ids) {
+    const text = normalizeEventDescriptor(
+      document.getElementById(id)?.textContent,
+    )
+    if (text) return text
+  }
+
+  return undefined
+}
+
+function getTooltipText(element: HTMLElement) {
+  return (
+    normalizeEventDescriptor(element.getAttribute('title')) ??
+    getReferencedText(element, 'aria-describedby')
+  )
+}
+
+function getIconName(element: HTMLElement) {
+  const icon = element.querySelector<SVGElement>('svg')
+  if (!icon) return undefined
+
+  const accessibleIconName =
+    normalizeEventDescriptor(icon.getAttribute('aria-label')) ??
+    normalizeEventDescriptor(icon.querySelector('title')?.textContent)
+  if (accessibleIconName) return accessibleIconName
+
+  const lucideClass = Array.from(icon.classList).find((className) =>
+    className.startsWith('lucide-'),
+  )
+  if (!lucideClass) return undefined
+
+  return normalizeEventDescriptor(
+    lucideClass
+      .replace(/^lucide-/, '')
+      .split('-')
+      .filter(Boolean)
+      .join(' '),
+  )
+}
+
+function toEventTitle(value: string) {
+  return value
+    .split(' ')
+    .map((word) => {
+      if (word.length <= 1) return word.toUpperCase()
+      if (word === word.toUpperCase() && /[A-Z]/.test(word)) return word
+      return `${word[0]?.toUpperCase() ?? ''}${word.slice(1).toLowerCase()}`
+    })
+    .join(' ')
+}
+
+function getElementDescriptor(element: HTMLElement) {
+  return (
+    normalizeEventDescriptor(element.getAttribute('aria-label')) ??
+    getReferencedText(element, 'aria-labelledby') ??
+    getElementText(element) ??
+    getTooltipText(element) ??
+    getIconName(element)
+  )
+}
+
+function getDynamicEventName(
+  element: HTMLElement,
+  fallback: AnalyticsEventName,
+) {
+  const descriptor = getElementDescriptor(element)
+  return descriptor ? `${toEventTitle(descriptor)} ${fallback}` : fallback
 }
 
 function getLinkProps(element: HTMLAnchorElement): AnalyticsProps {
@@ -128,12 +190,15 @@ function getLinkProps(element: HTMLAnchorElement): AnalyticsProps {
   }
 }
 
-function getClickProps(element: HTMLElement, event: MouseEvent): AnalyticsProps {
+function getClickProps(
+  element: HTMLElement,
+  event: MouseEvent,
+): AnalyticsProps {
   const role = getElementRole(element)
   const props: AnalyticsProps = {
-    ...getSafeDatasetProps(element),
     element: role,
-    modifier_key: event.metaKey || event.ctrlKey || event.shiftKey || event.altKey,
+    modifier_key:
+      event.metaKey || event.ctrlKey || event.shiftKey || event.altKey,
   }
 
   if (element instanceof HTMLAnchorElement) {
@@ -154,15 +219,15 @@ function getClickProps(element: HTMLElement, event: MouseEvent): AnalyticsProps 
 function getChangeProps(element: HTMLElement): AnalyticsProps {
   const role = getElementRole(element)
   const props: AnalyticsProps = {
-    ...getSafeDatasetProps(element),
     element: role,
   }
 
   if (element instanceof HTMLInputElement) {
     props.control_type = element.type || 'input'
-    props.checked = element.type === 'checkbox' || element.type === 'radio'
-      ? element.checked
-      : undefined
+    props.checked =
+      element.type === 'checkbox' || element.type === 'radio'
+        ? element.checked
+        : undefined
     props.has_value = element.value.length > 0
   }
 
@@ -174,23 +239,23 @@ function getChangeProps(element: HTMLElement): AnalyticsProps {
   return props
 }
 
-function getFormProps(form: HTMLFormElement): AnalyticsProps {
-  const safeProps = getSafeDatasetProps(form)
-  return {
-    ...safeProps,
-    surface: form.dataset.analyticsSurface ?? safeProps.surface,
-    analytics_id: form.dataset.analyticsId,
-  }
+function getFormProps(): AnalyticsProps {
+  return {}
 }
 
 function getDialogElements(element: Element) {
   const dialogs: HTMLElement[] = []
-  if (element instanceof HTMLElement && element.matches('[role="dialog"], [role="alertdialog"]')) {
+  if (
+    element instanceof HTMLElement &&
+    element.matches('[role="dialog"], [role="alertdialog"]')
+  ) {
     dialogs.push(element)
   }
   dialogs.push(
     ...Array.from(
-      element.querySelectorAll<HTMLElement>('[role="dialog"], [role="alertdialog"]'),
+      element.querySelectorAll<HTMLElement>(
+        '[role="dialog"], [role="alertdialog"]',
+      ),
     ),
   )
   return dialogs
@@ -206,7 +271,6 @@ function isDialogOpen(element: HTMLElement) {
 
 function getDialogProps(element: HTMLElement): AnalyticsProps {
   return {
-    ...getSafeDatasetProps(element),
     role: element.getAttribute('role') ?? 'dialog',
   }
 }
@@ -241,7 +305,11 @@ export function useGlobalAnalyticsTracker() {
         return
       }
 
-      track(getClickEventName(element), getClickProps(element, event))
+      const baseEventName = getBaseClickEventName(element)
+      track(
+        getDynamicEventName(element, baseEventName),
+        getClickProps(element, event),
+      )
     }
 
     const handleChange = (event: Event) => {
@@ -249,12 +317,16 @@ export function useGlobalAnalyticsTracker() {
       const element = event.target.closest<HTMLElement>(CHANGE_SELECTOR)
       if (!element || shouldSkipAnalytics(element)) return
 
-      track('Control Changed', getChangeProps(element))
+      track(
+        getDynamicEventName(element, 'Control Changed'),
+        getChangeProps(element),
+      )
     }
 
     const handleSubmit = (event: SubmitEvent) => {
-      if (!isFormElement(event.target) || shouldSkipAnalytics(event.target)) return
-      track('Form Submitted', getFormProps(event.target))
+      if (!isFormElement(event.target) || shouldSkipAnalytics(event.target))
+        return
+      track('Form Submitted', getFormProps())
     }
 
     document.addEventListener('click', handleClick)
@@ -266,7 +338,10 @@ export function useGlobalAnalyticsTracker() {
 
     const observer = new MutationObserver((mutations) => {
       mutations.forEach((mutation) => {
-        if (mutation.type === 'attributes' && mutation.target instanceof HTMLElement) {
+        if (
+          mutation.type === 'attributes' &&
+          mutation.target instanceof HTMLElement
+        ) {
           syncDialog(mutation.target)
           return
         }

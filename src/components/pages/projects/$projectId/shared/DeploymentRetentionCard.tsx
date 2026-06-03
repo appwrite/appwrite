@@ -58,7 +58,7 @@ export function DeploymentRetentionCard({
         <div className="flex items-center gap-3">
           <div className="flex-1">
             <h3 className="text-[15px] font-semibold text-foreground">
-              Deployment retention
+              Retention
             </h3>
             <p className="text-[13px] text-muted-foreground mt-1">
               Control how long inactive deployments are kept before they are

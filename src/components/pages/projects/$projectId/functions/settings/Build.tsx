@@ -171,7 +171,7 @@ export function View() {
     {
       id: 'deployment-retention',
       search: {
-        title: 'Deployment retention',
+        title: 'Retention',
         description:
           'Keep active deployments and choose when inactive deployments are deleted.',
         keywords: [

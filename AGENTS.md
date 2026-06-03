@@ -438,7 +438,7 @@ Checklist (in this order):
 
 ### Viewport units (CRITICAL - fixes mobile/iPad layout bugs)
 
-**Never use `vh`** (or `h-screen`, `min-h-screen`, `max-h-screen`). On iOS Safari, iPadOS, Chrome on Android, and any browser with a dynamic toolbar, `100vh` refers to the *layout viewport*, which is taller than the actually visible viewport when browser chrome (URL bar, toolbar) is on screen. Anything sized via `vh` extends below the visible area, hiding sticky footers, CTAs, and dialog actions.
+**Never use `vh`** (or `h-screen`, `min-h-screen`, `max-h-screen`). On iOS Safari, iPadOS, Chrome on Android, and any browser with a dynamic toolbar, `100vh` refers to the _layout viewport_, which is taller than the actually visible viewport when browser chrome (URL bar, toolbar) is on screen. Anything sized via `vh` extends below the visible area, hiding sticky footers, CTAs, and dialog actions.
 
 **Always use the dynamic viewport units instead:**
 
@@ -1009,31 +1009,31 @@ Follow the modal structure pattern above. For no-content modals, skip content se
 
 ## Quick Reference
 
-| Task                   | Pattern                                                                                                                                                                                                                                   |
-| ---------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Fetch data             | Extract query function, use in hook + route loader                                                                                                                                                                                        |
-| Pagination             | requestedPage + displayedPage; use displayed data/total for list and Pagination until new page loads                                                                                                                                      |
-| Filters                | FiltersPopover + URL `query`; `placeholderData: keepPreviousData` on list query; no loading state when filters change; different empty state for "no items" vs "no results for filters" (see "Filters (table/list)")                      |
-| Delete resource        | Use `refetchQueries` (not `invalidateQueries`) in onSuccess so list updates without reload                                                                                                                                                |
-| Create resource        | Form resets and closes dialog on success                                                                                                                                                                                                  |
-| Update resource        | Use "Update" terminology, not "Edit"                                                                                                                                                                                                      |
-| Button during action   | Keep text, use `disabled` state                                                                                                                                                                                                           |
-| Unavailable action     | Disable button with tooltip, don't hide                                                                                                                                                                                                   |
-| Text buttons           | No tooltip when button has a text label (tooltips only for icon-only buttons)                                                                                                                                                             |
-| Em dashes              | Never use `—` in user-facing copy; use a period, comma, colon, or parentheses instead                                                                                                                                                     |
-| Service avatar         | `bg-muted text-muted-foreground` (never colored)                                                                                                                                                                                          |
-| Badge style            | Use status variants (`error`, `warning`, `success`, `info`) for same design; `text-[10px] shrink-0` when inline with text                                                                                                                 |
-| Icon spacing           | `mr-1.5` or `gap-1.5`                                                                                                                                                                                                                     |
-| Date display           | Always include DateTooltip                                                                                                                                                                                                                |
-| Route prefetch         | All crucial data at route level                                                                                                                                                                                                           |
+| Task                   | Pattern                                                                                                                                                                                                                                                                                                                 |
+| ---------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Fetch data             | Extract query function, use in hook + route loader                                                                                                                                                                                                                                                                      |
+| Pagination             | requestedPage + displayedPage; use displayed data/total for list and Pagination until new page loads                                                                                                                                                                                                                    |
+| Filters                | FiltersPopover + URL `query`; `placeholderData: keepPreviousData` on list query; no loading state when filters change; different empty state for "no items" vs "no results for filters" (see "Filters (table/list)")                                                                                                    |
+| Delete resource        | Use `refetchQueries` (not `invalidateQueries`) in onSuccess so list updates without reload                                                                                                                                                                                                                              |
+| Create resource        | Form resets and closes dialog on success                                                                                                                                                                                                                                                                                |
+| Update resource        | Use "Update" terminology, not "Edit"                                                                                                                                                                                                                                                                                    |
+| Button during action   | Keep text, use `disabled` state                                                                                                                                                                                                                                                                                         |
+| Unavailable action     | Disable button with tooltip, don't hide                                                                                                                                                                                                                                                                                 |
+| Text buttons           | No tooltip when button has a text label (tooltips only for icon-only buttons)                                                                                                                                                                                                                                           |
+| Em dashes              | Never use `—` in user-facing copy; use a period, comma, colon, or parentheses instead                                                                                                                                                                                                                                   |
+| Service avatar         | `bg-muted text-muted-foreground` (never colored)                                                                                                                                                                                                                                                                        |
+| Badge style            | Use status variants (`error`, `warning`, `success`, `info`) for same design; `text-[10px] shrink-0` when inline with text                                                                                                                                                                                               |
+| Icon spacing           | `mr-1.5` or `gap-1.5`                                                                                                                                                                                                                                                                                                   |
+| Date display           | Always include DateTooltip                                                                                                                                                                                                                                                                                              |
+| Route prefetch         | All crucial data at route level                                                                                                                                                                                                                                                                                         |
 | List/tab loading flash | Never set `pendingComponent` on list/tab/detail routes that prefetch (it shows "Loading…" instead of keeping the current page). Match query keys exactly between loader and View - same shared constant for default limit/sort/search/filter normalization. See "Loading & Navigation" → "Why 'Loading rows…' appears". |
-| Detail page (no flash) | Loader returns data; route passes `initialData` to View; View uses `initialData` for first paint (see "Detail page: no loading flash")                                                                                                    |
-| Models types           | Always `Models.*` from `@appwrite.io/console`                                                                                                                                                                                             |
-| Table header           | `hover:bg-transparent border-b border-border` on row, `px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider` on head                                                                                        |
-| Actions column         | Never use "Actions" as title - use empty `TableHead`                                                                                                                                                                                        |
-| Table cells            | `px-4 py-3` on all cells (preserve special padding like `pl-6 sm:pl-8` where needed)                                                                                                                                                      |
-| Long-running progress  | One panel per scope; flat list of cards (no wrapper per type); same card style + ProgressBarRow; per-card dismiss; auto-action only on status transition to completed                                                                     |
-| RBAC (roles)           | Use **feature check methods** from `@/lib/console-access-checks` only; never check `access.isOwner` or `access.canWrite*` directly. Use `canAccess*` from `console-rbac-loader` in route loaders. See "Role-based access control (RBAC)". |
+| Detail page (no flash) | Loader returns data; route passes `initialData` to View; View uses `initialData` for first paint (see "Detail page: no loading flash")                                                                                                                                                                                  |
+| Models types           | Always `Models.*` from `@appwrite.io/console`                                                                                                                                                                                                                                                                           |
+| Table header           | `hover:bg-transparent border-b border-border` on row, `px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider` on head                                                                                                                                                                      |
+| Actions column         | Never use "Actions" as title - use empty `TableHead`                                                                                                                                                                                                                                                                    |
+| Table cells            | `px-4 py-3` on all cells (preserve special padding like `pl-6 sm:pl-8` where needed)                                                                                                                                                                                                                                    |
+| Long-running progress  | One panel per scope; flat list of cards (no wrapper per type); same card style + ProgressBarRow; per-card dismiss; auto-action only on status transition to completed                                                                                                                                                   |
+| RBAC (roles)           | Use **feature check methods** from `@/lib/console-access-checks` only; never check `access.isOwner` or `access.canWrite*` directly. Use `canAccess*` from `console-rbac-loader` in route loaders. See "Role-based access control (RBAC)".                                                                               |
 
 ---
 
@@ -1204,95 +1204,49 @@ Use `console-access-checks` (e.g. `canShowProjectSettings`, `canShowConnectSecti
 
 ## Product Analytics
 
-Product analytics uses Plausible and must stay privacy-friendly. Add tracking for new user-facing features as part of the feature work, especially for navigation, wizards, forms, dialogs, list controls, and CRUD actions.
+Product analytics uses Plausible and must stay privacy-friendly. Most interaction tracking is automatic through `useGlobalAnalyticsTracker` in the root.
 
 ### Rules
 
 - **Use the shared helper**: Import `useAnalytics` from `@/hooks/use-analytics` in components, or use `trackEvent` / `trackPageView` from `@/lib/analytics` outside React.
-- **Use automatic tracking by default**: `useGlobalAnalyticsTracker` in the root tracks generic links, buttons, menu items, tabs, non-text controls, form submits, and dialog open/close events across the app.
-- **Prefer automatic tracking**: Do not add explicit `data-analytics-id` names to every button. Let the root tracker infer generic link, button, menu, tab, control, submit, and dialog events unless a flow needs richer manual tracking.
+- **Use automatic tracking by default**: `useGlobalAnalyticsTracker` in the root tracks links, buttons, menu items, tabs, non-text controls, form submits, and dialog open/close events across the app.
+- **Prefer dynamic event names**: Do not add explicit analytics metadata attributes to buttons. The root tracker builds click and control event names from the element label, tooltip, or icon when available, with a generic fallback such as `Button Clicked`.
 - **Never send raw IDs or user-entered values**: Do not send project IDs, organization IDs, resource IDs, names, emails, domains, search terms, query strings, or full URLs.
 - **Use route templates**: Page views and events should use sanitized routes such as `/projects/$projectId/databases/$databaseId`, not concrete paths.
-- **Keep event names stable and finite**: Use a small set of generic event names and put context in props.
-- **Keep props low-cardinality**: Props should be booleans, counts, fixed enums, route templates, resource types, surfaces, steps, results, or error names. Avoid labels or arbitrary strings from the UI.
-- **Track outcomes**: For create/update/delete flows, track submit attempt, validation failure, success, and API failure when applicable.
+- **Keep manual tracking low-cardinality**: Manual event props should be booleans, counts, fixed enums, route templates, resource types, steps, results, or error names. Avoid labels or arbitrary strings from the UI.
+- **Track important outcomes manually**: For create/update/delete flows, track success and API failure when automatic form/click tracking is not enough.
 - **Avoid duplicates**: When a component has richer explicit tracking for a click or form, add `data-analytics-track="manual"` to the generic DOM element so the root tracker skips it.
 
-### Event names
+### Automatic event names
 
-Use title case names from this taxonomy:
+Click and control events are named from the best safe descriptor available:
 
-- `Page Viewed` (implemented through Plausible `pageview`)
-- `Navigation Clicked`
-- `Button Clicked`
-- `Menu Item Clicked`
-- `Control Changed`
-- `Command Executed`
-- `Dialog Opened`
-- `Dialog Closed`
-- `Wizard Opened`
-- `Wizard Option Selected`
-- `Form Submitted`
+- `aria-label` / `aria-labelledby`
+- visible text
+- tooltip text (`title` / `aria-describedby`)
+- icon name, including Lucide icon classes
+
+Examples: `Create Project Button Clicked`, `Trash Menu Item Clicked`, `Docs External Link Opened`. If no safe descriptor exists, the tracker falls back to generic names such as `Button Clicked`, `Menu Item Clicked`, `Control Changed`, `Navigation Clicked`, or `External Link Opened`.
+
+### Manual tracking
+
+Use manual tracking only for outcomes and flows that generic interaction tracking cannot explain. Common event names:
+
 - `Form Validation Failed`
 - `Resource Created`
 - `Resource Creation Failed`
-- `Search Performed`
-- `Filter Applied`
-- `Sort Changed`
-- `Pagination Changed`
-- `Tab Changed`
-- `View Mode Changed`
-- `External Link Opened`
 - `Error Shown`
+- `Wizard Opened`
+- `Wizard Option Selected`
 
-Add a new event name only when the existing names cannot describe the interaction without awkward props. If you add one, update `AnalyticsEventName` in `src/lib/analytics.ts` and this section.
+If you add a new reusable manual event name, update `AnalyticsEventName` in `src/lib/analytics.ts` and this section.
 
-### Standard props
+### Tracking opt-outs
 
-Prefer these prop names:
-
-```typescript
-track('Resource Created', {
-  surface: 'create_database_wizard',
-  resource: 'database',
-  database_type: 'TablesDB',
-  spec: 'shared',
-  has_custom_id: false,
-})
-```
-
-Common props:
-
-- `surface`: UI surface or component, e.g. `sidebar`, `create_database_wizard`
-- `resource`: resource type, e.g. `database`, `bucket`, `function`
-- `step`: wizard/form step, e.g. `database_type`, `specification`
-- `option`: selected fixed option, e.g. `TablesDB`, `shared`
-- `result`: `success`, `failed`, `cancelled`, etc.
-- `error_name`: JavaScript or API error class/name only, not the full message
-- `fields`: comma-separated field keys for validation failures, never field values
-- `error_count`, `filter_count`, `page_size`: numeric summaries
-- `mobile`, `has_search`, `has_custom_id`: booleans
-
-### Optional tracking attributes
-
-The root tracker intentionally does not read text labels, input values, hrefs, form values, or resource names. Use attributes sparingly, mostly to opt out of automatic tracking when a component has richer manual tracking.
-
-Supported attributes:
+Use attributes only to opt out of automatic tracking:
 
 - `data-analytics-track="manual"`: skip automatic tracking because the component tracks explicitly.
 - `data-analytics-track="false"`: skip tracking entirely for this element subtree.
-- `data-analytics-event="Button Clicked"`: override the automatic event name. Use only names listed in `AnalyticsEventName`.
-- `data-analytics-id`, `data-analytics-surface`, `data-analytics-resource`, and `data-analytics-prop-*`: supported for rare cases where generic automatic tracking is insufficient, but do not add them broadly to buttons or shared primitives.
-
-### What to track in new features
-
-- **Pages and tabs**: Page views are automatic. Track tab changes with `Tab Changed` when tabs do not change route.
-- **Navigation**: Track sidebar, command center, breadcrumbs, back buttons, and important in-page links with `Navigation Clicked`.
-- **Wizards**: Track `Wizard Opened`, meaningful `Wizard Option Selected` events, `Form Submitted`, validation failures, success, and API failure.
-- **Forms**: Track submit, validation failure, success, and API failure. Do not track typed input values.
-- **Lists and tables**: Track search with `has_search`, filters with `filter_count`, sort changes with enum field keys, pagination changes, and view mode changes.
-- **Dialogs and drawers**: Track opened, closed, confirmed, and cancelled actions using stable surface names.
-- **CRUD**: Track create/update/delete success and failure using resource type and result. Never include resource IDs or names.
 
 ---
 

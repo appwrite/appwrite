@@ -71,7 +71,6 @@ const PROVIDERS_OTHER: ProviderOption[] = [
   { id: 'NHost', label: 'NHost' },
 ]
 
-
 function getProviderOptions(isCloud: boolean): ProviderOption[] {
   const appwrite: ProviderOption[] = [
     {
@@ -489,10 +488,6 @@ export function ImportWizardView() {
                   setProvider(p.id)
                   setStep(2)
                 }}
-                data-analytics-id="migration_provider_select"
-                data-analytics-surface="import_migration_wizard"
-                data-analytics-resource="migration"
-                data-analytics-prop-provider={p.id}
                 className="flex w-full cursor-pointer items-center gap-3 rounded-xl border border-border bg-card/50 p-5 text-left transition-all hover:border-border/80 hover:bg-card/60"
               >
                 <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-muted text-muted-foreground overflow-hidden">
@@ -554,9 +549,6 @@ export function ImportWizardView() {
                     hash: 'card-transfer-project',
                   })
                 }
-                data-analytics-id="migration_transfer_project"
-                data-analytics-surface="import_migration_wizard"
-                data-analytics-resource="migration"
               >
                 Transfer project
               </Button>
@@ -883,7 +875,8 @@ export function ImportWizardView() {
 
       {step === 3 && (
         <>
-          {(provider === 'AppwriteSelfHosted' || provider === 'AppwriteCloud') && (
+          {(provider === 'AppwriteSelfHosted' ||
+            provider === 'AppwriteCloud') && (
             <div className="rounded-lg border border-border bg-card/50 px-4 py-3 space-y-2">
               <Label className="text-[13px] font-medium">Duplicate rows</Label>
               <p className="text-[12px] text-muted-foreground">
@@ -904,10 +897,6 @@ export function ImportWizardView() {
                     variant={onDuplicate === value ? 'default' : 'outline'}
                     className="h-8 text-[13px]"
                     onClick={() => setOnDuplicate(value)}
-                    data-analytics-id="migration_duplicate_behavior_select"
-                    data-analytics-surface="import_migration_wizard"
-                    data-analytics-resource="migration"
-                    data-analytics-prop-behavior={value}
                   >
                     {label}
                   </Button>
@@ -934,9 +923,6 @@ export function ImportWizardView() {
                   variant="outline"
                   size="sm"
                   onClick={selectAll}
-                  data-analytics-id="migration_select_all_resources"
-                  data-analytics-surface="import_migration_wizard"
-                  data-analytics-resource="migration"
                 >
                   Select all
                 </Button>
@@ -945,9 +931,6 @@ export function ImportWizardView() {
                   variant="outline"
                   size="sm"
                   onClick={selectNone}
-                  data-analytics-id="migration_deselect_all_resources"
-                  data-analytics-surface="import_migration_wizard"
-                  data-analytics-resource="migration"
                 >
                   Deselect all
                 </Button>
@@ -1180,10 +1163,6 @@ export function ImportWizardView() {
           variant="outline"
           onClick={() => setStep((s) => s - 1)}
           disabled={loadingReport || isCreatePending}
-          data-analytics-id="migration_wizard_back"
-          data-analytics-surface="import_migration_wizard"
-          data-analytics-resource="migration"
-          data-analytics-prop-step={step}
         >
           Back
         </Button>
@@ -1193,10 +1172,6 @@ export function ImportWizardView() {
           type="button"
           disabled={loadingReport}
           onClick={handleFetchReport}
-          data-analytics-id="migration_fetch_report"
-          data-analytics-surface="import_migration_wizard"
-          data-analytics-resource="migration"
-          data-analytics-prop-provider={provider ?? 'unknown'}
         >
           Continue
         </Button>
@@ -1206,12 +1181,6 @@ export function ImportWizardView() {
           type="button"
           disabled={!hasSelection || isCreatePending}
           onClick={handleCreate}
-          data-analytics-id="migration_start"
-          data-analytics-surface="import_migration_wizard"
-          data-analytics-resource="migration"
-          data-analytics-prop-provider={provider ?? 'unknown'}
-          data-analytics-prop-resource_count={selectedResourcesList.length}
-          data-analytics-prop-on_duplicate={onDuplicate}
         >
           {isCreatePending ? 'Starting...' : 'Start migration'}
         </Button>

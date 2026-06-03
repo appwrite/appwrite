@@ -30,7 +30,7 @@ export function SiteDeploymentRetentionCard({
       )
     },
     onSuccess: () => {
-      toast.success('Deployment retention has been updated')
+      toast.success('Retention has been updated')
       queryClient.invalidateQueries({
         queryKey: ['site', 'project', projectId, siteId],
       })
@@ -40,7 +40,7 @@ export function SiteDeploymentRetentionCard({
     },
     onError: (error: unknown) => {
       toast.error(
-        getErrorMessage(error, 'Failed to update deployment retention'),
+        getErrorMessage(error, 'Failed to update retention'),
       )
     },
   })

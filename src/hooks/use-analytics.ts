@@ -1,7 +1,6 @@
 import { useLocation, useMatches } from '@tanstack/react-router'
 import { useCallback, useMemo } from 'react'
 import {
-  type AnalyticsEventName,
   type AnalyticsProps,
   getAnalyticsArea,
   getAnalyticsRoutePath,
@@ -20,7 +19,7 @@ export function useAnalytics() {
   )
 
   const track = useCallback(
-    (eventName: AnalyticsEventName, props: AnalyticsProps = {}) => {
+    (eventName: string, props: AnalyticsProps = {}) => {
       trackEvent(eventName, props, { routePath })
     },
     [routePath],

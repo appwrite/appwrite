@@ -41,17 +41,25 @@ type PlausibleOptions = {
 
 declare global {
   interface Window {
-    plausible?: (eventName: 'pageview' | string, options?: PlausibleOptions) => void
+    plausible?: (
+      eventName: 'pageview' | string,
+      options?: PlausibleOptions,
+    ) => void
   }
 }
 
 function normalizeAnalyticsProps(props: AnalyticsProps = {}) {
   return Object.fromEntries(
-    Object.entries(props).filter(([, value]) => value !== null && value !== undefined),
+    Object.entries(props).filter(
+      ([, value]) => value !== null && value !== undefined,
+    ),
   ) as Record<string, string | number | boolean>
 }
 
-export function getAnalyticsRoutePath(routeId: string | undefined, pathname: string) {
+export function getAnalyticsRoutePath(
+  routeId: string | undefined,
+  pathname: string,
+) {
   const routePath = routeId
     ?.split('/')
     .filter(Boolean)
@@ -79,7 +87,7 @@ export function trackPageView(routePath: string) {
 }
 
 export function trackEvent(
-  eventName: AnalyticsEventName,
+  eventName: AnalyticsEventName | string,
   props: AnalyticsProps = {},
   options: { routePath?: string; url?: string } = {},
 ) {
@@ -87,9 +95,12 @@ export function trackEvent(
 
   const routePath = options.routePath
   window.plausible?.(eventName, {
-    url: options.url ?? (routePath ? getAnalyticsRouteUrl(routePath) : undefined),
+    url:
+      options.url ?? (routePath ? getAnalyticsRouteUrl(routePath) : undefined),
     props: normalizeAnalyticsProps({
-      ...(routePath ? { route: routePath, area: getAnalyticsArea(routePath) } : {}),
+      ...(routePath
+        ? { route: routePath, area: getAnalyticsArea(routePath) }
+        : {}),
       ...props,
     }),
   })
