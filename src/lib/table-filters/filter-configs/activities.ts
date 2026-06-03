@@ -19,9 +19,9 @@ const ACTIVITY_RESOURCE_TYPE_ELEMENTS = [
 ]
 
 /**
- * Supported `ActivityEvent.userType` values (Appwrite activity audit actors).
+ * Supported `ActivityEvent.actorType` values (Appwrite activity audit actors).
  */
-const ACTIVITY_USER_TYPE_ELEMENTS = [
+const ACTIVITY_ACTOR_TYPE_ELEMENTS = [
   { value: 'user', label: 'User (client API)' },
   { value: 'admin', label: 'Admin' },
   { value: 'guest', label: 'Guest' },
@@ -41,14 +41,14 @@ const ACTIVITY_CORE_FILTER_COLUMNS: FilterColumn[] = [
     optional: false,
   },
   {
-    id: 'userType',
+    id: 'actorType',
     title: 'Actor type',
     type: 'enum',
     format: 'enum',
-    elements: ACTIVITY_USER_TYPE_ELEMENTS,
+    elements: ACTIVITY_ACTOR_TYPE_ELEMENTS,
     optional: false,
   },
-  { id: 'userId', title: 'User ID', type: 'string' },
+  { id: 'actorId', title: 'Actor ID', type: 'string' },
   { id: 'event', title: 'Event path', type: 'string' },
 ]
 

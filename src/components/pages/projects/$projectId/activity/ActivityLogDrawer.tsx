@@ -263,13 +263,13 @@ export function ActivityLogDrawer({
 
   if (!event || !display) return null
 
-  const badge = userTypeBadge(event.userType)
+  const badge = userTypeBadge(event.actorType)
   const action = display.action
   const resourceType = display.resourceType
 
-  const secondaryLine = hasHumanEmail(event.userType)
-    ? formatValue(event.userEmail)
-    : formatValue(event.userId)
+  const secondaryLine = hasHumanEmail(event.actorType)
+    ? formatValue(event.actorEmail)
+    : formatValue(event.actorId)
 
   const rawJson = formatActivityEventJson(event)
 
@@ -399,41 +399,41 @@ export function ActivityLogDrawer({
                   <DetailField label="Name">
                     <div className="flex items-center gap-3">
                       <UserTypeAvatar
-                        userType={event.userType}
-                        userName={
-                          event.userName?.trim() ||
-                          event.userEmail?.trim() ||
+                        actorType={event.actorType}
+                        actorName={
+                          event.actorName?.trim() ||
+                          event.actorEmail?.trim() ||
                           'Unknown'
                         }
                       />
                       <p className="min-w-0 truncate text-[13px] font-medium text-foreground">
-                        {formatValue(event.userName)}
+                        {formatValue(event.actorName)}
                       </p>
                     </div>
                   </DetailField>
-                  <DetailField label={hasHumanEmail(event.userType) ? 'Email' : 'Actor ID'}>
+                  <DetailField label={hasHumanEmail(event.actorType) ? 'Email' : 'Actor ID'}>
                     <p
                       className={cn(
                         'truncate text-[13px] text-muted-foreground',
-                        !hasHumanEmail(event.userType) && 'font-mono',
+                        !hasHumanEmail(event.actorType) && 'font-mono',
                       )}
                     >
                       {secondaryLine}
                     </p>
                   </DetailField>
-                  <DetailField label="User type">
+                  <DetailField label="Actor type">
                     <span
                       className={cn(
                         'inline-flex rounded px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider',
                         badge.tone,
                       )}
                     >
-                      {formatValue(event.userType)}
+                      {formatValue(event.actorType)}
                     </span>
                   </DetailField>
-                  <DetailField label="User ID">
-                    {event.userId?.trim() ? (
-                      <CopyableId id={event.userId} size="xs" maxWidth={220} />
+                  <DetailField label="Actor ID">
+                    {event.actorId?.trim() ? (
+                      <CopyableId id={event.actorId} size="xs" maxWidth={220} />
                     ) : (
                       <p className="font-mono text-[12px] text-muted-foreground">
                         -

@@ -323,10 +323,10 @@ const resourceIcons: Record<ResourceType, React.ReactNode> = {
  */
 interface DisplayActivity {
   $id: string
-  userId: string
-  userType: string
-  userName: string
-  userEmail: string
+  actorId: string
+  actorType: string
+  actorName: string
+  actorEmail: string
   action: ActionType
   resourceType: ResourceType
   resourceId: string
@@ -433,10 +433,10 @@ function resourceLabelFromEvent(activity: Models.ActivityEvent): string {
 function toDisplayActivity(event: Models.ActivityEvent): DisplayActivity {
   return {
     $id: event.$id,
-    userId: event.userId,
-    userType: event.userType || '',
-    userName: event.userName || event.userEmail || 'Unknown',
-    userEmail: event.userEmail || '',
+    actorId: event.actorId,
+    actorType: event.actorType || '',
+    actorName: event.actorName || event.actorEmail || 'Unknown',
+    actorEmail: event.actorEmail || '',
     action: eventToActionType(event.event),
     resourceType: eventToResourceType(
       event.resourceType,
@@ -1037,34 +1037,34 @@ export function View({ projectId, plan = 'pro' }: ViewProps) {
                       <TableCell className="min-w-0 px-4 py-3">
                         <div className="flex items-center gap-2.5">
                           <UserTypeAvatar
-                            userType={activity.userType}
-                            userName={activity.userName}
+                            actorType={activity.actorType}
+                            actorName={activity.actorName}
                             className="shadow-none"
                           />
                           <div className="min-w-0">
                             <p className="truncate text-[13px] font-medium text-foreground">
-                              {activity.userName}
+                              {activity.actorName}
                             </p>
                             <p
                               className={cn(
                                 'truncate text-[11px] text-muted-foreground',
-                                hasHumanEmail(activity.userType)
+                                hasHumanEmail(activity.actorType)
                                   ? ''
                                   : 'font-mono',
                               )}
                             >
-                              {hasHumanEmail(activity.userType)
-                                ? activity.userEmail ||
-                                  activity.userId ||
+                              {hasHumanEmail(activity.actorType)
+                                ? activity.actorEmail ||
+                                  activity.actorId ||
                                   '-'
-                                : activity.userId || '-'}
+                                : activity.actorId || '-'}
                             </p>
                           </div>
                         </div>
                       </TableCell>
                       <TableCell className="min-w-0 whitespace-nowrap px-4 py-3">
                         {(() => {
-                          const badge = userTypeBadge(activity.userType)
+                          const badge = userTypeBadge(activity.actorType)
                           return (
                             <span
                               className={cn(

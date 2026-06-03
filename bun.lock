@@ -5,12 +5,13 @@
     "": {
       "name": "template-tanstack-start",
       "dependencies": {
-        "@appwrite.io/console": "https://pkg.vc/-/@appwrite/@appwrite.io/console@9a14a79",
+        "@appwrite.io/console": "https://pkg.vc/-/@appwrite/@appwrite.io/console@bc990c4",
         "@dnd-kit/core": "^6.3.1",
         "@dnd-kit/sortable": "^10.0.0",
         "@dnd-kit/utilities": "^3.2.2",
         "@faker-js/faker": "^10.1.0",
         "@hookform/resolvers": "^5.2.2",
+        "@lucide/lab": "^0.1.2",
         "@monaco-editor/react": "^4.7.0",
         "@radix-ui/react-accordion": "^1.2.12",
         "@radix-ui/react-alert-dialog": "^1.1.15",
@@ -133,7 +134,7 @@
   "packages": {
     "@adobe/css-tools": ["@adobe/css-tools@4.4.4", "", {}, "sha512-Elp+iwUx5rN5+Y8xLt5/GRoG20WGoDCQ/1Fb+1LiGtvwbDavuSk0jhD/eZdckHAuzcDzccnkv+rEjyWfRx18gg=="],
 
-    "@appwrite.io/console": ["@appwrite.io/console@https://pkg.vc/-/@appwrite/@appwrite.io/console@9a14a79", { "dependencies": { "json-bigint": "1.0.0" } }],
+    "@appwrite.io/console": ["@appwrite.io/console@https://pkg.vc/-/@appwrite/@appwrite.io/console@bc990c4", { "dependencies": { "json-bigint": "1.0.0" } }],
 
     "@asamuzakjp/css-color": ["@asamuzakjp/css-color@3.2.0", "", { "dependencies": { "@csstools/css-calc": "^2.1.3", "@csstools/css-color-parser": "^3.0.9", "@csstools/css-parser-algorithms": "^3.0.4", "@csstools/css-tokenizer": "^3.0.3", "lru-cache": "^10.4.3" } }, "sha512-K1A6z8tS3XsmCMM86xoWdn7Fkdn9m6RSVtocUrJYIwZnFVkng/PvkEoWtOWmP+Scc6saYWHWZYbndEEXxl24jw=="],
 
@@ -390,6 +391,8 @@
     "@jridgewell/sourcemap-codec": ["@jridgewell/sourcemap-codec@1.5.5", "", {}, "sha512-cYQ9310grqxueWbl+WuIUIaiUaDcj7WOq5fVhEljNVgRfOUhY9fy2zTvfoqWsnebh8Sl70VScFbICvJnLKB0Og=="],
 
     "@jridgewell/trace-mapping": ["@jridgewell/trace-mapping@0.3.31", "", { "dependencies": { "@jridgewell/resolve-uri": "^3.1.0", "@jridgewell/sourcemap-codec": "^1.4.14" } }, "sha512-zzNR+SdQSDJzc8joaeP8QQoCQr8NuYx2dIIytl1QeBEZHJ9uW6hebsrYgbz8hJwUQao3TWCMtmfV8Nu1twOLAw=="],
+
+    "@lucide/lab": ["@lucide/lab@0.1.2", "", {}, "sha512-VprF2BJa7ZuTGOhUd5cf8tHJXyL63wdxcGieAiVVoR9hO0YmPsnZO0AGqDiX2/br+/MC6n8BoJcmPilltOXIJA=="],
 
     "@mapbox/geojson-rewind": ["@mapbox/geojson-rewind@0.5.2", "", { "dependencies": { "get-stream": "^6.0.1", "minimist": "^1.2.6" }, "bin": { "geojson-rewind": "geojson-rewind" } }, "sha512-tJaT+RbYGJYStt7wI3cq4Nl4SXxG8W7JDG5DMJu97V25RnbNg3QtQtf+KD+VLjNpWKYsRvXDNmNrBgEETr1ifA=="],
 

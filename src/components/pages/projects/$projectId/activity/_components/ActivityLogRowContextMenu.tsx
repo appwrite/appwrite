@@ -50,7 +50,7 @@ export function ActivityLogRowContextMenu({
   }
 
   const eventHref = activityPermalink(projectId, event.$id)
-  const hasName = !!event.userName?.trim()
+  const hasName = !!event.actorName?.trim()
 
   return (
     <ContextMenu>
@@ -73,7 +73,7 @@ export function ActivityLogRowContextMenu({
             </ContextMenuItem>
             {hasName && (
               <ContextMenuItem
-                onSelect={() => copyToClipboard('Name', event.userName)}
+                onSelect={() => copyToClipboard('Name', event.actorName)}
               >
                 <ContextMenuIcon icon={Copy} />
                 Copy name

@@ -9,8 +9,8 @@ export function formatActivityEventJson(event: Models.ActivityEvent): string {
   return JSON.stringify(event, null, 2)
 }
 
-export function isRegularUserType(userType: string): boolean {
-  const normalized = userType.toLowerCase()
+export function isRegularUserType(actorType: string | undefined | null): boolean {
+  const normalized = (actorType ?? '').toLowerCase()
   /** `user` is the supported actor; `users` may appear on older audit rows. */
   return normalized === 'user' || normalized === 'users'
 }
@@ -18,21 +18,24 @@ export function isRegularUserType(userType: string): boolean {
 /**
  * Whether this actor has a real human email worth surfacing as the secondary
  * line under their name. End-users do (their auth email); admins do (their
- * console account email). API keys and system actors don't - their `userEmail`
+ * console account email). API keys and system actors don't - their `actorEmail`
  * is often a synthetic service address, so we fall back to the actor id for those.
  */
-export function hasHumanEmail(userType: string): boolean {
-  return isRegularUserType(userType) || userType.toLowerCase() === 'admin'
+export function hasHumanEmail(actorType: string | undefined | null): boolean {
+  const normalized = (actorType ?? '').toLowerCase()
+  return isRegularUserType(actorType) || normalized === 'admin'
 }
 
 /**
  * Label + color used in the dedicated "Type" column so each row's actor type
  * (end-user, admin, API key, system) is identifiable at a glance.
  */
-export function userTypeBadge(userType: string): { label: string; tone: string } {
-  const normalized = userType.toLowerCase()
+export function userTypeBadge(
+  actorType: string | undefined | null,
+): { label: string; tone: string } {
+  const normalized = (actorType ?? '').toLowerCase()
 
-  if (isRegularUserType(userType)) {
+  if (isRegularUserType(actorType)) {
     return {
       label: 'User',
       tone: 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400',

@@ -13,26 +13,26 @@ const avatarFrame =
  * All variants share the same outer size and frame.
  */
 export function UserTypeAvatar({
-  userType,
-  userName,
+  actorType,
+  actorName,
   className,
 }: {
-  userType: string
-  userName: string
-  /** Merged with the frame; e.g. `shadow-none` for the activity table user column. */
+  actorType: string | undefined | null
+  actorName: string
+  /** Merged with the frame; e.g. `shadow-none` for the activity table actor column. */
   className?: string
 }) {
-  if (isRegularUserType(userType)) {
+  if (isRegularUserType(actorType)) {
     return (
       <InitialsAvatar
-        name={userName}
+        name={actorName}
         size="sm"
         className={cn(avatarFrame, className)}
       />
     )
   }
 
-  const normalized = userType.toLowerCase()
+  const normalized = (actorType ?? '').toLowerCase()
   let icon: ReactNode
   let tone: string
   let label: string
