@@ -26,14 +26,7 @@ export default defineConfig(async () => {
         projects: ['./tsconfig.json'],
       }),
       tailwindcss(),
-      tanstackStart({
-        spa: {
-          enabled: false,
-        },
-        prerender: {
-          enabled: false,
-        },
-      }),
+      tanstackStart(),
       devtoolsJson(),
       viteReact(),
       ...sentryPlugins,
