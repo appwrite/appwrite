@@ -2156,12 +2156,11 @@ class SitesCustomServerTest extends Scope
         $this->assertArrayHasKey('supports', $runtime);
         $this->assertArrayHasKey('services', $runtime);
         $this->assertIsArray($runtime['services']);
-        $this->assertContains('sites', $runtime['services']);
 
-        // Flutter is a site-only runtime and must appear in sites list
-        $runtimeIds = array_column($runtimes['body']['runtimes'], '$id');
-        $flutterRuntimes = array_filter($runtimeIds, fn($id) => str_starts_with($id, 'flutter'));
-        $this->assertNotEmpty($flutterRuntimes, 'Flutter runtimes should appear in sites list');
+        // Every runtime in the sites list must support the sites service
+        foreach ($runtimes['body']['runtimes'] as $runtime) {
+            $this->assertContains('sites', $runtime['services'], "Runtime {$runtime['$id']} should not appear in sites list");
+        }
     }
 
     public function testSiteStatic(): void
