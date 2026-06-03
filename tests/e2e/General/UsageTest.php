@@ -2035,7 +2035,7 @@ class UsageTest extends Scope
                     'x-appwrite-key' => $this->getProject()['apiKey'],
                 ], $this->getHeaders()),
                 [
-                    'model' => 'embeddinggemma',
+                    'model' => 'nomic-embed-text',
                     'texts' => ['usage test warm-up ' . $callCount],
                 ]
             );
@@ -2059,7 +2059,7 @@ class UsageTest extends Scope
                     'x-appwrite-key' => $this->getProject()['apiKey'],
                 ], $this->getHeaders()),
                 [
-                    'model' => 'embeddinggemma',
+                    'model' => 'nomic-embed-text',
                     'texts' => ['usage test text ' . $i],
                 ]
             );

@@ -591,7 +591,7 @@ Http::post('/v1/users/:userId/targets')
     ->label('audits.event', 'target.create')
     ->label('audits.resource', 'target/response.$id')
     ->label('event', 'users.[userId].targets.[targetId].create')
-    ->label('scope', 'targets.write')
+    ->label('scope', 'users.write')
     ->label('sdk', new Method(
         namespace: 'users',
         group: 'targets',
@@ -852,7 +852,7 @@ Http::get('/v1/users/:userId/prefs')
 Http::get('/v1/users/:userId/targets/:targetId')
     ->desc('Get user target')
     ->groups(['api', 'users'])
-    ->label('scope', 'targets.read')
+    ->label('scope', 'users.read')
     ->label('sdk', new Method(
         namespace: 'users',
         group: 'targets',
@@ -1078,7 +1078,7 @@ Http::get('/v1/users/:userId/logs')
 Http::get('/v1/users/:userId/targets')
     ->desc('List user targets')
     ->groups(['api', 'users'])
-    ->label('scope', 'targets.read')
+    ->label('scope', 'users.read')
     ->label('sdk', new Method(
         namespace: 'users',
         group: 'targets',
@@ -1843,7 +1843,7 @@ Http::patch('/v1/users/:userId/targets/:targetId')
     ->label('audits.event', 'target.update')
     ->label('audits.resource', 'target/{response.$id}')
     ->label('event', 'users.[userId].targets.[targetId].update')
-    ->label('scope', 'targets.write')
+    ->label('scope', 'users.write')
     ->label('sdk', new Method(
         namespace: 'users',
         group: 'targets',
@@ -2661,7 +2661,7 @@ Http::delete('/v1/users/:userId/targets/:targetId')
     ->label('audits.event', 'target.delete')
     ->label('audits.resource', 'target/{request.$targetId}')
     ->label('event', 'users.[userId].targets.[targetId].delete')
-    ->label('scope', 'targets.write')
+    ->label('scope', 'users.write')
     ->label('sdk', new Method(
         namespace: 'users',
         group: 'targets',
