@@ -4,6 +4,7 @@ namespace Tests\E2E\Services\Databases\VectorsDB;
 
 use PHPUnit\Framework\Attributes\Depends;
 use Tests\E2E\Client;
+use Tests\E2E\Scopes\ApiVectorsDB;
 use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\SideConsole;
@@ -15,6 +16,7 @@ class DatabasesConsoleClientTest extends Scope
 {
     use ProjectCustom;
     use SideConsole;
+    use ApiVectorsDB;
 
     public function testCreateCollection(): array
     {
