@@ -232,6 +232,7 @@ class StorageConsoleClientTest extends Scope
             'name' => 'Impersonation Test Bucket',
             'fileSecurity' => true,
             'permissions' => [
+                Permission::read(Role::any()),
                 Permission::create(Role::any()),
             ],
         ]);
@@ -261,7 +262,7 @@ class StorageConsoleClientTest extends Scope
         ];
 
         $denied = $this->client->call(Client::METHOD_GET, '/storage/buckets/' . $bucketId . '/files/' . $fileId . '/preview', $sessionHeaders);
-        $this->assertContains($denied['headers']['status-code'], [401, 404]);
+        $this->assertEquals(401, $denied['headers']['status-code']);
 
         $preview = $this->client->call(Client::METHOD_GET, '/storage/buckets/' . $bucketId . '/files/' . $fileId . '/preview', $sessionHeaders, [
             'impersonateuserid' => $targetId,
