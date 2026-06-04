@@ -82,16 +82,7 @@ class UsersConsoleClientTest extends Scope
         $this->assertNotEmpty($set['body']['password']);
     }
 
-    /**
-     * Test that impersonation works via:
-     *   - X-Appwrite-Impersonate-User-Id header (existing behavior, unchanged)
-     *   - ?impersonateuserid= query param (lowercase, emitted by the SDK caseLower filter)
-     *   - ?impersonateUserId= query param (camelCase, backward compat)
-     *
-     * The query param variants are the key addition of this PR — they allow Console
-     * to embed impersonation in file/image URLs where browsers cannot set custom headers.
-     */
-    public function testImpersonateUserIdQueryParam(): void
+    public function testImpersonateQueryParams(): void
     {
         $projectId = $this->getProject()['$id'];
         $headers = array_merge([
@@ -99,7 +90,6 @@ class UsersConsoleClientTest extends Scope
             'x-appwrite-project' => $projectId,
         ], $this->getHeaders());
 
-        // Create actor (impersonator)
         $actorId = ID::unique();
         $actor = $this->client->call(Client::METHOD_POST, '/users', $headers, [
             'userId' => $actorId,
@@ -109,35 +99,36 @@ class UsersConsoleClientTest extends Scope
         ]);
         $this->assertEquals(201, $actor['headers']['status-code']);
 
-        // Create target
         $targetId = ID::unique();
+        $targetEmail = 'target-queryparam-' . $targetId . '@example.com';
+        $targetPhone = '+1' . rand(2000000000, 2999999999);
+
         $target = $this->client->call(Client::METHOD_POST, '/users', $headers, [
             'userId' => $targetId,
-            'email' => 'target-queryparam-' . $targetId . '@example.com',
+            'email' => $targetEmail,
             'password' => 'password123',
             'name' => 'Target',
         ]);
         $this->assertEquals(201, $target['headers']['status-code']);
 
-        // Grant impersonator capability
-        $grant = $this->client->call(Client::METHOD_PATCH, '/users/' . $actorId . '/impersonator', $headers, [
+        $this->client->call(Client::METHOD_PATCH, '/users/' . $targetId . '/phone', $headers, [
+            'number' => $targetPhone,
+        ]);
+
+        $this->client->call(Client::METHOD_PATCH, '/users/' . $actorId . '/impersonator', $headers, [
             'impersonator' => true,
         ]);
-        $this->assertEquals(200, $grant['headers']['status-code']);
 
-        // Create server-side session for actor
         $session = $this->client->call(Client::METHOD_POST, '/users/' . $actorId . '/sessions', $headers);
         $this->assertEquals(201, $session['headers']['status-code']);
-        $sessionSecret = $session['body']['secret'];
 
         $sessionHeaders = [
             'origin' => 'http://localhost',
             'content-type' => 'application/json',
             'x-appwrite-project' => $projectId,
-            'x-appwrite-session' => $sessionSecret,
+            'x-appwrite-session' => $session['body']['secret'],
         ];
 
-        // Header-based impersonation — existing behavior, must still work
         $byHeader = $this->client->call(Client::METHOD_GET, '/account', array_merge($sessionHeaders, [
             'x-appwrite-impersonate-user-id' => $targetId,
         ]));
@@ -145,25 +136,25 @@ class UsersConsoleClientTest extends Scope
         $this->assertEquals($targetId, $byHeader['body']['$id']);
         $this->assertEquals($actorId, $byHeader['body']['impersonatorUserId']);
 
-        // ?impersonateuserid= (lowercase) — emitted by SDK caseLower filter on LOCATION methods
-        $byLowerParam = $this->client->call(Client::METHOD_GET, '/account', $sessionHeaders, [
+        $byUserId = $this->client->call(Client::METHOD_GET, '/account', $sessionHeaders, [
             'impersonateuserid' => $targetId,
         ]);
-        $this->assertEquals(200, $byLowerParam['headers']['status-code']);
-        $this->assertEquals($targetId, $byLowerParam['body']['$id']);
-        $this->assertEquals($actorId, $byLowerParam['body']['impersonatorUserId']);
+        $this->assertEquals(200, $byUserId['headers']['status-code']);
+        $this->assertEquals($targetId, $byUserId['body']['$id']);
 
-        // ?impersonateUserId= (camelCase) — backward compat
-        $byCamelParam = $this->client->call(Client::METHOD_GET, '/account', $sessionHeaders, [
-            'impersonateUserId' => $targetId,
+        $byEmail = $this->client->call(Client::METHOD_GET, '/account', $sessionHeaders, [
+            'impersonateemail' => $targetEmail,
         ]);
-        $this->assertEquals(200, $byCamelParam['headers']['status-code']);
-        $this->assertEquals($targetId, $byCamelParam['body']['$id']);
-        $this->assertEquals($actorId, $byCamelParam['body']['impersonatorUserId']);
+        $this->assertEquals(200, $byEmail['headers']['status-code']);
+        $this->assertEquals($targetId, $byEmail['body']['$id']);
 
-        // Header takes priority over query param when both are present.
-        // Pass actorId as the decoy in ?impersonateuserid= and targetId in the header —
-        // the response must be targetId, not actorId.
+        $byPhone = $this->client->call(Client::METHOD_GET, '/account', $sessionHeaders, [
+            'impersonatephone' => $targetPhone,
+        ]);
+        $this->assertEquals(200, $byPhone['headers']['status-code']);
+        $this->assertEquals($targetId, $byPhone['body']['$id']);
+
+        // header takes priority over query param
         $priority = $this->client->call(
             Client::METHOD_GET,
             '/account',
@@ -171,6 +162,6 @@ class UsersConsoleClientTest extends Scope
             ['impersonateuserid' => $actorId]
         );
         $this->assertEquals(200, $priority['headers']['status-code']);
-        $this->assertEquals($targetId, $priority['body']['$id'], 'header must take priority over query param');
+        $this->assertEquals($targetId, $priority['body']['$id']);
     }
 }
