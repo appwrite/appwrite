@@ -74,6 +74,10 @@ class Swagger2 extends Format
             $output['securityDefinitions']['Project']['x-appwrite'] = ['demo' => '<YOUR_PROJECT_ID>'];
         }
 
+        if (isset($output['securityDefinitions']['ProjectQuery'])) {
+            $output['securityDefinitions']['ProjectQuery']['x-appwrite'] = ['demo' => '<YOUR_PROJECT_ID>'];
+        }
+
         if (isset($output['securityDefinitions']['Key'])) {
             $output['securityDefinitions']['Key']['x-appwrite'] = ['demo' => '<YOUR_API_KEY>'];
         }
@@ -184,7 +188,7 @@ class Swagger2 extends Format
                         continue;
                     }
 
-                    $methodSecurities = ['Project' => []];
+                    $methodSecurities = [$methodObj->getProjectAuth() => []];
                     foreach ($methodObj->getAuth() as $security) {
                         /** @var AuthType $security */
                         if (\array_key_exists($security->value, $this->keys)) {
@@ -361,7 +365,7 @@ class Swagger2 extends Format
             }
 
             if (!empty($scope)) {
-                $securities = ['Project' => []];
+                $securities = [$sdk->getProjectAuth() => []];
 
                 foreach ($sdk->getAuth() as $security) {
                     if (\array_key_exists($security->value, $this->keys)) {

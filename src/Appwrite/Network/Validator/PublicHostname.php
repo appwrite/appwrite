@@ -117,19 +117,23 @@ class PublicHostname extends Validator
      */
     public static function resolve(string $hostname): array
     {
-        $ipv4 = @\gethostbynamel($hostname) ?: [];
-
+        $ipv4 = [];
         $ipv6 = [];
-        $records = @\dns_get_record($hostname, DNS_AAAA);
+
+        $records = @\dns_get_record($hostname, DNS_A | DNS_AAAA);
         if (\is_array($records)) {
             foreach ($records as $record) {
+                if (!empty($record['ip'])) {
+                    $ipv4[] = $record['ip'];
+                }
+
                 if (!empty($record['ipv6'])) {
                     $ipv6[] = $record['ipv6'];
                 }
             }
         }
 
-        return \array_values(\array_unique(\array_merge($ipv4, $ipv6)));
+        return \array_values(\array_unique([...$ipv4, ...$ipv6]));
     }
 
     /**
