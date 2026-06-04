@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Tests\E2E\Services\GraphQL\Legacy;
 
 use Tests\E2E\Client;
@@ -11,7 +13,7 @@ use Utopia\Database\Helpers\ID;
 use Utopia\Database\Helpers\Permission;
 use Utopia\Database\Helpers\Role;
 
-class DatabaseClientTest extends Scope
+final class DatabaseClientTest extends Scope
 {
     use ProjectCustom;
     use SideClient;
@@ -486,7 +488,7 @@ class DatabaseClientTest extends Scope
 
         // Attribute may already exist from setupAttributes, so we check for either success or already exists error
         if (isset($attribute['body']['errors'])) {
-            $this->assertStringContainsString('already', $attribute['body']['errors'][0]['message']);
+            $this->assertStringContainsString('already', (string) $attribute['body']['errors'][0]['message']);
         } else {
             $this->assertIsArray($attribute['body']['data']);
             $this->assertIsArray($attribute['body']['data']['databasesCreateStringAttribute']);
@@ -519,7 +521,7 @@ class DatabaseClientTest extends Scope
 
         // Attribute may already exist from setupAttributes, so we check for either success or already exists error
         if (isset($attribute['body']['errors'])) {
-            $this->assertStringContainsString('already', $attribute['body']['errors'][0]['message']);
+            $this->assertStringContainsString('already', (string) $attribute['body']['errors'][0]['message']);
         } else {
             $this->assertIsArray($attribute['body']['data']);
             $this->assertIsArray($attribute['body']['data']['databasesCreateIntegerAttribute']);
@@ -618,7 +620,7 @@ class DatabaseClientTest extends Scope
         $document = $document['body']['data']['databasesUpdateDocument'];
         $this->assertIsArray($document);
 
-        $this->assertStringContainsString('New Document Name', $document['data']);
+        $this->assertStringContainsString('New Document Name', (string) $document['data']);
     }
 
     /**

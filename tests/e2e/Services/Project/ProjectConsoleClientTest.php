@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Tests\E2E\Services\Project;
 
 use Tests\E2E\Client;
@@ -9,7 +11,7 @@ use Tests\E2E\Scopes\SideConsole;
 use Utopia\Database\Helpers\ID;
 use Utopia\System\System;
 
-class ProjectConsoleClientTest extends Scope
+final class ProjectConsoleClientTest extends Scope
 {
     use ProjectBase;
     use ProjectCustom;

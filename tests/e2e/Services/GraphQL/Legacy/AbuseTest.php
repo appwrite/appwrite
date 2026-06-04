@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Tests\E2E\Services\GraphQL\Legacy;
 
 use Tests\E2E\Client;
@@ -12,7 +14,7 @@ use Utopia\Database\Helpers\Permission;
 use Utopia\Database\Helpers\Role;
 use Utopia\System\System;
 
-class AbuseTest extends Scope
+final class AbuseTest extends Scope
 {
     use ProjectCustom;
     use SideServer;
@@ -91,7 +93,7 @@ class AbuseTest extends Scope
             'x-appwrite-project' => $projectId,
         ], $this->getHeaders(false)), $graphQLPayload);
 
-        $max = System::getEnv('_APP_GRAPHQL_MAX_QUERY_COMPLEXITY', 250);
+        $max = System::getEnv('_APP_GRAPHQL_MAX_QUERY_COMPLEXITY', '250');
 
         $this->assertEquals('Max query complexity should be ' . $max . ' but got 259.', $response['body']['errors'][0]['message']);
     }
@@ -99,7 +101,7 @@ class AbuseTest extends Scope
     public function testTooManyQueriesBlocked()
     {
         $projectId = $this->getProject()['$id'];
-        $maxQueries = System::getEnv('_APP_GRAPHQL_MAX_QUERIES', 10);
+        $maxQueries = System::getEnv('_APP_GRAPHQL_MAX_QUERIES', '10');
 
         $query = [];
         for ($i = 0; $i <= ((int) $maxQueries) + 1; $i++) {

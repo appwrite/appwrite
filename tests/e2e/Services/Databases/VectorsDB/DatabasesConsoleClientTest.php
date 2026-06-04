@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Tests\E2E\Services\Databases\VectorsDB;
 
 use PHPUnit\Framework\Attributes\Depends;
@@ -12,7 +14,7 @@ use Utopia\Database\Helpers\ID;
 use Utopia\Database\Helpers\Permission;
 use Utopia\Database\Helpers\Role;
 
-class DatabasesConsoleClientTest extends Scope
+final class DatabasesConsoleClientTest extends Scope
 {
     use ProjectCustom;
     use SideConsole;
@@ -53,7 +55,7 @@ class DatabasesConsoleClientTest extends Scope
         ]);
 
         $this->assertEquals(201, $movies['headers']['status-code']);
-        $this->assertEquals($movies['body']['name'], 'Movies');
+        $this->assertEquals('Movies', $movies['body']['name']);
 
         /**
          * Test when database is disabled but can still create collections
@@ -96,7 +98,7 @@ class DatabasesConsoleClientTest extends Scope
         ]);
 
         $this->assertEquals(201, $tvShows['headers']['status-code']);
-        $this->assertEquals($tvShows['body']['name'], 'TvShows');
+        $this->assertEquals('TvShows', $tvShows['body']['name']);
 
         return ['moviesId' => $movies['body']['$id'], 'databaseId' => $databaseId, 'tvShowsId' => $tvShows['body']['$id']];
     }
@@ -176,7 +178,7 @@ class DatabasesConsoleClientTest extends Scope
         ], $this->getHeaders()));
 
         $this->assertEquals(204, $response['headers']['status-code']);
-        $this->assertEquals($response['body'], "");
+        $this->assertEquals("", $response['body']);
     }
 
     #[Depends('testCreateCollection')]
@@ -208,7 +210,7 @@ class DatabasesConsoleClientTest extends Scope
         ]);
 
         $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertEquals(11, count($response['body']));
+        $this->assertCount(11, $response['body']);
         $this->assertEquals('24h', $response['body']['range']);
         $this->assertIsNumeric($response['body']['documentsTotal']);
         $this->assertIsNumeric($response['body']['collectionsTotal']);
@@ -253,7 +255,7 @@ class DatabasesConsoleClientTest extends Scope
             'range' => '24h'
         ]);
         $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertEquals(3, count($response['body']));
+        $this->assertCount(3, $response['body']);
         $this->assertEquals('24h', $response['body']['range']);
         $this->assertIsNumeric($response['body']['documentsTotal']);
         $this->assertIsArray($response['body']['documents']);
