@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Tests\Unit\Platform\Modules\Compute\Validator;
 
 use Appwrite\Platform\Modules\Compute\Specification as SpecificationConstants;
@@ -7,7 +9,7 @@ use Appwrite\Platform\Modules\Compute\Validator\Specification;
 use PHPUnit\Framework\TestCase;
 use Utopia\Config\Config;
 
-class SpecificationTest extends TestCase
+final class SpecificationTest extends TestCase
 {
     private array $specifications;
 

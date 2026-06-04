@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Tests\E2E\Services\Functions;
 
 use Tests\E2E\Client;
@@ -12,7 +14,7 @@ use Utopia\Database\Helpers\ID;
 use Utopia\Database\Helpers\Role;
 use Utopia\Database\Query;
 
-class FunctionsConsoleClientTest extends Scope
+final class FunctionsConsoleClientTest extends Scope
 {
     use ProjectCustom;
     use SideConsole;
@@ -143,7 +145,7 @@ class FunctionsConsoleClientTest extends Scope
             'range' => '24h'
         ]);
         $this->assertEquals(200, $usage['headers']['status-code']);
-        $this->assertEquals(24, count($usage['body']));
+        $this->assertCount(24, $usage['body']);
         $this->assertEquals('24h', $usage['body']['range']);
         $this->assertIsNumeric($usage['body']['deploymentsTotal']);
         $this->assertIsNumeric($usage['body']['deploymentsStorageTotal']);
@@ -316,7 +318,7 @@ class FunctionsConsoleClientTest extends Scope
         ], $this->getHeaders()));
 
         $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertEquals(2, sizeof($response['body']['variables']));
+        $this->assertCount(2, $response['body']['variables']);
         $this->assertEquals(2, $response['body']['total']);
         $this->assertEquals("APP_TEST", $response['body']['variables'][0]['key']);
         $this->assertEquals("TESTINGVALUE", $response['body']['variables'][0]['value']);
@@ -850,7 +852,7 @@ class FunctionsConsoleClientTest extends Scope
         ], $this->getHeaders()));
 
         $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertEquals(0, sizeof($response['body']['variables']));
+        $this->assertCount(0, $response['body']['variables']);
         $this->assertEquals(0, $response['body']['total']);
 
         /**
@@ -950,7 +952,7 @@ class FunctionsConsoleClientTest extends Scope
 
         $buildMd5 = \md5($response['body']);
 
-        $this->assertNotEquals($deploymentMd5, $buildMd5);
+        $this->assertNotSame($deploymentMd5, $buildMd5);
 
         $this->cleanupFunction($functionId);
     }
