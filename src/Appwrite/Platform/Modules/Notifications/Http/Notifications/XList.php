@@ -97,6 +97,7 @@ class XList extends Action
             $cursor->setValue($cursorDocument);
         }
 
+        $queries[] = Query::equal('channel', [NOTIFICATION_TYPE_CONSOLE]);
         $queries[] = Query::equal('resourceType', [RESOURCE_TYPE_USERS]);
         $queries[] = Query::equal('resourceId', [$user->getId()]);
 

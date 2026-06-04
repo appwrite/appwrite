@@ -84,6 +84,7 @@ class NotificationsTest extends TestCase
     {
         $this->createNotification('user-alert', RESOURCE_TYPE_USERS, 'user-a');
         $this->createNotification('team-alert', RESOURCE_TYPE_TEAMS, 'team-a');
+        $this->createNotification('user-email-receipt', RESOURCE_TYPE_USERS, 'user-a', NOTIFICATION_TYPE_EMAIL);
 
         $response = new CapturingNotificationsResponse();
 
@@ -103,14 +104,14 @@ class NotificationsTest extends TestCase
         $this->assertSame(Response::MODEL_NOTIFICATION_LIST, $response->model);
     }
 
-    private function createNotification(string $id, string $resourceType, string $resourceId): Document
+    private function createNotification(string $id, string $resourceType, string $resourceId, string $channel = NOTIFICATION_TYPE_CONSOLE): Document
     {
         return $this->database->createDocument('notifications', new Document([
             '$id' => $id,
             'messageId' => $id,
             'recipientHash' => \substr(\md5($id), 0, 16),
             'type' => 'info',
-            'channel' => NOTIFICATION_TYPE_CONSOLE,
+            'channel' => $channel,
             'projectId' => 'project',
             'projectInternalId' => '10',
             'resourceType' => $resourceType,
