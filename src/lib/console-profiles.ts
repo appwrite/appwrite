@@ -21,6 +21,8 @@ export type ConsoleProfileFeatures = {
   usageStats: boolean
   /** Activity logs and audit trail */
   activity: boolean
+  /** Init launch event page, promo banner, ticket, and related CTAs */
+  init: boolean
   /** Multiple organizations and organization switching */
   multiTenancy: boolean
   /** Organization role selection (developer, editor, analyst, billing). When false, all members are owners and role UI is hidden. */
@@ -73,6 +75,7 @@ export const CONSOLE_PROFILE_FEATURE_LABELS: Record<
   marketplace: 'Marketplace',
   usageStats: 'Usage stats',
   activity: 'Activity',
+  init: 'Init',
   multiTenancy: 'Multi-tenancy',
   orgRoles: 'Org roles',
   systemStatus: 'System status',
@@ -111,6 +114,7 @@ export const CONSOLE_PROFILES: Record<ConsoleProfileId, ConsoleProfile> = {
       marketplace: false,
       usageStats: true,
       activity: true,
+      init: true,
       multiTenancy: true,
       orgRoles: true,
       systemStatus: true,
@@ -141,6 +145,7 @@ export const CONSOLE_PROFILES: Record<ConsoleProfileId, ConsoleProfile> = {
       marketplace: false,
       usageStats: false,
       activity: false,
+      init: false,
       multiTenancy: false,
       orgRoles: false,
       systemStatus: false,
@@ -264,7 +269,12 @@ function applyCloudOnlyFeatureGates(
   features: ConsoleProfileFeatures,
 ): ConsoleProfileFeatures {
   if (profileId === 'self-hosted') {
-    return { ...features, marketplace: false, multiTenancy: false }
+    return {
+      ...features,
+      marketplace: false,
+      init: false,
+      multiTenancy: false,
+    }
   }
   return features
 }

@@ -369,6 +369,14 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
     }, 0)
   }
 
+  const applyProfileOverrideAndGoHome = (action: () => void) => {
+    setIsOpen(false)
+    setTimeout(() => {
+      action()
+      window.location.assign('/')
+    }, 0)
+  }
+
   useEffect(() => {
     const unsubscribe = subscribeToDebugOverrides(setOverrides)
     return () => {
@@ -491,7 +499,7 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
       targetProfileId: TargetProfileId,
       setEndpoint: () => void,
     ) => {
-      applyOverrideAndReload(() => {
+      applyProfileOverrideAndGoHome(() => {
         setDebugProfileOverride(targetProfileId)
         setEndpoint()
       })
@@ -604,12 +612,18 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
         label: 'Use env vars',
         description: 'Reset to VITE_CONSOLE_PROFILE and VITE_APPWRITE_ENDPOINT',
         onClick: () => {
-          applyOverrideAndReload(() => {
+          applyProfileOverrideAndGoHome(() => {
             setDebugProfileOverride(null)
             setDebugEndpointOverride(null)
           })
         },
         icon: <RotateCcw className="h-3 w-3" />,
+      },
+      {
+        label: 'Compare profiles',
+        description: 'Canonical Cloud vs self-hosted feature flags',
+        icon: <Columns2 className="h-3 w-3" />,
+        submenuVariant: 'profileComparison',
       },
     ]
 
@@ -906,12 +920,6 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
             submenu: keyboardLayoutOptions,
           },
           {
-            label: 'Compare profiles',
-            description: 'Canonical Cloud vs self-hosted feature flags',
-            icon: <Columns2 className="h-3 w-3" />,
-            submenuVariant: 'profileComparison',
-          },
-          {
             label: 'User & team prefs',
             description:
               'Account prefs and team (org) prefs: view, edit JSON, set/delete keys, reset',
@@ -925,12 +933,16 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
             icon: <Boxes className="h-3 w-3" />,
             submenuVariant: 'seedResources',
           },
-          {
-            label: 'Init',
-            description: getInitSubmenuDescription(overrides),
-            icon: <CalendarDays className="h-3 w-3" />,
-            submenu: initSubmenuItems,
-          },
+          ...(features.init
+            ? [
+                {
+                  label: 'Init',
+                  description: getInitSubmenuDescription(overrides),
+                  icon: <CalendarDays className="h-3 w-3" />,
+                  submenu: initSubmenuItems,
+                },
+              ]
+            : []),
           {
             label: 'Feature flags',
             description:
@@ -1232,18 +1244,16 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
               },
               {
                 label: 'Use env var',
-                description:
-                  !isEnvEndpointAllowedForProfile(profileId)
-                    ? getEnvEndpointDisabledDescription(profileId)
-                    : 'Reset to VITE_APPWRITE_ENDPOINT',
-                onClick:
-                  !isEnvEndpointAllowedForProfile(profileId)
-                    ? undefined
-                    : () => {
-                        applyOverrideAndReload(() =>
-                          setDebugEndpointOverride(null),
-                        )
-                      },
+                description: !isEnvEndpointAllowedForProfile(profileId)
+                  ? getEnvEndpointDisabledDescription(profileId)
+                  : 'Reset to VITE_APPWRITE_ENDPOINT',
+                onClick: !isEnvEndpointAllowedForProfile(profileId)
+                  ? undefined
+                  : () => {
+                      applyOverrideAndReload(() =>
+                        setDebugEndpointOverride(null),
+                      )
+                    },
                 active: !endpointPreset,
                 disabled: !isEnvEndpointAllowedForProfile(profileId),
                 icon: <RotateCcw className="h-3 w-3" />,
@@ -1304,6 +1314,7 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
     features.oauthApps,
     features.orgApiKeys,
     features.marketplace,
+    features.init,
     endpointPreset,
     endpointCustomUrl,
     initLowPowerDecision,

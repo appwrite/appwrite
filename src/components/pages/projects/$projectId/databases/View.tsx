@@ -1020,6 +1020,7 @@ export function View() {
                     projectId={projectId}
                     database={{ $id: db.$id, name: db.name }}
                     showSecuritySettings={showDbSecuritySettings}
+                    showMonitor={features.usageStats}
                     showBackups={features.databaseBackups}
                     showInsights={features.databaseInsights}
                   >

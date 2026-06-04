@@ -10,15 +10,14 @@ import {
 } from '@/lib/init/org-promo-banner'
 import type { LaunchEventCta } from '@/lib/init/types'
 import type { ReactNode } from 'react'
+import { useConsoleProfile } from '@/hooks/use-console-profile'
 
-const BADGE_VARIANT: Record<
-  InitOrgPromoPhase,
-  'info' | 'success' | 'warning'
-> = {
-  before: 'info',
-  during: 'success',
-  after: 'info',
-}
+const BADGE_VARIANT: Record<InitOrgPromoPhase, 'info' | 'success' | 'warning'> =
+  {
+    before: 'info',
+    during: 'success',
+    after: 'info',
+  }
 
 function InitOrgPromoBannerLink({
   cta,
@@ -55,7 +54,11 @@ function InitOrgPromoBannerLink({
 
 export function InitOrgPromoBanner() {
   const bannerRef = useRef<HTMLDivElement>(null)
+  const { features } = useConsoleProfile()
   const { mockInitCurrentDay } = useDebugOverrides()
+
+  if (!features.init) return null
+
   const content = getInitOrgPromoBannerContent({
     mockCurrentDay: mockInitCurrentDay,
   })

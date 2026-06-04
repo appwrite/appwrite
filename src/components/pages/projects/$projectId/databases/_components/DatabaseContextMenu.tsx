@@ -43,6 +43,7 @@ interface DatabaseContextMenuProps {
   projectId: string
   database: DatabaseContextMenuDatabase
   showSecuritySettings: boolean
+  showMonitor: boolean
   showBackups: boolean
   showInsights: boolean
   children: React.ReactNode
@@ -52,6 +53,7 @@ export function DatabaseContextMenu({
   projectId,
   database,
   showSecuritySettings,
+  showMonitor,
   showBackups,
   showInsights,
   children,
@@ -102,16 +104,18 @@ export function DatabaseContextMenu({
           <ContextMenuIcon icon={Workflow} />
           Visualizer
         </ContextMenuItem>
-        <ContextMenuItem
-          onSelect={() =>
-            navigateToTab(
-              '/projects/$projectId/databases/$dbKind/$databaseId/monitor',
-            )
-          }
-        >
-          <ContextMenuIcon icon={Activity} />
-          Monitor
-        </ContextMenuItem>
+        {showMonitor && (
+          <ContextMenuItem
+            onSelect={() =>
+              navigateToTab(
+                '/projects/$projectId/databases/$dbKind/$databaseId/monitor',
+              )
+            }
+          >
+            <ContextMenuIcon icon={Activity} />
+            Monitor
+          </ContextMenuItem>
+        )}
         {showSecuritySettings && (
           <ContextMenuItem
             onSelect={() =>

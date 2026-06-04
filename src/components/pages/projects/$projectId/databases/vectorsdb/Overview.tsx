@@ -16,17 +16,8 @@ import {
   FileText,
   Copy,
 } from 'lucide-react'
-import {
-  formatNumber,
-} from '@/lib/utils/mock-data'
-import {
-  useState,
-  useEffect,
-  useMemo,
-} from 'react'
-
-
-
+import { formatNumber } from '@/lib/utils/mock-data'
+import { useState, useEffect, useMemo } from 'react'
 
 import { useMutation, useQueryClient, useQuery } from '@tanstack/react-query'
 import { toast } from 'sonner'
@@ -39,10 +30,7 @@ import {
   createProjectTable,
   invalidateDatabaseModel,
 } from '@/lib/react-query/hooks'
-import {
-  DEFAULT_PAGE_SIZE,
-} from '@/lib/react-query/hooks/constants'
-
+import { DEFAULT_PAGE_SIZE } from '@/lib/react-query/hooks/constants'
 
 import { BackupsView } from '../Backups'
 import { ExportImportView } from '../ExportImportView'
@@ -89,7 +77,6 @@ import { Pagination } from '@/components/global/shared/Pagination'
 import { CopyableId } from '@/components/global/shared/CopyableId'
 import { DetailResourceHeaderTitle } from '@/components/global/shared/ResourceTitleSwitcher'
 
-
 import { DateTooltip } from '@/components/global/shared/DateTooltip'
 import { EmptyState } from '@/components/global/shared/EmptyState'
 import { Button } from '@/components/ui/button'
@@ -116,7 +103,6 @@ import {
   useLocation,
 } from '@tanstack/react-router'
 
-
 import {
   Tooltip,
   TooltipContent,
@@ -125,7 +111,6 @@ import {
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Switch } from '@/components/ui/switch'
-
 
 import {
   Dialog,
@@ -523,9 +508,10 @@ export function Overview({
     features,
   )
 
-  // Redirect from backups/insights when feature disabled
+  // Redirect from monitor/backups/insights when feature disabled
   useEffect(() => {
     if (
+      (activeTab === 'monitor' && !features.usageStats) ||
       (activeTab === 'backups' && !features.databaseBackups) ||
       (activeTab === 'insights' && !features.databaseInsights)
     ) {
@@ -537,6 +523,7 @@ export function Overview({
     }
   }, [
     activeTab,
+    features.usageStats,
     features.databaseBackups,
     features.databaseInsights,
     projectId,
@@ -586,12 +573,16 @@ export function Overview({
           to: '/projects/$projectId/databases/$dbKind/$databaseId/visualizer',
           params: { projectId, dbKind: DB_KIND, databaseId },
         },
-        {
-          id: 'monitor',
-          label: 'Monitor',
-          to: '/projects/$projectId/databases/$dbKind/$databaseId/monitor',
-          params: { projectId, dbKind: DB_KIND, databaseId },
-        },
+        ...(features.usageStats
+          ? [
+              {
+                id: 'monitor' as const,
+                label: 'Monitor',
+                to: '/projects/$projectId/databases/$dbKind/$databaseId/monitor',
+                params: { projectId, dbKind: DB_KIND, databaseId },
+              },
+            ]
+          : []),
         ...(showDbSecuritySettings
           ? [
               {
@@ -644,6 +635,7 @@ export function Overview({
       databaseId,
       DB_KIND,
       dbLabels.databaseOverviewTabLabel,
+      features.usageStats,
       features.databaseBackups,
       features.databaseInsights,
       showDbSecuritySettings,
@@ -724,8 +716,7 @@ export function Overview({
     },
     onError: (error: Error) => {
       toast.error(
-        error.message ||
-          `Failed to delete ${dbLabels.containerPlural}`,
+        error.message || `Failed to delete ${dbLabels.containerPlural}`,
       )
     },
   })
@@ -1014,7 +1005,9 @@ export function Overview({
       <div
         className={cn(
           'flex-1 min-h-0 flex flex-col',
-          activeTab === 'monitor' ? 'min-h-0 overflow-hidden' : 'overflow-y-auto',
+          activeTab === 'monitor'
+            ? 'min-h-0 overflow-hidden'
+            : 'overflow-y-auto',
         )}
       >
         {activeTab === 'tables' && (
@@ -1522,7 +1515,7 @@ export function Overview({
                     className="h-9 text-[13px]"
                     disabled={
                       enabled ===
-                      ((database as Models.Database).enabled !== false) ||
+                        ((database as Models.Database).enabled !== false) ||
                       updateEnabledMutation.isPending
                     }
                     onClick={() => {

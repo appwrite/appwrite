@@ -191,7 +191,7 @@ export function ConsoleHeader({
 
   const hasSidebar = !isOrgOverview
   const isAccountScope = location.pathname.startsWith('/account')
-  const isInitScope = location.pathname === '/init'
+  const isInitScope = features.init && location.pathname === '/init'
   const initHeaderNavCta = isInitScope
     ? resolveInitHeaderNavCta({ mockCurrentDay: overrides.mockInitCurrentDay })
     : null
@@ -229,14 +229,15 @@ export function ConsoleHeader({
             const linkOrgId =
               project?.teamId ||
               (account?.prefs?.organization as string | undefined)
-            const logoDestination = showGuestHeader
-              ? ({ to: '/init' } as const)
-              : linkOrgId
-                ? ({
-                    to: '/organizations/$orgId',
-                    params: { orgId: linkOrgId },
-                  } as const)
-                : ({ to: '/' } as const)
+            const logoDestination =
+              showGuestHeader && features.init
+                ? ({ to: '/init' } as const)
+                : linkOrgId
+                  ? ({
+                      to: '/organizations/$orgId',
+                      params: { orgId: linkOrgId },
+                    } as const)
+                  : ({ to: '/' } as const)
             const logoLink = (childClassName?: string) => (
               <Link
                 {...logoDestination}

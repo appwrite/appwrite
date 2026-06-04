@@ -1,4 +1,4 @@
-import { createFileRoute } from '@tanstack/react-router'
+import { createFileRoute, redirect } from '@tanstack/react-router'
 import { Workspace } from '@/components/pages/projects/$projectId/databases/View'
 import {
   projectQueryOptions,
@@ -6,6 +6,7 @@ import {
   tablesQueryOptions,
 } from '@/lib/react-query/hooks'
 import { pageTitle } from '@/lib/utils/page-title'
+import { getActiveProfileFeatures } from '@/lib/console-profiles'
 
 const TABLES_PER_PAGE = 100
 
@@ -26,6 +27,13 @@ export const Route = createFileRoute(
     const { queryClient } = context
 
     if (!projectId || !databaseId) return
+    if (!getActiveProfileFeatures().usageStats) {
+      throw redirect({
+        to: '/projects/$projectId/databases/$dbKind/$databaseId/',
+        params,
+        replace: true,
+      })
+    }
 
     await queryClient.ensureQueryData(projectQueryOptions(projectId))
     await queryClient.ensureQueryData(

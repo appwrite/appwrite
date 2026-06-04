@@ -1225,18 +1225,20 @@ export function Workspace({
           <Network className="h-3.5 w-3.5 shrink-0" />
           <span>Visualizer</span>
         </Link>
-        <Link
-          {...dbNav.monitor(tableNavParams)}
-          className={cn(
-            'flex w-full items-center gap-2.5 rounded-md px-2.5 py-1.5 text-left text-[13px] font-medium transition-colors duration-150',
-            databaseTab === 'monitor'
-              ? 'bg-accent text-foreground'
-              : 'text-muted-foreground hover:bg-accent/50 hover:text-foreground',
-          )}
-        >
-          <Activity className="h-3.5 w-3.5 shrink-0" />
-          <span>Monitor</span>
-        </Link>
+        {features.usageStats && (
+          <Link
+            {...dbNav.monitor(tableNavParams)}
+            className={cn(
+              'flex w-full items-center gap-2.5 rounded-md px-2.5 py-1.5 text-left text-[13px] font-medium transition-colors duration-150',
+              databaseTab === 'monitor'
+                ? 'bg-accent text-foreground'
+                : 'text-muted-foreground hover:bg-accent/50 hover:text-foreground',
+            )}
+          >
+            <Activity className="h-3.5 w-3.5 shrink-0" />
+            <span>Monitor</span>
+          </Link>
+        )}
         {!noCreateDbPermission && (
           <Link
             {...dbNav.dbSecurity(tableNavParams)}
