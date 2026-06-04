@@ -68,7 +68,20 @@ class V17 extends Filter
         foreach ($content['queries'] as $query) {
             try {
                 $query = $this->parseQuery($query);
-                $parsed[] = \json_encode(\array_filter($query->toArray()));
+                $queryArray = \array_filter($query->toArray());
+
+                if ($query->getMethod() === Query::TYPE_SELECT) {
+                    foreach ($query->getValues() as $field) {
+                        $single = \array_filter(Query::parseQuery([
+                            'method' => Query::TYPE_SELECT,
+                            'attribute' => $field,
+                            'values' => [$field],
+                        ])->toArray());
+                        $parsed[] = \json_encode($single);
+                    }
+                } else {
+                    $parsed[] = \json_encode($queryArray);
+                }
             } catch (\Throwable $th) {
                 throw new Exception(Exception::GENERAL_QUERY_INVALID, $th->getMessage());
             }
