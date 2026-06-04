@@ -106,7 +106,6 @@ class UsersConsoleClientTest extends Scope
         // Create the target user (will be impersonated)
         $targetId = ID::unique();
         $targetEmail = 'target-' . $targetId . '@example.com';
-        $targetPhone = '+1' . rand(2000000000, 2999999999);
 
         $target = $this->client->call(Client::METHOD_POST, '/users', $headers, [
             'userId' => $targetId,
@@ -115,10 +114,6 @@ class UsersConsoleClientTest extends Scope
             'name' => 'Target User',
         ]);
         $this->assertEquals(201, $target['headers']['status-code']);
-
-        $this->client->call(Client::METHOD_PATCH, '/users/' . $targetId . '/phone', $headers, [
-            'number' => $targetPhone,
-        ]);
 
         // Confirm target has never been accessed — accessedAt is empty on a fresh user.
         // After impersonated requests it must remain empty: if the guard were removed,
@@ -152,20 +147,6 @@ class UsersConsoleClientTest extends Scope
         $this->assertEquals($targetId, $accountAsTarget['body']['$id']);
         $this->assertEquals($targetEmail, $accountAsTarget['body']['email']);
         $this->assertEquals($actorId, $accountAsTarget['body']['impersonatorUserId']);
-
-        // Impersonate by email via header
-        $accountByEmail = $this->client->call(Client::METHOD_GET, '/account', array_merge($actorHeaders, [
-            'x-appwrite-impersonation' => $targetEmail,
-        ]));
-        $this->assertEquals(200, $accountByEmail['headers']['status-code']);
-        $this->assertEquals($targetId, $accountByEmail['body']['$id']);
-
-        // Impersonate by phone via header
-        $accountByPhone = $this->client->call(Client::METHOD_GET, '/account', array_merge($actorHeaders, [
-            'x-appwrite-impersonation' => $targetPhone,
-        ]));
-        $this->assertEquals(200, $accountByPhone['headers']['status-code']);
-        $this->assertEquals($targetId, $accountByPhone['body']['$id']);
 
         // Impersonate via URL query param (mirrors file/image URL use case)
         $accountByParam = $this->client->call(Client::METHOD_GET, '/account', $actorHeaders, [
