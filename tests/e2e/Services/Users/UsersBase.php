@@ -2322,7 +2322,7 @@ trait UsersBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $projectId,
             'x-appwrite-session' => $sessionSecret,
-            'x-appwrite-impersonate-user-id' => $idB,
+            'x-appwrite-impersonation' => $idB,
         ];
 
         $account = $this->client->call(Client::METHOD_GET, '/account', $accountHeaders);
@@ -2344,7 +2344,7 @@ trait UsersBase
     }
 
     /**
-     * Test impersonation by email header
+     * Test impersonation by user ID (previously tested email header, now ID-only per API contract)
      */
     public function testImpersonateByEmail(): void
     {
@@ -2363,10 +2363,9 @@ trait UsersBase
         $this->assertEquals(201, $userA['headers']['status-code']);
         $idA = $userA['body']['$id'];
 
-        $targetEmail = 'impersonate-by-email-target@appwrite.io';
         $userB = $this->client->call(Client::METHOD_POST, '/users', $headers, [
             'userId' => ID::unique(),
-            'email' => $targetEmail,
+            'email' => 'impersonate-by-email-target@appwrite.io',
             'password' => 'password',
             'name' => 'Target By Email',
         ]);
@@ -2381,7 +2380,7 @@ trait UsersBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $projectId,
             'x-appwrite-session' => $session['body']['secret'],
-            'x-appwrite-impersonate-user-email' => $targetEmail,
+            'x-appwrite-impersonation' => $idB,
         ]);
         $this->assertEquals(200, $account['headers']['status-code']);
         $this->assertEquals($idB, $account['body']['$id']);
@@ -2389,7 +2388,7 @@ trait UsersBase
     }
 
     /**
-     * Test impersonation by phone header
+     * Test impersonation by user ID (previously tested phone header, now ID-only per API contract)
      */
     public function testImpersonateByPhone(): void
     {
@@ -2408,10 +2407,9 @@ trait UsersBase
         $this->assertEquals(201, $userA['headers']['status-code']);
         $idA = $userA['body']['$id'];
 
-        $targetPhone = '+1555010200';
         $userB = $this->client->call(Client::METHOD_POST, '/users', $headers, [
             'userId' => ID::unique(),
-            'phone' => $targetPhone,
+            'phone' => '+1555010200',
             'name' => 'Target By Phone',
         ]);
         $this->assertEquals(201, $userB['headers']['status-code']);
@@ -2425,7 +2423,7 @@ trait UsersBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $projectId,
             'x-appwrite-session' => $session['body']['secret'],
-            'x-appwrite-impersonate-user-phone' => $targetPhone,
+            'x-appwrite-impersonation' => $idB,
         ]);
         $this->assertEquals(200, $account['headers']['status-code']);
         $this->assertEquals($idB, $account['body']['$id']);
@@ -2468,7 +2466,7 @@ trait UsersBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $projectId,
             'x-appwrite-session' => $session['body']['secret'],
-            'x-appwrite-impersonate-user-id' => $idB,
+            'x-appwrite-impersonation' => $idB,
         ]);
         $this->assertEquals(200, $account['headers']['status-code']);
         $this->assertEquals($idA, $account['body']['$id']);
@@ -2512,14 +2510,14 @@ trait UsersBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $projectId,
             'x-appwrite-session' => $session['body']['secret'],
-            'x-appwrite-impersonate-user-id' => $userB['body']['$id'],
+            'x-appwrite-impersonation' => $userB['body']['$id'],
         ]);
         $this->assertEquals(401, $users['headers']['status-code']);
         $this->assertEquals('general_unauthorized_scope', $users['body']['type']);
     }
 
     /**
-     * Test that email and phone impersonation headers are ignored for users without impersonator capability
+     * Test that the impersonation header is ignored for users without impersonator capability
      */
     public function testImpersonationByEmailAndPhoneRequireCapability(): void
     {
@@ -2538,49 +2536,29 @@ trait UsersBase
         $this->assertEquals(201, $userA['headers']['status-code']);
         $idA = $userA['body']['$id'];
 
-        $targetEmail = 'non-impersonator-target-email@appwrite.io';
-        $targetByEmail = $this->client->call(Client::METHOD_POST, '/users', $headers, [
+        $userB = $this->client->call(Client::METHOD_POST, '/users', $headers, [
             'userId' => ID::unique(),
-            'email' => $targetEmail,
+            'email' => 'non-impersonator-target@appwrite.io',
             'password' => 'password',
-            'name' => 'Target Email',
+            'name' => 'Target',
         ]);
-        $this->assertEquals(201, $targetByEmail['headers']['status-code']);
-
-        $targetPhone = '+1555010300';
-        $targetByPhone = $this->client->call(Client::METHOD_POST, '/users', $headers, [
-            'userId' => ID::unique(),
-            'phone' => $targetPhone,
-            'name' => 'Target Phone',
-        ]);
-        $this->assertEquals(201, $targetByPhone['headers']['status-code']);
+        $this->assertEquals(201, $userB['headers']['status-code']);
+        $idB = $userB['body']['$id'];
 
         $session = $this->client->call(Client::METHOD_POST, '/users/' . $idA . '/sessions', $headers);
         $this->assertEquals(201, $session['headers']['status-code']);
 
-        $accountByEmail = $this->client->call(Client::METHOD_GET, '/account', [
+        $account = $this->client->call(Client::METHOD_GET, '/account', [
             'content-type' => 'application/json',
             'x-appwrite-project' => $projectId,
             'x-appwrite-session' => $session['body']['secret'],
-            'x-appwrite-impersonate-user-email' => $targetEmail,
+            'x-appwrite-impersonation' => $idB,
         ]);
-        $this->assertEquals(200, $accountByEmail['headers']['status-code']);
-        $this->assertEquals($idA, $accountByEmail['body']['$id']);
-        $this->assertEquals('Non Impersonator Headers', $accountByEmail['body']['name']);
-        $this->assertArrayHasKey('impersonatorUserId', $accountByEmail['body']);
-        $this->assertNull($accountByEmail['body']['impersonatorUserId']);
-
-        $accountByPhone = $this->client->call(Client::METHOD_GET, '/account', [
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $projectId,
-            'x-appwrite-session' => $session['body']['secret'],
-            'x-appwrite-impersonate-user-phone' => $targetPhone,
-        ]);
-        $this->assertEquals(200, $accountByPhone['headers']['status-code']);
-        $this->assertEquals($idA, $accountByPhone['body']['$id']);
-        $this->assertEquals('Non Impersonator Headers', $accountByPhone['body']['name']);
-        $this->assertArrayHasKey('impersonatorUserId', $accountByPhone['body']);
-        $this->assertNull($accountByPhone['body']['impersonatorUserId']);
+        $this->assertEquals(200, $account['headers']['status-code']);
+        $this->assertEquals($idA, $account['body']['$id']);
+        $this->assertEquals('Non Impersonator Headers', $account['body']['name']);
+        $this->assertArrayHasKey('impersonatorUserId', $account['body']);
+        $this->assertNull($account['body']['impersonatorUserId']);
     }
 
     /**
@@ -2660,7 +2638,7 @@ trait UsersBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $projectId,
             'x-appwrite-session' => $session['body']['secret'],
-            'x-appwrite-impersonate-user-id' => $idB,
+            'x-appwrite-impersonation' => $idB,
         ];
 
         $users = $this->client->call(Client::METHOD_GET, '/users', $listHeaders);
@@ -2709,7 +2687,7 @@ trait UsersBase
     }
 
     /**
-     * Test impersonation via URL query params — mirrors the ?project= and ?devKey= pattern.
+     * Test impersonation via URL query param — mirrors the ?project= and ?devKey= pattern.
      * Allows Console to embed impersonation in direct file/image URLs where headers cannot be set.
      */
     public function testImpersonateByQueryParams(): void
@@ -2720,14 +2698,9 @@ trait UsersBase
             'x-appwrite-project' => $projectId,
         ], $this->getHeaders());
 
-        $emailA = 'queryparam-impersonator-' . \uniqid() . '@appwrite.io';
-        $emailB = 'queryparam-target-' . \uniqid() . '@appwrite.io';
-        $emailC = 'queryparam-target-c-' . \uniqid() . '@appwrite.io';
-        $phone = '+1' . \rand(1000000000, 9999999999);
-
         $userA = $this->client->call(Client::METHOD_POST, '/users', $headers, [
             'userId' => ID::unique(),
-            'email' => $emailA,
+            'email' => 'queryparam-impersonator-' . \uniqid() . '@appwrite.io',
             'password' => 'password',
             'name' => 'Query Param Impersonator',
         ]);
@@ -2736,12 +2709,21 @@ trait UsersBase
 
         $userB = $this->client->call(Client::METHOD_POST, '/users', $headers, [
             'userId' => ID::unique(),
-            'email' => $emailB,
+            'email' => 'queryparam-target-' . \uniqid() . '@appwrite.io',
             'password' => 'password',
             'name' => 'Query Param Target',
         ]);
         $this->assertEquals(201, $userB['headers']['status-code']);
         $idB = $userB['body']['$id'];
+
+        $userC = $this->client->call(Client::METHOD_POST, '/users', $headers, [
+            'userId' => ID::unique(),
+            'email' => 'queryparam-target-c-' . \uniqid() . '@appwrite.io',
+            'password' => 'password',
+            'name' => 'Query Param Target C',
+        ]);
+        $this->assertEquals(201, $userC['headers']['status-code']);
+        $idC = $userC['body']['$id'];
 
         $patch = $this->client->call(Client::METHOD_PATCH, '/users/' . $idA . '/impersonator', $headers, ['impersonator' => true]);
         $this->assertEquals(200, $patch['headers']['status-code']);
@@ -2758,47 +2740,19 @@ trait UsersBase
 
         // Impersonate by user ID via query param
         $account = $this->client->call(Client::METHOD_GET, '/account', $sessionHeaders, [
-            'impersonateUserId' => $idB,
+            'impersonation' => $idB,
         ]);
         $this->assertEquals(200, $account['headers']['status-code']);
         $this->assertEquals($idB, $account['body']['$id']);
         $this->assertEquals('Query Param Target', $account['body']['name']);
         $this->assertEquals($idA, $account['body']['impersonatorUserId']);
 
-        // Impersonate by email via query param
-        $accountByEmail = $this->client->call(Client::METHOD_GET, '/account', $sessionHeaders, [
-            'impersonateEmail' => $emailB,
-        ]);
-        $this->assertEquals(200, $accountByEmail['headers']['status-code']);
-        $this->assertEquals($idB, $accountByEmail['body']['$id']);
-        $this->assertEquals($idA, $accountByEmail['body']['impersonatorUserId']);
-
-        // Impersonate by phone via query param (update target user with a phone first)
-        $this->client->call(Client::METHOD_PATCH, '/users/' . $idB . '/phone', $headers, [
-            'number' => $phone,
-        ]);
-        $accountByPhone = $this->client->call(Client::METHOD_GET, '/account', $sessionHeaders, [
-            'impersonatePhone' => $phone,
-        ]);
-        $this->assertEquals(200, $accountByPhone['headers']['status-code']);
-        $this->assertEquals($idB, $accountByPhone['body']['$id']);
-        $this->assertEquals($idA, $accountByPhone['body']['impersonatorUserId']);
-
         // Header takes priority over query param when both are present
-        $userC = $this->client->call(Client::METHOD_POST, '/users', $headers, [
-            'userId' => ID::unique(),
-            'email' => $emailC,
-            'password' => 'password',
-            'name' => 'Query Param Target C',
-        ]);
-        $this->assertEquals(201, $userC['headers']['status-code']);
-        $idC = $userC['body']['$id'];
-
         $accountHeaderPriority = $this->client->call(
             Client::METHOD_GET,
             '/account',
-            array_merge($sessionHeaders, ['x-appwrite-impersonate-user-id' => $idC]),
-            ['impersonateUserId' => $idB]
+            array_merge($sessionHeaders, ['x-appwrite-impersonation' => $idC]),
+            ['impersonation' => $idB]
         );
         $this->assertEquals(200, $accountHeaderPriority['headers']['status-code']);
         $this->assertEquals($idC, $accountHeaderPriority['body']['$id'], 'header must take priority over query param');
