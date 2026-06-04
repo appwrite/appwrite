@@ -46,13 +46,21 @@ import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
 import {
   organizationsQueryOptions,
+  organizationQueryOptions,
+  organizationPlanQueryOptions,
+  organizationFailedInvoicePresenceQueryOptions,
+  organizationScopesQueryOptions,
   activeProjectsQueryOptions,
   deleteOrganization,
   organizationMembershipsQueryOptions,
   mapOrganizationMembershipsToTeamMembers,
+  consoleTeamQueryOptions,
   useConsoleTeam,
   useUpdateConsoleTeamPrefs,
   pinnedProjectsQueryOptions,
+  organizationDomainsQueryOptions,
+  DOMAINS_DEFAULT_SORT_BY,
+  DOMAINS_DEFAULT_SORT_ORDER,
   useOrganizationPlan,
   useOrganizationFailedInvoicePresence,
   isOrganizationBillingReadonlyStatus,
@@ -105,13 +113,6 @@ import {
   DropdownMenuTrigger,
   DropdownMenuSeparator,
 } from '@/components/ui/dropdown-menu'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select'
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
 import { Label } from '@/components/ui/label'
 import {
@@ -150,7 +151,7 @@ import { ConsoleLayout } from '@/components/global/layout/ConsoleLayout'
 import { CommandCenter } from '@/components/global/shared/CommandCenter'
 import { InitialsAvatar } from '@/components/global/shared/Avatar'
 import { cn } from '@/lib/utils'
-import { MenuItemContent, MenuItemIcon } from '@/components/global/shared/ContextMenuIcon'
+import { MenuItemContent } from '@/components/global/shared/ContextMenuIcon'
 import { RowActionsMenuTrigger } from '@/components/global/shared/RowActionsMenuTrigger'
 import { getPlanBadgeColor, getPlanDisplayName } from '@/lib/utils/plan-badge'
 import {
@@ -202,13 +203,6 @@ import { DateTooltip } from '@/components/global/shared/DateTooltip'
 import { EmptyState } from '@/components/global/shared/EmptyState'
 import { ComingSoonView } from '@/components/global/shared/ComingSoonView'
 import { GripVertical } from 'lucide-react'
-
-// Environment variables for whitelabeling
-const COMPANY_NAME = import.meta.env.VITE_COMPANY_NAME || 'Appwrite'
-const CONTACT_SALES_URL =
-  import.meta.env.VITE_CONTACT_SALES_URL ||
-  'https://appwrite.io/contact-us/enterprise'
-const LEGAL_EMAIL = import.meta.env.VITE_LEGAL_EMAIL || 'legal@appwrite.io'
 
 function DomainsPlanLimitAlert({ orgId }: { orgId: string | undefined }) {
   const { currentCount, limit, plan, planName } =
@@ -1022,16 +1016,44 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
   // Mutation to update user prefs when switching organizations
   const updateOrgPrefsMutation = useMutation({
     mutationFn: async (orgId: string) => {
-      await sdk.forConsole.account.updatePrefs({
+      const accountPrefs = (
+        account as { prefs?: Record<string, unknown> } | null | undefined
+      )?.prefs
+      return await sdk.forConsole.account.updatePrefs({
         prefs: {
-          ...account?.prefs,
+          ...accountPrefs,
           organization: orgId,
         },
       })
     },
-    onSuccess: () => {
-      // Invalidate account query to refetch with new prefs
-      queryClient.invalidateQueries({ queryKey: ['account', 'console'] })
+    onMutate: (orgId) => {
+      queryClient.setQueriesData<{ prefs?: Record<string, unknown> }>(
+        { queryKey: ['account', 'console'] },
+        (current) =>
+          current
+            ? {
+                ...current,
+                prefs: { ...current.prefs, organization: orgId },
+              }
+            : current,
+      )
+    },
+    onSuccess: (updatedAccount) => {
+      queryClient.setQueriesData<{ prefs?: Record<string, unknown> }>(
+        { queryKey: ['account', 'console'] },
+        (current) =>
+          current
+            ? {
+                ...current,
+                ...updatedAccount,
+                prefs: {
+                  ...current.prefs,
+                  ...(updatedAccount as { prefs?: Record<string, unknown> })
+                    .prefs,
+                },
+              }
+            : current,
+      )
     },
   })
 
@@ -1621,6 +1643,104 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
       ? projectsByTeam
       : filteredProjectsByTeam
 
+  const prefetchOrganizationSwitchData = useCallback(
+    async (nextOrgId: string) => {
+      const [nextTeam] = await Promise.all([
+        queryClient.ensureQueryData(consoleTeamQueryOptions(nextOrgId)),
+        queryClient.ensureQueryData(organizationsQueryOptions()),
+        queryClient.ensureQueryData(organizationQueryOptions(nextOrgId)),
+        ...(features.billing
+          ? [
+              queryClient.ensureQueryData(organizationPlanQueryOptions(nextOrgId)),
+              queryClient
+                .ensureQueryData(
+                  organizationFailedInvoicePresenceQueryOptions(nextOrgId),
+                )
+                .catch(() => {}),
+            ]
+          : []),
+        ...(features.orgRoles
+          ? [
+              queryClient
+                .ensureQueryData(organizationScopesQueryOptions(nextOrgId))
+                .catch(() => {}),
+            ]
+          : []),
+      ])
+      const nextTeamPrefs = (
+        nextTeam as { prefs?: Record<string, unknown> } | null
+      )?.prefs
+      const nextPinnedIds = parsePinnedProjectIds(nextTeamPrefs)
+      const projectPages = Array.from(
+        new Set([0, Math.max(0, requestedPage - 1)]),
+      )
+
+      await Promise.all([
+        queryClient.ensureQueryData(
+          organizationMembershipsQueryOptions(
+            nextOrgId,
+            0,
+            GRID_DEFAULT_PAGE_SIZE,
+            '',
+          ),
+        ),
+        ...projectPages.map((page) =>
+          queryClient.ensureQueryData(
+            activeProjectsQueryOptions(
+              nextOrgId,
+              page,
+              urlProjectsLimit,
+              searchQuery,
+              searchQuery.trim() ? undefined : nextPinnedIds,
+            ),
+          ),
+        ),
+        ...(nextPinnedIds.length > 0
+          ? [
+              queryClient.ensureQueryData(
+                pinnedProjectsQueryOptions(nextOrgId, nextPinnedIds),
+              ),
+            ]
+          : []),
+        ...(activeTab === 'domains'
+          ? [
+              queryClient.ensureQueryData(
+                organizationDomainsQueryOptions(
+                  nextOrgId,
+                  0,
+                  GRID_DEFAULT_PAGE_SIZE,
+                  undefined,
+                  undefined,
+                  DOMAINS_DEFAULT_SORT_BY,
+                  DOMAINS_DEFAULT_SORT_ORDER,
+                ),
+              ),
+              queryClient.ensureQueryData(
+                organizationDomainsQueryOptions(
+                  nextOrgId,
+                  0,
+                  1,
+                  undefined,
+                  undefined,
+                  DOMAINS_DEFAULT_SORT_BY,
+                  DOMAINS_DEFAULT_SORT_ORDER,
+                ),
+              ),
+            ]
+          : []),
+      ])
+    },
+    [
+      activeTab,
+      features.billing,
+      features.orgRoles,
+      queryClient,
+      requestedPage,
+      searchQuery,
+      urlProjectsLimit,
+    ],
+  )
+
   const handleSelectOrg = async (org: Organization) => {
     setOrgSwitcherOpen(false)
 
@@ -1644,6 +1764,13 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
       settingsSubRoute ||
       (activeTab && tabRoutes[activeTab as keyof typeof tabRoutes]) ||
       '/organizations/$orgId'
+
+    try {
+      await prefetchOrganizationSwitchData(org.$id)
+    } catch (error) {
+      console.warn('Failed to prefetch organization switch data:', error)
+    }
+
     navigate({
       to: route as unknown,
       params: { orgId: org.$id } as unknown,
