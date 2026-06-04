@@ -50,7 +50,10 @@ class Create extends Action
         BuildPublisher $publisherForBuilds
     ) {
         $body = $request->getRawPayload();
-        $secret = System::getEnv('_APP_ORCHESTRATOR_CALLBACK_SECRET', System::getEnv('_APP_OPENSSL_KEY_V1', ''));
+        $secret = System::getEnv('_APP_ORCHESTRATOR_CALLBACK_SECRET', '');
+        if (empty($secret)) {
+            throw new Exception(Exception::GENERAL_SERVER_ERROR, '_APP_ORCHESTRATOR_CALLBACK_SECRET environment variable is required.');
+        }
         if (! Signature::verify($body, $request->getHeader('x-signature-256', ''), $secret)) {
             throw new Exception(Exception::USER_UNAUTHORIZED, 'Invalid orchestrator event signature.');
         }
