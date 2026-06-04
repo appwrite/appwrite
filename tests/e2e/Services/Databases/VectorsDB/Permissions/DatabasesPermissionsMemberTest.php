@@ -5,6 +5,7 @@ namespace Tests\E2E\Services\Databases\VectorsDB\Permissions;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Depends;
 use Tests\E2E\Client;
+use Tests\E2E\Scopes\ApiVectorsDB;
 use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\SideClient;
@@ -17,6 +18,7 @@ class DatabasesPermissionsMemberTest extends Scope
     use ProjectCustom;
     use SideClient;
     use DatabasesPermissionsScope;
+    use ApiVectorsDB;
 
     public array $collections = [];
 

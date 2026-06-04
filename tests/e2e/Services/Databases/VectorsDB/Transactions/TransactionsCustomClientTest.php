@@ -2,6 +2,7 @@
 
 namespace Tests\E2E\Services\Databases\VectorsDB\Transactions;
 
+use Tests\E2E\Scopes\ApiVectorsDB;
 use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\SideClient;
@@ -11,4 +12,5 @@ class TransactionsCustomClientTest extends Scope
     use TransactionsBase;
     use ProjectCustom;
     use SideClient;
+    use ApiVectorsDB;
 }
