@@ -743,7 +743,7 @@ class Builds extends Action
 
             $isCanceled = false;
             $span = Span::current();
-            $outputDirectory = $deployment->getAttribute('buildOutput') ?? $resource->getAttribute('outputDirectory');
+            $outputDirectory = $deployment->getAttribute('buildOutput') ?? $resource->getAttribute('outputDirectory') ?? '';
 
             if ($buildsBackend === 'orchestrator') {
                 $this->createOrchestratorBuild(
@@ -758,7 +758,7 @@ class Builds extends Action
                     memory: $memory,
                     timeout: $timeout,
                     version: $version,
-                    outputDirectory: $outputDirectory ?? ''
+                    outputDirectory: $outputDirectory
                 );
 
                 $orchestratorBuildSubmitted = true;
@@ -1334,7 +1334,10 @@ class Builds extends Action
         $base = \rtrim(System::getEnv('_APP_ORCHESTRATOR_APPWRITE_ENDPOINT', 'http://appwrite/v1'), '/');
         $callbackBase = \rtrim(System::getEnv('_APP_ORCHESTRATOR_APPWRITE_CALLBACK_ENDPOINT', $base), '/');
 
-        $callbackSecret = System::getEnv('_APP_ORCHESTRATOR_CALLBACK_SECRET', System::getEnv('_APP_OPENSSL_KEY_V1', ''));
+        $callbackSecret = System::getEnv('_APP_ORCHESTRATOR_CALLBACK_SECRET', '');
+        if (empty($callbackSecret)) {
+            throw new \Exception('_APP_ORCHESTRATOR_CALLBACK_SECRET environment variable is required.');
+        }
         $sourceToken = $this->createDeploymentArtifactToken($dbForProject, $resource, $deployment, 'source', $timeout + 300);
         $buildToken = $this->createDeploymentArtifactToken($dbForProject, $resource, $deployment, 'build', $timeout + 300);
         $projectQuery = 'project=' . \rawurlencode($project->getId());
@@ -1493,12 +1496,12 @@ class Builds extends Action
             throw new \Exception('Missing orchestrator event payload');
         }
 
-        $deployment = $dbForProject->getDocument('deployments', $deployment->getId());
+        $deployment = $dbForProject->getAuthorization()->skip(fn () => $dbForProject->getDocument('deployments', $deployment->getId()));
         if ($deployment->isEmpty()) {
             throw new \Exception('Deployment not found');
         }
 
-        $resource = $dbForProject->getDocument($resource->getCollection(), $resource->getId());
+        $resource = $dbForProject->getAuthorization()->skip(fn () => $dbForProject->getDocument($resource->getCollection(), $resource->getId()));
         if ($resource->isEmpty()) {
             throw new \Exception('Resource not found');
         }
@@ -1784,10 +1787,10 @@ class Builds extends Action
     protected function waitForOrchestratorBuildPath(Database $dbForProject, Document $deployment): Document
     {
         for ($attempt = 0; $attempt < 20; $attempt++) {
-            $deployments = $dbForProject->find('deployments', [
+            $deployments = $dbForProject->getAuthorization()->skip(fn () => $dbForProject->find('deployments', [
                 Query::equal('$id', [$deployment->getId()]),
                 Query::limit(1),
-            ]);
+            ]));
             $deployment = $deployments[0] ?? new Document();
 
             if ($deployment->isEmpty() || !empty($deployment->getAttribute('buildPath', ''))) {
@@ -1811,7 +1814,7 @@ class Builds extends Action
                 return $deployment;
             }
 
-            $deployment = $dbForProject->getDocument('deployments', $deployment->getId());
+            $deployment = $dbForProject->getAuthorization()->skip(fn () => $dbForProject->getDocument('deployments', $deployment->getId()));
             if ($deployment->isEmpty()) {
                 return $deployment;
             }
