@@ -7,12 +7,13 @@ import {
   Link,
 } from '@tanstack/react-router'
 import { useQueryClient, useQuery } from '@tanstack/react-query'
-import { Clock, Play, FileCode } from 'lucide-react'
+import { Bell, Clock, Play, FileCode } from 'lucide-react'
 import { RuntimeIcon } from '@/components/global/shared/RuntimeIcon'
 import { ServiceHeader, type Tab } from '../shared/ServiceHeader'
 import { ResourceCard, RESOURCE_CARD_GRID_CLASSNAME } from '../shared/ResourceCard'
 import { Pagination } from '@/components/global/shared/Pagination'
 import { EmptyState } from '@/components/global/shared/EmptyState'
+import { DateTooltip } from '@/components/global/shared/DateTooltip'
 import { Button } from '@/components/ui/button'
 import {
   useProjectFunctions,
@@ -76,6 +77,70 @@ function getNextScheduledExecution(func: Models.Function): string | null {
   // cron-parser is not available in client-side code
   // Return null to avoid dependency resolution errors
   return null
+}
+
+function getLastDeploymentCreatedAt(func: Models.Function): string | undefined {
+  const functionWithDeploymentDates = func as Models.Function & {
+    latestDeploymentCreatedAt?: string
+    deploymentCreatedAt?: string
+  }
+
+  return (
+    functionWithDeploymentDates.latestDeploymentCreatedAt ||
+    functionWithDeploymentDates.deploymentCreatedAt ||
+    undefined
+  )
+}
+
+function FunctionTriggerIndicators({
+  schedule,
+  eventCount,
+}: {
+  schedule?: string
+  eventCount: number
+}) {
+  if (!schedule && eventCount === 0) return null
+
+  return (
+    <TooltipProvider delayDuration={0}>
+      <span className="flex shrink-0 items-center gap-1">
+        {schedule ? (
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <span
+                className="inline-flex h-5 w-5 items-center justify-center rounded-full border border-border bg-muted/50 text-muted-foreground"
+                aria-label="Has cron trigger"
+              >
+                <Clock className="h-3 w-3" />
+              </span>
+            </TooltipTrigger>
+            <TooltipContent>
+              <p>Cron trigger: {formatCronExpression(schedule)}</p>
+            </TooltipContent>
+          </Tooltip>
+        ) : null}
+        {eventCount > 0 ? (
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <span
+                className="inline-flex h-5 w-5 items-center justify-center rounded-full border border-border bg-muted/50 text-muted-foreground"
+                aria-label="Has event triggers"
+              >
+                <Bell className="h-3 w-3" />
+              </span>
+            </TooltipTrigger>
+            <TooltipContent>
+              <p>
+                {eventCount === 1
+                  ? '1 event trigger'
+                  : `${eventCount} event triggers`}
+              </p>
+            </TooltipContent>
+          </Tooltip>
+        ) : null}
+      </span>
+    </TooltipProvider>
+  )
 }
 
 export function View() {
@@ -729,6 +794,9 @@ export function View() {
                     const nextExecution = func.schedule
                       ? getNextScheduledExecution(func as Models.Function)
                       : null
+                    const lastDeploymentCreatedAt = getLastDeploymentCreatedAt(
+                      func as Models.Function,
+                    )
 
                     return (
                       <FunctionContextMenu
@@ -762,8 +830,12 @@ export function View() {
                             }
                             metadata={[
                               {
-                                label: 'Runtime',
-                                value: func.runtime || 'unknown',
+                                label: 'Last deployed',
+                                value: lastDeploymentCreatedAt ? (
+                                  <DateTooltip date={lastDeploymentCreatedAt} />
+                                ) : (
+                                  'Never'
+                                ),
                               },
                               ...(func.schedule
                                 ? [
@@ -796,6 +868,20 @@ export function View() {
                                           </Tooltip>
                                         </TooltipProvider>
                                       ),
+                                    },
+                                  ]
+                                : []),
+                              ...(func.schedule || (func.events?.length ?? 0) > 0
+                                ? [
+                                    {
+                                      label: '',
+                                      value: (
+                                        <FunctionTriggerIndicators
+                                          schedule={func.schedule || undefined}
+                                          eventCount={func.events?.length ?? 0}
+                                        />
+                                      ),
+                                      align: 'right' as const,
                                     },
                                   ]
                                 : []),

@@ -63,9 +63,9 @@ import {
 import {
   setDebugEndpointOverride,
   ENDPOINT_PRESETS,
-  getEffectiveEndpointBaseUrl,
   getEnvEndpointBaseUrl,
   isCloudEndpointUrl,
+  type EndpointPresetId,
 } from '@/lib/debug-endpoint'
 import { useDebugEndpoint } from '@/hooks/use-debug-endpoint'
 import { useNavigate } from '@tanstack/react-router'
@@ -458,43 +458,156 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
       icon: <Keyboard className="h-3 w-3" />,
     }))
 
+    type TargetProfileId = 'cloud' | 'self-hosted'
+
+    const envEndpoint = getEnvEndpointBaseUrl()
+    const isCloudEnvEndpoint = envEndpoint
+      ? isCloudEndpointUrl(envEndpoint)
+      : false
+    const activeEndpointLabel = !endpointPreset
+      ? 'Use env var'
+      : endpointPreset === 'custom' && endpointCustomUrl
+        ? `Custom: ${endpointCustomUrl.replace(/\/v1\/?$/, '')}`
+        : endpointPreset !== 'custom' &&
+            ENDPOINT_PRESETS[endpointPreset as keyof typeof ENDPOINT_PRESETS]
+          ? ENDPOINT_PRESETS[endpointPreset as keyof typeof ENDPOINT_PRESETS]
+              .label
+          : endpointPreset
+
+    const isEnvEndpointAllowedForProfile = (targetProfileId: TargetProfileId) =>
+      !!envEndpoint &&
+      (targetProfileId === 'cloud' ? isCloudEnvEndpoint : !isCloudEnvEndpoint)
+
+    const getEnvEndpointDisabledDescription = (
+      targetProfileId: TargetProfileId,
+    ) => {
+      if (!envEndpoint) return 'VITE_APPWRITE_ENDPOINT is not configured'
+      return targetProfileId === 'cloud'
+        ? 'Unavailable because the env endpoint is not a cloud endpoint'
+        : 'Unavailable because the env endpoint is a cloud endpoint'
+    }
+
+    const setProfileAndEndpoint = (
+      targetProfileId: TargetProfileId,
+      setEndpoint: () => void,
+    ) => {
+      applyOverrideAndReload(() => {
+        setDebugProfileOverride(targetProfileId)
+        setEndpoint()
+      })
+    }
+
+    const buildProfileEndpointOptions = (
+      targetProfileId: TargetProfileId,
+    ): MenuItem[] => {
+      const presetOptions = (
+        Object.entries(ENDPOINT_PRESETS) as [
+          Exclude<EndpointPresetId, 'custom'>,
+          (typeof ENDPOINT_PRESETS)[keyof typeof ENDPOINT_PRESETS],
+        ][]
+      ).map(([id, { label, description }]) => {
+        const disabled =
+          (targetProfileId === 'self-hosted' &&
+            (id === 'production' || id === 'stage')) ||
+          (targetProfileId === 'cloud' && id === 'localhost')
+
+        return {
+          label,
+          description: disabled
+            ? targetProfileId === 'cloud'
+              ? 'Unavailable with the Cloud profile'
+              : 'Unavailable with the self-hosted profile'
+            : description,
+          onClick: disabled
+            ? undefined
+            : () => {
+                setProfileAndEndpoint(targetProfileId, () =>
+                  setDebugEndpointOverride(id),
+                )
+              },
+          active: profileId === targetProfileId && endpointPreset === id,
+          disabled,
+          icon: <Globe className="h-3 w-3" />,
+        }
+      })
+
+      const useEnvDisabled = !isEnvEndpointAllowedForProfile(targetProfileId)
+
+      return [
+        ...presetOptions,
+        ...(targetProfileId === 'self-hosted'
+          ? [
+              {
+                label: 'Custom...',
+                description: 'Enter a custom API URL',
+                onClick: () => {
+                  const url = window.prompt(
+                    'Enter API endpoint URL (e.g. https://my-appwrite.example/v1)',
+                    endpointPreset === 'custom' && endpointCustomUrl
+                      ? endpointCustomUrl
+                      : 'http://localhost/v1',
+                  )
+                  if (!url?.trim()) return
+                  if (isCloudEndpointUrl(url.trim())) {
+                    window.alert(
+                      'Cloud endpoints cannot be used with the self-hosted profile.',
+                    )
+                    return
+                  }
+                  setProfileAndEndpoint(targetProfileId, () =>
+                    setDebugEndpointOverride('custom', url.trim()),
+                  )
+                },
+                active:
+                  profileId === targetProfileId && endpointPreset === 'custom',
+                icon: <Globe className="h-3 w-3" />,
+              } satisfies MenuItem,
+            ]
+          : []),
+        {
+          label: 'Use env var',
+          description: useEnvDisabled
+            ? getEnvEndpointDisabledDescription(targetProfileId)
+            : 'Reset to VITE_APPWRITE_ENDPOINT',
+          onClick: useEnvDisabled
+            ? undefined
+            : () => {
+                setProfileAndEndpoint(targetProfileId, () =>
+                  setDebugEndpointOverride(null),
+                )
+              },
+          active: profileId === targetProfileId && !endpointPreset,
+          disabled: useEnvDisabled,
+          icon: <RotateCcw className="h-3 w-3" />,
+        },
+      ]
+    }
+
     const profileOptions: MenuItem[] = [
       {
         label: 'Cloud',
         description:
-          'Full feature set (billing, domains, usage, activity, org roles, system status, account MFA, account identities)',
-        onClick: () => {
-          applyOverrideAndReload(() => {
-            const effectiveEndpoint = getEffectiveEndpointBaseUrl()
-            if (!effectiveEndpoint || !isCloudEndpointUrl(effectiveEndpoint)) {
-              setDebugEndpointOverride('production')
-            }
-            setDebugProfileOverride('cloud')
-          })
-        },
+          'Full feature set. Choose a cloud endpoint to use with this profile.',
         active: profileId === 'cloud',
         icon: <Cloud className="h-3 w-3" />,
+        submenu: buildProfileEndpointOptions('cloud'),
       },
       {
         label: 'Self-hosted',
-        description: 'Cloud-only features disabled',
-        onClick: () => {
-          applyOverrideAndReload(() => {
-            const effectiveEndpoint = getEffectiveEndpointBaseUrl()
-            if (!effectiveEndpoint || isCloudEndpointUrl(effectiveEndpoint)) {
-              setDebugEndpointOverride('localhost')
-            }
-            setDebugProfileOverride('self-hosted')
-          })
-        },
+        description:
+          'Cloud-only features disabled. Choose a self-hosted endpoint to use with this profile.',
         active: profileId === 'self-hosted',
         icon: <Server className="h-3 w-3" />,
+        submenu: buildProfileEndpointOptions('self-hosted'),
       },
       {
-        label: 'Use env var',
-        description: 'Reset to VITE_CONSOLE_PROFILE',
+        label: 'Use env vars',
+        description: 'Reset to VITE_CONSOLE_PROFILE and VITE_APPWRITE_ENDPOINT',
         onClick: () => {
-          applyOverrideAndReload(() => setDebugProfileOverride(null))
+          applyOverrideAndReload(() => {
+            setDebugProfileOverride(null)
+            setDebugEndpointOverride(null)
+          })
         },
         icon: <RotateCcw className="h-3 w-3" />,
       },
@@ -717,61 +830,68 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
             badge: banners.length > 0 ? banners.length : undefined,
           },
           {
-            label: 'Fullscreen loader',
-            description: overrides.showFullscreenLoader
-              ? 'Enabled'
-              : 'Disabled',
-            icon: <Loader2 className="h-3 w-3" />,
+            label: 'Demo pages and comps',
+            description: 'Preview debug-only pages and components.',
+            icon: <Bug className="h-3 w-3" />,
             submenu: [
               {
-                label: 'Show fullscreen loader',
-                description:
-                  'Keep the initial loader visible to preview it (e.g. with status banner).',
-                onClick: () => {
-                  setOverrides((prev) => ({
-                    ...prev,
-                    showFullscreenLoader: true,
-                  }))
-                  setDebugOverride('showFullscreenLoader', true)
-                  setIsOpen(false)
-                },
-                active: overrides.showFullscreenLoader,
+                label: 'Fullscreen loader',
+                description: overrides.showFullscreenLoader
+                  ? 'Enabled'
+                  : 'Disabled',
                 icon: <Loader2 className="h-3 w-3" />,
+                submenu: [
+                  {
+                    label: 'Show fullscreen loader',
+                    description:
+                      'Keep the initial loader visible to preview it (e.g. with status banner).',
+                    onClick: () => {
+                      setOverrides((prev) => ({
+                        ...prev,
+                        showFullscreenLoader: true,
+                      }))
+                      setDebugOverride('showFullscreenLoader', true)
+                      setIsOpen(false)
+                    },
+                    active: overrides.showFullscreenLoader,
+                    icon: <Loader2 className="h-3 w-3" />,
+                  },
+                  {
+                    label: 'Hide fullscreen loader',
+                    description: 'Return to normal loading behavior.',
+                    onClick: () => {
+                      setOverrides((prev) => ({
+                        ...prev,
+                        showFullscreenLoader: false,
+                      }))
+                      setDebugOverride('showFullscreenLoader', false)
+                      setIsOpen(false)
+                    },
+                    active: !overrides.showFullscreenLoader,
+                    icon: <RotateCcw className="h-3 w-3" />,
+                  },
+                ],
               },
               {
-                label: 'Hide fullscreen loader',
-                description: 'Return to normal loading behavior.',
+                label: 'Error page',
+                description: 'Preview the error page as users see it.',
                 onClick: () => {
-                  setOverrides((prev) => ({
-                    ...prev,
-                    showFullscreenLoader: false,
-                  }))
-                  setDebugOverride('showFullscreenLoader', false)
+                  navigate({ to: '/debug/error-preview' })
                   setIsOpen(false)
                 },
-                active: !overrides.showFullscreenLoader,
-                icon: <RotateCcw className="h-3 w-3" />,
+                icon: <Bug className="h-3 w-3" />,
+              },
+              {
+                label: 'Org setup wizard',
+                description:
+                  'Preview the organization creation setup progress stage.',
+                onClick: () => {
+                  navigate({ to: '/debug/org-setup-preview' })
+                  setIsOpen(false)
+                },
+                icon: <Loader2 className="h-3 w-3" />,
               },
             ],
-          },
-          {
-            label: 'Error page',
-            description: 'Preview the error page as users see it.',
-            onClick: () => {
-              navigate({ to: '/debug/error-preview' })
-              setIsOpen(false)
-            },
-            icon: <Bug className="h-3 w-3" />,
-          },
-          {
-            label: 'Org setup wizard',
-            description:
-              'Preview the organization creation setup progress stage.',
-            onClick: () => {
-              navigate({ to: '/debug/org-setup-preview' })
-              setIsOpen(false)
-            },
-            icon: <Loader2 className="h-3 w-3" />,
           },
         ],
       },
@@ -779,17 +899,6 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
         title: 'Settings',
         icon: <Settings className="h-3.5 w-3.5" />,
         items: [
-          {
-            label: 'Console profile',
-            description: CONSOLE_PROFILES[profileId].description,
-            icon:
-              profileId === 'cloud' ? (
-                <Cloud className="h-3 w-3" />
-              ) : (
-                <Server className="h-3 w-3" />
-              ),
-            submenu: profileOptions,
-          },
           {
             label: 'Keyboard layout',
             description: keyboardLayoutDescription,
@@ -1040,23 +1149,24 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
               },
             ],
           },
+        ],
+      },
+      {
+        title: 'Environment',
+        icon: <Globe className="h-3.5 w-3.5" />,
+        items: [
+          {
+            label: 'Console profile',
+            description: CONSOLE_PROFILES[profileId].description,
+            icon:
+              profileId === 'cloud' ? (
+                <Cloud className="h-3 w-3" />
+              ) : (
+                <Server className="h-3 w-3" />
+              ),
+            submenu: profileOptions,
+          },
           (() => {
-            const envEndpoint = getEnvEndpointBaseUrl()
-            const isCloudEnvEndpoint = envEndpoint
-              ? isCloudEndpointUrl(envEndpoint)
-              : false
-            const activeEndpointLabel = !endpointPreset
-              ? 'Use env var'
-              : endpointPreset === 'custom' && endpointCustomUrl
-                ? `Custom: ${endpointCustomUrl.replace(/\/v1\/?$/, '')}`
-                : endpointPreset !== 'custom' &&
-                    ENDPOINT_PRESETS[
-                      endpointPreset as keyof typeof ENDPOINT_PRESETS
-                    ]
-                  ? ENDPOINT_PRESETS[
-                      endpointPreset as keyof typeof ENDPOINT_PRESETS
-                    ].label
-                  : endpointPreset
             const endpointOptions: MenuItem[] = [
               ...(
                 Object.entries(ENDPOINT_PRESETS) as [
@@ -1102,9 +1212,15 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
                           'Enter API endpoint URL (e.g. https://my-appwrite.example/v1)',
                           endpointPreset === 'custom' && endpointCustomUrl
                             ? endpointCustomUrl
-                            : 'https://cloud.appwrite.io/v1',
+                            : 'http://localhost/v1',
                         )
                         if (url?.trim()) {
+                          if (isCloudEndpointUrl(url.trim())) {
+                            window.alert(
+                              'Cloud endpoints cannot be used with the self-hosted profile.',
+                            )
+                            return
+                          }
                           applyOverrideAndReload(() =>
                             setDebugEndpointOverride('custom', url.trim()),
                           )
@@ -1117,11 +1233,11 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
               {
                 label: 'Use env var',
                 description:
-                  profileId === 'cloud' && !isCloudEnvEndpoint
-                    ? 'Unavailable because the env endpoint is not a cloud endpoint'
+                  !isEnvEndpointAllowedForProfile(profileId)
+                    ? getEnvEndpointDisabledDescription(profileId)
                     : 'Reset to VITE_APPWRITE_ENDPOINT',
                 onClick:
-                  profileId === 'cloud' && !isCloudEnvEndpoint
+                  !isEnvEndpointAllowedForProfile(profileId)
                     ? undefined
                     : () => {
                         applyOverrideAndReload(() =>
@@ -1129,7 +1245,7 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
                         )
                       },
                 active: !endpointPreset,
-                disabled: profileId === 'cloud' && !isCloudEnvEndpoint,
+                disabled: !isEnvEndpointAllowedForProfile(profileId),
                 icon: <RotateCcw className="h-3 w-3" />,
               },
             ]

@@ -60,6 +60,10 @@ function isBillingEnabled(): boolean {
   return getActiveProfileFeatures().billing
 }
 
+function isMultiTenancyEnabled(): boolean {
+  return getActiveProfileFeatures().multiTenancy
+}
+
 function createSelfHostedOrganizationPlan(): OrganizationPlan {
   return {
     $id: 'self-hosted',
@@ -719,6 +723,10 @@ export async function createOrganization(orgData: {
   budget?: number
   taxId?: string | null
 }) {
+  if (!isMultiTenancyEnabled()) {
+    throw new Error('This console profile supports only one organization')
+  }
+
   if (!orgData.name.trim()) {
     throw new Error('Organization name is required')
   }
@@ -751,6 +759,10 @@ export async function createOrganization(orgData: {
  * In self-hosted mode this deletes the backing team.
  */
 export async function deleteOrganization(organizationId: string) {
+  if (!isMultiTenancyEnabled()) {
+    throw new Error('This console profile requires one organization')
+  }
+
   if (!organizationId) {
     throw new Error('Organization ID is required')
   }

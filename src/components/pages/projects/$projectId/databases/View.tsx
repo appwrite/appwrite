@@ -23,15 +23,7 @@ import {
   collections,
   type Database as DatabaseType,
 } from '@/lib/utils/mock-data'
-import {
-  useState,
-  useEffect,
-  useRef,
-  useMemo,
-} from 'react'
-
-
-
+import { useState, useEffect, useRef, useMemo } from 'react'
 
 import { useMutation, useQueryClient, useQuery } from '@tanstack/react-query'
 import { toast } from 'sonner'
@@ -50,15 +42,11 @@ import {
   ROWS_DEFAULT_PAGE_SIZE,
 } from '@/lib/react-query/hooks/constants'
 
-
 import { CreateDatabase } from './CreateDatabase'
 import { CreateTable, createTableVariantForDbRoute } from './CreateTable'
 import { TableContextMenu } from './_components/TableContextMenu'
 import { DatabaseContextMenu } from './_components/DatabaseContextMenu'
 import { DatabaseBackupsNavLink } from './_components/DatabaseBackupsNavLink'
-
-
-
 
 import {
   canCreateDatabase,
@@ -85,10 +73,12 @@ type DatabaseWithBackup = Models.Database & {
 
 import { ServiceHeader } from '../shared/ServiceHeader'
 import { sdk } from '@/lib/appwrite/sdk'
-import { ResourceCard, RESOURCE_CARD_GRID_CLASSNAME } from '../shared/ResourceCard'
+import {
+  ResourceCard,
+  RESOURCE_CARD_GRID_CLASSNAME,
+} from '../shared/ResourceCard'
 import { Pagination } from '@/components/global/shared/Pagination'
 import { CopyableId } from '@/components/global/shared/CopyableId'
-
 
 import { DateTooltip } from '@/components/global/shared/DateTooltip'
 import { EmptyState } from '@/components/global/shared/EmptyState'
@@ -101,7 +91,6 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
-
 
 import { Checkbox } from '@/components/ui/checkbox'
 import { Badge } from '@/components/ui/badge'
@@ -124,9 +113,6 @@ import type { CompactFilterKey } from '@/lib/table-filters'
 import { FiltersPopover } from '@/components/global/shared/FiltersPopover'
 import { PlanLimitWarning } from '../shared/PlanLimitWarning'
 
-
-
-
 import {
   Dialog,
   DialogContent,
@@ -134,11 +120,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog'
-import {
-  Alert,
-  AlertDescription,
-  AlertTitle,
-} from '@/components/ui/alert'
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 
 export type {
   OverviewContentTab,
@@ -687,9 +669,9 @@ export function View() {
         onCreate={() =>
           useCreateDatabaseWizard
             ? navigate({
-              to: '/projects/$projectId/databases/create',
-              params: { projectId: projectId! },
-            })
+                to: '/projects/$projectId/databases/create',
+                params: { projectId: projectId! },
+              })
             : setCreateDatabaseDialogOpen(true)
         }
         createDisabled={isCreateDisabled}
@@ -735,8 +717,8 @@ export function View() {
           // Data is prefetched in route loader, only render if data exists
           // PlanLimitWarning handles its own visibility logic
           project &&
-            organizationPlan !== undefined &&
-            totalDatabasesData !== undefined ? (
+          organizationPlan !== undefined &&
+          totalDatabasesData !== undefined ? (
             <PlanLimitWarning
               currentCount={totalDatabasesCount}
               limit={databasesLimit}
@@ -933,7 +915,7 @@ export function View() {
                                       .backupPolicyCount > 0
                                       ? `${(db as DatabaseWithBackup).backupPolicyCount} ${(db as DatabaseWithBackup).backupPolicyCount === 1 ? 'policy' : 'policies'}`
                                       : (db as DatabaseWithBackup).backupPolicy
-                                        ?.name || 'Enabled'}
+                                          ?.name || 'Enabled'}
                                   </Badge>
                                 ) : (
                                   <Badge
@@ -960,7 +942,7 @@ export function View() {
                                 date={
                                   new Date(
                                     (db as DatabaseWithBackup).createdAt ||
-                                    new Date(),
+                                      new Date(),
                                   )
                                 }
                                 className="text-[12px] text-muted-foreground font-mono"
@@ -980,8 +962,8 @@ export function View() {
                                 date={
                                   new Date(
                                     (db as DatabaseWithBackup).updatedAt ||
-                                    (db as DatabaseWithBackup).createdAt ||
-                                    new Date(),
+                                      (db as DatabaseWithBackup).createdAt ||
+                                      new Date(),
                                   )
                                 }
                                 className="text-[12px] text-muted-foreground font-mono"
@@ -1196,7 +1178,11 @@ export function View() {
           onOpenChange={setCreateDatabaseDialogOpen}
           onCreate={(data) => createDatabaseMutation.mutate(data)}
           isLoading={createDatabaseMutation.isPending}
-          backupsEnabled={organizationPlan?.backupsEnabled}
+          backupsEnabled={
+            features.databaseBackups
+              ? organizationPlan?.backupsEnabled
+              : undefined
+          }
           orgId={project?.teamId}
         />
       </div>
@@ -1214,8 +1200,7 @@ export function DatabaseDetailLayout({
 }: DatabaseDetailLayoutProps) {
   const params = useParams({ strict: false })
   const projectId = params.projectId as string
-  const dbKind =
-    (params.dbKind as DatabaseRouteKind | undefined) ?? 'tablesdb'
+  const dbKind = (params.dbKind as DatabaseRouteKind | undefined) ?? 'tablesdb'
   const createTableVariantFromRoute = createTableVariantForDbRoute(dbKind)
   const dbLabels = getDatabaseConsoleLabels(dbKind)
   const ContainerListIcon =
@@ -1503,8 +1488,7 @@ export function DatabaseEmptyState({ databaseId }: DatabaseEmptyStateProps) {
     strict: false,
   })
   const projectId = params.projectId as string
-  const dbKind =
-    (params.dbKind as DatabaseRouteKind | undefined) ?? 'tablesdb'
+  const dbKind = (params.dbKind as DatabaseRouteKind | undefined) ?? 'tablesdb'
   const createTableVariant = createTableVariantForDbRoute(dbKind)
   const dbLabels = getDatabaseConsoleLabels(dbKind)
   const ContainerListIcon =
@@ -1716,4 +1700,3 @@ export function DatabaseEmptyState({ databaseId }: DatabaseEmptyStateProps) {
     </div>
   )
 }
-

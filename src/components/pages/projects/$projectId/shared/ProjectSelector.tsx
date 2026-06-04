@@ -74,7 +74,8 @@ export function ProjectSelector({
   isMobile,
   onCreateOrganization,
 }: ProjectSelectorProps) {
-  const { isCloud } = useConsoleProfile()
+  const { features, isCloud } = useConsoleProfile()
+  const supportsMultiTenancy = features.multiTenancy
   const navigate = useNavigate()
   const { account } = useAuth()
   const [open, setOpen] = useState(false)
@@ -424,6 +425,7 @@ export function ProjectSelector({
   }
 
   const handleCreateOrganization = useCallback(() => {
+    if (!supportsMultiTenancy) return
     const prefs = (account as { prefs?: Record<string, unknown> } | undefined)
       ?.prefs
     const orgId =
@@ -433,7 +435,13 @@ export function ProjectSelector({
       orgId,
     })
     setOpen(false)
-  }, [account, currentProject?.teamId, navigate, onCreateOrganization])
+  }, [
+    account,
+    currentProject?.teamId,
+    navigate,
+    onCreateOrganization,
+    supportsMultiTenancy,
+  ])
 
   // Show loading state if data is not ready
   if (
@@ -473,7 +481,10 @@ export function ProjectSelector({
             side="right"
             align="start"
             sideOffset={12}
-            className="w-[520px] border-border bg-popover p-0"
+            className={cn(
+              'border-border bg-popover p-0',
+              supportsMultiTenancy ? 'w-[520px]' : 'w-[320px]',
+            )}
           >
             <ProjectSelectorContent
               selectedTeam={resolvedTeam}
@@ -492,6 +503,7 @@ export function ProjectSelector({
               fetchNextPage={fetchNextPage}
               organizations={organizations}
               isCloud={isCloud}
+              supportsMultiTenancy={supportsMultiTenancy}
               currentProjectId={projectId}
               billingFailureTeamId={billingFailureTeamId}
               billingOrgReadonly={billingOrgReadonly}
@@ -533,15 +545,17 @@ export function ProjectSelector({
                 {truncateMiddle(resolvedProject.name, 30)}
               </p>
             </div>
-            <p
-              className="truncate text-[11px] text-muted-foreground"
-              title={currentProjectTeam?.name || resolvedTeam.name}
-            >
-              {truncateMiddle(
-                currentProjectTeam?.name || resolvedTeam.name,
-                30,
-              )}
-            </p>
+            {supportsMultiTenancy && (
+              <p
+                className="truncate text-[11px] text-muted-foreground"
+                title={currentProjectTeam?.name || resolvedTeam.name}
+              >
+                {truncateMiddle(
+                  currentProjectTeam?.name || resolvedTeam.name,
+                  30,
+                )}
+              </p>
+            )}
           </div>
           {isCloud && currentProjectOrg && (
             <ProjectSelectorPlanBadge
@@ -591,6 +605,7 @@ export function ProjectSelector({
               fetchNextPage={fetchNextPage}
               organizations={organizations}
               isCloud={isCloud}
+              supportsMultiTenancy={supportsMultiTenancy}
               currentProjectId={projectId}
               billingFailureTeamId={billingFailureTeamId}
               billingOrgReadonly={billingOrgReadonly}
@@ -625,13 +640,25 @@ export function ProjectSelector({
             <div className="min-w-0 flex flex-1 items-center gap-2 overflow-visible">
               <p
                 className="min-w-0 flex-1 truncate text-[13px] font-medium text-foreground"
-                title={`${currentProjectTeam?.name || resolvedTeam.name} / ${resolvedProject.name}`}
+                title={
+                  supportsMultiTenancy
+                    ? `${currentProjectTeam?.name || resolvedTeam.name} / ${
+                        resolvedProject.name
+                      }`
+                    : resolvedProject.name
+                }
               >
-                {truncateMiddle(
-                  currentProjectTeam?.name || resolvedTeam.name,
-                  20,
-                )}{' '}
-                / {truncateMiddle(resolvedProject.name, 22)}
+                {supportsMultiTenancy ? (
+                  <>
+                    {truncateMiddle(
+                      currentProjectTeam?.name || resolvedTeam.name,
+                      20,
+                    )}{' '}
+                    / {truncateMiddle(resolvedProject.name, 22)}
+                  </>
+                ) : (
+                  truncateMiddle(resolvedProject.name, 30)
+                )}
               </p>
               {isCloud && currentProjectOrg && (
                 <ProjectSelectorPlanBadge
@@ -648,7 +675,10 @@ export function ProjectSelector({
           side="bottom"
           align="start"
           sideOffset={8}
-          className="w-[520px] border-border bg-popover p-0"
+          className={cn(
+            'border-border bg-popover p-0',
+            supportsMultiTenancy ? 'w-[520px]' : 'w-[320px]',
+          )}
         >
           <ProjectSelectorContent
             selectedTeam={resolvedTeam}
@@ -667,6 +697,7 @@ export function ProjectSelector({
             fetchNextPage={fetchNextPage}
             organizations={organizations}
             isCloud={isCloud}
+            supportsMultiTenancy={supportsMultiTenancy}
             currentProjectId={projectId}
             billingFailureTeamId={billingFailureTeamId}
             billingOrgReadonly={billingOrgReadonly}
@@ -705,6 +736,7 @@ interface ProjectSelectorContentProps {
   fetchNextPage: () => void
   organizations: Organization[]
   isCloud: boolean
+  supportsMultiTenancy: boolean
   currentProjectId?: string
   /** Team id for the open project when that org has a failed invoice; list rows match on project.teamId */
   billingFailureTeamId: string | null
@@ -733,6 +765,7 @@ function ProjectSelectorContent({
   fetchNextPage,
   organizations,
   isCloud,
+  supportsMultiTenancy,
   currentProjectId,
   billingFailureTeamId,
   billingOrgReadonly,
@@ -782,96 +815,105 @@ function ProjectSelectorContent({
   }
 
   return (
-    <div className="flex divide-x divide-border">
+    <div
+      className={cn('flex', supportsMultiTenancy && 'divide-x divide-border')}
+    >
       {/* Organizations Column */}
-      <div className="flex w-1/2 flex-col">
-        {/* Organization Search */}
-        <div className="flex items-center gap-2 border-b border-border px-3 py-2.5">
-          <Search className="h-3.5 w-3.5 text-muted-foreground" />
-          <input
-            type="text"
-            placeholder="Find Organization..."
-            value={teamSearch}
-            onChange={(e) => setTeamSearch(e.target.value)}
-            className="flex-1 bg-transparent text-[13px] text-foreground placeholder:text-muted-foreground focus:outline-none"
-          />
-        </div>
+      {supportsMultiTenancy && (
+        <div className="flex w-1/2 flex-col">
+          {/* Organization Search */}
+          <div className="flex items-center gap-2 border-b border-border px-3 py-2.5">
+            <Search className="h-3.5 w-3.5 text-muted-foreground" />
+            <input
+              type="text"
+              placeholder="Find Organization..."
+              value={teamSearch}
+              onChange={(e) => setTeamSearch(e.target.value)}
+              className="flex-1 bg-transparent text-[13px] text-foreground placeholder:text-muted-foreground focus:outline-none"
+            />
+          </div>
 
-        {/* Organizations List - scrollable */}
-        <div className="min-h-[180px] max-h-[240px] flex-1 overflow-y-auto p-1.5">
-          <p className="px-2 py-1.5 text-[11px] font-medium text-muted-foreground">
-            Organizations
-          </p>
-          <div className="space-y-0.5">
-            {filteredTeams.length === 0 ? (
-              <p className="px-2 py-4 text-center text-[12px] text-muted-foreground">
-                No organizations found
-              </p>
-            ) : (
-              filteredTeams.map((team) => {
-                const teamOrg = organizations.find(
-                  (org) => org.$id === team.orgId,
-                )
-                return (
-                  <button
-                    key={team.$id}
-                    type="button"
-                    onClick={() => onSelectTeam(team)}
-                    onMouseEnter={() => prefetchTeamProjects(team.$id)}
-                    className={cn(
-                      'flex w-full cursor-pointer items-center gap-2.5 rounded-md px-2 py-1.5 text-left transition-colors',
-                      selectedTeam.$id === team.$id
-                        ? 'bg-accent'
-                        : 'hover:bg-accent/50',
-                    )}
-                  >
-                    <InitialsAvatar name={team.name} size="sm" />
-                    <div className="min-w-0 flex flex-1 items-center gap-2">
-                      <span className="truncate text-[13px] font-medium text-foreground">
-                        {team.name}
-                      </span>
-                      {isCloud && teamOrg && (
-                        <span
-                          className={cn(
-                            'shrink-0 rounded px-1.5 py-0.5 text-[10px] font-medium capitalize',
-                            teamOrg.billingPlanDowngrade
-                              ? 'border border-amber-500/20 bg-amber-500/10 text-amber-600 dark:text-amber-400'
-                              : getPlanBadgeColor(teamOrg.plan),
-                          )}
-                        >
-                          {teamOrg.billingPlanDowngrade
-                            ? 'Downgraded'
-                            : getPlanDisplayName(teamOrg.plan)}
-                        </span>
+          {/* Organizations List - scrollable */}
+          <div className="min-h-[180px] max-h-[240px] flex-1 overflow-y-auto p-1.5">
+            <p className="px-2 py-1.5 text-[11px] font-medium text-muted-foreground">
+              Organizations
+            </p>
+            <div className="space-y-0.5">
+              {filteredTeams.length === 0 ? (
+                <p className="px-2 py-4 text-center text-[12px] text-muted-foreground">
+                  No organizations found
+                </p>
+              ) : (
+                filteredTeams.map((team) => {
+                  const teamOrg = organizations.find(
+                    (org) => org.$id === team.orgId,
+                  )
+                  return (
+                    <button
+                      key={team.$id}
+                      type="button"
+                      onClick={() => onSelectTeam(team)}
+                      onMouseEnter={() => prefetchTeamProjects(team.$id)}
+                      className={cn(
+                        'flex w-full cursor-pointer items-center gap-2.5 rounded-md px-2 py-1.5 text-left transition-colors',
+                        selectedTeam.$id === team.$id
+                          ? 'bg-accent'
+                          : 'hover:bg-accent/50',
                       )}
-                    </div>
-                    {selectedTeam.$id === team.$id && (
-                      <Check className="h-3.5 w-3.5 shrink-0 text-foreground" />
-                    )}
-                  </button>
-                )
-              })
-            )}
+                    >
+                      <InitialsAvatar name={team.name} size="sm" />
+                      <div className="min-w-0 flex flex-1 items-center gap-2">
+                        <span className="truncate text-[13px] font-medium text-foreground">
+                          {team.name}
+                        </span>
+                        {isCloud && teamOrg && (
+                          <span
+                            className={cn(
+                              'shrink-0 rounded px-1.5 py-0.5 text-[10px] font-medium capitalize',
+                              teamOrg.billingPlanDowngrade
+                                ? 'border border-amber-500/20 bg-amber-500/10 text-amber-600 dark:text-amber-400'
+                                : getPlanBadgeColor(teamOrg.plan),
+                            )}
+                          >
+                            {teamOrg.billingPlanDowngrade
+                              ? 'Downgraded'
+                              : getPlanDisplayName(teamOrg.plan)}
+                          </span>
+                        )}
+                      </div>
+                      {selectedTeam.$id === team.$id && (
+                        <Check className="h-3.5 w-3.5 shrink-0 text-foreground" />
+                      )}
+                    </button>
+                  )
+                })
+              )}
+            </div>
+          </div>
+
+          {/* Create Organization - fixed at bottom */}
+          <div className="border-t border-border p-1.5">
+            <button
+              type="button"
+              onClick={onCreateOrganization}
+              className="flex w-full cursor-pointer items-center gap-2.5 rounded-md px-2 py-1.5 text-left text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+            >
+              <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full border border-dashed border-muted-foreground/50">
+                <Plus className="h-3.5 w-3.5" />
+              </div>
+              <span className="text-[13px]">Create Organization</span>
+            </button>
           </div>
         </div>
-
-        {/* Create Organization - fixed at bottom */}
-        <div className="border-t border-border p-1.5">
-          <button
-            type="button"
-            onClick={onCreateOrganization}
-            className="flex w-full cursor-pointer items-center gap-2.5 rounded-md px-2 py-1.5 text-left text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
-          >
-            <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full border border-dashed border-muted-foreground/50">
-              <Plus className="h-3.5 w-3.5" />
-            </div>
-            <span className="text-[13px]">Create Organization</span>
-          </button>
-        </div>
-      </div>
+      )}
 
       {/* Projects Column */}
-      <div className="flex w-1/2 flex-col">
+      <div
+        className={cn(
+          'flex flex-col',
+          supportsMultiTenancy ? 'w-1/2' : 'w-full',
+        )}
+      >
         {/* Project Search */}
         <div className="flex items-center gap-2 border-b border-border px-3 py-2.5">
           <Search className="h-3.5 w-3.5 text-muted-foreground" />
@@ -895,7 +937,9 @@ function ProjectSelectorContent({
           <div className="space-y-0.5">
             {displayProjects.length === 0 ? (
               <p className="px-2 py-4 text-center text-[12px] text-muted-foreground">
-                {selectedTeam ? 'No projects found' : 'Select an organization'}
+                {selectedTeam || !supportsMultiTenancy
+                  ? 'No projects found'
+                  : 'Select an organization'}
               </p>
             ) : (
               <>
@@ -1001,6 +1045,7 @@ function MobileProjectSelectorContent({
   fetchNextPage,
   organizations,
   isCloud,
+  supportsMultiTenancy,
   currentProjectId,
   billingFailureTeamId,
   billingOrgReadonly,
@@ -1061,32 +1106,34 @@ function MobileProjectSelectorContent({
   return (
     <div className="flex flex-1 flex-col overflow-hidden">
       {/* Tab Switcher */}
-      <div className="flex border-b border-border">
-        <button
-          onClick={() => setActiveTab('teams')}
-          className={cn(
-            'flex-1 cursor-pointer px-4 py-2.5 text-[13px] font-medium transition-colors',
-            activeTab === 'teams'
-              ? 'border-b-2 border-foreground text-foreground'
-              : 'text-muted-foreground',
-          )}
-        >
-          Organizations
-        </button>
-        <button
-          onClick={() => setActiveTab('projects')}
-          className={cn(
-            'flex-1 cursor-pointer px-4 py-2.5 text-[13px] font-medium transition-colors',
-            activeTab === 'projects'
-              ? 'border-b-2 border-foreground text-foreground'
-              : 'text-muted-foreground',
-          )}
-        >
-          Projects
-        </button>
-      </div>
+      {supportsMultiTenancy && (
+        <div className="flex border-b border-border">
+          <button
+            onClick={() => setActiveTab('teams')}
+            className={cn(
+              'flex-1 cursor-pointer px-4 py-2.5 text-[13px] font-medium transition-colors',
+              activeTab === 'teams'
+                ? 'border-b-2 border-foreground text-foreground'
+                : 'text-muted-foreground',
+            )}
+          >
+            Organizations
+          </button>
+          <button
+            onClick={() => setActiveTab('projects')}
+            className={cn(
+              'flex-1 cursor-pointer px-4 py-2.5 text-[13px] font-medium transition-colors',
+              activeTab === 'projects'
+                ? 'border-b-2 border-foreground text-foreground'
+                : 'text-muted-foreground',
+            )}
+          >
+            Projects
+          </button>
+        </div>
+      )}
 
-      {activeTab === 'teams' ? (
+      {supportsMultiTenancy && activeTab === 'teams' ? (
         <div className="flex flex-1 flex-col overflow-hidden">
           {/* Organization Search */}
           <div className="flex items-center gap-2 border-b border-border px-4 py-2.5">
@@ -1175,20 +1222,22 @@ function MobileProjectSelectorContent({
       ) : (
         <div className="flex flex-1 flex-col overflow-hidden">
           {/* Selected Organization Indicator */}
-          <div className="flex items-center gap-2 border-b border-border bg-muted/50 px-4 py-2">
-            <span className="text-[12px] text-muted-foreground">
-              Organization:
-            </span>
-            <span className="text-[12px] font-medium text-foreground">
-              {selectedTeam.name}
-            </span>
-            <button
-              onClick={() => setActiveTab('teams')}
-              className="ml-auto cursor-pointer text-[12px] text-primary hover:underline dark:text-muted-foreground"
-            >
-              Change
-            </button>
-          </div>
+          {supportsMultiTenancy && (
+            <div className="flex items-center gap-2 border-b border-border bg-muted/50 px-4 py-2">
+              <span className="text-[12px] text-muted-foreground">
+                Organization:
+              </span>
+              <span className="text-[12px] font-medium text-foreground">
+                {selectedTeam.name}
+              </span>
+              <button
+                onClick={() => setActiveTab('teams')}
+                className="ml-auto cursor-pointer text-[12px] text-primary hover:underline dark:text-muted-foreground"
+              >
+                Change
+              </button>
+            </div>
+          )}
 
           {/* Project Search */}
           <div className="flex items-center gap-2 border-b border-border px-4 py-2.5">
@@ -1210,7 +1259,7 @@ function MobileProjectSelectorContent({
             <div className="space-y-0.5">
               {displayProjects.length === 0 ? (
                 <p className="px-3 py-6 text-center text-[13px] text-muted-foreground">
-                  {selectedTeam
+                  {selectedTeam || !supportsMultiTenancy
                     ? 'No projects found'
                     : 'Select an organization'}
                 </p>

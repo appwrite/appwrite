@@ -21,6 +21,8 @@ export type ConsoleProfileFeatures = {
   usageStats: boolean
   /** Activity logs and audit trail */
   activity: boolean
+  /** Multiple organizations and organization switching */
+  multiTenancy: boolean
   /** Organization role selection (developer, editor, analyst, billing). When false, all members are owners and role UI is hidden. */
   orgRoles: boolean
   /** Appwrite Cloud system status (status.appwrite.online) */
@@ -71,6 +73,7 @@ export const CONSOLE_PROFILE_FEATURE_LABELS: Record<
   marketplace: 'Marketplace',
   usageStats: 'Usage stats',
   activity: 'Activity',
+  multiTenancy: 'Multi-tenancy',
   orgRoles: 'Org roles',
   systemStatus: 'System status',
   accountMfa: 'Account MFA',
@@ -108,6 +111,7 @@ export const CONSOLE_PROFILES: Record<ConsoleProfileId, ConsoleProfile> = {
       marketplace: false,
       usageStats: true,
       activity: true,
+      multiTenancy: true,
       orgRoles: true,
       systemStatus: true,
       accountMfa: true,
@@ -137,6 +141,7 @@ export const CONSOLE_PROFILES: Record<ConsoleProfileId, ConsoleProfile> = {
       marketplace: false,
       usageStats: false,
       activity: false,
+      multiTenancy: false,
       orgRoles: false,
       systemStatus: false,
       accountMfa: false,
@@ -185,7 +190,9 @@ function detectProfileFromEndpoint(): ConsoleProfileId {
   }
 
   if (typeof window !== 'undefined') {
-    return isCloudEndpoint(`${window.location.protocol}//${window.location.host}/v1`)
+    return isCloudEndpoint(
+      `${window.location.protocol}//${window.location.host}/v1`,
+    )
       ? 'cloud'
       : 'self-hosted'
   }
@@ -197,9 +204,12 @@ function getProfileFromEnv(): ConsoleProfileId {
   if (typeof import.meta === 'undefined' || !import.meta.env) {
     return detectProfileFromEndpoint()
   }
-  const env = (import.meta.env?.VITE_CONSOLE_PROFILE as string | undefined)
+  const env = import.meta.env?.VITE_CONSOLE_PROFILE as string | undefined
   const normalized = env?.toLowerCase().trim().replace(/\s+/g, '-')
-  if (normalized && VALID_PROFILE_IDS.includes(normalized as ConsoleProfileId)) {
+  if (
+    normalized &&
+    VALID_PROFILE_IDS.includes(normalized as ConsoleProfileId)
+  ) {
     return normalized as ConsoleProfileId
   }
   return detectProfileFromEndpoint()
@@ -254,7 +264,7 @@ function applyCloudOnlyFeatureGates(
   features: ConsoleProfileFeatures,
 ): ConsoleProfileFeatures {
   if (profileId === 'self-hosted') {
-    return { ...features, marketplace: false }
+    return { ...features, marketplace: false, multiTenancy: false }
   }
   return features
 }

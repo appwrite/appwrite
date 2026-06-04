@@ -289,9 +289,7 @@ function EmptyMemberAvatarSlot({
       onClick={onClick}
       className={cn(
         'relative flex shrink-0 items-center justify-center rounded-full border-2 border-background focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2',
-        disabled
-          ? 'cursor-not-allowed opacity-50'
-          : 'cursor-pointer',
+        disabled ? 'cursor-not-allowed opacity-50' : 'cursor-pointer',
       )}
       style={{ zIndex }}
       title={disabled ? undefined : 'Invite member'}
@@ -389,6 +387,7 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
   )
   const pinnedDragPreviewRef = useRef<HTMLDivElement | null>(null)
   const { features, isCloud } = useConsoleProfile()
+  const supportsMultiTenancy = features.multiTenancy
   const supportsMultiRegion = features.multiRegion
   const { access, isLoading: orgScopesLoading } = useOrganizationScopes(orgId)
 
@@ -449,8 +448,7 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
     )
 
     const isMarketplaceIndexRoute = matches.some(
-      (match) =>
-        match.routeId === '/_public/organizations/$orgId/marketplace/',
+      (match) => match.routeId === '/_public/organizations/$orgId/marketplace/',
     )
 
     // Also check pathname as fallback (helps during navigation transitions)
@@ -547,12 +545,7 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
               label: 'Billing',
               to: '/organizations/$orgId/settings/billing',
               icon: CreditCard,
-              keywords: [
-                'billing',
-                'payment',
-                'invoice',
-                'subscription',
-              ],
+              keywords: ['billing', 'payment', 'invoice', 'subscription'],
             },
           ]
         : []),
@@ -602,10 +595,8 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
       ? allNavItems.filter((item) => {
           if (item.id === 'overview')
             return canAccessOrgSettingsOverview(access)
-          if (item.id === 'members')
-            return canAccessOrgSettingsMembers(access)
-          if (item.id === 'billing')
-            return canAccessOrgSettingsBilling(access)
+          if (item.id === 'members') return canAccessOrgSettingsMembers(access)
+          if (item.id === 'billing') return canAccessOrgSettingsBilling(access)
           if (item.id === 'compliance')
             return canAccessOrgSettingsCompliance(access)
           if (item.id === 'oauth-apps')
@@ -621,6 +612,13 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
       params: { orgId: orgId ?? '' },
     }))
   }, [features, access, orgId])
+
+  const orgSettingsCardIndex = useMemo(() => {
+    if (supportsMultiTenancy) return ORG_SETTINGS_CARD_INDEX
+    return ORG_SETTINGS_CARD_INDEX.filter(
+      (entry) => entry.title !== 'Delete organization',
+    )
+  }, [supportsMultiTenancy])
 
   // Top-level tab vs role: default index is "projects" in the URL, but hidden tabs (e.g. billing-only) must land on first allowed tab
   useEffect(() => {
@@ -673,12 +671,13 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
   const [createOrgDialogOpen, setCreateOrgDialogOpen] = useState(false)
 
   const handleOpenCreateOrganization = useCallback(() => {
+    if (!supportsMultiTenancy) return
     if (features.billing) {
       navigate({ to: '/upgrade' })
       return
     }
     setCreateOrgDialogOpen(true)
-  }, [features.billing, navigate])
+  }, [features.billing, navigate, supportsMultiTenancy])
   const [createProjectDialogOpen, setCreateProjectDialogOpen] = useState(false)
   const [deleteOrgDialogOpen, setDeleteOrgDialogOpen] = useState(false)
   const [deleteOrgConfirmation, setDeleteOrgConfirmation] = useState('')
@@ -798,7 +797,9 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
             },
           }
         : {}),
-      'c t': () => handleOpenCreateOrganization(),
+      ...(supportsMultiTenancy
+        ? { 'c t': () => handleOpenCreateOrganization() }
+        : {}),
       ...(canInviteOrgMember(access, features)
         ? { 'c m': () => setInviteDialogOpen(true) }
         : {}),
@@ -922,6 +923,17 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
       return
     }
 
+    if (!features.multiTenancy) {
+      const url = new URL(window.location.href)
+      url.searchParams.delete('createOrg')
+      window.history.replaceState(
+        window.history.state,
+        '',
+        `${url.pathname}${url.search}${url.hash}`,
+      )
+      return
+    }
+
     if (features.billing) {
       navigate({ to: '/upgrade', replace: true })
       return
@@ -949,6 +961,7 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
     navigate,
     location.pathname,
     features.billing,
+    features.multiTenancy,
   ])
 
   // Check for create=project search param (e.g. from header plus button) and open Create Project dialog
@@ -998,9 +1011,11 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
         })
       } else if (features.billing) {
         navigate({ to: '/upgrade', replace: true })
-      } else if (!createOrgDialogOpen) {
+      } else if (features.multiTenancy && !createOrgDialogOpen) {
         // No organizations at all, open creation dialog (only if not already open)
         setCreateOrgDialogOpen(true)
+      } else {
+        navigate({ to: '/', replace: true })
       }
     }
   }, [
@@ -1011,6 +1026,7 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
     navigate,
     createOrgDialogOpen,
     features.billing,
+    features.multiTenancy,
   ])
 
   // Mutation to update user prefs when switching organizations
@@ -1651,7 +1667,9 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
         queryClient.ensureQueryData(organizationQueryOptions(nextOrgId)),
         ...(features.billing
           ? [
-              queryClient.ensureQueryData(organizationPlanQueryOptions(nextOrgId)),
+              queryClient.ensureQueryData(
+                organizationPlanQueryOptions(nextOrgId),
+              ),
               queryClient
                 .ensureQueryData(
                   organizationFailedInvoicePresenceQueryOptions(nextOrgId),
@@ -1791,7 +1809,9 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
       <ConsoleLayout
         header={{
           onCommandCenterOpen: openOrgCommandCenter,
-          onCreateOrganization: handleOpenCreateOrganization,
+          onCreateOrganization: supportsMultiTenancy
+            ? handleOpenCreateOrganization
+            : undefined,
         }}
         headerBanner={
           <OrganizationFailedInvoiceHeaderBanner
@@ -1812,101 +1832,110 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
             {/* Left: Org Switcher - h-8 control; h1 uses m-0 so UA margins do not shift layout */}
             <div className="flex h-8 min-h-8 max-h-8 shrink-0 items-center gap-2">
               {selectedOrg ? (
-                <Popover
-                  open={orgSwitcherOpen}
-                  onOpenChange={setOrgSwitcherOpen}
-                >
-                  <PopoverTrigger asChild>
-                    <button
-                      type="button"
-                      className="group flex h-8 max-h-8 min-h-8 min-w-0 cursor-pointer items-center gap-2 rounded-lg px-2 -ml-2 transition-colors hover:bg-accent"
-                    >
-                      <InitialsAvatar name={selectedOrg.name} size="sm" />
-                      <h1 className="m-0 truncate text-[13px] font-semibold leading-tight text-foreground">
-                        {selectedOrg.name}
-                      </h1>
-                      {isCloud && (
-                        <Badge
-                          className={cn(
-                            'shrink-0 rounded px-1.5 py-0.5 text-[10px] font-medium leading-none',
-                            selectedOrg.billingPlanDowngrade
-                              ? 'border-amber-500/20 bg-amber-500/10 text-amber-600 dark:text-amber-400'
-                              : getPlanBadgeColor(selectedOrg.plan),
-                          )}
-                        >
-                          {selectedOrg.billingPlanDowngrade
-                            ? 'Downgraded'
-                            : getPlanDisplayName(selectedOrg.plan)}
-                        </Badge>
-                      )}
-                      <ChevronDown className="h-3.5 w-3.5 shrink-0 text-muted-foreground transition-transform group-data-[state=open]:rotate-180" />
-                    </button>
-                  </PopoverTrigger>
-                  <PopoverContent
-                    align="start"
-                    className="w-72 border-border bg-popover p-0"
+                supportsMultiTenancy ? (
+                  <Popover
+                    open={orgSwitcherOpen}
+                    onOpenChange={setOrgSwitcherOpen}
                   >
-                    <div className="border-b border-border px-3 py-2">
-                      <p className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
-                        Switch organization
-                      </p>
-                    </div>
-                    <div className="max-h-64 overflow-y-auto py-1">
-                      {organizations.map((org) => (
-                        <button
-                          key={org.$id}
-                          onClick={() => handleSelectOrg(org)}
-                          className={cn(
-                            'flex w-full cursor-pointer items-center gap-3 px-3 py-2 text-left transition-colors hover:bg-accent',
-                            selectedOrg.$id === org.$id && 'bg-accent',
-                          )}
-                        >
-                          <InitialsAvatar name={org.name} size="md" />
-                          <div className="flex-1 min-w-0">
-                            <p className="truncate text-[13px] font-medium text-foreground">
-                              {org.name}
-                            </p>
-                            <div className="flex items-center gap-2">
-                              {isCloud && (
-                                <span
-                                  className={cn(
-                                    'rounded px-1.5 py-0.5 text-[10px] font-medium',
-                                    org.billingPlanDowngrade
-                                      ? 'border-amber-500/20 bg-amber-500/10 text-amber-600 dark:text-amber-400'
-                                      : getPlanBadgeColor(org.plan),
-                                  )}
-                                >
-                                  {org.billingPlanDowngrade
-                                    ? 'Downgraded'
-                                    : getPlanDisplayName(org.plan)}
-                                </span>
-                              )}
-                              <span className="text-[11px] text-muted-foreground">
-                                {org.members} member
-                                {org.members !== 1 ? 's' : ''}
-                              </span>
-                            </div>
-                          </div>
-                          {selectedOrg.$id === org.$id && (
-                            <Check className="h-4 w-4 text-muted-foreground" />
-                          )}
-                        </button>
-                      ))}
-                    </div>
-                    <div className="border-t border-border p-2">
+                    <PopoverTrigger asChild>
                       <button
-                        onClick={() => {
-                          setOrgSwitcherOpen(false)
-                          handleOpenCreateOrganization()
-                        }}
-                        className="flex w-full cursor-pointer items-center gap-2 rounded-md px-2 py-2 text-[13px] text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+                        type="button"
+                        className="group flex h-8 max-h-8 min-h-8 min-w-0 cursor-pointer items-center gap-2 rounded-lg px-2 -ml-2 transition-colors hover:bg-accent"
                       >
-                        <Plus className="h-4 w-4" />
-                        Create organization
+                        <InitialsAvatar name={selectedOrg.name} size="sm" />
+                        <h1 className="m-0 truncate text-[13px] font-semibold leading-tight text-foreground">
+                          {selectedOrg.name}
+                        </h1>
+                        {isCloud && (
+                          <Badge
+                            className={cn(
+                              'shrink-0 rounded px-1.5 py-0.5 text-[10px] font-medium leading-none',
+                              selectedOrg.billingPlanDowngrade
+                                ? 'border-amber-500/20 bg-amber-500/10 text-amber-600 dark:text-amber-400'
+                                : getPlanBadgeColor(selectedOrg.plan),
+                            )}
+                          >
+                            {selectedOrg.billingPlanDowngrade
+                              ? 'Downgraded'
+                              : getPlanDisplayName(selectedOrg.plan)}
+                          </Badge>
+                        )}
+                        <ChevronDown className="h-3.5 w-3.5 shrink-0 text-muted-foreground transition-transform group-data-[state=open]:rotate-180" />
                       </button>
-                    </div>
-                  </PopoverContent>
-                </Popover>
+                    </PopoverTrigger>
+                    <PopoverContent
+                      align="start"
+                      className="w-72 border-border bg-popover p-0"
+                    >
+                      <div className="border-b border-border px-3 py-2">
+                        <p className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
+                          Switch organization
+                        </p>
+                      </div>
+                      <div className="max-h-64 overflow-y-auto py-1">
+                        {organizations.map((org) => (
+                          <button
+                            key={org.$id}
+                            onClick={() => handleSelectOrg(org)}
+                            className={cn(
+                              'flex w-full cursor-pointer items-center gap-3 px-3 py-2 text-left transition-colors hover:bg-accent',
+                              selectedOrg.$id === org.$id && 'bg-accent',
+                            )}
+                          >
+                            <InitialsAvatar name={org.name} size="md" />
+                            <div className="flex-1 min-w-0">
+                              <p className="truncate text-[13px] font-medium text-foreground">
+                                {org.name}
+                              </p>
+                              <div className="flex items-center gap-2">
+                                {isCloud && (
+                                  <span
+                                    className={cn(
+                                      'rounded px-1.5 py-0.5 text-[10px] font-medium',
+                                      org.billingPlanDowngrade
+                                        ? 'border-amber-500/20 bg-amber-500/10 text-amber-600 dark:text-amber-400'
+                                        : getPlanBadgeColor(org.plan),
+                                    )}
+                                  >
+                                    {org.billingPlanDowngrade
+                                      ? 'Downgraded'
+                                      : getPlanDisplayName(org.plan)}
+                                  </span>
+                                )}
+                                <span className="text-[11px] text-muted-foreground">
+                                  {org.members} member
+                                  {org.members !== 1 ? 's' : ''}
+                                </span>
+                              </div>
+                            </div>
+                            {selectedOrg.$id === org.$id && (
+                              <Check className="h-4 w-4 text-muted-foreground" />
+                            )}
+                          </button>
+                        ))}
+                      </div>
+                      <div className="border-t border-border p-2">
+                        <button
+                          onClick={() => {
+                            setOrgSwitcherOpen(false)
+                            handleOpenCreateOrganization()
+                          }}
+                          className="flex w-full cursor-pointer items-center gap-2 rounded-md px-2 py-2 text-[13px] text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+                        >
+                          <Plus className="h-4 w-4" />
+                          Create organization
+                        </button>
+                      </div>
+                    </PopoverContent>
+                  </Popover>
+                ) : (
+                  <div className="flex h-8 max-h-8 min-h-8 min-w-0 items-center gap-2 px-2 -ml-2">
+                    <InitialsAvatar name={selectedOrg.name} size="sm" />
+                    <h1 className="m-0 truncate text-[13px] font-semibold leading-tight text-foreground">
+                      {selectedOrg.name}
+                    </h1>
+                  </div>
+                )
               ) : orgId ? (
                 <div
                   className="flex h-8 max-h-8 min-h-8 min-w-[200px] items-center gap-2 overflow-hidden px-2 -ml-2"
@@ -1917,25 +1946,29 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                   {isCloud && (
                     <div className="h-5 max-h-5 min-h-5 w-14 shrink-0 animate-pulse rounded bg-muted" />
                   )}
-                  <div className="h-3.5 w-3.5 shrink-0 animate-pulse rounded bg-muted" />
+                  {supportsMultiTenancy && (
+                    <div className="h-3.5 w-3.5 shrink-0 animate-pulse rounded bg-muted" />
+                  )}
                 </div>
               ) : null}
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="h-8 w-8 p-0 rounded-lg hover:bg-accent"
-                    aria-label="Create organization"
-                    onClick={handleOpenCreateOrganization}
-                  >
-                    <Plus className="h-4 w-4" />
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent>
-                  <p>Create organization</p>
-                </TooltipContent>
-              </Tooltip>
+              {supportsMultiTenancy && (
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="h-8 w-8 p-0 rounded-lg hover:bg-accent"
+                      aria-label="Create organization"
+                      onClick={handleOpenCreateOrganization}
+                    >
+                      <Plus className="h-4 w-4" />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>Create organization</p>
+                  </TooltipContent>
+                </Tooltip>
+              )}
             </div>
 
             {/* Right: same fixed h-8 band as left */}
@@ -1968,10 +2001,7 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                         totalCount > HEADER_MEMBER_AVATAR_SLOTS
                       const emptySlotCount = showOverflow
                         ? 0
-                        : Math.max(
-                            0,
-                            HEADER_MEMBER_AVATAR_SLOTS - totalCount,
-                          )
+                        : Math.max(0, HEADER_MEMBER_AVATAR_SLOTS - totalCount)
                       const slotCount =
                         displayMembers.length +
                         emptySlotCount +
@@ -1991,7 +2021,8 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                               className={cn(
                                 'flex h-8 min-h-8 items-center rounded-full focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 cursor-pointer',
                                 (displayMembers.length > 1 ||
-                                  (displayMembers.length > 0 && showOverflow)) &&
+                                  (displayMembers.length > 0 &&
+                                    showOverflow)) &&
                                   '-space-x-2',
                               )}
                               title="View members"
@@ -2197,10 +2228,7 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                           size="sm"
                           className="h-8 shrink-0 bg-amber-500 px-3 text-[12px] font-medium text-amber-950 hover:bg-amber-400 dark:bg-amber-500 dark:text-amber-950 dark:hover:bg-amber-400"
                         >
-                          <Link
-                            to="/upgrade"
-                            search={{ orgId: orgId! }}
-                          >
+                          <Link to="/upgrade" search={{ orgId: orgId! }}>
                             Upgrade
                           </Link>
                         </Button>
@@ -2271,10 +2299,7 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                           size="sm"
                           className="h-8 shrink-0 bg-amber-500 px-3 text-[12px] font-medium text-amber-950 hover:bg-amber-400 dark:bg-amber-500 dark:text-amber-950 dark:hover:bg-amber-400"
                         >
-                          <Link
-                            to="/upgrade"
-                            search={{ orgId: orgId! }}
-                          >
+                          <Link to="/upgrade" search={{ orgId: orgId! }}>
                             Upgrade
                           </Link>
                         </Button>
@@ -2429,201 +2454,212 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                             {/* Pinned projects (keeps previous data visible while refetching) */}
                             {!projectsSearchActive &&
                               pinnedProjects.length > 0 && (
-                              <div className="mb-8">
-                                <h2 className="mb-3 text-[13px] font-semibold text-muted-foreground uppercase tracking-wider">
-                                  Pinned
-                                </h2>
-                                <div className={RESOURCE_CARD_GRID_CLASSNAME}>
-                                  {pinnedProjects.map((project, index) => {
-                                    const isDragActive =
-                                      canReorderPinned &&
-                                      pinnedDraggingIndex !== null
-                                    const isDragSource =
-                                      isDragActive &&
-                                      pinnedDraggingIndex === index
-                                    const isDropTarget =
-                                      isDragActive &&
-                                      pinnedDragOverIndex === index &&
-                                      pinnedDraggingIndex !== index
-                                    const isDragDimmed =
-                                      isDragActive &&
-                                      pinnedDraggingIndex !== index &&
-                                      pinnedDragOverIndex !== index
+                                <div className="mb-8">
+                                  <h2 className="mb-3 text-[13px] font-semibold text-muted-foreground uppercase tracking-wider">
+                                    Pinned
+                                  </h2>
+                                  <div className={RESOURCE_CARD_GRID_CLASSNAME}>
+                                    {pinnedProjects.map((project, index) => {
+                                      const isDragActive =
+                                        canReorderPinned &&
+                                        pinnedDraggingIndex !== null
+                                      const isDragSource =
+                                        isDragActive &&
+                                        pinnedDraggingIndex === index
+                                      const isDropTarget =
+                                        isDragActive &&
+                                        pinnedDragOverIndex === index &&
+                                        pinnedDraggingIndex !== index
+                                      const isDragDimmed =
+                                        isDragActive &&
+                                        pinnedDraggingIndex !== index &&
+                                        pinnedDragOverIndex !== index
 
-                                    return (
-                                      <ProjectContextMenu
-                                        key={project.$id}
-                                        project={project}
-                                        showSettingsTab={showProjectSettingsTab}
-                                        canDeleteProject={canManageProjects}
-                                        onProjectDeleted={handleProjectDeleted}
-                                      >
-                                        <div
-                                          className={cn(
-                                            'group relative min-w-0 overflow-hidden rounded-xl border bg-card/50 p-4 transition-[opacity,transform,box-shadow,border-color] duration-200 ease-out hover:border-border hover:bg-card',
-                                            !isDragActive && 'border-border',
-                                            isDragSource &&
-                                              'z-0 scale-[0.99] opacity-[0.48] ring-2 ring-dashed ring-muted-foreground/45',
-                                            isDropTarget &&
-                                              'z-20 border-border opacity-100 ring-1 ring-inset ring-primary/35',
-                                            isDragDimmed && 'opacity-[0.26]',
-                                          )}
-                                          data-project-card
-                                          onDragOver={
-                                            canReorderPinned
-                                              ? (e) =>
-                                                  handlePinnedDragOver(e, index)
-                                              : undefined
+                                      return (
+                                        <ProjectContextMenu
+                                          key={project.$id}
+                                          project={project}
+                                          showSettingsTab={
+                                            showProjectSettingsTab
                                           }
-                                          onDragLeave={
-                                            canReorderPinned
-                                              ? handlePinnedCardDragLeave
-                                              : undefined
-                                          }
-                                          onDrop={
-                                            canReorderPinned
-                                              ? (e) =>
-                                                  handlePinnedDrop(e, index)
-                                              : undefined
+                                          canDeleteProject={canManageProjects}
+                                          onProjectDeleted={
+                                            handleProjectDeleted
                                           }
                                         >
-                                          <div className="flex items-start gap-1">
-                                            <Link
-                                              to="/projects/$projectId"
-                                              params={{
-                                                projectId: project.$id,
-                                              }}
-                                              className="min-w-0 flex-1"
-                                            >
-                                              <div className="min-w-0">
-                                                <div className="flex min-w-0 items-center gap-1.5">
-                                                  <h3 className="min-w-0 flex-1 truncate text-[14px] font-medium text-foreground group-hover:text-foreground">
-                                                    {project.name}
-                                                  </h3>
-                                                  <FailedInvoiceWarningIcon
-                                                    show={
-                                                      showFailedInvoiceOrgAlert
-                                                    }
-                                                    orgBillingReadonly={
-                                                      orgBillingReadonlyForFailedInvoice
-                                                    }
-                                                    className="shrink-0"
-                                                  />
-                                                </div>
-                                                {supportsMultiRegion &&
-                                                  project.region && (
-                                                    <div className="mt-0.5 flex min-w-0 items-center gap-1.5 text-[12px] text-muted-foreground">
-                                                      <RegionFlag
-                                                        region={project.region}
-                                                        className="shrink-0"
-                                                      />
-                                                      <span className="truncate">
-                                                        {project.region}
-                                                      </span>
-                                                    </div>
-                                                  )}
-                                              </div>
-                                              <ProjectCardFooter
-                                                platformsCount={
-                                                  project.platformsCount || 0
-                                                }
-                                                apiKeysCount={
-                                                  project.apiKeysCount || 0
-                                                }
-                                                paused={project.paused}
-                                              />
-                                            </Link>
-                                            {(canReorderPinned ||
-                                              canPinProjectsResult) && (
-                                              <div
-                                                className={cn(
-                                                  'flex shrink-0 items-center gap-0.5 opacity-0 transition-opacity group-hover:opacity-100',
-                                                  isDragActive && 'opacity-100',
-                                                )}
-                                              >
-                                              {canPinProjectsResult ? (
-                                                <TooltipProvider
-                                                  delayDuration={0}
-                                                >
-                                                  <Tooltip>
-                                                    <TooltipTrigger asChild>
-                                                      <Button
-                                                        variant="ghost"
-                                                        size="icon"
-                                                        className="h-8 w-8 rounded-md"
-                                                        aria-label="Unpin project"
-                                                        onClick={(e) => {
-                                                          e.preventDefault()
-                                                          handlePinProject(
-                                                            project.$id,
-                                                          )
-                                                        }}
-                                                        disabled={
-                                                          updateTeamPrefsMutation.isPending
-                                                        }
-                                                      >
-                                                        <PinOff className="h-4 w-4" />
-                                                      </Button>
-                                                    </TooltipTrigger>
-                                                    <TooltipContent>
-                                                      <p>Unpin project</p>
-                                                    </TooltipContent>
-                                                  </Tooltip>
-                                                </TooltipProvider>
-                                              ) : null}
-                                              {canReorderPinned ? (
-                                                <TooltipProvider
-                                                  delayDuration={0}
-                                                >
-                                                  <Tooltip>
-                                                    <TooltipTrigger asChild>
-                                                      <Button
-                                                        type="button"
-                                                        variant="ghost"
-                                                        size="icon"
-                                                        draggable={
-                                                          !updateTeamPrefsMutation.isPending
-                                                        }
-                                                        onDragStart={(e) =>
-                                                          handlePinnedDragStart(
-                                                            e,
-                                                            index,
-                                                            project.name ?? '',
-                                                          )
-                                                        }
-                                                        onDragEnd={
-                                                          handlePinnedDragEnd
-                                                        }
-                                                        className={cn(
-                                                          'h-8 w-8 cursor-grab rounded-md active:cursor-grabbing',
-                                                          updateTeamPrefsMutation.isPending &&
-                                                            'pointer-events-none opacity-40',
-                                                        )}
-                                                        aria-grabbed={
-                                                          pinnedDraggingIndex ===
-                                                          index
-                                                        }
-                                                        aria-label={`Drag to reorder ${project.name}`}
-                                                      >
-                                                        <GripVertical className="h-4 w-4" />
-                                                      </Button>
-                                                    </TooltipTrigger>
-                                                    <TooltipContent side="top">
-                                                      <p>Drag to reorder</p>
-                                                    </TooltipContent>
-                                                  </Tooltip>
-                                                </TooltipProvider>
-                                              ) : null}
-                                              </div>
+                                          <div
+                                            className={cn(
+                                              'group relative min-w-0 overflow-hidden rounded-xl border bg-card/50 p-4 transition-[opacity,transform,box-shadow,border-color] duration-200 ease-out hover:border-border hover:bg-card',
+                                              !isDragActive && 'border-border',
+                                              isDragSource &&
+                                                'z-0 scale-[0.99] opacity-[0.48] ring-2 ring-dashed ring-muted-foreground/45',
+                                              isDropTarget &&
+                                                'z-20 border-border opacity-100 ring-1 ring-inset ring-primary/35',
+                                              isDragDimmed && 'opacity-[0.26]',
                                             )}
+                                            data-project-card
+                                            onDragOver={
+                                              canReorderPinned
+                                                ? (e) =>
+                                                    handlePinnedDragOver(
+                                                      e,
+                                                      index,
+                                                    )
+                                                : undefined
+                                            }
+                                            onDragLeave={
+                                              canReorderPinned
+                                                ? handlePinnedCardDragLeave
+                                                : undefined
+                                            }
+                                            onDrop={
+                                              canReorderPinned
+                                                ? (e) =>
+                                                    handlePinnedDrop(e, index)
+                                                : undefined
+                                            }
+                                          >
+                                            <div className="flex items-start gap-1">
+                                              <Link
+                                                to="/projects/$projectId"
+                                                params={{
+                                                  projectId: project.$id,
+                                                }}
+                                                className="min-w-0 flex-1"
+                                              >
+                                                <div className="min-w-0">
+                                                  <div className="flex min-w-0 items-center gap-1.5">
+                                                    <h3 className="min-w-0 flex-1 truncate text-[14px] font-medium text-foreground group-hover:text-foreground">
+                                                      {project.name}
+                                                    </h3>
+                                                    <FailedInvoiceWarningIcon
+                                                      show={
+                                                        showFailedInvoiceOrgAlert
+                                                      }
+                                                      orgBillingReadonly={
+                                                        orgBillingReadonlyForFailedInvoice
+                                                      }
+                                                      className="shrink-0"
+                                                    />
+                                                  </div>
+                                                  {supportsMultiRegion &&
+                                                    project.region && (
+                                                      <div className="mt-0.5 flex min-w-0 items-center gap-1.5 text-[12px] text-muted-foreground">
+                                                        <RegionFlag
+                                                          region={
+                                                            project.region
+                                                          }
+                                                          className="shrink-0"
+                                                        />
+                                                        <span className="truncate">
+                                                          {project.region}
+                                                        </span>
+                                                      </div>
+                                                    )}
+                                                </div>
+                                                <ProjectCardFooter
+                                                  platformsCount={
+                                                    project.platformsCount || 0
+                                                  }
+                                                  apiKeysCount={
+                                                    project.apiKeysCount || 0
+                                                  }
+                                                  paused={project.paused}
+                                                />
+                                              </Link>
+                                              {(canReorderPinned ||
+                                                canPinProjectsResult) && (
+                                                <div
+                                                  className={cn(
+                                                    'flex shrink-0 items-center gap-0.5 opacity-0 transition-opacity group-hover:opacity-100',
+                                                    isDragActive &&
+                                                      'opacity-100',
+                                                  )}
+                                                >
+                                                  {canPinProjectsResult ? (
+                                                    <TooltipProvider
+                                                      delayDuration={0}
+                                                    >
+                                                      <Tooltip>
+                                                        <TooltipTrigger asChild>
+                                                          <Button
+                                                            variant="ghost"
+                                                            size="icon"
+                                                            className="h-8 w-8 rounded-md"
+                                                            aria-label="Unpin project"
+                                                            onClick={(e) => {
+                                                              e.preventDefault()
+                                                              handlePinProject(
+                                                                project.$id,
+                                                              )
+                                                            }}
+                                                            disabled={
+                                                              updateTeamPrefsMutation.isPending
+                                                            }
+                                                          >
+                                                            <PinOff className="h-4 w-4" />
+                                                          </Button>
+                                                        </TooltipTrigger>
+                                                        <TooltipContent>
+                                                          <p>Unpin project</p>
+                                                        </TooltipContent>
+                                                      </Tooltip>
+                                                    </TooltipProvider>
+                                                  ) : null}
+                                                  {canReorderPinned ? (
+                                                    <TooltipProvider
+                                                      delayDuration={0}
+                                                    >
+                                                      <Tooltip>
+                                                        <TooltipTrigger asChild>
+                                                          <Button
+                                                            type="button"
+                                                            variant="ghost"
+                                                            size="icon"
+                                                            draggable={
+                                                              !updateTeamPrefsMutation.isPending
+                                                            }
+                                                            onDragStart={(e) =>
+                                                              handlePinnedDragStart(
+                                                                e,
+                                                                index,
+                                                                project.name ??
+                                                                  '',
+                                                              )
+                                                            }
+                                                            onDragEnd={
+                                                              handlePinnedDragEnd
+                                                            }
+                                                            className={cn(
+                                                              'h-8 w-8 cursor-grab rounded-md active:cursor-grabbing',
+                                                              updateTeamPrefsMutation.isPending &&
+                                                                'pointer-events-none opacity-40',
+                                                            )}
+                                                            aria-grabbed={
+                                                              pinnedDraggingIndex ===
+                                                              index
+                                                            }
+                                                            aria-label={`Drag to reorder ${project.name}`}
+                                                          >
+                                                            <GripVertical className="h-4 w-4" />
+                                                          </Button>
+                                                        </TooltipTrigger>
+                                                        <TooltipContent side="top">
+                                                          <p>Drag to reorder</p>
+                                                        </TooltipContent>
+                                                      </Tooltip>
+                                                    </TooltipProvider>
+                                                  ) : null}
+                                                </div>
+                                              )}
+                                            </div>
                                           </div>
-                                        </div>
-                                      </ProjectContextMenu>
-                                    )
-                                  })}
+                                        </ProjectContextMenu>
+                                      )
+                                    })}
+                                  </div>
                                 </div>
-                              </div>
-                            )}
+                              )}
 
                             {/* Projects by Team (non-pinned, paginated) */}
                             <div
@@ -2635,11 +2671,13 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                                   <div key={team.$id}>
                                     {!projectsSearchActive &&
                                       pinnedProjects.length > 0 && (
-                                      <h2 className="mb-3 text-[13px] font-semibold text-muted-foreground uppercase tracking-wider">
-                                        All projects
-                                      </h2>
-                                    )}
-                                    <div className={RESOURCE_CARD_GRID_CLASSNAME}>
+                                        <h2 className="mb-3 text-[13px] font-semibold text-muted-foreground uppercase tracking-wider">
+                                          All projects
+                                        </h2>
+                                      )}
+                                    <div
+                                      className={RESOURCE_CARD_GRID_CLASSNAME}
+                                    >
                                       {projects.map((project) => {
                                         const canPin =
                                           pinnedIds.length < MAX_PINNED_PROJECTS
@@ -2715,7 +2753,9 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                                                         delayDuration={0}
                                                       >
                                                         <Tooltip>
-                                                          <TooltipTrigger asChild>
+                                                          <TooltipTrigger
+                                                            asChild
+                                                          >
                                                             <Button
                                                               variant="ghost"
                                                               size="icon"
@@ -2826,7 +2866,7 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                   <SettingsLayoutShell
                     navItems={orgSettingsNavItems}
                     activeSectionId={settingsSubTab}
-                    cardIndex={ORG_SETTINGS_CARD_INDEX}
+                    cardIndex={orgSettingsCardIndex}
                     searchQuery={settingsNavSearch}
                     onSearchQueryChange={setSettingsNavSearch}
                     onNavigateToSection={(sectionId) => {
@@ -2841,114 +2881,77 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                       }
                     }}
                   >
-                      {settingsSubTab === 'billing' ? (
-                        <BillingTab />
-                      ) : settingsSubTab === 'compliance' ? (
-                        <ComplianceTab />
-                      ) : settingsSubTab === 'oauth-apps' ? (
-                        <ComingSoonView title="OAuth apps" comingSoon />
-                      ) : settingsSubTab === 'api-keys' ? (
-                        <SettingsCardsList
-                          className="mx-auto w-full max-w-7xl px-4 pb-4 sm:px-6 sm:pb-6"
-                          cards={[
-                            {
-                              id: 'api-key-types',
-                              search: {
-                                title: 'API key types',
-                                description:
-                                  'Keys apply at different levels. Each key has its own permissions (scopes) to control access.',
-                                keywords: [
-                                  'api',
-                                  'keys',
-                                  'scopes',
-                                  'credentials',
-                                ],
-                              },
-                              node: (
-                          <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
-                            <div className="px-6 py-4">
-                              <h3 className="text-[15px] font-semibold text-foreground">
-                                API key types
-                              </h3>
-                              <p className="mt-1 text-[13px] text-muted-foreground">
-                                Keys apply at different levels. Each key has its
-                                own permissions (scopes) to control access.
-                              </p>
-                            </div>
-                          </div>
-                              ),
+                    {settingsSubTab === 'billing' ? (
+                      <BillingTab />
+                    ) : settingsSubTab === 'compliance' ? (
+                      <ComplianceTab />
+                    ) : settingsSubTab === 'oauth-apps' ? (
+                      <ComingSoonView title="OAuth apps" comingSoon />
+                    ) : settingsSubTab === 'api-keys' ? (
+                      <SettingsCardsList
+                        className="mx-auto w-full max-w-7xl px-4 pb-4 sm:px-6 sm:pb-6"
+                        cards={[
+                          {
+                            id: 'api-key-types',
+                            search: {
+                              title: 'API key types',
+                              description:
+                                'Keys apply at different levels. Each key has its own permissions (scopes) to control access.',
+                              keywords: [
+                                'api',
+                                'keys',
+                                'scopes',
+                                'credentials',
+                              ],
                             },
-                            {
-                              id: 'project-keys',
-                              search: {
-                                title: 'Project keys',
-                                keywords: [
-                                  'database',
-                                  'storage',
-                                  'functions',
-                                  'project',
-                                ],
-                              },
-                              node: (
-                                <div className="rounded-xl border border-border bg-card/50 overflow-hidden transition-colors hover:border-border/80">
-                                  <div className="px-4 py-3">
-                                    <h3 className="text-[13px] font-semibold text-foreground">
-                                      Project keys
-                                    </h3>
-                                    <p className="mt-1 text-[12px] text-muted-foreground leading-relaxed">
-                                      Databases, storage, users, functions. One
-                                      project per key.
-                                    </p>
-                                  </div>
-                                  <div className="flex min-h-9 w-full items-center border-t border-border px-4 py-3 bg-muted/20">
-                                    {activeProjects.length > 0 ? (
-                                      <ProjectSelector
-                                        orgTeamId={orgTeamId}
-                                        getProjectLink={(projectId) => ({
-                                          to: '/projects/$projectId/api-keys',
-                                          params: { projectId },
-                                        })}
-                                        showApiKeysCount
-                                      />
-                                    ) : (
-                                      <Button
-                                        variant="outline"
-                                        size="sm"
-                                        className="h-9 w-full justify-between text-[13px] font-normal"
-                                        asChild
-                                      >
-                                        <Link
-                                          to="/organizations/$orgId"
-                                          params={{ orgId: orgId ?? '' }}
-                                          className="inline-flex items-center gap-1.5"
-                                        >
-                                          Create a project first
-                                          <ChevronRight className="h-3.5 w-3.5 shrink-0" />
-                                        </Link>
-                                      </Button>
-                                    )}
-                                  </div>
+                            node: (
+                              <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
+                                <div className="px-6 py-4">
+                                  <h3 className="text-[15px] font-semibold text-foreground">
+                                    API key types
+                                  </h3>
+                                  <p className="mt-1 text-[13px] text-muted-foreground">
+                                    Keys apply at different levels. Each key has
+                                    its own permissions (scopes) to control
+                                    access.
+                                  </p>
                                 </div>
-                              ),
+                              </div>
+                            ),
+                          },
+                          {
+                            id: 'project-keys',
+                            search: {
+                              title: 'Project keys',
+                              keywords: [
+                                'database',
+                                'storage',
+                                'functions',
+                                'project',
+                              ],
                             },
-                            {
-                              id: 'account-keys',
-                              search: {
-                                title: 'Account keys',
-                                keywords: ['cli', 'sessions', 'user', 'account'],
-                              },
-                              node: (
-                                <div className="rounded-xl border border-border bg-card/50 overflow-hidden transition-colors hover:border-border/80">
-                                  <div className="px-4 py-3">
-                                    <h3 className="text-[13px] font-semibold text-foreground">
-                                      Account keys
-                                    </h3>
-                                    <p className="mt-1 text-[12px] text-muted-foreground leading-relaxed">
-                                      Account-level ops, CLI auth, sessions.
-                                      Per-user credentials.
-                                    </p>
-                                  </div>
-                                  <div className="flex min-h-9 w-full items-center border-t border-border px-4 py-3 bg-muted/20">
+                            node: (
+                              <div className="rounded-xl border border-border bg-card/50 overflow-hidden transition-colors hover:border-border/80">
+                                <div className="px-4 py-3">
+                                  <h3 className="text-[13px] font-semibold text-foreground">
+                                    Project keys
+                                  </h3>
+                                  <p className="mt-1 text-[12px] text-muted-foreground leading-relaxed">
+                                    Databases, storage, users, functions. One
+                                    project per key.
+                                  </p>
+                                </div>
+                                <div className="flex min-h-9 w-full items-center border-t border-border px-4 py-3 bg-muted/20">
+                                  {activeProjects.length > 0 ? (
+                                    <ProjectSelector
+                                      orgTeamId={orgTeamId}
+                                      getProjectLink={(projectId) => ({
+                                        to: '/projects/$projectId/api-keys',
+                                        params: { projectId },
+                                      })}
+                                      showApiKeysCount
+                                    />
+                                  ) : (
                                     <Button
                                       variant="outline"
                                       size="sm"
@@ -2956,821 +2959,891 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                                       asChild
                                     >
                                       <Link
-                                        to="/account"
+                                        to="/organizations/$orgId"
+                                        params={{ orgId: orgId ?? '' }}
                                         className="inline-flex items-center gap-1.5"
                                       >
-                                        Account settings
+                                        Create a project first
                                         <ChevronRight className="h-3.5 w-3.5 shrink-0" />
                                       </Link>
                                     </Button>
-                                  </div>
+                                  )}
                                 </div>
-                              ),
+                              </div>
+                            ),
+                          },
+                          {
+                            id: 'account-keys',
+                            search: {
+                              title: 'Account keys',
+                              keywords: ['cli', 'sessions', 'user', 'account'],
                             },
-                            {
-                              id: 'org-keys',
-                              search: {
-                                title: 'Org keys',
-                                keywords: [
-                                  'billing',
-                                  'team',
-                                  'organization',
-                                  'org',
-                                ],
-                              },
-                              node: (
-                                <div className="rounded-xl border border-border bg-card/50 overflow-hidden transition-colors hover:border-border/80">
-                                  <div className="px-4 py-3">
-                                    <h3 className="text-[13px] font-semibold text-foreground">
-                                      Org keys
-                                    </h3>
-                                    <p className="mt-1 text-[12px] text-muted-foreground leading-relaxed">
-                                      Billing, team, cross-project. One key for
-                                      the whole org.
-                                    </p>
-                                  </div>
-                                  <div className="flex min-h-9 w-full items-center border-t border-border px-4 py-3 bg-muted/20">
-                                    <Button
-                                      variant="outline"
-                                      size="sm"
-                                      className="h-9 w-full justify-between text-[13px] font-normal"
-                                      asChild
+                            node: (
+                              <div className="rounded-xl border border-border bg-card/50 overflow-hidden transition-colors hover:border-border/80">
+                                <div className="px-4 py-3">
+                                  <h3 className="text-[13px] font-semibold text-foreground">
+                                    Account keys
+                                  </h3>
+                                  <p className="mt-1 text-[12px] text-muted-foreground leading-relaxed">
+                                    Account-level ops, CLI auth, sessions.
+                                    Per-user credentials.
+                                  </p>
+                                </div>
+                                <div className="flex min-h-9 w-full items-center border-t border-border px-4 py-3 bg-muted/20">
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    className="h-9 w-full justify-between text-[13px] font-normal"
+                                    asChild
+                                  >
+                                    <Link
+                                      to="/account"
+                                      className="inline-flex items-center gap-1.5"
                                     >
-                                      <a
-                                        href="https://appwrite.io/docs/advanced/platform/api-keys"
-                                        target="_blank"
-                                        rel="noopener noreferrer"
-                                        className="inline-flex items-center gap-1.5"
-                                      >
-                                        Docs
-                                        <ExternalLink className="h-3.5 w-3.5 shrink-0" />
-                                      </a>
-                                    </Button>
-                                  </div>
+                                      Account settings
+                                      <ChevronRight className="h-3.5 w-3.5 shrink-0" />
+                                    </Link>
+                                  </Button>
                                 </div>
-                              ),
+                              </div>
+                            ),
+                          },
+                          {
+                            id: 'org-keys',
+                            search: {
+                              title: 'Org keys',
+                              keywords: [
+                                'billing',
+                                'team',
+                                'organization',
+                                'org',
+                              ],
                             },
-                            {
-                              id: 'api-keys-info',
-                              search: {
-                                title: 'API key types',
-                                keywords: [
-                                  'organization-level',
-                                  'server-side',
-                                  'manageable',
-                                ],
-                              },
-                              node: (
-                                <div className="rounded-lg border border-border bg-muted/20 px-4 py-3">
-                                  <p className="text-[12px] text-muted-foreground">
-                                    <Info className="mb-0.5 mr-2 inline-block h-4 w-4 align-middle" />
-                                    Organization-level keys will be manageable
-                                    here once available. Meanwhile, use project
-                                    keys for server-side access.
+                            node: (
+                              <div className="rounded-xl border border-border bg-card/50 overflow-hidden transition-colors hover:border-border/80">
+                                <div className="px-4 py-3">
+                                  <h3 className="text-[13px] font-semibold text-foreground">
+                                    Org keys
+                                  </h3>
+                                  <p className="mt-1 text-[12px] text-muted-foreground leading-relaxed">
+                                    Billing, team, cross-project. One key for
+                                    the whole org.
                                   </p>
                                 </div>
-                              ),
-                            },
-                          ]}
-                        />
-                      ) : settingsSubTab === 'members' ? (
-                        <>
-                          {/* Error State */}
-                          {membershipsError && (
-                            <div className="flex flex-col items-center justify-center py-16 text-center">
-                              <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-muted">
-                                <Users className="h-6 w-6 text-muted-foreground" />
+                                <div className="flex min-h-9 w-full items-center border-t border-border px-4 py-3 bg-muted/20">
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    className="h-9 w-full justify-between text-[13px] font-normal"
+                                    asChild
+                                  >
+                                    <a
+                                      href="https://appwrite.io/docs/advanced/platform/api-keys"
+                                      target="_blank"
+                                      rel="noopener noreferrer"
+                                      className="inline-flex items-center gap-1.5"
+                                    >
+                                      Docs
+                                      <ExternalLink className="h-3.5 w-3.5 shrink-0" />
+                                    </a>
+                                  </Button>
+                                </div>
                               </div>
-                              <h3 className="text-[15px] font-medium text-foreground">
-                                Failed to load members
-                              </h3>
-                              <p className="mt-1 text-[13px] text-muted-foreground">
-                                {membershipsError instanceof Error
-                                  ? membershipsError.message
-                                  : 'An error occurred'}
-                              </p>
+                            ),
+                          },
+                          {
+                            id: 'api-keys-info',
+                            search: {
+                              title: 'API key types',
+                              keywords: [
+                                'organization-level',
+                                'server-side',
+                                'manageable',
+                              ],
+                            },
+                            node: (
+                              <div className="rounded-lg border border-border bg-muted/20 px-4 py-3">
+                                <p className="text-[12px] text-muted-foreground">
+                                  <Info className="mb-0.5 mr-2 inline-block h-4 w-4 align-middle" />
+                                  Organization-level keys will be manageable
+                                  here once available. Meanwhile, use project
+                                  keys for server-side access.
+                                </p>
+                              </div>
+                            ),
+                          },
+                        ]}
+                      />
+                    ) : settingsSubTab === 'members' ? (
+                      <>
+                        {/* Error State */}
+                        {membershipsError && (
+                          <div className="flex flex-col items-center justify-center py-16 text-center">
+                            <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-muted">
+                              <Users className="h-6 w-6 text-muted-foreground" />
                             </div>
-                          )}
+                            <h3 className="text-[15px] font-medium text-foreground">
+                              Failed to load members
+                            </h3>
+                            <p className="mt-1 text-[13px] text-muted-foreground">
+                              {membershipsError instanceof Error
+                                ? membershipsError.message
+                                : 'An error occurred'}
+                            </p>
+                          </div>
+                        )}
 
-                          {/* Members Content */}
-                          {!membershipsError && (
-                            <>
-                              {/* Toolbar: Search + Invite */}
-                              <div className="mb-4 flex items-center gap-3">
-                                <div className="relative w-64">
-                                  <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                                  <Input
-                                    placeholder="Search members..."
-                                    value={membershipsSearchQuery}
-                                    onChange={(e) =>
-                                      setMembershipsSearchQuery(e.target.value)
-                                    }
-                                    className="h-9 border-border bg-accent/50 pl-10 text-[13px] text-foreground placeholder:text-muted-foreground focus:border-border focus:ring-0"
-                                  />
-                                </div>
-
-                                <TooltipProvider delayDuration={0}>
-                                  <Tooltip>
-                                    <TooltipTrigger asChild>
-                                      <span className="ml-auto inline-flex">
-                                        <Button
-                                          variant="brandCta"
-                                          className="h-9 gap-2 text-[13px] font-medium"
-                                          onClick={() =>
-                                            setInviteDialogOpen(true)
-                                          }
-                                          disabled={inviteDisabled}
-                                        >
-                                          <Plus className="h-4 w-4" />
-                                          Invite
-                                        </Button>
-                                      </span>
-                                    </TooltipTrigger>
-                                    {inviteDisabledTooltip ? (
-                                      <TooltipContent className="max-w-xs text-xs">
-                                        {inviteDisabledTooltip}
-                                      </TooltipContent>
-                                    ) : null}
-                                  </Tooltip>
-                                </TooltipProvider>
+                        {/* Members Content */}
+                        {!membershipsError && (
+                          <>
+                            {/* Toolbar: Search + Invite */}
+                            <div className="mb-4 flex items-center gap-3">
+                              <div className="relative w-64">
+                                <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                                <Input
+                                  placeholder="Search members..."
+                                  value={membershipsSearchQuery}
+                                  onChange={(e) =>
+                                    setMembershipsSearchQuery(e.target.value)
+                                  }
+                                  className="h-9 border-border bg-accent/50 pl-10 text-[13px] text-foreground placeholder:text-muted-foreground focus:border-border focus:ring-0"
+                                />
                               </div>
 
-                              {/* Members List or Empty State */}
-                              {membershipsLoading ? (
-                                <div className="flex flex-col items-center justify-center py-16 text-center">
-                                  <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-muted">
-                                    <Users className="h-6 w-6 text-muted-foreground" />
-                                  </div>
-                                  <p className="text-[13px] text-muted-foreground">
-                                    Loading members...
-                                  </p>
+                              <TooltipProvider delayDuration={0}>
+                                <Tooltip>
+                                  <TooltipTrigger asChild>
+                                    <span className="ml-auto inline-flex">
+                                      <Button
+                                        variant="brandCta"
+                                        className="h-9 gap-2 text-[13px] font-medium"
+                                        onClick={() =>
+                                          setInviteDialogOpen(true)
+                                        }
+                                        disabled={inviteDisabled}
+                                      >
+                                        <Plus className="h-4 w-4" />
+                                        Invite
+                                      </Button>
+                                    </span>
+                                  </TooltipTrigger>
+                                  {inviteDisabledTooltip ? (
+                                    <TooltipContent className="max-w-xs text-xs">
+                                      {inviteDisabledTooltip}
+                                    </TooltipContent>
+                                  ) : null}
+                                </Tooltip>
+                              </TooltipProvider>
+                            </div>
+
+                            {/* Members List or Empty State */}
+                            {membershipsLoading ? (
+                              <div className="flex flex-col items-center justify-center py-16 text-center">
+                                <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-muted">
+                                  <Users className="h-6 w-6 text-muted-foreground" />
                                 </div>
-                              ) : memberships.length > 0 ? (
-                                <>
-                                  <div className="rounded-lg border border-border bg-card overflow-hidden">
-                                    <Table>
-                                      <TableHeader>
-                                        <TableRow className="hover:bg-transparent border-b border-border">
-                                          <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">
-                                            Member
+                                <p className="text-[13px] text-muted-foreground">
+                                  Loading members...
+                                </p>
+                              </div>
+                            ) : memberships.length > 0 ? (
+                              <>
+                                <div className="rounded-lg border border-border bg-card overflow-hidden">
+                                  <Table>
+                                    <TableHeader>
+                                      <TableRow className="hover:bg-transparent border-b border-border">
+                                        <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">
+                                          Member
+                                        </TableHead>
+                                        {features.orgRoles && (
+                                          <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider text-center">
+                                            Role
                                           </TableHead>
-                                          {features.orgRoles && (
-                                            <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider text-center">
-                                              Role
-                                            </TableHead>
-                                          )}
-                                          {features.accountMfa && (
-                                            <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider text-center hidden sm:table-cell">
-                                              MFA
-                                            </TableHead>
-                                          )}
-                                          <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider text-right hidden sm:table-cell">
-                                            Joined
+                                        )}
+                                        {features.accountMfa && (
+                                          <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider text-center hidden sm:table-cell">
+                                            MFA
                                           </TableHead>
-                                          <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider w-[40px]"></TableHead>
-                                        </TableRow>
-                                      </TableHeader>
-                                      <TableBody>
-                                        {memberships.map(
-                                          (member: TeamMember) => {
-                                            const {
-                                              Icon: RoleIcon,
-                                              label: roleLabel,
-                                            } = orgMembershipRoleDisplay(
-                                              member.role,
-                                            )
-                                            return (
-                                              <TableRow
-                                                key={member.$id}
-                                                className="border-b border-border/50 hover:bg-muted/30 transition-colors"
-                                              >
-                                                <TableCell className="px-4 py-3">
-                                                  <div className="flex items-center gap-3 min-w-0">
-                                                    <InitialsAvatar
-                                                      name={
-                                                        member.userName ||
-                                                        member.userEmail
-                                                      }
-                                                      size="sm"
-                                                      className="shrink-0"
-                                                    />
-                                                    <div className="flex-1 min-w-0">
-                                                      <div className="flex items-center gap-2 flex-wrap">
-                                                        <p className="truncate text-[13px] font-medium text-foreground">
-                                                          {member.userName ||
-                                                            member.userEmail}
-                                                        </p>
-                                                        {member.status ===
-                                                          'pending' && (
-                                                          <Badge
-                                                            variant="secondary"
-                                                            className="text-[11px] font-medium border px-2 py-0.5 shrink-0"
-                                                          >
-                                                            Pending
-                                                          </Badge>
-                                                        )}
-                                                      </div>
-                                                      <div className="mt-0.5">
-                                                        <p className="truncate text-[12px] text-muted-foreground">
-                                                          {member.userEmail}
-                                                        </p>
-                                                      </div>
-                                                    </div>
-                                                  </div>
-                                                </TableCell>
-                                                {features.orgRoles && (
-                                                  <TableCell className="px-4 py-3">
-                                                    <div className="flex items-center justify-center">
+                                        )}
+                                        <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider text-right hidden sm:table-cell">
+                                          Joined
+                                        </TableHead>
+                                        <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider w-[40px]"></TableHead>
+                                      </TableRow>
+                                    </TableHeader>
+                                    <TableBody>
+                                      {memberships.map((member: TeamMember) => {
+                                        const {
+                                          Icon: RoleIcon,
+                                          label: roleLabel,
+                                        } = orgMembershipRoleDisplay(
+                                          member.role,
+                                        )
+                                        return (
+                                          <TableRow
+                                            key={member.$id}
+                                            className="border-b border-border/50 hover:bg-muted/30 transition-colors"
+                                          >
+                                            <TableCell className="px-4 py-3">
+                                              <div className="flex items-center gap-3 min-w-0">
+                                                <InitialsAvatar
+                                                  name={
+                                                    member.userName ||
+                                                    member.userEmail
+                                                  }
+                                                  size="sm"
+                                                  className="shrink-0"
+                                                />
+                                                <div className="flex-1 min-w-0">
+                                                  <div className="flex items-center gap-2 flex-wrap">
+                                                    <p className="truncate text-[13px] font-medium text-foreground">
+                                                      {member.userName ||
+                                                        member.userEmail}
+                                                    </p>
+                                                    {member.status ===
+                                                      'pending' && (
                                                       <Badge
                                                         variant="secondary"
-                                                        className={cn(
-                                                          'inline-flex items-center gap-1 text-[11px] font-medium border px-2 py-0.5',
-                                                        )}
+                                                        className="text-[11px] font-medium border px-2 py-0.5 shrink-0"
                                                       >
-                                                        <RoleIcon
-                                                          className="h-3 w-3 shrink-0"
-                                                          aria-hidden
-                                                        />
-                                                        {roleLabel}
+                                                        Pending
                                                       </Badge>
-                                                    </div>
-                                                  </TableCell>
-                                                )}
-                                                {features.accountMfa && (
-                                                  <TableCell className="px-4 py-3 hidden sm:table-cell">
-                                                    <div className="flex items-center justify-center">
-                                                      {member.status ===
-                                                      'pending' ? (
-                                                        <span className="text-muted-foreground/50 text-[12px]">
-                                                          -
-                                                        </span>
-                                                      ) : member.mfaEnabled ? (
-                                                        <Tooltip>
-                                                          <TooltipTrigger
-                                                            asChild
-                                                          >
-                                                            <div className="flex items-center justify-center">
-                                                              <CheckCircle2 className="h-4 w-4 text-green-600 dark:text-green-400" />
-                                                            </div>
-                                                          </TooltipTrigger>
-                                                          <TooltipContent>
-                                                            <p className="text-xs">
-                                                              Multi-factor
-                                                              authentication
-                                                              enabled
-                                                            </p>
-                                                          </TooltipContent>
-                                                        </Tooltip>
-                                                      ) : (
-                                                        <Tooltip>
-                                                          <TooltipTrigger
-                                                            asChild
-                                                          >
-                                                            <div className="flex items-center justify-center">
-                                                              <XCircle className="h-4 w-4 text-muted-foreground/40" />
-                                                            </div>
-                                                          </TooltipTrigger>
-                                                          <TooltipContent>
-                                                            <p className="text-xs">
-                                                              Multi-factor
-                                                              authentication not
-                                                              enabled
-                                                            </p>
-                                                          </TooltipContent>
-                                                        </Tooltip>
-                                                      )}
-                                                    </div>
-                                                  </TableCell>
-                                                )}
-                                                <TableCell className="px-4 py-3 hidden sm:table-cell">
-                                                  <div className="text-right">
-                                                    {member.status ===
-                                                    'pending' ? (
-                                                      <span className="text-[12px] text-muted-foreground/70 italic">
-                                                        Invited
-                                                      </span>
-                                                    ) : (
-                                                      <DateTooltip
-                                                        date={
-                                                          new Date(
-                                                            member.joinedAt,
-                                                          )
-                                                        }
-                                                        className="text-[12px] text-muted-foreground font-mono"
-                                                      />
                                                     )}
                                                   </div>
-                                                </TableCell>
-                                                <TableCell className="px-4 py-3">
-                                                  <div className="flex items-center justify-end">
-                                                    {member.status ===
-                                                    'pending' ? (
-                                                      <DropdownMenu>
-                                                        <DropdownMenuTrigger
-                                                          asChild
+                                                  <div className="mt-0.5">
+                                                    <p className="truncate text-[12px] text-muted-foreground">
+                                                      {member.userEmail}
+                                                    </p>
+                                                  </div>
+                                                </div>
+                                              </div>
+                                            </TableCell>
+                                            {features.orgRoles && (
+                                              <TableCell className="px-4 py-3">
+                                                <div className="flex items-center justify-center">
+                                                  <Badge
+                                                    variant="secondary"
+                                                    className={cn(
+                                                      'inline-flex items-center gap-1 text-[11px] font-medium border px-2 py-0.5',
+                                                    )}
+                                                  >
+                                                    <RoleIcon
+                                                      className="h-3 w-3 shrink-0"
+                                                      aria-hidden
+                                                    />
+                                                    {roleLabel}
+                                                  </Badge>
+                                                </div>
+                                              </TableCell>
+                                            )}
+                                            {features.accountMfa && (
+                                              <TableCell className="px-4 py-3 hidden sm:table-cell">
+                                                <div className="flex items-center justify-center">
+                                                  {member.status ===
+                                                  'pending' ? (
+                                                    <span className="text-muted-foreground/50 text-[12px]">
+                                                      -
+                                                    </span>
+                                                  ) : member.mfaEnabled ? (
+                                                    <Tooltip>
+                                                      <TooltipTrigger asChild>
+                                                        <div className="flex items-center justify-center">
+                                                          <CheckCircle2 className="h-4 w-4 text-green-600 dark:text-green-400" />
+                                                        </div>
+                                                      </TooltipTrigger>
+                                                      <TooltipContent>
+                                                        <p className="text-xs">
+                                                          Multi-factor
+                                                          authentication enabled
+                                                        </p>
+                                                      </TooltipContent>
+                                                    </Tooltip>
+                                                  ) : (
+                                                    <Tooltip>
+                                                      <TooltipTrigger asChild>
+                                                        <div className="flex items-center justify-center">
+                                                          <XCircle className="h-4 w-4 text-muted-foreground/40" />
+                                                        </div>
+                                                      </TooltipTrigger>
+                                                      <TooltipContent>
+                                                        <p className="text-xs">
+                                                          Multi-factor
+                                                          authentication not
+                                                          enabled
+                                                        </p>
+                                                      </TooltipContent>
+                                                    </Tooltip>
+                                                  )}
+                                                </div>
+                                              </TableCell>
+                                            )}
+                                            <TableCell className="px-4 py-3 hidden sm:table-cell">
+                                              <div className="text-right">
+                                                {member.status === 'pending' ? (
+                                                  <span className="text-[12px] text-muted-foreground/70 italic">
+                                                    Invited
+                                                  </span>
+                                                ) : (
+                                                  <DateTooltip
+                                                    date={
+                                                      new Date(member.joinedAt)
+                                                    }
+                                                    className="text-[12px] text-muted-foreground font-mono"
+                                                  />
+                                                )}
+                                              </div>
+                                            </TableCell>
+                                            <TableCell className="px-4 py-3">
+                                              <div className="flex items-center justify-end">
+                                                {member.status === 'pending' ? (
+                                                  <DropdownMenu>
+                                                    <DropdownMenuTrigger
+                                                      asChild
+                                                    >
+                                                      <RowActionsMenuTrigger />
+                                                    </DropdownMenuTrigger>
+                                                    <DropdownMenuContent
+                                                      align="end"
+                                                      className="w-48"
+                                                    >
+                                                      <DropdownMenuItem
+                                                        onClick={async () => {
+                                                          try {
+                                                            const roles =
+                                                              member.roles &&
+                                                              member.roles
+                                                                .length > 0
+                                                                ? member.roles
+                                                                : [member.role]
+                                                            await resendInviteMutation.mutateAsync(
+                                                              {
+                                                                membershipId:
+                                                                  member.membershipId ||
+                                                                  member.$id,
+                                                                email:
+                                                                  member.userEmail,
+                                                                roles,
+                                                              },
+                                                            )
+                                                            toast.success(
+                                                              'Invitation resent successfully',
+                                                            )
+                                                          } catch (error: unknown) {
+                                                            toast.error(
+                                                              error?.message ||
+                                                                'Failed to resend invitation',
+                                                            )
+                                                          }
+                                                        }}
+                                                        disabled={
+                                                          resendInviteMutation.isPending
+                                                        }
+                                                      >
+                                                        <MenuItemContent
+                                                          icon={Mail}
                                                         >
-                                                          <RowActionsMenuTrigger />
-                                                        </DropdownMenuTrigger>
-                                                        <DropdownMenuContent
-                                                          align="end"
-                                                          className="w-48"
+                                                          {resendInviteMutation.isPending
+                                                            ? 'Resending...'
+                                                            : 'Resend'}
+                                                        </MenuItemContent>
+                                                      </DropdownMenuItem>
+                                                      <DropdownMenuSeparator />
+                                                      <DropdownMenuItem
+                                                        onClick={() => {
+                                                          setSelectedMember(
+                                                            member,
+                                                          )
+                                                          setRemoveMemberDialogOpen(
+                                                            true,
+                                                          )
+                                                        }}
+                                                      >
+                                                        <MenuItemContent
+                                                          icon={Trash2}
                                                         >
-                                                          <DropdownMenuItem
-                                                            onClick={async () => {
-                                                              try {
-                                                                const roles =
-                                                                  member.roles &&
-                                                                  member.roles
-                                                                    .length > 0
-                                                                    ? member.roles
-                                                                    : [
-                                                                        member.role,
-                                                                      ]
-                                                                await resendInviteMutation.mutateAsync(
-                                                                  {
-                                                                    membershipId:
-                                                                      member.membershipId ||
-                                                                      member.$id,
-                                                                    email:
-                                                                      member.userEmail,
-                                                                    roles,
-                                                                  },
-                                                                )
-                                                                toast.success(
-                                                                  'Invitation resent successfully',
-                                                                )
-                                                              } catch (error: unknown) {
-                                                                toast.error(
-                                                                  error?.message ||
-                                                                    'Failed to resend invitation',
-                                                                )
-                                                              }
-                                                            }}
-                                                            disabled={
-                                                              resendInviteMutation.isPending
-                                                            }
-                                                          >
-                                                            <MenuItemContent icon={Mail}>
-                                                              {resendInviteMutation.isPending
-                                                                ? 'Resending...'
-                                                                : 'Resend'}
-                                                            </MenuItemContent>
-                                                          </DropdownMenuItem>
-                                                          <DropdownMenuSeparator />
+                                                          Remove
+                                                        </MenuItemContent>
+                                                      </DropdownMenuItem>
+                                                    </DropdownMenuContent>
+                                                  </DropdownMenu>
+                                                ) : (
+                                                  <DropdownMenu>
+                                                    <DropdownMenuTrigger
+                                                      asChild
+                                                    >
+                                                      <RowActionsMenuTrigger />
+                                                    </DropdownMenuTrigger>
+                                                    <DropdownMenuContent
+                                                      align="end"
+                                                      className="w-48"
+                                                    >
+                                                      {canInviteOrgMember(
+                                                        access,
+                                                        features,
+                                                      ) && (
+                                                        <>
                                                           <DropdownMenuItem
                                                             onClick={() => {
                                                               setSelectedMember(
                                                                 member,
                                                               )
-                                                              setRemoveMemberDialogOpen(
+                                                              const role =
+                                                                member.role as
+                                                                  | 'owner'
+                                                                  | 'developer'
+                                                                  | 'editor'
+                                                                  | 'analyst'
+                                                                  | 'billing'
+                                                              setSelectedRole(
+                                                                role,
+                                                              )
+                                                              setUpdateRoleDialogOpen(
                                                                 true,
                                                               )
                                                             }}
                                                           >
-                                                            <MenuItemContent icon={Trash2}>Remove</MenuItemContent>
-                                                          </DropdownMenuItem>
-                                                        </DropdownMenuContent>
-                                                      </DropdownMenu>
-                                                    ) : (
-                                                      <DropdownMenu>
-                                                        <DropdownMenuTrigger
-                                                          asChild
-                                                        >
-                                                          <RowActionsMenuTrigger />
-                                                        </DropdownMenuTrigger>
-                                                        <DropdownMenuContent
-                                                          align="end"
-                                                          className="w-48"
-                                                        >
-                                                          {canInviteOrgMember(
-                                                            access,
-                                                            features,
-                                                          ) && (
-                                                            <>
-                                                              <DropdownMenuItem
-                                                                onClick={() => {
-                                                                  setSelectedMember(
-                                                                    member,
-                                                                  )
-                                                                  const role =
-                                                                    member.role as
-                                                                      | 'owner'
-                                                                      | 'developer'
-                                                                      | 'editor'
-                                                                      | 'analyst'
-                                                                      | 'billing'
-                                                                  setSelectedRole(
-                                                                    role,
-                                                                  )
-                                                                  setUpdateRoleDialogOpen(
-                                                                    true,
-                                                                  )
-                                                                }}
-                                                              >
-                                                                <MenuItemContent icon={UserCog}>Update</MenuItemContent>
-                                                              </DropdownMenuItem>
-                                                              <DropdownMenuSeparator />
-                                                            </>
-                                                          )}
-                                                          {canInviteOrgMember(
-                                                            access,
-                                                            features,
-                                                          ) && (
-                                                            <DropdownMenuItem
-                                                              onClick={() => {
-                                                                setSelectedMember(
-                                                                  member,
-                                                                )
-                                                                setRemoveMemberDialogOpen(
-                                                                  true,
-                                                                )
-                                                              }}
+                                                            <MenuItemContent
+                                                              icon={UserCog}
                                                             >
-                                                              <MenuItemContent icon={Trash2}>Remove</MenuItemContent>
-                                                            </DropdownMenuItem>
-                                                          )}
-                                                        </DropdownMenuContent>
-                                                      </DropdownMenu>
-                                                    )}
-                                                  </div>
-                                                </TableCell>
-                                              </TableRow>
-                                            )
-                                          },
-                                        )}
-                                      </TableBody>
-                                    </Table>
-                                  </div>
-
-                                  {membershipsTotal > 0 && (
-                                    <Pagination
-                                      currentPage={displayedMembershipsPage}
-                                      totalItems={membershipsTotal}
-                                      pageSize={membershipsPageSize}
-                                      pageSizeOptions={[12, 18, 36, 72]}
-                                      onPageChange={(page: number) =>
-                                        setRequestedMembershipsPage(page)
-                                      }
-                                      onPageSizeChange={(size) => {
-                                        setMembershipsPageSize(size)
-                                        setRequestedMembershipsPage(1)
-                                        setDisplayedMembershipsPage(1)
-                                      }}
-                                      itemLabel="members"
-                                    />
-                                  )}
-                                </>
-                              ) : (
-                                <EmptyState
-                                  icon={Users}
-                                  title="No members found"
-                                  description={
-                                    membershipsSearchQuery
-                                      ? undefined
-                                      : 'Invite organization members to collaborate on your projects'
-                                  }
-                                  isEmpty={!membershipsSearchQuery}
-                                  hasFilters={!!membershipsSearchQuery}
-                                  variant="centered"
-                                  iconSize="md"
-                                />
-                              )}
-                            </>
-                          )}
-                        </>
-                      ) : (
-                        <SettingsCardsList
-                          cards={[
-                            ...(selectedOrg
-                              ? [
-                                  {
-                                    id: 'org-id',
-                                    search: {
-                                      title: 'Organization ID',
-                                      keywords: [
-                                        'id',
-                                        'api',
-                                        'webhook',
-                                        'sdk',
-                                        'copy',
-                                      ],
-                                    },
-                                    node: (
-                                      <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
-                                        <div className="px-6 py-4">
-                                          <h3 className="text-[15px] font-semibold text-foreground">
-                                            Organization ID
-                                          </h3>
-                                        </div>
-                                        <div className="border-t border-border" />
-                                        <div className="px-6 py-4">
-                                          <p className="text-[13px] text-muted-foreground mb-3">
-                                            Use this ID when integrating with the
-                                            Appwrite API, webhooks, or SDKs.
-                                            Support may also ask for this ID when
-                                            assisting with issues.
-                                          </p>
-                                          <CopyableId
-                                            id={selectedOrg.$id}
-                                            size="md"
-                                            maxWidth={240}
-                                          />
-                                        </div>
-                                      </div>
-                                    ),
-                                  } satisfies SettingsCardItem,
-                                ]
-                              : []),
-                            {
-                              id: 'org-name',
-                              search: {
-                                title: 'Organization name',
-                                keywords: ['rename', 'display name'],
-                              },
-                              node: (
-                                <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
-                                  <div className="px-6 py-4">
-                                    <h3 className="text-[15px] font-semibold text-foreground">
-                                      Organization name
-                                    </h3>
-                                  </div>
-                                  <div className="border-t border-border" />
-                                  <div className="px-6 py-4">
-                                    <p className="text-[13px] text-muted-foreground">
-                                      Update your organization's display name. This
-                                      will be visible to all organization members.
-                                    </p>
-                                    <Input
-                                      value={orgName}
-                                      onChange={(e) => setOrgName(e.target.value)}
-                                      placeholder="Organization name"
-                                      className="mt-3 h-9 max-w-sm border-border bg-background text-[13px] text-foreground placeholder:text-muted-foreground focus:border-border focus:ring-0"
-                                    />
-                                  </div>
-                                  <div className="px-6 py-4 border-t border-border bg-muted/30">
-                                    <Button
-                                      size="sm"
-                                      className="h-9 text-[13px]"
-                                      disabled={
-                                        !selectedOrg ||
-                                        orgName === selectedOrg.name ||
-                                        !orgName.trim() ||
-                                        updateOrgNameMutation.isPending
-                                      }
-                                      onClick={() => {
-                                        if (
-                                          selectedOrg &&
-                                          orgName.trim() &&
-                                          orgName !== selectedOrg.name
-                                        ) {
-                                          updateOrgNameMutation.mutate({
-                                            orgId: selectedOrg.$id,
-                                            name: orgName.trim(),
-                                          })
-                                        }
-                                      }}
-                                    >
-                                      Update
-                                    </Button>
-                                  </div>
-                                </div>
-                              ),
-                            },
-                            {
-                              id: 'delete-org',
-                              search: {
-                                title: 'Delete organization',
-                                keywords: ['delete', 'remove', 'destroy', 'danger'],
-                              },
-                              node: (
-                                <div className="rounded-xl border border-destructive/50 bg-card/50 overflow-hidden">
-                                  <div className="px-6 py-4">
-                                    <h3 className="text-[15px] font-semibold text-foreground">
-                                      Delete organization
-                                    </h3>
-                                  </div>
-                                  <div className="border-t border-destructive/20" />
-                                  <div className="px-6 py-4">
-                                    <p className="text-[13px] text-muted-foreground">
-                                      Permanently delete this organization and all
-                                      associated data. This action cannot be undone.
-                                    </p>
-
-                                    {selectedOrg && (
-                                      <div className="flex items-center gap-3 mt-4">
-                                        <InitialsAvatar
-                                          name={selectedOrg.name}
-                                          size="md"
-                                        />
-                                        <div className="flex-1 min-w-0">
-                                          <p className="text-[14px] font-medium text-foreground truncate">
-                                            {selectedOrg.name}
-                                          </p>
-                                          <p className="text-[12px] text-muted-foreground">
-                                            {membershipsTotal} member
-                                            {membershipsTotal !== 1 ? 's' : ''} •{' '}
-                                            {totalOrgProjects} project
-                                            {totalOrgProjects !== 1 ? 's' : ''}
-                                          </p>
-                                        </div>
-
-                                        {memberships.length > 0 && (
-                                          <div className="flex items-center gap-2">
-                                            <Link
-                                              to="/organizations/$orgId/settings/members"
-                                              params={{ orgId: orgId! }}
-                                              className="flex -space-x-2 rounded-full focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 cursor-pointer"
-                                              title="View members"
-                                              onClick={() =>
-                                                setDeleteOrgDialogOpen(false)
-                                              }
-                                            >
-                                              {memberships
-                                                .slice(0, 4)
-                                                .map(
-                                                  (
-                                                    member: TeamMember,
-                                                    index: number,
-                                                  ) => (
-                                                    <div
-                                                      key={member.$id}
-                                                      className="relative rounded-full border-2 border-background"
-                                                      style={{ zIndex: 4 - index }}
-                                                      title={member.userName}
-                                                    >
-                                                      <InitialsAvatar
-                                                        name={member.userName}
-                                                        size="sm"
-                                                      />
-                                                    </div>
-                                                  ),
+                                                              Update
+                                                            </MenuItemContent>
+                                                          </DropdownMenuItem>
+                                                          <DropdownMenuSeparator />
+                                                        </>
+                                                      )}
+                                                      {canInviteOrgMember(
+                                                        access,
+                                                        features,
+                                                      ) && (
+                                                        <DropdownMenuItem
+                                                          onClick={() => {
+                                                            setSelectedMember(
+                                                              member,
+                                                            )
+                                                            setRemoveMemberDialogOpen(
+                                                              true,
+                                                            )
+                                                          }}
+                                                        >
+                                                          <MenuItemContent
+                                                            icon={Trash2}
+                                                          >
+                                                            Remove
+                                                          </MenuItemContent>
+                                                        </DropdownMenuItem>
+                                                      )}
+                                                    </DropdownMenuContent>
+                                                  </DropdownMenu>
                                                 )}
-                                              {membershipsTotal > 4 && (
-                                                <div
-                                                  className="relative flex h-6 w-6 items-center justify-center rounded-full border-2 border-background bg-muted text-[10px] font-medium text-muted-foreground"
-                                                  style={{ zIndex: 0 }}
-                                                >
-                                                  +{membershipsTotal - 4}
-                                                </div>
-                                              )}
-                                            </Link>
-                                          </div>
-                                        )}
-                                      </div>
-                                    )}
-                                  </div>
+                                              </div>
+                                            </TableCell>
+                                          </TableRow>
+                                        )
+                                      })}
+                                    </TableBody>
+                                  </Table>
+                                </div>
 
-                                  <div className="px-6 py-4 border-t border-destructive/20 bg-destructive/5">
-                                    <Dialog
-                                      open={deleteOrgDialogOpen}
-                                      onOpenChange={setDeleteOrgDialogOpen}
-                                    >
-                                      <DialogTrigger asChild>
-                                        <Button
-                                          variant="destructive"
-                                          size="sm"
-                                          className="h-9 text-[13px]"
-                                        >
+                                {membershipsTotal > 0 && (
+                                  <Pagination
+                                    currentPage={displayedMembershipsPage}
+                                    totalItems={membershipsTotal}
+                                    pageSize={membershipsPageSize}
+                                    pageSizeOptions={[12, 18, 36, 72]}
+                                    onPageChange={(page: number) =>
+                                      setRequestedMembershipsPage(page)
+                                    }
+                                    onPageSizeChange={(size) => {
+                                      setMembershipsPageSize(size)
+                                      setRequestedMembershipsPage(1)
+                                      setDisplayedMembershipsPage(1)
+                                    }}
+                                    itemLabel="members"
+                                  />
+                                )}
+                              </>
+                            ) : (
+                              <EmptyState
+                                icon={Users}
+                                title="No members found"
+                                description={
+                                  membershipsSearchQuery
+                                    ? undefined
+                                    : 'Invite organization members to collaborate on your projects'
+                                }
+                                isEmpty={!membershipsSearchQuery}
+                                hasFilters={!!membershipsSearchQuery}
+                                variant="centered"
+                                iconSize="md"
+                              />
+                            )}
+                          </>
+                        )}
+                      </>
+                    ) : (
+                      <SettingsCardsList
+                        cards={[
+                          ...(selectedOrg
+                            ? [
+                                {
+                                  id: 'org-id',
+                                  search: {
+                                    title: 'Organization ID',
+                                    keywords: [
+                                      'id',
+                                      'api',
+                                      'webhook',
+                                      'sdk',
+                                      'copy',
+                                    ],
+                                  },
+                                  node: (
+                                    <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
+                                      <div className="px-6 py-4">
+                                        <h3 className="text-[15px] font-semibold text-foreground">
+                                          Organization ID
+                                        </h3>
+                                      </div>
+                                      <div className="border-t border-border" />
+                                      <div className="px-6 py-4">
+                                        <p className="text-[13px] text-muted-foreground mb-3">
+                                          Use this ID when integrating with the
+                                          Appwrite API, webhooks, or SDKs.
+                                          Support may also ask for this ID when
+                                          assisting with issues.
+                                        </p>
+                                        <CopyableId
+                                          id={selectedOrg.$id}
+                                          size="md"
+                                          maxWidth={240}
+                                        />
+                                      </div>
+                                    </div>
+                                  ),
+                                } satisfies SettingsCardItem,
+                              ]
+                            : []),
+                          {
+                            id: 'org-name',
+                            search: {
+                              title: 'Organization name',
+                              keywords: ['rename', 'display name'],
+                            },
+                            node: (
+                              <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
+                                <div className="px-6 py-4">
+                                  <h3 className="text-[15px] font-semibold text-foreground">
+                                    Organization name
+                                  </h3>
+                                </div>
+                                <div className="border-t border-border" />
+                                <div className="px-6 py-4">
+                                  <p className="text-[13px] text-muted-foreground">
+                                    Update your organization's display name.
+                                    This will be visible to all organization
+                                    members.
+                                  </p>
+                                  <Input
+                                    value={orgName}
+                                    onChange={(e) => setOrgName(e.target.value)}
+                                    placeholder="Organization name"
+                                    className="mt-3 h-9 max-w-sm border-border bg-background text-[13px] text-foreground placeholder:text-muted-foreground focus:border-border focus:ring-0"
+                                  />
+                                </div>
+                                <div className="px-6 py-4 border-t border-border bg-muted/30">
+                                  <Button
+                                    size="sm"
+                                    className="h-9 text-[13px]"
+                                    disabled={
+                                      !selectedOrg ||
+                                      orgName === selectedOrg.name ||
+                                      !orgName.trim() ||
+                                      updateOrgNameMutation.isPending
+                                    }
+                                    onClick={() => {
+                                      if (
+                                        selectedOrg &&
+                                        orgName.trim() &&
+                                        orgName !== selectedOrg.name
+                                      ) {
+                                        updateOrgNameMutation.mutate({
+                                          orgId: selectedOrg.$id,
+                                          name: orgName.trim(),
+                                        })
+                                      }
+                                    }}
+                                  >
+                                    Update
+                                  </Button>
+                                </div>
+                              </div>
+                            ),
+                          },
+                          ...(supportsMultiTenancy
+                            ? [
+                                {
+                                  id: 'delete-org',
+                                  search: {
+                                    title: 'Delete organization',
+                                    keywords: [
+                                      'delete',
+                                      'remove',
+                                      'destroy',
+                                      'danger',
+                                    ],
+                                  },
+                                  node: (
+                                    <div className="rounded-xl border border-destructive/50 bg-card/50 overflow-hidden">
+                                      <div className="px-6 py-4">
+                                        <h3 className="text-[15px] font-semibold text-foreground">
                                           Delete organization
-                                        </Button>
-                                      </DialogTrigger>
-                                      <DialogContent className="sm:max-w-md p-0">
-                                        <DialogHeader className="px-6 pt-6 text-left">
-                                          <DialogTitle>
-                                            Delete organization
-                                          </DialogTitle>
-                                          <DialogDescription className="text-[13px] mt-2">
-                                            Are you sure you want to delete{' '}
-                                            {selectedOrg && (
-                                              <span className="font-medium text-foreground">
+                                        </h3>
+                                      </div>
+                                      <div className="border-t border-destructive/20" />
+                                      <div className="px-6 py-4">
+                                        <p className="text-[13px] text-muted-foreground">
+                                          Permanently delete this organization
+                                          and all associated data. This action
+                                          cannot be undone.
+                                        </p>
+
+                                        {selectedOrg && (
+                                          <div className="flex items-center gap-3 mt-4">
+                                            <InitialsAvatar
+                                              name={selectedOrg.name}
+                                              size="md"
+                                            />
+                                            <div className="flex-1 min-w-0">
+                                              <p className="text-[14px] font-medium text-foreground truncate">
                                                 {selectedOrg.name}
-                                              </span>
-                                            )}{' '}
-                                            and all its projects, databases, and
-                                            files? This action cannot be undone.
-                                          </DialogDescription>
-                                        </DialogHeader>
-                                        <div className="border-t border-border" />
-                                        <div className="px-6 pb-4 pt-0">
-                                          <div className="rounded-lg border border-border bg-muted/50 p-3 mb-4 mt-2">
-                                            {selectedOrg && (
-                                              <div className="flex items-center gap-3">
-                                                <InitialsAvatar
-                                                  name={selectedOrg.name}
-                                                  size="sm"
-                                                />
-                                                <div>
-                                                  <p className="text-[13px] font-medium text-foreground">
-                                                    {selectedOrg.name}
-                                                  </p>
-                                                  <p className="text-[11px] text-muted-foreground">
-                                                    {membershipsTotal} member
-                                                    {membershipsTotal !== 1
-                                                      ? 's'
-                                                      : ''}{' '}
-                                                    will lose access •{' '}
-                                                    {activeProjectsTotal} project
-                                                    {activeProjectsTotal !== 1
-                                                      ? 's'
-                                                      : ''}{' '}
-                                                    will be deleted
-                                                  </p>
-                                                </div>
+                                              </p>
+                                              <p className="text-[12px] text-muted-foreground">
+                                                {membershipsTotal} member
+                                                {membershipsTotal !== 1
+                                                  ? 's'
+                                                  : ''}{' '}
+                                                • {totalOrgProjects} project
+                                                {totalOrgProjects !== 1
+                                                  ? 's'
+                                                  : ''}
+                                              </p>
+                                            </div>
+
+                                            {memberships.length > 0 && (
+                                              <div className="flex items-center gap-2">
+                                                <Link
+                                                  to="/organizations/$orgId/settings/members"
+                                                  params={{ orgId: orgId! }}
+                                                  className="flex -space-x-2 rounded-full focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 cursor-pointer"
+                                                  title="View members"
+                                                  onClick={() =>
+                                                    setDeleteOrgDialogOpen(
+                                                      false,
+                                                    )
+                                                  }
+                                                >
+                                                  {memberships
+                                                    .slice(0, 4)
+                                                    .map(
+                                                      (
+                                                        member: TeamMember,
+                                                        index: number,
+                                                      ) => (
+                                                        <div
+                                                          key={member.$id}
+                                                          className="relative rounded-full border-2 border-background"
+                                                          style={{
+                                                            zIndex: 4 - index,
+                                                          }}
+                                                          title={
+                                                            member.userName
+                                                          }
+                                                        >
+                                                          <InitialsAvatar
+                                                            name={
+                                                              member.userName
+                                                            }
+                                                            size="sm"
+                                                          />
+                                                        </div>
+                                                      ),
+                                                    )}
+                                                  {membershipsTotal > 4 && (
+                                                    <div
+                                                      className="relative flex h-6 w-6 items-center justify-center rounded-full border-2 border-background bg-muted text-[10px] font-medium text-muted-foreground"
+                                                      style={{ zIndex: 0 }}
+                                                    >
+                                                      +{membershipsTotal - 4}
+                                                    </div>
+                                                  )}
+                                                </Link>
                                               </div>
                                             )}
                                           </div>
-                                          {activeProjects.length > 0 && (
-                                            <div className="mb-4">
-                                              <p className="text-[12px] text-muted-foreground">
-                                                Projects that will be deleted:{' '}
-                                                {activeProjects
-                                                  .slice(0, 5)
-                                                  .map((project, index) => (
-                                                    <span key={project.$id}>
-                                                      {index > 0 && ', '}
-                                                      <span className="font-medium text-foreground">
-                                                        {project.name}
-                                                      </span>
-                                                    </span>
-                                                  ))}
-                                                {activeProjectsTotal > 5 && (
-                                                  <span>
-                                                    {' '}
-                                                    and {activeProjectsTotal - 5}{' '}
-                                                    more
+                                        )}
+                                      </div>
+
+                                      <div className="px-6 py-4 border-t border-destructive/20 bg-destructive/5">
+                                        <Dialog
+                                          open={deleteOrgDialogOpen}
+                                          onOpenChange={setDeleteOrgDialogOpen}
+                                        >
+                                          <DialogTrigger asChild>
+                                            <Button
+                                              variant="destructive"
+                                              size="sm"
+                                              className="h-9 text-[13px]"
+                                            >
+                                              Delete organization
+                                            </Button>
+                                          </DialogTrigger>
+                                          <DialogContent className="sm:max-w-md p-0">
+                                            <DialogHeader className="px-6 pt-6 text-left">
+                                              <DialogTitle>
+                                                Delete organization
+                                              </DialogTitle>
+                                              <DialogDescription className="text-[13px] mt-2">
+                                                Are you sure you want to delete{' '}
+                                                {selectedOrg && (
+                                                  <span className="font-medium text-foreground">
+                                                    {selectedOrg.name}
                                                   </span>
+                                                )}{' '}
+                                                and all its projects, databases,
+                                                and files? This action cannot be
+                                                undone.
+                                              </DialogDescription>
+                                            </DialogHeader>
+                                            <div className="border-t border-border" />
+                                            <div className="px-6 pb-4 pt-0">
+                                              <div className="rounded-lg border border-border bg-muted/50 p-3 mb-4 mt-2">
+                                                {selectedOrg && (
+                                                  <div className="flex items-center gap-3">
+                                                    <InitialsAvatar
+                                                      name={selectedOrg.name}
+                                                      size="sm"
+                                                    />
+                                                    <div>
+                                                      <p className="text-[13px] font-medium text-foreground">
+                                                        {selectedOrg.name}
+                                                      </p>
+                                                      <p className="text-[11px] text-muted-foreground">
+                                                        {membershipsTotal}{' '}
+                                                        member
+                                                        {membershipsTotal !== 1
+                                                          ? 's'
+                                                          : ''}{' '}
+                                                        will lose access •{' '}
+                                                        {activeProjectsTotal}{' '}
+                                                        project
+                                                        {activeProjectsTotal !==
+                                                        1
+                                                          ? 's'
+                                                          : ''}{' '}
+                                                        will be deleted
+                                                      </p>
+                                                    </div>
+                                                  </div>
                                                 )}
-                                              </p>
+                                              </div>
+                                              {activeProjects.length > 0 && (
+                                                <div className="mb-4">
+                                                  <p className="text-[12px] text-muted-foreground">
+                                                    Projects that will be
+                                                    deleted:{' '}
+                                                    {activeProjects
+                                                      .slice(0, 5)
+                                                      .map((project, index) => (
+                                                        <span key={project.$id}>
+                                                          {index > 0 && ', '}
+                                                          <span className="font-medium text-foreground">
+                                                            {project.name}
+                                                          </span>
+                                                        </span>
+                                                      ))}
+                                                    {activeProjectsTotal >
+                                                      5 && (
+                                                      <span>
+                                                        {' '}
+                                                        and{' '}
+                                                        {activeProjectsTotal -
+                                                          5}{' '}
+                                                        more
+                                                      </span>
+                                                    )}
+                                                  </p>
+                                                </div>
+                                              )}
+
+                                              <label className="text-[13px] text-muted-foreground">
+                                                Type{' '}
+                                                {selectedOrg && (
+                                                  <span className="font-mono font-medium text-foreground bg-muted px-1.5 py-0.5 rounded">
+                                                    {selectedOrg.name}
+                                                  </span>
+                                                )}{' '}
+                                                to confirm
+                                              </label>
+                                              <Input
+                                                value={deleteOrgConfirmation}
+                                                onChange={(e) =>
+                                                  setDeleteOrgConfirmation(
+                                                    e.target.value,
+                                                  )
+                                                }
+                                                placeholder="Enter organization name"
+                                                className="mt-2 h-9 border-border bg-background text-[13px] text-foreground placeholder:text-muted-foreground focus:border-red-500/50 focus:ring-0"
+                                              />
                                             </div>
-                                          )}
 
-                                          <label className="text-[13px] text-muted-foreground">
-                                            Type{' '}
-                                            {selectedOrg && (
-                                              <span className="font-mono font-medium text-foreground bg-muted px-1.5 py-0.5 rounded">
-                                                {selectedOrg.name}
-                                              </span>
-                                            )}{' '}
-                                            to confirm
-                                          </label>
-                                          <Input
-                                            value={deleteOrgConfirmation}
-                                            onChange={(e) =>
-                                              setDeleteOrgConfirmation(
-                                                e.target.value,
-                                              )
-                                            }
-                                            placeholder="Enter organization name"
-                                            className="mt-2 h-9 border-border bg-background text-[13px] text-foreground placeholder:text-muted-foreground focus:border-red-500/50 focus:ring-0"
-                                          />
-                                        </div>
-
-                                        <div className="px-6 py-4 border-t border-border bg-muted/30 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
-                                          <Button
-                                            variant="outline"
-                                            size="sm"
-                                            className="h-9 text-[13px]"
-                                            onClick={() => {
-                                              setDeleteOrgDialogOpen(false)
-                                              setDeleteOrgConfirmation('')
-                                            }}
-                                          >
-                                            Cancel
-                                          </Button>
-                                          <Button
-                                            variant="destructive"
-                                            size="sm"
-                                            className="h-9 text-[13px]"
-                                            disabled={
-                                              !selectedOrg ||
-                                              deleteOrgConfirmation !==
-                                                selectedOrg.name ||
-                                              deleteOrgMutation.isPending
-                                            }
-                                            onClick={() => {
-                                              if (
-                                                selectedOrg &&
-                                                deleteOrgConfirmation ===
-                                                  selectedOrg.name
-                                              ) {
-                                                deleteOrgMutation.mutate(
-                                                  selectedOrg.$id,
-                                                )
-                                              }
-                                            }}
-                                          >
-                                            Delete
-                                          </Button>
-                                        </div>
-                                      </DialogContent>
-                                    </Dialog>
-                                  </div>
-                                </div>
-                              ),
-                            },
-                          ]}
-                        />
-                      )}
+                                            <div className="px-6 py-4 border-t border-border bg-muted/30 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+                                              <Button
+                                                variant="outline"
+                                                size="sm"
+                                                className="h-9 text-[13px]"
+                                                onClick={() => {
+                                                  setDeleteOrgDialogOpen(false)
+                                                  setDeleteOrgConfirmation('')
+                                                }}
+                                              >
+                                                Cancel
+                                              </Button>
+                                              <Button
+                                                variant="destructive"
+                                                size="sm"
+                                                className="h-9 text-[13px]"
+                                                disabled={
+                                                  !selectedOrg ||
+                                                  deleteOrgConfirmation !==
+                                                    selectedOrg.name ||
+                                                  deleteOrgMutation.isPending
+                                                }
+                                                onClick={() => {
+                                                  if (
+                                                    selectedOrg &&
+                                                    deleteOrgConfirmation ===
+                                                      selectedOrg.name
+                                                  ) {
+                                                    deleteOrgMutation.mutate(
+                                                      selectedOrg.$id,
+                                                    )
+                                                  }
+                                                }}
+                                              >
+                                                Delete
+                                              </Button>
+                                            </div>
+                                          </DialogContent>
+                                        </Dialog>
+                                      </div>
+                                    </div>
+                                  ),
+                                } satisfies SettingsCardItem,
+                              ]
+                            : []),
+                        ]}
+                      />
+                    )}
                   </SettingsLayoutShell>
                 )}
 
@@ -4039,7 +4112,7 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
         </DialogContent>
       </Dialog>
 
-      {!features.billing && (
+      {supportsMultiTenancy && !features.billing && (
         <CreateOrganizationDialog
           open={createOrgDialogOpen}
           onOpenChange={setCreateOrgDialogOpen}

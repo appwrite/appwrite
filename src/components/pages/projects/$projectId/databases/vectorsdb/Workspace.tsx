@@ -18,17 +18,7 @@ import {
   Activity,
 } from 'lucide-react'
 
-
-import {
-  useState,
-  useEffect,
-  useRef,
-  useCallback,
-  useMemo,
-} from 'react'
-
-
-
+import { useState, useEffect, useRef, useCallback, useMemo } from 'react'
 
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
@@ -69,7 +59,6 @@ import type { DateRange } from 'react-day-picker'
 import { ImportCsv } from '../_components/ImportCsv'
 import { ExportCsv } from '../_components/ExportCsv'
 
-
 import { useDebugMode } from '@/components/global/providers/DebugMode'
 import {
   canCreateDatabase,
@@ -92,9 +81,7 @@ import { TableViewResizableLayout } from '../_components/TableViewResizableLayou
 import { ServiceHeader, type Tab } from '../../shared/ServiceHeader'
 import { CopyableId } from '@/components/global/shared/CopyableId'
 
-
 import { Button } from '@/components/ui/button'
-
 
 import {
   DropdownMenu,
@@ -136,9 +123,6 @@ import {
   TooltipTrigger,
 } from '@/components/ui/tooltip'
 import { Input } from '@/components/ui/input'
-
-
-
 
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import {
@@ -308,14 +292,11 @@ export function Workspace({
       await queryClient.refetchQueries({
         queryKey: ['tables', 'project', projectId, databaseId],
       })
-      toast.success(
-        `Created 50 ${dbLabels.containerPlural}`,
-      )
+      toast.success(`Created 50 ${dbLabels.containerPlural}`)
     },
     onError: (error: Error) => {
       toast.error(
-        error.message ||
-          `Failed to create ${dbLabels.containerPlural}`,
+        error.message || `Failed to create ${dbLabels.containerPlural}`,
       )
     },
   })
@@ -413,8 +394,11 @@ export function Workspace({
 
   // Create table mutation for workspace
   const createTableMutation = useMutation({
-    mutationFn: (data: { tableId?: string; name: string; dimension?: number }) =>
-      createProjectTable(projectId!, databaseId!, data),
+    mutationFn: (data: {
+      tableId?: string
+      name: string
+      dimension?: number
+    }) => createProjectTable(projectId!, databaseId!, data),
     onSuccess: async (table) => {
       toast.success(`${table.name} has been created`)
       // Refetch tables and wait for it to complete before navigating
@@ -681,7 +665,7 @@ export function Workspace({
           sort: hasSortKey
             ? params.sort
             : rowsSortBy !== ROWS_DEFAULT_SORT_BY ||
-              rowsSortOrder !== ROWS_DEFAULT_SORT_ORDER
+                rowsSortOrder !== ROWS_DEFAULT_SORT_ORDER
               ? encodeSort(rowsSortBy, rowsSortOrder)
               : undefined,
         })
@@ -723,7 +707,7 @@ export function Workspace({
       limit: rowsUrlLimit,
       sort:
         rowsSortBy !== ROWS_DEFAULT_SORT_BY ||
-          rowsSortOrder !== ROWS_DEFAULT_SORT_ORDER
+        rowsSortOrder !== ROWS_DEFAULT_SORT_ORDER
           ? encodeSort(rowsSortBy, rowsSortOrder)
           : undefined,
     })
@@ -739,7 +723,7 @@ export function Workspace({
       limit: rowsUrlLimit,
       sort:
         rowsSortBy !== ROWS_DEFAULT_SORT_BY ||
-          rowsSortOrder !== ROWS_DEFAULT_SORT_ORDER
+        rowsSortOrder !== ROWS_DEFAULT_SORT_ORDER
           ? encodeSort(rowsSortBy, rowsSortOrder)
           : undefined,
     })
@@ -753,7 +737,7 @@ export function Workspace({
       limit: rowsUrlLimit,
       sort:
         rowsSortBy !== ROWS_DEFAULT_SORT_BY ||
-          rowsSortOrder !== ROWS_DEFAULT_SORT_ORDER
+        rowsSortOrder !== ROWS_DEFAULT_SORT_ORDER
           ? encodeSort(rowsSortBy, rowsSortOrder)
           : undefined,
     })
@@ -816,922 +800,907 @@ export function Workspace({
   const tableViewSidebar = (
     <div className="flex h-full min-h-0 min-w-0 flex-col">
       {/* Tables Sidebar - sticky sections: database selector, create table, scrollable list, bottom nav */}
-        {/* 1. Sticky top: Database selector */}
-        <div className="flex shrink-0 flex-col border-b border-border bg-background">
-          <div className="flex items-center gap-2 border-b border-border px-3 py-2.5">
-            <button
-              onClick={handleBackToDatabases}
-              className="flex h-6 w-6 cursor-pointer items-center justify-center rounded text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
-              aria-label="Back to databases"
-            >
-              <ChevronLeft className="h-4 w-4" />
-            </button>
-            <span className="text-[13px] font-medium text-foreground">
-              Databases
-            </span>
-          </div>
-          <div className="flex min-w-0 items-center gap-2 px-2 py-2">
-            <DatabaseSelector
-              projectId={projectId}
-              value={databaseId}
-              selectedName={database?.name}
-              createTableMenuLabel={dbLabels.createContainer}
-              createDatabaseDisabled={noCreateDbPermission}
-              createDatabaseDisabledTooltip={createPermissionTooltip}
-              createTableDisabled={noCreateTablePermission}
-              createTableDisabledTooltip={createPermissionTooltip}
-              onSelect={async (newDatabaseId) => {
+      {/* 1. Sticky top: Database selector */}
+      <div className="flex shrink-0 flex-col border-b border-border bg-background">
+        <div className="flex items-center gap-2 border-b border-border px-3 py-2.5">
+          <button
+            onClick={handleBackToDatabases}
+            className="flex h-6 w-6 cursor-pointer items-center justify-center rounded text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+            aria-label="Back to databases"
+          >
+            <ChevronLeft className="h-4 w-4" />
+          </button>
+          <span className="text-[13px] font-medium text-foreground">
+            Databases
+          </span>
+        </div>
+        <div className="flex min-w-0 items-center gap-2 px-2 py-2">
+          <DatabaseSelector
+            projectId={projectId}
+            value={databaseId}
+            selectedName={database?.name}
+            createTableMenuLabel={dbLabels.createContainer}
+            createDatabaseDisabled={noCreateDbPermission}
+            createDatabaseDisabledTooltip={createPermissionTooltip}
+            createTableDisabled={noCreateTablePermission}
+            createTableDisabledTooltip={createPermissionTooltip}
+            onSelect={async (newDatabaseId) => {
+              try {
+                const newDb = await queryClient.ensureQueryData(
+                  databaseQueryOptions(projectId, newDatabaseId),
+                )
+                const nextDbKind = databaseRouteKindFromApiType(
+                  (newDb as { databaseType?: ApiDatabaseType }).databaseType,
+                )
+                // Same query/order as sidebar first page (useProjectTables)
+                const tablesData = await queryClient.ensureQueryData(
+                  tablesQueryOptions(
+                    projectId,
+                    newDatabaseId,
+                    0,
+                    ROWS_DEFAULT_PAGE_SIZE,
+                    undefined,
+                    'asc',
+                    '$createdAt',
+                  ),
+                )
+                const firstTable = (tablesData.tables || [])[0] as
+                  | { $id?: string }
+                  | undefined
+                navigate({
+                  ...dbNavLink(nextDbKind).dataGrid({
+                    projectId,
+                    dbKind: nextDbKind,
+                    databaseId: newDatabaseId,
+                    resourceId: firstTable?.$id ?? '-',
+                  }),
+                })
+              } catch {
+                let nextDbKind: DatabaseRouteKind = DB_KIND
                 try {
                   const newDb = await queryClient.ensureQueryData(
                     databaseQueryOptions(projectId, newDatabaseId),
                   )
-                  const nextDbKind = databaseRouteKindFromApiType(
+                  nextDbKind = databaseRouteKindFromApiType(
                     (newDb as { databaseType?: ApiDatabaseType }).databaseType,
                   )
-                  // Same query/order as sidebar first page (useProjectTables)
-                  const tablesData = await queryClient.ensureQueryData(
-                    tablesQueryOptions(
-                      projectId,
-                      newDatabaseId,
-                      0,
-                      ROWS_DEFAULT_PAGE_SIZE,
-                      undefined,
-                      'asc',
-                      '$createdAt',
-                    ),
-                  )
-                  const firstTable = (tablesData.tables || [])[0] as
-                    | { $id?: string }
-                    | undefined
-                  navigate({
-                    ...dbNavLink(nextDbKind).dataGrid({
-                      projectId,
-                      dbKind: nextDbKind,
-                      databaseId: newDatabaseId,
-                      resourceId: firstTable?.$id ?? '-',
-                    }),
-                  })
                 } catch {
-                  let nextDbKind: DatabaseRouteKind = DB_KIND
+                  // keep workspace db kind when type lookup fails
+                }
+                navigate({
+                  ...dbNavLink(nextDbKind).dataGrid({
+                    projectId,
+                    dbKind: nextDbKind,
+                    databaseId: newDatabaseId,
+                    resourceId: '-',
+                  }),
+                })
+              }
+            }}
+            onCreateDatabaseClick={() =>
+              useCreateDatabaseWizard
+                ? navigate({
+                    to: '/projects/$projectId/databases/create',
+                    params: { projectId },
+                  })
+                : setCreateDatabaseDialogOpen(true)
+            }
+            onCreateTableClick={() => setCreateTableDialogOpen(true)}
+          />
+        </div>
+      </div>
+
+      {/* 2. Scrollable: search, create table, tables list, pagination */}
+      <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
+        <div className="shrink-0 space-y-2 border-b border-border px-2 py-2">
+          <div className="flex min-w-0 items-center gap-2">
+            <div className="relative min-w-0 flex-1">
+              <Search className="absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
+              <Input
+                type="text"
+                placeholder={dbLabels.searchContainersPlaceholder}
+                value={sidebarTablesSearch}
+                onChange={(e) => setSidebarTablesSearch(e.target.value)}
+                className="h-8 pl-8 pr-2 text-[13px]"
+              />
+            </div>
+            <DropdownMenu>
+              <TooltipProvider delayDuration={0}>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <DropdownMenuTrigger asChild>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-8 w-8 shrink-0"
+                        aria-label={dbLabels.sortContainersAriaLabel}
+                      >
+                        <ArrowUpDown className="h-3.5 w-3.5" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                  </TooltipTrigger>
+                  <TooltipContent side="top" className="text-xs">
+                    Sort by attribute and direction
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+              <DropdownMenuContent align="end" className="w-52">
+                <DropdownMenuLabel className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
+                  {dbLabels.sortContainersMenu}
+                </DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                <DropdownMenuRadioGroup
+                  value={`${sidebarTablesSortBy}-${sidebarTablesOrder}`}
+                  onValueChange={(value) => {
+                    const [by, dir] = value.split('-')
+                    if (
+                      by &&
+                      (dir === 'asc' || dir === 'desc') &&
+                      (by === 'name' ||
+                        by === '$createdAt' ||
+                        by === '$updatedAt')
+                    ) {
+                      setSidebarTablesSortBy(by)
+                      setSidebarTablesOrder(dir)
+                      setSidebarTablesRequestedPage(1)
+                      setSidebarTablesDisplayedPage(1)
+                    }
+                  }}
+                >
+                  <DropdownMenuRadioItem value="name-asc">
+                    Name (A → Z)
+                  </DropdownMenuRadioItem>
+                  <DropdownMenuRadioItem value="name-desc">
+                    Name (Z → A)
+                  </DropdownMenuRadioItem>
+                  <DropdownMenuRadioItem value="$createdAt-asc">
+                    Created (oldest first)
+                  </DropdownMenuRadioItem>
+                  <DropdownMenuRadioItem value="$createdAt-desc">
+                    Created (newest first)
+                  </DropdownMenuRadioItem>
+                  <DropdownMenuRadioItem value="$updatedAt-asc">
+                    Updated (oldest first)
+                  </DropdownMenuRadioItem>
+                  <DropdownMenuRadioItem value="$updatedAt-desc">
+                    Updated (newest first)
+                  </DropdownMenuRadioItem>
+                </DropdownMenuRadioGroup>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
+        </div>
+        <div className="shrink-0 px-2 py-2">
+          {noCreateTablePermission ? (
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <span className="block w-full">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="h-9 w-full gap-2 pl-6 pr-6 text-[13px] font-medium"
+                    onClick={() => setCreateTableDialogOpen(true)}
+                    disabled
+                  >
+                    <Plus className="h-4 w-4" />
+                    {dbLabels.createContainer}
+                  </Button>
+                </span>
+              </TooltipTrigger>
+              <TooltipContent side="right">
+                {createPermissionTooltip}
+              </TooltipContent>
+            </Tooltip>
+          ) : (
+            <Button
+              variant="outline"
+              size="sm"
+              className="h-9 w-full gap-2 pl-6 pr-6 text-[13px] font-medium"
+              onClick={() => setCreateTableDialogOpen(true)}
+            >
+              <Plus className="h-4 w-4" />
+              {dbLabels.createContainer}
+            </Button>
+          )}
+        </div>
+
+        <div className="min-h-0 flex-1 overflow-y-auto">
+          {displayedSidebarTables.length === 0 && sidebarTablesLoading ? (
+            <div className="p-2 text-center text-[12px] text-muted-foreground">
+              Loading…
+            </div>
+          ) : (
+            <div className="space-y-0.5 px-2.5 py-2.5">
+              {displayedSidebarTables.map((table) => {
+                const isTableSelected =
+                  selectedTable?.$id === table.$id && !databaseTab
+                return (
+                  <TableContextMenu
+                    key={table.$id}
+                    projectId={projectId!}
+                    databaseId={databaseId}
+                    dbKind={DB_KIND}
+                    table={table}
+                    showSecuritySettings={showTableSecuritySettings}
+                    onCreateSimilar={async (newTableId) => {
+                      await queryClient.refetchQueries({
+                        queryKey: ['tables', 'project', projectId, databaseId],
+                      })
+                      // Prefetch new table data before navigating to avoid layout shift / loading screen
+                      await Promise.all([
+                        queryClient.ensureQueryData(
+                          tableQueryOptions(projectId, databaseId, newTableId),
+                        ),
+                        queryClient.ensureQueryData(
+                          collectionAttributesQueryOptions(
+                            projectId,
+                            databaseId,
+                            newTableId,
+                          ),
+                        ),
+                        queryClient.ensureQueryData(
+                          tableRowsQueryOptions(
+                            projectId,
+                            databaseId,
+                            newTableId,
+                            0,
+                            ROWS_DEFAULT_PAGE_SIZE,
+                            undefined,
+                          ),
+                        ),
+                      ])
+                      navigate({
+                        ...dbNav.dataGrid({
+                          projectId: projectId!,
+                          dbKind: DB_KIND,
+                          databaseId,
+                          resourceId: newTableId,
+                        }),
+                      })
+                    }}
+                  >
+                    <Link
+                      {...dbNav.dataGrid({
+                        projectId,
+                        dbKind: DB_KIND,
+                        databaseId,
+                        resourceId: table.$id,
+                      })}
+                      className={cn(
+                        'flex w-full items-center gap-2.5 rounded-md px-2.5 py-1.5 text-left text-[13px] font-medium transition-colors duration-150',
+                        isTableSelected
+                          ? 'bg-accent text-foreground'
+                          : 'text-muted-foreground hover:bg-accent/50 hover:text-foreground',
+                      )}
+                    >
+                      <ContainerListIcon className="h-3.5 w-3.5 shrink-0" />
+                      <span className="min-w-0 flex-1 truncate">
+                        {table.name}
+                      </span>
+                      {table.enabled === false && (
+                        <AlertCircle className="h-3.5 w-3.5 shrink-0 text-amber-500" />
+                      )}
+                    </Link>
+                  </TableContextMenu>
+                )
+              })}
+            </div>
+          )}
+        </div>
+        <div className="shrink-0 border-t border-border px-2 py-1.5">
+          <div className="flex items-center justify-between gap-1 text-[11px] text-muted-foreground">
+            <span className="shrink-0 tabular-nums">
+              {sidebarTablesTotal === 0
+                ? `0 ${dbLabels.containerPlural}`
+                : `${(sidebarTablesDisplayedPage - 1) * sidebarTablesPageSize + 1}-${Math.min(sidebarTablesDisplayedPage * sidebarTablesPageSize, sidebarTablesTotal ?? 0)} of ${(sidebarTablesTotal ?? 0).toLocaleString()} ${dbLabels.containerPlural}`}
+            </span>
+            <div className="flex items-center gap-0.5">
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-6 w-6"
+                onClick={() =>
+                  setSidebarTablesRequestedPage((p) => Math.max(1, p - 1))
+                }
+                disabled={sidebarTablesDisplayedPage <= 1}
+                aria-label="Previous page"
+              >
+                <ChevronLeft className="h-3 w-3" />
+              </Button>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-6 w-6"
+                onClick={() => setSidebarTablesRequestedPage((p) => p + 1)}
+                disabled={
+                  sidebarTablesDisplayedPage >=
+                  Math.ceil((sidebarTablesTotal ?? 0) / sidebarTablesPageSize)
+                }
+                aria-label="Next page"
+              >
+                <ChevronRight className="h-3 w-3" />
+              </Button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* 4. Sticky bottom: Nav links (match main sidebar item size and spacing) */}
+      <div className="shrink-0 space-y-0.5 border-t border-border bg-background px-2.5 py-2">
+        <Link
+          {...dbNav.visualizer(tableNavParams)}
+          className={cn(
+            'flex w-full items-center gap-2.5 rounded-md px-2.5 py-1.5 text-left text-[13px] font-medium transition-colors duration-150',
+            databaseTab === 'visualizer'
+              ? 'bg-accent text-foreground'
+              : 'text-muted-foreground hover:bg-accent/50 hover:text-foreground',
+          )}
+        >
+          <Network className="h-3.5 w-3.5 shrink-0" />
+          <span>Visualizer</span>
+        </Link>
+        <Link
+          {...dbNav.monitor(tableNavParams)}
+          className={cn(
+            'flex w-full items-center gap-2.5 rounded-md px-2.5 py-1.5 text-left text-[13px] font-medium transition-colors duration-150',
+            databaseTab === 'monitor'
+              ? 'bg-accent text-foreground'
+              : 'text-muted-foreground hover:bg-accent/50 hover:text-foreground',
+          )}
+        >
+          <Activity className="h-3.5 w-3.5 shrink-0" />
+          <span>Monitor</span>
+        </Link>
+        {!noCreateDbPermission && (
+          <Link
+            {...dbNav.dbSecurity(tableNavParams)}
+            className={cn(
+              'flex w-full items-center gap-2.5 rounded-md px-2.5 py-1.5 text-left text-[13px] font-medium transition-colors duration-150',
+              databaseTab === 'db-security'
+                ? 'bg-accent text-foreground'
+                : 'text-muted-foreground hover:bg-accent/50 hover:text-foreground',
+            )}
+          >
+            <Lock className="h-3.5 w-3.5 shrink-0" />
+            <span>Security</span>
+          </Link>
+        )}
+        {features.databaseInsights && (
+          <Link
+            {...dbNav.insights(tableNavParams)}
+            className={cn(
+              'flex w-full items-center gap-2.5 rounded-md px-2.5 py-1.5 text-left text-[13px] font-medium transition-colors duration-150',
+              databaseTab === 'insights'
+                ? 'bg-accent text-foreground'
+                : 'text-muted-foreground hover:bg-accent/50 hover:text-foreground',
+            )}
+          >
+            <BarChart3 className="h-3.5 w-3.5 shrink-0" />
+            <span>Insights</span>
+          </Link>
+        )}
+        {features.databaseBackups && (
+          <DatabaseBackupsNavLink
+            projectId={projectId}
+            databaseId={databaseId}
+            {...dbNav.backups(tableNavParams)}
+            className={cn(
+              'flex w-full items-center gap-2.5 rounded-md px-2.5 py-1.5 text-left text-[13px] font-medium transition-colors duration-150',
+              databaseTab === 'backups'
+                ? 'bg-accent text-foreground'
+                : 'text-muted-foreground hover:bg-accent/50 hover:text-foreground',
+            )}
+            labelClassName="flex-1"
+          />
+        )}
+        <Link
+          {...dbNav.exportImport(tableNavParams)}
+          className={cn(
+            'flex w-full items-center gap-2.5 rounded-md px-2.5 py-1.5 text-left text-[13px] font-medium transition-colors duration-150',
+            databaseTab === 'export-import'
+              ? 'bg-accent text-foreground'
+              : 'text-muted-foreground hover:bg-accent/50 hover:text-foreground',
+          )}
+        >
+          <Download className="h-3.5 w-3.5 shrink-0" />
+          <span>Export / Import</span>
+        </Link>
+        {!noCreateDbPermission && (
+          <Link
+            {...dbNav.dbSettings(tableNavParams)}
+            className={cn(
+              'flex w-full items-center gap-2.5 rounded-md px-2.5 py-1.5 text-left text-[13px] font-medium transition-colors duration-150',
+              databaseTab === 'settings'
+                ? 'bg-accent text-foreground'
+                : 'text-muted-foreground hover:bg-accent/50 hover:text-foreground',
+            )}
+          >
+            <Settings className="h-3.5 w-3.5 shrink-0" />
+            <span>Settings</span>
+          </Link>
+        )}
+      </div>
+    </div>
+  )
+
+  const tableViewMain = (
+    <div className="flex h-full min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
+      <ServiceHeader
+        title={
+          isDatabaseLevelView ? (
+            databaseTab ? (
+              DATABASE_TAB_LABELS[databaseTab]
+            ) : (
+              dbLabels.containerPluralTitle
+            )
+          ) : (
+            <div className="flex min-w-0 items-center gap-2">
+              <span className="truncate">{selectedTable!.name}</span>
+              <CopyableId
+                id={selectedTable!.$id}
+                size="xs"
+                className="shrink-0"
+              />
+            </div>
+          )
+        }
+        tabs={isDatabaseLevelView ? undefined : tableTabs}
+        activeTab={isDatabaseLevelView ? undefined : activeTab}
+        searchPlaceholder={undefined}
+        searchValue={undefined}
+        onSearchChange={undefined}
+        createLabel={isDatabaseLevelView ? undefined : getCreateLabel()}
+        createDisabled={
+          !isDatabaseLevelView &&
+          (activeTab === 'rows' || activeTab === 'documents'
+            ? noCreateRowPermission
+            : false)
+        }
+        createDisabledTooltip={
+          !isDatabaseLevelView ? createPermissionTooltip : undefined
+        }
+        onCreate={
+          isDatabaseLevelView
+            ? undefined
+            : () => {
+                if (activeTab === 'rows' && openCreateRowDrawerRef.current) {
+                  openCreateRowDrawerRef.current()
+                } else if (activeTab === 'documents') {
+                  navigateToRowsWithOpenCreate()
+                }
+              }
+        }
+        showFilters={
+          !isDatabaseLevelView &&
+          (activeTab === 'rows' || activeTab === 'documents')
+        }
+        filterTrigger={
+          !isDatabaseLevelView &&
+          (activeTab === 'rows' || activeTab === 'documents') ? (
+            <FiltersPopover
+              open={rowsFiltersOpen}
+              onOpenChange={setRowsFiltersOpen}
+              columns={rowsFilterColumns}
+              filterMap={rowsFilterMap}
+              onRemoveFilter={rowsRemoveFilter}
+              onClearAll={rowsClearAllFilters}
+              onApplyFilter={rowsApplyFilter}
+              resourceLabel={dbLabels.recordPlural}
+              filterScope={`databases.rows.${databaseId}.${tableId}`}
+              onApplyQuery={(queryParam, sortParam) =>
+                navigateToRowsList({
+                  search: rowsUrlSearch ?? undefined,
+                  query: queryParam ?? undefined,
+                  page: 1,
+                  limit: rowsUrlLimit,
+                  sort: sortParam ?? undefined,
+                })
+              }
+              sortBy={rowsSortBy}
+              sortOrder={rowsSortOrder}
+              onSortChange={handleRowsSortChange}
+              defaultSortParam={encodeSort(
+                ROWS_DEFAULT_SORT_BY,
+                ROWS_DEFAULT_SORT_ORDER,
+              )}
+              onReset={() => {
+                navigate({
+                  ...(activeTab === 'documents'
+                    ? dbNav.dataJson(tableNavParams)
+                    : dbNav.dataGrid(tableNavParams)),
+                  search: { page: 1, limit: rowsUrlLimit },
+                  replace: true,
+                })
+              }}
+              teamId={project?.teamId}
+            />
+          ) : undefined
+        }
+        showRefresh={
+          !isDatabaseLevelView &&
+          (activeTab === 'rows' || activeTab === 'documents')
+        }
+        onRefresh={
+          !isDatabaseLevelView &&
+          (activeTab === 'rows' || activeTab === 'documents')
+            ? async () => {
+                if (rowsRefetchRef.current) {
+                  refreshStartTimeRef.current = Date.now()
+                  setIsRefreshingRows(true)
+                  try {
+                    await rowsRefetchRef.current()
+                    const elapsed =
+                      Date.now() - (refreshStartTimeRef.current || 0)
+                    const remaining = Math.max(
+                      0,
+                      minAnimationDuration - elapsed,
+                    )
+                    await new Promise((resolve) =>
+                      setTimeout(resolve, remaining),
+                    )
+                    toast.success(
+                      `${dbLabels.recordPluralTitle} refreshed successfully`,
+                    )
+                  } catch {
+                    toast.error(`Failed to refresh ${dbLabels.recordPlural}`)
+                  } finally {
+                    setIsRefreshingRows(false)
+                    refreshStartTimeRef.current = null
+                  }
+                }
+              }
+            : undefined
+        }
+        isRefreshing={isRefreshingRows}
+        showImport={!isDatabaseLevelView && activeTab === 'rows'}
+        onImport={
+          !isDatabaseLevelView && activeTab === 'rows'
+            ? () => setImportCsvOpen(true)
+            : undefined
+        }
+        importTooltip="Import CSV"
+        showExport={!isDatabaseLevelView && activeTab === 'rows'}
+        onExport={
+          !isDatabaseLevelView && activeTab === 'rows'
+            ? () => setExportCsvOpen(true)
+            : undefined
+        }
+        exportTooltip="Export CSV"
+        exportDisabled={
+          !isDatabaseLevelView && activeTab === 'rows' && !hasRows
+        }
+        beforeCreateButtons={undefined}
+        collapsible={!isDatabaseLevelView}
+        fullWidthBorder
+        fullWidth={
+          !isDatabaseLevelView ||
+          databaseTab === 'visualizer' ||
+          databaseTab === 'monitor'
+        }
+        titleRightContent={
+          databaseTab === 'monitor' ? (
+            <>
+              <DatabaseMonitorHeaderActions
+                projectId={projectId}
+                databaseId={databaseId}
+                dbKind={DB_KIND}
+                dateRange={monitorDateRange}
+                onDateRangeChange={(r) =>
+                  setMonitorDateRange(r ?? getDefaultMonitorDateRange())
+                }
+                onRefresh={() => setMonitorChartTick((n) => n + 1)}
+                showSpecActions={showDbSecuritySettings}
+              />
+              {isDatabaseLevelView &&
+              isDebugModeOpen &&
+              SHOW_GRID_DEBUG_TOOLS ? (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="h-7"
+                  onClick={() => createFiftyTablesMutation.mutate()}
+                  disabled={createFiftyTablesMutation.isPending}
+                >
+                  {createFiftyTablesMutation.isPending
+                    ? 'Creating…'
+                    : dbLabels.debugCreateManyContainers}
+                </Button>
+              ) : null}
+            </>
+          ) : undefined
+        }
+        rightContent={
+          isDatabaseLevelView &&
+          isDebugModeOpen &&
+          SHOW_GRID_DEBUG_TOOLS &&
+          databaseTab !== 'monitor' ? (
+            <Button
+              variant="outline"
+              size="sm"
+              className="h-9"
+              onClick={() => createFiftyTablesMutation.mutate()}
+              disabled={createFiftyTablesMutation.isPending}
+            >
+              {createFiftyTablesMutation.isPending
+                ? 'Creating…'
+                : dbLabels.debugCreateManyContainers}
+            </Button>
+          ) : undefined
+        }
+        contentAfterBorder={
+          <>
+            {databaseTab === 'monitor' ? (
+              <div className="border-b border-border px-4 py-3 sm:px-6 lg:hidden">
+                <DatabaseMonitorMobileNav
+                  projectId={projectId}
+                  databaseId={databaseId}
+                />
+              </div>
+            ) : null}
+            {/* Mobile DB + table selector - above toolbar, shows when sidebar is hidden */}
+            <div className="flex flex-col gap-2 border-b border-border px-4 py-3 lg:hidden">
+              <DatabaseSelector
+                projectId={projectId}
+                value={databaseId}
+                selectedName={database?.name}
+                createTableMenuLabel={dbLabels.createContainer}
+                createDatabaseDisabled={noCreateDbPermission}
+                createDatabaseDisabledTooltip={createPermissionTooltip}
+                createTableDisabled={noCreateTablePermission}
+                createTableDisabledTooltip={createPermissionTooltip}
+                onSelect={async (newDatabaseId) => {
                   try {
                     const newDb = await queryClient.ensureQueryData(
                       databaseQueryOptions(projectId, newDatabaseId),
                     )
-                    nextDbKind = databaseRouteKindFromApiType(
-                      (newDb as { databaseType?: ApiDatabaseType }).databaseType,
+                    const nextDbKind = databaseRouteKindFromApiType(
+                      (newDb as { databaseType?: ApiDatabaseType })
+                        .databaseType,
                     )
-                  } catch {
-                    // keep workspace db kind when type lookup fails
-                  }
-                  navigate({
-                    ...dbNavLink(nextDbKind).dataGrid({
-                      projectId,
-                      dbKind: nextDbKind,
-                      databaseId: newDatabaseId,
-                      resourceId: '-',
-                    }),
-                  })
-                }
-              }}
-              onCreateDatabaseClick={() =>
-                useCreateDatabaseWizard
-                  ? navigate({
-                    to: '/projects/$projectId/databases/create',
-                    params: { projectId },
-                  })
-                  : setCreateDatabaseDialogOpen(true)
-              }
-              onCreateTableClick={() => setCreateTableDialogOpen(true)}
-            />
-          </div>
-        </div>
-
-        {/* 2. Scrollable: search, create table, tables list, pagination */}
-        <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
-          <div className="shrink-0 space-y-2 border-b border-border px-2 py-2">
-            <div className="flex min-w-0 items-center gap-2">
-              <div className="relative min-w-0 flex-1">
-                <Search className="absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
-                <Input
-                  type="text"
-                  placeholder={dbLabels.searchContainersPlaceholder}
-                  value={sidebarTablesSearch}
-                  onChange={(e) => setSidebarTablesSearch(e.target.value)}
-                  className="h-8 pl-8 pr-2 text-[13px]"
-                />
-              </div>
-              <DropdownMenu>
-                <TooltipProvider delayDuration={0}>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <DropdownMenuTrigger asChild>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="h-8 w-8 shrink-0"
-                          aria-label={dbLabels.sortContainersAriaLabel}
-                        >
-                          <ArrowUpDown className="h-3.5 w-3.5" />
-                        </Button>
-                      </DropdownMenuTrigger>
-                    </TooltipTrigger>
-                    <TooltipContent side="top" className="text-xs">
-                      Sort by attribute and direction
-                    </TooltipContent>
-                  </Tooltip>
-                </TooltipProvider>
-                <DropdownMenuContent align="end" className="w-52">
-                  <DropdownMenuLabel className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
-                    {dbLabels.sortContainersMenu}
-                  </DropdownMenuLabel>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuRadioGroup
-                    value={`${sidebarTablesSortBy}-${sidebarTablesOrder}`}
-                    onValueChange={(value) => {
-                      const [by, dir] = value.split('-')
-                      if (
-                        by &&
-                        (dir === 'asc' || dir === 'desc') &&
-                        (by === 'name' ||
-                          by === '$createdAt' ||
-                          by === '$updatedAt')
-                      ) {
-                        setSidebarTablesSortBy(by)
-                        setSidebarTablesOrder(dir)
-                        setSidebarTablesRequestedPage(1)
-                        setSidebarTablesDisplayedPage(1)
-                      }
-                    }}
-                  >
-                    <DropdownMenuRadioItem value="name-asc">
-                      Name (A → Z)
-                    </DropdownMenuRadioItem>
-                    <DropdownMenuRadioItem value="name-desc">
-                      Name (Z → A)
-                    </DropdownMenuRadioItem>
-                    <DropdownMenuRadioItem value="$createdAt-asc">
-                      Created (oldest first)
-                    </DropdownMenuRadioItem>
-                    <DropdownMenuRadioItem value="$createdAt-desc">
-                      Created (newest first)
-                    </DropdownMenuRadioItem>
-                    <DropdownMenuRadioItem value="$updatedAt-asc">
-                      Updated (oldest first)
-                    </DropdownMenuRadioItem>
-                    <DropdownMenuRadioItem value="$updatedAt-desc">
-                      Updated (newest first)
-                    </DropdownMenuRadioItem>
-                  </DropdownMenuRadioGroup>
-                </DropdownMenuContent>
-              </DropdownMenu>
-            </div>
-          </div>
-          <div className="shrink-0 px-2 py-2">
-            {noCreateTablePermission ? (
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <span className="block w-full">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="h-9 w-full gap-2 pl-6 pr-6 text-[13px] font-medium"
-                      onClick={() => setCreateTableDialogOpen(true)}
-                      disabled
-                    >
-                      <Plus className="h-4 w-4" />
-                      {dbLabels.createContainer}
-                    </Button>
-                  </span>
-                </TooltipTrigger>
-                <TooltipContent side="right">
-                  {createPermissionTooltip}
-                </TooltipContent>
-              </Tooltip>
-            ) : (
-              <Button
-                variant="outline"
-                size="sm"
-                className="h-9 w-full gap-2 pl-6 pr-6 text-[13px] font-medium"
-                onClick={() => setCreateTableDialogOpen(true)}
-              >
-                <Plus className="h-4 w-4" />
-                {dbLabels.createContainer}
-              </Button>
-            )}
-          </div>
-
-          <div className="min-h-0 flex-1 overflow-y-auto">
-            {displayedSidebarTables.length === 0 && sidebarTablesLoading ? (
-              <div className="p-2 text-center text-[12px] text-muted-foreground">
-                Loading…
-              </div>
-            ) : (
-              <div className="space-y-0.5 px-2.5 py-2.5">
-                {displayedSidebarTables.map((table) => {
-                  const isTableSelected =
-                    selectedTable?.$id === table.$id && !databaseTab
-                  return (
-                    <TableContextMenu
-                      key={table.$id}
-                      projectId={projectId!}
-                      databaseId={databaseId}
-                      dbKind={DB_KIND}
-                      table={table}
-                      showSecuritySettings={showTableSecuritySettings}
-                      onCreateSimilar={async (newTableId) => {
-                        await queryClient.refetchQueries({
-                          queryKey: [
-                            'tables',
-                            'project',
-                            projectId,
-                            databaseId,
-                          ],
-                        })
-                        // Prefetch new table data before navigating to avoid layout shift / loading screen
-                        await Promise.all([
-                          queryClient.ensureQueryData(
-                            tableQueryOptions(
-                              projectId,
-                              databaseId,
-                              newTableId,
-                            ),
-                          ),
-                          queryClient.ensureQueryData(
-                            collectionAttributesQueryOptions(
-                              projectId,
-                              databaseId,
-                              newTableId,
-                            ),
-                          ),
-                          queryClient.ensureQueryData(
-                            tableRowsQueryOptions(
-                              projectId,
-                              databaseId,
-                              newTableId,
-                              0,
-                              ROWS_DEFAULT_PAGE_SIZE,
-                              undefined,
-                            ),
-                          ),
-                        ])
-                        navigate({
-                          ...dbNav.dataGrid({
-                            projectId: projectId!,
-                            dbKind: DB_KIND,
-                            databaseId,
-                            resourceId: newTableId,
-                          }),
-                        })
-                      }}
-                    >
-                      <Link
-                        {...dbNav.dataGrid({
-                          projectId,
-                          dbKind: DB_KIND,
-                          databaseId,
-                          resourceId: table.$id,
-                        })}
-                        className={cn(
-                          'flex w-full items-center gap-2.5 rounded-md px-2.5 py-1.5 text-left text-[13px] font-medium transition-colors duration-150',
-                          isTableSelected
-                            ? 'bg-accent text-foreground'
-                            : 'text-muted-foreground hover:bg-accent/50 hover:text-foreground',
-                        )}
-                      >
-                        <ContainerListIcon className="h-3.5 w-3.5 shrink-0" />
-                        <span className="min-w-0 flex-1 truncate">
-                          {table.name}
-                        </span>
-                        {table.enabled === false && (
-                          <AlertCircle className="h-3.5 w-3.5 shrink-0 text-amber-500" />
-                        )}
-                      </Link>
-                    </TableContextMenu>
-                  )
-                })}
-              </div>
-            )}
-          </div>
-          <div className="shrink-0 border-t border-border px-2 py-1.5">
-            <div className="flex items-center justify-between gap-1 text-[11px] text-muted-foreground">
-              <span className="shrink-0 tabular-nums">
-                {sidebarTablesTotal === 0
-                  ? `0 ${dbLabels.containerPlural}`
-                  : `${(sidebarTablesDisplayedPage - 1) * sidebarTablesPageSize + 1}-${Math.min(sidebarTablesDisplayedPage * sidebarTablesPageSize, sidebarTablesTotal ?? 0)} of ${(sidebarTablesTotal ?? 0).toLocaleString()} ${dbLabels.containerPlural}`}
-              </span>
-              <div className="flex items-center gap-0.5">
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="h-6 w-6"
-                  onClick={() =>
-                    setSidebarTablesRequestedPage((p) => Math.max(1, p - 1))
-                  }
-                  disabled={sidebarTablesDisplayedPage <= 1}
-                  aria-label="Previous page"
-                >
-                  <ChevronLeft className="h-3 w-3" />
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="h-6 w-6"
-                  onClick={() => setSidebarTablesRequestedPage((p) => p + 1)}
-                  disabled={
-                    sidebarTablesDisplayedPage >=
-                    Math.ceil((sidebarTablesTotal ?? 0) / sidebarTablesPageSize)
-                  }
-                  aria-label="Next page"
-                >
-                  <ChevronRight className="h-3 w-3" />
-                </Button>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* 4. Sticky bottom: Nav links (match main sidebar item size and spacing) */}
-        <div className="shrink-0 space-y-0.5 border-t border-border bg-background px-2.5 py-2">
-          <Link
-            {...dbNav.visualizer(tableNavParams)}
-            className={cn(
-              'flex w-full items-center gap-2.5 rounded-md px-2.5 py-1.5 text-left text-[13px] font-medium transition-colors duration-150',
-              databaseTab === 'visualizer'
-                ? 'bg-accent text-foreground'
-                : 'text-muted-foreground hover:bg-accent/50 hover:text-foreground',
-            )}
-          >
-            <Network className="h-3.5 w-3.5 shrink-0" />
-            <span>Visualizer</span>
-          </Link>
-          <Link
-            {...dbNav.monitor(tableNavParams)}
-            className={cn(
-              'flex w-full items-center gap-2.5 rounded-md px-2.5 py-1.5 text-left text-[13px] font-medium transition-colors duration-150',
-              databaseTab === 'monitor'
-                ? 'bg-accent text-foreground'
-                : 'text-muted-foreground hover:bg-accent/50 hover:text-foreground',
-            )}
-          >
-            <Activity className="h-3.5 w-3.5 shrink-0" />
-            <span>Monitor</span>
-          </Link>
-          {!noCreateDbPermission && (
-            <Link
-              {...dbNav.dbSecurity(tableNavParams)}
-              className={cn(
-                'flex w-full items-center gap-2.5 rounded-md px-2.5 py-1.5 text-left text-[13px] font-medium transition-colors duration-150',
-                databaseTab === 'db-security'
-                  ? 'bg-accent text-foreground'
-                  : 'text-muted-foreground hover:bg-accent/50 hover:text-foreground',
-              )}
-            >
-              <Lock className="h-3.5 w-3.5 shrink-0" />
-              <span>Security</span>
-            </Link>
-          )}
-          {features.databaseInsights && (
-            <Link
-              {...dbNav.insights(tableNavParams)}
-              className={cn(
-                'flex w-full items-center gap-2.5 rounded-md px-2.5 py-1.5 text-left text-[13px] font-medium transition-colors duration-150',
-                databaseTab === 'insights'
-                  ? 'bg-accent text-foreground'
-                  : 'text-muted-foreground hover:bg-accent/50 hover:text-foreground',
-              )}
-            >
-              <BarChart3 className="h-3.5 w-3.5 shrink-0" />
-              <span>Insights</span>
-            </Link>
-          )}
-          {features.databaseBackups && (
-            <DatabaseBackupsNavLink
-              projectId={projectId}
-              databaseId={databaseId}
-              {...dbNav.backups(tableNavParams)}
-              className={cn(
-                'flex w-full items-center gap-2.5 rounded-md px-2.5 py-1.5 text-left text-[13px] font-medium transition-colors duration-150',
-                databaseTab === 'backups'
-                  ? 'bg-accent text-foreground'
-                  : 'text-muted-foreground hover:bg-accent/50 hover:text-foreground',
-              )}
-              labelClassName="flex-1"
-            />
-          )}
-          <Link
-            {...dbNav.exportImport(tableNavParams)}
-            className={cn(
-              'flex w-full items-center gap-2.5 rounded-md px-2.5 py-1.5 text-left text-[13px] font-medium transition-colors duration-150',
-              databaseTab === 'export-import'
-                ? 'bg-accent text-foreground'
-                : 'text-muted-foreground hover:bg-accent/50 hover:text-foreground',
-            )}
-          >
-            <Download className="h-3.5 w-3.5 shrink-0" />
-            <span>Export / Import</span>
-          </Link>
-          {!noCreateDbPermission && (
-            <Link
-              {...dbNav.dbSettings(tableNavParams)}
-              className={cn(
-                'flex w-full items-center gap-2.5 rounded-md px-2.5 py-1.5 text-left text-[13px] font-medium transition-colors duration-150',
-                databaseTab === 'settings'
-                  ? 'bg-accent text-foreground'
-                  : 'text-muted-foreground hover:bg-accent/50 hover:text-foreground',
-              )}
-            >
-              <Settings className="h-3.5 w-3.5 shrink-0" />
-              <span>Settings</span>
-            </Link>
-          )}
-        </div>
-      </div>
-  )
-
-  const tableViewMain = (
-      <div className="flex h-full min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
-        <ServiceHeader
-          title={
-            isDatabaseLevelView ? (
-              databaseTab ? (
-                DATABASE_TAB_LABELS[databaseTab]
-              ) : (
-                dbLabels.containerPluralTitle
-              )
-            ) : (
-              <div className="flex min-w-0 items-center gap-2">
-                <span className="truncate">{selectedTable!.name}</span>
-                <CopyableId
-                  id={selectedTable!.$id}
-                  size="xs"
-                  className="shrink-0"
-                />
-              </div>
-            )
-          }
-          tabs={isDatabaseLevelView ? undefined : tableTabs}
-          activeTab={isDatabaseLevelView ? undefined : activeTab}
-          searchPlaceholder={undefined}
-          searchValue={undefined}
-          onSearchChange={undefined}
-          createLabel={isDatabaseLevelView ? undefined : getCreateLabel()}
-          createDisabled={
-            !isDatabaseLevelView &&
-            (activeTab === 'rows' || activeTab === 'documents'
-              ? noCreateRowPermission
-              : false)
-          }
-          createDisabledTooltip={
-            !isDatabaseLevelView ? createPermissionTooltip : undefined
-          }
-          onCreate={
-            isDatabaseLevelView
-              ? undefined
-              : () => {
-                  if (activeTab === 'rows' && openCreateRowDrawerRef.current) {
-                    openCreateRowDrawerRef.current()
-                  } else if (activeTab === 'documents') {
-                    navigateToRowsWithOpenCreate()
-                  }
-                }
-          }
-          showFilters={
-            !isDatabaseLevelView &&
-            (activeTab === 'rows' || activeTab === 'documents')
-          }
-          filterTrigger={
-            !isDatabaseLevelView &&
-            (activeTab === 'rows' || activeTab === 'documents') ? (
-              <FiltersPopover
-                open={rowsFiltersOpen}
-                onOpenChange={setRowsFiltersOpen}
-                columns={rowsFilterColumns}
-                filterMap={rowsFilterMap}
-                onRemoveFilter={rowsRemoveFilter}
-                onClearAll={rowsClearAllFilters}
-                onApplyFilter={rowsApplyFilter}
-                resourceLabel={dbLabels.recordPlural}
-                filterScope={`databases.rows.${databaseId}.${tableId}`}
-                onApplyQuery={(queryParam, sortParam) =>
-                  navigateToRowsList({
-                    search: rowsUrlSearch ?? undefined,
-                    query: queryParam ?? undefined,
-                    page: 1,
-                    limit: rowsUrlLimit,
-                    sort: sortParam ?? undefined,
-                  })
-                }
-                sortBy={rowsSortBy}
-                sortOrder={rowsSortOrder}
-                onSortChange={handleRowsSortChange}
-                defaultSortParam={encodeSort(
-                  ROWS_DEFAULT_SORT_BY,
-                  ROWS_DEFAULT_SORT_ORDER,
-                )}
-                onReset={() => {
-                  navigate({
-                    ...(activeTab === 'documents'
-                      ? dbNav.dataJson(tableNavParams)
-                      : dbNav.dataGrid(tableNavParams)),
-                    search: { page: 1, limit: rowsUrlLimit },
-                    replace: true,
-                  })
-                }}
-                teamId={project?.teamId}
-              />
-            ) : undefined
-          }
-          showRefresh={
-            !isDatabaseLevelView &&
-            (activeTab === 'rows' || activeTab === 'documents')
-          }
-          onRefresh={
-            !isDatabaseLevelView &&
-            (activeTab === 'rows' || activeTab === 'documents')
-              ? async () => {
-                  if (rowsRefetchRef.current) {
-                    refreshStartTimeRef.current = Date.now()
-                    setIsRefreshingRows(true)
-                    try {
-                      await rowsRefetchRef.current()
-                      const elapsed =
-                        Date.now() - (refreshStartTimeRef.current || 0)
-                      const remaining = Math.max(
+                    const tablesData = await queryClient.ensureQueryData(
+                      tablesQueryOptions(
+                        projectId,
+                        newDatabaseId,
                         0,
-                        minAnimationDuration - elapsed,
-                      )
-                      await new Promise((resolve) =>
-                        setTimeout(resolve, remaining),
-                      )
-                      toast.success(
-                        `${dbLabels.recordPluralTitle} refreshed successfully`,
-                      )
-                    } catch {
-                      toast.error(
-                        `Failed to refresh ${dbLabels.recordPlural}`,
-                      )
-                    } finally {
-                      setIsRefreshingRows(false)
-                      refreshStartTimeRef.current = null
-                    }
-                  }
-                }
-              : undefined
-          }
-          isRefreshing={isRefreshingRows}
-          showImport={!isDatabaseLevelView && activeTab === 'rows'}
-          onImport={
-            !isDatabaseLevelView && activeTab === 'rows'
-              ? () => setImportCsvOpen(true)
-              : undefined
-          }
-          importTooltip="Import CSV"
-          showExport={!isDatabaseLevelView && activeTab === 'rows'}
-          onExport={
-            !isDatabaseLevelView && activeTab === 'rows'
-              ? () => setExportCsvOpen(true)
-              : undefined
-          }
-          exportTooltip="Export CSV"
-          exportDisabled={
-            !isDatabaseLevelView && activeTab === 'rows' && !hasRows
-          }
-          beforeCreateButtons={undefined}
-          collapsible={!isDatabaseLevelView}
-          fullWidthBorder
-          fullWidth={
-            !isDatabaseLevelView ||
-            databaseTab === 'visualizer' ||
-            databaseTab === 'monitor'
-          }
-          titleRightContent={
-            databaseTab === 'monitor' ? (
-              <>
-                <DatabaseMonitorHeaderActions
-                  projectId={projectId}
-                  databaseId={databaseId}
-                  dbKind={DB_KIND}
-                  dateRange={monitorDateRange}
-                  onDateRangeChange={(r) =>
-                    setMonitorDateRange(r ?? getDefaultMonitorDateRange())
-                  }
-                  onRefresh={() => setMonitorChartTick((n) => n + 1)}
-                  showSpecActions={showDbSecuritySettings}
-                />
-                {isDatabaseLevelView &&
-                isDebugModeOpen &&
-                SHOW_GRID_DEBUG_TOOLS ? (
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="h-7"
-                    onClick={() => createFiftyTablesMutation.mutate()}
-                    disabled={createFiftyTablesMutation.isPending}
-                  >
-                    {createFiftyTablesMutation.isPending
-                      ? 'Creating…'
-                      : dbLabels.debugCreateManyContainers}
-                  </Button>
-                ) : null}
-              </>
-            ) : undefined
-          }
-          rightContent={
-            isDatabaseLevelView &&
-            isDebugModeOpen &&
-            SHOW_GRID_DEBUG_TOOLS &&
-            databaseTab !== 'monitor' ? (
-              <Button
-                variant="outline"
-                size="sm"
-                className="h-9"
-                onClick={() => createFiftyTablesMutation.mutate()}
-                disabled={createFiftyTablesMutation.isPending}
-              >
-                {createFiftyTablesMutation.isPending
-                  ? 'Creating…'
-                  : dbLabels.debugCreateManyContainers}
-              </Button>
-            ) : undefined
-          }
-          contentAfterBorder={
-            <>
-              {databaseTab === 'monitor' ? (
-                <div className="border-b border-border px-4 py-3 sm:px-6 lg:hidden">
-                  <DatabaseMonitorMobileNav
-                    projectId={projectId}
-                    databaseId={databaseId}
-                  />
-                </div>
-              ) : null}
-              {/* Mobile DB + table selector - above toolbar, shows when sidebar is hidden */}
-              <div className="flex flex-col gap-2 border-b border-border px-4 py-3 lg:hidden">
-                <DatabaseSelector
-                  projectId={projectId}
-                  value={databaseId}
-                  selectedName={database?.name}
-                  createTableMenuLabel={dbLabels.createContainer}
-                  createDatabaseDisabled={noCreateDbPermission}
-                  createDatabaseDisabledTooltip={createPermissionTooltip}
-                  createTableDisabled={noCreateTablePermission}
-                  createTableDisabledTooltip={createPermissionTooltip}
-                  onSelect={async (newDatabaseId) => {
+                        ROWS_DEFAULT_PAGE_SIZE,
+                        undefined,
+                        'asc',
+                        '$createdAt',
+                      ),
+                    )
+                    const firstTable = (tablesData.tables || [])[0] as
+                      | { $id?: string }
+                      | undefined
+                    navigate({
+                      ...dbNavLink(nextDbKind).dataGrid({
+                        projectId,
+                        dbKind: nextDbKind,
+                        databaseId: newDatabaseId,
+                        resourceId: firstTable?.$id ?? '-',
+                      }),
+                    })
+                  } catch {
+                    let nextDbKind: DatabaseRouteKind = DB_KIND
                     try {
                       const newDb = await queryClient.ensureQueryData(
                         databaseQueryOptions(projectId, newDatabaseId),
                       )
-                      const nextDbKind = databaseRouteKindFromApiType(
-                        (newDb as { databaseType?: ApiDatabaseType }).databaseType,
+                      nextDbKind = databaseRouteKindFromApiType(
+                        (newDb as { databaseType?: ApiDatabaseType })
+                          .databaseType,
                       )
-                      const tablesData = await queryClient.ensureQueryData(
-                        tablesQueryOptions(
-                          projectId,
-                          newDatabaseId,
-                          0,
-                          ROWS_DEFAULT_PAGE_SIZE,
-                          undefined,
-                          'asc',
-                          '$createdAt',
-                        ),
-                      )
-                      const firstTable = (tablesData.tables || [])[0] as
-                        | { $id?: string }
-                        | undefined
-                      navigate({
-                        ...dbNavLink(nextDbKind).dataGrid({
-                          projectId,
-                          dbKind: nextDbKind,
-                          databaseId: newDatabaseId,
-                          resourceId: firstTable?.$id ?? '-',
-                        }),
-                      })
                     } catch {
-                      let nextDbKind: DatabaseRouteKind = DB_KIND
-                      try {
-                        const newDb = await queryClient.ensureQueryData(
-                          databaseQueryOptions(projectId, newDatabaseId),
-                        )
-                        nextDbKind = databaseRouteKindFromApiType(
-                          (newDb as { databaseType?: ApiDatabaseType }).databaseType,
-                        )
-                      } catch {
-                        // keep workspace db kind when type lookup fails
-                      }
-                      navigate({
-                        ...dbNavLink(nextDbKind).dataGrid({
-                          projectId,
-                          dbKind: nextDbKind,
-                          databaseId: newDatabaseId,
-                          resourceId: '-',
-                        }),
-                      })
+                      // keep workspace db kind when type lookup fails
                     }
-                  }}
-                  onCreateDatabaseClick={() =>
-                    useCreateDatabaseWizard
-                      ? navigate({
+                    navigate({
+                      ...dbNavLink(nextDbKind).dataGrid({
+                        projectId,
+                        dbKind: nextDbKind,
+                        databaseId: newDatabaseId,
+                        resourceId: '-',
+                      }),
+                    })
+                  }
+                }}
+                onCreateDatabaseClick={() =>
+                  useCreateDatabaseWizard
+                    ? navigate({
                         to: '/projects/$projectId/databases/create',
                         params: { projectId },
                       })
-                      : setCreateDatabaseDialogOpen(true)
+                    : setCreateDatabaseDialogOpen(true)
+                }
+                onCreateTableClick={() => setCreateTableDialogOpen(true)}
+              />
+              <TableSelector
+                projectId={projectId}
+                databaseId={databaseId}
+                value={tableId}
+                selectedName={selectedTable?.name}
+                placeholder={`Select ${dbLabels.containerSingular}`}
+                emptyLabel={`No ${dbLabels.containerPlural}`}
+                noResultsLabel={`No ${dbLabels.containerPlural} found`}
+                createTooltip={dbLabels.createContainer}
+                itemIcon={ContainerListIcon}
+                createDisabled={noCreateTablePermission}
+                createDisabledTooltip={createPermissionTooltip}
+                onSelect={(newTableId) => {
+                  navigate({
+                    ...dbNav.dataGrid({
+                      projectId,
+                      dbKind: DB_KIND,
+                      databaseId,
+                      resourceId: newTableId,
+                    }),
+                  })
+                }}
+                onCreateClick={() => setCreateTableDialogOpen(true)}
+                empty={dbTables.length === 0}
+              />
+            </div>
+            {database && (database as Models.Database).enabled === false ? (
+              <div className="border-b border-border bg-amber-500/5">
+                <div
+                  className={cn(
+                    'px-4 py-3 sm:px-6',
+                    isDatabaseLevelView &&
+                      databaseTab !== 'visualizer' &&
+                      databaseTab !== 'monitor' &&
+                      'mx-auto w-full max-w-7xl',
+                  )}
+                >
+                  <Alert
+                    variant="default"
+                    className="border-amber-500/30 bg-transparent"
+                  >
+                    <AlertCircle className="h-4 w-4 text-amber-500" />
+                    <AlertTitle className="text-[13px] font-medium text-amber-600 dark:text-amber-400">
+                      Database is disabled
+                    </AlertTitle>
+                    <AlertDescription className="text-[12px] text-amber-600/80 dark:text-amber-400/80">
+                      <span className="inline">
+                        This database is disabled and not accessible to end
+                        users through the API. Console actions remain available.{' '}
+                        <Link
+                          to="/projects/$projectId/databases/$dbKind/$databaseId/settings"
+                          params={{
+                            projectId,
+                            dbKind: DB_KIND,
+                            databaseId,
+                          }}
+                          className="font-medium underline hover:no-underline inline"
+                        >
+                          Enable it in the Settings tab
+                        </Link>{' '}
+                        to make it available to end users.
+                      </span>
+                    </AlertDescription>
+                  </Alert>
+                </div>
+              </div>
+            ) : tableDataForStatus && !tableDataForStatus.enabled ? (
+              <div className="border-b border-border bg-amber-500/5">
+                <div
+                  className={cn(
+                    'px-4 py-3 sm:px-6',
+                    isDatabaseLevelView &&
+                      databaseTab !== 'visualizer' &&
+                      databaseTab !== 'monitor' &&
+                      'mx-auto w-full max-w-7xl',
+                  )}
+                >
+                  <Alert
+                    variant="default"
+                    className="border-amber-500/30 bg-transparent"
+                  >
+                    <AlertCircle className="h-4 w-4 text-amber-500" />
+                    <AlertTitle className="text-[13px] font-medium text-amber-600 dark:text-amber-400">
+                      {dbLabels.disabledContainerTitle}
+                    </AlertTitle>
+                    <AlertDescription className="text-[12px] text-amber-600/80 dark:text-amber-400/80">
+                      <span className="inline">
+                        {dbLabels.disabledContainerBodyPrefix}{' '}
+                        <Link
+                          {...dbNav.settings({
+                            projectId,
+                            dbKind: DB_KIND,
+                            databaseId,
+                            resourceId: tableId,
+                          })}
+                          className="font-medium underline hover:no-underline inline"
+                        >
+                          Enable it in the Settings tab
+                        </Link>{' '}
+                        to access its data and functionality.
+                      </span>
+                    </AlertDescription>
+                  </Alert>
+                </div>
+              </div>
+            ) : null}
+          </>
+        }
+      />
+
+      <div className={cn('flex-1 min-h-0', 'overflow-y-auto')}>
+        {isDatabaseLevelView ? (
+          <Overview
+            databaseId={databaseId}
+            activeTab={
+              databaseTab ? DATABASE_TAB_TO_OVERVIEW[databaseTab] : 'tables'
+            }
+            contentOnly
+            monitorEmbed={
+              databaseTab === 'monitor'
+                ? {
+                    dateRange: monitorDateRange,
+                    chartTick: monitorChartTick,
                   }
-                  onCreateTableClick={() => setCreateTableDialogOpen(true)}
-                />
-                <TableSelector
-                  projectId={projectId}
-                  databaseId={databaseId}
-                  value={tableId}
-                  selectedName={selectedTable?.name}
-                  placeholder={`Select ${dbLabels.containerSingular}`}
-                  emptyLabel={`No ${dbLabels.containerPlural}`}
-                  noResultsLabel={`No ${dbLabels.containerPlural} found`}
-                  createTooltip={dbLabels.createContainer}
-                  itemIcon={ContainerListIcon}
-                  createDisabled={noCreateTablePermission}
-                  createDisabledTooltip={createPermissionTooltip}
-                  onSelect={(newTableId) => {
-                    navigate({
-                      ...dbNav.dataGrid({
-                        projectId,
-                        dbKind: DB_KIND,
-                        databaseId,
-                        resourceId: newTableId,
-                      }),
-                    })
+                : undefined
+            }
+          />
+        ) : (
+          <>
+            {activeTab === 'rows' && selectedTable ? (
+              <div className="contents">
+                <RowsSpreadsheet
+                  table={selectedTable}
+                  canWriteRows={!noCreateRowPermission}
+                  canWriteTables={!noCreateTablePermission}
+                  onRefetchReady={(refetchFn) => {
+                    rowsRefetchRef.current = refetchFn
                   }}
-                  onCreateClick={() => setCreateTableDialogOpen(true)}
-                  empty={dbTables.length === 0}
+                  onCreateRowReady={(openCreateDrawer) => {
+                    openCreateRowDrawerRef.current = openCreateDrawer
+                  }}
+                  onRowsCountChange={handleRowsCountChange}
+                  rowsUrlSearch={rowsUrlSearch}
+                  rowsUrlPage={rowsUrlPage}
+                  rowsUrlLimit={rowsUrlLimit}
+                  rowsFilterQueries={rowsFilterQueries}
+                  rowsFilterQueryString={rowsFilterQueryString}
+                  rowsSortBy={rowsSortBy}
+                  rowsSortOrder={rowsSortOrder}
+                  onNavigateToRowsList={navigateToRowsList}
                 />
               </div>
-              {database && (database as Models.Database).enabled === false ? (
-                <div className="border-b border-border bg-amber-500/5">
-                  <div
-                    className={cn(
-                      'px-4 py-3 sm:px-6',
-                      isDatabaseLevelView &&
-                        databaseTab !== 'visualizer' &&
-                        databaseTab !== 'monitor' &&
-                        'mx-auto w-full max-w-7xl',
-                    )}
-                  >
-                    <Alert
-                      variant="default"
-                      className="border-amber-500/30 bg-transparent"
-                    >
-                      <AlertCircle className="h-4 w-4 text-amber-500" />
-                      <AlertTitle className="text-[13px] font-medium text-amber-600 dark:text-amber-400">
-                        Database is disabled
-                      </AlertTitle>
-                      <AlertDescription className="text-[12px] text-amber-600/80 dark:text-amber-400/80">
-                        <span className="inline">
-                          This database is disabled and not accessible to end
-                          users through the API. Console actions remain
-                          available.{' '}
-                          <Link
-                            to="/projects/$projectId/databases/$dbKind/$databaseId/settings"
-                            params={{
-                              projectId,
-                              dbKind: DB_KIND,
-                              databaseId,
-                            }}
-                            className="font-medium underline hover:no-underline inline"
-                          >
-                            Enable it in the Settings tab
-                          </Link>{' '}
-                          to make it available to end users.
-                        </span>
-                      </AlertDescription>
-                    </Alert>
-                  </div>
-                </div>
-              ) : tableDataForStatus && !tableDataForStatus.enabled ? (
-                <div className="border-b border-border bg-amber-500/5">
-                  <div
-                    className={cn(
-                      'px-4 py-3 sm:px-6',
-                      isDatabaseLevelView &&
-                        databaseTab !== 'visualizer' &&
-                        databaseTab !== 'monitor' &&
-                        'mx-auto w-full max-w-7xl',
-                    )}
-                  >
-                    <Alert
-                      variant="default"
-                      className="border-amber-500/30 bg-transparent"
-                    >
-                      <AlertCircle className="h-4 w-4 text-amber-500" />
-                      <AlertTitle className="text-[13px] font-medium text-amber-600 dark:text-amber-400">
-                        {dbLabels.disabledContainerTitle}
-                      </AlertTitle>
-                      <AlertDescription className="text-[12px] text-amber-600/80 dark:text-amber-400/80">
-                        <span className="inline">
-                          {dbLabels.disabledContainerBodyPrefix}{' '}
-                          <Link
-                            {...dbNav.settings({
-                              projectId,
-                              dbKind: DB_KIND,
-                              databaseId,
-                              resourceId: tableId,
-                            })}
-                            className="font-medium underline hover:no-underline inline"
-                          >
-                            Enable it in the Settings tab
-                          </Link>{' '}
-                          to access its data and functionality.
-                        </span>
-                      </AlertDescription>
-                    </Alert>
-                  </div>
-                </div>
-              ) : null}
-            </>
-          }
-        />
-
-        <div
-          className={cn(
-            'flex-1 min-h-0',
-            'overflow-y-auto',
-          )}
-        >
-          {isDatabaseLevelView ? (
-            <Overview
-              databaseId={databaseId}
-              activeTab={
-                databaseTab ? DATABASE_TAB_TO_OVERVIEW[databaseTab] : 'tables'
-              }
-              contentOnly
-              monitorEmbed={
-                databaseTab === 'monitor'
-                  ? {
-                      dateRange: monitorDateRange,
-                      chartTick: monitorChartTick,
-                    }
-                  : undefined
-              }
-            />
-          ) : (
-            <>
-              {activeTab === 'rows' && selectedTable ? (
-                <div className="contents">
-                  <RowsSpreadsheet
-                    table={selectedTable}
-                    canWriteRows={!noCreateRowPermission}
-                    canWriteTables={!noCreateTablePermission}
-                    onRefetchReady={(refetchFn) => {
-                      rowsRefetchRef.current = refetchFn
-                    }}
-                    onCreateRowReady={(openCreateDrawer) => {
-                      openCreateRowDrawerRef.current = openCreateDrawer
-                    }}
-                    onRowsCountChange={handleRowsCountChange}
-                    rowsUrlSearch={rowsUrlSearch}
-                    rowsUrlPage={rowsUrlPage}
-                    rowsUrlLimit={rowsUrlLimit}
-                    rowsFilterQueries={rowsFilterQueries}
-                    rowsFilterQueryString={rowsFilterQueryString}
-                    rowsSortBy={rowsSortBy}
-                    rowsSortOrder={rowsSortOrder}
-                    onNavigateToRowsList={navigateToRowsList}
-                  />
-                </div>
-              ) : null}
-              {selectedTable && activeTab === 'documents' && (
-                  <>
-                    <DocumentsJsonSpreadsheet
-                      table={selectedTable}
-                      canWriteRows={!noCreateRowPermission}
-                      rowsUrlSearch={rowsUrlSearch}
-                      rowsUrlPage={rowsUrlPage}
-                      rowsUrlLimit={rowsUrlLimit}
-                      rowsFilterQueries={rowsFilterQueries}
-                      rowsFilterQueryString={rowsFilterQueryString}
-                      rowsSortBy={rowsSortBy}
-                      rowsSortOrder={rowsSortOrder}
-                      onNavigateToList={navigateToRowsList}
-                      onRefetchReady={(refetchFn) => {
-                        rowsRefetchRef.current = refetchFn
-                      }}
-                      onRowsCountChange={handleRowsCountChange}
-                    />
-                    <DocumentsRowCreateBridge
-                      table={selectedTable}
-                      onCreateRowReady={(openFn) => {
-                        openCreateRowDrawerRef.current = openFn
-                      }}
-                    />
-                  </>
-                )}
-              {activeTab === 'security' && (
-                <TableSecurity table={selectedTable!} />
-              )}
-              {activeTab === 'settings' && (
-                <TableSettings table={selectedTable!} />
-              )}
-            </>
-          )}
-        </div>
+            ) : null}
+            {selectedTable && activeTab === 'documents' && (
+              <>
+                <DocumentsJsonSpreadsheet
+                  table={selectedTable}
+                  canWriteRows={!noCreateRowPermission}
+                  rowsUrlSearch={rowsUrlSearch}
+                  rowsUrlPage={rowsUrlPage}
+                  rowsUrlLimit={rowsUrlLimit}
+                  rowsFilterQueries={rowsFilterQueries}
+                  rowsFilterQueryString={rowsFilterQueryString}
+                  rowsSortBy={rowsSortBy}
+                  rowsSortOrder={rowsSortOrder}
+                  onNavigateToList={navigateToRowsList}
+                  onRefetchReady={(refetchFn) => {
+                    rowsRefetchRef.current = refetchFn
+                  }}
+                  onRowsCountChange={handleRowsCountChange}
+                />
+                <DocumentsRowCreateBridge
+                  table={selectedTable}
+                  onCreateRowReady={(openFn) => {
+                    openCreateRowDrawerRef.current = openFn
+                  }}
+                />
+              </>
+            )}
+            {activeTab === 'security' && (
+              <TableSecurity table={selectedTable!} />
+            )}
+            {activeTab === 'settings' && (
+              <TableSettings table={selectedTable!} />
+            )}
+          </>
+        )}
       </div>
+    </div>
   )
 
   return (
@@ -1750,7 +1719,11 @@ export function Workspace({
         onOpenChange={setCreateDatabaseDialogOpen}
         onCreate={(data) => createDatabaseMutation.mutate(data)}
         isLoading={createDatabaseMutation.isPending}
-        backupsEnabled={organizationPlan?.backupsEnabled}
+        backupsEnabled={
+          features.databaseBackups
+            ? organizationPlan?.backupsEnabled
+            : undefined
+        }
         orgId={project?.teamId}
       />
       {/* Create Table Dialog */}

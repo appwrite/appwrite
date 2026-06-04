@@ -29,6 +29,12 @@ export const RESOURCE_CARD_GRID_WIDE_CLASSNAME =
 /** Apply to custom card shells inside resource grids when not using ResourceCard. */
 export const RESOURCE_CARD_SHELL_CLASSNAME = 'min-w-0 overflow-hidden'
 
+type ResourceCardMetadataItem = {
+  label: string
+  value: string | number | React.ReactNode
+  align?: 'right'
+}
+
 interface ResourceCardProps {
   title: string
   /** Renders inline after the title (e.g. status badges). */
@@ -40,7 +46,7 @@ interface ResourceCardProps {
   iconColor?: string
   status?: StatusType
   statusLabel?: string
-  metadata?: Array<{ label: string; value: string | number | React.ReactNode }>
+  metadata?: ResourceCardMetadataItem[]
   onClick?: () => void
   onMenuClick?: (e: React.MouseEvent) => void
   avatar?: string
@@ -176,7 +182,7 @@ export function ResourceCard({
           <div className="flex min-w-0 flex-nowrap items-center gap-x-1 overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
             {metadata.map((item, index) => (
               <Fragment key={index}>
-                {index > 0 ? (
+                {index > 0 && item.align !== 'right' ? (
                   <span
                     className="shrink-0 text-[10px] text-muted-foreground/40"
                     aria-hidden
@@ -184,7 +190,12 @@ export function ResourceCard({
                     ·
                   </span>
                 ) : null}
-                <div className="flex shrink-0 items-center gap-0.5">
+                <div
+                  className={cn(
+                    'flex shrink-0 items-center gap-0.5',
+                    item.align === 'right' && 'ml-auto',
+                  )}
+                >
                   {item.label ? (
                     <span className="text-[10px] text-muted-foreground/70">
                       {item.label}

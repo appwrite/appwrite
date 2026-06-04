@@ -134,6 +134,7 @@ export function ConsoleHeader({
   // Fetch current project to get teamId when in project context
   const { project } = useProject(projectId)
   const { features } = useConsoleProfile()
+  const supportsMultiTenancy = features.multiTenancy
   const overrides = useDebugOverrides()
   const { access } = useOrganizationScopes(project?.teamId)
   const showAIAssistant = overrides.showAIAssistant
@@ -414,21 +415,25 @@ export function ConsoleHeader({
                           <span>New Project</span>
                         </DropdownMenuItem>
                       )}
-                      <DropdownMenuItem
-                        onClick={() => {
-                          const orgId =
-                            project?.teamId ||
-                            (account?.prefs?.organization as string | undefined)
-                          openCreateOrganizationFlow(navigate, {
-                            onCreateOrganization,
-                            orgId,
-                          })
-                        }}
-                        className="flex cursor-pointer items-center gap-2 rounded px-2 py-1.5 text-[13px] text-foreground hover:bg-accent hover:text-foreground focus:bg-accent focus:text-foreground"
-                      >
-                        <Building2 className="h-4 w-4" />
-                        <span>New Organization</span>
-                      </DropdownMenuItem>
+                      {supportsMultiTenancy && (
+                        <DropdownMenuItem
+                          onClick={() => {
+                            const orgId =
+                              project?.teamId ||
+                              (account?.prefs?.organization as
+                                | string
+                                | undefined)
+                            openCreateOrganizationFlow(navigate, {
+                              onCreateOrganization,
+                              orgId,
+                            })
+                          }}
+                          className="flex cursor-pointer items-center gap-2 rounded px-2 py-1.5 text-[13px] text-foreground hover:bg-accent hover:text-foreground focus:bg-accent focus:text-foreground"
+                        >
+                          <Building2 className="h-4 w-4" />
+                          <span>New Organization</span>
+                        </DropdownMenuItem>
+                      )}
 
                       {projectId && (
                         <>

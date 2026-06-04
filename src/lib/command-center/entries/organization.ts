@@ -138,8 +138,7 @@ const ORG_SETTINGS_TABS: CommandEntry[] = [
     description: 'Third-party OAuth apps with access to this organization',
     icon: Key,
     keywords: ['oauth', 'apps', 'third party', 'integrations'],
-    available: (ctx) =>
-      canShowOrgOAuthAppsSettings(ctx.access, ctx.features),
+    available: (ctx) => canShowOrgOAuthAppsSettings(ctx.access, ctx.features),
     to: (ctx) => `/organizations/${ctx.orgId}/settings/oauth-apps`,
   },
   {
@@ -163,7 +162,8 @@ const ORG_SETTINGS_TABS: CommandEntry[] = [
     description: 'Permanently delete this organization',
     icon: AlertOctagon,
     keywords: ['danger', 'delete', 'remove', 'destroy'],
-    available: (ctx) => canAccessOrgSettingsOverview(ctx.access),
+    available: (ctx) =>
+      ctx.features.multiTenancy && canAccessOrgSettingsOverview(ctx.access),
     to: (ctx) => `/organizations/${ctx.orgId}/settings/danger-zone`,
   },
 ]
@@ -201,6 +201,7 @@ const ORG_CREATE: CommandEntry[] = [
     icon: Building2,
     shortcut: 'C T',
     keywords: ['new', 'organization', 'team', 'add'],
+    available: (ctx) => ctx.features.multiTenancy,
     perform: (ctx) => {
       ctx.closeCommandCenter()
       if (ctx.features.billing) {

@@ -3,8 +3,9 @@ import { navigateToUpgradeWizard } from '@/lib/open-upgrade-wizard'
 
 /**
  * Starts the create-organization flow:
- * - Cloud (billing): fullscreen upgrade wizard at `/upgrade`
- * - Self-hosted: optional in-app callback (org overview), else `createOrg` search param
+ * - Multi-tenant Cloud (billing): fullscreen upgrade wizard at `/upgrade`
+ * - Multi-tenant without billing: optional in-app callback, else `createOrg` search param
+ * - Single-tenant profiles: no-op
  */
 export function openCreateOrganizationFlow(
   navigate: (opts: {
@@ -17,7 +18,10 @@ export function openCreateOrganizationFlow(
     orgId: string | undefined
   },
 ): void {
-  if (getActiveProfileFeatures().billing) {
+  const features = getActiveProfileFeatures()
+  if (!features.multiTenancy) return
+
+  if (features.billing) {
     navigateToUpgradeWizard(navigate)
     return
   }
