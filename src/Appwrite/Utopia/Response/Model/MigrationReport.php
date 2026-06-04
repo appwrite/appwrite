@@ -77,6 +77,36 @@ class MigrationReport extends Model
                 'default' => 0,
                 'example' => 5,
             ])
+            ->addRule(Resource::TYPE_AUTH_METHODS, [
+                'type' => self::TYPE_INTEGER,
+                'description' => 'Number of auth-method configs to be migrated (always 0 or 1 — the project-level flag bundle).',
+                'default' => 0,
+                'example' => 1,
+            ])
+            ->addRule(Resource::TYPE_PROJECT_PROTOCOLS, [
+                'type' => self::TYPE_INTEGER,
+                'description' => 'Number of protocol configs to be migrated (always 0 or 1 — the project-level REST/GraphQL/WebSocket flags).',
+                'default' => 0,
+                'example' => 1,
+            ])
+            ->addRule(Resource::TYPE_PROJECT_LABELS, [
+                'type' => self::TYPE_INTEGER,
+                'description' => 'Number of label sets to be migrated (always 0 or 1 — the project-level RBAC label array).',
+                'default' => 0,
+                'example' => 1,
+            ])
+            ->addRule(Resource::TYPE_PROJECT_SERVICES, [
+                'type' => self::TYPE_INTEGER,
+                'description' => 'Number of service configs to be migrated (always 0 or 1 — the project-level enable/disable flags for all 17 services).',
+                'default' => 0,
+                'example' => 1,
+            ])
+            ->addRule(Resource::TYPE_POLICIES, [
+                'type' => self::TYPE_INTEGER,
+                'description' => 'Number of policy bundles to be migrated (always 0 or 1 — the project-level security policies covering password rules, session behavior, user limits, and membership privacy).',
+                'default' => 0,
+                'example' => 1,
+            ])
             ->addRule(Resource::TYPE_SITE, [
                 'type' => self::TYPE_INTEGER,
                 'description' => 'Number of sites to be migrated.',
