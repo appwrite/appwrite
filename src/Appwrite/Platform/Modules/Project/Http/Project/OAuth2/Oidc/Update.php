@@ -10,6 +10,7 @@ use Appwrite\Platform\Modules\Project\Http\Project\OAuth2\Base;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
+use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
@@ -152,6 +153,7 @@ class Update extends Base
             ->inject('dbForPlatform')
             ->inject('project')
             ->inject('authorization')
+            ->inject('request')
             ->inject('queueForEvents')
             ->callback($this->handle(...));
     }
@@ -203,6 +205,7 @@ class Update extends Base
         Database $dbForPlatform,
         Document $project,
         Authorization $authorization,
+        Request $request,
         QueueEvent $queueForEvents
     ): void {
         $providerId = static::getProviderId();
@@ -230,7 +233,7 @@ class Update extends Base
             'tokenEndpoint' => $tokenURL ?? ($existing['tokenEndpoint'] ?? ''),
             'userInfoEndpoint' => $userInfoURL ?? ($existing['userInfoEndpoint'] ?? ''),
             'prompt' => $prompt ?? ($existing['prompt'] ?? []),
-            'maxAge' => $maxAge ?? ($existing['maxAge'] ?? null),
+            'maxAge' => \array_key_exists('maxAge', $request->getParams()) ? $maxAge : ($existing['maxAge'] ?? null),
         ];
 
         // When enabling, require either wellKnownEndpoint alone, or all three
