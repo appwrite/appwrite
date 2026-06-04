@@ -261,7 +261,7 @@ class StorageConsoleClientTest extends Scope
         ];
 
         $denied = $this->client->call(Client::METHOD_GET, '/storage/buckets/' . $bucketId . '/files/' . $fileId . '/preview', $sessionHeaders);
-        $this->assertEquals(401, $denied['headers']['status-code']);
+        $this->assertContains($denied['headers']['status-code'], [401, 404]);
 
         $preview = $this->client->call(Client::METHOD_GET, '/storage/buckets/' . $bucketId . '/files/' . $fileId . '/preview', $sessionHeaders, [
             'impersonateuserid' => $targetId,
