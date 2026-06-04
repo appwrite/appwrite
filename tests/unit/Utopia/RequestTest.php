@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Tests\Unit\Utopia;
 
 use Appwrite\SDK\Method;
@@ -13,7 +15,7 @@ use Tests\Unit\Utopia\Request\Filters\Second;
 use Tests\Unit\Utopia\Request\Filters\ThrowingFilter;
 use Utopia\Http\Route;
 
-class RequestTest extends TestCase
+final class RequestTest extends TestCase
 {
     protected ?Request $request = null;
 
