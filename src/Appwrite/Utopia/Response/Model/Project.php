@@ -43,6 +43,12 @@ class Project extends Model
                 'default' => '',
                 'example' => '1592981250',
             ])
+            ->addRule('region', [
+                'type' => self::TYPE_STRING,
+                'description' => 'Project region.',
+                'default' => 'default',
+                'example' => 'fra',
+            ])
 
             // Resource: Dev Keys
             ->addRule('devKeys', [
@@ -173,6 +179,19 @@ class Project extends Model
                 'example' => new \stdClass(),
                 'array' => true,
             ])
+            ->addRule('blocks', [
+                'type' => self::TYPE_STRING,
+                'description' => 'Project blocks information.',
+                'default' => [],
+                'example' => [],
+                'array' => true,
+            ])
+            ->addRule('consoleAccessedAt', [
+                'type' => self::TYPE_DATETIME,
+                'description' => 'Last time the project was accessed via console.',
+                'default' => '',
+                'example' => self::TYPE_DATETIME_EXAMPLE,
+            ])
         ;
     }
 
@@ -207,8 +226,14 @@ class Project extends Model
         $this->expandServices($document);
         $this->expandProtocols($document);
         $this->expandAuthMethods($document);
+        $this->expandConsoleAccessedAt($document);
 
         return $document;
+    }
+
+    private function expandConsoleAccessedAt(Document $document): void
+    {
+        $document->setAttribute('consoleAccessedAt', $document->getAttribute('accessedAt', ''));
     }
 
     private function expandSmtpFields(Document $document): void
