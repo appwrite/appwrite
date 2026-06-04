@@ -229,7 +229,7 @@ class Webhooks extends Action
 
         $ownerMemberships = \array_filter(
             $memberships,
-            fn (Document $membership) => self::hasOwnerRole($membership, $project->getId())
+            fn (Document $membership) => self::hasOwnerRole($membership)
         );
 
         if (empty($ownerMemberships)) {
@@ -326,7 +326,7 @@ class Webhooks extends Action
         }
     }
 
-    private static function hasOwnerRole(Document $membership, string $projectId): bool
+    private static function hasOwnerRole(Document $membership): bool
     {
         $roles = $membership->getAttribute('roles', []);
         if (\is_string($roles)) {
@@ -341,8 +341,7 @@ class Webhooks extends Action
                 continue;
             }
 
-            $role = \strtolower($role);
-            if ($role === 'owner' || $role === 'project-' . \strtolower($projectId) . '-owner') {
+            if (\strtolower($role) === 'owner') {
                 return true;
             }
         }
