@@ -3264,6 +3264,103 @@ trait MigrationsBase
         $this->client->call(Client::METHOD_DELETE, '/proxy/rules/' . $sourceRule['$id'], $sourceHeaders);
     }
 
+    public function testAppwriteMigrationEmailTemplate(): void
+    {
+        $sourceProjectId = $this->getProject()['$id'];
+        $destinationProjectId = $this->getDestinationProject()['$id'];
+
+        $sourceKeyHeaders = [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $sourceProjectId,
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ];
+        $destinationKeyHeaders = [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $destinationProjectId,
+            'x-appwrite-key' => $this->getDestinationProject()['apiKey'],
+        ];
+
+        // The source SDK path requires custom SMTP enabled before a template can be
+        // saved — and the enable call validates the SMTP connection. `maildev` is the
+        // dev mailcatcher in the test cluster's docker-compose; it accepts unauthenticated
+        // connections on port 1025, so it's the only host that lets us pass validation.
+        $smtpUpdate = $this->client->call(Client::METHOD_PATCH, '/project/smtp', $sourceKeyHeaders, [
+            'enabled' => true,
+            'senderName' => 'Test Sender',
+            'senderEmail' => 'sender@example.com',
+            'host' => 'maildev',
+            'port' => 1025,
+        ]);
+        $this->assertEquals(200, $smtpUpdate['headers']['status-code'], 'SMTP enable on source failed: ' . \json_encode($smtpUpdate['body']));
+
+        $templateId = 'verification';
+        $locale = 'en';
+        $subject = 'Verify your account ' . ID::unique();
+        $message = '<p>Hello {{user}}, verify your account at {{redirect}}</p>';
+
+        $update = $this->client->call(
+            Client::METHOD_PATCH,
+            '/project/templates/email',
+            $sourceKeyHeaders,
+            [
+                'templateId' => $templateId,
+                'locale' => $locale,
+                'subject' => $subject,
+                'message' => $message,
+                'senderName' => 'Template Sender',
+                'senderEmail' => 'tpl-sender@example.com',
+                'replyToEmail' => 'reply@example.com',
+                'replyToName' => 'Reply Team',
+            ]
+        );
+        $this->assertEquals(200, $update['headers']['status-code']);
+
+        $result = $this->performMigrationSync([
+            'resources' => [
+                Resource::TYPE_PROJECT_EMAIL_TEMPLATE,
+            ],
+            'endpoint' => $this->webEndpoint,
+            'projectId' => $sourceProjectId,
+            'apiKey' => $this->getProject()['apiKey'],
+        ]);
+
+        $this->assertEquals('completed', $result['status']);
+        $this->assertEquals([Resource::TYPE_PROJECT_EMAIL_TEMPLATE], $result['resources']);
+        $this->assertArrayHasKey(Resource::TYPE_PROJECT_EMAIL_TEMPLATE, $result['statusCounters']);
+        $this->assertEquals(0, $result['statusCounters'][Resource::TYPE_PROJECT_EMAIL_TEMPLATE]['error']);
+        $this->assertEquals(0, $result['statusCounters'][Resource::TYPE_PROJECT_EMAIL_TEMPLATE]['pending']);
+        $this->assertGreaterThanOrEqual(1, $result['statusCounters'][Resource::TYPE_PROJECT_EMAIL_TEMPLATE]['success']);
+        $this->assertEquals(0, $result['statusCounters'][Resource::TYPE_PROJECT_EMAIL_TEMPLATE]['processing']);
+        $this->assertEquals(0, $result['statusCounters'][Resource::TYPE_PROJECT_EMAIL_TEMPLATE]['warning']);
+
+        // Read-back via the SDK requires the destination to have SMTP enabled too.
+        $this->client->call(Client::METHOD_PATCH, '/project/smtp', $destinationKeyHeaders, [
+            'enabled' => true,
+            'senderName' => 'Dest Sender',
+            'senderEmail' => 'dest@example.com',
+            'host' => 'maildev',
+            'port' => 1025,
+        ]);
+
+        $fetched = $this->client->call(
+            Client::METHOD_GET,
+            '/project/templates/email/' . $templateId,
+            $destinationKeyHeaders,
+            ['locale' => $locale]
+        );
+        $this->assertEquals(200, $fetched['headers']['status-code']);
+        $this->assertSame($subject, $fetched['body']['subject']);
+        $this->assertSame($message, $fetched['body']['message']);
+        $this->assertSame('Template Sender', $fetched['body']['senderName']);
+        $this->assertSame('tpl-sender@example.com', $fetched['body']['senderEmail']);
+        $this->assertSame('reply@example.com', $fetched['body']['replyToEmail']);
+        $this->assertSame('Reply Team', $fetched['body']['replyToName']);
+
+        // Reset both projects so the test is idempotent.
+        $this->client->call(Client::METHOD_PATCH, '/project/smtp', $sourceKeyHeaders, ['enabled' => false]);
+        $this->client->call(Client::METHOD_PATCH, '/project/smtp', $destinationKeyHeaders, ['enabled' => false]);
+    }
+
     /**
      * Import documents from a CSV file.
      */
