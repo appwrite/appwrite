@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "5d6823938d39a2ddbd3c40ada5fca362",
+    "content-hash": "0c23c30bba86ad84377d4d1abce0992a",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -4658,16 +4658,16 @@
         },
         {
             "name": "utopia-php/migration",
-            "version": "dev-add-oauth-providers-migration",
+            "version": "1.13.2",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/migration.git",
-                "reference": "dede00a186d30265318c7d7e82c85907584878ca"
+                "reference": "50526e121efcf73e11309446f194623a431d7e32"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/migration/zipball/dede00a186d30265318c7d7e82c85907584878ca",
-                "reference": "dede00a186d30265318c7d7e82c85907584878ca",
+                "url": "https://api.github.com/repos/utopia-php/migration/zipball/50526e121efcf73e11309446f194623a431d7e32",
+                "reference": "50526e121efcf73e11309446f194623a431d7e32",
                 "shasum": ""
             },
             "require": {
@@ -4707,9 +4707,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/migration/issues",
-                "source": "https://github.com/utopia-php/migration/tree/add-oauth-providers-migration"
+                "source": "https://github.com/utopia-php/migration/tree/1.13.2"
             },
-            "time": "2026-06-03T12:59:34+00:00"
+            "time": "2026-06-04T05:09:07+00:00"
         },
         {
             "name": "utopia-php/mongo",
@@ -8574,8 +8574,7 @@
     "aliases": [],
     "minimum-stability": "dev",
     "stability-flags": {
-        "utopia-php/http": 5,
-        "utopia-php/migration": 20
+        "utopia-php/http": 5
     },
     "prefer-stable": true,
     "prefer-lowest": false,
