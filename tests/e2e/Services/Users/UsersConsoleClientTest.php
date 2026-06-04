@@ -161,25 +161,14 @@ class UsersConsoleClientTest extends Scope
         $this->assertEquals($targetId, $byCamelParam['body']['$id']);
         $this->assertEquals($actorId, $byCamelParam['body']['impersonatorUserId']);
 
-        // Header takes priority over query param when both are present
-        $actorId2 = ID::unique();
-        $actor2 = $this->client->call(Client::METHOD_POST, '/users', $headers, [
-            'userId' => $actorId2,
-            'email' => 'impersonator2-' . $actorId2 . '@example.com',
-            'password' => 'password123',
-            'name' => 'Impersonator2',
-        ]);
-        $this->assertEquals(201, $actor2['headers']['status-code']);
-
-        $this->client->call(Client::METHOD_PATCH, '/users/' . $actorId . '/impersonator', $headers, [
-            'impersonator' => true,
-        ]);
-
+        // Header takes priority over query param when both are present.
+        // Pass actorId as the decoy in ?impersonateuserid= and targetId in the header —
+        // the response must be targetId, not actorId.
         $priority = $this->client->call(
             Client::METHOD_GET,
             '/account',
             array_merge($sessionHeaders, ['x-appwrite-impersonate-user-id' => $targetId]),
-            ['impersonateuserid' => $actorId2]
+            ['impersonateuserid' => $actorId]
         );
         $this->assertEquals(200, $priority['headers']['status-code']);
         $this->assertEquals($targetId, $priority['body']['$id'], 'header must take priority over query param');
