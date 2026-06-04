@@ -373,12 +373,12 @@ class Swagger2 extends Format
 
                 // For location-type methods, browsers cannot carry custom headers on resource
                 // requests (img src, href), so impersonation must fall back to a URL query param.
-                // ImpersonateUserId is appended after the authCount slice because it is a platform
+                // Impersonation is appended after the authCount slice because it is a platform
                 // key, not an SDK auth type — authCount governs auth types, not platform context headers.
-                // This causes the SDK to append ?impersonateuserid= to file view/preview/download URLs.
-                if ($sdk->getType() === MethodType::LOCATION && \array_key_exists('ImpersonateUserId', $this->keys)) {
-                    $securities['ImpersonateUserId'] = [];
-                    $temp['x-appwrite']['auth']['ImpersonateUserId'] = [];
+                // This causes the SDK to append ?impersonation= to file view/preview/download URLs.
+                if ($sdk->getType() === MethodType::LOCATION && \array_key_exists('Impersonation', $this->keys)) {
+                    $securities['Impersonation'] = [];
+                    $temp['x-appwrite']['auth']['Impersonation'] = [];
                 }
 
                 $temp['security'][] = $securities;
