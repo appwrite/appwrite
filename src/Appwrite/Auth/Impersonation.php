@@ -21,6 +21,6 @@ class Impersonation
             fn () => $db->getDocument('users', $userId)
         );
 
-        return ($user === null || $user->isEmpty()) ? null : $user;
+        return $user->isEmpty() ? null : $user;
     }
 }
