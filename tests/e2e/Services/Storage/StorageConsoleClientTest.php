@@ -232,7 +232,6 @@ class StorageConsoleClientTest extends Scope
             'name' => 'Impersonation Test Bucket',
             'fileSecurity' => true,
             'permissions' => [
-                Permission::read(Role::any()),
                 Permission::create(Role::any()),
             ],
         ]);
