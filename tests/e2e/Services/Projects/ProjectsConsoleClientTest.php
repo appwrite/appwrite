@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Tests\E2E\Services\Projects;
 
 use Appwrite\Extend\Exception;
@@ -17,7 +19,7 @@ use Utopia\Database\Helpers\Role;
 use Utopia\Database\Query;
 use Utopia\System\System;
 
-class ProjectsConsoleClientTest extends Scope
+final class ProjectsConsoleClientTest extends Scope
 {
     use ProjectsBase;
     use ProjectConsole;
@@ -381,7 +383,7 @@ class ProjectsConsoleClientTest extends Scope
             'search' => 'Project Test'
         ]));
 
-        $this->assertEquals($response['headers']['status-code'], 200);
+        $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertGreaterThan(0, $response['body']['total']);
         $this->assertIsArray($response['body']['projects']);
 
@@ -2040,7 +2042,7 @@ class ProjectsConsoleClientTest extends Scope
         });
         $this->assertEquals('Fallback sign-in alert', $lastEmail['subject']);
         $this->assertEquals('Fallback Mailer', $lastEmail['from'][0]['name']);
-        $this->assertStringContainsString('Fallback sign-in alert body', $lastEmail['html']);
+        $this->assertStringContainsString('Fallback sign-in alert body', (string) $lastEmail['html']);
 
         /** Create a new session with German locale — expect fallback (en) template */
         $response = $this->client->call(Client::METHOD_POST, '/account/sessions/email', [
@@ -2060,7 +2062,7 @@ class ProjectsConsoleClientTest extends Scope
         });
         $this->assertEquals('Fallback sign-in alert', $lastEmail['subject']);
         $this->assertEquals('Fallback Mailer', $lastEmail['from'][0]['name']);
-        $this->assertStringContainsString('Fallback sign-in alert body', $lastEmail['html']);
+        $this->assertStringContainsString('Fallback sign-in alert body', (string) $lastEmail['html']);
 
         /** Create a new session with Slovak locale — expect Slovak template */
         $response = $this->client->call(Client::METHOD_POST, '/account/sessions/email', [
@@ -2080,7 +2082,7 @@ class ProjectsConsoleClientTest extends Scope
         });
         $this->assertEquals('Slovak sign-in alert', $lastEmail['subject']);
         $this->assertEquals('Slovak Mailer', $lastEmail['from'][0]['name']);
-        $this->assertStringContainsString('Slovak sign-in alert body', $lastEmail['html']);
+        $this->assertStringContainsString('Slovak sign-in alert body', (string) $lastEmail['html']);
 
         /** Cleanup — delete the project */
         $response = $this->client->call(Client::METHOD_DELETE, '/projects/' . $projectId, array_merge([
@@ -2536,7 +2538,7 @@ class ProjectsConsoleClientTest extends Scope
             'name' => $name,
         ]);
 
-        $this->assertEquals($response['headers']['status-code'], 501);
+        $this->assertEquals(501, $response['headers']['status-code']);
 
         $response = $this->client->call(Client::METHOD_POST, '/teams', array_merge([
             'content-type' => 'application/json',
@@ -2562,7 +2564,7 @@ class ProjectsConsoleClientTest extends Scope
             'url' => 'http://localhost:5000/join-us#title'
         ]);
 
-        $this->assertEquals($response['headers']['status-code'], 501);
+        $this->assertEquals(501, $response['headers']['status-code']);
 
         $response = $this->client->call(Client::METHOD_POST, '/account/jwt', array_merge([
             'content-type' => 'application/json',
@@ -2570,7 +2572,7 @@ class ProjectsConsoleClientTest extends Scope
             'cookie' => 'a_session_' . $id . '=' . $session,
         ]));
 
-        $this->assertEquals($response['headers']['status-code'], 501);
+        $this->assertEquals(501, $response['headers']['status-code']);
 
         $response = $this->client->call(Client::METHOD_POST, '/account/sessions/email', array_merge([
             'origin' => 'http://localhost',
@@ -2581,7 +2583,7 @@ class ProjectsConsoleClientTest extends Scope
             'password' => $originalPassword,
         ]);
 
-        $this->assertEquals($response['headers']['status-code'], 501);
+        $this->assertEquals(501, $response['headers']['status-code']);
 
         $response = $this->client->call(Client::METHOD_POST, '/account/sessions/anonymous', array_merge([
             'origin' => 'http://localhost',
@@ -2589,7 +2591,7 @@ class ProjectsConsoleClientTest extends Scope
             'x-appwrite-project' => $id,
         ]));
 
-        $this->assertEquals($response['headers']['status-code'], 501);
+        $this->assertEquals(501, $response['headers']['status-code']);
 
         // Cleanup
 
@@ -2715,7 +2717,7 @@ class ProjectsConsoleClientTest extends Scope
             'name' => $name,
         ]);
 
-        $this->assertEquals($response['headers']['status-code'], 201);
+        $this->assertEquals(201, $response['headers']['status-code']);
     }
 
     public function testUpdateProjectAuthSessionsLimit(): void
@@ -3029,7 +3031,7 @@ class ProjectsConsoleClientTest extends Scope
         $this->assertEquals(201, $response['headers']['status-code']);
 
         $lastEmail = $this->getLastEmailByAddress($email, function ($email) {
-            $this->assertStringContainsString('Password Reset', $email['subject']);
+            $this->assertStringContainsString('Password Reset', (string) $email['subject']);
         });
         $tokens = $this->extractQueryParamsFromEmailLink($lastEmail['html']);
 
@@ -3230,7 +3232,7 @@ class ProjectsConsoleClientTest extends Scope
         ]);
 
         $this->assertEquals(400, $response['headers']['status-code']);
-        $this->assertStringContainsString('Value must a valid array no longer than 10 items', $response['body']['message']);
+        $this->assertStringContainsString('Value must a valid array no longer than 10 items', (string) $response['body']['message']);
 
         /**
          * Test for success
@@ -6723,7 +6725,7 @@ class ProjectsConsoleClientTest extends Scope
             'error_description' => '',
         ], followRedirects: false);
         $this->assertEquals(400, $response['headers']['status-code']);
-        $this->assertStringContainsString('project_invalid_success_url', $response['body']);
+        $this->assertStringContainsString('project_invalid_success_url', (string) $response['body']);
 
         // Ensure rule's domain can be redirect URL
         $response = $this->client->call(Client::METHOD_GET, '/account/sessions/oauth2/' . $provider, [
@@ -6753,7 +6755,7 @@ class ProjectsConsoleClientTest extends Scope
             'error_deescription' => '',
         ], followRedirects: false);
         $this->assertEquals(301, $response['headers']['status-code']);
-        $this->assertStringContainsString('https://' . $domain, $response['headers']['location']);
+        $this->assertStringContainsString('https://' . $domain, (string) $response['headers']['location']);
 
         // Ensure unknown domain cannot be redirect URL
         $response = $this->client->call(Client::METHOD_POST, '/account/sessions/magic-url', [
@@ -6828,7 +6830,7 @@ class ProjectsConsoleClientTest extends Scope
 
         $this->assertEquals(301, $response['headers']['status-code']);
         $this->assertStringStartsWith($scheme . '://', $response['headers']['location']);
-        $this->assertStringContainsString('error=', $response['headers']['location']);
+        $this->assertStringContainsString('error=', (string) $response['headers']['location']);
     }
 
     #[Group('abuseEnabled')]
@@ -7818,14 +7820,14 @@ class ProjectsConsoleClientTest extends Scope
         $userEmail = $this->getUser()['email'];
 
         $lastEmail = $this->getLastEmailByAddress($userEmail, function ($email) use ($url) {
-            $this->assertStringContainsString($url, $email['html'] ?? '');
+            $this->assertStringContainsString($url, (string) ($email['html'] ?? ''));
         });
 
         $this->assertEquals('Password Reset for ' . $this->getProject()['name'], $lastEmail['subject']);
 
         $expectedUrl = $url . "&userId=" . $userId . "&secret=";
 
-        $this->assertStringContainsString($expectedUrl, $lastEmail['html']);
+        $this->assertStringContainsString($expectedUrl, (string) $lastEmail['html']);
 
         // With search params, with mobile backlink
         $url = 'appwriteio://signin?id=abcd1234&tenant=efgh5678&domain=example.com&referred=0';
@@ -7850,14 +7852,14 @@ class ProjectsConsoleClientTest extends Scope
         $userId = $response['body']['userId'];
 
         $lastEmail = $this->getLastEmailByAddress($userEmail, function ($email) use ($url) {
-            $this->assertStringContainsString($url, $email['html'] ?? '');
+            $this->assertStringContainsString($url, (string) ($email['html'] ?? ''));
         });
 
         $this->assertEquals('Password Reset for ' . $this->getProject()['name'], $lastEmail['subject']);
 
         $expectedUrl = $url . "&userId=" . $userId . "&secret=";
 
-        $this->assertStringContainsString($expectedUrl, $lastEmail['html']);
+        $this->assertStringContainsString($expectedUrl, (string) $lastEmail['html']);
 
         // Without search params
         $url = 'http://localhost/auth/signin';
@@ -7882,14 +7884,14 @@ class ProjectsConsoleClientTest extends Scope
         $userId = $response['body']['userId'];
 
         $lastEmail = $this->getLastEmailByAddress($userEmail, function ($email) use ($url, $userId) {
-            $this->assertStringContainsString($url . '?userId=' . $userId, $email['html'] ?? '');
+            $this->assertStringContainsString($url . '?userId=' . $userId, (string) ($email['html'] ?? ''));
         });
 
         $this->assertEquals('Password Reset for ' . $this->getProject()['name'], $lastEmail['subject']);
 
         $expectedUrl = $url . "?userId=" . $userId . "&secret=";
 
-        $this->assertStringContainsString($expectedUrl, $lastEmail['html']);
+        $this->assertStringContainsString($expectedUrl, (string) $lastEmail['html']);
 
         // Without search params, with mobile backlink
         $url = 'appwriteio://signin';
@@ -7914,14 +7916,14 @@ class ProjectsConsoleClientTest extends Scope
         $userId = $response['body']['userId'];
 
         $lastEmail = $this->getLastEmailByAddress($userEmail, function ($email) use ($url, $userId) {
-            $this->assertStringContainsString($url . '?userId=' . $userId, $email['html'] ?? '');
+            $this->assertStringContainsString($url . '?userId=' . $userId, (string) ($email['html'] ?? ''));
         });
 
         $this->assertEquals('Password Reset for ' . $this->getProject()['name'], $lastEmail['subject']);
 
         $expectedUrl = $url . "?userId=" . $userId . "&secret=";
 
-        $this->assertStringContainsString($expectedUrl, $lastEmail['html']);
+        $this->assertStringContainsString($expectedUrl, (string) $lastEmail['html']);
 
         // With injection (allowed, meant to be protected client-side)
         $url = 'http://localhost/auth/signin\"></a><h1>INJECTED</h1>';
@@ -7946,19 +7948,19 @@ class ProjectsConsoleClientTest extends Scope
         $userId = $response['body']['userId'];
 
         $lastEmail = $this->getLastEmailByAddress($userEmail, function ($email) {
-            $this->assertStringContainsString('INJECTED', $email['html'] ?? '');
+            $this->assertStringContainsString('INJECTED', (string) ($email['html'] ?? ''));
         });
 
         $this->assertEquals('Password Reset for ' . $this->getProject()['name'], $lastEmail['subject']);
 
-        $this->assertStringContainsString('INJECTED', $lastEmail['html']);
-        $this->assertStringContainsString('<h1>', $lastEmail['html']);
-        $this->assertStringContainsString('</h1>', $lastEmail['html']);
-        $this->assertStringContainsString('">', $lastEmail['html']);
-        $this->assertStringContainsString('</a>', $lastEmail['html']);
+        $this->assertStringContainsString('INJECTED', (string) $lastEmail['html']);
+        $this->assertStringContainsString('<h1>', (string) $lastEmail['html']);
+        $this->assertStringContainsString('</h1>', (string) $lastEmail['html']);
+        $this->assertStringContainsString('">', (string) $lastEmail['html']);
+        $this->assertStringContainsString('</a>', (string) $lastEmail['html']);
 
         $expectedUrl = $url . "?userId=" . $userId . "&secret=";
-        $this->assertStringContainsString($expectedUrl, $lastEmail['html']);
+        $this->assertStringContainsString($expectedUrl, (string) $lastEmail['html']);
 
     }
 }

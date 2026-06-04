@@ -1,11 +1,13 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Tests\Unit\Migration;
 
 use Appwrite\Migration\Migration;
 use PHPUnit\Framework\TestCase;
 
-class MigrationVersionsTest extends TestCase
+final class MigrationVersionsTest extends TestCase
 {
     /**
      * Check versions array integrity.

@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Tests\Unit\Advisor;
 
 use Appwrite\Platform\Modules\Advisor\Http\Insights\Get as GetInsight;
@@ -13,7 +15,7 @@ use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use Utopia\Platform\Action;
 
-class AuthTest extends TestCase
+final class AuthTest extends TestCase
 {
     #[DataProvider('advisorActionsProvider')]
     public function testAdvisorApisOnlySupportAdminAndKeyAuth(Action $action): void
@@ -24,14 +26,12 @@ class AuthTest extends TestCase
         $this->assertSame([AuthType::ADMIN, AuthType::KEY], $method->getAuth());
     }
 
-    public static function advisorActionsProvider(): array
+    public static function advisorActionsProvider(): \Iterator
     {
-        return [
-            'get report' => [new GetReport()],
-            'list reports' => [new ListReports()],
-            'delete report' => [new DeleteReport()],
-            'get insight' => [new GetInsight()],
-            'list insights' => [new ListInsights()],
-        ];
+        yield 'get report' => [new GetReport()];
+        yield 'list reports' => [new ListReports()];
+        yield 'delete report' => [new DeleteReport()];
+        yield 'get insight' => [new GetInsight()];
+        yield 'list insights' => [new ListInsights()];
     }
 }
