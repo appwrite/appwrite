@@ -41,6 +41,10 @@ import {
   trackPageView,
 } from '@/lib/analytics'
 import { useGlobalAnalyticsTracker } from '@/hooks/use-global-analytics-tracker'
+import {
+  getConsoleRouteIds,
+  withPageTitleNameContext,
+} from '@/lib/utils/page-title'
 
 interface MyRouterContext {
   queryClient: QueryClient
@@ -270,6 +274,51 @@ function PlausibleRouteTracker() {
   return null
 }
 
+function ContextualDocumentTitle() {
+  const location = useLocation()
+  const queryClient = useQueryClient()
+  const [previousContextPart, setPreviousContextPart] = useState<
+    string | undefined
+  >()
+  useMatches()
+
+  useEffect(() => {
+    if (typeof document === 'undefined') return
+
+    const { projectId, orgId } = getConsoleRouteIds(location.pathname)
+    const project = projectId
+      ? (queryClient.getQueryData(['project', projectId]) as
+          | { name?: string }
+          | undefined)
+      : undefined
+    const organization = orgId
+      ? (queryClient.getQueryData(['organization', orgId]) as
+          | { name?: string }
+          | undefined) ??
+        (
+          queryClient.getQueryData(['organizations', 'console']) as
+            | { teams?: { $id?: string; name?: string }[] }
+            | undefined
+        )?.teams?.find((team) => team.$id === orgId)
+      : undefined
+    const contextPart = project?.name ?? organization?.name
+
+    const nextTitle = withPageTitleNameContext(document.title, {
+      projectName: project?.name,
+      organizationName: organization?.name,
+      previousContextPart,
+    })
+    if (document.title !== nextTitle) {
+      document.title = nextTitle
+    }
+    if (previousContextPart !== contextPart) {
+      setPreviousContextPart(contextPart)
+    }
+  })
+
+  return null
+}
+
 /** When true, upload progress is shown by the project layout unified panel instead of root */
 function isProjectRoute(pathname: string) {
   const parts = pathname.split('/').filter(Boolean)
@@ -334,6 +383,7 @@ function RootDocument({ children }: { children: React.ReactNode }) {
         <DynamicFavicon />
         <UploadWarning />
         <PlausibleRouteTracker />
+        <ContextualDocumentTitle />
         <ClientThemeProvider>
           <NavigationHistoryProvider>
             {/* Show branded loader (logo + 2.0) from first paint; avoid route "Loading..." flash.
