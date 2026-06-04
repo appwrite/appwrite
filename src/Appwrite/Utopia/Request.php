@@ -283,11 +283,6 @@ class Request extends UtopiaRequest
         $this->user = $user;
     }
 
-    /**
-     * Returns the impersonation value from the X-Appwrite-Impersonation header,
-     * falling back to the ?impersonation= query param. Used by both the HTTP and
-     * realtime paths so browsers can embed it in URLs where headers cannot be set.
-     */
     public function getImpersonation(): string
     {
         return $this->getHeader('x-appwrite-impersonation', (string)$this->getParam('impersonation', ''));

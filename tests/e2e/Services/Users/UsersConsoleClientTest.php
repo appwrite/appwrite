@@ -93,12 +93,11 @@ class UsersConsoleClientTest extends Scope
         // Create the acting user (will become impersonator)
         $actorId = ID::unique();
         $actorEmail = 'impersonator-' . $actorId . '@example.com';
-        $actorPassword = 'password123';
 
         $actor = $this->client->call(Client::METHOD_POST, '/users', $headers, [
             'userId' => $actorId,
             'email' => $actorEmail,
-            'password' => $actorPassword,
+            'password' => 'password123',
             'name' => 'Impersonator User',
         ]);
         $this->assertEquals(201, $actor['headers']['status-code']);
@@ -121,6 +120,11 @@ class UsersConsoleClientTest extends Scope
             'number' => $targetPhone,
         ]);
 
+        // Confirm target has never been accessed — accessedAt is empty on a fresh user.
+        // After impersonated requests it must remain empty: if the guard were removed,
+        // the first impersonated request would set it, making this assertion fail.
+        $this->assertEmpty($target['body']['accessedAt']);
+
         // Grant impersonator capability — should reflect in response
         $grant = $this->client->call(Client::METHOD_PATCH, '/users/' . $actorId . '/impersonator', $headers, [
             'impersonator' => true,
@@ -128,23 +132,16 @@ class UsersConsoleClientTest extends Scope
         $this->assertEquals(200, $grant['headers']['status-code']);
         $this->assertTrue($grant['body']['impersonator']);
 
-        // Create a session for the actor so they can make authenticated client requests
-        $session = $this->client->call(Client::METHOD_POST, '/account/sessions/email', [
-            'origin' => 'http://localhost',
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $projectId,
-        ], [
-            'email' => $actorEmail,
-            'password' => $actorPassword,
-        ]);
+        // Create a server-side session for the actor (avoids email verification requirements)
+        $session = $this->client->call(Client::METHOD_POST, '/users/' . $actorId . '/sessions', $headers);
         $this->assertEquals(201, $session['headers']['status-code']);
-        $sessionCookie = 'a_session_' . $projectId . '=' . $session['cookies']['a_session_' . $projectId];
+        $sessionSecret = $session['body']['secret'];
 
         $actorHeaders = [
             'origin' => 'http://localhost',
             'content-type' => 'application/json',
             'x-appwrite-project' => $projectId,
-            'cookie' => $sessionCookie,
+            'x-appwrite-session' => $sessionSecret,
         ];
 
         // Impersonate by user ID via header — GET /account should return the target
@@ -154,7 +151,6 @@ class UsersConsoleClientTest extends Scope
         $this->assertEquals(200, $accountAsTarget['headers']['status-code']);
         $this->assertEquals($targetId, $accountAsTarget['body']['$id']);
         $this->assertEquals($targetEmail, $accountAsTarget['body']['email']);
-        $this->assertNotEmpty($accountAsTarget['body']['impersonatorUserId']);
         $this->assertEquals($actorId, $accountAsTarget['body']['impersonatorUserId']);
 
         // Impersonate by email via header
@@ -178,10 +174,16 @@ class UsersConsoleClientTest extends Scope
         $this->assertEquals(200, $accountByParam['headers']['status-code']);
         $this->assertEquals($targetId, $accountByParam['body']['$id']);
 
-        // accessedAt on the target should not have changed after impersonated requests
+        // accessedAt on target must still be empty — impersonated requests must not mark activity
         $targetAfter = $this->client->call(Client::METHOD_GET, '/users/' . $targetId, $headers);
         $this->assertEquals(200, $targetAfter['headers']['status-code']);
-        $this->assertEquals($target['body']['accessedAt'], $targetAfter['body']['accessedAt']);
+        $this->assertEmpty($targetAfter['body']['accessedAt']);
+
+        // Unknown impersonation value must return 404, not silently fall back
+        $notFound = $this->client->call(Client::METHOD_GET, '/account', array_merge($actorHeaders, [
+            'x-appwrite-impersonation' => 'nonexistent-user-id',
+        ]));
+        $this->assertEquals(404, $notFound['headers']['status-code']);
 
         // Without impersonator flag — header must be ignored, actor sees their own account
         $revoke = $this->client->call(Client::METHOD_PATCH, '/users/' . $actorId . '/impersonator', $headers, [

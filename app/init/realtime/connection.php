@@ -2,6 +2,7 @@
 
 use Ahc\Jwt\JWT;
 use Ahc\Jwt\JWTException;
+use Appwrite\Auth\Impersonation;
 use Appwrite\Extend\Exception;
 use Appwrite\Network\Platform;
 use Appwrite\Network\Validator\Origin;
@@ -328,28 +329,16 @@ return function (Container $container): void {
         }
 
         // Impersonation: if current user has impersonator capability and header/param is set, act as another user.
-        // The value is tried as a user ID first, then email, then phone.
         $impersonation = $request->getImpersonation();
 
         if (!$user->isEmpty() && $user->getAttribute('impersonator', false)) {
             $userDb = ($mode === APP_MODE_ADMIN || $project->getId() === 'console') ? $dbForPlatform : $dbForProject;
-            $targetUser = null;
 
             if (!empty($impersonation)) {
-                $targetUser = $authorization->skip(fn () => $userDb->getDocument('users', $impersonation));
-                if ($targetUser === null || $targetUser->isEmpty()) {
-                    $targetUser = $authorization->skip(fn () => $userDb->findOne('users', [
-                        Query::equal('email', [\strtolower($impersonation)]),
-                    ]));
+                $targetUser = Impersonation::resolveUser($impersonation, $userDb);
+                if ($targetUser === null) {
+                    throw new Exception(Exception::USER_NOT_FOUND, 'Impersonation target user not found.');
                 }
-                if ($targetUser === null || $targetUser->isEmpty()) {
-                    $targetUser = $authorization->skip(fn () => $userDb->findOne('users', [
-                        Query::equal('phone', [$impersonation]),
-                    ]));
-                }
-            }
-
-            if ($targetUser !== null && !$targetUser->isEmpty()) {
                 $impersonator = clone $user;
                 $user = clone $targetUser;
                 $user->setAttribute('impersonatorUserId', $impersonator->getId());
