@@ -1,9 +1,5 @@
 import type { MarketplaceApp } from '@/lib/marketplace/mock-data'
-import {
-  MARKETPLACE_CATEGORY_ICONS,
-  MARKETPLACE_CATEGORY_LABELS,
-  formatMarketplaceCreators,
-} from '@/lib/marketplace/mock-data'
+import { MARKETPLACE_CATEGORY_ICONS } from '@/lib/marketplace/mock-data'
 import { ResourceCard } from '@/components/pages/projects/$projectId/shared/ResourceCard'
 import { MarketplaceAppBadges } from './MarketplaceAppBadges'
 
@@ -36,16 +32,6 @@ export function MarketplaceAppCard({ app, onClick }: MarketplaceAppCardProps) {
       subtitle={app.shortDescription}
       icon={CategoryIcon}
       onClick={onClick}
-      metadata={[
-        {
-          label: 'Category',
-          value: MARKETPLACE_CATEGORY_LABELS[app.category],
-        },
-        {
-          label: 'Creators',
-          value: formatMarketplaceCreators(app.creators),
-        },
-      ]}
       statusLabel={app.isOwned ? statusLabel(app.status) : undefined}
       status={app.isOwned ? statusVariant(app.status) : undefined}
     />
