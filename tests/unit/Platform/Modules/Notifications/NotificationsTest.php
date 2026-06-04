@@ -56,22 +56,22 @@ class NotificationsTest extends TestCase
         ];
 
         $this->database->create();
-        $this->database->createCollection('alerts', [], [], $permissions, false);
-        $this->database->createAttribute('alerts', 'messageId', Database::VAR_STRING, 255, false);
-        $this->database->createAttribute('alerts', 'recipientHash', Database::VAR_STRING, 64, true);
-        $this->database->createAttribute('alerts', 'type', Database::VAR_STRING, 64, false, 'info');
-        $this->database->createAttribute('alerts', 'channel', Database::VAR_STRING, 64, true);
-        $this->database->createAttribute('alerts', 'projectId', Database::VAR_STRING, 255, true);
-        $this->database->createAttribute('alerts', 'projectInternalId', Database::VAR_ID, 0, true);
-        $this->database->createAttribute('alerts', 'resourceType', Database::VAR_STRING, 64, true);
-        $this->database->createAttribute('alerts', 'resourceId', Database::VAR_STRING, 255, true);
-        $this->database->createAttribute('alerts', 'resourceInternalId', Database::VAR_ID, 0, true);
-        $this->database->createAttribute('alerts', 'parentResourceType', Database::VAR_STRING, 64, true);
-        $this->database->createAttribute('alerts', 'parentResourceId', Database::VAR_STRING, 255, true);
-        $this->database->createAttribute('alerts', 'parentResourceInternalId', Database::VAR_ID, 0, true);
-        $this->database->createAttribute('alerts', 'title', Database::VAR_STRING, 256, true);
-        $this->database->createAttribute('alerts', 'body', Database::VAR_STRING, 16384, true);
-        $this->database->createAttribute('alerts', 'read', Database::VAR_BOOLEAN, 0, false, false);
+        $this->database->createCollection('notifications', [], [], $permissions, false);
+        $this->database->createAttribute('notifications', 'messageId', Database::VAR_STRING, 255, false);
+        $this->database->createAttribute('notifications', 'recipientHash', Database::VAR_STRING, 64, true);
+        $this->database->createAttribute('notifications', 'type', Database::VAR_STRING, 64, false, 'info');
+        $this->database->createAttribute('notifications', 'channel', Database::VAR_STRING, 64, true);
+        $this->database->createAttribute('notifications', 'projectId', Database::VAR_STRING, 255, true);
+        $this->database->createAttribute('notifications', 'projectInternalId', Database::VAR_ID, 0, true);
+        $this->database->createAttribute('notifications', 'resourceType', Database::VAR_STRING, 64, true);
+        $this->database->createAttribute('notifications', 'resourceId', Database::VAR_STRING, 255, true);
+        $this->database->createAttribute('notifications', 'resourceInternalId', Database::VAR_ID, 0, true);
+        $this->database->createAttribute('notifications', 'parentResourceType', Database::VAR_STRING, 64, true);
+        $this->database->createAttribute('notifications', 'parentResourceId', Database::VAR_STRING, 255, true);
+        $this->database->createAttribute('notifications', 'parentResourceInternalId', Database::VAR_ID, 0, true);
+        $this->database->createAttribute('notifications', 'title', Database::VAR_STRING, 256, true);
+        $this->database->createAttribute('notifications', 'body', Database::VAR_STRING, 16384, true);
+        $this->database->createAttribute('notifications', 'read', Database::VAR_BOOLEAN, 0, false, false);
     }
 
     protected function tearDown(): void
@@ -105,7 +105,7 @@ class NotificationsTest extends TestCase
 
     private function createNotification(string $id, string $resourceType, string $resourceId): Document
     {
-        return $this->database->createDocument('alerts', new Document([
+        return $this->database->createDocument('notifications', new Document([
             '$id' => $id,
             'messageId' => $id,
             'recipientHash' => \substr(\md5($id), 0, 16),

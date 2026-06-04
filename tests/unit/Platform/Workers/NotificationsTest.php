@@ -170,35 +170,35 @@ class NotificationsTest extends TestCase
 
         $this->database->create();
         $this->database->createCollection(
-            'alerts',
+            'notifications',
             [],
             [],
             [Permission::create(Role::any()), Permission::read(Role::any()), Permission::update(Role::any()), Permission::delete(Role::any())],
             false,
         );
-        $this->database->createAttribute('alerts', 'messageId', Database::VAR_STRING, 255, false);
-        $this->database->createAttribute('alerts', 'recipientHash', Database::VAR_STRING, 64, true);
-        $this->database->createAttribute('alerts', 'type', Database::VAR_STRING, 64, false, 'info');
-        $this->database->createAttribute('alerts', 'channel', Database::VAR_STRING, 64, true);
-        $this->database->createAttribute('alerts', 'projectId', Database::VAR_STRING, 255, true);
-        $this->database->createAttribute('alerts', 'projectInternalId', Database::VAR_ID, 0, true);
-        $this->database->createAttribute('alerts', 'resourceType', Database::VAR_STRING, 64, true);
-        $this->database->createAttribute('alerts', 'resourceId', Database::VAR_STRING, 255, true);
-        $this->database->createAttribute('alerts', 'resourceInternalId', Database::VAR_ID, 0, true);
-        $this->database->createAttribute('alerts', 'parentResourceType', Database::VAR_STRING, 64, true);
-        $this->database->createAttribute('alerts', 'parentResourceId', Database::VAR_STRING, 255, true);
-        $this->database->createAttribute('alerts', 'parentResourceInternalId', Database::VAR_ID, 0, true);
-        $this->database->createAttribute('alerts', 'title', Database::VAR_STRING, 256, true);
-        $this->database->createAttribute('alerts', 'body', Database::VAR_STRING, 16384, true);
-        $this->database->createAttribute('alerts', 'read', Database::VAR_BOOLEAN, 0, false, false);
-        $this->database->createAttribute('alerts', 'firstSeen', Database::VAR_DATETIME, 0, false);
-        $this->database->createAttribute('alerts', 'lastSeen', Database::VAR_DATETIME, 0, false);
+        $this->database->createAttribute('notifications', 'messageId', Database::VAR_STRING, 255, false);
+        $this->database->createAttribute('notifications', 'recipientHash', Database::VAR_STRING, 64, true);
+        $this->database->createAttribute('notifications', 'type', Database::VAR_STRING, 64, false, 'info');
+        $this->database->createAttribute('notifications', 'channel', Database::VAR_STRING, 64, true);
+        $this->database->createAttribute('notifications', 'projectId', Database::VAR_STRING, 255, true);
+        $this->database->createAttribute('notifications', 'projectInternalId', Database::VAR_ID, 0, true);
+        $this->database->createAttribute('notifications', 'resourceType', Database::VAR_STRING, 64, true);
+        $this->database->createAttribute('notifications', 'resourceId', Database::VAR_STRING, 255, true);
+        $this->database->createAttribute('notifications', 'resourceInternalId', Database::VAR_ID, 0, true);
+        $this->database->createAttribute('notifications', 'parentResourceType', Database::VAR_STRING, 64, true);
+        $this->database->createAttribute('notifications', 'parentResourceId', Database::VAR_STRING, 255, true);
+        $this->database->createAttribute('notifications', 'parentResourceInternalId', Database::VAR_ID, 0, true);
+        $this->database->createAttribute('notifications', 'title', Database::VAR_STRING, 256, true);
+        $this->database->createAttribute('notifications', 'body', Database::VAR_STRING, 16384, true);
+        $this->database->createAttribute('notifications', 'read', Database::VAR_BOOLEAN, 0, false, false);
+        $this->database->createAttribute('notifications', 'firstSeen', Database::VAR_DATETIME, 0, false);
+        $this->database->createAttribute('notifications', 'lastSeen', Database::VAR_DATETIME, 0, false);
 
         // Mirror the production `_key_recipient` UNIQUE composite index so the
         // duplicate-handling branch in persistAlert (catch DuplicateException ->
         // return existing alertId) is actually exercised by tests.
         $this->database->createIndex(
-            'alerts',
+            'notifications',
             '_key_recipient',
             Database::INDEX_UNIQUE,
             ['messageId', 'channel', 'recipientHash'],
@@ -311,7 +311,7 @@ class NotificationsTest extends TestCase
 
         $worker->action($this->buildMessage($payload), $this->project, $this->registry, $this->database, $this->log);
 
-        $rows = $this->database->find('alerts');
+        $rows = $this->database->find('notifications');
         $this->assertCount(2, $rows);
         $resourceIds = \array_map(static fn (Document $row) => $row->getAttribute('resourceId'), $rows);
         \sort($resourceIds);
@@ -525,7 +525,7 @@ class NotificationsTest extends TestCase
         $this->assertSame(NOTIFICATION_TYPE_WEBHOOK, $tags['channel'] ?? null);
         $this->assertSame('boom', $tags['error'] ?? null);
 
-        $rows = $this->database->find('alerts');
+        $rows = $this->database->find('notifications');
         $this->assertCount(0, $rows, 'failed dispatch must not persist alert');
     }
 
@@ -553,7 +553,7 @@ class NotificationsTest extends TestCase
             $this->assertSame('webhook down', $error->getMessage());
         }
 
-        $rows = $this->database->find('alerts', [
+        $rows = $this->database->find('notifications', [
             Query::equal('messageId', [$messageId]),
         ]);
         $this->assertCount(1, $rows, 'first attempt should persist only the successful console recipient');
@@ -565,7 +565,7 @@ class NotificationsTest extends TestCase
         $this->assertCount(1, $retry->dispatched, 'retry should dispatch only the previously undelivered webhook');
         $this->assertSame(NOTIFICATION_TYPE_WEBHOOK, $retry->dispatched[0]['channel']);
 
-        $rows = $this->database->find('alerts', [
+        $rows = $this->database->find('notifications', [
             Query::equal('messageId', [$messageId]),
         ]);
         $this->assertCount(2, $rows, 'retry must complete the missing recipient without duplicating console');
@@ -590,7 +590,7 @@ class NotificationsTest extends TestCase
         // The Console adapter wrote exactly one alert; the action loop
         // must NOT have called persistAlert (otherwise we'd see 2 rows or
         // a duplicate-key swallow plus a non-zero counter).
-        $consoleRows = $this->database->find('alerts', [
+        $consoleRows = $this->database->find('notifications', [
             Query::equal('channel', ['console']),
         ]);
         $this->assertCount(1, $consoleRows);
@@ -618,7 +618,7 @@ class NotificationsTest extends TestCase
             $this->assertStringContainsString('Console alert delivery failed', $error->getMessage());
         }
 
-        $this->assertCount(0, $this->database->find('alerts'), 'failed console dispatch must not persist alert');
+        $this->assertCount(0, $this->database->find('notifications'), 'failed console dispatch must not persist alert');
     }
 
     public function testMultiRecipientFanoutNoCollision(): void
@@ -638,7 +638,7 @@ class NotificationsTest extends TestCase
 
         $worker->action($this->buildMessage($payload), $this->project, $this->registry, $this->database, $this->log);
 
-        $rows = $this->database->find('alerts');
+        $rows = $this->database->find('notifications');
         $this->assertCount(2, $rows, 'two recipients must produce two distinct alert rows');
 
         $messageId = \md5('fanout');
@@ -675,7 +675,7 @@ class NotificationsTest extends TestCase
 
         $worker->action($this->buildMessage($payload), $this->project, $this->registry, $this->database, $this->log);
 
-        $rows = $this->database->find('alerts');
+        $rows = $this->database->find('notifications');
         $this->assertCount(1, $rows);
         $this->assertSame(RESOURCE_TYPE_USERS, $rows[0]->getAttribute('resourceType'));
         $this->assertSame('u1', $rows[0]->getAttribute('resourceId'));
@@ -874,13 +874,13 @@ class NotificationsTest extends TestCase
 
             $threw = false;
             try {
-                $this->database->createDocument('alerts', $sameTupleDoc);
+                $this->database->createDocument('notifications', $sameTupleDoc);
             } catch (\Utopia\Database\Exception\Duplicate) {
                 $threw = true;
             }
             $this->assertTrue($threw, 'unique-index `_key_recipient` must reject a second row sharing the recipient tuple');
 
-            $rows = $this->database->find('alerts', [
+            $rows = $this->database->find('notifications', [
                 Query::equal('messageId', [$messageId]),
             ]);
             $this->assertCount(1, $rows, 'unique-index must prevent a second row from being persisted');
@@ -919,7 +919,7 @@ class NotificationsTest extends TestCase
         $this->assertCount(1, $worker->persistedIds);
 
         $alertId = $worker->persistedIds[0];
-        $row = $this->database->getDocument('alerts', $alertId);
+        $row = $this->database->getDocument('notifications', $alertId);
         $this->assertFalse($row->isEmpty(), 'persistAlert must return an id resolvable via getDocument');
         $this->assertSame(RESOURCE_TYPE_USERS, $row->getAttribute('resourceType'));
         $this->assertSame('user-7', $row->getAttribute('resourceId'));
@@ -973,7 +973,7 @@ class NotificationsTest extends TestCase
 
             // Critical: no orphan dedup row. If there is one, the retry below
             // will short-circuit and the user never gets the email.
-            $orphans = $this->database->find('alerts', [
+            $orphans = $this->database->find('notifications', [
                 Query::equal('messageId', [$messageId]),
             ]);
             $this->assertCount(0, $orphans, 'failed SMTP send must not leave a dedup row behind');
@@ -988,7 +988,7 @@ class NotificationsTest extends TestCase
 
             $this->assertSame(1, $working->sendCount, 'retry must invoke the working adapter');
 
-            $rows = $this->database->find('alerts', [
+            $rows = $this->database->find('notifications', [
                 Query::equal('messageId', [$messageId]),
             ]);
             $this->assertCount(1, $rows, 'retry must persist exactly one alert row');
@@ -1033,7 +1033,7 @@ class NotificationsTest extends TestCase
             }
             $this->assertTrue($threw, 'SMTP failure must still propagate so the email recipient is retried');
 
-            $consoleRows = $this->database->find('alerts', [
+            $consoleRows = $this->database->find('notifications', [
                 Query::equal('messageId', [$messageId]),
                 Query::equal('channel', [NOTIFICATION_TYPE_CONSOLE]),
             ]);
@@ -1041,7 +1041,7 @@ class NotificationsTest extends TestCase
             $this->assertSame('project-x', $consoleRows[0]->getAttribute('projectId'));
             $this->assertSame('project-internal-x', $consoleRows[0]->getAttribute('projectInternalId'));
 
-            $emailRows = $this->database->find('alerts', [
+            $emailRows = $this->database->find('notifications', [
                 Query::equal('messageId', [$messageId]),
                 Query::equal('channel', [NOTIFICATION_TYPE_EMAIL]),
             ]);
@@ -1054,7 +1054,7 @@ class NotificationsTest extends TestCase
             $retryWorker->action($this->buildMessage($payload), $this->project, $this->registry, $this->database, $this->log);
 
             $this->assertSame(1, $working->sendCount, 'retry must still deliver the email recipient');
-            $rows = $this->database->find('alerts', [
+            $rows = $this->database->find('notifications', [
                 Query::equal('messageId', [$messageId]),
             ]);
             $this->assertCount(2, $rows, 'retry must add email without duplicating the already-delivered console alert');
@@ -1119,7 +1119,7 @@ class NotificationsTest extends TestCase
 
         $this->assertSame(1, $worker->persistAlertCalls, 'email channel must persist exactly once after a successful send');
         $messageId = \md5('happy-email');
-        $rows = $this->database->find('alerts', [
+        $rows = $this->database->find('notifications', [
             Query::equal('messageId', [$messageId]),
         ]);
         $this->assertCount(1, $rows);
@@ -1165,7 +1165,7 @@ class NotificationsTest extends TestCase
 
         $worker->action($this->buildMessage($payload), $this->project, $this->registry, $this->database, $this->log);
 
-        $rows = $this->database->find('alerts', [
+        $rows = $this->database->find('notifications', [
             Query::equal('channel', ['console']),
         ]);
         $this->assertCount(1, $rows, 'console adapter must write exactly one alert');
@@ -1208,7 +1208,7 @@ class NotificationsTest extends TestCase
 
         $worker->action($this->buildMessage($payload), $this->project, $this->registry, $this->database, $this->log);
 
-        $rows = $this->database->find('alerts');
+        $rows = $this->database->find('notifications');
         $this->assertCount(1, $rows);
         $this->assertSame('Webhook orders paused', $rows[0]->getAttribute('title'));
         $this->assertSame('Plain alert for orders.', $rows[0]->getAttribute('body'));
@@ -1245,7 +1245,7 @@ class NotificationsTest extends TestCase
 
         $this->assertTrue($threw, 'missing SMTP must fail email delivery so the queue can retry');
         $this->assertSame(0, $worker->persistAlertCalls);
-        $this->assertCount(0, $this->database->find('alerts'));
+        $this->assertCount(0, $this->database->find('notifications'));
         $this->assertSame('no_smtp', $this->log->getTags()['email_skipped'] ?? null);
     }
 
@@ -1371,7 +1371,7 @@ class NotificationsTest extends TestCase
 
         // Action loop must persist exactly one webhook alert row AFTER the send.
         $this->assertSame(1, $worker->persistAlertCalls);
-        $rows = $this->database->find('alerts', [
+        $rows = $this->database->find('notifications', [
             Query::equal('messageId', [\md5('happy-webhook')]),
         ]);
         $this->assertCount(1, $rows);
