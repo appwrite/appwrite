@@ -61,6 +61,14 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from '@/components/ui/tooltip'
+import {
+  Sheet,
+  SheetClose,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from '@/components/ui/sheet'
 import { useKeyboardShortcutsContext } from '@/components/global/providers/KeyboardShortcuts'
 import { ThemeToggle } from '@/components/global/shared/ThemeToggle'
 import { SupportPopover } from '@/components/global/shared/SupportPopover'
@@ -76,7 +84,28 @@ import { openCreateOrganizationFlow } from '@/lib/open-create-organization-flow'
 import { useTheme } from 'next-themes'
 import { getConsoleHeaderLogoClass } from '@/lib/html-theme'
 import { ConsoleHeaderLogo } from '@/components/global/shared/ConsoleHeaderLogo'
+import { AppwriteWordmark } from '@/components/global/shared/AppwriteWordmark'
 import { resolveInitHeaderNavCta } from '@/lib/init/events'
+
+type MarketingHeaderNavItem = {
+  label: string
+  href: string
+  hasMenuIndicator?: boolean
+}
+
+const DEFAULT_MARKETING_HEADER_NAV: readonly MarketingHeaderNavItem[] = [
+  {
+    label: 'Products',
+    href: 'https://appwrite.io/products/auth',
+    hasMenuIndicator: true,
+  },
+  { label: 'Docs', href: 'https://appwrite.io/docs' },
+  { label: 'Pricing', href: 'https://appwrite.io/pricing' },
+  { label: 'Enterprise', href: 'https://appwrite.io/contact-us/enterprise' },
+  { label: 'Customers', href: 'https://appwrite.io/blog/category/customer-stories' },
+  { label: 'Blog', href: 'https://appwrite.io/blog' },
+  { label: 'Changelog', href: 'https://appwrite.io/changelog' },
+] as const
 
 interface ConsoleHeaderProps {
   onMenuClick?: () => void
@@ -84,6 +113,7 @@ interface ConsoleHeaderProps {
   projectId?: string
   onCommandCenterOpen?: () => void
   onCreateOrganization?: () => void
+  marketingNav?: boolean | readonly MarketingHeaderNavItem[]
   /** When true, search is hidden (e.g. when native app bar is shown above) */
   hideSearch?: boolean
 }
@@ -94,6 +124,7 @@ export function ConsoleHeader({
   projectId,
   onCommandCenterOpen,
   onCreateOrganization,
+  marketingNav,
   hideSearch = false,
 }: ConsoleHeaderProps) {
   const { openCommandCenter: contextOpenCommandCenter } =
@@ -195,18 +226,26 @@ export function ConsoleHeader({
   const initHeaderNavCta = isInitScope
     ? resolveInitHeaderNavCta({ mockCurrentDay: overrides.mockInitCurrentDay })
     : null
-  const logoColumnWidth = 60
   const isOptionalAuth = isOptionalAuthPage(location.pathname)
   const optionalAuthPending = isOptionalAuth && isAuthLoading
   const showGuestHeader = isOptionalAuth && !isAuthenticated && !isAuthLoading
   const authRedirect = location.pathname
+  const marketingNavItems =
+    marketingNav === true
+      ? DEFAULT_MARKETING_HEADER_NAV
+      : marketingNav
+        ? marketingNav
+        : []
+  const showMarketingNav = marketingNavItems.length > 0
+  const logoColumnWidth = showMarketingNav ? 158 : 60
 
   return (
     <div className="@container w-full overflow-visible">
       <header
         className={cn(
-          'flex h-14 min-h-14 flex-wrap items-center justify-between gap-1 overflow-visible @[640px]:gap-2 border-b border-border bg-background',
-          'pl-3 pr-3 @[640px]:pl-4 @[640px]:pr-4 @[1024px]:pl-0 @[1000px]:pr-6',
+          'relative flex h-14 min-h-14 flex-wrap items-center justify-between gap-1 overflow-visible @[640px]:gap-2 border-b border-border bg-background',
+          'pl-3 pr-3 @[640px]:pl-4 @[640px]:pr-4 @[1000px]:pr-6',
+          !showMarketingNav && '@[1024px]:pl-0',
           className,
         )}
       >
@@ -222,6 +261,45 @@ export function ConsoleHeader({
             >
               <Menu className="h-5 w-5" />
             </button>
+          ) : null}
+
+          {showMarketingNav ? (
+            <Sheet>
+              <SheetTrigger asChild>
+                <button
+                  type="button"
+                  className="flex h-9 w-9 shrink-0 cursor-pointer items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-accent hover:text-foreground @[1280px]:hidden"
+                  aria-label="Open website navigation"
+                >
+                  <Menu className="h-4 w-4" />
+                </button>
+              </SheetTrigger>
+              <SheetContent side="left" className="w-[300px] p-0">
+                <SheetHeader className="border-b border-border px-4 py-4">
+                  <SheetTitle className="text-left">
+                    <AppwriteWordmark className="h-5" aria-label="Appwrite" />
+                  </SheetTitle>
+                </SheetHeader>
+                <nav
+                  className="flex flex-col p-2"
+                  aria-label="Website navigation"
+                >
+                  {marketingNavItems.map((item) => (
+                    <SheetClose asChild key={item.label}>
+                      <a
+                        href={item.href}
+                        className="flex h-10 items-center justify-between rounded-md px-3 text-[13px] font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+                      >
+                        {item.label}
+                        {item.hasMenuIndicator ? (
+                          <ChevronDown className="size-3.5" aria-hidden />
+                        ) : null}
+                      </a>
+                    </SheetClose>
+                  ))}
+                </nav>
+              </SheetContent>
+            </Sheet>
           ) : null}
 
           {/* Logo - 60px column matches collapsed nav; never shifts; optional spacer + border continues from nav */}
@@ -243,18 +321,30 @@ export function ConsoleHeader({
                 {...logoDestination}
                 aria-label="Appwrite"
                 className={cn(
-                  'group inline-flex size-10 shrink-0 items-center justify-center rounded-lg transition-transform duration-150 ease-out active:scale-[0.94] active:bg-muted/40 motion-reduce:active:scale-100 motion-reduce:active:bg-transparent focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1 focus-visible:ring-offset-background',
+                  'group inline-flex shrink-0 items-center justify-center rounded-lg transition-transform duration-150 ease-out active:scale-[0.94] active:bg-muted/40 motion-reduce:active:scale-100 motion-reduce:active:bg-transparent focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1 focus-visible:ring-offset-background',
+                  showMarketingNav ? 'h-10 w-auto px-2' : 'size-10',
                   childClassName,
                 )}
               >
-                <ConsoleHeaderLogo
-                  className={cn(
-                    'transition-transform duration-150 ease-out group-hover:scale-[1.04]',
-                    headerLogoClassName,
-                  )}
-                />
+                {showMarketingNav ? (
+                  <AppwriteWordmark
+                    className="h-5 transition-transform duration-150 ease-out group-hover:scale-[1.02]"
+                    aria-label="Appwrite"
+                  />
+                ) : (
+                  <ConsoleHeaderLogo
+                    className={cn(
+                      'transition-transform duration-150 ease-out group-hover:scale-[1.04]',
+                      headerLogoClassName,
+                    )}
+                  />
+                )}
               </Link>
             )
+
+            if (showMarketingNav) {
+              return logoLink()
+            }
 
             if (hasSidebar) {
               return (
@@ -285,6 +375,26 @@ export function ConsoleHeader({
               </>
             )
           })()}
+
+          {marketingNavItems.length > 0 ? (
+            <nav
+              className="ml-2 hidden min-w-0 items-center gap-1 @[1280px]:flex @[1536px]:absolute @[1536px]:left-1/2 @[1536px]:ml-0 @[1536px]:-translate-x-1/2"
+              aria-label="Website navigation"
+            >
+              {marketingNavItems.map((item) => (
+                <a
+                  key={item.label}
+                  href={item.href}
+                  className="inline-flex h-9 items-center gap-1 rounded-md px-2.5 text-[13px] font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+                >
+                  {item.label}
+                  {item.hasMenuIndicator ? (
+                    <ChevronDown className="size-3.5" aria-hidden />
+                  ) : null}
+                </a>
+              ))}
+            </nav>
+          ) : null}
 
           {/* Account scope quick return */}
           {isAccountScope && orgId && (

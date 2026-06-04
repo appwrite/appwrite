@@ -39,6 +39,7 @@ interface ConsoleLayoutProps {
     projectId?: string
     onCommandCenterOpen?: () => void
     onCreateOrganization?: () => void
+    marketingNav?: boolean
   }
 
   /** Optional strip below impersonation / cloud status, above the main header bar (e.g. {@link HeaderAlertBar}) */
@@ -46,6 +47,11 @@ interface ConsoleLayoutProps {
 
   /** Whether to show the footer */
   showFooter?: boolean
+
+  /** Optional footer configuration */
+  footer?: {
+    expanded?: boolean
+  }
 
   /** Whether the main content should have overflow-hidden (for views that manage their own scrolling) */
   fixedLayout?: boolean
@@ -99,6 +105,7 @@ export function ConsoleLayout({
   header,
   headerBanner,
   showFooter = true,
+  footer,
   fixedLayout = false,
   containerClassName,
 }: ConsoleLayoutProps) {
@@ -133,6 +140,7 @@ export function ConsoleLayout({
           projectId={header?.projectId}
           onCommandCenterOpen={header?.onCommandCenterOpen}
           onCreateOrganization={header?.onCreateOrganization}
+          marketingNav={header?.marketingNav}
           hideSearch={showNativeAppBar}
         />
       </div>
@@ -180,7 +188,7 @@ export function ConsoleLayout({
               {children}
             </div>
           </div>
-          {showFooter && <ConsoleFooter />}
+          {showFooter && <ConsoleFooter expanded={footer?.expanded} />}
         </main>
       </div>
 
