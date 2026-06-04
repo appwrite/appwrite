@@ -64,7 +64,7 @@ class Get extends Action
             ->param('collectionId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Collection ID.', false, ['dbForProject'])
             ->param('queries', [], new ArrayList(new Text(APP_LIMIT_ARRAY_ELEMENT_SIZE), APP_LIMIT_ARRAY_PARAMS_SIZE), 'Array of query strings generated using the Query class provided by the SDK. Same shape as listDocuments.', true)
             ->param('total', true, new Boolean(true), 'When true, the explain captures the COUNT(*) call listDocuments fires for the total field as a second entry. Mirrors listDocuments default behavior.', true)
-            ->param('tree', false, new Boolean(true), 'When true, populate the sanitized backend-specific query plan tree. Defaults to false so the tree field is null.', true)
+            ->param('tree', false, new Boolean(true), 'When true, include the sanitized backend-specific query plan tree. Defaults to false so the tree field is omitted.', true)
             ->inject('response')
             ->inject('dbForProject')
             ->inject('user')
@@ -227,7 +227,8 @@ class Get extends Action
     protected function normalizePlan(array $plan, bool $includeTree): array
     {
         $indexUsed = isset($plan['indexUsed']) ? $this->scrubPhysicalIdentifiers($plan['indexUsed']) : null;
-        $tree = isset($plan['tree']) ? $this->scrubPhysicalIdentifiers($plan['tree']) : null;
+        $rawTree = $plan['tree'] ?? null;
+        $tree = $includeTree && isset($plan['tree']) ? $this->scrubPhysicalIdentifiers($plan['tree']) : null;
 
         $normalized = [
             'metrics' => [
@@ -237,7 +238,7 @@ class Get extends Action
                 'estimatedCost' => $plan['estimatedCost'] ?? null,
             ],
             'access' => [
-                'type' => $this->inferAccessType($indexUsed, $tree),
+                'type' => $this->inferAccessType($indexUsed, $rawTree),
                 'index' => $indexUsed,
             ],
             'rowsScanned' => $plan['rowsScanned'] ?? null,
@@ -375,23 +376,30 @@ class Get extends Action
 
     protected function maskPlanTreeValue(string $key, string $value): ?string
     {
-        return match ($key) {
-            'namespace' => \preg_replace('/^[^.]+\\./', '', $this->scrubPhysicalIdentifiers($value)) ?? $value,
-            'Relation Name' => '<collection>',
-            'Index Name' => '<index>',
+        return match (\strtolower($key)) {
+            'namespace', 'ns' => \preg_replace('/^[^.]+\\./', '', $this->scrubPhysicalIdentifiers($value)) ?? $value,
+            'database', 'dbname', 'db' => '<database>',
+            'collection', 'collectionname', 'relation name', 'table', 'tablename', 'table_name' => '<collection>',
+            'index', 'indexname', 'index name' => '<index>',
+            'host', 'server', 'address' => '<server>',
             default => null,
         };
     }
 
     protected function shouldDropPlanTreeKey(string $key): bool
     {
-        return \in_array($key, [
+        return \in_array(\strtolower($key), [
             '$db',
-            '$clusterTime',
-            'operationTime',
-            'serverInfo',
-            'serverParameters',
-            'slotBasedPlan',
+            '$clustertime',
+            'operationtime',
+            'serverinfo',
+            'serverparameters',
+            'slotbasedplan',
+            'engine',
+            'hasengine',
+            'port',
+            'topologyversion',
+            'signature',
         ], true);
     }
 

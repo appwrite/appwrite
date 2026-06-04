@@ -54,7 +54,7 @@ class Get extends DocumentExplain
             ->param('tableId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Table ID.', false, ['dbForProject'])
             ->param('queries', [], new ArrayList(new Text(APP_LIMIT_ARRAY_ELEMENT_SIZE), APP_LIMIT_ARRAY_PARAMS_SIZE), 'Array of query strings generated using the Query class provided by the SDK. Same shape as listRows.', true)
             ->param('total', true, new Boolean(true), 'When true, the explain captures the COUNT(*) call listRows fires for the total field as a second entry. Mirrors listRows default behavior.', true)
-            ->param('tree', false, new Boolean(true), 'When true, populate the sanitized backend-specific query plan tree. Defaults to false so the tree field is null.', true)
+            ->param('tree', false, new Boolean(true), 'When true, include the sanitized backend-specific query plan tree. Defaults to false so the tree field is omitted.', true)
             ->inject('response')
             ->inject('dbForProject')
             ->inject('user')
