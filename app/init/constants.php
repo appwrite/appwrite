@@ -108,6 +108,9 @@ const APP_VCS_GITHUB_EMAIL = 'team@appwrite.io';
 const APP_VCS_GITHUB_URL = 'https://github.com/TeamAppwrite';
 const APP_BRANDED_EMAIL_BASE_TEMPLATE = 'email-base-styled';
 
+// Embeddings
+const APP_EMBEDDING_BATCH_LIMIT = 100;
+
 /**
  * JWT for Resource Tokens.
  */
@@ -240,6 +243,12 @@ const RULE_STATUS_VERIFIED = 'verified';
 // Message types
 const MESSAGE_SEND_TYPE_INTERNAL = 'internal';
 const MESSAGE_SEND_TYPE_EXTERNAL = 'external';
+// External message fan-out tuning
+const MESSAGE_RECIPIENTS_PAGE_SIZE = 5000; // Recipients resolved from the database per page while streaming a send; aligned with APP_LIMIT_COUNT to minimise round-trips on large topics
+const MESSAGE_SEND_CONCURRENCY = 10; // Maximum adapter send requests running concurrently within a single send job
+const MESSAGE_DELIVERY_ERRORS_LIMIT = 100; // Maximum number of per-recipient delivery errors retained on a message
+const MESSAGE_SEND_MAX_RETRIES = 5; // Maximum number of attempts to deliver a batch when the provider throttles or fails transiently
+const MESSAGE_SEND_RETRY_DELAY = 1.0; // Base seconds for exponential backoff between batch send retries; overridable in tests for an instant suite
 // Mail Types
 const MAIL_TYPE_VERIFICATION = 'verification';
 const MAIL_TYPE_MAGIC_SESSION = 'magicSession';

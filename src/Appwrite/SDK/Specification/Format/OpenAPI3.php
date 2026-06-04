@@ -85,6 +85,10 @@ class OpenAPI3 extends Format
             $output['components']['securitySchemes']['Project']['x-appwrite'] = ['demo' => '<YOUR_PROJECT_ID>'];
         }
 
+        if (isset($output['components']['securitySchemes']['ProjectQuery'])) {
+            $output['components']['securitySchemes']['ProjectQuery']['x-appwrite'] = ['demo' => '<YOUR_PROJECT_ID>'];
+        }
+
         if (isset($output['components']['securitySchemes']['Key'])) {
             $output['components']['securitySchemes']['Key']['x-appwrite'] = ['demo' => '<YOUR_API_KEY>'];
         }
@@ -184,7 +188,7 @@ class OpenAPI3 extends Format
                         continue;
                     }
 
-                    $methodSecurities = ['Project' => []];
+                    $methodSecurities = [$methodObj->getProjectAuth() => []];
                     foreach ($methodObj->getAuth() as $security) {
                         if (\array_key_exists($security->value, $this->keys)) {
                             $methodSecurities[$security->value] = [];
@@ -371,7 +375,7 @@ class OpenAPI3 extends Format
             }
 
             if (!empty($scope)) {
-                $securities = ['Project' => []];
+                $securities = [$sdk->getProjectAuth() => []];
 
                 foreach ($sdk->getAuth() as $security) {
                     /** @var AuthType $security */
@@ -858,13 +862,6 @@ class OpenAPI3 extends Format
 
             if ($model->isAny()) {
                 $output['components']['schemas'][$model->getType()]['additionalProperties'] = true;
-
-                $additionalKey = \method_exists($model, 'getAdditionalPropertiesKey')
-                    ? $model->getAdditionalPropertiesKey()
-                    : null;
-                if ($additionalKey !== null) {
-                    $output['components']['schemas'][$model->getType()]['x-additional-properties-key'] = $additionalKey;
-                }
             }
 
             if (!empty($required)) {

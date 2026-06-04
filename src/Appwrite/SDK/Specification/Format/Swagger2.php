@@ -74,6 +74,10 @@ class Swagger2 extends Format
             $output['securityDefinitions']['Project']['x-appwrite'] = ['demo' => '<YOUR_PROJECT_ID>'];
         }
 
+        if (isset($output['securityDefinitions']['ProjectQuery'])) {
+            $output['securityDefinitions']['ProjectQuery']['x-appwrite'] = ['demo' => '<YOUR_PROJECT_ID>'];
+        }
+
         if (isset($output['securityDefinitions']['Key'])) {
             $output['securityDefinitions']['Key']['x-appwrite'] = ['demo' => '<YOUR_API_KEY>'];
         }
@@ -184,7 +188,7 @@ class Swagger2 extends Format
                         continue;
                     }
 
-                    $methodSecurities = ['Project' => []];
+                    $methodSecurities = [$methodObj->getProjectAuth() => []];
                     foreach ($methodObj->getAuth() as $security) {
                         /** @var AuthType $security */
                         if (\array_key_exists($security->value, $this->keys)) {
@@ -362,7 +366,7 @@ class Swagger2 extends Format
             }
 
             if (!empty($scope)) {
-                $securities = ['Project' => []];
+                $securities = [$sdk->getProjectAuth() => []];
 
                 foreach ($sdk->getAuth() as $security) {
                     if (\array_key_exists($security->value, $this->keys)) {
@@ -612,19 +616,15 @@ class Swagger2 extends Format
                                     }
 
                                     $enumKeys = [];
-                                    if (!empty($enum->map)) {
-                                        foreach ($enumValues as $enumValue) {
-                                            $enumKeys[] = $enum->map[$enumValue] ?? $enumValue;
-                                        }
+                                    foreach ($enumValues as $enumValue) {
+                                        $enumKeys[] = $enum->map[$enumValue] ?? $enumValue;
                                     }
 
                                     $node['items']['enum'] = $enumValues;
                                     if (!empty($enum->name)) {
                                         $node['items']['x-enum-name'] = $enum->name;
                                     }
-                                    if (!empty($enumKeys)) {
-                                        $node['items']['x-enum-keys'] = $enumKeys;
-                                    }
+                                    $node['items']['x-enum-keys'] = $enumKeys;
                                 }
                             }
                             if ($validator->getType() === 'integer') {
@@ -653,19 +653,15 @@ class Swagger2 extends Format
                                     }
 
                                     $enumKeys = [];
-                                    if (!empty($enum->map)) {
-                                        foreach ($enumValues as $enumValue) {
-                                            $enumKeys[] = $enum->map[$enumValue] ?? $enumValue;
-                                        }
+                                    foreach ($enumValues as $enumValue) {
+                                        $enumKeys[] = $enum->map[$enumValue] ?? $enumValue;
                                     }
 
                                     $node['enum'] = $enumValues;
                                     if (!empty($enum->name)) {
                                         $node['x-enum-name'] = $enum->name;
                                     }
-                                    if (!empty($enumKeys)) {
-                                        $node['x-enum-keys'] = $enumKeys;
-                                    }
+                                    $node['x-enum-keys'] = $enumKeys;
                                 }
                             }
                             if ($validator->getType() === 'integer') {
@@ -770,9 +766,7 @@ class Swagger2 extends Format
                         /// If the enum flag is Set, add the enum values to the body
                         $body['schema']['properties'][$name]['enum'] = $node['enum'];
                         $body['schema']['properties'][$name]['x-enum-name'] = $node['x-enum-name'] ?? null;
-                        if (isset($node['x-enum-keys'])) {
-                            $body['schema']['properties'][$name]['x-enum-keys'] = $node['x-enum-keys'];
-                        }
+                        $body['schema']['properties'][$name]['x-enum-keys'] = $node['x-enum-keys'];
                     }
 
                     if ($parameter['nullable']) {
@@ -831,13 +825,6 @@ class Swagger2 extends Format
 
             if ($model->isAny()) {
                 $output['definitions'][$model->getType()]['additionalProperties'] = true;
-
-                $additionalKey = \method_exists($model, 'getAdditionalPropertiesKey')
-                    ? $model->getAdditionalPropertiesKey()
-                    : null;
-                if ($additionalKey !== null) {
-                    $output['definitions'][$model->getType()]['x-additional-properties-key'] = $additionalKey;
-                }
             }
 
             if (!empty($required)) {

@@ -112,7 +112,7 @@ services:
         condition: service_healthy
       coredns:
         condition: service_started
-      ollama:
+      appwrite-embedding:
         condition: service_started
     entrypoint:
       - php
@@ -305,7 +305,7 @@ services:
     depends_on:
       - ${_APP_DB_HOST:-mongodb}
       - redis
-      - ollama
+      - appwrite-embedding
     environment:
       - _APP_ENV
       - _APP_WORKER_PER_CORE
@@ -347,9 +347,11 @@ services:
     depends_on:
       - redis
       - ${_APP_DB_HOST:-mongodb}
-      - ollama
+      - appwrite-embedding
     environment:
       - _APP_ENV
+      - _APP_WORKERS_NUM=1
+      - _APP_WORKER_MAX_COROUTINES=1
       - _APP_WORKER_PER_CORE
       - _APP_POOL_ADAPTER
       - _APP_OPENSSL_KEY_V1
@@ -381,9 +383,11 @@ services:
       - ${_APP_DB_HOST:-mongodb}
       - request-catcher-sms
       - request-catcher-webhook
-      - ollama
+      - appwrite-embedding
     environment:
       - _APP_ENV
+      - _APP_WORKERS_NUM=1
+      - _APP_WORKER_MAX_COROUTINES=1
       - _APP_WORKER_PER_CORE
       - _APP_POOL_ADAPTER
       - _APP_OPENSSL_KEY_V1
@@ -412,7 +416,7 @@ services:
     depends_on:
       - redis
       - ${_APP_DB_HOST:-mongodb}
-      - ollama
+      - appwrite-embedding
     volumes:
       - appwrite-uploads:/storage/uploads:rw
       - appwrite-cache:/storage/cache:rw
@@ -425,6 +429,8 @@ services:
       
     environment:
       - _APP_ENV
+      - _APP_WORKERS_NUM=1
+      - _APP_WORKER_MAX_COROUTINES=8
       - _APP_WORKER_PER_CORE
       - _APP_POOL_ADAPTER
       - _APP_OPENSSL_KEY_V1
@@ -482,9 +488,11 @@ services:
     depends_on:
       - redis
       - ${_APP_DB_HOST:-mongodb}
-      - ollama
+      - appwrite-embedding
     environment:
       - _APP_ENV
+      - _APP_WORKERS_NUM=1
+      - _APP_WORKER_MAX_COROUTINES=1
       - _APP_WORKER_PER_CORE
       - _APP_POOL_ADAPTER
       - _APP_OPENSSL_KEY_V1
@@ -505,7 +513,6 @@ services:
       - _APP_DB_USER_VECTORSDB
       - _APP_DB_PASS_VECTORSDB
       - _APP_LOGGING_CONFIG
-      - _APP_WORKERS_NUM
       - _APP_QUEUE_NAME
       - _APP_DATABASE_SHARED_TABLES
 
@@ -525,9 +532,11 @@ services:
     depends_on:
       - redis
       - ${_APP_DB_HOST:-mongodb}
-      - ollama
+      - appwrite-embedding
     environment:
       - _APP_ENV
+      - _APP_WORKERS_NUM=1
+      - _APP_WORKER_MAX_COROUTINES=8
       - _APP_WORKER_PER_CORE
       - _APP_POOL_ADAPTER
       - _APP_OPENSSL_KEY_V1
@@ -606,6 +615,8 @@ services:
       - _APP_OPTIONS_FORCE_HTTPS
       # Basic
       - _APP_ENV
+      - _APP_WORKERS_NUM=1
+      - _APP_WORKER_MAX_COROUTINES=8
       - _APP_WORKER_PER_CORE
       - _APP_POOL_ADAPTER
       - _APP_LOGGING_CONFIG
@@ -658,7 +669,7 @@ services:
     depends_on:
       - redis
       - ${_APP_DB_HOST:-mongodb}
-      - ollama
+      - appwrite-embedding
     volumes:
       - appwrite-config:/storage/config:rw
       - appwrite-certificates:/storage/certificates:rw
@@ -666,6 +677,8 @@ services:
       - ./src:/usr/src/code/src
     environment:
       - _APP_ENV
+      - _APP_WORKERS_NUM=1
+      - _APP_WORKER_MAX_COROUTINES=8
       - _APP_WORKER_PER_CORE
       - _APP_POOL_ADAPTER
       - _APP_OPENSSL_KEY_V1
@@ -706,8 +719,11 @@ services:
       - ${_APP_DB_HOST:-mongodb}
     environment:
       - _APP_ENV
+      - _APP_WORKERS_NUM=1
+      - _APP_WORKER_MAX_COROUTINES=8
       - _APP_WORKER_PER_CORE
       - _APP_POOL_ADAPTER
+      - _APP_OPENSSL_KEY_V1
       - _APP_REDIS_HOST
       - _APP_REDIS_PORT
       - _APP_REDIS_USER
@@ -736,6 +752,8 @@ services:
       - redis
     environment:
       - _APP_ENV
+      - _APP_WORKERS_NUM=1
+      - _APP_WORKER_MAX_COROUTINES=8
       - _APP_WORKER_PER_CORE
       - _APP_POOL_ADAPTER
       - _APP_OPENSSL_KEY_V1
@@ -782,6 +800,8 @@ services:
       # - smtp
     environment:
       - _APP_ENV
+      - _APP_WORKERS_NUM=1
+      - _APP_WORKER_MAX_COROUTINES=1
       - _APP_WORKER_PER_CORE
       - _APP_POOL_ADAPTER
       - _APP_OPENSSL_KEY_V1
@@ -866,6 +886,8 @@ services:
       - redis
     environment:
       - _APP_ENV
+      - _APP_WORKERS_NUM=1
+      - _APP_WORKER_MAX_COROUTINES=1
       - _APP_WORKER_PER_CORE
       - _APP_POOL_ADAPTER
       - _APP_OPENSSL_KEY_V1
@@ -926,6 +948,8 @@ services:
       - ${_APP_DB_HOST:-mongodb}
     environment:
       - _APP_ENV
+      - _APP_WORKERS_NUM=1
+      - _APP_WORKER_MAX_COROUTINES=1
       - _APP_WORKER_PER_CORE
       - _APP_POOL_ADAPTER
       - _APP_OPENSSL_KEY_V1
@@ -1087,6 +1111,8 @@ services:
       - ${_APP_DB_HOST:-mongodb}
     environment:
       - _APP_ENV
+      - _APP_WORKERS_NUM=1
+      - _APP_WORKER_MAX_COROUTINES=1
       - _APP_WORKER_PER_CORE
       - _APP_POOL_ADAPTER
       - _APP_OPENSSL_KEY_V1
@@ -1118,9 +1144,11 @@ services:
     depends_on:
       - redis
       - ${_APP_DB_HOST:-mongodb}
-      - ollama
+      - appwrite-embedding
     environment:
       - _APP_ENV
+      - _APP_WORKERS_NUM=1
+      - _APP_WORKER_MAX_COROUTINES=1
       - _APP_WORKER_PER_CORE
       - _APP_POOL_ADAPTER
       - _APP_OPENSSL_KEY_V1
@@ -1152,7 +1180,7 @@ services:
     depends_on:
       - ${_APP_DB_HOST:-mongodb}
       - redis
-      - ollama
+      - appwrite-embedding
     environment:
       - _APP_ENV
       - _APP_WORKER_PER_CORE
@@ -1190,7 +1218,7 @@ services:
     depends_on:
       - ${_APP_DB_HOST:-mongodb}
       - redis
-      - ollama
+      - appwrite-embedding
     environment:
       - _APP_ENV
       - _APP_WORKER_PER_CORE
@@ -1228,7 +1256,7 @@ services:
     depends_on:
       - ${_APP_DB_HOST:-mongodb}
       - redis
-      - ollama
+      - appwrite-embedding
     environment:
       - _APP_ENV
       - _APP_WORKER_PER_CORE
@@ -1399,19 +1427,23 @@ services:
       timeout: 5s
       retries: 10
       start_period: 10s
-    command: "postgres"
+    command: >
+      postgres
+      -c fsync=off
+      -c synchronous_commit=off
+      -c full_page_writes=off
 
-  ollama:
-    image: appwrite/ollama:0.1.1
-    container_name: ollama
-    ports:
-      - "11434:11434"
-    restart: unless-stopped
+  appwrite-embedding:
+    image: appwrite/embedding:0.1.0
     environment:
-      MODELS: ${_APP_EMBEDDING_MODELS:-embeddinggemma}
-      OLLAMA_KEEP_ALIVE: 24h
+      EMBEDDING_MODELS: ${_APP_EMBEDDING_MODELS:-nomic-embed-text}
+    container_name: appwrite-embedding
+    ports:
+      - "3000:3000"
+    restart: unless-stopped
+    # persistent for caching models across restarts and preloading
     volumes:
-      - appwrite-models:/root/.ollama
+      - appwrite-models:/home/embedder/models
     networks:
       - appwrite
 

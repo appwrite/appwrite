@@ -406,7 +406,7 @@ jobs:
 
   e2e_service:
     name: Tests / E2E / ${{ matrix.database }} (${{ matrix.mode }}) / ${{ matrix.service }}
-    runs-on: ${{ matrix.runner || format('runs-on={0}/runner=4cpu-linux-x64/volume=120g/spot=false', github.run_id) }}
+    runs-on: ${{ matrix.runner || format('runs-on={0}/runner=4cpu-linux-x64/volume=120g/spot=false/extras=otel', github.run_id) }}
     needs: [build, matrix]
     permissions:
       contents: read
@@ -448,11 +448,11 @@ jobs:
         ]
         include:
           - service: Databases
-            runner: runs-on=${{ github.run_id }}/runner=8cpu-linux-x64/volume=120g/spot=false
+            runner: runs-on=${{ github.run_id }}/runner=8cpu-linux-x64/volume=120g/spot=false/extras=otel
             paratest_processes: 3
             timeout_minutes: 30
           - service: TablesDB
-            runner: runs-on=${{ github.run_id }}/runner=8cpu-linux-x64/volume=120g/spot=false
+            runner: runs-on=${{ github.run_id }}/runner=8cpu-linux-x64/volume=120g/spot=false/extras=otel
             paratest_processes: 3
             timeout_minutes: 30
           - service: Migrations
@@ -762,6 +762,15 @@ jobs:
         run: |
           docker tag ${{ env.IMAGE }}:before ${{ env.IMAGE }}
           docker compose up -d --wait --no-build
+          for attempt in $(seq 1 10); do
+            if curl -fsS http://localhost/v1/health/version; then
+              break
+            fi
+            if [ "$attempt" -eq 10 ]; then
+              exit 1
+            fi
+            sleep 1
+          done
 
       - name: Prepare benchmark files
         run: rm -f benchmark-before-summary.json benchmark-after-summary.json benchmark-before-samples.json benchmark-after-samples.json
@@ -817,6 +826,15 @@ jobs:
         run: |
           docker tag ${{ env.IMAGE }}:after ${{ env.IMAGE }}
           docker compose up -d --wait --no-build
+          for attempt in $(seq 1 10); do
+            if curl -fsS http://localhost/v1/health/version; then
+              break
+            fi
+            if [ "$attempt" -eq 10 ]; then
+              exit 1
+            fi
+            sleep 1
+          done
 
       - name: Benchmark after
         id: benchmark_after
