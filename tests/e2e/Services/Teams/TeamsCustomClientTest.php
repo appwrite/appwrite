@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Tests\E2E\Services\Teams;
 
 use Tests\E2E\Client;
@@ -7,7 +9,7 @@ use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\SideClient;
 
-class TeamsCustomClientTest extends Scope
+final class TeamsCustomClientTest extends Scope
 {
     use TeamsBase;
     use TeamsBaseClient;
@@ -154,8 +156,8 @@ class TeamsCustomClientTest extends Scope
         // injection allowed, meant to be protected client-side
         $encoded = 'http://localhost:5000/join-us\"></a><h1>INJECTED</h1>';
 
-        $this->assertStringContainsString('<h1>INJECTED</h1>', $lastEmail['html']);
-        $this->assertStringContainsString($encoded, $lastEmail['html']);
+        $this->assertStringContainsString('<h1>INJECTED</h1>', (string) $lastEmail['html']);
+        $this->assertStringContainsString($encoded, (string) $lastEmail['html']);
 
         $response = $this->client->call(Client::METHOD_DELETE, '/teams/' . $teamUid . '/memberships/'.$response['body']['$id'], array_merge([
             'content-type' => 'application/json',
