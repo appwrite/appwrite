@@ -167,6 +167,13 @@ class MigrationReport extends Model
                 'default' => '',
                 'example' => '1.4.0',
             ]);
+
+        $this->addRule(Resource::TYPE_OAUTH2_PROVIDER, [
+            'type' => self::TYPE_INTEGER,
+            'description' => 'Number of OAuth2 provider configurations to be migrated. Secrets (clientSecret, p8File) are never migrated — destination admin must re-enter them per provider.',
+            'default' => 0,
+            'example' => 5,
+        ]);
     }
 
     /**
