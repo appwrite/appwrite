@@ -59,6 +59,12 @@ class MigrationReport extends Model
                 'default' => 0,
                 'example' => 5,
             ])
+            ->addRule(Resource::TYPE_API_KEY, [
+                'type' => self::TYPE_INTEGER,
+                'description' => 'Number of API keys to be migrated.',
+                'default' => 0,
+                'example' => 5,
+            ])
             ->addRule(Resource::TYPE_SITE, [
                 'type' => self::TYPE_INTEGER,
                 'description' => 'Number of sites to be migrated.',

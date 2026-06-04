@@ -224,7 +224,11 @@ trait MigrationsBase
         $this->assertEquals(Appwrite::getSupportedResources(), $response['resources']);
         $this->assertEquals('Appwrite', $response['source']);
         $this->assertEquals('Appwrite', $response['destination']);
-        $this->assertEmpty($response['statusCounters']);
+
+        $this->assertArrayHasKey(Resource::TYPE_API_KEY, $response['statusCounters']);
+        $counts = $response['statusCounters'][Resource::TYPE_API_KEY];
+        $this->assertEquals(0, $counts['error']);
+        $this->assertGreaterThan(0, $counts['success']);
     }
 
     /**
@@ -2538,6 +2542,89 @@ trait MigrationsBase
 
         // Cleanup on source
         $this->client->call(Client::METHOD_DELETE, '/project/platforms/' . $platform['$id'], $sourceHeaders);
+    }
+
+    public function testAppwriteMigrationApiKey(): void
+    {
+        $sourceHeaders = [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ];
+
+        $destinationHeaders = [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getDestinationProject()['$id'],
+            'x-appwrite-key' => $this->getDestinationProject()['apiKey'],
+        ];
+
+        // Create API key on source project
+        $response = $this->client->call(Client::METHOD_POST, '/project/keys', $sourceHeaders, [
+            'keyId' => ID::unique(),
+            'name' => 'Test API Key',
+            'scopes' => ['databases.read', 'databases.write'],
+            'expire' => null,
+        ]);
+
+        $this->assertEquals(201, $response['headers']['status-code']);
+        $this->assertNotEmpty($response['body']);
+        $this->assertNotEmpty($response['body']['$id']);
+
+        $apiKey = $response['body'];
+
+        $result = $this->performMigrationSync([
+            'resources' => [
+                Resource::TYPE_API_KEY,
+            ],
+            'endpoint' => $this->webEndpoint,
+            'projectId' => $this->getProject()['$id'],
+            'apiKey' => $this->getProject()['apiKey'],
+        ]);
+
+        $this->assertEquals('completed', $result['status']);
+        $this->assertEquals([Resource::TYPE_API_KEY], $result['resources']);
+        $this->assertArrayHasKey(Resource::TYPE_API_KEY, $result['statusCounters']);
+        $this->assertEquals(0, $result['statusCounters'][Resource::TYPE_API_KEY]['error']);
+        $this->assertEquals(0, $result['statusCounters'][Resource::TYPE_API_KEY]['pending']);
+        $this->assertGreaterThanOrEqual(1, $result['statusCounters'][Resource::TYPE_API_KEY]['success']);
+        $this->assertEquals(0, $result['statusCounters'][Resource::TYPE_API_KEY]['processing']);
+        $this->assertEquals(0, $result['statusCounters'][Resource::TYPE_API_KEY]['warning']);
+
+        // Verify API key on destination project using the project's API key
+        $response = $this->client->call(Client::METHOD_GET, '/project/keys', $destinationHeaders);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertNotEmpty($response['body']);
+        $this->assertGreaterThan(0, $response['body']['total']);
+
+        $foundKey = null;
+
+        foreach ($response['body']['keys'] as $k) {
+            if ($k['name'] === 'Test API Key') {
+                $foundKey = $k;
+
+                break;
+            }
+        }
+
+        $this->assertNotNull($foundKey);
+        $this->assertEquals('Test API Key', $foundKey['name']);
+        $this->assertEqualsCanonicalizing(['databases.read', 'databases.write'], $foundKey['scopes']);
+        $this->assertEmpty($foundKey['expire']);
+        $this->assertNotEquals($apiKey['secret'], $foundKey['secret']);
+
+        // Cleanup migrated keys on destination — delete anything that isn't the destination's own auth key,
+        // otherwise later tests inherit duplicated apiKeys and fail on conflict.
+        $destinationAuthSecret = $this->getDestinationProject()['apiKey'];
+        foreach ($response['body']['keys'] as $k) {
+            if ($k['secret'] === $destinationAuthSecret) {
+                continue;
+            }
+            $this->client->call(Client::METHOD_DELETE, '/project/keys/' . $k['$id'], $destinationHeaders);
+        }
+
+        // Cleanup on source
+        $this->client->call(Client::METHOD_DELETE, '/project/keys/' . $apiKey['$id'], $sourceHeaders);
     }
 
     /**
