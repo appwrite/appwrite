@@ -701,7 +701,15 @@ class Migrations extends Action
                 }
                 $destination_type = $migration->getAttribute('destination');
                 if ($destination_type === DestinationCSV::getName() || $destination_type === DestinationJSON::getName()) {
-                    $this->handleDataExportComplete($project, $migration, $publisherForMails, $queueForRealtime, $platform, $authorization);
+                    try {
+                        $this->handleDataExportComplete($project, $migration, $publisherForMails, $queueForRealtime, $platform, $authorization);
+                    } catch (\Throwable $th) {
+                        // The export itself has already completed; sending the completion
+                        // notification is best-effort. A failure here must not escape the
+                        // finally block, where it would mask the migration result and, in a
+                        // shared worker, disrupt other in-flight migrations.
+                        Console::error('Failed to handle data export completion for migration ' . $migration->getId() . ': ' . $th->getMessage());
+                    }
                 }
             } finally {
                 $source?->cleanup();
@@ -780,6 +788,15 @@ class Migrations extends Action
         $bucketId = 'default'; // Always use platform default bucket
         $filename = $options['filename'] ?? 'export_' . \time();
         $userInternalId = $options['userInternalId'] ?? '';
+        if (empty($userInternalId)) {
+            // Exports initiated without a user session (e.g. via an API key) have no
+            // recipient for the completion notification. Skip it: there is nobody to
+            // notify, and querying the integer-only '$sequence' attribute with an empty
+            // value would otherwise throw a query validation error.
+            Console::warning('Skipping export completion notification for migration ' . $migration->getId() . ': no initiating user.');
+            return;
+        }
+
         $user = $this->dbForPlatform->findOne('users', [
             Query::equal('$sequence', [$userInternalId])
         ]);
