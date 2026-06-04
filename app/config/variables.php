@@ -604,6 +604,84 @@ return [
         ],
     ],
     [
+        'category' => 'Push',
+        'description' => 'Appwrite Push is Appwrite\'s own MQTT-based delivery network for mobile push notifications. Use these variables to configure the bundled broker that ships in docker-compose, or to point Appwrite at an MQTT broker you operate.',
+        'variables' => [
+            [
+                'name' => '_APP_PUSH_ENDPOINT',
+                'description' => 'Host[:port] of the Appwrite Push MQTT broker the messaging worker should publish to. Defaults to the in-stack `appwrite-push` service.',
+                'introduction' => '1.9.0',
+                'default' => 'appwrite-push:8883',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_PUSH_SIGNING_KEY',
+                'description' => 'Shared HMAC secret used to sign device and server JWTs. Treat as sensitive — both the broker and the messaging worker read this value. If empty the broker refuses all connections.',
+                'introduction' => '1.9.0',
+                'default' => '',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_PUSH_PORT',
+                'description' => 'TCP port the broker process binds to. Defaults to 8883 for TLS and 1883 for plaintext.',
+                'introduction' => '1.9.0',
+                'default' => '8883',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_PUSH_TLS',
+                'description' => 'Whether the broker terminates TLS. When enabled `_APP_PUSH_TLS_CERT` and `_APP_PUSH_TLS_KEY` must be set.',
+                'introduction' => '1.9.0',
+                'default' => 'enabled',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_PUSH_TLS_CERT',
+                'description' => 'Absolute path to the TLS certificate the broker presents.',
+                'introduction' => '1.9.0',
+                'default' => '',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_PUSH_TLS_KEY',
+                'description' => 'Absolute path to the TLS private key the broker presents.',
+                'introduction' => '1.9.0',
+                'default' => '',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_PUSH_KEEPALIVE',
+                'description' => 'Maximum allowed MQTT keep-alive in seconds. The broker advertises this value in CONNACK so clients can pick the longest interval allowed. Default 1800 (30 minutes) — picked specifically to minimize radio wake-ups on Android.',
+                'introduction' => '1.9.0',
+                'default' => '1800',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_PUSH_RETENTION',
+                'description' => 'How long the broker retains undelivered messages for an offline device, in seconds. Default 86400 (24 hours).',
+                'introduction' => '1.9.0',
+                'default' => '86400',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+        ],
+    ],
+    [
         'category' => 'Storage',
         'description' => '',
         'variables' => [

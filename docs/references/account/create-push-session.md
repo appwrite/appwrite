@@ -1,0 +1,1 @@
+Exchange an existing push target for connection details to the Appwrite Push MQTT broker. Returns the broker endpoint, the topic the device should subscribe to, a short-lived signed JWT to pass as the MQTT CONNECT password, and the keep-alive interval the device should use. The device must call this endpoint again before the returned token expires to keep its session alive.

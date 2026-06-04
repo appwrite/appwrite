@@ -177,6 +177,8 @@ $hostPath = rtrim($this->getParam('hostPath', ''), '/');
       - _APP_MAINTENANCE_RETENTION_SCHEDULES
       - _APP_SMS_PROVIDER
       - _APP_SMS_FROM
+      - _APP_PUSH_ENDPOINT
+      - _APP_PUSH_SIGNING_KEY
       - _APP_GRAPHQL_INTROSPECTION
       - _APP_GRAPHQL_MAX_BATCH_SIZE
       - _APP_GRAPHQL_MAX_COMPLEXITY
@@ -256,6 +258,34 @@ $hostPath = rtrim($this->getParam('hostPath', ''), '/');
       - _APP_DB_USER
       - _APP_DB_PASS
       - _APP_USAGE_STATS
+      - _APP_LOGGING_CONFIG
+
+  appwrite-push:
+    image: <?php echo $organization; ?>/<?php echo $image; ?>:<?php echo $version."\n"; ?>
+    entrypoint: push
+    <<: *x-logging
+    container_name: appwrite-push
+    restart: unless-stopped
+    ports:
+      - "8883:8883"
+    networks:
+      - appwrite
+    depends_on:
+      - redis
+    environment:
+      - _APP_ENV
+      - _APP_OPENSSL_KEY_V1
+      - _APP_PUSH_PORT
+      - _APP_PUSH_TLS
+      - _APP_PUSH_TLS_CERT
+      - _APP_PUSH_TLS_KEY
+      - _APP_PUSH_SIGNING_KEY
+      - _APP_PUSH_KEEPALIVE
+      - _APP_PUSH_RETENTION
+      - _APP_REDIS_HOST
+      - _APP_REDIS_PORT
+      - _APP_REDIS_USER
+      - _APP_REDIS_PASS
       - _APP_LOGGING_CONFIG
 
   appwrite-worker-audits:
@@ -666,6 +696,8 @@ $hostPath = rtrim($this->getParam('hostPath', ''), '/');
       - _APP_LOGGING_CONFIG
       - _APP_SMS_FROM
       - _APP_SMS_PROVIDER
+      - _APP_PUSH_ENDPOINT
+      - _APP_PUSH_SIGNING_KEY
       - _APP_STORAGE_DEVICE
       - _APP_STORAGE_S3_ACCESS_KEY
       - _APP_STORAGE_S3_SECRET
