@@ -71,6 +71,12 @@ class MigrationReport extends Model
                 'default' => 0,
                 'example' => 5,
             ])
+            ->addRule(Resource::TYPE_WEBHOOK, [
+                'type' => self::TYPE_INTEGER,
+                'description' => 'Number of webhooks to be migrated.',
+                'default' => 0,
+                'example' => 5,
+            ])
             ->addRule(Resource::TYPE_SITE, [
                 'type' => self::TYPE_INTEGER,
                 'description' => 'Number of sites to be migrated.',
