@@ -3198,6 +3198,72 @@ trait MigrationsBase
         $this->client->call(Client::METHOD_PATCH, '/project/smtp', $destinationKeyHeaders, ['enabled' => false]);
     }
 
+    public function testAppwriteMigrationCustomDomains(): void
+    {
+        $sourceHeaders = [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ];
+
+        $destinationHeaders = [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getDestinationProject()['$id'],
+            'x-appwrite-key' => $this->getDestinationProject()['apiKey'],
+        ];
+
+        // Domains are globally unique across projects; orphans from prior failed runs
+        // poison both source list+report (returns extra rules) and destination create
+        // (409 conflict). Sweep both before creating the new rule.
+        foreach ([$sourceHeaders, $destinationHeaders] as $headers) {
+            $existing = $this->client->call(Client::METHOD_GET, '/proxy/rules', $headers);
+            if ($existing['headers']['status-code'] === 200) {
+                foreach ($existing['body']['rules'] ?? [] as $r) {
+                    if (\str_ends_with($r['domain'] ?? '', '-migration-api.myapp.com')) {
+                        $this->client->call(Client::METHOD_DELETE, '/proxy/rules/' . $r['$id'], $headers);
+                    }
+                }
+            }
+        }
+
+        // Unique domain so re-runs and parallel suites can't collide on the
+        // global domain uniqueness check.
+        $domain = \uniqid() . '-migration-api.myapp.com';
+
+        $createResp = $this->client->call(Client::METHOD_POST, '/proxy/rules/api', $sourceHeaders, [
+            'domain' => $domain,
+        ]);
+        $this->assertEquals(201, $createResp['headers']['status-code']);
+        $sourceRule = $createResp['body'];
+
+        $result = $this->performMigrationSync([
+            'resources' => [
+                Resource::TYPE_RULE,
+            ],
+            'endpoint' => $this->webEndpoint,
+            'projectId' => $this->getProject()['$id'],
+            'apiKey' => $this->getProject()['apiKey'],
+        ]);
+
+        $this->assertEquals('completed', $result['status']);
+        $this->assertEquals([Resource::TYPE_RULE], $result['resources']);
+        $this->assertArrayHasKey(Resource::TYPE_RULE, $result['statusCounters']);
+        $this->assertEquals(0, $result['statusCounters'][Resource::TYPE_RULE]['error']);
+        $this->assertEquals(0, $result['statusCounters'][Resource::TYPE_RULE]['pending']);
+        $this->assertEquals(0, $result['statusCounters'][Resource::TYPE_RULE]['processing']);
+        // Domain uniqueness is enforced globally across projects. In this single-server
+        // E2E setup the source project still owns the domain when the migration runs,
+        // so the destination create hits the cross-project 409 — the destination must
+        // surface a WARNING, not a hard error, so the rest of the migration continues.
+        // (In a real self-hosted-to-cloud migration the source domain is on a separate
+        // server, so this conflict does not occur and we'd see `success` instead.)
+        $this->assertEquals(0, $result['statusCounters'][Resource::TYPE_RULE]['success']);
+        $this->assertGreaterThanOrEqual(1, $result['statusCounters'][Resource::TYPE_RULE]['warning']);
+
+        // Cleanup on source
+        $this->client->call(Client::METHOD_DELETE, '/proxy/rules/' . $sourceRule['$id'], $sourceHeaders);
+    }
+
     /**
      * Import documents from a CSV file.
      */
