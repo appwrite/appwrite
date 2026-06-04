@@ -3,13 +3,14 @@
 namespace Appwrite\Platform\Modules\Migrations\Http\Migrations\Appwrite\Report;
 
 use Appwrite\Extend\Exception;
+use Appwrite\Platform\Action;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response;
 use Utopia\Database\Document;
 use Utopia\Migration\Sources\Appwrite as AppwriteSource;
-use Utopia\Platform\Action;
+use Utopia\Platform\Enum;
 use Utopia\Platform\Scope\HTTP;
 use Utopia\Validator\ArrayList;
 use Utopia\Validator\Text;
@@ -46,7 +47,7 @@ class Get extends Action
                     )
                 ]
             ))
-            ->param('resources', [], new ArrayList(new WhiteList(AppwriteSource::getSupportedResources())), 'List of resources to migrate')
+            ->param('resources', [], new ArrayList(new WhiteList(AppwriteSource::getSupportedResources())), 'List of resources to migrate', enum: new Enum(name: 'AppwriteMigrationResource'))
             ->param('endpoint', '', new URL(), "Source's Appwrite Endpoint")
             ->param('projectID', '', new Text(512), "Source's Project ID")
             ->param('key', '', new Text(512), "Source's API Key")

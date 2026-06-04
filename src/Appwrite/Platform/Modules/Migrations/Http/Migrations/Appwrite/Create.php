@@ -5,6 +5,7 @@ namespace Appwrite\Platform\Modules\Migrations\Http\Migrations\Appwrite;
 use Appwrite\Event\Event;
 use Appwrite\Event\Message\Migration as MigrationMessage;
 use Appwrite\Event\Publisher\Migration as MigrationPublisher;
+use Appwrite\Platform\Action;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
@@ -15,7 +16,7 @@ use Utopia\Database\Helpers\ID;
 use Utopia\Database\Validator\UID;
 use Utopia\Migration\Destinations\OnDuplicate;
 use Utopia\Migration\Sources\Appwrite as AppwriteSource;
-use Utopia\Platform\Action;
+use Utopia\Platform\Enum;
 use Utopia\Platform\Scope\HTTP;
 use Utopia\Validator\ArrayList;
 use Utopia\Validator\Text;
@@ -54,11 +55,11 @@ class Create extends Action
                     )
                 ]
             ))
-            ->param('resources', [], new ArrayList(new WhiteList(AppwriteSource::getSupportedResources())), 'List of resources to migrate')
+            ->param('resources', [], new ArrayList(new WhiteList(AppwriteSource::getSupportedResources())), 'List of resources to migrate', enum: new Enum(name: 'AppwriteMigrationResource'))
             ->param('endpoint', '', new URL(), 'Source Appwrite endpoint')
             ->param('projectId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Source Project ID', false, ['dbForProject'])
             ->param('apiKey', '', new Text(512), 'Source API Key')
-            ->param('onDuplicate', OnDuplicate::Fail->value, new WhiteList(OnDuplicate::values()), 'Behavior when a row with an existing $id is encountered. "fail" (default): abort on first conflict. "skip": silently ignore. "overwrite": replace existing row.', true)
+            ->param('onDuplicate', OnDuplicate::Fail->value, new WhiteList(OnDuplicate::values()), 'Behavior when a row with an existing $id is encountered. "fail" (default): abort on first conflict. "skip": silently ignore. "overwrite": replace existing row.', true, enum: new Enum(name: 'OnDuplicate'))
             ->inject('response')
             ->inject('dbForProject')
             ->inject('project')
