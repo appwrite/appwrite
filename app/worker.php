@@ -68,10 +68,8 @@ if (\str_starts_with($workerName, 'databases')) {
 $redisHost = System::getEnv('_APP_REDIS_HOST', 'redis');
 $redisPort = (int) System::getEnv('_APP_REDIS_PORT', 6379);
 
-// The consumer is a single broker, not a pool: one blocking-receive connection
-// drives the receive loop while a separate, lock-guarded connection serializes
-// acks and publishes issued from the per-message coroutines. Broker\Redis is
-// both Publisher and Consumer, so it also backs the queue-depth telemetry gauge.
+// A dedicated connection drives the blocking receive loop; a lock-guarded one
+// serializes acks/publishes from the per-message coroutines.
 $adapter = new Swoole(
     new BrokerRedis(
         receive: new RedisConnection($redisHost, $redisPort),

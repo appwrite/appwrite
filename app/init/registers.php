@@ -363,10 +363,7 @@ $register->set('pools', function () {
                             default => null
                         };
                     case 'publisher':
-                        // Publishers only issue commands (enqueue/retry/size), never
-                        // the blocking receive, so a single connection backs both the
-                        // receive and commands slots. The pool isolates concurrent
-                        // callers, so no locking is needed here.
+                        // Publishers never block on receive, so one connection backs both broker slots.
                         return match ($dsn->getScheme()) {
                             'redis' => (function () use ($dsn) {
                                 $connection = new Queue\Connection\Redis($dsn->getHost(), $dsn->getPort());
