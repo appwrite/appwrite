@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from '@tanstack/react-router'
-import { useRef, useState } from 'react'
+import { useState } from 'react'
 import {
   ArrowRight,
   ChevronRight,
@@ -14,7 +14,6 @@ import {
 } from 'lucide-react'
 import { ConsoleLayout } from '@/components/global/layout/ConsoleLayout'
 import { CommandCenter } from '@/components/global/shared/CommandCenter'
-import { InitHeroBackground } from '@/components/pages/init/_components/InitHeroBackground'
 import { Button } from '@/components/ui/button'
 import { useKeyboardShortcut } from '@/hooks/use-keyboard-shortcuts'
 import { consoleAccountQueryOptions } from '@/lib/react-query/hooks/auth'
@@ -51,13 +50,20 @@ const customerLogos = [
   { src: '/images/logos/trusted-by/ibm.svg', alt: 'IBM', width: 63, height: 26 },
   { src: '/images/logos/trusted-by/american-airlines.svg', alt: 'American Airlines', width: 125, height: 20 },
   { src: '/images/logos/trusted-by/langx.svg', alt: 'LangX', width: 114, height: 25 },
-  { src: '/images/logos/trusted-by/gm.svg', alt: 'GM', width: 41, height: 41, inverseMask: true },
+  {
+    src: '/images/logos/trusted-by/gm.svg',
+    maskSrc: '/images/logos/trusted-by/gm-inverse-mask.svg',
+    alt: 'GM',
+    width: 41,
+    height: 41,
+    inverseMask: true,
+  },
   { src: '/images/logos/trusted-by/ey.svg', alt: 'EY', width: 39, height: 41 },
   { src: '/images/logos/trusted-by/k-collect.svg', alt: 'K-Collect', width: 110, height: 35, mask: true },
   { src: '/images/logos/trusted-by/bosch.svg', alt: 'BOSCH', width: 94, height: 31 },
   {
     src: '/images/logos/trusted-by/decathlon.svg',
-    maskSrc: '/images/logos/trusted-by/decathlon-text-mask.svg',
+    maskSrc: '/images/logos/trusted-by/decathlon-inverse-mask.svg',
     alt: 'DECATHLON',
     width: 108,
     height: 27,
@@ -140,7 +146,6 @@ export const Route = createFileRoute('/home')({
 
 function HomePage() {
   const [commandCenterOpen, setCommandCenterOpen] = useState(false)
-  const heroRef = useRef<HTMLDivElement>(null)
 
   useKeyboardShortcut('meta+k', () => setCommandCenterOpen(true))
   useKeyboardShortcut('control+k', () => setCommandCenterOpen(true))
@@ -155,23 +160,18 @@ function HomePage() {
         showFooter
         footer={{ expanded: true }}
       >
-        <section
-          ref={heroRef}
-          className="relative isolate overflow-hidden border-b border-border bg-muted-foreground/10 dark:bg-background"
-        >
-          <div className="absolute inset-0 opacity-25" aria-hidden>
-            <InitHeroBackground containerRef={heroRef} />
-          </div>
-
+        <section className="relative isolate overflow-hidden border-b border-border bg-muted-foreground/10 dark:bg-background">
           <div
-            className="pointer-events-none absolute inset-x-0 bottom-0 z-[1] h-[360px] overflow-hidden motion-reduce:hidden"
+            className="pointer-events-none absolute inset-0 overflow-hidden motion-reduce:hidden"
             aria-hidden
           >
-            <div className="absolute left-1/2 top-28 h-52 w-[520px] -translate-x-1/2 rounded-full bg-[radial-gradient(circle,color-mix(in_srgb,var(--brand-cta)_38%,transparent)_0%,transparent_68%)] blur-3xl [animation:home-hero-light-drift_12s_ease-in-out_infinite]" />
-            <div className="absolute left-[18%] top-40 h-44 w-[360px] rounded-full bg-[radial-gradient(circle,rgba(248,161,186,0.18)_0%,transparent_70%)] blur-3xl [animation:home-hero-light-drift-alt_16s_ease-in-out_infinite]" />
-            <div className="absolute right-[12%] top-36 h-48 w-[420px] rounded-full bg-[radial-gradient(circle,rgba(255,255,255,0.1)_0%,transparent_68%)] blur-3xl [animation:home-hero-light-drift-slow_18s_ease-in-out_infinite]" />
+            <div className="absolute -left-[32%] bottom-6 h-[460px] w-[980px] rounded-[999px] bg-[radial-gradient(ellipse,rgba(253,54,110,0.15)_0%,rgba(253,54,110,0.055)_44%,transparent_76%)] blur-3xl [animation:home-hero-soft-light-left_18s_ease-in-out_infinite]" />
+            <div className="absolute -right-[34%] bottom-0 h-[500px] w-[1040px] rounded-[999px] bg-[radial-gradient(ellipse,rgba(99,102,241,0.14)_0%,rgba(99,102,241,0.05)_46%,transparent_78%)] blur-3xl [animation:home-hero-soft-light-right_22s_ease-in-out_infinite]" />
           </div>
-
+          <div
+            className="absolute inset-0 bg-[radial-gradient(circle,var(--border)_1px,transparent_1px)] bg-[length:18px_18px]"
+            aria-hidden
+          />
           <div className="relative z-10 mx-auto flex min-h-[640px] w-full max-w-7xl flex-col items-center px-4 pb-0 pt-14 text-center sm:px-6 sm:pt-20">
             <Button
               variant="outline"
@@ -219,8 +219,8 @@ function HomePage() {
               </Button>
             </div>
 
-            <div className="mt-8 max-h-[380px] w-full max-w-[80rem] overflow-hidden rounded-t-[28px] border-x-2 border-t-2 border-b-0 border-muted-foreground/8 bg-muted-foreground/[0.035] px-4 pb-0 pt-1 backdrop-blur-md dark:border-muted/30 dark:bg-muted/10 sm:mt-10 sm:max-h-[480px]">
-              <div className="flex h-10 items-center gap-2 text-left">
+            <div className="relative isolate mt-8 max-h-[380px] w-full max-w-[80rem] overflow-hidden rounded-t-[28px] border-x-2 border-t-2 border-b-0 border-muted-foreground/8 bg-muted-foreground/[0.035] px-4 pb-0 pt-1 backdrop-blur-md dark:border-muted/30 dark:bg-muted/10 sm:mt-10 sm:max-h-[480px]">
+              <div className="relative z-10 flex h-10 items-center gap-2 text-left">
                 <div className="ml-2 flex items-center gap-1.5" aria-hidden>
                   <span className="size-2.5 rounded-full bg-muted-foreground/30" />
                   <span className="size-2.5 rounded-full bg-muted-foreground/30" />
@@ -237,30 +237,25 @@ function HomePage() {
               <img
                 src="/images/heroes/console-app-light.png"
                 alt="Appwrite console overview with usage charts, apps, and API keys"
-                className="block w-full rounded-t-lg opacity-95 dark:hidden"
+                className="relative z-10 block w-full rounded-t-lg opacity-95 dark:hidden"
               />
               <img
                 src="/images/heroes/console-app-dark.png"
                 alt="Appwrite console overview with usage charts, apps, and API keys"
-                className="hidden w-full rounded-t-lg opacity-95 dark:block"
+                className="relative z-10 hidden w-full rounded-t-lg opacity-95 dark:block"
               />
             </div>
           </div>
           <style>
             {`
-              @keyframes home-hero-light-drift {
-                0%, 100% { transform: translate3d(-50%, 16px, 0) scale(1); opacity: 0.72; }
-                50% { transform: translate3d(calc(-50% + 80px), -24px, 0) scale(1.08); opacity: 1; }
+              @keyframes home-hero-soft-light-left {
+                0%, 100% { transform: translate3d(0, 0, 0) scale(1); opacity: 0.75; }
+                50% { transform: translate3d(120px, -18px, 0) scale(1.08); opacity: 1; }
               }
 
-              @keyframes home-hero-light-drift-alt {
-                0%, 100% { transform: translate3d(-40px, 18px, 0) scale(0.94); opacity: 0.5; }
-                50% { transform: translate3d(120px, -16px, 0) scale(1.08); opacity: 0.82; }
-              }
-
-              @keyframes home-hero-light-drift-slow {
-                0%, 100% { transform: translate3d(60px, 12px, 0) scale(1); opacity: 0.42; }
-                50% { transform: translate3d(-120px, -20px, 0) scale(1.12); opacity: 0.75; }
+              @keyframes home-hero-soft-light-right {
+                0%, 100% { transform: translate3d(0, 0, 0) scale(1); opacity: 0.7; }
+                50% { transform: translate3d(-136px, -24px, 0) scale(1.07); opacity: 0.96; }
               }
             `}
           </style>
@@ -337,26 +332,20 @@ function HomePage() {
                       <span
                         role="img"
                         aria-label={logo.alt}
-                        className="relative block bg-foreground/75 transition duration-200 group-hover:scale-105 group-hover:bg-foreground dark:bg-muted-foreground dark:group-hover:bg-foreground"
+                        className="block bg-foreground/75 transition duration-200 group-hover:scale-105 group-hover:bg-foreground dark:bg-muted-foreground dark:group-hover:bg-foreground"
                         style={{
                           width: logo.width,
                           height: logo.height,
+                          maskImage: `url(${inverseMaskSrc})`,
+                          maskPosition: 'center',
+                          maskRepeat: 'no-repeat',
+                          maskSize: 'contain',
+                          WebkitMaskImage: `url(${inverseMaskSrc})`,
+                          WebkitMaskPosition: 'center',
+                          WebkitMaskRepeat: 'no-repeat',
+                          WebkitMaskSize: 'contain',
                         }}
-                      >
-                        <span
-                          className="absolute inset-0 bg-muted-foreground/10 dark:bg-background"
-                          style={{
-                            maskImage: `url(${inverseMaskSrc})`,
-                            maskPosition: 'center',
-                            maskRepeat: 'no-repeat',
-                            maskSize: 'contain',
-                            WebkitMaskImage: `url(${inverseMaskSrc})`,
-                            WebkitMaskPosition: 'center',
-                            WebkitMaskRepeat: 'no-repeat',
-                            WebkitMaskSize: 'contain',
-                          }}
-                        />
-                      </span>
+                      />
                     ) : 'mask' in logo ? (
                       <span
                         role="img"
