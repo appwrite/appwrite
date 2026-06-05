@@ -20,11 +20,9 @@ const accordionEase = 'cubic-bezier(0.22, 1, 0.36, 1)'
 const accordionTransition = `600ms ${accordionEase}`
 
 /** Shared logo sizing for compact cards (grid + collapsed accordion). */
-const smallCardLogoClassName = 'h-5 w-auto max-h-none sm:h-6 lg:h-7'
+const smallCardLogoClassName = 'max-h-3.5 w-auto sm:max-h-4 lg:max-h-5'
 
-const collapsedAccordionLogoClassName = 'h-10 w-auto max-h-none lg:h-11'
-
-const SMALL_LOGO_SCALE = 1.25
+const collapsedAccordionLogoClassName = 'max-h-7 w-auto lg:max-h-8'
 
 function SmallCardLogo({
   logo,
@@ -33,14 +31,12 @@ function SmallCardLogo({
   logo: Pick<HomeCustomerLogo, 'src' | 'alt' | 'width' | 'height' | 'mask' | 'maskSrc' | 'inverseMask'>
   className?: string
 }) {
-  const usesMask = logo.mask || logo.inverseMask
-
   return (
     <TrustedByLogo
       src={logo.src}
       alt={logo.alt}
-      width={usesMask ? Math.round(logo.width * SMALL_LOGO_SCALE) : logo.width}
-      height={usesMask ? Math.round(logo.height * SMALL_LOGO_SCALE) : logo.height}
+      width={logo.width}
+      height={logo.height}
       mask={logo.mask}
       maskSrc={logo.maskSrc}
       inverseMask={logo.inverseMask}
@@ -106,7 +102,7 @@ function CustomerLogoGrid({ logos }: { logos: HomeCustomerLogo[] }) {
       ref={gridRef}
       key={pageIndex}
       className={cn(
-        'relative z-[1] col-span-6 mt-3 grid min-h-[calc(2*4rem+0.75rem)] grid-cols-2 gap-3 sm:grid-cols-3 lg:mt-4 lg:min-h-[calc(2*5rem+1rem)] lg:grid-cols-subgrid lg:gap-4',
+        'relative z-[1] col-span-6 mt-3 grid min-h-[calc(2*3.25rem+0.75rem)] grid-cols-2 gap-3 sm:grid-cols-3 lg:mt-4 lg:min-h-[calc(2*4rem+1rem)] lg:grid-cols-subgrid lg:gap-4',
         !prefersReducedMotion && 'motion-reduce:animate-none animate-in fade-in duration-500',
       )}
       aria-label="More customers"
@@ -154,7 +150,7 @@ function CaseStudyPanelContent({
     >
       <div
         className={cn(
-          'flex h-6 w-full max-w-[min(100%,150px)] items-center motion-reduce:transition-none sm:h-7 md:h-8',
+          'flex h-5 w-full max-w-[min(100%,120px)] items-center motion-reduce:transition-none sm:h-6 md:h-7',
           revealed ? 'opacity-100' : 'opacity-0',
         )}
         style={{
@@ -232,7 +228,7 @@ function CaseStudyPanelContent({
 
 function CustomerLogoCard({ logo }: { logo: HomeCustomerLogo }) {
   return (
-    <div className="flex h-16 w-full min-w-0 items-center justify-center overflow-hidden rounded-xl border border-border bg-card px-3 lg:h-20 lg:px-4">
+    <div className="flex h-[3.25rem] w-full min-w-0 items-center justify-center overflow-hidden rounded-xl border border-border bg-card px-3 lg:h-16 lg:px-4">
       <SmallCardLogo logo={logo} />
     </div>
   )

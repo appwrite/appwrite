@@ -20,6 +20,7 @@ import {
 } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
 import { ConsoleLayout } from '@/components/global/layout/ConsoleLayout'
+import { InitOrgPromoBanner } from '@/components/pages/organizations/$orgId/overview/_components/InitOrgPromoBanner'
 import { AiSection } from '@/components/pages/home/AiSection'
 import { NetworkSection } from '@/components/pages/home/NetworkSection'
 import { PricingSection } from '@/components/pages/home/PricingSection'
@@ -216,6 +217,7 @@ function HomePage() {
         showFooter
         footer={{ expanded: true }}
       >
+        <InitOrgPromoBanner />
         <section className="relative isolate overflow-hidden border-b border-border bg-background">
           <HomeSoftLights />
           <div
