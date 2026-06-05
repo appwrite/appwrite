@@ -85,20 +85,43 @@ class StatsResources extends Action
 
     protected function countForProject(Database $dbForPlatform, callable $getLogsDB, callable $getProjectDB, Document $project): void
     {
+        $maxRetries = 3;
+
+        for ($attempt = 1; $attempt <= $maxRetries; $attempt++) {
+            $this->documents = [];
+
+            try {
+                $this->attemptCountForProject($dbForPlatform, $getLogsDB, $getProjectDB, $project);
+                return;
+            } catch (\PDOException $e) {
+                Console::warning("PDOException on attempt {$attempt}/{$maxRetries} for project {$project->getId()}: {$e->getMessage()}");
+
+                if ($attempt < $maxRetries) {
+                    \sleep($attempt); // Linear backoff: 1s, 2s
+                    continue;
+                }
+
+                call_user_func_array($this->logError, [$e, "StatsResources", "count_for_project_{$project->getId()}"]);
+            } catch (Throwable $e) {
+                Console::error('Unable to count for project ' . $project->getId());
+                Console::error($e->getMessage());
+                call_user_func_array($this->logError, [$e, "StatsResources", "count_for_project_{$project->getId()}"]);
+                return;
+            }
+        }
+    }
+
+    protected function attemptCountForProject(Database $dbForPlatform, callable $getLogsDB, callable $getProjectDB, Document $project): void
+    {
         Console::info('Begining count for: ' . $project->getId());
 
         $dbForLogs = null;
         $dbForProject = null;
-        try {
-            /** @var \Utopia\Database\Database $dbForLogs */
-            $dbForLogs = call_user_func($getLogsDB, $project);
-            /** @var \Utopia\Database\Database $dbForProject */
-            $dbForProject = call_user_func($getProjectDB, $project);
-        } catch (Throwable $th) {
-            Console::error('Unable to get database');
-            Console::error($th->getMessage());
-            return;
-        }
+
+        /** @var \Utopia\Database\Database $dbForLogs */
+        $dbForLogs = call_user_func($getLogsDB, $project);
+        /** @var \Utopia\Database\Database $dbForProject */
+        $dbForProject = call_user_func($getProjectDB, $project);
 
         try {
 
@@ -205,6 +228,9 @@ class StatsResources extends Action
 
             $this->writeDocuments($dbForLogs, $project);
         } catch (Throwable $th) {
+            if ($th instanceof \PDOException) {
+                throw $th;
+            }
             call_user_func_array($this->logError, [$th, "StatsResources", "count_for_project_{$project->getId()}"]);
         }
 
