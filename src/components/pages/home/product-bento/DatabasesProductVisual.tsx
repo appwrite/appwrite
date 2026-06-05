@@ -1,5 +1,5 @@
-import { useState } from 'react'
-import { Braces, Fingerprint, Layers, Table as TableIcon, type LucideIcon } from 'lucide-react'
+import { useEffect, useRef, useState } from 'react'
+import { Braces, CheckCircle2, Fingerprint, Layers, Loader2, Table as TableIcon, type LucideIcon } from 'lucide-react'
 import {
   MySQLDolphinIcon,
   PostgresElephantIcon,
@@ -26,18 +26,20 @@ const TABLE_ROWS: {
   code: string
   team: string
   lap: string
-  revealDelayMs?: number
+  revealDelayMs: number
+  highlight?: boolean
 }[] = [
-  { id: '67f8a2…04c1', driver: 'Charles Leclerc', code: 'LEC', team: 'ferrari', lap: '70842' },
-  { id: '67f8b1…12a4', driver: 'Lando Norris', code: 'NOR', team: 'mclaren', lap: '71016' },
-  { id: '67f8c3…28b7', driver: 'Oscar Piastri', code: 'PIA', team: 'mclaren', lap: '71204' },
+  { id: '67f8a2…04c1', driver: 'Charles Leclerc', code: 'LEC', team: 'ferrari', lap: '70842', revealDelayMs: 220 },
+  { id: '67f8b1…12a4', driver: 'Lando Norris', code: 'NOR', team: 'mclaren', lap: '71016', revealDelayMs: 360 },
+  { id: '67f8c3…28b7', driver: 'Oscar Piastri', code: 'PIA', team: 'mclaren', lap: '71204', revealDelayMs: 500 },
   {
     id: '67f8d4…39c8',
     driver: 'Lewis Hamilton',
     code: 'HAM',
     team: 'ferrari',
     lap: '71388',
-    revealDelayMs: 200,
+    revealDelayMs: 640,
+    highlight: true,
   },
 ]
 
@@ -135,7 +137,30 @@ function SpreadsheetEmptyRow() {
   )
 }
 
-function TablesDbPanel() {
+function TablesDbPanel({ playKey }: { playKey: number }) {
+  const shouldAnimate = playKey > 0
+  const [queryState, setQueryState] = useState<'running' | 'done'>(shouldAnimate ? 'running' : 'done')
+  const [rowCount, setRowCount] = useState(shouldAnimate ? 843 : 847)
+
+  useEffect(() => {
+    if (playKey === 0) {
+      setQueryState('done')
+      setRowCount(847)
+      return
+    }
+
+    setQueryState('running')
+    setRowCount(843)
+
+    const countTimer = window.setTimeout(() => setRowCount(847), 780)
+    const doneTimer = window.setTimeout(() => setQueryState('done'), 920)
+
+    return () => {
+      window.clearTimeout(countTimer)
+      window.clearTimeout(doneTimer)
+    }
+  }, [playKey])
+
   return (
     <div className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-lg border border-border bg-background/70">
       <div className="border-b border-border bg-muted/5 px-3.5 py-2.5">
@@ -143,14 +168,34 @@ function TablesDbPanel() {
           <p className="min-w-0 font-mono text-[12px] text-muted-foreground">
             monaco_gp / <span className={cn('font-medium', productBentoIdle.text)}>lap_times</span>
           </p>
-          <p className="shrink-0 text-[11px] tabular-nums text-muted-foreground">847 rows</p>
+          <p
+            className={cn(
+              'shrink-0 text-[11px] tabular-nums text-muted-foreground transition-[color,transform] duration-300',
+              rowCount === 847 && 'group-hover:scale-105 group-hover:text-foreground',
+            )}
+          >
+            {rowCount} rows
+          </p>
         </div>
       </div>
 
-      <div className="border-b border-border/80 bg-background/60 px-3.5 py-2">
-        <p className="truncate font-mono text-[11px]">
+      <div
+        className={cn(
+          'flex items-center gap-2 border-b border-border/80 bg-background/60 px-3.5 py-2',
+          shouldAnimate && queryState === 'running' && 'product-bento-db-query-running',
+        )}
+      >
+        <p className="min-w-0 flex-1 truncate font-mono text-[11px]">
           <QueryEqualFilter />
         </p>
+        {queryState === 'running' ? (
+          <Loader2 className="size-3.5 shrink-0 animate-spin text-muted-foreground" aria-hidden />
+        ) : (
+          <CheckCircle2
+            className={cn('size-3.5 shrink-0', productBentoIdle.emeraldIcon)}
+            aria-hidden
+          />
+        )}
       </div>
 
       <div className="min-h-0 flex-1 overflow-auto">
@@ -202,20 +247,20 @@ function TablesDbPanel() {
             </tr>
           </thead>
           <tbody>
-            {TABLE_ROWS.map((row) => {
-              const revealCellClassName =
-                row.revealDelayMs !== undefined
-                  ? 'opacity-0 transition-opacity duration-300 group-hover:opacity-100 motion-reduce:opacity-100'
-                  : undefined
-              const revealCellStyle =
-                row.revealDelayMs !== undefined
-                  ? { transitionDelay: `${row.revealDelayMs}ms` }
-                  : undefined
-
-              return (
+            {TABLE_ROWS.map((row) => (
               <tr
                 key={row.id}
-                className="transition-[background-color] duration-300 hover:bg-muted/50 motion-reduce:hover:bg-transparent"
+                className={cn(
+                  shouldAnimate &&
+                    row.highlight &&
+                    'product-bento-db-row-highlight motion-reduce:animate-none',
+                  'transition-[background-color] duration-300 hover:bg-muted/50 motion-reduce:hover:bg-transparent',
+                )}
+                style={
+                  shouldAnimate && row.highlight
+                    ? { animationDelay: `${row.revealDelayMs}ms` }
+                    : undefined
+                }
               >
                 <SpreadsheetCheckboxCell />
                 {TABLE_COLUMNS.map((column, columnIndex) => {
@@ -237,13 +282,16 @@ function TablesDbPanel() {
                     >
                       <span
                         className={cn(
-                          'truncate text-[12px]',
+                          'block truncate text-[12px]',
                           isMutedValue && 'text-muted-foreground',
                           isAccentValue && productBentoIdle.text,
                           column.key === 'lap' && 'tabular-nums',
-                          revealCellClassName,
+                          shouldAnimate &&
+                            'product-bento-db-row-reveal motion-reduce:opacity-100',
                         )}
-                        style={revealCellStyle}
+                        style={
+                          shouldAnimate ? { animationDelay: `${row.revealDelayMs}ms` } : undefined
+                        }
                       >
                         {value}
                       </span>
@@ -251,8 +299,7 @@ function TablesDbPanel() {
                   )
                 })}
               </tr>
-              )
-            })}
+            ))}
             {Array.from({ length: EMPTY_TABLE_ROW_COUNT }, (_, index) => (
               <SpreadsheetEmptyRow key={`empty-row-${index}`} />
             ))}
@@ -263,41 +310,42 @@ function TablesDbPanel() {
   )
 }
 
-function DocumentsDbPanel() {
+function DocumentsDbPanel({ playKey }: { playKey: number }) {
   return (
-    <div className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-lg border border-border bg-background/70">
+    <div
+      key={playKey}
+      className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-lg border border-border bg-background/70"
+    >
       <div className="flex items-center justify-between gap-2 border-b border-border bg-muted/5 px-3.5 py-2.5">
-        <div className="min-w-0">
+        <div className="min-w-0 product-bento-db-reveal" style={{ animationDelay: '0ms' }}>
           <p className={cn('text-[12px] font-medium', productBentoIdle.text)}>race_briefings</p>
           <p className="truncate text-[10px] text-muted-foreground">Monaco GP strategy</p>
         </div>
         <Badge
           variant="inactive"
-          className="h-5 shrink-0 px-1.5 text-[10px] transition-[color,background-color,border-color] duration-300 group-hover:border-green-500/30 group-hover:bg-green-500/10 group-hover:text-green-700 dark:group-hover:text-green-400"
+          className="product-bento-db-reveal h-5 shrink-0 px-1.5 text-[10px] transition-[color,background-color,border-color] duration-300 group-hover:border-green-500/30 group-hover:bg-green-500/10 group-hover:text-green-700 dark:group-hover:text-green-400"
+          style={{ animationDelay: '420ms' }}
         >
           Live
         </Badge>
       </div>
       <div className="min-h-0 flex-1 overflow-hidden p-3 font-mono text-[11px] leading-relaxed sm:text-[12px]">
-        <div>
+        <div className="product-bento-db-reveal" style={{ animationDelay: '60ms' }}>
           <Syn tone="punctuation">{'{'}</Syn>
         </div>
-        <div className="pl-2">
+        <div className="product-bento-db-reveal pl-2" style={{ animationDelay: '120ms' }}>
           <Syn tone="property">&quot;event&quot;</Syn>
           <Syn tone="punctuation">: </Syn>
           <Syn tone="string">&quot;Monaco GP&quot;</Syn>
           <Syn tone="punctuation">,</Syn>
         </div>
-        <div className="pl-2">
+        <div className="product-bento-db-reveal pl-2" style={{ animationDelay: '180ms' }}>
           <Syn tone="property">&quot;session&quot;</Syn>
           <Syn tone="punctuation">: </Syn>
           <Syn tone="string">&quot;Race&quot;</Syn>
           <Syn tone="punctuation">,</Syn>
         </div>
-        <div
-          className="pl-2 opacity-0 transition-opacity duration-300 group-hover:opacity-100 motion-reduce:opacity-100"
-          style={{ transitionDelay: '160ms' }}
-        >
+        <div className="product-bento-db-reveal pl-2" style={{ animationDelay: '260ms' }}>
           <Syn tone="property">&quot;weather&quot;</Syn>
           <Syn tone="punctuation">: </Syn>
           <Syn tone="punctuation">{'{ '}</Syn>
@@ -311,15 +359,12 @@ function DocumentsDbPanel() {
           <Syn tone="punctuation">{' }'}</Syn>
           <Syn tone="punctuation">,</Syn>
         </div>
-        <div
-          className="pl-2 opacity-0 transition-opacity duration-300 group-hover:opacity-100 motion-reduce:opacity-100"
-          style={{ transitionDelay: '300ms' }}
-        >
+        <div className="product-bento-db-reveal pl-2" style={{ animationDelay: '340ms' }}>
           <Syn tone="property">&quot;strategy&quot;</Syn>
           <Syn tone="punctuation">: </Syn>
           <Syn tone="string">&quot;Medium stint, pit 14-17&quot;</Syn>
         </div>
-        <div>
+        <div className="product-bento-db-reveal" style={{ animationDelay: '400ms' }}>
           <Syn tone="punctuation">{'}'}</Syn>
         </div>
       </div>
@@ -327,21 +372,27 @@ function DocumentsDbPanel() {
   )
 }
 
-function VectorsDbPanel() {
+function VectorsDbPanel({ playKey }: { playKey: number }) {
   return (
-    <div className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-lg border border-border bg-background/70 p-3.5">
-      <div className="shrink-0 rounded-md border border-border/80 bg-muted/8 px-3 py-2">
+    <div
+      key={playKey}
+      className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-lg border border-border bg-background/70 p-3.5"
+    >
+      <div
+        className="product-bento-db-reveal shrink-0 rounded-md border border-border/80 bg-muted/8 px-3 py-2"
+        style={{ animationDelay: '0ms' }}
+      >
         <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Query</p>
         <p className="mt-1 truncate font-mono text-[11px] sm:text-[12px]">
           <Syn tone="string">&quot;Monaco undercut on Medium&quot;</Syn>
         </p>
       </div>
       <div className="mt-3 min-h-0 flex-1 space-y-2">
-        {VECTOR_RESULTS.map((row) => (
+        {VECTOR_RESULTS.map((row, index) => (
           <div
-            key={row.title}
-            className="flex items-center justify-between gap-3 rounded-md border border-border/70 bg-muted/5 px-3 py-2 opacity-80 transition-opacity duration-300 group-hover:opacity-100 motion-reduce:opacity-100"
-            style={{ transitionDelay: `${row.delayMs}ms` }}
+            key={`${row.title}-${playKey}`}
+            className="product-bento-db-result-reveal flex items-center justify-between gap-3 rounded-md border border-border/70 bg-muted/5 px-3 py-2 motion-reduce:opacity-100"
+            style={{ animationDelay: `${120 + index * 160}ms` }}
           >
             <span className={cn('min-w-0 truncate text-[11px] font-medium sm:text-[12px]', productBentoIdle.text)}>
               {row.title}
@@ -410,25 +461,68 @@ function NativeDbSelectionStrip() {
 
 export function DatabasesProductVisual() {
   const [activeTab, setActiveTab] = useState<AppwriteTabId>('tablesdb')
+  const [tablesPlayKey, setTablesPlayKey] = useState(0)
+  const [documentsPlayKey, setDocumentsPlayKey] = useState(0)
+  const [vectorsPlayKey, setVectorsPlayKey] = useState(0)
+  const visualHoveredRef = useRef(false)
 
   const tabPanelClassName =
     'absolute inset-0 mt-0 flex h-full w-full min-h-0 flex-col overflow-hidden p-3.5 focus-visible:outline-none'
 
+  const replayTablesAnimation = () => {
+    setTablesPlayKey((key) => key + 1)
+  }
+
+  const handleVisualEnter = () => {
+    if (visualHoveredRef.current) {
+      return
+    }
+
+    visualHoveredRef.current = true
+
+    if (activeTab === 'tablesdb') {
+      replayTablesAnimation()
+    }
+  }
+
+  const handleVisualLeave = () => {
+    visualHoveredRef.current = false
+
+    if (activeTab === 'tablesdb') {
+      setTablesPlayKey(0)
+    }
+  }
+
+  const handleTabChange = (value: string) => {
+    const tab = value as AppwriteTabId
+    setActiveTab(tab)
+
+    if (tab === 'tablesdb') {
+      replayTablesAnimation()
+    } else if (tab === 'documentsdb') {
+      setDocumentsPlayKey((key) => key + 1)
+    } else if (tab === 'vectorsdb') {
+      setVectorsPlayKey((key) => key + 1)
+    }
+  }
+
   return (
     <Tabs
       value={activeTab}
-      onValueChange={(value) => setActiveTab(value as AppwriteTabId)}
+      onValueChange={handleTabChange}
+      onMouseEnter={handleVisualEnter}
+      onMouseLeave={handleVisualLeave}
       className="absolute inset-0 flex flex-col gap-0 overflow-visible"
     >
       <div className="relative min-h-0 flex-1">
         <TabsContent value="tablesdb" className={tabPanelClassName}>
-          <TablesDbPanel />
+          <TablesDbPanel playKey={tablesPlayKey} />
         </TabsContent>
         <TabsContent value="documentsdb" className={tabPanelClassName}>
-          <DocumentsDbPanel />
+          <DocumentsDbPanel key={documentsPlayKey} playKey={documentsPlayKey} />
         </TabsContent>
         <TabsContent value="vectorsdb" className={tabPanelClassName}>
-          <VectorsDbPanel />
+          <VectorsDbPanel key={vectorsPlayKey} playKey={vectorsPlayKey} />
         </TabsContent>
 
         <div className="pointer-events-none absolute inset-x-0 bottom-0 z-50 flex justify-center px-3 sm:bottom-1">

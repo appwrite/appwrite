@@ -1415,3 +1415,137 @@ html[data-init-ticket-video-capturing] [data-init-ticket-video-capture] * {
     animation: none;
   }
 }
+
+@keyframes product-bento-db-panel-reveal {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes product-bento-db-result-reveal {
+  from {
+    opacity: 0;
+    transform: translateY(6px) scale(0.98);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.product-bento-db-reveal {
+  opacity: 0;
+  animation: product-bento-db-panel-reveal 0.45s ease forwards;
+}
+
+.product-bento-db-result-reveal {
+  opacity: 0;
+  animation: product-bento-db-result-reveal 0.5s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+@keyframes product-bento-db-row-reveal {
+  from {
+    opacity: 0;
+    transform: translateX(-12px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes product-bento-db-row-highlight {
+  0%,
+  55% {
+    background-color: transparent;
+  }
+
+  72% {
+    background-color: color-mix(in srgb, var(--muted-foreground) 12%, transparent);
+  }
+
+  100% {
+    background-color: transparent;
+  }
+}
+
+@keyframes product-bento-db-row-highlight-branded {
+  0%,
+  55% {
+    background-color: transparent;
+  }
+
+  72% {
+    background-color: color-mix(in srgb, var(--brand-cta) 18%, transparent);
+  }
+
+  100% {
+    background-color: transparent;
+  }
+}
+
+@keyframes product-bento-db-query-running {
+  0%,
+  100% {
+    background-color: transparent;
+  }
+
+  50% {
+    background-color: color-mix(in srgb, var(--muted-foreground) 8%, transparent);
+  }
+}
+
+@keyframes product-bento-db-query-running-branded {
+  0%,
+  100% {
+    background-color: transparent;
+  }
+
+  50% {
+    background-color: color-mix(in srgb, var(--brand-cta) 10%, transparent);
+  }
+}
+
+.product-bento-db-row-reveal {
+  opacity: 0;
+  animation: product-bento-db-row-reveal 0.65s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+.product-bento-db-row-highlight {
+  animation: product-bento-db-row-highlight 1.1s ease forwards;
+}
+
+.group:hover .product-bento-db-row-highlight {
+  animation: product-bento-db-row-highlight-branded 1.1s ease forwards;
+}
+
+.product-bento-db-query-running {
+  animation: product-bento-db-query-running 0.75s ease-in-out 2;
+}
+
+.group:hover .product-bento-db-query-running {
+  animation: product-bento-db-query-running-branded 0.75s ease-in-out 2;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .product-bento-db-reveal,
+  .product-bento-db-result-reveal,
+  .product-bento-db-row-reveal,
+  .product-bento-db-row-highlight {
+    opacity: 1;
+    animation: none;
+    transform: none;
+  }
+
+  .product-bento-db-query-running {
+    animation: none;
+  }
+}

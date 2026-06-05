@@ -172,7 +172,7 @@ export function SitesProductVisual() {
                 <span className="size-1.5 rounded-full bg-muted-foreground/25" aria-hidden />
                 <span className="size-1.5 rounded-full bg-muted-foreground/25" aria-hidden />
                 <span className="ml-0.5 truncate font-mono text-[9px] text-muted-foreground">
-                  preview.acme.io
+                  preview.appwrite.network
                 </span>
               </div>
               <div className="space-y-2 bg-muted/8 p-3">
@@ -181,10 +181,10 @@ export function SitesProductVisual() {
                     className={cn('size-2 rounded-full', productBentoIdle.brandDot)}
                     aria-hidden
                   />
-                  <span className={cn('text-[11px] font-semibold', productBentoIdle.text)}>Acme</span>
+                  <span className={cn('text-[11px] font-semibold', productBentoIdle.text)}>Appwrite</span>
                 </div>
                 <p className={cn('text-[11px] font-medium leading-tight', productBentoIdle.text)}>
-                  Ship faster with Acme
+                  Ship faster with Appwrite
                 </p>
                 <div
                   className="h-2 w-full max-w-[11rem] rounded-sm bg-muted-foreground/10"
