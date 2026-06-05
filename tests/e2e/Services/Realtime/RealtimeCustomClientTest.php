@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Tests\E2E\Services\Realtime;
 
 use CURLFile;
@@ -16,7 +18,7 @@ use Utopia\Database\Helpers\Role;
 use WebSocket\ConnectionException;
 use WebSocket\TimeoutException;
 
-class RealtimeCustomClientTest extends Scope
+final class RealtimeCustomClientTest extends Scope
 {
     use FunctionsBase;
     use RealtimeBase;
@@ -458,7 +460,7 @@ class RealtimeCustomClientTest extends Scope
         $this->assertContains("users.*", $response['data']['events']);
 
         $lastEmail = $this->getLastEmailByAddress('torsten@appwrite.io', function ($email) use ($userId) {
-            $this->assertStringContainsString($userId, $email['html']);
+            $this->assertStringContainsString($userId, (string) $email['html']);
         });
         $tokens = $this->extractQueryParamsFromEmailLink($lastEmail['html']);
         $verificationSecret = $tokens['secret'];
@@ -674,8 +676,8 @@ class RealtimeCustomClientTest extends Scope
         $response = json_decode($client->receive(), true);
 
         $lastEmail = $this->getLastEmailByAddress('torsten@appwrite.io', function ($email) use ($userId) {
-            $this->assertStringContainsString($userId, $email['html']);
-            $this->assertStringContainsString('recovery', $email['html']);
+            $this->assertStringContainsString($userId, (string) $email['html']);
+            $this->assertStringContainsString('recovery', (string) $email['html']);
         });
         $tokens = $this->extractQueryParamsFromEmailLink($lastEmail['html']);
         $recoverySecret = $tokens['secret'];

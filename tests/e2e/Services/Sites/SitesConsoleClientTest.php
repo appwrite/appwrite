@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Tests\E2E\Services\Sites;
 
 use PHPUnit\Framework\Attributes\Group;
@@ -10,7 +12,7 @@ use Tests\E2E\Scopes\SideConsole;
 use Utopia\Console;
 use Utopia\Database\Helpers\ID;
 
-class SitesConsoleClientTest extends Scope
+final class SitesConsoleClientTest extends Scope
 {
     use ProjectCustom;
     use SideConsole;
@@ -51,8 +53,8 @@ class SitesConsoleClientTest extends Scope
         $response = $proxyClient->call(Client::METHOD_GET, '/');
 
         $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertStringContainsString("Themed website", $response['body']);
-        $this->assertStringContainsString("@media (prefers-color-scheme: dark)", $response['body']);
+        $this->assertStringContainsString("Themed website", (string) $response['body']);
+        $this->assertStringContainsString("@media (prefers-color-scheme: dark)", (string) $response['body']);
 
         $deployment = null;
         $site = null;
@@ -136,7 +138,7 @@ class SitesConsoleClientTest extends Scope
         $screenshotDarkHash = \md5($file['body']);
         $this->assertNotEmpty($screenshotDarkHash);
 
-        $this->assertNotEquals($screenshotDarkHash, $screenshotHash);
+        $this->assertNotSame($screenshotDarkHash, $screenshotHash);
 
         $screenshotId = $deployment['body']['screenshotLight'];
         $file = $this->client->call(Client::METHOD_GET, "/storage/buckets/screenshots/files/$screenshotId/preview?project=console");

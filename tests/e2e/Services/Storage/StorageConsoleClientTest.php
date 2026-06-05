@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Tests\E2E\Services\Storage;
 
 use CURLFile;
@@ -9,7 +11,7 @@ use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\SideConsole;
 use Utopia\Database\Helpers\ID;
 
-class StorageConsoleClientTest extends Scope
+final class StorageConsoleClientTest extends Scope
 {
     use SideConsole;
     use StorageBase;
@@ -27,7 +29,7 @@ class StorageConsoleClientTest extends Scope
             'range' => '32h'
         ]);
 
-        $this->assertEquals($response['headers']['status-code'], 400);
+        $this->assertEquals(400, $response['headers']['status-code']);
 
         /**
          * Test for SUCCESS
@@ -40,7 +42,7 @@ class StorageConsoleClientTest extends Scope
         ]);
 
         $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertEquals(7, count($response['body']));
+        $this->assertCount(7, $response['body']);
         $this->assertEquals('24h', $response['body']['range']);
         $this->assertIsNumeric($response['body']['bucketsTotal']);
         $this->assertIsNumeric($response['body']['filesTotal']);
@@ -99,7 +101,7 @@ class StorageConsoleClientTest extends Scope
         ]);
 
         $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertEquals(7, count($response['body']));
+        $this->assertCount(7, $response['body']);
         $this->assertEquals('24h', $response['body']['range']);
         $this->assertIsNumeric($response['body']['filesTotal']);
         $this->assertIsNumeric($response['body']['filesStorageTotal']);
