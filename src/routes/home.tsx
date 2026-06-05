@@ -21,13 +21,11 @@ import {
 } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
 import { ConsoleLayout } from '@/components/global/layout/ConsoleLayout'
-import { TrustedByLogo } from '@/components/global/shared/TrustedByLogo'
 import { NetworkSection } from '@/components/pages/home/NetworkSection'
 import { PricingSection } from '@/components/pages/home/PricingSection'
 import { ScaleSection } from '@/components/pages/home/ScaleSection'
 import { HomeSoftLights } from '@/components/pages/home/HomeSoftLights'
 import { TestimonialsSection } from '@/components/pages/home/TestimonialsSection'
-import { homeCustomerLogos } from '@/lib/home/customer-logos'
 import { CommandCenter } from '@/components/global/shared/CommandCenter'
 import { Button } from '@/components/ui/button'
 import { useKeyboardShortcut } from '@/hooks/use-keyboard-shortcuts'
@@ -347,46 +345,7 @@ function HomePage() {
           </nav>
         </section>
 
-        <section className="border-b border-border bg-background py-16 sm:py-20">
-          <div className="mx-auto w-full max-w-6xl px-4 sm:px-6">
-            <h2 className="font-aeonik-pro text-center text-[15px] font-normal text-foreground sm:text-[16px]">
-              Trusted by developer teams worldwide
-              <span className="text-[var(--brand-cta)]">_</span>
-            </h2>
-
-            <div className="grid grid-cols-2 gap-x-8 gap-y-9 py-10 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 lg:gap-x-12">
-              {homeCustomerLogos.map((logo) => (
-                <div
-                  key={logo.src}
-                  className="group flex min-h-10 items-center justify-center"
-                >
-                  <TrustedByLogo
-                    src={logo.src}
-                    alt={logo.alt}
-                    width={logo.width}
-                    height={logo.height}
-                    mask={'mask' in logo}
-                    maskSrc={'maskSrc' in logo ? logo.maskSrc : undefined}
-                    inverseMask={'inverseMask' in logo}
-                    className="max-w-[120px]"
-                  />
-                </div>
-              ))}
-            </div>
-
-            <div className="text-center">
-              <a
-                href="https://appwrite.io/blog/category/customer-stories"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center gap-1.5 text-[13px] font-medium text-foreground transition-colors hover:text-[var(--brand-cta)]"
-              >
-                Read our case studies
-                <ArrowRight className="size-3.5" />
-              </a>
-            </div>
-          </div>
-        </section>
+        {/* Top customer logos — hidden for now. Restore from git history when needed. */}
 
         <section className="bg-background py-16 sm:py-20">
           <div className="mx-auto w-full max-w-7xl px-4 sm:px-6">

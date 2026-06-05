@@ -401,6 +401,17 @@ export function TestimonialsSection() {
     <section className="relative isolate overflow-hidden border-t border-border bg-background py-16 sm:py-20">
       <HomeSoftLights variant="testimonials" />
       <div className="relative z-[1] mx-auto w-full max-w-7xl px-4 sm:px-6">
+        <div className="mx-auto mb-10 max-w-3xl text-center sm:mb-12">
+          <h2 className="font-aeonik-pro text-balance text-[36px] font-normal leading-none tracking-tight text-foreground sm:text-[44px]">
+            Loved by teams building in production
+            <span className="text-[var(--brand-cta)]">_</span>
+          </h2>
+          <p className="mx-auto mt-5 max-w-2xl text-balance text-[14px] leading-6 text-muted-foreground sm:text-[15px] sm:leading-7">
+            From fast-moving startups to global enterprises, developers ship faster
+            with Appwrite.
+          </p>
+        </div>
+
         {mounted ? (
           <div className="lg:grid lg:grid-cols-6 lg:gap-4">
             <div
@@ -420,6 +431,18 @@ export function TestimonialsSection() {
             </div>
 
             {gridLogos.length > 0 ? <CustomerLogoGrid logos={gridLogos} /> : null}
+
+            <div className="relative z-[1] col-span-6 mt-8 text-center lg:mt-10">
+              <a
+                href="https://appwrite.io/blog/category/customer-stories"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-1.5 text-[13px] font-medium text-foreground transition-colors hover:text-[var(--brand-cta)]"
+              >
+                Read our case studies
+                <ArrowRight className="size-3.5" />
+              </a>
+            </div>
           </div>
         ) : (
           <div
