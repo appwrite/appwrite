@@ -4,6 +4,7 @@ import { TrustedByLogo } from '@/components/global/shared/TrustedByLogo'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { homeCaseStudies, type HomeCaseStudy } from '@/lib/home/case-studies'
 import { cn } from '@/lib/utils'
+import { HomeSoftLights } from './HomeSoftLights'
 
 const PANEL_RESIZE_MS = 300
 
@@ -138,14 +139,14 @@ function CaseStudyCard({
         }}
         onKeyDown={handleKeyDown}
         className={cn(
-          'group relative grid w-full min-w-0 overflow-hidden rounded-xl border border-border bg-card/50 [grid-template-areas:stack]',
+          'group relative isolate z-[1] grid w-full min-w-0 overflow-hidden rounded-xl border border-border bg-card [grid-template-areas:stack]',
           'transition-colors duration-300 ease-in-out motion-reduce:transition-none',
           'outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50',
-          !isActive && 'cursor-pointer hover:bg-accent/20',
+          !isActive && 'cursor-pointer hover:bg-accent/30',
           'max-lg:min-h-[5.5rem] max-lg:h-auto',
           'lg:h-[467px] lg:max-h-[467px] lg:min-h-[467px]',
           isActive &&
-            'bg-card/80 shadow-[0_0_0_4px_color-mix(in_srgb,var(--border)_65%,transparent)]',
+            'shadow-[0_0_0_4px_color-mix(in_srgb,var(--border)_65%,transparent)]',
         )}
       >
         <div
@@ -208,13 +209,14 @@ export function TestimonialsSection() {
   }
 
   return (
-    <section className="border-t border-border bg-background py-16 sm:py-20">
-      <div className="mx-auto w-full max-w-7xl px-4 sm:px-6">
+    <section className="relative isolate overflow-hidden border-t border-border bg-background py-16 sm:py-20">
+      <HomeSoftLights variant="testimonials" />
+      <div className="relative z-[1] mx-auto w-full max-w-7xl px-4 sm:px-6">
         <div
           role="tablist"
           aria-label="Customer stories"
           onKeyDown={handleTabListKeyDown}
-          className="flex w-full touch-pan-y flex-col gap-3 overscroll-y-auto sm:gap-4 lg:min-h-[467px] lg:flex-row lg:items-stretch"
+          className="relative z-[1] flex w-full touch-pan-y flex-col gap-3 overscroll-y-auto sm:gap-4 lg:min-h-[467px] lg:flex-row lg:items-stretch"
         >
           {homeCaseStudies.map((study) => (
             <CaseStudyCard

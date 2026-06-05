@@ -25,6 +25,7 @@ import { TrustedByLogo } from '@/components/global/shared/TrustedByLogo'
 import { NetworkSection } from '@/components/pages/home/NetworkSection'
 import { PricingSection } from '@/components/pages/home/PricingSection'
 import { ScaleSection } from '@/components/pages/home/ScaleSection'
+import { HomeSoftLights } from '@/components/pages/home/HomeSoftLights'
 import { TestimonialsSection } from '@/components/pages/home/TestimonialsSection'
 import { CommandCenter } from '@/components/global/shared/CommandCenter'
 import { Button } from '@/components/ui/button'
@@ -237,19 +238,13 @@ function HomePage() {
         showFooter
         footer={{ expanded: true }}
       >
-        <section className="relative isolate overflow-x-clip border-b border-border bg-background">
+        <section className="relative isolate overflow-hidden border-b border-border bg-background">
+          <HomeSoftLights />
           <div
-            className="pointer-events-none absolute inset-0 overflow-hidden motion-reduce:hidden"
-            aria-hidden
-          >
-            <div className="absolute -left-[42%] bottom-16 h-[220px] w-[440px] rounded-[999px] bg-[radial-gradient(ellipse,rgba(253,54,110,0.34)_0%,rgba(253,54,110,0.12)_44%,transparent_76%)] blur-3xl [animation:home-hero-soft-light-left-light_11s_ease-in-out_infinite] dark:bg-[radial-gradient(ellipse,rgba(253,54,110,0.15)_0%,rgba(253,54,110,0.055)_44%,transparent_76%)] dark:[animation:home-hero-soft-light-left-dark_11s_ease-in-out_infinite] sm:-left-[34%] sm:bottom-8 sm:h-[360px] sm:w-[760px] lg:-left-[32%] lg:bottom-6 lg:h-[460px] lg:w-[980px]" />
-            <div className="absolute -right-[44%] bottom-12 h-[240px] w-[460px] rounded-[999px] bg-[radial-gradient(ellipse,rgba(124,103,254,0.3)_0%,rgba(124,103,254,0.1)_46%,transparent_78%)] blur-3xl [animation:home-hero-soft-light-right-light_13s_ease-in-out_infinite] dark:bg-[radial-gradient(ellipse,rgba(99,102,241,0.14)_0%,rgba(99,102,241,0.05)_46%,transparent_78%)] dark:[animation:home-hero-soft-light-right-dark_13s_ease-in-out_infinite] sm:-right-[36%] sm:bottom-4 sm:h-[380px] sm:w-[800px] lg:-right-[34%] lg:bottom-0 lg:h-[500px] lg:w-[1040px]" />
-          </div>
-          <div
-            className="absolute inset-0 bg-[radial-gradient(circle,var(--border)_1px,transparent_1px)] bg-[length:18px_18px]"
+            className="absolute inset-0 z-0 bg-[radial-gradient(circle,var(--border)_1px,transparent_1px)] bg-[length:18px_18px]"
             aria-hidden
           />
-          <div className="relative z-10 mx-auto flex w-full max-w-7xl flex-col items-center px-4 pb-0 pt-14 text-center sm:px-6 sm:pt-20">
+          <div className="relative z-[1] mx-auto flex w-full max-w-7xl flex-col items-center px-4 pb-0 pt-14 text-center sm:px-6 sm:pt-20">
             <Button
               variant="outline"
               size="sm"
@@ -297,9 +292,9 @@ function HomePage() {
             </div>
           </div>
 
-          <div className="relative z-10 mt-8 w-full sm:mt-10">
+          <div className="relative z-[1] mt-8 w-full sm:mt-10">
             <div className="mx-auto w-full max-w-[min(100vw-2rem,80rem)] px-4 sm:max-w-[min(100vw-3rem,84rem)] sm:px-6 lg:max-w-[min(100vw-4rem,88rem)]">
-              <div className="relative isolate max-h-[400px] w-full overflow-hidden rounded-t-[28px] border-x-2 border-t-2 border-b-0 border-muted-foreground/8 bg-muted-foreground/[0.035] px-4 pb-0 pt-1 backdrop-blur-md dark:border-muted/30 dark:bg-muted/10 sm:max-h-[500px] lg:max-h-[560px]">
+              <div className="relative isolate z-[1] max-h-[400px] w-full overflow-hidden rounded-t-[28px] border-x-2 border-t-2 border-b-0 border-muted-foreground/8 bg-muted-foreground/[0.035] px-4 pb-0 pt-1 backdrop-blur-md dark:border-muted/30 dark:bg-muted/10 sm:max-h-[500px] lg:max-h-[560px]">
                 <div className="relative z-10 flex h-10 items-center gap-2 text-left">
                   <div className="ml-2 flex items-center gap-1.5" aria-hidden>
                     <span className="size-2.5 rounded-full bg-muted-foreground/30" />
@@ -327,29 +322,6 @@ function HomePage() {
               </div>
             </div>
           </div>
-          <style>
-            {`
-              @keyframes home-hero-soft-light-left-light {
-                0%, 100% { transform: translate3d(0, 0, 0) rotate(-3deg) scale(1); opacity: 0.88; }
-                50% { transform: translate3d(18%, -7%, 0) rotate(4deg) scale(1.1); opacity: 1; }
-              }
-
-              @keyframes home-hero-soft-light-right-light {
-                0%, 100% { transform: translate3d(0, 0, 0) rotate(3deg) scale(1); opacity: 0.85; }
-                50% { transform: translate3d(-18%, -8%, 0) rotate(-4deg) scale(1.09); opacity: 1; }
-              }
-
-              @keyframes home-hero-soft-light-left-dark {
-                0%, 100% { transform: translate3d(0, 0, 0) rotate(-3deg) scale(1); opacity: 0.72; }
-                50% { transform: translate3d(18%, -7%, 0) rotate(4deg) scale(1.1); opacity: 1; }
-              }
-
-              @keyframes home-hero-soft-light-right-dark {
-                0%, 100% { transform: translate3d(0, 0, 0) rotate(3deg) scale(1); opacity: 0.68; }
-                50% { transform: translate3d(-18%, -8%, 0) rotate(-4deg) scale(1.09); opacity: 0.98; }
-              }
-            `}
-          </style>
         </section>
 
         <section className="border-b border-border bg-background py-14 sm:py-16">
