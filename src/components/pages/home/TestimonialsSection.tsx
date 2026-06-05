@@ -2,11 +2,103 @@ import { useEffect, useState, type KeyboardEvent } from 'react'
 import { ArrowRight } from 'lucide-react'
 import { TrustedByLogo } from '@/components/global/shared/TrustedByLogo'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
-import { homeCaseStudies, type HomeCaseStudy } from '@/lib/home/case-studies'
+import { pickRandomHomeCaseStudies, type HomeCaseStudy } from '@/lib/home/case-studies'
+import {
+  HOME_LOGO_GRID_COUNT,
+  pickRandomHomeLogos,
+  type HomeCustomerLogo,
+} from '@/lib/home/customer-logos'
+import { useMediaMinWidth } from '@/hooks/use-media-min-width'
 import { cn } from '@/lib/utils'
 import { HomeSoftLights } from './HomeSoftLights'
 
-const PANEL_RESIZE_MS = 300
+const PANEL_RESIZE_MS = 420
+const LOGO_GRID_ROWS = 2
+const LOGO_ROTATE_MS = 6000
+
+const accordionEase = 'cubic-bezier(0.22, 1, 0.36, 1)'
+const accordionTransition = `600ms ${accordionEase}`
+
+/** Shared logo sizing for compact cards (grid + collapsed accordion). */
+const smallCardLogoClassName = 'h-5 w-auto max-h-none sm:h-6 lg:h-7'
+
+const collapsedAccordionLogoClassName = 'h-10 w-auto max-h-none lg:h-11'
+
+const SMALL_LOGO_SCALE = 1.25
+
+function SmallCardLogo({
+  logo,
+  className = smallCardLogoClassName,
+}: {
+  logo: Pick<HomeCustomerLogo, 'src' | 'alt' | 'width' | 'height' | 'mask' | 'maskSrc' | 'inverseMask'>
+  className?: string
+}) {
+  const usesMask = logo.mask || logo.inverseMask
+
+  return (
+    <TrustedByLogo
+      src={logo.src}
+      alt={logo.alt}
+      width={usesMask ? Math.round(logo.width * SMALL_LOGO_SCALE) : logo.width}
+      height={usesMask ? Math.round(logo.height * SMALL_LOGO_SCALE) : logo.height}
+      mask={logo.mask}
+      maskSrc={logo.maskSrc}
+      inverseMask={logo.inverseMask}
+      interactive={false}
+      className={className}
+    />
+  )
+}
+
+function useLogoGridColumns() {
+  const isLg = useMediaMinWidth(1024)
+  const isSm = useMediaMinWidth(640)
+  if (isLg) return 6
+  if (isSm) return 3
+  return 2
+}
+
+function CustomerLogoGrid({ logos }: { logos: HomeCustomerLogo[] }) {
+  const columns = useLogoGridColumns()
+  const logosPerPage = columns * LOGO_GRID_ROWS
+  const totalPages = Math.max(1, Math.ceil(logos.length / logosPerPage))
+  const [pageIndex, setPageIndex] = useState(0)
+
+  useEffect(() => {
+    setPageIndex(0)
+  }, [logosPerPage, logos.length])
+
+  useEffect(() => {
+    if (totalPages <= 1) return
+
+    const intervalId = window.setInterval(() => {
+      setPageIndex((current) => (current + 1) % totalPages)
+    }, LOGO_ROTATE_MS)
+
+    return () => window.clearInterval(intervalId)
+  }, [totalPages])
+
+  const visibleBatch = logos.slice(pageIndex * logosPerPage, (pageIndex + 1) * logosPerPage)
+  const prefersReducedMotion =
+    typeof window !== 'undefined' &&
+    window.matchMedia('(prefers-reduced-motion: reduce)').matches
+
+  return (
+    <div
+      key={pageIndex}
+      className={cn(
+        'relative z-[1] col-span-6 mt-3 grid min-h-[calc(2*4rem+0.75rem)] grid-cols-2 gap-3 sm:grid-cols-3 lg:mt-4 lg:min-h-[calc(2*5rem+1rem)] lg:grid-cols-subgrid lg:gap-4',
+        !prefersReducedMotion && 'motion-reduce:animate-none animate-in fade-in duration-500',
+      )}
+      aria-label="More customers"
+      aria-live="polite"
+    >
+      {visibleBatch.map((logo) => (
+        <CustomerLogoCard key={logo.src} logo={logo} />
+      ))}
+    </div>
+  )
+}
 
 function CaseStudyDottedSeparator() {
   return (
@@ -17,7 +109,13 @@ function CaseStudyDottedSeparator() {
   )
 }
 
-function CaseStudyPanelContent({ study }: { study: HomeCaseStudy }) {
+function CaseStudyPanelContent({
+  study,
+  revealed = true,
+}: {
+  study: HomeCaseStudy
+  revealed?: boolean
+}) {
   const initials = study.name
     .split(' ')
     .map((part) => part[0])
@@ -33,9 +131,17 @@ function CaseStudyPanelContent({ study }: { study: HomeCaseStudy }) {
       id={panelId}
       role="tabpanel"
       aria-labelledby={tabId}
-      className="flex w-[min(100%,36rem)] min-w-[17.5rem] max-w-none flex-col gap-5 p-6 text-left lg:w-[min(100%,40rem)] lg:min-w-[28rem] lg:p-10"
+      className="flex w-[min(100%,36rem)] min-w-[17.5rem] max-w-none flex-col gap-5 p-6 text-left lg:w-full lg:min-w-0 lg:p-10"
     >
-      <div className="flex h-6 w-full max-w-[min(100%,150px)] items-center sm:h-7 md:h-8">
+      <div
+        className={cn(
+          'flex h-6 w-full max-w-[min(100%,150px)] items-center motion-reduce:transition-none sm:h-7 md:h-8',
+          revealed ? 'opacity-100' : 'opacity-0',
+        )}
+        style={{
+          transition: `opacity 500ms ${accordionEase}`,
+        }}
+      >
         <TrustedByLogo
           src={study.logo}
           alt={study.company}
@@ -47,11 +153,29 @@ function CaseStudyPanelContent({ study }: { study: HomeCaseStudy }) {
         />
       </div>
 
-      <h3 className="font-aeonik-pro max-w-[20ch] text-pretty text-[22px] font-normal leading-[1.15] tracking-tight text-foreground sm:text-[26px] lg:text-[28px]">
+      <h3
+        className={cn(
+          'font-aeonik-pro max-w-[20ch] text-pretty text-[22px] font-normal leading-[1.15] tracking-tight text-foreground motion-reduce:transition-none sm:text-[26px] lg:text-[28px]',
+          revealed ? 'translate-y-0 opacity-100' : 'translate-y-2 opacity-0',
+        )}
+        style={{
+          transition: `opacity 650ms ${accordionEase}, transform 650ms ${accordionEase}`,
+          transitionDelay: revealed ? '60ms' : '0ms',
+        }}
+      >
         {study.headline}
       </h3>
 
-      <div className="space-y-5 pt-1">
+      <div
+        className={cn(
+          'space-y-5 pt-1 motion-reduce:transition-none',
+          revealed ? 'translate-y-0 opacity-100' : 'translate-y-2 opacity-0',
+        )}
+        style={{
+          transition: `opacity 650ms ${accordionEase}, transform 650ms ${accordionEase}`,
+          transitionDelay: revealed ? '140ms' : '0ms',
+        }}
+      >
         <CaseStudyDottedSeparator />
 
         <blockquote className="max-w-2xl text-[13px] leading-6 text-foreground sm:text-[14px] sm:leading-7">
@@ -83,6 +207,14 @@ function CaseStudyPanelContent({ study }: { study: HomeCaseStudy }) {
           </a>
         </div>
       </div>
+    </div>
+  )
+}
+
+function CustomerLogoCard({ logo }: { logo: HomeCustomerLogo }) {
+  return (
+    <div className="flex h-16 w-full min-w-0 items-center justify-center overflow-hidden rounded-xl border border-border bg-card px-3 lg:h-20 lg:px-4">
+      <SmallCardLogo logo={logo} />
     </div>
   )
 }
@@ -123,9 +255,8 @@ function CaseStudyCard({
   return (
     <div
       className={cn(
-        'min-w-0 w-full shrink max-lg:my-1.5 max-lg:flex-none lg:my-0',
-        'motion-reduce:transition-none lg:transition-[flex-grow,flex-basis] lg:duration-300 lg:ease-in-out',
-        isActive ? 'lg:flex-[7]' : 'lg:flex-[1.5]',
+        'min-w-0 w-full shrink max-lg:my-1.5 max-lg:flex-none lg:my-0 lg:min-w-0',
+        isActive ? 'lg:col-span-4' : 'lg:col-span-1',
       )}
     >
       <div
@@ -141,7 +272,7 @@ function CaseStudyCard({
         onKeyDown={handleKeyDown}
         className={cn(
           'group relative isolate z-[1] w-full min-w-0 overflow-hidden rounded-xl border border-border bg-card',
-          'transition-colors duration-300 ease-in-out motion-reduce:transition-none',
+          'motion-reduce:transition-none',
           'outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50',
           !isActive && 'cursor-pointer hover:bg-accent/30',
           !isActive && 'h-16 lg:h-[467px] lg:max-h-[467px] lg:min-h-[467px]',
@@ -149,29 +280,38 @@ function CaseStudyCard({
           isActive &&
             'lg:shadow-[0_0_0_4px_color-mix(in_srgb,var(--border)_65%,transparent)]',
         )}
+        style={
+          {
+            transition: `background-color ${accordionTransition}, box-shadow ${accordionTransition}`,
+          } as const
+        }
       >
         {isActive ? (
           <div
             className={cn(
               'lg:hidden',
-              'transition-opacity duration-200 ease-out motion-reduce:transition-none',
-              showPanelContent ? 'opacity-100' : 'opacity-0',
+              'motion-reduce:transition-none',
+              showPanelContent
+                ? 'translate-y-0 opacity-100'
+                : 'translate-y-2 opacity-0',
             )}
+            style={{ transition: `opacity 550ms ${accordionEase}, transform 550ms ${accordionEase}` }}
           >
-            <CaseStudyPanelContent study={study} />
+            <CaseStudyPanelContent study={study} revealed={showPanelContent} />
           </div>
         ) : (
           <div
             className="flex h-16 items-center justify-center px-4 lg:hidden"
             aria-hidden={isActive}
           >
-            <TrustedByLogo
-              src={study.logo}
-              alt={study.company}
-              width={study.logoWidth}
-              height={study.logoHeight}
-              mask={study.logoMask}
-              className="h-[1.125rem] w-auto sm:h-5 group-hover:scale-100"
+            <SmallCardLogo
+              logo={{
+                src: study.logo,
+                alt: study.company,
+                width: study.logoWidth,
+                height: study.logoHeight,
+                mask: study.logoMask,
+              }}
             />
           </div>
         )}
@@ -179,18 +319,24 @@ function CaseStudyCard({
         <div className="hidden lg:grid lg:h-full lg:min-h-0 lg:[grid-template-areas:stack]">
           <div
             className={cn(
-              'flex items-center justify-center [grid-area:stack] p-8 transition-opacity duration-200',
+              'flex items-center justify-center [grid-area:stack] p-8 motion-reduce:transition-none',
               isActive ? 'pointer-events-none opacity-0' : 'opacity-100',
             )}
+            style={{
+              transition: `opacity 500ms ${accordionEase}`,
+              transitionDelay: isActive ? '0ms' : '120ms',
+            }}
             aria-hidden={isActive}
           >
-            <TrustedByLogo
-              src={study.logo}
-              alt={study.company}
-              width={study.logoWidth}
-              height={study.logoHeight}
-              mask={study.logoMask}
-              className="h-8 w-auto group-hover:scale-100"
+            <SmallCardLogo
+              logo={{
+                src: study.logo,
+                alt: study.company,
+                width: study.logoWidth,
+                height: study.logoHeight,
+                mask: study.logoMask,
+              }}
+              className={collapsedAccordionLogoClassName}
             />
           </div>
 
@@ -203,11 +349,14 @@ function CaseStudyCard({
           >
             <div
               className={cn(
-                'transition-opacity duration-200 ease-out motion-reduce:transition-none',
-                showPanelContent && isActive ? 'opacity-100' : 'opacity-0',
+                'motion-reduce:transition-none',
+                showPanelContent && isActive
+                  ? 'translate-y-0 opacity-100'
+                  : 'translate-y-2 opacity-0',
               )}
+              style={{ transition: `opacity 600ms ${accordionEase}, transform 600ms ${accordionEase}` }}
             >
-              <CaseStudyPanelContent study={study} />
+              <CaseStudyPanelContent study={study} revealed={showPanelContent && isActive} />
             </div>
           </div>
         </div>
@@ -217,23 +366,34 @@ function CaseStudyCard({
 }
 
 export function TestimonialsSection() {
-  const [activeId, setActiveId] = useState(homeCaseStudies[0]?.id ?? '')
+  const [mounted, setMounted] = useState(false)
+  const [visibleStudies, setVisibleStudies] = useState<HomeCaseStudy[]>([])
+  const [gridLogos, setGridLogos] = useState<HomeCustomerLogo[]>([])
+  const [activeId, setActiveId] = useState('')
+
+  useEffect(() => {
+    const studies = pickRandomHomeCaseStudies()
+    setVisibleStudies(studies)
+    setActiveId(studies[0]?.id ?? '')
+    setGridLogos(pickRandomHomeLogos(HOME_LOGO_GRID_COUNT))
+    setMounted(true)
+  }, [])
 
   const handleTabListKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
-    const currentIndex = homeCaseStudies.findIndex((study) => study.id === activeId)
+    const currentIndex = visibleStudies.findIndex((study) => study.id === activeId)
     if (currentIndex < 0) return
 
     let nextIndex = currentIndex
     if (event.key === 'ArrowRight' || event.key === 'ArrowDown') {
-      nextIndex = (currentIndex + 1) % homeCaseStudies.length
+      nextIndex = (currentIndex + 1) % visibleStudies.length
     } else if (event.key === 'ArrowLeft' || event.key === 'ArrowUp') {
-      nextIndex = (currentIndex - 1 + homeCaseStudies.length) % homeCaseStudies.length
+      nextIndex = (currentIndex - 1 + visibleStudies.length) % visibleStudies.length
     } else {
       return
     }
 
     event.preventDefault()
-    const nextStudy = homeCaseStudies[nextIndex]
+    const nextStudy = visibleStudies[nextIndex]
     if (nextStudy) setActiveId(nextStudy.id)
   }
 
@@ -241,21 +401,32 @@ export function TestimonialsSection() {
     <section className="relative isolate overflow-hidden border-t border-border bg-background py-16 sm:py-20">
       <HomeSoftLights variant="testimonials" />
       <div className="relative z-[1] mx-auto w-full max-w-7xl px-4 sm:px-6">
-        <div
-          role="tablist"
-          aria-label="Customer stories"
-          onKeyDown={handleTabListKeyDown}
-          className="relative z-[1] flex w-full touch-pan-y flex-col max-lg:gap-0 overscroll-y-auto lg:min-h-[467px] lg:flex-row lg:items-stretch lg:gap-4"
-        >
-          {homeCaseStudies.map((study) => (
-            <CaseStudyCard
-              key={study.id}
-              study={study}
-              isActive={activeId === study.id}
-              onSelect={() => setActiveId(study.id)}
-            />
-          ))}
-        </div>
+        {mounted ? (
+          <div className="lg:grid lg:grid-cols-6 lg:gap-4">
+            <div
+              role="tablist"
+              aria-label="Customer stories"
+              onKeyDown={handleTabListKeyDown}
+              className="relative z-[1] col-span-6 flex w-full touch-pan-y flex-col max-lg:gap-0 overscroll-y-auto lg:grid lg:min-h-[467px] lg:grid-cols-subgrid lg:items-stretch lg:gap-4"
+            >
+              {visibleStudies.map((study) => (
+                <CaseStudyCard
+                  key={study.id}
+                  study={study}
+                  isActive={activeId === study.id}
+                  onSelect={() => setActiveId(study.id)}
+                />
+              ))}
+            </div>
+
+            {gridLogos.length > 0 ? <CustomerLogoGrid logos={gridLogos} /> : null}
+          </div>
+        ) : (
+          <div
+            className="max-lg:min-h-[40rem] lg:min-h-[467px]"
+            aria-hidden
+          />
+        )}
       </div>
     </section>
   )

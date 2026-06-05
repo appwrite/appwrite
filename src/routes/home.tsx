@@ -27,6 +27,7 @@ import { PricingSection } from '@/components/pages/home/PricingSection'
 import { ScaleSection } from '@/components/pages/home/ScaleSection'
 import { HomeSoftLights } from '@/components/pages/home/HomeSoftLights'
 import { TestimonialsSection } from '@/components/pages/home/TestimonialsSection'
+import { homeCustomerLogos } from '@/lib/home/customer-logos'
 import { CommandCenter } from '@/components/global/shared/CommandCenter'
 import { Button } from '@/components/ui/button'
 import { useKeyboardShortcut } from '@/hooks/use-keyboard-shortcuts'
@@ -55,35 +56,6 @@ const aiDocLinks = [
   { label: 'MCP servers', href: 'https://appwrite.io/docs/tooling/ai/mcp-servers' },
   { label: 'Appwrite Skills', href: 'https://appwrite.io/docs/tooling/ai/skills' },
   { label: 'AI Arena', href: 'https://arena.appwrite.io/' },
-] as const
-
-const customerLogos = [
-  { src: '/images/logos/trusted-by/times-of-india.svg', alt: 'The Times of India', width: 123, height: 45 },
-  { src: '/images/logos/trusted-by/devkind.svg', alt: 'DevKind', width: 91, height: 27 },
-  { src: '/images/logos/trusted-by/first-media.svg', alt: 'First Media', width: 139, height: 37 },
-  { src: '/images/logos/trusted-by/acer.svg', alt: 'Acer', width: 90, height: 22 },
-  { src: '/images/logos/trusted-by/ibm.svg', alt: 'IBM', width: 63, height: 26 },
-  { src: '/images/logos/trusted-by/american-airlines.svg', alt: 'American Airlines', width: 125, height: 20 },
-  { src: '/images/logos/trusted-by/langx.svg', alt: 'LangX', width: 114, height: 25 },
-  {
-    src: '/images/logos/trusted-by/gm.svg',
-    maskSrc: '/images/logos/trusted-by/gm-inverse-mask.svg',
-    alt: 'GM',
-    width: 41,
-    height: 41,
-    inverseMask: true,
-  },
-  { src: '/images/logos/trusted-by/ey.svg', alt: 'EY', width: 39, height: 41 },
-  { src: '/images/logos/trusted-by/k-collect.svg', alt: 'K-Collect', width: 110, height: 35, mask: true },
-  { src: '/images/logos/trusted-by/bosch.svg', alt: 'BOSCH', width: 94, height: 31 },
-  {
-    src: '/images/logos/trusted-by/decathlon.svg',
-    maskSrc: '/images/logos/trusted-by/decathlon-inverse-mask.svg',
-    alt: 'DECATHLON',
-    width: 108,
-    height: 27,
-    inverseMask: true,
-  },
 ] as const
 
 const productBentoItems = [
@@ -383,7 +355,7 @@ function HomePage() {
             </h2>
 
             <div className="grid grid-cols-2 gap-x-8 gap-y-9 py-10 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 lg:gap-x-12">
-              {customerLogos.map((logo) => (
+              {homeCustomerLogos.map((logo) => (
                 <div
                   key={logo.src}
                   className="group flex min-h-10 items-center justify-center"
