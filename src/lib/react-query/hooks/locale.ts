@@ -88,14 +88,21 @@ export function useCountries() {
 }
 
 /**
+ * Query options for the current user's locale (IP-derived country, etc.).
+ */
+export function localeQueryOptions() {
+  return queryOptions({
+    queryKey: ['locale', 'console'],
+    queryFn: fetchLocale,
+    staleTime: LONG_STALE_TIME,
+  })
+}
+
+/**
  * Hook to fetch user locale information
  *
  * Uses the console SDK to fetch user's locale information.
  */
 export function useLocale() {
-  return useQuery({
-    queryKey: ['locale', 'console'],
-    queryFn: fetchLocale,
-    staleTime: LONG_STALE_TIME,
-  })
+  return useQuery(localeQueryOptions())
 }

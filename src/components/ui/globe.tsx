@@ -55,6 +55,7 @@ export type GlobeMarker = {
   count: number
   pointRadius: number
   ringMaxRadius: number
+  pointAltitude?: number
 }
 
 type GlobeRingEntry = {
@@ -237,6 +238,7 @@ export function Globe({ globeConfig, data, markers = [] }: WorldProps) {
       lat: number
       lng: number
       radius: number
+      altitude: number
     }> = []
 
     if (countryMarkers.length > 0) {
@@ -248,6 +250,7 @@ export function Globe({ globeConfig, data, markers = [] }: WorldProps) {
           lat: marker.lat,
           lng: marker.lng,
           radius: marker.pointRadius,
+          altitude: marker.pointAltitude ?? 0,
         })
       }
     } else {
@@ -259,6 +262,7 @@ export function Globe({ globeConfig, data, markers = [] }: WorldProps) {
           lat: arc.startLat,
           lng: arc.startLng,
           radius: 2,
+          altitude: 0,
         })
         points.push({
           size: pointSize,
@@ -267,6 +271,7 @@ export function Globe({ globeConfig, data, markers = [] }: WorldProps) {
           lat: arc.endLat,
           lng: arc.endLng,
           radius: 2,
+          altitude: 0,
         })
       }
     }
@@ -274,7 +279,10 @@ export function Globe({ globeConfig, data, markers = [] }: WorldProps) {
     const filteredPoints = points.filter(
       (point, index, all) =>
         all.findIndex(
-          (other) => other.lat === point.lat && other.lng === point.lng,
+          (other) =>
+            other.lat === point.lat &&
+            other.lng === point.lng &&
+            other.color === point.color,
         ) === index,
     )
 
@@ -296,12 +304,16 @@ export function Globe({ globeConfig, data, markers = [] }: WorldProps) {
       .pointsData(filteredPoints)
       .pointColor((entry) => (entry as { color: string }).color)
       .pointsMerge(countryMarkers.length === 0)
-      .pointAltitude(0)
+      .pointAltitude((entry) => (entry as { altitude: number }).altitude)
       .pointRadius((entry) => (entry as { radius: number }).radius)
 
     if (countryMarkers.length > 0) {
+      const ringMarkers = countryMarkers.filter(
+        (marker) => marker.ringMaxRadius > 0,
+      )
+
       globeRef.current
-        .ringsData(countryMarkers.map(markerToRingEntry))
+        .ringsData(ringMarkers.map(markerToRingEntry))
         .ringColor((entry) => (entry as { color: string }).color)
         .ringMaxRadius((entry) => (entry as GlobeRingEntry).ringMaxRadius)
         .ringPropagationSpeed(RING_PROPAGATION_SPEED)
@@ -327,17 +339,23 @@ export function Globe({ globeConfig, data, markers = [] }: WorldProps) {
       const countryMarkers = markersRef.current
 
       if (countryMarkers.length > 0) {
+        const ringMarkers = countryMarkers.filter(
+          (marker) => marker.ringMaxRadius > 0,
+        )
+
+        if (ringMarkers.length === 0) return
+
         const ringIndexes =
-          countryMarkers.length === 1
+          ringMarkers.length === 1
             ? [0]
             : genRandomNumbers(
                 0,
-                countryMarkers.length,
-                Math.max(1, Math.floor((countryMarkers.length * 4) / 5)),
+                ringMarkers.length,
+                Math.max(1, Math.floor((ringMarkers.length * 4) / 5)),
               )
 
         globeRef.current
-          .ringsData(ringIndexes.map((index) => markerToRingEntry(countryMarkers[index])))
+          .ringsData(ringIndexes.map((index) => markerToRingEntry(ringMarkers[index])))
           .ringMaxRadius((entry) => (entry as GlobeRingEntry).ringMaxRadius)
         return
       }

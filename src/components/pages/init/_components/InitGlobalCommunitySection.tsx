@@ -1,57 +1,16 @@
-import { lazy, Suspense, useCallback, useEffect, useMemo, useState } from 'react'
-import { useTheme } from 'next-themes'
+import { lazy, Suspense, useCallback, useMemo } from 'react'
 import { buildInitGlobePresenceData } from '@/lib/init/build-init-globe-arcs'
-import { buildInitGlobeConfig, getInitGlobeBrandRgb } from '@/lib/init/init-globe-theme'
+import { getInitGlobeBrandRgb } from '@/lib/init/init-globe-theme'
+import { useGlobeThemeConfig } from '@/hooks/use-globe-theme-config'
 import { useInitPresenceActivity } from '@/lib/init/init-presence-context'
 import { buildInitExploringGlobeActivity } from '@/lib/init/init-presence-activity'
 import { INIT_GLOBE_SECTION_ID } from '@/lib/init/init-section-ids'
-import type { GlobeConfig } from '@/components/ui/globe'
 import type { InitCommunityCountry } from '@/lib/init/types'
 import { cn } from '@/lib/utils'
 
 const World = lazy(() =>
   import('@/components/ui/globe').then((module) => ({ default: module.World })),
 )
-
-function useInitGlobeConfig(): {
-  config: GlobeConfig | null
-  themeKey: string
-} {
-  const { resolvedTheme } = useTheme()
-  const [mounted, setMounted] = useState(false)
-  const [config, setConfig] = useState<GlobeConfig | null>(null)
-
-  useEffect(() => {
-    setMounted(true)
-  }, [])
-
-  useEffect(() => {
-    if (!mounted) return
-
-    let cancelled = false
-    const isDark = resolvedTheme === 'dark'
-
-    const syncConfig = () => {
-      if (!cancelled) {
-        setConfig(buildInitGlobeConfig(isDark))
-      }
-    }
-
-    // Re-read CSS theme tokens after the html class / variables have updated.
-    const frame = requestAnimationFrame(() => {
-      requestAnimationFrame(syncConfig)
-    })
-
-    return () => {
-      cancelled = true
-      cancelAnimationFrame(frame)
-    }
-  }, [mounted, resolvedTheme])
-
-  const themeKey = !mounted ? 'pending' : resolvedTheme === 'dark' ? 'dark' : 'light'
-
-  return { config, themeKey }
-}
 
 function serializeCommunityCountries(countries: InitCommunityCountry[]): string {
   return countries.map((country) => `${country.code}:${country.count}`).join('|')
@@ -121,7 +80,7 @@ function InitCommunityGlobe({
   isLive,
   className,
 }: InitCommunityGlobeProps) {
-  const { config: globeConfig, themeKey } = useInitGlobeConfig()
+  const { config: globeConfig, themeKey } = useGlobeThemeConfig()
   const countriesKey = useMemo(
     () => serializeCommunityCountries(countries),
     [countries],

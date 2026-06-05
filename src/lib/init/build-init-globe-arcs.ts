@@ -19,6 +19,8 @@ export type InitGlobeMarker = {
   count: number
   pointRadius: number
   ringMaxRadius: number
+  /** Height above the globe surface, in globe-radius units. */
+  pointAltitude?: number
 }
 
 export type InitGlobePresenceData = {
