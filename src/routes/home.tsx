@@ -298,7 +298,7 @@ function HomePage() {
           </div>
 
           <div className="relative z-10 mt-8 w-full sm:mt-10">
-            <div className="mx-auto w-full max-w-[min(100vw-2rem,76rem)] px-4 sm:max-w-[min(100vw-3rem,80rem)] sm:px-6 lg:max-w-[min(100vw-4rem,84rem)]">
+            <div className="mx-auto w-full max-w-[min(100vw-2rem,80rem)] px-4 sm:max-w-[min(100vw-3rem,84rem)] sm:px-6 lg:max-w-[min(100vw-4rem,88rem)]">
               <div className="relative isolate max-h-[400px] w-full overflow-hidden rounded-t-[28px] border-x-2 border-t-2 border-b-0 border-muted-foreground/8 bg-muted-foreground/[0.035] px-4 pb-0 pt-1 backdrop-blur-md dark:border-muted/30 dark:bg-muted/10 sm:max-h-[500px] lg:max-h-[560px]">
                 <div className="relative z-10 flex h-10 items-center gap-2 text-left">
                   <div className="ml-2 flex items-center gap-1.5" aria-hidden>

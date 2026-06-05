@@ -1,11 +1,8 @@
-import { useEffect, useRef, useState, type ReactNode } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useReducedMotion } from 'motion/react'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Card } from '@/components/ui/card'
 import { cn } from '@/lib/utils'
-
-/** Max bar height in the desktop chart plot (rem). */
-const SCALE_PLOT_MAX_REM = 12
 
 const SCALE_QUOTE = {
   text: 'The switch to using Appwrite brought infinite value that I\u2019m still discovering today.',
@@ -61,19 +58,13 @@ const SCALE_STATS = [
   { value: 300, suffix: '+', label: 'PoP locations' },
   { value: 300, suffix: 'K+', label: 'Cloud projects' },
   { value: 500, suffix: 'K+', label: 'Developers' },
-  { value: 20, suffix: 'B+', label: 'Monthly database operations' },
+  { value: 20, suffix: 'B+', label: 'DB operations / month' },
 ] as const
 
 const SCALE_STAT_COUNT = SCALE_STATS.length
 
-/** Bar height as fraction of the chart plot area (ascending left to right). */
-const COLUMN_BAR_HEIGHTS = SCALE_STATS.map(
-  (_, index) => 0.28 + (0.6 * index) / Math.max(1, SCALE_STAT_COUNT - 1),
-)
-
 const STAT_STAGGER_MS = 450
 const COUNT_DURATION_MS = 1200
-const BAR_GROW_MS = 1100
 
 function easeOutCubic(t: number) {
   return 1 - (1 - t) ** 3
@@ -182,14 +173,9 @@ function ScaleAreaCurve({ className }: { className?: string }) {
       aria-hidden
     >
       <defs>
-        <linearGradient id="scale-area-fill" x1="0%" y1="100%" x2="0%" y2="0%">
-          <stop offset="0%" stopColor="var(--primary)" stopOpacity="0.12" />
-          <stop offset="55%" stopColor="var(--primary)" stopOpacity="0.05" />
-          <stop offset="100%" stopColor="var(--primary)" stopOpacity="0" />
-        </linearGradient>
-        <linearGradient id="scale-area-stroke" x1="0%" y1="0%" x2="100%" y2="0%">
-          <stop offset="0%" stopColor="var(--border)" stopOpacity="1" />
-          <stop offset="100%" stopColor="var(--primary)" stopOpacity="0.35" />
+        <linearGradient id="scale-area-fill" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stopColor="var(--chart-brand)" stopOpacity={0.2} />
+          <stop offset="100%" stopColor="var(--chart-brand)" stopOpacity={0} />
         </linearGradient>
       </defs>
       <path
@@ -199,8 +185,8 @@ function ScaleAreaCurve({ className }: { className?: string }) {
       <path
         d="M0 228 C28 220 56 210 86 198 C114 186 142 170 172 152 C200 134 228 118 256 100 C286 82 314 64 342 46 C368 30 386 22 400 14"
         fill="none"
-        stroke="url(#scale-area-stroke)"
-        strokeWidth="1.5"
+        stroke="var(--chart-brand)"
+        strokeWidth={2}
         vectorEffect="non-scaling-stroke"
       />
     </svg>
@@ -221,41 +207,6 @@ function ScaleChartBackground() {
   )
 }
 
-function ScaleGrowthColumn({
-  index,
-  started,
-  prefersReducedMotion,
-  children,
-}: {
-  index: number
-  started: boolean
-  prefersReducedMotion: boolean
-  children: ReactNode
-}) {
-  const barHeightRem =
-    (COLUMN_BAR_HEIGHTS[index] ?? 0.5) * SCALE_PLOT_MAX_REM
-  const delayMs = index * 100
-
-  return (
-    <div className="relative flex min-h-[26rem] flex-col border-l border-border px-2 first:border-l-0 sm:min-h-[28rem] sm:px-3">
-      <div className="relative z-10 shrink-0 px-0.5 pt-10 pb-4">{children}</div>
-      <div className="relative z-10 mt-auto flex h-[11rem] items-end pb-6 sm:h-[12rem]">
-        <div
-          className="w-full min-h-0 overflow-hidden rounded-t-md border border-b-0 border-border bg-primary/15 shadow-[inset_0_1px_0_0_color-mix(in_srgb,var(--primary)_25%,transparent)] dark:bg-primary/20"
-          style={{
-            height:
-              started || prefersReducedMotion ? `${barHeightRem}rem` : 0,
-            transition: prefersReducedMotion
-              ? 'none'
-              : `height ${BAR_GROW_MS}ms cubic-bezier(0.22, 1, 0.36, 1)`,
-            transitionDelay: prefersReducedMotion ? '0ms' : `${delayMs}ms`,
-          }}
-        />
-      </div>
-    </div>
-  )
-}
-
 function ScaleStatsChart({
   started,
   prefersReducedMotion,
@@ -263,74 +214,56 @@ function ScaleStatsChart({
   started: boolean
   prefersReducedMotion: boolean
 }) {
-  const mobilePlotMaxRem = 3.25
-
   return (
-    <Card className="relative w-full gap-0 overflow-hidden py-0">
+    <Card className="relative min-h-[24rem] w-full gap-0 overflow-hidden py-0 sm:min-h-[28rem] lg:min-h-[30rem]">
       <div className="pointer-events-none absolute inset-0 z-0" aria-hidden>
         <ScaleChartBackground />
-        <ScaleAreaCurve className="opacity-70" />
+        <ScaleAreaCurve className="opacity-80" />
       </div>
 
-      <div
-        className="relative z-10 hidden w-full lg:grid"
-        style={{
-          gridTemplateColumns: `repeat(${SCALE_STAT_COUNT}, minmax(0, 1fr))`,
-        }}
-      >
-        {SCALE_STATS.map((stat, index) => (
-          <ScaleGrowthColumn
-            key={stat.label}
-            index={index}
-            started={started}
-            prefersReducedMotion={prefersReducedMotion}
-          >
-            <ScaleStatValue
-              value={stat.value}
-              suffix={stat.suffix}
-              label={stat.label}
-              started={started}
-              index={index}
-              prefersReducedMotion={prefersReducedMotion}
-              size="large"
-            />
-          </ScaleGrowthColumn>
-        ))}
-      </div>
-
-      <div className="relative z-10 grid grid-cols-2 gap-3 p-4 sm:grid-cols-3 sm:gap-4 sm:p-6 lg:hidden">
-        {SCALE_STATS.map((stat, index) => (
-          <div
-            key={stat.label}
-            className="flex min-h-[10rem] flex-col overflow-hidden rounded-lg border border-border bg-muted/30 p-4"
-          >
-            <ScaleStatValue
-              value={stat.value}
-              suffix={stat.suffix}
-              label={stat.label}
-              started={started}
-              index={index}
-              prefersReducedMotion={prefersReducedMotion}
-            />
-            <div className="mt-auto flex h-[4.5rem] items-end pt-4">
-              <div
-                className="w-full overflow-hidden rounded-t-md border border-b-0 border-border bg-primary/15 dark:bg-primary/20"
-                style={{
-                  height:
-                    started || prefersReducedMotion
-                      ? `${(COLUMN_BAR_HEIGHTS[index] ?? 0.4) * mobilePlotMaxRem}rem`
-                      : 0,
-                  transition: prefersReducedMotion
-                    ? 'none'
-                    : `height ${BAR_GROW_MS}ms cubic-bezier(0.22, 1, 0.36, 1)`,
-                  transitionDelay: prefersReducedMotion
-                    ? '0ms'
-                    : `${index * 120}ms`,
-                }}
+      <div className="relative z-10 hidden lg:block">
+        <div
+          className="grid gap-4 border-b border-border px-6 py-5"
+          style={{
+            gridTemplateColumns: `repeat(${SCALE_STAT_COUNT}, minmax(0, 1fr))`,
+          }}
+        >
+          {SCALE_STATS.map((stat, index) => (
+            <div
+              key={stat.label}
+              className="min-w-0 border-l border-border px-2 first:border-l-0 sm:px-3"
+            >
+              <ScaleStatValue
+                value={stat.value}
+                suffix={stat.suffix}
+                label={stat.label}
+                started={started}
+                index={index}
+                prefersReducedMotion={prefersReducedMotion}
+                size="large"
               />
             </div>
-          </div>
-        ))}
+          ))}
+        </div>
+        <div className="min-h-[16rem] sm:min-h-[18rem] lg:min-h-[20rem]" aria-hidden />
+      </div>
+
+      <div className="relative z-10 lg:hidden">
+        <div className="grid grid-cols-2 gap-4 p-4 sm:grid-cols-3 sm:gap-5 sm:p-6">
+          {SCALE_STATS.map((stat, index) => (
+            <div key={stat.label} className="min-w-0 px-0.5">
+              <ScaleStatValue
+                value={stat.value}
+                suffix={stat.suffix}
+                label={stat.label}
+                started={started}
+                index={index}
+                prefersReducedMotion={prefersReducedMotion}
+              />
+            </div>
+          ))}
+        </div>
+        <div className="min-h-[10rem] border-t border-border sm:min-h-[12rem]" aria-hidden />
       </div>
     </Card>
   )
