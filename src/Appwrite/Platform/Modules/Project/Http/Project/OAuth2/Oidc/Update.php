@@ -232,7 +232,7 @@ class Update extends Base
             'authorizationEndpoint' => $authorizationURL ?? ($existing['authorizationEndpoint'] ?? ''),
             'tokenEndpoint' => $tokenURL ?? ($existing['tokenEndpoint'] ?? ''),
             'userInfoEndpoint' => $userInfoURL ?? ($existing['userInfoEndpoint'] ?? ''),
-            'prompt' => $prompt ?? ($existing['prompt'] ?? []),
+            'prompt' => \array_key_exists('prompt', $request->getParams()) ? ($prompt ?? []) : ($existing['prompt'] ?? []),
             'maxAge' => \array_key_exists('maxAge', $request->getParams()) ? $maxAge : ($existing['maxAge'] ?? null),
         ];
 
