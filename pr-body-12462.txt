@@ -1,0 +1,9 @@
+Fixes: Unable to clear maxAge after it has been set. Related to #12462
+
+## Changes
+- Injected Request object to check if maxAge was explicitly provided via array_key_exists
+- When maxAge is explicitly sent (even as null), use the provided value
+- When omitted, keep the existing stored value
+
+## Root Cause
+The null-coalescing merge ( ?? ) made it impossible to clear maxAge once set, because both "not provided" and "explicitly null" resolved to PHP null. Added Request injection to distinguish the two cases via array_key_exists.
