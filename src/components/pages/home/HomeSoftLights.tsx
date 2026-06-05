@@ -39,27 +39,27 @@ const variants = {
   },
 } as const
 
-/** Tile-scoped lights for MCP / Skills cards — softer than hero. */
+/** Tile-scoped lights for MCP / Skills / plugins bento — softer than hero, stronger than bare wash. */
 const tileLights = {
   mcp: cn(
-    'absolute -right-[38%] top-[-28%] h-[260px] w-[380px]',
-    'bg-[radial-gradient(ellipse_at_center,rgba(124,103,254,0.07)_0%,rgba(124,103,254,0.022)_42%,transparent_74%)]',
-    'dark:bg-[radial-gradient(ellipse_at_center,rgba(99,102,241,0.045)_0%,rgba(99,102,241,0.014)_42%,transparent_74%)]',
+    'absolute -right-[36%] top-[-32%] h-[300px] w-[440px]',
+    'bg-[radial-gradient(ellipse_at_center,rgba(124,103,254,0.15)_0%,rgba(124,103,254,0.055)_42%,transparent_74%)]',
+    'dark:bg-[radial-gradient(ellipse_at_center,rgba(99,102,241,0.1)_0%,rgba(99,102,241,0.035)_42%,transparent_74%)]',
   ),
   skills: cn(
-    'absolute -left-[38%] top-[-28%] h-[260px] w-[380px]',
-    'bg-[radial-gradient(ellipse_at_center,rgba(253,54,110,0.07)_0%,rgba(253,54,110,0.022)_42%,transparent_74%)]',
-    'dark:bg-[radial-gradient(ellipse_at_center,rgba(253,54,110,0.045)_0%,rgba(253,54,110,0.014)_42%,transparent_74%)]',
+    'absolute -left-[36%] top-[-32%] h-[300px] w-[440px]',
+    'bg-[radial-gradient(ellipse_at_center,rgba(253,54,110,0.15)_0%,rgba(253,54,110,0.055)_42%,transparent_74%)]',
+    'dark:bg-[radial-gradient(ellipse_at_center,rgba(253,54,110,0.1)_0%,rgba(253,54,110,0.035)_42%,transparent_74%)]',
   ),
   plugins: cn(
-    'absolute -left-[38%] bottom-[-28%] h-[260px] w-[380px]',
-    'bg-[radial-gradient(ellipse_at_center,rgba(133,219,216,0.07)_0%,rgba(133,219,216,0.022)_42%,transparent_74%)]',
-    'dark:bg-[radial-gradient(ellipse_at_center,rgba(133,219,216,0.045)_0%,rgba(133,219,216,0.014)_42%,transparent_74%)]',
+    'absolute -left-[36%] bottom-[-32%] h-[300px] w-[440px]',
+    'bg-[radial-gradient(ellipse_at_center,rgba(133,219,216,0.15)_0%,rgba(133,219,216,0.055)_42%,transparent_74%)]',
+    'dark:bg-[radial-gradient(ellipse_at_center,rgba(133,219,216,0.1)_0%,rgba(133,219,216,0.035)_42%,transparent_74%)]',
   ),
   integrations: cn(
-    'absolute -right-[38%] bottom-[-28%] h-[260px] w-[380px]',
-    'bg-[radial-gradient(ellipse_at_center,rgba(254,149,103,0.07)_0%,rgba(254,149,103,0.022)_42%,transparent_74%)]',
-    'dark:bg-[radial-gradient(ellipse_at_center,rgba(254,149,103,0.045)_0%,rgba(254,149,103,0.014)_42%,transparent_74%)]',
+    'absolute -right-[36%] bottom-[-32%] h-[300px] w-[440px]',
+    'bg-[radial-gradient(ellipse_at_center,rgba(254,149,103,0.15)_0%,rgba(254,149,103,0.055)_42%,transparent_74%)]',
+    'dark:bg-[radial-gradient(ellipse_at_center,rgba(254,149,103,0.1)_0%,rgba(254,149,103,0.035)_42%,transparent_74%)]',
   ),
 } as const
 

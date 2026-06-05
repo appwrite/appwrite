@@ -70,7 +70,7 @@ function ScaleStatCard({
   label: string
 }) {
   return (
-    <div className="flex h-full min-w-0 flex-col justify-center rounded-xl border border-border/80 bg-background/90 px-2.5 py-2.5 shadow-sm backdrop-blur-sm sm:px-3 sm:py-3">
+    <div className="flex h-full min-w-0 flex-col justify-center rounded-xl border border-border/80 px-2.5 py-2.5 sm:px-3 sm:py-3">
       <p className="text-base font-semibold tabular-nums tracking-tight text-foreground sm:text-lg lg:text-xl">
         {value}
         {suffix}
@@ -85,14 +85,24 @@ function ScaleStatCard({
 function ScaleAreaCurve({ className }: { className?: string }) {
   return (
     <svg
-      className={cn('absolute inset-x-0 bottom-0 h-[88%] w-full', className)}
+      className={cn('absolute inset-0 h-full w-full', className)}
       viewBox="0 0 400 280"
       preserveAspectRatio="none"
       aria-hidden
     >
       <defs>
-        <linearGradient id="scale-area-fill" x1="0" y1="0" x2="0" y2="1">
+        <linearGradient
+          id="scale-area-fill"
+          gradientUnits="userSpaceOnUse"
+          x1="0"
+          y1="0"
+          x2="0"
+          y2="280"
+        >
           <stop offset="0%" stopColor="var(--chart-brand)" stopOpacity={0.2} />
+          <stop offset="38%" stopColor="var(--chart-brand)" stopOpacity={0.1} />
+          <stop offset="62%" stopColor="var(--chart-brand)" stopOpacity={0.04} />
+          <stop offset="82%" stopColor="var(--chart-brand)" stopOpacity={0.012} />
           <stop offset="100%" stopColor="var(--chart-brand)" stopOpacity={0} />
         </linearGradient>
       </defs>
@@ -145,10 +155,10 @@ function ScaleStatCards() {
 function ScaleChart() {
   return (
     <div className="relative left-1/2 w-screen -translate-x-1/2">
-      <div className="relative min-h-[22rem] w-full overflow-hidden border-y border-border bg-card/40 sm:min-h-[26rem] lg:min-h-[28rem]">
+      <div className="relative min-h-[22rem] w-full overflow-hidden border-t border-border bg-card/40 dark:bg-background sm:min-h-[26rem] lg:min-h-[28rem]">
         <div className="pointer-events-none absolute inset-0" aria-hidden>
           <ScaleChartBackground />
-          <ScaleAreaCurve className="opacity-80" />
+          <ScaleAreaCurve className="opacity-80 dark:opacity-95" />
         </div>
       </div>
     </div>
@@ -173,7 +183,7 @@ export function ScaleSection() {
         <ScaleChart />
       </div>
 
-      <div className="mx-auto mt-10 w-full max-w-7xl px-4 sm:mt-12 sm:px-6">
+      <div className="relative z-[1] mx-auto -mt-6 w-full max-w-7xl px-4 sm:-mt-8 sm:px-6">
         <ScaleQuoteBelowChart />
       </div>
     </section>
