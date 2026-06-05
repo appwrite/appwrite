@@ -23,7 +23,9 @@ export interface IDEConfig {
    * Codex uses `generateCodexNewThreadDeeplink` instead (see `generateAIChatDeeplink`).
    */
   aiChatDeeplink?: string
-  /** URL to MCP documentation for this IDE (if available) */
+  /** URL to official plugin docs (marketplace install, skills, commands) */
+  pluginDocsUrl?: string
+  /** URL to MCP server setup documentation for this IDE (if available) */
   mcpDocsUrl?: string
 }
 
@@ -46,6 +48,7 @@ export const IDE_CONFIGS: IDEConfig[] = [
     supportsAIChat: true,
     /** Handled by `generateCodexNewThreadDeeplink` — opens the Codex desktop app. */
     aiChatDeeplink: 'codex://threads/new',
+    pluginDocsUrl: 'https://appwrite.io/docs/tooling/ai/agents/codex',
   },
   // AI-powered IDEs (desktop apps with deeplinks)
   {
@@ -54,6 +57,7 @@ export const IDE_CONFIGS: IDEConfig[] = [
     iconPath: '/icons/cursor-ai.svg',
     supportsAIChat: true,
     aiChatDeeplink: 'cursor://anysphere.cursor-deeplink/prompt?text={prompt}',
+    pluginDocsUrl: 'https://appwrite.io/docs/tooling/ai/ai-dev-tools/cursor',
     mcpDocsUrl: 'https://appwrite.io/docs/tooling/mcp/cursor',
   },
   {
@@ -78,11 +82,12 @@ export const IDE_CONFIGS: IDEConfig[] = [
     name: 'Claude Code',
     iconPath: '/icons/claude.svg',
     supportsAIChat: false,
+    pluginDocsUrl: 'https://appwrite.io/docs/tooling/ai/ai-dev-tools/claude-code',
     mcpDocsUrl: 'https://appwrite.io/docs/tooling/mcp/claude',
   },
   {
     id: 'google-antigravity',
-    name: 'Google Antigravity',
+    name: 'Antigravity',
     iconPath: '/icons/google-antigravity.svg',
     supportsAIChat: false,
     mcpDocsUrl: 'https://appwrite.io/docs/tooling/mcp/antigravity',
@@ -108,6 +113,43 @@ export function getAIChatIDEs(): IDEConfig[] {
  */
 export function getMCPIDEs(): IDEConfig[] {
   return IDE_CONFIGS.filter((ide) => ide.mcpDocsUrl)
+}
+
+/** Official Appwrite-maintained plugins (home page and marketing). */
+export const OFFICIAL_PLUGIN_IDS = ['cursor', 'claude-code', 'codex'] as const
+
+export type HomePluginConfig = {
+  id: string
+  name: string
+  iconPath: string
+  docsUrl: string
+}
+
+/**
+ * Official plugins: Cursor, Claude Code, and Codex.
+ */
+export function getOfficialPlugins(): HomePluginConfig[] {
+  return OFFICIAL_PLUGIN_IDS.map((id) => {
+    const ide = getIDEById(id)
+    if (!ide?.pluginDocsUrl) {
+      throw new Error(`Missing plugin docs for IDE: ${id}`)
+    }
+
+    return {
+      id: ide.id,
+      name: ide.name,
+      iconPath: ide.iconPath,
+      docsUrl: ide.pluginDocsUrl,
+    }
+  })
+}
+
+/**
+ * MCP server setup guides for other agents and IDEs (not official plugins).
+ */
+export function getMcpIntegrations(): IDEConfig[] {
+  const officialIds = new Set<string>(OFFICIAL_PLUGIN_IDS)
+  return getMCPIDEs().filter((ide) => !officialIds.has(ide.id))
 }
 
 /**

@@ -1076,3 +1076,87 @@ html[data-init-ticket-video-capturing] [data-init-ticket-video-capture],
 html[data-init-ticket-video-capturing] [data-init-ticket-video-capture] * {
   animation-play-state: running !important;
 }
+
+/* Home AI feature card mock UI */
+@keyframes ai-mock-fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes ai-mock-sidebar-pulse {
+  0%,
+  100% {
+    opacity: 0.15;
+  }
+
+  50% {
+    opacity: 0.34;
+  }
+}
+
+@keyframes ai-mock-type-reveal {
+  from {
+    max-width: 0;
+  }
+
+  to {
+    max-width: 13rem;
+  }
+}
+
+@keyframes ai-mock-cursor-blink {
+  0%,
+  49% {
+    opacity: 1;
+  }
+
+  50%,
+  100% {
+    opacity: 0;
+  }
+}
+
+@keyframes ai-mock-tag-press {
+  0% {
+    transform: scale(1);
+    border-color: var(--border);
+    background-color: color-mix(in oklch, var(--background) 80%, transparent);
+  }
+
+  45% {
+    transform: scale(0.94);
+    border-color: color-mix(in oklch, var(--brand-cta) 35%, var(--border));
+    background-color: color-mix(in oklch, var(--brand-cta) 14%, var(--background));
+  }
+
+  100% {
+    transform: scale(1);
+    border-color: color-mix(in oklch, var(--brand-cta) 22%, var(--border));
+    background-color: color-mix(in oklch, var(--brand-cta) 8%, var(--background));
+  }
+}
+
+@keyframes ai-mock-thinking-dots {
+  0%,
+  20% {
+    opacity: 0.25;
+    transform: translateY(0);
+  }
+
+  40% {
+    opacity: 1;
+    transform: translateY(-1px);
+  }
+
+  100% {
+    opacity: 0.25;
+    transform: translateY(0);
+  }
+}

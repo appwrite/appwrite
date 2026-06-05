@@ -39,6 +39,40 @@ const variants = {
   },
 } as const
 
+/** Tile-scoped lights for MCP / Skills cards — softer than hero. */
+const tileLights = {
+  mcp: cn(
+    'absolute -right-[38%] top-[-28%] h-[260px] w-[380px]',
+    'bg-[radial-gradient(ellipse_at_center,rgba(124,103,254,0.07)_0%,rgba(124,103,254,0.022)_42%,transparent_74%)]',
+    'dark:bg-[radial-gradient(ellipse_at_center,rgba(99,102,241,0.045)_0%,rgba(99,102,241,0.014)_42%,transparent_74%)]',
+  ),
+  skills: cn(
+    'absolute -left-[38%] top-[-28%] h-[260px] w-[380px]',
+    'bg-[radial-gradient(ellipse_at_center,rgba(253,54,110,0.07)_0%,rgba(253,54,110,0.022)_42%,transparent_74%)]',
+    'dark:bg-[radial-gradient(ellipse_at_center,rgba(253,54,110,0.045)_0%,rgba(253,54,110,0.014)_42%,transparent_74%)]',
+  ),
+  plugins: cn(
+    'absolute -left-[38%] bottom-[-28%] h-[260px] w-[380px]',
+    'bg-[radial-gradient(ellipse_at_center,rgba(133,219,216,0.07)_0%,rgba(133,219,216,0.022)_42%,transparent_74%)]',
+    'dark:bg-[radial-gradient(ellipse_at_center,rgba(133,219,216,0.045)_0%,rgba(133,219,216,0.014)_42%,transparent_74%)]',
+  ),
+  integrations: cn(
+    'absolute -right-[38%] bottom-[-28%] h-[260px] w-[380px]',
+    'bg-[radial-gradient(ellipse_at_center,rgba(254,149,103,0.07)_0%,rgba(254,149,103,0.022)_42%,transparent_74%)]',
+    'dark:bg-[radial-gradient(ellipse_at_center,rgba(254,149,103,0.045)_0%,rgba(254,149,103,0.014)_42%,transparent_74%)]',
+  ),
+} as const
+
+export type AiTileSoftLightTone = keyof typeof tileLights
+
+export function AiTileSoftLight({ tone }: { tone: AiTileSoftLightTone }) {
+  return (
+    <div className="pointer-events-none absolute inset-0 overflow-hidden" aria-hidden>
+      <div className={tileLights[tone]} />
+    </div>
+  )
+}
+
 type HomeSoftLightsProps = {
   variant?: keyof typeof variants
   className?: string

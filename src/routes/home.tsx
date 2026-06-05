@@ -20,6 +20,7 @@ import {
 } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
 import { ConsoleLayout } from '@/components/global/layout/ConsoleLayout'
+import { AiSection } from '@/components/pages/home/AiSection'
 import { NetworkSection } from '@/components/pages/home/NetworkSection'
 import { PricingSection } from '@/components/pages/home/PricingSection'
 import { ScaleSection } from '@/components/pages/home/ScaleSection'
@@ -421,6 +422,8 @@ function HomePage() {
             </div>
           </div>
         </section>
+
+        <AiSection />
 
         <TestimonialsSection />
 
