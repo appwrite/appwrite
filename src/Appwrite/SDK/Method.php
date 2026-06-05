@@ -33,6 +33,7 @@ class Method
      * @param string $desc
      * @param bool $public Whether this method should be rendered on the website/documentation
      * @param string $projectAuth Project authentication security scheme to use in specs
+     * @param array<string> $locationAuth Additional security scheme keys injected for location-type methods
      */
     public function __construct(
         protected string $namespace,
@@ -51,7 +52,8 @@ class Method
         protected array $additionalParameters = [],
         protected string $desc = '',
         protected bool $public = true,
-        protected string $projectAuth = 'Project'
+        protected string $projectAuth = 'Project',
+        protected array $locationAuth = ['ImpersonateUserIdQuery', 'ImpersonateUserEmailQuery', 'ImpersonateUserPhoneQuery']
     ) {
         $this->validateMethod($name, $namespace);
         $this->validateAuthTypes($auth);
@@ -232,6 +234,11 @@ class Method
     public function getProjectAuth(): string
     {
         return $this->projectAuth;
+    }
+
+    public function getLocationAuth(): array
+    {
+        return $this->locationAuth;
     }
 
     public function setNamespace(string $namespace): self
