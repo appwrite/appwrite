@@ -374,16 +374,6 @@ class Swagger2 extends Format
                 }
 
                 $temp['x-appwrite']['auth'] = \array_slice($securities, 0, $this->authCount);
-
-                if ($sdk->getType() === MethodType::LOCATION) {
-                    foreach (['ImpersonateUserId', 'ImpersonateUserEmail', 'ImpersonateUserPhone'] as $key) {
-                        if (\array_key_exists($key, $this->keys)) {
-                            $securities[$key] = [];
-                            $temp['x-appwrite']['auth'][$key] = [];
-                        }
-                    }
-                }
-
                 $temp['security'][] = $securities;
             }
 
