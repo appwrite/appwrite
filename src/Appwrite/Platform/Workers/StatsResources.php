@@ -104,54 +104,54 @@ class StatsResources extends Action
 
             $region = $project->getAttribute('region');
 
-            $platforms = $dbForPlatform->count('platforms', [
+            $platforms = $this->retryOnFailure(fn () => $dbForPlatform->count('platforms', [
                 Query::equal('projectInternalId', [$project->getSequence()])
-            ]);
-            $webhooks = $dbForPlatform->count('webhooks', [
+            ]));
+            $webhooks = $this->retryOnFailure(fn () => $dbForPlatform->count('webhooks', [
                 Query::equal('projectInternalId', [$project->getSequence()])
-            ]);
-            $keys = $dbForPlatform->count('keys', [
+            ]));
+            $keys = $this->retryOnFailure(fn () => $dbForPlatform->count('keys', [
                 Query::equal('projectInternalId', [$project->getSequence()])
-            ]);
+            ]));
 
-            $domains = $dbForPlatform->count('rules', [
+            $domains = $this->retryOnFailure(fn () => $dbForPlatform->count('rules', [
                 Query::equal('projectInternalId', [$project->getSequence()]),
                 Query::equal('owner', ['']),
-            ]);
+            ]));
 
 
-            $databases = $dbForProject->count('databases');
-            $buckets = $dbForProject->count('buckets');
-            $users = $dbForProject->count('users');
+            $databases = $this->retryOnFailure(fn () => $dbForProject->count('databases'));
+            $buckets = $this->retryOnFailure(fn () => $dbForProject->count('buckets'));
+            $users = $this->retryOnFailure(fn () => $dbForProject->count('users'));
 
             $last30Days = (new \DateTime())->sub(\DateInterval::createFromDateString('30 days'))->format('Y-m-d 00:00:00');
-            $usersMAU = $dbForProject->count('users', [
+            $usersMAU = $this->retryOnFailure(fn () => $dbForProject->count('users', [
                 Query::greaterThanEqual('accessedAt', $last30Days)
-            ]);
+            ]));
             $last24Hours = (new \DateTime())->sub(\DateInterval::createFromDateString('24 hours'))->format('Y-m-d h:m:00');
-            $usersDAU = $dbForProject->count('users', [
+            $usersDAU = $this->retryOnFailure(fn () => $dbForProject->count('users', [
                 Query::greaterThanEqual('accessedAt', $last24Hours)
-            ]);
+            ]));
             $last7Days = (new \DateTime())->sub(\DateInterval::createFromDateString('7 days'))->format('Y-m-d 00:00:00');
-            $usersWAU = $dbForProject->count('users', [
+            $usersWAU = $this->retryOnFailure(fn () => $dbForProject->count('users', [
                 Query::greaterThanEqual('accessedAt', $last7Days)
-            ]);
-            $teams = $dbForProject->count('teams');
-            $functions = $dbForProject->count('functions');
+            ]));
+            $teams = $this->retryOnFailure(fn () => $dbForProject->count('teams'));
+            $functions = $this->retryOnFailure(fn () => $dbForProject->count('functions'));
 
-            $messages = $dbForProject->count('messages');
-            $providers = $dbForProject->count('providers');
-            $topics = $dbForProject->count('topics');
-            $targets = $dbForProject->count('targets');
-            $emailTargets = $dbForProject->count('targets', [
+            $messages = $this->retryOnFailure(fn () => $dbForProject->count('messages'));
+            $providers = $this->retryOnFailure(fn () => $dbForProject->count('providers'));
+            $topics = $this->retryOnFailure(fn () => $dbForProject->count('topics'));
+            $targets = $this->retryOnFailure(fn () => $dbForProject->count('targets'));
+            $emailTargets = $this->retryOnFailure(fn () => $dbForProject->count('targets', [
                 Query::equal('providerType', [MESSAGE_TYPE_EMAIL])
-            ]);
-            $pushTargets = $dbForProject->count('targets', [
+            ]));
+            $pushTargets = $this->retryOnFailure(fn () => $dbForProject->count('targets', [
                 Query::equal('providerType', [MESSAGE_TYPE_PUSH])
-            ]);
-            $smsTargets = $dbForProject->count('targets', [
+            ]));
+            $smsTargets = $this->retryOnFailure(fn () => $dbForProject->count('targets', [
                 Query::equal('providerType', [MESSAGE_TYPE_SMS])
-            ]);
+            ]));
 
             $metrics = [
                 METRIC_DATABASES => $databases,
@@ -216,12 +216,12 @@ class StatsResources extends Action
         $totalFiles = 0;
         $totalStorage = 0;
         $this->foreachDocument($dbForProject, 'buckets', [], function ($bucket) use ($dbForProject, $dbForLogs, $region, &$totalFiles, &$totalStorage) {
-            $files = $dbForProject->count('bucket_' . $bucket->getSequence());
+            $files = $this->retryOnFailure(fn () => $dbForProject->count('bucket_' . $bucket->getSequence()));
 
             $metric = str_replace('{bucketInternalId}', $bucket->getSequence(), METRIC_BUCKET_ID_FILES);
             $this->createStatsDocuments($region, $metric, $files);
 
-            $storage = $dbForProject->sum('bucket_' . $bucket->getSequence(), 'sizeActual');
+            $storage = $this->retryOnFailure(fn () => $dbForProject->sum('bucket_' . $bucket->getSequence(), 'sizeActual'));
             $metric = str_replace('{bucketInternalId}', $bucket->getSequence(), METRIC_BUCKET_ID_FILES_STORAGE);
             $this->createStatsDocuments($region, $metric, $storage);
 
@@ -241,9 +241,9 @@ class StatsResources extends Action
         $totalImageTransformations = 0;
         $last30Days = (new \DateTime())->sub(\DateInterval::createFromDateString('30 days'))->format('Y-m-d 00:00:00');
         $this->foreachDocument($dbForProject, 'buckets', [], function ($bucket) use ($dbForProject, $last30Days, $region, &$totalImageTransformations) {
-            $imageTransformations = $dbForProject->count('bucket_' . $bucket->getSequence(), [
+            $imageTransformations = $this->retryOnFailure(fn () => $dbForProject->count('bucket_' . $bucket->getSequence(), [
                 Query::greaterThanEqual('transformedAt', $last30Days),
-            ]);
+            ]));
             $metric = str_replace('{bucketInternalId}', $bucket->getSequence(), METRIC_BUCKET_ID_FILES_IMAGES_TRANSFORMED);
             $this->createStatsDocuments($region, $metric, $imageTransformations);
             $totalImageTransformations += $imageTransformations;
@@ -260,7 +260,7 @@ class StatsResources extends Action
         $totalDatabaseStorage = 0;
 
         $this->foreachDocument($dbForProject, 'databases', [], function ($database) use ($dbForProject, $region, &$totalCollections, &$totalDocuments, &$totalDatabaseStorage) {
-            $collections = $dbForProject->count('database_' . $database->getSequence());
+            $collections = $this->retryOnFailure(fn () => $dbForProject->count('database_' . $database->getSequence()));
 
             $metric = str_replace('{databaseInternalId}', $database->getSequence(), METRIC_DATABASE_ID_COLLECTIONS);
             $this->createStatsDocuments($region, $metric, $collections);
@@ -281,12 +281,12 @@ class StatsResources extends Action
         $databaseDocuments = 0;
         $databaseStorage = 0;
         $this->foreachDocument($dbForProject, 'database_' . $database->getSequence(), [], function ($collection) use ($dbForProject, $database, $region, &$databaseStorage, &$databaseDocuments) {
-            $documents = $dbForProject->count('database_' . $database->getSequence() . '_collection_' . $collection->getSequence());
+            $documents = $this->retryOnFailure(fn () => $dbForProject->count('database_' . $database->getSequence() . '_collection_' . $collection->getSequence()));
             $metric = str_replace(['{databaseInternalId}', '{collectionInternalId}'], [$database->getSequence(), $collection->getSequence()], METRIC_DATABASE_ID_COLLECTION_ID_DOCUMENTS);
             $this->createStatsDocuments($region, $metric, $documents);
             $databaseDocuments += $documents;
 
-            $collectionStorage = $dbForProject->getSizeOfCollection('database_' . $database->getSequence() . '_collection_' . $collection->getSequence());
+            $collectionStorage = $this->retryOnFailure(fn () => $dbForProject->getSizeOfCollection('database_' . $database->getSequence() . '_collection_' . $collection->getSequence()));
             $metric = str_replace(['{databaseInternalId}', '{collectionInternalId}'], [$database->getSequence(), $collection->getSequence()], METRIC_DATABASE_ID_COLLECTION_ID_STORAGE);
             $this->createStatsDocuments($region, $metric, $collectionStorage);
             $databaseStorage += $collectionStorage;
@@ -304,12 +304,12 @@ class StatsResources extends Action
 
     protected function countForSitesAndFunctions(Database $dbForProject, string $region): void
     {
-        $deploymentsStorage = $dbForProject->sum('deployments', 'sourceSize');
-        $buildsStorage = $dbForProject->sum('deployments', 'buildSize');
+        $deploymentsStorage = $this->retryOnFailure(fn () => $dbForProject->sum('deployments', 'sourceSize'));
+        $buildsStorage = $this->retryOnFailure(fn () => $dbForProject->sum('deployments', 'buildSize'));
         $this->createStatsDocuments($region, METRIC_DEPLOYMENTS_STORAGE, $deploymentsStorage);
         $this->createStatsDocuments($region, METRIC_BUILDS_STORAGE, $buildsStorage);
 
-        $deployments = $dbForProject->count('deployments');
+        $deployments = $this->retryOnFailure(fn () => $dbForProject->count('deployments'));
         $this->createStatsDocuments($region, METRIC_DEPLOYMENTS, $deployments);
         $this->createStatsDocuments($region, METRIC_BUILDS, $deployments);
 
@@ -320,18 +320,18 @@ class StatsResources extends Action
     protected function countForFunctions(Database $dbForProject, string $region)
     {
 
-        $deploymentsStorage = $dbForProject->sum('deployments', 'sourceSize', [
+        $deploymentsStorage = $this->retryOnFailure(fn () => $dbForProject->sum('deployments', 'sourceSize', [
             Query::equal('resourceType', [RESOURCE_TYPE_FUNCTIONS])
-        ]);
-        $buildsStorage = $dbForProject->sum('deployments', 'buildSize', [
+        ]));
+        $buildsStorage = $this->retryOnFailure(fn () => $dbForProject->sum('deployments', 'buildSize', [
             Query::equal('resourceType', [RESOURCE_TYPE_FUNCTIONS])
-        ]);
+        ]));
         $this->createStatsDocuments($region, str_replace("{resourceType}", RESOURCE_TYPE_FUNCTIONS, METRIC_RESOURCE_TYPE_DEPLOYMENTS_STORAGE), $deploymentsStorage);
         $this->createStatsDocuments($region, str_replace("{resourceType}", RESOURCE_TYPE_FUNCTIONS, METRIC_RESOURCE_TYPE_BUILDS_STORAGE), $buildsStorage);
 
-        $deployments = $dbForProject->count('deployments', [
+        $deployments = $this->retryOnFailure(fn () => $dbForProject->count('deployments', [
             Query::equal('resourceType', [RESOURCE_TYPE_FUNCTIONS])
-        ]);
+        ]));
         $this->createStatsDocuments($region, str_replace("{resourceType}", RESOURCE_TYPE_FUNCTIONS, METRIC_RESOURCE_TYPE_DEPLOYMENTS), $deployments);
         $this->createStatsDocuments($region, str_replace("{resourceType}", RESOURCE_TYPE_FUNCTIONS, METRIC_RESOURCE_TYPE_BUILDS), $deployments);
 
@@ -340,16 +340,16 @@ class StatsResources extends Action
         $runtimes = [];
 
         $this->foreachDocument($dbForProject, 'functions', [], function (Document $function) use ($dbForProject, $region, &$runtimes) {
-            $functionDeploymentsStorage = $dbForProject->sum('deployments', 'sourceSize', [
+            $functionDeploymentsStorage = $this->retryOnFailure(fn () => $dbForProject->sum('deployments', 'sourceSize', [
                 Query::equal('resourceInternalId', [$function->getSequence()]),
                 Query::equal('resourceType', [RESOURCE_TYPE_FUNCTIONS]),
-            ]);
+            ]));
             $this->createStatsDocuments($region, str_replace(['{resourceType}','{resourceInternalId}'], [RESOURCE_TYPE_FUNCTIONS,$function->getSequence()], METRIC_RESOURCE_TYPE_ID_DEPLOYMENTS_STORAGE), $functionDeploymentsStorage);
 
-            $functionDeployments = $dbForProject->count('deployments', [
+            $functionDeployments = $this->retryOnFailure(fn () => $dbForProject->count('deployments', [
                 Query::equal('resourceInternalId', [$function->getSequence()]),
                 Query::equal('resourceType', [RESOURCE_TYPE_FUNCTIONS]),
-            ]);
+            ]));
             $this->createStatsDocuments($region, str_replace(['{resourceType}','{resourceInternalId}'], [RESOURCE_TYPE_FUNCTIONS,$function->getSequence()], METRIC_RESOURCE_TYPE_ID_DEPLOYMENTS), $functionDeployments);
 
             /**
@@ -386,18 +386,18 @@ class StatsResources extends Action
     protected function countForSites(Database $dbForProject, string $region)
     {
 
-        $deploymentsStorage = $dbForProject->sum('deployments', 'sourceSize', [
+        $deploymentsStorage = $this->retryOnFailure(fn () => $dbForProject->sum('deployments', 'sourceSize', [
             Query::equal('resourceType', [RESOURCE_TYPE_SITES])
-        ]);
-        $buildsStorage = $dbForProject->sum('deployments', 'buildSize', [
+        ]));
+        $buildsStorage = $this->retryOnFailure(fn () => $dbForProject->sum('deployments', 'buildSize', [
             Query::equal('resourceType', [RESOURCE_TYPE_SITES])
-        ]);
+        ]));
         $this->createStatsDocuments($region, str_replace("{resourceType}", RESOURCE_TYPE_SITES, METRIC_RESOURCE_TYPE_DEPLOYMENTS_STORAGE), $deploymentsStorage);
         $this->createStatsDocuments($region, str_replace("{resourceType}", RESOURCE_TYPE_SITES, METRIC_RESOURCE_TYPE_BUILDS_STORAGE), $buildsStorage);
 
-        $deployments = $dbForProject->count('deployments', [
+        $deployments = $this->retryOnFailure(fn () => $dbForProject->count('deployments', [
             Query::equal('resourceType', [RESOURCE_TYPE_SITES])
-        ]);
+        ]));
         $this->createStatsDocuments($region, str_replace("{resourceType}", RESOURCE_TYPE_SITES, METRIC_RESOURCE_TYPE_DEPLOYMENTS), $deployments);
         $this->createStatsDocuments($region, str_replace("{resourceType}", RESOURCE_TYPE_SITES, METRIC_RESOURCE_TYPE_BUILDS), $deployments);
 
@@ -405,16 +405,16 @@ class StatsResources extends Action
         $frameworks = [];
 
         $this->foreachDocument($dbForProject, 'sites', [], function (Document $site) use ($dbForProject, $region, &$frameworks) {
-            $siteDeploymentsStorage = $dbForProject->sum('deployments', 'sourceSize', [
+            $siteDeploymentsStorage = $this->retryOnFailure(fn () => $dbForProject->sum('deployments', 'sourceSize', [
                 Query::equal('resourceInternalId', [$site->getSequence()]),
                 Query::equal('resourceType', [RESOURCE_TYPE_SITES]),
-            ]);
+            ]));
             $this->createStatsDocuments($region, str_replace(['{resourceType}','{resourceInternalId}'], [RESOURCE_TYPE_SITES,$site->getSequence()], METRIC_RESOURCE_TYPE_ID_DEPLOYMENTS_STORAGE), $siteDeploymentsStorage);
 
-            $siteDeployments = $dbForProject->count('deployments', [
+            $siteDeployments = $this->retryOnFailure(fn () => $dbForProject->count('deployments', [
                 Query::equal('resourceInternalId', [$site->getSequence()]),
                 Query::equal('resourceType', [RESOURCE_TYPE_SITES]),
-            ]);
+            ]));
             $this->createStatsDocuments($region, str_replace(['{resourceType}','{resourceInternalId}'], [RESOURCE_TYPE_SITES,$site->getSequence()], METRIC_RESOURCE_TYPE_ID_DEPLOYMENTS), $siteDeployments);
 
             /**
@@ -423,10 +423,10 @@ class StatsResources extends Action
              */
             $this->createStatsDocuments($region, str_replace(['{resourceType}','{resourceInternalId}'], [RESOURCE_TYPE_SITES,$site->getSequence()], METRIC_RESOURCE_TYPE_ID_BUILDS), $siteDeployments);
 
-            $siteBuildsStorage = $dbForProject->sum('deployments', 'buildSize', [
+            $siteBuildsStorage = $this->retryOnFailure(fn () => $dbForProject->sum('deployments', 'buildSize', [
                 Query::equal('resourceInternalId', [$site->getSequence()]),
                 Query::equal('resourceType', [RESOURCE_TYPE_SITES]),
-            ]);
+            ]));
 
             $this->createStatsDocuments($region, str_replace(['{resourceType}','{resourceInternalId}'], [RESOURCE_TYPE_SITES,$site->getSequence()], METRIC_RESOURCE_TYPE_ID_BUILDS_STORAGE), $siteBuildsStorage);
 
@@ -492,10 +492,10 @@ class StatsResources extends Action
         });
 
         try {
-            $dbForLogs->upsertDocuments(
+            $this->retryOnFailure(fn () => $dbForLogs->upsertDocuments(
                 'stats',
                 $this->documents,
-            );
+            ));
 
             Console::success($message . ' | Documents: ' . count($this->documents));
         } catch (\Throwable $e) {

@@ -21,6 +21,50 @@ class Action extends UtopiaAction
      */
     protected mixed $logError;
 
+    /**
+     * Transient PDO error codes that are safe to retry
+     */
+    private const TRANSIENT_PDO_ERRORS = [
+        9001,  // ProxySQL: Max connect timeout reached
+        2006,  // MySQL server has gone away
+        2013,  // Lost connection to MySQL server during query
+    ];
+
+    /**
+     * Retry a callback on transient database errors with exponential backoff.
+     *
+     * @param callable $callback
+     * @param int $maxRetries
+     * @return mixed
+     * @throws \Throwable
+     */
+    protected function retryOnFailure(callable $callback, int $maxRetries = 3): mixed
+    {
+        $attempt = 0;
+        while (true) {
+            try {
+                return $callback();
+            } catch (\PDOException $e) {
+                $attempt++;
+                if ($attempt >= $maxRetries || !self::isTransientError($e)) {
+                    throw $e;
+                }
+                \usleep($attempt * 500000); // 0.5s, 1s, 1.5s...
+            }
+        }
+    }
+
+    private static function isTransientError(\PDOException $e): bool
+    {
+        $message = $e->getMessage();
+        foreach (self::TRANSIENT_PDO_ERRORS as $code) {
+            if (\str_contains($message, (string) $code)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     protected array $filters = [
         'subQueryKeys', 'subQueryWebhooks', 'subQueryPlatforms', 'subQueryProjectVariables', 'subQueryBlocks', 'subQueryDevKeys', // Project
         'subQueryAuthenticators', 'subQuerySessions', 'subQueryTokens', 'subQueryChallenges', 'subQueryMemberships', 'subQueryTargets', 'subQueryTopicTargets',// Users
@@ -59,9 +103,12 @@ class Action extends UtopiaAction
                     array_unshift($newQueries, Query::cursorAfter($latestDocument));
                 }
                 $newQueries[] = Query::limit($limit);
-                $database->disableValidation();
-                $results = $database->find($collection, $newQueries);
-                $database->enableValidation();
+                $results = $this->retryOnFailure(function () use ($database, $collection, $newQueries) {
+                    $database->disableValidation();
+                    $results = $database->find($collection, $newQueries);
+                    $database->enableValidation();
+                    return $results;
+                });
             } catch (\Exception $e) {
                 if (!empty($this->logError)) {
                     call_user_func_array($this->logError, [$e, "CLI", "fetch_documents_namespace_{$database->getNamespace()}_collection{$collection}"]);
