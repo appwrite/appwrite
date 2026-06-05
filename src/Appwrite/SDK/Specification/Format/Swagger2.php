@@ -375,9 +375,8 @@ class Swagger2 extends Format
 
                 $temp['x-appwrite']['auth'] = \array_slice($securities, 0, $this->authCount);
 
-                // Impersonation falls back to query params for location-type methods (browsers can't set headers on resource URLs)
                 if ($sdk->getType() === MethodType::LOCATION) {
-                    foreach (['ImpersonateUserId', 'ImpersonateUserEmail', 'ImpersonateUserPhone'] as $key) {
+                    foreach (['ImpersonateUserIdQuery', 'ImpersonateUserEmailQuery', 'ImpersonateUserPhoneQuery'] as $key) {
                         if (\array_key_exists($key, $this->keys)) {
                             $securities[$key] = [];
                             $temp['x-appwrite']['auth'][$key] = [];
