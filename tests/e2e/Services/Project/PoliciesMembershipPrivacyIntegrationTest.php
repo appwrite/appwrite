@@ -156,7 +156,18 @@ final class PoliciesMembershipPrivacyIntegrationTest extends Scope
         $this->assertTrue($response['body']['authMembershipsMfa']);
         $this->assertTrue($response['body']['authMembershipsUserAccessedAt']);
 
-        // Step 6: List memberships with privacy enabled - user details exposed
+        // Step 6: Sign in as user2 so accessedAt is populated
+        $session2 = $this->client->call(Client::METHOD_POST, '/account/sessions/email', [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ], [
+            'email' => $user2Email,
+            'password' => $password,
+        ]);
+        $this->assertSame(201, $session2['headers']['status-code']);
+
+        // Step 7: List memberships with privacy enabled - user details exposed
         $response = $this->client->call(Client::METHOD_GET, '/teams/' . $teamId . '/memberships', $clientHeaders);
         $this->assertSame(200, $response['headers']['status-code']);
         $this->assertSame(2, $response['body']['total']);
