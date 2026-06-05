@@ -482,12 +482,12 @@ function HomePage() {
 
         <section className="border-t border-border bg-background py-16 sm:py-20">
           <div className="mx-auto w-full max-w-7xl px-4 sm:px-6">
-            <div className="grid gap-8 lg:grid-cols-[1fr_0.9fr] lg:items-start">
-              <h2 className="font-aeonik-pro max-w-xl text-balance text-[36px] font-normal leading-none tracking-tight text-foreground sm:text-[44px]">
-                Safely scale with built-in security and compliance
+            <div className="mx-auto max-w-5xl text-center">
+              <h2 className="font-aeonik-pro mx-auto max-w-5xl text-balance text-[36px] font-normal leading-none tracking-tight text-foreground sm:text-[44px]">
+                Embedded security across every layer of the architecture
                 <span className="text-[var(--brand-cta)]">_</span>
               </h2>
-              <p className="max-w-xl text-[14px] leading-6 text-muted-foreground sm:text-[15px]">
+              <p className="mx-auto mt-5 max-w-2xl text-balance text-[14px] leading-6 text-muted-foreground sm:text-[15px] sm:leading-7">
                 With a security-first approach, Appwrite helps keep products and
                 users safe by default, making it easier to adhere to strict
                 safety policies.

@@ -70,8 +70,8 @@ function ScaleStatValue({
         className={cn(
           'font-semibold tabular-nums tracking-tight text-foreground',
           size === 'large'
-            ? 'text-2xl sm:text-3xl xl:text-4xl'
-            : 'text-2xl sm:text-3xl',
+            ? 'text-xl sm:text-2xl xl:text-3xl'
+            : 'text-xl sm:text-2xl',
         )}
       >
         {value}
