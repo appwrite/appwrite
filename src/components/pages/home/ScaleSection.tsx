@@ -223,7 +223,7 @@ function ScaleStatsChart({
 
       <div className="relative z-10 hidden lg:block">
         <div
-          className="grid gap-4 border-b border-border px-6 py-5"
+          className="grid gap-4 px-6 py-5"
           style={{
             gridTemplateColumns: `repeat(${SCALE_STAT_COUNT}, minmax(0, 1fr))`,
           }}
@@ -263,7 +263,7 @@ function ScaleStatsChart({
             </div>
           ))}
         </div>
-        <div className="min-h-[10rem] border-t border-border sm:min-h-[12rem]" aria-hidden />
+        <div className="min-h-[10rem] sm:min-h-[12rem]" aria-hidden />
       </div>
     </Card>
   )
