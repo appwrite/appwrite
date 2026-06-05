@@ -4,6 +4,7 @@ namespace Appwrite\Platform\Workers;
 
 use Appwrite\Platform\Action;
 use Exception;
+use PDOException;
 use Throwable;
 use Utopia\CLI\Console;
 use Utopia\Database\Database;
@@ -90,10 +91,8 @@ class StatsResources extends Action
         $dbForLogs = null;
         $dbForProject = null;
         try {
-            /** @var \Utopia\Database\Database $dbForLogs */
-            $dbForLogs = call_user_func($getLogsDB, $project);
-            /** @var \Utopia\Database\Database $dbForProject */
-            $dbForProject = call_user_func($getProjectDB, $project);
+            $dbForLogs = $this->retry(fn () => call_user_func($getLogsDB, $project));
+            $dbForProject = $this->retry(fn () => call_user_func($getProjectDB, $project));
         } catch (Throwable $th) {
             Console::error('Unable to get database');
             Console::error($th->getMessage());
@@ -104,54 +103,54 @@ class StatsResources extends Action
 
             $region = $project->getAttribute('region');
 
-            $platforms = $dbForPlatform->count('platforms', [
+            $platforms = $this->retry(fn () => $dbForPlatform->count('platforms', [
                 Query::equal('projectInternalId', [$project->getSequence()])
-            ]);
-            $webhooks = $dbForPlatform->count('webhooks', [
+            ]));
+            $webhooks = $this->retry(fn () => $dbForPlatform->count('webhooks', [
                 Query::equal('projectInternalId', [$project->getSequence()])
-            ]);
-            $keys = $dbForPlatform->count('keys', [
+            ]));
+            $keys = $this->retry(fn () => $dbForPlatform->count('keys', [
                 Query::equal('projectInternalId', [$project->getSequence()])
-            ]);
+            ]));
 
-            $domains = $dbForPlatform->count('rules', [
+            $domains = $this->retry(fn () => $dbForPlatform->count('rules', [
                 Query::equal('projectInternalId', [$project->getSequence()]),
                 Query::equal('owner', ['']),
-            ]);
+            ]));
 
 
-            $databases = $dbForProject->count('databases');
-            $buckets = $dbForProject->count('buckets');
-            $users = $dbForProject->count('users');
+            $databases = $this->retry(fn () => $dbForProject->count('databases'));
+            $buckets = $this->retry(fn () => $dbForProject->count('buckets'));
+            $users = $this->retry(fn () => $dbForProject->count('users'));
 
             $last30Days = (new \DateTime())->sub(\DateInterval::createFromDateString('30 days'))->format('Y-m-d 00:00:00');
-            $usersMAU = $dbForProject->count('users', [
+            $usersMAU = $this->retry(fn () => $dbForProject->count('users', [
                 Query::greaterThanEqual('accessedAt', $last30Days)
-            ]);
+            ]));
             $last24Hours = (new \DateTime())->sub(\DateInterval::createFromDateString('24 hours'))->format('Y-m-d h:m:00');
-            $usersDAU = $dbForProject->count('users', [
+            $usersDAU = $this->retry(fn () => $dbForProject->count('users', [
                 Query::greaterThanEqual('accessedAt', $last24Hours)
-            ]);
+            ]));
             $last7Days = (new \DateTime())->sub(\DateInterval::createFromDateString('7 days'))->format('Y-m-d 00:00:00');
-            $usersWAU = $dbForProject->count('users', [
+            $usersWAU = $this->retry(fn () => $dbForProject->count('users', [
                 Query::greaterThanEqual('accessedAt', $last7Days)
-            ]);
-            $teams = $dbForProject->count('teams');
-            $functions = $dbForProject->count('functions');
+            ]));
+            $teams = $this->retry(fn () => $dbForProject->count('teams'));
+            $functions = $this->retry(fn () => $dbForProject->count('functions'));
 
-            $messages = $dbForProject->count('messages');
-            $providers = $dbForProject->count('providers');
-            $topics = $dbForProject->count('topics');
-            $targets = $dbForProject->count('targets');
-            $emailTargets = $dbForProject->count('targets', [
+            $messages = $this->retry(fn () => $dbForProject->count('messages'));
+            $providers = $this->retry(fn () => $dbForProject->count('providers'));
+            $topics = $this->retry(fn () => $dbForProject->count('topics'));
+            $targets = $this->retry(fn () => $dbForProject->count('targets'));
+            $emailTargets = $this->retry(fn () => $dbForProject->count('targets', [
                 Query::equal('providerType', [MESSAGE_TYPE_EMAIL])
-            ]);
-            $pushTargets = $dbForProject->count('targets', [
+            ]));
+            $pushTargets = $this->retry(fn () => $dbForProject->count('targets', [
                 Query::equal('providerType', [MESSAGE_TYPE_PUSH])
-            ]);
-            $smsTargets = $dbForProject->count('targets', [
+            ]));
+            $smsTargets = $this->retry(fn () => $dbForProject->count('targets', [
                 Query::equal('providerType', [MESSAGE_TYPE_SMS])
-            ]);
+            ]));
 
             $metrics = [
                 METRIC_DATABASES => $databases,
@@ -180,25 +179,25 @@ class StatsResources extends Action
             }
 
             try {
-                $this->countForBuckets($dbForProject, $dbForLogs, $region);
+                $this->retry(fn () => $this->countForBuckets($dbForProject, $dbForLogs, $region));
             } catch (Throwable $th) {
                 call_user_func_array($this->logError, [$th, "StatsResources", "count_for_buckets_{$project->getId()}"]);
             }
 
             try {
-                $this->countImageTransformations($dbForProject, $dbForLogs, $region);
+                $this->retry(fn () => $this->countImageTransformations($dbForProject, $dbForLogs, $region));
             } catch (Throwable $th) {
                 call_user_func_array($this->logError, [$th, "StatsResources", "count_for_buckets_{$project->getId()}"]);
             }
 
             try {
-                $this->countForDatabase($dbForProject, $region);
+                $this->retry(fn () => $this->countForDatabase($dbForProject, $region));
             } catch (Throwable $th) {
                 call_user_func_array($this->logError, [$th, "StatsResources", "count_for_database_{$project->getId()}"]);
             }
 
             try {
-                $this->countForSitesAndFunctions($dbForProject, $region);
+                $this->retry(fn () => $this->countForSitesAndFunctions($dbForProject, $region));
             } catch (Throwable $th) {
                 call_user_func_array($this->logError, [$th, "StatsResources", "count_for_functions_{$project->getId()}"]);
             }
@@ -460,6 +459,58 @@ class StatsResources extends Action
         }
     }
 
+    private const TRANSIENT_ERROR_PATTERNS = [
+        'Max connect timeout',
+        'MySQL server has gone away',
+        'Lost connection to MySQL',
+        'Error while sending',
+        'decryption failed or bad record mac',
+        'server closed the connection unexpectedly',
+        'Connection refused',
+        'Connection timed out',
+    ];
+
+    /**
+     * Retry a callable on transient database connection errors.
+     *
+     * @template T
+     * @param callable(): T $callback
+     * @param int $maxAttempts
+     * @param int $baseDelayMs Base delay in milliseconds between retries (doubled each attempt)
+     * @return T
+     * @throws Throwable
+     */
+    public function retry(callable $callback, int $maxAttempts = 3, int $baseDelayMs = 500): mixed
+    {
+        $attempt = 0;
+        while (true) {
+            $attempt++;
+            try {
+                return $callback();
+            } catch (PDOException $e) {
+                if ($attempt >= $maxAttempts || !self::isTransientError($e)) {
+                    throw $e;
+                }
+                $delayMs = $baseDelayMs * (2 ** ($attempt - 1));
+                if ($delayMs > 0) {
+                    usleep($delayMs * 1000);
+                }
+                Console::warning("Transient DB error (attempt {$attempt}/{$maxAttempts}), retrying: " . $e->getMessage());
+            }
+        }
+    }
+
+    private static function isTransientError(PDOException $e): bool
+    {
+        $message = $e->getMessage();
+        foreach (self::TRANSIENT_ERROR_PATTERNS as $pattern) {
+            if (\str_contains($message, $pattern)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     protected function writeDocuments(Database $dbForLogs, Document $project): void
     {
         $message = 'Stats writeDocuments project: ' . $project->getId() . '(' . $project->getSequence() . ')';
@@ -492,10 +543,10 @@ class StatsResources extends Action
         });
 
         try {
-            $dbForLogs->upsertDocuments(
+            $this->retry(fn () => $dbForLogs->upsertDocuments(
                 'stats',
                 $this->documents,
-            );
+            ));
 
             Console::success($message . ' | Documents: ' . count($this->documents));
         } catch (\Throwable $e) {
