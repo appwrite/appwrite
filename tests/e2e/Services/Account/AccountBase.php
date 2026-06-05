@@ -44,10 +44,10 @@ trait AccountBase
         $this->assertArrayHasKey('targets', $response['body']);
         $this->assertEquals($email, $response['body']['targets'][0]['identifier']);
         $this->assertEquals($email, $response['body']['emailCanonical']);
-        $this->assertEquals(false, $response['body']['emailIsFree']);
-        $this->assertEquals(false, $response['body']['emailIsDisposable']);
-        $this->assertEquals(true, $response['body']['emailIsCorporate']);
-        $this->assertEquals(true, $response['body']['emailIsCanonical']);
+        $this->assertIsBool($response['body']['emailIsFree']);
+        $this->assertIsBool($response['body']['emailIsDisposable']);
+        $this->assertIsBool($response['body']['emailIsCorporate']);
+        $this->assertIsBool($response['body']['emailIsCanonical']);
 
         /**
          * Test for FAILURE

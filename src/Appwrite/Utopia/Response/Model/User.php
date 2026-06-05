@@ -134,7 +134,7 @@ class User extends Model
                 'description' => 'Whether the user email is from a corporate domain.',
                 'required' => false,
                 'default' => null,
-                'example' => false,
+                'example' => true,
             ])
             ->addRule('emailIsCanonical', [
                 'type' => self::TYPE_BOOLEAN,
