@@ -417,10 +417,13 @@ class Deletes extends Action
         $date = DateTime::addSeconds(new \DateTime(), -self::PROCESSING_STUCK_RETENTION_SECONDS);
 
         $queries = [
-            Query::select($this->selects),
             Query::equal('status', ['processing']),
             Query::lessThan('$updatedAt', $date),
         ];
+
+        foreach ($this->selects as $select) {
+            $queries[] = Query::select($select);
+        }
 
         $this->listByGroup(
             'migrations',
