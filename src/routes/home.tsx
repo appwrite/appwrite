@@ -16,7 +16,6 @@ import {
   Scale,
   Shield,
   ShieldCheck,
-  Sparkles,
   Zap,
 } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
@@ -55,55 +54,63 @@ const aiDocLinks = [
   { label: 'AI Arena', href: 'https://arena.appwrite.io/' },
 ] as const
 
-const productBentoItems = [
+const productBentoItems: {
+  title: string
+  description: string
+  icon: LucideIcon
+  className: string
+  label?: string
+  tall?: boolean
+}[] = [
   {
     title: 'Auth',
     description:
       'Authenticate users securely with email, SMS, OAuth, anonymous sessions, and magic URLs.',
     icon: ShieldCheck,
-    className: 'lg:col-span-4',
+    className:
+      'lg:col-span-4 lg:col-start-1 lg:row-start-1 lg:row-span-2',
   },
   {
     title: 'Databases',
     description:
       'Model, query, and scale application data with fast tables and robust permissions.',
     icon: Database,
-    className: 'lg:col-span-8',
+    className:
+      'lg:col-span-8 lg:col-start-5 lg:row-start-1 lg:row-span-3',
+    tall: true,
   },
   {
     title: 'Storage',
     description:
       'Store files with compression, encryption, image transformations, and access control.',
     icon: HardDrive,
-    className: 'lg:col-span-4',
+    className:
+      'lg:col-span-4 lg:col-start-1 lg:row-start-3 lg:row-span-2',
   },
   {
     title: 'Functions',
     description:
       'Deploy serverless functions with secure isolated runtimes and event-driven execution.',
     icon: Zap,
-    className: 'lg:col-span-4',
-  },
-  {
-    title: 'Messaging',
-    description:
-      'Send email, SMS, and push messages through a unified messaging service.',
-    icon: MessageSquare,
-    className: 'lg:col-span-4',
-  },
-  {
-    title: 'Realtime',
-    description:
-      'Subscribe and react to events across your project as they happen.',
-    icon: Radio,
-    className: 'lg:col-span-4',
+    className:
+      'lg:col-span-4 lg:col-start-1 lg:row-start-5 lg:row-span-2',
   },
   {
     title: 'Sites',
     description:
       'Deploy static, SSR, and CSR frontends with Appwrite behind them.',
     icon: Globe2,
-    className: 'lg:col-span-8',
+    className:
+      'lg:col-span-8 lg:col-start-5 lg:row-start-4 lg:row-span-3',
+    tall: true,
+  },
+  {
+    title: 'Messaging',
+    description:
+      'Send email, SMS, and push messages through a unified messaging service.',
+    icon: MessageSquare,
+    className:
+      'lg:col-span-4 lg:col-start-1 lg:row-start-7 lg:row-span-1',
   },
   {
     title: 'Firewall',
@@ -111,16 +118,18 @@ const productBentoItems = [
     description:
       'Protect apps with traffic rules, abuse controls, and edge security for every project.',
     icon: Shield,
-    className: 'lg:col-span-6',
+    className:
+      'lg:col-span-4 lg:col-start-5 lg:row-start-7 lg:row-span-1',
   },
   {
-    title: 'Advisor',
+    title: 'Realtime',
     description:
-      'Get actionable recommendations to improve security, performance, and project configuration.',
-    icon: Sparkles,
-    className: 'lg:col-span-6',
+      'Subscribe and react to events across your project as they happen.',
+    icon: Radio,
+    className:
+      'lg:col-span-4 lg:col-start-9 lg:row-start-7 lg:row-span-1',
   },
-] as const
+]
 
 const securityItems: {
   title: string
@@ -360,16 +369,18 @@ function HomePage() {
               </p>
             </div>
 
-            <div className="mt-10 grid overflow-hidden rounded-xl border border-border bg-card/50 lg:grid-cols-12">
+            <div className="mt-10 grid overflow-hidden rounded-xl border border-border bg-card/50 lg:grid-cols-12 lg:grid-rows-[repeat(6,minmax(0,1fr))_auto] lg:min-h-[720px]">
               {productBentoItems.map((item) => {
                 const Icon = item.icon
 
                 return (
                   <article
                     key={item.title}
-                    className={`${item.className} group border-b border-border transition-colors hover:bg-accent/15 lg:border-r [&:nth-last-child(-n+1)]:border-b-0 lg:[&:nth-child(2)]:border-r-0 lg:[&:nth-child(5)]:border-r-0 lg:[&:nth-child(7)]:border-r-0 lg:[&:nth-child(9)]:border-r-0 lg:[&:nth-child(n+8)]:border-b-0`}
+                    className={`${item.className} group border-b border-border transition-colors hover:bg-accent/15 lg:border-r lg:[&:nth-child(2)]:border-r-0 lg:[&:nth-child(5)]:border-r-0 lg:[&:nth-child(8)]:border-r-0 lg:[&:nth-child(n+6)]:border-b-0`}
                   >
-                    <div className="flex min-h-[320px] flex-col">
+                    <div
+                      className={`flex min-h-[320px] flex-col lg:h-full lg:min-h-0 ${item.tall ? 'lg:min-h-full' : ''}`}
+                    >
                       <div className="space-y-3 px-5 pt-5">
                         <div className="flex items-center gap-2">
                           <span className="flex size-7 items-center justify-center rounded-md border border-border bg-muted/40">
@@ -392,9 +403,11 @@ function HomePage() {
                         </p>
                       </div>
 
-                      <div className="p-5 pt-4">
+                      <div
+                        className={`p-5 pt-4 ${item.tall ? 'lg:flex lg:flex-1 lg:flex-col lg:min-h-0' : ''}`}
+                      >
                         <div
-                          className="relative min-h-[240px] overflow-hidden rounded-lg border border-border bg-muted/20"
+                          className={`relative min-h-[240px] overflow-hidden rounded-lg border border-border bg-muted/20 ${item.tall ? 'lg:min-h-0 lg:flex-1' : ''}`}
                           aria-hidden
                         >
                           <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_30%,color-mix(in_srgb,var(--brand-cta)_10%,transparent),transparent_62%)] opacity-80" />

@@ -1,5 +1,4 @@
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
-import { Card } from '@/components/ui/card'
 import { cn } from '@/lib/utils'
 
 const SCALE_QUOTE = {
@@ -42,49 +41,41 @@ function ScaleQuoteBelowChart() {
 }
 
 const SCALE_STATS = [
-  { value: 9, suffix: '+', label: 'Network edges' },
   { value: 24, suffix: 'K+', label: 'Discord members' },
   { value: 56, suffix: 'K+', label: 'GitHub stars' },
   { value: 300, suffix: '+', label: 'PoP locations' },
   { value: 300, suffix: 'K+', label: 'Cloud projects' },
   { value: 500, suffix: 'K+', label: 'Developers' },
   { value: 20, suffix: 'B+', label: 'DB operations / month' },
+  { value: 7, suffix: 'B+', label: 'Requests / month' },
 ] as const
 
-const SCALE_STAT_COUNT = SCALE_STATS.length
+function scaleStatMagnitude(stat: { value: number; suffix: string }): number {
+  if (stat.suffix.startsWith('B')) return stat.value * 1_000_000_000
+  if (stat.suffix.startsWith('K')) return stat.value * 1_000
+  return stat.value
+}
 
-function ScaleStatValue({
+const SORTED_SCALE_STATS = [...SCALE_STATS].sort(
+  (a, b) => scaleStatMagnitude(a) - scaleStatMagnitude(b),
+)
+
+function ScaleStatCard({
   value,
   suffix,
   label,
-  size = 'default',
 }: {
   value: number
   suffix: string
   label: string
-  size?: 'default' | 'large'
 }) {
   return (
-    <div className="min-w-0 space-y-1.5">
-      <p
-        className={cn(
-          'font-semibold tabular-nums tracking-tight text-foreground',
-          size === 'large'
-            ? 'text-xl sm:text-2xl xl:text-3xl'
-            : 'text-xl sm:text-2xl',
-        )}
-      >
+    <div className="flex h-full min-w-0 flex-col justify-center rounded-xl border border-border/80 bg-background/90 px-2.5 py-2.5 shadow-sm backdrop-blur-sm sm:px-3 sm:py-3">
+      <p className="text-base font-semibold tabular-nums tracking-tight text-foreground sm:text-lg lg:text-xl">
         {value}
         {suffix}
       </p>
-      <p
-        className={cn(
-          'leading-snug text-muted-foreground',
-          size === 'large'
-            ? 'text-[10px] sm:text-[11px]'
-            : 'text-xs',
-        )}
-      >
+      <p className="mt-0.5 text-[10px] leading-snug text-muted-foreground sm:text-[11px]">
         {label}
       </p>
     </div>
@@ -134,53 +125,33 @@ function ScaleChartBackground() {
   )
 }
 
-function ScaleStatsChart() {
+function ScaleStatCards() {
   return (
-    <Card className="relative min-h-[24rem] w-full gap-0 overflow-hidden py-0 sm:min-h-[28rem] lg:min-h-[30rem]">
-      <div className="pointer-events-none absolute inset-0 z-0" aria-hidden>
-        <ScaleChartBackground />
-        <ScaleAreaCurve className="opacity-80" />
+    <div className="-mx-4 overflow-x-auto px-4 sm:mx-0 sm:overflow-visible sm:px-0">
+      <div className="grid min-w-[50rem] grid-cols-7 gap-2 sm:min-w-0 min-[1200px]:gap-3">
+        {SORTED_SCALE_STATS.map((stat) => (
+          <ScaleStatCard
+            key={stat.label}
+            value={stat.value}
+            suffix={stat.suffix}
+            label={stat.label}
+          />
+        ))}
       </div>
+    </div>
+  )
+}
 
-      <div className="relative z-10 hidden lg:block">
-        <div
-          className="grid gap-4 px-6 py-5"
-          style={{
-            gridTemplateColumns: `repeat(${SCALE_STAT_COUNT}, minmax(0, 1fr))`,
-          }}
-        >
-          {SCALE_STATS.map((stat) => (
-            <div
-              key={stat.label}
-              className="min-w-0 border-l border-border px-2 first:border-l-0 sm:px-3"
-            >
-              <ScaleStatValue
-                value={stat.value}
-                suffix={stat.suffix}
-                label={stat.label}
-                size="large"
-              />
-            </div>
-          ))}
+function ScaleChart() {
+  return (
+    <div className="relative left-1/2 w-screen -translate-x-1/2">
+      <div className="relative min-h-[22rem] w-full overflow-hidden border-y border-border bg-card/40 sm:min-h-[26rem] lg:min-h-[28rem]">
+        <div className="pointer-events-none absolute inset-0" aria-hidden>
+          <ScaleChartBackground />
+          <ScaleAreaCurve className="opacity-80" />
         </div>
-        <div className="min-h-[16rem] sm:min-h-[18rem] lg:min-h-[20rem]" aria-hidden />
       </div>
-
-      <div className="relative z-10 lg:hidden">
-        <div className="grid grid-cols-2 gap-4 p-4 sm:grid-cols-3 sm:gap-5 sm:p-6">
-          {SCALE_STATS.map((stat) => (
-            <div key={stat.label} className="min-w-0 px-0.5">
-              <ScaleStatValue
-                value={stat.value}
-                suffix={stat.suffix}
-                label={stat.label}
-              />
-            </div>
-          ))}
-        </div>
-        <div className="min-h-[10rem] sm:min-h-[12rem]" aria-hidden />
-      </div>
-    </Card>
+    </div>
   )
 }
 
@@ -193,13 +164,17 @@ export function ScaleSection() {
           <span className="text-[var(--brand-cta)]">_</span>
         </h2>
 
-        <div className="mt-10 w-full sm:mt-12">
-          <ScaleStatsChart />
+        <div className="mt-8 sm:mt-10">
+          <ScaleStatCards />
         </div>
+      </div>
 
-        <div className="mt-10 sm:mt-12">
-          <ScaleQuoteBelowChart />
-        </div>
+      <div className="mt-6 w-full sm:mt-8">
+        <ScaleChart />
+      </div>
+
+      <div className="mx-auto mt-10 w-full max-w-7xl px-4 sm:mt-12 sm:px-6">
+        <ScaleQuoteBelowChart />
       </div>
     </section>
   )
