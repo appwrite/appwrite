@@ -139,8 +139,8 @@ export function StorageProductVisual() {
       className="absolute inset-0 overflow-hidden px-3 pt-3 sm:px-4 sm:pt-4"
       onMouseEnter={() => setWidthSliderKey((key) => key + 1)}
     >
-      <div className="flex h-[calc(100%+1.25rem)] min-h-[220px] flex-col overflow-hidden rounded-xl border border-border bg-card/70 shadow-sm">
-        <div className="flex items-center justify-between gap-2 border-b border-border bg-muted/10 px-3 py-2">
+      <div className="flex h-full min-h-0 flex-col overflow-hidden rounded-xl border border-border bg-card/70 shadow-sm">
+        <div className="flex shrink-0 items-center justify-between gap-2 border-b border-border bg-muted/10 px-3 py-2">
           <span className={cn('rounded-sm bg-background px-2 py-0.5 text-[10px] font-medium shadow-sm', productBentoIdle.text)}>
             Design
           </span>
@@ -153,17 +153,17 @@ export function StorageProductVisual() {
           </Badge>
         </div>
 
-        <div className="flex min-h-0 flex-1 flex-col sm:flex-row">
-          <div className="relative min-h-[7rem] flex-1 overflow-hidden bg-background">
+        <div className="flex min-h-0 flex-1 flex-col overflow-hidden sm:flex-row">
+          <div className="relative min-h-[5rem] min-w-0 flex-1 overflow-hidden bg-background sm:min-h-[7rem]">
             <SchemaBlueprintMat density="dense" />
-            <div className="relative z-[1] flex h-full items-center justify-center p-3">
+            <div className="relative z-[1] flex h-full items-center justify-center p-2 sm:p-3">
               <MockImagePreview />
             </div>
           </div>
 
-          <aside className="w-full shrink-0 border-t border-border bg-background/60 p-2.5 sm:w-[42%] sm:border-l sm:border-t-0">
+          <aside className="w-full shrink-0 border-t border-border bg-background/60 p-2 sm:w-[42%] sm:border-l sm:border-t-0 sm:p-2.5">
             <p className={cn('text-[11px] font-medium', productBentoIdle.text)}>Transform</p>
-            <div className="mt-2.5 space-y-2">
+            <div className="mt-1.5 space-y-1.5 sm:mt-2.5 sm:space-y-2">
               <MockSliderRow
                 label="Width (px)"
                 idleValue="1200"
@@ -184,7 +184,7 @@ export function StorageProductVisual() {
           </aside>
         </div>
 
-        <div className="flex items-center gap-2 border-t border-border bg-muted/8 px-3 py-2">
+        <div className="flex shrink-0 items-center gap-2 border-t border-border bg-muted/8 px-2.5 py-2 sm:px-3">
           <PreviewReductionRing>
             <span className={cn('inline-flex items-baseline tabular-nums text-[8px] font-medium', productBentoIdle.text)}>
               <span className="product-bento-storage-ring-value opacity-40 transition-opacity duration-300 group-hover:opacity-100 motion-reduce:opacity-100">
@@ -193,9 +193,9 @@ export function StorageProductVisual() {
               <span className="text-[7px] font-normal text-muted-foreground">%</span>
             </span>
           </PreviewReductionRing>
-          <p className={cn('min-w-0 flex-1 truncate text-[10px] leading-tight', productBentoIdle.text)}>
+          <p className={cn('min-w-0 flex-1 text-[10px] leading-tight', productBentoIdle.text)}>
             <span className="font-medium tabular-nums">2.4 MB</span>
-            <ArrowRight className="mx-1 inline size-2.5 shrink-0 align-text-bottom text-muted-foreground" />
+            <ArrowRight className="mx-0.5 inline size-2.5 shrink-0 align-text-bottom text-muted-foreground sm:mx-1" />
             <span className="font-medium tabular-nums opacity-70 transition-opacity duration-300 group-hover:opacity-100 motion-reduce:opacity-100">
               920 KB
             </span>

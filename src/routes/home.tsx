@@ -70,6 +70,8 @@ const productBentoItems: {
   className: string
   label?: string
   tall?: boolean
+  /** Taller article + visual min-heights below lg (complex stacked visuals). */
+  mobileVisualTall?: boolean
 }[] = [
   {
     title: 'Auth',
@@ -87,6 +89,7 @@ const productBentoItems: {
     className:
       'lg:col-span-8 lg:col-start-5 lg:row-start-1 lg:row-span-3',
     tall: true,
+    mobileVisualTall: true,
   },
   {
     title: 'Storage',
@@ -392,7 +395,7 @@ function HomePage() {
                     className={`${item.className} group border-b border-border transition-colors hover:bg-accent/15 lg:border-r lg:[&:nth-child(2)]:border-r-0 lg:[&:nth-child(5)]:border-r-0 lg:[&:nth-child(8)]:border-r-0 lg:[&:nth-child(n+6)]:border-b-0`}
                   >
                     <div
-                      className={`flex min-h-[320px] flex-col lg:h-full lg:min-h-0 ${item.tall ? 'lg:min-h-full' : ''}`}
+                      className={`flex flex-col lg:h-full lg:min-h-0 ${item.mobileVisualTall ? 'min-h-[480px]' : 'min-h-[320px]'} ${item.tall ? 'lg:min-h-full' : ''}`}
                     >
                       <div className="space-y-3 px-5 pt-5">
                         <div className="flex items-center gap-2">
@@ -417,10 +420,10 @@ function HomePage() {
                       </div>
 
                       <div
-                        className={`p-5 pt-4 ${item.tall ? 'lg:flex lg:flex-1 lg:flex-col lg:min-h-0' : ''}`}
+                        className={`p-5 pt-4 ${item.mobileVisualTall ? 'max-lg:flex max-lg:min-h-0 max-lg:flex-1 max-lg:flex-col' : ''} ${item.tall ? 'lg:flex lg:flex-1 lg:flex-col lg:min-h-0' : ''}`}
                       >
                         <div
-                          className={`relative isolate min-h-[240px] overflow-hidden rounded-lg border border-border bg-muted/[0.06] ${item.tall ? 'lg:min-h-0 lg:flex-1' : ''}`}
+                          className={`relative isolate overflow-hidden rounded-lg border border-border bg-muted/[0.06] ${item.mobileVisualTall ? 'min-h-[240px] max-lg:min-h-[400px] max-lg:flex-1' : 'min-h-[240px]'} ${item.tall ? 'lg:min-h-0 lg:flex-1' : ''}`}
                           aria-hidden
                         >
                           <div className="absolute inset-0 opacity-[0.94] transition-opacity duration-300 group-hover:opacity-100 motion-reduce:opacity-100">
