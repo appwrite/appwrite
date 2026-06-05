@@ -1,0 +1,23 @@
+Fixes 4 active defects in the orchestrator build backend. Related to #12479
+
+## Changes
+
+### 1. Premature event emission (P1)
+Functions and Sites deployment Create endpoints were setting queueForEvents params on every chunk upload (because !->isEmpty() is always true after first chunk). Now guarded with  ===  check so events only fire when all chunks are complete.
+
+Files: Functions/Http/Deployments/Create.php, Sites/Http/Deployments/Create.php
+
+### 2. Missing Authorization::skip() wrappers
+New orchestrator methods (applyOrchestratorEvent, waitForOrchestratorBuildPath, waitForOrchestratorSiteDetectionLogs) were fetching from the database without getAuthorization()->skip() wrappers, which could silently return empty documents under project authorization context.
+
+Files: Functions/Workers/Builds.php
+
+### 3. Security: callback secret conflation
+Both Builds.php::createOrchestratorBuild and Deployments/Events/Create.php fell back to _APP_OPENSSL_KEY_V1 when _APP_ORCHESTRATOR_CALLBACK_SECRET was not set. If the callback secret is exposed, the attacker gains the primary encryption key. Now requires explicit _APP_ORCHESTRATOR_CALLBACK_SECRET.
+
+Files: Functions/Workers/Builds.php, Deployments/Http/Deployments/Events/Create.php
+
+### 4. Null coalesce regression in outputDirectory
+The ?? '' guard was dropped when  was hoisted out of the closure, passing null to the executor when neither buildOutput nor outputDirectory was configured. Restored the default.
+
+Files: Functions/Workers/Builds.php
