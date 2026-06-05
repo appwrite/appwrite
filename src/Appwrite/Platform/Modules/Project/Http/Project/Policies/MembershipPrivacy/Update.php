@@ -46,7 +46,7 @@ class Update extends Action
                 responses: [
                     new SDKResponse(
                         code: Response::STATUS_CODE_OK,
-                        model: Response::MODEL_PROJECT,
+                        model: Response::MODEL_POLICY_MEMBERSHIP_PRIVACY,
                     )
                 ],
             ))
@@ -55,6 +55,7 @@ class Update extends Action
             ->param('userPhone', null, new Boolean(), 'Set to true if you want make user phone number visible to all team members, or false to hide it.', optional: true)
             ->param('userName', null, new Boolean(), 'Set to true if you want make user name visible to all team members, or false to hide it.', optional: true)
             ->param('userMFA', null, new Boolean(), 'Set to true if you want make user MFA status visible to all team members, or false to hide it.', optional: true)
+            ->param('userAccessedAt', null, new Boolean(), 'Set to true if you want make user last access time visible to all team members, or false to hide it.', optional: true)
             ->inject('response')
             ->inject('dbForPlatform')
             ->inject('project')
@@ -69,6 +70,7 @@ class Update extends Action
         ?bool $userPhone,
         ?bool $userName,
         ?bool $userMFA,
+        ?bool $userAccessedAt,
         Response $response,
         Database $dbForPlatform,
         Document $project,
@@ -92,6 +94,9 @@ class Update extends Action
         if ($userMFA !== null) {
             $auths['membershipsMfa'] = $userMFA;
         }
+        if ($userAccessedAt !== null) {
+            $auths['membershipsUserAccessedAt'] = $userAccessedAt;
+        }
 
         $updates = new Document([
             'auths' => $auths,
@@ -103,6 +108,16 @@ class Update extends Action
             ->setParam('projectId', $project->getId())
             ->setParam('policy', 'membership-privacy');
 
-        $response->dynamic($project, Response::MODEL_PROJECT);
+        $auths = $project->getAttribute('auths', []);
+
+        $response->dynamic(new Document([
+            '$id' => 'membership-privacy',
+            'userId' => $auths['membershipsUserId'] ?? false,
+            'userEmail' => $auths['membershipsUserEmail'] ?? false,
+            'userPhone' => $auths['membershipsUserPhone'] ?? false,
+            'userName' => $auths['membershipsUserName'] ?? false,
+            'userMFA' => $auths['membershipsMfa'] ?? false,
+            'userAccessedAt' => $auths['membershipsUserAccessedAt'] ?? false,
+        ]), Response::MODEL_POLICY_MEMBERSHIP_PRIVACY);
     }
 }
