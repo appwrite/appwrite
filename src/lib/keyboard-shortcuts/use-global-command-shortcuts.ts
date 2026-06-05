@@ -18,8 +18,8 @@ export function useGlobalCommandShortcuts({
 }: UseGlobalCommandShortcutsOptions) {
   const active = enabled && !commandCenterOpen
 
-  useKeyboardShortcut('meta+k', onOpenCommandCenter, { enabled: active })
-  useKeyboardShortcut('control+k', onOpenCommandCenter, { enabled: active })
+  useKeyboardShortcut('meta+k', onOpenCommandCenter, { enabled: active, capture: true })
+  useKeyboardShortcut('control+k', onOpenCommandCenter, { enabled: active, capture: true })
 
   useKeyboardShortcut(
     '/',
@@ -27,7 +27,7 @@ export function useGlobalCommandShortcuts({
       e.preventDefault()
       onOpenCommandCenter()
     },
-    { enabled: active },
+    { enabled: active, capture: true },
   )
 
   // ? is shift+/ on US layouts; register both forms.
@@ -37,7 +37,7 @@ export function useGlobalCommandShortcuts({
       e.preventDefault()
       onOpenShortcutsHelp()
     },
-    { enabled: active },
+    { enabled: active, capture: true },
   )
 
   useKeyboardShortcut(
@@ -46,6 +46,6 @@ export function useGlobalCommandShortcuts({
       e.preventDefault()
       onOpenShortcutsHelp()
     },
-    { enabled: active },
+    { enabled: active, capture: true },
   )
 }

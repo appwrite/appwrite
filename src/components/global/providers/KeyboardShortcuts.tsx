@@ -5,6 +5,7 @@ import {
   useCallback,
   useMemo,
   type ReactNode,
+  type ComponentProps,
 } from 'react'
 import { useNavigate } from '@tanstack/react-router'
 import { useConsoleProfile } from '@/hooks/use-console-profile'
@@ -328,6 +329,70 @@ export function KeyboardShortcutsProvider({
         onNavigateToResource={onNavigateToResource}
         onCreateResource={onCreateResource}
         projectId={projectId}
+        initialSubPage={initialSubPage}
+        onInitialSubPageConsumed={() => setInitialSubPage(null)}
+      />
+    </KeyboardShortcutsContext.Provider>
+  )
+}
+
+type StandaloneCommandCenterScopeProps = {
+  children: ReactNode
+} & Omit<
+  ComponentProps<typeof CommandCenter>,
+  'open' | 'onOpenChange' | 'initialSubPage' | 'onInitialSubPageConsumed'
+>
+
+/** Command center + global shortcuts for pages outside project/org providers (e.g. home). */
+export function StandaloneCommandCenterScope({
+  children,
+  context = 'account',
+  ...commandCenterProps
+}: StandaloneCommandCenterScopeProps) {
+  const [commandCenterOpen, setCommandCenterOpen] = useState(false)
+  const [initialSubPage, setInitialSubPage] = useState<string | null>(null)
+
+  const openCommandCenter = useCallback(() => {
+    setInitialSubPage(null)
+    setCommandCenterOpen(true)
+  }, [])
+
+  const openShortcutsHelp = useCallback(() => {
+    setInitialSubPage('shortcuts')
+    setCommandCenterOpen(true)
+  }, [])
+
+  const closeCommandCenter = useCallback(() => {
+    setCommandCenterOpen(false)
+    setInitialSubPage(null)
+  }, [])
+
+  useGlobalCommandShortcuts({
+    commandCenterOpen,
+    onOpenCommandCenter: openCommandCenter,
+    onOpenShortcutsHelp: openShortcutsHelp,
+  })
+
+  const contextValue = useMemo<KeyboardShortcutsContextValue>(
+    () => ({
+      openCommandCenter,
+      closeCommandCenter,
+      isCommandCenterOpen: commandCenterOpen,
+    }),
+    [openCommandCenter, closeCommandCenter, commandCenterOpen],
+  )
+
+  return (
+    <KeyboardShortcutsContext.Provider value={contextValue}>
+      {children}
+      <CommandCenter
+        {...commandCenterProps}
+        context={context}
+        open={commandCenterOpen}
+        onOpenChange={(open) => {
+          setCommandCenterOpen(open)
+          if (!open) setInitialSubPage(null)
+        }}
         initialSubPage={initialSubPage}
         onInitialSubPageConsumed={() => setInitialSubPage(null)}
       />

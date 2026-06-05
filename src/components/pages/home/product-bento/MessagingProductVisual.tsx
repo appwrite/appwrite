@@ -1,7 +1,7 @@
 import { Bell, CheckCircle2, Mail, Phone, Users } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
 import { cn } from '@/lib/utils'
-import { productBentoIdle } from './MockSyntax'
+import { productBentoContainer, productBentoIdle } from './MockSyntax'
 
 const CHANNELS = [
   { id: 'email', label: 'Email', icon: Mail },
@@ -47,25 +47,30 @@ function DeliveryChip({
 }) {
   return (
     <div
-      className="flex flex-1 items-center justify-center gap-1.5 rounded-md border border-border/80 bg-background/90 px-2 py-1.5 opacity-0 group-hover:animate-[product-bento-oauth-highlight_0.4s_ease-out_both] motion-reduce:opacity-100 motion-reduce:group-hover:animate-none"
-      style={{ animationDelay: `${delayMs}ms` }}
+      className={cn(
+        'flex flex-1 items-center justify-center gap-1.5 rounded-md border border-border/80 px-2 py-1.5 text-muted-foreground transition-[border-color,background-color,color] duration-300',
+        productBentoContainer.panelMd,
+        'group-hover:border-[color-mix(in_srgb,var(--brand-cta)_22%,var(--border))] group-hover:bg-background group-hover:text-foreground motion-reduce:group-hover:border-border/80 motion-reduce:group-hover:bg-card/70 motion-reduce:group-hover:text-muted-foreground',
+      )}
+      style={{ transitionDelay: `${delayMs}ms` }}
     >
       <CheckCircle2
-        className="size-3.5 shrink-0 text-emerald-600 dark:text-emerald-400"
+        className={cn(
+          'hidden size-3.5 shrink-0 text-emerald-600 dark:text-emerald-400',
+          'group-hover:inline-block motion-reduce:inline-block',
+        )}
         aria-hidden
       />
-      <span className="text-[10px] font-medium text-foreground sm:text-[11px]">
-        {label}
-      </span>
+      <span className="text-[10px] font-medium sm:text-[11px]">{label}</span>
     </div>
   )
 }
 
 export function MessagingProductVisual() {
   return (
-    <div className="absolute inset-0 overflow-hidden px-3 pt-2.5 sm:px-4 sm:pt-3">
-      <div className="mx-auto w-full max-w-[21rem] overflow-hidden rounded-xl border border-border bg-card/70 shadow-sm">
-        <div className="border-b border-border bg-muted/10 px-3.5 py-2.5">
+    <div className="absolute inset-0 flex flex-col">
+      <div className={cn('mx-auto flex h-full min-h-0 w-full max-w-[21rem] flex-col', productBentoContainer.shell)}>
+        <div className={cn(productBentoContainer.header, 'px-3.5 py-2.5')}>
           <p className={cn('text-[12px] font-medium sm:text-[13px]', productBentoIdle.text)}>
             Campaign message
           </p>
@@ -74,79 +79,84 @@ export function MessagingProductVisual() {
           </p>
         </div>
 
-        <div className="p-3">
-          <div className="flex gap-1.5">
-            {CHANNELS.map((channel, index) => (
-              <ChannelPill
-                key={channel.id}
-                label={channel.label}
-                icon={channel.icon}
-                index={index}
-              />
-            ))}
-          </div>
-
-          <div
-            className={cn(
-              'mt-2.5 rounded-md border border-border bg-background/80 px-3 py-2.5 transition-[border-color,background-color] duration-300',
-              'group-hover:border-[color-mix(in_srgb,var(--brand-cta)_24%,var(--border))] group-hover:bg-background',
-            )}
-          >
-            <p className={cn('text-[12px] font-medium sm:text-[13px]', productBentoIdle.text)}>
-              Welcome to Acme
-            </p>
-            <div className="relative mt-1 min-h-[2.25rem] text-[11px] leading-snug text-muted-foreground sm:text-[12px] sm:leading-relaxed">
-              <span className="transition-opacity duration-200 group-hover:opacity-0 motion-reduce:group-hover:opacity-100">
-                Draft your message once...
-              </span>
-              <span className="absolute inset-0 opacity-0 transition-opacity duration-300 group-hover:opacity-100 motion-reduce:static motion-reduce:opacity-100">
-                Thanks for signing up. Here&apos;s how to get started with your new
-                account.
-              </span>
+        <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
+          <div className="p-3">
+            <div className="flex gap-1.5">
+              {CHANNELS.map((channel, index) => (
+                <ChannelPill
+                  key={channel.id}
+                  label={channel.label}
+                  icon={channel.icon}
+                  index={index}
+                />
+              ))}
             </div>
-          </div>
 
-          <div className="mt-2.5 flex items-center gap-2 rounded-md border border-border/70 bg-muted/8 px-2.5 py-2">
-            <Users className="size-3.5 shrink-0 text-muted-foreground" aria-hidden />
-            <div className="min-w-0 flex-1">
-              <p className={cn('truncate font-mono text-[11px] sm:text-[12px]', productBentoIdle.text)}>
-                product-updates
+            <div
+              className={cn(
+                'mt-2.5 px-3 py-2.5 transition-[border-color,background-color] duration-300',
+                productBentoContainer.panelMd,
+                'group-hover:border-[color-mix(in_srgb,var(--brand-cta)_24%,var(--border))] group-hover:bg-background',
+              )}
+            >
+              <p className={cn('text-[12px] font-medium sm:text-[13px]', productBentoIdle.text)}>
+                Welcome to Acme
               </p>
-              <p className="text-[10px] text-muted-foreground sm:text-[11px]">Topic</p>
+              <div className="relative mt-1 min-h-[2.25rem] text-[11px] leading-snug text-muted-foreground sm:text-[12px] sm:leading-relaxed">
+                <span className="transition-opacity duration-200 group-hover:opacity-0 motion-reduce:group-hover:opacity-100">
+                  Draft your message once...
+                </span>
+                <span className="absolute inset-0 opacity-0 transition-opacity duration-300 group-hover:opacity-100 motion-reduce:static motion-reduce:opacity-100">
+                  Thanks for signing up. Here&apos;s how to get started with your new
+                  account.
+                </span>
+              </div>
             </div>
-            <p className="shrink-0 text-[10px] tabular-nums text-muted-foreground sm:text-[11px]">
-              <span className={cn('font-medium', productBentoIdle.text)}>1,248</span> targets
-            </p>
-          </div>
-        </div>
 
-        <div className="border-t border-border/80 px-3 py-2.5">
-          <div className="flex gap-1.5">
-            {CHANNELS.map((channel, index) => (
-              <DeliveryChip
-                key={channel.id}
-                label={channel.label}
-                delayMs={220 + index * 120}
-              />
-            ))}
+            <div className="mt-2.5 flex items-center gap-2 rounded-md border border-border/70 bg-muted/8 px-2.5 py-2">
+              <Users className="size-3.5 shrink-0 text-muted-foreground" aria-hidden />
+              <div className="min-w-0 flex-1">
+                <p className={cn('truncate font-mono text-[11px] sm:text-[12px]', productBentoIdle.text)}>
+                  product-updates
+                </p>
+                <p className="text-[10px] text-muted-foreground sm:text-[11px]">Topic</p>
+              </div>
+              <p className="shrink-0 text-[10px] tabular-nums text-muted-foreground sm:text-[11px]">
+                <span className={cn('font-medium', productBentoIdle.text)}>1,248</span> targets
+              </p>
+            </div>
           </div>
-          <p className="mt-2 text-center text-[10px] text-muted-foreground opacity-0 transition-opacity duration-300 group-hover:opacity-100 motion-reduce:opacity-100 sm:text-[11px]">
-            Delivered across every selected channel
-          </p>
-        </div>
 
-        <div className="flex items-center justify-between gap-2 border-t border-border/80 bg-muted/5 px-3 py-2">
-          <div className="flex items-center gap-2" aria-hidden>
-            {PROVIDERS.map((provider) => (
-              <img
-                key={provider.label}
-                src={provider.icon}
-                alt=""
-                className={cn('size-4', productBentoIdle.providerIcon)}
-              />
-            ))}
+          <div className="mt-auto shrink-0 border-t border-border bg-muted/5">
+            <div className="px-3 py-2.5">
+              <div className="flex gap-1.5">
+                {CHANNELS.map((channel, index) => (
+                  <DeliveryChip
+                    key={channel.id}
+                    label={channel.label}
+                    delayMs={220 + index * 120}
+                  />
+                ))}
+              </div>
+              <p className="mt-2 hidden text-center text-[10px] text-muted-foreground group-hover:block motion-reduce:block sm:text-[11px]">
+                Delivered across every selected channel
+              </p>
+            </div>
+
+            <div className="flex items-center justify-between gap-2 border-t border-border/80 px-3 py-2">
+              <div className="flex items-center gap-2" aria-hidden>
+                {PROVIDERS.map((provider) => (
+                  <img
+                    key={provider.label}
+                    src={provider.icon}
+                    alt=""
+                    className={cn('size-4', productBentoIdle.providerIcon)}
+                  />
+                ))}
+              </div>
+              <p className="text-[10px] text-muted-foreground sm:text-[11px]">Your providers</p>
+            </div>
           </div>
-          <p className="text-[10px] text-muted-foreground sm:text-[11px]">Your providers</p>
         </div>
       </div>
     </div>

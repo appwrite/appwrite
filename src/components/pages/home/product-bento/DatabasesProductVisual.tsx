@@ -8,7 +8,7 @@ import { Badge } from '@/components/ui/badge'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { cn } from '@/lib/utils'
 import { getColumnIcon } from '@/lib/utils/column-icons'
-import { productBentoIdle, QueryEqualFilter, Syn } from './MockSyntax'
+import { productBentoContainer, productBentoIdle, QueryEqualFilter, Syn } from './MockSyntax'
 
 type IconComponent = LucideIcon | typeof PostgresElephantIcon
 
@@ -162,8 +162,8 @@ function TablesDbPanel({ playKey }: { playKey: number }) {
   }, [playKey])
 
   return (
-    <div className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-lg border border-border bg-background/70">
-      <div className="border-b border-border bg-muted/5 px-3.5 py-2.5">
+    <div className={cn('flex min-h-0 flex-1 flex-col overflow-hidden', productBentoContainer.panel)}>
+      <div className="border-b border-border bg-muted/20 px-3.5 py-2.5">
         <div className="flex items-start justify-between gap-3">
           <p className="min-w-0 font-mono text-[12px] text-muted-foreground">
             monaco_gp / <span className={cn('font-medium', productBentoIdle.text)}>lap_times</span>
@@ -181,7 +181,7 @@ function TablesDbPanel({ playKey }: { playKey: number }) {
 
       <div
         className={cn(
-          'flex items-center gap-2 border-b border-border/80 bg-background/60 px-3.5 py-2',
+          'flex items-center gap-2 border-b border-border bg-muted/15 px-3.5 py-2',
           shouldAnimate && queryState === 'running' && 'product-bento-db-query-running',
         )}
       >
@@ -198,8 +198,8 @@ function TablesDbPanel({ playKey }: { playKey: number }) {
         )}
       </div>
 
-      <div className="min-h-0 flex-1 overflow-hidden">
-        <table className="w-full table-fixed border-collapse">
+      <div className="min-h-0 flex-1 overflow-hidden bg-background">
+        <table className="w-full table-fixed border-collapse bg-background">
           <colgroup>
             <col style={{ width: 40 }} />
             {TABLE_COLUMNS.map((column) => (
@@ -314,7 +314,7 @@ function DocumentsDbPanel({ playKey }: { playKey: number }) {
   return (
     <div
       key={playKey}
-      className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-lg border border-border bg-background/70"
+      className={cn('flex min-h-0 flex-1 flex-col overflow-hidden', productBentoContainer.panel)}
     >
       <div className="flex items-center justify-between gap-2 border-b border-border bg-muted/5 px-3.5 py-2.5">
         <div className="min-w-0 product-bento-db-reveal" style={{ animationDelay: '0ms' }}>
@@ -376,7 +376,7 @@ function VectorsDbPanel({ playKey }: { playKey: number }) {
   return (
     <div
       key={playKey}
-      className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-lg border border-border bg-background/70 p-3.5"
+      className={cn('flex min-h-0 flex-1 flex-col overflow-hidden p-3.5', productBentoContainer.panel)}
     >
       <div
         className="product-bento-db-reveal shrink-0 rounded-md border border-border/80 bg-muted/8 px-3 py-2"
@@ -417,8 +417,9 @@ function NativeDbSelectionCard({
   return (
     <div
       className={cn(
-        'flex min-w-0 items-center gap-2.5 rounded-lg border border-border bg-background/60 px-2.5 py-2 transition-colors duration-300 sm:gap-3 sm:px-3 sm:py-2.5',
-        'group-hover:bg-accent/15 motion-reduce:group-hover:bg-background/60',
+        'flex min-w-0 items-center gap-2.5 px-2.5 py-2 transition-colors duration-300 sm:gap-3 sm:px-3 sm:py-2.5',
+        productBentoContainer.panel,
+        'group-hover:bg-accent/15 motion-reduce:group-hover:bg-card/70',
       )}
     >
       <span className="flex size-8 shrink-0 items-center justify-center rounded-md border border-border bg-muted/40 text-muted-foreground">
@@ -467,7 +468,7 @@ export function DatabasesProductVisual() {
   const visualHoveredRef = useRef(false)
 
   const tabPanelClassName =
-    'absolute inset-0 mt-0 flex h-full w-full min-h-0 flex-col overflow-hidden p-3.5 focus-visible:outline-none'
+    'absolute inset-x-0 top-0 bottom-0 mt-0 flex min-h-0 w-full flex-col overflow-hidden px-3.5 focus-visible:outline-none'
 
   const replayTablesAnimation = () => {
     setTablesPlayKey((key) => key + 1)
@@ -525,7 +526,7 @@ export function DatabasesProductVisual() {
           <VectorsDbPanel key={vectorsPlayKey} playKey={vectorsPlayKey} />
         </TabsContent>
 
-        <div className="pointer-events-none absolute inset-x-0 bottom-0 z-50 flex justify-center px-3 sm:bottom-1">
+        <div className="pointer-events-none absolute inset-x-0 bottom-0 z-50 flex justify-center px-3">
           <TabsList className="pointer-events-auto inline-flex h-auto w-auto gap-1 rounded-lg border border-border bg-background p-1 shadow-sm">
             {APPWRITE_TABS.map((tab) => {
               const Icon = tab.Icon
@@ -545,7 +546,7 @@ export function DatabasesProductVisual() {
         </div>
       </div>
 
-      <div className="relative z-10 shrink-0 bg-card/10 px-3.5 pb-3.5 pt-4">
+      <div className="relative z-10 shrink-0 bg-card/10 px-3.5 pb-3 pt-4 sm:pb-3.5">
         <NativeDbOrSeparator />
         <div className="mt-2.5">
           <NativeDbSelectionStrip />

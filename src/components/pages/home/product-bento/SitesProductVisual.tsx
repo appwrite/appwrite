@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { ArrowRight, CheckCircle2 } from 'lucide-react'
 import { cn } from '@/lib/utils'
-import { productBentoIdle } from './MockSyntax'
+import { productBentoContainer, productBentoIdle } from './MockSyntax'
 
 const COMMIT_HASH = '01ab234c'
 /** Matches `product-bento-site-build` in styles.css */
@@ -100,14 +100,15 @@ export function SitesProductVisual() {
 
   return (
     <div
-      className="absolute inset-0 flex items-center justify-center overflow-hidden p-4 sm:p-6"
+      className="absolute inset-0 flex flex-col overflow-hidden"
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >
-      <div className="w-full max-w-[21rem] space-y-3.5 transition-transform duration-500 group-hover:-translate-y-1 motion-reduce:group-hover:translate-y-0">
+      <div className="mx-auto flex h-full min-h-0 w-full max-w-[21rem] flex-col justify-end space-y-3.5 transition-transform duration-500 group-hover:-translate-y-1 motion-reduce:group-hover:translate-y-0">
         <div
           className={cn(
-            'flex items-center gap-2.5 rounded-lg border border-border bg-background/55 px-3.5 py-3 transition-[border-color,background-color] duration-300',
+            'flex items-center gap-2.5 px-3.5 py-3 transition-[border-color,background-color] duration-300',
+            productBentoContainer.panel,
             'group-hover:border-[color-mix(in_srgb,var(--brand-cta)_28%,var(--border))] group-hover:bg-background',
           )}
         >
@@ -124,7 +125,7 @@ export function SitesProductVisual() {
           />
         </div>
 
-        <div className="rounded-lg border border-border bg-background/55 px-3.5 py-3">
+        <div className={cn(productBentoContainer.panel, 'px-3.5 py-3')}>
           <div className="flex items-center justify-between gap-2">
             <span className={cn('text-[12px] font-medium', productBentoIdle.text)}>Build</span>
             <div className="flex items-center gap-2">
@@ -151,7 +152,7 @@ export function SitesProductVisual() {
         </div>
 
         <PipelineRow revealDelayMs={1400}>
-          <div className="flex items-start gap-2.5 rounded-lg border border-border bg-background/55 px-3.5 py-3">
+          <div className={cn('flex items-start gap-2.5 px-3.5 py-3', productBentoContainer.panel)}>
             <span className="flex size-7 shrink-0 items-center justify-center rounded-full bg-muted/40">
               <img src="/icons/appwrite.svg" alt="" className="size-3.5" aria-hidden />
             </span>
@@ -165,7 +166,7 @@ export function SitesProductVisual() {
         </PipelineRow>
 
         <PipelineRow revealDelayMs={1650} className="group-hover:max-h-36 sm:group-hover:max-h-40">
-          <div className="overflow-hidden rounded-lg border border-border bg-background/55 p-2.5">
+          <div className={cn('overflow-hidden p-2.5', productBentoContainer.panel)}>
             <div className="overflow-hidden rounded-md border border-border/80 bg-card">
               <div className="flex items-center gap-1.5 border-b border-border/80 bg-muted/15 px-2.5 py-1.5">
                 <span className="size-1.5 rounded-full bg-muted-foreground/25" aria-hidden />

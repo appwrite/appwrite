@@ -10,7 +10,7 @@ import {
 import type { LucideIcon } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import { cn } from '@/lib/utils'
-import { productBentoIdle } from './MockSyntax'
+import { productBentoContainer, productBentoIdle } from './MockSyntax'
 
 type FirewallAction = 'block' | 'allow' | 'challenge'
 
@@ -75,33 +75,6 @@ const TRAFFIC_REQUESTS = [
   { id: 'req-5', outcome: 'block', tone: 'blocked', delayMs: 880 },
 ] as const
 
-const LIVE_LOGS = [
-  {
-    id: 'log-1',
-    status: '403',
-    method: 'GET',
-    path: '/api/users',
-    tone: 'block' as const,
-    delayMs: 180,
-  },
-  {
-    id: 'log-2',
-    status: '429',
-    method: 'GET',
-    path: '/api/products',
-    tone: 'challenge' as const,
-    delayMs: 340,
-  },
-  {
-    id: 'log-3',
-    status: '200',
-    method: 'GET',
-    path: '/admin/dashboard',
-    tone: 'allow' as const,
-    delayMs: 500,
-  },
-] as const
-
 const ACTION_CONFIG: Record<
   FirewallAction,
   { label: string; Icon: LucideIcon }
@@ -119,15 +92,6 @@ const ACTION_BADGE_HOVER_CLASS: Record<FirewallAction, string> = {
   challenge:
     'group-hover:border-amber-500/30 group-hover:bg-amber-500/10 group-hover:text-amber-700 dark:group-hover:text-amber-400 motion-reduce:group-hover:border-border motion-reduce:group-hover:bg-muted motion-reduce:group-hover:text-foreground/80',
 }
-
-const LOG_TONE_CLASS = {
-  block:
-    'text-muted-foreground transition-colors duration-300 group-hover:text-red-600 dark:group-hover:text-red-400 motion-reduce:group-hover:text-muted-foreground',
-  challenge:
-    'text-muted-foreground transition-colors duration-300 group-hover:text-amber-600 dark:group-hover:text-amber-400 motion-reduce:group-hover:text-muted-foreground',
-  allow:
-    'text-muted-foreground transition-colors duration-300 group-hover:text-emerald-600 dark:group-hover:text-emerald-400 motion-reduce:group-hover:text-muted-foreground',
-} as const
 
 const REQUEST_TONE_CLASS = {
   allowed: 'bg-muted-foreground group-hover:bg-emerald-500 motion-reduce:group-hover:bg-muted-foreground',
@@ -210,9 +174,10 @@ function FirewallRuleRow({
   return (
     <div
       className={cn(
-        'flex items-center gap-2 rounded-md border border-border/70 bg-background/70 px-2 py-1.5 transition-[border-color,background-color,opacity,transform] duration-300',
+        'flex items-center gap-2 rounded-md border border-border/70 px-2 py-1.5 transition-[border-color,background-color,opacity,transform] duration-300',
+        productBentoContainer.panelMd,
         enabled
-          ? 'group-hover:border-[color-mix(in_srgb,var(--brand-cta)_22%,var(--border))] group-hover:bg-background motion-reduce:group-hover:border-border/70 motion-reduce:group-hover:bg-background/70'
+          ? 'group-hover:border-[color-mix(in_srgb,var(--brand-cta)_22%,var(--border))] group-hover:bg-background motion-reduce:group-hover:border-border/70 motion-reduce:group-hover:bg-card/70'
           : 'opacity-60',
         highlightOnHover &&
           'group-hover:animate-[product-bento-oauth-highlight_0.45s_ease-out_both] motion-reduce:group-hover:animate-none',
@@ -254,37 +219,11 @@ function FirewallRuleRow({
   )
 }
 
-function LiveLogFeed() {
-  return (
-    <div className="relative min-h-[2.75rem]">
-      <p className="text-[10px] text-muted-foreground sm:text-[11px] transition-opacity duration-200 group-hover:opacity-0 motion-reduce:group-hover:opacity-100">
-        <span className={cn('font-medium tabular-nums', productBentoIdle.text)}>
-          {FIREWALL_RULES.filter((rule) => rule.enabled).length}
-        </span>{' '}
-        active rules
-      </p>
-      <div className="absolute inset-0 space-y-1 opacity-0 transition-opacity duration-300 group-hover:opacity-100 motion-reduce:static motion-reduce:opacity-100">
-        {LIVE_LOGS.map((log) => (
-          <p
-            key={log.id}
-            className="truncate font-mono text-[10px] text-muted-foreground opacity-0 transition-opacity duration-300 group-hover:opacity-100 motion-reduce:opacity-100 sm:text-[11px]"
-            style={{ transitionDelay: `${log.delayMs}ms` }}
-          >
-            <span className={LOG_TONE_CLASS[log.tone]}>{log.status}</span>
-            {' · '}
-            {log.method} {log.path}
-          </p>
-        ))}
-      </div>
-    </div>
-  )
-}
-
 export function FirewallProductVisual() {
   return (
-    <div className="absolute inset-0 overflow-hidden px-3 pt-2.5 sm:px-4 sm:pt-3">
-      <div className="mx-auto w-full max-w-[21rem] overflow-hidden rounded-xl border border-border bg-card/70 shadow-sm">
-        <div className="border-b border-border bg-muted/10 px-3.5 py-2.5">
+    <div className="absolute inset-0 flex flex-col">
+      <div className={cn('mx-auto flex h-full min-h-0 w-full max-w-[21rem] flex-col', productBentoContainer.shell)}>
+        <div className={cn(productBentoContainer.header, 'px-3.5 py-2.5')}>
           <div className="flex items-start justify-between gap-2">
             <div className="min-w-0">
               <p className={cn('text-[12px] font-medium sm:text-[13px]', productBentoIdle.text)}>
@@ -306,33 +245,33 @@ export function FirewallProductVisual() {
           </div>
         </div>
 
-        <div className="space-y-2 p-3">
+        <div className="space-y-2 overflow-hidden p-3">
           <div className="grid grid-cols-3 gap-1.5">
-            {TRAFFIC_STATS.map((stat, index) => (
-              <div
-                key={stat.id}
-                className={cn(
-                  'rounded-md border border-border/70 bg-muted/8 px-2 py-1.5 text-center transition-[border-color,background-color,transform] duration-300 group-hover:border-border group-hover:bg-background/80',
-                  stat.popOnHover &&
-                    'group-hover:animate-[product-bento-oauth-highlight_0.45s_ease-out_both] motion-reduce:group-hover:animate-none',
-                )}
-                style={{ animationDelay: `${index * 60}ms`, transitionDelay: `${index * 40}ms` }}
-              >
-                <p
+              {TRAFFIC_STATS.map((stat, index) => (
+                <div
+                  key={stat.id}
                   className={cn(
-                    'text-[11px] font-semibold tabular-nums transition-colors duration-300 sm:text-[12px]',
-                    stat.idleClass,
-                    stat.hoverClass,
+                    'rounded-md border border-border/70 bg-muted/8 px-2 py-1.5 text-center transition-[border-color,background-color,transform] duration-300 group-hover:border-border group-hover:bg-background/80',
+                    stat.popOnHover &&
+                      'group-hover:animate-[product-bento-oauth-highlight_0.45s_ease-out_both] motion-reduce:group-hover:animate-none',
                   )}
+                  style={{ animationDelay: `${index * 60}ms`, transitionDelay: `${index * 40}ms` }}
                 >
-                  {stat.value}
-                </p>
-                <p className="text-[9px] text-muted-foreground sm:text-[10px]">{stat.label}</p>
-              </div>
-            ))}
-          </div>
+                  <p
+                    className={cn(
+                      'text-[11px] font-semibold tabular-nums transition-colors duration-300 sm:text-[12px]',
+                      stat.idleClass,
+                      stat.hoverClass,
+                    )}
+                  >
+                    {stat.value}
+                  </p>
+                  <p className="text-[9px] text-muted-foreground sm:text-[10px]">{stat.label}</p>
+                </div>
+              ))}
+            </div>
 
-          <TrafficFlowStrip />
+            <TrafficFlowStrip />
 
           <div className="space-y-1.5">
             {FIREWALL_RULES.map((rule, index) => (
@@ -347,10 +286,6 @@ export function FirewallProductVisual() {
               />
             ))}
           </div>
-        </div>
-
-        <div className="border-t border-border/80 bg-muted/5 px-3 py-2">
-          <LiveLogFeed />
         </div>
       </div>
     </div>

@@ -64,6 +64,15 @@ export const productBentoIdle = {
     'opacity-50 grayscale transition-all duration-300 group-hover:opacity-100 group-hover:grayscale-0 motion-reduce:group-hover:opacity-50 motion-reduce:group-hover:grayscale',
 } as const
 
+/** Shared container surfaces so idle mock cards match across product tiles. */
+export const productBentoContainer = {
+  shell:
+    'overflow-hidden rounded-t-xl border border-border border-b-0 bg-card/70 shadow-sm',
+  panel: 'rounded-lg border border-border bg-card/70',
+  panelMd: 'rounded-md border border-border bg-card/70',
+  header: 'shrink-0 border-b border-border bg-muted/10',
+} as const
+
 export function Syn({
   tone,
   className,

@@ -18,6 +18,8 @@ interface ShortcutOptions {
   ignoreInputs?: boolean
   /** Enable the shortcut */
   enabled?: boolean
+  /** Listen in capture phase so global shortcuts run before nested handlers */
+  capture?: boolean
 }
 
 // Normalize key names
@@ -73,6 +75,7 @@ export function useKeyboardShortcut(
     stopPropagation = false,
     ignoreInputs = true,
     enabled = true,
+    capture = false,
   } = options
 
   const handlerRef = useRef(handler)
@@ -130,9 +133,9 @@ export function useKeyboardShortcut(
       }
     }
 
-    window.addEventListener('keydown', handleKeyDown)
-    return () => window.removeEventListener('keydown', handleKeyDown)
-  }, [keyCombo, preventDefault, stopPropagation, ignoreInputs, enabled])
+    window.addEventListener('keydown', handleKeyDown, capture)
+    return () => window.removeEventListener('keydown', handleKeyDown, capture)
+  }, [keyCombo, preventDefault, stopPropagation, ignoreInputs, enabled, capture])
 }
 
 /**

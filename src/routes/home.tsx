@@ -1,5 +1,4 @@
 import { createFileRoute, Link, redirect } from '@tanstack/react-router'
-import { useState } from 'react'
 import {
   ArrowRight,
   BadgeCheck,
@@ -33,9 +32,8 @@ import {
 } from '@/components/pages/home/HomeSoftLights'
 import { TestimonialsSection } from '@/components/pages/home/TestimonialsSection'
 import { ProductBentoVisual } from '@/components/pages/home/product-bento/ProductBentoVisual'
-import { CommandCenter } from '@/components/global/shared/CommandCenter'
+import { StandaloneCommandCenterScope } from '@/components/global/providers/KeyboardShortcuts'
 import { Button } from '@/components/ui/button'
-import { useKeyboardShortcut } from '@/hooks/use-keyboard-shortcuts'
 import { getActiveProfileFeatures } from '@/lib/console-profiles'
 import { consoleAccountQueryOptions } from '@/lib/react-query/hooks/auth'
 import { pageTitle } from '@/lib/utils/page-title'
@@ -215,16 +213,10 @@ export const Route = createFileRoute('/home')({
 })
 
 function HomePage() {
-  const [commandCenterOpen, setCommandCenterOpen] = useState(false)
-
-  useKeyboardShortcut('meta+k', () => setCommandCenterOpen(true))
-  useKeyboardShortcut('control+k', () => setCommandCenterOpen(true))
-
   return (
-    <>
+    <StandaloneCommandCenterScope context="account">
       <ConsoleLayout
         header={{
-          onCommandCenterOpen: () => setCommandCenterOpen(true),
           marketingNav: true,
         }}
         showFooter
@@ -397,7 +389,7 @@ function HomePage() {
                     <div
                       className={`flex flex-col lg:h-full lg:min-h-0 ${item.mobileVisualTall ? 'min-h-[480px]' : 'min-h-[320px]'} ${item.tall ? 'lg:min-h-full' : ''}`}
                     >
-                      <div className="space-y-3 px-5 pt-5">
+                      <div className="space-y-3 px-5 pt-5 pb-4">
                         <div className="flex items-center gap-2">
                           <span className="flex size-7 items-center justify-center rounded-md border border-border bg-muted/40">
                             <Icon
@@ -420,14 +412,12 @@ function HomePage() {
                       </div>
 
                       <div
-                        className={`p-5 pt-4 ${item.mobileVisualTall ? 'max-lg:flex max-lg:min-h-0 max-lg:flex-1 max-lg:flex-col' : ''} ${item.tall ? 'lg:flex lg:flex-1 lg:flex-col lg:min-h-0' : ''}`}
+                        className={`relative isolate min-h-0 flex-1 overflow-hidden border-t border-border bg-muted/[0.06] ${item.mobileVisualTall ? 'min-h-[240px] max-lg:min-h-[400px]' : 'min-h-[240px]'} ${item.tall ? 'lg:min-h-0' : ''}`}
+                        aria-hidden
                       >
-                        <div
-                          className={`relative isolate overflow-hidden rounded-lg border border-border bg-muted/[0.06] ${item.mobileVisualTall ? 'min-h-[240px] max-lg:min-h-[400px] max-lg:flex-1' : 'min-h-[240px]'} ${item.tall ? 'lg:min-h-0 lg:flex-1' : ''}`}
-                          aria-hidden
-                        >
-                          <div className="absolute inset-0 opacity-[0.94] transition-opacity duration-300 group-hover:opacity-100 motion-reduce:opacity-100">
-                            <ProductBentoSoftLights />
+                        <ProductBentoSoftLights />
+                        <div className="absolute inset-0 px-3 pt-3 pb-0 sm:px-4 sm:pt-4 sm:pb-0">
+                          <div className="relative h-full min-h-0 w-full opacity-[0.94] transition-opacity duration-300 group-hover:opacity-100 motion-reduce:opacity-100">
                             <ProductBentoVisual title={item.title} />
                           </div>
                         </div>
@@ -496,12 +486,6 @@ function HomePage() {
 
         <PricingSection />
       </ConsoleLayout>
-
-      <CommandCenter
-        open={commandCenterOpen}
-        onOpenChange={setCommandCenterOpen}
-        context="account"
-      />
-    </>
+    </StandaloneCommandCenterScope>
   )
 }

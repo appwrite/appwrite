@@ -3,7 +3,7 @@ import { ArrowRight } from 'lucide-react'
 import { SchemaBlueprintMat } from '@/components/global/shared/SchemaBlueprintMat'
 import { Badge } from '@/components/ui/badge'
 import { cn } from '@/lib/utils'
-import { productBentoIdle } from './MockSyntax'
+import { productBentoContainer, productBentoIdle } from './MockSyntax'
 
 const RING_SIZE = 32
 const RING_STROKE = 2
@@ -136,11 +136,11 @@ export function StorageProductVisual() {
 
   return (
     <div
-      className="absolute inset-0 overflow-hidden px-3 pt-3 sm:px-4 sm:pt-4"
+      className="absolute inset-0 flex flex-col overflow-hidden"
       onMouseEnter={() => setWidthSliderKey((key) => key + 1)}
     >
-      <div className="flex h-full min-h-0 flex-col overflow-hidden rounded-xl border border-border bg-card/70 shadow-sm">
-        <div className="flex shrink-0 items-center justify-between gap-2 border-b border-border bg-muted/10 px-3 py-2">
+      <div className={cn('flex h-full min-h-0 flex-col', productBentoContainer.shell)}>
+        <div className={cn(productBentoContainer.header, 'flex shrink-0 items-center justify-between gap-2 px-3 py-2')}>
           <span className={cn('rounded-sm bg-background px-2 py-0.5 text-[10px] font-medium shadow-sm', productBentoIdle.text)}>
             Design
           </span>
@@ -161,7 +161,7 @@ export function StorageProductVisual() {
             </div>
           </div>
 
-          <aside className="w-full shrink-0 border-t border-border bg-background/60 p-2 sm:w-[42%] sm:border-l sm:border-t-0 sm:p-2.5">
+          <aside className="w-full shrink-0 border-t border-border bg-card/70 p-2 sm:w-[42%] sm:border-l sm:border-t-0 sm:p-2.5">
             <p className={cn('text-[11px] font-medium', productBentoIdle.text)}>Transform</p>
             <div className="mt-1.5 space-y-1.5 sm:mt-2.5 sm:space-y-2">
               <MockSliderRow

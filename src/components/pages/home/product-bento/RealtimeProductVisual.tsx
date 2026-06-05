@@ -1,7 +1,7 @@
 import { Check, Radio } from 'lucide-react'
 import { InitialsAvatar } from '@/components/global/shared/Avatar'
 import { cn } from '@/lib/utils'
-import { RealtimeSubscribeSnippet, productBentoIdle } from './MockSyntax'
+import { productBentoContainer, productBentoIdle } from './MockSyntax'
 
 const PEERS = [
   { name: 'Maya Chen', color: 'var(--brand-cta)' },
@@ -78,9 +78,9 @@ function PresenceBar() {
 
 export function RealtimeProductVisual() {
   return (
-    <div className="absolute inset-0 overflow-hidden px-3 pt-2.5 sm:px-4 sm:pt-3">
-      <div className="mx-auto w-full max-w-[21rem] overflow-hidden rounded-xl border border-border bg-card/70 shadow-sm">
-        <div className="border-b border-border bg-muted/10 px-3.5 py-2.5">
+    <div className="absolute inset-0 flex flex-col">
+      <div className={cn('mx-auto flex h-full min-h-0 w-full max-w-[21rem] flex-col', productBentoContainer.shell)}>
+        <div className={cn(productBentoContainer.header, 'px-3.5 py-2.5')}>
           <div className="flex items-start justify-between gap-2">
             <div>
               <p className={cn('text-[12px] font-medium sm:text-[13px]', productBentoIdle.text)}>
@@ -99,72 +99,65 @@ export function RealtimeProductVisual() {
           </div>
         </div>
 
-        <div className="space-y-2.5 p-3">
-          <PresenceBar />
+        <div className="overflow-hidden p-3">
+            <PresenceBar />
 
-          <div className="relative min-h-[8.5rem] overflow-hidden rounded-lg border border-border/70 bg-background/60 p-3">
-            <PeerCursor
-              name="Maya Chen"
-              color={PEERS[0].color}
-              className="left-[4%] top-[14%] translate-x-0 translate-y-0 group-hover:translate-x-14 group-hover:translate-y-2 group-hover:opacity-100 motion-reduce:translate-x-14 motion-reduce:translate-y-2 motion-reduce:opacity-100"
-            />
-            <PeerCursor
-              name="Sharon Lee"
-              color={PEERS[1].color}
-              className="left-[4%] top-[50%] translate-x-0 translate-y-0 delay-150 group-hover:translate-x-12 group-hover:translate-y-0 group-hover:opacity-100 motion-reduce:translate-x-12 motion-reduce:opacity-100"
-            />
+            <div className={cn('relative mt-2.5 overflow-hidden p-3', productBentoContainer.panel)}>
+              <PeerCursor
+                name="Maya Chen"
+                color={PEERS[0].color}
+                className="left-[4%] top-[14%] translate-x-0 translate-y-0 group-hover:translate-x-14 group-hover:translate-y-2 group-hover:opacity-100 motion-reduce:translate-x-14 motion-reduce:translate-y-2 motion-reduce:opacity-100"
+              />
+              <PeerCursor
+                name="Sharon Lee"
+                color={PEERS[1].color}
+                className="left-[4%] top-[50%] translate-x-0 translate-y-0 delay-150 group-hover:translate-x-12 group-hover:translate-y-0 group-hover:opacity-100 motion-reduce:translate-x-12 motion-reduce:opacity-100"
+              />
 
-            <p className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground sm:text-[11px]">
-              Launch plan
-            </p>
-
-            <div className="relative mt-2 rounded-md px-2 py-1.5">
-              <p className={cn('relative min-h-[1.25rem] text-[12px] font-semibold leading-snug sm:text-[13px]', productBentoIdle.text)}>
-                <span className="transition-opacity duration-500 ease-out delay-500 group-hover:opacity-0 motion-reduce:delay-0 motion-reduce:group-hover:opacity-100">
-                  Launch landing page
-                </span>
-                <span className="absolute inset-0 opacity-0 transition-opacity duration-500 ease-out delay-700 group-hover:opacity-100 motion-reduce:static motion-reduce:delay-0 motion-reduce:opacity-100">
-                  Launch homepage v2
-                </span>
+              <p className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground sm:text-[11px]">
+                Launch plan
               </p>
+
+              <div className="relative mt-2 rounded-md px-2 py-1.5">
+                <p className={cn('relative min-h-[1.25rem] text-[12px] font-semibold leading-snug sm:text-[13px]', productBentoIdle.text)}>
+                  <span className="transition-opacity duration-500 ease-out delay-500 group-hover:opacity-0 motion-reduce:delay-0 motion-reduce:group-hover:opacity-100">
+                    Launch landing page
+                  </span>
+                  <span className="absolute inset-0 opacity-0 transition-opacity duration-500 ease-out delay-700 group-hover:opacity-100 motion-reduce:static motion-reduce:delay-0 motion-reduce:opacity-100">
+                    Launch homepage v2
+                  </span>
+                </p>
+              </div>
+
+              <div className="mt-3 space-y-1.5">
+                <div className="flex items-center gap-2 rounded-md border border-border/60 bg-muted/8 px-2 py-1.5">
+                  <span
+                    className={cn(
+                      'flex size-3.5 shrink-0 items-center justify-center rounded border border-border bg-background transition-[border-color,background-color] duration-500 ease-out delay-500',
+                      'group-hover:border-emerald-500/50 group-hover:bg-emerald-500/15 motion-reduce:delay-0 motion-reduce:group-hover:border-border motion-reduce:group-hover:bg-background',
+                    )}
+                  >
+                    <Check
+                      className={cn('size-2.5 opacity-0 transition-opacity duration-500 ease-out delay-500 group-hover:opacity-100 motion-reduce:delay-0 motion-reduce:opacity-100', productBentoIdle.emeraldIcon)}
+                      aria-hidden
+                    />
+                  </span>
+                  <span className="text-[11px] text-muted-foreground transition-[color,text-decoration-color] duration-500 ease-out delay-500 group-hover:text-muted-foreground group-hover:line-through motion-reduce:delay-0 sm:text-[12px]">
+                    Draft hero copy
+                  </span>
+                </div>
+                <div className="flex items-center gap-2 px-2 py-1">
+                  <span className="size-3.5 shrink-0 rounded border border-border/80 bg-background" />
+                  <span className="text-[11px] text-muted-foreground sm:text-[12px]">
+                    Ship pricing section
+                  </span>
+                </div>
+              </div>
             </div>
 
-            <div className="mt-3 space-y-1.5">
-              <div className="flex items-center gap-2 rounded-md border border-border/60 bg-muted/8 px-2 py-1.5">
-                <span
-                  className={cn(
-                    'flex size-3.5 shrink-0 items-center justify-center rounded border border-border bg-background transition-[border-color,background-color] duration-500 ease-out delay-500',
-                    'group-hover:border-emerald-500/50 group-hover:bg-emerald-500/15 motion-reduce:delay-0 motion-reduce:group-hover:border-border motion-reduce:group-hover:bg-background',
-                  )}
-                >
-                  <Check
-                    className={cn('size-2.5 opacity-0 transition-opacity duration-500 ease-out delay-500 group-hover:opacity-100 motion-reduce:delay-0 motion-reduce:opacity-100', productBentoIdle.emeraldIcon)}
-                    aria-hidden
-                  />
-                </span>
-                <span className="text-[11px] text-muted-foreground transition-[color,text-decoration-color] duration-500 ease-out delay-500 group-hover:text-muted-foreground group-hover:line-through motion-reduce:delay-0 sm:text-[12px]">
-                  Draft hero copy
-                </span>
-              </div>
-              <div className="flex items-center gap-2 px-2 py-1">
-                <span className="size-3.5 shrink-0 rounded border border-border/80 bg-background" />
-                <span className="text-[11px] text-muted-foreground sm:text-[12px]">
-                  Ship pricing section
-                </span>
-              </div>
-            </div>
-          </div>
-
-          <p className="text-center text-[10px] text-muted-foreground sm:text-[11px]">
-            Edits sync instantly for everyone in the doc
-          </p>
-        </div>
-
-        <div className="border-t border-border/80 px-3 py-2">
-          <p className="mb-1 text-[10px] font-medium uppercase tracking-wider text-muted-foreground sm:text-[11px]">
-            SDK
-          </p>
-          <RealtimeSubscribeSnippet />
+            <p className="mt-2.5 text-center text-[10px] text-muted-foreground sm:text-[11px]">
+              Edits sync instantly for everyone in the doc
+            </p>
         </div>
       </div>
     </div>

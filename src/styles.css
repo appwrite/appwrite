@@ -1523,16 +1523,8 @@ html[data-init-ticket-video-capturing] [data-init-ticket-video-capture] * {
   animation: product-bento-db-row-highlight 1.1s ease forwards;
 }
 
-.group:hover .product-bento-db-row-highlight {
-  animation: product-bento-db-row-highlight-branded 1.1s ease forwards;
-}
-
 .product-bento-db-query-running {
   animation: product-bento-db-query-running 0.75s ease-in-out 2;
-}
-
-.group:hover .product-bento-db-query-running {
-  animation: product-bento-db-query-running-branded 0.75s ease-in-out 2;
 }
 
 @media (prefers-reduced-motion: reduce) {
