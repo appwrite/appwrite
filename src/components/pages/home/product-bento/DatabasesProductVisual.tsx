@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { Braces, CheckCircle2, Fingerprint, Layers, Loader2, Table as TableIcon, type LucideIcon } from 'lucide-react'
+import { Braces, Check, CheckCircle2, Fingerprint, Layers, Loader2, Table as TableIcon, type LucideIcon } from 'lucide-react'
 import {
   MySQLDolphinIcon,
   PostgresElephantIcon,
@@ -25,18 +25,20 @@ const TABLE_ROWS: {
   driver: string
   code: string
   team: string
+  position: string
   lap: string
   revealDelayMs: number
   highlight?: boolean
 }[] = [
-  { id: '67f8a2…04c1', driver: 'Charles Leclerc', code: 'LEC', team: 'ferrari', lap: '70842', revealDelayMs: 220 },
-  { id: '67f8b1…12a4', driver: 'Lando Norris', code: 'NOR', team: 'mclaren', lap: '71016', revealDelayMs: 360 },
-  { id: '67f8c3…28b7', driver: 'Oscar Piastri', code: 'PIA', team: 'mclaren', lap: '71204', revealDelayMs: 500 },
+  { id: '67f8a2…04c1', driver: 'Charles Leclerc', code: 'LEC', team: 'ferrari', position: '1', lap: '70842', revealDelayMs: 220 },
+  { id: '67f8b1…12a4', driver: 'Lando Norris', code: 'NOR', team: 'mclaren', position: '2', lap: '71016', revealDelayMs: 360 },
+  { id: '67f8c3…28b7', driver: 'Oscar Piastri', code: 'PIA', team: 'mclaren', position: '3', lap: '71204', revealDelayMs: 500 },
   {
     id: '67f8d4…39c8',
     driver: 'Lewis Hamilton',
     code: 'HAM',
     team: 'ferrari',
+    position: '4',
     lap: '71388',
     revealDelayMs: 640,
     highlight: true,
@@ -70,17 +72,25 @@ const NATIVE_DATABASES = [
 ] as const
 
 const TABLE_COLUMNS = [
-  { key: 'id', label: '$id', type: 'system-id', cellAlign: 'left' as const, width: 96 },
-  { key: 'driver', label: 'driver', type: 'string', cellAlign: 'left' as const, width: 128 },
-  { key: 'code', label: 'code', type: 'string', cellAlign: 'left' as const, width: 56 },
-  { key: 'team', label: 'team', type: 'string', cellAlign: 'left' as const },
-  { key: 'lap', label: 'lap_ms', type: 'integer', cellAlign: 'right' as const },
+  { key: 'id', label: '$id', type: 'system-id', cellAlign: 'left' as const, width: '16%' },
+  { key: 'driver', label: 'driver', type: 'string', cellAlign: 'left' as const, width: '28%' },
+  { key: 'code', label: 'code', type: 'string', cellAlign: 'left' as const, width: '9%' },
+  { key: 'team', label: 'team', type: 'string', cellAlign: 'left' as const, width: '16%' },
+  { key: 'position', label: 'pos', type: 'integer', cellAlign: 'right' as const, width: '11%' },
+  { key: 'lap', label: 'lap_ms', type: 'integer', cellAlign: 'right' as const, width: '20%' },
 ] as const
+
+const TABLE_CHECKBOX_COL_WIDTH = 28
+const TABLE_CELL_X = 'px-2'
+const TABLE_HEADER_Y = 'py-1.5'
+const TABLE_BODY_Y = 'py-1'
+const TABLE_TEXT = 'text-[11px]'
+const TABLE_HEADER_TEXT = 'text-[11px]'
 
 function TablesDbColumnIcon({ type }: { type: string }) {
   const Icon = type === 'system-id' ? Fingerprint : getColumnIcon(type)
 
-  return <Icon className="size-3.5 shrink-0 text-muted-foreground" aria-hidden />
+  return <Icon className="size-3 shrink-0 text-muted-foreground" aria-hidden />
 }
 
 const spreadsheetHeaderCellClass =
@@ -90,26 +100,33 @@ const spreadsheetLastHeaderCellClass =
 const spreadsheetBodyCellClass = 'border-b border-r border-border'
 const spreadsheetLastBodyCellClass = 'border-b border-border'
 
-const EMPTY_TABLE_ROW_COUNT = 6
+const EMPTY_TABLE_ROW_COUNT = 4
 
-function SpreadsheetCheckboxPlaceholder() {
+function SpreadsheetCheckboxPlaceholder({ checked = false }: { checked?: boolean }) {
   return (
     <div
-      className="mx-auto size-3.5 rounded-[3px] border border-border bg-background"
+      className={cn(
+        'mx-auto flex size-3 items-center justify-center rounded-[3px] border',
+        checked
+          ? 'border-primary bg-primary text-primary-foreground'
+          : 'border-border bg-background',
+      )}
       aria-hidden
-    />
+    >
+      {checked ? <Check className="size-2.5 stroke-[3]" /> : null}
+    </div>
   )
 }
 
-function SpreadsheetCheckboxCell() {
+function SpreadsheetCheckboxCell({ checked = false }: { checked?: boolean }) {
   return (
     <td
       className={cn(
-        'border-b border-border px-2 py-1.5 text-center',
+        'border-b border-border px-1.5 py-1 text-center',
         'shadow-[inset_-1px_0_0_0_var(--border)]',
       )}
     >
-      <SpreadsheetCheckboxPlaceholder />
+      <SpreadsheetCheckboxPlaceholder checked={checked} />
     </td>
   )
 }
@@ -124,12 +141,9 @@ function SpreadsheetEmptyRow() {
         return (
           <td
             key={column.key}
-            className={cn(
-              'px-3 py-1.5',
-              isLast ? spreadsheetLastBodyCellClass : spreadsheetBodyCellClass,
-            )}
+            className={cn(TABLE_CELL_X, TABLE_BODY_Y, isLast ? spreadsheetLastBodyCellClass : spreadsheetBodyCellClass)}
           >
-            <span className="block min-h-[18px]" />
+            <span className="block min-h-[14px]" />
           </td>
         )
       })}
@@ -163,14 +177,14 @@ function TablesDbPanel({ playKey }: { playKey: number }) {
 
   return (
     <div className={cn('flex min-h-0 flex-1 flex-col overflow-hidden', productBentoContainer.panel)}>
-      <div className="border-b border-border bg-muted/20 px-3.5 py-2.5">
-        <div className="flex items-start justify-between gap-3">
-          <p className="min-w-0 font-mono text-[12px] text-muted-foreground">
+      <div className="border-b border-border bg-muted/20 px-3 py-2">
+        <div className="flex items-start justify-between gap-2">
+          <p className="min-w-0 font-mono text-[11px] text-muted-foreground">
             monaco_gp / <span className={cn('font-medium', productBentoIdle.text)}>lap_times</span>
           </p>
           <p
             className={cn(
-              'shrink-0 text-[11px] tabular-nums text-muted-foreground transition-[color,transform] duration-300',
+              'shrink-0 text-[10px] tabular-nums text-muted-foreground transition-[color,transform] duration-300',
               rowCount === 847 && 'group-hover:scale-105 group-hover:text-foreground',
             )}
           >
@@ -181,11 +195,11 @@ function TablesDbPanel({ playKey }: { playKey: number }) {
 
       <div
         className={cn(
-          'flex items-center gap-2 border-b border-border bg-muted/15 px-3.5 py-2',
+          'flex items-center gap-2 border-b border-border bg-muted/15 px-3 py-1.5',
           shouldAnimate && queryState === 'running' && 'product-bento-db-query-running',
         )}
       >
-        <p className="min-w-0 flex-1 truncate font-mono text-[11px]">
+        <p className="min-w-0 flex-1 truncate font-mono text-[10px]">
           <QueryEqualFilter />
         </p>
         {queryState === 'running' ? (
@@ -201,19 +215,16 @@ function TablesDbPanel({ playKey }: { playKey: number }) {
       <div className="min-h-0 flex-1 overflow-hidden bg-background">
         <table className="w-full table-fixed border-collapse bg-background">
           <colgroup>
-            <col style={{ width: 40 }} />
+            <col style={{ width: TABLE_CHECKBOX_COL_WIDTH }} />
             {TABLE_COLUMNS.map((column) => (
-              <col
-                key={column.key}
-                style={'width' in column && column.width ? { width: column.width } : undefined}
-              />
+              <col key={column.key} style={{ width: column.width }} />
             ))}
           </colgroup>
           <thead className="sticky top-0 z-20 bg-background">
             <tr>
               <th
                 className={cn(
-                  'w-10 px-2 py-2 text-center',
+                  'w-7 px-1.5 text-center',
                   'shadow-[inset_0_1px_0_0_var(--border),inset_0_-1px_0_0_var(--border),inset_-1px_0_0_0_var(--border)]',
                 )}
               >
@@ -226,15 +237,23 @@ function TablesDbPanel({ playKey }: { playKey: number }) {
                   <th
                     key={column.key}
                     className={cn(
-                      'px-3 py-2 text-left',
+                      TABLE_CELL_X,
+                      TABLE_HEADER_Y,
+                      column.cellAlign === 'right' ? 'text-right' : 'text-left',
                       isLast ? spreadsheetLastHeaderCellClass : spreadsheetHeaderCellClass,
                     )}
                   >
-                    <div className="flex min-w-0 items-center gap-2">
+                    <div
+                      className={cn(
+                        'flex min-w-0 items-center gap-1',
+                        column.cellAlign === 'right' && 'justify-end',
+                      )}
+                    >
                       <TablesDbColumnIcon type={column.type} />
                       <span
                         className={cn(
-                          'min-w-0 truncate text-[12px] font-medium',
+                          'min-w-0 truncate font-medium',
+                          TABLE_HEADER_TEXT,
                           productBentoIdle.text,
                         )}
                       >
@@ -247,13 +266,18 @@ function TablesDbPanel({ playKey }: { playKey: number }) {
             </tr>
           </thead>
           <tbody>
-            {TABLE_ROWS.map((row) => (
+            {TABLE_ROWS.map((row) => {
+              const isSelectedRow =
+                Boolean(row.highlight) && shouldAnimate && queryState === 'done'
+
+              return (
               <tr
                 key={row.id}
                 className={cn(
                   shouldAnimate &&
                     row.highlight &&
                     'product-bento-db-row-highlight motion-reduce:animate-none',
+                  isSelectedRow && 'bg-muted',
                   'transition-[background-color] duration-300 hover:bg-muted/50 motion-reduce:hover:bg-transparent',
                 )}
                 style={
@@ -262,19 +286,23 @@ function TablesDbPanel({ playKey }: { playKey: number }) {
                     : undefined
                 }
               >
-                <SpreadsheetCheckboxCell />
+                <SpreadsheetCheckboxCell checked={isSelectedRow} />
                 {TABLE_COLUMNS.map((column, columnIndex) => {
                   const isLast = columnIndex === TABLE_COLUMNS.length - 1
                   const value = row[column.key]
                   const isMutedValue =
-                    column.key === 'team' || column.key === 'code' || column.type === 'system-id'
+                    column.key === 'team' ||
+                    column.key === 'code' ||
+                    column.key === 'position' ||
+                    column.type === 'system-id'
                   const isAccentValue = column.key === 'driver' || column.key === 'lap'
 
                   return (
                     <td
                       key={column.key}
                       className={cn(
-                        'px-3 py-1.5',
+                        TABLE_CELL_X,
+                        TABLE_BODY_Y,
                         isLast ? spreadsheetLastBodyCellClass : spreadsheetBodyCellClass,
                         column.cellAlign === 'right' && 'text-right',
                         column.type === 'system-id' && 'font-mono',
@@ -282,10 +310,11 @@ function TablesDbPanel({ playKey }: { playKey: number }) {
                     >
                       <span
                         className={cn(
-                          'block truncate text-[12px]',
+                          'block truncate',
+                          TABLE_TEXT,
                           isMutedValue && 'text-muted-foreground',
                           isAccentValue && productBentoIdle.text,
-                          column.key === 'lap' && 'tabular-nums',
+                          column.type === 'integer' && 'tabular-nums',
                           shouldAnimate &&
                             'product-bento-db-row-reveal motion-reduce:opacity-100',
                         )}
@@ -299,7 +328,8 @@ function TablesDbPanel({ playKey }: { playKey: number }) {
                   )
                 })}
               </tr>
-            ))}
+              )
+            })}
             {Array.from({ length: EMPTY_TABLE_ROW_COUNT }, (_, index) => (
               <SpreadsheetEmptyRow key={`empty-row-${index}`} />
             ))}

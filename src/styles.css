@@ -1473,7 +1473,7 @@ html[data-init-ticket-video-capturing] [data-init-ticket-video-capture] * {
   }
 
   100% {
-    background-color: transparent;
+    background-color: var(--muted);
   }
 }
 
@@ -1535,6 +1535,7 @@ html[data-init-ticket-video-capturing] [data-init-ticket-video-capture] * {
     opacity: 1;
     animation: none;
     transform: none;
+    background-color: var(--muted);
   }
 
   .product-bento-db-query-running {
