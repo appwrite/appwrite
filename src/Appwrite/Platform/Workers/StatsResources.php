@@ -100,6 +100,11 @@ class StatsResources extends Action
             return;
         }
 
+        if (!$dbForProject->exists($dbForProject->getDatabase())) {
+            Console::warning('Project ' . $project->getId() . ' database does not exist, skipping stats collection');
+            return;
+        }
+
         try {
 
             $region = $project->getAttribute('region');
