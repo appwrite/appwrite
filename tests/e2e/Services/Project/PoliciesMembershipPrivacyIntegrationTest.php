@@ -125,7 +125,7 @@ final class PoliciesMembershipPrivacyIntegrationTest extends Scope
             'cookie' => 'a_session_' . $projectId . '=' . $user1Session,
         ];
 
-        // Also sign in as user2 so accessedAt is populated before privacy is enabled
+        // Also sign in as user2 and make a request so accessedAt is populated before privacy is enabled
         $session2 = $this->client->call(Client::METHOD_POST, '/account/sessions/email', [
             'origin' => 'http://localhost',
             'content-type' => 'application/json',
@@ -135,6 +135,17 @@ final class PoliciesMembershipPrivacyIntegrationTest extends Scope
             'password' => $password,
         ]);
         $this->assertSame(201, $session2['headers']['status-code']);
+        $user2Session = $session2['cookies']['a_session_' . $projectId];
+
+        $client2Headers = [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+            'cookie' => 'a_session_' . $projectId . '=' . $user2Session,
+        ];
+
+        // Make a request as user2 to ensure accessedAt is updated
+        $this->client->call(Client::METHOD_GET, '/account', $client2Headers);
 
         $response = $this->client->call(Client::METHOD_GET, '/teams/' . $teamId . '/memberships', $clientHeaders);
         $this->assertSame(200, $response['headers']['status-code']);
