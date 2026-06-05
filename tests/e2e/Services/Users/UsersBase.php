@@ -337,11 +337,11 @@ trait UsersBase
         $this->assertEquals($body['status'], true);
         $this->assertGreaterThan('2000-01-01 00:00:00', $body['registration']);
         $this->assertEquals($body['labels'], []);
-        $this->assertArrayHasKey('emailCanonical', $body);
-        $this->assertArrayHasKey('emailIsFree', $body);
-        $this->assertArrayHasKey('emailIsDisposable', $body);
-        $this->assertArrayHasKey('emailIsCorporate', $body);
-        $this->assertArrayHasKey('emailIsCanonical', $body);
+        $this->assertEquals('cristiano.ronaldo@manchester-united.co.uk', $body['emailCanonical']);
+        $this->assertEquals(false, $body['emailIsFree']);
+        $this->assertEquals(false, $body['emailIsDisposable']);
+        $this->assertEquals(true, $body['emailIsCorporate']);
+        $this->assertEquals(true, $body['emailIsCanonical']);
 
         /**
          * Test Create with Custom ID for SUCCESS

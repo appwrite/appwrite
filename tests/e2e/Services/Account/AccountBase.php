@@ -43,11 +43,11 @@ trait AccountBase
         $this->assertNotEmpty($response['body']['accessedAt']);
         $this->assertArrayHasKey('targets', $response['body']);
         $this->assertEquals($email, $response['body']['targets'][0]['identifier']);
-        $this->assertArrayHasKey('emailCanonical', $response['body']);
-        $this->assertArrayHasKey('emailIsFree', $response['body']);
-        $this->assertArrayHasKey('emailIsDisposable', $response['body']);
-        $this->assertArrayHasKey('emailIsCorporate', $response['body']);
-        $this->assertArrayHasKey('emailIsCanonical', $response['body']);
+        $this->assertEquals($email, $response['body']['emailCanonical']);
+        $this->assertEquals(false, $response['body']['emailIsFree']);
+        $this->assertEquals(false, $response['body']['emailIsDisposable']);
+        $this->assertEquals(true, $response['body']['emailIsCorporate']);
+        $this->assertEquals(true, $response['body']['emailIsCanonical']);
 
         /**
          * Test for FAILURE
