@@ -664,6 +664,7 @@ trait OAuth2Base
             'tokenURL' => '',
             'userInfoURL' => '',
             'prompt' => [],
+            'maxAge' => null,
             'enabled' => false,
         ]);
     }
@@ -696,6 +697,7 @@ trait OAuth2Base
             'clientSecret' => '',
             'wellKnownURL' => '',
             'prompt' => [],
+            'maxAge' => null,
             'enabled' => false,
         ]);
     }
@@ -723,6 +725,61 @@ trait OAuth2Base
         ]);
 
         $this->assertSame(400, $response['headers']['status-code']);
+    }
+
+    public function testUpdateOAuth2OidcMaxAgeClearViaNull(): void
+    {
+        $this->updateOAuth2('oidc', [
+            'clientId' => 'oidc-maxage-clear',
+            'clientSecret' => 'oidc-maxage-clear-secret',
+            'wellKnownURL' => 'https://idp.example.com/.well-known/openid-configuration',
+            'maxAge' => 3600,
+            'enabled' => false,
+        ]);
+
+        $response = $this->updateOAuth2('oidc', [
+            'maxAge' => null,
+        ]);
+
+        $this->assertSame(200, $response['headers']['status-code']);
+        $this->assertNull($response['body']['maxAge']);
+
+        // Cleanup
+        $this->updateOAuth2('oidc', [
+            'clientId' => '',
+            'clientSecret' => '',
+            'wellKnownURL' => '',
+            'prompt' => [],
+            'maxAge' => null,
+            'enabled' => false,
+        ]);
+    }
+
+    public function testUpdateOAuth2OidcPromptClearViaNull(): void
+    {
+        $this->updateOAuth2('oidc', [
+            'clientId' => 'oidc-prompt-clear',
+            'clientSecret' => 'oidc-prompt-clear-secret',
+            'wellKnownURL' => 'https://idp.example.com/.well-known/openid-configuration',
+            'prompt' => ['login', 'consent'],
+            'enabled' => false,
+        ]);
+
+        $response = $this->updateOAuth2('oidc', [
+            'prompt' => null,
+        ]);
+
+        $this->assertSame(200, $response['headers']['status-code']);
+        $this->assertSame([], $response['body']['prompt']);
+
+        // Cleanup
+        $this->updateOAuth2('oidc', [
+            'clientId' => '',
+            'clientSecret' => '',
+            'wellKnownURL' => '',
+            'prompt' => [],
+            'enabled' => false,
+        ]);
     }
 
     // =========================================================================
