@@ -350,6 +350,10 @@ Http::post('/v1/account')
             throw new Exception(Exception::USER_EMAIL_FREE);
         }
 
+        if ((($project->getId() === 'console') || ($plan['supportsCorporateEmailValidation'] ?? false)) && ($project->getAttribute('auths', [])['corporateEmails'] ?? false) && !($emailMetadata['emailIsCorporate'] ?? true)) {
+            throw new Exception(Exception::USER_EMAIL_NOT_CORPORATE);
+        }
+
         try {
             $userId = $userId == 'unique()' ? ID::unique() : $userId;
             $user->setAttributes([
@@ -3436,6 +3440,10 @@ Http::patch('/v1/account/email')
 
         if ((($project->getId() === 'console') || ($plan['supportsFreeEmailValidation'] ?? false)) && ($project->getAttribute('auths', [])['freeEmails'] ?? false) && $emailMetadata['emailIsFree']) {
             throw new Exception(Exception::USER_EMAIL_FREE);
+        }
+
+        if ((($project->getId() === 'console') || ($plan['supportsCorporateEmailValidation'] ?? false)) && ($project->getAttribute('auths', [])['corporateEmails'] ?? false) && !($emailMetadata['emailIsCorporate'] ?? true)) {
+            throw new Exception(Exception::USER_EMAIL_NOT_CORPORATE);
         }
 
         $user
