@@ -23,24 +23,8 @@ export const NETWORK_SEGMENT_LABELS: Record<NetworkSegment, string> = {
   regions: 'Regions',
 }
 
-const USER_LOCATION_MARKER_COLOR = 'rgb(255, 255, 255)'
 const NETWORK_MARKER_OPACITY = 0.85
 const PLANNED_NETWORK_MARKER_OPACITY = 0.5
-
-export function buildUserLocationMarker(
-  lat: number,
-  lng: number,
-): InitGlobeMarker {
-  return {
-    lat,
-    lng,
-    color: USER_LOCATION_MARKER_COLOR,
-    count: 1,
-    pointRadius: 1.35,
-    ringMaxRadius: 3.8,
-    pointAltitude: 0.006,
-  }
-}
 
 const SEGMENT_LAYER: Record<
   NetworkSegment,

@@ -30,7 +30,6 @@ import { CommandCenter } from '@/components/global/shared/CommandCenter'
 import { Button } from '@/components/ui/button'
 import { useKeyboardShortcut } from '@/hooks/use-keyboard-shortcuts'
 import { consoleAccountQueryOptions } from '@/lib/react-query/hooks/auth'
-import { localeQueryOptions } from '@/lib/react-query/hooks/locale'
 import { pageTitle } from '@/lib/utils/page-title'
 
 const frameworkTools = [
@@ -184,10 +183,9 @@ export const Route = createFileRoute('/home')({
   loader: async ({ context }) => {
     if (typeof window === 'undefined') return
 
-    void Promise.all([
-      context.queryClient.prefetchQuery(consoleAccountQueryOptions()),
-      context.queryClient.prefetchQuery(localeQueryOptions()),
-    ]).catch(() => {})
+    void context.queryClient
+      .prefetchQuery(consoleAccountQueryOptions())
+      .catch(() => {})
   },
   component: HomePage,
 })
@@ -264,7 +262,7 @@ function HomePage() {
 
           <div className="relative z-[1] mt-8 w-full sm:mt-10">
             <div className="mx-auto w-full max-w-[min(100vw-2rem,80rem)] px-4 sm:max-w-[min(100vw-3rem,84rem)] sm:px-6 lg:max-w-[min(100vw-4rem,88rem)]">
-              <div className="relative isolate z-[1] max-h-[400px] w-full overflow-hidden rounded-t-[28px] border-x-2 border-t-2 border-b-0 border-muted-foreground/8 bg-muted-foreground/[0.035] px-4 pb-0 pt-1 backdrop-blur-md dark:border-muted/30 dark:bg-muted/10 sm:max-h-[500px] lg:max-h-[560px]">
+              <div className="relative isolate z-[1] max-h-[400px] w-full overflow-hidden rounded-t-[28px] border-x-2 border-t-2 border-b-0 border-muted-foreground/8 bg-muted-foreground/[0.035] px-4 pb-0 pt-1 dark:border-muted/30 dark:bg-muted/10 sm:max-h-[500px] lg:max-h-[560px]">
                 <div className="relative z-10 flex h-10 items-center gap-2 text-left">
                   <div className="ml-2 flex items-center gap-1.5" aria-hidden>
                     <span className="size-2.5 rounded-full bg-muted-foreground/30" />
@@ -411,6 +409,8 @@ function HomePage() {
           </div>
         </section>
 
+        <TestimonialsSection />
+
         <section className="border-t border-border bg-background py-16 sm:py-20">
           <div className="mx-auto w-full max-w-7xl px-4 sm:px-6">
             <div className="mx-auto max-w-5xl text-center">
@@ -456,8 +456,6 @@ function HomePage() {
             </div>
           </div>
         </section>
-
-        <TestimonialsSection />
 
         <NetworkSection />
 

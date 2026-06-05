@@ -1,0 +1,8 @@
+{
+  "files.watcherExclude": {
+    "**/src/routeTree.gen.ts": true
+  },
+  "files.readonlyInclude": {
+    "**/src/routeTree.gen.ts": true
+  }
+}

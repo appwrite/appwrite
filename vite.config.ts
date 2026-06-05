@@ -35,6 +35,10 @@ export default defineConfig(async () => {
       host: '::',
       allowedHosts: true,
       hmr: true,
+      // TanStack Router writes this file; watching it retriggers generation in a loop.
+      watch: {
+        ignored: ['**/src/routeTree.gen.ts'],
+      },
     },
     resolve: {
       dedupe: ['react', 'react-dom', 'use-sync-external-store'],

@@ -2,10 +2,8 @@ import { lazy, Suspense, useMemo } from 'react'
 import { CheckCircle2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { useGlobeThemeConfig } from '@/hooks/use-globe-theme-config'
-import { useUserGeolocation } from '@/hooks/use-user-geolocation'
 import {
   buildCombinedNetworkGlobeData,
-  buildUserLocationMarker,
   getNetworkSegmentColors,
   NETWORK_SEGMENT_COLORS,
   NETWORK_SEGMENT_LABELS,
@@ -49,21 +47,11 @@ function NetworkGlobeLegend({ className }: { className?: string }) {
 
 function NetworkGlobe({ className }: { className?: string }) {
   const { config: globeConfig, themeKey } = useGlobeThemeConfig()
-  const userLocation = useUserGeolocation()
   const segmentColors = useMemo(() => getNetworkSegmentColors(), [themeKey])
-  const globePresence = useMemo(() => {
-    const data = buildCombinedNetworkGlobeData(segmentColors)
-
-    if (!userLocation) return data
-
-    return {
-      ...data,
-      markers: [
-        ...data.markers,
-        buildUserLocationMarker(userLocation.lat, userLocation.lng),
-      ],
-    }
-  }, [segmentColors, userLocation])
+  const globePresence = useMemo(
+    () => buildCombinedNetworkGlobeData(segmentColors),
+    [segmentColors],
+  )
 
   return (
     <div

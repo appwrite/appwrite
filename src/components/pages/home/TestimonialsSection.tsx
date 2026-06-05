@@ -1,4 +1,4 @@
-import { useEffect, useState, type KeyboardEvent } from 'react'
+import { useEffect, useRef, useState, type KeyboardEvent } from 'react'
 import { ArrowRight } from 'lucide-react'
 import { TrustedByLogo } from '@/components/global/shared/TrustedByLogo'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
@@ -59,24 +59,42 @@ function useLogoGridColumns() {
 }
 
 function CustomerLogoGrid({ logos }: { logos: HomeCustomerLogo[] }) {
+  const gridRef = useRef<HTMLDivElement>(null)
   const columns = useLogoGridColumns()
   const logosPerPage = columns * LOGO_GRID_ROWS
   const totalPages = Math.max(1, Math.ceil(logos.length / logosPerPage))
   const [pageIndex, setPageIndex] = useState(0)
+  const [isVisible, setIsVisible] = useState(false)
 
   useEffect(() => {
     setPageIndex(0)
   }, [logosPerPage, logos.length])
 
   useEffect(() => {
-    if (totalPages <= 1) return
+    const node = gridRef.current
+    if (!node) return
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (!entry) return
+        setIsVisible(entry.isIntersecting)
+      },
+      { rootMargin: '120px 0px', threshold: 0 },
+    )
+
+    observer.observe(node)
+    return () => observer.disconnect()
+  }, [])
+
+  useEffect(() => {
+    if (totalPages <= 1 || !isVisible) return
 
     const intervalId = window.setInterval(() => {
       setPageIndex((current) => (current + 1) % totalPages)
     }, LOGO_ROTATE_MS)
 
     return () => window.clearInterval(intervalId)
-  }, [totalPages])
+  }, [totalPages, isVisible])
 
   const visibleBatch = logos.slice(pageIndex * logosPerPage, (pageIndex + 1) * logosPerPage)
   const prefersReducedMotion =
@@ -85,6 +103,7 @@ function CustomerLogoGrid({ logos }: { logos: HomeCustomerLogo[] }) {
 
   return (
     <div
+      ref={gridRef}
       key={pageIndex}
       className={cn(
         'relative z-[1] col-span-6 mt-3 grid min-h-[calc(2*4rem+0.75rem)] grid-cols-2 gap-3 sm:grid-cols-3 lg:mt-4 lg:min-h-[calc(2*5rem+1rem)] lg:grid-cols-subgrid lg:gap-4',
