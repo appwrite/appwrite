@@ -17,6 +17,7 @@ import {
 } from '@/lib/react-query/hooks/auth'
 import { AccountAccessBlockedScreen } from '@/components/global/auth/AccountAccessBlockedScreen'
 import { ConsoleImpersonationBanner } from '@/components/global/shared/ConsoleImpersonationBanner'
+import { getActiveProfileFeatures } from '@/lib/console-profiles'
 
 // Helper function to check if we're on an auth page
 function isAuthPage(pathname: string): boolean {
@@ -33,7 +34,10 @@ function isAuthPage(pathname: string): boolean {
 
 /** Console routes that work without sign-in; account is optional. */
 export function isOptionalAuthPage(pathname: string): boolean {
-  return pathname === '/init' || pathname === '/home'
+  const features = getActiveProfileFeatures()
+  if (pathname === '/init') return features.init
+  if (pathname === '/home') return features.marketing
+  return false
 }
 
 // Helper function to extract redirect from search params

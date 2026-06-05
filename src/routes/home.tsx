@@ -1,4 +1,4 @@
-import { createFileRoute, Link } from '@tanstack/react-router'
+import { createFileRoute, Link, redirect } from '@tanstack/react-router'
 import { useState } from 'react'
 import {
   ArrowRight,
@@ -6,8 +6,9 @@ import {
   ChevronRight,
   Database,
   DatabaseBackup,
+  Folder,
+  Globe,
   Globe2,
-  HardDrive,
   HeartPulse,
   LockKeyhole,
   MessageSquare,
@@ -16,6 +17,7 @@ import {
   Scale,
   Shield,
   ShieldCheck,
+  Users,
   Zap,
 } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
@@ -25,11 +27,16 @@ import { AiSection } from '@/components/pages/home/AiSection'
 import { NetworkSection } from '@/components/pages/home/NetworkSection'
 import { PricingSection } from '@/components/pages/home/PricingSection'
 import { ScaleSection } from '@/components/pages/home/ScaleSection'
-import { HomeSoftLights } from '@/components/pages/home/HomeSoftLights'
+import {
+  HomeSoftLights,
+  ProductBentoSoftLights,
+} from '@/components/pages/home/HomeSoftLights'
 import { TestimonialsSection } from '@/components/pages/home/TestimonialsSection'
+import { ProductBentoVisual } from '@/components/pages/home/product-bento/ProductBentoVisual'
 import { CommandCenter } from '@/components/global/shared/CommandCenter'
 import { Button } from '@/components/ui/button'
 import { useKeyboardShortcut } from '@/hooks/use-keyboard-shortcuts'
+import { getActiveProfileFeatures } from '@/lib/console-profiles'
 import { consoleAccountQueryOptions } from '@/lib/react-query/hooks/auth'
 import { pageTitle } from '@/lib/utils/page-title'
 
@@ -68,7 +75,7 @@ const productBentoItems: {
     title: 'Auth',
     description:
       'Authenticate users securely with email, SMS, OAuth, anonymous sessions, and magic URLs.',
-    icon: ShieldCheck,
+    icon: Users,
     className:
       'lg:col-span-4 lg:col-start-1 lg:row-start-1 lg:row-span-2',
   },
@@ -85,7 +92,7 @@ const productBentoItems: {
     title: 'Storage',
     description:
       'Store files with compression, encryption, image transformations, and access control.',
-    icon: HardDrive,
+    icon: Folder,
     className:
       'lg:col-span-4 lg:col-start-1 lg:row-start-3 lg:row-span-2',
   },
@@ -101,7 +108,7 @@ const productBentoItems: {
     title: 'Sites',
     description:
       'Deploy static, SSR, and CSR frontends with Appwrite behind them.',
-    icon: Globe2,
+    icon: Globe,
     className:
       'lg:col-span-8 lg:col-start-5 lg:row-start-4 lg:row-span-3',
     tall: true,
@@ -193,6 +200,9 @@ export const Route = createFileRoute('/home')({
   head: () => ({ meta: [{ title: pageTitle('Home') }] }),
   loader: async ({ context }) => {
     if (typeof window === 'undefined') return
+    if (!getActiveProfileFeatures().marketing) {
+      throw redirect({ to: '/', replace: true })
+    }
 
     void context.queryClient
       .prefetchQuery(consoleAccountQueryOptions())
@@ -410,11 +420,11 @@ function HomePage() {
                         className={`p-5 pt-4 ${item.tall ? 'lg:flex lg:flex-1 lg:flex-col lg:min-h-0' : ''}`}
                       >
                         <div
-                          className={`relative min-h-[240px] overflow-hidden rounded-lg border border-border bg-muted/20 ${item.tall ? 'lg:min-h-0 lg:flex-1' : ''}`}
+                          className={`relative isolate min-h-[240px] overflow-hidden rounded-lg border border-border bg-muted/15 ${item.tall ? 'lg:min-h-0 lg:flex-1' : ''}`}
                           aria-hidden
                         >
-                          <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_30%,color-mix(in_srgb,var(--brand-cta)_10%,transparent),transparent_62%)] opacity-80" />
-                          <div className="absolute inset-x-8 bottom-6 h-px bg-border/70" />
+                          <ProductBentoSoftLights />
+                          <ProductBentoVisual title={item.title} />
                         </div>
                       </div>
                     </div>

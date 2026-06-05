@@ -1160,3 +1160,167 @@ html[data-init-ticket-video-capturing] [data-init-ticket-video-capture] * {
     transform: translateY(0);
   }
 }
+
+/* Home product bento mock UI */
+@keyframes product-bento-search-reveal {
+  from {
+    max-width: 0;
+  }
+
+  to {
+    max-width: 6rem;
+  }
+}
+
+@keyframes product-bento-email-reveal {
+  from {
+    max-width: 0;
+  }
+
+  to {
+    max-width: 9rem;
+  }
+}
+
+@keyframes product-bento-sql-reveal {
+  from {
+    max-width: 0;
+  }
+
+  to {
+    max-width: 16rem;
+  }
+}
+
+@keyframes product-bento-sql-line-reveal {
+  from {
+    max-width: 0;
+  }
+
+  to {
+    max-width: calc(var(--sql-type-chars) * 1ch);
+  }
+}
+
+.group:hover .product-bento-sql-typing-line {
+  animation: product-bento-sql-line-reveal var(--sql-type-duration) steps(var(--sql-type-chars), end)
+    forwards;
+  animation-delay: var(--sql-type-delay);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .group:hover .product-bento-sql-typing-line {
+    animation: none;
+    max-width: calc(var(--sql-type-chars) * 1ch);
+  }
+}
+
+@keyframes product-bento-sql-reveal-long {
+  from {
+    max-width: 0;
+  }
+
+  to {
+    max-width: var(--bento-reveal-max-width, 22rem);
+  }
+}
+
+@keyframes product-bento-site-build {
+  from {
+    width: 8%;
+  }
+
+  to {
+    width: 100%;
+  }
+}
+
+.group:hover .product-bento-site-build {
+  animation: product-bento-site-build 1.1s ease-out 0.25s forwards;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .group:hover .product-bento-site-build {
+    animation: none;
+    width: 100%;
+  }
+}
+
+@keyframes product-bento-oauth-highlight {
+  0% {
+    transform: scale(1);
+    border-color: var(--border);
+    background-color: color-mix(in oklch, var(--background) 80%, transparent);
+  }
+
+  45% {
+    transform: scale(0.96);
+    border-color: color-mix(in oklch, var(--brand-cta) 30%, var(--border));
+    background-color: color-mix(in oklch, var(--brand-cta) 12%, var(--background));
+  }
+
+  100% {
+    transform: scale(1);
+    border-color: color-mix(in oklch, var(--brand-cta) 18%, var(--border));
+    background-color: color-mix(in oklch, var(--brand-cta) 6%, var(--background));
+  }
+}
+
+@keyframes product-bento-storage-slider {
+  from {
+    width: var(--slider-idle);
+  }
+
+  to {
+    width: var(--slider-hover);
+  }
+}
+
+.group:hover .product-bento-storage-slider {
+  animation: product-bento-storage-slider 0.75s ease-out var(--slider-delay, 0ms) forwards;
+}
+
+@keyframes product-bento-storage-ring-fill {
+  from {
+    stroke-dashoffset: var(--ring-offset-idle);
+  }
+
+  to {
+    stroke-dashoffset: var(--ring-offset-hover);
+  }
+}
+
+.group:hover .product-bento-storage-ring-arc {
+  animation: product-bento-storage-ring-fill 0.85s ease-out 0.4s forwards;
+}
+
+@keyframes product-bento-storage-preview {
+  from {
+    transform: scale(1);
+  }
+
+  to {
+    transform: scale(0.88);
+  }
+}
+
+.group:hover .product-bento-storage-preview {
+  animation: product-bento-storage-preview 0.75s ease-out 0.15s forwards;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .group:hover .product-bento-storage-slider {
+    animation: none;
+    width: var(--slider-hover);
+  }
+
+  .group:hover .product-bento-storage-ring-arc {
+    animation: none;
+    stroke-dashoffset: var(--ring-offset-hover);
+  }
+
+  .group:hover .product-bento-storage-preview {
+    animation: none;
+    transform: scale(0.88);
+  }
+}

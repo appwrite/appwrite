@@ -155,7 +155,7 @@ function ScaleStatCards() {
 function ScaleChart() {
   return (
     <div className="relative left-1/2 w-screen -translate-x-1/2">
-      <div className="relative min-h-[22rem] w-full overflow-hidden border-t border-border bg-card/40 dark:bg-background sm:min-h-[26rem] lg:min-h-[28rem]">
+      <div className="relative min-h-[22rem] w-full overflow-hidden bg-card/40 dark:bg-background sm:min-h-[26rem] lg:min-h-[28rem]">
         <div className="pointer-events-none absolute inset-0" aria-hidden>
           <ScaleChartBackground />
           <ScaleAreaCurve className="opacity-80 dark:opacity-95" />

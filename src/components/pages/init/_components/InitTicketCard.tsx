@@ -8,10 +8,13 @@ import {
   type ReactNode,
 } from 'react'
 import {
-  formatInitTicketNumber,
   getInitTicketHolderTitle,
   type InitTicketPrefs,
 } from '@/lib/init/ticket-prefs'
+export {
+  getInitTicketHolderName,
+  getInitTicketNumberForUser,
+} from '@/lib/init/ticket-render-data'
 import {
   INIT_TICKET_ASPECT_RATIO,
   INIT_TICKET_BOTTOM_TRIM_PERCENT,
@@ -133,7 +136,11 @@ function TicketStackIcons({
         const iconSrc = getInitTicketStackIconSrc(option.iconKey, usesDarkImage)
 
         return (
-          <span key={id} className="flex items-center justify-center" title={option.label}>
+          <span
+            key={id}
+            className="flex items-center justify-center"
+            title={option.label}
+          >
             {iconSrc ? (
               <img
                 src={iconSrc}
@@ -257,7 +264,9 @@ function TicketFaceShell({
   isBack?: boolean
   children: ReactNode
 }) {
-  const [loadedBackgroundSrc, setLoadedBackgroundSrc] = useState<string | null>(null)
+  const [loadedBackgroundSrc, setLoadedBackgroundSrc] = useState<string | null>(
+    null,
+  )
   const backgroundLoaded = loadedBackgroundSrc === ticketBgSrc
 
   return (
@@ -331,7 +340,10 @@ function TicketFrontFace(props: TicketFaceSharedProps) {
           </div>
 
           <div className="space-y-4">
-            <TicketStackIcons stack={prefs.stack} usesDarkImage={usesDarkImage} />
+            <TicketStackIcons
+              stack={prefs.stack}
+              usesDarkImage={usesDarkImage}
+            />
             <div
               className={cn(
                 'space-y-2.5 border-t border-dashed pt-4',
@@ -413,101 +425,104 @@ function TicketBackFace(props: TicketFaceSharedProps) {
     <TicketFaceShell {...props} isBack>
       <div className="grid h-full min-h-0 overflow-visible" style={contentGrid}>
         <div className="flex min-w-0 flex-col justify-between pe-[8%]">
-        <div className="space-y-2">
-          <p
-            className={cn(
-              'text-[9px] font-semibold uppercase tracking-[0.24em]',
-              mutedClass,
-            )}
-          >
-            Official pass
-          </p>
-          <InitWordmark
-            accentColor={accentColor}
-            className={cn(
-              'text-[clamp(22px,4.5vw,34px)]',
-              usesDarkImage ? 'text-white' : 'text-neutral-900',
-            )}
-          />
-          <p
-            className="font-mono text-[11px] font-semibold tabular-nums sm:text-[12px]"
-            style={{ color: accentColor }}
-          >
-            {ticketNumber}
-          </p>
-        </div>
-
-        <div className="space-y-3">
-          <div
-            className="flex h-10 items-end justify-start gap-0.5 overflow-hidden"
-            aria-hidden
-          >
-            {Array.from({ length: 24 }).map((_, index) => (
-              <span
-                key={index}
-                className={cn(
-                  'w-0.5 rounded-full',
-                  usesDarkImage ? 'bg-white/30' : 'bg-neutral-900/25',
-                )}
-                style={{ height: `${28 + ((index * 17) % 40)}%` }}
-              />
-            ))}
+          <div className="space-y-2">
+            <p
+              className={cn(
+                'text-[9px] font-semibold uppercase tracking-[0.24em]',
+                mutedClass,
+              )}
+            >
+              Official pass
+            </p>
+            <InitWordmark
+              accentColor={accentColor}
+              className={cn(
+                'text-[clamp(22px,4.5vw,34px)]',
+                usesDarkImage ? 'text-white' : 'text-neutral-900',
+              )}
+            />
+            <p
+              className="font-mono text-[11px] font-semibold tabular-nums sm:text-[12px]"
+              style={{ color: accentColor }}
+            >
+              {ticketNumber}
+            </p>
           </div>
-          <div
-            className={cn(
-              'space-y-1 border-t border-dashed pt-3',
-              usesDarkImage ? 'border-white/20' : 'border-neutral-900/15',
-            )}
-          >
-            <p
+
+          <div className="space-y-3">
+            <div
+              className="flex h-10 items-end justify-start gap-0.5 overflow-hidden"
+              aria-hidden
+            >
+              {Array.from({ length: 24 }).map((_, index) => (
+                <span
+                  key={index}
+                  className={cn(
+                    'w-0.5 rounded-full',
+                    usesDarkImage ? 'bg-white/30' : 'bg-neutral-900/25',
+                  )}
+                  style={{ height: `${28 + ((index * 17) % 40)}%` }}
+                />
+              ))}
+            </div>
+            <div
               className={cn(
-                'text-[9px] font-semibold uppercase tracking-[0.2em]',
-                mutedClass,
+                'space-y-1 border-t border-dashed pt-3',
+                usesDarkImage ? 'border-white/20' : 'border-neutral-900/15',
               )}
             >
-              Valid for Init week
-            </p>
-            <p
-              className={cn(
-                'text-[12px] font-medium',
-                usesDarkImage ? 'text-white/90' : 'text-neutral-800',
-              )}
-            >
-              {dateRangeLabel}
-            </p>
-            <p
-              className={cn(
-                'truncate text-[clamp(11px,1.9vw,15px)] font-normal leading-tight',
-                usesDarkImage ? 'text-white/90' : 'text-neutral-800',
-              )}
-            >
-              {holderName}
-            </p>
-            <p
-              className={cn(
-                'truncate text-[11px] font-medium',
-                usesDarkImage ? 'text-white/65' : 'text-neutral-500',
-              )}
-            >
-              {holderTitle}
-            </p>
-            <p
-              className={cn(
-                'text-[9px] font-semibold uppercase tracking-[0.2em]',
-                mutedClass,
-              )}
-            >
-              {passLabel}
-            </p>
-            {githubUsername ? (
-              <TicketGitHubBadge
-                username={githubUsername}
+              <p
+                className={cn(
+                  'text-[9px] font-semibold uppercase tracking-[0.2em]',
+                  mutedClass,
+                )}
+              >
+                Valid for Init week
+              </p>
+              <p
+                className={cn(
+                  'text-[12px] font-medium',
+                  usesDarkImage ? 'text-white/90' : 'text-neutral-800',
+                )}
+              >
+                {dateRangeLabel}
+              </p>
+              <p
+                className={cn(
+                  'truncate text-[clamp(11px,1.9vw,15px)] font-normal leading-tight',
+                  usesDarkImage ? 'text-white/90' : 'text-neutral-800',
+                )}
+              >
+                {holderName}
+              </p>
+              <p
+                className={cn(
+                  'truncate text-[11px] font-medium',
+                  usesDarkImage ? 'text-white/65' : 'text-neutral-500',
+                )}
+              >
+                {holderTitle}
+              </p>
+              <p
+                className={cn(
+                  'text-[9px] font-semibold uppercase tracking-[0.2em]',
+                  mutedClass,
+                )}
+              >
+                {passLabel}
+              </p>
+              {githubUsername ? (
+                <TicketGitHubBadge
+                  username={githubUsername}
+                  usesDarkImage={usesDarkImage}
+                />
+              ) : null}
+              <TicketStackIcons
+                stack={prefs.stack}
                 usesDarkImage={usesDarkImage}
               />
-            ) : null}
-            <TicketStackIcons stack={prefs.stack} usesDarkImage={usesDarkImage} />
+            </div>
           </div>
-        </div>
         </div>
         <div aria-hidden />
       </div>
@@ -515,27 +530,36 @@ function TicketBackFace(props: TicketFaceSharedProps) {
   )
 }
 
-export const InitTicketCard = forwardRef<InitTicketCardHandle, InitTicketCardProps>(
-  function InitTicketCard(
-    {
-      dateRangeLabel,
-      holderName,
-      githubUsername,
-      ticketNumber,
-      prefs,
-      ticketAppearance,
-      blurred = false,
-      previewOnly = false,
-      captureMode = false,
-      className,
-    },
-    ref,
-  ) {
+export const InitTicketCard = forwardRef<
+  InitTicketCardHandle,
+  InitTicketCardProps
+>(function InitTicketCard(
+  {
+    dateRangeLabel,
+    holderName,
+    githubUsername,
+    ticketNumber,
+    prefs,
+    ticketAppearance,
+    blurred = false,
+    previewOnly = false,
+    captureMode = false,
+    className,
+  },
+  ref,
+) {
   const captureRootRef = useRef<HTMLDivElement>(null)
   const ticketFrameRef = useRef<HTMLDivElement>(null)
   const interactive = !blurred && !previewOnly && !captureMode
-  const { backgroundSrc: ticketBgSrc, usesDarkChrome: usesDarkImage, shadowClassName, shadowOffsetY, passLabel, holderTitle: defaultHolderTitle, accentColor } =
-    ticketAppearance
+  const {
+    backgroundSrc: ticketBgSrc,
+    usesDarkChrome: usesDarkImage,
+    shadowClassName,
+    shadowOffsetY,
+    passLabel,
+    holderTitle: defaultHolderTitle,
+    accentColor,
+  } = ticketAppearance
   const holderTitle = getInitTicketHolderTitle(prefs, defaultHolderTitle)
 
   const sceneRef = useRef<HTMLDivElement>(null)
@@ -661,29 +685,33 @@ export const InitTicketCard = forwardRef<InitTicketCardHandle, InitTicketCardPro
   useEffect(() => {
     if (!deviceTiltEnabled) return
 
-    const Orientation = DeviceOrientationEvent as typeof DeviceOrientationEvent & {
-      requestPermission?: () => Promise<PermissionState>
-    }
+    const Orientation =
+      DeviceOrientationEvent as typeof DeviceOrientationEvent & {
+        requestPermission?: () => Promise<PermissionState>
+      }
     if (typeof Orientation.requestPermission !== 'function') {
       void startDeviceTilt()
     }
   }, [deviceTiltEnabled, startDeviceTilt])
 
-  const computeTiltAtClientCoords = useCallback((clientX: number, clientY: number) => {
-    const scene = sceneRef.current
-    if (!scene) return null
+  const computeTiltAtClientCoords = useCallback(
+    (clientX: number, clientY: number) => {
+      const scene = sceneRef.current
+      if (!scene) return null
 
-    const rect = scene.getBoundingClientRect()
-    if (rect.width <= 0 || rect.height <= 0) return null
+      const rect = scene.getBoundingClientRect()
+      if (rect.width <= 0 || rect.height <= 0) return null
 
-    const px = (clientX - rect.left) / rect.width - 0.5
-    const py = (clientY - rect.top) / rect.height - 0.5
+      const px = (clientX - rect.left) / rect.width - 0.5
+      const py = (clientY - rect.top) / rect.height - 0.5
 
-    return {
-      x: -py * TILT_MAX_X,
-      y: px * TILT_MAX_Y,
-    }
-  }, [])
+      return {
+        x: -py * TILT_MAX_X,
+        y: px * TILT_MAX_Y,
+      }
+    },
+    [],
+  )
 
   const applyMouseHoverTilt = useCallback(
     (clientX: number, clientY: number) => {
@@ -727,7 +755,12 @@ export const InitTicketCard = forwardRef<InitTicketCardHandle, InitTicketCardPro
     }
     tiltRef.current = { x: 0, y: 0 }
     scheduleTiltApply(RESET_DURATION_MS)
-  }, [deviceTiltEnabled, deviceTiltListening, scheduleTiltApply, syncEffectiveTilt])
+  }, [
+    deviceTiltEnabled,
+    deviceTiltListening,
+    scheduleTiltApply,
+    syncEffectiveTilt,
+  ])
 
   const releasePointerTilt = releaseMouseHoverTilt
 
@@ -779,13 +812,20 @@ export const InitTicketCard = forwardRef<InitTicketCardHandle, InitTicketCardPro
       applyMouseHoverTiltRef.current(event.clientX, event.clientY)
     }
 
-    window.addEventListener('mousemove', handleWindowMouseMove, { passive: true })
+    window.addEventListener('mousemove', handleWindowMouseMove, {
+      passive: true,
+    })
     return () => window.removeEventListener('mousemove', handleWindowMouseMove)
   }, [interactive, reducedMotion])
 
   const handleSceneMouseMove = useCallback(
     (event: React.MouseEvent<HTMLDivElement>) => {
-      if (!interactive || reducedMotion || animatingRef.current || touchActiveRef.current) {
+      if (
+        !interactive ||
+        reducedMotion ||
+        animatingRef.current ||
+        touchActiveRef.current
+      ) {
         return
       }
       applyMouseHoverTilt(event.clientX, event.clientY)
@@ -807,7 +847,8 @@ export const InitTicketCard = forwardRef<InitTicketCardHandle, InitTicketCardPro
       if (event.pointerType === 'mouse') return
 
       const isTouch = event.pointerType === 'touch'
-      const isHoverPointer = event.pointerType !== 'touch' && event.buttons === 0
+      const isHoverPointer =
+        event.pointerType !== 'touch' && event.buttons === 0
 
       if (!isTouch && !isHoverPointer && event.buttons === 0) return
 
@@ -863,7 +904,13 @@ export const InitTicketCard = forwardRef<InitTicketCardHandle, InitTicketCardPro
         }
       }
     },
-    [deviceTiltEnabled, interactive, reducedMotion, startDeviceTilt, updateTiltFromPointer],
+    [
+      deviceTiltEnabled,
+      interactive,
+      reducedMotion,
+      startDeviceTilt,
+      updateTiltFromPointer,
+    ],
   )
 
   const handlePointerUp = useCallback(
@@ -992,13 +1039,27 @@ export const InitTicketCard = forwardRef<InitTicketCardHandle, InitTicketCardPro
                   clipPath: `inset(0 0 ${INIT_TICKET_BOTTOM_TRIM_PERCENT}% 0)`,
                 }),
           }}
-          onMouseMove={interactive && !reducedMotion ? handleSceneMouseMove : undefined}
-          onMouseLeave={interactive && !reducedMotion ? handleSceneMouseLeave : undefined}
-          onPointerDown={interactive && !reducedMotion ? handlePointerDown : undefined}
-          onPointerMove={interactive && !reducedMotion ? handlePointerMove : undefined}
-          onPointerUp={interactive && !reducedMotion ? handlePointerUp : undefined}
-          onPointerCancel={interactive && !reducedMotion ? handlePointerCancel : undefined}
-          onPointerLeave={interactive && !reducedMotion ? handlePointerLeave : undefined}
+          onMouseMove={
+            interactive && !reducedMotion ? handleSceneMouseMove : undefined
+          }
+          onMouseLeave={
+            interactive && !reducedMotion ? handleSceneMouseLeave : undefined
+          }
+          onPointerDown={
+            interactive && !reducedMotion ? handlePointerDown : undefined
+          }
+          onPointerMove={
+            interactive && !reducedMotion ? handlePointerMove : undefined
+          }
+          onPointerUp={
+            interactive && !reducedMotion ? handlePointerUp : undefined
+          }
+          onPointerCancel={
+            interactive && !reducedMotion ? handlePointerCancel : undefined
+          }
+          onPointerLeave={
+            interactive && !reducedMotion ? handlePointerLeave : undefined
+          }
           onClick={interactive && !reducedMotion ? handleClick : undefined}
           onKeyDown={interactive && !reducedMotion ? handleKeyDown : undefined}
           role={interactive && !reducedMotion ? 'button' : undefined}
@@ -1026,17 +1087,4 @@ export const InitTicketCard = forwardRef<InitTicketCardHandle, InitTicketCardPro
       </div>
     </div>
   )
-  },
-)
-
-export function getInitTicketHolderName(
-  accountName: string | undefined,
-  prefs: InitTicketPrefs,
-  fallback = 'Your name',
-): string {
-  return prefs.displayName?.trim() || accountName?.trim() || fallback
-}
-
-export function getInitTicketNumberForUser(userId?: string | null): string {
-  return formatInitTicketNumber(userId)
-}
+})

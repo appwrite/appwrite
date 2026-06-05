@@ -42,12 +42,12 @@ const variants = {
 /** Tile-scoped lights for MCP / Skills / plugins bento — softer than hero, stronger than bare wash. */
 const tileLights = {
   mcp: cn(
-    'absolute -right-[36%] top-[-32%] h-[300px] w-[440px]',
+    'absolute -left-[36%] top-[-32%] h-[300px] w-[440px]',
     'bg-[radial-gradient(ellipse_at_center,rgba(124,103,254,0.15)_0%,rgba(124,103,254,0.055)_42%,transparent_74%)]',
     'dark:bg-[radial-gradient(ellipse_at_center,rgba(99,102,241,0.05)_0%,rgba(99,102,241,0.016)_42%,transparent_74%)]',
   ),
   skills: cn(
-    'absolute -left-[36%] top-[-32%] h-[300px] w-[440px]',
+    'absolute -right-[36%] top-[-32%] h-[300px] w-[440px]',
     'bg-[radial-gradient(ellipse_at_center,rgba(253,54,110,0.15)_0%,rgba(253,54,110,0.055)_42%,transparent_74%)]',
     'dark:bg-[radial-gradient(ellipse_at_center,rgba(253,54,110,0.05)_0%,rgba(253,54,110,0.016)_42%,transparent_74%)]',
   ),
@@ -70,6 +70,16 @@ export function AiTileSoftLight({ tone }: { tone: AiTileSoftLightTone }) {
     <div className="pointer-events-none absolute inset-0 overflow-hidden" aria-hidden>
       <div className={tileLights[tone]} />
     </div>
+  )
+}
+
+/** Neutral ambient wash for product bento visual frames — single top-left light. */
+export function ProductBentoSoftLights() {
+  return (
+    <div
+      className="pointer-events-none absolute inset-0 z-0 overflow-hidden rounded-[inherit] bg-[radial-gradient(ellipse_at_0%_0%,color-mix(in_srgb,var(--foreground)_6%,transparent)_0%,transparent_58%)]"
+      aria-hidden
+    />
   )
 }
 

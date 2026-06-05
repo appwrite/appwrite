@@ -28,6 +28,7 @@ import {
   ArrowLeft,
   DatabaseZap,
   ShieldAlert,
+  Home,
 } from 'lucide-react'
 import {
   useAuth,
@@ -106,6 +107,9 @@ const DEFAULT_MARKETING_HEADER_NAV: readonly MarketingHeaderNavItem[] = [
   { label: 'Blog', href: 'https://appwrite.io/blog' },
   { label: 'Changelog', href: 'https://appwrite.io/changelog' },
 ] as const
+
+const ACCOUNT_MENU_ITEM_CLASS =
+  'flex cursor-pointer items-center gap-2.5 rounded-md px-3 py-2.5 text-[14px] text-muted-foreground hover:bg-accent hover:text-foreground focus:bg-accent focus:text-foreground'
 
 interface ConsoleHeaderProps {
   onMenuClick?: () => void
@@ -913,47 +917,60 @@ export function ConsoleHeader({
               {/* User Menu */}
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <button className="flex shrink-0 cursor-pointer items-center gap-2 rounded-md px-2 py-1.5 transition-colors hover:bg-accent min-w-0">
+                  <button className="flex shrink-0 cursor-pointer items-center gap-2.5 rounded-md px-2.5 py-2 transition-colors hover:bg-accent min-w-0">
                     <InitialsAvatar
                       name={displayName}
-                      size="sm"
+                      size="md"
                       className="shrink-0"
                     />
                     <div className="hidden text-left @[800px]:block min-w-0">
-                      <p className="text-[13px] font-medium text-foreground truncate">
+                      <p className="text-[14px] font-medium text-foreground truncate">
                         {displayName}
                       </p>
                     </div>
-                    <ChevronDown className="hidden h-3.5 w-3.5 shrink-0 text-muted-foreground @[800px]:block" />
+                    <ChevronDown className="hidden h-4 w-4 shrink-0 text-muted-foreground @[800px]:block" />
                   </button>
                 </DropdownMenuTrigger>
 
                 <DropdownMenuContent
                   align="end"
-                  className="w-64 border-border bg-popover p-1"
+                  className="w-72 border-border bg-popover p-2"
                 >
-                  <div className="px-3 py-3">
-                    <p className="text-[13px] font-medium text-foreground">
+                  <div className="px-4 py-4">
+                    <p className="text-[14px] font-medium text-foreground">
                       {displayName}
                     </p>
                     {userEmail && (
-                      <p className="text-[12px] text-muted-foreground">
+                      <p className="mt-1 text-[13px] text-muted-foreground">
                         {userEmail}
                       </p>
                     )}
                   </div>
 
-                  <DropdownMenuSeparator className="my-1 bg-border" />
+                  {features.marketing && (
+                    <>
+                      <DropdownMenuSeparator className="my-2 bg-border" />
+
+                      <DropdownMenuItem asChild>
+                        <Link to="/home" className={ACCOUNT_MENU_ITEM_CLASS}>
+                          <Home className="h-[18px] w-[18px]" />
+                          <span>Home</span>
+                        </Link>
+                      </DropdownMenuItem>
+                    </>
+                  )}
+
+                  <DropdownMenuSeparator className="my-2 bg-border" />
 
                   {/* Account Details */}
-                  <div className="px-3 py-2 space-y-4">
+                  <div className="space-y-5 px-4 py-3">
                     {/* Member Since */}
                     {account?.registration && (
                       <div>
-                        <p className="text-[11px] text-muted-foreground mb-1.5">
+                        <p className="mb-2 text-[12px] text-muted-foreground">
                           Member since
                         </p>
-                        <p className="text-[14px] text-foreground">
+                        <p className="text-[15px] text-foreground">
                           {memberSince}
                         </p>
                       </div>
@@ -961,12 +978,12 @@ export function ConsoleHeader({
 
                     {/* Account Status */}
                     <div>
-                      <p className="text-[11px] text-muted-foreground mb-1.5">
+                      <p className="mb-2 text-[12px] text-muted-foreground">
                         Account status
                       </p>
-                      <div className="flex items-center gap-2">
-                        <div className="h-2 w-2 rounded-full bg-emerald-500" />
-                        <p className="text-[14px] text-foreground">
+                      <div className="flex items-center gap-2.5">
+                        <div className="h-2.5 w-2.5 rounded-full bg-emerald-500" />
+                        <p className="text-[15px] text-foreground">
                           {accountStatus}
                         </p>
                       </div>
@@ -974,21 +991,21 @@ export function ConsoleHeader({
 
                     {features.accountMfa && (
                       <div>
-                        <p className="text-[11px] text-muted-foreground mb-1.5">
+                        <p className="mb-2 text-[12px] text-muted-foreground">
                           2FA
                         </p>
-                        <div className="flex items-center gap-2">
+                        <div className="flex items-center gap-2.5">
                           {is2FAEnabled ? (
                             <>
-                              <Shield className="h-3.5 w-3.5 text-emerald-500" />
-                              <p className="text-[14px] text-foreground">
+                              <Shield className="h-4 w-4 text-emerald-500" />
+                              <p className="text-[15px] text-foreground">
                                 Enabled
                               </p>
                             </>
                           ) : (
                             <>
-                              <Shield className="h-3.5 w-3.5 text-muted-foreground" />
-                              <p className="text-[14px] text-muted-foreground">
+                              <Shield className="h-4 w-4 text-muted-foreground" />
+                              <p className="text-[15px] text-muted-foreground">
                                 Disabled
                               </p>
                             </>
@@ -1000,7 +1017,7 @@ export function ConsoleHeader({
                     {/* Account ID */}
                     {accountId && (
                       <div>
-                        <p className="text-[11px] text-muted-foreground mb-1.5">
+                        <p className="mb-2 text-[12px] text-muted-foreground">
                           Account ID
                         </p>
                         <TooltipProvider delayDuration={0}>
@@ -1010,15 +1027,15 @@ export function ConsoleHeader({
                                 onClick={() =>
                                   copyToClipboard(accountId, 'accountId')
                                 }
-                                className="flex cursor-pointer items-center gap-1.5 group"
+                                className="group flex cursor-pointer items-center gap-2"
                               >
-                                <p className="text-[14px] text-foreground font-mono">
+                                <p className="font-mono text-[15px] text-foreground">
                                   {accountId}
                                 </p>
                                 {copiedField === 'accountId' ? (
-                                  <Check className="h-3.5 w-3.5 text-emerald-500" />
+                                  <Check className="h-4 w-4 text-emerald-500" />
                                 ) : (
-                                  <Copy className="h-3.5 w-3.5 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
+                                  <Copy className="h-4 w-4 text-muted-foreground opacity-0 transition-opacity group-hover:opacity-100" />
                                 )}
                               </button>
                             </TooltipTrigger>
@@ -1035,14 +1052,11 @@ export function ConsoleHeader({
                     )}
                   </div>
 
-                  <DropdownMenuSeparator className="my-1 bg-border" />
+                  <DropdownMenuSeparator className="my-2 bg-border" />
 
                   <DropdownMenuItem asChild>
-                    <Link
-                      to="/account"
-                      className="flex cursor-pointer items-center gap-2 rounded px-2 py-1.5 text-[13px] text-muted-foreground hover:bg-accent hover:text-foreground focus:bg-accent focus:text-foreground"
-                    >
-                      <User className="h-4 w-4" />
+                    <Link to="/account" className={ACCOUNT_MENU_ITEM_CLASS}>
+                      <User className="h-[18px] w-[18px]" />
                       <span>Account</span>
                     </Link>
                   </DropdownMenuItem>
@@ -1051,9 +1065,9 @@ export function ConsoleHeader({
                     <DropdownMenuItem asChild>
                       <Link
                         to="/account/payments"
-                        className="flex cursor-pointer items-center gap-2 rounded px-2 py-1.5 text-[13px] text-muted-foreground hover:bg-accent hover:text-foreground focus:bg-accent focus:text-foreground"
+                        className={ACCOUNT_MENU_ITEM_CLASS}
                       >
-                        <CreditCard className="h-4 w-4" />
+                        <CreditCard className="h-[18px] w-[18px]" />
                         <span>Payments</span>
                       </Link>
                     </DropdownMenuItem>
@@ -1061,45 +1075,39 @@ export function ConsoleHeader({
 
                   {showAdminSection && (
                     <>
-                      <DropdownMenuSeparator className="my-1 bg-border" />
+                      <DropdownMenuSeparator className="my-2 bg-border" />
 
-                      <DropdownMenuLabel className="px-2 py-1.5 text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
+                      <DropdownMenuLabel className="px-3 py-2 text-[12px] font-medium uppercase tracking-wider text-muted-foreground">
                         Admin
                       </DropdownMenuLabel>
 
                       <DropdownMenuItem asChild>
-                        <Link
-                          to="/cache"
-                          className="flex cursor-pointer items-center gap-2 rounded px-2 py-1.5 text-[13px] text-muted-foreground hover:bg-accent hover:text-foreground focus:bg-accent focus:text-foreground"
-                        >
-                          <DatabaseZap className="h-4 w-4" />
+                        <Link to="/cache" className={ACCOUNT_MENU_ITEM_CLASS}>
+                          <DatabaseZap className="h-[18px] w-[18px]" />
                           <span>Cache</span>
                         </Link>
                       </DropdownMenuItem>
 
                       <DropdownMenuItem asChild>
-                        <Link
-                          to="/blocks"
-                          className="flex cursor-pointer items-center gap-2 rounded px-2 py-1.5 text-[13px] text-muted-foreground hover:bg-accent hover:text-foreground focus:bg-accent focus:text-foreground"
-                        >
-                          <ShieldAlert className="h-4 w-4" />
+                        <Link to="/blocks" className={ACCOUNT_MENU_ITEM_CLASS}>
+                          <ShieldAlert className="h-[18px] w-[18px]" />
                           <span>Blocks</span>
                         </Link>
                       </DropdownMenuItem>
                     </>
                   )}
 
-                  <DropdownMenuSeparator className="my-1 bg-border" />
+                  <DropdownMenuSeparator className="my-2 bg-border" />
 
                   <ThemeToggle />
 
-                  <DropdownMenuSeparator className="my-1 bg-border" />
+                  <DropdownMenuSeparator className="my-2 bg-border" />
 
                   <DropdownMenuItem
                     onClick={() => signOut()}
-                    className="flex cursor-pointer items-center gap-2 rounded px-2 py-1.5 text-[13px] text-muted-foreground hover:bg-accent hover:text-foreground focus:bg-accent focus:text-foreground"
+                    className={ACCOUNT_MENU_ITEM_CLASS}
                   >
-                    <LogOut className="h-4 w-4" />
+                    <LogOut className="h-[18px] w-[18px]" />
                     <span>Sign out</span>
                   </DropdownMenuItem>
                 </DropdownMenuContent>

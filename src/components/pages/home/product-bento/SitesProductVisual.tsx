@@ -1,0 +1,203 @@
+import { useEffect, useState } from 'react'
+import { ArrowRight, CheckCircle2 } from 'lucide-react'
+import { cn } from '@/lib/utils'
+
+const COMMIT_HASH = '01ab234c'
+/** Matches `product-bento-site-build` in styles.css */
+const BUILD_ANIMATION_DELAY_MS = 250
+const BUILD_ANIMATION_DURATION_MS = 1100
+const BUILD_TOTAL_SECONDS = 14
+
+function getBuildProgress(elapsedMs: number) {
+  if (elapsedMs < BUILD_ANIMATION_DELAY_MS) {
+    return { progress: 0, seconds: 0, complete: false }
+  }
+
+  const progress = Math.min(
+    1,
+    (elapsedMs - BUILD_ANIMATION_DELAY_MS) / BUILD_ANIMATION_DURATION_MS,
+  )
+  const seconds =
+    progress >= 1
+      ? BUILD_TOTAL_SECONDS
+      : Math.floor(progress * BUILD_TOTAL_SECONDS)
+
+  return { progress, seconds, complete: progress >= 1 }
+}
+
+function PipelineRow({
+  children,
+  className,
+  revealDelayMs,
+}: {
+  children: React.ReactNode
+  className?: string
+  revealDelayMs?: number
+}) {
+  if (revealDelayMs === undefined) {
+    return <div className={className}>{children}</div>
+  }
+
+  return (
+    <div
+      className={cn(
+        'max-h-0 overflow-hidden opacity-0 transition-[max-height,opacity] duration-500 group-hover:max-h-28 group-hover:opacity-100 motion-reduce:group-hover:max-h-28 motion-reduce:group-hover:opacity-100',
+        className,
+      )}
+      style={{ transitionDelay: `${revealDelayMs}ms` }}
+    >
+      {children}
+    </div>
+  )
+}
+
+export function SitesProductVisual() {
+  const [isHovered, setIsHovered] = useState(false)
+  const [buildSeconds, setBuildSeconds] = useState<number | null>(null)
+  const [buildComplete, setBuildComplete] = useState(false)
+  const [prefersReducedMotion, setPrefersReducedMotion] = useState(false)
+
+  useEffect(() => {
+    const media = window.matchMedia('(prefers-reduced-motion: reduce)')
+    const update = () => setPrefersReducedMotion(media.matches)
+    update()
+    media.addEventListener('change', update)
+    return () => media.removeEventListener('change', update)
+  }, [])
+
+  useEffect(() => {
+    if (!isHovered) {
+      setBuildSeconds(null)
+      setBuildComplete(false)
+      return
+    }
+
+    if (prefersReducedMotion) {
+      setBuildSeconds(BUILD_TOTAL_SECONDS)
+      setBuildComplete(true)
+      return
+    }
+
+    setBuildSeconds(0)
+    setBuildComplete(false)
+
+    const startedAt = Date.now()
+
+    const tick = () => {
+      const { seconds, complete } = getBuildProgress(Date.now() - startedAt)
+      setBuildSeconds(seconds)
+      setBuildComplete(complete)
+    }
+
+    tick()
+    const tickId = window.setInterval(tick, 50)
+
+    return () => {
+      window.clearInterval(tickId)
+    }
+  }, [isHovered, prefersReducedMotion])
+
+  return (
+    <div
+      className="absolute inset-0 flex items-center justify-center overflow-hidden p-4 sm:p-6"
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
+    >
+      <div className="w-full max-w-[21rem] space-y-3.5 transition-transform duration-500 group-hover:-translate-y-1 motion-reduce:group-hover:translate-y-0">
+        <div
+          className={cn(
+            'flex items-center gap-2.5 rounded-lg border border-border bg-background/80 px-3.5 py-3 transition-[border-color,background-color] duration-300',
+            'group-hover:border-[color-mix(in_srgb,var(--brand-cta)_28%,var(--border))] group-hover:bg-background',
+          )}
+        >
+          <span className="flex size-8 shrink-0 items-center justify-center rounded-md bg-muted/50">
+            <img src="/icons/github.svg" alt="" className="size-4" aria-hidden />
+          </span>
+          <div className="min-w-0 flex-1">
+            <p className="text-[12px] font-medium text-foreground">Push to main</p>
+            <p className="mt-0.5 font-mono text-[11px] text-muted-foreground">{COMMIT_HASH}</p>
+          </div>
+          <ArrowRight
+            className="size-4 shrink-0 text-muted-foreground/40 transition-[color,transform] duration-300 group-hover:translate-x-0.5 group-hover:text-[var(--brand-cta)] motion-reduce:group-hover:translate-x-0"
+            aria-hidden
+          />
+        </div>
+
+        <div className="rounded-lg border border-border bg-background/80 px-3.5 py-3">
+          <div className="flex items-center justify-between gap-2">
+            <span className="text-[12px] font-medium text-foreground">Build</span>
+            <div className="flex items-center gap-2">
+              <span
+                className={cn(
+                  'min-w-[2rem] text-right font-mono text-[11px] tabular-nums text-muted-foreground transition-opacity duration-200',
+                  buildSeconds === null && 'opacity-50',
+                )}
+              >
+                {buildSeconds === null ? '—' : `${buildSeconds}s`}
+              </span>
+              <CheckCircle2
+                className={cn(
+                  'size-4 shrink-0 text-emerald-600 transition-opacity duration-300 dark:text-emerald-400',
+                  buildComplete ? 'opacity-100' : 'opacity-0',
+                )}
+                aria-hidden
+              />
+            </div>
+          </div>
+          <div className="mt-2.5 h-1.5 overflow-hidden rounded-full bg-muted">
+            <div className="product-bento-site-build h-full w-[6%] rounded-full bg-[var(--brand-cta)] motion-reduce:w-full" />
+          </div>
+        </div>
+
+        <PipelineRow revealDelayMs={1400}>
+          <div className="flex items-start gap-2.5 rounded-lg border border-border bg-background/80 px-3.5 py-3">
+            <span className="flex size-7 shrink-0 items-center justify-center rounded-full bg-muted/50">
+              <img src="/icons/appwrite.svg" alt="" className="size-3.5" aria-hidden />
+            </span>
+            <div className="min-w-0 flex-1 space-y-1">
+              <p className="text-[12px] font-medium text-foreground">
+                Your site has been deployed.
+              </p>
+              <p className="text-[11px] text-blue-600 dark:text-blue-400">Open preview</p>
+            </div>
+          </div>
+        </PipelineRow>
+
+        <PipelineRow revealDelayMs={1650} className="group-hover:max-h-36 sm:group-hover:max-h-40">
+          <div className="overflow-hidden rounded-lg border border-border bg-background/80 p-2.5">
+            <div className="overflow-hidden rounded-md border border-border/80 bg-card">
+              <div className="flex items-center gap-1.5 border-b border-border/80 bg-muted/30 px-2.5 py-1.5">
+                <span className="size-1.5 rounded-full bg-muted-foreground/25" aria-hidden />
+                <span className="size-1.5 rounded-full bg-muted-foreground/25" aria-hidden />
+                <span className="size-1.5 rounded-full bg-muted-foreground/25" aria-hidden />
+                <span className="ml-0.5 truncate font-mono text-[9px] text-muted-foreground">
+                  preview.acme.io
+                </span>
+              </div>
+              <div className="space-y-2 bg-muted/15 p-3">
+                <div className="flex items-center gap-1.5">
+                  <span
+                    className="size-2 rounded-full bg-[var(--brand-cta)]"
+                    aria-hidden
+                  />
+                  <span className="text-[11px] font-semibold text-foreground">Acme</span>
+                </div>
+                <p className="text-[11px] font-medium leading-tight text-foreground">
+                  Ship faster with Acme
+                </p>
+                <div
+                  className="h-2 w-full max-w-[11rem] rounded-sm bg-muted-foreground/10"
+                  aria-hidden
+                />
+                <div
+                  className="h-4 w-14 rounded-sm bg-[var(--brand-cta)]/85"
+                  aria-hidden
+                />
+              </div>
+            </div>
+          </div>
+        </PipelineRow>
+      </div>
+    </div>
+  )
+}

@@ -3,19 +3,13 @@ import { Link } from '@tanstack/react-router'
 import { useQuery } from '@tanstack/react-query'
 import type { Models } from '@appwrite.io/console'
 import type { InitDisplayEvent } from '@/lib/init/types'
-import {
-  findGitHubIdentity,
-  getGitHubUsername,
-} from '@/lib/init/github-identity'
 import { buildInitTicketShareMessage } from '@/lib/init/ticket-prefs'
-import { resolveInitTicketAppearance } from '@/lib/init/ticket-types'
 import { useInitThemeUsesDarkImage } from '@/lib/init/use-init-theme-image'
 import { useInitTicketPrefs } from '@/lib/init/use-init-ticket-prefs'
 import { useDebugOverrides } from '@/lib/debug-overrides'
 import { accountIdentitiesQueryOptions } from '@/lib/react-query/hooks/auth'
+import { buildInitTicketRenderData } from '@/lib/init/ticket-render-data'
 import {
-  getInitTicketHolderName,
-  getInitTicketNumberForUser,
   InitTicketCard,
   type InitTicketCardHandle,
 } from '@/components/pages/init/_components/InitTicketCard'
@@ -118,7 +112,9 @@ function ShareActions({
 
   if (!isAuthenticated) {
     return (
-      <div className={cn('flex flex-wrap items-center gap-2', actionsAlignClass)}>
+      <div
+        className={cn('flex flex-wrap items-center gap-2', actionsAlignClass)}
+      >
         <Button className={primaryButtonClass} asChild>
           <Link to="/sign-up" search={{ redirect: '/init' }}>
             <Ticket className={iconSizeClass} />
@@ -135,23 +131,18 @@ function ShareActions({
   }
 
   return (
-    <div
-      className={cn(
-        'flex flex-wrap items-center gap-2',
-        actionsAlignClass,
-      )}
-    >
+    <div className={cn('flex flex-wrap items-center gap-2', actionsAlignClass)}>
       <Popover open={shareOpen} onOpenChange={onShareOpenChange}>
         <PopoverTrigger asChild>
-          <Button
-            className={primaryButtonClass}
-            disabled={isSharing}
-          >
+          <Button className={primaryButtonClass} disabled={isSharing}>
             <Trophy className={iconSizeClass} />
             {primaryShareLabel}
           </Button>
         </PopoverTrigger>
-        <PopoverContent align={compact ? 'start' : 'center'} className="w-52 p-1">
+        <PopoverContent
+          align={compact ? 'start' : 'center'}
+          className="w-52 p-1"
+        >
           {canNativeShare ? (
             <button
               type="button"
@@ -187,7 +178,10 @@ function ShareActions({
           </a>
           <button
             type="button"
-            className={cn(shareMenuItemClass, 'mt-1 border-t border-border pt-2')}
+            className={cn(
+              shareMenuItemClass,
+              'mt-1 border-t border-border pt-2',
+            )}
             onClick={() => void onCopyShareMessage()}
           >
             <Copy className="size-4 shrink-0 text-muted-foreground" />
@@ -232,8 +226,10 @@ export function InitTicketSection({
     null,
   )
   const isVideoBusy = isCapturingVideo || isExportingVideo
-  const { setIsCapturing: setPageVideoCapturing } = useInitTicketVideoRecording()
-  const { setPriorityActivity, setTransientActivity } = useInitPresenceActivity()
+  const { setIsCapturing: setPageVideoCapturing } =
+    useInitTicketVideoRecording()
+  const { setPriorityActivity, setTransientActivity } =
+    useInitPresenceActivity()
   const ticketCardRef = useRef<InitTicketCardHandle>(null)
 
   useEffect(() => {
@@ -257,35 +253,28 @@ export function InitTicketSection({
   const canExportTicketVideo = isInitTicketVideoExportSupported()
   const canExport60FpsVideo = supportsInitTicket60FpsVideoCapture()
 
-  const accountName =
-    account?.name?.trim() || account?.email?.split('@')[0] || undefined
-  const githubUsername = useMemo(() => {
-    if (!isAuthenticated) return undefined
-    const identity = findGitHubIdentity(identitiesData?.identities)
-    return getGitHubUsername(identity, accountName)
-  }, [accountName, identitiesData?.identities, isAuthenticated])
-  const holderName = getInitTicketHolderName(
-    accountName,
-    prefs,
-    isAuthenticated ? 'Console user' : 'Your name',
-  )
-  const ticketNumber = getInitTicketNumberForUser(account?.$id)
-  const ticketAppearance = useMemo(
+  const ticketRenderData = useMemo(
     () =>
-      resolveInitTicketAppearance(
-        event.tickets,
-        { account, identities: identitiesData?.identities },
+      buildInitTicketRenderData({
+        event,
+        account,
+        identities: isAuthenticated ? identitiesData?.identities : undefined,
+        prefs,
         themeUsesDarkImage,
-        mockInitTicketType,
-      ),
+        mockTypeId: mockInitTicketType,
+        fallbackHolderName: isAuthenticated ? 'Console user' : 'Your name',
+      }),
     [
       account,
-      event.tickets,
+      event,
       identitiesData?.identities,
+      isAuthenticated,
       mockInitTicketType,
+      prefs,
       themeUsesDarkImage,
     ],
   )
+  const { holderName, ticketAppearance } = ticketRenderData
   const shareUrl = buildShareUrl()
 
   const shareMessage = useMemo(
@@ -366,13 +355,13 @@ export function InitTicketSection({
         .toLowerCase()
         .replace(/[^a-z0-9]+/g, '-')
         .replace(/^-+|-+$/g, '')
-      downloadInitTicketVideo(
-        blob,
-        `${slug || 'init'}-ticket.${fileExtension}`,
-      )
+      downloadInitTicketVideo(blob, `${slug || 'init'}-ticket.${fileExtension}`)
       toast.success('Ticket video downloaded')
     } catch (error) {
-      if (error instanceof Error && error.message === 'Tab capture was cancelled') {
+      if (
+        error instanceof Error &&
+        error.message === 'Tab capture was cancelled'
+      ) {
         toast.error('Video capture was cancelled')
       } else {
         toast.error('Could not generate ticket video')
@@ -403,14 +392,7 @@ export function InitTicketSection({
     onShareMenuClose: () => setShareOpen(false),
   }
 
-  const ticketCardProps = {
-    dateRangeLabel: event.dateRangeLabel,
-    holderName,
-    githubUsername,
-    ticketNumber,
-    prefs,
-    ticketAppearance,
-  } as const
+  const ticketCardProps = ticketRenderData
 
   const sectionTitle = isAuthenticated
     ? (ticketCopy?.titleAuthenticated ?? 'Share to enter the giveaway')
@@ -435,7 +417,9 @@ export function InitTicketSection({
           widthPx={INIT_TICKET_COLLAPSED_WIDTH_PX}
           pointerEventsNone
         >
-          {accountReady ? <InitTicketCard {...ticketCardProps} previewOnly /> : null}
+          {accountReady ? (
+            <InitTicketCard {...ticketCardProps} previewOnly />
+          ) : null}
         </InitTicketScaledFrame>
         <div className="min-w-0 flex-1 space-y-2 text-left">
           <h2 className="text-[14px] font-semibold leading-tight tracking-tight text-foreground sm:text-[15px]">
@@ -527,7 +511,9 @@ export function InitTicketSection({
           ) : (
             <>
               <Video className="mr-1.5 size-4" />
-              {canExport60FpsVideo ? 'Download 60fps video' : 'Download ticket video'}
+              {canExport60FpsVideo
+                ? 'Download 60fps video'
+                : 'Download ticket video'}
             </>
           )}
         </Button>
@@ -539,7 +525,9 @@ export function InitTicketSection({
         className="absolute right-0 top-0 z-20 size-8 shrink-0"
         onClick={() => updatePrefs({ sectionCollapsed: !collapsed })}
         aria-expanded={!collapsed}
-        aria-label={collapsed ? 'Expand ticket section' : 'Collapse ticket section'}
+        aria-label={
+          collapsed ? 'Expand ticket section' : 'Collapse ticket section'
+        }
       >
         <ChevronDown
           className={cn(

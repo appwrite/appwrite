@@ -3,15 +3,26 @@ import { cn } from '@/lib/utils'
 
 type SchemaBlueprintMatProps = {
   className?: string
+  /** Tighter dot spacing for compact panels (e.g. marketing mocks). */
+  density?: 'default' | 'dense'
 }
+
+const DOT_DENSITY = {
+  default: { spacing: 40, radius: 2.5 },
+  dense: { spacing: 22, radius: 1.75 },
+} as const
 
 /**
  * Infinite blueprint dot mat used by database schema / browser visualizers.
  * Pattern id is unique per mount (React `useId`) so multiple instances never clash.
  */
-export function SchemaBlueprintMat({ className }: SchemaBlueprintMatProps) {
+export function SchemaBlueprintMat({
+  className,
+  density = 'default',
+}: SchemaBlueprintMatProps) {
   const reactId = useId()
   const patternId = `schema-blueprint-dots-${reactId.replace(/:/g, '')}`
+  const { spacing, radius } = DOT_DENSITY[density]
 
   return (
     <svg
@@ -28,14 +39,14 @@ export function SchemaBlueprintMat({ className }: SchemaBlueprintMatProps) {
       <defs>
         <pattern
           id={patternId}
-          width="40"
-          height="40"
+          width={spacing}
+          height={spacing}
           patternUnits="userSpaceOnUse"
         >
           <circle
             cx="0"
             cy="0"
-            r="2.5"
+            r={radius}
             className="fill-foreground/20 dark:fill-foreground/30"
           />
         </pattern>
