@@ -1,4 +1,10 @@
 import { ShieldCheck } from 'lucide-react'
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from '@/components/ui/accordion'
 import { useConsoleProfile } from '@/hooks/use-console-profile'
 
 type FooterLink = {
@@ -99,6 +105,25 @@ const expandedFooterGroups: readonly ExpandedFooterGroup[] = [
     ],
   },
 ] as const
+
+function FooterGroupLinks({ links }: { links: readonly FooterLink[] }) {
+  return (
+    <ul className="space-y-2.5">
+      {links.map((link) => (
+        <li key={link.label}>
+          <a
+            href={link.href}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-[13px] leading-5 text-muted-foreground transition-colors hover:text-foreground"
+          >
+            {link.label}
+          </a>
+        </li>
+      ))}
+    </ul>
+  )
+}
 
 /**
  * ConsoleFooter Component
@@ -286,26 +311,32 @@ export function ConsoleFooter({ expanded = false }: ConsoleFooterProps) {
   return (
     <footer className="@container shrink-0 border-t border-border bg-background">
       <div className="mx-auto w-full max-w-7xl px-4 py-10 sm:px-6 sm:py-12">
-        <div className="grid gap-x-8 gap-y-10 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6">
+        <Accordion type="multiple" className="md:hidden">
+          {expandedFooterGroups.map((group) => (
+            <AccordionItem
+              key={group.title}
+              value={group.title}
+              className="border-border"
+            >
+              <AccordionTrigger className="py-3.5 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground hover:no-underline">
+                {group.title}
+              </AccordionTrigger>
+              <AccordionContent className="pb-1">
+                <nav aria-label={group.title}>
+                  <FooterGroupLinks links={group.links} />
+                </nav>
+              </AccordionContent>
+            </AccordionItem>
+          ))}
+        </Accordion>
+
+        <div className="hidden gap-x-8 gap-y-10 md:grid md:grid-cols-3 lg:grid-cols-6">
           {expandedFooterGroups.map((group) => (
             <nav key={group.title} aria-label={group.title}>
               <h2 className="mb-4 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
                 {group.title}
               </h2>
-              <ul className="space-y-2.5">
-                {group.links.map((link) => (
-                  <li key={link.label}>
-                    <a
-                      href={link.href}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-[13px] leading-5 text-muted-foreground transition-colors hover:text-foreground"
-                    >
-                      {link.label}
-                    </a>
-                  </li>
-                ))}
-              </ul>
+              <FooterGroupLinks links={group.links} />
             </nav>
           ))}
         </div>

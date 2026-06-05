@@ -123,8 +123,9 @@ function CaseStudyCard({
   return (
     <div
       className={cn(
-        'min-w-0 shrink transition-[flex-grow,flex-basis] duration-300 ease-in-out motion-reduce:transition-none',
-        isActive ? 'flex-[7]' : 'flex-[1.5] max-lg:w-full max-lg:flex-none',
+        'min-w-0 w-full shrink max-lg:my-1.5 max-lg:flex-none lg:my-0',
+        'motion-reduce:transition-none lg:transition-[flex-grow,flex-basis] lg:duration-300 lg:ease-in-out',
+        isActive ? 'lg:flex-[7]' : 'lg:flex-[1.5]',
       )}
     >
       <div
@@ -139,47 +140,75 @@ function CaseStudyCard({
         }}
         onKeyDown={handleKeyDown}
         className={cn(
-          'group relative isolate z-[1] grid w-full min-w-0 overflow-hidden rounded-xl border border-border bg-card [grid-template-areas:stack]',
+          'group relative isolate z-[1] w-full min-w-0 overflow-hidden rounded-xl border border-border bg-card',
           'transition-colors duration-300 ease-in-out motion-reduce:transition-none',
           'outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50',
           !isActive && 'cursor-pointer hover:bg-accent/30',
-          'max-lg:min-h-[5.5rem] max-lg:h-auto',
-          'lg:h-[467px] lg:max-h-[467px] lg:min-h-[467px]',
+          !isActive && 'h-16 lg:h-[467px] lg:max-h-[467px] lg:min-h-[467px]',
+          isActive && 'lg:h-[467px] lg:max-h-[467px] lg:min-h-[467px]',
           isActive &&
-            'shadow-[0_0_0_4px_color-mix(in_srgb,var(--border)_65%,transparent)]',
+            'lg:shadow-[0_0_0_4px_color-mix(in_srgb,var(--border)_65%,transparent)]',
         )}
       >
-        <div
-          className={cn(
-            'flex items-center justify-center [grid-area:stack] p-6 transition-opacity duration-200 lg:p-8',
-            isActive ? 'pointer-events-none opacity-0' : 'opacity-100',
-          )}
-          aria-hidden={isActive}
-        >
-          <TrustedByLogo
-            src={study.logo}
-            alt={study.company}
-            width={study.logoWidth}
-            height={study.logoHeight}
-            mask={study.logoMask}
-            className="h-5 w-auto sm:h-6 lg:h-8 group-hover:scale-100"
-          />
-        </div>
-
-        <div
-          className={cn(
-            'relative flex min-h-0 items-stretch justify-start overflow-hidden [grid-area:stack]',
-            !isActive && 'pointer-events-none',
-          )}
-          aria-hidden={!isActive}
-        >
+        {isActive ? (
           <div
             className={cn(
+              'lg:hidden',
               'transition-opacity duration-200 ease-out motion-reduce:transition-none',
-              showPanelContent && isActive ? 'opacity-100' : 'opacity-0',
+              showPanelContent ? 'opacity-100' : 'opacity-0',
             )}
           >
             <CaseStudyPanelContent study={study} />
+          </div>
+        ) : (
+          <div
+            className="flex h-16 items-center justify-center px-4 lg:hidden"
+            aria-hidden={isActive}
+          >
+            <TrustedByLogo
+              src={study.logo}
+              alt={study.company}
+              width={study.logoWidth}
+              height={study.logoHeight}
+              mask={study.logoMask}
+              className="h-[1.125rem] w-auto sm:h-5 group-hover:scale-100"
+            />
+          </div>
+        )}
+
+        <div className="hidden lg:grid lg:h-full lg:min-h-0 lg:[grid-template-areas:stack]">
+          <div
+            className={cn(
+              'flex items-center justify-center [grid-area:stack] p-8 transition-opacity duration-200',
+              isActive ? 'pointer-events-none opacity-0' : 'opacity-100',
+            )}
+            aria-hidden={isActive}
+          >
+            <TrustedByLogo
+              src={study.logo}
+              alt={study.company}
+              width={study.logoWidth}
+              height={study.logoHeight}
+              mask={study.logoMask}
+              className="h-8 w-auto group-hover:scale-100"
+            />
+          </div>
+
+          <div
+            className={cn(
+              'relative flex min-h-0 items-stretch justify-start overflow-hidden [grid-area:stack]',
+              !isActive && 'pointer-events-none',
+            )}
+            aria-hidden={!isActive}
+          >
+            <div
+              className={cn(
+                'transition-opacity duration-200 ease-out motion-reduce:transition-none',
+                showPanelContent && isActive ? 'opacity-100' : 'opacity-0',
+              )}
+            >
+              <CaseStudyPanelContent study={study} />
+            </div>
           </div>
         </div>
       </div>
@@ -216,7 +245,7 @@ export function TestimonialsSection() {
           role="tablist"
           aria-label="Customer stories"
           onKeyDown={handleTabListKeyDown}
-          className="relative z-[1] flex w-full touch-pan-y flex-col gap-3 overscroll-y-auto sm:gap-4 lg:min-h-[467px] lg:flex-row lg:items-stretch"
+          className="relative z-[1] flex w-full touch-pan-y flex-col max-lg:gap-0 overscroll-y-auto lg:min-h-[467px] lg:flex-row lg:items-stretch lg:gap-4"
         >
           {homeCaseStudies.map((study) => (
             <CaseStudyCard

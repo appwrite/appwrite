@@ -1,52 +1,42 @@
-import { useEffect, useRef, useState } from 'react'
-import { useReducedMotion } from 'motion/react'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Card } from '@/components/ui/card'
 import { cn } from '@/lib/utils'
 
 const SCALE_QUOTE = {
-  text: 'The switch to using Appwrite brought infinite value that I\u2019m still discovering today.',
-  emphasis: 'infinite value that I\u2019m still discovering today.',
+  lineOne: 'The switch to using Appwrite brought',
+  lineTwo: 'infinite value that I\u2019m still discovering today.',
   name: 'Ryan O\u2019Connor',
   title: 'Founder',
   company: 'K-Collect',
   avatar: '/images/testimonials/ryan-oconner-testimonial.avif',
 } as const
 
-function ScaleQuoteBesideTitle() {
-  const emphasisStart = SCALE_QUOTE.text.indexOf(SCALE_QUOTE.emphasis)
-  const quoteLead =
-    emphasisStart > 0 ? SCALE_QUOTE.text.slice(0, emphasisStart) : ''
-  const quoteEmphasis =
-    emphasisStart >= 0 ? SCALE_QUOTE.text.slice(emphasisStart) : SCALE_QUOTE.text
-
+function ScaleQuoteBelowChart() {
   return (
-    <figure className="flex h-full gap-3 sm:gap-4 lg:max-w-md lg:justify-self-end xl:max-w-lg">
+    <figure className="mx-auto flex w-full max-w-[21rem] flex-col items-center text-center sm:max-w-[24rem]">
       <span
-        className="font-aeonik-pro shrink-0 self-start text-[3.5rem] leading-none text-muted-foreground/30 sm:text-[4rem] lg:text-[4.25rem]"
+        className="font-aeonik-pro text-[3.5rem] leading-none text-muted-foreground/30 sm:text-[4rem]"
         aria-hidden
       >
         &ldquo;
       </span>
-      <div className="flex min-h-full min-w-0 flex-1 flex-col justify-between gap-6 lg:gap-8">
-        <blockquote className="text-sm leading-relaxed text-muted-foreground sm:text-[15px] sm:leading-7 lg:pt-1">
-          {quoteLead}
-          <span className="font-medium text-foreground">{quoteEmphasis}</span>
-        </blockquote>
-        <figcaption className="flex items-center gap-2.5 lg:pb-0.5">
-          <Avatar className="size-8">
-            <AvatarImage src={SCALE_QUOTE.avatar} alt="" />
-            <AvatarFallback className="text-xs">RO</AvatarFallback>
-          </Avatar>
-          <p className="text-sm leading-snug">
-            <span className="font-medium text-foreground">{SCALE_QUOTE.name}</span>
-            <span className="text-muted-foreground">
-              {' '}
-              · {SCALE_QUOTE.title}, {SCALE_QUOTE.company}
-            </span>
-          </p>
-        </figcaption>
-      </div>
+      <blockquote className="mt-3 text-sm leading-snug text-muted-foreground sm:text-[15px] sm:leading-6">
+        <span className="block">{SCALE_QUOTE.lineOne}</span>
+        <span className="mt-1 block">{SCALE_QUOTE.lineTwo}</span>
+      </blockquote>
+      <figcaption className="mt-7 flex items-center justify-center gap-2.5 sm:mt-8">
+        <Avatar className="size-8">
+          <AvatarImage src={SCALE_QUOTE.avatar} alt="" />
+          <AvatarFallback className="text-xs">RO</AvatarFallback>
+        </Avatar>
+        <p className="text-left text-sm leading-snug">
+          <span className="font-medium text-foreground">{SCALE_QUOTE.name}</span>
+          <span className="text-muted-foreground">
+            {' '}
+            · {SCALE_QUOTE.title}, {SCALE_QUOTE.company}
+          </span>
+        </p>
+      </figcaption>
     </figure>
   )
 }
@@ -63,80 +53,17 @@ const SCALE_STATS = [
 
 const SCALE_STAT_COUNT = SCALE_STATS.length
 
-const STAT_STAGGER_MS = 450
-const COUNT_DURATION_MS = 1200
-
-function easeOutCubic(t: number) {
-  return 1 - (1 - t) ** 3
-}
-
-function useStaggeredCountUp(
-  target: number,
-  started: boolean,
-  delayMs: number,
-  prefersReducedMotion: boolean,
-) {
-  const [display, setDisplay] = useState(prefersReducedMotion ? target : 0)
-
-  useEffect(() => {
-    if (prefersReducedMotion) {
-      setDisplay(target)
-      return
-    }
-
-    if (!started) {
-      setDisplay(0)
-      return
-    }
-
-    let frame = 0
-    let startTime = 0
-    const delayTimeout = window.setTimeout(() => {
-      const tick = (timestamp: number) => {
-        if (!startTime) startTime = timestamp
-        const elapsed = timestamp - startTime
-        const progress = Math.min(1, elapsed / COUNT_DURATION_MS)
-        setDisplay(Math.round(target * easeOutCubic(progress)))
-        if (progress < 1) {
-          frame = requestAnimationFrame(tick)
-        }
-      }
-      frame = requestAnimationFrame(tick)
-    }, delayMs)
-
-    return () => {
-      window.clearTimeout(delayTimeout)
-      cancelAnimationFrame(frame)
-    }
-  }, [target, started, delayMs, prefersReducedMotion])
-
-  return display
-}
-
 function ScaleStatValue({
   value,
   suffix,
   label,
-  started,
-  index,
-  prefersReducedMotion,
   size = 'default',
 }: {
   value: number
   suffix: string
   label: string
-  started: boolean
-  index: number
-  prefersReducedMotion: boolean
   size?: 'default' | 'large'
 }) {
-  const displayValue = useStaggeredCountUp(
-    value,
-    started,
-    (index * STAT_STAGGER_MS) / SCALE_STATS.length,
-    prefersReducedMotion,
-  )
-
   return (
     <div className="min-w-0 space-y-1.5">
       <p
@@ -147,7 +74,7 @@ function ScaleStatValue({
             : 'text-2xl sm:text-3xl',
         )}
       >
-        {displayValue}
+        {value}
         {suffix}
       </p>
       <p
@@ -207,13 +134,7 @@ function ScaleChartBackground() {
   )
 }
 
-function ScaleStatsChart({
-  started,
-  prefersReducedMotion,
-}: {
-  started: boolean
-  prefersReducedMotion: boolean
-}) {
+function ScaleStatsChart() {
   return (
     <Card className="relative min-h-[24rem] w-full gap-0 overflow-hidden py-0 sm:min-h-[28rem] lg:min-h-[30rem]">
       <div className="pointer-events-none absolute inset-0 z-0" aria-hidden>
@@ -228,7 +149,7 @@ function ScaleStatsChart({
             gridTemplateColumns: `repeat(${SCALE_STAT_COUNT}, minmax(0, 1fr))`,
           }}
         >
-          {SCALE_STATS.map((stat, index) => (
+          {SCALE_STATS.map((stat) => (
             <div
               key={stat.label}
               className="min-w-0 border-l border-border px-2 first:border-l-0 sm:px-3"
@@ -237,9 +158,6 @@ function ScaleStatsChart({
                 value={stat.value}
                 suffix={stat.suffix}
                 label={stat.label}
-                started={started}
-                index={index}
-                prefersReducedMotion={prefersReducedMotion}
                 size="large"
               />
             </div>
@@ -250,15 +168,12 @@ function ScaleStatsChart({
 
       <div className="relative z-10 lg:hidden">
         <div className="grid grid-cols-2 gap-4 p-4 sm:grid-cols-3 sm:gap-5 sm:p-6">
-          {SCALE_STATS.map((stat, index) => (
+          {SCALE_STATS.map((stat) => (
             <div key={stat.label} className="min-w-0 px-0.5">
               <ScaleStatValue
                 value={stat.value}
                 suffix={stat.suffix}
                 label={stat.label}
-                started={started}
-                index={index}
-                prefersReducedMotion={prefersReducedMotion}
               />
             </div>
           ))}
@@ -270,47 +185,20 @@ function ScaleStatsChart({
 }
 
 export function ScaleSection() {
-  const sectionRef = useRef<HTMLElement>(null)
-  const [hasAnimated, setHasAnimated] = useState(false)
-  const prefersReducedMotion = useReducedMotion() ?? false
-
-  useEffect(() => {
-    const node = sectionRef.current
-    if (!node) return
-
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        if (entry?.isIntersecting) {
-          setHasAnimated(true)
-          observer.disconnect()
-        }
-      },
-      { threshold: 0.25 },
-    )
-
-    observer.observe(node)
-    return () => observer.disconnect()
-  }, [])
-
   return (
-    <section
-      ref={sectionRef}
-      className="border-t border-border bg-background py-16 sm:py-20"
-    >
+    <section className="border-t border-border bg-background py-16 sm:py-20">
       <div className="mx-auto w-full max-w-7xl px-4 sm:px-6">
-        <div className="grid gap-8 lg:grid-cols-[minmax(0,1.05fr)_minmax(0,0.95fr)] lg:items-stretch lg:gap-10 xl:gap-14">
-          <h2 className="font-aeonik-pro max-w-xl self-start text-balance text-[36px] font-normal leading-none tracking-tight text-foreground sm:text-[44px] lg:max-w-none">
-            Over half a million developers scale with Appwrite
-            <span className="text-[var(--brand-cta)]">_</span>
-          </h2>
-          <ScaleQuoteBesideTitle />
-        </div>
+        <h2 className="font-aeonik-pro max-w-3xl text-balance text-[36px] font-normal leading-none tracking-tight text-foreground sm:text-[44px]">
+          Over half a million developers scale with Appwrite
+          <span className="text-[var(--brand-cta)]">_</span>
+        </h2>
 
         <div className="mt-10 w-full sm:mt-12">
-          <ScaleStatsChart
-            started={hasAnimated}
-            prefersReducedMotion={prefersReducedMotion}
-          />
+          <ScaleStatsChart />
+        </div>
+
+        <div className="mt-10 sm:mt-12">
+          <ScaleQuoteBelowChart />
         </div>
       </div>
     </section>

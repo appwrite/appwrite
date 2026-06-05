@@ -2,28 +2,28 @@ import { cn } from '@/lib/utils'
 
 const HOME_SOFT_LIGHT_KEYFRAMES = `
   @keyframes home-hero-soft-light-left-light {
-    0%, 100% { transform: translate3d(0, 56%, 0) rotate(-3deg) scale(1); opacity: 0.78; }
-    50% { transform: translate3d(14%, -8%, 0) rotate(4deg) scale(1.14); opacity: 1; }
+    0% { transform: translate3d(0, 56%, 0) rotate(-3deg) scale(1); opacity: 0.78; }
+    100% { transform: translate3d(14%, -8%, 0) rotate(4deg) scale(1.14); opacity: 1; }
   }
 
   @keyframes home-hero-soft-light-right-light {
-    0%, 100% { transform: translate3d(0, 58%, 0) rotate(3deg) scale(1); opacity: 0.75; }
-    50% { transform: translate3d(-14%, -10%, 0) rotate(-4deg) scale(1.12); opacity: 1; }
+    0% { transform: translate3d(0, 58%, 0) rotate(3deg) scale(1); opacity: 0.75; }
+    100% { transform: translate3d(-14%, -10%, 0) rotate(-4deg) scale(1.12); opacity: 1; }
   }
 
   @keyframes home-hero-soft-light-left-dark {
-    0%, 100% { transform: translate3d(0, 56%, 0) rotate(-3deg) scale(1); opacity: 0.62; }
-    50% { transform: translate3d(14%, -8%, 0) rotate(4deg) scale(1.14); opacity: 0.95; }
+    0% { transform: translate3d(0, 56%, 0) rotate(-3deg) scale(1); opacity: 0.62; }
+    100% { transform: translate3d(14%, -8%, 0) rotate(4deg) scale(1.14); opacity: 0.95; }
   }
 
   @keyframes home-hero-soft-light-right-dark {
-    0%, 100% { transform: translate3d(0, 58%, 0) rotate(3deg) scale(1); opacity: 0.58; }
-    50% { transform: translate3d(-14%, -10%, 0) rotate(-4deg) scale(1.12); opacity: 0.92; }
+    0% { transform: translate3d(0, 58%, 0) rotate(3deg) scale(1); opacity: 0.58; }
+    100% { transform: translate3d(-14%, -10%, 0) rotate(-4deg) scale(1.12); opacity: 0.92; }
   }
 `
 
 const lightBaseClass =
-  'rounded-[999px] blur-[88px] [animation-duration:11s] [animation-timing-function:ease-in-out] [animation-iteration-count:infinite]'
+  'rounded-[999px] blur-[88px] [animation-duration:3.5s] [animation-timing-function:ease-out] [animation-iteration-count:1] [animation-fill-mode:forwards]'
 
 const bottomAnchoredClass =
   'bottom-[-48%] sm:bottom-[-44%] lg:bottom-[-40%]'
@@ -45,7 +45,7 @@ const variants = {
       lightBaseClass,
       'absolute -right-[60%] h-[380px] w-[740px]',
       bottomAnchoredClass,
-      '[animation-duration:13s] [animation-name:home-hero-soft-light-right-light]',
+      '[animation-duration:4s] [animation-name:home-hero-soft-light-right-light]',
       'bg-[radial-gradient(ellipse,rgba(124,103,254,0.3)_0%,rgba(124,103,254,0.1)_46%,transparent_78%)]',
       'dark:bg-[radial-gradient(ellipse,rgba(99,102,241,0.14)_0%,rgba(99,102,241,0.05)_46%,transparent_78%)]',
       'dark:[animation-name:home-hero-soft-light-right-dark]',
@@ -69,7 +69,7 @@ const variants = {
       lightBaseClass,
       'absolute -right-[64%] h-[420px] w-[780px]',
       bottomAnchoredClass,
-      '[animation-duration:13s] [animation-name:home-hero-soft-light-right-light]',
+      '[animation-duration:4s] [animation-name:home-hero-soft-light-right-light]',
       'bg-[radial-gradient(ellipse,rgba(124,103,254,0.28)_0%,rgba(124,103,254,0.1)_46%,transparent_78%)]',
       'dark:bg-[radial-gradient(ellipse,rgba(99,102,241,0.13)_0%,rgba(99,102,241,0.045)_46%,transparent_78%)]',
       'dark:[animation-name:home-hero-soft-light-right-dark]',
