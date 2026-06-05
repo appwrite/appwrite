@@ -93,3 +93,37 @@ export function buildInitGlobeConfig(isDark: boolean): GlobeConfig {
     autoRotateSpeed: 0.5,
   }
 }
+
+/** Softer marketing network globe: muted atmosphere, land, and lighting. */
+export function buildNetworkGlobeConfig(isDark: boolean): GlobeConfig {
+  const base = buildInitGlobeConfig(isDark)
+
+  return {
+    ...base,
+    atmosphereColor: cssColorToHex(
+      isDark
+        ? 'color-mix(in srgb, var(--brand-cta) 16%, var(--card))'
+        : 'color-mix(in srgb, var(--brand-cta) 12%, var(--card))',
+      isDark ? '#38353a' : '#f9f2f5',
+    ),
+    atmosphereAltitude: isDark ? 0.1 : 0.08,
+    polygonColor: cssColorToHex(
+      isDark
+        ? 'color-mix(in srgb, var(--muted-foreground) 48%, var(--muted))'
+        : 'color-mix(in srgb, var(--muted-foreground) 48%, var(--border))',
+      isDark ? '#94949e' : '#aeaeb8',
+    ),
+    ...(isDark
+      ? {
+          ambientLight: cssColorToHex(
+            'color-mix(in srgb, var(--brand-cta) 14%, var(--muted-foreground))',
+            '#9a9198',
+          ),
+          pointLight: cssColorToHex(
+            'color-mix(in srgb, var(--brand-cta) 22%, var(--card))',
+            '#524550',
+          ),
+        }
+      : {}),
+  }
+}
