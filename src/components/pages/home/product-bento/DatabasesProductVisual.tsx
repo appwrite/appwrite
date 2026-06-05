@@ -1,5 +1,5 @@
-import { useEffect, useState, type ReactNode } from 'react'
-import { Braces, Layers, Table as TableIcon, type LucideIcon } from 'lucide-react'
+import { useState } from 'react'
+import { Braces, Fingerprint, Layers, Table as TableIcon, type LucideIcon } from 'lucide-react'
 import {
   MySQLDolphinIcon,
   PostgresElephantIcon,
@@ -7,40 +7,38 @@ import {
 import { Badge } from '@/components/ui/badge'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { cn } from '@/lib/utils'
-import {
-  MySqlIdleSql,
-  MySqlTypedSql,
-  PostgresIdleSql,
-  PostgresTypedSql,
-  Syn,
-} from './MockSyntax'
-
-type TypedSqlComponent = ({ baseDelayMs }: { baseDelayMs?: number }) => ReactNode
+import { getColumnIcon } from '@/lib/utils/column-icons'
+import { productBentoIdle, QueryEqualFilter, Syn } from './MockSyntax'
 
 type IconComponent = LucideIcon | typeof PostgresElephantIcon
 
 const APPWRITE_TABS = [
   { id: 'tablesdb', label: 'TablesDB', Icon: TableIcon },
-  { id: 'documentsdb', label: 'DocumentsDB', Icon: Braces, badge: 'beta' as const },
-  { id: 'vectorsdb', label: 'VectorsDB', Icon: Layers, badge: 'beta' as const },
+  { id: 'documentsdb', label: 'DocumentsDB', Icon: Braces },
+  { id: 'vectorsdb', label: 'VectorsDB', Icon: Layers },
 ] as const
 
 type AppwriteTabId = (typeof APPWRITE_TABS)[number]['id']
 
-const APPWRITE_TAB_IDS: AppwriteTabId[] = APPWRITE_TABS.map((tab) => tab.id)
-
-const AUTO_CYCLE_MS = 3000
-
 const TABLE_ROWS: {
+  id: string
   driver: string
+  code: string
   team: string
   lap: string
   revealDelayMs?: number
 }[] = [
-  { driver: 'LEC', team: 'ferrari', lap: '70842' },
-  { driver: 'NOR', team: 'mclaren', lap: '71016' },
-  { driver: 'PIA', team: 'mclaren', lap: '71204' },
-  { driver: 'HAM', team: 'mercedes', lap: '71388', revealDelayMs: 200 },
+  { id: '67f8a2…04c1', driver: 'Charles Leclerc', code: 'LEC', team: 'ferrari', lap: '70842' },
+  { id: '67f8b1…12a4', driver: 'Lando Norris', code: 'NOR', team: 'mclaren', lap: '71016' },
+  { id: '67f8c3…28b7', driver: 'Oscar Piastri', code: 'PIA', team: 'mclaren', lap: '71204' },
+  {
+    id: '67f8d4…39c8',
+    driver: 'Lewis Hamilton',
+    code: 'HAM',
+    team: 'ferrari',
+    lap: '71388',
+    revealDelayMs: 200,
+  },
 ]
 
 const VECTOR_RESULTS = [
@@ -61,63 +59,205 @@ const NATIVE_DATABASES = [
     id: 'postgres',
     label: 'Postgres',
     Icon: PostgresElephantIcon,
-    idleSql: <PostgresIdleSql />,
-    TypedSql: PostgresTypedSql,
   },
   {
     id: 'mysql',
     label: 'MySQL',
     Icon: MySQLDolphinIcon,
-    idleSql: <MySqlIdleSql />,
-    TypedSql: MySqlTypedSql,
   },
 ] as const
 
+const TABLE_COLUMNS = [
+  { key: 'id', label: '$id', type: 'system-id', cellAlign: 'left' as const, width: 96 },
+  { key: 'driver', label: 'driver', type: 'string', cellAlign: 'left' as const, width: 128 },
+  { key: 'code', label: 'code', type: 'string', cellAlign: 'left' as const, width: 56 },
+  { key: 'team', label: 'team', type: 'string', cellAlign: 'left' as const },
+  { key: 'lap', label: 'lap_ms', type: 'integer', cellAlign: 'right' as const },
+] as const
+
+function TablesDbColumnIcon({ type }: { type: string }) {
+  const Icon = type === 'system-id' ? Fingerprint : getColumnIcon(type)
+
+  return <Icon className="size-3.5 shrink-0 text-muted-foreground" aria-hidden />
+}
+
+const spreadsheetHeaderCellClass =
+  'border-r border-border shadow-[inset_0_1px_0_0_var(--border),inset_0_-1px_0_0_var(--border)]'
+const spreadsheetLastHeaderCellClass =
+  'shadow-[inset_0_1px_0_0_var(--border),inset_0_-1px_0_0_var(--border)]'
+const spreadsheetBodyCellClass = 'border-b border-r border-border'
+const spreadsheetLastBodyCellClass = 'border-b border-border'
+
+const EMPTY_TABLE_ROW_COUNT = 6
+
+function SpreadsheetCheckboxPlaceholder() {
+  return (
+    <div
+      className="mx-auto size-3.5 rounded-[3px] border border-border bg-background"
+      aria-hidden
+    />
+  )
+}
+
+function SpreadsheetCheckboxCell() {
+  return (
+    <td
+      className={cn(
+        'border-b border-border px-2 py-1.5 text-center',
+        'shadow-[inset_-1px_0_0_0_var(--border)]',
+      )}
+    >
+      <SpreadsheetCheckboxPlaceholder />
+    </td>
+  )
+}
+
+function SpreadsheetEmptyRow() {
+  return (
+    <tr aria-hidden>
+      <SpreadsheetCheckboxCell />
+      {TABLE_COLUMNS.map((column, columnIndex) => {
+        const isLast = columnIndex === TABLE_COLUMNS.length - 1
+
+        return (
+          <td
+            key={column.key}
+            className={cn(
+              'px-3 py-1.5',
+              isLast ? spreadsheetLastBodyCellClass : spreadsheetBodyCellClass,
+            )}
+          >
+            <span className="block min-h-[18px]" />
+          </td>
+        )
+      })}
+    </tr>
+  )
+}
+
 function TablesDbPanel() {
   return (
-    <div className="flex h-full flex-col overflow-hidden rounded-lg border border-border bg-background/90">
-      <div className="border-b border-border bg-muted/20 px-3.5 py-2.5">
+    <div className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-lg border border-border bg-background/70">
+      <div className="border-b border-border bg-muted/5 px-3.5 py-2.5">
         <div className="flex items-start justify-between gap-3">
           <p className="min-w-0 font-mono text-[12px] text-muted-foreground">
-            monaco_gp / <span className="font-medium text-foreground">lap_times</span>
+            monaco_gp / <span className={cn('font-medium', productBentoIdle.text)}>lap_times</span>
           </p>
           <p className="shrink-0 text-[11px] tabular-nums text-muted-foreground">847 rows</p>
         </div>
       </div>
 
       <div className="border-b border-border/80 bg-background/60 px-3.5 py-2">
-        <p className="truncate font-mono text-[11px] text-muted-foreground">
-          Query.equal(&quot;session_id&quot;, &quot;Q3_MON&quot;)
+        <p className="truncate font-mono text-[11px]">
+          <QueryEqualFilter />
         </p>
       </div>
 
-      <div className="min-h-0 flex-1 overflow-hidden px-3.5 py-2.5">
-        <div className="grid grid-cols-3 gap-x-3 border-b border-border/80 pb-2 text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
-          <span>Driver</span>
-          <span>Team</span>
-          <span className="text-right">Lap ms</span>
-        </div>
-        <div className="space-y-1 pt-1.5">
-          {TABLE_ROWS.map((row) => (
-            <div
-              key={row.driver}
-              className={cn(
-                'grid grid-cols-3 gap-x-3 font-mono text-[13px] leading-snug',
-                row.revealDelayMs !== undefined &&
-                  'opacity-0 transition-opacity duration-300 group-hover:opacity-100 motion-reduce:opacity-100',
-              )}
-              style={
+      <div className="min-h-0 flex-1 overflow-auto">
+        <table className="w-full table-fixed border-collapse">
+          <colgroup>
+            <col style={{ width: 40 }} />
+            {TABLE_COLUMNS.map((column) => (
+              <col
+                key={column.key}
+                style={'width' in column && column.width ? { width: column.width } : undefined}
+              />
+            ))}
+          </colgroup>
+          <thead className="sticky top-0 z-20 bg-background">
+            <tr>
+              <th
+                className={cn(
+                  'w-10 px-2 py-2 text-center',
+                  'shadow-[inset_0_1px_0_0_var(--border),inset_0_-1px_0_0_var(--border),inset_-1px_0_0_0_var(--border)]',
+                )}
+              >
+                <SpreadsheetCheckboxPlaceholder />
+              </th>
+              {TABLE_COLUMNS.map((column, index) => {
+                const isLast = index === TABLE_COLUMNS.length - 1
+
+                return (
+                  <th
+                    key={column.key}
+                    className={cn(
+                      'px-3 py-2 text-left',
+                      isLast ? spreadsheetLastHeaderCellClass : spreadsheetHeaderCellClass,
+                    )}
+                  >
+                    <div className="flex min-w-0 items-center gap-2">
+                      <TablesDbColumnIcon type={column.type} />
+                      <span
+                        className={cn(
+                          'min-w-0 truncate text-[12px] font-medium',
+                          productBentoIdle.text,
+                        )}
+                      >
+                        {column.label}
+                      </span>
+                    </div>
+                  </th>
+                )
+              })}
+            </tr>
+          </thead>
+          <tbody>
+            {TABLE_ROWS.map((row) => {
+              const revealCellClassName =
+                row.revealDelayMs !== undefined
+                  ? 'opacity-0 transition-opacity duration-300 group-hover:opacity-100 motion-reduce:opacity-100'
+                  : undefined
+              const revealCellStyle =
                 row.revealDelayMs !== undefined
                   ? { transitionDelay: `${row.revealDelayMs}ms` }
                   : undefined
-              }
-            >
-              <span className="truncate text-foreground">{row.driver}</span>
-              <span className="truncate text-muted-foreground">{row.team}</span>
-              <span className="truncate text-right tabular-nums text-foreground">{row.lap}</span>
-            </div>
-          ))}
-        </div>
+
+              return (
+              <tr
+                key={row.id}
+                className="transition-[background-color] duration-300 hover:bg-muted/50 motion-reduce:hover:bg-transparent"
+              >
+                <SpreadsheetCheckboxCell />
+                {TABLE_COLUMNS.map((column, columnIndex) => {
+                  const isLast = columnIndex === TABLE_COLUMNS.length - 1
+                  const value = row[column.key]
+                  const isMutedValue =
+                    column.key === 'team' || column.key === 'code' || column.type === 'system-id'
+                  const isAccentValue = column.key === 'driver' || column.key === 'lap'
+
+                  return (
+                    <td
+                      key={column.key}
+                      className={cn(
+                        'px-3 py-1.5',
+                        isLast ? spreadsheetLastBodyCellClass : spreadsheetBodyCellClass,
+                        column.cellAlign === 'right' && 'text-right',
+                        column.type === 'system-id' && 'font-mono',
+                      )}
+                    >
+                      <span
+                        className={cn(
+                          'truncate text-[12px]',
+                          isMutedValue && 'text-muted-foreground',
+                          isAccentValue && productBentoIdle.text,
+                          column.key === 'lap' && 'tabular-nums',
+                          revealCellClassName,
+                        )}
+                        style={revealCellStyle}
+                      >
+                        {value}
+                      </span>
+                    </td>
+                  )
+                })}
+              </tr>
+              )
+            })}
+            {Array.from({ length: EMPTY_TABLE_ROW_COUNT }, (_, index) => (
+              <SpreadsheetEmptyRow key={`empty-row-${index}`} />
+            ))}
+          </tbody>
+        </table>
       </div>
     </div>
   )
@@ -125,13 +265,16 @@ function TablesDbPanel() {
 
 function DocumentsDbPanel() {
   return (
-    <div className="flex h-full flex-col overflow-hidden rounded-lg border border-border bg-background/90">
-      <div className="flex items-center justify-between gap-2 border-b border-border bg-muted/20 px-3.5 py-2.5">
+    <div className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-lg border border-border bg-background/70">
+      <div className="flex items-center justify-between gap-2 border-b border-border bg-muted/5 px-3.5 py-2.5">
         <div className="min-w-0">
-          <p className="text-[12px] font-medium text-foreground">race_briefings</p>
+          <p className={cn('text-[12px] font-medium', productBentoIdle.text)}>race_briefings</p>
           <p className="truncate text-[10px] text-muted-foreground">Monaco GP strategy</p>
         </div>
-        <Badge variant="success" className="h-5 shrink-0 px-1.5 text-[10px]">
+        <Badge
+          variant="inactive"
+          className="h-5 shrink-0 px-1.5 text-[10px] transition-[color,background-color,border-color] duration-300 group-hover:border-green-500/30 group-hover:bg-green-500/10 group-hover:text-green-700 dark:group-hover:text-green-400"
+        >
           Live
         </Badge>
       </div>
@@ -186,21 +329,21 @@ function DocumentsDbPanel() {
 
 function VectorsDbPanel() {
   return (
-    <div className="flex h-full flex-col overflow-hidden rounded-lg border border-border bg-background/90 p-3.5">
-      <div className="rounded-md border border-border/80 bg-muted/15 px-3 py-2">
+    <div className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-lg border border-border bg-background/70 p-3.5">
+      <div className="shrink-0 rounded-md border border-border/80 bg-muted/8 px-3 py-2">
         <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Query</p>
         <p className="mt-1 truncate font-mono text-[11px] sm:text-[12px]">
           <Syn tone="string">&quot;Monaco undercut on Medium&quot;</Syn>
         </p>
       </div>
-      <div className="mt-3 space-y-2">
+      <div className="mt-3 min-h-0 flex-1 space-y-2">
         {VECTOR_RESULTS.map((row) => (
           <div
             key={row.title}
-            className="flex items-center justify-between gap-3 rounded-md border border-border/70 bg-muted/10 px-3 py-2 opacity-80 transition-opacity duration-300 group-hover:opacity-100 motion-reduce:opacity-100"
+            className="flex items-center justify-between gap-3 rounded-md border border-border/70 bg-muted/5 px-3 py-2 opacity-80 transition-opacity duration-300 group-hover:opacity-100 motion-reduce:opacity-100"
             style={{ transitionDelay: `${row.delayMs}ms` }}
           >
-            <span className="min-w-0 truncate text-[11px] font-medium text-foreground sm:text-[12px]">
+            <span className={cn('min-w-0 truncate text-[11px] font-medium sm:text-[12px]', productBentoIdle.text)}>
               {row.title}
             </span>
             <span className="shrink-0 font-mono text-[11px] tabular-nums text-muted-foreground">
@@ -213,143 +356,107 @@ function VectorsDbPanel() {
   )
 }
 
-function NativeDbPanel({
+function NativeDbSelectionCard({
   label,
   Icon,
-  idleSql,
-  TypedSql,
-  typeDelayMs,
 }: {
   label: string
   Icon: IconComponent
-  idleSql: ReactNode
-  TypedSql: TypedSqlComponent
-  typeDelayMs: number
 }) {
   return (
-    <div className="flex h-full min-h-0 flex-col px-3.5 py-3">
-      <div className="flex items-center gap-2">
-        <span className="flex size-8 shrink-0 items-center justify-center rounded-md bg-muted/50 text-muted-foreground">
-          <Icon className="size-4" aria-hidden />
-        </span>
-        <span className="text-[12px] font-medium text-foreground">{label}</span>
-        <Badge variant="inactive" className="ml-auto h-5 shrink-0 px-1.5 text-[10px]">
-          Soon
-        </Badge>
-      </div>
-      <div className="relative mt-2.5 min-h-0 flex-1 overflow-hidden rounded-lg border border-border bg-background/90 p-3.5 font-mono text-[11px] leading-normal sm:text-[12px]">
-        <div className="transition-opacity duration-150 group-hover:opacity-0 motion-reduce:transition-none">
-          {idleSql}
-        </div>
-        <div className="pointer-events-none absolute inset-3.5">
-          <TypedSql baseDelayMs={typeDelayMs} />
-        </div>
-      </div>
+    <div
+      className={cn(
+        'flex min-w-0 items-center gap-2.5 rounded-lg border border-border bg-background/60 px-2.5 py-2 transition-colors duration-300 sm:gap-3 sm:px-3 sm:py-2.5',
+        'group-hover:bg-accent/15 motion-reduce:group-hover:bg-background/60',
+      )}
+    >
+      <span className="flex size-8 shrink-0 items-center justify-center rounded-md border border-border bg-muted/40 text-muted-foreground">
+        <Icon className="size-4" aria-hidden />
+      </span>
+      <span
+        className={cn(
+          'min-w-0 flex-1 truncate text-[12px] font-medium sm:text-[13px]',
+          productBentoIdle.text,
+        )}
+      >
+        {label}
+      </span>
+    </div>
+  )
+}
+
+function NativeDbOrSeparator() {
+  return (
+    <div className="flex items-center gap-2 px-1">
+      <div className="h-px flex-1 bg-border" />
+      <span className="text-[9px] font-medium uppercase tracking-wider text-muted-foreground">
+        or
+      </span>
+      <div className="h-px flex-1 bg-border" />
+    </div>
+  )
+}
+
+function NativeDbSelectionStrip() {
+  const [postgres, mysql] = NATIVE_DATABASES
+
+  return (
+    <div className="grid grid-cols-2 gap-2">
+      <NativeDbSelectionCard label={postgres.label} Icon={postgres.Icon} />
+      <NativeDbSelectionCard label={mysql.label} Icon={mysql.Icon} />
     </div>
   )
 }
 
 export function DatabasesProductVisual() {
   const [activeTab, setActiveTab] = useState<AppwriteTabId>('tablesdb')
-  const [autoCycle, setAutoCycle] = useState(true)
-  const [isHovered, setIsHovered] = useState(false)
-  const [prefersReducedMotion, setPrefersReducedMotion] = useState(false)
 
-  useEffect(() => {
-    const media = window.matchMedia('(prefers-reduced-motion: reduce)')
-    const update = () => setPrefersReducedMotion(media.matches)
-    update()
-    media.addEventListener('change', update)
-    return () => media.removeEventListener('change', update)
-  }, [])
-
-  useEffect(() => {
-    if (!autoCycle || !isHovered || prefersReducedMotion) return
-
-    const intervalId = window.setInterval(() => {
-      setActiveTab((current) => {
-        const currentIndex = APPWRITE_TAB_IDS.indexOf(current)
-        return APPWRITE_TAB_IDS[(currentIndex + 1) % APPWRITE_TAB_IDS.length]
-      })
-    }, AUTO_CYCLE_MS)
-
-    return () => window.clearInterval(intervalId)
-  }, [autoCycle, isHovered, prefersReducedMotion])
-
-  const handleTabChange = (value: string) => {
-    setAutoCycle(false)
-    setActiveTab(value as AppwriteTabId)
-  }
+  const tabPanelClassName =
+    'absolute inset-0 mt-0 flex h-full w-full min-h-0 flex-col overflow-hidden p-3.5 focus-visible:outline-none'
 
   return (
-    <div
-      className="absolute inset-0 overflow-hidden"
-      onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => setIsHovered(false)}
+    <Tabs
+      value={activeTab}
+      onValueChange={(value) => setActiveTab(value as AppwriteTabId)}
+      className="absolute inset-0 flex flex-col gap-0 overflow-visible"
     >
-      <div className="flex h-full flex-col">
-        <Tabs
-          value={activeTab}
-          onValueChange={handleTabChange}
-          className="flex min-h-0 flex-[2] flex-col gap-0 border-b border-border"
-        >
-          <div className="shrink-0 border-b border-border bg-card/40 px-3.5 py-3">
-            <TabsList className="grid h-10 w-full grid-cols-3 gap-1 rounded-lg bg-muted/50 p-1">
-              {APPWRITE_TABS.map((tab) => {
-                const Icon = tab.Icon
+      <div className="relative min-h-0 flex-1">
+        <TabsContent value="tablesdb" className={tabPanelClassName}>
+          <TablesDbPanel />
+        </TabsContent>
+        <TabsContent value="documentsdb" className={tabPanelClassName}>
+          <DocumentsDbPanel />
+        </TabsContent>
+        <TabsContent value="vectorsdb" className={tabPanelClassName}>
+          <VectorsDbPanel />
+        </TabsContent>
 
-                return (
-                  <TabsTrigger
-                    key={tab.id}
-                    value={tab.id}
-                    className="gap-1.5 px-2 text-[11px] sm:text-[12px] [&_svg:not([class*='size-'])]:size-4"
-                  >
-                    <Icon aria-hidden />
-                    <span className="truncate">{tab.label}</span>
-                    {tab.badge ? (
-                      <Badge variant="info" className="h-5 shrink-0 px-1.5 text-[10px]">
-                        Beta
-                      </Badge>
-                    ) : null}
-                  </TabsTrigger>
-                )
-              })}
-            </TabsList>
-          </div>
+        <div className="pointer-events-none absolute inset-x-0 bottom-0 z-50 flex justify-center px-3 sm:bottom-1">
+          <TabsList className="pointer-events-auto inline-flex h-auto w-auto gap-1 rounded-lg border border-border bg-background p-1 shadow-sm">
+            {APPWRITE_TABS.map((tab) => {
+              const Icon = tab.Icon
 
-          <TabsContent
-            value="tablesdb"
-            className="mt-0 min-h-0 flex-1 overflow-hidden p-3.5 focus-visible:outline-none"
-          >
-            <TablesDbPanel />
-          </TabsContent>
-          <TabsContent
-            value="documentsdb"
-            className="mt-0 min-h-0 flex-1 overflow-hidden p-3.5 focus-visible:outline-none"
-          >
-            <DocumentsDbPanel />
-          </TabsContent>
-          <TabsContent
-            value="vectorsdb"
-            className="mt-0 min-h-0 flex-1 overflow-hidden p-3.5 focus-visible:outline-none"
-          >
-            <VectorsDbPanel />
-          </TabsContent>
-        </Tabs>
-
-        <div className="grid min-h-0 flex-1 grid-cols-2 divide-x divide-border bg-card/15">
-          {NATIVE_DATABASES.map((db, index) => (
-            <NativeDbPanel
-              key={db.id}
-              label={db.label}
-              Icon={db.Icon}
-              idleSql={db.idleSql}
-              TypedSql={db.TypedSql}
-              typeDelayMs={140 + index * 60}
-            />
-          ))}
+              return (
+                <TabsTrigger
+                  key={tab.id}
+                  value={tab.id}
+                  className="h-auto gap-1.5 rounded-md px-2.5 py-1.5 text-[10px] text-muted-foreground transition-colors duration-300 data-[state=active]:bg-muted/60 data-[state=active]:text-muted-foreground data-[state=active]:shadow-none sm:text-[11px] group-hover:data-[state=active]:bg-muted group-hover:data-[state=active]:text-foreground [&_svg:not([class*='size-'])]:size-3"
+                >
+                  <Icon aria-hidden />
+                  <span className="truncate">{tab.label}</span>
+                </TabsTrigger>
+              )
+            })}
+          </TabsList>
         </div>
       </div>
-    </div>
+
+      <div className="relative z-10 shrink-0 bg-card/10 px-3.5 pb-3.5 pt-4">
+        <NativeDbOrSeparator />
+        <div className="mt-2.5">
+          <NativeDbSelectionStrip />
+        </div>
+      </div>
+    </Tabs>
   )
 }

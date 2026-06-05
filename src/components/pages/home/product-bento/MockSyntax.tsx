@@ -4,7 +4,7 @@ import { cn } from '@/lib/utils'
 const SQL_MS_PER_CHAR = 36
 const SQL_LINE_GAP_MS = 32
 
-/** VS Code–inspired token colors for compact mock code snippets. */
+/** VS Code–inspired token colors for compact mock code snippets (on bento hover). */
 export const syntax = {
   keyword: 'text-blue-600 dark:text-blue-400',
   string: 'text-emerald-600 dark:text-emerald-400',
@@ -23,6 +23,47 @@ export const syntax = {
   sqlAlias: 'text-orange-600 dark:text-orange-400',
 } as const
 
+const syntaxHover: Record<keyof typeof syntax, string> = {
+  keyword: 'group-hover:text-blue-600 dark:group-hover:text-blue-400',
+  string: 'group-hover:text-emerald-600 dark:group-hover:text-emerald-400',
+  number: 'group-hover:text-amber-600 dark:group-hover:text-amber-400',
+  property: 'group-hover:text-sky-600 dark:group-hover:text-sky-400',
+  function: 'group-hover:text-violet-600 dark:group-hover:text-violet-400',
+  class: 'group-hover:text-yellow-600 dark:group-hover:text-yellow-400',
+  type: 'group-hover:text-cyan-700 dark:group-hover:text-cyan-400',
+  operator: 'group-hover:text-muted-foreground',
+  punctuation: 'group-hover:text-muted-foreground/90',
+  identifier: 'group-hover:text-foreground',
+  comment: 'group-hover:text-muted-foreground',
+  sqlKeyword: 'group-hover:text-blue-600 dark:group-hover:text-blue-400',
+  sqlFunction: 'group-hover:text-violet-600 dark:group-hover:text-violet-400',
+  sqlTable: 'group-hover:text-cyan-700 dark:group-hover:text-cyan-400',
+  sqlAlias: 'group-hover:text-orange-600 dark:group-hover:text-orange-400',
+}
+
+/** Shared muted-until-hover classes for product bento visuals. */
+export const productBentoIdle = {
+  text: 'text-muted-foreground transition-colors duration-300 group-hover:text-foreground',
+  brandIcon:
+    'text-muted-foreground transition-colors duration-300 group-hover:text-[var(--brand-cta)]',
+  brandDot:
+    'bg-muted-foreground transition-colors duration-300 group-hover:bg-[var(--brand-cta)]',
+  emeraldIcon:
+    'text-muted-foreground transition-colors duration-300 group-hover:text-emerald-600 dark:group-hover:text-emerald-400',
+  link: 'text-muted-foreground transition-colors duration-300 group-hover:text-blue-600 dark:group-hover:text-blue-400',
+  scaleBar:
+    'bg-muted-foreground/20 transition-all duration-500 group-hover:bg-[var(--brand-cta)]/80 motion-reduce:group-hover:bg-muted-foreground/20',
+  slider:
+    'bg-muted-foreground/30 transition-colors duration-300 group-hover:bg-primary/75',
+  ring: 'stroke-muted-foreground transition-colors duration-300 group-hover:stroke-emerald-500',
+  buildBar:
+    'bg-muted-foreground/30 transition-colors duration-300 group-hover:bg-[var(--brand-cta)]',
+  ctaBlock:
+    'bg-muted-foreground/25 transition-colors duration-300 group-hover:bg-[var(--brand-cta)]/85',
+  providerIcon:
+    'opacity-50 grayscale transition-all duration-300 group-hover:opacity-100 group-hover:grayscale-0 motion-reduce:group-hover:opacity-50 motion-reduce:group-hover:grayscale',
+} as const
+
 export function Syn({
   tone,
   className,
@@ -32,7 +73,22 @@ export function Syn({
   className?: string
   children: ReactNode
 }) {
-  return <span className={cn(syntax[tone], className)}>{children}</span>
+  const mutedIdle =
+    tone === 'punctuation' ? 'text-muted-foreground/80' : 'text-muted-foreground'
+
+  return (
+    <span
+      className={cn(
+        'transition-colors duration-300',
+        mutedIdle,
+        syntaxHover[tone],
+        tone === 'comment' && 'italic',
+        className,
+      )}
+    >
+      {children}
+    </span>
+  )
 }
 
 export function SqlBlock({
@@ -267,7 +323,7 @@ export function AuthMagicLinkSnippet() {
       <div className="pl-2">
         <Syn tone="property">email</Syn>
         <Syn tone="punctuation">: </Syn>
-        <span className="text-foreground">&apos;sarah@acme.io&apos;</span>
+        <Syn tone="string">&apos;sarah@acme.io&apos;</Syn>
         <Syn tone="punctuation">,</Syn>
       </div>
       <div className="pl-2">
@@ -275,6 +331,35 @@ export function AuthMagicLinkSnippet() {
         <Syn tone="punctuation">: </Syn>
         <Syn tone="string">&apos;https://acme.io/auth&apos;</Syn>
         <Syn tone="punctuation">,</Syn>
+      </div>
+      <div>
+        <Syn tone="punctuation">{'}'})</Syn>
+      </div>
+    </div>
+  )
+}
+
+export function MessagingEmailSnippet() {
+  return (
+    <div className="font-mono text-[9px] leading-relaxed sm:text-[10px]">
+      <div>
+        <Syn tone="keyword">await</Syn>{' '}
+        <Syn tone="identifier">messaging</Syn>
+        <Syn tone="punctuation">.</Syn>
+        <Syn tone="function">createEmail</Syn>
+        <Syn tone="punctuation">({'{'}</Syn>
+      </div>
+      <div className="pl-2">
+        <Syn tone="property">subject</Syn>
+        <Syn tone="punctuation">: </Syn>
+        <Syn tone="string">&apos;Welcome to Acme&apos;</Syn>
+        <Syn tone="punctuation">,</Syn>
+      </div>
+      <div className="pl-2">
+        <Syn tone="property">topics</Syn>
+        <Syn tone="punctuation">: [</Syn>
+        <Syn tone="string">&apos;product-updates&apos;</Syn>
+        <Syn tone="punctuation">],</Syn>
       </div>
       <div>
         <Syn tone="punctuation">{'}'})</Syn>
@@ -309,6 +394,28 @@ export function FunctionsStripeSnippet() {
       </div>
       <div>
         <Syn tone="punctuation">{'}'})</Syn>
+      </div>
+    </div>
+  )
+}
+
+export function RealtimeSubscribeSnippet() {
+  return (
+    <div className="font-mono text-[9px] leading-relaxed sm:text-[10px]">
+      <div>
+        <Syn tone="keyword">await</Syn>{' '}
+        <Syn tone="identifier">realtime</Syn>
+        <Syn tone="punctuation">.</Syn>
+        <Syn tone="function">subscribe</Syn>
+        <Syn tone="punctuation">([</Syn>
+      </div>
+      <div className="pl-2">
+        <Syn tone="string">&apos;databases.*.tables.docs.rows.*.update&apos;</Syn>
+        <Syn tone="punctuation">],</Syn>
+      </div>
+      <div className="pl-2">
+        <Syn tone="identifier">onDocChange</Syn>
+        <Syn tone="punctuation">)</Syn>
       </div>
     </div>
   )

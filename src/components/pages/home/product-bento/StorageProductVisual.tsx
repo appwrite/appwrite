@@ -3,6 +3,7 @@ import { ArrowRight } from 'lucide-react'
 import { SchemaBlueprintMat } from '@/components/global/shared/SchemaBlueprintMat'
 import { Badge } from '@/components/ui/badge'
 import { cn } from '@/lib/utils'
+import { productBentoIdle } from './MockSyntax'
 
 const RING_SIZE = 32
 const RING_STROKE = 2
@@ -36,7 +37,7 @@ function PreviewReductionRing({ children }: { children: ReactNode }) {
           cy={RING_SIZE / 2}
           r={RING_R}
           fill="none"
-          className="product-bento-storage-ring-arc stroke-emerald-500 motion-reduce:transition-none"
+          className={cn('product-bento-storage-ring-arc motion-reduce:transition-none', productBentoIdle.ring)}
           strokeWidth={RING_STROKE}
           strokeLinecap="round"
           strokeDasharray={RING_C}
@@ -83,7 +84,7 @@ function MockSliderRow({
       <div className="flex items-center justify-between gap-2">
         <span className="text-[10px] text-muted-foreground">{label}</span>
         {idleValue && hoverValue ? (
-          <span className="relative min-w-[2.25rem] text-right text-[10px] tabular-nums text-foreground">
+          <span className={cn('relative min-w-[2.25rem] text-right text-[10px] tabular-nums', productBentoIdle.text)}>
             <span className="transition-opacity duration-200 group-hover:opacity-0 motion-reduce:group-hover:opacity-100">
               {idleValue}
             </span>
@@ -99,7 +100,7 @@ function MockSliderRow({
       <div className="h-1 overflow-hidden rounded-full bg-muted">
         <div
           key={trackKey}
-          className="product-bento-storage-slider h-full rounded-full bg-primary/75 motion-reduce:!w-[var(--slider-hover)]"
+          className={cn('product-bento-storage-slider h-full rounded-full motion-reduce:!w-[var(--slider-hover)]', productBentoIdle.slider)}
           style={
             {
               '--slider-idle': `${idleFill}%`,
@@ -138,9 +139,9 @@ export function StorageProductVisual() {
       className="absolute inset-0 overflow-hidden px-3 pt-3 sm:px-4 sm:pt-4"
       onMouseEnter={() => setWidthSliderKey((key) => key + 1)}
     >
-      <div className="flex h-[calc(100%+1.25rem)] min-h-[220px] flex-col overflow-hidden rounded-xl border border-border bg-card/95 shadow-sm">
-        <div className="flex items-center justify-between gap-2 border-b border-border bg-muted/20 px-3 py-2">
-          <span className="rounded-sm bg-background px-2 py-0.5 text-[10px] font-medium text-foreground shadow-sm">
+      <div className="flex h-[calc(100%+1.25rem)] min-h-[220px] flex-col overflow-hidden rounded-xl border border-border bg-card/70 shadow-sm">
+        <div className="flex items-center justify-between gap-2 border-b border-border bg-muted/10 px-3 py-2">
+          <span className={cn('rounded-sm bg-background px-2 py-0.5 text-[10px] font-medium shadow-sm', productBentoIdle.text)}>
             Design
           </span>
           <Badge
@@ -160,8 +161,8 @@ export function StorageProductVisual() {
             </div>
           </div>
 
-          <aside className="w-full shrink-0 border-t border-border bg-background/80 p-2.5 sm:w-[42%] sm:border-l sm:border-t-0">
-            <p className="text-[11px] font-medium text-foreground">Transform</p>
+          <aside className="w-full shrink-0 border-t border-border bg-background/60 p-2.5 sm:w-[42%] sm:border-l sm:border-t-0">
+            <p className={cn('text-[11px] font-medium', productBentoIdle.text)}>Transform</p>
             <div className="mt-2.5 space-y-2">
               <MockSliderRow
                 label="Width (px)"
@@ -183,19 +184,17 @@ export function StorageProductVisual() {
           </aside>
         </div>
 
-        <div className="flex items-center gap-2 border-t border-border bg-muted/15 px-3 py-2">
+        <div className="flex items-center gap-2 border-t border-border bg-muted/8 px-3 py-2">
           <PreviewReductionRing>
-            <span className="inline-flex items-baseline tabular-nums text-[8px] font-medium text-foreground">
+            <span className={cn('inline-flex items-baseline tabular-nums text-[8px] font-medium', productBentoIdle.text)}>
               <span className="product-bento-storage-ring-value opacity-40 transition-opacity duration-300 group-hover:opacity-100 motion-reduce:opacity-100">
                 {SAVED_PCT}
               </span>
               <span className="text-[7px] font-normal text-muted-foreground">%</span>
             </span>
           </PreviewReductionRing>
-          <p className="min-w-0 flex-1 truncate text-[10px] leading-tight text-foreground">
-            <span className="font-medium tabular-nums text-muted-foreground transition-colors duration-300 group-hover:text-foreground motion-reduce:group-hover:text-foreground">
-              2.4 MB
-            </span>
+          <p className={cn('min-w-0 flex-1 truncate text-[10px] leading-tight', productBentoIdle.text)}>
+            <span className="font-medium tabular-nums">2.4 MB</span>
             <ArrowRight className="mx-1 inline size-2.5 shrink-0 align-text-bottom text-muted-foreground" />
             <span className="font-medium tabular-nums opacity-70 transition-opacity duration-300 group-hover:opacity-100 motion-reduce:opacity-100">
               920 KB

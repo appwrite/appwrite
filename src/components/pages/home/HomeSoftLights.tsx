@@ -77,7 +77,7 @@ export function AiTileSoftLight({ tone }: { tone: AiTileSoftLightTone }) {
 export function ProductBentoSoftLights() {
   return (
     <div
-      className="pointer-events-none absolute inset-0 z-0 overflow-hidden rounded-[inherit] bg-[radial-gradient(ellipse_at_0%_0%,color-mix(in_srgb,var(--foreground)_6%,transparent)_0%,transparent_58%)]"
+      className="pointer-events-none absolute inset-0 z-0 overflow-hidden rounded-[inherit] bg-[radial-gradient(ellipse_at_0%_0%,color-mix(in_srgb,var(--foreground)_3%,transparent)_0%,transparent_55%)]"
       aria-hidden
     />
   )

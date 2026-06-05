@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { ArrowRight, CheckCircle2 } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { productBentoIdle } from './MockSyntax'
 
 const COMMIT_HASH = '01ab234c'
 /** Matches `product-bento-site-build` in styles.css */
@@ -106,26 +107,26 @@ export function SitesProductVisual() {
       <div className="w-full max-w-[21rem] space-y-3.5 transition-transform duration-500 group-hover:-translate-y-1 motion-reduce:group-hover:translate-y-0">
         <div
           className={cn(
-            'flex items-center gap-2.5 rounded-lg border border-border bg-background/80 px-3.5 py-3 transition-[border-color,background-color] duration-300',
+            'flex items-center gap-2.5 rounded-lg border border-border bg-background/55 px-3.5 py-3 transition-[border-color,background-color] duration-300',
             'group-hover:border-[color-mix(in_srgb,var(--brand-cta)_28%,var(--border))] group-hover:bg-background',
           )}
         >
-          <span className="flex size-8 shrink-0 items-center justify-center rounded-md bg-muted/50">
+          <span className="flex size-8 shrink-0 items-center justify-center rounded-md bg-muted/40">
             <img src="/icons/github.svg" alt="" className="size-4" aria-hidden />
           </span>
           <div className="min-w-0 flex-1">
-            <p className="text-[12px] font-medium text-foreground">Push to main</p>
+            <p className={cn('text-[12px] font-medium', productBentoIdle.text)}>Push to main</p>
             <p className="mt-0.5 font-mono text-[11px] text-muted-foreground">{COMMIT_HASH}</p>
           </div>
           <ArrowRight
-            className="size-4 shrink-0 text-muted-foreground/40 transition-[color,transform] duration-300 group-hover:translate-x-0.5 group-hover:text-[var(--brand-cta)] motion-reduce:group-hover:translate-x-0"
+            className="size-4 shrink-0 text-muted-foreground/50 transition-[color,transform] duration-300 group-hover:translate-x-0.5 group-hover:text-[var(--brand-cta)] motion-reduce:group-hover:translate-x-0"
             aria-hidden
           />
         </div>
 
-        <div className="rounded-lg border border-border bg-background/80 px-3.5 py-3">
+        <div className="rounded-lg border border-border bg-background/55 px-3.5 py-3">
           <div className="flex items-center justify-between gap-2">
-            <span className="text-[12px] font-medium text-foreground">Build</span>
+            <span className={cn('text-[12px] font-medium', productBentoIdle.text)}>Build</span>
             <div className="flex items-center gap-2">
               <span
                 className={cn(
@@ -145,28 +146,28 @@ export function SitesProductVisual() {
             </div>
           </div>
           <div className="mt-2.5 h-1.5 overflow-hidden rounded-full bg-muted">
-            <div className="product-bento-site-build h-full w-[6%] rounded-full bg-[var(--brand-cta)] motion-reduce:w-full" />
+            <div className={cn('product-bento-site-build h-full w-[6%] rounded-full motion-reduce:w-full', productBentoIdle.buildBar)} />
           </div>
         </div>
 
         <PipelineRow revealDelayMs={1400}>
-          <div className="flex items-start gap-2.5 rounded-lg border border-border bg-background/80 px-3.5 py-3">
-            <span className="flex size-7 shrink-0 items-center justify-center rounded-full bg-muted/50">
+          <div className="flex items-start gap-2.5 rounded-lg border border-border bg-background/55 px-3.5 py-3">
+            <span className="flex size-7 shrink-0 items-center justify-center rounded-full bg-muted/40">
               <img src="/icons/appwrite.svg" alt="" className="size-3.5" aria-hidden />
             </span>
             <div className="min-w-0 flex-1 space-y-1">
-              <p className="text-[12px] font-medium text-foreground">
+              <p className={cn('text-[12px] font-medium', productBentoIdle.text)}>
                 Your site has been deployed.
               </p>
-              <p className="text-[11px] text-blue-600 dark:text-blue-400">Open preview</p>
+              <p className={cn('text-[11px]', productBentoIdle.link)}>Open preview</p>
             </div>
           </div>
         </PipelineRow>
 
         <PipelineRow revealDelayMs={1650} className="group-hover:max-h-36 sm:group-hover:max-h-40">
-          <div className="overflow-hidden rounded-lg border border-border bg-background/80 p-2.5">
+          <div className="overflow-hidden rounded-lg border border-border bg-background/55 p-2.5">
             <div className="overflow-hidden rounded-md border border-border/80 bg-card">
-              <div className="flex items-center gap-1.5 border-b border-border/80 bg-muted/30 px-2.5 py-1.5">
+              <div className="flex items-center gap-1.5 border-b border-border/80 bg-muted/15 px-2.5 py-1.5">
                 <span className="size-1.5 rounded-full bg-muted-foreground/25" aria-hidden />
                 <span className="size-1.5 rounded-full bg-muted-foreground/25" aria-hidden />
                 <span className="size-1.5 rounded-full bg-muted-foreground/25" aria-hidden />
@@ -174,15 +175,15 @@ export function SitesProductVisual() {
                   preview.acme.io
                 </span>
               </div>
-              <div className="space-y-2 bg-muted/15 p-3">
+              <div className="space-y-2 bg-muted/8 p-3">
                 <div className="flex items-center gap-1.5">
                   <span
-                    className="size-2 rounded-full bg-[var(--brand-cta)]"
+                    className={cn('size-2 rounded-full', productBentoIdle.brandDot)}
                     aria-hidden
                   />
-                  <span className="text-[11px] font-semibold text-foreground">Acme</span>
+                  <span className={cn('text-[11px] font-semibold', productBentoIdle.text)}>Acme</span>
                 </div>
-                <p className="text-[11px] font-medium leading-tight text-foreground">
+                <p className={cn('text-[11px] font-medium leading-tight', productBentoIdle.text)}>
                   Ship faster with Acme
                 </p>
                 <div
@@ -190,7 +191,7 @@ export function SitesProductVisual() {
                   aria-hidden
                 />
                 <div
-                  className="h-4 w-14 rounded-sm bg-[var(--brand-cta)]/85"
+                  className={cn('h-4 w-14 rounded-sm', productBentoIdle.ctaBlock)}
                   aria-hidden
                 />
               </div>

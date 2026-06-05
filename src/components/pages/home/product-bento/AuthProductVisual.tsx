@@ -1,7 +1,7 @@
 import { CheckCircle2, Mail } from 'lucide-react'
 import { InitialsAvatar } from '@/components/global/shared/Avatar'
 import { cn } from '@/lib/utils'
-import { AuthMagicLinkSnippet } from './MockSyntax'
+import { AuthMagicLinkSnippet, productBentoIdle } from './MockSyntax'
 
 const OAUTH_PROVIDERS = [
   {
@@ -39,13 +39,13 @@ function MockEmailField({
 
   return (
     <div className="space-y-1">
-      <label className="text-[11px] font-medium text-foreground">Email</label>
+      <label className={cn('text-[11px] font-medium', productBentoIdle.text)}>Email</label>
       <div className="relative rounded-md border border-border bg-background px-2.5 py-1.5 text-[12px]">
         <span className="text-muted-foreground transition-opacity duration-200 group-hover:opacity-0 motion-reduce:group-hover:opacity-100">
           {placeholder}
         </span>
         <span className="absolute inset-x-2.5 inset-y-0 flex items-center opacity-0 group-hover:opacity-100 motion-reduce:opacity-100">
-          <span className="inline-flex max-w-full items-center overflow-hidden whitespace-nowrap text-foreground">
+          <span className={cn('inline-flex max-w-full items-center overflow-hidden whitespace-nowrap', productBentoIdle.text)}>
             <span
               className="inline-block max-w-0 overflow-hidden whitespace-nowrap group-hover:animate-[product-bento-email-reveal_1.4s_steps(18,end)_forwards] motion-reduce:max-w-none motion-reduce:group-hover:animate-none"
               style={{ animationDelay: `${typeDelayMs}ms` }}
@@ -75,14 +75,15 @@ function OAuthButton({
   return (
     <div
       className={cn(
-        'flex items-center justify-center gap-1.5 rounded-md border border-border bg-background px-2 py-1.5 text-[12px] text-foreground transition-[border-color,background-color,transform,box-shadow] duration-300',
+        'flex items-center justify-center gap-1.5 rounded-md border border-border bg-background px-2 py-1.5 text-[12px] transition-[border-color,background-color,transform,box-shadow,color] duration-300',
+        productBentoIdle.text,
         provider.hoverClass,
         highlighted &&
           'group-hover:animate-[product-bento-oauth-highlight_0.45s_ease-out_both] motion-reduce:group-hover:animate-none',
       )}
       style={highlighted ? { animationDelay: `${80 + index * 90}ms` } : undefined}
     >
-      <img src={provider.icon} alt="" className="size-3.5 shrink-0" aria-hidden />
+      <img src={provider.icon} alt="" className={cn('size-3.5 shrink-0', productBentoIdle.providerIcon)} aria-hidden />
       <span className="truncate">{provider.label}</span>
     </div>
   )
@@ -93,20 +94,20 @@ export function AuthProductVisual() {
     <div className="absolute inset-0 overflow-hidden">
       <div className="flex justify-center px-3 pt-2 sm:px-4 sm:pt-3">
         <div className="relative w-full max-w-[20rem]">
-          <div className="overflow-hidden rounded-xl border border-border bg-card/95 shadow-sm">
-            <div className="border-b border-border bg-muted/20 px-3 py-2">
+          <div className="overflow-hidden rounded-xl border border-border bg-card/70 shadow-sm">
+            <div className="border-b border-border bg-muted/10 px-3 py-2">
               <div className="flex items-center gap-1.5">
                 <span
-                  className="size-2 rounded-full bg-[var(--brand-cta)]"
+                  className={cn('size-2 rounded-full', productBentoIdle.brandDot)}
                   aria-hidden
                 />
-                <span className="text-[12px] font-semibold text-foreground">Acme</span>
+                <span className={cn('text-[12px] font-semibold', productBentoIdle.text)}>Acme</span>
               </div>
             </div>
 
             <div className="space-y-3 p-3">
               <div>
-                <p className="text-[13px] font-semibold text-foreground">Welcome back</p>
+                <p className={cn('text-[13px] font-semibold', productBentoIdle.text)}>Welcome back</p>
                 <p className="mt-0.5 text-[11px] text-muted-foreground">
                   Sign in to your account
                 </p>
@@ -139,7 +140,7 @@ export function AuthProductVisual() {
                 className="flex items-center justify-center gap-1.5 rounded-md border border-border bg-muted/30 px-2 py-1.5 text-[12px] font-medium text-muted-foreground transition-[border-color,background-color,color] duration-300 group-hover:border-[color-mix(in_srgb,var(--brand-cta)_35%,var(--border))] group-hover:bg-[color-mix(in_srgb,var(--brand-cta)_12%,var(--background))] group-hover:text-foreground motion-reduce:group-hover:border-border motion-reduce:group-hover:bg-muted/30 motion-reduce:group-hover:text-muted-foreground"
                 style={{ transitionDelay: '480ms' }}
               >
-                <Mail className="size-3.5 shrink-0 text-[var(--brand-cta)]/80" aria-hidden />
+                <Mail className={cn('size-3.5 shrink-0', productBentoIdle.brandIcon)} aria-hidden />
                 <span>Send magic link</span>
               </div>
             </div>

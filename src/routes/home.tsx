@@ -82,7 +82,7 @@ const productBentoItems: {
   {
     title: 'Databases',
     description:
-      'Model, query, and scale application data with fast tables and robust permissions.',
+      "Model, query, and scale with Appwrite databases or native Postgres and MySQL, so you can match your use case and team's needs.",
     icon: Database,
     className:
       'lg:col-span-8 lg:col-start-5 lg:row-start-1 lg:row-span-3',
@@ -107,7 +107,7 @@ const productBentoItems: {
   {
     title: 'Sites',
     description:
-      'Deploy static, SSR, and CSR frontends with Appwrite behind them.',
+      'Deploy static, SSR, and CSR frontends from Git with instant previews and Appwrite behind them.',
     icon: Globe,
     className:
       'lg:col-span-8 lg:col-start-5 lg:row-start-4 lg:row-span-3',
@@ -420,11 +420,13 @@ function HomePage() {
                         className={`p-5 pt-4 ${item.tall ? 'lg:flex lg:flex-1 lg:flex-col lg:min-h-0' : ''}`}
                       >
                         <div
-                          className={`relative isolate min-h-[240px] overflow-hidden rounded-lg border border-border bg-muted/15 ${item.tall ? 'lg:min-h-0 lg:flex-1' : ''}`}
+                          className={`relative isolate min-h-[240px] overflow-hidden rounded-lg border border-border bg-muted/[0.06] ${item.tall ? 'lg:min-h-0 lg:flex-1' : ''}`}
                           aria-hidden
                         >
-                          <ProductBentoSoftLights />
-                          <ProductBentoVisual title={item.title} />
+                          <div className="absolute inset-0 opacity-[0.94] transition-opacity duration-300 group-hover:opacity-100 motion-reduce:opacity-100">
+                            <ProductBentoSoftLights />
+                            <ProductBentoVisual title={item.title} />
+                          </div>
                         </div>
                       </div>
                     </div>

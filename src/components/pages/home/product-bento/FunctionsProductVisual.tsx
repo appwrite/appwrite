@@ -11,7 +11,7 @@ import {
 import type { LucideIcon } from 'lucide-react'
 import type { ReactNode } from 'react'
 import { cn } from '@/lib/utils'
-import { FunctionsStripeSnippet } from './MockSyntax'
+import { FunctionsStripeSnippet, productBentoIdle } from './MockSyntax'
 
 type HighlightKey = 'webhook' | 'schedule'
 
@@ -109,13 +109,13 @@ function UseCaseRow({ useCase }: { useCase: UseCase }) {
         )}
       >
         {useCase.iconSrc ? (
-          <img src={useCase.iconSrc} alt="" className="size-3.5" aria-hidden />
+          <img src={useCase.iconSrc} alt="" className={cn('size-3.5', productBentoIdle.providerIcon)} aria-hidden />
         ) : Icon ? (
           <Icon className="size-3.5 text-muted-foreground" aria-hidden />
         ) : null}
       </span>
       <div className="min-w-0 flex-1">
-        <p className="text-[11px] font-medium leading-tight text-foreground">
+        <p className={cn('text-[11px] font-medium leading-tight', productBentoIdle.text)}>
           {useCase.label}
         </p>
         <p className="mt-0.5 text-[10px] leading-snug text-muted-foreground">
@@ -152,7 +152,7 @@ function FlowStep({
         {iconSrc ? (
           <img src={iconSrc} alt="" className="size-3.5" aria-hidden />
         ) : Icon ? (
-          <Icon className="size-3.5 text-[var(--brand-cta)]" aria-hidden />
+          <Icon className={cn('size-3.5', productBentoIdle.brandIcon)} aria-hidden />
         ) : null}
       </span>
       <div className="min-w-0 flex-1">
@@ -174,16 +174,16 @@ function AutoScalingHint() {
   return (
     <div className="border-t border-border/80 px-2.5 py-2">
       <div className="flex items-center gap-2">
-        <TrendingUp className="size-3.5 shrink-0 text-[var(--brand-cta)]" aria-hidden />
+        <TrendingUp className={cn('size-3.5 shrink-0', productBentoIdle.brandIcon)} aria-hidden />
         <div className="min-w-0 flex-1">
-          <p className="text-[10px] font-medium text-foreground">Auto-scaling</p>
+          <p className={cn('text-[10px] font-medium', productBentoIdle.text)}>Auto-scaling</p>
           <p className="text-[9px] text-muted-foreground">Scales with incoming executions</p>
         </div>
         <p className="shrink-0 text-right text-[9px] tabular-nums text-muted-foreground">
-          <span className="font-medium text-foreground group-hover:hidden motion-reduce:inline">
+          <span className={cn('font-medium group-hover:hidden motion-reduce:inline', productBentoIdle.text)}>
             1
           </span>
-          <span className="hidden font-medium text-foreground group-hover:inline motion-reduce:hidden">
+          <span className={cn('hidden font-medium group-hover:inline motion-reduce:hidden', productBentoIdle.text)}>
             24
           </span>{' '}
           concurrent
@@ -194,7 +194,8 @@ function AutoScalingHint() {
           <div
             key={index}
             className={cn(
-              'flex-1 rounded-sm bg-[var(--brand-cta)]/20 transition-all duration-500 group-hover:bg-[var(--brand-cta)]/80 motion-reduce:group-hover:bg-[var(--brand-cta)]/20',
+              'flex-1 rounded-sm transition-all duration-500',
+              productBentoIdle.scaleBar,
               bar.idle,
               bar.active,
             )}
@@ -214,7 +215,7 @@ function ScheduleRevealPanel() {
     >
       <div className="flex items-start justify-between gap-2">
         <div className="min-w-0">
-          <p className="text-[10px] font-medium text-foreground">
+          <p className={cn('text-[10px] font-medium', productBentoIdle.text)}>
             cleanup-expired-sessions
           </p>
           <p className="mt-0.5 font-mono text-[9px] text-muted-foreground">0 2 * * *</p>
@@ -224,17 +225,17 @@ function ScheduleRevealPanel() {
         </span>
       </div>
 
-      <div className="mt-2 flex items-center gap-2 rounded-md border border-border bg-muted/20 px-2 py-1.5">
-        <CalendarClock className="size-3.5 shrink-0 text-[var(--brand-cta)]" aria-hidden />
+      <div className="mt-2 flex items-center gap-2 rounded-md border border-border bg-muted/10 px-2 py-1.5">
+        <CalendarClock className={cn('size-3.5 shrink-0', productBentoIdle.brandIcon)} aria-hidden />
         <div className="min-w-0 flex-1">
-          <p className="text-[10px] text-foreground">Daily at 2:00 AM UTC</p>
+          <p className={cn('text-[10px]', productBentoIdle.text)}>Daily at 2:00 AM UTC</p>
           <p className="text-[9px] text-muted-foreground">Cron expression schedule</p>
         </div>
       </div>
 
       <div className="mt-2 flex items-center justify-between gap-2 text-[9px]">
         <span className="text-muted-foreground">Next run</span>
-        <span className="font-medium tabular-nums text-foreground opacity-70 transition-opacity duration-300 group-hover:opacity-100 motion-reduce:opacity-100">
+        <span className={cn('font-medium tabular-nums opacity-70 transition-[opacity,color] duration-300 group-hover:opacity-100', productBentoIdle.text)}>
           in 6h 12m
         </span>
       </div>
@@ -245,9 +246,9 @@ function ScheduleRevealPanel() {
 export function FunctionsProductVisual() {
   return (
     <div className="absolute inset-0 overflow-hidden px-3 pt-2 transition-transform duration-500 group-hover:-translate-y-1 motion-reduce:group-hover:translate-y-0 sm:px-4 sm:pt-3">
-      <div className="mx-auto w-full max-w-[20rem] overflow-hidden rounded-xl border border-border bg-card/95 shadow-sm">
-        <div className="border-b border-border bg-muted/20 px-3 py-2">
-          <p className="text-[11px] font-medium text-foreground">My functions</p>
+      <div className="mx-auto w-full max-w-[20rem] overflow-hidden rounded-xl border border-border bg-card/70 shadow-sm">
+        <div className="border-b border-border bg-muted/10 px-3 py-2">
+          <p className={cn('text-[11px] font-medium', productBentoIdle.text)}>My functions</p>
           <p className="mt-0.5 text-[10px] text-muted-foreground">
             Auto-scales with demand, schedules, and events
           </p>
@@ -262,7 +263,7 @@ export function FunctionsProductVisual() {
         <AutoScalingHint />
 
         <FlowReveal
-          className="space-y-3 border-t border-border bg-muted/10 px-2.5 pb-2.5 pt-2"
+          className="space-y-3 border-t border-border bg-muted/5 px-2.5 pb-2.5 pt-2"
           delayMs={80}
           maxHeightClass="group-hover:max-h-[26rem]"
         >
