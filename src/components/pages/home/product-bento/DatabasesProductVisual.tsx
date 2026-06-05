@@ -198,7 +198,7 @@ function TablesDbPanel({ playKey }: { playKey: number }) {
         )}
       </div>
 
-      <div className="min-h-0 flex-1 overflow-auto">
+      <div className="min-h-0 flex-1 overflow-hidden">
         <table className="w-full table-fixed border-collapse">
           <colgroup>
             <col style={{ width: 40 }} />
