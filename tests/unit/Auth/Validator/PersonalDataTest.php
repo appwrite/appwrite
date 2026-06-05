@@ -1,11 +1,13 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Tests\Unit\Auth\Validator;
 
 use Appwrite\Auth\Validator\PersonalData;
 use PHPUnit\Framework\TestCase;
 
-class PersonalDataTest extends TestCase
+final class PersonalDataTest extends TestCase
 {
     protected ?PersonalData $object = null;
 
@@ -13,69 +15,69 @@ class PersonalDataTest extends TestCase
     {
         $this->object = new PersonalData('userId', 'email@example.com', 'name', '+129492323', true);
 
-        $this->assertEquals($this->object->isValid('userId'), false);
-        $this->assertEquals($this->object->isValid('something.userId'), false);
-        $this->assertEquals($this->object->isValid('userId.something'), false);
-        $this->assertEquals($this->object->isValid('something.userId.something'), false);
+        $this->assertFalse($this->object->isValid('userId'));
+        $this->assertFalse($this->object->isValid('something.userId'));
+        $this->assertFalse($this->object->isValid('userId.something'));
+        $this->assertFalse($this->object->isValid('something.userId.something'));
 
-        $this->assertEquals($this->object->isValid('email@example.com'), false);
-        $this->assertEquals($this->object->isValid('something.email@example.com'), false);
-        $this->assertEquals($this->object->isValid('email@example.com.something'), false);
-        $this->assertEquals($this->object->isValid('something.email@example.com.something'), false);
+        $this->assertFalse($this->object->isValid('email@example.com'));
+        $this->assertFalse($this->object->isValid('something.email@example.com'));
+        $this->assertFalse($this->object->isValid('email@example.com.something'));
+        $this->assertFalse($this->object->isValid('something.email@example.com.something'));
 
-        $this->assertEquals($this->object->isValid('name'), false);
-        $this->assertEquals($this->object->isValid('something.name'), false);
-        $this->assertEquals($this->object->isValid('name.something'), false);
-        $this->assertEquals($this->object->isValid('something.name.something'), false);
+        $this->assertFalse($this->object->isValid('name'));
+        $this->assertFalse($this->object->isValid('something.name'));
+        $this->assertFalse($this->object->isValid('name.something'));
+        $this->assertFalse($this->object->isValid('something.name.something'));
 
-        $this->assertEquals($this->object->isValid('+129492323'), false);
-        $this->assertEquals($this->object->isValid('something.+129492323'), false);
-        $this->assertEquals($this->object->isValid('+129492323.something'), false);
-        $this->assertEquals($this->object->isValid('something.+129492323.something'), false);
+        $this->assertFalse($this->object->isValid('+129492323'));
+        $this->assertFalse($this->object->isValid('something.+129492323'));
+        $this->assertFalse($this->object->isValid('+129492323.something'));
+        $this->assertFalse($this->object->isValid('something.+129492323.something'));
 
-        $this->assertEquals($this->object->isValid('129492323'), false);
-        $this->assertEquals($this->object->isValid('something.129492323'), false);
-        $this->assertEquals($this->object->isValid('129492323.something'), false);
-        $this->assertEquals($this->object->isValid('something.129492323.something'), false);
+        $this->assertFalse($this->object->isValid('129492323'));
+        $this->assertFalse($this->object->isValid('something.129492323'));
+        $this->assertFalse($this->object->isValid('129492323.something'));
+        $this->assertFalse($this->object->isValid('something.129492323.something'));
 
-        $this->assertEquals($this->object->isValid('email'), false);
-        $this->assertEquals($this->object->isValid('something.email'), false);
-        $this->assertEquals($this->object->isValid('email.something'), false);
-        $this->assertEquals($this->object->isValid('something.email.something'), false);
+        $this->assertFalse($this->object->isValid('email'));
+        $this->assertFalse($this->object->isValid('something.email'));
+        $this->assertFalse($this->object->isValid('email.something'));
+        $this->assertFalse($this->object->isValid('something.email.something'));
 
         /** Test for success */
-        $this->assertEquals($this->object->isValid('893pu5egerfsv3rgersvd'), true);
+        $this->assertTrue($this->object->isValid('893pu5egerfsv3rgersvd'));
     }
 
     public function testNotStrict(): void
     {
         $this->object = new PersonalData('userId', 'email@example.com', 'name', '+129492323', false);
 
-        $this->assertEquals($this->object->isValid('userId'), false);
-        $this->assertEquals($this->object->isValid('USERID'), false);
-        $this->assertEquals($this->object->isValid('something.USERID'), false);
-        $this->assertEquals($this->object->isValid('USERID.something'), false);
-        $this->assertEquals($this->object->isValid('something.USERID.something'), false);
+        $this->assertFalse($this->object->isValid('userId'));
+        $this->assertFalse($this->object->isValid('USERID'));
+        $this->assertFalse($this->object->isValid('something.USERID'));
+        $this->assertFalse($this->object->isValid('USERID.something'));
+        $this->assertFalse($this->object->isValid('something.USERID.something'));
 
-        $this->assertEquals($this->object->isValid('email@example.com'), false);
-        $this->assertEquals($this->object->isValid('EMAIL@EXAMPLE.COM'), false);
-        $this->assertEquals($this->object->isValid('something.EMAIL@EXAMPLE.COM'), false);
-        $this->assertEquals($this->object->isValid('EMAIL@EXAMPLE.COM.something'), false);
-        $this->assertEquals($this->object->isValid('something.EMAIL@EXAMPLE.COM.something'), false);
+        $this->assertFalse($this->object->isValid('email@example.com'));
+        $this->assertFalse($this->object->isValid('EMAIL@EXAMPLE.COM'));
+        $this->assertFalse($this->object->isValid('something.EMAIL@EXAMPLE.COM'));
+        $this->assertFalse($this->object->isValid('EMAIL@EXAMPLE.COM.something'));
+        $this->assertFalse($this->object->isValid('something.EMAIL@EXAMPLE.COM.something'));
 
-        $this->assertEquals($this->object->isValid('name'), false);
-        $this->assertEquals($this->object->isValid('NAME'), false);
-        $this->assertEquals($this->object->isValid('something.NAME'), false);
-        $this->assertEquals($this->object->isValid('NAME.something'), false);
-        $this->assertEquals($this->object->isValid('something.NAME.something'), false);
+        $this->assertFalse($this->object->isValid('name'));
+        $this->assertFalse($this->object->isValid('NAME'));
+        $this->assertFalse($this->object->isValid('something.NAME'));
+        $this->assertFalse($this->object->isValid('NAME.something'));
+        $this->assertFalse($this->object->isValid('something.NAME.something'));
 
-        $this->assertEquals($this->object->isValid('+129492323'), false);
-        $this->assertEquals($this->object->isValid('129492323'), false);
+        $this->assertFalse($this->object->isValid('+129492323'));
+        $this->assertFalse($this->object->isValid('129492323'));
 
-        $this->assertEquals($this->object->isValid('email'), false);
-        $this->assertEquals($this->object->isValid('EMAIL'), false);
-        $this->assertEquals($this->object->isValid('something.EMAIL'), false);
-        $this->assertEquals($this->object->isValid('EMAIL.something'), false);
-        $this->assertEquals($this->object->isValid('something.EMAIL.something'), false);
+        $this->assertFalse($this->object->isValid('email'));
+        $this->assertFalse($this->object->isValid('EMAIL'));
+        $this->assertFalse($this->object->isValid('something.EMAIL'));
+        $this->assertFalse($this->object->isValid('EMAIL.something'));
+        $this->assertFalse($this->object->isValid('something.EMAIL.something'));
     }
 }

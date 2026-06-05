@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Tests\E2E\Services\Sites;
 
 use Ahc\Jwt\JWT;
@@ -16,7 +18,7 @@ use Utopia\Database\Query;
 use Utopia\Database\Validator\Datetime as DatetimeValidator;
 use Utopia\System\System;
 
-class SitesCustomServerTest extends Scope
+final class SitesCustomServerTest extends Scope
 {
     use SitesBase;
     use ProjectCustom;
@@ -692,8 +694,8 @@ class SitesCustomServerTest extends Scope
         $response = $proxyClient->call(Client::METHOD_GET, '/');
 
         $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertStringContainsString("Env variable is Appwrite", $response['body']);
-        $this->assertStringNotContainsString("Variable not found", $response['body']);
+        $this->assertStringContainsString("Env variable is Appwrite", (string) $response['body']);
+        $this->assertStringNotContainsString("Variable not found", (string) $response['body']);
 
         $deployment = $this->getDeployment($siteId, $deploymentId);
         $this->assertEquals(200, $deployment['headers']['status-code']);
@@ -869,10 +871,10 @@ class SitesCustomServerTest extends Scope
         $proxyClient->setEndpoint('http://' . $domain);
         $response = $proxyClient->call(Client::METHOD_GET, '/');
         $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertStringContainsString('Main page', $response['body']);
+        $this->assertStringContainsString('Main page', (string) $response['body']);
         $response = $proxyClient->call(Client::METHOD_GET, '/something');
         $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertStringContainsString('Main page', $response['body']);
+        $this->assertStringContainsString('Main page', (string) $response['body']);
 
         $this->cleanupSite($siteId);
     }
@@ -939,7 +941,7 @@ class SitesCustomServerTest extends Scope
         $proxyClient->setEndpoint('http://' . $domain);
         $response = $proxyClient->call(Client::METHOD_GET, '/');
         $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertStringContainsString("Astro SSR", $response['body']);
+        $this->assertStringContainsString("Astro SSR", (string) $response['body']);
         $response = $proxyClient->call(Client::METHOD_GET, '/not-found');
         $this->assertEquals(404, $response['headers']['status-code']);
 
@@ -951,10 +953,10 @@ class SitesCustomServerTest extends Scope
         $proxyClient->setEndpoint('http://' . $domain);
         $response = $proxyClient->call(Client::METHOD_GET, '/');
         $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertStringContainsString("Astro static", $response['body']);
+        $this->assertStringContainsString("Astro static", (string) $response['body']);
         $response = $proxyClient->call(Client::METHOD_GET, '/not-found');
         $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertStringContainsString("Astro static", $response['body']);
+        $this->assertStringContainsString("Astro static", (string) $response['body']);
 
         $this->cleanupSite($siteId);
     }
@@ -979,9 +981,9 @@ class SitesCustomServerTest extends Scope
             'search' => 'Test List Sites',
         ]);
 
-        $this->assertEquals($sites['headers']['status-code'], 200);
+        $this->assertEquals(200, $sites['headers']['status-code']);
         $this->assertCount(1, $sites['body']['sites']);
-        $this->assertEquals($sites['body']['sites'][0]['name'], 'Test List Sites');
+        $this->assertEquals('Test List Sites', $sites['body']['sites'][0]['name']);
 
         // Test pagination limit
         $sites = $this->listSites([
@@ -990,7 +992,7 @@ class SitesCustomServerTest extends Scope
             ],
         ]);
 
-        $this->assertEquals($sites['headers']['status-code'], 200);
+        $this->assertEquals(200, $sites['headers']['status-code']);
         $this->assertCount(1, $sites['body']['sites']);
 
         // Test pagination offset with search filter (to only count our test site)
@@ -1001,7 +1003,7 @@ class SitesCustomServerTest extends Scope
             ],
         ]);
 
-        $this->assertEquals($sites['headers']['status-code'], 200);
+        $this->assertEquals(200, $sites['headers']['status-code']);
         $this->assertCount(0, $sites['body']['sites']);
 
         // Test filter enabled (with search to isolate our test site)
@@ -1012,7 +1014,7 @@ class SitesCustomServerTest extends Scope
             ],
         ]);
 
-        $this->assertEquals($sites['headers']['status-code'], 200);
+        $this->assertEquals(200, $sites['headers']['status-code']);
         $this->assertCount(1, $sites['body']['sites']);
 
         // Test filter disabled (with search to isolate our test site)
@@ -1023,7 +1025,7 @@ class SitesCustomServerTest extends Scope
             ],
         ]);
 
-        $this->assertEquals($sites['headers']['status-code'], 200);
+        $this->assertEquals(200, $sites['headers']['status-code']);
         $this->assertCount(0, $sites['body']['sites']);
 
         // Test search name
@@ -1031,7 +1033,7 @@ class SitesCustomServerTest extends Scope
             'search' => 'Test List Sites'
         ]);
 
-        $this->assertEquals($sites['headers']['status-code'], 200);
+        $this->assertEquals(200, $sites['headers']['status-code']);
         $this->assertCount(1, $sites['body']['sites']);
         $this->assertEquals($sites['body']['sites'][0]['$id'], $siteId);
 
@@ -1040,7 +1042,7 @@ class SitesCustomServerTest extends Scope
             'search' => 'analog'
         ]);
 
-        $this->assertEquals($sites['headers']['status-code'], 200);
+        $this->assertEquals(200, $sites['headers']['status-code']);
         $this->assertCount(1, $sites['body']['sites']);
         $this->assertEquals($sites['body']['sites'][0]['$id'], $siteId);
 
@@ -1062,12 +1064,12 @@ class SitesCustomServerTest extends Scope
             'search' => 'Test List Sites',
         ]);
 
-        $this->assertEquals($sites['headers']['status-code'], 200);
-        $this->assertEquals($sites['body']['total'], 2);
+        $this->assertEquals(200, $sites['headers']['status-code']);
+        $this->assertEquals(2, $sites['body']['total']);
         $this->assertIsArray($sites['body']['sites']);
         $this->assertCount(2, $sites['body']['sites']);
-        $this->assertEquals($sites['body']['sites'][0]['name'], 'Test List Sites');
-        $this->assertEquals($sites['body']['sites'][1]['name'], 'Test List Sites 2');
+        $this->assertEquals('Test List Sites', $sites['body']['sites'][0]['name']);
+        $this->assertEquals('Test List Sites 2', $sites['body']['sites'][1]['name']);
 
         $sites1 = $this->listSites([
             'search' => 'Test List Sites',
@@ -1076,9 +1078,9 @@ class SitesCustomServerTest extends Scope
             ],
         ]);
 
-        $this->assertEquals($sites1['headers']['status-code'], 200);
+        $this->assertEquals(200, $sites1['headers']['status-code']);
         $this->assertCount(1, $sites1['body']['sites']);
-        $this->assertEquals($sites1['body']['sites'][0]['name'], 'Test List Sites 2');
+        $this->assertEquals('Test List Sites 2', $sites1['body']['sites'][0]['name']);
 
         $sites2 = $this->listSites([
             'search' => 'Test List Sites',
@@ -1087,9 +1089,9 @@ class SitesCustomServerTest extends Scope
             ],
         ]);
 
-        $this->assertEquals($sites2['headers']['status-code'], 200);
+        $this->assertEquals(200, $sites2['headers']['status-code']);
         $this->assertCount(1, $sites2['body']['sites']);
-        $this->assertEquals($sites2['body']['sites'][0]['name'], 'Test List Sites');
+        $this->assertEquals('Test List Sites', $sites2['body']['sites'][0]['name']);
 
         /**
          * Test for FAILURE
@@ -1099,7 +1101,7 @@ class SitesCustomServerTest extends Scope
                 Query::cursorAfter(new Document(['$id' => 'unknown']))->toString(),
             ],
         ]);
-        $this->assertEquals($sites['headers']['status-code'], 400);
+        $this->assertEquals(400, $sites['headers']['status-code']);
 
         $this->cleanupSite($siteId);
         $this->cleanupSite($siteId2);
@@ -1123,15 +1125,15 @@ class SitesCustomServerTest extends Scope
          */
         $site = $this->getSite($siteId);
 
-        $this->assertEquals($site['headers']['status-code'], 200);
-        $this->assertEquals($site['body']['name'], 'Test Site');
+        $this->assertEquals(200, $site['headers']['status-code']);
+        $this->assertEquals('Test Site', $site['body']['name']);
 
         /**
          * Test for FAILURE
          */
         $site = $this->getSite('x');
 
-        $this->assertEquals($site['headers']['status-code'], 404);
+        $this->assertEquals(404, $site['headers']['status-code']);
 
         $this->cleanupSite($siteId);
     }
@@ -1588,7 +1590,7 @@ class SitesCustomServerTest extends Scope
         $this->assertEventually(function () use ($siteId, $deploymentId) {
             $deployment = $this->getDeployment($siteId, $deploymentId);
             $this->assertEquals(200, $deployment['headers']['status-code']);
-            $this->assertStringContainsString('Build has been canceled.', $deployment['body']['buildLogs']);
+            $this->assertStringContainsString('Build has been canceled.', (string) $deployment['body']['buildLogs']);
         });
 
         $deployment = $this->getDeployment($siteId, $deploymentId);
@@ -1676,8 +1678,8 @@ class SitesCustomServerTest extends Scope
 
         $deployments = $this->listDeployments($siteId);
 
-        $this->assertEquals($deployments['headers']['status-code'], 200);
-        $this->assertEquals($deployments['body']['total'], 2);
+        $this->assertEquals(200, $deployments['headers']['status-code']);
+        $this->assertEquals(2, $deployments['body']['total']);
         $this->assertIsArray($deployments['body']['deployments']);
         $this->assertCount(2, $deployments['body']['deployments']);
         $this->assertArrayHasKey('sourceSize', $deployments['body']['deployments'][0]);
@@ -1689,7 +1691,7 @@ class SitesCustomServerTest extends Scope
             ],
         ]);
 
-        $this->assertEquals($deployments['headers']['status-code'], 200);
+        $this->assertEquals(200, $deployments['headers']['status-code']);
         $this->assertCount(1, $deployments['body']['deployments']);
 
         $deployments = $this->listDeployments($siteId, [
@@ -1698,7 +1700,7 @@ class SitesCustomServerTest extends Scope
             ],
         ]);
 
-        $this->assertEquals($deployments['headers']['status-code'], 200);
+        $this->assertEquals(200, $deployments['headers']['status-code']);
         $this->assertArrayHasKey('status', $deployments['body']['deployments'][0]);
         $this->assertArrayHasKey('status', $deployments['body']['deployments'][1]);
         $this->assertArrayNotHasKey('sourceSize', $deployments['body']['deployments'][0]);
@@ -1710,7 +1712,7 @@ class SitesCustomServerTest extends Scope
                 Query::select(['buildLogs'])->toString(),
             ],
         ]);
-        $this->assertEquals($deployments['headers']['status-code'], 200);
+        $this->assertEquals(200, $deployments['headers']['status-code']);
         $this->assertArrayHasKey('buildLogs', $deployments['body']['deployments'][0]);
         $this->assertArrayHasKey('buildLogs', $deployments['body']['deployments'][1]);
         $this->assertArrayNotHasKey('sourceSize', $deployments['body']['deployments'][0]);
@@ -1722,7 +1724,7 @@ class SitesCustomServerTest extends Scope
             ],
         ]);
 
-        $this->assertEquals($deployments['headers']['status-code'], 200);
+        $this->assertEquals(200, $deployments['headers']['status-code']);
         $this->assertCount(1, $deployments['body']['deployments']);
 
         $deployments = $this->listDeployments(
@@ -1734,7 +1736,7 @@ class SitesCustomServerTest extends Scope
             ]
         );
 
-        $this->assertEquals($deployments['headers']['status-code'], 200);
+        $this->assertEquals(200, $deployments['headers']['status-code']);
         $this->assertEquals(2, $deployments['body']['total']);
 
         $deployments = $this->listDeployments(
@@ -1746,7 +1748,7 @@ class SitesCustomServerTest extends Scope
             ]
         );
 
-        $this->assertEquals($deployments['headers']['status-code'], 200);
+        $this->assertEquals(200, $deployments['headers']['status-code']);
         $this->assertEquals(0, $deployments['body']['total']);
 
         $deployments = $this->listDeployments(
@@ -1758,7 +1760,7 @@ class SitesCustomServerTest extends Scope
             ]
         );
 
-        $this->assertEquals($deployments['headers']['status-code'], 200);
+        $this->assertEquals(200, $deployments['headers']['status-code']);
         $this->assertEquals(0, $deployments['body']['total']);
 
         $deployments = $this->listDeployments(
@@ -1770,7 +1772,7 @@ class SitesCustomServerTest extends Scope
             ]
         );
 
-        $this->assertEquals($deployments['headers']['status-code'], 200);
+        $this->assertEquals(200, $deployments['headers']['status-code']);
         $this->assertEquals(0, $deployments['body']['total']);
 
         $deployments = $this->listDeployments(
@@ -1782,7 +1784,7 @@ class SitesCustomServerTest extends Scope
             ]
         );
 
-        $this->assertEquals($deployments['headers']['status-code'], 200);
+        $this->assertEquals(200, $deployments['headers']['status-code']);
         $this->assertEquals(2, $deployments['body']['total']);
 
         $deployments = $this->listDeployments(
@@ -1793,7 +1795,7 @@ class SitesCustomServerTest extends Scope
                 ],
             ]
         );
-        $this->assertEquals($deployments['headers']['status-code'], 200);
+        $this->assertEquals(200, $deployments['headers']['status-code']);
         $this->assertEquals(2, $deployments['body']['total']);
 
         /**
@@ -1887,7 +1889,7 @@ class SitesCustomServerTest extends Scope
          */
         $deployment = $this->getDeployment($siteId, 'x');
 
-        $this->assertEquals($deployment['headers']['status-code'], 404);
+        $this->assertEquals(404, $deployment['headers']['status-code']);
 
         $this->cleanupDeployment($siteId, $deploymentId);
         $this->cleanupSite($siteId);
@@ -2167,7 +2169,7 @@ class SitesCustomServerTest extends Scope
         ]));
 
         $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertStringContainsString("Index page", $response['body']);
+        $this->assertStringContainsString("Index page", (string) $response['body']);
 
         $this->assertArrayHasKey('x-appwrite-log-id', $response['headers']);
         $this->assertNotEmpty($response['headers']['x-appwrite-log-id']);
@@ -2178,7 +2180,7 @@ class SitesCustomServerTest extends Scope
         ]));
 
         $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertStringContainsString("Contact page", $response['body']);
+        $this->assertStringContainsString("Contact page", (string) $response['body']);
 
         $response = $proxyClient->call(Client::METHOD_GET, '/non-existing', array_merge([
             'content-type' => 'application/json',
@@ -2186,9 +2188,9 @@ class SitesCustomServerTest extends Scope
         ]));
 
         $this->assertEquals(404, $response['headers']['status-code']);
-        $this->assertStringContainsString("Page not found", $response['body']); // Title
-        $this->assertStringContainsString("Go to homepage", $response['body']); // Button
-        $this->assertStringNotContainsString("Powered by", $response['body']); // Brand
+        $this->assertStringContainsString("Page not found", (string) $response['body']); // Title
+        $this->assertStringContainsString("Go to homepage", (string) $response['body']); // Button
+        $this->assertStringNotContainsString("Powered by", (string) $response['body']); // Brand
 
         $this->cleanupSite($siteId);
     }
@@ -2227,7 +2229,7 @@ class SitesCustomServerTest extends Scope
         ]));
 
         $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertStringContainsString("Index page", $response['body']);
+        $this->assertStringContainsString("Index page", (string) $response['body']);
 
         $response = $proxyClient->call(Client::METHOD_GET, '/contact', array_merge([
             'content-type' => 'application/json',
@@ -2235,7 +2237,7 @@ class SitesCustomServerTest extends Scope
         ]));
 
         $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertStringContainsString("Contact page", $response['body']);
+        $this->assertStringContainsString("Contact page", (string) $response['body']);
 
         $response = $proxyClient->call(Client::METHOD_GET, '/non-existing', array_merge([
             'content-type' => 'application/json',
@@ -2243,8 +2245,8 @@ class SitesCustomServerTest extends Scope
         ]));
 
         $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertStringContainsString("Customized 404 page", $response['body']);
-        $this->assertStringNotContainsString("Powered by", $response['body']); //brand
+        $this->assertStringContainsString("Customized 404 page", (string) $response['body']);
+        $this->assertStringNotContainsString("Powered by", (string) $response['body']); //brand
 
         $this->cleanupSite($siteId);
     }
@@ -2301,14 +2303,14 @@ class SitesCustomServerTest extends Scope
         $response = $proxyClient->call(Client::METHOD_GET, '/');
 
         $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertStringContainsString("Astro Blog", $response['body']);
-        $this->assertStringContainsString("Hello, Astronaut!", $response['body']);
+        $this->assertStringContainsString("Astro Blog", (string) $response['body']);
+        $this->assertStringContainsString("Hello, Astronaut!", (string) $response['body']);
 
         $response = $proxyClient->call(Client::METHOD_GET, '/about');
 
         $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertStringContainsString("Astro Blog", $response['body']);
-        $this->assertStringContainsString("About Me", $response['body']);
+        $this->assertStringContainsString("Astro Blog", (string) $response['body']);
+        $this->assertStringContainsString("About Me", (string) $response['body']);
 
         $deployment = $this->getDeployment($siteId, $deployment['body']['$id']);
         $this->assertEquals(200, $deployment['headers']['status-code']);
@@ -2372,14 +2374,14 @@ class SitesCustomServerTest extends Scope
         $response = $proxyClient->call(Client::METHOD_GET, '/');
 
         $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertStringContainsString("Astro Blog", $response['body']);
-        $this->assertStringContainsString("Hello, Astronaut!", $response['body']);
+        $this->assertStringContainsString("Astro Blog", (string) $response['body']);
+        $this->assertStringContainsString("Hello, Astronaut!", (string) $response['body']);
 
         $response = $proxyClient->call(Client::METHOD_GET, '/about');
 
         $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertStringContainsString("Astro Blog", $response['body']);
-        $this->assertStringContainsString("About Me", $response['body']);
+        $this->assertStringContainsString("Astro Blog", (string) $response['body']);
+        $this->assertStringContainsString("About Me", (string) $response['body']);
 
         $deployment = $this->getDeployment($siteId, $deployment['body']['$id']);
         $this->assertEquals(200, $deployment['headers']['status-code']);
@@ -2450,14 +2452,14 @@ class SitesCustomServerTest extends Scope
         $response = $proxyClient->call(Client::METHOD_GET, '/');
 
         $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertStringContainsString("Astro Blog", $response['body']);
-        $this->assertStringContainsString("Hello, Astronaut!", $response['body']);
+        $this->assertStringContainsString("Astro Blog", (string) $response['body']);
+        $this->assertStringContainsString("Hello, Astronaut!", (string) $response['body']);
 
         $response = $proxyClient->call(Client::METHOD_GET, '/about');
 
         $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertStringContainsString("Astro Blog", $response['body']);
-        $this->assertStringContainsString("About Me", $response['body']);
+        $this->assertStringContainsString("Astro Blog", (string) $response['body']);
+        $this->assertStringContainsString("About Me", (string) $response['body']);
 
         $deployment = $this->getDeployment($siteId, $deployment['body']['$id']);
         $this->assertEquals(200, $deployment['headers']['status-code']);
@@ -2502,7 +2504,7 @@ class SitesCustomServerTest extends Scope
         $response = $proxyClient->call(Client::METHOD_GET, '/');
 
         $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertStringNotContainsString("This domain is not connected to any Appwrite resource yet", $response['body']);
+        $this->assertStringNotContainsString("This domain is not connected to any Appwrite resource yet", (string) $response['body']);
 
         $site2 = $this->createSite([
             'siteId' => ID::unique(),
@@ -2548,7 +2550,7 @@ class SitesCustomServerTest extends Scope
         $response = $proxyClient->call(Client::METHOD_GET, '/');
 
         $this->assertEquals(404, $response['headers']['status-code']);
-        $this->assertStringContainsString("This page is empty, but you can make it yours.", $response['body']);
+        $this->assertStringContainsString("This page is empty, but you can make it yours.", (string) $response['body']);
 
         $site = $this->createSite([
             'siteId' => ID::unique(),
@@ -2606,15 +2608,15 @@ class SitesCustomServerTest extends Scope
         $proxyClient->setEndpoint('http://' . $siteDomain);
         $response = $proxyClient->call(Client::METHOD_GET, '/');
         $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertStringContainsString("Hello Appwrite", $response['body']);
-        $this->assertStringNotContainsString("Preview by", $response['body']);
+        $this->assertStringContainsString("Hello Appwrite", (string) $response['body']);
+        $this->assertStringNotContainsString("Preview by", (string) $response['body']);
         $contentLength = $response['headers']['content-length'];
 
         $proxyClient = new Client();
         $proxyClient->setEndpoint('http://' . $deploymentDomain);
         $response = $proxyClient->call(Client::METHOD_GET, '/', followRedirects: false);
         $this->assertEquals(301, $response['headers']['status-code']);
-        $this->assertStringContainsString('/console/auth/preview', $response['headers']['location']);
+        $this->assertStringContainsString('/console/auth/preview', (string) $response['headers']['location']);
 
         $jwtObj = new JWT(System::getEnv('_APP_OPENSSL_KEY_V1'), 'HS256', 900, 0);
         $apiKey = $jwtObj->encode([
@@ -2625,16 +2627,16 @@ class SitesCustomServerTest extends Scope
             'x-appwrite-key' => API_KEY_EPHEMERAL . '_' . $apiKey,
         ]);
         $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertStringContainsString("Hello Appwrite", $response['body']);
-        $this->assertStringContainsString("Preview by", $response['body']);
+        $this->assertStringContainsString("Hello Appwrite", (string) $response['body']);
+        $this->assertStringContainsString("Preview by", (string) $response['body']);
         $this->assertGreaterThan($contentLength, $response['headers']['content-length']);
 
         $response = $proxyClient->call(Client::METHOD_GET, '/non-existing-path', followRedirects: false, headers: [
             'x-appwrite-key' => API_KEY_EPHEMERAL . '_' . $apiKey,
         ]);
         $this->assertEquals(404, $response['headers']['status-code']);
-        $this->assertStringContainsString("Page not found", $response['body']);
-        $this->assertStringNotContainsString("Preview by", $response['body']);
+        $this->assertStringContainsString("Page not found", (string) $response['body']);
+        $this->assertStringNotContainsString("Preview by", (string) $response['body']);
         $this->assertGreaterThan($contentLength, $response['headers']['content-length']);
 
         $this->cleanupSite($siteId);
@@ -2732,7 +2734,7 @@ class SitesCustomServerTest extends Scope
 
         $buildMd5 = \md5($response['body']);
 
-        $this->assertNotEquals($deploymentMd5, $buildMd5);
+        $this->assertNotSame($deploymentMd5, $buildMd5);
 
         $this->cleanupSite($siteId);
     }
@@ -2768,7 +2770,7 @@ class SitesCustomServerTest extends Scope
 
         $response = $proxyClient->call(Client::METHOD_GET, '/logs-inline');
         $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertStringContainsString("Inline logs printed.", $response['body']);
+        $this->assertStringContainsString("Inline logs printed.", (string) $response['body']);
 
         // Poll for execution logs to be written (async)
         // Filter by requestPath to avoid picking up screenshot worker executions
@@ -2790,13 +2792,13 @@ class SitesCustomServerTest extends Scope
         $this->assertNotEmpty($logs['body']['executions'], 'Execution logs were not available within timeout');
         $this->assertNotNull($logs['body']['executions'][0]['logs'], 'Execution logs content was not populated within timeout');
         $this->assertEquals(200, $logs['headers']['status-code']);
-        $this->assertStringContainsString($deploymentId, $logs['body']['executions'][0]['deploymentId']);
-        $this->assertStringContainsString("GET", $logs['body']['executions'][0]['requestMethod']);
-        $this->assertStringContainsString("/logs-inline", $logs['body']['executions'][0]['requestPath']);
-        $this->assertStringContainsString("Log1", $logs['body']['executions'][0]['logs']);
-        $this->assertStringContainsString("Log2", $logs['body']['executions'][0]['logs']);
-        $this->assertStringContainsString("Error1", $logs['body']['executions'][0]['errors']);
-        $this->assertStringContainsString("Error2", $logs['body']['executions'][0]['errors']);
+        $this->assertStringContainsString($deploymentId, (string) $logs['body']['executions'][0]['deploymentId']);
+        $this->assertStringContainsString("GET", (string) $logs['body']['executions'][0]['requestMethod']);
+        $this->assertStringContainsString("/logs-inline", (string) $logs['body']['executions'][0]['requestPath']);
+        $this->assertStringContainsString("Log1", (string) $logs['body']['executions'][0]['logs']);
+        $this->assertStringContainsString("Log2", (string) $logs['body']['executions'][0]['logs']);
+        $this->assertStringContainsString("Error1", (string) $logs['body']['executions'][0]['errors']);
+        $this->assertStringContainsString("Error2", (string) $logs['body']['executions'][0]['errors']);
         $log1Id = $logs['body']['executions'][0]['$id'];
         $this->assertNotEmpty($log1Id);
 
@@ -2820,7 +2822,7 @@ class SitesCustomServerTest extends Scope
 
         $response = $proxyClient->call(Client::METHOD_GET, '/logs-action');
         $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertStringContainsString("Action logs printed.", $response['body']);
+        $this->assertStringContainsString("Action logs printed.", (string) $response['body']);
 
         $logs = null;
         $start = \time();
@@ -2838,13 +2840,13 @@ class SitesCustomServerTest extends Scope
         $this->assertNotEmpty($logs['body']['executions'], 'Action execution logs were not available within timeout');
         $this->assertNotNull($logs['body']['executions'][0]['logs'], 'Action execution logs content was not populated within timeout');
         $this->assertEquals(200, $logs['headers']['status-code']);
-        $this->assertStringContainsString($deploymentId, $logs['body']['executions'][0]['deploymentId']);
-        $this->assertStringContainsString("GET", $logs['body']['executions'][0]['requestMethod']);
-        $this->assertStringContainsString("/logs-action", $logs['body']['executions'][0]['requestPath']);
-        $this->assertStringContainsString("Log1", $logs['body']['executions'][0]['logs']);
-        $this->assertStringContainsString("Log2", $logs['body']['executions'][0]['logs']);
-        $this->assertStringContainsString("Error1", $logs['body']['executions'][0]['errors']);
-        $this->assertStringContainsString("Error2", $logs['body']['executions'][0]['errors']);
+        $this->assertStringContainsString($deploymentId, (string) $logs['body']['executions'][0]['deploymentId']);
+        $this->assertStringContainsString("GET", (string) $logs['body']['executions'][0]['requestMethod']);
+        $this->assertStringContainsString("/logs-action", (string) $logs['body']['executions'][0]['requestPath']);
+        $this->assertStringContainsString("Log1", (string) $logs['body']['executions'][0]['logs']);
+        $this->assertStringContainsString("Log2", (string) $logs['body']['executions'][0]['logs']);
+        $this->assertStringContainsString("Error1", (string) $logs['body']['executions'][0]['errors']);
+        $this->assertStringContainsString("Error2", (string) $logs['body']['executions'][0]['errors']);
         $log2Id = $logs['body']['executions'][0]['$id'];
         $this->assertNotEmpty($log2Id);
 
@@ -2870,7 +2872,7 @@ class SitesCustomServerTest extends Scope
         $this->assertEventually(function () use ($proxyClient) {
             $response = $proxyClient->call(Client::METHOD_GET, '/logs-inline');
             $this->assertEquals(200, $response['headers']['status-code']);
-            $this->assertStringContainsString("Inline logs printed.", $response['body']);
+            $this->assertStringContainsString("Inline logs printed.", (string) $response['body']);
         }, 15_000, 500);
 
         // Poll for the NEW log entry (after logging was disabled) to appear
@@ -2902,7 +2904,7 @@ class SitesCustomServerTest extends Scope
 
         $response = $proxyClient->call(Client::METHOD_GET, '/logs-action');
         $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertStringContainsString("Action logs printed.", $response['body']);
+        $this->assertStringContainsString("Action logs printed.", (string) $response['body']);
 
         // Poll for the NEW log entry for /logs-action
         $start = \time();
@@ -2957,7 +2959,7 @@ class SitesCustomServerTest extends Scope
         $this->assertNotEmpty($deploymentId1);
 
         $response = $proxyClient->call(Client::METHOD_GET, '/not-found');
-        $this->assertStringContainsString("Customized 404 page", $response['body']);
+        $this->assertStringContainsString("Customized 404 page", (string) $response['body']);
 
         $site = $this->updateSite([
             '$id' => $siteId,
@@ -3016,7 +3018,7 @@ class SitesCustomServerTest extends Scope
         }, 120000, 500);
 
         $response = $proxyClient->call(Client::METHOD_GET, '/not-found');
-        $this->assertStringContainsString("Index page", $response['body']);
+        $this->assertStringContainsString("Index page", (string) $response['body']);
 
         $deployment = $this->getDeployment($siteId, $deploymentId2);
         $this->assertEquals(200, $deployment['headers']['status-code']);
@@ -3066,7 +3068,7 @@ class SitesCustomServerTest extends Scope
 
         $response = $proxyClient->call(Client::METHOD_GET, '/');
         $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertStringContainsString('Hello Appwrite', $response['body']);
+        $this->assertStringContainsString('Hello Appwrite', (string) $response['body']);
 
         $deploymentId2 = $this->setupDeployment($siteId, [
             'code' => $this->packageSite('static-spa'),
@@ -3081,7 +3083,7 @@ class SitesCustomServerTest extends Scope
 
         $response = $proxyClient->call(Client::METHOD_GET, '/');
         $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertStringContainsString('Index page', $response['body']);
+        $this->assertStringContainsString('Index page', (string) $response['body']);
 
         $site = $this->getSite($siteId);
         $this->assertEquals(200, $site['headers']['status-code']);
@@ -3101,7 +3103,7 @@ class SitesCustomServerTest extends Scope
 
         $response = $proxyClient->call(Client::METHOD_GET, '/');
         $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertStringContainsString('Hello Appwrite', $response['body']);
+        $this->assertStringContainsString('Hello Appwrite', (string) $response['body']);
 
         $deployment = $this->deleteDeployment($siteId, $deploymentId2);
         $this->assertEquals(204, $deployment['headers']['status-code']);
@@ -3139,10 +3141,10 @@ class SitesCustomServerTest extends Scope
 
         $response = $proxyClient->call(Client::METHOD_GET, '/contact', followRedirects: false);
         $this->assertEquals(301, $response['headers']['status-code']);
-        $this->assertStringContainsString('/console/auth/preview', $response['headers']['location']);
-        $this->assertStringContainsString('projectId=' . $this->getProject()['$id'], $response['headers']['location']);
-        $this->assertStringContainsString('origin=', $response['headers']['location']);
-        $this->assertStringContainsString('path=%2Fcontact', $response['headers']['location']);
+        $this->assertStringContainsString('/console/auth/preview', (string) $response['headers']['location']);
+        $this->assertStringContainsString('projectId=' . $this->getProject()['$id'], (string) $response['headers']['location']);
+        $this->assertStringContainsString('origin=', (string) $response['headers']['location']);
+        $this->assertStringContainsString('path=%2Fcontact', (string) $response['headers']['location']);
 
         $session = $this->client->call(Client::METHOD_POST, '/account/sessions/email', array_merge([
             'origin' => 'http://localhost',
@@ -3172,11 +3174,11 @@ class SitesCustomServerTest extends Scope
         ], followRedirects: false);
         $this->assertEquals(301, $response['headers']['status-code']);
         $this->assertArrayHasKey('set-cookie', $response['headers']);
-        $this->assertStringContainsString('a_jwt_console=', $response['headers']['set-cookie']);
+        $this->assertStringContainsString('a_jwt_console=', (string) $response['headers']['set-cookie']);
         // due to swoole update; no more httponly
-        $this->assertStringContainsString('HttpOnly', $response['headers']['set-cookie']);
-        $this->assertStringContainsString('domain=' . $domain, $response['headers']['set-cookie']);
-        $this->assertStringContainsString('path=/', $response['headers']['set-cookie']);
+        $this->assertStringContainsString('HttpOnly', (string) $response['headers']['set-cookie']);
+        $this->assertStringContainsString('domain=' . $domain, (string) $response['headers']['set-cookie']);
+        $this->assertStringContainsString('path=/', (string) $response['headers']['set-cookie']);
         $this->assertNotEmpty($response['cookies']['a_jwt_console']);
         $this->assertEquals($jwt['body']['jwt'], $response['cookies']['a_jwt_console']);
 
@@ -3184,8 +3186,8 @@ class SitesCustomServerTest extends Scope
             'cookie' => 'a_jwt_console=' . $jwt['body']['jwt']
         ], followRedirects: false);
         $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertStringContainsString("Contact page", $response['body']);
-        $this->assertStringContainsString("Preview by", $response['body']);
+        $this->assertStringContainsString("Contact page", (string) $response['body']);
+        $this->assertStringContainsString("Preview by", (string) $response['body']);
 
         // Failure: Session missing (old bad, new ok)
         $session = $this->client->call(Client::METHOD_DELETE, '/account/sessions/current', array_merge([
@@ -3200,7 +3202,7 @@ class SitesCustomServerTest extends Scope
             'cookie' => 'a_jwt_console=' . $jwt['body']['jwt']
         ], followRedirects: false);
         $this->assertEquals(301, $response['headers']['status-code']);
-        $this->assertStringContainsString('/console/auth/preview', $response['headers']['location']);
+        $this->assertStringContainsString('/console/auth/preview', (string) $response['headers']['location']);
 
         // Failure: User missing
         $cookie = 'a_session_console=' .$this->getRoot()['session'];
@@ -3217,8 +3219,8 @@ class SitesCustomServerTest extends Scope
             'cookie' => 'a_jwt_console=' . $jwt['body']['jwt']
         ], followRedirects: false);
         $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertStringContainsString("Contact page", $response['body']);
-        $this->assertStringContainsString("Preview by", $response['body']);
+        $this->assertStringContainsString("Contact page", (string) $response['body']);
+        $this->assertStringContainsString("Preview by", (string) $response['body']);
 
         $user = $this->client->call(Client::METHOD_PATCH, '/account/status', array_merge([
             'origin' => 'http://localhost',
@@ -3233,7 +3235,7 @@ class SitesCustomServerTest extends Scope
             'cookie' => 'a_jwt_console=' . $jwt['body']['jwt']
         ], followRedirects: false);
         $this->assertEquals(301, $response['headers']['status-code']);
-        $this->assertStringContainsString('/console/auth/preview', $response['headers']['location']);
+        $this->assertStringContainsString('/console/auth/preview', (string) $response['headers']['location']);
 
         // Failure: Membership missing
         $email = \uniqid() . 'newuser@appwrite.io';
@@ -3273,7 +3275,7 @@ class SitesCustomServerTest extends Scope
             'cookie' => 'a_jwt_console=' . $jwt['body']['jwt']
         ], followRedirects: false);
         $this->assertEquals(301, $response['headers']['status-code']);
-        $this->assertStringContainsString('/console/auth/preview', $response['headers']['location']);
+        $this->assertStringContainsString('/console/auth/preview', (string) $response['headers']['location']);
 
         $this->cleanupSite($siteId);
     }
@@ -3347,7 +3349,7 @@ class SitesCustomServerTest extends Scope
         }, 100000, 500);
 
         $response = $proxyClient->call(Client::METHOD_GET, '/');
-        $this->assertStringContainsString('This page is empty, activate a deployment to make it live.', $response['body']);
+        $this->assertStringContainsString('This page is empty, activate a deployment to make it live.', (string) $response['body']);
 
         $this->cleanupSite($siteId);
     }
@@ -3378,18 +3380,18 @@ class SitesCustomServerTest extends Scope
         $this->assertEventually(function () use ($proxyClient) {
             $response = $proxyClient->call(Client::METHOD_GET, '/');
             $this->assertEquals(200, $response['headers']['status-code']);
-            $this->assertStringContainsString('Sub-directory index', $response['body']);
+            $this->assertStringContainsString('Sub-directory index', (string) $response['body']);
         }, 30000, 500);
 
         $this->assertEventually(function () use ($proxyClient) {
             $response1 = $proxyClient->call(Client::METHOD_GET, '/project1');
             $this->assertEquals(200, $response1['headers']['status-code']);
-            $this->assertStringContainsString('Sub-directory project1', $response1['body']);
+            $this->assertStringContainsString('Sub-directory project1', (string) $response1['body']);
         }, 30000, 500);
 
         $response2 = $proxyClient->call(Client::METHOD_GET, '/project1/');
         $this->assertEquals(200, $response2['headers']['status-code']);
-        $this->assertStringContainsString('Sub-directory project1', $response2['body']);
+        $this->assertStringContainsString('Sub-directory project1', (string) $response2['body']);
         $this->cleanupSite($siteId);
     }
 
@@ -3418,8 +3420,8 @@ class SitesCustomServerTest extends Scope
 
         $deployment = $this->getDeployment($siteId, $deploymentId);
         $this->assertEquals(200, $deployment['headers']['status-code']);
-        $this->assertStringContainsString('Hello one', $deployment['body']['buildLogs']);
-        $this->assertStringContainsString('Hello two', $deployment['body']['buildLogs']);
+        $this->assertStringContainsString('Hello one', (string) $deployment['body']['buildLogs']);
+        $this->assertStringContainsString('Hello two', (string) $deployment['body']['buildLogs']);
 
         $this->cleanupSite($siteId);
     }
@@ -3435,8 +3437,8 @@ class SitesCustomServerTest extends Scope
         $response = $proxyClient->call(Client::METHOD_GET, '/');
 
         $this->assertEquals(404, $response['headers']['status-code']);
-        $this->assertStringContainsString('Nothing is here yet', $response['body']);
-        $this->assertStringContainsString('Start with this domain', $response['body']);
+        $this->assertStringContainsString('Nothing is here yet', (string) $response['body']);
+        $this->assertStringContainsString('Start with this domain', (string) $response['body']);
 
         $siteId = $this->setupSite([
             'siteId' => ID::unique(),
@@ -3488,20 +3490,20 @@ class SitesCustomServerTest extends Scope
             'canceled' => 'Deployment build canceled',
             default => 'Deployment is still building',
         };
-        $this->assertStringContainsString($expectedMessage, $response['body']);
+        $this->assertStringContainsString($expectedMessage, (string) $response['body']);
         $expectedCta = match ($status) {
             'failed' => 'View logs',
             'canceled' => 'View deployments',
             default => 'Reload',
         };
-        $this->assertStringContainsString($expectedCta, $response['body']);
+        $this->assertStringContainsString($expectedCta, (string) $response['body']);
 
         // check site domain for no active deployments
         $proxyClient->setEndpoint('http://' . $domain);
         $response = $proxyClient->call(Client::METHOD_GET, '/');
         $this->assertEquals(404, $response['headers']['status-code']);
-        $this->assertStringContainsString('No active deployments', $response['body']);
-        $this->assertStringContainsString('View deployments', $response['body']);
+        $this->assertStringContainsString('No active deployments', (string) $response['body']);
+        $this->assertStringContainsString('View deployments', (string) $response['body']);
 
         $deployment = $this->createDeployment($siteId, [
             'code' => $this->packageSite('static-single-file'),
@@ -3523,9 +3525,9 @@ class SitesCustomServerTest extends Scope
             'x-appwrite-key' => API_KEY_EPHEMERAL . '_' . $apiKey,
         ]);
         $this->assertEquals(400, $response['headers']['status-code']);
-        $this->assertStringContainsString("Deployment is still building", $response['body']);
-        $this->assertStringContainsString("View logs", $response['body']);
-        $this->assertStringContainsString("Reload", $response['body']);
+        $this->assertStringContainsString("Deployment is still building", (string) $response['body']);
+        $this->assertStringContainsString("View logs", (string) $response['body']);
+        $this->assertStringContainsString("Reload", (string) $response['body']);
 
         $this->assertEventually(function () use ($siteId, $deploymentId) {
             $deployment = $this->getDeployment($siteId, $deploymentId);
@@ -3538,8 +3540,8 @@ class SitesCustomServerTest extends Scope
             'x-appwrite-key' => API_KEY_EPHEMERAL . '_' . $apiKey,
         ]);
         $this->assertEquals(400, $response['headers']['status-code']);
-        $this->assertStringContainsString("Deployment build failed", $response['body']);
-        $this->assertStringContainsString("View logs", $response['body']);
+        $this->assertStringContainsString("Deployment build failed", (string) $response['body']);
+        $this->assertStringContainsString("View logs", (string) $response['body']);
 
         $this->cleanupSite($siteId);
     }
@@ -3574,7 +3576,7 @@ class SitesCustomServerTest extends Scope
         $this->assertEventually(function () use ($siteId, $deploymentId) {
             $deployment = $this->getDeployment($siteId, $deploymentId);
             $this->assertEquals('failed', $deployment['body']['status'], 'Deployment status does not match: ' . json_encode($deployment['body'], JSON_PRETTY_PRINT));
-            $this->assertStringContainsString('Error:', $deployment['body']['buildLogs'], 'Deployment logs do not match: ' . json_encode($deployment['body'], JSON_PRETTY_PRINT));
+            $this->assertStringContainsString('Error:', (string) $deployment['body']['buildLogs'], 'Deployment logs do not match: ' . json_encode($deployment['body'], JSON_PRETTY_PRINT));
         }, 100000, 500);
 
         $this->cleanupSite($siteId);
@@ -3604,7 +3606,7 @@ class SitesCustomServerTest extends Scope
         $this->assertEventually(function () use ($siteId, $deploymentId) {
             $deployment = $this->getDeployment($siteId, $deploymentId);
             $this->assertEquals('failed', $deployment['body']['status'], 'Deployment status does not match: ' . json_encode($deployment['body'], JSON_PRETTY_PRINT));
-            $this->assertStringContainsString('Error:', $deployment['body']['buildLogs'], 'Deployment logs do not match: ' . json_encode($deployment['body'], JSON_PRETTY_PRINT));
+            $this->assertStringContainsString('Error:', (string) $deployment['body']['buildLogs'], 'Deployment logs do not match: ' . json_encode($deployment['body'], JSON_PRETTY_PRINT));
         }, 100000, 500);
 
         $this->cleanupSite($siteId);
@@ -3633,7 +3635,7 @@ class SitesCustomServerTest extends Scope
         $this->assertEventually(function () use ($siteId, $deploymentId) {
             $deployment = $this->getDeployment($siteId, $deploymentId);
             $this->assertEquals('failed', $deployment['body']['status'], 'Deployment status does not match: ' . json_encode($deployment['body'], JSON_PRETTY_PRINT));
-            $this->assertStringContainsString('No such file or directory', $deployment['body']['buildLogs'], 'Deployment logs do not match: ' . json_encode($deployment['body'], JSON_PRETTY_PRINT));
+            $this->assertStringContainsString('No such file or directory', (string) $deployment['body']['buildLogs'], 'Deployment logs do not match: ' . json_encode($deployment['body'], JSON_PRETTY_PRINT));
         }, 100000, 500);
 
         $this->cleanupSite($siteId);
@@ -3675,8 +3677,8 @@ class SitesCustomServerTest extends Scope
 
         $deployment = $this->getDeployment($siteId, $deploymentId);
         $this->assertEquals(200, $deployment['headers']['status-code']);
-        $this->assertStringContainsString('custom error', $deployment['body']['buildLogs']);
-        $this->assertStringContainsString('Adapter mismatch', $deployment['body']['buildLogs']);
+        $this->assertStringContainsString('custom error', (string) $deployment['body']['buildLogs']);
+        $this->assertStringContainsString('Adapter mismatch', (string) $deployment['body']['buildLogs']);
 
         $this->cleanupSite($siteId);
     }
@@ -3754,29 +3756,29 @@ class SitesCustomServerTest extends Scope
 
         $response = $proxyClient->call(Client::METHOD_GET, '/');
         $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertStringContainsString("Homepage OK", $response['body']);
+        $this->assertStringContainsString("Homepage OK", (string) $response['body']);
 
         $response = $proxyClient->call(Client::METHOD_GET, '/ssr');
         $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertStringContainsString("SSR OK", $response['body']);
+        $this->assertStringContainsString("SSR OK", (string) $response['body']);
         $originalBody = $response['body'];
         $response = $proxyClient->call(Client::METHOD_GET, '/ssr');
         $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertStringContainsString("SSR OK", $response['body']);
+        $this->assertStringContainsString("SSR OK", (string) $response['body']);
         $this->assertNotEquals($originalBody, $response['body']); // Includes Date.now()
 
         $response = $proxyClient->call(Client::METHOD_GET, '/ssr-custom');
         $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertStringContainsString("Custom SSR OK", $response['body']);
+        $this->assertStringContainsString("Custom SSR OK", (string) $response['body']);
         $originalBody = $response['body'];
         $response = $proxyClient->call(Client::METHOD_GET, '/ssr-custom');
         $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertStringContainsString("Custom SSR OK", $response['body']);
+        $this->assertStringContainsString("Custom SSR OK", (string) $response['body']);
         $this->assertNotEquals($originalBody, $response['body']); // Includes Date.now()
 
         $response = $proxyClient->call(Client::METHOD_GET, '/non-existing');
         $this->assertEquals(500, $response['headers']['status-code']);
-        $this->assertStringContainsString("Custom error", $response['body']);
+        $this->assertStringContainsString("Custom error", (string) $response['body']);
 
         $this->cleanupSite($siteId);
     }
@@ -3815,7 +3817,7 @@ class SitesCustomServerTest extends Scope
         $this->assertEventually(function () use ($siteId, $deploymentId) {
             $deployment = $this->getDeployment($siteId, $deploymentId);
             // TODO: This assertion is not testing what we set in create function, because build worker currently overrides to minimal build specs
-            $this->assertStringContainsString('2048:1', $deployment['body']['buildLogs']);
+            $this->assertStringContainsString('2048:1', (string) $deployment['body']['buildLogs']);
         }, 10000, 500);
 
         // Check if the sites specifications are correctly set in executions

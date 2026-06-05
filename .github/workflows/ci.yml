@@ -139,6 +139,26 @@ jobs:
       - name: Run Linter
         run: composer lint
 
+  refactor:
+    name: Checks / Refactor
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@accd6127cb78bee3e8082180cb391013d204ef9f # 2.37.0
+        with:
+          php-version: '8.3'
+          tools: composer:v2
+          coverage: none
+
+      - name: Install dependencies
+        run: composer install --prefer-dist --no-progress --ignore-platform-reqs
+
+      - name: Run Rector
+        run: composer refactor:check
+
   analyze:
     name: Checks / Analyze
     runs-on: ubuntu-latest
@@ -406,7 +426,7 @@ jobs:
 
   e2e_service:
     name: Tests / E2E / ${{ matrix.database }} (${{ matrix.mode }}) / ${{ matrix.service }}
-    runs-on: ${{ matrix.runner || format('runs-on={0}/runner=4cpu-linux-x64/volume=120g/spot=false', github.run_id) }}
+    runs-on: ${{ matrix.runner || format('runs-on={0}/runner=4cpu-linux-x64/volume=120g/spot=false/extras=otel', github.run_id) }}
     needs: [build, matrix]
     permissions:
       contents: read
@@ -447,11 +467,11 @@ jobs:
         ]
         include:
           - service: Databases
-            runner: runs-on=${{ github.run_id }}/runner=8cpu-linux-x64/volume=120g/spot=false
+            runner: runs-on=${{ github.run_id }}/runner=8cpu-linux-x64/volume=120g/spot=false/extras=otel
             paratest_processes: 3
             timeout_minutes: 30
           - service: TablesDB
-            runner: runs-on=${{ github.run_id }}/runner=8cpu-linux-x64/volume=120g/spot=false
+            runner: runs-on=${{ github.run_id }}/runner=8cpu-linux-x64/volume=120g/spot=false/extras=otel
             paratest_processes: 3
             timeout_minutes: 30
           - service: Migrations
