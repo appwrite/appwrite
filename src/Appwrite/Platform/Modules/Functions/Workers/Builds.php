@@ -1681,12 +1681,8 @@ class Builds extends Action
         if ($exitCode === 0 && empty($deployment->getAttribute('buildPath', ''))) {
             $deployment = $this->waitForOrchestratorBuildPath($dbForProject, $deployment);
             if ($deployment->isEmpty() || empty($deployment->getAttribute('buildPath', ''))) {
-                $state = $cache->load($logStateKey, 3600);
-                $state = \is_array($state) ? $state : [];
-                $state['pendingExit'] = $data;
-                $cache->save($logStateKey, $state);
-
-                return;
+                $data['error'] = $data['error'] ?? 'Build exited with code 0 but no build artifacts were found after waiting.';
+                $exitCode = -1;
             }
         }
 
@@ -1759,7 +1755,7 @@ class Builds extends Action
 
     protected function waitForOrchestratorBuildPath(Database $dbForProject, Document $deployment): Document
     {
-        for ($attempt = 0; $attempt < 20; $attempt++) {
+        for ($attempt = 0; $attempt < 60; $attempt++) {
             $deployments = $dbForProject->getAuthorization()->skip(fn () => $dbForProject->find('deployments', [
                 Query::equal('$id', [$deployment->getId()]),
                 Query::limit(1),
@@ -1770,7 +1766,7 @@ class Builds extends Action
                 return $deployment;
             }
 
-            \usleep(250_000);
+            Co::sleep(0.25);
         }
 
         return $deployment;
@@ -1792,7 +1788,7 @@ class Builds extends Action
                 return $deployment;
             }
 
-            \usleep(250_000);
+            Co::sleep(0.25);
         }
 
         return $deployment;
