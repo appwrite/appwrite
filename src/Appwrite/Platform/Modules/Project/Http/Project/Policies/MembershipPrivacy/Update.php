@@ -46,7 +46,7 @@ class Update extends Action
                 responses: [
                     new SDKResponse(
                         code: Response::STATUS_CODE_OK,
-                        model: Response::MODEL_POLICY_MEMBERSHIP_PRIVACY,
+                        model: Response::MODEL_PROJECT,
                     )
                 ],
             ))
@@ -108,16 +108,6 @@ class Update extends Action
             ->setParam('projectId', $project->getId())
             ->setParam('policy', 'membership-privacy');
 
-        $auths = $project->getAttribute('auths', []);
-
-        $response->dynamic(new Document([
-            '$id' => 'membership-privacy',
-            'userId' => $auths['membershipsUserId'] ?? false,
-            'userEmail' => $auths['membershipsUserEmail'] ?? false,
-            'userPhone' => $auths['membershipsUserPhone'] ?? false,
-            'userName' => $auths['membershipsUserName'] ?? false,
-            'userMFA' => $auths['membershipsMfa'] ?? false,
-            'userAccessedAt' => $auths['membershipsUserAccessedAt'] ?? false,
-        ]), Response::MODEL_POLICY_MEMBERSHIP_PRIVACY);
+        $response->dynamic($project, Response::MODEL_PROJECT);
     }
 }

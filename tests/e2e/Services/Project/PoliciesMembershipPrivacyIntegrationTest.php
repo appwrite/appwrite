@@ -38,12 +38,12 @@ final class PoliciesMembershipPrivacyIntegrationTest extends Scope
         ]);
 
         $this->assertSame(200, $response['headers']['status-code']);
-        $this->assertFalse($response['body']['userId']);
-        $this->assertFalse($response['body']['userEmail']);
-        $this->assertFalse($response['body']['userPhone']);
-        $this->assertFalse($response['body']['userName']);
-        $this->assertFalse($response['body']['userMFA']);
-        $this->assertFalse($response['body']['userAccessedAt']);
+        $this->assertFalse($response['body']['authMembershipsUserId']);
+        $this->assertFalse($response['body']['authMembershipsUserEmail']);
+        $this->assertFalse($response['body']['authMembershipsUserPhone']);
+        $this->assertFalse($response['body']['authMembershipsUserName']);
+        $this->assertFalse($response['body']['authMembershipsMfa']);
+        $this->assertFalse($response['body']['authMembershipsUserAccessedAt']);
 
         // Step 2: Setup two users
         $user1Email = 'user1_' . uniqid() . '@localhost.test';
@@ -149,12 +149,12 @@ final class PoliciesMembershipPrivacyIntegrationTest extends Scope
             'userAccessedAt' => true,
         ]);
         $this->assertSame(200, $response['headers']['status-code']);
-        $this->assertTrue($response['body']['userId']);
-        $this->assertTrue($response['body']['userEmail']);
-        $this->assertTrue($response['body']['userPhone']);
-        $this->assertTrue($response['body']['userName']);
-        $this->assertTrue($response['body']['userMFA']);
-        $this->assertTrue($response['body']['userAccessedAt']);
+        $this->assertTrue($response['body']['authMembershipsUserId']);
+        $this->assertTrue($response['body']['authMembershipsUserEmail']);
+        $this->assertTrue($response['body']['authMembershipsUserPhone']);
+        $this->assertTrue($response['body']['authMembershipsUserName']);
+        $this->assertTrue($response['body']['authMembershipsMfa']);
+        $this->assertTrue($response['body']['authMembershipsUserAccessedAt']);
 
         // Step 6: List memberships with privacy enabled - user details exposed
         $response = $this->client->call(Client::METHOD_GET, '/teams/' . $teamId . '/memberships', $clientHeaders);
