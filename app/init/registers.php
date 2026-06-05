@@ -1,5 +1,6 @@
 <?php
 
+use Appwrite\Databases\PDOConnectionFactory;
 use Appwrite\Extend\Exception;
 use Appwrite\GraphQL\Promises\Adapter\Swoole;
 use Appwrite\Hooks\Hooks;
@@ -263,13 +264,18 @@ $register->set('pools', function () {
                 'mysql',
                 'mariadb' => function () use ($dsnHost, $dsnPort, $dsnUser, $dsnPass, $dsnDatabase) {
                     return new PDOProxy(function () use ($dsnHost, $dsnPort, $dsnUser, $dsnPass, $dsnDatabase) {
-                        return new PDO("mysql:host={$dsnHost};port={$dsnPort};dbname={$dsnDatabase};charset=utf8mb4", $dsnUser, $dsnPass, [
-                            \PDO::ATTR_TIMEOUT => 3, // Seconds
-                            \PDO::ATTR_PERSISTENT => false,
-                            \PDO::ATTR_DEFAULT_FETCH_MODE => \PDO::FETCH_ASSOC,
-                            \PDO::ATTR_EMULATE_PREPARES => true,
-                            \PDO::ATTR_STRINGIFY_FETCHES => true
-                        ]);
+                        return PDOConnectionFactory::create(
+                            "mysql:host={$dsnHost};port={$dsnPort};dbname={$dsnDatabase};charset=utf8mb4",
+                            $dsnUser,
+                            $dsnPass,
+                            [
+                                \PDO::ATTR_TIMEOUT => 3, // Seconds
+                                \PDO::ATTR_PERSISTENT => false,
+                                \PDO::ATTR_DEFAULT_FETCH_MODE => \PDO::FETCH_ASSOC,
+                                \PDO::ATTR_EMULATE_PREPARES => true,
+                                \PDO::ATTR_STRINGIFY_FETCHES => true
+                            ],
+                        );
                     });
                 },
                 'redis' => function () use ($dsnHost, $dsnPort, $dsnPass) {
