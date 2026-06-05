@@ -53,7 +53,7 @@ class Method
         protected string $desc = '',
         protected bool $public = true,
         protected string $projectAuth = 'Project',
-        protected array $locationAuth = ['ImpersonateUserIdQuery', 'ImpersonateUserEmailQuery', 'ImpersonateUserPhoneQuery']
+        protected array $locationAuth = []
     ) {
         $this->validateMethod($name, $namespace);
         $this->validateAuthTypes($auth);
