@@ -1702,6 +1702,10 @@ Http::get('/v1/account/sessions/oauth2/:provider/redirect')
                     $failureRedirect(Exception::USER_EMAIL_FREE);
                 }
 
+                if ((($project->getId() === 'console') || ($plan['supportsCorporateEmailValidation'] ?? false)) && ($project->getAttribute('auths', [])['corporateEmails'] ?? false) && !($emailMetadata['emailIsCorporate'] ?? true)) {
+                    $failureRedirect(Exception::USER_EMAIL_NOT_CORPORATE);
+                }
+
                 try {
                     $userId = ID::unique();
                     $user->setAttributes([
@@ -1841,6 +1845,10 @@ Http::get('/v1/account/sessions/oauth2/:provider/redirect')
 
             if ((($project->getId() === 'console') || ($plan['supportsFreeEmailValidation'] ?? false)) && ($project->getAttribute('auths', [])['freeEmails'] ?? false) && $emailMetadata['emailIsFree']) {
                 $failureRedirect(Exception::USER_EMAIL_FREE);
+            }
+
+            if ((($project->getId() === 'console') || ($plan['supportsCorporateEmailValidation'] ?? false)) && ($project->getAttribute('auths', [])['corporateEmails'] ?? false) && !($emailMetadata['emailIsCorporate'] ?? true)) {
+                $failureRedirect(Exception::USER_EMAIL_NOT_CORPORATE);
             }
 
             $user->setAttribute('email', $email);
@@ -2201,6 +2209,10 @@ Http::post('/v1/account/tokens/magic-url')
                 throw new Exception(Exception::USER_EMAIL_FREE);
             }
 
+            if ((($project->getId() === 'console') || ($plan['supportsCorporateEmailValidation'] ?? false)) && ($project->getAttribute('auths', [])['corporateEmails'] ?? false) && !($emailMetadata['emailIsCorporate'] ?? true)) {
+                throw new Exception(Exception::USER_EMAIL_NOT_CORPORATE);
+            }
+
             $user->setAttributes([
                 '$id' => $userId,
                 '$permissions' => [
@@ -2519,6 +2531,10 @@ Http::post('/v1/account/tokens/email')
 
             if ((($project->getId() === 'console') || ($plan['supportsFreeEmailValidation'] ?? false)) && ($project->getAttribute('auths', [])['freeEmails'] ?? false) && $emailMetadata['emailIsFree']) {
                 throw new Exception(Exception::USER_EMAIL_FREE);
+            }
+
+            if ((($project->getId() === 'console') || ($plan['supportsCorporateEmailValidation'] ?? false)) && ($project->getAttribute('auths', [])['corporateEmails'] ?? false) && !($emailMetadata['emailIsCorporate'] ?? true)) {
+                throw new Exception(Exception::USER_EMAIL_NOT_CORPORATE);
             }
 
             $user->setAttributes([
