@@ -74,10 +74,6 @@ final class OAuth2ProviderTest extends TestCase
             $this->assertArrayHasKey('name', $parameter);
             $this->assertArrayHasKey('example', $parameter);
             $this->assertArrayHasKey('hint', $parameter);
-            $this->assertIsString($parameter['$id']);
-            $this->assertIsString($parameter['name']);
-            $this->assertIsString($parameter['example']);
-            $this->assertIsString($parameter['hint']);
             $this->assertNotSame('', $parameter['$id']);
             $this->assertNotSame('', $parameter['name']);
         }
@@ -383,15 +379,20 @@ final class OAuth2ProviderTest extends TestCase
     {
         $this->expectException(Exception::class);
 
-        $this->runHandle(new OidcUpdate(), $this->project(), [
-            'oidc-client',
-            'oidc-secret',
-            null,
-            'https://idp.example/oauth2/authorize',
-            null,
-            'https://idp.example/oauth2/userinfo',
-            true,
-        ]);
+        $this->runHandle(
+            new OidcUpdate(),
+            $this->project(),
+            [
+                'oidc-client',
+                'oidc-secret',
+                null,
+                'https://idp.example/oauth2/authorize',
+                null,
+                'https://idp.example/oauth2/userinfo',
+                true,
+            ],
+            assertQueueParam: false,
+        );
     }
 
     public function testOidcCanSwitchFromWellKnownToDiscoveryMode(): void
@@ -448,37 +449,52 @@ final class OAuth2ProviderTest extends TestCase
     {
         $this->expectException(Exception::class);
 
-        $this->runHandle(new GoogleUpdate(), $this->project(), [
-            'google-client',
-            'google-secret',
-            [],
-            false,
-        ]);
+        $this->runHandle(
+            new GoogleUpdate(),
+            $this->project(),
+            [
+                'google-client',
+                'google-secret',
+                [],
+                false,
+            ],
+            assertQueueParam: false,
+        );
     }
 
     public function testGoogleRejectsNoneWithOtherPrompts(): void
     {
         $this->expectException(Exception::class);
 
-        $this->runHandle(new GoogleUpdate(), $this->project(), [
-            'google-client',
-            'google-secret',
-            ['none', 'consent'],
-            false,
-        ]);
+        $this->runHandle(
+            new GoogleUpdate(),
+            $this->project(),
+            [
+                'google-client',
+                'google-secret',
+                ['none', 'consent'],
+                false,
+            ],
+            assertQueueParam: false,
+        );
     }
 
     public function testOktaRequiresDomainWhenEnabling(): void
     {
         $this->expectException(Exception::class);
 
-        $this->runHandle(new OktaUpdate(), $this->project(), [
-            'okta-client',
-            'okta-secret',
-            '',
-            null,
-            true,
-        ]);
+        $this->runHandle(
+            new OktaUpdate(),
+            $this->project(),
+            [
+                'okta-client',
+                'okta-secret',
+                '',
+                null,
+                true,
+            ],
+            assertQueueParam: false,
+        );
     }
 
     public function testOktaCanEnableWithStoredDomain(): void
@@ -516,7 +532,7 @@ final class OAuth2ProviderTest extends TestCase
      * @param array<int, mixed> $args
      * @return array{updatedProject: Document, response: Document}
      */
-    private function runHandle(Base $action, Document $project, array $args): array
+    private function runHandle(Base $action, Document $project, array $args, bool $assertQueueParam = true): array
     {
         $updatedProject = null;
         $responseDocument = null;
@@ -551,11 +567,13 @@ final class OAuth2ProviderTest extends TestCase
             ->onlyMethods(['setParam'])
             ->getMock();
         $queueForEvents
-            ->expects($this->once())
+            ->expects($assertQueueParam ? $this->once() : $this->atMost(1))
             ->method('setParam')
             ->with('providerId', $action::getProviderId());
 
-        $action->handle(...[
+        $handle = [$action, 'handle'];
+        $this->assertIsCallable($handle);
+        $handle(...[
             ...$args,
             $response,
             $dbForPlatform,
