@@ -385,6 +385,7 @@ class OpenAPI3 extends Format
 
                 $temp['x-appwrite']['auth'] = array_slice($securities, 0, $this->authCount);
 
+                // Impersonation falls back to query params for location-type methods (browsers can't set headers on resource URLs)
                 if ($sdk->getType() === MethodType::LOCATION) {
                     foreach (['ImpersonateUserId', 'ImpersonateUserEmail', 'ImpersonateUserPhone'] as $key) {
                         if (\array_key_exists($key, $this->keys)) {
