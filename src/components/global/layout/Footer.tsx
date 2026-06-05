@@ -80,6 +80,18 @@ const expandedFooterGroups: readonly ExpandedFooterGroup[] = [
     ],
   },
   {
+    title: 'About',
+    links: [
+      { label: 'Company', href: 'https://appwrite.io/company' },
+      { label: 'Pricing', href: 'https://appwrite.io/pricing' },
+      { label: 'Careers', href: 'https://appwrite.io/careers' },
+      { label: 'Store', href: 'https://store.appwrite.io/' },
+      { label: 'Contact us', href: 'https://appwrite.io/contact-us' },
+      { label: 'Assets', href: 'https://appwrite.io/assets' },
+      { label: 'Security', href: 'https://appwrite.io/security' },
+    ],
+  },
+  {
     title: 'Compare',
     links: [
       { label: 'Appwrite vs. Supabase', href: 'https://appwrite.io/compare/supabase' },
@@ -90,18 +102,6 @@ const expandedFooterGroups: readonly ExpandedFooterGroup[] = [
       { label: 'Appwrite vs. Cloudinary', href: 'https://appwrite.io/compare/cloudinary' },
       { label: 'Appwrite vs. Auth0', href: 'https://appwrite.io/compare/auth0' },
       { label: 'Backend as a service (BaaS)', href: 'https://appwrite.io/compare/backend-as-a-service' },
-    ],
-  },
-  {
-    title: 'About',
-    links: [
-      { label: 'Company', href: 'https://appwrite.io/company' },
-      { label: 'Pricing', href: 'https://appwrite.io/pricing' },
-      { label: 'Careers', href: 'https://appwrite.io/careers' },
-      { label: 'Store', href: 'https://store.appwrite.io/' },
-      { label: 'Contact us', href: 'https://appwrite.io/contact-us' },
-      { label: 'Assets', href: 'https://appwrite.io/assets' },
-      { label: 'Security', href: 'https://appwrite.io/security' },
     ],
   },
 ] as const
