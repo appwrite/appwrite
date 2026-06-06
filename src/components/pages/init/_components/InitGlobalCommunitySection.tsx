@@ -1,16 +1,13 @@
-import { lazy, Suspense, useCallback, useMemo } from 'react'
+import { useCallback, useMemo } from 'react'
 import { buildInitGlobePresenceData } from '@/lib/init/build-init-globe-arcs'
 import { getInitGlobeBrandRgb } from '@/lib/init/init-globe-theme'
 import { useGlobeThemeConfig } from '@/hooks/use-globe-theme-config'
+import { World } from '@/components/ui/globe'
 import { useInitPresenceActivity } from '@/lib/init/init-presence-context'
 import { buildInitExploringGlobeActivity } from '@/lib/init/init-presence-activity'
 import { INIT_GLOBE_SECTION_ID } from '@/lib/init/init-section-ids'
 import type { InitCommunityCountry } from '@/lib/init/types'
 import { cn } from '@/lib/utils'
-
-const World = lazy(() =>
-  import('@/components/ui/globe').then((module) => ({ default: module.World })),
-)
 
 function serializeCommunityCountries(countries: InitCommunityCountry[]): string {
   return countries.map((country) => `${country.code}:${country.count}`).join('|')
@@ -101,34 +98,26 @@ function InitCommunityGlobe({
         className,
       )}
     >
-      <div className="aspect-square w-full">
-        <Suspense
-          fallback={
-            <div className="flex aspect-square items-center justify-center">
-              <div className="size-10 animate-spin rounded-full border-2 border-border border-t-[var(--brand-cta)]" />
-            </div>
-          }
-        >
-          {globeConfig ? (
-            <World
-              key={themeKey}
-              globeConfig={globeConfig}
-              data={globePresence.arcs}
-              markers={globePresence.markers}
-            />
-          ) : (
-            <div className="flex aspect-square items-center justify-center">
-              <div className="size-10 animate-spin rounded-full border-2 border-border border-t-[var(--brand-cta)]" />
-            </div>
-          )}
-        </Suspense>
+      <div className="absolute inset-x-0 top-0 aspect-square w-full">
+        {globeConfig ? (
+          <World
+            key={themeKey}
+            globeConfig={globeConfig}
+            data={globePresence.arcs}
+            markers={globePresence.markers}
+          />
+        ) : (
+          <div className="flex h-full w-full items-center justify-center">
+            <div className="size-10 animate-spin rounded-full border-2 border-border border-t-[var(--brand-cta)]" />
+          </div>
+        )}
       </div>
 
       <InitGlobePresenceStats
         countries={countries}
         developerCount={developerCount}
         isLive={isLive}
-        className="absolute bottom-4 left-3 z-20 sm:bottom-5 sm:left-4"
+        className="absolute bottom-4 left-3 z-30 sm:bottom-5 sm:left-4"
       />
     </div>
   )

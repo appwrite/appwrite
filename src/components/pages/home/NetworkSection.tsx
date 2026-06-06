@@ -1,6 +1,7 @@
-import { lazy, Suspense, useMemo } from 'react'
+import { useMemo } from 'react'
 import { CheckCircle2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { World } from '@/components/ui/globe'
 import { useGlobeThemeConfig } from '@/hooks/use-globe-theme-config'
 import {
   buildCombinedNetworkGlobeData,
@@ -10,10 +11,6 @@ import {
 } from '@/lib/home/build-network-globe-data'
 import type { NetworkSegment } from '@/lib/home/network-locations'
 import { cn } from '@/lib/utils'
-
-const World = lazy(() =>
-  import('@/components/ui/globe').then((module) => ({ default: module.World })),
-)
 
 const networkProtections = [
   'Global CDN',
@@ -60,30 +57,22 @@ function NetworkGlobe({ className }: { className?: string }) {
         className,
       )}
     >
-      <div className="aspect-square w-full">
-        <Suspense
-          fallback={
-            <div className="flex aspect-square items-center justify-center">
-              <div className="size-10 animate-spin rounded-full border-2 border-border border-t-[var(--brand-cta)]" />
-            </div>
-          }
-        >
-          {globeConfig ? (
-            <World
-              key={themeKey}
-              globeConfig={globeConfig}
-              data={globePresence.arcs}
-              markers={globePresence.markers}
-            />
-          ) : (
-            <div className="flex aspect-square items-center justify-center">
-              <div className="size-10 animate-spin rounded-full border-2 border-border border-t-[var(--brand-cta)]" />
-            </div>
-          )}
-        </Suspense>
+      <div className="absolute inset-x-0 top-0 aspect-square w-full">
+        {globeConfig ? (
+          <World
+            key={themeKey}
+            globeConfig={globeConfig}
+            data={globePresence.arcs}
+            markers={globePresence.markers}
+          />
+        ) : (
+          <div className="flex h-full w-full items-center justify-center">
+            <div className="size-10 animate-spin rounded-full border-2 border-border border-t-[var(--brand-cta)]" />
+          </div>
+        )}
       </div>
 
-      <NetworkGlobeLegend className="absolute bottom-4 left-3 z-20 sm:bottom-5 sm:left-4" />
+      <NetworkGlobeLegend className="absolute bottom-4 left-3 z-30 sm:bottom-5 sm:left-4" />
     </div>
   )
 }

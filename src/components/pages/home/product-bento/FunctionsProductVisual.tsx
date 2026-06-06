@@ -50,11 +50,9 @@ function UseCaseRow({ useCase }: { useCase: UseCase }) {
   return (
     <div
       className={cn(
-        'flex items-start gap-2 rounded-md border px-2 py-1.5 transition-[border-color,background-color] duration-300',
-        productBentoContainer.panelMd,
-        highlighted
-          ? 'border-border/80 group-hover:border-[color-mix(in_srgb,var(--brand-cta)_30%,var(--border))] group-hover:bg-[color-mix(in_srgb,var(--brand-cta)_8%,var(--background))] motion-reduce:group-hover:border-border/80 motion-reduce:group-hover:bg-card/70'
-          : 'border-border/80',
+        'flex items-start gap-2 rounded-md border border-border/80 bg-background px-2 py-1.5 transition-[border-color,background-color] duration-300',
+        highlighted &&
+          'group-hover:border-[color-mix(in_srgb,var(--brand-cta)_30%,var(--border))] group-hover:bg-muted/30 motion-reduce:group-hover:border-border/80 motion-reduce:group-hover:bg-background',
       )}
     >
       <span
@@ -84,8 +82,8 @@ function UseCaseRow({ useCase }: { useCase: UseCase }) {
 
 export function FunctionsProductVisual() {
   return (
-    <div className="absolute inset-0 flex flex-col overflow-hidden transition-transform duration-500 group-hover:-translate-y-1 motion-reduce:group-hover:translate-y-0">
-      <div className={cn('mx-auto flex h-full min-h-0 w-full max-w-[20rem] flex-col', productBentoContainer.shell)}>
+    <div className="absolute inset-0 flex flex-col overflow-hidden bg-background transition-transform duration-500 group-hover:-translate-y-1 motion-reduce:group-hover:translate-y-0">
+      <div className="mx-auto flex h-full min-h-0 w-full max-w-[20rem] flex-col overflow-hidden rounded-t-xl border border-border border-b-0 bg-background shadow-sm">
         <div className={cn(productBentoContainer.header, 'px-3 py-2')}>
           <p className={cn('text-[11px] font-medium', productBentoIdle.text)}>My functions</p>
           <p className="mt-0.5 text-[10px] text-muted-foreground">
