@@ -295,8 +295,16 @@ return function (Container $container): void {
             }
 
             $jwtSessionId = $payload['sessionId'] ?? '';
-            if (!empty($jwtSessionId) && empty($user->find('$id', $jwtSessionId, 'sessions'))) {
-                $user = new User([]);
+            if (!empty($jwtSessionId)) {
+                $session = $user->find('$id', $jwtSessionId, 'sessions');
+                if (empty($session) ||
+                    (
+                        $session->isSet('expire') &&
+                        DatabaseDateTime::formatTz(DatabaseDateTime::format(new \DateTime($session->getAttribute('expire')))) < DatabaseDateTime::formatTz(DatabaseDateTime::now())
+                    )
+                ) {
+                    $user = new User([]);
+                }
             }
         }
 
