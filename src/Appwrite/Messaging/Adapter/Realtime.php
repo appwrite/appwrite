@@ -501,6 +501,61 @@ class Realtime extends MessagingAdapter
     }
 
     /**
+     *
+     * @param array<string,mixed> $event decoded event published to the `realtime` channel
+     * @return array<string,mixed>
+     */
+    public static function toTailMetadata(array $event): array
+    {
+        $events = $event['data']['events'] ?? [];
+        $name = \is_array($events) ? ($events[0] ?? '') : '';
+        $parts = $name === '' ? [] : \explode('.', $name);
+        $count = \count($parts);
+        $type = $parts[0] ?? null;
+
+        $action = null;
+        if ($count >= 1 && \in_array($parts[$count - 1], self::SUPPORTED_ACTIONS, true)) {
+            $action = $parts[$count - 1];
+        } elseif ($count >= 2 && \in_array($parts[$count - 2], self::SUPPORTED_ACTIONS, true)) {
+            $action = $parts[$count - 2];
+        }
+
+        $payload = $event['data']['payload'] ?? [];
+        if (!\is_array($payload)) {
+            $payload = [];
+        }
+
+        $metadata = [
+            'event'      => $name,
+            'type'       => $type,
+            'action'     => $action,
+            'userId'     => $event['userId'] ?? null,
+            'timestamp'  => $event['data']['timestamp'] ?? null,
+            'resourceId' => $payload['$id'] ?? null,
+        ];
+
+        // Attach only the scope ids that belong to this resource type.
+        $scope = match ($type) {
+            'databases' => [
+                'databaseId'   => $payload['$databaseId'] ?? null,
+                'collectionId' => $payload['$collectionId'] ?? $payload['$tableId'] ?? null,
+            ],
+            'buckets'   => ['bucketId' => $payload['bucketId'] ?? null],
+            'functions' => ['functionId' => $payload['functionId'] ?? null],
+            'teams'     => ['teamId' => $payload['teamId'] ?? null],
+            default     => [],
+        };
+
+        foreach ($scope as $key => $value) {
+            if ($value !== null) {
+                $metadata[$key] = $value;
+            }
+        }
+
+        return $metadata;
+    }
+
+    /**
      * Converts the channels from the Query Params into an array.
      * Also renames the account channel to account.USER_ID, rewrites action-suffixed
      * account variants (`account.create`, `account.update`, `account.upsert`,
