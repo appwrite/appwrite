@@ -8,6 +8,7 @@ use Throwable;
 use Utopia\CLI\Console;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
+use Utopia\Database\Exception\NotFound;
 use Utopia\Database\Query;
 use Utopia\Queue\Message;
 
@@ -216,17 +217,21 @@ class StatsResources extends Action
         $totalFiles = 0;
         $totalStorage = 0;
         $this->foreachDocument($dbForProject, 'buckets', [], function ($bucket) use ($dbForProject, $dbForLogs, $region, &$totalFiles, &$totalStorage) {
-            $files = $dbForProject->count('bucket_' . $bucket->getSequence());
+            try {
+                $files = $dbForProject->count('bucket_' . $bucket->getSequence());
 
-            $metric = str_replace('{bucketInternalId}', $bucket->getSequence(), METRIC_BUCKET_ID_FILES);
-            $this->createStatsDocuments($region, $metric, $files);
+                $metric = str_replace('{bucketInternalId}', $bucket->getSequence(), METRIC_BUCKET_ID_FILES);
+                $this->createStatsDocuments($region, $metric, $files);
 
-            $storage = $dbForProject->sum('bucket_' . $bucket->getSequence(), 'sizeActual');
-            $metric = str_replace('{bucketInternalId}', $bucket->getSequence(), METRIC_BUCKET_ID_FILES_STORAGE);
-            $this->createStatsDocuments($region, $metric, $storage);
+                $storage = $dbForProject->sum('bucket_' . $bucket->getSequence(), 'sizeActual');
+                $metric = str_replace('{bucketInternalId}', $bucket->getSequence(), METRIC_BUCKET_ID_FILES_STORAGE);
+                $this->createStatsDocuments($region, $metric, $storage);
 
-            $totalStorage += $storage;
-            $totalFiles += $files;
+                $totalStorage += $storage;
+                $totalFiles += $files;
+            } catch (NotFound) {
+                // Bucket was deleted between listing and counting, skip it
+            }
         });
 
         $this->createStatsDocuments($region, METRIC_FILES, $totalFiles);
@@ -241,12 +246,16 @@ class StatsResources extends Action
         $totalImageTransformations = 0;
         $last30Days = (new \DateTime())->sub(\DateInterval::createFromDateString('30 days'))->format('Y-m-d 00:00:00');
         $this->foreachDocument($dbForProject, 'buckets', [], function ($bucket) use ($dbForProject, $last30Days, $region, &$totalImageTransformations) {
-            $imageTransformations = $dbForProject->count('bucket_' . $bucket->getSequence(), [
-                Query::greaterThanEqual('transformedAt', $last30Days),
-            ]);
-            $metric = str_replace('{bucketInternalId}', $bucket->getSequence(), METRIC_BUCKET_ID_FILES_IMAGES_TRANSFORMED);
-            $this->createStatsDocuments($region, $metric, $imageTransformations);
-            $totalImageTransformations += $imageTransformations;
+            try {
+                $imageTransformations = $dbForProject->count('bucket_' . $bucket->getSequence(), [
+                    Query::greaterThanEqual('transformedAt', $last30Days),
+                ]);
+                $metric = str_replace('{bucketInternalId}', $bucket->getSequence(), METRIC_BUCKET_ID_FILES_IMAGES_TRANSFORMED);
+                $this->createStatsDocuments($region, $metric, $imageTransformations);
+                $totalImageTransformations += $imageTransformations;
+            } catch (NotFound) {
+                // Bucket was deleted between listing and counting, skip it
+            }
         });
 
         $this->createStatsDocuments($region, METRIC_FILES_IMAGES_TRANSFORMED, $totalImageTransformations);
@@ -260,7 +269,12 @@ class StatsResources extends Action
         $totalDatabaseStorage = 0;
 
         $this->foreachDocument($dbForProject, 'databases', [], function ($database) use ($dbForProject, $region, &$totalCollections, &$totalDocuments, &$totalDatabaseStorage) {
-            $collections = $dbForProject->count('database_' . $database->getSequence());
+            try {
+                $collections = $dbForProject->count('database_' . $database->getSequence());
+            } catch (NotFound) {
+                // Database was deleted between listing and counting, skip it
+                return;
+            }
 
             $metric = str_replace('{databaseInternalId}', $database->getSequence(), METRIC_DATABASE_ID_COLLECTIONS);
             $this->createStatsDocuments($region, $metric, $collections);
@@ -281,16 +295,19 @@ class StatsResources extends Action
         $databaseDocuments = 0;
         $databaseStorage = 0;
         $this->foreachDocument($dbForProject, 'database_' . $database->getSequence(), [], function ($collection) use ($dbForProject, $database, $region, &$databaseStorage, &$databaseDocuments) {
-            $documents = $dbForProject->count('database_' . $database->getSequence() . '_collection_' . $collection->getSequence());
-            $metric = str_replace(['{databaseInternalId}', '{collectionInternalId}'], [$database->getSequence(), $collection->getSequence()], METRIC_DATABASE_ID_COLLECTION_ID_DOCUMENTS);
-            $this->createStatsDocuments($region, $metric, $documents);
-            $databaseDocuments += $documents;
+            try {
+                $documents = $dbForProject->count('database_' . $database->getSequence() . '_collection_' . $collection->getSequence());
+                $metric = str_replace(['{databaseInternalId}', '{collectionInternalId}'], [$database->getSequence(), $collection->getSequence()], METRIC_DATABASE_ID_COLLECTION_ID_DOCUMENTS);
+                $this->createStatsDocuments($region, $metric, $documents);
+                $databaseDocuments += $documents;
 
-            $collectionStorage = $dbForProject->getSizeOfCollection('database_' . $database->getSequence() . '_collection_' . $collection->getSequence());
-            $metric = str_replace(['{databaseInternalId}', '{collectionInternalId}'], [$database->getSequence(), $collection->getSequence()], METRIC_DATABASE_ID_COLLECTION_ID_STORAGE);
-            $this->createStatsDocuments($region, $metric, $collectionStorage);
-            $databaseStorage += $collectionStorage;
-
+                $collectionStorage = $dbForProject->getSizeOfCollection('database_' . $database->getSequence() . '_collection_' . $collection->getSequence());
+                $metric = str_replace(['{databaseInternalId}', '{collectionInternalId}'], [$database->getSequence(), $collection->getSequence()], METRIC_DATABASE_ID_COLLECTION_ID_STORAGE);
+                $this->createStatsDocuments($region, $metric, $collectionStorage);
+                $databaseStorage += $collectionStorage;
+            } catch (NotFound) {
+                // Collection was deleted between listing and counting, skip it
+            }
         });
 
         $metric = str_replace(['{databaseInternalId}'], [$database->getSequence()], METRIC_DATABASE_ID_DOCUMENTS);
