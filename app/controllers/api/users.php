@@ -80,7 +80,6 @@ use Utopia\Validator\WhiteList;
 /** TODO: Remove function when we move to using utopia/platform */
 function createUser(Hash $hash, string $userId, ?string $email, ?string $password, ?string $phone, ?string $name, Document $project, Database $dbForProject, Hooks $hooks, array $plan): Document
 {
-    $name ??= '';
     $name = $name ?? '';
     $plaintextPassword = $password;
     $passwordHistory = $project->getAttribute('auths', [])['passwordHistory'] ?? 0;
