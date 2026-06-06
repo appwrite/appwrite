@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Tests\E2E\Services\Projects\Schedules;
 
 use Tests\E2E\Client;
@@ -10,7 +12,7 @@ use Utopia\Database\Helpers\ID;
 use Utopia\Database\Query;
 use Utopia\System\System;
 
-class SchedulesConsoleClientTest extends Scope
+final class SchedulesConsoleClientTest extends Scope
 {
     use ProjectConsole;
     use SchedulesBase;

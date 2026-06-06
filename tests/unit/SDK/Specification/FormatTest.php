@@ -31,7 +31,7 @@ class TestFormat extends Format
     }
 }
 
-class FormatTest extends TestCase
+final class FormatTest extends TestCase
 {
     private TestFormat $format;
 

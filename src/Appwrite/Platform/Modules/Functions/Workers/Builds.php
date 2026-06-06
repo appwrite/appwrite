@@ -809,6 +809,10 @@ class Builds extends Action
                                         $streamLog = \str_replace('{APPWRITE_LINEBREAK_PLACEHOLDER}', "\n", $streamLog);
                                         $streamParts = \explode(' ', $streamLog, 2);
 
+                                        if (! isset($streamParts[1])) {
+                                            continue;
+                                        }
+
                                         // TODO: use part[0] as timestamp when switching to dbForLogs for build logs
                                         $currentLogs .= $streamParts[1];
 

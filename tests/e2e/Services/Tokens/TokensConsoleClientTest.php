@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Tests\E2E\Services\Tokens;
 
 use Ahc\Jwt\JWT;
@@ -15,7 +17,7 @@ use Utopia\Database\Helpers\Role;
 use Utopia\Database\Validator\Datetime as DatetimeValidator;
 use Utopia\System\System;
 
-class TokensConsoleClientTest extends Scope
+final class TokensConsoleClientTest extends Scope
 {
     use TokensBase;
     use ProjectCustom;
@@ -126,7 +128,7 @@ class TokensConsoleClientTest extends Scope
             'expire' => '2022-11-02',
         ]);
         $this->assertEquals(400, $token['headers']['status-code']);
-        $this->assertStringContainsString('Value must be valid date in the future', $token['body']['message']);
+        $this->assertStringContainsString('Value must be valid date in the future', (string) $token['body']['message']);
 
         // Success cases: With & without expiry
         $expireList = [null, date('Y-m-d', strtotime("tomorrow"))];
@@ -183,7 +185,7 @@ class TokensConsoleClientTest extends Scope
             'expire' => '2022-11-02',
         ]);
         $this->assertEquals(400, $token['headers']['status-code']);
-        $this->assertStringContainsString('Value must be valid date in the future', $token['body']['message']);
+        $this->assertStringContainsString('Value must be valid date in the future', (string) $token['body']['message']);
 
         // Finite expiry
         $expiry = date('Y-m-d', strtotime("tomorrow"));
