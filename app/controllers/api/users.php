@@ -2902,4 +2902,3 @@ Http::get('/v1/users/usage')
             'sessions' => $usage[$metrics[1]]['data'],
         ]), Response::MODEL_USAGE_USERS);
     });
-
