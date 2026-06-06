@@ -8,7 +8,10 @@ import {
   type MouseEvent as ReactMouseEvent,
   type PointerEvent as ReactPointerEvent,
 } from 'react'
+import { createPortal } from 'react-dom'
 import {
+  Maximize2,
+  Minimize2,
   RotateCcw,
   Terminal,
   Trash2,
@@ -16,45 +19,50 @@ import {
   ChevronDown,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import { Badge } from '@/components/ui/badge'
 import { cn } from '@/lib/utils'
 import { CLI_SHELL_COLLAPSED_HEIGHT_PX } from '@/lib/cli-shell/constants'
 import { CliTerminalSpinner } from './CliTerminalSpinner'
 import { useCliShell } from './CliShellProvider'
 
-function statusBadgeVariant(
-  status: ReturnType<typeof useCliShell>['status'],
-): 'success' | 'processing' | 'warning' | 'error' | 'inactive' {
-  switch (status) {
-    case 'ready':
-      return 'success'
-    case 'running':
-      return 'processing'
-    case 'bootstrapping':
-      return 'warning'
-    case 'error':
-      return 'error'
-    default:
-      return 'inactive'
-  }
-}
-
-function statusLabel(status: ReturnType<typeof useCliShell>['status']) {
-  switch (status) {
-    case 'bootstrapping':
-      return 'Setting up'
-    case 'running':
-      return 'Running'
-    case 'error':
-      return 'Error'
-    case 'ready':
-      return 'Ready'
-    default:
-      return 'Idle'
-  }
-}
-
 export function ProjectCliShell() {
+  const { open, fullscreen } = useCliShell()
+
+  if (fullscreen && open && typeof document !== 'undefined') {
+    return createPortal(
+      <div className="fixed inset-0 z-[140] flex min-h-0 flex-col bg-background">
+        <ProjectCliShellPanel />
+      </div>,
+      document.body,
+    )
+  }
+
+  return (
+    <div
+      className="shrink-0 border-t border-border bg-background"
+      style={open ? undefined : { height: CLI_SHELL_COLLAPSED_HEIGHT_PX }}
+    >
+      {!open ? <ProjectCliShellCollapsedBar /> : <ProjectCliShellPanel />}
+    </div>
+  )
+}
+
+function ProjectCliShellCollapsedBar() {
+  const { setOpen } = useCliShell()
+
+  return (
+    <button
+      type="button"
+      onClick={() => setOpen(true)}
+      className="flex h-full w-full cursor-pointer items-center gap-2 px-4 text-left text-[13px] font-medium text-muted-foreground transition-colors hover:bg-muted/40 hover:text-foreground sm:px-6"
+      aria-label="Open terminal"
+    >
+      <Terminal className="h-3.5 w-3.5 shrink-0 opacity-60" />
+      <span>Terminal</span>
+    </button>
+  )
+}
+
+function ProjectCliShellPanel() {
   const {
     open,
     setOpen,
@@ -69,6 +77,8 @@ export function ProjectCliShell() {
     setHeight,
     retryBootstrap,
     bootstrapError,
+    fullscreen,
+    toggleFullscreen,
   } = useCliShell()
 
   const [input, setInput] = useState('')
@@ -273,7 +283,7 @@ export function ProjectCliShell() {
   }, [])
 
   useEffect(() => {
-    if (!isResizing) return
+    if (!isResizing || fullscreen) return
 
     const handleMouseMove = (event: MouseEvent) => {
       if (!panelRef.current) return
@@ -296,42 +306,32 @@ export function ProjectCliShell() {
       document.body.style.cursor = ''
       document.body.style.userSelect = ''
     }
-  }, [isResizing, setHeight])
+  }, [fullscreen, isResizing, setHeight])
 
   const inputBusyLabel =
     status === 'bootstrapping' ? 'setting up' : isRunning ? 'working' : null
 
   return (
     <div
-      className="shrink-0 border-t border-border bg-background"
-      style={open ? undefined : { height: CLI_SHELL_COLLAPSED_HEIGHT_PX }}
+      ref={panelRef}
+      className={cn(
+        'relative flex min-h-0 flex-col overflow-hidden bg-background',
+        fullscreen && 'h-full min-h-0 flex-1',
+      )}
+      style={fullscreen ? undefined : { height: `${height}px` }}
     >
-      {!open ? (
-        <button
-          type="button"
-          onClick={() => setOpen(true)}
-          className="flex h-full w-full cursor-pointer items-center gap-2 px-4 text-left text-[13px] font-medium text-muted-foreground transition-colors hover:bg-muted/40 hover:text-foreground sm:px-6"
-          aria-label="Open terminal"
-        >
-          <Terminal className="h-3.5 w-3.5 shrink-0 opacity-60" />
-          <span>Terminal</span>
-        </button>
-      ) : (
+      {!fullscreen && (
         <div
-          ref={panelRef}
-          className="relative flex min-h-0 flex-col overflow-hidden"
-          style={{ height: `${height}px` }}
-        >
-          <div
-            role="separator"
-            aria-orientation="horizontal"
-            aria-label="Resize terminal"
-            onMouseDown={handleResizeMouseDown}
-            className={cn(
-              'absolute inset-x-0 top-0 z-10 flex h-1.5 w-full cursor-row-resize items-center justify-center transition-colors hover:bg-primary/20 dark:hover:bg-sidebar-accent/60',
-              isResizing && 'bg-primary/30 dark:bg-sidebar-accent/70',
-            )}
-          />
+          role="separator"
+          aria-orientation="horizontal"
+          aria-label="Resize terminal"
+          onMouseDown={handleResizeMouseDown}
+          className={cn(
+            'absolute inset-x-0 top-0 z-10 flex h-1.5 w-full cursor-row-resize items-center justify-center transition-colors hover:bg-primary/20 dark:hover:bg-sidebar-accent/60',
+            isResizing && 'bg-primary/30 dark:bg-sidebar-accent/70',
+          )}
+        />
+      )}
 
           <div className="flex shrink-0 items-center justify-between gap-3 border-b border-border px-4 py-2.5">
             <div className="flex min-w-0 items-center gap-2">
@@ -341,12 +341,6 @@ export function ProjectCliShell() {
             <span className="truncate text-[13px] font-semibold text-foreground">
               Terminal
             </span>
-            <Badge
-              variant={statusBadgeVariant(status)}
-              className="text-[10px] shrink-0"
-            >
-              {statusLabel(status)}
-            </Badge>
             </div>
 
             <div className="flex shrink-0 items-center gap-1">
@@ -371,6 +365,20 @@ export function ProjectCliShell() {
               title="Clear output"
             >
               <Trash2 className="h-3.5 w-3.5" />
+            </Button>
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon"
+              className="h-8 w-8"
+              onClick={toggleFullscreen}
+              title={fullscreen ? 'Exit full screen' : 'Full screen'}
+            >
+              {fullscreen ? (
+                <Minimize2 className="h-3.5 w-3.5" />
+              ) : (
+                <Maximize2 className="h-3.5 w-3.5" />
+              )}
             </Button>
             <Button
               type="button"
@@ -508,8 +516,6 @@ export function ProjectCliShell() {
             )}
           </form>
         </div>
-        </div>
-      )}
     </div>
   )
 }

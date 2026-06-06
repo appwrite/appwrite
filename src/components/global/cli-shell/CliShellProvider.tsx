@@ -63,6 +63,9 @@ type CliShellContextValue = {
   isRunning: boolean
   height: number
   setHeight: (height: number) => void
+  fullscreen: boolean
+  toggleFullscreen: () => void
+  exitFullscreen: () => void
   retryBootstrap: () => void
   bootstrapError: string | null
 }
@@ -124,6 +127,9 @@ export function CliShellProvider({ projectId, children }: CliShellProviderProps)
   const bootstrapLastUpdateRef = useRef(0)
   const bootstrapSilentRef = useRef(false)
   const authInitializedRef = useRef(false)
+  const heightBeforeFullscreenRef = useRef<number | null>(null)
+
+  const [fullscreen, setFullscreen] = useState(false)
 
   const BOOTSTRAP_LINE_MIN_INTERVAL_MS = 250
 
@@ -202,6 +208,35 @@ export function CliShellProvider({ projectId, children }: CliShellProviderProps)
     },
     [setHeightPx],
   )
+
+  const exitFullscreen = useCallback(() => {
+    setFullscreen(false)
+    if (heightBeforeFullscreenRef.current !== null) {
+      setHeight(heightBeforeFullscreenRef.current)
+      heightBeforeFullscreenRef.current = null
+    }
+  }, [setHeight])
+
+  const enterFullscreen = useCallback(() => {
+    setOpen(true)
+    heightBeforeFullscreenRef.current = height
+    setFullscreen(true)
+  }, [height, setOpen])
+
+  const toggleFullscreen = useCallback(() => {
+    if (fullscreen) {
+      exitFullscreen()
+      return
+    }
+    enterFullscreen()
+  }, [enterFullscreen, exitFullscreen, fullscreen])
+
+  useEffect(() => {
+    if (!open && fullscreen) {
+      heightBeforeFullscreenRef.current = null
+      setFullscreen(false)
+    }
+  }, [fullscreen, open])
 
   const initializeCliAuth = useCallback(
     async (container: CliShellContainer): Promise<void> => {
@@ -533,8 +568,23 @@ export function CliShellProvider({ projectId, children }: CliShellProviderProps)
   }, [])
 
   const toggle = useCallback(() => {
-    setOpen((prev) => !prev)
+    setOpen((prev) => {
+      const next = !prev
+      if (!next) {
+        heightBeforeFullscreenRef.current = null
+        setFullscreen(false)
+      }
+      return next
+    })
   }, [setOpen])
+
+  useKeyboardShortcut(
+    'escape',
+    () => {
+      exitFullscreen()
+    },
+    { enabled: fullscreen, ignoreInputs: false },
+  )
 
   useKeyboardShortcut(
     'control+`',
@@ -565,6 +615,9 @@ export function CliShellProvider({ projectId, children }: CliShellProviderProps)
       isRunning,
       height,
       setHeight,
+      fullscreen,
+      toggleFullscreen,
+      exitFullscreen,
       retryBootstrap,
       bootstrapError,
     }),
@@ -581,6 +634,9 @@ export function CliShellProvider({ projectId, children }: CliShellProviderProps)
       isRunning,
       height,
       setHeight,
+      fullscreen,
+      toggleFullscreen,
+      exitFullscreen,
       retryBootstrap,
       bootstrapError,
     ],

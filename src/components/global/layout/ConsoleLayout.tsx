@@ -188,13 +188,16 @@ export function ConsoleLayout({
         >
           <div
             className={cn(
-              'flex-1 min-h-0',
-              usesSplitMain && 'overflow-y-auto',
+              'flex-1',
+              usesSplitMain && 'min-h-0 overflow-y-auto',
               fixedLayout && 'flex flex-col',
             )}
           >
             <div
-              className={cn('h-full', fixedLayout && 'min-h-0 flex flex-col')}
+              className={cn(
+                usesSplitMain && 'h-full',
+                fixedLayout && 'min-h-0 flex flex-col',
+              )}
             >
               {children}
             </div>
