@@ -8,15 +8,8 @@ type ThemeToggleProps = {
   variant?: 'menu' | 'header'
 }
 
-function ThemeToggleGroup({
-  className,
-  compact = false,
-}: {
-  className?: string
-  compact?: boolean
-}) {
+function ThemeToggleGroup({ className }: { className?: string }) {
   const { theme, setTheme } = useTheme()
-  const itemClassName = compact ? 'h-7 w-7' : 'h-8 w-8'
 
   return (
     <ToggleGroup
@@ -30,30 +23,21 @@ function ThemeToggleGroup({
       <ToggleGroupItem
         value="light"
         aria-label="Light theme"
-        className={cn(
-          itemClassName,
-          'rounded-md data-[state=on]:bg-accent data-[state=on]:text-foreground',
-        )}
+        className="h-7 w-7 rounded-md data-[state=on]:bg-accent data-[state=on]:text-foreground"
       >
         <Sun className="h-4 w-4" />
       </ToggleGroupItem>
       <ToggleGroupItem
         value="dark"
         aria-label="Dark theme"
-        className={cn(
-          itemClassName,
-          'rounded-md data-[state=on]:bg-accent data-[state=on]:text-foreground',
-        )}
+        className="h-7 w-7 rounded-md data-[state=on]:bg-accent data-[state=on]:text-foreground"
       >
         <Moon className="h-4 w-4" />
       </ToggleGroupItem>
       <ToggleGroupItem
         value="system"
         aria-label="System theme"
-        className={cn(
-          itemClassName,
-          'rounded-md data-[state=on]:bg-accent data-[state=on]:text-foreground',
-        )}
+        className="h-7 w-7 rounded-md data-[state=on]:bg-accent data-[state=on]:text-foreground"
       >
         <Contrast className="h-4 w-4" />
       </ToggleGroupItem>
@@ -65,15 +49,15 @@ export function ThemeToggle({ variant = 'menu' }: ThemeToggleProps) {
   if (variant === 'header') {
     return (
       <div className="shrink-0">
-        <ThemeToggleGroup compact />
+        <ThemeToggleGroup />
       </div>
     )
   }
 
   return (
-    <div className="flex items-center justify-between px-3 py-2.5">
-      <span className="text-[14px] text-muted-foreground">Theme</span>
-      <ThemeToggleGroup className="p-1" />
+    <div className="flex items-center justify-between px-2 py-2">
+      <span className="text-sm text-muted-foreground">Theme</span>
+      <ThemeToggleGroup />
     </div>
   )
 }
