@@ -25,13 +25,10 @@ export function buildInitGlobeConfig(isDark: boolean): GlobeConfig {
   )
 
   if (!isDark) {
-    const ocean = cssColorToHex(
-      'color-mix(in srgb, var(--muted) 28%, var(--background))',
-      '#f2f2f4',
-    )
+    const ocean = cssColorToHex('var(--background)', '#ffffff')
     const land = cssColorToHex(
-      'color-mix(in srgb, var(--muted-foreground) 78%, var(--border))',
-      '#7a7a86',
+      'color-mix(in srgb, var(--muted-foreground) 70%, var(--border))',
+      '#8b8b96',
     )
 
     return {
@@ -55,7 +52,6 @@ export function buildInitGlobeConfig(isDark: boolean): GlobeConfig {
       maxRings: 3,
       autoRotate: true,
       autoRotateSpeed: 0.5,
-      hexPolygonResolution: 2,
     }
   }
 
@@ -95,7 +91,5 @@ export function buildInitGlobeConfig(isDark: boolean): GlobeConfig {
     maxRings: 3,
     autoRotate: true,
     autoRotateSpeed: 0.5,
-    hexPolygonResolution: 2,
   }
 }
-
