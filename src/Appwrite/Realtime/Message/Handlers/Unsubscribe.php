@@ -46,8 +46,9 @@ class Unsubscribe extends Action
                 'subscriptionId' => $subscriptionId,
                 'removed' => $realtime->unsubscribeSubscription($connectionId, $subscriptionId),
             ];
-            // No-op if it wasn't a tail subscription.
-            $eventTailRegistry->remove($subscriptionId);
+            // No-op if it wasn't a tail subscription. Connection-scoped: subscription
+            // IDs are only unique within a connection.
+            $eventTailRegistry->remove($connectionId, $subscriptionId);
         }
 
         $subscriptionsAfter = \count($realtime->getSubscriptionMetadata($connectionId));

@@ -90,22 +90,26 @@ class Subscribe extends Action
         // Console live event tail: any `console.tail.<projectId>` channel is authorized by
         // team membership of the target project's owning team, then registered with its
         // compiled filter so the worker's pub/sub loop can filter+sample before delivery.
+        //
+        // Registration is additive, mirroring Realtime::subscribe(): a reused subscription
+        // id accumulates channels (it never drops the ones already subscribed), and the
+        // registry is keyed by (connId, subId, projectId) so re-subscribing the same
+        // channel overwrites its filter in place rather than leaving a stale entry.
         $now = \microtime(true);
         foreach ($parsedPayloads as $parsedPayload) {
+            $compiled = null;
             foreach ($parsedPayload['convertedChannels'] as $channel) {
                 $targetProjectId = EventTailRegistry::projectFromChannel($channel);
                 if ($targetProjectId === null) {
                     continue;
                 }
 
-                $teamId = $eventTailRegistry->cachedTeam($targetProjectId);
-                if ($teamId === null) {
-                    $project = $dbForConsole->getAuthorization()->skip(
-                        fn () => $dbForConsole->getDocument('projects', $targetProjectId)
-                    );
-                    $teamId = (string) $project->getAttribute('teamId', '');
-                    $eventTailRegistry->cacheTeam($targetProjectId, $teamId);
-                }
+                // Resolve ownership fresh on every subscribe — projects can be transferred
+                // between teams, so a cached teamId could authorize the wrong team.
+                $project = $dbForConsole->getAuthorization()->skip(
+                    fn () => $dbForConsole->getDocument('projects', $targetProjectId)
+                );
+                $teamId = (string) $project->getAttribute('teamId', '');
 
                 if ($teamId === '' || !\in_array(Role::team($teamId)->toString(), $roles, true)) {
                     throw new Exception(
@@ -114,13 +118,8 @@ class Subscribe extends Action
                     );
                 }
 
-                $eventTailRegistry->add(
-                    $connectionId,
-                    $parsedPayload['subscriptionId'],
-                    $targetProjectId,
-                    RuntimeQuery::compile($parsedPayload['queries']),
-                    $now,
-                );
+                $compiled ??= RuntimeQuery::compile($parsedPayload['queries']);
+                $eventTailRegistry->add($connectionId, $parsedPayload['subscriptionId'], $targetProjectId, $compiled, $now);
             }
         }
 

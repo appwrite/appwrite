@@ -36,6 +36,23 @@ final class EventTailRegistryTest extends TestCase
         return $server;
     }
 
+    /**
+     * Like server(), but records the target connection id alongside each frame so tests
+     * can assert per-connection isolation.
+     *
+     * @param array<int,array{connId:mixed, frame:array<string,mixed>}> $sent
+     */
+    private function serverWithConn(array &$sent): Server
+    {
+        $server = $this->createStub(Server::class);
+        $server->method('send')->willReturnCallback(
+            function (array $connections, string $message) use (&$sent): void {
+                $sent[] = ['connId' => $connections[0] ?? null, 'frame' => json_decode($message, true)];
+            }
+        );
+        return $server;
+    }
+
     /** @param array<string,mixed> $payload */
     private function compile(array $queries): array
     {
@@ -345,22 +362,118 @@ final class EventTailRegistryTest extends TestCase
         $registry->add(7, 'sub-a', 'projX', $this->compile([]), 0.0);
         $registry->add(7, 'sub-b', 'projX', $this->compile([]), 0.0);
 
-        $registry->remove('sub-a');
+        $registry->remove(7, 'sub-a');
         $this->assertTrue($registry->isTailed('projX'), 'sub-b still tails projX');
 
-        $registry->remove('sub-b');
+        $registry->remove(7, 'sub-b');
         $this->assertFalse($registry->isTailed('projX'));
 
         // Removing an unknown subscription is a no-op.
-        $registry->remove('does-not-exist');
+        $registry->remove(7, 'does-not-exist');
         $this->assertFalse($registry->isTailed('projX'));
     }
 
-    public function testTeamCache(): void
+    public function testSameSubscriptionIdOnDifferentConnectionsIsolated(): void
     {
-        $registry = new EventTailRegistry();
-        $this->assertNull($registry->cachedTeam('projX'));
-        $registry->cacheTeam('projX', 'team-1');
-        $this->assertSame('team-1', $registry->cachedTeam('projX'));
+        // Subscription IDs are only unique within a connection. Two connections both
+        // using 'dup' must stay fully isolated — no cross-project/connection leakage.
+        $registry = new EventTailRegistry(rate: 100);
+        $registry->add(1, 'dup', 'projA', $this->compile([]), 0.0);
+        $registry->add(2, 'dup', 'projB', $this->compile([]), 0.0);
+
+        $registry->ingest('projA', ['type' => 'databases', 'resourceId' => 'a1'], 0.0);
+        $registry->ingest('projB', ['type' => 'databases', 'resourceId' => 'b1'], 0.0);
+
+        $sent = [];
+        $registry->flush($this->serverWithConn($sent));
+
+        $byConn = [];
+        foreach ($sent as $s) {
+            $byConn[$s['connId']][] = $s['frame']['data']['channels'][0];
+        }
+        // Connection 1 only ever receives projA's channel; connection 2 only projB's.
+        $this->assertSame(['console.tail.projA'], $byConn[1] ?? []);
+        $this->assertSame(['console.tail.projB'], $byConn[2] ?? []);
+
+        // Removing one connection's 'dup' must not touch the other's.
+        $registry->remove(1, 'dup');
+        $this->assertFalse($registry->isTailed('projA'));
+        $this->assertTrue($registry->isTailed('projB'));
+    }
+
+    public function testMultipleProjectsUnderOneSubscription(): void
+    {
+        // A subscription naming several tail channels tails each project independently;
+        // none overwrites another, and removing the subscription clears them all.
+        $registry = new EventTailRegistry(rate: 100);
+        $registry->add(1, 'sub-multi', 'projA', $this->compile([]), 0.0);
+        $registry->add(1, 'sub-multi', 'projB', $this->compile([]), 0.0);
+
+        $this->assertTrue($registry->isTailed('projA'));
+        $this->assertTrue($registry->isTailed('projB'));
+
+        $registry->ingest('projA', ['type' => 'databases', 'resourceId' => 'a1'], 0.0);
+        $registry->ingest('projB', ['type' => 'databases', 'resourceId' => 'b1'], 0.0);
+
+        $sent = [];
+        $registry->flush($this->serverWithConn($sent));
+
+        $channels = array_map(fn ($s) => $s['frame']['data']['channels'][0], $sent);
+        $this->assertContains('console.tail.projA', $channels);
+        $this->assertContains('console.tail.projB', $channels);
+        // Both frames carry the same (real) subscription id.
+        foreach ($sent as $s) {
+            $this->assertSame(['sub-multi'], $s['frame']['data']['subscriptions']);
+        }
+
+        $registry->remove(1, 'sub-multi');
+        $this->assertFalse($registry->isTailed('projA'));
+        $this->assertFalse($registry->isTailed('projB'));
+    }
+
+    public function testReAddingSameChannelOverwritesFilterWithoutStaleEntry(): void
+    {
+        // Reusing a subscription id on the SAME tail channel updates its filter in place
+        // (keyed by connId/subId/projectId) — no stale entry, no duplicate delivery.
+        $registry = new EventTailRegistry(rate: 100);
+        $registry->add(1, 'x', 'projA', $this->compile([Query::equal('action', ['create'])]), 0.0);
+        $registry->add(1, 'x', 'projA', $this->compile([Query::equal('action', ['delete'])]), 0.0);
+
+        $registry->ingest('projA', ['action' => 'create', 'resourceId' => 'c1'], 0.0);
+        $registry->ingest('projA', ['action' => 'delete', 'resourceId' => 'd1'], 0.0);
+
+        $sent = [];
+        $registry->flush($this->server($sent));
+
+        $eventFrames = array_values(array_filter($sent, fn ($f) => $f['data']['events'] === ['console.tail']));
+        // A lingering create-filter entry would surface the create and/or add a 2nd frame.
+        $this->assertCount(1, $eventFrames);
+        $this->assertCount(1, $eventFrames[0]['data']['payload']);
+        $this->assertSame('delete', $eventFrames[0]['data']['payload'][0]['action']);
+        $this->assertSame('d1', $eventFrames[0]['data']['payload'][0]['resourceId']);
+    }
+
+    public function testAddingChannelPreservesExistingTail(): void
+    {
+        // Review scenario: subscribe id 'x' to tail A, later add tail B under the same id.
+        // Registration is additive (mirrors Realtime::subscribe()), so A must keep delivering.
+        $registry = new EventTailRegistry(rate: 100);
+        $registry->add(1, 'x', 'projA', $this->compile([]), 0.0);
+
+        // ... later, the same subscription id also tails projB.
+        $registry->add(1, 'x', 'projB', $this->compile([]), 0.0);
+
+        $this->assertTrue($registry->isTailed('projA'), 'projA must remain tailed after adding projB');
+        $this->assertTrue($registry->isTailed('projB'));
+
+        $registry->ingest('projA', ['type' => 'databases', 'resourceId' => 'a1'], 0.0);
+        $registry->ingest('projB', ['type' => 'databases', 'resourceId' => 'b1'], 0.0);
+
+        $sent = [];
+        $registry->flush($this->serverWithConn($sent));
+
+        $channels = array_map(fn ($s) => $s['frame']['data']['channels'][0], $sent);
+        $this->assertContains('console.tail.projA', $channels, 'projA stopped delivering after projB was added');
+        $this->assertContains('console.tail.projB', $channels);
     }
 }
