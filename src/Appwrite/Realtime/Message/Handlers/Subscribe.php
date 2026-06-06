@@ -4,8 +4,11 @@ namespace Appwrite\Realtime\Message\Handlers;
 
 use Appwrite\Extend\Exception;
 use Appwrite\Messaging\Adapter\Realtime;
+use Appwrite\Realtime\EventTailRegistry;
 use Appwrite\Realtime\Message\Dispatcher;
 use Appwrite\Realtime\Message\Validators\SubscribePayload as SubscribePayloadValidator;
+use Appwrite\Utopia\Database\RuntimeQuery;
+use Utopia\Database\Database;
 use Utopia\Database\Exception\Query as QueryException;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Helpers\Role;
@@ -26,6 +29,8 @@ class Subscribe extends Action
             ->inject('realtime')
             ->inject('register')
             ->inject('projectId')
+            ->inject('eventTailRegistry')
+            ->inject('dbForConsole')
             ->callback($this->action(...));
     }
 
@@ -39,6 +44,8 @@ class Subscribe extends Action
         Realtime $realtime,
         Registry $register,
         ?string $projectId,
+        EventTailRegistry $eventTailRegistry,
+        Database $dbForConsole,
     ): array {
         $roles = $realtime->connections[$connectionId]['roles'] ?? [Role::guests()->toString()];
         $userId = $realtime->connections[$connectionId]['userId'] ?? '';
@@ -78,6 +85,43 @@ class Subscribe extends Action
                 $parsedPayload['convertedChannels'],
                 $parsedPayload['queries'],
             );
+        }
+
+        // Console live event tail: any `console.tail.<projectId>` channel is authorized by
+        // team membership of the target project's owning team, then registered with its
+        // compiled filter so the worker's pub/sub loop can filter+sample before delivery.
+        $now = \microtime(true);
+        foreach ($parsedPayloads as $parsedPayload) {
+            foreach ($parsedPayload['convertedChannels'] as $channel) {
+                $targetProjectId = EventTailRegistry::projectFromChannel($channel);
+                if ($targetProjectId === null) {
+                    continue;
+                }
+
+                $teamId = $eventTailRegistry->cachedTeam($targetProjectId);
+                if ($teamId === null) {
+                    $project = $dbForConsole->getAuthorization()->skip(
+                        fn () => $dbForConsole->getDocument('projects', $targetProjectId)
+                    );
+                    $teamId = (string) $project->getAttribute('teamId', '');
+                    $eventTailRegistry->cacheTeam($targetProjectId, $teamId);
+                }
+
+                if ($teamId === '' || !\in_array(Role::team($teamId)->toString(), $roles, true)) {
+                    throw new Exception(
+                        Exception::REALTIME_POLICY_VIOLATION,
+                        'Not authorized to tail project "' . $targetProjectId . '".'
+                    );
+                }
+
+                $eventTailRegistry->add(
+                    $connectionId,
+                    $parsedPayload['subscriptionId'],
+                    $targetProjectId,
+                    RuntimeQuery::compile($parsedPayload['queries']),
+                    $now,
+                );
+            }
         }
 
         $subscriptionsAfter = \count($realtime->getSubscriptionMetadata($connectionId));
