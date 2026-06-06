@@ -100,6 +100,11 @@ class StatsResources extends Action
             return;
         }
 
+        if (!$dbForProject->exists($dbForProject->getDatabase(), '_metadata')) {
+            Console::warning('Project database not initialized, skipping: ' . $project->getId());
+            return;
+        }
+
         try {
 
             $region = $project->getAttribute('region');
