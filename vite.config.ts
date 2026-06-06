@@ -6,8 +6,10 @@ import viteReact from '@vitejs/plugin-react'
 import viteTsConfigPaths from 'vite-tsconfig-paths'
 import tailwindcss from '@tailwindcss/vite'
 import devtoolsJson from 'vite-plugin-devtools-json'
+import { almostnodeBuildPlugin } from './src/lib/cli-shell/vite-almostnode-plugin'
 
 const projectRoot = path.dirname(fileURLToPath(import.meta.url))
+const almostnodeDist = path.resolve(projectRoot, 'node_modules/almostnode/dist')
 const justBashBrowserEntry = path.resolve(
   projectRoot,
   'node_modules/just-bash/dist/bundle/browser.js',
@@ -41,6 +43,7 @@ export default defineConfig(async () => {
       tailwindcss(),
       tanstackStart(),
       devtoolsJson(),
+      almostnodeBuildPlugin(almostnodeDist),
       viteReact(),
       ...sentryPlugins,
     ],
