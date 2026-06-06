@@ -53,7 +53,7 @@ class Get extends Action
                 ],
                 contentType: ContentType::ANY,
                 type: MethodType::LOCATION,
-                locationAuth: ['ImpersonateUserIdQuery', 'ImpersonateUserEmailQuery', 'ImpersonateUserPhoneQuery'],
+                locationAuth: ['Project', 'ImpersonateUserIdQuery', 'ImpersonateUserEmailQuery', 'ImpersonateUserPhoneQuery'],
             ))
             ->param('functionId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Function ID.', false, ['dbForProject'])
             ->param('deploymentId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Deployment ID.', false, ['dbForProject'])

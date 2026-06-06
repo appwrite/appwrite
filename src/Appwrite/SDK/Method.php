@@ -32,8 +32,7 @@ class Method
      * @param array $additionalParameters
      * @param string $desc
      * @param bool $public Whether this method should be rendered on the website/documentation
-     * @param string $projectAuth Project authentication security scheme to use in specs
-     * @param array<string> $locationAuth Additional security scheme keys injected for location-type methods
+     * @param array<string> $locationAuth Security scheme keys injected for location-type methods (includes project auth)
      */
     public function __construct(
         protected string $namespace,
@@ -52,16 +51,11 @@ class Method
         protected array $additionalParameters = [],
         protected string $desc = '',
         protected bool $public = true,
-        protected string $projectAuth = 'Project',
         protected array $locationAuth = []
     ) {
         $this->validateMethod($name, $namespace);
         $this->validateAuthTypes($auth);
         $this->validateDesc($description);
-
-        if (!\in_array($projectAuth, ['Project', 'ProjectQuery'], true)) {
-            self::$errors[] = "Error with {$this->getRouteName()} method: Invalid project auth scheme";
-        }
 
         foreach ($responses as $response) {
             $this->validateResponseModel($response->getModel());
@@ -233,7 +227,7 @@ class Method
 
     public function getProjectAuth(): string
     {
-        return $this->projectAuth;
+        return $this->locationAuth[0] ?? 'Project';
     }
 
     public function getLocationAuth(): array
