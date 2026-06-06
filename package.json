@@ -73,6 +73,7 @@
     "@tanstack/react-virtual": "^3.13.18",
     "@tanstack/router-plugin": "1.132.31",
     "@tanstack/store": "^0.9.3",
+    "almostnode": "^0.2.14",
     "animejs": "^4.4.1",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",

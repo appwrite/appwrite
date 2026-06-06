@@ -28,6 +28,7 @@ import { PricingSection } from '@/components/pages/home/PricingSection'
 import { ScaleSection } from '@/components/pages/home/ScaleSection'
 import {
   HomeSoftLights,
+  ProductBentoHoverLight,
   ProductBentoSoftLights,
 } from '@/components/pages/home/HomeSoftLights'
 import { TestimonialsSection } from '@/components/pages/home/TestimonialsSection'
@@ -377,17 +378,18 @@ function HomePage() {
               </p>
             </div>
 
-            <div className="mt-10 grid overflow-hidden rounded-xl border border-border bg-card/50 lg:grid-cols-12 lg:grid-rows-[repeat(6,minmax(0,1fr))_auto] lg:min-h-[720px]">
+            <div className="product-bento-grid mt-10 grid overflow-hidden rounded-xl border border-border bg-card/50 lg:grid-cols-12 lg:grid-rows-[repeat(6,minmax(0,1fr))_auto] lg:min-h-[720px]">
               {productBentoItems.map((item) => {
                 const Icon = item.icon
 
                 return (
                   <article
                     key={item.title}
-                    className={`${item.className} group border-b border-border transition-colors hover:bg-accent/15 lg:border-r lg:[&:nth-child(2)]:border-r-0 lg:[&:nth-child(5)]:border-r-0 lg:[&:nth-child(8)]:border-r-0 lg:[&:nth-child(n+6)]:border-b-0`}
+                    className={`${item.className} group relative border-b border-border transition-colors hover:bg-accent/12 lg:border-r lg:[&:nth-child(2)]:border-r-0 lg:[&:nth-child(5)]:border-r-0 lg:[&:nth-child(8)]:border-r-0 lg:[&:nth-child(n+6)]:border-b-0`}
                   >
+                    <ProductBentoHoverLight />
                     <div
-                      className={`flex flex-col lg:h-full lg:min-h-0 ${item.mobileVisualTall ? 'min-h-[480px]' : 'min-h-[320px]'} ${item.tall ? 'lg:min-h-full' : ''}`}
+                      className={`relative flex flex-col lg:h-full lg:min-h-0 ${item.mobileVisualTall ? 'min-h-[480px]' : 'min-h-[320px]'} ${item.tall ? 'lg:min-h-full' : ''}`}
                     >
                       <div className="space-y-3 px-5 pt-5 pb-4">
                         <div className="flex items-center gap-2">

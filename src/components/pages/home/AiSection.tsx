@@ -334,61 +334,59 @@ function PluginTile({
 
 function AiPluginsSection() {
   return (
-    <div className="border-t border-border">
-      <div className="grid lg:grid-cols-2 lg:divide-x lg:divide-border">
-        <div className="relative overflow-hidden px-5 py-6 sm:px-6">
-          <AiTileSoftLight tone="plugins" />
-          <div className="relative space-y-1.5">
-            <h3 className="font-aeonik-pro text-[16px] font-normal text-foreground sm:text-[18px]">
-              Official plugins
-            </h3>
-            <p className="text-[13px] leading-5 text-muted-foreground">
-              One-click marketplace plugins for Cursor, Claude Code, and Codex.
-            </p>
-          </div>
-          <div className="relative mt-4 grid grid-cols-1 gap-2 sm:grid-cols-2">
-            {OFFICIAL_PLUGINS.map((plugin) => (
-              <PluginTile
-                key={plugin.id}
-                plugin={plugin}
-                href={plugin.docsUrl}
-                badges={[{ label: 'Official', variant: 'info' }]}
-              />
-            ))}
-          </div>
+    <div className="mt-10 grid overflow-visible pb-4 lg:mt-12 lg:grid-cols-2 lg:divide-x lg:divide-border">
+      <div className="relative py-6 lg:py-0 lg:pr-10">
+        <AiTileSoftLight tone="plugins" />
+        <div className="relative space-y-1.5">
+          <h3 className="font-aeonik-pro text-[16px] font-normal text-foreground sm:text-[18px]">
+            Official plugins
+          </h3>
+          <p className="text-[13px] leading-5 text-muted-foreground">
+            One-click marketplace plugins for Cursor, Claude Code, and Codex.
+          </p>
         </div>
+        <div className="relative mt-4 grid grid-cols-1 gap-2 sm:grid-cols-2">
+          {OFFICIAL_PLUGINS.map((plugin) => (
+            <PluginTile
+              key={plugin.id}
+              plugin={plugin}
+              href={plugin.docsUrl}
+              badges={[{ label: 'Official', variant: 'info' }]}
+            />
+          ))}
+        </div>
+      </div>
 
-        <div className="relative overflow-hidden border-t border-border px-5 py-6 sm:px-6 lg:border-t-0">
-          <AiTileSoftLight tone="integrations" />
-          <div className="relative space-y-1.5">
-            <h3 className="font-aeonik-pro text-[16px] font-normal text-foreground sm:text-[18px]">
-              Integrations
-            </h3>
-            <p className="text-[13px] leading-5 text-muted-foreground">
-              Connect Appwrite in other agents and IDEs.
-            </p>
-          </div>
-          <div className="relative mt-4 grid grid-cols-2 gap-2">
-            {MCP_INTEGRATIONS.map((integration: IDEConfig) => (
-              <PluginTile
-                key={integration.id}
-                plugin={integration}
-                href={integration.mcpDocsUrl!}
-                badges={[{ label: 'Skills', variant: 'inactive' }]}
-              />
-            ))}
-          </div>
-          <div className="relative mt-4">
-            <Button variant="outline" className="h-9 text-[13px]" asChild>
-              <a
-                href="https://appwrite.io/docs/tooling/mcp"
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                Learn more
-              </a>
-            </Button>
-          </div>
+      <div className="relative border-t border-border py-6 lg:border-t-0 lg:py-0 lg:pl-10">
+        <AiTileSoftLight tone="integrations" />
+        <div className="relative space-y-1.5">
+          <h3 className="font-aeonik-pro text-[16px] font-normal text-foreground sm:text-[18px]">
+            Integrations
+          </h3>
+          <p className="text-[13px] leading-5 text-muted-foreground">
+            Connect Appwrite in other agents and IDEs.
+          </p>
+        </div>
+        <div className="relative mt-4 grid grid-cols-2 gap-2">
+          {MCP_INTEGRATIONS.map((integration: IDEConfig) => (
+            <PluginTile
+              key={integration.id}
+              plugin={integration}
+              href={integration.mcpDocsUrl!}
+              badges={[{ label: 'Skills', variant: 'inactive' }]}
+            />
+          ))}
+        </div>
+        <div className="relative mt-4">
+          <Button variant="outline" className="h-9 text-[13px]" asChild>
+            <a
+              href="https://appwrite.io/docs/tooling/mcp"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              Learn more
+            </a>
+          </Button>
         </div>
       </div>
     </div>
@@ -490,8 +488,9 @@ export function AiSection() {
             <McpFeaturePanel />
             <SkillsFeaturePanel />
           </div>
-          <AiPluginsSection />
         </div>
+
+        <AiPluginsSection />
 
         <div className="pt-8 sm:pt-10">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">

@@ -193,12 +193,7 @@ function TablesDbPanel({ playKey }: { playKey: number }) {
         </div>
       </div>
 
-      <div
-        className={cn(
-          'flex items-center gap-2 border-b border-border bg-muted/15 px-3 py-1.5',
-          shouldAnimate && queryState === 'running' && 'product-bento-db-query-running',
-        )}
-      >
+      <div className="flex items-center gap-2 border-b border-border bg-background px-3 py-1.5">
         <p className="min-w-0 flex-1 truncate font-mono text-[10px]">
           <QueryEqualFilter />
         </p>

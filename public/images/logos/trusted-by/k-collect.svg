@@ -1,11 +1,11 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="110" height="35" viewBox="0 0 110 35" fill="none" aria-hidden="true">
+<svg xmlns="http://www.w3.org/2000/svg" width="120" height="35" viewBox="0 0 120 35" fill="none" aria-hidden="true">
 	<defs>
 		<clipPath id="k-collect-trusted-clip">
-			<rect width="110" height="35" fill="#fff" />
+			<rect width="120" height="35" fill="#fff" />
 		</clipPath>
 	</defs>
 	<g clip-path="url(#k-collect-trusted-clip)">
-		<g transform="translate(15.5 17.5)">
+		<g transform="translate(14 17.5) scale(1.32)">
 			<rect
 				x="-8"
 				y="-6"
@@ -27,11 +27,11 @@
 			/>
 		</g>
 		<text
-			x="36"
+			x="32"
 			y="23.5"
 			fill="#19191C"
 			font-family="system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif"
-			font-size="11"
+			font-size="13.5"
 			font-weight="700"
 			letter-spacing="0.05em"
 		>K-COLLECT</text>

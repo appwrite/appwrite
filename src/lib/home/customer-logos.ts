@@ -8,6 +8,8 @@ export type HomeCustomerLogo = {
   mask?: boolean
   maskSrc?: string
   inverseMask?: boolean
+  /** Slightly larger treatment for logos that read small at default scale. */
+  size?: 'lg'
 }
 
 /** Enterprise logos from the homepage trusted-by strip. */
@@ -17,6 +19,7 @@ export const homeCustomerLogos: HomeCustomerLogo[] = [
     alt: 'The Times of India',
     width: 123,
     height: 45,
+    size: 'lg',
   },
   { src: '/images/logos/trusted-by/devkind.svg', alt: 'DevKind', width: 91, height: 27 },
   {
@@ -24,6 +27,7 @@ export const homeCustomerLogos: HomeCustomerLogo[] = [
     alt: 'First Media',
     width: 139,
     height: 37,
+    size: 'lg',
   },
   { src: '/images/logos/trusted-by/acer.svg', alt: 'Acer', width: 90, height: 22 },
   { src: '/images/logos/trusted-by/ibm.svg', alt: 'IBM', width: 63, height: 26 },
@@ -46,7 +50,7 @@ export const homeCustomerLogos: HomeCustomerLogo[] = [
   {
     src: '/images/logos/trusted-by/k-collect.svg',
     alt: 'K-Collect',
-    width: 110,
+    width: 120,
     height: 35,
     mask: true,
   },
@@ -77,6 +81,7 @@ export function buildAllHomeLogos(): HomeCustomerLogo[] {
       width: study.logoWidth,
       height: study.logoHeight,
       mask: study.logoMask,
+      size: study.logoSize,
     })
   }
 

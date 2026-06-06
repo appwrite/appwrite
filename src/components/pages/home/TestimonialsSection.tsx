@@ -12,34 +12,78 @@ import { useMediaMinWidth } from '@/hooks/use-media-min-width'
 import { cn } from '@/lib/utils'
 import { HomeSoftLights } from './HomeSoftLights'
 
-const PANEL_RESIZE_MS = 420
+const PANEL_RESIZE_MS = 480
 const LOGO_GRID_ROWS = 2
 const LOGO_ROTATE_MS = 6000
 
-const accordionEase = 'cubic-bezier(0.22, 1, 0.36, 1)'
-const accordionTransition = `600ms ${accordionEase}`
+const accordionEase = 'cubic-bezier(0.25, 1, 0.45, 1)'
+const accordionDurationMs = 780
+const accordionTransition = `${accordionDurationMs}ms ${accordionEase}`
+const contentRevealTransition = `opacity 720ms ${accordionEase}, transform 720ms ${accordionEase}`
+const panelFlexTransition = `flex ${accordionTransition}, flex-grow ${accordionTransition}, flex-basis ${accordionTransition}`
 
 /** Shared logo sizing for compact cards (grid + collapsed accordion). */
 const smallCardLogoClassName = 'max-h-3.5 w-auto sm:max-h-4 lg:max-h-5'
 
+const gridLogoClassName = 'max-h-4 w-auto sm:max-h-5 lg:max-h-6'
+const largeGridLogoClassName = 'max-h-5 w-auto sm:max-h-6 lg:max-h-7'
+
 const collapsedAccordionLogoClassName = 'max-h-7 w-auto lg:max-h-8'
+const largeCollapsedAccordionLogoClassName = 'max-h-9 w-auto lg:max-h-10'
+
+const LOGO_LG_SCALE = 1.2
+
+type SizedLogo = Pick<
+  HomeCustomerLogo,
+  'src' | 'alt' | 'width' | 'height' | 'mask' | 'maskSrc' | 'inverseMask' | 'size'
+>
+
+function isLargeLogo(logo: { size?: 'lg'; logoSize?: 'lg' }) {
+  return logo.size === 'lg' || logo.logoSize === 'lg'
+}
+
+function scaledLogoDimensions(width: number, height: number, large: boolean) {
+  if (!large) return { width, height }
+  return {
+    width: Math.round(width * LOGO_LG_SCALE),
+    height: Math.round(height * LOGO_LG_SCALE),
+  }
+}
+
+function withScaledLogoDimensions<T extends SizedLogo>(logo: T): T {
+  const { width, height } = scaledLogoDimensions(logo.width, logo.height, isLargeLogo(logo))
+  return { ...logo, width, height }
+}
+
+function caseStudyToSizedLogo(study: HomeCaseStudy): SizedLogo {
+  return {
+    src: study.logo,
+    alt: study.company,
+    width: study.logoWidth,
+    height: study.logoHeight,
+    mask: study.logoMask,
+    size: study.logoSize,
+  }
+}
 
 function SmallCardLogo({
   logo,
   className = smallCardLogoClassName,
 }: {
-  logo: Pick<HomeCustomerLogo, 'src' | 'alt' | 'width' | 'height' | 'mask' | 'maskSrc' | 'inverseMask'>
+  logo: SizedLogo
   className?: string
 }) {
+  const sizedLogo = withScaledLogoDimensions(logo)
+
   return (
     <TrustedByLogo
-      src={logo.src}
-      alt={logo.alt}
-      width={logo.width}
-      height={logo.height}
-      mask={logo.mask}
-      maskSrc={logo.maskSrc}
-      inverseMask={logo.inverseMask}
+      src={sizedLogo.src}
+      alt={sizedLogo.alt}
+      width={sizedLogo.width}
+      height={sizedLogo.height}
+      mask={sizedLogo.mask}
+      maskSrc={sizedLogo.maskSrc}
+      inverseMask={sizedLogo.inverseMask}
       interactive={false}
       className={className}
     />
@@ -102,14 +146,14 @@ function CustomerLogoGrid({ logos }: { logos: HomeCustomerLogo[] }) {
       ref={gridRef}
       key={pageIndex}
       className={cn(
-        'relative z-[1] col-span-6 mt-3 grid min-h-[calc(2*3.25rem+0.75rem)] grid-cols-2 gap-3 sm:grid-cols-3 lg:mt-4 lg:min-h-[calc(2*4rem+1rem)] lg:grid-cols-subgrid lg:gap-4',
+        'relative z-[1] col-span-6 mt-3 grid min-h-[2.75rem] grid-cols-2 gap-x-6 gap-y-4 sm:grid-cols-3 lg:mt-4 lg:min-h-[3.5rem] lg:grid-cols-subgrid lg:gap-x-8 lg:gap-y-5',
         !prefersReducedMotion && 'motion-reduce:animate-none animate-in fade-in duration-500',
       )}
       aria-label="More customers"
       aria-live="polite"
     >
       {visibleBatch.map((logo) => (
-        <CustomerLogoCard key={logo.src} logo={logo} />
+        <CustomerLogoItem key={logo.src} logo={logo} />
       ))}
     </div>
   )
@@ -140,6 +184,8 @@ function CaseStudyPanelContent({
 
   const tabId = `case-study-tab-${study.id}`
   const panelId = `case-study-panel-${study.id}`
+  const largeLogo = isLargeLogo(study)
+  const panelLogoDimensions = scaledLogoDimensions(study.logoWidth, study.logoHeight, largeLogo)
 
   return (
     <div
@@ -150,18 +196,19 @@ function CaseStudyPanelContent({
     >
       <div
         className={cn(
-          'flex h-5 w-full max-w-[min(100%,120px)] items-center motion-reduce:transition-none sm:h-6 md:h-7',
+          'flex h-5 w-full items-center motion-reduce:transition-none sm:h-6 md:h-7',
+          largeLogo ? 'max-w-[min(100%,144px)]' : 'max-w-[min(100%,120px)]',
           revealed ? 'opacity-100' : 'opacity-0',
         )}
         style={{
-          transition: `opacity 500ms ${accordionEase}`,
+          transition: `opacity 620ms ${accordionEase}`,
         }}
       >
         <TrustedByLogo
           src={study.logo}
           alt={study.company}
-          width={study.logoWidth}
-          height={study.logoHeight}
+          width={panelLogoDimensions.width}
+          height={panelLogoDimensions.height}
           mask={study.logoMask}
           emphasized
           className="max-h-full w-auto object-left group-hover:scale-100"
@@ -171,11 +218,11 @@ function CaseStudyPanelContent({
       <h3
         className={cn(
           'font-aeonik-pro max-w-[20ch] text-pretty text-[22px] font-normal leading-[1.15] tracking-tight text-foreground motion-reduce:transition-none sm:text-[26px] lg:text-[28px]',
-          revealed ? 'translate-y-0 opacity-100' : 'translate-y-2 opacity-0',
+          revealed ? 'translate-y-0 opacity-100' : 'translate-y-1 opacity-0',
         )}
         style={{
-          transition: `opacity 650ms ${accordionEase}, transform 650ms ${accordionEase}`,
-          transitionDelay: revealed ? '60ms' : '0ms',
+          transition: contentRevealTransition,
+          transitionDelay: revealed ? '90ms' : '0ms',
         }}
       >
         {study.headline}
@@ -184,11 +231,11 @@ function CaseStudyPanelContent({
       <div
         className={cn(
           'space-y-5 pt-1 motion-reduce:transition-none',
-          revealed ? 'translate-y-0 opacity-100' : 'translate-y-2 opacity-0',
+          revealed ? 'translate-y-0 opacity-100' : 'translate-y-1 opacity-0',
         )}
         style={{
-          transition: `opacity 650ms ${accordionEase}, transform 650ms ${accordionEase}`,
-          transitionDelay: revealed ? '140ms' : '0ms',
+          transition: contentRevealTransition,
+          transitionDelay: revealed ? '180ms' : '0ms',
         }}
       >
         <CaseStudyDottedSeparator />
@@ -226,10 +273,20 @@ function CaseStudyPanelContent({
   )
 }
 
-function CustomerLogoCard({ logo }: { logo: HomeCustomerLogo }) {
+function CustomerLogoItem({ logo }: { logo: HomeCustomerLogo }) {
+  const large = isLargeLogo(logo)
+
   return (
-    <div className="flex h-[3.25rem] w-full min-w-0 items-center justify-center overflow-hidden rounded-xl border border-border bg-card px-3 lg:h-16 lg:px-4">
-      <SmallCardLogo logo={logo} />
+    <div
+      className={cn(
+        'flex w-full min-w-0 items-center justify-center',
+        large ? 'h-12 lg:h-16' : 'h-11 lg:h-14',
+      )}
+    >
+      <SmallCardLogo
+        logo={logo}
+        className={large ? largeGridLogoClassName : gridLogoClassName}
+      />
     </div>
   )
 }
@@ -270,9 +327,10 @@ function CaseStudyCard({
   return (
     <div
       className={cn(
-        'min-w-0 w-full shrink max-lg:my-1.5 max-lg:flex-none lg:my-0 lg:min-w-0',
-        isActive ? 'lg:col-span-4' : 'lg:col-span-1',
+        'min-w-0 w-full shrink max-lg:my-1.5 max-lg:flex-none lg:my-0 lg:min-w-0 motion-reduce:transition-none',
+        isActive ? 'lg:flex-[4_1_0%]' : 'lg:flex-[1_1_0%]',
       )}
+      style={{ transition: panelFlexTransition }}
     >
       <div
         id={tabId}
@@ -293,7 +351,7 @@ function CaseStudyCard({
           !isActive && 'h-16 lg:h-[467px] lg:max-h-[467px] lg:min-h-[467px]',
           isActive && 'lg:h-[467px] lg:max-h-[467px] lg:min-h-[467px]',
           isActive &&
-            'lg:shadow-[0_0_0_4px_color-mix(in_srgb,var(--border)_65%,transparent)]',
+            'lg:shadow-[0_0_0_3px_color-mix(in_srgb,var(--border)_50%,transparent)]',
         )}
         style={
           {
@@ -308,9 +366,9 @@ function CaseStudyCard({
               'motion-reduce:transition-none',
               showPanelContent
                 ? 'translate-y-0 opacity-100'
-                : 'translate-y-2 opacity-0',
+                : 'translate-y-1 opacity-0',
             )}
-            style={{ transition: `opacity 550ms ${accordionEase}, transform 550ms ${accordionEase}` }}
+            style={{ transition: contentRevealTransition }}
           >
             <CaseStudyPanelContent study={study} revealed={showPanelContent} />
           </div>
@@ -319,15 +377,7 @@ function CaseStudyCard({
             className="flex h-16 items-center justify-center px-4 lg:hidden"
             aria-hidden={isActive}
           >
-            <SmallCardLogo
-              logo={{
-                src: study.logo,
-                alt: study.company,
-                width: study.logoWidth,
-                height: study.logoHeight,
-                mask: study.logoMask,
-              }}
-            />
+            <SmallCardLogo logo={caseStudyToSizedLogo(study)} />
           </div>
         )}
 
@@ -338,20 +388,18 @@ function CaseStudyCard({
               isActive ? 'pointer-events-none opacity-0' : 'opacity-100',
             )}
             style={{
-              transition: `opacity 500ms ${accordionEase}`,
-              transitionDelay: isActive ? '0ms' : '120ms',
+              transition: `opacity 620ms ${accordionEase}`,
+              transitionDelay: isActive ? '0ms' : '200ms',
             }}
             aria-hidden={isActive}
           >
             <SmallCardLogo
-              logo={{
-                src: study.logo,
-                alt: study.company,
-                width: study.logoWidth,
-                height: study.logoHeight,
-                mask: study.logoMask,
-              }}
-              className={collapsedAccordionLogoClassName}
+              logo={caseStudyToSizedLogo(study)}
+              className={
+                isLargeLogo(study)
+                  ? largeCollapsedAccordionLogoClassName
+                  : collapsedAccordionLogoClassName
+              }
             />
           </div>
 
@@ -367,9 +415,9 @@ function CaseStudyCard({
                 'motion-reduce:transition-none',
                 showPanelContent && isActive
                   ? 'translate-y-0 opacity-100'
-                  : 'translate-y-2 opacity-0',
+                  : 'translate-y-1 opacity-0',
               )}
-              style={{ transition: `opacity 600ms ${accordionEase}, transform 600ms ${accordionEase}` }}
+              style={{ transition: contentRevealTransition }}
             >
               <CaseStudyPanelContent study={study} revealed={showPanelContent && isActive} />
             </div>
@@ -433,7 +481,7 @@ export function TestimonialsSection() {
               role="tablist"
               aria-label="Customer stories"
               onKeyDown={handleTabListKeyDown}
-              className="relative z-[1] col-span-6 flex w-full touch-pan-y flex-col max-lg:gap-0 overscroll-y-auto lg:grid lg:min-h-[467px] lg:grid-cols-subgrid lg:items-stretch lg:gap-4"
+              className="relative z-[1] col-span-6 flex w-full touch-pan-y flex-col max-lg:gap-0 overscroll-y-auto lg:min-h-[467px] lg:flex-row lg:items-stretch lg:gap-4"
             >
               {visibleStudies.map((study) => (
                 <CaseStudyCard

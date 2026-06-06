@@ -5,6 +5,8 @@ export type HomeCaseStudy = {
   logoHeight: number
   /** K-Collect and similar logos use a foreground mask in light/dark mode. */
   logoMask?: boolean
+  /** Slightly larger treatment for logos that read small at default scale. */
+  logoSize?: 'lg'
   headline: string
   blurb: string
   name: string
@@ -48,7 +50,7 @@ export const allHomeCaseStudies: HomeCaseStudy[] = [
   {
     id: 'k-collect',
     logo: '/images/logos/trusted-by/k-collect.svg',
-    logoWidth: 110,
+    logoWidth: 120,
     logoHeight: 35,
     logoMask: true,
     headline: 'K-Collect reduced infrastructure costs by 700%',
@@ -118,6 +120,7 @@ export const allHomeCaseStudies: HomeCaseStudy[] = [
     logo: '/images/logos/trusted-by/radar.svg',
     logoWidth: 100,
     logoHeight: 32,
+    logoSize: 'lg',
     headline: 'Radar shipped a polished iOS hub for every kind of media recommendation',
     blurb: 'The barrier to entry is zero with Appwrite. And I think that’s really special.',
     name: 'Matt Martino',
