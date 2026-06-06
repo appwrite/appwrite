@@ -350,7 +350,7 @@ Http::post('/v1/account')
             throw new Exception(Exception::USER_EMAIL_FREE);
         }
 
-        if ((($project->getId() === 'console') || ($plan['supportsCorporateEmailValidation'] ?? false)) && ($project->getAttribute('auths', [])['corporateEmails'] ?? false) && !($emailMetadata['emailIsCorporate'] ?? true)) {
+        if ((($project->getId() === 'console') || ($plan['supportsCorporateEmailValidation'] ?? false)) && ($project->getAttribute('auths', [])['corporateEmails'] ?? false) && !$emailMetadata['emailIsCorporate']) {
             throw new Exception(Exception::USER_EMAIL_NOT_CORPORATE);
         }
 
@@ -1702,7 +1702,7 @@ Http::get('/v1/account/sessions/oauth2/:provider/redirect')
                     $failureRedirect(Exception::USER_EMAIL_FREE);
                 }
 
-                if ((($project->getId() === 'console') || ($plan['supportsCorporateEmailValidation'] ?? false)) && ($project->getAttribute('auths', [])['corporateEmails'] ?? false) && !($emailMetadata['emailIsCorporate'] ?? true)) {
+                if ((($project->getId() === 'console') || ($plan['supportsCorporateEmailValidation'] ?? false)) && ($project->getAttribute('auths', [])['corporateEmails'] ?? false) && !$emailMetadata['emailIsCorporate']) {
                     $failureRedirect(Exception::USER_EMAIL_NOT_CORPORATE);
                 }
 
@@ -1847,7 +1847,7 @@ Http::get('/v1/account/sessions/oauth2/:provider/redirect')
                 $failureRedirect(Exception::USER_EMAIL_FREE);
             }
 
-            if ((($project->getId() === 'console') || ($plan['supportsCorporateEmailValidation'] ?? false)) && ($project->getAttribute('auths', [])['corporateEmails'] ?? false) && !($emailMetadata['emailIsCorporate'] ?? true)) {
+            if ((($project->getId() === 'console') || ($plan['supportsCorporateEmailValidation'] ?? false)) && ($project->getAttribute('auths', [])['corporateEmails'] ?? false) && !$emailMetadata['emailIsCorporate']) {
                 $failureRedirect(Exception::USER_EMAIL_NOT_CORPORATE);
             }
 
@@ -2209,7 +2209,7 @@ Http::post('/v1/account/tokens/magic-url')
                 throw new Exception(Exception::USER_EMAIL_FREE);
             }
 
-            if ((($project->getId() === 'console') || ($plan['supportsCorporateEmailValidation'] ?? false)) && ($project->getAttribute('auths', [])['corporateEmails'] ?? false) && !($emailMetadata['emailIsCorporate'] ?? true)) {
+            if ((($project->getId() === 'console') || ($plan['supportsCorporateEmailValidation'] ?? false)) && ($project->getAttribute('auths', [])['corporateEmails'] ?? false) && !$emailMetadata['emailIsCorporate']) {
                 throw new Exception(Exception::USER_EMAIL_NOT_CORPORATE);
             }
 
@@ -2533,7 +2533,7 @@ Http::post('/v1/account/tokens/email')
                 throw new Exception(Exception::USER_EMAIL_FREE);
             }
 
-            if ((($project->getId() === 'console') || ($plan['supportsCorporateEmailValidation'] ?? false)) && ($project->getAttribute('auths', [])['corporateEmails'] ?? false) && !($emailMetadata['emailIsCorporate'] ?? true)) {
+            if ((($project->getId() === 'console') || ($plan['supportsCorporateEmailValidation'] ?? false)) && ($project->getAttribute('auths', [])['corporateEmails'] ?? false) && !$emailMetadata['emailIsCorporate']) {
                 throw new Exception(Exception::USER_EMAIL_NOT_CORPORATE);
             }
 
@@ -3458,7 +3458,7 @@ Http::patch('/v1/account/email')
             throw new Exception(Exception::USER_EMAIL_FREE);
         }
 
-        if ((($project->getId() === 'console') || ($plan['supportsCorporateEmailValidation'] ?? false)) && ($project->getAttribute('auths', [])['corporateEmails'] ?? false) && !($emailMetadata['emailIsCorporate'] ?? true)) {
+        if ((($project->getId() === 'console') || ($plan['supportsCorporateEmailValidation'] ?? false)) && ($project->getAttribute('auths', [])['corporateEmails'] ?? false) && !$emailMetadata['emailIsCorporate']) {
             throw new Exception(Exception::USER_EMAIL_NOT_CORPORATE);
         }
 

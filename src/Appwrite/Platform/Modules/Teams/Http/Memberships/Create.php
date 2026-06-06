@@ -204,7 +204,7 @@ class Create extends Action
                 throw new Exception(Exception::USER_EMAIL_FREE);
             }
 
-            if ((($project->getId() === 'console') || ($plan['supportsCorporateEmailValidation'] ?? false)) && ($project->getAttribute('auths', [])['corporateEmails'] ?? false) && !($emailMetadata['emailIsCorporate'] ?? true)) {
+            if ((($project->getId() === 'console') || ($plan['supportsCorporateEmailValidation'] ?? false)) && ($project->getAttribute('auths', [])['corporateEmails'] ?? false) && !$emailMetadata['emailIsCorporate']) {
                 throw new Exception(Exception::USER_EMAIL_NOT_CORPORATE);
             }
 
