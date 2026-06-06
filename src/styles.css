@@ -1111,6 +1111,18 @@ html[data-init-ticket-video-capturing] [data-init-ticket-video-capture] * {
   }
 }
 
+@keyframes terminal-cursor-blink {
+  0%,
+  49% {
+    opacity: 1;
+  }
+
+  50%,
+  100% {
+    opacity: 0;
+  }
+}
+
 @keyframes ai-mock-cursor-blink {
   0%,
   49% {

@@ -269,17 +269,6 @@ function ProjectLayout() {
     isFunctionExecutionsTab ||
     isSiteLogsTab
 
-  // Hide footer for usage view, database spreadsheet / level tabs (incl. monitor, visualizer), function executions tab, site logs tab, functions editor, and storage workspace
-  const hideFooter =
-    isDatabaseSpreadsheetView ||
-    isDatabaseVisualizerView ||
-    activeSection === 'usage' ||
-    isFunctionExecutionsTab ||
-    isSiteLogsTab ||
-    activeSection === 'activity' ||
-    activeSection === 'storage' ||
-    isFunctionsEditorView
-
   // Close sidebar on route change
   useEffect(() => {
     setSidebarOpen(false)
@@ -395,8 +384,9 @@ function ProjectLayout() {
                       orgBillingReadonly={orgBillingReadonlyForFailedInvoice}
                     />
                   }
-                  showFooter={!hideFooter}
+                  showFooter={false}
                   fixedLayout={isFixedLayoutView}
+                  bottomPanel={<ProjectCliShell />}
                 >
                   <Outlet />
                 </ConsoleLayout>
@@ -406,7 +396,6 @@ function ProjectLayout() {
                   <CsvImportBox projectId={projectId} />
                   <CsvExportBox projectId={projectId} />
                 </div>
-                <ProjectCliShell />
               </ProjectConnectDialogProvider>
             </CliShellProvider>
           </KeyboardShortcutsProvider>

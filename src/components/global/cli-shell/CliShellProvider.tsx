@@ -8,24 +8,43 @@ import {
   useState,
   type ReactNode,
 } from 'react'
+import type { Models } from '@appwrite.io/console'
 import { useAuth } from '@/components/global/auth/RequireAuth'
 import {
   getBaseEndpoint,
   getProjectApiEndpoint,
 } from '@/lib/appwrite/sdk'
-import { bootstrapCliContainer } from '@/lib/cli-shell/bootstrap-cli-container'
-import { getConsoleSessionCookie } from '@/lib/cli-shell/console-session'
+import {
+  bootstrapCliRuntime,
+  syncCliAuthFiles,
+} from '@/lib/cli-shell/bootstrap-cli-container'
+import {
+  CLI_PROJECT_CWD,
+  createCliShellWelcomeLines,
+} from '@/lib/cli-shell/constants'
+import { resolveConsoleCliAuth } from '@/lib/cli-shell/console-session'
+import {
+  installCliFetchBridge,
+  removeCliFetchBridge,
+} from '@/lib/cli-shell/fetch-bridge'
+import { isAppwriteCliCommand } from '@/lib/cli-shell/is-appwrite-command'
+import { prepareCliCommand } from '@/lib/cli-shell/prepare-command'
+import {
+  applyTabCompletion,
+  tabComplete,
+} from '@/lib/cli-shell/tab-completion'
 import type {
   CliShellContainer,
   CliShellLine,
   CliShellStatus,
 } from '@/lib/cli-shell/types'
 import { useKeyboardShortcut } from '@/hooks/use-keyboard-shortcuts'
-
-const CLI_SHELL_HEIGHT_KEY = 'console.cliShellHeight'
-const DEFAULT_SHELL_HEIGHT = 280
-const MIN_SHELL_HEIGHT = 160
-const MAX_SHELL_HEIGHT_RATIO = 0.55
+import {
+  useCliShellHeight,
+  useCliShellOpen,
+  type ConsoleAccountCache,
+} from '@/lib/react-query/hooks/auth'
+import { clampCliShellHeightPx } from '@/lib/user-prefs-keys'
 
 type CliShellContextValue = {
   open: boolean
@@ -35,11 +54,17 @@ type CliShellContextValue = {
   lines: CliShellLine[]
   runCommand: (command: string) => Promise<void>
   clearOutput: () => void
+  completeTab: (
+    input: string,
+    cursor: number,
+    listOnly?: boolean,
+  ) => { input: string; cursor: number } | null
   cancelRunning: () => void
   isRunning: boolean
   height: number
   setHeight: (height: number) => void
   retryBootstrap: () => void
+  bootstrapError: string | null
 }
 
 const CliShellContext = createContext<CliShellContextValue | null>(null)
@@ -57,153 +82,388 @@ export function useCliShellOptional() {
   return useContext(CliShellContext)
 }
 
-function readStoredHeight(): number {
-  if (typeof window === 'undefined') return DEFAULT_SHELL_HEIGHT
-  try {
-    const raw = window.localStorage.getItem(CLI_SHELL_HEIGHT_KEY)
-    const parsed = raw ? Number.parseInt(raw, 10) : NaN
-    if (Number.isFinite(parsed) && parsed >= MIN_SHELL_HEIGHT) {
-      return parsed
-    }
-  } catch {
-    /* private mode */
-  }
-  return DEFAULT_SHELL_HEIGHT
-}
-
 type CliShellProviderProps = {
   projectId: string
   children: ReactNode
 }
 
-export function CliShellProvider({ projectId, children }: CliShellProviderProps) {
-  const { account } = useAuth()
+type ProjectBootstrapState = {
+  promise: Promise<CliShellContainer> | null
+  container: CliShellContainer | null
+}
 
-  const [open, setOpen] = useState(false)
+const projectBootstrapState = new Map<string, ProjectBootstrapState>()
+
+function getProjectBootstrapState(projectId: string): ProjectBootstrapState {
+  const existing = projectBootstrapState.get(projectId)
+  if (existing) return existing
+  const created: ProjectBootstrapState = { promise: null, container: null }
+  projectBootstrapState.set(projectId, created)
+  return created
+}
+
+export function CliShellProvider({ projectId, children }: CliShellProviderProps) {
+  const { account, isLoading: isAccountLoading } = useAuth()
+  const consoleAccount = account as ConsoleAccountCache | undefined
+  const { isOpen: open, setIsOpen: setOpen } = useCliShellOpen(consoleAccount)
+  const { heightPx, setHeightPx } = useCliShellHeight(consoleAccount)
+  const height = clampCliShellHeightPx(heightPx)
+
   const [status, setStatus] = useState<CliShellStatus>('idle')
-  const [lines, setLines] = useState<CliShellLine[]>([])
-  const [height, setHeightState] = useState(readStoredHeight)
+  const [lines, setLines] = useState<CliShellLine[]>(() =>
+    createCliShellWelcomeLines(),
+  )
   const [isRunning, setIsRunning] = useState(false)
+  const [bootstrapError, setBootstrapError] = useState<string | null>(null)
 
   const containerRef = useRef<CliShellContainer | null>(null)
-  const abortRef = useRef<AbortController | null>(null)
   const bootstrapPromiseRef = useRef<Promise<CliShellContainer> | null>(null)
+  const bootstrapLineIndexRef = useRef<number | null>(null)
+  const bootstrapPendingRef = useRef<string | null>(null)
+  const bootstrapTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const bootstrapLastUpdateRef = useRef(0)
+  const bootstrapSilentRef = useRef(false)
+  const authInitializedRef = useRef(false)
+
+  const BOOTSTRAP_LINE_MIN_INTERVAL_MS = 250
 
   const appendLine = useCallback((line: CliShellLine) => {
     setLines((prev) => [...prev, line])
   }, [])
 
-  const setHeight = useCallback((next: number) => {
-    const maxHeight = Math.floor(window.innerHeight * MAX_SHELL_HEIGHT_RATIO)
-    const clamped = Math.min(
-      Math.max(next, MIN_SHELL_HEIGHT),
-      Math.max(maxHeight, MIN_SHELL_HEIGHT),
-    )
-    setHeightState(clamped)
-    try {
-      window.localStorage.setItem(CLI_SHELL_HEIGHT_KEY, String(clamped))
-    } catch {
-      /* private mode */
-    }
+  const setBootstrapLine = useCallback((text: string) => {
+    setLines((prev) => {
+      const index = bootstrapLineIndexRef.current
+      if (index === null || index >= prev.length || prev[index]?.type !== 'system') {
+        bootstrapLineIndexRef.current = prev.length
+        return [...prev, { type: 'system', text }]
+      }
+      const next = [...prev]
+      next[index] = { type: 'system', text }
+      return next
+    })
   }, [])
 
-  const ensureContainer = useCallback(async (): Promise<CliShellContainer> => {
-    if (containerRef.current) return containerRef.current
-    if (bootstrapPromiseRef.current) return bootstrapPromiseRef.current
+  const scheduleBootstrapLine = useCallback(
+    (text: string) => {
+      bootstrapPendingRef.current = text
 
-    const sessionCookie = getConsoleSessionCookie()
-    if (!sessionCookie) {
-      throw new Error(
-        'No active console session. Sign in again to use the Appwrite CLI.',
+      const flush = () => {
+        bootstrapTimerRef.current = null
+        const pending = bootstrapPendingRef.current
+        if (pending !== null) {
+          setBootstrapLine(pending)
+          bootstrapPendingRef.current = null
+          bootstrapLastUpdateRef.current = Date.now()
+        }
+      }
+
+      if (bootstrapTimerRef.current !== null) return
+
+      const elapsed = Date.now() - bootstrapLastUpdateRef.current
+      if (elapsed >= BOOTSTRAP_LINE_MIN_INTERVAL_MS) {
+        flush()
+        return
+      }
+
+      bootstrapTimerRef.current = setTimeout(
+        flush,
+        BOOTSTRAP_LINE_MIN_INTERVAL_MS - elapsed,
       )
+    },
+    [setBootstrapLine],
+  )
+
+  const finalizeBootstrapLine = useCallback(
+    (text: string) => {
+      if (bootstrapTimerRef.current !== null) {
+        clearTimeout(bootstrapTimerRef.current)
+        bootstrapTimerRef.current = null
+      }
+      bootstrapPendingRef.current = null
+      setBootstrapLine(text)
+      bootstrapLineIndexRef.current = null
+    },
+    [setBootstrapLine],
+  )
+
+  const resetBootstrapLine = useCallback(() => {
+    if (bootstrapTimerRef.current !== null) {
+      clearTimeout(bootstrapTimerRef.current)
+      bootstrapTimerRef.current = null
     }
+    bootstrapPendingRef.current = null
+    bootstrapLineIndexRef.current = null
+  }, [])
 
-    const email = account?.email?.trim()
-    if (!email) {
-      throw new Error('Account email is required to configure the CLI session.')
-    }
+  const setHeight = useCallback(
+    (next: number) => {
+      setHeightPx(clampCliShellHeightPx(next))
+    },
+    [setHeightPx],
+  )
 
-    const projectEndpoint = getProjectApiEndpoint(projectId)
-    const consoleEndpoint = getBaseEndpoint()
+  const initializeCliAuth = useCallback(
+    async (container: CliShellContainer): Promise<void> => {
+      if (authInitializedRef.current || isAccountLoading) return
 
-    setStatus('bootstrapping')
-    appendLine({
-      type: 'system',
-      text: 'Installing Appwrite CLI in the browser runtime (first open may take a moment)...',
-    })
+      const accountUser = account as Models.User | undefined
+      const email = accountUser?.email?.trim()
+      if (!email) return
 
-    const promise = bootstrapCliContainer({
-      projectId,
-      projectEndpoint,
-      consoleEndpoint,
-      email,
-      sessionCookie,
-    })
-      .then((container) => {
-        containerRef.current = container
+      const auth = await resolveConsoleCliAuth()
+      if (!auth) {
+        throw new Error(
+          'No active console session. Sign in again to use the Appwrite CLI.',
+        )
+      }
+
+      const projectEndpoint = getProjectApiEndpoint(projectId)
+      const consoleEndpoint = getBaseEndpoint()
+
+      if (auth.mode === 'browser-proxy') {
+        installCliFetchBridge([consoleEndpoint, projectEndpoint])
+      } else {
+        removeCliFetchBridge()
+      }
+
+      syncCliAuthFiles(container.vfs, {
+        projectId,
+        projectEndpoint,
+        consoleEndpoint,
+        email,
+        auth,
+      })
+
+      authInitializedRef.current = true
+    },
+    [account, isAccountLoading, projectId],
+  )
+
+  const ensureRuntime = useCallback(
+    async (options?: { silent?: boolean }): Promise<CliShellContainer> => {
+      const projectBootstrap = getProjectBootstrapState(projectId)
+
+      if (containerRef.current) return containerRef.current
+      if (projectBootstrap.container) {
+        containerRef.current = projectBootstrap.container
         setStatus('ready')
-        appendLine({
-          type: 'system',
-          text: 'Appwrite CLI is ready. Type a command and press Enter.',
-        })
-        return container
-      })
-      .catch((error: unknown) => {
-        setStatus('error')
-        const message =
-          error instanceof Error ? error.message : 'Failed to start CLI shell.'
-        appendLine({ type: 'stderr', text: message })
-        throw error
-      })
-      .finally(() => {
-        bootstrapPromiseRef.current = null
-      })
+        setBootstrapError(null)
+        return projectBootstrap.container
+      }
 
-    bootstrapPromiseRef.current = promise
-    return promise
-  }, [account?.email, appendLine, projectId])
+      const requestedSilent = options?.silent ?? false
+      if (bootstrapPromiseRef.current ?? projectBootstrap.promise) {
+        const activePromise =
+          bootstrapPromiseRef.current ?? projectBootstrap.promise!
+        if (!requestedSilent && bootstrapSilentRef.current) {
+          bootstrapSilentRef.current = false
+          setBootstrapError(null)
+          setStatus('bootstrapping')
+          scheduleBootstrapLine('Setting up browser shell runtime...')
+        }
+        return activePromise
+      }
+
+      const silent = requestedSilent
+      bootstrapSilentRef.current = silent
+
+      const projectEndpoint = getProjectApiEndpoint(projectId)
+      const consoleEndpoint = getBaseEndpoint()
+
+      setBootstrapError(null)
+      if (!silent) {
+        setStatus('bootstrapping')
+        scheduleBootstrapLine('Setting up browser shell runtime...')
+      } else {
+        setStatus('bootstrapping')
+      }
+
+      const promise = bootstrapCliRuntime(
+        {
+          projectId,
+          projectEndpoint,
+          consoleEndpoint,
+        },
+        (message) => {
+          if (bootstrapSilentRef.current) return
+          scheduleBootstrapLine(message)
+        },
+      )
+        .then(async (container) => {
+          containerRef.current = container
+          projectBootstrap.container = container
+          projectBootstrap.promise = null
+
+          try {
+            await initializeCliAuth(container)
+            setBootstrapError(null)
+          } catch (error: unknown) {
+            const message =
+              error instanceof Error
+                ? error.message
+                : 'Failed to configure Appwrite CLI session.'
+            setBootstrapError(message)
+            if (!bootstrapSilentRef.current) {
+              resetBootstrapLine()
+              appendLine({ type: 'stderr', text: message })
+            }
+          }
+
+          setStatus('ready')
+          if (!bootstrapSilentRef.current) {
+            finalizeBootstrapLine('Appwrite CLI is ready.')
+          }
+          return container
+        })
+        .catch((error: unknown) => {
+          projectBootstrap.container = null
+          projectBootstrap.promise = null
+          const message =
+            error instanceof Error ? error.message : 'Failed to start CLI shell.'
+          setStatus('error')
+          setBootstrapError(message)
+          if (!bootstrapSilentRef.current) {
+            resetBootstrapLine()
+          }
+          throw error
+        })
+        .finally(() => {
+          bootstrapPromiseRef.current = null
+          bootstrapSilentRef.current = false
+        })
+
+      bootstrapPromiseRef.current = promise
+      projectBootstrap.promise = promise
+      return promise
+    },
+    [
+      appendLine,
+      finalizeBootstrapLine,
+      initializeCliAuth,
+      projectId,
+      resetBootstrapLine,
+      scheduleBootstrapLine,
+    ],
+  )
+
+  useEffect(() => {
+    const container = containerRef.current
+    if (!container || isAccountLoading || authInitializedRef.current) return
+    void initializeCliAuth(container)
+      .then(() => setBootstrapError(null))
+      .catch((error: unknown) => {
+        const message =
+          error instanceof Error
+            ? error.message
+            : 'Failed to configure Appwrite CLI session.'
+        setBootstrapError(message)
+      })
+  }, [account, initializeCliAuth, isAccountLoading])
 
   const retryBootstrap = useCallback(() => {
     containerRef.current = null
     bootstrapPromiseRef.current = null
+    authInitializedRef.current = false
+    const projectBootstrap = getProjectBootstrapState(projectId)
+    projectBootstrap.container = null
+    projectBootstrap.promise = null
+    setBootstrapError(null)
+    resetBootstrapLine()
     setStatus('idle')
+    removeCliFetchBridge()
     if (open) {
-      void ensureContainer().catch(() => {})
+      void ensureRuntime({ silent: false }).catch(() => {})
     }
-  }, [ensureContainer, open])
+  }, [ensureRuntime, open, projectId, resetBootstrapLine])
 
   useEffect(() => {
-    if (!open) return
-    void ensureContainer().catch(() => {})
-  }, [open, ensureContainer])
+    void ensureRuntime({ silent: !open }).catch(() => {})
+  }, [ensureRuntime, open])
 
   useEffect(() => {
     containerRef.current = null
     bootstrapPromiseRef.current = null
+    authInitializedRef.current = false
+    projectBootstrapState.delete(projectId)
     setStatus('idle')
-    setLines([])
+    setLines(createCliShellWelcomeLines())
+    setBootstrapError(null)
+    resetBootstrapLine()
     setIsRunning(false)
-    abortRef.current?.abort()
-    abortRef.current = null
-  }, [projectId])
+    removeCliFetchBridge()
+  }, [projectId, resetBootstrapLine])
+
+  useEffect(() => {
+    return () => {
+      removeCliFetchBridge()
+    }
+  }, [])
+
+  const clearOutput = useCallback(() => {
+    setLines([])
+  }, [])
+
+  const completeTab = useCallback(
+    (input: string, cursor: number, listOnly = false) => {
+      const outcome = tabComplete(input, cursor, {
+        vfs: containerRef.current?.vfs ?? null,
+      }, listOnly)
+
+      if (outcome.kind === 'none') return null
+
+      if (outcome.kind === 'list') {
+        appendLine({
+          type: 'system',
+          text: outcome.matches.join('  '),
+        })
+        return { input, cursor }
+      }
+
+      return applyTabCompletion(input, cursor, outcome)
+    },
+    [appendLine],
+  )
 
   const runCommand = useCallback(
     async (rawCommand: string) => {
-      const command = rawCommand.trim()
-      if (!command) return
-
-      appendLine({ type: 'command', text: command })
-
-      let container: CliShellContainer
-      try {
-        container = await ensureContainer()
-      } catch {
+      const trimmed = rawCommand.trim()
+      if (!trimmed) {
+        appendLine({ type: 'command', text: '' })
         return
       }
 
-      abortRef.current?.abort()
-      const controller = new AbortController()
-      abortRef.current = controller
+      if (trimmed === 'clear' || trimmed === 'cls') {
+        setLines([])
+        return
+      }
+
+      const command = prepareCliCommand(rawCommand)
+      if (!command) return
+
+      appendLine({ type: 'command', text: trimmed })
+
+      let container: CliShellContainer
+      try {
+        container = await ensureRuntime()
+      } catch (error: unknown) {
+        const message =
+          error instanceof Error ? error.message : 'CLI shell is not ready.'
+        if (!bootstrapError) {
+          appendLine({ type: 'stderr', text: message })
+        }
+        return
+      }
+
+      if (isAppwriteCliCommand(rawCommand) && !authInitializedRef.current) {
+        appendLine({
+          type: 'stderr',
+          text:
+            bootstrapError ??
+            'Appwrite CLI session is not ready. Retry setup or refresh the page.',
+        })
+        return
+      }
 
       setIsRunning(true)
       setStatus('running')
@@ -212,8 +472,10 @@ export function CliShellProvider({ projectId, children }: CliShellProviderProps)
         let streamedStdout = false
         let streamedStderr = false
 
+        // Do not pass `signal` to container.run: almostnode treats any signal as
+        // long-running and waits forever for process.exit() instead of idle timeout.
         const result = await container.run(command, {
-          signal: controller.signal,
+          cwd: CLI_PROJECT_CWD,
           onStdout: (chunk) => {
             if (chunk) {
               streamedStdout = true
@@ -228,48 +490,51 @@ export function CliShellProvider({ projectId, children }: CliShellProviderProps)
           },
         })
 
-        if (result.stdout && !streamedStdout && !controller.signal.aborted) {
+        if (result.stdout && !streamedStdout) {
           appendLine({ type: 'stdout', text: result.stdout })
         }
-        if (result.stderr && !streamedStderr && !controller.signal.aborted) {
+        if (result.stderr && !streamedStderr) {
           appendLine({ type: 'stderr', text: result.stderr })
         }
-        if (result.exitCode !== 0 && !controller.signal.aborted) {
+        if (
+          result.exitCode !== 0 &&
+          !result.stdout &&
+          !result.stderr
+        ) {
+          appendLine({
+            type: 'stderr',
+            text: `Command failed with exit code ${result.exitCode}.`,
+          })
+        } else if (result.exitCode !== 0) {
           appendLine({
             type: 'system',
             text: `Process exited with code ${result.exitCode}.`,
           })
         }
       } catch (error: unknown) {
-        if (controller.signal.aborted) {
-          appendLine({ type: 'system', text: 'Command cancelled.' })
-        } else {
-          const message =
-            error instanceof Error ? error.message : 'Command failed.'
-          appendLine({ type: 'stderr', text: message })
-        }
+        const message =
+          error instanceof Error ? error.message : 'Command failed.'
+        appendLine({ type: 'stderr', text: message })
       } finally {
-        if (abortRef.current === controller) {
-          abortRef.current = null
-        }
         setIsRunning(false)
         setStatus(containerRef.current ? 'ready' : 'error')
       }
     },
-    [appendLine, ensureContainer],
+    [
+      appendLine,
+      bootstrapError,
+      ensureRuntime,
+    ],
   )
 
   const cancelRunning = useCallback(() => {
-    abortRef.current?.abort()
-  }, [])
-
-  const clearOutput = useCallback(() => {
-    setLines([])
+    // almostnode only supports cancellation when a signal is passed to run(),
+    // which prevents Node-based CLIs from exiting. No-op for now.
   }, [])
 
   const toggle = useCallback(() => {
     setOpen((prev) => !prev)
-  }, [])
+  }, [setOpen])
 
   useKeyboardShortcut(
     'control+`',
@@ -295,24 +560,29 @@ export function CliShellProvider({ projectId, children }: CliShellProviderProps)
       lines,
       runCommand,
       clearOutput,
+      completeTab,
       cancelRunning,
       isRunning,
       height,
       setHeight,
       retryBootstrap,
+      bootstrapError,
     }),
     [
       open,
+      setOpen,
       toggle,
       status,
       lines,
       runCommand,
       clearOutput,
+      completeTab,
       cancelRunning,
       isRunning,
       height,
       setHeight,
       retryBootstrap,
+      bootstrapError,
     ],
   )
 

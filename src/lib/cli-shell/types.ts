@@ -7,13 +7,12 @@ export type CliShellLine =
   | { type: 'stdout'; text: string }
   | { type: 'stderr'; text: string }
   | { type: 'system'; text: string }
+  | { type: 'suggestions'; commands: readonly string[] }
 
-export type CliShellBootstrapConfig = {
+export type CliShellRuntimeConfig = {
   projectId: string
   projectEndpoint: string
   consoleEndpoint: string
-  email: string
-  sessionCookie: string
 }
 
 export type CliShellStatus =
