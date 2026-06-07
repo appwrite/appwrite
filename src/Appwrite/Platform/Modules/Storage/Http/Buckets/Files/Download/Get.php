@@ -58,7 +58,7 @@ class Get extends Action
                 ],
                 contentType: ContentType::ANY,
                 type: MethodType::LOCATION,
-                locationAuth: ['Project', 'ImpersonateUserId'],
+                locationAuth: ['Project', 'ImpersonateUserId', 'ImpersonateUserEmail', 'ImpersonateUserPhone'],
             ))
             ->param('bucketId', '', new UID(), 'Storage bucket ID. You can create a new storage bucket using the Storage service [server integration](https://appwrite.io/docs/server/storage#createBucket).')
             ->param('fileId', '', new UID(), 'File ID.')

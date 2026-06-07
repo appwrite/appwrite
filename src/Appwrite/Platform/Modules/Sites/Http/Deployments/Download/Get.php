@@ -51,7 +51,7 @@ class Get extends Action
                     )
                 ],
                 type: MethodType::LOCATION,
-                locationAuth: ['Project', 'ImpersonateUserId'],
+                locationAuth: ['Project', 'ImpersonateUserId', 'ImpersonateUserEmail', 'ImpersonateUserPhone'],
                 contentType: ContentType::ANY,
             ))
             ->param('siteId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Site ID.', false, ['dbForProject'])
