@@ -29,6 +29,8 @@ import {
   DatabaseZap,
   ShieldAlert,
   Home,
+  Monitor,
+  LayoutDashboard,
 } from 'lucide-react'
 import {
   useAuth,
@@ -947,17 +949,35 @@ export function ConsoleHeader({
                     )}
                   </div>
 
-                  {features.marketing && (
-                    <>
-                      <DropdownMenuSeparator className="my-1 bg-border" />
+                  <DropdownMenuSeparator className="my-1 bg-border" />
 
-                      <DropdownMenuItem asChild>
-                        <Link to="/home" className={ACCOUNT_MENU_ITEM_CLASS}>
-                          <Home className="h-4 w-4" />
-                          <span>Home</span>
-                        </Link>
-                      </DropdownMenuItem>
-                    </>
+                  <DropdownMenuItem asChild>
+                    <Link to="/account" className={ACCOUNT_MENU_ITEM_CLASS}>
+                      <User className="h-4 w-4" />
+                      <span>Account</span>
+                    </Link>
+                  </DropdownMenuItem>
+
+                  <DropdownMenuItem asChild>
+                    <Link
+                      to="/account/sessions"
+                      className={ACCOUNT_MENU_ITEM_CLASS}
+                    >
+                      <Monitor className="h-4 w-4" />
+                      <span>Sessions</span>
+                    </Link>
+                  </DropdownMenuItem>
+
+                  {features.billing && (
+                    <DropdownMenuItem asChild>
+                      <Link
+                        to="/account/payments"
+                        className={ACCOUNT_MENU_ITEM_CLASS}
+                      >
+                        <CreditCard className="h-4 w-4" />
+                        <span>Payments</span>
+                      </Link>
+                    </DropdownMenuItem>
                   )}
 
                   <DropdownMenuSeparator className="my-1 bg-border" />
@@ -1052,25 +1072,32 @@ export function ConsoleHeader({
                     )}
                   </div>
 
-                  <DropdownMenuSeparator className="my-1 bg-border" />
+                  {(showMarketingNav || features.marketing) && (
+                    <>
+                      <DropdownMenuSeparator className="my-1 bg-border" />
 
-                  <DropdownMenuItem asChild>
-                    <Link to="/account" className={ACCOUNT_MENU_ITEM_CLASS}>
-                      <User className="h-4 w-4" />
-                      <span>Account</span>
-                    </Link>
-                  </DropdownMenuItem>
-
-                  {features.billing && (
-                    <DropdownMenuItem asChild>
-                      <Link
-                        to="/account/payments"
-                        className={ACCOUNT_MENU_ITEM_CLASS}
-                      >
-                        <CreditCard className="h-4 w-4" />
-                        <span>Payments</span>
-                      </Link>
-                    </DropdownMenuItem>
+                      <DropdownMenuItem asChild>
+                        {showMarketingNav ? (
+                          <Link
+                            {...(orgId
+                              ? {
+                                  to: '/organizations/$orgId',
+                                  params: { orgId },
+                                }
+                              : { to: '/' })}
+                            className={ACCOUNT_MENU_ITEM_CLASS}
+                          >
+                            <LayoutDashboard className="h-4 w-4" />
+                            <span>Console</span>
+                          </Link>
+                        ) : (
+                          <Link to="/home" className={ACCOUNT_MENU_ITEM_CLASS}>
+                            <Home className="h-4 w-4" />
+                            <span>Home</span>
+                          </Link>
+                        )}
+                      </DropdownMenuItem>
+                    </>
                   )}
 
                   {showAdminSection && (
