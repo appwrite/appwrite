@@ -1,9 +1,26 @@
+import { createRequire } from 'node:module'
+import path from 'node:path'
+import { fileURLToPath } from 'node:url'
 import { defineConfig } from 'vite'
 import { tanstackStart } from '@tanstack/react-start/plugin/vite'
 import viteReact from '@vitejs/plugin-react'
 import viteTsConfigPaths from 'vite-tsconfig-paths'
 import tailwindcss from '@tailwindcss/vite'
 import devtoolsJson from 'vite-plugin-devtools-json'
+import { almostnodeBuildPlugin } from './src/lib/cli-shell/vite-almostnode-plugin'
+
+const projectRoot = path.dirname(fileURLToPath(import.meta.url))
+const require = createRequire(import.meta.url)
+const almostnodeDist = path.resolve(projectRoot, 'node_modules/almostnode/dist')
+const justBashBrowserEntry = path.join(
+  path.dirname(require.resolve('just-bash/package.json')),
+  'dist/bundle/browser.js',
+)
+const sprintfJsShim = path.resolve(
+  projectRoot,
+  'src/lib/cli-shell/shims/sprintf-js.ts',
+)
+const almostnodeSrc = path.resolve(projectRoot, 'node_modules/almostnode/src')
 
 export default defineConfig(async () => {
   const sentryPlugins =
@@ -28,6 +45,7 @@ export default defineConfig(async () => {
       tailwindcss(),
       tanstackStart(),
       devtoolsJson(),
+      almostnodeBuildPlugin(almostnodeDist),
       viteReact(),
       ...sentryPlugins,
     ],
@@ -42,6 +60,39 @@ export default defineConfig(async () => {
     },
     resolve: {
       dedupe: ['react', 'react-dom', 'use-sync-external-store'],
+      alias: [
+        {
+          find: /^sprintf-js$/,
+          replacement: sprintfJsShim,
+        },
+        {
+          find: /^just-bash$/,
+          replacement: justBashBrowserEntry,
+        },
+        {
+          find: '@almostnode-internal/registry',
+          replacement: path.join(almostnodeSrc, 'npm/registry.ts'),
+        },
+        {
+          find: '@almostnode-internal/tarball',
+          replacement: path.join(almostnodeSrc, 'npm/tarball.ts'),
+        },
+        {
+          find: '@almostnode-internal/transform',
+          replacement: path.join(almostnodeSrc, 'transform.ts'),
+        },
+        {
+          find: '@almostnode-internal/path',
+          replacement: path.join(almostnodeSrc, 'shims/path.ts'),
+        },
+        {
+          find: /^almostnode$/,
+          replacement: path.resolve(
+            projectRoot,
+            'node_modules/almostnode/dist/index.mjs',
+          ),
+        },
+      ],
     },
     optimizeDeps: {
       // Recharts uses decimal.js (via victory-vendor/d3-scale) for tick calculations.
@@ -49,6 +100,8 @@ export default defineConfig(async () => {
       needsInterop: [
         'decimal.js',
         'decimal.js-light',
+        'sprintf-js',
+        'sprintf-js/src/sprintf.js',
         // CJS entry re-exports `useSyncExternalStoreWithSelector`; pre-bundle so named ESM imports work
         // (recharts).
         'use-sync-external-store/shim/with-selector.js',
@@ -59,10 +112,11 @@ export default defineConfig(async () => {
         'recharts',
         'use-sync-external-store',
         'use-sync-external-store/shim/with-selector.js',
+        'sprintf-js/src/sprintf.js',
       ],
       // Serve TanStack store packages as native ESM. Pre-bundling cached an older
       // @tanstack/react-store without createAtom when router upgraded first.
-      exclude: ['@tanstack/react-store', '@tanstack/store'],
+      exclude: ['@tanstack/react-store', '@tanstack/store', 'almostnode'],
     },
     preview: {
       port: 4173,

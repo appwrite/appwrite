@@ -10,6 +10,11 @@ import {
   normalizeLegacySidebarWidthPrefValue,
   TABLE_VIEW_SIDEBAR_DEFAULT_WIDTH_PX,
 } from '@/lib/resizable-layout'
+import {
+  CLI_SHELL_DEFAULT_HEIGHT_PX,
+  CLI_SHELL_MAX_HEIGHT_RATIO,
+  CLI_SHELL_MIN_HEIGHT_PX,
+} from '@/lib/cli-shell/constants'
 
 export type UserPrefs = Record<string, unknown>
 
@@ -1064,6 +1069,112 @@ export function clearLegacyAIChatLocalStorage(): void {
   try {
     localStorage.removeItem(LEGACY_LOCAL_STORAGE_AI_CHAT_PANEL_OPEN)
     localStorage.removeItem(LEGACY_LOCAL_STORAGE_AI_CHAT_PANEL_WIDTH)
+  } catch {
+    /* private mode */
+  }
+}
+
+// ---------------------------------------------------------------------------
+// CLI shell panel (account prefs)
+// ---------------------------------------------------------------------------
+
+/** Full key: `console.cliShell.open` - terminal expanded when true / `"true"`. */
+export const USER_PREFS_KEY_CLI_SHELL_OPEN = 'console.cliShell.open'
+
+/** Full key: `console.cliShell.heightPx` - terminal height in pixels (string number). */
+export const USER_PREFS_KEY_CLI_SHELL_HEIGHT_PX = 'console.cliShell.heightPx'
+
+/** @deprecated Migrated to account prefs; cleared after first sync. */
+export const LEGACY_LOCAL_STORAGE_CLI_SHELL_HEIGHT = 'console.cliShellHeight'
+
+export function clampCliShellHeightPx(
+  px: number,
+  viewportHeight = typeof window !== 'undefined' ? window.innerHeight : 800,
+): number {
+  const maxHeight = Math.floor(
+    viewportHeight * CLI_SHELL_MAX_HEIGHT_RATIO,
+  )
+  return Math.min(
+    Math.max(Math.round(px), CLI_SHELL_MIN_HEIGHT_PX),
+    Math.max(maxHeight, CLI_SHELL_MIN_HEIGHT_PX),
+  )
+}
+
+export function parseCliShellOpen(
+  prefs: UserPrefs | null | undefined,
+): boolean {
+  return parseBooleanAccountPref(prefs?.[USER_PREFS_KEY_CLI_SHELL_OPEN]) ?? false
+}
+
+export function hasCliShellOpenPref(
+  prefs: UserPrefs | null | undefined,
+): boolean {
+  return prefs?.[USER_PREFS_KEY_CLI_SHELL_OPEN] !== undefined
+}
+
+export function parseCliShellHeightPx(
+  prefs: UserPrefs | null | undefined,
+): number {
+  const raw = prefs?.[USER_PREFS_KEY_CLI_SHELL_HEIGHT_PX]
+  const n =
+    typeof raw === 'number'
+      ? raw
+      : typeof raw === 'string'
+        ? parseInt(raw, 10)
+        : NaN
+  if (Number.isFinite(n) && n >= CLI_SHELL_MIN_HEIGHT_PX) {
+    return clampCliShellHeightPx(n)
+  }
+  return CLI_SHELL_DEFAULT_HEIGHT_PX
+}
+
+export function hasCliShellHeightPref(
+  prefs: UserPrefs | null | undefined,
+): boolean {
+  return prefs?.[USER_PREFS_KEY_CLI_SHELL_HEIGHT_PX] !== undefined
+}
+
+export function mergeCliShellOpenIntoPrefs(
+  prefs: UserPrefs,
+  open: boolean,
+): UserPrefs {
+  return {
+    ...prefs,
+    [USER_PREFS_KEY_CLI_SHELL_OPEN]: open,
+  }
+}
+
+export function mergeCliShellHeightPxIntoPrefs(
+  prefs: UserPrefs,
+  heightPx: number,
+): UserPrefs {
+  return {
+    ...prefs,
+    [USER_PREFS_KEY_CLI_SHELL_HEIGHT_PX]: String(
+      clampCliShellHeightPx(heightPx),
+    ),
+  }
+}
+
+export function readLegacyCliShellHeightFromLocalStorage(): number | null {
+  if (typeof window === 'undefined') return null
+  try {
+    const raw = localStorage.getItem(LEGACY_LOCAL_STORAGE_CLI_SHELL_HEIGHT)
+    if (!raw) return null
+    const n = parseInt(raw, 10)
+    if (Number.isFinite(n) && n >= CLI_SHELL_MIN_HEIGHT_PX) {
+      return clampCliShellHeightPx(n)
+    }
+    return null
+  } catch {
+    return null
+  }
+}
+
+export function clearLegacyCliShellHeightLocalStorage(): void {
+  if (typeof window === 'undefined') return
+  try {
+    localStorage.removeItem(LEGACY_LOCAL_STORAGE_CLI_SHELL_HEIGHT)
   } catch {
     /* private mode */
   }
