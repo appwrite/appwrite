@@ -244,6 +244,7 @@ abstract class ScheduleBase extends Action
         }
 
         // Only process updated/new schedules, not all schedules
+        $scheduleIdsToDelete = [];
         foreach ($updatedSequences as $sequence) {
             $schedule = $this->schedules[$sequence] ?? null;
             if ($schedule === null) {
@@ -279,13 +280,18 @@ abstract class ScheduleBase extends Action
 
             if ($resource->isEmpty()) {
                 Console::error("Resource not found: projectId::{$schedule['projectId']} resourceId::{$schedule['resourceId']}");
-                $dbForPlatform->deleteDocument('schedules', $schedule['$id']);
-
+                $scheduleIdsToDelete[] = $schedule['$id'];
                 unset($this->schedules[$sequence]);
                 continue;
             }
 
             $this->schedules[$sequence]['resource'] = $resource;
+        }
+
+        if (!empty($scheduleIdsToDelete)) {
+            $dbForPlatform->deleteDocuments('schedules', [
+                Query::equal('$id', $scheduleIdsToDelete),
+            ]);
         }
 
         $lastSyncUpdate = $time;
