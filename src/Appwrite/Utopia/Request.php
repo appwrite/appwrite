@@ -178,6 +178,32 @@ class Request extends UtopiaRequest
     }
 
     /**
+     * Get headers
+     *
+     * Method for getting all HTTP headers, including a synthesized `cookie`
+     * header. Swoole parses the incoming Cookie header into its own cookie jar,
+     * so it is absent from the raw header map; rebuild it here so consumers that
+     * forward request headers (e.g. function/site executions) still receive it.
+     *
+     * @return array<string, array<int, string>>
+     */
+    public function getHeaders(): array
+    {
+        $headers = parent::getHeaders();
+
+        $cookies = $this->getCookieParams();
+        if (!empty($cookies)) {
+            $pairs = [];
+            foreach ($cookies as $key => $value) {
+                $pairs[] = "{$key}={$value}";
+            }
+            $headers['cookie'] = [\implode('; ', $pairs)];
+        }
+
+        return $headers;
+    }
+
+    /**
      * Get User Agent
      *
      * Method for getting User Agent. Preferring forwarded agent for privileged users; otherwise returns default.

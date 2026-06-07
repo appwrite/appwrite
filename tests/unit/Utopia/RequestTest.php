@@ -187,6 +187,30 @@ final class RequestTest extends TestCase
         $this->assertSame('https://a.example, https://b.example', $request->getHeaderLine('referer'));
     }
 
+    public function testGetHeadersSynthesizesCookieHeaderFromCookieJar(): void
+    {
+        // Swoole parses the Cookie header into its cookie jar, so getHeaders()
+        // must rebuild it for consumers that forward request headers onward
+        // (e.g. function/site executions).
+        $swoole = new SwooleRequest();
+        $swoole->header = ['host' => 'example.com'];
+        $swoole->cookie = ['custom-session-id' => 'abcd123', 'custom-user-id' => 'efgh456'];
+        $request = new Request($swoole);
+
+        $headers = $request->getHeaders();
+
+        $this->assertSame(['custom-session-id=abcd123; custom-user-id=efgh456'], $headers['cookie']);
+    }
+
+    public function testGetHeadersOmitsCookieHeaderWhenNoCookies(): void
+    {
+        $swoole = new SwooleRequest();
+        $swoole->header = ['host' => 'example.com'];
+        $request = new Request($swoole);
+
+        $this->assertArrayNotHasKey('cookie', $request->getHeaders());
+    }
+
     public function testGetParamsCachesRawParamsWhenFilterThrows4xx(): void
     {
         /*
