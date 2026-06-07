@@ -293,7 +293,12 @@ function router(Http $utopia, Database $dbForPlatform, callable $getProjectDB, S
         $body = $swooleRequest->getContent() ?: '';
         $method = $swooleRequest->server['request_method'];
 
-        $requestHeaders = $request->getHeaders();
+        // getHeaders() follows PSR-7 and returns each header as a list of values;
+        // collapse to single-line strings for the function/site header map below.
+        $requestHeaders = \array_map(
+            static fn (array $values) => \implode(', ', $values),
+            $request->getHeaders()
+        );
 
         if ($resource->isEmpty() || !$resource->getAttribute('enabled')) {
             if ($type === 'function') {
@@ -400,8 +405,7 @@ function router(Http $utopia, Database $dbForPlatform, callable $getProjectDB, S
         $headersFiltered = [];
         foreach ($headers as $key => $value) {
             if (\in_array(\strtolower($key), FUNCTION_ALLOWLIST_HEADERS_REQUEST)) {
-                // Request headers follow PSR-7 and arrive as a list of values; collapse to a single line.
-                $headersFiltered[] = ['name' => $key, 'value' => \is_array($value) ? \implode(', ', $value) : $value];
+                $headersFiltered[] = ['name' => $key, 'value' => $value];
             }
         }
 
