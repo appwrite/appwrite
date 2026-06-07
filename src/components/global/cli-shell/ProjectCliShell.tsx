@@ -5,7 +5,6 @@ import {
   useState,
   type MouseEvent as ReactMouseEvent,
 } from 'react'
-import { createPortal } from 'react-dom'
 import { Terminal } from '@xterm/xterm'
 import { FitAddon } from '@xterm/addon-fit'
 import { createCliTerminalWebLinksAddon } from '@/lib/cli-shell/cli-terminal-web-links'
@@ -32,18 +31,14 @@ import { useCliShell } from './CliShellProvider'
 export function ProjectCliShell() {
   const { open, fullscreen } = useCliShell()
 
-  if (fullscreen && open && typeof document !== 'undefined') {
-    return createPortal(
-      <div className="fixed inset-0 z-[140] flex min-h-0 flex-col bg-background">
-        <ProjectCliShellPanel />
-      </div>,
-      document.body,
-    )
-  }
-
   return (
     <div
-      className="shrink-0 border-t border-border bg-background"
+      className={cn(
+        'bg-background',
+        open && fullscreen
+          ? 'fixed inset-0 z-[140] flex min-h-0 flex-col'
+          : 'shrink-0 border-t border-border',
+      )}
       style={open ? undefined : { height: CLI_SHELL_COLLAPSED_HEIGHT_PX }}
     >
       {!open ? <ProjectCliShellCollapsedBar /> : <ProjectCliShellPanel />}
@@ -73,6 +68,7 @@ function ProjectCliShellPanel() {
     toggle,
     status,
     registerTerminal,
+    unregisterTerminal,
     runCommand,
     clearOutput,
     completeTab,
@@ -95,13 +91,43 @@ function ProjectCliShellPanel() {
   const isRunningRef = useRef(isRunning)
   const wasRunningRef = useRef(false)
   const showInputPromptRef = useRef<(() => void) | null>(null)
+  const isResizingPanelRef = useRef(false)
+  const fitRafRef = useRef<number | null>(null)
+  const runCommandRef = useRef(runCommand)
+  const completeTabRef = useRef(completeTab)
+  const registerTerminalRef = useRef(registerTerminal)
+  const unregisterTerminalRef = useRef(unregisterTerminal)
 
   isRunningRef.current = isRunning
+  isResizingPanelRef.current = isResizing
+  runCommandRef.current = runCommand
+  completeTabRef.current = completeTab
+  registerTerminalRef.current = registerTerminal
+  unregisterTerminalRef.current = unregisterTerminal
 
   const fitTerminal = useCallback(() => {
-    requestAnimationFrame(() => {
+    if (fitRafRef.current !== null) {
+      cancelAnimationFrame(fitRafRef.current)
+    }
+
+    fitRafRef.current = requestAnimationFrame(() => {
+      fitRafRef.current = null
+
       try {
-        fitAddonRef.current?.fit()
+        const fitAddon = fitAddonRef.current
+        const terminal = terminalRef.current
+        if (!fitAddon || !terminal) return
+
+        const proposed = fitAddon.proposeDimensions()
+        if (!proposed || proposed.cols <= 0 || proposed.rows <= 0) return
+        if (
+          proposed.cols === terminal.cols &&
+          proposed.rows === terminal.rows
+        ) {
+          return
+        }
+
+        fitAddon.fit()
       } catch {
         /* container may have zero size during layout */
       }
@@ -115,7 +141,7 @@ function ProjectCliShellPanel() {
     const terminal = new Terminal({
       cursorBlink: true,
       fontSize: 13,
-      lineHeight: 1.5,
+      lineHeight: 1.4,
       fontFamily:
         'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace',
       theme: getCliTerminalTheme(resolvedTheme),
@@ -143,8 +169,8 @@ function ProjectCliShellPanel() {
     const inputSession = createCliTerminalInputHandler({
       terminal,
       getIsRunning: () => isRunningRef.current,
-      onRunCommand: (command) => runCommand(command),
-      onTabComplete: completeTab,
+      onRunCommand: (command) => runCommandRef.current(command),
+      onTabComplete: (...args) => completeTabRef.current(...args),
     })
 
     const api: CliTerminalApi = {
@@ -159,27 +185,33 @@ function ProjectCliShellPanel() {
 
     showInputPromptRef.current = inputSession.showPrompt
 
-    registerTerminal(api)
+    registerTerminalRef.current(api)
 
     const dataDisposable = terminal.onData(inputSession.onData)
 
     terminal.focus()
 
     const resizeObserver = new ResizeObserver(() => {
-      fitTerminal()
+      if (!isResizingPanelRef.current) {
+        fitTerminal()
+      }
     })
     resizeObserver.observe(container)
 
     return () => {
+      if (fitRafRef.current !== null) {
+        cancelAnimationFrame(fitRafRef.current)
+        fitRafRef.current = null
+      }
       dataDisposable.dispose()
       resizeObserver.disconnect()
-      registerTerminal(null)
+      unregisterTerminalRef.current()
       terminal.dispose()
       showInputPromptRef.current = null
       terminalRef.current = null
       fitAddonRef.current = null
     }
-  }, [completeTab, fitTerminal, registerTerminal, runCommand])
+  }, [fitTerminal])
 
   useEffect(() => {
     const terminal = terminalRef.current
@@ -196,7 +228,13 @@ function ProjectCliShellPanel() {
 
   useEffect(() => {
     fitTerminal()
-  }, [fitTerminal, fullscreen, height, open])
+  }, [fitTerminal, fullscreen, open])
+
+  useEffect(() => {
+    if (!isResizing) {
+      fitTerminal()
+    }
+  }, [fitTerminal, isResizing])
 
   const handleResizeMouseDown = useCallback((event: ReactMouseEvent) => {
     event.preventDefault()
@@ -330,7 +368,7 @@ function ProjectCliShellPanel() {
         <div
           ref={terminalContainerRef}
           className={cn(
-            'cli-terminal h-full min-h-0 overflow-hidden',
+            'cli-terminal h-full min-h-0',
             '[&_.xterm]:h-full [&_.xterm-viewport]:!overflow-y-auto',
           )}
           onPointerDown={() => terminalRef.current?.focus()}

@@ -1560,6 +1560,11 @@ html[data-init-ticket-video-capturing] [data-init-ticket-video-capture] * {
 }
 
 /* Browser CLI terminal (xterm.js) */
+.cli-terminal {
+  box-sizing: border-box;
+  padding-bottom: 6px;
+}
+
 .cli-terminal .xterm {
   padding: 0;
   background-color: transparent !important;
@@ -1567,15 +1572,18 @@ html[data-init-ticket-video-capturing] [data-init-ticket-video-capture] * {
 
 .cli-terminal .xterm-viewport {
   background-color: transparent !important;
+  overflow-clip-margin: 2px;
 }
 
 .cli-terminal .xterm-screen {
   outline: none;
   cursor: text;
+  overflow-clip-margin: 2px;
 }
 
 .cli-terminal .xterm-rows {
   padding-top: 8px;
+  padding-bottom: 4px;
 }
 
 .cli-terminal .xterm-helper-textarea {

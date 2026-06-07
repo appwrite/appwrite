@@ -69,7 +69,8 @@ type CliShellContextValue = {
   setOpen: (open: boolean) => void
   toggle: () => void
   status: CliShellStatus
-  registerTerminal: (api: CliTerminalApi | null) => void
+  registerTerminal: (api: CliTerminalApi) => void
+  unregisterTerminal: () => void
   runCommand: (command: string) => Promise<void>
   clearOutput: () => void
   completeTab: (
@@ -154,12 +155,8 @@ export function CliShellProvider({ projectId, children }: CliShellProviderProps)
   }, [])
 
   const registerTerminal = useCallback(
-    (api: CliTerminalApi | null) => {
+    (api: CliTerminalApi) => {
       terminalApiRef.current = api
-      if (!api) {
-        terminalWelcomeWrittenRef.current = false
-        return
-      }
 
       if (!terminalWelcomeWrittenRef.current) {
         terminalWelcomeWrittenRef.current = true
@@ -184,6 +181,11 @@ export function CliShellProvider({ projectId, children }: CliShellProviderProps)
     },
     [showInputPromptIfIdle, writeWelcome],
   )
+
+  const unregisterTerminal = useCallback(() => {
+    terminalApiRef.current = null
+    terminalWelcomeWrittenRef.current = false
+  }, [])
 
   const writeBootstrapMessage = useCallback((text: string) => {
     if (
@@ -738,6 +740,7 @@ export function CliShellProvider({ projectId, children }: CliShellProviderProps)
       toggle,
       status,
       registerTerminal,
+      unregisterTerminal,
       runCommand,
       clearOutput,
       completeTab,
@@ -757,6 +760,7 @@ export function CliShellProvider({ projectId, children }: CliShellProviderProps)
       toggle,
       status,
       registerTerminal,
+      unregisterTerminal,
       runCommand,
       clearOutput,
       completeTab,
