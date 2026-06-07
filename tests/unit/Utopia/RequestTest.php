@@ -165,35 +165,26 @@ final class RequestTest extends TestCase
         $this->assertSame($secondRoute, $secondRequest->getRoute());
     }
 
-    public function testGetHeaderReturnsStringValue(): void
+    public function testGetHeaderLineReturnsStringValue(): void
     {
         $this->request->addHeader('referer', 'https://example.com');
 
-        $this->assertSame('https://example.com', $this->request->getHeader('referer'));
+        $this->assertSame('https://example.com', $this->request->getHeaderLine('referer'));
     }
 
-    public function testGetHeaderReturnsDefaultWhenMissing(): void
+    public function testGetHeaderLineReturnsDefaultWhenMissing(): void
     {
-        $this->assertSame('', $this->request->getHeader('referer'));
-        $this->assertSame('fallback', $this->request->getHeader('referer', 'fallback'));
+        $this->assertSame('', $this->request->getHeaderLine('referer'));
+        $this->assertSame('fallback', $this->request->getHeaderLine('referer', 'fallback'));
     }
 
-    public function testGetHeaderCoercesArrayToFirstElement(): void
+    public function testGetHeaderLineJoinsMultipleValues(): void
     {
         $swoole = new SwooleRequest();
         $swoole->header = ['referer' => ['https://a.example', 'https://b.example']];
         $request = new Request($swoole);
 
-        $this->assertSame('https://a.example', $request->getHeader('referer'));
-    }
-
-    public function testGetHeaderReturnsDefaultWhenValueNotString(): void
-    {
-        $swoole = new SwooleRequest();
-        $swoole->header = ['referer' => 123];
-        $request = new Request($swoole);
-
-        $this->assertSame('fallback', $request->getHeader('referer', 'fallback'));
+        $this->assertSame('https://a.example, https://b.example', $request->getHeaderLine('referer'));
     }
 
     public function testGetParamsCachesRawParamsWhenFilterThrows4xx(): void

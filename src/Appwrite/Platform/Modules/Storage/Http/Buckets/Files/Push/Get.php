@@ -119,7 +119,7 @@ class Get extends Action
 
         $size = $file->getAttribute('sizeOriginal', 0);
 
-        $rangeHeader = $request->getHeader('range');
+        $rangeHeader = $request->getHeaderLine('range');
         if (!empty($rangeHeader)) {
             $start = $request->getRangeStart();
             $end = $request->getRangeEnd();

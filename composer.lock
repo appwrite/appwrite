@@ -4106,16 +4106,16 @@
         },
         {
             "name": "utopia-php/http",
-            "version": "2.0.0-rc4",
+            "version": "2.0.0-rc5",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/http.git",
-                "reference": "0396a959c6a3be7c16b4b72283347327a75d1f92"
+                "reference": "ec968c1fd7a4281d8febb3ed771207be0b852b14"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/http/zipball/0396a959c6a3be7c16b4b72283347327a75d1f92",
-                "reference": "0396a959c6a3be7c16b4b72283347327a75d1f92",
+                "url": "https://api.github.com/repos/utopia-php/http/zipball/ec968c1fd7a4281d8febb3ed771207be0b852b14",
+                "reference": "ec968c1fd7a4281d8febb3ed771207be0b852b14",
                 "shasum": ""
             },
             "require": {
@@ -4156,9 +4156,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/http/issues",
-                "source": "https://github.com/utopia-php/http/tree/2.0.0-rc4"
+                "source": "https://github.com/utopia-php/http/tree/2.0.0-rc5"
             },
-            "time": "2026-06-02T04:17:22+00:00"
+            "time": "2026-06-04T13:35:09+00:00"
         },
         {
             "name": "utopia-php/image",
