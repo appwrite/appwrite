@@ -9,13 +9,6 @@ use Utopia\WebSocket\Server;
  * Per-worker token-bucket + buffers for console event-tail subscriptions.
  *
  * Each tail of a single project is one entry, keyed by (connId, subId, projectId).
- * Subscription IDs are only unique WITHIN a connection, so the connection id is part
- * of the key — subscriptions from different connections (or different projects under
- * the same subscription id) never collide. A subscription that names several tail
- * channels gets one entry per project under the same (connId, subId).
- *
- * Source of truth: $entries[connId][subId][projectId] => state.
- * Hot-path index:  $projectIndex[projectId][connId][subId] => true.
  */
 class EventTailRegistry
 {
