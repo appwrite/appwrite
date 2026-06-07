@@ -197,9 +197,8 @@ class StatsUsage extends Action
     */
     protected function reduce(Document $project, Document $document, array &$metrics, callable $getProjectDB): void
     {
-        $dbForProject = $getProjectDB($project);
-
         try {
+            $dbForProject = $getProjectDB($project);
             switch (true) {
                 case $document->getCollection() === 'users': // users
                     $sessions = count($document->getAttribute(METRIC_SESSIONS, 0));

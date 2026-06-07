@@ -104,7 +104,13 @@ if (!function_exists('getProjectDB')) {
             $dsn = new DSN('mysql://' . $project->getAttribute('database'));
         }
 
-        $adapter = new DatabasePool($pools->get($dsn->getHost()));
+        try {
+            $pool = $pools->get($dsn->getHost());
+        } catch (\Exception $e) {
+            throw new \Exception("Pool '{$dsn->getHost()}' not found for project '{$project->getId()}'. The project's database pool is not available on this instance. Database attribute: '{$project->getAttribute('database')}'");
+        }
+
+        $adapter = new DatabasePool($pool);
         $database = new Database($adapter, getCache());
 
         $sharedTables = \explode(',', System::getEnv('_APP_DATABASE_SHARED_TABLES', ''));
