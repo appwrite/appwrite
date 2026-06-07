@@ -279,9 +279,9 @@ abstract class ScheduleBase extends Action
 
             if ($resource->isEmpty()) {
                 Console::error("Resource not found: projectId::{$schedule['projectId']} resourceId::{$schedule['resourceId']}");
-                unset($this->schedules[$sequence]);
-
                 $dbForPlatform->deleteDocument('schedules', $schedule['$id']);
+
+                unset($this->schedules[$sequence]);
 
                 continue;
             }
