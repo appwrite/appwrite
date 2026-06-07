@@ -13,6 +13,8 @@ export type CliShellRuntimeConfig = {
   projectId: string
   projectEndpoint: string
   consoleEndpoint: string
+  /** Organization (team) ID; persisted in appwrite.config.json for the CLI. */
+  organizationId?: string
 }
 
 export type CliShellStatus =

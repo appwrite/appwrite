@@ -180,3 +180,59 @@ export async function clearCliModulesCache(version: string): Promise<void> {
     /* ignore cache clear failures */
   }
 }
+
+export type CliModulesCacheMeta = {
+  version: string
+  savedAt: number
+  fileCount: number
+}
+
+export async function readCliModulesCacheMeta(
+  version: string,
+): Promise<CliModulesCacheMeta | null> {
+  if (typeof window === 'undefined') return null
+
+  try {
+    const db = await openCacheDb()
+    const cached = await new Promise<CachedCliModules | null>((resolve, reject) => {
+      const transaction = db.transaction(STORE_NAME, 'readonly')
+      const store = transaction.objectStore(STORE_NAME)
+      const request = store.get(cacheKey(version))
+      request.onsuccess = () => {
+        resolve((request.result as CachedCliModules | undefined) ?? null)
+      }
+      request.onerror = () => reject(request.error ?? new Error('IndexedDB read failed'))
+    })
+    db.close()
+
+    if (!cached || cached.version !== version || cached.snapshot.files.length === 0) {
+      return null
+    }
+
+    return {
+      version: cached.version,
+      savedAt: cached.savedAt,
+      fileCount: cached.snapshot.files.length,
+    }
+  } catch {
+    return null
+  }
+}
+
+export async function clearAllCliModulesCaches(): Promise<void> {
+  if (typeof window === 'undefined') return
+
+  try {
+    const db = await openCacheDb()
+    await new Promise<void>((resolve, reject) => {
+      const transaction = db.transaction(STORE_NAME, 'readwrite')
+      const store = transaction.objectStore(STORE_NAME)
+      const request = store.clear()
+      request.onsuccess = () => resolve()
+      request.onerror = () => reject(request.error ?? new Error('IndexedDB clear failed'))
+    })
+    db.close()
+  } catch {
+    /* ignore cache clear failures */
+  }
+}

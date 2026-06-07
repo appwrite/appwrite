@@ -10,6 +10,7 @@ import {
   type ResolvedCliAuth,
 } from './console-session'
 
+import { applyCliRuntimePatches } from './apply-cli-runtime-patches'
 import { installAppwriteCliPackage } from './install-appwrite-cli'
 import {
   clearCliModulesCache,
@@ -96,11 +97,24 @@ function writeProjectFiles(
     ),
   )
 
+  syncCliProjectConfig(vfs, config)
+}
+
+/** Keep appwrite.config.json aligned with the active console project. */
+export function syncCliProjectConfig(
+  vfs: CliShellContainer['vfs'],
+  config: Pick<
+    CliShellRuntimeConfig,
+    'projectId' | 'projectEndpoint' | 'organizationId'
+  >,
+): void {
+  vfs.mkdirSync(CLI_PROJECT_CWD, { recursive: true })
   vfs.writeFileSync(
     `${CLI_PROJECT_CWD}/appwrite.config.json`,
     buildAppwriteConfigJson({
       projectId: config.projectId,
       endpoint: config.projectEndpoint,
+      organizationId: config.organizationId,
     }),
   )
 }
@@ -168,8 +182,11 @@ export async function bootstrapCliRuntime(
     )
   }
 
+  applyCliRuntimePatches(container)
+
   return container
 }
+
 
 /** @deprecated Use bootstrapCliRuntime + syncCliAuthFiles instead. */
 export async function bootstrapCliContainer(

@@ -149,10 +149,13 @@ export function buildCliPrefsJson(options: {
 export function buildAppwriteConfigJson(options: {
   projectId: string
   endpoint: string
+  organizationId?: string
 }): string {
+  const organizationId = options.organizationId?.trim()
   return JSON.stringify(
     {
       projectId: options.projectId,
+      ...(organizationId ? { organizationId } : {}),
       endpoint: options.endpoint,
       functions: [],
       sites: [],

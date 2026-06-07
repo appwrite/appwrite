@@ -17,6 +17,7 @@ import {
 import {
   bootstrapCliRuntime,
   syncCliAuthFiles,
+  syncCliProjectConfig,
 } from '@/lib/cli-shell/bootstrap-cli-container'
 import {
   CLI_PROJECT_CWD,
@@ -29,6 +30,12 @@ import {
 } from '@/lib/cli-shell/fetch-bridge'
 import { isAppwriteCliCommand } from '@/lib/cli-shell/is-appwrite-command'
 import { prepareCliCommand } from '@/lib/cli-shell/prepare-command'
+import { applyCliRuntimePatches } from '@/lib/cli-shell/apply-cli-runtime-patches'
+import {
+  deleteProjectBootstrapState,
+  getProjectBootstrapState,
+} from '@/lib/cli-shell/bootstrap-state'
+import { CLI_TERMINAL_CACHE_CLEARED } from '@/lib/cli-shell/clear-terminal-cache'
 import {
   applyTabCompletion,
   tabComplete,
@@ -44,6 +51,7 @@ import {
   useCliShellOpen,
   type ConsoleAccountCache,
 } from '@/lib/react-query/hooks/auth'
+import { useProject } from '@/lib/react-query/hooks'
 import { clampCliShellHeightPx } from '@/lib/user-prefs-keys'
 
 type CliShellContextValue = {
@@ -90,23 +98,10 @@ type CliShellProviderProps = {
   children: ReactNode
 }
 
-type ProjectBootstrapState = {
-  promise: Promise<CliShellContainer> | null
-  container: CliShellContainer | null
-}
-
-const projectBootstrapState = new Map<string, ProjectBootstrapState>()
-
-function getProjectBootstrapState(projectId: string): ProjectBootstrapState {
-  const existing = projectBootstrapState.get(projectId)
-  if (existing) return existing
-  const created: ProjectBootstrapState = { promise: null, container: null }
-  projectBootstrapState.set(projectId, created)
-  return created
-}
-
 export function CliShellProvider({ projectId, children }: CliShellProviderProps) {
   const { account, isLoading: isAccountLoading } = useAuth()
+  const { project } = useProject(projectId)
+  const organizationId = project?.teamId
   const consoleAccount = account as ConsoleAccountCache | undefined
   const { isOpen: open, setIsOpen: setOpen } = useCliShellOpen(consoleAccount)
   const { heightPx, setHeightPx } = useCliShellHeight(consoleAccount)
@@ -270,16 +265,24 @@ export function CliShellProvider({ projectId, children }: CliShellProviderProps)
         auth,
       })
 
+      syncCliProjectConfig(container.vfs, {
+        projectId,
+        projectEndpoint,
+        organizationId,
+      })
+
       authInitializedRef.current = true
     },
-    [account, isAccountLoading, projectId],
+    [account, isAccountLoading, organizationId, projectId],
   )
 
   const ensureRuntime = useCallback(
     async (options?: { silent?: boolean }): Promise<CliShellContainer> => {
       const projectBootstrap = getProjectBootstrapState(projectId)
 
-      if (containerRef.current) return containerRef.current
+      if (containerRef.current) {
+        return containerRef.current
+      }
       if (projectBootstrap.container) {
         containerRef.current = projectBootstrap.container
         setStatus('ready')
@@ -319,6 +322,7 @@ export function CliShellProvider({ projectId, children }: CliShellProviderProps)
           projectId,
           projectEndpoint,
           consoleEndpoint,
+          organizationId,
         },
         (message) => {
           if (bootstrapSilentRef.current) return
@@ -376,11 +380,23 @@ export function CliShellProvider({ projectId, children }: CliShellProviderProps)
       appendLine,
       finalizeBootstrapLine,
       initializeCliAuth,
+      organizationId,
       projectId,
       resetBootstrapLine,
       scheduleBootstrapLine,
     ],
   )
+
+  useEffect(() => {
+    const container = containerRef.current
+    if (!container || !organizationId) return
+
+    syncCliProjectConfig(container.vfs, {
+      projectId,
+      projectEndpoint: getProjectApiEndpoint(projectId),
+      organizationId,
+    })
+  }, [organizationId, projectId])
 
   useEffect(() => {
     const container = containerRef.current
@@ -413,6 +429,19 @@ export function CliShellProvider({ projectId, children }: CliShellProviderProps)
   }, [ensureRuntime, open, projectId, resetBootstrapLine])
 
   useEffect(() => {
+    const handleTerminalCacheCleared = () => {
+      retryBootstrap()
+    }
+    window.addEventListener(CLI_TERMINAL_CACHE_CLEARED, handleTerminalCacheCleared)
+    return () => {
+      window.removeEventListener(
+        CLI_TERMINAL_CACHE_CLEARED,
+        handleTerminalCacheCleared,
+      )
+    }
+  }, [retryBootstrap])
+
+  useEffect(() => {
     void ensureRuntime({ silent: !open }).catch(() => {})
   }, [ensureRuntime, open])
 
@@ -420,7 +449,7 @@ export function CliShellProvider({ projectId, children }: CliShellProviderProps)
     containerRef.current = null
     bootstrapPromiseRef.current = null
     authInitializedRef.current = false
-    projectBootstrapState.delete(projectId)
+    deleteProjectBootstrapState(projectId)
     setStatus('idle')
     setLines(createCliShellWelcomeLines())
     setBootstrapError(null)
@@ -502,6 +531,8 @@ export function CliShellProvider({ projectId, children }: CliShellProviderProps)
 
       setIsRunning(true)
       setStatus('running')
+
+      applyCliRuntimePatches(container)
 
       try {
         let streamedStdout = false
