@@ -1,4 +1,3 @@
-import { createRequire } from 'node:module'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { defineConfig } from 'vite'
@@ -10,11 +9,9 @@ import devtoolsJson from 'vite-plugin-devtools-json'
 import { almostnodeBuildPlugin } from './src/lib/cli-shell/vite-almostnode-plugin'
 
 const projectRoot = path.dirname(fileURLToPath(import.meta.url))
-const require = createRequire(import.meta.url)
 const almostnodeDist = path.resolve(projectRoot, 'node_modules/almostnode/dist')
-const justBashBrowserEntry = path.join(
-  path.dirname(require.resolve('just-bash/package.json')),
-  'dist/bundle/browser.js',
+const justBashBrowserEntry = fileURLToPath(
+  import.meta.resolve('just-bash/browser'),
 )
 const sprintfJsShim = path.resolve(
   projectRoot,
