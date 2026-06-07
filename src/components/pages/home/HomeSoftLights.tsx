@@ -25,18 +25,18 @@ const variants = {
   },
   pricing: {
     left: cn(
-      'absolute -left-[48%] top-1/2 h-[620px] w-[1080px] -translate-y-1/2',
-      'bg-[radial-gradient(ellipse_at_center,rgba(253,54,110,0.18)_0%,rgba(253,54,110,0.06)_32%,transparent_84%)]',
-      'dark:bg-[radial-gradient(ellipse_at_center,rgba(253,54,110,0.11)_0%,rgba(253,54,110,0.035)_32%,transparent_84%)]',
-      'sm:-left-[44%] sm:h-[720px] sm:w-[1280px]',
-      'lg:-left-[42%] lg:h-[820px] lg:w-[1480px]',
+      'absolute -left-[52%] top-1/2 h-[780px] w-[1360px] -translate-y-1/2',
+      'bg-[radial-gradient(ellipse_at_center,rgba(253,54,110,0.18)_0%,rgba(253,54,110,0.06)_24%,transparent_58%)]',
+      'dark:bg-[radial-gradient(ellipse_at_center,rgba(253,54,110,0.11)_0%,rgba(253,54,110,0.035)_24%,transparent_58%)]',
+      'sm:-left-[48%] sm:h-[920px] sm:w-[1620px]',
+      'lg:-left-[46%] lg:h-[1040px] lg:w-[1860px]',
     ),
     right: cn(
-      'absolute -right-[48%] top-1/2 h-[640px] w-[1100px] -translate-y-1/2',
-      'bg-[radial-gradient(ellipse_at_center,rgba(124,103,254,0.15)_0%,rgba(124,103,254,0.055)_34%,transparent_86%)]',
-      'dark:bg-[radial-gradient(ellipse_at_center,rgba(124,103,254,0.095)_0%,rgba(124,103,254,0.035)_34%,transparent_86%)]',
-      'sm:-right-[44%] sm:h-[740px] sm:w-[1300px]',
-      'lg:-right-[42%] lg:h-[840px] lg:w-[1500px]',
+      'absolute -right-[52%] top-1/2 h-[800px] w-[1380px] -translate-y-1/2',
+      'bg-[radial-gradient(ellipse_at_center,rgba(124,103,254,0.15)_0%,rgba(124,103,254,0.055)_26%,transparent_60%)]',
+      'dark:bg-[radial-gradient(ellipse_at_center,rgba(124,103,254,0.095)_0%,rgba(124,103,254,0.035)_26%,transparent_60%)]',
+      'sm:-right-[48%] sm:h-[940px] sm:w-[1640px]',
+      'lg:-right-[46%] lg:h-[1060px] lg:w-[1880px]',
     ),
   },
   testimonials: {

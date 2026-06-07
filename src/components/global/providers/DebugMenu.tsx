@@ -24,7 +24,6 @@ import {
   Ticket,
   Boxes,
   Keyboard,
-  Terminal,
 } from 'lucide-react'
 import {
   Popover,
@@ -77,7 +76,6 @@ import { DebugMenuPrefsPanel } from '@/components/global/providers/DebugMenuPref
 import { DebugMenuInitDayPanel } from '@/components/global/providers/DebugMenuInitDayPanel'
 import { DebugMenuInitTicketPanel } from '@/components/global/providers/DebugMenuInitTicketPanel'
 import { DebugMenuSeedResourcesPanel } from '@/components/global/providers/DebugMenuSeedResourcesPanel'
-import { DebugMenuTerminalPanel } from '@/components/global/providers/DebugMenuTerminalPanel'
 import {
   useInitLowPowerAnimationDecision,
   type InitLowPowerAnimationDecision,
@@ -111,7 +109,6 @@ interface MenuItem {
     | 'initDayMock'
     | 'initTicketMock'
     | 'seedResources'
-    | 'terminalSettings'
   /** Extra classes on submenu row buttons (e.g. separator above reset actions). */
   rowClassName?: string
 }
@@ -138,8 +135,7 @@ function menuItemHasSubmenu(item: MenuItem): boolean {
     item.submenuVariant === 'prefsDebug' ||
     item.submenuVariant === 'initDayMock' ||
     item.submenuVariant === 'initTicketMock' ||
-    item.submenuVariant === 'seedResources' ||
-    item.submenuVariant === 'terminalSettings'
+    item.submenuVariant === 'seedResources'
   )
 }
 
@@ -931,13 +927,6 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
             submenuVariant: 'prefsDebug',
           },
           {
-            label: 'Terminal settings',
-            description:
-              'Browser CLI cache: view status and clear the local Appwrite CLI install',
-            icon: <Terminal className="h-3 w-3" />,
-            submenuVariant: 'terminalSettings',
-          },
-          {
             label: 'Seed resources',
             description:
               'Create projects, mock memberships, empty DBs, buckets, and domains in the current context.',
@@ -1380,8 +1369,7 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
               currentSubmenu?.submenuVariant === 'prefsDebug' ||
               currentSubmenu?.submenuVariant === 'seedResources' ||
               currentSubmenu?.submenuVariant === 'initDayMock' ||
-              currentSubmenu?.submenuVariant === 'initTicketMock' ||
-              currentSubmenu?.submenuVariant === 'terminalSettings'
+              currentSubmenu?.submenuVariant === 'initTicketMock'
               ? 'w-[min(92vw,720px)]'
               : 'w-80',
           )}
@@ -1422,8 +1410,6 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
                 <DebugMenuInitDayPanel />
               ) : currentSubmenu.submenuVariant === 'initTicketMock' ? (
                 <DebugMenuInitTicketPanel />
-              ) : currentSubmenu.submenuVariant === 'terminalSettings' ? (
-                <DebugMenuTerminalPanel />
               ) : (
                 <nav className="space-y-0.5" aria-label={currentSubmenu.title}>
                   {currentSubmenu.items.map((item, itemIndex) => {

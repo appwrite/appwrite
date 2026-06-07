@@ -73,7 +73,6 @@
     "@tanstack/react-virtual": "^3.13.18",
     "@tanstack/router-plugin": "1.132.31",
     "@tanstack/store": "^0.9.3",
-    "almostnode": "^0.2.14",
     "animejs": "^4.4.1",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
@@ -92,9 +91,9 @@
     "prism-react-renderer": "^2.4.1",
     "prismjs": "^1.30.0",
     "qrcode": "^1.5.4",
-    "react": "^19.1.1",
+    "react": "19.1.1",
     "react-day-picker": "^9.11.0",
-    "react-dom": "^19.1.1",
+    "react-dom": "19.1.1",
     "react-hook-form": "^7.63.0",
     "react-markdown": "^10.1.0",
     "react-resizable-panels": "^3.0.6",
@@ -112,12 +111,16 @@
     "zod": "^4.1.11"
   },
   "overrides": {
+    "react": "19.1.1",
+    "react-dom": "19.1.1",
     "use-sync-external-store": "^1.6.0",
     "@tanstack/react-store": "^0.9.3",
     "@tanstack/store": "^0.9.3"
   },
   "pnpm": {
     "overrides": {
+      "react": "19.1.1",
+      "react-dom": "19.1.1",
       "@tanstack/react-store": "^0.9.3",
       "@tanstack/store": "^0.9.3"
     }

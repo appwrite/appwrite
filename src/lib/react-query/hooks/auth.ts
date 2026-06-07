@@ -38,29 +38,22 @@ import {
   readRecentImpersonationSessionList,
   clearLegacyAIChatLocalStorage,
   clearLegacyBuildNotificationsOptedOutLocalStorage,
-  clearLegacyCliShellHeightLocalStorage,
   clearLegacyStorageFilesTablePaneWidthLocalStorage,
   hasAIChatPanelOpenPref,
   hasAIChatPanelWidthPref,
   hasBuildNotificationsOptedOutPref,
-  hasCliShellHeightPref,
   hasStorageFilesTablePaneWidthPref,
   mergeAIChatPanelOpenIntoPrefs,
   mergeAIChatPanelWidthPxIntoPrefs,
   mergeBuildNotificationsOptedOutIntoPrefs,
-  mergeCliShellHeightPxIntoPrefs,
-  mergeCliShellOpenIntoPrefs,
   mergeStorageFilesTablePaneWidthPxIntoPrefs,
   parseAIChatPanelOpen,
   parseAIChatPanelWidthPx,
   parseBuildNotificationsOptedOut,
-  parseCliShellHeightPx,
-  parseCliShellOpen,
   parseStorageFilesTablePaneWidthPx,
   readLegacyAIChatPanelOpenFromLocalStorage,
   readLegacyAIChatPanelWidthFromLocalStorage,
   readLegacyBuildNotificationsOptedOutFromLocalStorage,
-  readLegacyCliShellHeightFromLocalStorage,
   readLegacyStorageFilesTablePaneWidthFromLocalStorage,
   type UserPrefs,
 } from '@/lib/user-prefs-keys'
@@ -989,18 +982,9 @@ async function migrateLegacyBrowserPrefsToAccount(
     }
   }
 
-  if (!hasCliShellHeightPref(prefs)) {
-    const legacyCliShellHeight = readLegacyCliShellHeightFromLocalStorage()
-    if (legacyCliShellHeight !== null) {
-      next = mergeCliShellHeightPxIntoPrefs(next, legacyCliShellHeight)
-      changed = true
-    }
-  }
-
   if (!changed) {
     clearLegacyAIChatLocalStorage()
     clearLegacyBuildNotificationsOptedOutLocalStorage()
-    clearLegacyCliShellHeightLocalStorage()
     clearLegacyStorageFilesTablePaneWidthLocalStorage()
     return
   }
@@ -1008,7 +992,6 @@ async function migrateLegacyBrowserPrefsToAccount(
   await updateAccountPrefs(next)
   clearLegacyAIChatLocalStorage()
   clearLegacyBuildNotificationsOptedOutLocalStorage()
-  clearLegacyCliShellHeightLocalStorage()
   clearLegacyStorageFilesTablePaneWidthLocalStorage()
   queryClient.invalidateQueries({ queryKey: ['account', 'console'] })
 }
@@ -1177,146 +1160,6 @@ export function useAIChatPanelWidth(
   }, [])
 
   return { widthPx, setWidthPx }
-}
-
-const CLI_SHELL_HEIGHT_PERSIST_DEBOUNCE_MS = 250
-
-/**
- * CLI terminal open state (`console.cliShell.open`).
- */
-export function useCliShellOpen(account: ConsoleAccountCache | undefined) {
-  const queryClient = useQueryClient()
-  useMigrateLegacyBrowserPrefsToAccount(account)
-
-  const isOpen = parseCliShellOpen(account?.prefs as UserPrefs | undefined)
-
-  const updateMutation = useMutation({
-    mutationFn: async (value: boolean) => {
-      if (!account) {
-        throw new Error('Account data not available')
-      }
-      return await updateAccountPrefs(
-        mergeCliShellOpenIntoPrefs((account.prefs ?? {}) as UserPrefs, value),
-      )
-    },
-    onMutate: async (value) => {
-      queryClient.setQueriesData<{ prefs?: Record<string, unknown> }>(
-        { queryKey: ['account', 'console'] },
-        (current) =>
-          current
-            ? {
-                ...current,
-                prefs: mergeCliShellOpenIntoPrefs(
-                  (current.prefs ?? {}) as UserPrefs,
-                  value,
-                ),
-              }
-            : current,
-      )
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['account', 'console'] })
-    },
-  })
-
-  const setIsOpen = useCallback(
-    (value: boolean | ((prev: boolean) => boolean)) => {
-      const nextValue = typeof value === 'function' ? value(isOpen) : value
-      if (!account) return
-      updateMutation.mutate(nextValue)
-    },
-    [account, isOpen, updateMutation],
-  )
-
-  return { isOpen, setIsOpen }
-}
-
-/**
- * CLI terminal height (`console.cliShell.heightPx`).
- * Debounces writes while resizing.
- */
-export function useCliShellHeight(account: ConsoleAccountCache | undefined) {
-  const queryClient = useQueryClient()
-  useMigrateLegacyBrowserPrefsToAccount(account)
-
-  const heightPx = parseCliShellHeightPx(
-    account?.prefs as UserPrefs | undefined,
-  )
-
-  const persistTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
-
-  const updateMutation = useMutation({
-    mutationFn: async (value: number) => {
-      if (!account) {
-        throw new Error('Account data not available')
-      }
-      return await updateAccountPrefs(
-        mergeCliShellHeightPxIntoPrefs(
-          (account.prefs ?? {}) as UserPrefs,
-          value,
-        ),
-      )
-    },
-    onMutate: async (value) => {
-      const patch = mergeCliShellHeightPxIntoPrefs(
-        (account?.prefs ?? {}) as UserPrefs,
-        value,
-      )
-      queryClient.setQueriesData<{ prefs?: Record<string, unknown> }>(
-        { queryKey: ['account', 'console'] },
-        (current) =>
-          current
-            ? {
-                ...current,
-                prefs: { ...current.prefs, ...patch },
-              }
-            : current,
-      )
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['account', 'console'] })
-    },
-  })
-
-  const setHeightPx = useCallback(
-    (value: number | ((prev: number) => number)) => {
-      const nextValue =
-        typeof value === 'function' ? value(heightPx) : value
-      if (!account) return
-      if (persistTimerRef.current !== null) {
-        clearTimeout(persistTimerRef.current)
-      }
-      const patch = mergeCliShellHeightPxIntoPrefs(
-        (account.prefs ?? {}) as UserPrefs,
-        nextValue,
-      )
-      queryClient.setQueriesData<{ prefs?: Record<string, unknown> }>(
-        { queryKey: ['account', 'console'] },
-        (current) =>
-          current
-            ? {
-                ...current,
-                prefs: { ...current.prefs, ...patch },
-              }
-            : current,
-      )
-      persistTimerRef.current = setTimeout(() => {
-        persistTimerRef.current = null
-        updateMutation.mutate(nextValue)
-      }, CLI_SHELL_HEIGHT_PERSIST_DEBOUNCE_MS)
-    },
-    [account, queryClient, updateMutation, heightPx],
-  )
-
-  useEffect(() => {
-    return () => {
-      if (persistTimerRef.current !== null) {
-        clearTimeout(persistTimerRef.current)
-      }
-    }
-  }, [])
-
-  return { heightPx, setHeightPx }
 }
 
 /**

@@ -58,9 +58,6 @@ interface ConsoleLayoutProps {
 
   /** Custom container class name */
   containerClassName?: string
-
-  /** Optional panel docked to the bottom of the main column (pushes content up) */
-  bottomPanel?: ReactNode
 }
 
 /**
@@ -111,11 +108,9 @@ export function ConsoleLayout({
   footer,
   fixedLayout = false,
   containerClassName,
-  bottomPanel,
 }: ConsoleLayoutProps) {
   const hasSidebar = !!sidebar
   const hasLeftSidebar = !!leftSidebar
-  const usesSplitMain = fixedLayout || !!bottomPanel
   const layoutContainerClass =
     containerClassName ||
     (hasSidebar || hasLeftSidebar
@@ -183,26 +178,16 @@ export function ConsoleLayout({
           tabIndex={-1}
           className={cn(
             'flex-1 bg-background flex flex-col min-h-0 outline-none',
-            usesSplitMain ? 'overflow-hidden' : 'overflow-y-auto',
+            fixedLayout ? 'overflow-hidden' : 'overflow-y-auto',
           )}
         >
-          <div
-            className={cn(
-              'flex-1',
-              usesSplitMain && 'min-h-0 overflow-y-auto',
-              fixedLayout && 'flex flex-col',
-            )}
-          >
+          <div className={cn('flex-1', fixedLayout && 'min-h-0')}>
             <div
-              className={cn(
-                usesSplitMain && 'h-full',
-                fixedLayout && 'min-h-0 flex flex-col',
-              )}
+              className={cn('h-full', fixedLayout && 'min-h-0 flex flex-col')}
             >
               {children}
             </div>
           </div>
-          {bottomPanel}
           {showFooter && <ConsoleFooter expanded={footer?.expanded} />}
         </main>
       </div>
