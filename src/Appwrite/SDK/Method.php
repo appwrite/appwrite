@@ -225,11 +225,6 @@ class Method
         return $this->additionalParameters;
     }
 
-    public function getProjectAuth(): string
-    {
-        return $this->locationAuth[0] ?? 'Project';
-    }
-
     public function getLocationAuth(): array
     {
         return $this->locationAuth;

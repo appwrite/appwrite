@@ -188,7 +188,7 @@ class Swagger2 extends Format
                         continue;
                     }
 
-                    $methodSecurities = [$methodObj->getProjectAuth() => []];
+                    $methodSecurities = [($methodObj->getLocationAuth()[0] ?? 'Project') => []];
                     foreach ($methodObj->getAuth() as $security) {
                         /** @var AuthType $security */
                         if (\array_key_exists($security->value, $this->keys)) {
@@ -365,7 +365,7 @@ class Swagger2 extends Format
             }
 
             if (!empty($scope)) {
-                $securities = [$sdk->getProjectAuth() => []];
+                $securities = [($sdk->getLocationAuth()[0] ?? 'Project') => []];
 
                 foreach ($sdk->getAuth() as $security) {
                     if (\array_key_exists($security->value, $this->keys)) {
