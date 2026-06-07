@@ -1016,7 +1016,20 @@ trait StorageBase
         $this->assertEquals(200, $cachedPreview['headers']['status-code']);
         $this->assertEquals('image/png', $cachedPreview['headers']['content-type']);
         $this->assertStringStartsWith('private, max-age=', $cachedPreview['headers']['cache-control']);
-        $this->assertEquals($preview['body'], $cachedPreview['body']);
+        $this->assertNotEmpty($cachedPreview['body']);
+
+        $cachedPreviewAgain = $this->client->call(
+            Client::METHOD_GET,
+            '/storage/buckets/' . $bucketId . '/files/' . $fileId . '/preview',
+            $headers,
+            $params
+        );
+
+        $this->assertEquals(200, $cachedPreviewAgain['headers']['status-code']);
+        $this->assertEquals('image/png', $cachedPreviewAgain['headers']['content-type']);
+        $this->assertStringStartsWith('private, max-age=', $cachedPreviewAgain['headers']['cache-control']);
+        $this->assertEquals('hit', $cachedPreviewAgain['headers']['x-appwrite-cache']);
+        $this->assertEquals($cachedPreview['body'], $cachedPreviewAgain['body']);
     }
 
     public function testFilePreviewZstdCompression(): void

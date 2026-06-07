@@ -34,6 +34,7 @@ final class PoliciesMembershipPrivacyIntegrationTest extends Scope
             'userPhone' => false,
             'userName' => false,
             'userMFA' => false,
+            'userAccessedAt' => false,
         ]);
 
         $this->assertSame(200, $response['headers']['status-code']);
@@ -42,6 +43,7 @@ final class PoliciesMembershipPrivacyIntegrationTest extends Scope
         $this->assertFalse($response['body']['authMembershipsUserPhone']);
         $this->assertFalse($response['body']['authMembershipsUserName']);
         $this->assertFalse($response['body']['authMembershipsMfa']);
+        $this->assertFalse($response['body']['authMembershipsUserAccessedAt']);
 
         // Step 2: Setup two users
         $user1Email = 'user1_' . uniqid() . '@localhost.test';
@@ -123,6 +125,28 @@ final class PoliciesMembershipPrivacyIntegrationTest extends Scope
             'cookie' => 'a_session_' . $projectId . '=' . $user1Session,
         ];
 
+        // Also sign in as user2 and make a request so accessedAt is populated before privacy is enabled
+        $session2 = $this->client->call(Client::METHOD_POST, '/account/sessions/email', [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ], [
+            'email' => $user2Email,
+            'password' => $password,
+        ]);
+        $this->assertSame(201, $session2['headers']['status-code']);
+        $user2Session = $session2['cookies']['a_session_' . $projectId];
+
+        $client2Headers = [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+            'cookie' => 'a_session_' . $projectId . '=' . $user2Session,
+        ];
+
+        // Make a request as user2 to ensure accessedAt is updated
+        $this->client->call(Client::METHOD_GET, '/account', $client2Headers);
+
         $response = $this->client->call(Client::METHOD_GET, '/teams/' . $teamId . '/memberships', $clientHeaders);
         $this->assertSame(200, $response['headers']['status-code']);
         $this->assertSame(2, $response['body']['total']);
@@ -134,6 +158,7 @@ final class PoliciesMembershipPrivacyIntegrationTest extends Scope
             $this->assertSame('', $membership['userPhone']);
             $this->assertSame('', $membership['userId']);
             $this->assertFalse($membership['mfa']);
+            $this->assertSame('', $membership['userAccessedAt']);
         }
 
         // Step 5: Update privacy to true
@@ -143,6 +168,7 @@ final class PoliciesMembershipPrivacyIntegrationTest extends Scope
             'userPhone' => true,
             'userName' => true,
             'userMFA' => true,
+            'userAccessedAt' => true,
         ]);
         $this->assertSame(200, $response['headers']['status-code']);
         $this->assertTrue($response['body']['authMembershipsUserId']);
@@ -150,6 +176,7 @@ final class PoliciesMembershipPrivacyIntegrationTest extends Scope
         $this->assertTrue($response['body']['authMembershipsUserPhone']);
         $this->assertTrue($response['body']['authMembershipsUserName']);
         $this->assertTrue($response['body']['authMembershipsMfa']);
+        $this->assertTrue($response['body']['authMembershipsUserAccessedAt']);
 
         // Step 6: List memberships with privacy enabled - user details exposed
         $response = $this->client->call(Client::METHOD_GET, '/teams/' . $teamId . '/memberships', $clientHeaders);
@@ -168,6 +195,7 @@ final class PoliciesMembershipPrivacyIntegrationTest extends Scope
         $this->assertSame($user1Email, $membershipsByUser[$user1Id]['userEmail']);
         $this->assertSame($user1Phone, $membershipsByUser[$user1Id]['userPhone']);
         $this->assertFalse($membershipsByUser[$user1Id]['mfa']);
+        $this->assertNotEmpty($membershipsByUser[$user1Id]['userAccessedAt']);
 
         $this->assertArrayHasKey($user2Id, $membershipsByUser);
         $this->assertSame($user2Id, $membershipsByUser[$user2Id]['userId']);
@@ -175,5 +203,6 @@ final class PoliciesMembershipPrivacyIntegrationTest extends Scope
         $this->assertSame($user2Email, $membershipsByUser[$user2Id]['userEmail']);
         $this->assertSame($user2Phone, $membershipsByUser[$user2Id]['userPhone']);
         $this->assertFalse($membershipsByUser[$user2Id]['mfa']);
+        $this->assertNotEmpty($membershipsByUser[$user2Id]['userAccessedAt']);
     }
 }
