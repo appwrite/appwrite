@@ -282,7 +282,6 @@ abstract class ScheduleBase extends Action
                 $dbForPlatform->deleteDocument('schedules', $schedule['$id']);
 
                 unset($this->schedules[$sequence]);
-
                 continue;
             }
 
