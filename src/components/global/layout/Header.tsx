@@ -103,7 +103,7 @@ const DEFAULT_MARKETING_HEADER_NAV: readonly MarketingHeaderNavItem[] = [
     hasMenuIndicator: true,
   },
   { label: 'Docs', href: 'https://appwrite.io/docs' },
-  { label: 'Pricing', href: 'https://appwrite.io/pricing' },
+  { label: 'Pricing', href: '/pricing' },
   { label: 'Enterprise', href: 'https://appwrite.io/contact-us/enterprise' },
   { label: 'Customers', href: 'https://appwrite.io/blog/category/customer-stories' },
   { label: 'Blog', href: 'https://appwrite.io/blog' },

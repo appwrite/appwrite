@@ -9,6 +9,7 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as PricingRouteImport } from './routes/pricing'
 import { Route as HomeRouteImport } from './routes/home'
 import { Route as PublicRouteImport } from './routes/_public'
 import { Route as ProtectedRouteImport } from './routes/_protected'
@@ -234,6 +235,11 @@ import { Route as PublicProjectsProjectIdDatabasesDbKindDatabaseIdCollectionsCol
 import { Route as PublicProjectsProjectIdDatabasesDbKindDatabaseIdCollectionsCollectionIdColumnsRouteImport } from './routes/_public/projects.$projectId.databases.$dbKind.$databaseId.collections.$collectionId.columns'
 import { Route as PublicProjectsProjectIdDatabasesDbKindDatabaseIdCollectionsCollectionIdBackupsRouteImport } from './routes/_public/projects.$projectId.databases.$dbKind.$databaseId.collections.$collectionId.backups'
 
+const PricingRoute = PricingRouteImport.update({
+  id: '/pricing',
+  path: '/pricing',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const HomeRoute = HomeRouteImport.update({
   id: '/home',
   path: '/home',
@@ -1679,6 +1685,7 @@ const PublicProjectsProjectIdDatabasesDbKindDatabaseIdCollectionsCollectionIdBac
 
 export interface FileRoutesByFullPath {
   '/home': typeof HomeRoute
+  '/pricing': typeof PricingRoute
   '/hello': typeof ApiHelloRoute
   '/join': typeof AuthJoinRoute
   '/mfa': typeof AuthMfaRoute
@@ -1902,6 +1909,7 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/home': typeof HomeRoute
+  '/pricing': typeof PricingRoute
   '/hello': typeof ApiHelloRoute
   '/join': typeof AuthJoinRoute
   '/mfa': typeof AuthMfaRoute
@@ -2098,6 +2106,7 @@ export interface FileRoutesById {
   '/_protected': typeof ProtectedRouteWithChildren
   '/_public': typeof PublicRouteWithChildren
   '/home': typeof HomeRoute
+  '/pricing': typeof PricingRoute
   '/_api/hello': typeof ApiHelloRoute
   '/_auth/join': typeof AuthJoinRoute
   '/_auth/mfa': typeof AuthMfaRoute
@@ -2323,6 +2332,7 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/home'
+    | '/pricing'
     | '/hello'
     | '/join'
     | '/mfa'
@@ -2546,6 +2556,7 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/home'
+    | '/pricing'
     | '/hello'
     | '/join'
     | '/mfa'
@@ -2741,6 +2752,7 @@ export interface FileRouteTypes {
     | '/_protected'
     | '/_public'
     | '/home'
+    | '/pricing'
     | '/_api/hello'
     | '/_auth/join'
     | '/_auth/mfa'
@@ -2968,6 +2980,7 @@ export interface RootRouteChildren {
   ProtectedRoute: typeof ProtectedRouteWithChildren
   PublicRoute: typeof PublicRouteWithChildren
   HomeRoute: typeof HomeRoute
+  PricingRoute: typeof PricingRoute
   ApiHelloRoute: typeof ApiHelloRoute
   ApiInitCalendarEventSlugRoute: typeof ApiInitCalendarEventSlugRoute
   ApiInitTicketEventSlugRoute: typeof ApiInitTicketEventSlugRoute
@@ -2975,6 +2988,13 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/pricing': {
+      id: '/pricing'
+      path: '/pricing'
+      fullPath: '/pricing'
+      preLoaderRoute: typeof PricingRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/home': {
       id: '/home'
       path: '/home'
@@ -5685,6 +5705,7 @@ const rootRouteChildren: RootRouteChildren = {
   ProtectedRoute: ProtectedRouteWithChildren,
   PublicRoute: PublicRouteWithChildren,
   HomeRoute: HomeRoute,
+  PricingRoute: PricingRoute,
   ApiHelloRoute: ApiHelloRoute,
   ApiInitCalendarEventSlugRoute: ApiInitCalendarEventSlugRoute,
   ApiInitTicketEventSlugRoute: ApiInitTicketEventSlugRoute,

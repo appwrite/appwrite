@@ -36,7 +36,7 @@ function isAuthPage(pathname: string): boolean {
 export function isOptionalAuthPage(pathname: string): boolean {
   const features = getActiveProfileFeatures()
   if (pathname === '/init') return features.init
-  if (pathname === '/home') return features.marketing
+  if (pathname === '/home' || pathname === '/pricing') return features.marketing
   return false
 }
 

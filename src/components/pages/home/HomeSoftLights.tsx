@@ -23,6 +23,22 @@ const variants = {
       'lg:-right-[38%] lg:h-[660px] lg:w-[1140px]',
     ),
   },
+  pricing: {
+    left: cn(
+      'absolute -left-[48%] top-1/2 h-[620px] w-[1080px] -translate-y-1/2',
+      'bg-[radial-gradient(ellipse_at_center,rgba(253,54,110,0.18)_0%,rgba(253,54,110,0.06)_32%,transparent_84%)]',
+      'dark:bg-[radial-gradient(ellipse_at_center,rgba(253,54,110,0.11)_0%,rgba(253,54,110,0.035)_32%,transparent_84%)]',
+      'sm:-left-[44%] sm:h-[720px] sm:w-[1280px]',
+      'lg:-left-[42%] lg:h-[820px] lg:w-[1480px]',
+    ),
+    right: cn(
+      'absolute -right-[48%] top-1/2 h-[640px] w-[1100px] -translate-y-1/2',
+      'bg-[radial-gradient(ellipse_at_center,rgba(124,103,254,0.15)_0%,rgba(124,103,254,0.055)_34%,transparent_86%)]',
+      'dark:bg-[radial-gradient(ellipse_at_center,rgba(124,103,254,0.095)_0%,rgba(124,103,254,0.035)_34%,transparent_86%)]',
+      'sm:-right-[44%] sm:h-[740px] sm:w-[1300px]',
+      'lg:-right-[42%] lg:h-[840px] lg:w-[1500px]',
+    ),
+  },
   testimonials: {
     left: cn(
       'absolute -left-[44%] bottom-[-34%] h-[500px] w-[860px]',
@@ -124,7 +140,7 @@ export function HomeSoftLights({
   return (
     <div
       className={cn(
-        'pointer-events-none absolute inset-y-0 left-1/2 z-0 w-screen -translate-x-1/2 overflow-hidden',
+        'pointer-events-none absolute inset-0 z-0 overflow-x-hidden overflow-y-visible',
         className,
       )}
       aria-hidden

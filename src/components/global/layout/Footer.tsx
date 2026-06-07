@@ -83,7 +83,7 @@ const expandedFooterGroups: readonly ExpandedFooterGroup[] = [
     title: 'About',
     links: [
       { label: 'Company', href: 'https://appwrite.io/company' },
-      { label: 'Pricing', href: 'https://appwrite.io/pricing' },
+      { label: 'Pricing', href: '/pricing' },
       { label: 'Careers', href: 'https://appwrite.io/careers' },
       { label: 'Store', href: 'https://store.appwrite.io/' },
       { label: 'Contact us', href: 'https://appwrite.io/contact-us' },

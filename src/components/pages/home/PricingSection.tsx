@@ -2,7 +2,6 @@ import { Link } from '@tanstack/react-router'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
 
-const PRICING_PAGE_URL = 'https://appwrite.io/pricing'
 const CONTACT_ENTERPRISE_URL = 'https://appwrite.io/contact-us/enterprise'
 
 type PricingTier = {
@@ -131,13 +130,7 @@ export function PricingSection() {
               </Link>
             </Button>
             <Button variant="outline" className="h-10 text-[13px]" asChild>
-              <a
-                href={PRICING_PAGE_URL}
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                View pricing plans
-              </a>
+              <Link to="/pricing">View pricing plans</Link>
             </Button>
           </div>
         </div>
