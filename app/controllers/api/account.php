@@ -4046,11 +4046,20 @@ Http::post('/v1/account/recovery/email')
             $projectName = $platform['platformName'];
         }
 
+        $heading = $locale->getText("emails.otpRecovery.heading");
         $subject = $locale->getText("emails.otpRecovery.subject");
         $preview = $locale->getText("emails.otpRecovery.preview");
         $customTemplate =
             $project->getAttribute('templates', [])['email.otpRecovery-' . $locale->default] ??
             $project->getAttribute('templates', [])['email.otpRecovery-' . $locale->fallback] ?? [];
+        $smtpBaseTemplate = $project->getAttribute('smtpBaseTemplate', 'email-base');
+
+        $validator = new FileName();
+        if (!$validator->isValid($smtpBaseTemplate)) {
+            throw new Exception(Exception::GENERAL_BAD_REQUEST, 'Invalid template path');
+        }
+
+        $bodyTemplate = __DIR__ . '/../../config/locale/templates/' . $smtpBaseTemplate . '.tpl';
 
         $message = Template::fromFile(__DIR__ . '/../../config/locale/templates/email-otp.tpl');
         $message
@@ -4121,6 +4130,7 @@ Http::post('/v1/account/recovery/email')
         }
 
         $emailVariables = [
+            'heading' => $heading,
             'direction' => $locale->getText('settings.direction'),
             // {{user}}, {{project}} and {{otp}} are required in default and custom templates
             'user' => $profile->getAttribute('name'),
@@ -4130,15 +4140,29 @@ Http::post('/v1/account/recovery/email')
             'team' => '',
         ];
 
+        if ($smtpBaseTemplate === APP_BRANDED_EMAIL_BASE_TEMPLATE) {
+            $emailVariables = array_merge($emailVariables, [
+                'accentColor' => $platform['accentColor'],
+                'logoUrl' => $platform['logoUrl'],
+                'twitter' => $platform['twitterUrl'],
+                'discord' => $platform['discordUrl'],
+                'github' => $platform['githubUrl'],
+                'terms' => $platform['termsUrl'],
+                'privacy' => $platform['privacyUrl'],
+                'platform' => $platform['platformName'],
+            ]);
+        }
+
         $queueForMails
             ->setRecipient($profile->getAttribute('email', ''))
             ->setName($profile->getAttribute('name', ''))
             ->setBody($body)
+            ->setBodyTemplate($bodyTemplate)
             ->appendVariables($emailVariables)
             ->setSubject($subject)
             ->setPreview($preview);
 
-        if ($project->getId() === 'console') {
+        if ($project->getId() === 'console' || $smtpBaseTemplate === APP_BRANDED_EMAIL_BASE_TEMPLATE) {
             $queueForMails->setSenderName($platform['emailSenderName']);
         }
 
@@ -4350,7 +4374,9 @@ Http::post('/v1/account/recovery/phone')
         $dbForProject->purgeCachedDocument('users', $profile->getId());
 
         if ($sendSMS) {
-            $projectName = $project->getAttribute('name');
+            $projectName = $project->isEmpty()
+                ? 'Console'
+                : $project->getAttribute('name', '[APP-NAME]');
             if ($project->getId() === 'console') {
                 $projectName = $platform['platformName'];
             }
