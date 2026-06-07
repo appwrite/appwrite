@@ -12,7 +12,7 @@ $traceProjectId = System::getEnv('_APP_TRACE_PROJECT_ID', '');
 $traceFunctionId = System::getEnv('_APP_TRACE_FUNCTION_ID', '');
 $traceEnabled = $traceProjectId !== '' || $traceFunctionId !== '';
 
-Span::addExporter(new Exporter\Pretty(), function (Span $span) use ($traceEnabled, $traceProjectId, $traceFunctionId): bool {
+Span::setExporters(new Exporter\Pretty(sampler: function (Span $span) use ($traceEnabled, $traceProjectId, $traceFunctionId): bool {
     if (\str_starts_with($span->getAction(), 'listener.')) {
         return $span->getError() !== null;
     }
@@ -29,4 +29,4 @@ Span::addExporter(new Exporter\Pretty(), function (Span $span) use ($traceEnable
     }
 
     return true;
-});
+}));
