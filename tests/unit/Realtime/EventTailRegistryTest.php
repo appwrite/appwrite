@@ -53,7 +53,7 @@ final class EventTailRegistryTest extends TestCase
         return $server;
     }
 
-    /** @param array<string,mixed> $payload */
+    /** @param array<int,\Utopia\Database\Query> $queries */
     private function compile(array $queries): array
     {
         return RuntimeQuery::compile($queries);
@@ -114,11 +114,43 @@ final class EventTailRegistryTest extends TestCase
         $this->assertArrayNotHasKey('functionId', $file);
         $this->assertArrayNotHasKey('collectionId', $file);
 
-        // A null scope id is omitted rather than emitted.
-        $fnNoScope = Realtime::toTailMetadata([
+        // Scope comes from the event name, so it's present even when the payload (here an
+        // execution doc) carries no functionId field — resourceId is the leaf ($id).
+        $exec = Realtime::toTailMetadata([
             'data' => ['events' => ['functions.fn1.executions.e1.create'], 'payload' => ['$id' => 'e1']],
         ]);
-        $this->assertArrayNotHasKey('functionId', $fnNoScope);
+        $this->assertSame('fn1', $exec['functionId']);
+        $this->assertSame('e1', $exec['resourceId']);
+    }
+
+    public function testTailMetadataTopLevelResourceEventsCarryScope(): void
+    {
+        // Top-level resource events: the payload is the resource doc itself (id at $id,
+        // not at a teamId/bucketId/functionId field). Scope must still be present so a
+        // filter like equal('teamId', ['T']) matches the team's own create/update events.
+        $teamCreate = Realtime::toTailMetadata([
+            'data' => ['events' => ['teams.T.create'], 'payload' => ['$id' => 'T', 'name' => 'Acme']],
+        ]);
+        $this->assertSame('teams', $teamCreate['type']);
+        $this->assertSame('T', $teamCreate['teamId']);
+        $this->assertSame('T', $teamCreate['resourceId']);
+
+        // Nested membership event: same teamId scope, leaf resourceId is the membership.
+        $membership = Realtime::toTailMetadata([
+            'data' => ['events' => ['teams.T.memberships.M.create'], 'payload' => ['$id' => 'M', 'teamId' => 'T']],
+        ]);
+        $this->assertSame('T', $membership['teamId']);
+        $this->assertSame('M', $membership['resourceId']);
+
+        $bucketCreate = Realtime::toTailMetadata([
+            'data' => ['events' => ['buckets.B.create'], 'payload' => ['$id' => 'B']],
+        ]);
+        $this->assertSame('B', $bucketCreate['bucketId']);
+
+        $functionCreate = Realtime::toTailMetadata([
+            'data' => ['events' => ['functions.F.create'], 'payload' => ['$id' => 'F']],
+        ]);
+        $this->assertSame('F', $functionCreate['functionId']);
     }
 
     public function testTailMetadataTablesUsesTableIdAsCollection(): void

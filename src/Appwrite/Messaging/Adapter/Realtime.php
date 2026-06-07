@@ -534,20 +534,42 @@ class Realtime extends MessagingAdapter
             'resourceId' => $payload['$id'] ?? null,
         ];
 
-        // Attach only the scope ids that belong to this resource type.
-        $scope = match ($type) {
-            'databases' => [
-                'databaseId'   => $payload['$databaseId'] ?? null,
-                'collectionId' => $payload['$collectionId'] ?? $payload['$tableId'] ?? null,
-            ],
-            'buckets'   => ['bucketId' => $payload['bucketId'] ?? null],
-            'functions' => ['functionId' => $payload['functionId'] ?? null],
-            'teams'     => ['teamId' => $payload['teamId'] ?? null],
-            default     => [],
-        };
+        // Attach only the scope ids that belong to this resource type. Derived from the
+        // (concrete) event name rather than the payload: for a top-level resource event
+        // (e.g. `teams.T.create`) the payload's id lives at $id, not at a teamId field,
+        // so a payload lookup would drop the scope and silently break filters. The event
+        // name encodes the id at every level — parts[1] is the top-level resource id and
+        // parts[3] the collection/table id.
+        $scope = [];
+        switch ($type) {
+            case 'databases':
+                if (isset($parts[1])) {
+                    $scope['databaseId'] = $parts[1];
+                }
+                if (isset($parts[2], $parts[3]) && \in_array($parts[2], ['collections', 'tables'], true)) {
+                    $scope['collectionId'] = $parts[3];
+                }
+                break;
+            case 'buckets':
+                if (isset($parts[1])) {
+                    $scope['bucketId'] = $parts[1];
+                }
+                break;
+            case 'functions':
+                if (isset($parts[1])) {
+                    $scope['functionId'] = $parts[1];
+                }
+                break;
+            case 'teams':
+                if (isset($parts[1])) {
+                    $scope['teamId'] = $parts[1];
+                }
+                break;
+        }
 
         foreach ($scope as $key => $value) {
-            if ($value !== null) {
+            // Skip wildcard/empty segments (defensive: events[0] is concrete, but guard anyway).
+            if ($value !== '' && $value !== '*') {
                 $metadata[$key] = $value;
             }
         }

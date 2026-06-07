@@ -76,26 +76,14 @@ class Subscribe extends Action
             ];
         }
 
-        foreach ($parsedPayloads as $parsedPayload) {
-            $realtime->subscribe(
-                $projectId,
-                $connectionId,
-                $parsedPayload['subscriptionId'],
-                $roles,
-                $parsedPayload['convertedChannels'],
-                $parsedPayload['queries'],
-            );
-        }
-
-        // Console live event tail: any `console.tail.<projectId>` channel is authorized by
-        // team membership of the target project's owning team, then registered with its
-        // compiled filter so the worker's pub/sub loop can filter+sample before delivery.
-        //
-        // Registration is additive, mirroring Realtime::subscribe(): a reused subscription
-        // id accumulates channels (it never drops the ones already subscribed), and the
-        // registry is keyed by (connId, subId, projectId) so re-subscribing the same
-        // channel overwrites its filter in place rather than leaving a stale entry.
+        // Console live event tail: authorize every `console.tail.<projectId>` channel
+        // FIRST — before any subscription state is mutated — so a batch mixing authorized
+        // and unauthorized tails can't leave partial state behind. Each tail is authorized
+        // by team membership of the target project's owning team, with ownership resolved
+        // fresh (projects can be transferred between teams, so a cached teamId could
+        // authorize the wrong team).
         $now = \microtime(true);
+        $pendingTails = [];
         foreach ($parsedPayloads as $parsedPayload) {
             $compiled = null;
             foreach ($parsedPayload['convertedChannels'] as $channel) {
@@ -104,8 +92,6 @@ class Subscribe extends Action
                     continue;
                 }
 
-                // Resolve ownership fresh on every subscribe — projects can be transferred
-                // between teams, so a cached teamId could authorize the wrong team.
                 $project = $dbForConsole->getAuthorization()->skip(
                     fn () => $dbForConsole->getDocument('projects', $targetProjectId)
                 );
@@ -119,8 +105,27 @@ class Subscribe extends Action
                 }
 
                 $compiled ??= RuntimeQuery::compile($parsedPayload['queries']);
-                $eventTailRegistry->add($connectionId, $parsedPayload['subscriptionId'], $targetProjectId, $compiled, $now);
+                $pendingTails[] = [$parsedPayload['subscriptionId'], $targetProjectId, $compiled];
             }
+        }
+
+        foreach ($parsedPayloads as $parsedPayload) {
+            $realtime->subscribe(
+                $projectId,
+                $connectionId,
+                $parsedPayload['subscriptionId'],
+                $roles,
+                $parsedPayload['convertedChannels'],
+                $parsedPayload['queries'],
+            );
+        }
+
+        // All tail channels passed authorization above — register them additively. The
+        // registry is keyed by (connId, subId, projectId): re-subscribing the same channel
+        // overwrites its filter in place, while a reused subscription id that names a new
+        // tail channel keeps the ones already registered (mirrors the tree).
+        foreach ($pendingTails as [$subId, $targetProjectId, $compiled]) {
+            $eventTailRegistry->add($connectionId, $subId, $targetProjectId, $compiled, $now);
         }
 
         $subscriptionsAfter = \count($realtime->getSubscriptionMetadata($connectionId));
