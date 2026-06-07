@@ -6,10 +6,16 @@ import {
   AccordionTrigger,
 } from '@/components/ui/accordion'
 import { useConsoleProfile } from '@/hooks/use-console-profile'
+import { getFooterPolicyLinks } from '@/lib/legal/policies'
+import {
+  getMarketingPageUrl,
+  isMarketingPageExternal,
+} from '@/lib/marketing/urls'
 
 type FooterLink = {
   label: string
   href: string
+  external?: boolean
 }
 
 type ExpandedFooterGroup = {
@@ -21,90 +27,104 @@ type ConsoleFooterProps = {
   expanded?: boolean
 }
 
-const expandedFooterGroups: readonly ExpandedFooterGroup[] = [
+function getExpandedFooterGroups(marketing: boolean): readonly ExpandedFooterGroup[] {
+  return [
   {
     title: 'Quick starts',
     links: [
-      { label: 'Web', href: 'https://appwrite.io/docs/quick-starts/web' },
-      { label: 'Next.js', href: 'https://appwrite.io/docs/quick-starts/nextjs' },
-      { label: 'React', href: 'https://appwrite.io/docs/quick-starts/react' },
-      { label: 'Vue.js', href: 'https://appwrite.io/docs/quick-starts/vue' },
-      { label: 'Nuxt', href: 'https://appwrite.io/docs/quick-starts/nuxt' },
-      { label: 'SvelteKit', href: 'https://appwrite.io/docs/quick-starts/sveltekit' },
-      { label: 'Refine', href: 'https://appwrite.io/docs/quick-starts/refine' },
-      { label: 'Angular', href: 'https://appwrite.io/docs/quick-starts/angular' },
-      { label: 'React Native', href: 'https://appwrite.io/docs/quick-starts/react-native' },
-      { label: 'Flutter', href: 'https://appwrite.io/docs/quick-starts/flutter' },
-      { label: 'Apple', href: 'https://appwrite.io/docs/quick-starts/apple' },
-      { label: 'Android', href: 'https://appwrite.io/docs/quick-starts/android' },
-      { label: 'Qwik', href: 'https://appwrite.io/docs/quick-starts/qwik' },
-      { label: 'Astro', href: 'https://appwrite.io/docs/quick-starts/astro' },
-      { label: 'Solid', href: 'https://appwrite.io/docs/quick-starts/solid' },
+      { label: 'Web', href: 'https://appwrite.io/docs/quick-starts/web', external: true },
+      { label: 'Next.js', href: 'https://appwrite.io/docs/quick-starts/nextjs', external: true },
+      { label: 'React', href: 'https://appwrite.io/docs/quick-starts/react', external: true },
+      { label: 'Vue.js', href: 'https://appwrite.io/docs/quick-starts/vue', external: true },
+      { label: 'Nuxt', href: 'https://appwrite.io/docs/quick-starts/nuxt', external: true },
+      { label: 'SvelteKit', href: 'https://appwrite.io/docs/quick-starts/sveltekit', external: true },
+      { label: 'Refine', href: 'https://appwrite.io/docs/quick-starts/refine', external: true },
+      { label: 'Angular', href: 'https://appwrite.io/docs/quick-starts/angular', external: true },
+      { label: 'React Native', href: 'https://appwrite.io/docs/quick-starts/react-native', external: true },
+      { label: 'Flutter', href: 'https://appwrite.io/docs/quick-starts/flutter', external: true },
+      { label: 'Apple', href: 'https://appwrite.io/docs/quick-starts/apple', external: true },
+      { label: 'Android', href: 'https://appwrite.io/docs/quick-starts/android', external: true },
+      { label: 'Qwik', href: 'https://appwrite.io/docs/quick-starts/qwik', external: true },
+      { label: 'Astro', href: 'https://appwrite.io/docs/quick-starts/astro', external: true },
+      { label: 'Solid', href: 'https://appwrite.io/docs/quick-starts/solid', external: true },
     ],
   },
   {
     title: 'Products',
     links: [
-      { label: 'Auth', href: 'https://appwrite.io/products/auth' },
-      { label: 'Databases', href: 'https://appwrite.io/products/databases' },
-      { label: 'Storage', href: 'https://appwrite.io/products/storage' },
-      { label: 'Functions', href: 'https://appwrite.io/products/functions' },
-      { label: 'Messaging', href: 'https://appwrite.io/products/messaging' },
-      { label: 'Realtime', href: 'https://appwrite.io/products/realtime' },
-      { label: 'Hosting', href: 'https://appwrite.io/products/sites' },
-      { label: 'Network', href: 'https://appwrite.io/products/network' },
+      { label: 'Auth', href: 'https://appwrite.io/products/auth', external: true },
+      { label: 'Databases', href: 'https://appwrite.io/products/databases', external: true },
+      { label: 'Storage', href: 'https://appwrite.io/products/storage', external: true },
+      { label: 'Functions', href: 'https://appwrite.io/products/functions', external: true },
+      { label: 'Messaging', href: 'https://appwrite.io/products/messaging', external: true },
+      { label: 'Realtime', href: 'https://appwrite.io/products/realtime', external: true },
+      { label: 'Hosting', href: 'https://appwrite.io/products/sites', external: true },
+      { label: 'Network', href: 'https://appwrite.io/products/network', external: true },
     ],
   },
   {
     title: 'Learn',
     links: [
-      { label: 'Blog', href: 'https://appwrite.io/blog' },
-      { label: 'Docs', href: 'https://appwrite.io/docs' },
-      { label: 'Integrations', href: 'https://appwrite.io/integrations' },
-      { label: 'Community', href: 'https://appwrite.io/discord' },
-      { label: 'Init', href: 'https://appwrite.io/init' },
-      { label: 'Threads', href: 'https://threads.appwrite.io/' },
-      { label: 'Changelog', href: 'https://appwrite.io/changelog' },
-      { label: 'Roadmap', href: 'https://github.com/appwrite/appwrite/projects' },
-      { label: 'Source code', href: 'https://github.com/appwrite/appwrite' },
-      { label: 'Arena', href: 'https://arena.appwrite.io/' },
-      { label: 'Tech news', href: 'https://appwrite.io/blog/category/tech-news' },
+      { label: 'Blog', href: 'https://appwrite.io/blog', external: true },
+      { label: 'Docs', href: 'https://appwrite.io/docs', external: true },
+      { label: 'Integrations', href: 'https://appwrite.io/integrations', external: true },
+      { label: 'Community', href: 'https://appwrite.io/discord', external: true },
+      { label: 'Init', href: 'https://appwrite.io/init', external: true },
+      { label: 'Threads', href: 'https://threads.appwrite.io/', external: true },
+      { label: 'Changelog', href: 'https://appwrite.io/changelog', external: true },
+      { label: 'Roadmap', href: 'https://github.com/appwrite/appwrite/projects', external: true },
+      { label: 'Source code', href: 'https://github.com/appwrite/appwrite', external: true },
+      { label: 'Arena', href: 'https://arena.appwrite.io/', external: true },
+      { label: 'Tech news', href: 'https://appwrite.io/blog/category/tech-news', external: true },
     ],
   },
   {
     title: 'Programs',
     links: [
-      { label: 'Startups', href: 'https://appwrite.io/startups' },
-      { label: 'Education', href: 'https://appwrite.io/education' },
-      { label: 'Partners', href: 'https://appwrite.io/partners' },
+      { label: 'Startups', href: 'https://appwrite.io/startups', external: true },
+      { label: 'Education', href: 'https://appwrite.io/education', external: true },
+      { label: 'Partners', href: 'https://appwrite.io/partners', external: true },
     ],
   },
   {
     title: 'About',
     links: [
-      { label: 'Company', href: 'https://appwrite.io/company' },
-      { label: 'Pricing', href: '/pricing' },
-      { label: 'Careers', href: 'https://appwrite.io/careers' },
-      { label: 'Store', href: 'https://store.appwrite.io/' },
-      { label: 'Contact us', href: 'https://appwrite.io/contact-us' },
-      { label: 'Assets', href: 'https://appwrite.io/assets' },
-      { label: 'Security', href: 'https://appwrite.io/security' },
+      {
+        label: 'Company',
+        href: getMarketingPageUrl('/company', marketing),
+        external: isMarketingPageExternal(marketing),
+      },
+      {
+        label: 'Pricing',
+        href: getMarketingPageUrl('/pricing', marketing),
+        external: isMarketingPageExternal(marketing),
+      },
+      { label: 'Careers', href: 'https://appwrite.io/careers', external: true },
+      { label: 'Store', href: 'https://store.appwrite.io/', external: true },
+      { label: 'Contact us', href: 'https://appwrite.io/contact-us', external: true },
+      {
+        label: 'Assets',
+        href: getMarketingPageUrl('/assets', marketing),
+        external: isMarketingPageExternal(marketing),
+      },
+      { label: 'Security', href: 'https://appwrite.io/security', external: true },
     ],
   },
   {
     title: 'Compare',
     links: [
-      { label: 'Appwrite vs. Supabase', href: 'https://appwrite.io/compare/supabase' },
-      { label: 'Appwrite vs. Firebase', href: 'https://appwrite.io/compare/firebase' },
-      { label: 'Appwrite vs. Neon', href: 'https://appwrite.io/compare/neon' },
-      { label: 'Appwrite vs. Vercel', href: 'https://appwrite.io/compare/vercel' },
-      { label: 'Appwrite vs. Netlify', href: 'https://appwrite.io/compare/netlify' },
-      { label: 'Appwrite vs. Cloudinary', href: 'https://appwrite.io/compare/cloudinary' },
-      { label: 'Appwrite vs. Auth0', href: 'https://appwrite.io/compare/auth0' },
-      { label: 'Backend as a service (BaaS)', href: 'https://appwrite.io/compare/backend-as-a-service' },
+      { label: 'Appwrite vs. Supabase', href: 'https://appwrite.io/compare/supabase', external: true },
+      { label: 'Appwrite vs. Firebase', href: 'https://appwrite.io/compare/firebase', external: true },
+      { label: 'Appwrite vs. Neon', href: 'https://appwrite.io/compare/neon', external: true },
+      { label: 'Appwrite vs. Vercel', href: 'https://appwrite.io/compare/vercel', external: true },
+      { label: 'Appwrite vs. Netlify', href: 'https://appwrite.io/compare/netlify', external: true },
+      { label: 'Appwrite vs. Cloudinary', href: 'https://appwrite.io/compare/cloudinary', external: true },
+      { label: 'Appwrite vs. Auth0', href: 'https://appwrite.io/compare/auth0', external: true },
+      { label: 'Backend as a service (BaaS)', href: 'https://appwrite.io/compare/backend-as-a-service', external: true },
     ],
   },
 ] as const
+}
 
 function FooterGroupLinks({ links }: { links: readonly FooterLink[] }) {
   return (
@@ -113,8 +133,9 @@ function FooterGroupLinks({ links }: { links: readonly FooterLink[] }) {
         <li key={link.label}>
           <a
             href={link.href}
-            target="_blank"
-            rel="noopener noreferrer"
+            {...(link.external
+              ? { target: '_blank', rel: 'noopener noreferrer' }
+              : {})}
             className="text-[13px] leading-5 text-muted-foreground transition-colors hover:text-foreground"
           >
             {link.label}
@@ -144,6 +165,7 @@ export function ConsoleFooter({ expanded = false }: ConsoleFooterProps) {
   const currentYear = new Date().getFullYear()
   const { isCloud, features } = useConsoleProfile()
   const cloudStatusEnabled = isCloud && features.systemStatus
+  const expandedFooterGroups = getExpandedFooterGroups(features.marketing)
 
   const resourceLinks = [
     { label: 'Docs', href: 'https://appwrite.io/docs' },
@@ -153,10 +175,7 @@ export function ConsoleFooter({ expanded = false }: ConsoleFooterProps) {
       : []),
   ]
 
-  const legalLinks = [
-    { label: 'Terms', href: 'https://appwrite.io/terms' },
-    { label: 'Privacy', href: 'https://appwrite.io/privacy' },
-  ]
+  const legalLinks = getFooterPolicyLinks(features.marketing)
 
   const socialLinks = [
     {
@@ -275,8 +294,9 @@ export function ConsoleFooter({ expanded = false }: ConsoleFooterProps) {
               <div key={link.label} className="flex items-center">
                 <a
                   href={link.href}
-                  target="_blank"
-                  rel="noopener noreferrer"
+                  {...(link.external
+                    ? { target: '_blank', rel: 'noopener noreferrer' }
+                    : {})}
                   className="whitespace-nowrap rounded-md px-2.5 py-1.5 text-[13px] text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
                 >
                   {link.label}

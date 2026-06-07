@@ -8,6 +8,8 @@ type PricingSectionHeadingProps = {
   align?: 'center' | 'left'
   size?: 'lg' | 'md'
   className?: string
+  as?: 'h1' | 'h2'
+  showUnderscore?: boolean
 }
 
 export function PricingSectionHeading({
@@ -17,6 +19,8 @@ export function PricingSectionHeading({
   align = 'center',
   size = 'lg',
   className,
+  as: HeadingTag = 'h2',
+  showUnderscore = true,
 }: PricingSectionHeadingProps) {
   return (
     <div
@@ -25,7 +29,7 @@ export function PricingSectionHeading({
         className,
       )}
     >
-      <h2
+      <HeadingTag
         className={cn(
           'font-aeonik-pro text-balance font-normal leading-none tracking-tight text-foreground',
           size === 'lg'
@@ -34,8 +38,10 @@ export function PricingSectionHeading({
         )}
       >
         {title}
-        <span className="text-[var(--brand-cta)]">_</span>
-      </h2>
+        {showUnderscore ? (
+          <span className="text-[var(--brand-cta)]">_</span>
+        ) : null}
+      </HeadingTag>
       {description ? (
         <p
           className={cn(

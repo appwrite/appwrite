@@ -3,7 +3,7 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "vite dev --port 3000",
+    "dev": "tsr generate && vite dev --port 3000",
     "start": "bun run server.ts",
     "build": "tsr generate && vite build --sourcemap",
     "build:node": "tsr generate && FOR_SITES=true vite build",

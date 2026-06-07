@@ -36,8 +36,17 @@ function isAuthPage(pathname: string): boolean {
 export function isOptionalAuthPage(pathname: string): boolean {
   const features = getActiveProfileFeatures()
   if (pathname === '/init') return features.init
-  if (pathname === '/home' || pathname === '/pricing') return features.marketing
-  return false
+  if (!features.marketing) return false
+
+  return (
+    pathname === '/home' ||
+    pathname === '/pricing' ||
+    pathname === '/company' ||
+    pathname === '/assets' ||
+    pathname === '/terms' ||
+    pathname === '/privacy' ||
+    pathname === '/cookies'
+  )
 }
 
 // Helper function to extract redirect from search params

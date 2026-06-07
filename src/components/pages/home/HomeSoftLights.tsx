@@ -57,6 +57,65 @@ const variants = {
   },
 } as const
 
+/** Single ambient wash for marketing sections — one secondary brand tone. */
+const singleSecondaryLightGradients = {
+  purple: cn(
+    'bg-[radial-gradient(ellipse_at_center,rgba(124,103,254,0.16)_0%,rgba(124,103,254,0.055)_36%,transparent_70%)]',
+    'dark:bg-[radial-gradient(ellipse_at_center,rgba(124,103,254,0.1)_0%,rgba(124,103,254,0.035)_36%,transparent_70%)]',
+  ),
+  /** Mint green secondary (#85DBD8) used on the home page plugins bento. */
+  teal: cn(
+    'bg-[radial-gradient(ellipse_at_center,rgba(133,219,216,0.16)_0%,rgba(133,219,216,0.055)_36%,transparent_70%)]',
+    'dark:bg-[radial-gradient(ellipse_at_center,rgba(133,219,216,0.1)_0%,rgba(133,219,216,0.035)_36%,transparent_70%)]',
+  ),
+  orange: cn(
+    'bg-[radial-gradient(ellipse_at_center,rgba(254,149,103,0.16)_0%,rgba(254,149,103,0.055)_36%,transparent_70%)]',
+    'dark:bg-[radial-gradient(ellipse_at_center,rgba(254,149,103,0.1)_0%,rgba(254,149,103,0.035)_36%,transparent_70%)]',
+  ),
+} as const
+
+const singleSecondaryLightPosition = {
+  left: cn(
+    'absolute -left-[36%] top-1/2 h-[620px] w-[980px] -translate-y-1/2',
+    'sm:-left-[32%] sm:h-[720px] sm:w-[1120px]',
+    'lg:-left-[28%] lg:h-[800px] lg:w-[1240px]',
+  ),
+  right: cn(
+    'absolute -right-[36%] top-1/2 h-[620px] w-[980px] -translate-y-1/2',
+    'sm:-right-[32%] sm:h-[720px] sm:w-[1120px]',
+    'lg:-right-[28%] lg:h-[800px] lg:w-[1240px]',
+  ),
+} as const
+
+export type SecondarySoftLightTone = keyof typeof singleSecondaryLightGradients
+
+export function SectionSoftLight({
+  tone = 'purple',
+  position = 'right',
+  className,
+}: {
+  tone?: SecondarySoftLightTone
+  position?: keyof typeof singleSecondaryLightPosition
+  className?: string
+}) {
+  return (
+    <div
+      className={cn(
+        'pointer-events-none absolute inset-0 z-0 overflow-hidden',
+        className,
+      )}
+      aria-hidden
+    >
+      <div
+        className={cn(
+          singleSecondaryLightPosition[position],
+          singleSecondaryLightGradients[tone],
+        )}
+      />
+    </div>
+  )
+}
+
 /** Tile-scoped lights for MCP / Skills / plugins bento — softer than hero, stronger than bare wash. */
 const tileLights = {
   mcp: cn(
