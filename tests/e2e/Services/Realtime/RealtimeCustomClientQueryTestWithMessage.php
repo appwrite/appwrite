@@ -1037,4 +1037,76 @@ final class RealtimeCustomClientQueryTestWithMessage extends Scope
             // already closed by the server
         }
     }
+
+    public function testConsoleTailSeesEventsNotReadableByTheConsoleUser(): void
+    {
+        // The tail authorizes the *viewer* by team membership at subscribe time and then
+        // forwards every project event regardless of the resource's read ACL. A document
+        // readable only by some OTHER user (not `any`, not the console user) must still
+        // appear in the console tail.
+        $projectId = $this->getProject()['$id'];
+        $headers = [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ];
+
+        $database = $this->client->call(Client::METHOD_POST, '/databases', $headers, [
+            'databaseId' => ID::unique(),
+            'name' => 'Tail ACL DB',
+        ]);
+        $this->assertEquals(201, $database['headers']['status-code']);
+        $databaseId = $database['body']['$id'];
+
+        // documentSecurity ON and NO read(any) at the collection level, so the only read
+        // grant comes from the document's own (restricted) permission.
+        $collection = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections', $headers, [
+            'collectionId' => ID::unique(),
+            'name' => 'Secrets',
+            'documentSecurity' => true,
+            'permissions' => [Permission::create(Role::any())],
+        ]);
+        $this->assertEquals(201, $collection['headers']['status-code']);
+        $collectionId = $collection['body']['$id'];
+
+        $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $collectionId . '/attributes/string', $headers, [
+            'key' => 'name',
+            'size' => 256,
+            'required' => true,
+        ]);
+        $this->assertEventually(function () use ($databaseId, $collectionId, $headers) {
+            $attribute = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $collectionId . '/attributes/name', $headers);
+            $this->assertEquals(200, $attribute['headers']['status-code']);
+            $this->assertEquals('available', $attribute['body']['status']);
+        }, 120000, 500);
+
+        $client = $this->openConsoleTail($projectId);
+
+        // Read restricted to a user that is NOT the console user → the console viewer
+        // could never read this document directly, yet the tail must surface its event.
+        $document = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $collectionId . '/documents', $headers, [
+            'documentId' => ID::unique(),
+            'data' => ['name' => 'top secret'],
+            'permissions' => [Permission::read(Role::user('not-the-console-user'))],
+        ]);
+        $this->assertEquals(201, $document['headers']['status-code']);
+        $documentId = $document['body']['$id'];
+
+        $frames = $this->receiveTailFrames($client);
+
+        $match = null;
+        foreach ($frames as $frame) {
+            if (($frame['resourceId'] ?? null) === $documentId) {
+                $match = $frame;
+                break;
+            }
+        }
+
+        $this->assertNotNull($match, 'restricted-read document.create not present in tail: ' . \json_encode($frames));
+        $this->assertSame('databases', $match['type']);
+        $this->assertSame('create', $match['action']);
+        $this->assertArrayNotHasKey('name', $match); // still no document body
+
+        $client->close();
+    }
 }
