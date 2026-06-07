@@ -305,8 +305,16 @@ $http->on(Constant::EVENT_START, function ($http) use ($payloadSize, $totalWorke
 
             if ($dbForPlatform->getCollection(AuditAdapterSQL::COLLECTION)->isEmpty()) {
                 $adapter = new AdapterDatabase($dbForPlatform);
-                $audit = new Audit($adapter);
-                $audit->setup();
+                $indexDocs = array_filter(
+                    $adapter->getIndexDocuments(),
+                    fn ($doc) => $doc->getAttribute('type') !== Database::INDEX_FULLTEXT
+                        || $dbForPlatform->getAdapter()->getSupportForFulltextIndex()
+                );
+                $dbForPlatform->createCollection(
+                    AuditAdapterSQL::COLLECTION,
+                    $adapter->getAttributeDocuments(),
+                    $indexDocs,
+                );
             }
 
             if ($dbForPlatform->getDocument('buckets', 'default')->isEmpty()) {
@@ -457,8 +465,16 @@ $http->on(Constant::EVENT_START, function ($http) use ($payloadSize, $totalWorke
 
             if ($dbForProject->getCollection(AuditAdapterSQL::COLLECTION)->isEmpty()) {
                 $adapter = new AdapterDatabase($dbForProject);
-                $audit = new Audit($adapter);
-                $audit->setup();
+                $indexDocs = array_filter(
+                    $adapter->getIndexDocuments(),
+                    fn ($doc) => $doc->getAttribute('type') !== Database::INDEX_FULLTEXT
+                        || $dbForProject->getAdapter()->getSupportForFulltextIndex()
+                );
+                $dbForProject->createCollection(
+                    AuditAdapterSQL::COLLECTION,
+                    $adapter->getAttributeDocuments(),
+                    $indexDocs,
+                );
             }
 
             $collectionsCreated = 0;

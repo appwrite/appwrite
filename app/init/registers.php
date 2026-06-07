@@ -428,6 +428,21 @@ $register->set('db', function () {
         case 'postgresql':
             $dsn = "pgsql:host={$dbHost};port={$dbPort};dbname={$dbSchema};connect_timeout=3";
             return new PDO($dsn, $dbUser, $dbPass, SQL::getPDOAttributes());
+        case 'sqlite':
+            $path = System::getEnv('_APP_DB_SQLITE_PATH', '/tmp/appwrite.db');
+            $dir = \dirname($path);
+            $path = "{$dir}/console.db";
+            $pdo = new PDO("sqlite:{$path}", null, null, SQL::getPDOAttributes());
+            $pdo->query('PRAGMA journal_mode=WAL');
+            $pdo->query('PRAGMA busy_timeout=60000');
+            $pdo->query('PRAGMA synchronous=OFF');
+            $pdo->query('PRAGMA temp_store=MEMORY');
+            $pdo->query('PRAGMA cache_size=-262144');
+            $pdo->query('PRAGMA mmap_size=2147483648');
+            $pdo->query('PRAGMA wal_autocheckpoint=10000');
+            $pdo->query('PRAGMA journal_size_limit=67108864');
+            $pdo->query('PRAGMA foreign_keys=ON');
+            return $pdo;
         default:
             throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Invalid database adapter');
     }
