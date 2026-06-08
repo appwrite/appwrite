@@ -97,6 +97,7 @@ class Update extends Action
 
         if ($deployment->getSequence() === $site->getAttribute('latestDeploymentInternalId', '')) {
             $site = $site->setAttribute('latestDeploymentStatus', $deployment->getAttribute('status', ''));
+
             $dbForProject->updateDocument('sites', $site->getId(), new Document([
                 'latestDeploymentStatus' => $site->getAttribute('latestDeploymentStatus'),
             ]));

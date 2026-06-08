@@ -247,6 +247,7 @@ class Builds extends Action
             ->setParam('deploymentId', $deployment->getId());
 
         if ($deployment->getAttribute('status') === 'canceled') {
+            $resource = $this->updateLatestDeployment($dbForProject, $resource);
             $this->cancelDeployment($deployment->getId(), $dbForProject, $queueForRealtime);
 
             return;
@@ -261,9 +262,7 @@ class Builds extends Action
             'status' => 'processing',
         ]));
 
-        if ($deployment->getSequence() === $resource->getAttribute('latestDeploymentInternalId', '')) {
-            $resource = $dbForProject->updateDocument($resource->getCollection(), $resource->getId(), new Document(['latestDeploymentStatus' => $deployment->getAttribute('status', '')]));
-        }
+        $resource = $this->updateLatestDeployment($dbForProject, $resource);
 
         Span::add('deployment.status', 'processing');
 
@@ -537,9 +536,7 @@ class Builds extends Action
             ]));
             Span::add('deployment.status', 'building');
 
-            if ($deployment->getSequence() === $resource->getAttribute('latestDeploymentInternalId', '')) {
-                $resource = $dbForProject->updateDocument($resource->getCollection(), $resource->getId(), new Document(['latestDeploymentStatus' => $deployment->getAttribute('status', '')]));
-            }
+            $resource = $this->updateLatestDeployment($dbForProject, $resource);
 
             $queueForRealtime
                 ->setPayload($deployment->getArrayCopy())
@@ -905,10 +902,6 @@ class Builds extends Action
             ]));
             Span::add('deployment.status', 'ready');
 
-            if ($deployment->getSequence() === $resource->getAttribute('latestDeploymentInternalId', '')) {
-                $resource = $dbForProject->updateDocument($resource->getCollection(), $resource->getId(), new Document(['latestDeploymentStatus' => $deployment->getAttribute('status', '')]));
-            }
-
             if ($isVcsEnabled) {
                 $this->runGitAction('ready', $github, $providerCommitHash, $owner, $repositoryName, $project, $resource, $deployment->getId(), $dbForProject, $dbForPlatform, $queueForRealtime, $platform);
             }
@@ -993,6 +986,8 @@ class Builds extends Action
 
                 Span::add('build.activated', true);
             }
+
+            $resource = $this->updateLatestDeployment($dbForProject, $resource);
 
             $this->afterDeploymentSuccess(
                 $project,
@@ -1150,9 +1145,7 @@ class Builds extends Action
                 'buildLogs' => $message,
             ]));
 
-            if ($deployment->getSequence() === $resource->getAttribute('latestDeploymentInternalId', '')) {
-                $resource = $dbForProject->updateDocument($resource->getCollection(), $resource->getId(), new Document(['latestDeploymentStatus' => $deployment->getAttribute('status', '')]));
-            }
+            $resource = $this->updateLatestDeployment($dbForProject, $resource);
 
             $queueForRealtime
                 ->setPayload($deployment->getArrayCopy())
@@ -1494,6 +1487,30 @@ class Builds extends Action
                 ->setPayload($deployment->getArrayCopy())
                 ->trigger();
         }
+    }
+
+    private function updateLatestDeployment(Database $dbForProject, Document $resource): Document
+    {
+        $latestDeployment = $dbForProject->findOne('deployments', [
+            Query::equal('resourceType', [$resource->getCollection()]),
+            Query::equal('resourceInternalId', [$resource->getSequence()]),
+            Query::orderDesc('$createdAt'),
+        ]);
+
+        $updates = [
+            'latestDeploymentCreatedAt' => $latestDeployment->isEmpty() ? '' : $latestDeployment->getCreatedAt(),
+            'latestDeploymentInternalId' => $latestDeployment->isEmpty() ? '' : $latestDeployment->getSequence(),
+            'latestDeploymentId' => $latestDeployment->isEmpty() ? '' : $latestDeployment->getId(),
+            'latestDeploymentStatus' => $latestDeployment->isEmpty() ? '' : $latestDeployment->getAttribute('status', ''),
+        ];
+
+        foreach ($updates as $key => $value) {
+            if ($resource->getAttribute($key, '') !== $value) {
+                return $dbForProject->updateDocument($resource->getCollection(), $resource->getId(), new Document($updates));
+            }
+        }
+
+        return $resource;
     }
 
     private function cancelDeployment(string $deploymentId, Database $dbForProject, Realtime $queueForRealtime)
