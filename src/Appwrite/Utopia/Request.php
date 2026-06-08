@@ -282,4 +282,9 @@ class Request extends UtopiaRequest
     {
         $this->user = $user;
     }
+
+    public function getImpersonation(): string
+    {
+        return $this->getHeader('x-appwrite-impersonation', (string)$this->getParam('impersonation', ''));
+    }
 }

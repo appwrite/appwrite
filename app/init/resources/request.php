@@ -2,6 +2,7 @@
 
 use Ahc\Jwt\JWT;
 use Ahc\Jwt\JWTException;
+use Appwrite\Auth\Impersonation;
 use Appwrite\Auth\Key;
 use Appwrite\Database\Factory as DatabaseFactory;
 use Appwrite\Databases\TransactionState;
@@ -488,23 +489,15 @@ return function (Container $context): void {
             }
         }
 
-        // Impersonation: if current user has impersonator capability and headers/params are set, act as another user
-        // Query params mirror the header fallback pattern used by ?project= and ?devKey=,
-        // allowing Console to embed impersonation in direct file/image URLs where headers cannot be set.
-        $impersonateUserId = $request->getHeader('x-appwrite-impersonate-user-id', (string)$request->getParam('impersonateUserId', ''));
-        $impersonateEmail = $request->getHeader('x-appwrite-impersonate-user-email', (string)$request->getParam('impersonateEmail', ''));
-        $impersonatePhone = $request->getHeader('x-appwrite-impersonate-user-phone', (string)$request->getParam('impersonatePhone', ''));
+        // Impersonation: if current user has impersonator capability and header/param is set, act as another user.
+        $impersonation = $request->getImpersonation();
         if (!$user->isEmpty() && $user->getAttribute('impersonator', false)) {
             $userDb = (APP_MODE_ADMIN === $mode || $project->getId() === 'console') ? $dbForPlatform : $dbForProject;
-            $targetUser = null;
-            if (!empty($impersonateUserId)) {
-                $targetUser = $userDb->getAuthorization()->skip(fn () => $userDb->getDocument('users', $impersonateUserId));
-            } elseif (!empty($impersonateEmail)) {
-                $targetUser = $userDb->getAuthorization()->skip(fn () => $userDb->findOne('users', [Query::equal('email', [\strtolower($impersonateEmail)])]));
-            } elseif (!empty($impersonatePhone)) {
-                $targetUser = $userDb->getAuthorization()->skip(fn () => $userDb->findOne('users', [Query::equal('phone', [$impersonatePhone])]));
-            }
-            if ($targetUser !== null && !$targetUser->isEmpty()) {
+            if (!empty($impersonation)) {
+                $targetUser = Impersonation::resolveUser($impersonation, $userDb);
+                if ($targetUser === null) {
+                    throw new Exception(Exception::USER_NOT_FOUND, 'Impersonation target user not found.');
+                }
                 $impersonator = clone $user;
                 $user = clone $targetUser;
                 $user->setAttribute('impersonatorUserId', $impersonator->getId());
