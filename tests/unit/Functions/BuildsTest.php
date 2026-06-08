@@ -47,8 +47,8 @@ final class BuildsTest extends TestCase
         $command = $this->callBuilds('prepareSiteBuildCommand', 'npm run build', './dist folder');
 
         $this->assertStringStartsWith('npm run build && echo "{APPWRITE_DETECTION_SEPARATOR_START}"', $command);
-        $this->assertStringContainsString('cd /usr/local/build && cd \'./dist folder\'', $command);
-        $this->assertStringContainsString('find . -name \'node_modules\' -prune -o -type f -print', $command);
+        $this->assertStringContainsString('cd /usr/local/build && cd \'./dist folder\'', (string) $command);
+        $this->assertStringContainsString('find . -name \'node_modules\' -prune -o -type f -print', (string) $command);
         $this->assertStringEndsWith('echo "{APPWRITE_DETECTION_SEPARATOR_END}"', $command);
     }
 
@@ -57,7 +57,7 @@ final class BuildsTest extends TestCase
         $command = $this->callBuilds('prepareSiteBuildCommand', '', '');
 
         $this->assertStringStartsWith('echo "{APPWRITE_DETECTION_SEPARATOR_START}"', $command);
-        $this->assertStringContainsString('cd /usr/local/build && find .', $command);
+        $this->assertStringContainsString('cd /usr/local/build && find .', (string) $command);
     }
 
     public function testSplitSiteDetectionLogsRemovesDetectionBlock(): void
