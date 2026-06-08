@@ -1,10 +1,12 @@
 import { Github } from 'lucide-react'
 import { CompanyHero } from '@/components/pages/company/CompanyHero'
+import { CompanySectionNav } from '@/components/pages/company/CompanySectionNav'
 import { CompanyTeam } from '@/components/pages/company/CompanyTeam'
 import { CompanyTimeline } from '@/components/pages/company/CompanyTimeline'
 import { HomeSoftLights, SectionSoftLight } from '@/components/pages/home/HomeSoftLights'
 import { PricingSectionHeading } from '@/components/pages/pricing/_components/PricingSectionHeading'
 import { Button } from '@/components/ui/button'
+import { COMPANY_SECTION_IDS } from '@/lib/company/sections'
 import {
   angelInvestors,
   ventureInvestors,
@@ -30,11 +32,16 @@ export function View() {
 
       <CompanyHero />
 
+      <CompanySectionNav />
+
       <CompanyTimeline />
 
       <CompanyTeam />
 
-      <section className="relative isolate overflow-x-hidden bg-muted/20">
+      <section
+        id={COMPANY_SECTION_IDS.investors}
+        className="relative isolate scroll-mt-28 overflow-x-hidden bg-muted/20"
+      >
         <SectionSoftLight tone="purple" />
         <div className="relative z-[1] mx-auto max-w-7xl px-4 py-16 sm:px-6 sm:py-20">
           <PricingSectionHeading
@@ -113,7 +120,10 @@ export function View() {
         </div>
       </section>
 
-      <section className="relative border-t border-border">
+      <section
+        id={COMPANY_SECTION_IDS.careers}
+        className="relative scroll-mt-28 border-t border-border"
+      >
         <HomeSoftLights variant="testimonials" className="opacity-50" />
         <div className="relative mx-auto max-w-xl px-4 py-16 text-center sm:px-6 sm:py-20">
           <h2 className="font-aeonik-pro text-[28px] font-normal leading-tight text-foreground sm:text-[36px]">

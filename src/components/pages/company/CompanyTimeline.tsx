@@ -1,11 +1,19 @@
-import { Fragment, useEffect, useMemo } from 'react'
+import { Fragment, useEffect, useMemo, useState } from 'react'
+import { COMPANY_SECTION_IDS } from '@/lib/company/sections'
 import { PricingSectionHeading } from '@/components/pages/pricing/_components/PricingSectionHeading'
+import { Button } from '@/components/ui/button'
+import {
+  Dialog,
+  DialogContent,
+  DialogTitle,
+} from '@/components/ui/dialog'
 import {
   companyTimelineIntro,
   companyTimelineMilestones,
   companyTimelineYearGroups,
   companyTimelineYears,
   type CompanyTimelineLink,
+  type CompanyTimelineImage,
   type CompanyTimelineMilestone,
 } from '@/lib/company/timeline'
 import {
@@ -17,6 +25,8 @@ import { cn } from '@/lib/utils'
 import {
   ArrowUpRight,
   BookOpen,
+  ChevronLeft,
+  ChevronRight,
   Github,
   Megaphone,
   Newspaper,
@@ -83,17 +93,115 @@ function MilestoneLinks({ links }: { links: readonly CompanyTimelineLink[] }) {
   )
 }
 
+function MilestoneImages({ images }: { images: readonly CompanyTimelineImage[] }) {
+  const [previewIndex, setPreviewIndex] = useState<number | null>(null)
+
+  if (images.length === 0) return null
+
+  const previewImage = previewIndex !== null ? images[previewIndex] : null
+  const hasMultiple = images.length > 1
+
+  return (
+    <>
+      <ul className="mt-3 flex flex-wrap gap-2 border-t border-border pt-3">
+        {images.map((image, index) => (
+          <li key={image.src}>
+            <button
+              type="button"
+              onClick={() => setPreviewIndex(index)}
+              className="block cursor-pointer overflow-hidden rounded-md border border-border bg-muted/20 transition-colors hover:border-foreground/20 hover:bg-muted/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+              aria-label={`Enlarge image: ${image.alt}`}
+            >
+              <img
+                src={image.src}
+                alt=""
+                className="h-14 w-[4.5rem] object-cover object-center sm:h-16 sm:w-24"
+                loading="lazy"
+                decoding="async"
+              />
+            </button>
+          </li>
+        ))}
+      </ul>
+
+      <Dialog
+        open={previewIndex !== null}
+        onOpenChange={(open) => {
+          if (!open) setPreviewIndex(null)
+        }}
+      >
+        <DialogContent className="gap-0 overflow-hidden p-0 sm:max-w-4xl">
+          {previewImage ? (
+            <>
+              <DialogTitle className="sr-only">{previewImage.alt}</DialogTitle>
+              <div className="relative bg-muted/20">
+                {hasMultiple && previewIndex !== null && previewIndex > 0 ? (
+                  <Button
+                    type="button"
+                    variant="secondary"
+                    size="icon"
+                    className="absolute left-3 top-1/2 z-[1] size-8 -translate-y-1/2 rounded-full shadow-sm"
+                    onClick={() =>
+                      setPreviewIndex((current) =>
+                        current !== null ? current - 1 : current,
+                      )
+                    }
+                    aria-label="Previous image"
+                  >
+                    <ChevronLeft className="size-4" aria-hidden />
+                  </Button>
+                ) : null}
+                <img
+                  src={previewImage.src}
+                  alt={previewImage.alt}
+                  className="max-h-[85dvh] w-full object-contain"
+                />
+                {hasMultiple &&
+                previewIndex !== null &&
+                previewIndex < images.length - 1 ? (
+                  <Button
+                    type="button"
+                    variant="secondary"
+                    size="icon"
+                    className="absolute right-3 top-1/2 z-[1] size-8 -translate-y-1/2 rounded-full shadow-sm"
+                    onClick={() =>
+                      setPreviewIndex((current) =>
+                        current !== null ? current + 1 : current,
+                      )
+                    }
+                    aria-label="Next image"
+                  >
+                    <ChevronRight className="size-4" aria-hidden />
+                  </Button>
+                ) : null}
+              </div>
+              <p className="border-t border-border px-4 py-3 text-[13px] leading-relaxed text-muted-foreground">
+                {previewImage.alt}
+              </p>
+            </>
+          ) : null}
+        </DialogContent>
+      </Dialog>
+    </>
+  )
+}
+
 function MilestoneCard({
   title,
   description,
   links,
+  images,
   className,
 }: {
   title: string
   description: string
   links?: readonly CompanyTimelineLink[]
+  images?: readonly CompanyTimelineImage[]
   className?: string
 }) {
+  const milestoneImages = images ?? []
+  const hasLinks = links && links.length > 0
+
   return (
     <article
       className={cn(
@@ -107,7 +215,10 @@ function MilestoneCard({
       <p className="mt-2 text-[13px] leading-6 text-muted-foreground sm:text-[14px]">
         {description}
       </p>
-      {links && links.length > 0 ? <MilestoneLinks links={links} /> : null}
+      {hasLinks ? <MilestoneLinks links={links} /> : null}
+      {milestoneImages.length > 0 ? (
+        <MilestoneImages images={milestoneImages} />
+      ) : null}
     </article>
   )
 }
@@ -212,6 +323,7 @@ function MobileTimelineEntry({ index, milestone }: TimelineEntryProps) {
           title={milestone.title}
           description={milestone.description}
           links={milestone.links}
+          images={milestone.images}
         />
       </div>
     </li>
@@ -244,6 +356,7 @@ function DesktopTimelineEntry({ index, milestone }: TimelineEntryProps) {
                 title={milestone.title}
                 description={milestone.description}
                 links={milestone.links}
+                images={milestone.images}
               />
             </div>
           )}
@@ -260,6 +373,7 @@ function DesktopTimelineEntry({ index, milestone }: TimelineEntryProps) {
                 title={milestone.title}
                 description={milestone.description}
                 links={milestone.links}
+                images={milestone.images}
               />
             </div>
           ) : (
@@ -289,7 +403,10 @@ export function CompanyTimeline() {
   }, [])
 
   return (
-    <section className="relative isolate overflow-x-hidden border-b border-border bg-background">
+    <section
+      id={COMPANY_SECTION_IDS.story}
+      className="relative isolate scroll-mt-28 overflow-x-hidden border-b border-border bg-background"
+    >
       <div
         className="pointer-events-none absolute inset-0 z-0 bg-[radial-gradient(circle,var(--border)_1px,transparent_1px)] bg-[length:18px_18px] opacity-70"
         aria-hidden

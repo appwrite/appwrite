@@ -79,19 +79,27 @@ export const companyTeamPillars: readonly CompanyTeamPillar[] = [
   },
 ] as const
 
-export type CompanyTeamFact = {
+export type CompanyTeamMetric = {
   id: string
   value: string
   label: string
 }
 
-export const companyTeamFacts: readonly CompanyTeamFact[] = [
+export const companyTeamMetrics: readonly CompanyTeamMetric[] = [
   { id: 'countries', value: '15+', label: 'Countries' },
   { id: 'continents', value: '5', label: 'Continents' },
-  { id: 'remote', value: '100%', label: 'Remote-first' },
-  { id: 'structure', value: 'Flat', label: 'Org structure' },
-  { id: 'communication', value: 'Efficient', label: 'Communication' },
-  { id: 'ai', value: 'AI', label: 'Native' },
+  { id: 'remote', value: '100%', label: 'Remote' },
+] as const
+
+export type CompanyTeamValue = {
+  id: string
+  label: string
+}
+
+export const companyTeamValues: readonly CompanyTeamValue[] = [
+  { id: 'structure', label: 'Flat org structure' },
+  { id: 'communication', label: 'Efficient communication' },
+  { id: 'ai', label: 'AI-native' },
 ] as const
 
 export const companyTeamLinks = {
@@ -126,19 +134,19 @@ const COMPANY_TEAM_ROLE_COUNTS = [
     id: 'community-marketing',
     label: 'Community and marketing',
     count: 3,
-    barClassName: 'bg-foreground/45',
+    barClassName: 'bg-[color-mix(in_oklch,var(--brand-cta)_68%,transparent)]',
   },
   {
     id: 'ga',
     label: 'G&A',
     count: 2,
-    barClassName: 'bg-foreground/28',
+    barClassName: 'bg-[color-mix(in_oklch,var(--brand-cta)_42%,transparent)]',
   },
   {
     id: 'business',
     label: 'Business',
     count: 1,
-    barClassName: 'bg-foreground/16',
+    barClassName: 'bg-[color-mix(in_oklch,var(--brand-cta)_24%,transparent)]',
   },
 ] as const
 
@@ -169,7 +177,7 @@ function toRolePercentages(
 export const companyTeamProductFirst = {
   title: 'Product-first team',
   description:
-    'We keep overhead lean and investment close to the product. Most of the team builds, ships, and supports Appwrite. We prefer to let the product do the talking.',
+    'We keep overhead lean and our investments close to the product. Most of our team is dedicated to creating products developers genuinely enjoy using.',
 } as const
 
 export const companyTeamRoleSegments: readonly CompanyTeamRoleSegment[] =

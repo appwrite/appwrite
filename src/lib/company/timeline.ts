@@ -21,12 +21,18 @@ export type CompanyTimelineLink = {
   kind: TimelineLinkKind
 }
 
+export type CompanyTimelineImage = {
+  src: string
+  alt: string
+}
+
 export type CompanyTimelineMilestone = {
   id: string
   date: string
   title: string
   description: string
   category: TimelineCategory
+  images?: readonly CompanyTimelineImage[]
   links?: readonly CompanyTimelineLink[]
 }
 
@@ -79,6 +85,12 @@ export const companyTimelineMilestones: readonly CompanyTimelineMilestone[] = [
     description:
       'Appwrite launched publicly as an open-source backend platform. Designed from the outset to abstract cloud complexity through familiar APIs and protocols, the project gained rapid traction in its first month, including strong visibility across developer communities.',
     category: 'launch',
+    images: [
+      {
+        src: '/images/company/first-release-console.jpg',
+        alt: 'The very first Appwrite Console',
+      },
+    ],
     links: [
       {
         id: 'github',
@@ -95,19 +107,11 @@ export const companyTimelineMilestones: readonly CompanyTimelineMilestone[] = [
     ],
   },
   {
-    id: '2020-pre-seed',
-    date: 'November 2020',
-    title: 'Pre-seed funding',
-    description:
-      'Appwrite raised $1.25M in pre-seed funding led by Ibex Investors, Seedcamp, and the Abraham Fund. The round supported early company formation and brought foundational engineering talent from the open-source contributor community.',
-    category: 'funding',
-  },
-  {
     id: '2021-seed',
     date: 'May 2021',
     title: 'Seed funding',
     description:
-      'A $8.5M seed round led by Bessemer Venture Partners and Flybridge validated Appwrite\'s momentum and expanded the company\'s investor and board network.',
+      'Appwrite raised $10M in seed funding led by Bessemer Venture Partners and Flybridge, with participation from Ibex Investors, Seedcamp, and the Abraham Fund. The round supported company formation, brought foundational engineering talent from the open-source contributor community, and expanded the investor and board network.',
     category: 'funding',
     links: [
       {
@@ -189,13 +193,17 @@ export const companyTimelineMilestones: readonly CompanyTimelineMilestone[] = [
     description:
       'Appwrite won Product Hunt\'s Golden Kitty Award for Best Developer Tool, recognizing the platform\'s impact among makers and the broader developer community.',
     category: 'community',
-    links: [
+    images: [
       {
-        id: 'product-hunt',
-        label: '2022 Hall of Fame',
-        href: 'https://www.producthunt.com/golden-kitty-awards/hall-of-fame?year=2022',
-        kind: 'product-hunt',
+        src: '/images/company/golden-kitty-winners.jpg',
+        alt: 'Appwrite won Best Developer Tool at the 2022 Golden Kitty Awards',
       },
+      {
+        src: '/images/company/golden-kitty-product-hunt.jpg',
+        alt: 'Appwrite on Product Hunt as #1 Product of the Week',
+      },
+    ],
+    links: [
     ],
   },
   {
@@ -217,6 +225,44 @@ export const companyTimelineMilestones: readonly CompanyTimelineMilestone[] = [
         label: 'Appwrite Cloud',
         href: 'https://appwrite.io/docs/advanced/platform/cloud',
         kind: 'docs',
+      },
+    ],
+  },
+  {
+    id: '2023-rebrand',
+    date: 'September 2023',
+    title: 'Brand refresh',
+    description:
+      'Appwrite unveiled a refreshed brand identity, including a new logo, redesigned website, and improved documentation, reflecting the company\'s evolution from a backend service into an all-in-one open-source development platform.',
+    category: 'platform',
+    images: [
+      {
+        src: '/images/company/rebrand-before-after.jpg',
+        alt: 'Side-by-side comparison of the previous and refreshed Appwrite logos',
+      },
+      {
+        src: '/images/company/rebrand-logo-sketches.jpg',
+        alt: 'Early hand-drawn logo sketches from the Appwrite rebrand process',
+      },
+    ],
+    links: [
+      {
+        id: 'announcement',
+        label: 'Rebrand announcement',
+        href: 'https://appwrite.io/blog/post/meet-the-new-appwrite',
+        kind: 'blog',
+      },
+      {
+        id: 'logo',
+        label: 'The new logo',
+        href: 'https://appwrite.io/blog/post/the-journey-and-meaning-behind-our-new-logo',
+        kind: 'blog',
+      },
+      {
+        id: 'website',
+        label: 'Designing the new website',
+        href: 'https://appwrite.io/blog/post/designing-the-new-appwrite-website',
+        kind: 'blog',
       },
     ],
   },
@@ -265,28 +311,6 @@ export const companyTimelineMilestones: readonly CompanyTimelineMilestone[] = [
     ],
   },
   {
-    id: '2024-cloud-ga',
-    date: 'September 2024',
-    title: 'Cloud is GA!',
-    description:
-      'Appwrite Cloud reached general availability with production-grade reliability, expanded infrastructure, and the performance teams need to run applications at scale.',
-    category: 'platform',
-    links: [
-      {
-        id: 'cloud-ga',
-        label: 'Cloud GA',
-        href: 'https://appwrite.io/cloud-ga',
-        kind: 'product',
-      },
-      {
-        id: 'update',
-        label: 'Cloud GA announcement',
-        href: 'https://appwrite.io/blog/post/product-update-august-2025',
-        kind: 'blog',
-      },
-    ],
-  },
-  {
     id: '2024-github-stars',
     date: 'November 2024',
     title: '50,000 GitHub stars',
@@ -315,13 +339,17 @@ export const companyTimelineMilestones: readonly CompanyTimelineMilestone[] = [
     description:
       'Appwrite Sites launched as an open-source application hosting product, letting teams develop, deploy, and scale web apps from the same platform as their backend services.',
     category: 'product',
-    links: [
+    images: [
       {
-        id: 'announcement',
-        label: 'Sites announcement',
-        href: 'https://appwrite.io/blog/post/announcing-appwrite-sites',
-        kind: 'blog',
+        src: '/images/company/sites-empty-state.jpg',
+        alt: 'The Sites view in Console, ready to deploy your first web app',
       },
+      {
+        src: '/images/company/sites-create-templates.jpg',
+        alt: 'Creating a site from starter templates and popular frameworks',
+      },
+    ],
+    links: [
       {
         id: 'docs',
         label: 'Sites docs',
@@ -331,24 +359,24 @@ export const companyTimelineMilestones: readonly CompanyTimelineMilestone[] = [
     ],
   },
   {
-    id: '2026-realtime-queries',
-    date: 'February 2026',
-    title: 'Realtime Queries',
+    id: '2025-cloud-ga',
+    date: 'September 2025',
+    title: 'Cloud is GA!',
     description:
-      'Realtime Queries gave developers precise control over subscription events, improving efficiency and scalability for interactive applications.',
-    category: 'product',
+      'Appwrite Cloud reached general availability with production-grade reliability, expanded infrastructure, and the performance teams need to run applications at scale.',
+    category: 'platform',
+    images: [
+      {
+        src: '/images/company/cloud-ga-journey.jpg',
+        alt: 'The Appwrite Cloud GA journey from private beta to launch',
+      },
+    ],
     links: [
       {
-        id: 'announcement',
-        label: 'Realtime Queries announcement',
-        href: 'https://appwrite.io/blog/post/announcing-realtime-queries',
-        kind: 'blog',
-      },
-      {
-        id: 'docs',
-        label: 'Realtime docs',
-        href: 'https://appwrite.io/docs/apis/realtime',
-        kind: 'docs',
+        id: 'cloud-ga',
+        label: 'Cloud GA',
+        href: 'https://appwrite.io/cloud-ga',
+        kind: 'product',
       },
     ],
   },
@@ -375,30 +403,24 @@ export const companyTimelineMilestones: readonly CompanyTimelineMilestone[] = [
     ],
   },
   {
-    id: '2026-platform-expansion',
-    date: 'April 2026',
-    title: 'Platform expansion',
+    id: '2026-presences',
+    date: 'May 25, 2026',
+    title: 'Appwrite Presences',
     description:
-      'Appwrite 1.9 expanded database and realtime capabilities, official Terraform support arrived for infrastructure-as-code workflows, and the Rust SDK broadened the language ecosystem.',
+      'Appwrite Presences introduced a Realtime API for short-lived user statuses, with built-in channels, automatic expiry, and permission-aware subscriptions.',
     category: 'product',
     links: [
       {
-        id: 'update',
-        label: 'April product update',
-        href: 'https://appwrite.io/blog/post/april-product-update-mongodb-support-appwrite-190-realtime-upgrades-and-ai-tooling',
+        id: 'announcement',
+        label: 'Presences announcement',
+        href: 'https://appwrite.io/blog/post/announcing-presences-api',
         kind: 'blog',
       },
       {
-        id: 'terraform',
-        label: 'Terraform provider',
-        href: 'https://appwrite.io/blog/post/introducing-terraform-provider-for-appwrite',
-        kind: 'blog',
-      },
-      {
-        id: 'rust',
-        label: 'Rust SDK',
-        href: 'https://appwrite.io/blog/post/announcing-appwrite-rust-sdk',
-        kind: 'blog',
+        id: 'docs',
+        label: 'Presences docs',
+        href: 'https://appwrite.io/docs/apis/realtime/presences',
+        kind: 'docs',
       },
     ],
   },
