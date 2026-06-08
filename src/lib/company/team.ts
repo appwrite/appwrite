@@ -43,14 +43,14 @@ export const companyTeamPhotos: readonly CompanyTeamPhoto[] = [
     id: 'init-prague-portraits',
     src: '/images/company/team-init-prague-portraits.png',
     alt: 'Appwrite team members during the first Init shoot in Prague',
-    caption: 'Making of the first Init in Prague',
+    caption: 'Behind the scenes: portrait setup for the first Init in Prague',
     gridClassName: 'lg:col-span-4',
   },
   {
     id: 'init-prague-monitor',
     src: '/images/company/team-init-prague-monitor.png',
     alt: 'On-set monitor during the first Init filming in Prague',
-    caption: 'Making of the first Init in Prague',
+    caption: 'Behind the scenes: reviewing takes on the first Init set in Prague',
     gridClassName: 'lg:col-span-4',
   },
 ] as const
