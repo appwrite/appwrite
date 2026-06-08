@@ -745,13 +745,28 @@ final class RealtimeCustomClientTest extends Scope
         $client->close();
 
         /**
-         * This test mutates the shared cached user: the password change and the
-         * password-recovery completion above invalidate every session of that
-         * user (including the one cached in self::$user). Refresh the cache so
-         * later tests in the same process (e.g. testChannelDatabase) connect
-         * with a valid session instead of falling back to a guest connection.
+         * The password change and password-recovery completion above invalidate
+         * every existing session of this user, including the one cached in
+         * self::$user. Re-authenticate the SAME account (its email is now
+         * torsten@appwrite.io and its password 'test-recovery' after the flow
+         * above) and refresh only the cached session, so later tests in this
+         * process keep the same user $id but connect with a valid session
+         * instead of falling back to a guest connection.
          */
-        $this->getUser(true);
+        $refreshedSession = $this->client->call(Client::METHOD_POST, '/account/sessions/email', [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ], [
+            'email' => 'torsten@appwrite.io',
+            'password' => 'test-recovery',
+        ]);
+
+        $this->assertEquals(201, $refreshedSession['headers']['status-code']);
+
+        self::$user[$projectId]['email'] = 'torsten@appwrite.io';
+        self::$user[$projectId]['session'] = $refreshedSession['cookies']['a_session_' . $projectId];
+        self::$user[$projectId]['sessionId'] = $refreshedSession['body']['$id'];
     }
 
     public function testChannelDatabase()
