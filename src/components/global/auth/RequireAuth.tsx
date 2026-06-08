@@ -43,6 +43,10 @@ export function isOptionalAuthPage(pathname: string): boolean {
     pathname === '/pricing' ||
     pathname === '/company' ||
     pathname === '/assets' ||
+    pathname === '/partners' ||
+    pathname === '/education' ||
+    pathname === '/startups' ||
+    pathname === '/community' ||
     pathname === '/terms' ||
     pathname === '/privacy' ||
     pathname === '/cookies'

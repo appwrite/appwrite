@@ -1,0 +1,77 @@
+const GROWTH_ENDPOINT = import.meta.env.VITE_GROWTH_ENDPOINT as string | undefined
+
+function getGrowthBaseUrl(): string | null {
+  const trimmed = GROWTH_ENDPOINT?.trim()
+  if (!trimmed) return null
+  return trimmed.replace(/\/$/, '')
+}
+
+function getReferrerAndUtmSource(): Record<string, string | undefined> {
+  if (typeof window === 'undefined') return {}
+  const params = new URLSearchParams(window.location.search)
+  return {
+    referrer: document.referrer || undefined,
+    utmSource: params.get('utm_source') ?? undefined,
+    utmMedium: params.get('utm_medium') ?? undefined,
+    utmCampaign: params.get('utm_campaign') ?? undefined,
+  }
+}
+
+async function postGrowthJson(path: string, body: Record<string, unknown>): Promise<boolean> {
+  const baseUrl = getGrowthBaseUrl()
+  if (!baseUrl) return false
+
+  const response = await fetch(`${baseUrl}${path}`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ ...body, ...getReferrerAndUtmSource() }),
+  })
+
+  if (response.status >= 400) {
+    throw new Error(
+      response.status >= 500
+        ? 'Internal server error.'
+        : 'Error submitting form. Please contact support.',
+    )
+  }
+
+  return true
+}
+
+export function isGrowthFormsConfigured(): boolean {
+  return !!getGrowthBaseUrl()
+}
+
+export type PartnerApplicationPayload = {
+  name: string
+  email: string
+  companyName: string
+  companyUrl: string
+  message: string
+}
+
+export async function submitPartnerApplication(
+  payload: PartnerApplicationPayload,
+): Promise<boolean> {
+  return postGrowthJson('/conversations/partner', payload)
+}
+
+export type StartupsApplicationPayload = {
+  personName: string
+  personEmail: string
+  companyName: string
+  companyUrl: string
+}
+
+export async function submitStartupsApplication(
+  payload: StartupsApplicationPayload,
+): Promise<boolean> {
+  const companyUrl = payload.companyUrl.startsWith('http')
+    ? payload.companyUrl
+    : `https://${payload.companyUrl}`
+
+  return postGrowthJson('/conversations/startups', {
+    ...payload,
+    companyUrl,
+  })
+}

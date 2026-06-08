@@ -10,11 +10,15 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as TermsRouteImport } from './routes/terms'
+import { Route as StartupsRouteImport } from './routes/startups'
 import { Route as PrivacyRouteImport } from './routes/privacy'
 import { Route as PricingRouteImport } from './routes/pricing'
+import { Route as PartnersRouteImport } from './routes/partners'
 import { Route as HomeRouteImport } from './routes/home'
+import { Route as EducationRouteImport } from './routes/education'
 import { Route as CookiesRouteImport } from './routes/cookies'
 import { Route as CompanyRouteImport } from './routes/company'
+import { Route as CommunityRouteImport } from './routes/community'
 import { Route as AssetsRouteImport } from './routes/assets'
 import { Route as PublicRouteImport } from './routes/_public'
 import { Route as ProtectedRouteImport } from './routes/_protected'
@@ -245,6 +249,11 @@ const TermsRoute = TermsRouteImport.update({
   path: '/terms',
   getParentRoute: () => rootRouteImport,
 } as any)
+const StartupsRoute = StartupsRouteImport.update({
+  id: '/startups',
+  path: '/startups',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const PrivacyRoute = PrivacyRouteImport.update({
   id: '/privacy',
   path: '/privacy',
@@ -255,9 +264,19 @@ const PricingRoute = PricingRouteImport.update({
   path: '/pricing',
   getParentRoute: () => rootRouteImport,
 } as any)
+const PartnersRoute = PartnersRouteImport.update({
+  id: '/partners',
+  path: '/partners',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const HomeRoute = HomeRouteImport.update({
   id: '/home',
   path: '/home',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const EducationRoute = EducationRouteImport.update({
+  id: '/education',
+  path: '/education',
   getParentRoute: () => rootRouteImport,
 } as any)
 const CookiesRoute = CookiesRouteImport.update({
@@ -268,6 +287,11 @@ const CookiesRoute = CookiesRouteImport.update({
 const CompanyRoute = CompanyRouteImport.update({
   id: '/company',
   path: '/company',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CommunityRoute = CommunityRouteImport.update({
+  id: '/community',
+  path: '/community',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AssetsRoute = AssetsRouteImport.update({
@@ -1715,11 +1739,15 @@ const PublicProjectsProjectIdDatabasesDbKindDatabaseIdCollectionsCollectionIdBac
 
 export interface FileRoutesByFullPath {
   '/assets': typeof AssetsRoute
+  '/community': typeof CommunityRoute
   '/company': typeof CompanyRoute
   '/cookies': typeof CookiesRoute
+  '/education': typeof EducationRoute
   '/home': typeof HomeRoute
+  '/partners': typeof PartnersRoute
   '/pricing': typeof PricingRoute
   '/privacy': typeof PrivacyRoute
+  '/startups': typeof StartupsRoute
   '/terms': typeof TermsRoute
   '/hello': typeof ApiHelloRoute
   '/join': typeof AuthJoinRoute
@@ -1944,11 +1972,15 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/assets': typeof AssetsRoute
+  '/community': typeof CommunityRoute
   '/company': typeof CompanyRoute
   '/cookies': typeof CookiesRoute
+  '/education': typeof EducationRoute
   '/home': typeof HomeRoute
+  '/partners': typeof PartnersRoute
   '/pricing': typeof PricingRoute
   '/privacy': typeof PrivacyRoute
+  '/startups': typeof StartupsRoute
   '/terms': typeof TermsRoute
   '/hello': typeof ApiHelloRoute
   '/join': typeof AuthJoinRoute
@@ -2146,11 +2178,15 @@ export interface FileRoutesById {
   '/_protected': typeof ProtectedRouteWithChildren
   '/_public': typeof PublicRouteWithChildren
   '/assets': typeof AssetsRoute
+  '/community': typeof CommunityRoute
   '/company': typeof CompanyRoute
   '/cookies': typeof CookiesRoute
+  '/education': typeof EducationRoute
   '/home': typeof HomeRoute
+  '/partners': typeof PartnersRoute
   '/pricing': typeof PricingRoute
   '/privacy': typeof PrivacyRoute
+  '/startups': typeof StartupsRoute
   '/terms': typeof TermsRoute
   '/_api/hello': typeof ApiHelloRoute
   '/_auth/join': typeof AuthJoinRoute
@@ -2377,11 +2413,15 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/assets'
+    | '/community'
     | '/company'
     | '/cookies'
+    | '/education'
     | '/home'
+    | '/partners'
     | '/pricing'
     | '/privacy'
+    | '/startups'
     | '/terms'
     | '/hello'
     | '/join'
@@ -2606,11 +2646,15 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/assets'
+    | '/community'
     | '/company'
     | '/cookies'
+    | '/education'
     | '/home'
+    | '/partners'
     | '/pricing'
     | '/privacy'
+    | '/startups'
     | '/terms'
     | '/hello'
     | '/join'
@@ -2807,11 +2851,15 @@ export interface FileRouteTypes {
     | '/_protected'
     | '/_public'
     | '/assets'
+    | '/community'
     | '/company'
     | '/cookies'
+    | '/education'
     | '/home'
+    | '/partners'
     | '/pricing'
     | '/privacy'
+    | '/startups'
     | '/terms'
     | '/_api/hello'
     | '/_auth/join'
@@ -3040,11 +3088,15 @@ export interface RootRouteChildren {
   ProtectedRoute: typeof ProtectedRouteWithChildren
   PublicRoute: typeof PublicRouteWithChildren
   AssetsRoute: typeof AssetsRoute
+  CommunityRoute: typeof CommunityRoute
   CompanyRoute: typeof CompanyRoute
   CookiesRoute: typeof CookiesRoute
+  EducationRoute: typeof EducationRoute
   HomeRoute: typeof HomeRoute
+  PartnersRoute: typeof PartnersRoute
   PricingRoute: typeof PricingRoute
   PrivacyRoute: typeof PrivacyRoute
+  StartupsRoute: typeof StartupsRoute
   TermsRoute: typeof TermsRoute
   ApiHelloRoute: typeof ApiHelloRoute
   ApiInitCalendarEventSlugRoute: typeof ApiInitCalendarEventSlugRoute
@@ -3058,6 +3110,13 @@ declare module '@tanstack/react-router' {
       path: '/terms'
       fullPath: '/terms'
       preLoaderRoute: typeof TermsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/startups': {
+      id: '/startups'
+      path: '/startups'
+      fullPath: '/startups'
+      preLoaderRoute: typeof StartupsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/privacy': {
@@ -3074,11 +3133,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PricingRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/partners': {
+      id: '/partners'
+      path: '/partners'
+      fullPath: '/partners'
+      preLoaderRoute: typeof PartnersRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/home': {
       id: '/home'
       path: '/home'
       fullPath: '/home'
       preLoaderRoute: typeof HomeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/education': {
+      id: '/education'
+      path: '/education'
+      fullPath: '/education'
+      preLoaderRoute: typeof EducationRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/cookies': {
@@ -3093,6 +3166,13 @@ declare module '@tanstack/react-router' {
       path: '/company'
       fullPath: '/company'
       preLoaderRoute: typeof CompanyRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/community': {
+      id: '/community'
+      path: '/community'
+      fullPath: '/community'
+      preLoaderRoute: typeof CommunityRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/assets': {
@@ -5805,11 +5885,15 @@ const rootRouteChildren: RootRouteChildren = {
   ProtectedRoute: ProtectedRouteWithChildren,
   PublicRoute: PublicRouteWithChildren,
   AssetsRoute: AssetsRoute,
+  CommunityRoute: CommunityRoute,
   CompanyRoute: CompanyRoute,
   CookiesRoute: CookiesRoute,
+  EducationRoute: EducationRoute,
   HomeRoute: HomeRoute,
+  PartnersRoute: PartnersRoute,
   PricingRoute: PricingRoute,
   PrivacyRoute: PrivacyRoute,
+  StartupsRoute: StartupsRoute,
   TermsRoute: TermsRoute,
   ApiHelloRoute: ApiHelloRoute,
   ApiInitCalendarEventSlugRoute: ApiInitCalendarEventSlugRoute,

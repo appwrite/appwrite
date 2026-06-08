@@ -68,7 +68,7 @@ function getExpandedFooterGroups(marketing: boolean): readonly ExpandedFooterGro
       { label: 'Blog', href: 'https://appwrite.io/blog', external: true },
       { label: 'Docs', href: 'https://appwrite.io/docs', external: true },
       { label: 'Integrations', href: 'https://appwrite.io/integrations', external: true },
-      { label: 'Community', href: 'https://appwrite.io/discord', external: true },
+      { label: 'Community', href: getMarketingPageUrl('/community', marketing), external: isMarketingPageExternal(marketing) },
       { label: 'Init', href: 'https://appwrite.io/init', external: true },
       { label: 'Threads', href: 'https://threads.appwrite.io/', external: true },
       { label: 'Changelog', href: 'https://appwrite.io/changelog', external: true },
@@ -81,9 +81,21 @@ function getExpandedFooterGroups(marketing: boolean): readonly ExpandedFooterGro
   {
     title: 'Programs',
     links: [
-      { label: 'Startups', href: 'https://appwrite.io/startups', external: true },
-      { label: 'Education', href: 'https://appwrite.io/education', external: true },
-      { label: 'Partners', href: 'https://appwrite.io/partners', external: true },
+      {
+        label: 'Startups',
+        href: getMarketingPageUrl('/startups', marketing),
+        external: isMarketingPageExternal(marketing),
+      },
+      {
+        label: 'Education',
+        href: getMarketingPageUrl('/education', marketing),
+        external: isMarketingPageExternal(marketing),
+      },
+      {
+        label: 'Partners',
+        href: getMarketingPageUrl('/partners', marketing),
+        external: isMarketingPageExternal(marketing),
+      },
     ],
   },
   {

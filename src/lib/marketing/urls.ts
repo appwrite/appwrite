@@ -7,6 +7,10 @@ export type MarketingPagePath =
   | '/company'
   | '/assets'
   | '/pricing'
+  | '/partners'
+  | '/education'
+  | '/startups'
+  | '/community'
 
 /**
  * Resolves a marketing page path to a relative route when marketing is enabled,
