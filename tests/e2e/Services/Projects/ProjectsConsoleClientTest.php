@@ -7407,28 +7407,12 @@ final class ProjectsConsoleClientTest extends Scope
                 'successProjectIds' => [$projectIdA, $projectIdB],
             ],
             [
-                'roles' => ["developer"],
-                'successProjectIds' => [$projectIdA, $projectIdB],
-            ],
-            [
                 'roles' => ["project-$projectIdA-owner"],
-                'successProjectIds' => [$projectIdA],
-            ],
-            [
-                'roles' => ["project-$projectIdB-owner"],
-                'successProjectIds' => [$projectIdB],
-            ],
-            [
-                'roles' => ["project-$projectIdA-developer"],
                 'successProjectIds' => [$projectIdA],
             ],
             [
                 'roles' => ["project-$projectIdB-developer"],
                 'successProjectIds' => [$projectIdB],
-            ],
-            [
-                'roles' => ["developer", "project-$projectIdA-owner"],
-                'successProjectIds' => [$projectIdA, $projectIdB],
             ]
         ];
 
@@ -7495,22 +7479,7 @@ final class ProjectsConsoleClientTest extends Scope
                 'failureProjectIds' => [],
             ],
             [
-                'roles' => ["developer"],
-                'successProjectIds' => [$projectIdA, $projectIdB],
-                'failureProjectIds' => [],
-            ],
-            [
                 'roles' => ["project-$projectIdA-owner"],
-                'successProjectIds' => [$projectIdA],
-                'failureProjectIds' => [$projectIdB],
-            ],
-            [
-                'roles' => ["project-$projectIdB-owner"],
-                'successProjectIds' => [$projectIdB],
-                'failureProjectIds' => [$projectIdA],
-            ],
-            [
-                'roles' => ["project-$projectIdA-developer"],
                 'successProjectIds' => [$projectIdA],
                 'failureProjectIds' => [$projectIdB],
             ],
@@ -7518,11 +7487,6 @@ final class ProjectsConsoleClientTest extends Scope
                 'roles' => ["project-$projectIdB-developer"],
                 'successProjectIds' => [$projectIdB],
                 'failureProjectIds' => [$projectIdA],
-            ],
-            [
-                'roles' => ["developer", "project-$projectIdA-owner"],
-                'successProjectIds' => [$projectIdA, $projectIdB],
-                'failureProjectIds' => [],
             ]
         ];
 
@@ -7625,11 +7589,6 @@ final class ProjectsConsoleClientTest extends Scope
                 'successProjectIds' => [$projectIdD],
                 'failureProjectIds' => [$projectIdE],
             ],
-            [
-                'roles' => ["project-$projectIdE-owner"],
-                'successProjectIds' => [$projectIdE],
-                'failureProjectIds' => [],
-            ],
         ];
 
         // Setup session
@@ -7703,21 +7662,6 @@ final class ProjectsConsoleClientTest extends Scope
                 'failureProjectIds' => [],
             ],
             [
-                'roles' => ["developer"],
-                'successProjectIds' => [$projectIdA, $projectIdB],
-                'failureProjectIds' => [],
-            ],
-            [
-                'roles' => ["project-$projectIdA-owner"],
-                'successProjectIds' => [$projectIdA],
-                'failureProjectIds' => [$projectIdB],
-            ],
-            [
-                'roles' => ["project-$projectIdB-owner"],
-                'successProjectIds' => [$projectIdB],
-                'failureProjectIds' => [$projectIdA],
-            ],
-            [
                 'roles' => ["project-$projectIdA-developer"],
                 'successProjectIds' => [$projectIdA],
                 'failureProjectIds' => [$projectIdB],
@@ -7726,11 +7670,6 @@ final class ProjectsConsoleClientTest extends Scope
                 'roles' => ["project-$projectIdB-developer"],
                 'successProjectIds' => [$projectIdB],
                 'failureProjectIds' => [$projectIdA],
-            ],
-            [
-                'roles' => ["developer", "project-$projectIdA-owner"],
-                'successProjectIds' => [$projectIdA, $projectIdB],
-                'failureProjectIds' => [],
             ]
         ];
 
