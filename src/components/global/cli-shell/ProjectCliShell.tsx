@@ -97,18 +97,38 @@ export function ProjectCliShell() {
   )
 }
 
+function CliShellHeaderTitle({
+  showBootstrapSpinner = false,
+}: {
+  showBootstrapSpinner?: boolean
+}) {
+  return (
+    <div className="flex min-w-0 items-center gap-2">
+      <span className="flex size-7 shrink-0 items-center justify-center rounded-md border border-border bg-muted/50 text-muted-foreground">
+        <TerminalIcon className="h-3.5 w-3.5" />
+      </span>
+      <span className="truncate text-[13px] font-semibold text-foreground">
+        Terminal
+      </span>
+      {showBootstrapSpinner ? (
+        <Loader2 className="h-3.5 w-3.5 shrink-0 animate-spin text-muted-foreground" />
+      ) : null}
+    </div>
+  )
+}
+
 function ProjectCliShellCollapsedBar() {
-  const { setOpen } = useCliShell()
+  const { setOpen, status } = useCliShell()
+  const isBootstrapping = status === 'bootstrapping'
 
   return (
     <button
       type="button"
       onClick={() => setOpen(true)}
-      className="flex h-full w-full cursor-pointer items-center gap-2 px-4 text-left text-[13px] font-medium text-muted-foreground transition-colors hover:bg-muted/40 hover:text-foreground sm:px-6"
+      className="flex h-full w-full cursor-pointer items-center bg-card/50 px-4 py-2.5 text-left transition-colors hover:bg-muted/40 sm:px-6"
       aria-label="Open terminal"
     >
-      <TerminalIcon className="h-3.5 w-3.5 shrink-0 opacity-60" />
-      <span>Terminal</span>
+      <CliShellHeaderTitle showBootstrapSpinner={isBootstrapping} />
     </button>
   )
 }
@@ -408,17 +428,7 @@ function ProjectCliShellPanel({ onResizingChange }: ProjectCliShellPanelProps) {
       )}
 
       <div className="flex shrink-0 items-center justify-between gap-3 border-b border-border bg-card/50 px-4 py-2.5 sm:px-6">
-        <div className="flex min-w-0 items-center gap-2">
-          <span className="flex size-7 shrink-0 items-center justify-center rounded-md border border-border bg-muted/50 text-muted-foreground">
-            <TerminalIcon className="h-3.5 w-3.5" />
-          </span>
-          <span className="truncate text-[13px] font-semibold text-foreground">
-            Terminal
-          </span>
-          {isBootstrapping ? (
-            <Loader2 className="h-3.5 w-3.5 shrink-0 animate-spin text-muted-foreground" />
-          ) : null}
-        </div>
+        <CliShellHeaderTitle showBootstrapSpinner={isBootstrapping} />
 
         <div
           className={cn(
