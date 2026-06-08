@@ -188,7 +188,7 @@ class OpenAPI3 extends Format
                         continue;
                     }
 
-                    $methodSecurities = [($methodObj->getLocationAuth()[0] ?? 'Project') => []];
+                    $methodSecurities = [$methodObj->getProjectAuth() => []];
                     foreach ($methodObj->getAuth() as $security) {
                         if (\array_key_exists($security->value, $this->keys)) {
                             $methodSecurities[$security->value] = [];
@@ -374,7 +374,7 @@ class OpenAPI3 extends Format
             }
 
             if (!empty($scope)) {
-                $securities = [($sdk->getLocationAuth()[0] ?? 'Project') => []];
+                $securities = [$sdk->getProjectAuth() => []];
 
                 foreach ($sdk->getAuth() as $security) {
                     /** @var AuthType $security */
@@ -384,16 +384,6 @@ class OpenAPI3 extends Format
                 }
 
                 $temp['x-appwrite']['auth'] = array_slice($securities, 0, $this->authCount);
-
-                if ($sdk->getType() === MethodType::LOCATION) {
-                    foreach ($sdk->getLocationAuth() as $key) {
-                        if (\array_key_exists($key, $this->keys)) {
-                            $securities[$key] = [];
-                            $temp['x-appwrite']['auth'][$key] = [];
-                        }
-                    }
-                }
-
                 $temp['security'][] = $securities;
             }
 

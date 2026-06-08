@@ -57,7 +57,6 @@ class Get extends Action
                 description: '/docs/references/avatars/get-screenshot.md',
                 auth: [AuthType::ADMIN, AuthType::SESSION, AuthType::KEY, AuthType::JWT],
                 type: MethodType::LOCATION,
-                locationAuth: ['Project', 'ImpersonateUserQuery', 'ImpersonateUserEmailQuery', 'ImpersonateUserPhoneQuery'],
                 responses: [
                     new SDKResponse(
                         code: Response::STATUS_CODE_OK,
