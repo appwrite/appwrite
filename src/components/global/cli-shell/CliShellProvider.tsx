@@ -37,6 +37,9 @@ import {
   CLI_TERMINAL_MUTED,
   CLI_TERMINAL_RESET,
   createTerminalOutputLinkifier,
+  formatCliTerminalPrompt,
+  resolveCliTerminalProjectLabel,
+  resolveCliTerminalUsername,
   type CliTerminalApi,
   writeCliShellLine,
   writeCliTerminalRaw,
@@ -56,6 +59,7 @@ import type {
   CliShellStatus,
 } from '@/lib/cli-shell/types'
 import { useKeyboardShortcut } from '@/hooks/use-keyboard-shortcuts'
+import { CLI_SHELL_TOGGLE_SHORTCUT_COMBOS } from '@/lib/cli-shell/cli-terminal-shortcuts'
 import {
   useCliShellHeight,
   useCliShellOpen,
@@ -87,6 +91,7 @@ type CliShellContextValue = {
   exitFullscreen: () => void
   retryBootstrap: () => void
   bootstrapError: string | null
+  getTerminalPrompt: () => string
 }
 
 const CliShellContext = createContext<CliShellContextValue | null>(null)
@@ -715,23 +720,46 @@ export function CliShellProvider({ projectId, children }: CliShellProviderProps)
     () => {
       exitFullscreen()
     },
-    { enabled: fullscreen, ignoreInputs: false },
+    {
+      enabled: fullscreen,
+      ignoreInputs: false,
+      capture: true,
+      stopPropagation: true,
+    },
   )
 
-  useKeyboardShortcut(
-    'control+`',
-    () => {
-      toggle()
-    },
-    { enabled: true, ignoreInputs: false },
-  )
-  useKeyboardShortcut(
-    'meta+`',
-    () => {
-      toggle()
-    },
-    { enabled: true, ignoreInputs: false },
-  )
+  const getTerminalPrompt = useCallback(() => {
+    const accountInfo =
+      account && typeof account === 'object'
+        ? {
+            name: 'name' in account ? String(account.name ?? '') : undefined,
+            email: 'email' in account ? String(account.email ?? '') : undefined,
+          }
+        : null
+
+    return formatCliTerminalPrompt({
+      username: resolveCliTerminalUsername(accountInfo),
+      projectName: resolveCliTerminalProjectLabel(
+        project ? { name: project.name } : null,
+        projectId,
+      ),
+    })
+  }, [account, project, projectId])
+
+  const onToggleTerminalShortcut = useCallback(() => {
+    toggle()
+  }, [toggle])
+
+  useKeyboardShortcut(CLI_SHELL_TOGGLE_SHORTCUT_COMBOS[0], onToggleTerminalShortcut, {
+    enabled: true,
+    ignoreInputs: false,
+    capture: true,
+  })
+  useKeyboardShortcut(CLI_SHELL_TOGGLE_SHORTCUT_COMBOS[1], onToggleTerminalShortcut, {
+    enabled: true,
+    ignoreInputs: false,
+    capture: true,
+  })
 
   const value = useMemo<CliShellContextValue>(
     () => ({
@@ -753,6 +781,7 @@ export function CliShellProvider({ projectId, children }: CliShellProviderProps)
       exitFullscreen,
       retryBootstrap,
       bootstrapError,
+      getTerminalPrompt,
     }),
     [
       open,
@@ -773,6 +802,7 @@ export function CliShellProvider({ projectId, children }: CliShellProviderProps)
       exitFullscreen,
       retryBootstrap,
       bootstrapError,
+      getTerminalPrompt,
     ],
   )
 

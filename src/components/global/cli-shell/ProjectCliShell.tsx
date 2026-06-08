@@ -30,20 +30,69 @@ import { getCliTerminalTheme } from '@/lib/cli-shell/cli-terminal-theme'
 import type { CliTerminalApi } from '@/lib/cli-shell/cli-terminal-api'
 import { useCliShell } from './CliShellProvider'
 
+const CLI_SHELL_COLLAPSE_MS = 200
+
 export function ProjectCliShell() {
-  const { open, fullscreen } = useCliShell()
+  const { open, fullscreen, height } = useCliShell()
+  const [hasOpenedPanel, setHasOpenedPanel] = useState(open)
+  const [isCollapsing, setIsCollapsing] = useState(false)
+  const [isResizing, setIsResizing] = useState(false)
+
+  useEffect(() => {
+    if (open) {
+      setHasOpenedPanel(true)
+      setIsCollapsing(false)
+      return
+    }
+
+    if (!hasOpenedPanel) return
+
+    setIsCollapsing(true)
+    const timer = window.setTimeout(
+      () => setIsCollapsing(false),
+      CLI_SHELL_COLLAPSE_MS,
+    )
+    return () => window.clearTimeout(timer)
+  }, [open, hasOpenedPanel])
+
+  const showPanel = open || isCollapsing
+  const showCollapsedBar = !open && !isCollapsing
+  const isFullscreenOpen = open && fullscreen
+  const containerHeight =
+    open && !fullscreen ? height : CLI_SHELL_COLLAPSED_HEIGHT_PX
 
   return (
     <div
       className={cn(
         'bg-background',
-        open && fullscreen
+        isFullscreenOpen
           ? 'fixed inset-0 z-[140] flex min-h-0 flex-col'
-          : 'shrink-0 border-t border-border',
+          : cn(
+              'relative shrink-0 overflow-hidden border-t border-border',
+              !isResizing && 'transition-[height] ease-out',
+            ),
       )}
-      style={open ? undefined : { height: CLI_SHELL_COLLAPSED_HEIGHT_PX }}
+      style={
+        isFullscreenOpen
+          ? undefined
+          : {
+              height: containerHeight,
+              transitionDuration: isResizing ? '0ms' : `${CLI_SHELL_COLLAPSE_MS}ms`,
+            }
+      }
     >
-      {!open ? <ProjectCliShellCollapsedBar /> : <ProjectCliShellPanel />}
+      {hasOpenedPanel ? (
+        <div
+          className={cn(
+            'flex min-h-0 flex-col',
+            isFullscreenOpen ? 'h-full flex-1' : 'h-full',
+            !showPanel && 'hidden',
+          )}
+        >
+          <ProjectCliShellPanel onResizingChange={setIsResizing} />
+        </div>
+      ) : null}
+      {showCollapsedBar ? <ProjectCliShellCollapsedBar /> : null}
     </div>
   )
 }
@@ -64,8 +113,13 @@ function ProjectCliShellCollapsedBar() {
   )
 }
 
-function ProjectCliShellPanel() {
+type ProjectCliShellPanelProps = {
+  onResizingChange?: (isResizing: boolean) => void
+}
+
+function ProjectCliShellPanel({ onResizingChange }: ProjectCliShellPanelProps) {
   const {
+    open,
     setOpen,
     toggle,
     status,
@@ -81,12 +135,13 @@ function ProjectCliShellPanel() {
     bootstrapError,
     fullscreen,
     toggleFullscreen,
+    exitFullscreen,
+    getTerminalPrompt,
   } = useCliShell()
 
   const { resolvedTheme } = useTheme()
   const [isResizing, setIsResizing] = useState(false)
 
-  const panelRef = useRef<HTMLDivElement>(null)
   const terminalContainerRef = useRef<HTMLDivElement>(null)
   const terminalRef = useRef<Terminal | null>(null)
   const fitAddonRef = useRef<FitAddon | null>(null)
@@ -97,13 +152,23 @@ function ProjectCliShellPanel() {
     typeof createCliTerminalInputHandler
   > | null>(null)
   const isResizingPanelRef = useRef(false)
+  const resizeSessionRef = useRef<{
+    startY: number
+    startHeight: number
+  } | null>(null)
   const fitRafRef = useRef<number | null>(null)
   const runCommandRef = useRef(runCommand)
   const completeTabRef = useRef(completeTab)
   const registerTerminalRef = useRef(registerTerminal)
   const unregisterTerminalRef = useRef(unregisterTerminal)
+  const fullscreenRef = useRef(fullscreen)
+  const exitFullscreenRef = useRef(exitFullscreen)
+  const getTerminalPromptRef = useRef(getTerminalPrompt)
 
   isRunningRef.current = isRunning
+  fullscreenRef.current = fullscreen
+  exitFullscreenRef.current = exitFullscreen
+  getTerminalPromptRef.current = getTerminalPrompt
   isResizingPanelRef.current = isResizing
   runCommandRef.current = runCommand
   completeTabRef.current = completeTab
@@ -173,6 +238,13 @@ function ProjectCliShellPanel() {
     terminal.loadAddon(fitAddon)
     terminal.loadAddon(webLinksAddon)
     terminal.loadAddon(suggestionLinksAddon)
+    terminal.attachCustomKeyEventHandler((event) => {
+      if (event.type !== 'keydown' || event.key !== 'Escape') return true
+      if (!fullscreenRef.current) return true
+      event.preventDefault()
+      exitFullscreenRef.current()
+      return false
+    })
     terminal.open(container)
     fitAddon.fit()
 
@@ -182,6 +254,7 @@ function ProjectCliShellPanel() {
     const inputSession = createCliTerminalInputHandler({
       terminal,
       getIsRunning: () => isRunningRef.current,
+      getPrompt: () => getTerminalPromptRef.current(),
       onRunCommand: (command) => runCommandRef.current(command),
       onTabComplete: (...args) => completeTabRef.current(...args),
     })
@@ -194,6 +267,7 @@ function ProjectCliShellPanel() {
       focus: () => terminal.focus(),
       showInputPrompt: inputSession.showPrompt,
       clearScreen: inputSession.clearScreen,
+      getPrompt: () => getTerminalPromptRef.current(),
       afterOutputLine: () => {
         webLinksAddon.scanLastWrittenLine()
         suggestionLinksAddon.scanLastWrittenLine()
@@ -245,7 +319,7 @@ function ProjectCliShellPanel() {
   }, [isRunning])
 
   useEffect(() => {
-    fitTerminal()
+    if (open) fitTerminal()
   }, [fitTerminal, fullscreen, open])
 
   useEffect(() => {
@@ -254,21 +328,33 @@ function ProjectCliShellPanel() {
     }
   }, [fitTerminal, isResizing])
 
-  const handleResizeMouseDown = useCallback((event: ReactMouseEvent) => {
-    event.preventDefault()
-    setIsResizing(true)
-  }, [])
+  const handleResizeMouseDown = useCallback(
+    (event: ReactMouseEvent) => {
+      event.preventDefault()
+      resizeSessionRef.current = {
+        startY: event.clientY,
+        startHeight: height,
+      }
+      setIsResizing(true)
+    },
+    [height],
+  )
+
+  useEffect(() => {
+    onResizingChange?.(isResizing)
+  }, [isResizing, onResizingChange])
 
   useEffect(() => {
     if (!isResizing || fullscreen) return
 
     const handleMouseMove = (event: MouseEvent) => {
-      if (!panelRef.current) return
-      const panelBottom = panelRef.current.getBoundingClientRect().bottom
-      setHeight(panelBottom - event.clientY)
+      const session = resizeSessionRef.current
+      if (!session) return
+      setHeight(session.startHeight + (session.startY - event.clientY))
     }
 
     const handleMouseUp = () => {
+      resizeSessionRef.current = null
       setIsResizing(false)
     }
 
@@ -287,14 +373,26 @@ function ProjectCliShellPanel() {
 
   const isBootstrapping = status === 'bootstrapping'
 
+  const [headerActionsVisible, setHeaderActionsVisible] = useState(false)
+
+  useEffect(() => {
+    if (!open) {
+      setHeaderActionsVisible(false)
+      return
+    }
+
+    const raf = requestAnimationFrame(() => {
+      setHeaderActionsVisible(true)
+    })
+    return () => cancelAnimationFrame(raf)
+  }, [open])
+
   return (
     <div
-      ref={panelRef}
       className={cn(
         'relative flex min-h-0 flex-col overflow-hidden bg-background',
-        fullscreen && 'h-full min-h-0 flex-1',
+        fullscreen ? 'h-full min-h-0 flex-1' : 'h-full',
       )}
-      style={fullscreen ? undefined : { height: `${height}px` }}
     >
       {!fullscreen && (
         <div
@@ -322,7 +420,15 @@ function ProjectCliShellPanel() {
           ) : null}
         </div>
 
-        <div className="flex shrink-0 items-center gap-0.5">
+        <div
+          className={cn(
+            'flex shrink-0 items-center gap-0.5 transition-opacity ease-out',
+            headerActionsVisible
+              ? 'opacity-100'
+              : 'pointer-events-none opacity-0',
+          )}
+          style={{ transitionDuration: `${CLI_SHELL_COLLAPSE_MS}ms` }}
+        >
           {(status === 'error' || bootstrapError) && (
             <Button
               type="button"

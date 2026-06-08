@@ -8,6 +8,8 @@ export type CliTerminalApi = {
   focus: () => void
   showInputPrompt?: () => void
   clearScreen?: () => void
+  /** Returns the current interactive prompt prefix (user@project $). */
+  getPrompt?: () => string
   /** Called after each completed output line to register link underlines. */
   afterOutputLine?: () => void
 }
@@ -21,7 +23,48 @@ export const CLI_TERMINAL_BRIGHT_BLUE = '\x1b[94m'
 export const CLI_TERMINAL_CYAN = '\x1b[36m'
 export const CLI_TERMINAL_GREEN = '\x1b[32m'
 export const CLI_TERMINAL_YELLOW = '\x1b[33m'
+/** Fallback prompt when account or project context is unavailable. */
 export const CLI_TERMINAL_PROMPT = `${CLI_TERMINAL_CYAN}$${CLI_TERMINAL_RESET} `
+
+export function sanitizeTerminalPromptSegment(value: string): string {
+  const sanitized = value
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9._-]+/g, '-')
+    .replace(/^-+|-+$/g, '')
+  return sanitized
+}
+
+export function resolveCliTerminalUsername(
+  account: { name?: string | null; email?: string | null } | null | undefined,
+): string {
+  if (account?.name?.trim()) {
+    return sanitizeTerminalPromptSegment(account.name) || 'user'
+  }
+  if (account?.email?.trim()) {
+    const localPart = account.email.split('@')[0] ?? ''
+    return sanitizeTerminalPromptSegment(localPart) || 'user'
+  }
+  return 'user'
+}
+
+export function resolveCliTerminalProjectLabel(
+  project: { name?: string | null } | null | undefined,
+  projectId: string,
+): string {
+  if (project?.name?.trim()) {
+    return sanitizeTerminalPromptSegment(project.name) || projectId
+  }
+  return sanitizeTerminalPromptSegment(projectId) || 'project'
+}
+
+export function formatCliTerminalPrompt(options: {
+  username: string
+  projectName: string
+}): string {
+  const { username, projectName } = options
+  return `${CLI_TERMINAL_GREEN}${username}@${projectName}${CLI_TERMINAL_RESET}${CLI_TERMINAL_CYAN}$${CLI_TERMINAL_RESET} `
+}
 
 /** Bright blue link text; solid underline is drawn by the terminal link addon. */
 export function formatTerminalLink(text: string): string {
@@ -92,9 +135,11 @@ export function writeCliShellLine(
         api.afterOutputLine?.()
       })
       break
-    case 'command':
-      api.writeln(`$ ${line.text}`)
+    case 'command': {
+      const prompt = api.getPrompt?.() ?? CLI_TERMINAL_PROMPT
+      api.writeln(`${prompt}${line.text}`)
       break
+    }
     case 'suggestions': {
       const parts = line.commands
         .map(

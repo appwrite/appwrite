@@ -47,6 +47,11 @@ function parseKeyCombo(combo: KeyCombo): string[] {
   return combo.split('+').map((k) => normalizeKey(k.trim()))
 }
 
+function isBackquoteKey(e: KeyboardEvent): boolean {
+  const pressed = normalizeKey(e.key)
+  return pressed === '`' || pressed === 'backquote' || e.code === 'Backquote'
+}
+
 function eventMatchesRequiredKey(
   e: KeyboardEvent,
   requiredKey: string,
@@ -55,6 +60,12 @@ function eventMatchesRequiredKey(
   if (pressed === requiredKey) return true
   // US QWERTY: ? is shift+/ but e.key is '?'.
   if (requiredKey === '/' && pressed === '?') return true
+  if (
+    (requiredKey === 'backquote' || requiredKey === '`') &&
+    isBackquoteKey(e)
+  ) {
+    return true
+  }
   return false
 }
 

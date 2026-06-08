@@ -2,11 +2,18 @@
 export type TerminalShortcutRef = {
   id: string
   description: string
-  /** Shortcut string in the same format as command-center entries (e.g. `mod+` `, `ctrl+u`). */
+  /** Shortcut string in the same format as command-center entries (e.g. `ctrl+backquote`, `ctrl+u`). */
   raw: string
 }
 
-export const CLI_SHELL_TOGGLE_SHORTCUT_RAW = 'mod+`'
+/** Display string for shortcuts UI (mod resolves to ⌘ on Mac, Ctrl on Windows). */
+export const CLI_SHELL_TOGGLE_SHORTCUT_RAW = 'mod+;'
+
+/** Key combos registered for the terminal toggle (mod is not parsed by useKeyboardShortcut). */
+export const CLI_SHELL_TOGGLE_SHORTCUT_COMBOS = [
+  'meta+;',
+  'control+;',
+] as const
 
 /** Console-level shortcut for opening/closing the project terminal panel. */
 export const CLI_SHELL_CONSOLE_SHORTCUTS: readonly TerminalShortcutRef[] = [

@@ -1,5 +1,5 @@
 import type { Terminal } from '@xterm/xterm'
-import { CLI_TERMINAL_PROMPT, CLI_TERMINAL_RESET } from './cli-terminal-api'
+import { CLI_TERMINAL_RESET } from './cli-terminal-api'
 import {
   findWordBoundaryLeft,
   findWordBoundaryRight,
@@ -17,6 +17,7 @@ const CLEAR_COMMANDS = new Set(['clear', 'cls'])
 type CliTerminalInputOptions = {
   terminal: Terminal
   getIsRunning: () => boolean
+  getPrompt: () => string
   onRunCommand: (command: string) => void
   onTabComplete: TabCompleteFn
 }
@@ -39,8 +40,12 @@ export function createCliTerminalInputHandler(
   let lastTab: { input: string; cursor: number; at: number } | null = null
   let awaitingPrompt = true
 
+  const writePrompt = () => {
+    options.terminal.write(options.getPrompt())
+  }
+
   const showPrompt = () => {
-    options.terminal.write(CLI_TERMINAL_PROMPT)
+    writePrompt()
     awaitingPrompt = false
   }
 
@@ -63,7 +68,7 @@ export function createCliTerminalInputHandler(
   const redrawInputLine = () => {
     // Overwrite in place so the cursor never sits on a blank line before the prompt.
     options.terminal.write(
-      `\r${CLI_TERMINAL_PROMPT}${inputBuffer}${CLI_TERMINAL_RESET}\x1b[K`,
+      `\r${options.getPrompt()}${inputBuffer}${CLI_TERMINAL_RESET}\x1b[K`,
     )
     const tail = inputBuffer.length - cursorPos
     if (tail > 0) {
