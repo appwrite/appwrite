@@ -42,6 +42,7 @@ export interface CommandContext {
     onProjectCreate?: (type: CreateResourceType) => void
     onOrgInviteMember?: () => void
     onOrgCreateProject?: () => void
+    onToggleTerminal?: () => void
   }
 }
 

@@ -1,4 +1,5 @@
 import type { LucideIcon } from 'lucide-react'
+import type { ComponentType, SVGProps } from 'react'
 import type { ReactNode } from 'react'
 import { HomeSoftLights } from '@/components/pages/home/HomeSoftLights'
 import { cn } from '@/lib/utils'
@@ -146,10 +147,12 @@ export function MarketingSectionHeading({
   )
 }
 
+export type MarketingFeatureIcon = LucideIcon | ComponentType<SVGProps<SVGSVGElement>>
+
 export type MarketingFeatureItem = {
   title: string
   description: string
-  icon: LucideIcon
+  icon: MarketingFeatureIcon
 }
 
 type MarketingFeatureGridProps = {

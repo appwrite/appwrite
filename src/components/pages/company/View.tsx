@@ -1,4 +1,5 @@
 import { Github } from 'lucide-react'
+import { CompanyFounder } from '@/components/pages/company/CompanyFounder'
 import { CompanyHero } from '@/components/pages/company/CompanyHero'
 import { CompanySectionNav } from '@/components/pages/company/CompanySectionNav'
 import { CompanyTeam } from '@/components/pages/company/CompanyTeam'
@@ -37,6 +38,8 @@ export function View() {
       <CompanyTimeline />
 
       <CompanyTeam />
+
+      <CompanyFounder />
 
       <section
         id={COMPANY_SECTION_IDS.investors}

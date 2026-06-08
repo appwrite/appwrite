@@ -1,3 +1,4 @@
+import { INIT_PRIZES_SECTION_ID } from '@/lib/init/init-section-ids'
 import type { LaunchEventGiveaway } from '@/lib/init/types'
 import { useInitThemeImageSrc } from '@/lib/init/use-init-theme-image'
 import { Button } from '@/components/ui/button'
@@ -20,7 +21,7 @@ export function GiveawayPromoCard({ giveaway }: GiveawayPromoCardProps) {
     giveaway.imageSrcDark,
   )
   const ctaLabel = giveaway.ctaLabel ?? 'View all prizes'
-  const ctaHref = giveaway.ctaHref ?? '#init-prizes'
+  const ctaHref = giveaway.ctaHref ?? `#${INIT_PRIZES_SECTION_ID}`
 
   return (
     <section

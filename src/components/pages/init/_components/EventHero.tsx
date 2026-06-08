@@ -1,3 +1,4 @@
+import { INIT_PRIZES_SECTION_ID } from '@/lib/init/init-section-ids'
 import type { InitDisplayEvent, LaunchEventLiveBanner } from '@/lib/init/types'
 import type { ReactNode } from 'react'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
@@ -314,7 +315,7 @@ export function EventHero({ event, headerAddon, liveBanner }: EventHeroProps) {
                 <EventCtaButton cta={event.primaryCta} variant="brandCta" size="lg" />
               ) : event.prizes ? (
                 <Button variant="brandCta" size="lg" className="h-10 text-[14px]" asChild>
-                  <a href="#init-prizes">
+                  <a href={`#${INIT_PRIZES_SECTION_ID}`}>
                     {event.giveaway?.ctaLabel ?? 'View prizes'}
                   </a>
                 </Button>

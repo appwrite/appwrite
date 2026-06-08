@@ -29,6 +29,16 @@ function formatSingleDisplayKey(key: string, isMac: boolean): string {
   if (lower === 'shift') return isMac ? '⇧' : 'Shift'
   if (lower === 'escape' || lower === 'esc') return 'Esc'
   if (lower === 'slash' || key === '/') return '/'
+  if (lower === 'backquote' || key === '`') return '`'
+  if (lower === 'home') return 'Home'
+  if (lower === 'end') return 'End'
+  if (lower === 'delete') return 'Delete'
+  if (lower === 'backspace') return '⌫'
+  if (lower === 'tab') return 'Tab'
+  if (lower === 'up') return '↑'
+  if (lower === 'down') return '↓'
+  if (lower === 'left') return '←'
+  if (lower === 'right') return '→'
   if (key === '?') return '?'
   if (key === ',') return ','
   if (key.length === 1 && /[a-z]/i.test(key)) return key.toUpperCase()
@@ -45,6 +55,16 @@ function tokenToHighlightKey(token: string, isMac: boolean): KeyId[] {
   if (lower === 'shift') return ['shiftLeft']
   if (lower === 'escape' || lower === 'esc') return ['escape']
   if (lower === 'slash' || token === '/') return ['slash']
+  if (lower === 'backquote' || token === '`') return ['backquote']
+  if (lower === 'home') return ['home']
+  if (lower === 'end') return ['end']
+  if (lower === 'delete') return ['delete']
+  if (lower === 'backspace') return ['backspace']
+  if (lower === 'tab') return ['tab']
+  if (lower === 'up') return ['arrowUp']
+  if (lower === 'down') return ['arrowDown']
+  if (lower === 'left') return ['arrowLeft']
+  if (lower === 'right') return ['arrowRight']
   if (token === '?') return ['shiftLeft', 'slash']
   if (token === ',') return ['comma']
   if (token.length === 1 && /[a-z]/i.test(token)) return [token.toLowerCase()]
@@ -89,6 +109,43 @@ export function isSequentialShortcut(raw: string) {
 export interface ShortcutGroup {
   label: string
   shortcuts: ParsedShortcut[]
+}
+
+export function buildShortcutRefGroup(
+  label: string,
+  shortcuts: Array<{ id: string; description: string; raw: string }>,
+  isMac: boolean,
+): ShortcutGroup {
+  return {
+    label,
+    shortcuts: shortcuts.map((shortcut) => ({
+      id: shortcut.id,
+      description: shortcut.description,
+      raw: shortcut.raw,
+      displayKeys: formatDisplayKeys(shortcut.raw, isMac),
+      highlightKeys: parseHighlightKeys(shortcut.raw, isMac),
+      isSequential: isSequentialShortcut(shortcut.raw),
+    })),
+  }
+}
+
+export function mergeShortcutGroups(
+  base: ShortcutGroup[],
+  extra: ShortcutGroup[],
+  insertAfterLabel = 'Global',
+): ShortcutGroup[] {
+  if (extra.length === 0) return base
+
+  const insertIndex = base.findIndex((group) => group.label === insertAfterLabel)
+  if (insertIndex === -1) {
+    return [...base, ...extra]
+  }
+
+  return [
+    ...base.slice(0, insertIndex + 1),
+    ...extra,
+    ...base.slice(insertIndex + 1),
+  ]
 }
 
 export function buildShortcutGroups(

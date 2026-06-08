@@ -27,6 +27,7 @@ import {
   buildInitRecordingTicketActivity,
   buildInitViewingTicketActivity,
 } from '@/lib/init/init-presence-activity'
+import { INIT_TICKET_SECTION_ID } from '@/lib/init/init-section-ids'
 import { INIT_TICKET_VIDEO_HERO_WARMUP_MS } from '@/lib/init/ticket-video-capture'
 import { InitTicketScaledFrame } from '@/components/pages/init/_components/InitTicketScaledFrame'
 import { InitTicketVideoCaptureStage } from '@/components/pages/init/_components/InitTicketVideoCaptureStage'
@@ -474,7 +475,7 @@ export function InitTicketSection({
 
   return (
     <section
-      id="init-ticket"
+      id={INIT_TICKET_SECTION_ID}
       className="relative w-full scroll-mt-28"
       aria-label="Init ticket"
       onMouseEnter={() => {

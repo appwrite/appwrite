@@ -13,6 +13,7 @@ import { getInitDayCardId } from '@/lib/init/scroll-to-day-card'
 import {
   INIT_GET_INVOLVED_SECTION_ID,
   INIT_GLOBE_SECTION_ID,
+  INIT_PRIZES_SECTION_ID,
   INIT_TICKET_SECTION_ID,
 } from '@/lib/init/init-section-ids'
 import type { InitDisplayEvent } from '@/lib/init/types'
@@ -45,7 +46,7 @@ function buildBaselineAnchors(options: {
   }
 
   if (options.hasPrizes) {
-    anchors.push({ zone: { kind: 'prizes' }, id: 'init-prizes' })
+    anchors.push({ zone: { kind: 'prizes' }, id: INIT_PRIZES_SECTION_ID })
   }
 
   if (options.hasGlobe) {

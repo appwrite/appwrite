@@ -1,3 +1,4 @@
+import { INIT_PRIZES_SECTION_ID } from '@/lib/init/init-section-ids'
 import type {
   InitDisplayEvent,
   LaunchEventDailyPrize,
@@ -317,12 +318,12 @@ export function InitPrizesSection({ event }: InitPrizesSectionProps) {
       <div className="py-8">
         <div className="mx-auto w-full max-w-7xl px-4 sm:px-6">
           <section
-            id="init-prizes"
+            id={INIT_PRIZES_SECTION_ID}
             className="scroll-mt-28 space-y-4"
-            aria-labelledby="init-prizes-heading"
+            aria-labelledby="prizes-heading"
           >
         <div>
-          <h3 id="init-prizes-heading" className="text-[15px] font-semibold text-foreground">
+          <h3 id="prizes-heading" className="text-[15px] font-semibold text-foreground">
             {sectionTitle}
           </h3>
           {prizes.sectionDescription ? (

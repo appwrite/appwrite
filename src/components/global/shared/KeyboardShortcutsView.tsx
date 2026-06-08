@@ -6,8 +6,14 @@ import { usePlatform } from '@/hooks/use-keyboard-shortcuts'
 import { DEFAULT_GROUP_LABELS, type CommandKind } from '@/lib/command-center'
 import {
   buildShortcutGroups,
+  buildShortcutRefGroup,
+  mergeShortcutGroups,
   type ParsedShortcut,
 } from '@/lib/keyboard-shortcuts/display'
+import {
+  CLI_SHELL_CONSOLE_SHORTCUTS,
+  CLI_TERMINAL_INPUT_SHORTCUTS,
+} from '@/lib/cli-shell/cli-terminal-shortcuts'
 import { KeyboardLayoutVisualizer } from '@/components/global/shared/KeyboardLayoutVisualizer'
 
 interface ShortcutCommand {
@@ -21,6 +27,7 @@ interface ShortcutCommand {
 interface KeyboardShortcutsViewProps {
   commands: ShortcutCommand[]
   isMobile: boolean
+  showTerminalShortcuts?: boolean
   onBack: () => void
   onClose: () => void
   onKeyDown: (e: React.KeyboardEvent) => void
@@ -75,6 +82,7 @@ function getSequentialHighlightKeys(shortcut: ParsedShortcut) {
 export function KeyboardShortcutsView({
   commands,
   isMobile,
+  showTerminalShortcuts = false,
   onBack,
   onClose,
   onKeyDown,
@@ -82,15 +90,23 @@ export function KeyboardShortcutsView({
   const { isMac } = usePlatform()
   const [selectedId, setSelectedId] = useState<string | null>(null)
 
-  const groups = useMemo(
-    () =>
-      buildShortcutGroups(
-        commands,
-        (kind) => DEFAULT_GROUP_LABELS[kind as CommandKind] ?? kind,
+  const groups = useMemo(() => {
+    const base = buildShortcutGroups(
+      commands,
+      (kind) => DEFAULT_GROUP_LABELS[kind as CommandKind] ?? kind,
+      isMac,
+    )
+
+    if (!showTerminalShortcuts) return base
+
+    return mergeShortcutGroups(base, [
+      buildShortcutRefGroup(
+        'Terminal',
+        [...CLI_SHELL_CONSOLE_SHORTCUTS, ...CLI_TERMINAL_INPUT_SHORTCUTS],
         isMac,
       ),
-    [commands, isMac],
-  )
+    ])
+  }, [commands, isMac, showTerminalShortcuts])
 
   const allShortcuts = useMemo(
     () => groups.flatMap((group) => group.shortcuts),

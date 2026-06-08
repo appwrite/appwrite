@@ -1612,3 +1612,8 @@ html[data-init-ticket-video-capturing] [data-init-ticket-video-capture] * {
   border-bottom: 1px solid #3b82f6;
 }
 
+.cli-terminal .cli-terminal-suggestion-underline {
+  box-sizing: border-box;
+  border-bottom: 1px solid #22d3ee;
+}
+

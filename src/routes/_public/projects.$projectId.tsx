@@ -375,8 +375,8 @@ function ProjectLayout() {
       <SessionMigrationsProvider>
         <RealtimeProvider projectId={projectId}>
           <BuildNotificationsProvider projectId={projectId} />
-          <KeyboardShortcutsProvider projectId={projectId}>
-            <CliShellProvider projectId={projectId}>
+          <CliShellProvider projectId={projectId}>
+            <KeyboardShortcutsProvider projectId={projectId}>
               <ProjectConnectDialogProvider projectId={projectId}>
                 <ConsoleLayout
                   sidebar={{
@@ -407,8 +407,8 @@ function ProjectLayout() {
                 <CsvExportBox projectId={projectId} />
               </div>
               </ProjectConnectDialogProvider>
-            </CliShellProvider>
-          </KeyboardShortcutsProvider>
+            </KeyboardShortcutsProvider>
+          </CliShellProvider>
         </RealtimeProvider>
       </SessionMigrationsProvider>
     </RequireAuth>

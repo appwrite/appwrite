@@ -217,6 +217,8 @@ interface CommandCenterProps {
   onInviteMember?: () => void
   /** Org context: open create project dialog */
   onOrgCreateProject?: () => void
+  /** Project context: toggle the built-in CLI terminal panel */
+  onToggleTerminal?: () => void
   projectId?: string | null
   orgId?: string | null
   /** When set while opening, navigates to this command center sub-page (e.g. shortcuts). */
@@ -251,6 +253,7 @@ export function CommandCenter({
   onOrgNavigate,
   onInviteMember,
   onOrgCreateProject,
+  onToggleTerminal,
   projectId,
   orgId,
   initialSubPage,
@@ -306,6 +309,7 @@ export function CommandCenter({
         onProjectCreate: onCreateResource,
         onOrgInviteMember: onInviteMember,
         onOrgCreateProject,
+        onToggleTerminal,
       },
     }),
     [
@@ -321,6 +325,7 @@ export function CommandCenter({
       onCreateResource,
       onInviteMember,
       onOrgCreateProject,
+      onToggleTerminal,
     ],
   )
 
@@ -1305,6 +1310,7 @@ export function CommandCenter({
           <KeyboardShortcutsView
             commands={allCommands}
             isMobile={isMobile}
+            showTerminalShortcuts={isProjectContext && !!onToggleTerminal}
             onBack={() => setPages([])}
             onClose={() => onOpenChange(false)}
             onKeyDown={handleKeyDown}

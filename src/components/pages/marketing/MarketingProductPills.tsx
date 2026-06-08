@@ -1,6 +1,6 @@
 import type { LucideIcon } from 'lucide-react'
+import { ArrowDown, ArrowRight, Globe, Sparkles } from 'lucide-react'
 import { Fragment } from 'react'
-import { Globe, Sparkles } from 'lucide-react'
 import { ProductAvatarsList } from '@/components/global/shared/ProductAvatarsList'
 import { pricingServices } from '@/lib/pricing/services'
 import { cn } from '@/lib/utils'
@@ -57,12 +57,21 @@ function ProductAvatarGroup({
   )
 }
 
-function GroupDivider() {
+function GroupArrow() {
   return (
-    <span
-      className="hidden h-px w-8 shrink-0 border-t border-dashed border-border sm:block"
+    <div
+      className="flex h-9 shrink-0 items-center justify-center sm:h-10"
       aria-hidden
-    />
+    >
+      <ArrowRight
+        className="hidden size-4 text-muted-foreground/50 sm:block"
+        strokeWidth={1.5}
+      />
+      <ArrowDown
+        className="size-4 text-muted-foreground/50 sm:hidden"
+        strokeWidth={1.5}
+      />
+    </div>
   )
 }
 
@@ -81,13 +90,13 @@ export function MarketingProductPills({
   return (
     <div
       className={cn(
-        'mt-10 flex flex-col items-center justify-center gap-8 sm:flex-row sm:flex-wrap sm:gap-10 lg:gap-12',
+        'mt-10 flex flex-col items-center justify-center gap-6 sm:flex-row sm:items-end sm:gap-4 lg:gap-6',
         className,
       )}
     >
       {groups.map((group, index) => (
         <Fragment key={group.label}>
-          {index > 0 ? <GroupDivider /> : null}
+          {index > 0 ? <GroupArrow /> : null}
           <ProductAvatarGroup label={group.label} products={group.products} />
         </Fragment>
       ))}

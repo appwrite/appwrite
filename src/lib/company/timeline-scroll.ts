@@ -2,7 +2,7 @@
 export const TIMELINE_YEAR_SCROLL_OFFSET_PX = 112
 
 export function getTimelineYearAnchorId(year: number) {
-  return `timeline-year-${year}`
+  return `year-${year}`
 }
 
 export function scrollToTimelineYear(year: number) {
@@ -35,7 +35,7 @@ export function scrollToTimelineYearFromHash() {
   if (typeof window === 'undefined') return
 
   const hash = window.location.hash.slice(1)
-  const match = hash.match(/^timeline-year-(20\d{2})$/)
+  const match = hash.match(/^year-(20\d{2})$/)
   if (!match) return
 
   scrollToTimelineYear(Number(match[1]))

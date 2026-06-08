@@ -8,6 +8,8 @@ import {
 import { Terminal } from '@xterm/xterm'
 import { FitAddon } from '@xterm/addon-fit'
 import { createCliTerminalWebLinksAddon } from '@/lib/cli-shell/cli-terminal-web-links'
+import { createCliTerminalSuggestionLinksAddon } from '@/lib/cli-shell/cli-terminal-suggestion-links'
+import { CLI_SHELL_TRY_COMMANDS } from '@/lib/cli-shell/constants'
 import '@xterm/xterm/css/xterm.css'
 import { useTheme } from 'next-themes'
 import {
@@ -91,6 +93,9 @@ function ProjectCliShellPanel() {
   const isRunningRef = useRef(isRunning)
   const wasRunningRef = useRef(false)
   const showInputPromptRef = useRef<(() => void) | null>(null)
+  const inputSessionRef = useRef<ReturnType<
+    typeof createCliTerminalInputHandler
+  > | null>(null)
   const isResizingPanelRef = useRef(false)
   const fitRafRef = useRef<number | null>(null)
   const runCommandRef = useRef(runCommand)
@@ -157,9 +162,17 @@ function ProjectCliShellPanel() {
       event.preventDefault()
     }
     const webLinksAddon = createCliTerminalWebLinksAddon(openLink)
+    const suggestionLinksAddon = createCliTerminalSuggestionLinksAddon(
+      CLI_SHELL_TRY_COMMANDS,
+      (event, command) => {
+        event.preventDefault()
+        inputSessionRef.current?.setInput(command)
+      },
+    )
 
     terminal.loadAddon(fitAddon)
     terminal.loadAddon(webLinksAddon)
+    terminal.loadAddon(suggestionLinksAddon)
     terminal.open(container)
     fitAddon.fit()
 
@@ -172,6 +185,7 @@ function ProjectCliShellPanel() {
       onRunCommand: (command) => runCommandRef.current(command),
       onTabComplete: (...args) => completeTabRef.current(...args),
     })
+    inputSessionRef.current = inputSession
 
     const api: CliTerminalApi = {
       write: (data, callback) => terminal.write(data, callback),
@@ -180,7 +194,10 @@ function ProjectCliShellPanel() {
       focus: () => terminal.focus(),
       showInputPrompt: inputSession.showPrompt,
       clearScreen: inputSession.clearScreen,
-      afterOutputLine: () => webLinksAddon.scanLastWrittenLine(),
+      afterOutputLine: () => {
+        webLinksAddon.scanLastWrittenLine()
+        suggestionLinksAddon.scanLastWrittenLine()
+      },
     }
 
     showInputPromptRef.current = inputSession.showPrompt
@@ -208,6 +225,7 @@ function ProjectCliShellPanel() {
       unregisterTerminalRef.current()
       terminal.dispose()
       showInputPromptRef.current = null
+      inputSessionRef.current = null
       terminalRef.current = null
       fitAddonRef.current = null
     }

@@ -18,6 +18,10 @@ import {
   getInitMockDayAfter,
   INIT_MOCK_DAY_BEFORE,
 } from './mock-current-day'
+import {
+  INIT_PRIZES_SECTION_ID,
+  INIT_TICKET_SECTION_ID,
+} from './init-section-ids'
 import type { LaunchEvent, LaunchEventStatus, LaunchEventHeaderNavCta } from './types'
 
 /** Add new launch-week events here; the page resolves the active one automatically. */
@@ -88,7 +92,7 @@ export const LAUNCH_EVENTS: LaunchEvent[] = [
       description:
         'Win an Appwrite hoodie and tee, light and dark Appwriter keyboards, a RUNTIME bottle, and more on days 1-4. Day 5 grand prize: 12 months of Claude Max 20x.',
       ctaLabel: 'View all prizes',
-      ctaHref: '#init-prizes',
+      ctaHref: `#${INIT_PRIZES_SECTION_ID}`,
       imageSrcLight: '/images/init/giveaway-swag-promo-light.jpg',
       imageSrcDark: '/images/init/giveaway-swag-promo.jpg',
       imageAlt:
@@ -101,7 +105,7 @@ export const LAUNCH_EVENTS: LaunchEvent[] = [
         title: 'Claim your ticket',
         description: 'Get access and unlock exclusive swag.',
         icon: Ticket,
-        href: '#init-ticket',
+        href: `#${INIT_TICKET_SECTION_ID}`,
       },
       {
         id: 'community',
@@ -115,7 +119,7 @@ export const LAUNCH_EVENTS: LaunchEvent[] = [
         title: 'Earn launch rewards',
         description: 'Join daily sessions and enter the day 5 grand prize draw.',
         icon: Gift,
-        href: '#init-prizes',
+        href: `#${INIT_PRIZES_SECTION_ID}`,
       },
     ],
     recap: {

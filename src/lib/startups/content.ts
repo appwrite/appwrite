@@ -1,8 +1,8 @@
 import type { LucideIcon } from 'lucide-react'
+import type { ComponentType, SVGProps } from 'react'
 import {
   ArrowRightLeft,
   Cloud,
-  Database,
   Gift,
   Globe,
   GraduationCap,
@@ -14,11 +14,12 @@ import {
   TrendingUp,
   Zap,
 } from 'lucide-react'
+import { OpenSourceIcon } from '@/components/global/shared/icons/OpenSourceIcon'
 
 export type StartupsBenefit = {
   title: string
   description: string
-  icon: LucideIcon
+  icon: LucideIcon | ComponentType<SVGProps<SVGSVGElement>>
 }
 
 export const startupsHero = {
@@ -153,7 +154,7 @@ export const startupsPlatformBenefits: StartupsBenefit[] = [
     title: 'Open-source',
     description:
       'Your data is always yours. Want to migrate away? You can do so at any time.',
-    icon: Database,
+    icon: OpenSourceIcon,
   },
 ]
 
@@ -218,7 +219,7 @@ export const startupsFormBullets = [
   'Exclusive founder swag',
 ] as const
 
-export const STARTUPS_FORM_ID = 'startups-form'
+export const STARTUPS_FORM_ID = 'apply'
 
 export type StartupsApplyStep = {
   title: string

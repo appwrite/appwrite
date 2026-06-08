@@ -6,6 +6,7 @@
  */
 
 import './project'
+import './project-actions'
 import './project-create'
 import './project-tabs'
 import './project-cards'

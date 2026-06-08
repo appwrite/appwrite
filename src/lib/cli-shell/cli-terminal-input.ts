@@ -1,5 +1,10 @@
 import type { Terminal } from '@xterm/xterm'
 import { CLI_TERMINAL_PROMPT, CLI_TERMINAL_RESET } from './cli-terminal-api'
+import {
+  findWordBoundaryLeft,
+  findWordBoundaryRight,
+  resolveTerminalKeyAction,
+} from './cli-terminal-keybindings'
 
 type TabCompleteFn = (
   input: string,
@@ -20,6 +25,8 @@ export type CliTerminalInputSession = {
   onData: (data: string) => void
   showPrompt: () => void
   clearScreen: () => void
+  /** Prefill the input line without submitting (user presses Enter to run). */
+  setInput: (command: string) => void
 }
 
 export function createCliTerminalInputHandler(
@@ -65,6 +72,87 @@ export function createCliTerminalInputHandler(
     awaitingPrompt = false
   }
 
+  const moveCursorTo = (nextPos: number) => {
+    const clamped = Math.max(0, Math.min(nextPos, inputBuffer.length))
+    if (clamped === cursorPos) return
+
+    const delta = clamped - cursorPos
+    if (delta > 0) {
+      options.terminal.write(`\x1b[${delta}C`)
+    } else {
+      options.terminal.write(`\x1b[${-delta}D`)
+    }
+    cursorPos = clamped
+  }
+
+  const moveCursorToStart = () => {
+    moveCursorTo(0)
+  }
+
+  const moveCursorToEnd = () => {
+    moveCursorTo(inputBuffer.length)
+  }
+
+  const deleteBackward = () => {
+    if (cursorPos <= 0) return
+
+    const deletingAtEnd = cursorPos === inputBuffer.length
+    inputBuffer =
+      inputBuffer.slice(0, cursorPos - 1) + inputBuffer.slice(cursorPos)
+    cursorPos -= 1
+
+    if (deletingAtEnd) {
+      options.terminal.write('\b \b')
+    } else {
+      redrawInputLine()
+    }
+  }
+
+  const deleteForward = () => {
+    if (cursorPos >= inputBuffer.length) return
+
+    const deletingAtEnd = cursorPos === inputBuffer.length - 1
+    inputBuffer =
+      inputBuffer.slice(0, cursorPos) + inputBuffer.slice(cursorPos + 1)
+
+    if (deletingAtEnd) {
+      options.terminal.write('\x1b[K')
+    } else {
+      redrawInputLine()
+    }
+  }
+
+  const deleteWordBackward = () => {
+    if (cursorPos <= 0) return
+
+    const start = findWordBoundaryLeft(inputBuffer, cursorPos)
+    inputBuffer = inputBuffer.slice(0, start) + inputBuffer.slice(cursorPos)
+    cursorPos = start
+    redrawInputLine()
+  }
+
+  const killLineBefore = () => {
+    if (cursorPos <= 0) return
+
+    inputBuffer = inputBuffer.slice(cursorPos)
+    cursorPos = 0
+    redrawInputLine()
+  }
+
+  const killLineAfter = () => {
+    if (cursorPos >= inputBuffer.length) return
+
+    inputBuffer = inputBuffer.slice(0, cursorPos)
+    redrawInputLine()
+  }
+
+  const clearLine = () => {
+    inputBuffer = ''
+    cursorPos = 0
+    historyIndex = null
+    redrawInputLine()
+  }
+
   const submitCommand = () => {
     const command = inputBuffer.trim()
     resetInputState()
@@ -86,103 +174,128 @@ export function createCliTerminalInputHandler(
     }
   }
 
-  const handleLocalData = (data: string) => {
-    if (data === '\r' || data === '\r\n') {
-      submitCommand()
-      return
-    }
+  const handleTab = () => {
+    const now = Date.now()
+    const listOnly =
+      !!lastTab &&
+      lastTab.input === inputBuffer &&
+      lastTab.cursor === cursorPos &&
+      now - lastTab.at < 400
+    lastTab = { input: inputBuffer, cursor: cursorPos, at: now }
 
-    // xterm often sends \n right after \r; ignore the trailing newline.
-    if (data === '\n') {
-      if (inputBuffer === '') return
-      submitCommand()
-      return
-    }
+    const result = options.onTabComplete(inputBuffer, cursorPos, listOnly)
+    if (!result) return
 
-    if (data === '\u007f' || data === '\b') {
-      if (cursorPos <= 0) return
-      const deletingAtEnd = cursorPos === inputBuffer.length
-      inputBuffer =
-        inputBuffer.slice(0, cursorPos - 1) + inputBuffer.slice(cursorPos)
-      cursorPos -= 1
-      if (deletingAtEnd) {
-        options.terminal.write('\b \b')
-      } else {
-        redrawInputLine()
-      }
-      return
-    }
+    inputBuffer = result.input
+    cursorPos = result.cursor
+    redrawInputLine()
+  }
 
-    if (data === '\t') {
-      const now = Date.now()
-      const listOnly =
-        !!lastTab &&
-        lastTab.input === inputBuffer &&
-        lastTab.cursor === cursorPos &&
-        now - lastTab.at < 400
-      lastTab = { input: inputBuffer, cursor: cursorPos, at: now }
+  const handleHistoryPrev = () => {
+    if (history.length === 0) return
 
-      const result = options.onTabComplete(inputBuffer, cursorPos, listOnly)
-      if (!result) return
+    historyIndex =
+      historyIndex === null
+        ? history.length - 1
+        : Math.max(0, historyIndex - 1)
+    inputBuffer = history[historyIndex] ?? ''
+    cursorPos = inputBuffer.length
+    redrawInputLine()
+  }
 
-      inputBuffer = result.input
-      cursorPos = result.cursor
-      redrawInputLine()
-      return
-    }
+  const handleHistoryNext = () => {
+    if (historyIndex === null) return
 
-    if (data === '\x1b[A') {
-      if (history.length === 0) return
-      historyIndex =
-        historyIndex === null
-          ? history.length - 1
-          : Math.max(0, historyIndex - 1)
-      inputBuffer = history[historyIndex] ?? ''
-      cursorPos = inputBuffer.length
-      redrawInputLine()
-      return
-    }
-
-    if (data === '\x1b[B') {
-      if (historyIndex === null) return
-      const nextIndex = historyIndex + 1
-      if (nextIndex >= history.length) {
-        historyIndex = null
-        inputBuffer = ''
-      } else {
-        historyIndex = nextIndex
-        inputBuffer = history[nextIndex] ?? ''
-      }
-      cursorPos = inputBuffer.length
-      redrawInputLine()
-      return
-    }
-
-    if (data === '\x1b[C' && cursorPos < inputBuffer.length) {
-      cursorPos += 1
-      options.terminal.write(data)
-      return
-    }
-
-    if (data === '\x1b[D' && cursorPos > 0) {
-      cursorPos -= 1
-      options.terminal.write(data)
-      return
-    }
-
-    if (data === '\x03') {
+    const nextIndex = historyIndex + 1
+    if (nextIndex >= history.length) {
+      historyIndex = null
       inputBuffer = ''
-      cursorPos = 0
-      redrawInputLine()
+    } else {
+      historyIndex = nextIndex
+      inputBuffer = history[nextIndex] ?? ''
+    }
+    cursorPos = inputBuffer.length
+    redrawInputLine()
+  }
+
+  const insertText = (text: string) => {
+    inputBuffer =
+      inputBuffer.slice(0, cursorPos) + text + inputBuffer.slice(cursorPos)
+    cursorPos += text.length
+    options.terminal.write(text)
+  }
+
+  const applyKeyAction = (action: ReturnType<typeof resolveTerminalKeyAction>) => {
+    if (!action) return
+
+    switch (action.type) {
+      case 'cursor-start':
+        moveCursorToStart()
+        return
+      case 'cursor-end':
+        moveCursorToEnd()
+        return
+      case 'cursor-left':
+        moveCursorTo(cursorPos - 1)
+        return
+      case 'cursor-right':
+        moveCursorTo(cursorPos + 1)
+        return
+      case 'cursor-word-left':
+        moveCursorTo(findWordBoundaryLeft(inputBuffer, cursorPos))
+        return
+      case 'cursor-word-right':
+        moveCursorTo(findWordBoundaryRight(inputBuffer, cursorPos))
+        return
+      case 'history-prev':
+        handleHistoryPrev()
+        return
+      case 'history-next':
+        handleHistoryNext()
+        return
+      case 'delete-backward':
+        deleteBackward()
+        return
+      case 'delete-forward':
+        deleteForward()
+        return
+      case 'delete-word-backward':
+        deleteWordBackward()
+        return
+      case 'kill-line-before':
+        killLineBefore()
+        return
+      case 'kill-line-after':
+        killLineAfter()
+        return
+      case 'clear-line':
+        clearLine()
+        return
+      case 'submit':
+        submitCommand()
+        return
+      case 'tab':
+        handleTab()
+        return
+      case 'insert':
+        insertText(action.text)
+        return
+    }
+  }
+
+  const handleLocalData = (data: string) => {
+    const action = resolveTerminalKeyAction(data)
+    if (action) {
+      if (action.type === 'submit' && data === '\n' && inputBuffer === '') {
+        return
+      }
+      applyKeyAction(action)
       return
     }
 
-    if (data < ' ' && data !== '\t') return
-
-    inputBuffer =
-      inputBuffer.slice(0, cursorPos) + data + inputBuffer.slice(cursorPos)
-    cursorPos += data.length
-    options.terminal.write(data)
+    if (data.startsWith('\x1b')) {
+      return
+    }
   }
 
   const isSubmitKey = (char: string) => char === '\r' || char === '\n'
@@ -196,19 +309,60 @@ export function createCliTerminalInputHandler(
   const onData = (data: string) => {
     if (options.getIsRunning()) return
 
-    // Escape sequences (arrows, etc.) must stay atomic.
+    // Escape sequences (arrows, home/end, etc.) must stay atomic.
     if (data.startsWith('\x1b') || data.length === 1) {
       ensurePromptBeforeInput(data)
       handleLocalData(data)
       return
     }
 
-    // Paste or batched input (e.g. "clear\r") — process per character.
-    for (const char of data) {
+    // Paste or batched input — try whole chunk first, then per-sequence tokens.
+    ensurePromptBeforeInput(data[0] ?? '')
+    const action = resolveTerminalKeyAction(data)
+    if (action?.type === 'insert' && data.length > 1) {
+      insertText(data)
+      return
+    }
+
+    if (action) {
+      applyKeyAction(action)
+      return
+    }
+
+    let index = 0
+    while (index < data.length) {
+      if (data[index] === '\x1b') {
+        let end = index + 1
+        while (end < data.length && end - index < 8 && data[end]! >= '\x40') {
+          end += 1
+        }
+        if (end - index < 2) {
+          index += 1
+          continue
+        }
+        const sequence = data.slice(index, end)
+        applyKeyAction(resolveTerminalKeyAction(sequence))
+        index = end
+        continue
+      }
+
+      const char = data[index]!
       ensurePromptBeforeInput(char)
-      handleLocalData(char)
+      applyKeyAction(resolveTerminalKeyAction(char))
+      index += 1
     }
   }
 
-  return { onData, showPrompt, clearScreen }
+  const setInput = (command: string) => {
+    if (options.getIsRunning()) return
+
+    inputBuffer = command
+    cursorPos = command.length
+    historyIndex = null
+    awaitingPrompt = false
+    redrawInputLine()
+    options.terminal.focus()
+  }
+
+  return { onData, showPrompt, clearScreen, setInput }
 }

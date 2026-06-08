@@ -130,7 +130,7 @@ export function ComparePlansSection() {
   const [mobilePlan, setMobilePlan] = useState<PlanId>('pro')
 
   return (
-    <section id="compare-plans" className="border-b border-border bg-background py-16 sm:py-20">
+    <section id="compare" className="border-b border-border bg-background py-16 sm:py-20">
       <div className="mx-auto w-full max-w-7xl px-4 sm:px-6">
         <PricingSectionHeading
           align="left"

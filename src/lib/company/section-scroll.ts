@@ -1,3 +1,5 @@
+import { companyPageSections } from '@/lib/company/sections'
+
 /** Matches company section `scroll-mt-28` offset (px). */
 export const COMPANY_SECTION_SCROLL_OFFSET_PX = 112
 
@@ -27,7 +29,7 @@ export function scrollToCompanySectionFromHash() {
   if (typeof window === 'undefined') return
 
   const hash = window.location.hash.slice(1)
-  if (!hash.startsWith('company-')) return
+  if (!companyPageSections.some((section) => section.id === hash)) return
 
   scrollToCompanySection(hash)
 }

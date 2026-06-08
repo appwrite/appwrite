@@ -104,6 +104,9 @@ export function writeCliShellLine(
         .join(`${CLI_TERMINAL_MUTED}, ${CLI_TERMINAL_RESET}`)
       api.writeln(
         `${CLI_TERMINAL_BLUE}Try:${CLI_TERMINAL_RESET} ${parts}${CLI_TERMINAL_RESET}`,
+        () => {
+          api.afterOutputLine?.()
+        },
       )
       break
     }

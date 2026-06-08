@@ -120,4 +120,4 @@ export const partnerFormBullets = [
   'Deliver your clients a great experience',
 ] as const
 
-export const PARTNERS_FORM_ID = 'become-a-partner'
+export const PARTNERS_FORM_ID = 'apply'
