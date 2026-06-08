@@ -15,6 +15,7 @@ use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\UID;
+use Utopia\Mongo\Exception as MongoException;
 use Utopia\Platform\Action;
 use Utopia\Platform\Scope\HTTP;
 use Utopia\Storage\Device;
@@ -89,8 +90,20 @@ class Delete extends Action
             throw new Exception(Exception::DEPLOYMENT_NOT_FOUND);
         }
 
-        if (!$dbForProject->deleteDocument('deployments', $deployment->getId())) {
-            throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Failed to remove deployment from DB');
+        try {
+            if (!$dbForProject->deleteDocument('deployments', $deployment->getId())) {
+                throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Failed to remove deployment from DB');
+            }
+        } catch (MongoException $exception) {
+            if ($exception->getCode() !== 112) {
+                throw $exception;
+            }
+
+            $deploymentExists = !$dbForProject->getDocument('deployments', $deployment->getId())->isEmpty();
+
+            if ($deploymentExists && !$dbForProject->deleteDocument('deployments', $deployment->getId())) {
+                throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Failed to remove deployment from DB');
+            }
         }
 
         if (!empty($deployment->getAttribute('sourcePath', ''))) {

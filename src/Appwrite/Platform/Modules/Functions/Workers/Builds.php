@@ -895,12 +895,19 @@ class Builds extends Action
             $deployment->setAttribute('buildLogs', $logs);
 
             /** Update the status */
+            $endTime = DateTime::now();
+            $durationEnd = \microtime(true);
+            $deployment->setAttribute('buildEndedAt', $endTime);
+            $deployment->setAttribute('buildDuration', \intval(\ceil($durationEnd - $durationStart)));
             $deployment->setAttribute('status', 'ready');
             $deployment = $dbForProject->updateDocument('deployments', $deploymentId, new Document([
+                'buildEndedAt' => $deployment->getAttribute('buildEndedAt'),
+                'buildDuration' => $deployment->getAttribute('buildDuration'),
                 'buildLogs' => $deployment->getAttribute('buildLogs'),
                 'status' => 'ready',
             ]));
             Span::add('deployment.status', 'ready');
+            Span::add('build.duration', $deployment->getAttribute('buildDuration'));
 
             if ($isVcsEnabled) {
                 $this->runGitAction('ready', $github, $providerCommitHash, $owner, $repositoryName, $project, $resource, $deployment->getId(), $dbForProject, $dbForPlatform, $queueForRealtime, $platform);
@@ -1058,13 +1065,6 @@ class Builds extends Action
                 }
             }
 
-            $endTime = DateTime::now();
-            $durationEnd = \microtime(true);
-            $deployment = $dbForProject->updateDocument('deployments', $deployment->getId(), new Document([
-                'buildEndedAt' => $endTime,
-                'buildDuration' => \intval(\ceil($durationEnd - $durationStart)),
-            ]));
-            Span::add('build.duration', $deployment->getAttribute('buildDuration'));
             $queueForRealtime
                 ->setPayload($deployment->getArrayCopy())
                 ->trigger();
@@ -1497,16 +1497,27 @@ class Builds extends Action
             Query::orderDesc('$createdAt'),
         ]);
 
-        $updates = [
-            'latestDeploymentCreatedAt' => $latestDeployment->isEmpty() ? '' : $latestDeployment->getCreatedAt(),
-            'latestDeploymentInternalId' => $latestDeployment->isEmpty() ? '' : $latestDeployment->getSequence(),
-            'latestDeploymentId' => $latestDeployment->isEmpty() ? '' : $latestDeployment->getId(),
-            'latestDeploymentStatus' => $latestDeployment->isEmpty() ? '' : $latestDeployment->getAttribute('status', ''),
-        ];
+        $updates = $latestDeployment->isEmpty()
+            ? [
+                'latestDeploymentCreatedAt' => '',
+                'latestDeploymentInternalId' => '',
+                'latestDeploymentId' => '',
+                'latestDeploymentStatus' => '',
+            ]
+            : [
+                'latestDeploymentCreatedAt' => $latestDeployment->getCreatedAt(),
+                'latestDeploymentInternalId' => $latestDeployment->getSequence(),
+                'latestDeploymentId' => $latestDeployment->getId(),
+                'latestDeploymentStatus' => $latestDeployment->getAttribute('status', ''),
+            ];
 
         foreach ($updates as $key => $value) {
             if ($resource->getAttribute($key, '') !== $value) {
-                return $dbForProject->updateDocument($resource->getCollection(), $resource->getId(), new Document($updates));
+                return $dbForProject->updateDocument(
+                    $resource->getCollection(),
+                    $resource->getId(),
+                    new Document($updates)
+                );
             }
         }
 
