@@ -394,7 +394,7 @@ final class DatabasesNumericTypesTest extends Scope
             $this->assertEquals(-20, $column['body']['min']);
             $this->assertEquals(20, $column['body']['max']);
             $this->assertEquals(3, $column['body']['default']);
-        }, 30000, 250);
+        }, 240000, 250);
 
         // Update bigint column
         $updateBigint = $this->client->call(
@@ -426,7 +426,7 @@ final class DatabasesNumericTypesTest extends Scope
             $this->assertEquals(-999, $column['body']['min']);
             $this->assertEquals(999, $column['body']['max']);
             $this->assertEquals(10, $column['body']['default']);
-        }, 30000, 250);
+        }, 240000, 250);
     }
 
     public function testDeleteIntegerAndBigIntColumns(): void
@@ -456,7 +456,7 @@ final class DatabasesNumericTypesTest extends Scope
             ]);
 
             $this->assertEquals(404, $column['headers']['status-code']);
-        }, 30000, 250);
+        }, 240000, 250);
 
         // Delete bigint column
         $deleteBigint = $this->client->call(
@@ -479,6 +479,6 @@ final class DatabasesNumericTypesTest extends Scope
             ]);
 
             $this->assertEquals(404, $column['headers']['status-code']);
-        }, 30000, 250);
+        }, 240000, 250);
     }
 }

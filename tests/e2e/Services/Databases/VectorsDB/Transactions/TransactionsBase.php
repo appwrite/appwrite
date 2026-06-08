@@ -1099,7 +1099,16 @@ trait TransactionsBase
             'attributes' => ['embeddings'],
         ]);
 
-        sleep(2);
+        $this->assertEventually(function () use ($databaseId, $collectionId) {
+            $index = $this->client->call(Client::METHOD_GET, "/vectorsdb/{$databaseId}/collections/{$collectionId}/indexes/embeddings_index", array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+                'x-appwrite-key' => $this->getProject()['apiKey']
+            ]));
+
+            $this->assertEquals(200, $index['headers']['status-code']);
+            $this->assertEquals('available', $index['body']['status'] ?? null);
+        }, 240000, 500);
 
         // Create an existing document
         $duplicateId = ID::unique();

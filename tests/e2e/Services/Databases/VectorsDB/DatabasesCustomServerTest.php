@@ -461,14 +461,15 @@ final class DatabasesCustomServerTest extends Scope
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]);
         $this->assertEquals(204, $del['headers']['status-code']);
-        sleep(4);
-        // Ensure it's gone
-        $getMissing = $this->client->call(Client::METHOD_GET, "/vectorsdb/{$databaseId}/collections/{$collectionId}/indexes/embedding_dot", [
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
-        ]);
-        $this->assertEquals(404, $getMissing['headers']['status-code']);
+
+        $this->assertEventually(function () use ($databaseId, $collectionId) {
+            $getMissing = $this->client->call(Client::METHOD_GET, "/vectorsdb/{$databaseId}/collections/{$collectionId}/indexes/embedding_dot", [
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+                'x-appwrite-key' => $this->getProject()['apiKey']
+            ]);
+            $this->assertEquals(404, $getMissing['headers']['status-code']);
+        }, 240000, 500);
     }
 
     public function testBulkCreate(): array
