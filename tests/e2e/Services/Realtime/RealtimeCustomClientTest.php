@@ -743,6 +743,15 @@ final class RealtimeCustomClientTest extends Scope
         $this->assertNotEmpty($response['data']['payload']);
 
         $client->close();
+
+        /**
+         * This test mutates the shared cached user: the password change and the
+         * password-recovery completion above invalidate every session of that
+         * user (including the one cached in self::$user). Refresh the cache so
+         * later tests in the same process (e.g. testChannelDatabase) connect
+         * with a valid session instead of falling back to a guest connection.
+         */
+        $this->getUser(true);
     }
 
     public function testChannelDatabase()
@@ -3141,7 +3150,7 @@ final class RealtimeCustomClientTest extends Scope
         $client = $this->getWebsocket(['documents'], [
             'origin' => 'http://localhost',
             'cookie' => 'a_session_' . $projectId . '=' . $session
-        ]);
+        ], null, null, 10);
 
         $response = json_decode($client->receive(), true);
 
@@ -3408,7 +3417,7 @@ final class RealtimeCustomClientTest extends Scope
         ], [
             'origin' => 'http://localhost',
             'cookie' => 'a_session_' . $projectId . '=' . $session,
-        ]);
+        ], null, null, 10);
 
         $connected = json_decode($legacyClient->receive(), true);
         $this->assertEquals('connected', $connected['type']);
@@ -3502,7 +3511,7 @@ final class RealtimeCustomClientTest extends Scope
         ], [
             'origin' => 'http://localhost',
             'cookie' => 'a_session_' . $projectId . '=' . $session,
-        ]);
+        ], null, null, 10);
 
         $connected = json_decode($tablesClient->receive(), true);
         $this->assertEquals('connected', $connected['type']);
@@ -3576,7 +3585,7 @@ final class RealtimeCustomClientTest extends Scope
         ], [
             'origin' => 'http://localhost',
             'cookie' => 'a_session_' . $projectId . '=' . $session,
-        ]);
+        ], null, null, 10);
 
         $connected = json_decode($documentsClient->receive(), true);
         $this->assertEquals('connected', $connected['type']);
