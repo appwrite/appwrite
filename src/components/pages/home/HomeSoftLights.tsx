@@ -74,17 +74,28 @@ const singleSecondaryLightGradients = {
   ),
 } as const
 
-const singleSecondaryLightPosition = {
+const singleSecondaryLightHorizontal = {
   left: cn(
-    'absolute -left-[36%] top-1/2 h-[620px] w-[980px] -translate-y-1/2',
-    'sm:-left-[32%] sm:h-[720px] sm:w-[1120px]',
-    'lg:-left-[28%] lg:h-[800px] lg:w-[1240px]',
+    'absolute -left-[36%]',
+    'sm:-left-[32%]',
+    'lg:-left-[28%]',
   ),
   right: cn(
-    'absolute -right-[36%] top-1/2 h-[620px] w-[980px] -translate-y-1/2',
-    'sm:-right-[32%] sm:h-[720px] sm:w-[1120px]',
-    'lg:-right-[28%] lg:h-[800px] lg:w-[1240px]',
+    'absolute -right-[36%]',
+    'sm:-right-[32%]',
+    'lg:-right-[28%]',
   ),
+} as const
+
+const singleSecondaryLightSize = cn(
+  'h-[620px] w-[980px]',
+  'sm:h-[720px] sm:w-[1120px]',
+  'lg:h-[800px] lg:w-[1240px]',
+)
+
+const singleSecondaryLightAlign = {
+  center: 'top-1/2 -translate-y-1/2',
+  top: 'top-[-26%]',
 } as const
 
 export type SecondarySoftLightTone = keyof typeof singleSecondaryLightGradients
@@ -92,10 +103,12 @@ export type SecondarySoftLightTone = keyof typeof singleSecondaryLightGradients
 export function SectionSoftLight({
   tone = 'purple',
   position = 'right',
+  align = 'center',
   className,
 }: {
   tone?: SecondarySoftLightTone
-  position?: keyof typeof singleSecondaryLightPosition
+  position?: keyof typeof singleSecondaryLightHorizontal
+  align?: keyof typeof singleSecondaryLightAlign
   className?: string
 }) {
   return (
@@ -108,7 +121,9 @@ export function SectionSoftLight({
     >
       <div
         className={cn(
-          singleSecondaryLightPosition[position],
+          singleSecondaryLightHorizontal[position],
+          singleSecondaryLightSize,
+          singleSecondaryLightAlign[align],
           singleSecondaryLightGradients[tone],
         )}
       />

@@ -1,4 +1,5 @@
 import { Github } from 'lucide-react'
+import { CompanyHero } from '@/components/pages/company/CompanyHero'
 import { CompanyTeam } from '@/components/pages/company/CompanyTeam'
 import { CompanyTimeline } from '@/components/pages/company/CompanyTimeline'
 import { HomeSoftLights, SectionSoftLight } from '@/components/pages/home/HomeSoftLights'
@@ -27,58 +28,11 @@ export function View() {
     <div className="relative overflow-x-hidden">
       <HomeSoftLights variant="hero" />
 
-      <section className="relative border-b border-border">
-        <div className="mx-auto max-w-4xl px-4 py-16 text-center sm:px-6 sm:py-20">
-          <PricingSectionHeading
-            as="h1"
-            title="Unleashing creativity and innovation in every creator"
-            description="Software development transforms our everyday lives, shaped by the creativity and innovation of developers and the AI agents they work with. At Appwrite, we enable them to build products the world loves by removing technical barriers with our backend platform."
-          />
-        </div>
-      </section>
-
-      <section className="relative border-b border-border">
-        <div className="mx-auto grid max-w-7xl gap-10 px-4 py-16 sm:px-6 sm:py-20 lg:grid-cols-2 lg:gap-16 lg:items-start">
-          <div className="space-y-6">
-            <h2 className="font-aeonik-pro text-[28px] font-normal leading-tight tracking-tight text-foreground sm:text-[36px]">
-              Designed for and by developers
-              <span className="text-[var(--brand-cta)]">_</span>
-            </h2>
-            <Button variant="brandCta" asChild>
-              <a
-                href="https://appwrite.careers"
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                Join the team
-              </a>
-            </Button>
-          </div>
-
-          <div className="space-y-4 text-[14px] leading-7 text-muted-foreground sm:text-[15px]">
-            <p>
-              At Appwrite, our mission is to eliminate friction and abstract
-              complexity for every creator. We build Appwrite for agents and
-              developers, giving them the tools and experience they need to
-              create and innovate without limits and with minimum concerns.
-            </p>
-            <p>
-              We do this by building the most complete development platform,
-              backed by the open source community. A platform with everything
-              you need in one place, maximum flexibility, and minimum friction.
-              From auth, databases, storage, and functions to MCP servers,
-              Skills, and agent integrations, Appwrite moves with you on your
-              journey from ideation to scale and helps you succeed in the
-              challenges of today and those of tomorrow.
-            </p>
-            <p className="font-medium text-foreground">Build like a team of hundreds.</p>
-          </div>
-        </div>
-      </section>
-
-      <CompanyTeam />
+      <CompanyHero />
 
       <CompanyTimeline />
+
+      <CompanyTeam />
 
       <section className="relative isolate overflow-x-hidden bg-muted/20">
         <SectionSoftLight tone="purple" />

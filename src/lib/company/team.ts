@@ -1,7 +1,7 @@
 export const companyTeamIntro = {
   title: 'Team Appwrite',
   description:
-    'We are a remote-first, AI-native team built to stay lean. We recruit exceptional talent worldwide and focus on efficient communication and human-AI collaboration to build more with less.',
+    'We are a remote-first, AI-native team built to stay lean. We recruit exceptional talent worldwide, communicate with clarity, and combine human judgment with AI to ship ambitious work at speed.',
 } as const
 
 export type CompanyTeamPhoto = {
@@ -107,3 +107,75 @@ export const companyTeamCta = {
   description:
     'Explore open roles or learn how Appwriters join from the community.',
 } as const
+
+export type CompanyTeamRoleSegment = {
+  id: string
+  label: string
+  percentage: number
+  barClassName: string
+}
+
+const COMPANY_TEAM_ROLE_COUNTS = [
+  {
+    id: 'engineers',
+    label: 'Engineering',
+    count: 13,
+    barClassName: 'bg-[var(--brand-cta)]',
+  },
+  {
+    id: 'community-marketing',
+    label: 'Community and marketing',
+    count: 3,
+    barClassName: 'bg-foreground/45',
+  },
+  {
+    id: 'ga',
+    label: 'G&A',
+    count: 2,
+    barClassName: 'bg-foreground/28',
+  },
+  {
+    id: 'business',
+    label: 'Business',
+    count: 1,
+    barClassName: 'bg-foreground/16',
+  },
+] as const
+
+/** Round role counts to whole percentages that sum to 100. Counts are not exposed. */
+function toRolePercentages(
+  roles: readonly { count: number }[],
+): number[] {
+  const total = roles.reduce((sum, role) => sum + role.count, 0)
+  if (total === 0) return roles.map(() => 0)
+
+  const exact = roles.map((role) => (role.count / total) * 100)
+  const floored = exact.map((value) => Math.floor(value))
+  let remainder = 100 - floored.reduce((sum, value) => sum + value, 0)
+
+  const order = exact
+    .map((value, index) => ({ index, remainder: value - floored[index] }))
+    .sort((a, b) => b.remainder - a.remainder)
+
+  const percentages = [...floored]
+  for (let i = 0; i < remainder; i += 1) {
+    const target = order[i % order.length]
+    if (target) percentages[target.index] += 1
+  }
+
+  return percentages
+}
+
+export const companyTeamProductFirst = {
+  title: 'Product-first team',
+  description:
+    'We keep overhead lean and investment close to the product. Most of the team builds, ships, and supports Appwrite. We prefer to let the product do the talking.',
+} as const
+
+export const companyTeamRoleSegments: readonly CompanyTeamRoleSegment[] =
+  COMPANY_TEAM_ROLE_COUNTS.map((role, index) => ({
+    id: role.id,
+    label: role.label,
+    percentage: toRolePercentages(COMPANY_TEAM_ROLE_COUNTS)[index] ?? 0,
+    barClassName: role.barClassName,
+  }))

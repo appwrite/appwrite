@@ -11,6 +11,7 @@ export type TimelineLinkKind =
   | 'github'
   | 'news'
   | 'product'
+  | 'product-hunt'
   | 'youtube'
 
 export type CompanyTimelineLink = {
@@ -182,6 +183,22 @@ export const companyTimelineMilestones: readonly CompanyTimelineMilestone[] = [
     ],
   },
   {
+    id: '2022-golden-kitty',
+    date: 'December 2022',
+    title: 'Golden Kitty Award',
+    description:
+      'Appwrite won Product Hunt\'s Golden Kitty Award for Best Developer Tool, recognizing the platform\'s impact among makers and the broader developer community.',
+    category: 'community',
+    links: [
+      {
+        id: 'product-hunt',
+        label: '2022 Hall of Fame',
+        href: 'https://www.producthunt.com/golden-kitty-awards/hall-of-fame?year=2022',
+        kind: 'product-hunt',
+      },
+    ],
+  },
+  {
     id: '2023-cloud-beta',
     date: 'April 2023',
     title: 'Cloud public beta',
@@ -200,28 +217,6 @@ export const companyTimelineMilestones: readonly CompanyTimelineMilestone[] = [
         label: 'Appwrite Cloud',
         href: 'https://appwrite.io/docs/advanced/platform/cloud',
         kind: 'docs',
-      },
-    ],
-  },
-  {
-    id: '2024-cloud-pricing',
-    date: 'January 2024',
-    title: 'Cloud pricing',
-    description:
-      'Appwrite introduced commercial pricing for Cloud after an extended beta period, establishing a sustainable foundation for infrastructure investment and long-term platform support.',
-    category: 'platform',
-    links: [
-      {
-        id: 'pricing',
-        label: 'Pricing announcement',
-        href: 'https://appwrite.io/blog/post/announcing-pricing',
-        kind: 'blog',
-      },
-      {
-        id: 'pricing-page',
-        label: 'View pricing',
-        href: 'https://appwrite.io/pricing',
-        kind: 'product',
       },
     ],
   },
@@ -272,7 +267,7 @@ export const companyTimelineMilestones: readonly CompanyTimelineMilestone[] = [
   {
     id: '2024-cloud-ga',
     date: 'September 2024',
-    title: 'Cloud general availability',
+    title: 'Cloud is GA!',
     description:
       'Appwrite Cloud reached general availability with production-grade reliability, expanded infrastructure, and the performance teams need to run applications at scale.',
     category: 'platform',
@@ -332,28 +327,6 @@ export const companyTimelineMilestones: readonly CompanyTimelineMilestone[] = [
         label: 'Sites docs',
         href: 'https://appwrite.io/docs/products/sites',
         kind: 'docs',
-      },
-    ],
-  },
-  {
-    id: '2025-pricing',
-    date: 'August 2025',
-    title: 'Cloud pricing evolution',
-    description:
-      'Appwrite evolved Cloud pricing to a per-project model with expanded included resources and lower usage costs, aligned with how production teams build and scale.',
-    category: 'platform',
-    links: [
-      {
-        id: 'announcement',
-        label: 'New pricing plans',
-        href: 'https://appwrite.io/blog/post/appwrite-pricing-update',
-        kind: 'blog',
-      },
-      {
-        id: 'pricing',
-        label: 'Compare plans',
-        href: 'https://appwrite.io/pricing',
-        kind: 'product',
       },
     ],
   },
@@ -435,6 +408,14 @@ export const companyTimelineMilestones: readonly CompanyTimelineMilestone[] = [
     title: 'Appwrite 2.0',
     description:
       'Appwrite 2.0 introduced a refreshed platform experience and stronger foundations, powered by Hyperloop B, a new engine for the platform, and Console IV, a next-generation console rebuilt with TanStack.',
+    category: 'product',
+  },
+  {
+    id: '2026-native-databases',
+    date: 'July 2026',
+    title: 'Native Postgres and MySQL',
+    description:
+      'Appwrite introduced native Postgres and MySQL database solutions to the platform, giving teams dedicated relational engines for SQL workflows, portable schemas, and production workloads alongside Appwrite\'s managed data layer.',
     category: 'product',
   },
 ]

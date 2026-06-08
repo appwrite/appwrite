@@ -33,6 +33,10 @@ const LINK_KIND_META: Record<
   github: { icon: Github, typeLabel: 'GitHub' },
   news: { icon: Megaphone, typeLabel: 'News' },
   product: { icon: Rocket, typeLabel: 'Product' },
+  'product-hunt': {
+    iconSrc: '/icons/product-hunt.svg',
+    typeLabel: 'Product Hunt',
+  },
   youtube: { iconSrc: '/icons/youtube.svg', typeLabel: 'YouTube' },
 }
 
@@ -121,7 +125,7 @@ function TimelineDate({
     <time
       dateTime={date}
       className={cn(
-        'inline-block shrink-0 whitespace-nowrap text-[12px] font-medium leading-none sm:text-[13px]',
+        'inline-block shrink-0 self-start whitespace-nowrap text-[12px] font-medium leading-none sm:text-[13px]',
         highlighted
           ? 'rounded-full bg-foreground px-3 py-1.5 text-[11px] text-background sm:text-[12px]'
           : 'text-muted-foreground',
