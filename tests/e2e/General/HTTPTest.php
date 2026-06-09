@@ -165,6 +165,52 @@ class HTTPTest extends Scope
         $this->assertEquals('http://random.com', $response['headers']['access-control-allow-origin']);
     }
 
+    public function testPreflightDevKeyHeader(): void
+    {
+        $endpoint = '/v1/account';
+        $corsConfig = Config::getParam('cors');
+        $allowedHeaders = \implode(', ', $corsConfig['allowedHeaders']);
+
+        $response = $this->client->call(Client::METHOD_OPTIONS, $endpoint, [
+            'origin' => 'http://localhost:3000',
+            'access-control-request-headers' => 'X-Appwrite-Project, X-Appwrite-Dev-Key, Content-Type',
+            'access-control-request-method' => 'POST',
+        ]);
+
+        $this->assertEquals(204, $response['headers']['status-code']);
+        $this->assertEquals($allowedHeaders, $response['headers']['access-control-allow-headers']);
+        $this->assertStringContainsString('X-Appwrite-Dev-Key', $response['headers']['access-control-allow-headers']);
+    }
+
+    /**
+     * Guards against the 1.7.4 dev-key regression where the server set
+     * `Access-Control-Allow-Origin: *` while also sending
+     * `Access-Control-Allow-Credentials: true`. Browsers reject that illegal
+     * combination for any credentialed request, breaking all dev-key traffic
+     * from the browser. The server must echo a specific origin, never `*`,
+     * whenever credentials are allowed.
+     */
+    public function testCredentialedResponseNeverUsesWildcardOrigin(): void
+    {
+        $endpoint = '/v1/account';
+
+        foreach ([Client::METHOD_GET, Client::METHOD_OPTIONS] as $method) {
+            $response = $this->client->call($method, $endpoint, [
+                'origin' => 'http://localhost',
+                'access-control-request-headers' => 'X-Appwrite-Project, X-Appwrite-Dev-Key',
+                'access-control-request-method' => 'POST',
+            ]);
+
+            $allowOrigin = $response['headers']['access-control-allow-origin'] ?? null;
+            $allowCredentials = $response['headers']['access-control-allow-credentials'] ?? null;
+
+            if ($allowCredentials === 'true') {
+                $this->assertNotEquals('*', $allowOrigin, "Wildcard origin must never be paired with credentials ($method)");
+                $this->assertEquals('http://localhost', $allowOrigin, "Server must echo the specific origin ($method)");
+            }
+        }
+    }
+
     public function testConsoleRedirect()
     {
         /**
