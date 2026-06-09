@@ -188,7 +188,7 @@ class OpenAPI3 extends Format
                         continue;
                     }
 
-                    $methodSecurities = [$methodObj->getProjectAuth() => []];
+                    $methodSecurities = [($methodObj->getLocationAuth()[0] ?? 'Project') => []];
                     foreach ($methodObj->getAuth() as $security) {
                         if (\array_key_exists($security->value, $this->keys)) {
                             $methodSecurities[$security->value] = [];
@@ -374,7 +374,7 @@ class OpenAPI3 extends Format
             }
 
             if (!empty($scope)) {
-                $securities = [$sdk->getProjectAuth() => []];
+                $securities = [($sdk->getLocationAuth()[0] ?? 'Project') => []];
 
                 foreach ($sdk->getAuth() as $security) {
                     /** @var AuthType $security */
@@ -384,6 +384,16 @@ class OpenAPI3 extends Format
                 }
 
                 $temp['x-appwrite']['auth'] = array_slice($securities, 0, $this->authCount);
+
+                if ($sdk->getType() === MethodType::LOCATION) {
+                    foreach ($sdk->getLocationAuth() as $key) {
+                        if (\array_key_exists($key, $this->keys)) {
+                            $securities[$key] = [];
+                            $temp['x-appwrite']['auth'][$key] = [];
+                        }
+                    }
+                }
+
                 $temp['security'][] = $securities;
             }
 
@@ -482,6 +492,9 @@ class OpenAPI3 extends Format
                             $node['schema']['x-upload-id'] = true;
                         }
                         $node['schema']['type'] = $validator->getType();
+                        $node['schema']['x-appwrite'] = [
+                            'idGenerator' => 'ID.unique',
+                        ];
                         $node['schema']['x-example'] = ($param['example'] ?? '') ?: '<' . \strtoupper(Template::fromCamelCaseToSnake($node['name'])) . '>';
                         break;
                     case \Utopia\Database\Validator\Datetime::class:
@@ -587,6 +600,7 @@ class OpenAPI3 extends Format
                         $node['schema']['x-example'] = ($param['example'] ?? '') ?: '["' . Role::any()->toString() . '"]';
                         break;
                     case \Appwrite\Auth\Validator\Password::class:
+                    case \Appwrite\SDK\Specification\Validator\PasswordFormat::class:
                         $node['schema']['type'] = $validator->getType();
                         $node['schema']['format'] = 'password';
                         $node['schema']['x-example'] = ($param['example'] ?? '') ?: 'password';
@@ -807,6 +821,10 @@ class OpenAPI3 extends Format
                         $body['content'][$consumes[0]]['schema']['properties'][$name]['x-upload-id'] = $node['schema']['x-upload-id'];
                     }
 
+                    if (isset($node['schema']['x-appwrite'])) {
+                        $body['content'][$consumes[0]]['schema']['properties'][$name]['x-appwrite'] = $node['schema']['x-appwrite'];
+                    }
+
                     if (\array_key_exists('items', $node['schema'])) {
                         $body['content'][$consumes[0]]['schema']['properties'][$name]['items'] = $node['schema']['items'];
                     }
@@ -873,7 +891,7 @@ class OpenAPI3 extends Format
                 }
 
                 $type = '';
-                $format = null;
+                $format = $rule['format'] ?? null;
                 $items = null;
 
                 $examples[$name] = $rule['example'] ?? null;

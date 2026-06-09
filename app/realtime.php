@@ -845,6 +845,7 @@ $server->onOpen(function (int $connection, SwooleRequest $request) use ($server,
         Span::add('realtime.origin', $request->getOrigin());
     }
 
+    $error = null;
     try {
         /** @var Document $project */
         $project = $connectionContainer->get('project');
@@ -1009,7 +1010,7 @@ $server->onOpen(function (int $connection, SwooleRequest $request) use ($server,
         $success = true;
 
     } catch (Throwable $th) {
-        Span::error($th);
+        $error = $th;
 
         // Convert known Utopia DB exceptions to AppwriteException so isPublishable()
         // suppresses expected client errors (permission denied, query timeout) from Sentry.
@@ -1067,7 +1068,7 @@ $server->onOpen(function (int $connection, SwooleRequest $request) use ($server,
         if (!empty($logUser?->getId())) {
             Span::add('user.id', $logUser->getId());
         }
-        Span::current()?->finish();
+        Span::current()?->finish(error: $error);
     }
 });
 
@@ -1086,6 +1087,7 @@ $server->onMessage(function (int $connection, string $message) use ($container, 
     Span::add('realtime.inbound_bytes', $rawSize);
     Span::add('realtime.container.id', $containerId);
 
+    $error = null;
     try {
         $response = new Response(new SwooleResponse());
 
@@ -1213,7 +1215,7 @@ $server->onMessage(function (int $connection, string $message) use ($container, 
 
         $success = true;
     } catch (Throwable $th) {
-        Span::error($th);
+        $error = $th;
 
         // Convert known Utopia DB exceptions to AppwriteException so isPublishable()
         // suppresses expected client errors (permission denied, query timeout) from Sentry.
@@ -1259,7 +1261,7 @@ $server->onMessage(function (int $connection, string $message) use ($container, 
         Span::add('project.id', $project?->getId() ?? $projectId);
         Span::add('user.id', $realtime->connections[$connection]['userId'] ?? null);
         Span::add('realtime.message_type', $messageType);
-        Span::current()?->finish();
+        Span::current()?->finish(error: $error);
     }
 });
 
@@ -1346,7 +1348,7 @@ $server->onClose(function (int $connection) use ($realtime, $stats, $register, $
                             );
                             $presenceState->triggerUsage($publisherForUsage, $project, -$deletionCount);
                         } catch (Throwable $th) {
-                            Span::error($th);
+                            Span::current()?->setError($th);
                             logError($th, 'realtimeOnClosePresenceDeletion', tags: [
                                 'projectId' => $projectId,
                                 'presences' => \count($presences)
@@ -1373,7 +1375,7 @@ $server->onClose(function (int $connection) use ($realtime, $stats, $register, $
                             }
                         }
                     } catch (Throwable $th) {
-                        Span::error($th);
+                        Span::current()?->setError($th);
                         logError($th, 'realtimeOnClosePresenceCleanup', tags: [
                             'projectId' => $projectId,
                         ]);
@@ -1392,13 +1394,13 @@ $server->onClose(function (int $connection) use ($realtime, $stats, $register, $
         // Log only; do not rethrow. If we let this bubble, Swoole dumps full coroutine
         // backtraces and unsubscribe() below would never run (connection cleanup would fail).
         Console::error('Realtime onClose error: ' . $th->getMessage());
-        Span::error($th);
+        Span::current()?->setError($th);
     } finally {
         try {
             $realtime->unsubscribe($connection);
         } catch (\Throwable $th) {
             Console::error('Realtime onClose unsubscribe error: ' . $th->getMessage());
-            Span::error($th);
+            Span::current()?->setError($th);
         }
 
         Span::add('realtime.success', $success);

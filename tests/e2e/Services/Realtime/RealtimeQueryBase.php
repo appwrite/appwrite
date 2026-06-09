@@ -165,7 +165,7 @@ trait RealtimeQueryBase
             'cookie' => 'a_session_' . $projectId . '=' . $session,
         ], null, [
             Query::equal('$id', [$targetDocumentId])->toString(),
-        ]);
+        ], 10);
 
         $this->assertConnectionStatusIfSupported($client);
 
@@ -263,7 +263,7 @@ trait RealtimeQueryBase
             'cookie' => 'a_session_' . $projectId . '=' . $session,
         ], null, [
             Query::notEqual('$id', [$excludedDocumentId])->toString(),
-        ]);
+        ], 10);
 
         $this->assertConnectionStatusIfSupported($client);
 
@@ -358,7 +358,7 @@ trait RealtimeQueryBase
             'cookie' => 'a_session_' . $projectId . '=' . $session,
         ], null, [
             Query::greaterThan('score', 50)->toString(),
-        ]);
+        ], 10);
 
         $this->assertConnectionStatusIfSupported($client);
 
@@ -452,7 +452,7 @@ trait RealtimeQueryBase
             'cookie' => 'a_session_' . $projectId . '=' . $session,
         ], null, [
             Query::lessThan('age', 18)->toString(),
-        ]);
+        ], 10);
 
         $this->assertConnectionStatusIfSupported($client);
 
@@ -546,7 +546,7 @@ trait RealtimeQueryBase
             'cookie' => 'a_session_' . $projectId . '=' . $session,
         ], null, [
             Query::greaterThanEqual('priority', 5)->toString(),
-        ]);
+        ], 10);
 
         $this->assertConnectionStatusIfSupported($client);
 
@@ -658,7 +658,7 @@ trait RealtimeQueryBase
             'cookie' => 'a_session_' . $projectId . '=' . $session,
         ], null, [
             Query::lessThanEqual('level', 10)->toString(),
-        ]);
+        ], 10);
 
         $this->assertConnectionStatusIfSupported($client);
 
@@ -771,7 +771,7 @@ trait RealtimeQueryBase
             'cookie' => 'a_session_' . $projectId . '=' . $session,
         ], null, [
             Query::isNull('description')->toString(),
-        ]);
+        ], 10);
 
         $this->assertConnectionStatusIfSupported($client);
 
@@ -865,7 +865,7 @@ trait RealtimeQueryBase
             'cookie' => 'a_session_' . $projectId . '=' . $session,
         ], null, [
             Query::isNotNull('email')->toString(),
-        ]);
+        ], 10);
 
         $this->assertConnectionStatusIfSupported($client);
 
@@ -976,7 +976,7 @@ trait RealtimeQueryBase
                 Query::equal('status', ['active']),
                 Query::greaterThan('priority', 5)
             ])->toString(),
-        ]);
+        ], 10);
 
         $this->assertConnectionStatusIfSupported($client);
 
@@ -1099,7 +1099,7 @@ trait RealtimeQueryBase
                 Query::equal('type', ['urgent']),
                 Query::equal('type', ['critical'])
             ])->toString(),
-        ]);
+        ], 10);
 
         $this->assertConnectionStatusIfSupported($client);
 
@@ -1233,7 +1233,7 @@ trait RealtimeQueryBase
                 ]),
                 Query::greaterThanEqual('score', 80)
             ])->toString(),
-        ]);
+        ], 10);
 
         $this->assertConnectionStatusIfSupported($client);
 

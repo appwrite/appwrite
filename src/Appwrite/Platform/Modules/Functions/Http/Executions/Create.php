@@ -13,7 +13,6 @@ use Appwrite\Extend\Exception as AppwriteException;
 use Appwrite\Functions\Validator\Headers;
 use Appwrite\Platform\Modules\Compute\Base;
 use Appwrite\SDK\AuthType;
-use Appwrite\SDK\ContentType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Usage\Context;
@@ -81,7 +80,6 @@ class Create extends Base
                         model: Response::MODEL_EXECUTION,
                     )
                 ],
-                contentType: ContentType::MULTIPART,
             ))
             ->param('functionId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Function ID.', false, ['dbForProject'])
             ->param('body', '', new Text(10485760, 0), 'HTTP body of execution. Default value is empty string.', true)
