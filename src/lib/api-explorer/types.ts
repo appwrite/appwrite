@@ -106,6 +106,10 @@ export type OpenApiSpec = {
     title?: string
     description?: string
   }
+  tags?: Array<{
+    name?: string
+    description?: string
+  }>
   paths?: Record<string, Record<string, OpenApiOperation>>
   components?: {
     schemas?: Record<string, OpenApiSchema>
@@ -138,6 +142,7 @@ export type ApiExplorerMethod = {
 export type ApiExplorerService = {
   id: string
   label: string
+  description?: string
   methods: ApiExplorerMethod[]
 }
 

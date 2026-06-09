@@ -317,11 +317,30 @@ function sortMethodsByOperationOrder(
   })
 }
 
+function buildTagDescriptionMap(spec: OpenApiSpec): Map<string, string> {
+  const descriptions = new Map<string, string>()
+  for (const tag of spec.tags ?? []) {
+    const name = tag.name?.trim()
+    const description = tag.description?.trim()
+    if (!name || !description) continue
+    descriptions.set(name.toLowerCase(), description)
+  }
+  return descriptions
+}
+
+function getServiceDescription(
+  serviceId: string,
+  tagDescriptions: Map<string, string>,
+): string | undefined {
+  return tagDescriptions.get(serviceId.toLowerCase())
+}
+
 export function parseOpenApiSpec(
   spec: OpenApiSpec,
   platform: ApiSpecPlatform,
 ): ParsedApiSpec {
   const serviceMap = new Map<string, ApiExplorerMethod[]>()
+  const tagDescriptions = buildTagDescriptionMap(spec)
 
   for (const context of iterateOperations(spec, platform)) {
     const parsed = parseOperation(context, spec.components)
@@ -334,6 +353,7 @@ export function parseOpenApiSpec(
     .map(([id, methods]) => ({
       id,
       label: getServiceLabel(id),
+      description: getServiceDescription(id, tagDescriptions),
       methods: sortMethodsByWeight(methods),
     }))
     .sort((a, b) => compareServices(a.id, b.id))
