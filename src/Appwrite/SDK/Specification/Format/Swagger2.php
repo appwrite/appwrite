@@ -487,11 +487,36 @@ class Swagger2 extends Format
                     case \Utopia\Database\Validator\Spatial::class:
                         /** @var Spatial $validator */
                         $node['type'] = 'array';
-                        $node['schema']['items'] = [
-                            'oneOf' => [
-                                ['type' => 'array']
-                            ]
-                        ];
+                        $node['items'] = match ($validator->getSpatialType()) {
+                            Database::VAR_POINT => [
+                                'type' => 'number',
+                                'format' => 'double',
+                            ],
+                            Database::VAR_LINESTRING => [
+                                'type' => 'array',
+                                'items' => [
+                                    'type' => 'number',
+                                    'format' => 'double',
+                                ],
+                            ],
+                            Database::VAR_POLYGON => [
+                                'type' => 'array',
+                                'items' => [
+                                    'type' => 'array',
+                                    'items' => [
+                                        'type' => 'number',
+                                        'format' => 'double',
+                                    ],
+                                ],
+                            ],
+                            default => [
+                                'type' => 'array',
+                                'items' => [
+                                    'type' => 'number',
+                                    'format' => 'double',
+                                ],
+                            ],
+                        };
                         $node['x-example'] = ($param['example'] ?? '') ?: match ($validator->getSpatialType()) {
                             Database::VAR_POINT => '[1, 2]',
                             Database::VAR_LINESTRING => '[[1, 2], [3, 4], [5, 6]]',
@@ -745,7 +770,7 @@ class Swagger2 extends Format
                 if ($isPathParam) { // Param is in URL path (directly or through alias)
                     $node['in'] = 'path';
                     $temp['parameters'][] = $node;
-                } elseif ($route->getMethod() == 'GET') { // Param is in query
+                } elseif (\in_array($route->getMethod(), ['GET', 'DELETE'], true)) { // Param is in query
                     $node['in'] = 'query';
                     $temp['parameters'][] = $node;
                 } else { // Param is in payload
@@ -879,6 +904,7 @@ class Swagger2 extends Format
 
                     case 'array':
                         $type = 'array';
+                        $items = $this->getArrayItemsSchema($rule['example'] ?? []);
                         break;
 
                     case 'integer':
@@ -933,7 +959,6 @@ class Swagger2 extends Format
                             }
                         } else {
                             $items = [
-                                'type' => $type,
                                 '$ref' => '#/definitions/' . $rule['type'],
                             ];
                         }
@@ -986,7 +1011,19 @@ class Swagger2 extends Format
                     }
                 }
                 if ($items) {
-                    $output['definitions'][$model->getType()]['properties'][$name]['items'] = $items;
+                    if ($rule['array'] || $rule['type'] === 'array') {
+                        $output['definitions'][$model->getType()]['properties'][$name]['items'] = $items;
+                    } else {
+                        if (isset($items['$ref'])) {
+                            $items = ['allOf' => [$items]];
+                        }
+                        /** @var array<string, mixed> $property */
+                        $property = $output['definitions'][$model->getType()]['properties'][$name];
+                        $output['definitions'][$model->getType()]['properties'][$name] = [
+                            ...$property,
+                            ...$items,
+                        ];
+                    }
                 }
                 if ($rule['type'] === 'enum' && !empty($rule['enum'])) {
                     if ($rule['array']) {
