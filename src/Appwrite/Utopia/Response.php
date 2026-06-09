@@ -39,6 +39,7 @@ class Response extends SwooleResponse
     public const MODEL_USAGE_TABLE = 'usageTable';
     public const MODEL_USAGE_COLLECTION = 'usageCollection';
     public const MODEL_USAGE_USERS = 'usageUsers';
+    public const MODEL_USAGE_PRESENCE = 'usagePresence';
     public const MODEL_USAGE_BUCKETS = 'usageBuckets';
     public const MODEL_USAGE_STORAGE = 'usageStorage';
     public const MODEL_USAGE_FUNCTIONS = 'usageFunctions';
@@ -64,6 +65,8 @@ class Response extends SwooleResponse
     public const MODEL_COLUMN_INDEX_LIST = 'columnIndexList';
     public const MODEL_DOCUMENT = 'document';
     public const MODEL_DOCUMENT_LIST = 'documentList';
+    public const MODEL_PRESENCE = 'presence';
+    public const MODEL_PRESENCE_LIST = 'presenceList';
     public const MODEL_ROW = 'row';
     public const MODEL_ROW_LIST = 'rowList';
 
@@ -264,6 +267,7 @@ class Response extends SwooleResponse
     public const MODEL_POLICY_LIST = 'policyList';
     public const MODEL_POLICY_PASSWORD_DICTIONARY = 'policyPasswordDictionary';
     public const MODEL_POLICY_PASSWORD_HISTORY = 'policyPasswordHistory';
+    public const MODEL_POLICY_PASSWORD_STRENGTH = 'policyPasswordStrength';
     public const MODEL_POLICY_PASSWORD_PERSONAL_DATA = 'policyPasswordPersonalData';
     public const MODEL_POLICY_SESSION_ALERT = 'policySessionAlert';
     public const MODEL_POLICY_SESSION_DURATION = 'policySessionDuration';
@@ -588,7 +592,7 @@ class Response extends SwooleResponse
                 $roles = $this->authorization->getRoles();
                 $user = $this->user ?? new DBUser();
                 $isPrivilegedUser = $user->isPrivileged($roles);
-                $isAppUser = $user->isApp($roles);
+                $isAppUser = $user->isKey($roles);
 
                 if ((!$isPrivilegedUser && !$isAppUser) && !$this->showSensitive) {
                     $data->setAttribute($key, '');

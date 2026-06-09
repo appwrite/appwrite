@@ -548,6 +548,59 @@ trait TemplatesBase
         $this->assertSame(401, $response['headers']['status-code']);
     }
 
+    public function testUpdateEmailTemplateSenderFieldsCanBeCleared(): void
+    {
+        $this->ensureSMTPEnabled();
+
+        // Step 1: Set a custom en verification template with sender and reply-to fields.
+        $first = $this->updateEmailTemplate(
+            templateId: 'verification',
+            locale: 'en',
+            subject: 'Verify your email',
+            message: 'Please verify: {{url}}',
+            senderName: 'Custom Sender',
+            senderEmail: 'custom-sender@appwrite.io',
+            replyToName: 'Custom Reply',
+            replyToEmail: 'custom-reply@appwrite.io',
+        );
+        $this->assertSame(200, $first['headers']['status-code']);
+        $this->assertSame('Custom Sender', $first['body']['senderName']);
+        $this->assertSame('custom-sender@appwrite.io', $first['body']['senderEmail']);
+        $this->assertSame('Custom Reply', $first['body']['replyToName']);
+        $this->assertSame('custom-reply@appwrite.io', $first['body']['replyToEmail']);
+
+        // Step 2: GET en verification template and ensure it reflects the custom values.
+        $get = $this->getEmailTemplate('verification', 'en');
+        $this->assertSame(200, $get['headers']['status-code']);
+        $this->assertSame('Custom Sender', $get['body']['senderName']);
+        $this->assertSame('custom-sender@appwrite.io', $get['body']['senderEmail']);
+        $this->assertSame('Custom Reply', $get['body']['replyToName']);
+        $this->assertSame('custom-reply@appwrite.io', $get['body']['replyToEmail']);
+
+        // Step 3: Update the same template, clearing sender and reply-to fields to empty strings.
+        $clear = $this->updateEmailTemplate(
+            templateId: 'verification',
+            locale: 'en',
+            senderName: '',
+            senderEmail: '',
+            replyToName: '',
+            replyToEmail: '',
+        );
+        $this->assertSame(200, $clear['headers']['status-code']);
+        $this->assertSame('', $clear['body']['senderName']);
+        $this->assertSame('', $clear['body']['senderEmail']);
+        $this->assertSame('', $clear['body']['replyToName']);
+        $this->assertSame('', $clear['body']['replyToEmail']);
+
+        // Step 4: GET again to confirm the cleared values persist.
+        $getAfter = $this->getEmailTemplate('verification', 'en');
+        $this->assertSame(200, $getAfter['headers']['status-code']);
+        $this->assertSame('', $getAfter['body']['senderName']);
+        $this->assertSame('', $getAfter['body']['senderEmail']);
+        $this->assertSame('', $getAfter['body']['replyToName']);
+        $this->assertSame('', $getAfter['body']['replyToEmail']);
+    }
+
     public function testUpdateEmailTemplateBlockedWhenSMTPDisabled(): void
     {
         // Custom templates only make sense alongside a custom SMTP configuration.

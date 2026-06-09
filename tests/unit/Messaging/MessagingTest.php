@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Tests\Unit\Messaging;
 
 use Appwrite\Messaging\Adapter\Realtime;
@@ -9,7 +11,7 @@ use Utopia\Database\Helpers\ID;
 use Utopia\Database\Helpers\Permission;
 use Utopia\Database\Helpers\Role;
 
-class MessagingTest extends TestCase
+final class MessagingTest extends TestCase
 {
     public function setUp(): void
     {
@@ -53,56 +55,56 @@ class MessagingTest extends TestCase
         $receivers = array_keys($realtime->getSubscribers($event));
 
         $this->assertCount(1, $receivers);
-        $this->assertEquals(1, $receivers[0]);
+        $this->assertSame(1, $receivers[0]);
 
         $event['roles'] = [Role::users()->toString()];
 
         $receivers = array_keys($realtime->getSubscribers($event));
 
         $this->assertCount(1, $receivers);
-        $this->assertEquals(1, $receivers[0]);
+        $this->assertSame(1, $receivers[0]);
 
         $event['roles'] = [Role::user(ID::custom('123'))->toString()];
 
         $receivers = array_keys($realtime->getSubscribers($event));
 
         $this->assertCount(1, $receivers);
-        $this->assertEquals(1, $receivers[0]);
+        $this->assertSame(1, $receivers[0]);
 
         $event['roles'] = [Role::team(ID::custom('abc'))->toString()];
 
         $receivers = array_keys($realtime->getSubscribers($event));
 
         $this->assertCount(1, $receivers);
-        $this->assertEquals(1, $receivers[0]);
+        $this->assertSame(1, $receivers[0]);
 
         $event['roles'] = [Role::team(ID::custom('abc'), 'administrator')->toString()];
 
         $receivers = array_keys($realtime->getSubscribers($event));
 
         $this->assertCount(1, $receivers);
-        $this->assertEquals(1, $receivers[0]);
+        $this->assertSame(1, $receivers[0]);
 
         $event['roles'] = [Role::team(ID::custom('abc'), 'moderator')->toString()];
 
         $receivers = array_keys($realtime->getSubscribers($event));
 
         $this->assertCount(1, $receivers);
-        $this->assertEquals(1, $receivers[0]);
+        $this->assertSame(1, $receivers[0]);
 
         $event['roles'] = [Role::team(ID::custom('def'))->toString()];
 
         $receivers = array_keys($realtime->getSubscribers($event));
 
         $this->assertCount(1, $receivers);
-        $this->assertEquals(1, $receivers[0]);
+        $this->assertSame(1, $receivers[0]);
 
         $event['roles'] = [Role::team(ID::custom('def'), 'guest')->toString()];
 
         $receivers = array_keys($realtime->getSubscribers($event));
 
         $this->assertCount(1, $receivers);
-        $this->assertEquals(1, $receivers[0]);
+        $this->assertSame(1, $receivers[0]);
 
         $event['roles'] = [Role::user(ID::custom('456'))->toString()];
 
@@ -128,7 +130,7 @@ class MessagingTest extends TestCase
         $receivers = array_keys($realtime->getSubscribers($event));
 
         $this->assertCount(1, $receivers);
-        $this->assertEquals(1, $receivers[0]);
+        $this->assertSame(1, $receivers[0]);
 
         $event['project'] = '2';
 
@@ -217,7 +219,7 @@ class MessagingTest extends TestCase
             ],
         ];
         $receivers = array_keys($realtime->getSubscribers($event));
-        $this->assertEquals([1], $receivers);
+        $this->assertSame([1], $receivers);
 
         // Channels recomputed: sub-a's channel is gone
         $this->assertSame(['files'], $realtime->connections[1]['channels']);
@@ -250,7 +252,7 @@ class MessagingTest extends TestCase
                 'channels' => ['documents'],
             ],
         ];
-        $this->assertEquals([1], array_keys($realtime->getSubscribers($event)));
+        $this->assertSame([1], array_keys($realtime->getSubscribers($event)));
     }
 
     public function testUnsubscribeSubscriptionKeepsConnectionWhenLastSubRemoved(): void
@@ -301,7 +303,7 @@ class MessagingTest extends TestCase
                 'channels' => ['files'],
             ],
         ];
-        $this->assertEquals([1], array_keys($realtime->getSubscribers($event)));
+        $this->assertSame([1], array_keys($realtime->getSubscribers($event)));
     }
 
     public function testSubscribeAfterOnOpenEmptySentinelPreservesUnion(): void
@@ -1024,5 +1026,106 @@ class MessagingTest extends TestCase
             ];
             $this->assertArrayHasKey(1, $realtime->getSubscribers($event), "plain `documents` should match {$action} event");
         }
+    }
+
+    public function testFromPayloadPresenceChannels(): void
+    {
+        $presenceId = ID::custom('presence123');
+
+        $result = Realtime::fromPayload(
+            event: 'presences.' . $presenceId . '.upsert',
+            payload: new Document([
+                '$id' => $presenceId,
+                '$permissions' => [
+                    Permission::read(Role::any()),
+                    Permission::update(Role::users()),
+                    Permission::delete(Role::users()),
+                ],
+            ]),
+        );
+
+        $this->assertContains('presences', $result['channels']);
+        $this->assertContains('presences.' . $presenceId, $result['channels']);
+        $this->assertContains(Role::any()->toString(), $result['roles']);
+    }
+
+    public function testExtractDeletedPresenceIdReturnsIdForDeleteEvent(): void
+    {
+        $event = [
+            'project' => 'proj',
+            'data' => [
+                'events' => [
+                    'presences.abc.delete',
+                    'presences.*.delete',
+                    'presences.abc',
+                ],
+                'payload' => ['$id' => 'abc'],
+            ],
+        ];
+
+        $this->assertSame('abc', Realtime::extractDeletedPresenceId($event));
+    }
+
+    public function testExtractDeletedPresenceIdRejectsNonDeleteEvents(): void
+    {
+        $this->assertNull(Realtime::extractDeletedPresenceId([
+            'data' => [
+                'events' => ['presences.abc.upsert'],
+                'payload' => ['$id' => 'abc'],
+            ],
+        ]));
+
+        // Unrelated resource that happens to end with `.delete` must not trigger.
+        $this->assertNull(Realtime::extractDeletedPresenceId([
+            'data' => [
+                'events' => ['documents.abc.delete'],
+                'payload' => ['$id' => 'abc'],
+            ],
+        ]));
+
+        // Missing payload ID — the event names look right but we have nothing to remove.
+        $this->assertNull(Realtime::extractDeletedPresenceId([
+            'data' => [
+                'events' => ['presences.abc.delete'],
+                'payload' => [],
+            ],
+        ]));
+    }
+
+    public function testRemovePresenceFromConnectionsScopedToProject(): void
+    {
+        $realtime = new Realtime();
+
+        // Two connections in different projects both holding the same presence ID; only
+        // the matching project should be touched.
+        $realtime->connections[1] = [
+            'projectId' => 'proj-a',
+            'presences' => ['p1' => new Document(['$id' => 'p1']), 'p2' => new Document(['$id' => 'p2'])],
+        ];
+        $realtime->connections[2] = [
+            'projectId' => 'proj-b',
+            'presences' => ['p1' => new Document(['$id' => 'p1'])],
+        ];
+
+        $removed = $realtime->removePresenceFromConnections('proj-a', 'p1');
+
+        $this->assertSame(1, $removed);
+        $this->assertArrayNotHasKey('p1', $realtime->connections[1]['presences']);
+        $this->assertArrayHasKey('p2', $realtime->connections[1]['presences']);
+        $this->assertArrayHasKey('p1', $realtime->connections[2]['presences']);
+    }
+
+    public function testRemovePresenceFromConnectionsNoMatchIsNoOp(): void
+    {
+        $realtime = new Realtime();
+        $realtime->connections[1] = [
+            'projectId' => 'proj-a',
+            'presences' => ['p1' => new Document(['$id' => 'p1'])],
+        ];
+
+        $this->assertSame(0, $realtime->removePresenceFromConnections('proj-a', 'missing'));
+        $this->assertSame(0, $realtime->removePresenceFromConnections('', 'p1'));
+        $this->assertSame(0, $realtime->removePresenceFromConnections('proj-a', ''));
+        $this->assertArrayHasKey('p1', $realtime->connections[1]['presences']);
     }
 }

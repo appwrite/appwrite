@@ -115,7 +115,7 @@ class Create extends Action
     ) {
         $bucket = $authorization->skip(fn () => $dbForProject->getDocument('buckets', $bucketId));
 
-        $isAPIKey = $user->isApp($authorization->getRoles());
+        $isAPIKey = $user->isKey($authorization->getRoles());
         $isPrivilegedUser = $user->isPrivileged($authorization->getRoles());
 
         if ($bucket->isEmpty() || (!$bucket->getAttribute('enabled') && !$isAPIKey && !$isPrivilegedUser)) {
@@ -260,8 +260,8 @@ class Create extends Action
         };
 
         try {
-            $locks($lockKey, 600, function () use ($bucket, &$chunks, $contentRange, $dbForProject, $deviceForFiles, $fileId, $fileName, $fileSize, &$metadata, $path, $permissions, $response, &$completed): void {
-                $file = $dbForProject->getDocument('bucket_' . $bucket->getSequence(), $fileId);
+            $locks($lockKey, 600, function () use ($authorization, $bucket, &$chunks, $contentRange, $dbForProject, $deviceForFiles, $fileId, $fileName, $fileSize, &$metadata, $path, $permissions, $response, &$completed): void {
+                $file = $authorization->skip(fn () => $dbForProject->getDocument('bucket_' . $bucket->getSequence(), $fileId));
                 if (!$file->isEmpty()) {
                     $chunks = $file->getAttribute('chunksTotal', 1);
                     $uploaded = $file->getAttribute('chunksUploaded', 0);
@@ -320,11 +320,12 @@ class Create extends Action
         }
 
         if ($completed) {
+            $queueForEvents->reset();
             return;
         }
 
         $finalizeUpload = function (int $chunksUploaded) use ($authorization, $bucket, &$chunks, $contentRange, $dbForProject, $deviceForFiles, $fileId, $fileName, $fileSize, &$metadata, $mergeUploadMetadata, $path, $permissions, $queueForEvents, $response): void {
-            $file = $dbForProject->getDocument('bucket_' . $bucket->getSequence(), $fileId);
+            $file = $authorization->skip(fn () => $dbForProject->getDocument('bucket_' . $bucket->getSequence(), $fileId));
             $uploaded = 0;
 
             if (!$file->isEmpty()) {
@@ -336,6 +337,8 @@ class Create extends Action
                     if (empty($contentRange)) {
                         throw new Exception(Exception::STORAGE_FILE_ALREADY_EXISTS);
                     }
+
+                    $queueForEvents->reset();
 
                     $response
                         ->setStatusCode(Response::STATUS_CODE_OK)
@@ -494,6 +497,8 @@ class Create extends Action
                     ->setParam('bucketId', $bucket->getId())
                     ->setParam('fileId', $file->getId())
                     ->setContext('bucket', $bucket);
+            } else {
+                $queueForEvents->reset();
             }
 
             $metadata = null; // was causing leaks as it was passed by reference

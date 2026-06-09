@@ -1,11 +1,13 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Tests\Unit\Platform\Modules\Installer\Validator;
 
 use Appwrite\Platform\Installer\Validator\AppDomain;
 use PHPUnit\Framework\TestCase;
 
-class AppDomainTest extends TestCase
+final class AppDomainTest extends TestCase
 {
     protected ?AppDomain $validator = null;
 
@@ -31,7 +33,7 @@ class AppDomainTest extends TestCase
 
     public function testType(): void
     {
-        $this->assertEquals($this->validator::TYPE_STRING, $this->validator->getType());
+        $this->assertSame($this->validator::TYPE_STRING, $this->validator->getType());
     }
 
     public function testRejectsNonStringTypes(): void

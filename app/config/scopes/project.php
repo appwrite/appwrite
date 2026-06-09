@@ -379,4 +379,12 @@ return [
         'description' => 'Access to delete reports under Advisor service.',
         'category' => 'Advisor',
     ],
+    'presences.read' => [
+        'description' => 'Access to read your project\'s presences',
+        'category' => 'Presences',
+    ],
+    'presences.write' => [
+        'description' => 'Access to create, update, and delete your project\'s presences',
+        'category' => 'Presences',
+    ],
 ];
