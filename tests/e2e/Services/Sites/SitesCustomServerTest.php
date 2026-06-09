@@ -2540,12 +2540,14 @@ final class SitesCustomServerTest extends Scope
         $this->assertNotEmpty($response['cookies']['a_jwt_console']);
         $this->assertEquals($jwt['body']['jwt'], $response['cookies']['a_jwt_console']);
 
-        $response = $proxyClient->call(Client::METHOD_GET, '/contact', headers: [
-            'cookie' => 'a_jwt_console=' . $jwt['body']['jwt']
-        ], followRedirects: false);
-        $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertStringContainsString("Contact page", (string) $response['body']);
-        $this->assertStringContainsString("Preview by", (string) $response['body']);
+        $this->assertEventually(function () use ($proxyClient, $jwt) {
+            $response = $proxyClient->call(Client::METHOD_GET, '/contact', headers: [
+                'cookie' => 'a_jwt_console=' . $jwt['body']['jwt']
+            ], followRedirects: false);
+            $this->assertEquals(200, $response['headers']['status-code']);
+            $this->assertStringContainsString("Contact page", (string) $response['body']);
+            $this->assertStringContainsString("Preview by", (string) $response['body']);
+        });
 
         // Failure: Session missing (old bad, new ok)
         $session = $this->client->call(Client::METHOD_DELETE, '/account/sessions/current', array_merge([
@@ -2573,12 +2575,14 @@ final class SitesCustomServerTest extends Scope
         $this->assertEquals(201, $jwt['headers']['status-code']);
         $this->assertNotEmpty($jwt['body']['jwt']);
 
-        $response = $proxyClient->call(Client::METHOD_GET, '/contact', headers: [
-            'cookie' => 'a_jwt_console=' . $jwt['body']['jwt']
-        ], followRedirects: false);
-        $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertStringContainsString("Contact page", (string) $response['body']);
-        $this->assertStringContainsString("Preview by", (string) $response['body']);
+        $this->assertEventually(function () use ($proxyClient, $jwt) {
+            $response = $proxyClient->call(Client::METHOD_GET, '/contact', headers: [
+                'cookie' => 'a_jwt_console=' . $jwt['body']['jwt']
+            ], followRedirects: false);
+            $this->assertEquals(200, $response['headers']['status-code']);
+            $this->assertStringContainsString("Contact page", (string) $response['body']);
+            $this->assertStringContainsString("Preview by", (string) $response['body']);
+        });
 
         $user = $this->client->call(Client::METHOD_PATCH, '/account/status', array_merge([
             'origin' => 'http://localhost',
