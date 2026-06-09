@@ -231,6 +231,7 @@ Database::addFilter(
         return $database->getAuthorization()->skip(fn () => $database
             ->find('authenticators', [
                 Query::equal('userInternalId', [$document->getSequence()]),
+                Query::orderDesc('$createdAt'),
                 Query::limit(APP_LIMIT_SUBQUERY),
             ]));
     }
