@@ -73,18 +73,24 @@ export function calculateDedicatedDatabaseMonthlyCost(params: {
   }
 }
 
+export const DATABASE_COMPUTE_CREDITS_NOTE =
+  'Each project includes $10 of compute credits for database usage every month.'
+
+export function formatDedicatedMonthlyPrice(amountUsd: number): string {
+  const rounded =
+    Number.isInteger(amountUsd) ? amountUsd.toFixed(0) : amountUsd.toFixed(2)
+  return `$${rounded}/mo`
+}
+
 export function formatDedicatedAddonPrice(amountUsd: number): string {
-  if (amountUsd <= 0) return 'Included'
+  if (amountUsd <= 0) return formatDedicatedMonthlyPrice(0)
   const rounded =
     Number.isInteger(amountUsd) ? amountUsd.toFixed(0) : amountUsd.toFixed(2)
   return `+$${rounded}/mo`
 }
 
 export function formatDedicatedMonthlyTotal(amountUsd: number): string {
-  if (amountUsd <= 0) return 'Included'
-  const rounded =
-    Number.isInteger(amountUsd) ? amountUsd.toFixed(0) : amountUsd.toFixed(2)
-  return `$${rounded}/mo`
+  return formatDedicatedMonthlyPrice(amountUsd)
 }
 
 export const MAX_DEDICATED_DB_HA_REPLICA_COUNT = 5

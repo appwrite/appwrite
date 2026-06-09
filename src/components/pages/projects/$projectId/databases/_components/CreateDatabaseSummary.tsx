@@ -6,7 +6,10 @@ import {
 import { Badge } from '@/components/ui/badge'
 import { cn } from '@/lib/utils'
 import type { SpecOption } from '@/lib/database-specs'
-import type { DedicatedDatabaseMonthlyCost } from '@/lib/database-create-pricing'
+import {
+  DATABASE_COMPUTE_CREDITS_NOTE,
+  type DedicatedDatabaseMonthlyCost,
+} from '@/lib/database-create-pricing'
 import { formatCurrency } from '@/components/pages/organizations/$orgId/billing/utils'
 import {
   MySQLDolphinIcon,
@@ -77,11 +80,19 @@ function CostLine({
   label,
   amountUsd,
   emphasize,
+  zeroLabel,
 }: {
   label: string
   amountUsd: number
   emphasize?: boolean
+  /** Shown instead of a dollar amount when the line cost is zero (e.g. None, Off). */
+  zeroLabel?: string
 }) {
+  const isUnset = amountUsd <= 0 && zeroLabel !== undefined
+  const display = isUnset
+    ? zeroLabel
+    : `${formatCurrency(amountUsd)}/mo`
+
   return (
     <div
       className={cn(
@@ -96,9 +107,10 @@ function CostLine({
         className={cn(
           'shrink-0 tabular-nums font-medium',
           emphasize && 'font-semibold',
+          isUnset && 'text-muted-foreground',
         )}
       >
-        {amountUsd <= 0 ? 'Included' : `${formatCurrency(amountUsd)}/mo`}
+        {display}
       </span>
     </div>
   )
@@ -204,10 +216,12 @@ export function CreateDatabaseSummary({
                         : `Replicas (${replicaCount})`
                     }
                     amountUsd={monthlyCost.haReplicasUsd}
+                    zeroLabel="None"
                   />
                   <CostLine
                     label={pitrEnabled ? 'PITR' : 'PITR (off)'}
                     amountUsd={monthlyCost.pitrUsd}
+                    zeroLabel="Off"
                   />
                   <CostLine
                     label="Total"
@@ -215,9 +229,10 @@ export function CreateDatabaseSummary({
                     emphasize
                   />
                 </div>
-                <p className="text-[12px] leading-relaxed text-muted-foreground">
-                  Storage and bandwidth overages billed separately.
-                </p>
+                <div className="space-y-1.5 text-[12px] leading-relaxed text-muted-foreground">
+                  <p>{DATABASE_COMPUTE_CREDITS_NOTE}</p>
+                  <p>Storage and bandwidth overages billed separately.</p>
+                </div>
               </>
             )}
           </div>

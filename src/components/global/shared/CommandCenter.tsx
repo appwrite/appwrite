@@ -295,7 +295,7 @@ export function CommandCenter({
     () => ({
       scope: toRegistryScope(context),
       projectId: projectId ?? null,
-      orgId: orgId ?? null,
+      orgId: orgId ?? project?.teamId ?? null,
       features,
       access,
       isMobile,
@@ -316,6 +316,7 @@ export function CommandCenter({
       context,
       projectId,
       orgId,
+      project?.teamId,
       features,
       access,
       isMobile,

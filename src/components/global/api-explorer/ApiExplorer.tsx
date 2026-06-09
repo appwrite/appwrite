@@ -90,6 +90,9 @@ const VERTICAL_HANDLE_CLASS = cn(
 const COLUMN_HEADER_CLASS =
   'flex h-[62px] shrink-0 border-b border-border px-4'
 
+/** Matches ServiceHeader title and toolbar horizontal padding. */
+const EXPLORER_EDGE_PADDING = 'px-4 sm:px-6'
+
 const EXPLORER_SCROLL_AREA_CLASS = 'min-h-0 min-w-0 flex-1 overflow-hidden'
 
 export type ApiExplorerProps = {
@@ -100,7 +103,53 @@ export type ApiExplorerProps = {
     serviceId: string
     operationId: string
   }) => void
+  searchValue?: string
+  onSearchChange?: (value: string) => void
+  platform?: ApiExplorerProjectPlatform
+  onPlatformChange?: (platform: ApiExplorerProjectPlatform) => void
+  /** When true, omits the search/platform bar (render via ServiceHeader instead). */
+  hideToolbar?: boolean
   className?: string
+}
+
+type ApiExplorerPlatformToggleProps = {
+  value: ApiExplorerProjectPlatform
+  onChange: (platform: ApiExplorerProjectPlatform) => void
+  className?: string
+}
+
+export function ApiExplorerPlatformToggle({
+  value,
+  onChange,
+  className,
+}: ApiExplorerPlatformToggleProps) {
+  return (
+    <ToggleGroup
+      type="single"
+      variant="outline"
+      size="sm"
+      value={value}
+      onValueChange={(next: string) => {
+        if (next !== 'server' && next !== 'client') return
+        onChange(next)
+      }}
+      className={cn('shrink-0', className)}
+      aria-label="API platform"
+    >
+      <ToggleGroupItem
+        value="server"
+        className="h-9 px-3 text-[13px] font-medium data-[state=on]:bg-muted data-[state=on]:text-foreground"
+      >
+        Server API
+      </ToggleGroupItem>
+      <ToggleGroupItem
+        value="client"
+        className="h-9 px-3 text-[13px] font-medium data-[state=on]:bg-muted data-[state=on]:text-foreground"
+      >
+        Client API
+      </ToggleGroupItem>
+    </ToggleGroup>
+  )
 }
 
 function getHttpMethodVariant(
@@ -152,6 +201,11 @@ export function ApiExplorer({
   initialServiceId,
   initialOperationId,
   onSelectionChange,
+  searchValue: controlledSearchValue,
+  onSearchChange,
+  platform: controlledPlatform,
+  onPlatformChange,
+  hideToolbar = false,
   className,
 }: ApiExplorerProps) {
   const { account } = useAuth()
@@ -166,7 +220,9 @@ export function ApiExplorer({
   const [parsedSpec, setParsedSpec] = useState<ParsedApiSpec | null>(null)
   const [specError, setSpecError] = useState<string | null>(null)
   const [specLoading, setSpecLoading] = useState(true)
-  const [searchValue, setSearchValue] = useState('')
+  const [internalSearchValue, setInternalSearchValue] = useState('')
+  const searchValue = controlledSearchValue ?? internalSearchValue
+  const setSearchValue = onSearchChange ?? setInternalSearchValue
   const [selectedServiceId, setSelectedServiceId] = useState<string | null>(
     initialServiceId ?? null,
   )
@@ -180,8 +236,10 @@ export function ApiExplorer({
   const [bodyInputMode, setBodyInputMode] = useState<'form' | 'json'>('form')
   const [response, setResponse] = useState<ExecuteApiRequestResult | null>(null)
   const [isExecuting, setIsExecuting] = useState(false)
-  const [activePlatform, setActivePlatform] =
+  const [internalPlatform, setInternalPlatform] =
     useState<ApiExplorerProjectPlatform>(initialPlatform)
+  const activePlatform = controlledPlatform ?? internalPlatform
+  const setActivePlatform = onPlatformChange ?? setInternalPlatform
   const [authMode, setAuthMode] = useState<ApiExplorerSessionAuthMode>('guest')
   const [authUserId, setAuthUserId] = useState('')
   const selectedOperationRef = useRef<string | undefined>(initialOperationId)
@@ -512,6 +570,20 @@ export function ApiExplorer({
     selectedMethod,
   ])
 
+  const handlePlatformChange = useCallback(
+    (platform: ApiExplorerProjectPlatform) => {
+      setActivePlatform(platform)
+    },
+    [setActivePlatform],
+  )
+
+  const previousPlatformRef = useRef(activePlatform)
+  useEffect(() => {
+    if (previousPlatformRef.current === activePlatform) return
+    previousPlatformRef.current = activePlatform
+    setResponse(null)
+  }, [activePlatform])
+
   const pathParameters = selectedMethod?.parameters.filter(
     (param) => param.in === 'path',
   )
@@ -552,44 +624,24 @@ export function ApiExplorer({
 
   return (
     <div className={cn('flex h-full min-h-0 flex-1 flex-col', className)}>
-      <div className="shrink-0 border-b border-border px-4 py-3 sm:px-6">
-        <div className="flex flex-wrap items-center gap-3">
-          <div className="min-w-0 flex-1">
-            <Input
-              value={searchValue}
-              onChange={(event) => setSearchValue(event.target.value)}
-              placeholder="Search services and methods…"
-              className="h-9 max-w-md text-[13px]"
+      {!hideToolbar ? (
+        <div className="shrink-0 border-b border-border px-4 py-3 sm:px-6">
+          <div className="flex flex-wrap items-center gap-3">
+            <div className="min-w-0 flex-1">
+              <Input
+                value={searchValue}
+                onChange={(event) => setSearchValue(event.target.value)}
+                placeholder="Search services and methods…"
+                className="h-9 max-w-md text-[13px]"
+              />
+            </div>
+            <ApiExplorerPlatformToggle
+              value={activePlatform}
+              onChange={handlePlatformChange}
             />
           </div>
-          <ToggleGroup
-            type="single"
-            variant="outline"
-            size="sm"
-            value={activePlatform}
-            onValueChange={(value) => {
-              if (value !== 'server' && value !== 'client') return
-              setActivePlatform(value)
-              setResponse(null)
-            }}
-            className="shrink-0"
-            aria-label="API platform"
-          >
-            <ToggleGroupItem
-              value="server"
-              className="h-9 px-3 text-[13px] font-medium data-[state=on]:bg-muted data-[state=on]:text-foreground"
-            >
-              Server API
-            </ToggleGroupItem>
-            <ToggleGroupItem
-              value="client"
-              className="h-9 px-3 text-[13px] font-medium data-[state=on]:bg-muted data-[state=on]:text-foreground"
-            >
-              Client API
-            </ToggleGroupItem>
-          </ToggleGroup>
         </div>
-      </div>
+      ) : null}
 
       <div className="min-h-0 flex-1">
         <ExplorerColumnsResizableLayout
@@ -668,15 +720,25 @@ function ServiceListPanel({
 
   return (
     <div className="flex h-full min-h-0 min-w-0 flex-col overflow-hidden border-r border-border bg-muted/20">
-      <div className={cn(COLUMN_HEADER_CLASS, 'items-center')}>
+      <div
+        className={cn(
+          'flex h-[62px] shrink-0 items-center border-b border-border',
+          EXPLORER_EDGE_PADDING,
+        )}
+      >
         <p className="text-[12px] font-semibold uppercase tracking-wider text-muted-foreground">
           Services
         </p>
       </div>
       <ScrollArea className={EXPLORER_SCROLL_AREA_CLASS}>
-        <div className="box-border w-full max-w-full min-w-0 p-2">
+        <div
+          className={cn(
+            'box-border w-full max-w-full min-w-0 py-2',
+            EXPLORER_EDGE_PADDING,
+          )}
+        >
           {!hasServices ? (
-            <p className="px-2 py-4 text-[13px] text-muted-foreground">
+            <p className="py-4 text-[13px] text-muted-foreground">
               No services match your search.
             </p>
           ) : (
@@ -695,7 +757,7 @@ function ServiceListPanel({
                   value={group.id}
                   className="border-b border-border/50 pb-1 last:border-b-0 last:pb-0"
                 >
-                  <AccordionTrigger className="gap-1.5 px-2.5 py-2 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground/70 hover:no-underline [&>svg]:size-3.5 [&>svg]:text-muted-foreground/70">
+                  <AccordionTrigger className="gap-1.5 py-2 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground/70 hover:no-underline [&>svg]:size-3.5 [&>svg]:text-muted-foreground/70">
                     <span className="min-w-0 flex-1 truncate text-left">
                       {group.label}
                     </span>

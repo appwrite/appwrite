@@ -5,6 +5,14 @@ import { Link } from '@tanstack/react-router'
 import { Button } from '@/components/ui/button'
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table'
+import {
   ComparisonCellValue,
   ComparisonRowLabel,
   getPlanCtaHref,
@@ -12,10 +20,16 @@ import {
   outlineTierButtonClassName,
 } from './_components/PricingShared'
 import { PricingSectionHeading } from './_components/PricingSectionHeading'
+import { CompareToc } from './CompareToc'
 import { PRICING_PLAN_COLUMNS } from '@/lib/pricing/constants'
 import { comparisonTables } from '@/lib/pricing/comparison-data'
+import { getComparisonTableAnchorId } from '@/lib/pricing/comparison-sections'
 import type { ComparisonTable, PlanId } from '@/lib/pricing/types'
 import { cn } from '@/lib/utils'
+
+const compareTableClassName = 'w-full table-fixed'
+const compareStickyHeadClassName =
+  'sticky top-0 z-10 bg-background px-4 py-3 text-[12px] font-semibold uppercase tracking-wider text-muted-foreground shadow-[inset_0_-1px_0_var(--border)] sm:px-6'
 
 function MobilePlanTabs({
   activePlan,
@@ -45,26 +59,6 @@ function MobilePlanTabs({
   )
 }
 
-function CompareTableHeader() {
-  return (
-    <div className="hidden border-b border-border lg:grid lg:grid-cols-[minmax(220px,1.2fr)_repeat(3,minmax(0,1fr))]">
-      <div className="px-4 py-3 text-[12px] font-semibold uppercase tracking-wider text-muted-foreground sm:px-6">
-        Feature
-      </div>
-      {PRICING_PLAN_COLUMNS.map((column) => (
-        <div
-          key={column.id}
-          className="flex items-center justify-center px-4 py-3 text-center sm:px-6"
-        >
-          <span className="text-[12px] font-semibold uppercase tracking-wider text-muted-foreground">
-            {column.label}
-          </span>
-        </div>
-      ))}
-    </div>
-  )
-}
-
 function CompareCategoryTable({
   table,
   mobilePlan,
@@ -73,38 +67,56 @@ function CompareCategoryTable({
   mobilePlan: PlanId
 }) {
   return (
-    <div className="overflow-hidden rounded-xl border border-border bg-card/45">
+    <div
+      id={getComparisonTableAnchorId(table.title)}
+      className="scroll-mt-28 overflow-visible rounded-xl border border-border bg-card/45"
+    >
       <div className="border-b border-border px-4 py-4 sm:px-6">
         <h3 className="font-aeonik-pro text-[16px] font-normal text-foreground sm:text-[17px]">
           {table.title}
         </h3>
       </div>
 
-      <CompareTableHeader />
-
-      <div className="hidden lg:block">
-        {table.rows.map((row, index) => (
-          <div
-            key={row.title}
-            className={cn(
-              'grid grid-cols-[minmax(220px,1.2fr)_repeat(3,minmax(0,1fr))]',
-              index > 0 && 'border-t border-border',
-            )}
-          >
-            <div className="px-4 py-3 sm:px-6">
-              <ComparisonRowLabel title={row.title} info={row.info} />
-            </div>
+      <Table withScrollContainer={false} className={cn('hidden lg:table', compareTableClassName)}>
+        <colgroup>
+          <col className="w-[32%]" />
+          <col />
+          <col />
+          <col />
+        </colgroup>
+        <TableHeader>
+          <TableRow className="hover:bg-transparent border-b border-border">
+            <TableHead className={cn(compareStickyHeadClassName, 'text-left')}>
+              Feature
+            </TableHead>
             {PRICING_PLAN_COLUMNS.map((column) => (
-              <div
+              <TableHead
                 key={column.id}
-                className="flex items-center justify-center px-4 py-3 text-center sm:px-6"
+                className={cn(compareStickyHeadClassName, 'text-center')}
               >
-                <ComparisonCellValue value={row[column.id]} />
-              </div>
+                {column.label}
+              </TableHead>
             ))}
-          </div>
-        ))}
-      </div>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {table.rows.map((row) => (
+            <TableRow key={row.title} className="hover:bg-transparent border-b border-border">
+              <TableCell className="px-4 py-3 align-middle sm:px-6">
+                <ComparisonRowLabel title={row.title} info={row.info} />
+              </TableCell>
+              {PRICING_PLAN_COLUMNS.map((column) => (
+                <TableCell
+                  key={column.id}
+                  className="px-4 py-3 text-center align-middle sm:px-6"
+                >
+                  <ComparisonCellValue value={row[column.id]} />
+                </TableCell>
+              ))}
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
 
       <div className="lg:hidden">
         {table.rows.map((row, index) => (
@@ -130,7 +142,10 @@ export function ComparePlansSection() {
   const [mobilePlan, setMobilePlan] = useState<PlanId>('pro')
 
   return (
-    <section id="compare" className="border-b border-border bg-background py-16 sm:py-20">
+    <section
+      id="compare"
+      className="overflow-visible border-b border-border bg-background py-16 sm:py-20"
+    >
       <div className="mx-auto w-full max-w-7xl px-4 sm:px-6">
         <PricingSectionHeading
           align="left"
@@ -138,19 +153,27 @@ export function ComparePlansSection() {
           description="Discover our plans and find the one that fits your project's needs."
           className="max-w-2xl"
         />
+      </div>
 
+      <div className="mx-auto w-full max-w-7xl overflow-visible px-4 sm:px-6">
         <div className="mt-8 lg:hidden">
           <MobilePlanTabs activePlan={mobilePlan} onPlanChange={setMobilePlan} />
         </div>
 
-        <div className="mt-8 space-y-6 sm:space-y-8">
-          {comparisonTables.map((table) => (
-            <CompareCategoryTable
-              key={table.title}
-              table={table}
-              mobilePlan={mobilePlan}
-            />
-          ))}
+        <div
+          className="mt-8 grid items-start gap-8 lg:grid-cols-[220px_minmax(0,1fr)] lg:gap-10 xl:grid-cols-[240px_minmax(0,1fr)]"
+        >
+          <CompareToc />
+
+          <div className="min-w-0 space-y-6 overflow-visible sm:space-y-8">
+            {comparisonTables.map((table) => (
+              <CompareCategoryTable
+                key={table.title}
+                table={table}
+                mobilePlan={mobilePlan}
+              />
+            ))}
+          </div>
         </div>
 
         <div className="mt-8 flex flex-col items-stretch gap-3 sm:flex-row sm:justify-center lg:hidden">

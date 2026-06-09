@@ -1,5 +1,6 @@
 import { ComparePlansSection } from './ComparePlansSection'
 import { FaqSection } from './FaqSection'
+import { PricingHashScroll } from './PricingHashScroll'
 import {
   PricingHeroSection,
   StackConsolidationSection,
@@ -7,11 +8,12 @@ import {
 
 export function View() {
   return (
-    <div className="overflow-x-hidden">
+    <div className="min-w-0">
       <PricingHeroSection />
       <StackConsolidationSection />
       <ComparePlansSection />
       <FaqSection />
+      <PricingHashScroll />
     </div>
   )
 }

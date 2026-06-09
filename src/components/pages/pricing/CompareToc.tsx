@@ -1,0 +1,74 @@
+'use client'
+
+import { useEffect, useState, type MouseEvent } from 'react'
+import {
+  PolicySidebarSection,
+  policySidebarLinkClassName,
+} from '@/components/pages/legal/PolicySidebarNav'
+import { comparisonPageSections } from '@/lib/pricing/comparison-sections'
+import { scrollToComparisonSection } from '@/lib/pricing/comparison-scroll'
+import { cn } from '@/lib/utils'
+
+export function CompareToc({ className }: { className?: string }) {
+  const [activeId, setActiveId] = useState(comparisonPageSections[0]?.id ?? '')
+
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const visible = entries
+          .filter((entry) => entry.isIntersecting)
+          .sort((a, b) => b.intersectionRatio - a.intersectionRatio)
+
+        if (visible[0]?.target.id) {
+          setActiveId(visible[0].target.id)
+        }
+      },
+      {
+        root: document.getElementById('main-content'),
+        rootMargin: '-20% 0px -60% 0px',
+        threshold: [0, 0.25, 0.5, 1],
+      },
+    )
+
+    for (const section of comparisonPageSections) {
+      const element = document.getElementById(section.id)
+      if (element) observer.observe(element)
+    }
+
+    return () => observer.disconnect()
+  }, [])
+
+  const handleClick = (
+    event: MouseEvent<HTMLAnchorElement>,
+    sectionId: string,
+  ) => {
+    event.preventDefault()
+    scrollToComparisonSection(sectionId)
+  }
+
+  return (
+    <aside
+      className={cn(
+        'sticky top-6 z-10 hidden max-h-[calc(100dvh-3rem)] self-start overflow-y-auto lg:block',
+        className,
+      )}
+    >
+      <PolicySidebarSection title="On this page" ariaLabel="Compare plans sections">
+        <ul className="space-y-0.5">
+          {comparisonPageSections.map((section) => (
+            <li key={section.id}>
+              <a
+                href={`#${section.id}`}
+                onClick={(event) => handleClick(event, section.id)}
+                className={policySidebarLinkClassName(activeId === section.id)}
+                aria-current={activeId === section.id ? 'location' : undefined}
+              >
+                {section.label}
+              </a>
+            </li>
+          ))}
+        </ul>
+      </PolicySidebarSection>
+    </aside>
+  )
+}

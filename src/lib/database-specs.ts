@@ -5,6 +5,7 @@
 
 import type { Models } from '@appwrite.io/console'
 import { DatabaseType } from '@appwrite.io/console'
+import { formatDedicatedMonthlyPrice } from '@/lib/database-create-pricing'
 
 export type SpecOption = {
   id: string
@@ -143,8 +144,7 @@ export function formatDedicatedSpecMemory(memoryMb: number): string {
 }
 
 export function formatDedicatedSpecPrice(priceUsd: number): string {
-  if (priceUsd <= 0) return 'Included'
-  return `$${priceUsd}/mo`
+  return formatDedicatedMonthlyPrice(Math.max(0, priceUsd))
 }
 
 /** Map Compute API specification to wizard table rows. */

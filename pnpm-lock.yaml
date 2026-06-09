@@ -19,7 +19,7 @@ importers:
         version: https://pkg.vc/-/@appwrite/@appwrite.io/console@c7819a3
       '@appwrite.io/specs':
         specifier: github:appwrite/specs
-        version: https://codeload.github.com/appwrite/specs/tar.gz/570c9de01b4d6c54a28a746fb6dd2a6ecbdc6da4
+        version: https://codeload.github.com/appwrite/specs/tar.gz/b3ae6f24d42b40a00e7dcec617ce7e035cb4c019
       '@dnd-kit/core':
         specifier: ^6.3.1
         version: 6.3.1(react-dom@19.1.1(react@19.1.1))(react@19.1.1)
@@ -426,8 +426,8 @@ packages:
     version: 13.2.0
     engines: {node: '>=18.0.0'}
 
-  '@appwrite.io/specs@https://codeload.github.com/appwrite/specs/tar.gz/570c9de01b4d6c54a28a746fb6dd2a6ecbdc6da4':
-    resolution: {tarball: https://codeload.github.com/appwrite/specs/tar.gz/570c9de01b4d6c54a28a746fb6dd2a6ecbdc6da4}
+  '@appwrite.io/specs@https://codeload.github.com/appwrite/specs/tar.gz/b3ae6f24d42b40a00e7dcec617ce7e035cb4c019':
+    resolution: {tarball: https://codeload.github.com/appwrite/specs/tar.gz/b3ae6f24d42b40a00e7dcec617ce7e035cb4c019}
     version: 0.0.0
 
   '@asamuzakjp/css-color@3.2.0':
@@ -4998,8 +4998,8 @@ packages:
     resolution: {integrity: sha512-okMH7OXXJ7YrN9Ok3/SXrnu4iX9yOk+25nqX4imS2npuvTYDmo/QEZoqwZkYaIDk3jVvBOTOIEgEhaLOynBS9g==}
     hasBin: true
 
-  js-yaml@4.1.1:
-    resolution: {integrity: sha512-qQKT4zQxXl8lLwBtHMWwaTcGfFOZviOJet3Oy/xmGk2gZH677CJM9EvtfdSkgWcATZhj/55JZ0rmy3myCT5lsA==}
+  js-yaml@4.2.0:
+    resolution: {integrity: sha512-ePWsvanv0DWuDRsW8dnt+R4jQ31SCRCQ7hhNcPXZPsoBZiemuZNYGf7adZdqX2D86j6rvKp3RpCxVTSb8WQlOw==}
     hasBin: true
 
   jsdom@26.1.0:
@@ -7234,7 +7234,7 @@ snapshots:
     dependencies:
       json-bigint: 1.0.0
 
-  '@appwrite.io/specs@https://codeload.github.com/appwrite/specs/tar.gz/570c9de01b4d6c54a28a746fb6dd2a6ecbdc6da4': {}
+  '@appwrite.io/specs@https://codeload.github.com/appwrite/specs/tar.gz/b3ae6f24d42b40a00e7dcec617ce7e035cb4c019': {}
 
   '@asamuzakjp/css-color@3.2.0':
     dependencies:
@@ -7710,7 +7710,7 @@ snapshots:
       globals: 14.0.0
       ignore: 5.3.2
       import-fresh: 3.3.1
-      js-yaml: 4.1.1
+      js-yaml: 4.2.0
       minimatch: 3.1.5
       strip-json-comments: 3.1.1
     transitivePeerDependencies:
@@ -11824,7 +11824,7 @@ snapshots:
       argparse: 1.0.10
       esprima: 4.0.1
 
-  js-yaml@4.1.1:
+  js-yaml@4.2.0:
     dependencies:
       argparse: 2.0.1
 

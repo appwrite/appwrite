@@ -1,6 +1,13 @@
+'use client'
+
 import { ArrowRight } from 'lucide-react'
+import type { MouseEvent } from 'react'
 import { HomeSoftLights } from '@/components/pages/home/HomeSoftLights'
 import { Button } from '@/components/ui/button'
+import {
+  PRICING_COMPARE_ANCHOR_ID,
+  scrollToComparisonSection,
+} from '@/lib/pricing/comparison-scroll'
 import { PricingCardsGrid } from './_components/PricingShared'
 import { PricingSectionHeading } from './_components/PricingSectionHeading'
 import { PricingServicesAvatars } from './_components/PricingServicesAvatars'
@@ -100,7 +107,13 @@ export function StackConsolidationSection() {
 
         <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-4">
           <Button variant="outline" className="h-10 text-[13px]" asChild>
-            <a href="#compare">
+            <a
+              href={`#${PRICING_COMPARE_ANCHOR_ID}`}
+              onClick={(event: MouseEvent<HTMLAnchorElement>) => {
+                event.preventDefault()
+                scrollToComparisonSection(PRICING_COMPARE_ANCHOR_ID)
+              }}
+            >
               See what&apos;s included
               <ArrowRight className="ml-1.5 size-4" />
             </a>

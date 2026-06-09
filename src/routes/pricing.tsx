@@ -3,6 +3,10 @@ import { ConsoleLayout } from '@/components/global/layout/ConsoleLayout'
 import { StandaloneCommandCenterScope } from '@/components/global/providers/KeyboardShortcuts'
 import { View } from '@/components/pages/pricing/View'
 import { getActiveProfileFeatures } from '@/lib/console-profiles'
+import {
+  isPricingHashTarget,
+  resetPricingPageScrollContainers,
+} from '@/lib/pricing/comparison-scroll'
 import { consoleAccountQueryOptions } from '@/lib/react-query/hooks/auth'
 import { pageTitle } from '@/lib/utils/page-title'
 
@@ -20,6 +24,12 @@ export const Route = createFileRoute('/pricing')({
   }),
   loader: async ({ context }) => {
     if (typeof window === 'undefined') return
+
+    const hash = window.location.hash.slice(1)
+    if (hash && isPricingHashTarget(hash)) {
+      history.scrollRestoration = 'manual'
+      resetPricingPageScrollContainers(true)
+    }
 
     if (!getActiveProfileFeatures().marketing) {
       throw redirect({ to: '/', replace: true })

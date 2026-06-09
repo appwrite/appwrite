@@ -11,6 +11,7 @@ import {
   BarChart3,
   Database,
   Folder,
+  FolderOpen,
   Globe,
   Key,
   LayoutDashboard,
@@ -30,6 +31,18 @@ import { registerCommands } from '../registry'
 import type { CommandEntry } from '../types'
 
 const PROJECT_NAV: CommandEntry[] = [
+  {
+    id: 'project.nav.projects',
+    scopes: ['project'],
+    kind: 'navigation',
+    label: 'Projects',
+    description: 'All projects in this organization',
+    icon: FolderOpen,
+    shortcut: 'G P',
+    keywords: ['home', 'projects', 'list', 'organization'],
+    available: (ctx) => Boolean(ctx.orgId),
+    to: (ctx) => `/organizations/${ctx.orgId}`,
+  },
   {
     id: 'project.nav.overview',
     scopes: ['project'],
@@ -72,7 +85,7 @@ const PROJECT_NAV: CommandEntry[] = [
     label: 'Explorer',
     description: 'Browse and test Appwrite REST API endpoints',
     icon: ListTree,
-    shortcut: 'G P',
+    shortcut: 'G X',
     keywords: [
       'api',
       'explorer',
@@ -201,7 +214,7 @@ const PROJECT_NAV: CommandEntry[] = [
     label: 'Settings',
     description: 'Project settings, custom domains, variables, webhooks',
     icon: Settings,
-    shortcut: 'G ,',
+    shortcut: 'G E',
     keywords: ['config', 'preferences', 'options', 'settings', 'env'],
     available: (ctx) => canShowProjectSettings(ctx.access, ctx.features),
     to: (ctx) => `/projects/${ctx.projectId}/settings`,

@@ -92,6 +92,13 @@ export function KeyboardShortcutsProvider({
         navigate({ to: '/projects/$projectId/api-keys', params: { projectId } })
         return
       }
+      if (section === 'projects') {
+        const teamId = project?.teamId
+        if (teamId) {
+          navigate({ to: '/organizations/$orgId', params: { orgId: teamId } })
+        }
+        return
+      }
       if (section === 'explorer') {
         navigate({ to: '/projects/$projectId/explorer', params: { projectId } })
         return
@@ -130,7 +137,7 @@ export function KeyboardShortcutsProvider({
       }
       navigate({ to: `/projects/${projectId}/${section}` as never })
     },
-    [navigate, projectId],
+    [navigate, projectId, project?.teamId],
   )
 
   const onNavigateToResource = useCallback(
@@ -261,10 +268,13 @@ export function KeyboardShortcutsProvider({
       'g o': () => navigateToSection('overview'),
     }
 
+    if (project?.teamId) {
+      shortcuts['g p'] = () => navigateToSection('projects')
+    }
     if (canShowConnectSection(access, features)) {
       shortcuts['g i'] = () => navigateToSection('apps')
       shortcuts['g k'] = () => navigateToSection('api-keys')
-      shortcuts['g p'] = () => navigateToSection('explorer')
+      shortcuts['g x'] = () => navigateToSection('explorer')
     }
     if (canSeeProjectNavItem(access, features, 'databases')) {
       shortcuts['g d'] = () => navigateToSection('databases')
@@ -289,6 +299,7 @@ export function KeyboardShortcutsProvider({
     }
     shortcuts['g a'] = () => navigateToSection('auth')
     if (canShowProjectSettings(access, features)) {
+      shortcuts['g e'] = () => navigateToSection('settings')
       shortcuts['g ,'] = () => navigateToSection('settings')
     }
 
@@ -312,7 +323,7 @@ export function KeyboardShortcutsProvider({
     }
 
     return shortcuts
-  }, [access, features, navigateToSection, onCreateResource])
+  }, [access, features, navigateToSection, onCreateResource, project?.teamId])
 
   useSequentialShortcuts(sequentialShortcuts, { enabled: !commandCenterOpen })
 

@@ -51,6 +51,7 @@ import { DEFAULT_NEW_DATABASE_NAME } from '@/lib/default-new-database-name'
 import { useAnalytics } from '@/hooks/use-analytics'
 import {
   calculateDedicatedDatabaseMonthlyCost,
+  DATABASE_COMPUTE_CREDITS_NOTE,
   getDedicatedDatabaseCreatePricing,
 } from '@/lib/database-create-pricing'
 import {
@@ -622,9 +623,7 @@ export function CreateDatabaseWizardView() {
             </p>
             <div className="rounded-lg border border-border bg-muted/30 px-4 py-3 mb-4">
               <p className="text-[13px] font-medium text-foreground">
-                Each organization includes{' '}
-                <span className="font-semibold">$10 of compute credits</span>{' '}
-                for database usage every month.
+                {DATABASE_COMPUTE_CREDITS_NOTE}
               </p>
             </div>
             <div className="rounded-xl border border-border bg-card overflow-hidden">
