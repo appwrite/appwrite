@@ -289,9 +289,11 @@ abstract class ScheduleBase extends Action
         }
 
         if (!empty($scheduleIdsToDelete)) {
-            $dbForPlatform->deleteDocuments('schedules', [
-                Query::equal('$id', $scheduleIdsToDelete),
-            ]);
+            go(function () use ($dbForPlatform, $scheduleIdsToDelete) {
+                $dbForPlatform->deleteDocuments('schedules', [
+                    Query::equal('$id', $scheduleIdsToDelete),
+                ]);
+            });
         }
 
         $lastSyncUpdate = $time;
