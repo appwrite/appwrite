@@ -13,9 +13,9 @@ use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
+use Utopia\Database\Exception\Transaction as TransactionException;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\UID;
-use Utopia\Mongo\Exception as MongoException;
 use Utopia\Platform\Action;
 use Utopia\Platform\Scope\HTTP;
 use Utopia\Storage\Device;
@@ -94,11 +94,7 @@ class Delete extends Action
             if (!$dbForProject->deleteDocument('deployments', $deployment->getId())) {
                 throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Failed to remove deployment from DB');
             }
-        } catch (MongoException $exception) {
-            if ($exception->getCode() !== 112) {
-                throw $exception;
-            }
-
+        } catch (TransactionException) {
             $deploymentExists = !$dbForProject->getDocument('deployments', $deployment->getId())->isEmpty();
 
             if ($deploymentExists && !$dbForProject->deleteDocument('deployments', $deployment->getId())) {

@@ -96,11 +96,7 @@ class Update extends Action
                 'buildDuration' => $duration,
                 'status' => 'canceled'
             ]));
-        } catch (TransactionException $exception) {
-            if ($exception->getCode() !== 112) {
-                throw $exception;
-            }
-
+        } catch (TransactionException) {
             $deployment = $dbForProject->getDocument('deployments', $deployment->getId());
 
             if ($deployment->isEmpty()) {
