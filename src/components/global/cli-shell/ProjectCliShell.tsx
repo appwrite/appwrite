@@ -19,7 +19,6 @@ import {
   RotateCcw,
   Terminal as TerminalIcon,
   Trash2,
-  X,
   ChevronDown,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
@@ -138,7 +137,6 @@ type ProjectCliShellPanelProps = {
 function ProjectCliShellPanel({ onResizingChange }: ProjectCliShellPanelProps) {
   const {
     open,
-    setOpen,
     toggle,
     status,
     registerTerminal,
@@ -487,16 +485,6 @@ function ProjectCliShellPanel({ onResizingChange }: ProjectCliShellPanelProps) {
             title="Minimize shell"
           >
             <ChevronDown className="h-3.5 w-3.5" />
-          </Button>
-          <Button
-            type="button"
-            variant="ghost"
-            size="icon"
-            className="h-8 w-8 text-muted-foreground"
-            onClick={() => setOpen(false)}
-            title="Close shell"
-          >
-            <X className="h-3.5 w-3.5" />
           </Button>
         </div>
       </div>

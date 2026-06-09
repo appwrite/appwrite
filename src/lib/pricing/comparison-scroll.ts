@@ -1,3 +1,4 @@
+import { resetConsoleShellDocumentScroll } from '@/lib/utils'
 import { comparisonPageSections } from './comparison-sections'
 
 export const PRICING_COMPARE_ANCHOR_ID = 'compare'
@@ -11,13 +12,11 @@ export function isPricingHashTarget(hash: string): boolean {
   return comparisonPageSections.some((section) => section.id === hash)
 }
 
-/** Keep window at top; optional reset of the main scroll container before programmatic scroll. */
+/** Keep shell/document at top; optional reset of the main scroll container before programmatic scroll. */
 export function resetPricingPageScrollContainers(resetMain = false) {
   if (typeof window === 'undefined') return
 
-  window.scrollTo(0, 0)
-  document.documentElement.scrollTop = 0
-  document.body.scrollTop = 0
+  resetConsoleShellDocumentScroll()
 
   if (!resetMain) return
 
@@ -35,6 +34,8 @@ export function scrollToComparisonSection(
   const el = document.getElementById(sectionId)
   if (!main || !el) return
 
+  resetConsoleShellDocumentScroll()
+
   const mainRect = main.getBoundingClientRect()
   const elRect = el.getBoundingClientRect()
   const targetTop =
@@ -46,7 +47,13 @@ export function scrollToComparisonSection(
   main.scrollTo({ top: Math.max(0, targetTop), behavior })
 
   if (typeof window !== 'undefined') {
-    window.history.replaceState(null, '', `#${sectionId}`)
+    const nextHash = `#${sectionId}`
+    if (window.location.hash !== nextHash) {
+      // Updating the hash scrolls `.root-container` asynchronously; the pricing
+      // page locks that container at scrollTop 0 while mounted.
+      window.history.replaceState(null, '', nextHash)
+      resetConsoleShellDocumentScroll()
+    }
   }
 }
 

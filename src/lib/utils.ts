@@ -31,6 +31,23 @@ export function truncateStart(str: string, maxLength: number): string {
 }
 
 /**
+ * Reset document and `.root-container` scroll. The app shell is `position: fixed`;
+ * native hash navigation can scroll this container and push the header off-screen.
+ */
+export function resetConsoleShellDocumentScroll() {
+  if (typeof window === 'undefined' || typeof document === 'undefined') return
+
+  window.scrollTo(0, 0)
+  document.documentElement.scrollTop = 0
+  document.body.scrollTop = 0
+
+  const root = document.querySelector('.root-container')
+  if (root instanceof HTMLElement) {
+    root.scrollTop = 0
+  }
+}
+
+/**
  * Scroll the console shell main region to top. List views use `#main-content`
  * (overflow-y-auto); window/document scroll is often zero, so pagination must
  * target this element.
