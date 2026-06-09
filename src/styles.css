@@ -6,6 +6,8 @@
 
 @import './fonts-inter-latin.css';
 
+@import '@xterm/xterm/css/xterm.css';
+
 /* Match default dark + debug-only themes that omit .dark but use dark surfaces (see html-theme.ts). */
 @custom-variant dark (&:is(.dark *, .crazy *, .stealth *, .premium *, .high-contrast *));
 
@@ -1549,6 +1551,16 @@ html[data-init-ticket-video-capturing] [data-init-ticket-video-capture] * {
 
 .cli-terminal .xterm-helper-textarea {
   opacity: 0;
+}
+
+/* xterm font measurement probe — must stay off-screen (see @xterm/xterm/css/xterm.css) */
+.cli-terminal .xterm-char-measure-element {
+  display: inline-block;
+  visibility: hidden;
+  position: absolute;
+  top: 0;
+  left: -9999em;
+  line-height: normal;
 }
 
 .cli-terminal .xterm-viewport::-webkit-scrollbar {

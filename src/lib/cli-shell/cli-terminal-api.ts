@@ -7,6 +7,9 @@ export type CliTerminalApi = {
   clear: () => void
   focus: () => void
   showInputPrompt?: () => void
+  prepareInputLine?: () => void
+  resetForWelcome?: () => void
+  markWelcomeComplete?: () => void
   clearScreen?: () => void
   /** Returns the current interactive prompt prefix (user@project $). */
   getPrompt?: () => string

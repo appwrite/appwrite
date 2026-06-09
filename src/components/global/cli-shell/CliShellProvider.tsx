@@ -66,6 +66,13 @@ import {
   type ConsoleAccountCache,
 } from '@/lib/react-query/hooks/auth'
 import { useProject } from '@/lib/react-query/hooks'
+import {
+  createDefaultCliShellSession,
+  createCliShellSessionId,
+  getInitialCliShellSessionState,
+  nextCliShellSessionName,
+  type CliShellSession,
+} from '@/lib/cli-shell/cli-shell-sessions'
 import { clampCliShellHeightPx } from '@/lib/user-prefs-keys'
 
 type CliShellContextValue = {
@@ -73,14 +80,21 @@ type CliShellContextValue = {
   setOpen: (open: boolean) => void
   toggle: () => void
   status: CliShellStatus
-  registerTerminal: (api: CliTerminalApi) => void
-  unregisterTerminal: () => void
-  runCommand: (command: string) => Promise<void>
-  clearOutput: () => void
+  sessions: CliShellSession[]
+  activeSessionId: string
+  setActiveSessionId: (sessionId: string) => void
+  createSession: () => void
+  removeSession: (sessionId: string) => void
+  registerTerminal: (sessionId: string, api: CliTerminalApi) => void
+  unregisterTerminal: (sessionId: string) => void
+  writeSessionWelcome: (sessionId: string) => boolean
+  runCommand: (command: string, sessionId?: string) => Promise<void>
+  clearOutput: (sessionId?: string) => void
   completeTab: (
     input: string,
     cursor: number,
     listOnly?: boolean,
+    sessionId?: string,
   ) => { input: string; cursor: number } | null
   cancelRunning: () => void
   isRunning: boolean
@@ -126,12 +140,21 @@ export function CliShellProvider({ projectId, children }: CliShellProviderProps)
   const [status, setStatus] = useState<CliShellStatus>('idle')
   const [isRunning, setIsRunning] = useState(false)
   const [bootstrapError, setBootstrapError] = useState<string | null>(null)
+  const [sessions, setSessions] = useState<CliShellSession[]>(
+    () => getInitialCliShellSessionState().sessions,
+  )
+  const [activeSessionId, setActiveSessionId] = useState<string>(
+    () => getInitialCliShellSessionState().activeSessionId,
+  )
   const isRunningRef = useRef(false)
   isRunningRef.current = isRunning
 
   const containerRef = useRef<CliShellContainer | null>(null)
-  const terminalApiRef = useRef<CliTerminalApi | null>(null)
-  const terminalWelcomeWrittenRef = useRef(false)
+  const terminalApisRef = useRef<Map<string, CliTerminalApi>>(new Map())
+  const terminalContentReadyRef = useRef<Set<string>>(new Set())
+  const welcomeInitInProgressRef = useRef<Set<string>>(new Set())
+  const activeSessionIdRef = useRef(activeSessionId)
+  activeSessionIdRef.current = activeSessionId
   const pendingBootstrapMessagesRef = useRef<string[]>([])
   const bootstrapPromiseRef = useRef<Promise<CliShellContainer> | null>(null)
   const bootstrapPendingRef = useRef<string | null>(null)
@@ -147,11 +170,24 @@ export function CliShellProvider({ projectId, children }: CliShellProviderProps)
 
   const BOOTSTRAP_LINE_MIN_INTERVAL_MS = 250
 
-  const showInputPromptIfIdle = useCallback(() => {
-    if (!isRunningRef.current) {
-      terminalApiRef.current?.showInputPrompt?.()
-    }
+  const getTerminalApi = useCallback((sessionId?: string) => {
+    const id = sessionId ?? activeSessionIdRef.current
+    return terminalApisRef.current.get(id) ?? null
   }, [])
+
+  const showInputPromptIfIdle = useCallback((sessionId?: string) => {
+    if (isRunningRef.current) return
+
+    const api = getTerminalApi(sessionId)
+    if (!api) return
+
+    if (api.prepareInputLine) {
+      api.prepareInputLine()
+      return
+    }
+
+    api.showInputPrompt?.()
+  }, [getTerminalApi])
 
   const writeWelcome = useCallback((api: CliTerminalApi) => {
     for (const line of createCliShellWelcomeLines()) {
@@ -159,37 +195,83 @@ export function CliShellProvider({ projectId, children }: CliShellProviderProps)
     }
   }, [])
 
+  const flushPendingBootstrapMessages = useCallback((sessionId: string) => {
+    if (sessionId !== activeSessionIdRef.current) return false
+
+    const api = terminalApisRef.current.get(sessionId)
+    if (!api) return false
+
+    let shouldShowPrompt = bootstrapReadyAnnouncedRef.current
+
+    for (const message of pendingBootstrapMessagesRef.current) {
+      if (
+        message === CLI_BOOTSTRAP_READY_MESSAGE &&
+        bootstrapReadyAnnouncedRef.current
+      ) {
+        continue
+      }
+      if (message === CLI_BOOTSTRAP_READY_MESSAGE) {
+        bootstrapReadyAnnouncedRef.current = true
+        shouldShowPrompt = true
+      }
+      api.writeln(`${CLI_TERMINAL_MUTED}${message}${CLI_TERMINAL_RESET}`)
+      bootstrapLastWrittenRef.current = message
+    }
+    pendingBootstrapMessagesRef.current = []
+
+    return shouldShowPrompt
+  }, [])
+
   const registerTerminal = useCallback(
-    (api: CliTerminalApi) => {
-      terminalApiRef.current = api
-
-      if (!terminalWelcomeWrittenRef.current) {
-        terminalWelcomeWrittenRef.current = true
-        writeWelcome(api)
-      }
-
-      for (const message of pendingBootstrapMessagesRef.current) {
-        if (
-          message === CLI_BOOTSTRAP_READY_MESSAGE &&
-          bootstrapReadyAnnouncedRef.current
-        ) {
-          continue
-        }
-        if (message === CLI_BOOTSTRAP_READY_MESSAGE) {
-          bootstrapReadyAnnouncedRef.current = true
-        }
-        api.writeln(`${CLI_TERMINAL_MUTED}${message}${CLI_TERMINAL_RESET}`)
-        bootstrapLastWrittenRef.current = message
-      }
-      pendingBootstrapMessagesRef.current = []
-      showInputPromptIfIdle()
+    (sessionId: string, api: CliTerminalApi) => {
+      terminalApisRef.current.set(sessionId, api)
     },
-    [showInputPromptIfIdle, writeWelcome],
+    [],
   )
 
-  const unregisterTerminal = useCallback(() => {
-    terminalApiRef.current = null
-    terminalWelcomeWrittenRef.current = false
+  const writeSessionWelcome = useCallback(
+    (sessionId: string): boolean => {
+      const api = terminalApisRef.current.get(sessionId)
+      if (!api) return false
+
+      if (terminalContentReadyRef.current.has(sessionId)) {
+        return true
+      }
+
+      if (welcomeInitInProgressRef.current.has(sessionId)) {
+        return false
+      }
+
+      welcomeInitInProgressRef.current.add(sessionId)
+
+      try {
+        api.resetForWelcome?.()
+        writeWelcome(api)
+
+        let shouldShowPrompt = false
+        if (sessionId === activeSessionIdRef.current) {
+          shouldShowPrompt = flushPendingBootstrapMessages(sessionId)
+        }
+
+        api.markWelcomeComplete?.()
+
+        if (sessionId === activeSessionIdRef.current && shouldShowPrompt) {
+          showInputPromptIfIdle(sessionId)
+        }
+
+        terminalContentReadyRef.current.add(sessionId)
+        return true
+      } finally {
+        welcomeInitInProgressRef.current.delete(sessionId)
+      }
+    },
+    [flushPendingBootstrapMessages, showInputPromptIfIdle, writeWelcome],
+  )
+
+  const unregisterTerminal = useCallback((sessionId: string) => {
+    terminalApisRef.current.delete(sessionId)
+    terminalContentReadyRef.current.delete(sessionId)
+    welcomeInitInProgressRef.current.delete(sessionId)
   }, [])
 
   const writeBootstrapMessage = useCallback((text: string) => {
@@ -203,14 +285,20 @@ export function CliShellProvider({ projectId, children }: CliShellProviderProps)
       return
     }
 
-    const api = terminalApiRef.current
-    if (api) {
+    const activeId = activeSessionIdRef.current
+    const api = getTerminalApi()
+    if (
+      api &&
+      terminalContentReadyRef.current.has(activeId)
+    ) {
       if (text === CLI_BOOTSTRAP_READY_MESSAGE) {
         bootstrapReadyAnnouncedRef.current = true
       }
       api.writeln(`${CLI_TERMINAL_MUTED}${text}${CLI_TERMINAL_RESET}`)
       bootstrapLastWrittenRef.current = text
-      showInputPromptIfIdle()
+      if (text === CLI_BOOTSTRAP_READY_MESSAGE) {
+        showInputPromptIfIdle(activeId)
+      }
       return
     }
 
@@ -225,7 +313,7 @@ export function CliShellProvider({ projectId, children }: CliShellProviderProps)
     }
 
     pendingBootstrapMessagesRef.current.push(text)
-  }, [showInputPromptIfIdle])
+  }, [getTerminalApi, showInputPromptIfIdle])
 
   const scheduleBootstrapLine = useCallback(
     (text: string) => {
@@ -278,23 +366,29 @@ export function CliShellProvider({ projectId, children }: CliShellProviderProps)
   }, [])
 
   const writeStderrLine = useCallback(
-    (text: string, options?: { showPromptAfter?: boolean }) => {
+    (
+      text: string,
+      options?: { showPromptAfter?: boolean; sessionId?: string },
+    ) => {
       writeCliShellLine(
-        terminalApiRef.current,
+        getTerminalApi(options?.sessionId),
         { type: 'stderr', text },
         options,
       )
     },
-    [],
+    [getTerminalApi],
   )
 
-  const writeSystemLine = useCallback((text: string) => {
-    writeCliShellLine(
-      terminalApiRef.current,
-      { type: 'system', text },
-      { showPromptAfter: !isRunningRef.current },
-    )
-  }, [])
+  const writeSystemLine = useCallback(
+    (text: string, sessionId?: string) => {
+      writeCliShellLine(
+        getTerminalApi(sessionId),
+        { type: 'system', text },
+        { showPromptAfter: !isRunningRef.current },
+      )
+    },
+    [getTerminalApi],
+  )
 
   const setHeight = useCallback(
     (next: number) => {
@@ -558,9 +652,13 @@ export function CliShellProvider({ projectId, children }: CliShellProviderProps)
     setBootstrapError(null)
     resetBootstrapLine()
     setIsRunning(false)
-    terminalWelcomeWrittenRef.current = false
+    terminalContentReadyRef.current.clear()
+    welcomeInitInProgressRef.current.clear()
+    terminalApisRef.current.clear()
     pendingBootstrapMessagesRef.current = []
-    terminalApiRef.current?.clear()
+    const defaultSession = createDefaultCliShellSession()
+    setSessions([defaultSession])
+    setActiveSessionId(defaultSession.id)
     removeCliFetchBridge()
   }, [projectId, resetBootstrapLine])
 
@@ -570,18 +668,26 @@ export function CliShellProvider({ projectId, children }: CliShellProviderProps)
     }
   }, [])
 
-  const clearOutput = useCallback(() => {
-    const api = terminalApiRef.current
-    if (api?.clearScreen) {
-      api.clearScreen()
-      return
-    }
-    api?.clear()
-    showInputPromptIfIdle()
-  }, [showInputPromptIfIdle])
+  const clearOutput = useCallback(
+    (sessionId?: string) => {
+      const api = getTerminalApi(sessionId)
+      if (api?.clearScreen) {
+        api.clearScreen()
+        return
+      }
+      api?.clear()
+      showInputPromptIfIdle(sessionId)
+    },
+    [getTerminalApi, showInputPromptIfIdle],
+  )
 
   const completeTab = useCallback(
-    (input: string, cursor: number, listOnly = false) => {
+    (
+      input: string,
+      cursor: number,
+      listOnly = false,
+      sessionId?: string,
+    ) => {
       const outcome = tabComplete(input, cursor, {
         vfs: containerRef.current?.vfs ?? null,
       }, listOnly)
@@ -589,7 +695,7 @@ export function CliShellProvider({ projectId, children }: CliShellProviderProps)
       if (outcome.kind === 'none') return null
 
       if (outcome.kind === 'list') {
-        writeSystemLine(outcome.matches.join('  '))
+        writeSystemLine(outcome.matches.join('  '), sessionId)
         return { input, cursor }
       }
 
@@ -598,8 +704,51 @@ export function CliShellProvider({ projectId, children }: CliShellProviderProps)
     [writeSystemLine],
   )
 
+  const focusSession = useCallback((sessionId: string) => {
+    const api = terminalApisRef.current.get(sessionId)
+    if (!api) return false
+    requestAnimationFrame(() => {
+      api.focus()
+    })
+    return true
+  }, [])
+
+  const createSession = useCallback(() => {
+    const nextSessionId = createCliShellSessionId()
+
+    setSessions((prev) => {
+      const nextSession: CliShellSession = {
+        id: nextSessionId,
+        name: nextCliShellSessionName(prev),
+      }
+      return [...prev, nextSession]
+    })
+    setActiveSessionId(nextSessionId)
+
+    const focusNewSession = (attempt = 0) => {
+      if (focusSession(nextSessionId) || attempt >= 30) return
+      requestAnimationFrame(() => focusNewSession(attempt + 1))
+    }
+    requestAnimationFrame(() => focusNewSession())
+  }, [focusSession])
+
+  const removeSession = useCallback((sessionId: string) => {
+    setSessions((prev) => {
+      if (prev.length <= 1) return prev
+      const nextSessions = prev.filter((session) => session.id !== sessionId)
+      if (activeSessionIdRef.current === sessionId) {
+        setActiveSessionId(nextSessions[0]?.id ?? '')
+      }
+      terminalContentReadyRef.current.delete(sessionId)
+      welcomeInitInProgressRef.current.delete(sessionId)
+      terminalApisRef.current.delete(sessionId)
+      return nextSessions
+    })
+  }, [])
+
   const runCommand = useCallback(
-    async (rawCommand: string) => {
+    async (rawCommand: string, sessionId?: string) => {
+      const targetSessionId = sessionId ?? activeSessionIdRef.current
       const trimmed = rawCommand.trim()
       if (!trimmed) return
 
@@ -609,6 +758,7 @@ export function CliShellProvider({ projectId, children }: CliShellProviderProps)
         lines.forEach((line, index) => {
           writeStderrLine(line, {
             showPromptAfter: index === lines.length - 1,
+            sessionId: targetSessionId,
           })
         })
         return
@@ -624,7 +774,10 @@ export function CliShellProvider({ projectId, children }: CliShellProviderProps)
         const message =
           error instanceof Error ? error.message : 'CLI shell is not ready.'
         if (!bootstrapError) {
-          writeStderrLine(message, { showPromptAfter: true })
+          writeStderrLine(message, {
+            showPromptAfter: true,
+            sessionId: targetSessionId,
+          })
         }
         return
       }
@@ -633,7 +786,7 @@ export function CliShellProvider({ projectId, children }: CliShellProviderProps)
         writeStderrLine(
           bootstrapError ??
             'Appwrite CLI session is not ready. Retry setup or refresh the page.',
-          { showPromptAfter: true },
+          { showPromptAfter: true, sessionId: targetSessionId },
         )
         return
       }
@@ -645,6 +798,8 @@ export function CliShellProvider({ projectId, children }: CliShellProviderProps)
       let streamedStderr = false
       const stdoutLinkifier = createTerminalOutputLinkifier()
       const stderrLinkifier = createTerminalOutputLinkifier()
+      const getOutputApi = () =>
+        terminalApisRef.current.get(targetSessionId) ?? null
 
       // Do not pass `signal`: almostnode treats any signal as long-running and
       // waits forever for process.exit() instead of using the idle timeout.
@@ -653,12 +808,12 @@ export function CliShellProvider({ projectId, children }: CliShellProviderProps)
         onStdout: (chunk) => {
           if (!chunk) return
           streamedStdout = true
-          stdoutLinkifier.write(terminalApiRef.current, chunk)
+          stdoutLinkifier.write(getOutputApi(), chunk)
         },
         onStderr: (chunk) => {
           if (!chunk) return
           streamedStderr = true
-          stderrLinkifier.write(terminalApiRef.current, chunk)
+          stderrLinkifier.write(getOutputApi(), chunk)
         },
       }
 
@@ -666,35 +821,41 @@ export function CliShellProvider({ projectId, children }: CliShellProviderProps)
         const result = await container.run(command, runOptions)
 
         if (result.stdout && !streamedStdout) {
-          writeCliTerminalRaw(terminalApiRef.current, result.stdout)
+          writeCliTerminalRaw(getOutputApi(), result.stdout)
         }
         if (result.stderr && !streamedStderr) {
-          writeCliTerminalRaw(terminalApiRef.current, result.stderr)
+          writeCliTerminalRaw(getOutputApi(), result.stderr)
         }
         if (
           result.exitCode !== 0 &&
           !result.stdout &&
           !result.stderr
         ) {
-          writeStderrLine(`Command failed with exit code ${result.exitCode}.`)
+          writeStderrLine(`Command failed with exit code ${result.exitCode}.`, {
+            sessionId: targetSessionId,
+          })
         } else if (result.exitCode !== 0) {
-          writeSystemLine(`Process exited with code ${result.exitCode}.`)
+          writeSystemLine(
+            `Process exited with code ${result.exitCode}.`,
+            targetSessionId,
+          )
         }
       } catch (error: unknown) {
         const message =
           error instanceof Error ? error.message : 'Command failed.'
-        writeStderrLine(message)
+        writeStderrLine(message, { sessionId: targetSessionId })
       } finally {
-        stdoutLinkifier.flush(terminalApiRef.current)
-        stderrLinkifier.flush(terminalApiRef.current)
+        stdoutLinkifier.flush(getOutputApi())
+        stderrLinkifier.flush(getOutputApi())
         setIsRunning(false)
         setStatus(containerRef.current ? 'ready' : 'error')
+        showInputPromptIfIdle(targetSessionId)
       }
     },
     [
       bootstrapError,
-      clearOutput,
       ensureRuntime,
+      showInputPromptIfIdle,
       writeStderrLine,
       writeSystemLine,
     ],
@@ -767,8 +928,14 @@ export function CliShellProvider({ projectId, children }: CliShellProviderProps)
       setOpen,
       toggle,
       status,
+      sessions,
+      activeSessionId,
+      setActiveSessionId,
+      createSession,
+      removeSession,
       registerTerminal,
       unregisterTerminal,
+      writeSessionWelcome,
       runCommand,
       clearOutput,
       completeTab,
@@ -788,8 +955,13 @@ export function CliShellProvider({ projectId, children }: CliShellProviderProps)
       setOpen,
       toggle,
       status,
+      sessions,
+      activeSessionId,
+      createSession,
+      removeSession,
       registerTerminal,
       unregisterTerminal,
+      writeSessionWelcome,
       runCommand,
       clearOutput,
       completeTab,

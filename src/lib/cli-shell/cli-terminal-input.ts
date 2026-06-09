@@ -25,6 +25,12 @@ type CliTerminalInputOptions = {
 export type CliTerminalInputSession = {
   onData: (data: string) => void
   showPrompt: () => void
+  /** Move to a fresh line and show the prompt (used after welcome/bootstrap output). */
+  prepareInputLine: () => void
+  /** Reset input state before writing static welcome output. */
+  resetForWelcome: () => void
+  /** Allow prompt rendering after welcome/bootstrap static output is written. */
+  markWelcomeComplete: () => void
   clearScreen: () => void
   /** Prefill the input line without submitting (user presses Enter to run). */
   setInput: (command: string) => void
@@ -39,33 +45,83 @@ export function createCliTerminalInputHandler(
   let historyIndex: number | null = null
   let lastTab: { input: string; cursor: number; at: number } | null = null
   let awaitingPrompt = true
+  let promptVisible = false
+  let welcomeOutputComplete = false
 
   const writePrompt = () => {
+    if (!welcomeOutputComplete || options.terminal.cols <= 0) return
     options.terminal.write(options.getPrompt())
   }
 
   const showPrompt = () => {
+    if (!welcomeOutputComplete) return
+    if (promptVisible && inputBuffer.length === 0 && cursorPos === 0) {
+      return
+    }
     writePrompt()
+    promptVisible = true
     awaitingPrompt = false
+  }
+
+  const prepareInputLine = () => {
+    if (!welcomeOutputComplete || options.terminal.cols <= 0) return
+
+    if (promptVisible && inputBuffer.length === 0 && cursorPos === 0) {
+      return
+    }
+
+    inputBuffer = ''
+    cursorPos = 0
+    historyIndex = null
+    awaitingPrompt = false
+
+    const buffer = options.terminal.buffer.active
+    const line = buffer.getLine(buffer.baseY + buffer.cursorY)
+    const lineLength = line?.translateToString(false).replace(/\s+$/, '').length ?? 0
+
+    if (lineLength > 0) {
+      options.terminal.write('\r\n')
+    }
+
+    writePrompt()
+    promptVisible = true
+    awaitingPrompt = false
+  }
+
+  const resetForWelcome = () => {
+    welcomeOutputComplete = false
+    resetInputState()
+    awaitingPrompt = true
+    promptVisible = false
+    options.terminal.reset()
+    options.terminal.clear()
+  }
+
+  const markWelcomeComplete = () => {
+    welcomeOutputComplete = true
   }
 
   const markAwaitingPrompt = () => {
     awaitingPrompt = true
+    promptVisible = false
   }
 
   const resetInputState = () => {
     inputBuffer = ''
     cursorPos = 0
     historyIndex = null
+    promptVisible = false
   }
 
   const clearScreen = () => {
+    welcomeOutputComplete = true
     resetInputState()
     options.terminal.reset()
     showPrompt()
   }
 
   const redrawInputLine = () => {
+    if (!welcomeOutputComplete) return
     // Overwrite in place so the cursor never sits on a blank line before the prompt.
     options.terminal.write(
       `\r${options.getPrompt()}${inputBuffer}${CLI_TERMINAL_RESET}\x1b[K`,
@@ -75,6 +131,7 @@ export function createCliTerminalInputHandler(
       options.terminal.write(`\x1b[${tail}D`)
     }
     awaitingPrompt = false
+    promptVisible = true
   }
 
   const moveCursorTo = (nextPos: number) => {
@@ -369,5 +426,13 @@ export function createCliTerminalInputHandler(
     options.terminal.focus()
   }
 
-  return { onData, showPrompt, clearScreen, setInput }
+  return {
+    onData,
+    showPrompt,
+    prepareInputLine,
+    resetForWelcome,
+    markWelcomeComplete,
+    clearScreen,
+    setInput,
+  }
 }
