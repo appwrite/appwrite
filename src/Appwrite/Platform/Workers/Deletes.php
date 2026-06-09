@@ -5,8 +5,12 @@ namespace Appwrite\Platform\Workers;
 use Appwrite\Certificates\Adapter as CertificatesAdapter;
 use Appwrite\Deletes\Identities;
 use Appwrite\Deletes\Targets;
-use Appwrite\Event\Delete as DeleteEvent;
+use Appwrite\Event\Message\Delete as DeleteMessage;
+use Appwrite\Event\Message\Usage;
+use Appwrite\Event\Publisher\Delete as DeletePublisher;
+use Appwrite\Event\Publisher\Usage as UsagePublisher;
 use Appwrite\Extend\Exception;
+use Appwrite\Usage\Context as UsageContext;
 use Executor\Executor;
 use Throwable;
 use Utopia\Abuse\Adapters\TimeLimit\Database as AbuseDatabase;
@@ -36,6 +40,7 @@ use function Swoole\Coroutine\batch;
 class Deletes extends Action
 {
     protected array $selects = ['$sequence', '$id', '$collection', '$permissions', '$updatedAt'];
+    public const PROCESSING_STUCK_RETENTION_SECONDS = 3 * 24 * 60 * 60; // 3 days
 
     public static function getName(): string
     {
@@ -66,8 +71,9 @@ class Deletes extends Action
             ->inject('executionsRetentionCount')
             ->inject('auditRetention')
             ->inject('log')
-            ->inject('queueForDeletes')
+            ->inject('publisherForDeletes')
             ->inject('getAudit')
+            ->inject('publisherForUsage')
             ->callback($this->action(...));
     }
 
@@ -93,8 +99,9 @@ class Deletes extends Action
         int $executionsRetentionCount,
         string $auditRetention,
         Log $log,
-        DeleteEvent $queueForDeletes,
+        DeletePublisher $publisherForDeletes,
         callable $getAudit,
+        UsagePublisher $publisherForUsage,
     ): void {
         $payload = $message->getPayload();
 
@@ -102,12 +109,13 @@ class Deletes extends Action
             throw new Exception('Missing payload');
         }
 
-        $type = $payload['type'] ?? '';
-        $datetime = $payload['datetime'] ?? null;
-        $hourlyUsageRetentionDatetime = $payload['hourlyUsageRetentionDatetime'] ?? null;
-        $resource = $payload['resource'] ?? null;
-        $resourceType = $payload['resourceType'] ?? null;
-        $document = new Document($payload['document'] ?? []);
+        $deleteMessage = DeleteMessage::fromArray($payload);
+        $type = $deleteMessage->type;
+        $datetime = $deleteMessage->datetime;
+        $hourlyUsageRetentionDatetime = $deleteMessage->hourlyUsageRetentionDatetime;
+        $resource = $deleteMessage->resource;
+        $resourceType = $deleteMessage->resourceType;
+        $document = $deleteMessage->document ?? new Document();
 
         $log->addTag('projectId', $project->getId());
         $log->addTag('type', $type);
@@ -142,7 +150,7 @@ class Deletes extends Action
                     case DELETE_TYPE_RULES:
                         $this->deleteRule($dbForPlatform, $document, $certificates);
                         break;
-                    case DELETE_TYPE_TRANSACTION:
+                    case DELETE_TYPE_TRANSACTIONS:
                         $this->deleteTransactionLogs($getProjectDB, $document, $project);
                         break;
                     default:
@@ -213,12 +221,29 @@ class Deletes extends Action
                 $this->deleteAuditLogs($project, $getAudit, $auditRetention);
                 $this->deleteUsageStats($project, $getProjectDB, $getLogsDB, $hourlyUsageRetentionDatetime);
                 $this->deleteExpiredSessions($project, $getProjectDB);
+                $this->deleteExpiredOAuth2Grants($project, $getProjectDB);
                 $this->deleteExpiredTransactions($project, $getProjectDB);
-                $this->deleteOldDeployments($queueForDeletes, $project, $getProjectDB);
+                $this->deleteExpiredPresences($project, $getProjectDB, $publisherForUsage);
+                $this->deleteOldDeployments($publisherForDeletes, $project, $getProjectDB);
+                $this->updateProcessingMigrations($project, $getProjectDB);
+                break;
+            case DELETE_TYPE_REPORT:
+                $this->deleteReport($dbForPlatform, $project, $document);
                 break;
             default:
                 throw new \Exception('No delete operation for type: ' . \strval($type));
         }
+    }
+
+    private function deleteReport(Database $dbForPlatform, Document $project, Document $report): void
+    {
+        $projectInternalId = $project->getSequence();
+        $reportInternalId = $report->getSequence();
+
+        $this->deleteByGroup('insights', [
+            Query::equal('projectInternalId', [$projectInternalId]),
+            Query::equal('reportInternalId', [$reportInternalId]),
+        ], $dbForPlatform);
     }
 
     private function cleanDatabase(
@@ -368,20 +393,63 @@ class Deletes extends Action
      */
     private function deleteExpiredTargets(Document $project, callable $getProjectDB): void
     {
+        Console::info('Delete expired targets');
         Targets::delete($getProjectDB($project), Query::equal('expired', [true]));
     }
 
     private function deleteSessionTargets(Document $project, callable $getProjectDB, Document $session): void
     {
+        Console::info('Delete session targets');
         Targets::delete($getProjectDB($project), Query::equal('sessionInternalId', [$session->getSequence()]));
     }
 
-    private function deleteOldDeployments(DeleteEvent $queueForDeletes, Document $project, callable $getProjectDB): void
+    private function updateProcessingMigrations(Document $project, callable $getProjectDB): void
     {
+        if ($project->getId() === 'console') {
+            return;
+        }
+
+        Console::info('Update processing migrations');
+
         /** @var Database $dbForProject */
         $dbForProject = $getProjectDB($project);
 
-        $removalCallback = function (Document $resource) use ($dbForProject, $queueForDeletes, $project) {
+        $date = DateTime::addSeconds(new \DateTime(), -self::PROCESSING_STUCK_RETENTION_SECONDS);
+
+        $queries = [
+            Query::select($this->selects),
+            Query::equal('status', ['processing']),
+            Query::lessThan('$updatedAt', $date),
+        ];
+
+        $this->listByGroup(
+            'migrations',
+            $queries,
+            $dbForProject,
+            function (Document $migration) use ($dbForProject, $project) {
+                try {
+                    $dbForProject->updateDocument('migrations', $migration->getId(), new Document([
+                        'status' => 'failed'
+                    ]));
+                } catch (Throwable $th) {
+                    Console::error("Failed to update processing migration {$migration->getId()} for project {$project->getId()}: " . $th->getMessage());
+                }
+            }
+        );
+    }
+
+    private function deleteOldDeployments(DeletePublisher $publisherForDeletes, Document $project, callable $getProjectDB): void
+    {
+        if ($project->getId() === 'console') {
+            return;
+        }
+
+        Console::info('Delete old deployments');
+
+        /** @var Database $dbForProject */
+        $dbForProject = $getProjectDB($project);
+
+        $removalCallback = function (Document $resource) use ($dbForProject, $publisherForDeletes, $project) {
             $retention = $resource->getAttribute('deploymentRetention', 0);
 
             // 0 means unlimited - never delete
@@ -406,12 +474,12 @@ class Deletes extends Action
                 'deployments',
                 $queries,
                 $dbForProject,
-                function (Document $deployment) use ($queueForDeletes, $project) {
-                    $queueForDeletes
-                        ->setType(DELETE_TYPE_DOCUMENT)
-                        ->setDocument($deployment)
-                        ->setProject($project)
-                        ->trigger();
+                function (Document $deployment) use ($publisherForDeletes, $project) {
+                    $publisherForDeletes->enqueue(new DeleteMessage(
+                        project: $project,
+                        type: DELETE_TYPE_DOCUMENT,
+                        document: $deployment,
+                    ));
                 }
             );
         };
@@ -523,6 +591,12 @@ class Deletes extends Action
      */
     private function deleteUsageStats(Document $project, callable $getProjectDB, callable $getLogsDB, string $hourlyUsageRetentionDatetime): void
     {
+        if ($project->getId() === 'console') {
+            return;
+        }
+
+        Console::info('Delete usage stats');
+
         /** @var Database $dbForProject */
         $dbForProject = $getProjectDB($project);
 
@@ -537,19 +611,17 @@ class Deletes extends Action
             Query::orderDesc(),
         ], $dbForProject);
 
-        if ($project->getId() !== 'console') {
-            /** @var Database $dbForLogs */
-            $dbForLogs = call_user_func($getLogsDB, $project);
+        /** @var Database $dbForLogs */
+        $dbForLogs = call_user_func($getLogsDB, $project);
 
-            // Delete Usage stats from logsDB
-            $this->deleteByGroup('stats', [
-                Query::select($selects),
-                Query::equal('period', ['1h']),
-                Query::lessThan('time', $hourlyUsageRetentionDatetime),
-                Query::orderDesc('time'),
-                Query::orderDesc(),
-            ], $dbForLogs);
-        }
+        // Delete Usage stats from logsDB
+        $this->deleteByGroup('stats', [
+            Query::select($selects),
+            Query::equal('period', ['1h']),
+            Query::lessThan('time', $hourlyUsageRetentionDatetime),
+            Query::orderDesc('time'),
+            Query::orderDesc(),
+        ], $dbForLogs);
     }
 
     /**
@@ -714,6 +786,26 @@ class Deletes extends Action
             ], $dbForPlatform);
         } catch (Throwable $th) {
             Console::error('Failed to delete schedules: ' . $th->getMessage());
+        }
+
+        // Delete Advisor insights
+        try {
+            $this->deleteByGroup('insights', [
+                Query::equal('projectInternalId', [$projectInternalId]),
+                Query::orderAsc()
+            ], $dbForPlatform);
+        } catch (Throwable $th) {
+            Console::error('Failed to delete insights: ' . $th->getMessage());
+        }
+
+        // Delete Advisor reports
+        try {
+            $this->deleteByGroup('reports', [
+                Query::equal('projectInternalId', [$projectInternalId]),
+                Query::orderAsc()
+            ], $dbForPlatform);
+        } catch (Throwable $th) {
+            Console::error('Failed to delete reports: ' . $th->getMessage());
         }
 
         /**
@@ -939,6 +1031,12 @@ class Deletes extends Action
      */
     private function deleteExecutionLogs(Document $project, callable $getProjectDB, string $datetime, ?int $executionsRetentionCount = 0): void
     {
+        if ($project->getId() === 'console') {
+            return;
+        }
+
+        Console::info('Delete execution logs');
+
         /** @var Database $dbForProject */
         $dbForProject = $getProjectDB($project);
 
@@ -970,7 +1068,7 @@ class Deletes extends Action
         ?string $resourceInternalId = null,
         ?string $resourceType = null
     ): void {
-        if ($executionsRetentionCount <= 0) {
+        if ($executionsRetentionCount <= 0 || $project->getId() === 'console') {
             return;
         }
 
@@ -985,6 +1083,7 @@ class Deletes extends Action
                 Query::equal('resourceInternalId', [$resourceInternalId]),
                 Query::equal('resourceType', [$resourceType]),
                 Query::orderDesc('$createdAt'),
+                Query::orderDesc(),
                 Query::offset($executionsRetentionCount),
             ]);
 
@@ -1034,6 +1133,8 @@ class Deletes extends Action
      */
     private function deleteExpiredSessions(Document $project, callable $getProjectDB): void
     {
+        Console::info('Delete expired sessions');
+
         $dbForProject = $getProjectDB($project);
         $duration = $project->getAttribute('auths', [])['duration'] ?? TOKEN_EXPIRATION_LOGIN_LONG;
         $expired = DateTime::addSeconds(new \DateTime(), -1 * $duration);
@@ -1044,6 +1145,27 @@ class Deletes extends Action
             Query::lessThan('$createdAt', $expired),
             Query::orderDesc('$createdAt'),
             Query::orderDesc(),
+        ], $dbForProject);
+    }
+
+    /**
+     * @param Document $project
+     * @param callable $getProjectDB
+     * @return void
+     * @throws Exception|Throwable
+     */
+    private function deleteExpiredOAuth2Grants(Document $project, callable $getProjectDB): void
+    {
+        Console::info('Delete expired OAuth2 grants');
+
+        $dbForProject = $getProjectDB($project);
+
+        $this->deleteByGroup('tokens', [
+            Query::select([...$this->selects, 'expire']),
+            Query::equal('type', [TOKEN_TYPE_OAUTH2]),
+            Query::lessThan('expire', DateTime::format(new \DateTime())),
+            Query::orderAsc('expire'),
+            Query::orderAsc(),
         ], $dbForProject);
     }
 
@@ -1107,6 +1229,8 @@ class Deletes extends Action
      */
     private function deleteAuditLogs(Document $project, callable $getAudit, string $auditRetention): void
     {
+        Console::info('Delete audit logs');
+
         $projectId = $project->getId();
         /** @var Audit $audit */
         $audit = $getAudit($project);
@@ -1477,6 +1601,11 @@ class Deletes extends Action
     ): void {
         $start = \microtime(true);
 
+        $message = 'collection:'.$database->getNamespace().'_'.$collection;
+        if ($database->getSharedTables()) {
+            $message .= ' Tenant:'.$database->getTenant();
+        }
+
         /**
          * deleteDocuments uses a cursor, we need to add a unique order by field or use default
          */
@@ -1487,13 +1616,13 @@ class Deletes extends Action
                 onNext: $callback
             );
         } catch (Throwable $th) {
-            $tenant = $database->getSharedTables() ? 'Tenant:' . $database->getTenant() : '';
-            Console::error("Failed to delete documents for collection:{$database->getNamespace()}_{$collection} {$tenant} :{$th->getMessage()}");
+            $tenant = $database->getSharedTables() ? 'Tenant:'. $database->getTenant() : '';
+            Console::error("Failed to delete documents for {$message} :{$th->getMessage()}");
             return;
         }
 
         $end = \microtime(true);
-        Console::info("Deleted {$count} documents by group in " . ($end - $start) . " seconds");
+        Console::info("Deleted {$count} documents by group in " . ($end - $start) . " seconds {$message}");
     }
 
     /**
@@ -1540,7 +1669,12 @@ class Deletes extends Action
 
         $end = \microtime(true);
 
-        Console::info("Listed {$count} documents by group in " . ($end - $start) . " seconds");
+        $message = 'collection:'.$database->getNamespace().'_'.$collection;
+        if ($database->getSharedTables()) {
+            $message .= ' Tenant:'.$database->getTenant();
+        }
+
+        Console::info("Listed {$count} documents by group in " . ($end - $start) . " seconds {$message}");
     }
 
     /**
@@ -1680,6 +1814,12 @@ class Deletes extends Action
 
     private function deleteExpiredTransactions(Document $project, callable $getProjectDB): void
     {
+        if ($project->getId() === 'console') {
+            return;
+        }
+
+        Console::info('Delete expired transactions');
+
         $dbForProject = $getProjectDB($project);
         $transactionInternalIds = [];
 
@@ -1704,5 +1844,32 @@ class Deletes extends Action
         ], onError: function (Throwable $th) {
             // Swallow errors to avoid breaking the cleanup process
         });
+    }
+
+    private function deleteExpiredPresences(Document $project, callable $getProjectDB, UsagePublisher $publisherForUsage): void
+    {
+        if ($project->getId() === 'console') {
+            return;
+        }
+
+        Console::info('Delete expired presences');
+
+        $dbForProject = $getProjectDB($project);
+
+        $now = DateTime::format(new \DateTime());
+
+        $deleted = $dbForProject->deleteDocuments('presenceLogs', [
+            Query::lessThan('expiresAt', $now),
+        ], onError: function (Throwable $th) {
+            // Swallow errors to avoid breaking the cleanup process
+        });
+
+        if ($deleted > 0) {
+            $usage = (new UsageContext())->addMetric(METRIC_USERS_PRESENCE, -$deleted);
+            $publisherForUsage->enqueue(new Usage(
+                project: $project,
+                metrics: $usage->getMetrics(),
+            ));
+        }
     }
 }

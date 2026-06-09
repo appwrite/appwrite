@@ -2,8 +2,8 @@
 
 namespace Appwrite\Platform\Modules\Databases\Http\Databases\Collections\Attributes\Enum;
 
-use Appwrite\Event\Database as EventDatabase;
 use Appwrite\Event\Event;
+use Appwrite\Event\Publisher\Database as DatabasePublisher;
 use Appwrite\Extend\Exception;
 use Appwrite\Platform\Modules\Databases\Http\Databases\Collections\Attributes\Action;
 use Appwrite\SDK\AuthType;
@@ -72,13 +72,13 @@ class Create extends Action
             ->param('array', false, new Boolean(), 'Is attribute an array?', true)
             ->inject('response')
             ->inject('dbForProject')
-            ->inject('queueForDatabase')
+            ->inject('publisherForDatabase')
             ->inject('queueForEvents')
             ->inject('authorization')
             ->callback($this->action(...));
     }
 
-    public function action(string $databaseId, string $collectionId, string $key, array $elements, ?bool $required, ?string $default, bool $array, UtopiaResponse $response, Database $dbForProject, EventDatabase $queueForDatabase, Event $queueForEvents, Authorization $authorization): void
+    public function action(string $databaseId, string $collectionId, string $key, array $elements, ?bool $required, ?string $default, bool $array, UtopiaResponse $response, Database $dbForProject, DatabasePublisher $publisherForDatabase, Event $queueForEvents, Authorization $authorization): void
     {
         if (!is_null($default) && !\in_array($default, $elements, true)) {
             throw new Exception($this->getInvalidValueException(), 'Default value not found in elements');
@@ -99,7 +99,7 @@ class Create extends Action
             ]),
             $response,
             $dbForProject,
-            $queueForDatabase,
+            $publisherForDatabase,
             $queueForEvents,
             $authorization
         );

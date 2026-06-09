@@ -53,6 +53,78 @@ class MigrationReport extends Model
                 'default' => 0,
                 'example' => 20,
             ])
+            ->addRule(Resource::TYPE_PLATFORM, [
+                'type' => self::TYPE_INTEGER,
+                'description' => 'Number of platforms to be migrated.',
+                'default' => 0,
+                'example' => 5,
+            ])
+            ->addRule(Resource::TYPE_API_KEY, [
+                'type' => self::TYPE_INTEGER,
+                'description' => 'Number of API keys to be migrated.',
+                'default' => 0,
+                'example' => 5,
+            ])
+            ->addRule(Resource::TYPE_PROJECT_VARIABLE, [
+                'type' => self::TYPE_INTEGER,
+                'description' => 'Number of project variables to be migrated.',
+                'default' => 0,
+                'example' => 5,
+            ])
+            ->addRule(Resource::TYPE_WEBHOOK, [
+                'type' => self::TYPE_INTEGER,
+                'description' => 'Number of webhooks to be migrated.',
+                'default' => 0,
+                'example' => 5,
+            ])
+            ->addRule(Resource::TYPE_AUTH_METHODS, [
+                'type' => self::TYPE_INTEGER,
+                'description' => 'Number of auth-method configs to be migrated (always 0 or 1 — the project-level flag bundle).',
+                'default' => 0,
+                'example' => 1,
+            ])
+            ->addRule(Resource::TYPE_PROJECT_PROTOCOLS, [
+                'type' => self::TYPE_INTEGER,
+                'description' => 'Number of protocol configs to be migrated (always 0 or 1 — the project-level REST/GraphQL/WebSocket flags).',
+                'default' => 0,
+                'example' => 1,
+            ])
+            ->addRule(Resource::TYPE_PROJECT_LABELS, [
+                'type' => self::TYPE_INTEGER,
+                'description' => 'Number of label sets to be migrated (always 0 or 1 — the project-level RBAC label array).',
+                'default' => 0,
+                'example' => 1,
+            ])
+            ->addRule(Resource::TYPE_PROJECT_SERVICES, [
+                'type' => self::TYPE_INTEGER,
+                'description' => 'Number of service configs to be migrated (always 0 or 1 — the project-level enable/disable flags for all 17 services).',
+                'default' => 0,
+                'example' => 1,
+            ])
+            ->addRule(Resource::TYPE_POLICIES, [
+                'type' => self::TYPE_INTEGER,
+                'description' => 'Number of policy bundles to be migrated (always 0 or 1 — the project-level security policies covering password rules, session behavior, user limits, and membership privacy).',
+                'default' => 0,
+                'example' => 1,
+            ])
+            ->addRule(Resource::TYPE_SMTP, [
+                'type' => self::TYPE_INTEGER,
+                'description' => 'Number of SMTP configurations to be migrated (always 0 or 1 — the project-level custom SMTP settings; password is not exposed by the source API).',
+                'default' => 0,
+                'example' => 1,
+            ])
+            ->addRule(Resource::TYPE_RULE, [
+                'type' => self::TYPE_INTEGER,
+                'description' => 'Number of custom-domain proxy rules to be migrated. Auto-generated `.appwrite.network` rules are skipped — they are recreated by parent Function/Site migration.',
+                'default' => 0,
+                'example' => 5,
+            ])
+            ->addRule(Resource::TYPE_PROJECT_EMAIL_TEMPLATE, [
+                'type' => self::TYPE_INTEGER,
+                'description' => 'Number of custom email templates to be migrated (one per templateId × locale pair).',
+                'default' => 0,
+                'example' => 7,
+            ])
             ->addRule(Resource::TYPE_SITE, [
                 'type' => self::TYPE_INTEGER,
                 'description' => 'Number of sites to be migrated.',
@@ -95,6 +167,13 @@ class MigrationReport extends Model
                 'default' => '',
                 'example' => '1.4.0',
             ]);
+
+        $this->addRule(Resource::TYPE_OAUTH2_PROVIDER, [
+            'type' => self::TYPE_INTEGER,
+            'description' => 'Number of OAuth2 provider configurations to be migrated. Secrets (clientSecret, p8File) are never migrated — destination admin must re-enter them per provider.',
+            'default' => 0,
+            'example' => 5,
+        ]);
     }
 
     /**

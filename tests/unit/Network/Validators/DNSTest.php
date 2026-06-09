@@ -1,12 +1,14 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Tests\Unit\Network\Validators;
 
 use Appwrite\Network\Validator\DNS;
 use PHPUnit\Framework\TestCase;
 use Utopia\DNS\Message\Record;
 
-class DNSTest extends TestCase
+final class DNSTest extends TestCase
 {
     public function testSingleDNSServer(): void
     {
@@ -14,7 +16,7 @@ class DNSTest extends TestCase
 
         $this->assertEquals(false, $validator->isValid(''));
         $this->assertEquals(false, $validator->isValid(null));
-        $this->assertEquals('string', $validator->getType());
+        $this->assertSame('string', $validator->getType());
     }
 
     public function testMultipleDNSServers(): void
@@ -23,7 +25,7 @@ class DNSTest extends TestCase
 
         $this->assertEquals(false, $validator->isValid(''));
         $this->assertEquals(false, $validator->isValid(null));
-        $this->assertEquals('string', $validator->getType());
+        $this->assertSame('string', $validator->getType());
     }
 
     public function testValidationFailure(): void

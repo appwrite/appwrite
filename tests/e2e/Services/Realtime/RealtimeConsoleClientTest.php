@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Tests\E2E\Services\Realtime;
 
 use Tests\E2E\Client;
@@ -11,7 +13,7 @@ use Utopia\Database\Helpers\ID;
 use Utopia\Database\Helpers\Permission;
 use Utopia\Database\Helpers\Role;
 
-class RealtimeConsoleClientTest extends Scope
+final class RealtimeConsoleClientTest extends Scope
 {
     use FunctionsBase;
     use RealtimeBase;
@@ -257,7 +259,7 @@ class RealtimeConsoleClientTest extends Scope
         $this->assertEquals('error', $response['type']);
         $this->assertNotEmpty($response['data']);
         $this->assertEquals(1003, $response['data']['code']);
-        $this->assertEquals('Payload is not valid.', $response['data']['message']);
+        $this->assertEquals('Payload is not valid. Session is required', $response['data']['message']);
 
         $client->send(\json_encode([
             'type' => 'unknown',

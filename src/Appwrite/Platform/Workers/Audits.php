@@ -10,8 +10,6 @@ use Utopia\Database\Document;
 use Utopia\Database\Exception\Structure;
 use Utopia\Platform\Action;
 use Utopia\Queue\Message;
-use Utopia\Queue\Result\Commit;
-use Utopia\Queue\Result\NoCommit;
 use Utopia\System\System;
 
 class Audits extends Action
@@ -51,12 +49,11 @@ class Audits extends Action
     /**
      * @param Message $message
      * @param callable(Document): \Utopia\Audit\Audit $getAudit
-     * @return Commit|NoCommit
      * @throws Throwable
      * @throws \Utopia\Database\Exception
      * @throws Structure
      */
-    public function action(Message $message, callable $getAudit): Commit|NoCommit
+    public function action(Message $message, callable $getAudit): void
     {
         $payload = $message->getPayload();
 
@@ -91,7 +88,7 @@ class Audits extends Action
         $actorUserEmail = $impersonatorUserId
             ? $user->getAttribute('impersonatorUserEmail', '')
             : $user->getAttribute('email', '');
-        $userType = $user->getAttribute('type', ACTIVITY_TYPE_USER);
+        $userType = $user->getAttribute('type', ACTOR_TYPE_USER);
 
         // Create event data
         $eventData = [
@@ -100,7 +97,6 @@ class Audits extends Action
             'resource' => $resource,
             'userAgent' => $userAgent,
             'ip' => $ip,
-            'location' => '',
             'data' => [
                 'userId' => $actorUserId,
                 'userName' => $actorUserName,
@@ -149,7 +145,7 @@ class Audits extends Action
         }
 
         if (!$shouldProcessBatch) {
-            return new NoCommit();
+            return;
         }
 
         foreach ($this->logs as $sequence => $projectLogs) {
@@ -169,6 +165,5 @@ class Audits extends Action
         }
 
         $this->lastTriggeredTime = time();
-        return new Commit();
     }
 }
