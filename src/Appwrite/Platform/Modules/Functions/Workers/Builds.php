@@ -1514,17 +1514,11 @@ class Builds extends Action
                 'latestDeploymentStatus' => $latestDeployment->getAttribute('status', ''),
             ];
 
-        foreach ($updates as $key => $value) {
-            if ($resource->getAttribute($key, '') !== $value) {
-                return $dbForProject->updateDocument(
-                    $resource->getCollection(),
-                    $resource->getId(),
-                    new Document($updates)
-                );
-            }
-        }
-
-        return $resource;
+        return $dbForProject->updateDocument(
+            $resource->getCollection(),
+            $resource->getId(),
+            new Document($updates)
+        );
     }
 
     private function cancelDeployment(string $deploymentId, Database $dbForProject, Realtime $queueForRealtime)
