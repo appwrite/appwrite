@@ -344,12 +344,6 @@ class Create extends Base
                     referenceType: 'branch'
                 );
 
-                $function = $dbForProject->updateDocument('functions', $function->getId(), new Document([
-                    'latestDeploymentId' => $deployment->getId(),
-                    'latestDeploymentInternalId' => $deployment->getSequence(),
-                    'latestDeploymentCreatedAt' => $deployment->getCreatedAt(),
-                    'latestDeploymentStatus' => $deployment->getAttribute('status', ''),
-                ]));
             } elseif (!$template->isEmpty()) {
                 // Deploy non-VCS from template
                 $deploymentId = ID::unique();
@@ -368,13 +362,6 @@ class Create extends Base
                     'startCommand' => $function->getAttribute('startCommand', ''),
                     'type' => 'manual',
                     'activate' => true,
-                ]));
-
-                $function = $dbForProject->updateDocument('functions', $function->getId(), new Document([
-                    'latestDeploymentId' => $deployment->getId(),
-                    'latestDeploymentInternalId' => $deployment->getSequence(),
-                    'latestDeploymentCreatedAt' => $deployment->getCreatedAt(),
-                    'latestDeploymentStatus' => $deployment->getAttribute('status', ''),
                 ]));
 
                 $publisherForBuilds->enqueue(new BuildMessage(
