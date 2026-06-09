@@ -30,6 +30,7 @@ use Utopia\Database\Exception\Conflict;
 use Utopia\Database\Exception\Duplicate;
 use Utopia\Database\Exception\Restricted;
 use Utopia\Database\Exception\Structure;
+use Utopia\Database\Exception\Transaction as TransactionException;
 use Utopia\Database\Query;
 use Utopia\Detector\Detection\Rendering\SSR;
 use Utopia\Detector\Detection\Rendering\XStatic;
@@ -909,6 +910,8 @@ class Builds extends Action
             Span::add('deployment.status', 'ready');
             Span::add('build.duration', $deployment->getAttribute('buildDuration'));
 
+            $resource = $this->updateLatestDeployment($dbForProject, $resource);
+
             if ($isVcsEnabled) {
                 $this->runGitAction('ready', $github, $providerCommitHash, $owner, $repositoryName, $project, $resource, $deployment->getId(), $dbForProject, $dbForPlatform, $queueForRealtime, $platform);
             }
@@ -1528,16 +1531,28 @@ class Builds extends Action
     {
         Span::add('deployment.status', 'canceled');
 
-        $deployment = $dbForProject->getDocument('deployments', $deploymentId);
+        $attempts = 0;
 
-        $logs = $deployment->getAttribute('buildLogs', '');
-        $date = \date('H:i:s');
-        $logs .= "\033[90m[$date] \033[90m[\033[0mappwrite\033[90m]\033[33m Build has been canceled. \033[0m\n";
+        while (true) {
+            try {
+                $deployment = $dbForProject->getDocument('deployments', $deploymentId);
 
-        $deployment->setAttribute('buildLogs', $logs);
-        $deployment = $dbForProject->updateDocument('deployments', $deployment->getId(), new Document([
-            'buildLogs' => $deployment->getAttribute('buildLogs'),
-        ]));
+                $logs = $deployment->getAttribute('buildLogs', '');
+                $date = \date('H:i:s');
+                $logs .= "\033[90m[$date] \033[90m[\033[0mappwrite\033[90m]\033[33m Build has been canceled. \033[0m\n";
+
+                $deployment->setAttribute('buildLogs', $logs);
+                $deployment = $dbForProject->updateDocument('deployments', $deployment->getId(), new Document([
+                    'buildLogs' => $deployment->getAttribute('buildLogs'),
+                ]));
+
+                break;
+            } catch (TransactionException $exception) {
+                if ($exception->getCode() !== 112 || ++$attempts >= 5) {
+                    throw $exception;
+                }
+            }
+        }
 
         $queueForRealtime
             ->setPayload($deployment->getArrayCopy())
