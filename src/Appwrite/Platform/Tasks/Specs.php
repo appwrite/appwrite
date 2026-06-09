@@ -139,11 +139,15 @@ class Specs extends Action
                     'description' => 'Your project ID',
                     'in' => 'header',
                 ],
-                'ProjectQuery' => [
+                'ProjectPath' => [
                     'type' => 'apiKey',
                     'name' => 'project',
                     'description' => 'Your project ID',
                     'in' => 'query',
+                    'x-appwrite' => [
+                        'location' => 'path',
+                        'param' => 'project_id',
+                    ],
                 ],
                 'JWT' => [
                     'type' => 'apiKey',
@@ -201,11 +205,15 @@ class Specs extends Action
                     'description' => 'Your project ID',
                     'in' => 'header',
                 ],
-                'ProjectQuery' => [
+                'ProjectPath' => [
                     'type' => 'apiKey',
                     'name' => 'project',
                     'description' => 'Your project ID',
                     'in' => 'query',
+                    'x-appwrite' => [
+                        'location' => 'path',
+                        'param' => 'project_id',
+                    ],
                 ],
                 'Key' => [
                     'type' => 'apiKey',
@@ -275,11 +283,15 @@ class Specs extends Action
                     'description' => 'Your project ID',
                     'in' => 'header',
                 ],
-                'ProjectQuery' => [
+                'ProjectPath' => [
                     'type' => 'apiKey',
                     'name' => 'project',
                     'description' => 'Your project ID',
                     'in' => 'query',
+                    'x-appwrite' => [
+                        'location' => 'path',
+                        'param' => 'project_id',
+                    ],
                 ],
                 'Key' => [
                     'type' => 'apiKey',

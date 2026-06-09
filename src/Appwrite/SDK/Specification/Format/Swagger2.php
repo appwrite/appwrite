@@ -70,28 +70,20 @@ class Swagger2 extends Format
             ],
         ];
 
-        if (isset($output['securityDefinitions']['Project'])) {
-            $output['securityDefinitions']['Project']['x-appwrite'] = ['demo' => '<YOUR_PROJECT_ID>'];
-        }
-
-        if (isset($output['securityDefinitions']['ProjectQuery'])) {
-            $output['securityDefinitions']['ProjectQuery']['x-appwrite'] = ['demo' => '<YOUR_PROJECT_ID>'];
-        }
-
-        if (isset($output['securityDefinitions']['Key'])) {
-            $output['securityDefinitions']['Key']['x-appwrite'] = ['demo' => '<YOUR_API_KEY>'];
-        }
-
-        if (isset($output['securityDefinitions']['JWT'])) {
-            $output['securityDefinitions']['JWT']['x-appwrite'] = ['demo' => '<YOUR_JWT>'];
-        }
-
-        if (isset($output['securityDefinitions']['Locale'])) {
-            $output['securityDefinitions']['Locale']['x-appwrite'] = ['demo' => 'en'];
-        }
-
-        if (isset($output['securityDefinitions']['Mode'])) {
-            $output['securityDefinitions']['Mode']['x-appwrite'] = ['demo' => ''];
+        foreach ([
+            'Project' => '<YOUR_PROJECT_ID>',
+            'ProjectPath' => '<YOUR_PROJECT_ID>',
+            'Key' => '<YOUR_API_KEY>',
+            'JWT' => '<YOUR_JWT>',
+            'Locale' => 'en',
+            'Mode' => '',
+        ] as $key => $demo) {
+            if (isset($output['securityDefinitions'][$key])) {
+                $output['securityDefinitions'][$key]['x-appwrite'] = \array_merge(
+                    $output['securityDefinitions'][$key]['x-appwrite'] ?? [],
+                    ['demo' => $demo]
+                );
+            }
         }
 
         $usedModels = [];
