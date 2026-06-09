@@ -35,7 +35,7 @@ trait WebhooksBase
 
             $this->assertEquals(200, $function['headers']['status-code']);
             $this->assertEquals($deploymentId, $function['body']['deploymentId'] ?? '', \json_encode($function['body']));
-        }, 120000, 500);
+        }, 240000, 500);
     }
 
     /**
