@@ -100,6 +100,7 @@ class Get extends Action
                 new Document([
                     '$id' => 'password-dictionary',
                     'enabled' => $auths['passwordDictionary'] ?? false,
+                    'words' => $auths['passwordDictionaryWords'] ?? [],
                 ]),
                 Response::MODEL_POLICY_PASSWORD_DICTIONARY,
             ],

@@ -20,6 +20,14 @@ class PolicyPasswordDictionary extends PolicyBase
             'default' => false,
             'example' => true,
         ]);
+
+        $this->addRule('words', [
+            'type' => self::TYPE_STRING,
+            'description' => 'Custom list of words blocked by the password dictionary policy.',
+            'default' => [],
+            'example' => ['company', 'internal'],
+            'array' => true,
+        ]);
     }
 
     public function getName(): string

@@ -11,12 +11,14 @@ class PasswordDictionary extends Password
 {
     protected array $dictionary;
     protected bool $enabled;
+    protected array $customWords;
 
-    public function __construct(array $dictionary, bool $enabled = false, bool $allowEmpty = false)
+    public function __construct(array $dictionary, bool $enabled = false, bool $allowEmpty = false, array $customWords = [])
     {
         parent::__construct($allowEmpty);
         $this->dictionary = $dictionary;
         $this->enabled = $enabled;
+        $this->customWords = array_flip(array_map('strtolower', $customWords));
     }
 
     /**
@@ -44,9 +46,15 @@ class PasswordDictionary extends Password
             return false;
         }
 
-        if ($this->enabled && array_key_exists($value, $this->dictionary)) {
-            return false;
+        if ($this->enabled) {
+            if (array_key_exists($value, $this->dictionary)) {
+                return false;
+            }
+            if (!empty($this->customWords) && array_key_exists(strtolower($value), $this->customWords)) {
+                return false;
+            }
         }
+
         return true;
     }
 

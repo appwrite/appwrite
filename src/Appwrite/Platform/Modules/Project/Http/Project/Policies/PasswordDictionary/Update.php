@@ -12,7 +12,9 @@ use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Platform\Scope\HTTP;
+use Utopia\Validator\ArrayList;
 use Utopia\Validator\Boolean;
+use Utopia\Validator\Text;
 
 class Update extends Action
 {
@@ -51,6 +53,7 @@ class Update extends Action
                 ],
             ))
             ->param('enabled', null, new Boolean(), 'Toggle password dictionary policy. Set to true if you want password change to block passwords in the dictionary, or false to allow them. When changing this policy, existing passwords remain valid.')
+            ->param('words', [], new ArrayList(new Text(128), 1000), 'Custom list of words to block. Each word must be at most 128 characters. Maximum of 1000 words allowed. Words are matched case-insensitively.', optional: true)
             ->inject('response')
             ->inject('dbForPlatform')
             ->inject('project')
@@ -61,6 +64,7 @@ class Update extends Action
 
     public function action(
         bool $enabled,
+        array $words,
         Response $response,
         Database $dbForPlatform,
         Document $project,
@@ -69,6 +73,7 @@ class Update extends Action
     ): void {
         $auths = $project->getAttribute('auths', []);
         $auths['passwordDictionary'] = $enabled;
+        $auths['passwordDictionaryWords'] = $words;
 
         $updates = new Document([
             'auths' => $auths,
