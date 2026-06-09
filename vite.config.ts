@@ -99,6 +99,8 @@ export default defineConfig(async () => {
         'decimal.js-light',
         'sprintf-js',
         'sprintf-js/src/sprintf.js',
+        // Appwrite console SDK default-imports this CJS package from dist/esm/sdk.js.
+        'json-bigint',
         // CJS entry re-exports `useSyncExternalStoreWithSelector`; pre-bundle so named ESM imports work
         // (recharts).
         'use-sync-external-store/shim/with-selector.js',
@@ -110,6 +112,10 @@ export default defineConfig(async () => {
         'use-sync-external-store',
         'use-sync-external-store/shim/with-selector.js',
         'sprintf-js/src/sprintf.js',
+        // Pre-bundle so json-bigint gets a default export shim and Compute API stays in sync
+        // with the installed @appwrite.io/console version. Clear node_modules/.vite after SDK bumps.
+        '@appwrite.io/console',
+        'json-bigint',
       ],
       // Serve TanStack store packages as native ESM. Pre-bundling cached an older
       // @tanstack/react-store without createAtom when router upgraded first.

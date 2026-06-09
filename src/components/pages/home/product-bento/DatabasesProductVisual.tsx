@@ -8,7 +8,7 @@ import { Badge } from '@/components/ui/badge'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { cn } from '@/lib/utils'
 import { getColumnIcon } from '@/lib/utils/column-icons'
-import { productBentoContainer, productBentoIdle, QueryEqualFilter, Syn } from './MockSyntax'
+import { productBentoContainer, productBentoIdle, QueryEqualFilter, Syn, VectorsDbSearchSnippet } from './MockSyntax'
 
 type IconComponent = LucideIcon | typeof PostgresElephantIcon
 
@@ -48,15 +48,28 @@ const TABLE_ROWS: {
 const VECTOR_RESULTS = [
   {
     title: 'Monaco undercut window',
-    score: '94%',
+    snippet: 'Pit lap 16 while rival stays out on Medium to gain track position.',
+    source: 'briefing_q3.md',
+    score: 0.94,
     delayMs: 140,
   },
   {
     title: 'Tyre cliff after lap 22',
-    score: '91%',
+    snippet: 'Medium degradation accelerates once surface temps drop in the tunnel.',
+    source: 'telemetry_lap22.json',
+    score: 0.91,
     delayMs: 280,
   },
+  {
+    title: 'Safety car restart gap',
+    snippet: 'Leave 1.2s to leader at line to avoid DRS train into Turn 1.',
+    source: 'race_control_notes',
+    score: 0.87,
+    delayMs: 420,
+  },
 ] as const
+
+const VECTOR_FILTERS = ['session: Monaco GP', 'type: strategy'] as const
 
 const NATIVE_DATABASES = [
   {
@@ -397,36 +410,135 @@ function DocumentsDbPanel({ playKey }: { playKey: number }) {
   )
 }
 
+function VectorScoreBar({ score, delayMs }: { score: number; delayMs: number }) {
+  const width = `${Math.round(score * 100)}%`
+
+  return (
+    <div className="flex min-w-[3.25rem] flex-col items-end gap-1">
+      <span className="font-mono text-[10px] tabular-nums text-muted-foreground transition-colors duration-300 group-hover:text-foreground sm:text-[11px]">
+        {Math.round(score * 100)}%
+      </span>
+      <div className="h-1 w-full overflow-hidden rounded-full bg-muted/40">
+        <div
+          className="product-bento-db-reveal h-full rounded-full bg-muted-foreground/25 transition-[width,background-color] duration-500 group-hover:bg-[var(--brand-cta)]/75 motion-reduce:group-hover:bg-muted-foreground/25"
+          style={{
+            width,
+            animationDelay: `${delayMs}ms`,
+            transitionDelay: `${delayMs}ms`,
+          }}
+        />
+      </div>
+    </div>
+  )
+}
+
 function VectorsDbPanel({ playKey }: { playKey: number }) {
   return (
     <div
       key={playKey}
-      className={cn('flex min-h-0 flex-1 flex-col overflow-hidden p-3.5', productBentoContainer.panel)}
+      className={cn('flex min-h-0 flex-1 flex-col overflow-hidden', productBentoContainer.panel)}
     >
       <div
-        className="product-bento-db-reveal shrink-0 rounded-md border border-border/80 bg-muted/8 px-3 py-2"
+        className="product-bento-db-reveal border-b border-border bg-muted/10 px-3 py-2"
         style={{ animationDelay: '0ms' }}
       >
-        <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Query</p>
-        <p className="mt-1 truncate font-mono text-[11px] sm:text-[12px]">
-          <Syn tone="string">&quot;Monaco undercut on Medium&quot;</Syn>
-        </p>
+        <div className="flex items-start justify-between gap-2">
+          <div className="min-w-0">
+            <p className="font-mono text-[10px] text-muted-foreground sm:text-[11px]">
+              race_notes /{' '}
+              <span className={cn('font-medium', productBentoIdle.text)}>strategy_embeddings</span>
+            </p>
+            <p className="mt-0.5 truncate text-[10px] text-muted-foreground">
+              Semantic search over race briefings and telemetry notes
+            </p>
+          </div>
+          <div className="flex shrink-0 flex-wrap justify-end gap-1">
+            <Badge variant="inactive" className="h-5 px-1.5 text-[9px] sm:text-[10px]">
+              1536d
+            </Badge>
+            <Badge
+              variant="inactive"
+              className="h-5 px-1.5 text-[9px] transition-[color,background-color,border-color] duration-300 group-hover:border-[var(--brand-cta)]/25 group-hover:bg-[var(--brand-cta)]/10 group-hover:text-[var(--brand-cta)] sm:text-[10px]"
+            >
+              cosine
+            </Badge>
+          </div>
+        </div>
       </div>
-      <div className="mt-3 min-h-0 flex-1 space-y-2">
+
+      <div className="space-y-2 border-b border-border px-3 py-2.5">
+        <div
+          className="product-bento-db-reveal rounded-md border border-border/80 bg-muted/8 px-2.5 py-2"
+          style={{ animationDelay: '60ms' }}
+        >
+          <p className="text-[9px] uppercase tracking-wider text-muted-foreground sm:text-[10px]">
+            Query
+          </p>
+          <p className="mt-1 truncate font-mono text-[11px] sm:text-[12px]">
+            <Syn tone="string">&quot;Monaco undercut on Medium&quot;</Syn>
+          </p>
+        </div>
+        <div
+          className="product-bento-db-reveal flex flex-wrap gap-1"
+          style={{ animationDelay: '120ms' }}
+        >
+          {VECTOR_FILTERS.map((filter, index) => (
+            <span
+              key={filter}
+              className={cn(
+                'rounded-md border border-border bg-background px-1.5 py-0.5 font-mono text-[9px] text-muted-foreground transition-[border-color,background-color,color] duration-300 sm:text-[10px]',
+                'group-hover:border-[color-mix(in_srgb,var(--brand-cta)_22%,var(--border))] group-hover:bg-[color-mix(in_srgb,var(--brand-cta)_8%,var(--background))] group-hover:text-foreground motion-reduce:group-hover:border-border motion-reduce:group-hover:bg-background motion-reduce:group-hover:text-muted-foreground',
+              )}
+              style={{ transitionDelay: `${index * 40}ms` }}
+            >
+              {filter}
+            </span>
+          ))}
+        </div>
+      </div>
+
+      <div className="min-h-0 flex-1 space-y-1.5 overflow-hidden px-3 py-2.5">
         {VECTOR_RESULTS.map((row, index) => (
           <div
             key={`${row.title}-${playKey}`}
-            className="product-bento-db-result-reveal flex items-center justify-between gap-3 rounded-md border border-border/70 bg-muted/5 px-3 py-2 motion-reduce:opacity-100"
+            className="product-bento-db-result-reveal rounded-md border border-border/70 bg-muted/5 px-2.5 py-2 motion-reduce:opacity-100"
             style={{ animationDelay: `${120 + index * 160}ms` }}
           >
-            <span className={cn('min-w-0 truncate text-[11px] font-medium sm:text-[12px]', productBentoIdle.text)}>
-              {row.title}
-            </span>
-            <span className="shrink-0 font-mono text-[11px] tabular-nums text-muted-foreground">
-              {row.score}
-            </span>
+            <div className="flex items-start justify-between gap-2">
+              <div className="min-w-0 flex-1">
+                <p
+                  className={cn(
+                    'truncate text-[11px] font-medium sm:text-[12px]',
+                    productBentoIdle.text,
+                  )}
+                >
+                  {row.title}
+                </p>
+                <p className="mt-0.5 line-clamp-2 text-[10px] leading-snug text-muted-foreground sm:text-[11px]">
+                  {row.snippet}
+                </p>
+              </div>
+              <VectorScoreBar score={row.score} delayMs={row.delayMs} />
+            </div>
+            <p className="mt-1.5 truncate font-mono text-[9px] text-muted-foreground sm:text-[10px]">
+              <span className={cn('transition-colors duration-300', productBentoIdle.text)}>
+                {row.source}
+              </span>
+            </p>
           </div>
         ))}
+      </div>
+
+      <div
+        className="product-bento-db-reveal flex items-end justify-between gap-2 border-t border-border bg-muted/5 px-3 py-1.5"
+        style={{ animationDelay: '560ms' }}
+      >
+        <div className="min-w-0">
+          <VectorsDbSearchSnippet />
+        </div>
+        <p className="shrink-0 text-[9px] tabular-nums text-muted-foreground transition-colors duration-300 group-hover:text-foreground sm:text-[10px]">
+          {VECTOR_RESULTS.length} matches · 14ms
+        </p>
       </div>
     </div>
   )
@@ -551,8 +663,8 @@ export function DatabasesProductVisual() {
           <VectorsDbPanel key={vectorsPlayKey} playKey={vectorsPlayKey} />
         </TabsContent>
 
-        <div className="pointer-events-none absolute inset-x-0 bottom-0 z-50 flex justify-center px-3">
-          <TabsList className="pointer-events-auto inline-flex h-auto w-auto gap-1 rounded-lg border border-border bg-background p-1 shadow-sm">
+        <div className="pointer-events-none absolute inset-x-0 bottom-0 z-50 flex justify-center px-3 pb-0.5">
+          <TabsList className="pointer-events-auto inline-flex h-auto w-auto gap-1 rounded-lg border border-border/45 bg-background/25 p-1 shadow-sm backdrop-blur-md supports-[backdrop-filter]:bg-background/15">
             {APPWRITE_TABS.map((tab) => {
               const Icon = tab.Icon
 
@@ -560,7 +672,7 @@ export function DatabasesProductVisual() {
                 <TabsTrigger
                   key={tab.id}
                   value={tab.id}
-                  className="h-auto gap-1.5 rounded-md px-2.5 py-1.5 text-[10px] text-muted-foreground transition-colors duration-300 data-[state=active]:bg-muted/60 data-[state=active]:text-muted-foreground data-[state=active]:shadow-none sm:text-[11px] group-hover:data-[state=active]:bg-muted group-hover:data-[state=active]:text-foreground [&_svg:not([class*='size-'])]:size-3"
+                  className="h-auto gap-1.5 rounded-md border border-transparent px-2.5 py-1.5 text-[10px] text-muted-foreground transition-[color,background-color,border-color,box-shadow] duration-300 data-[state=active]:border-border/40 data-[state=active]:bg-background/35 data-[state=active]:text-muted-foreground data-[state=active]:shadow-sm data-[state=active]:backdrop-blur-sm data-[state=active]:supports-[backdrop-filter]:bg-background/25 sm:text-[11px] group-hover:data-[state=active]:border-border/55 group-hover:data-[state=active]:bg-background/50 group-hover:data-[state=active]:text-foreground [&_svg:not([class*='size-'])]:size-3"
                 >
                   <Icon aria-hidden />
                   <span className="truncate">{tab.label}</span>

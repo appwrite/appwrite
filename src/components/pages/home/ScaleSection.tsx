@@ -167,7 +167,7 @@ function ScaleChart() {
 
 export function ScaleSection() {
   return (
-    <section className="border-t border-border bg-background py-16 sm:py-20">
+    <section id="scale" className="border-t border-border bg-background py-16 sm:py-20">
       <div className="mx-auto w-full max-w-7xl px-4 sm:px-6">
         <h2 className="font-aeonik-pro max-w-3xl text-balance text-[36px] font-normal leading-none tracking-tight text-foreground sm:text-[44px]">
           Over half a million developers scale with Appwrite

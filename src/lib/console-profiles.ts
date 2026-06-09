@@ -55,6 +55,10 @@ export type ConsoleProfileFeatures = {
   dedicatedDbsDocumentsDB: boolean
   /** Dedicated DBs support for Vectors DB. */
   dedicatedDbsVectorsDB: boolean
+  /** Native Postgres databases via Compute service. */
+  nativeDbsPostgres: boolean
+  /** Native MySQL databases via Compute service. */
+  nativeDbsMySQL: boolean
   /** Multi-region support (region picker/labels in project UX). */
   multiRegion: boolean
   /**
@@ -94,6 +98,8 @@ export const CONSOLE_PROFILE_FEATURE_LABELS: Record<
   dedicatedDbsTablesDB: 'Dedicated DBs: Tables',
   dedicatedDbsDocumentsDB: 'Dedicated DBs: Documents',
   dedicatedDbsVectorsDB: 'Dedicated DBs: Vectors',
+  nativeDbsPostgres: 'Native DBs: Postgres',
+  nativeDbsMySQL: 'Native DBs: MySQL',
   multiRegion: 'Multi-region',
   edgeNetwork: 'Edge network',
   userVerification: 'User verification',
@@ -134,6 +140,8 @@ export const CONSOLE_PROFILES: Record<ConsoleProfileId, ConsoleProfile> = {
       dedicatedDbsTablesDB: true,
       dedicatedDbsDocumentsDB: false,
       dedicatedDbsVectorsDB: false,
+      nativeDbsPostgres: true,
+      nativeDbsMySQL: true,
       multiRegion: true,
       edgeNetwork: true,
       userVerification: true,
@@ -166,6 +174,8 @@ export const CONSOLE_PROFILES: Record<ConsoleProfileId, ConsoleProfile> = {
       dedicatedDbsTablesDB: false,
       dedicatedDbsDocumentsDB: false,
       dedicatedDbsVectorsDB: false,
+      nativeDbsPostgres: false,
+      nativeDbsMySQL: false,
       multiRegion: false,
       edgeNetwork: false,
       userVerification: false,

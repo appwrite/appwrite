@@ -2,6 +2,7 @@ import { createFileRoute, useNavigate, useParams } from '@tanstack/react-router'
 import { useEffect } from 'react'
 import { CreateDatabaseWizardView } from '@/components/pages/projects/$projectId/databases/create/CreateDatabaseWizardView'
 import { useConsoleProfile } from '@/hooks/use-console-profile'
+import { databaseSpecificationsQueryOptions } from '@/lib/react-query/hooks'
 import { pageTitle } from '@/lib/utils/page-title'
 
 export const Route = createFileRoute(
@@ -10,6 +11,16 @@ export const Route = createFileRoute(
   head: () => ({
     meta: [{ title: pageTitle('Create database', 'Databases') }],
   }),
+  loader: async ({ params, context }) => {
+    if (typeof window === 'undefined') return
+    const { projectId } = params
+    const { queryClient } = context
+    if (!projectId) return
+
+    await queryClient.ensureQueryData(
+      databaseSpecificationsQueryOptions(projectId),
+    )
+  },
   // Disable lazy split for this route: avoids dev failures loading
   // `*.tsx?tsr-split=component` (e.g. rolldown/vite transform or HMR edge cases).
   codeSplitGroupings: [],

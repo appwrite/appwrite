@@ -6,6 +6,8 @@ import {
 import { Badge } from '@/components/ui/badge'
 import { cn } from '@/lib/utils'
 import type { SpecOption } from '@/lib/database-specs'
+import type { DedicatedDatabaseMonthlyCost } from '@/lib/database-create-pricing'
+import { formatCurrency } from '@/components/pages/organizations/$orgId/billing/utils'
 import {
   MySQLDolphinIcon,
   PostgresElephantIcon,
@@ -25,26 +27,11 @@ type CreateDatabaseSummaryProps = {
   selectedDbType: DbTypeMeta | null
   showSpecs: boolean
   selectedSpec: SpecOption | null
+  showDedicatedOptions?: boolean
+  replicaCount?: number
+  pitrEnabled?: boolean
+  monthlyCost?: DedicatedDatabaseMonthlyCost | null
   canCreate: boolean
-}
-
-function SummaryRow({
-  label,
-  children,
-  className,
-}: {
-  label: string
-  children: React.ReactNode
-  className?: string
-}) {
-  return (
-    <div className={cn('space-y-1.5', className)}>
-      <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
-        {label}
-      </p>
-      {children}
-    </div>
-  )
 }
 
 function DbTypeIcon({
@@ -54,7 +41,7 @@ function DbTypeIcon({
   icon: DbTypeMeta['icon']
   className?: string
 }) {
-  const iconClass = cn('h-4 w-4 shrink-0', className)
+  const iconClass = cn('h-3.5 w-3.5 shrink-0', className)
   switch (icon) {
     case 'table':
       return <TableIcon className={iconClass} />
@@ -71,25 +58,47 @@ function DbTypeIcon({
   }
 }
 
-function SpecDetail({
+function InlineRow({
   label,
-  value,
-  mono,
+  children,
 }: {
   label: string
-  value: string
-  mono?: boolean
+  children: React.ReactNode
 }) {
   return (
-    <div className="flex items-start justify-between gap-4 text-[13px] leading-snug">
-      <span className="text-muted-foreground">{label}</span>
+    <div className="flex items-start justify-between gap-3 text-[13px] leading-snug">
+      <span className="shrink-0 text-muted-foreground">{label}</span>
+      <div className="min-w-0 text-right text-foreground">{children}</div>
+    </div>
+  )
+}
+
+function CostLine({
+  label,
+  amountUsd,
+  emphasize,
+}: {
+  label: string
+  amountUsd: number
+  emphasize?: boolean
+}) {
+  return (
+    <div
+      className={cn(
+        'flex items-center justify-between gap-3 text-[13px] leading-snug',
+        emphasize && 'pt-2 border-t border-border/80',
+      )}
+    >
+      <span className={emphasize ? 'font-medium text-foreground' : 'text-muted-foreground'}>
+        {label}
+      </span>
       <span
         className={cn(
-          'shrink-0 text-right font-medium text-foreground',
-          mono && 'font-mono text-[12px]',
+          'shrink-0 tabular-nums font-medium',
+          emphasize && 'font-semibold',
         )}
       >
-        {value}
+        {amountUsd <= 0 ? 'Included' : `${formatCurrency(amountUsd)}/mo`}
       </span>
     </div>
   )
@@ -102,132 +111,149 @@ export function CreateDatabaseSummary({
   selectedDbType,
   showSpecs,
   selectedSpec,
+  showDedicatedOptions = false,
+  replicaCount = 0,
+  pitrEnabled = false,
+  monthlyCost = null,
   canCreate,
 }: CreateDatabaseSummaryProps) {
   const trimmedName = name.trim()
   const hasType = Boolean(selectedDbType && dbType)
+  const showPricing = Boolean(
+    showDedicatedOptions && selectedSpec && monthlyCost,
+  )
 
   return (
     <div className="rounded-xl border border-border bg-card overflow-hidden">
-      <div className="border-b border-border bg-muted/30 px-5 py-3.5">
+      <div className="border-b border-border bg-muted/30 px-4 py-3">
         <h3 className="text-[13px] font-semibold tracking-tight text-foreground">
           Database summary
         </h3>
-        <p className="mt-0.5 text-[12px] leading-snug text-muted-foreground">
-          Review your configuration before creating the database.
-        </p>
       </div>
 
-      <div className="px-5 py-5 space-y-5">
-        <SummaryRow label="Name">
+      <div className="space-y-4 px-4 py-4">
+        <InlineRow label="Name">
           {trimmedName ? (
-            <p className="text-[14px] font-medium leading-snug text-foreground">
-              {trimmedName}
-            </p>
+            <span className="font-medium">{trimmedName}</span>
           ) : (
-            <p className="text-[13px] leading-relaxed text-muted-foreground">
-              Enter a name for your database.
-            </p>
+            <span className="text-muted-foreground">Required</span>
           )}
-        </SummaryRow>
+        </InlineRow>
 
-        <SummaryRow label="Database ID">
+        <InlineRow label="ID">
           {databaseId?.trim() ? (
-            <p className="break-all font-mono text-[13px] font-medium leading-snug text-foreground">
+            <span className="break-all font-mono text-[12px] font-medium">
               {databaseId.trim()}
-            </p>
+            </span>
           ) : (
-            <p className="text-[13px] leading-relaxed text-muted-foreground">
-              Auto-generated on create
-            </p>
+            <span className="text-muted-foreground">Auto-generated</span>
           )}
-        </SummaryRow>
+        </InlineRow>
 
-        <div className="space-y-5 border-t border-border pt-5">
-          <SummaryRow label="Database type">
-            {hasType ? (
-              <div className="flex flex-wrap items-center gap-2">
-                <span className="inline-flex h-8 w-8 items-center justify-center rounded-lg bg-muted text-muted-foreground">
-                  <DbTypeIcon icon={selectedDbType!.icon} />
-                </span>
-                <span className="text-[14px] font-medium text-foreground">
-                  {selectedDbType!.label}
-                </span>
-                {(selectedDbType!.id === 'DocumentsDB' ||
-                  selectedDbType!.id === 'VectorsDB') && (
-                  <Badge variant="info" className="text-[10px] shrink-0">
-                    Beta
-                  </Badge>
-                )}
-                {selectedDbType!.comingSoon && (
-                  <Badge variant="inactive" className="text-[10px] shrink-0">
-                    Coming soon
-                  </Badge>
-                )}
-              </div>
-            ) : (
-              <p className="text-[13px] leading-relaxed text-muted-foreground">
-                Choose a database type to continue.
-              </p>
-            )}
-          </SummaryRow>
-
-          {showSpecs && (
-            <SummaryRow label="Specification">
-              {selectedSpec ? (
-                <div className="space-y-3 rounded-lg border border-border bg-muted/20 px-4 py-3.5">
-                  <div className="flex items-center justify-between gap-3">
-                    <span className="text-[14px] font-semibold text-foreground">
-                      {selectedSpec.label}
-                    </span>
-                    <span className="text-[13px] font-semibold tabular-nums text-foreground">
-                      {selectedSpec.price}
-                    </span>
-                  </div>
-                  <div className="space-y-2.5 border-t border-border/80 pt-3">
-                    <SpecDetail label="CPU" value={selectedSpec.cpu} />
-                    <SpecDetail label="Memory" value={selectedSpec.memory} />
-                    <SpecDetail
-                      label="Connections"
-                      value={selectedSpec.connections}
-                      mono={selectedSpec.connections !== 'Shared'}
-                    />
-                  </div>
-                </div>
-              ) : (
-                <p className="text-[13px] leading-relaxed text-muted-foreground">
-                  Select a compute and storage tier.
-                </p>
+        <InlineRow label="Type">
+          {hasType ? (
+            <span className="inline-flex items-center justify-end gap-1.5 font-medium">
+              <span className="inline-flex h-6 w-6 items-center justify-center rounded-md bg-muted text-muted-foreground">
+                <DbTypeIcon icon={selectedDbType!.icon} />
+              </span>
+              {selectedDbType!.label}
+              {(selectedDbType!.id === 'DocumentsDB' ||
+                selectedDbType!.id === 'VectorsDB') && (
+                <Badge variant="info" className="text-[10px] shrink-0">
+                  Beta
+                </Badge>
               )}
-            </SummaryRow>
+            </span>
+          ) : (
+            <span className="text-muted-foreground">Not selected</span>
           )}
-        </div>
+        </InlineRow>
+
+        {showSpecs && selectedSpec && (
+          <div className="rounded-lg border border-border bg-muted/20 px-4 py-3 space-y-3">
+            <div className="flex items-center justify-between gap-2">
+              <span className="text-[13px] font-semibold text-foreground">
+                {selectedSpec.label}
+              </span>
+              <span className="text-[13px] font-semibold tabular-nums text-foreground">
+                {selectedSpec.price}
+              </span>
+            </div>
+            <div className="space-y-2.5">
+              <InlineRow label="CPU">
+                <span className="font-medium tabular-nums">{selectedSpec.cpu}</span>
+              </InlineRow>
+              <InlineRow label="Memory">
+                <span className="font-medium tabular-nums">{selectedSpec.memory}</span>
+              </InlineRow>
+              <InlineRow label="Connections">
+                <span className="font-medium tabular-nums">
+                  {selectedSpec.connections}
+                </span>
+              </InlineRow>
+            </div>
+
+            {showPricing && monthlyCost && (
+              <>
+                <div className="border-t border-border/80 pt-3 space-y-2">
+                  <CostLine label="Compute" amountUsd={monthlyCost.baseUsd} />
+                  <CostLine
+                    label={
+                      replicaCount === 0
+                        ? 'Replicas'
+                        : `Replicas (${replicaCount})`
+                    }
+                    amountUsd={monthlyCost.haReplicasUsd}
+                  />
+                  <CostLine
+                    label={pitrEnabled ? 'PITR' : 'PITR (off)'}
+                    amountUsd={monthlyCost.pitrUsd}
+                  />
+                  <CostLine
+                    label="Total"
+                    amountUsd={monthlyCost.totalUsd}
+                    emphasize
+                  />
+                </div>
+                <p className="text-[12px] leading-relaxed text-muted-foreground">
+                  Storage and bandwidth overages billed separately.
+                </p>
+              </>
+            )}
+          </div>
+        )}
+
+        {showSpecs && !selectedSpec && (
+          <p className="text-[12px] text-muted-foreground">
+            Select a compute tier to continue.
+          </p>
+        )}
       </div>
 
       <div
         className={cn(
-          'border-t px-5 py-3.5',
+          'border-t px-4 py-2.5',
           canCreate ? 'bg-muted/30' : 'bg-transparent',
         )}
       >
         <p
           className={cn(
-            'text-[12px] leading-relaxed',
+            'text-[12px] leading-snug',
             canCreate ? 'text-foreground' : 'text-muted-foreground',
           )}
         >
           {canCreate ? (
-            <span className="inline-flex items-center gap-2">
+            <span className="inline-flex items-center gap-1.5">
               <span
-                className="h-2 w-2 shrink-0 rounded-full bg-green-500"
+                className="h-1.5 w-1.5 shrink-0 rounded-full bg-green-500"
                 aria-hidden
               />
-              Your database is ready to create.
+              Ready to create
             </span>
           ) : hasType && selectedDbType?.comingSoon ? (
             'This database type is not available yet.'
           ) : (
-            'Complete the required fields to create your database.'
+            'Complete the required fields to continue.'
           )}
         </p>
       </div>

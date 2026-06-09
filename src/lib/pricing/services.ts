@@ -6,6 +6,7 @@ import {
   Globe2,
   MessageSquare,
   Radio,
+  ScanSearch,
   Shield,
   Users,
   Zap,
@@ -26,6 +27,7 @@ export const pricingServices: readonly PricingService[] = [
   { name: 'Sites', icon: Globe },
   { name: 'Network', icon: Globe2 },
   { name: 'Firewall', icon: Shield },
+  { name: 'Advisor', icon: ScanSearch },
 ]
 
 export function formatPricingServiceList() {

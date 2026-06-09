@@ -1027,6 +1027,37 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
                 },
               },
               {
+                label: 'Native DBs: Postgres',
+                description:
+                  'Enable dedicated Postgres databases in the create wizard.',
+                variant: 'switch' as const,
+                switchValue: features.nativeDbsPostgres,
+                switchOnChange: (checked: boolean) => {
+                  setTimeout(
+                    () =>
+                      setDebugProfileFeatureOverride(
+                        'nativeDbsPostgres',
+                        checked,
+                      ),
+                    0,
+                  )
+                },
+              },
+              {
+                label: 'Native DBs: MySQL',
+                description:
+                  'Enable dedicated MySQL databases in the create wizard.',
+                variant: 'switch' as const,
+                switchValue: features.nativeDbsMySQL,
+                switchOnChange: (checked: boolean) => {
+                  setTimeout(
+                    () =>
+                      setDebugProfileFeatureOverride('nativeDbsMySQL', checked),
+                    0,
+                  )
+                },
+              },
+              {
                 label: 'Console user verification',
                 description:
                   'Require email verification after signup; redirect to verify-email page on cloud.',
@@ -1321,6 +1352,8 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
     features.dedicatedDbsTablesDB,
     features.dedicatedDbsDocumentsDB,
     features.dedicatedDbsVectorsDB,
+    features.nativeDbsPostgres,
+    features.nativeDbsMySQL,
     features.userVerification,
     features.oauthApps,
     features.orgApiKeys,

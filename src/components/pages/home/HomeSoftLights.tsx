@@ -169,14 +169,14 @@ export function AiTileSoftLight({ tone }: { tone: AiTileSoftLightTone }) {
 export function ProductBentoSoftLights() {
   return (
     <div
-      className="pointer-events-none absolute inset-0 z-0 overflow-hidden rounded-[inherit] bg-[radial-gradient(ellipse_at_0%_0%,color-mix(in_srgb,var(--foreground)_2.5%,transparent)_0%,transparent_58%)] transition-opacity duration-300 group-hover:opacity-55 motion-reduce:group-hover:opacity-100"
+      className="pointer-events-none absolute inset-0 z-0 overflow-hidden rounded-lg bg-[radial-gradient(ellipse_at_0%_0%,color-mix(in_srgb,var(--foreground)_4%,transparent)_0%,transparent_62%)] transition-opacity duration-300 group-hover:opacity-70 motion-reduce:group-hover:opacity-100"
       aria-hidden
     />
   )
 }
 
 /** Brand-tinted ambient light that fades in when a product bento tile is hovered. */
-export function ProductBentoHoverLight() {
+export function ProductBentoHoverLight({ tall = false }: { tall?: boolean }) {
   return (
     <div
       className="product-bento-hover-light pointer-events-none absolute inset-0 overflow-hidden opacity-0 transition-opacity duration-300 group-hover:opacity-70 motion-reduce:transition-none motion-reduce:group-hover:opacity-0 dark:group-hover:opacity-55"
@@ -184,16 +184,18 @@ export function ProductBentoHoverLight() {
     >
       <div
         className={cn(
-          'absolute -left-[38%] top-[-38%] h-[300px] w-[440px]',
-          'bg-[radial-gradient(ellipse_at_center,rgba(253,54,110,0.09)_0%,rgba(253,54,110,0.03)_45%,transparent_78%)]',
-          'dark:bg-[radial-gradient(ellipse_at_center,rgba(253,54,110,0.06)_0%,rgba(253,54,110,0.018)_45%,transparent_78%)]',
+          'absolute bg-[radial-gradient(ellipse_at_center,rgba(133,219,216,0.09)_0%,rgba(133,219,216,0.03)_45%,transparent_78%)] dark:bg-[radial-gradient(ellipse_at_center,rgba(133,219,216,0.06)_0%,rgba(133,219,216,0.018)_45%,transparent_78%)]',
+          tall
+            ? '-left-[28%] top-[-28%] h-[440px] w-[680px]'
+            : '-left-[38%] top-[-38%] h-[300px] w-[440px]',
         )}
       />
       <div
         className={cn(
-          'absolute -right-[38%] bottom-[-38%] h-[280px] w-[420px]',
-          'bg-[radial-gradient(ellipse_at_center,rgba(124,103,254,0.07)_0%,rgba(124,103,254,0.022)_45%,transparent_78%)]',
-          'dark:bg-[radial-gradient(ellipse_at_center,rgba(124,103,254,0.05)_0%,rgba(124,103,254,0.015)_45%,transparent_78%)]',
+          'absolute bg-[radial-gradient(ellipse_at_center,rgba(124,103,254,0.07)_0%,rgba(124,103,254,0.022)_45%,transparent_78%)] dark:bg-[radial-gradient(ellipse_at_center,rgba(124,103,254,0.05)_0%,rgba(124,103,254,0.015)_45%,transparent_78%)]',
+          tall
+            ? '-right-[28%] bottom-[-28%] h-[400px] w-[640px]'
+            : '-right-[38%] bottom-[-38%] h-[280px] w-[420px]',
         )}
       />
     </div>

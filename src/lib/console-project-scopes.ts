@@ -12,7 +12,7 @@ import {
   Boxes,
   Globe2,
   MoreHorizontal,
-  Sparkles,
+  ScanSearch,
   Network,
 } from 'lucide-react'
 
@@ -193,7 +193,7 @@ export function getScopeCategoryIcon(
     return UsersRound
   }
   if (c.includes('advisor')) {
-    return Sparkles
+    return ScanSearch
   }
   if (c.includes('proxy')) {
     return Network
@@ -225,7 +225,7 @@ export function getScopeCategoryIcon(
     }
     if (/^(sites|log)\./.test(id)) return Globe
     if (/^presences\./.test(id)) return UsersRound
-    if (/^advisor\./.test(id)) return Sparkles
+    if (/^advisor\./.test(id)) return ScanSearch
     if (/^proxy\./.test(id)) return Network
   }
   return MoreHorizontal

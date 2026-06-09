@@ -15,6 +15,7 @@ import {
   Zap,
 } from 'lucide-react'
 import { OpenSourceIcon } from '@/components/global/shared/icons/OpenSourceIcon'
+import { marketingProductToolkit } from '@/lib/marketing/product-toolkit'
 
 export type StartupsBenefit = {
   title: string
@@ -158,21 +159,7 @@ export const startupsPlatformBenefits: StartupsBenefit[] = [
   },
 ]
 
-export const startupsToolkit = {
-  build: [
-    { label: 'Auth', href: 'https://appwrite.io/products/auth' },
-    { label: 'Databases', href: 'https://appwrite.io/products/databases' },
-    { label: 'Storage', href: 'https://appwrite.io/products/storage' },
-    { label: 'Functions', href: 'https://appwrite.io/products/functions' },
-    { label: 'Messaging', href: 'https://appwrite.io/products/messaging' },
-    { label: 'Realtime', href: 'https://appwrite.io/docs/apis/realtime' },
-  ],
-  deploy: [{ label: 'Sites', href: 'https://appwrite.io/products/sites' }],
-  protect: [
-    { label: 'Firewall', href: 'https://appwrite.io/docs/products/network/firewall' },
-    { label: 'Advisor', href: 'https://appwrite.io/docs/products/network' },
-  ],
-} as const
+export const startupsToolkit = marketingProductToolkit
 
 export const startupsCaseStudies = [
   {

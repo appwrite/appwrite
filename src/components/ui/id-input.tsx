@@ -36,18 +36,29 @@ export interface IdInputProps {
    * Input ID for label association
    */
   id?: string
+  /**
+   * ID validation rules. Dedicated native databases only allow letters and numbers.
+   * @default 'default'
+   */
+  idFormat?: 'default' | 'dedicated'
 }
 
 /**
  * Validates Appwrite ID format: alphanumeric, non-leading hyphen, underscore, period
  */
-function validateId(id: string): boolean {
+function validateDefaultId(id: string): boolean {
   if (!id || id.length === 0) return true // Empty is valid (will use auto-generated)
   if (id.length > 36) return false
   // Must start with alphanumeric or underscore, not hyphen or period
   if (!/^[a-zA-Z0-9_]/.test(id)) return false
   // Can contain alphanumeric, hyphen (not leading), underscore, period
   return /^[a-zA-Z0-9][a-zA-Z0-9._-]*$/.test(id)
+}
+
+function validateDedicatedId(id: string): boolean {
+  if (!id || id.length === 0) return true
+  if (id.length > 36) return false
+  return /^[A-Za-z0-9]+$/.test(id)
 }
 
 export function IdInput({
@@ -58,7 +69,14 @@ export function IdInput({
   placeholder = 'Leave blank to auto-generate',
   className,
   id,
+  idFormat = 'default',
 }: IdInputProps) {
+  const validateId =
+    idFormat === 'dedicated' ? validateDedicatedId : validateDefaultId
+  const idHelpText =
+    idFormat === 'dedicated'
+      ? 'Allowed characters: letters and numbers only'
+      : 'Allowed characters: alphanumeric, non-leading hyphen, underscore, period'
   const [isOpen, setIsOpen] = React.useState(false)
   const [inputValue, setInputValue] = React.useState(value || '')
   const [error, setError] = React.useState<string | null>(null)
@@ -157,8 +175,7 @@ export function IdInput({
           <div className="flex items-start gap-2 rounded-lg border border-border bg-muted/30 p-3">
             <Info className="h-4 w-4 shrink-0 text-muted-foreground mt-0.5" />
             <p className="text-[12px] text-muted-foreground">
-              Allowed characters: alphanumeric, non-leading hyphen, underscore,
-              period
+              {idHelpText}
             </p>
           </div>
         </div>

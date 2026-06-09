@@ -1,5 +1,4 @@
-import type { LucideIcon } from 'lucide-react'
-import { ArrowDown, ArrowRight, Globe, Sparkles } from 'lucide-react'
+import { ArrowDown, ArrowRight, ArrowUpRight, Globe } from 'lucide-react'
 import { Fragment } from 'react'
 import { ProductAvatarsList } from '@/components/global/shared/ProductAvatarsList'
 import { pricingServices } from '@/lib/pricing/services'
@@ -14,17 +13,15 @@ type MarketingProductPillsProps = {
   build: readonly MarketingProductPill[]
   deploy?: readonly MarketingProductPill[]
   protect?: readonly MarketingProductPill[]
+  scale?: {
+    href?: string
+  }
   className?: string
 }
 
-const MARKETING_PRODUCT_ICONS: Record<string, LucideIcon> = {
-  Advisor: Sparkles,
-}
-
-function getProductIcon(label: string): LucideIcon {
+function getProductIcon(label: string) {
   return (
     pricingServices.find((service) => service.name === label)?.icon ??
-    MARKETING_PRODUCT_ICONS[label] ??
     Globe
   )
 }
@@ -45,13 +42,27 @@ function ProductAvatarGroup({
   products: readonly MarketingProductPill[]
 }) {
   return (
-    <div className="flex flex-col items-center gap-3">
-      <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-muted-foreground">
+    <div className="flex flex-nowrap items-center gap-2.5 sm:gap-3">
+      <p className="shrink-0 text-[11px] font-semibold uppercase tracking-[0.2em] text-muted-foreground">
         {label}
       </p>
       <ProductAvatarsList
         items={toAvatarItems(products)}
         ariaLabel={`${label} products`}
+      />
+    </div>
+  )
+}
+
+function ScaleAvatarGroup({ href }: { href?: string }) {
+  return (
+    <div className="flex flex-nowrap items-center gap-2.5 sm:gap-3">
+      <p className="shrink-0 text-[11px] font-semibold uppercase tracking-[0.2em] text-muted-foreground">
+        Scale
+      </p>
+      <ProductAvatarsList
+        items={[{ name: 'Scale', icon: ArrowUpRight, href }]}
+        ariaLabel="Scale"
       />
     </div>
   )
@@ -79,9 +90,10 @@ export function MarketingProductPills({
   build,
   deploy,
   protect,
+  scale,
   className,
 }: MarketingProductPillsProps) {
-  const groups = [
+  const productGroups = [
     { label: 'Build', products: build },
     ...(deploy?.length ? [{ label: 'Deploy' as const, products: deploy }] : []),
     ...(protect?.length ? [{ label: 'Protect' as const, products: protect }] : []),
@@ -90,16 +102,22 @@ export function MarketingProductPills({
   return (
     <div
       className={cn(
-        'mt-10 flex flex-col items-center justify-center gap-6 sm:flex-row sm:items-end sm:gap-4 lg:gap-6',
+        'mt-10 flex flex-col items-center justify-center gap-5 sm:flex-row sm:flex-wrap sm:items-center sm:justify-center sm:gap-x-4 sm:gap-y-3 lg:gap-x-6',
         className,
       )}
     >
-      {groups.map((group, index) => (
+      {productGroups.map((group, index) => (
         <Fragment key={group.label}>
           {index > 0 ? <GroupArrow /> : null}
           <ProductAvatarGroup label={group.label} products={group.products} />
         </Fragment>
       ))}
+      {scale ? (
+        <>
+          {productGroups.length > 0 ? <GroupArrow /> : null}
+          <ScaleAvatarGroup href={scale.href} />
+        </>
+      ) : null}
     </div>
   )
 }

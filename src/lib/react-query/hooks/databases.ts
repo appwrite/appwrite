@@ -18,6 +18,10 @@ import type { Models } from '@appwrite.io/console'
 import type { Database, Collection } from '@/lib/utils/mock-data'
 import { sdk } from '@/lib/appwrite/sdk'
 import {
+  getDedicatedDatabaseIdError,
+  resolveDedicatedDatabaseId,
+} from '@/lib/dedicated-database-id'
+import {
   groupEditsIntoUpdateOperations,
   serializeRowDataForApi,
   type PendingRowCellEdit,
@@ -333,6 +337,100 @@ export async function createProjectDatabase(
     return await projectSdk.vectorsDB.create({ databaseId, name })
   }
   return await projectSdk.tablesDB.create({ databaseId, name })
+}
+
+export type NativeDatabaseEngine = 'postgres' | 'mysql'
+
+/**
+ * Create a native Postgres or MySQL database via the Compute service.
+ */
+export async function createNativeDatabase(
+  projectId: string,
+  data: {
+    databaseId?: string | null
+    name: string
+    engine: NativeDatabaseEngine
+    specification: string
+    region?: string | null
+    haReplicaCount?: number
+    pitrEnabled?: boolean
+  },
+) {
+  if (!projectId) {
+    throw new Error('Project ID is required')
+  }
+  if (!data.specification.trim()) {
+    throw new Error('Database specification is required')
+  }
+
+  const region =
+    data.region && data.region.trim() !== '' && data.region !== 'unknown'
+      ? data.region.trim()
+      : undefined
+  const projectSdk = sdk.forProject(projectId, region)
+
+  if (data.databaseId?.trim()) {
+    const idError = getDedicatedDatabaseIdError(data.databaseId)
+    if (idError) {
+      throw new Error(idError)
+    }
+  }
+
+  const databaseId = resolveDedicatedDatabaseId(data.databaseId)
+
+  const haReplicaCount = Math.max(0, data.haReplicaCount ?? 0)
+  const pitrEnabled = data.pitrEnabled === true
+
+  return await projectSdk.compute.createDatabase({
+    databaseId,
+    name: data.name.trim(),
+    engine: data.engine,
+    specification: data.specification.trim(),
+    region,
+    type: 'dedicated',
+    highAvailability: haReplicaCount > 0,
+    highAvailabilityReplicaCount: haReplicaCount,
+    backupEnabled: pitrEnabled,
+    backupPitr: pitrEnabled,
+  })
+}
+
+export async function fetchDatabaseSpecifications(projectId: string) {
+  if (!projectId) {
+    return { specifications: [], total: 0, pricing: null }
+  }
+
+  const response = await sdk
+    .forProject(projectId)
+    .compute.listDatabaseSpecifications()
+
+  return {
+    specifications: response.specifications ?? [],
+    total: response.total ?? response.specifications?.length ?? 0,
+    pricing: response.pricing ?? null,
+  }
+}
+
+export function databaseSpecificationsQueryOptions(
+  projectId: string | null | undefined,
+) {
+  return queryOptions({
+    queryKey: ['database-specifications', 'project', projectId],
+    queryFn: () => fetchDatabaseSpecifications(projectId!),
+    enabled: !!projectId,
+    staleTime: DEFAULT_STALE_TIME,
+    retry: false,
+    refetchOnMount: false,
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: false,
+    gcTime: projectId ? 5 * 60 * 1000 : 0,
+  })
+}
+
+export function useDatabaseSpecifications(
+  projectId: string | null | undefined,
+) {
+  return useQuery(databaseSpecificationsQueryOptions(projectId))
 }
 
 /**

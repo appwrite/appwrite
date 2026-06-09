@@ -67,10 +67,10 @@ export const productBentoIdle = {
 /** Shared container surfaces so idle mock cards match across product tiles. */
 export const productBentoContainer = {
   shell:
-    'overflow-hidden rounded-t-xl border border-border border-b-0 bg-card/70 shadow-sm',
-  panel: 'rounded-lg border border-border bg-card/70',
-  panelMd: 'rounded-md border border-border bg-card/70',
-  header: 'shrink-0 border-b border-border bg-muted/10',
+    'overflow-hidden rounded-md border border-border bg-card/80 shadow-sm',
+  panel: 'rounded-md border border-border bg-card/80',
+  panelMd: 'rounded-md border border-border bg-card/80',
+  header: 'shrink-0 border-b border-border bg-muted/15',
 } as const
 
 export function Syn({
@@ -402,6 +402,38 @@ export function FunctionsStripeSnippet() {
         <Syn tone="punctuation">,</Syn>
       </div>
       <div>
+        <Syn tone="punctuation">{'}'})</Syn>
+      </div>
+    </div>
+  )
+}
+
+export function VectorsDbSearchSnippet() {
+  return (
+    <div className="font-mono text-[9px] leading-relaxed sm:text-[10px]">
+      <div>
+        <Syn tone="keyword">await</Syn>{' '}
+        <Syn tone="identifier">vectorsDB</Syn>
+        <Syn tone="punctuation">.</Syn>
+        <Syn tone="function">createTextEmbeddings</Syn>
+        <Syn tone="punctuation">({'{'}</Syn>
+        <Syn tone="property">texts</Syn>
+        <Syn tone="punctuation">: [</Syn>
+        <Syn tone="string">&apos;Monaco undercut on Medium&apos;</Syn>
+        <Syn tone="punctuation">]</Syn>
+        <Syn tone="punctuation">{'}'})</Syn>
+      </div>
+      <div>
+        <Syn tone="keyword">await</Syn>{' '}
+        <Syn tone="identifier">vectorsDB</Syn>
+        <Syn tone="punctuation">.</Syn>
+        <Syn tone="function">listDocuments</Syn>
+        <Syn tone="punctuation">({'{'}</Syn>
+        <Syn tone="property">databaseId</Syn>
+        <Syn tone="punctuation">,</Syn>
+        <Syn tone="property"> collectionId</Syn>
+        <Syn tone="punctuation">,</Syn>
+        <Syn tone="property"> queries</Syn>
         <Syn tone="punctuation">{'}'})</Syn>
       </div>
     </div>

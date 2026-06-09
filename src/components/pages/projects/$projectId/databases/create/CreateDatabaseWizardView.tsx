@@ -11,6 +11,7 @@ import {
   PostgresElephantIcon,
 } from '../_components/database-mascot-icons'
 import { CreateDatabaseSummary } from '../_components/CreateDatabaseSummary'
+import { CreateDatabaseDedicatedOptions } from '../_components/CreateDatabaseDedicatedOptions'
 import { WizardLayout } from '@/components/global/shared/WizardLayout'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -26,20 +27,36 @@ import {
   TableRow,
 } from '@/components/ui/table'
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
-import { useMutation, useQueryClient } from '@tanstack/react-query'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
-import { createProjectDatabase, useProject } from '@/lib/react-query/hooks'
+import {
+  createNativeDatabase,
+  createProjectDatabase,
+  databaseSpecificationsQueryOptions,
+  useOrganizationPlan,
+  useProject,
+} from '@/lib/react-query/hooks'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
 import { DatabaseType } from '@appwrite.io/console'
 import { cn } from '@/lib/utils'
 import { useConsoleProfile } from '@/hooks/use-console-profile'
 import {
   TABLE_DB_SPEC_OPTIONS as SPEC_OPTIONS,
+  getDefaultEnabledSpecId,
   hasLockedDatabaseSpecifications,
+  mapDedicatedDatabaseSpecifications,
 } from '@/lib/database-specs'
 import { SpecificationsUpgradeNote } from '@/components/global/shared/SpecificationsUpgradeNote'
 import { DEFAULT_NEW_DATABASE_NAME } from '@/lib/default-new-database-name'
 import { useAnalytics } from '@/hooks/use-analytics'
+import {
+  calculateDedicatedDatabaseMonthlyCost,
+  getDedicatedDatabaseCreatePricing,
+} from '@/lib/database-create-pricing'
+import {
+  getDedicatedDatabaseIdError,
+  formatDedicatedDatabaseCreateError,
+} from '@/lib/dedicated-database-id'
 
 export type DatabaseTypeOption =
   | 'TablesDB'
@@ -100,7 +117,6 @@ const DB_TYPE_GROUPS: {
         description:
           'A dedicated PostgreSQL database for relational workloads, SQL tooling, and portable schemas.',
         icon: 'elephant',
-        comingSoon: true,
       },
       {
         id: 'MySQL',
@@ -108,7 +124,6 @@ const DB_TYPE_GROUPS: {
         description:
           'A dedicated MySQL database for common relational workloads and existing MySQL applications.',
         icon: 'dolphin',
-        comingSoon: true,
       },
     ],
   },
@@ -129,6 +144,14 @@ function wizardBackend(t: DatabaseTypeOption): DatabaseType {
   return DatabaseType.Tablesdb
 }
 
+function isNativeDatabaseType(t: DatabaseTypeOption | null): t is 'Postgres' | 'MySQL' {
+  return t === 'Postgres' || t === 'MySQL'
+}
+
+function nativeDatabaseEngine(t: 'Postgres' | 'MySQL'): 'postgres' | 'mysql' {
+  return t === 'Postgres' ? 'postgres' : 'mysql'
+}
+
 export function CreateDatabaseWizardView() {
   const { projectId } = useParams({ strict: false })
   const navigate = useNavigate()
@@ -137,44 +160,103 @@ export function CreateDatabaseWizardView() {
   const { features } = useConsoleProfile()
   const { track } = useAnalytics()
   const { project } = useProject(pid)
+  const { plan: organizationPlan } = useOrganizationPlan(project?.teamId)
+
+  const { data: specificationsData, isLoading: specificationsLoading } =
+    useQuery(databaseSpecificationsQueryOptions(pid))
+  const apiSpecOptions = useMemo(
+    () => mapDedicatedDatabaseSpecifications(specificationsData?.specifications),
+    [specificationsData?.specifications],
+  )
+  const dedicatedPricing = useMemo(
+    () =>
+      getDedicatedDatabaseCreatePricing(
+        organizationPlan,
+        specificationsData?.pricing ?? null,
+      ),
+    [organizationPlan, specificationsData?.pricing],
+  )
 
   const [dbType, setDbType] = useState<DatabaseTypeOption | null>(null)
   const [specId, setSpecId] = useState<string | null>(null)
+  const [haReplicaCount, setHaReplicaCount] = useState(0)
+  const [pitrEnabled, setPitrEnabled] = useState(false)
   const [name, setName] = useState(DEFAULT_NEW_DATABASE_NAME)
   const [databaseId, setDatabaseId] = useState<string | undefined>(undefined)
   const [errors, setErrors] = useState<Record<string, string>>({})
 
   const isTablesDB = dbType === 'TablesDB'
+  const isNativeDb = isNativeDatabaseType(dbType)
+
+  const dbTypeOptions = useMemo(
+    () =>
+      DB_TYPE_OPTIONS.map((opt) => ({
+        ...opt,
+        comingSoon:
+          opt.id === 'Postgres'
+            ? !features.nativeDbsPostgres
+            : opt.id === 'MySQL'
+              ? !features.nativeDbsMySQL
+              : opt.comingSoon,
+      })),
+    [features.nativeDbsPostgres, features.nativeDbsMySQL],
+  )
 
   /** Show specs section only when the selected DB type has dedicated support enabled. */
   const showSpecsForType =
     (dbType === 'TablesDB' && features.dedicatedDbsTablesDB) ||
     (dbType === 'DocumentsDB' && features.dedicatedDbsDocumentsDB) ||
-    (dbType === 'VectorsDB' && features.dedicatedDbsVectorsDB)
+    (dbType === 'VectorsDB' && features.dedicatedDbsVectorsDB) ||
+    (dbType === 'Postgres' && features.nativeDbsPostgres) ||
+    (dbType === 'MySQL' && features.nativeDbsMySQL)
 
   const selectableSpecs = useMemo(() => {
-    if (isTablesDB) {
-      return SPEC_OPTIONS.map((s) =>
-        s.id === 'shared'
-          ? { ...s, comingSoon: false }
-          : { ...s, comingSoon: true },
-      )
+    if (isNativeDb) {
+      return apiSpecOptions
     }
-    // DocumentsDB / VectorsDB: only dedicated tiers, no Shared DB
-    return SPEC_OPTIONS.filter((s) => s.id !== 'shared').map((s) => ({
-      ...s,
-      comingSoon: false,
-    }))
-  }, [isTablesDB])
+    if (isTablesDB) {
+      const shared = SPEC_OPTIONS.find((s) => s.id === 'shared')
+      return [
+        ...(shared ? [{ ...shared, comingSoon: false }] : []),
+        ...apiSpecOptions.map((spec) => ({ ...spec, comingSoon: true })),
+      ]
+    }
+    return apiSpecOptions
+  }, [apiSpecOptions, isNativeDb, isTablesDB])
 
   const selectedSpec = useMemo(
     () => (specId ? selectableSpecs.find((s) => s.id === specId) : null),
     [specId, selectableSpecs],
   )
   const selectedDbType = useMemo(
-    () => (dbType ? DB_TYPE_OPTIONS.find((opt) => opt.id === dbType) : null),
-    [dbType],
+    () => (dbType ? dbTypeOptions.find((opt) => opt.id === dbType) : null),
+    [dbType, dbTypeOptions],
   )
+
+  const showDedicatedOptions = Boolean(
+    isNativeDb &&
+      selectedSpec &&
+      !selectedSpec.comingSoon &&
+      typeof selectedSpec.priceUsd === 'number',
+  )
+
+  const basePriceUsd = selectedSpec?.priceUsd ?? 0
+
+  const monthlyCost = useMemo(() => {
+    if (!showDedicatedOptions) return null
+    return calculateDedicatedDatabaseMonthlyCost({
+      basePriceUsd,
+      replicaCount: haReplicaCount,
+      pitrEnabled,
+      pricing: dedicatedPricing,
+    })
+  }, [
+    showDedicatedOptions,
+    basePriceUsd,
+    haReplicaCount,
+    pitrEnabled,
+    dedicatedPricing,
+  ])
 
   useEffect(() => {
     track('Wizard Opened', {
@@ -183,9 +265,39 @@ export function CreateDatabaseWizardView() {
     })
   }, [track])
 
+  useEffect(() => {
+    if (!dbType || !showSpecsForType || specificationsLoading) return
+    if (dbType === 'TablesDB' && specId === 'shared') return
+    if (
+      specId &&
+      selectableSpecs.some((spec) => spec.id === specId && !spec.comingSoon)
+    ) {
+      return
+    }
+    const nextSpecId = getDefaultEnabledSpecId(selectableSpecs)
+    if (nextSpecId && nextSpecId !== specId) {
+      setSpecId(nextSpecId)
+    }
+  }, [
+    dbType,
+    showSpecsForType,
+    specificationsLoading,
+    selectableSpecs,
+    specId,
+  ])
+
+  useEffect(() => {
+    setHaReplicaCount(0)
+    setPitrEnabled(false)
+  }, [dbType])
+
   const handleDbTypeSelect = (option: DbTypeChoice) => {
     setDbType(option.id)
-    setSpecId(option.id === 'TablesDB' ? 'shared' : null)
+    if (option.id === 'TablesDB') {
+      setSpecId('shared')
+    } else {
+      setSpecId(getDefaultEnabledSpecId(apiSpecOptions))
+    }
     track('Wizard Option Selected', {
       surface: 'create_database_wizard',
       resource: 'database',
@@ -211,6 +323,19 @@ export function CreateDatabaseWizardView() {
       if (!dbType) {
         throw new Error('Database type is required')
       }
+      if (isNativeDatabaseType(dbType)) {
+        if (!specId) {
+          throw new Error('Database specification is required')
+        }
+        return createNativeDatabase(pid, {
+          ...data,
+          engine: nativeDatabaseEngine(dbType),
+          specification: specId,
+          region: project?.region,
+          haReplicaCount,
+          pitrEnabled,
+        })
+      }
       return createProjectDatabase(pid, data, wizardBackend(dbType))
     },
     onSuccess: async (database) => {
@@ -226,6 +351,13 @@ export function CreateDatabaseWizardView() {
         has_custom_id: Boolean(databaseId?.trim()),
       })
       toast.success('Database created')
+      if (isNativeDatabaseType(dbType)) {
+        navigate({
+          to: '/projects/$projectId/databases/',
+          params: { projectId: pid },
+        })
+        return
+      }
       navigate({
         to: '/projects/$projectId/databases/$databaseId',
         params: { projectId: pid, databaseId: database.$id },
@@ -239,14 +371,23 @@ export function CreateDatabaseWizardView() {
         spec: selectedSpec?.id ?? 'none',
         error_name: error instanceof Error ? error.name : 'unknown',
       })
-      toast.error(getErrorMessage(error) || 'Failed to create database')
+      const fallback = 'Failed to create database'
+      const message = isNativeDatabaseType(dbType)
+        ? formatDedicatedDatabaseCreateError(error, fallback)
+        : getErrorMessage(error) || fallback
+      toast.error(message)
     },
   })
 
   const handleCreate = () => {
     const newErrors: Record<string, string> = {}
     if (!name.trim()) newErrors.name = 'Name is required'
-    if (databaseId?.trim() && !validateDatabaseId(databaseId)) {
+    if (isNativeDatabaseType(dbType)) {
+      const dedicatedIdError = databaseId?.trim()
+        ? getDedicatedDatabaseIdError(databaseId)
+        : null
+      if (dedicatedIdError) newErrors.databaseId = dedicatedIdError
+    } else if (databaseId?.trim() && !validateDatabaseId(databaseId)) {
       newErrors.databaseId =
         'Database ID must be 1–36 characters, alphanumeric, underscore, hyphen, or period. Cannot start with a special character.'
     }
@@ -274,12 +415,14 @@ export function CreateDatabaseWizardView() {
     })
   }
 
-  const isCreatePending = createMutation.isPending
+  const isSpecSelectionReady =
+    !showSpecsForType ||
+    (!specificationsLoading &&
+      selectedSpec != null &&
+      !selectedSpec.comingSoon)
+
   const showNameForm = Boolean(
-    dbType &&
-    !selectedDbType?.comingSoon &&
-    (!showSpecsForType ||
-      (selectedSpec != null && (!isTablesDB || selectedSpec.id === 'shared'))),
+    dbType && !selectedDbType?.comingSoon && isSpecSelectionReady,
   )
 
   const canCreate = Boolean(
@@ -288,6 +431,7 @@ export function CreateDatabaseWizardView() {
     dbType &&
     !selectedDbType?.comingSoon,
   )
+  const isCreatePending = createMutation.isPending
   const footer = (
     <div className="flex w-full justify-end">
       <Button
@@ -317,6 +461,10 @@ export function CreateDatabaseWizardView() {
           selectedDbType={selectedDbType ?? null}
           showSpecs={Boolean(dbType && showSpecsForType)}
           selectedSpec={selectedSpec ?? null}
+          showDedicatedOptions={showDedicatedOptions}
+          replicaCount={haReplicaCount}
+          pitrEnabled={pitrEnabled}
+          monthlyCost={monthlyCost}
           canCreate={canCreate}
         />
       }
@@ -352,6 +500,9 @@ export function CreateDatabaseWizardView() {
                 onChange={setDatabaseId}
                 maxLength={36}
                 placeholder="Leave blank to auto-generate"
+                idFormat={
+                  isNativeDatabaseType(dbType) ? 'dedicated' : 'default'
+                }
               />
               {errors.databaseId && (
                 <p className="text-[12px] text-destructive">
@@ -391,17 +542,19 @@ export function CreateDatabaseWizardView() {
                   </p>
                 </div>
                 <div className="space-y-4">
-                  {group.options.map((opt) => (
+                  {group.options.map((opt) => {
+                    const optionMeta = dbTypeOptions.find((item) => item.id === opt.id) ?? opt
+                    return (
                     <button
                       key={opt.id}
                       type="button"
-                      disabled={opt.comingSoon}
+                      disabled={optionMeta.comingSoon}
                       onClick={() => handleDbTypeSelect(opt)}
                       data-analytics-track="manual"
                       className={cn(
                         'flex w-full cursor-pointer items-start gap-4 rounded-xl border border-border bg-card/50 p-4 text-left transition-all hover:border-border/80 hover:bg-card/60 disabled:cursor-not-allowed disabled:opacity-60 disabled:hover:border-border disabled:hover:bg-card/50',
                         dbType === opt.id &&
-                          !opt.comingSoon &&
+                          !optionMeta.comingSoon &&
                           'border-primary ring-1 ring-primary/20 hover:border-primary',
                       )}
                     >
@@ -436,7 +589,7 @@ export function CreateDatabaseWizardView() {
                               Beta
                             </Badge>
                           )}
-                          {opt.comingSoon && (
+                          {optionMeta.comingSoon && (
                             <Badge
                               variant="inactive"
                               className="text-[10px] shrink-0"
@@ -450,7 +603,8 @@ export function CreateDatabaseWizardView() {
                         </p>
                       </div>
                     </button>
-                  ))}
+                    )
+                  })}
                 </div>
               </div>
             ))}
@@ -501,10 +655,27 @@ export function CreateDatabaseWizardView() {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {selectableSpecs.map((spec) => {
-                      const locked = isTablesDB
-                        ? spec.id !== 'shared'
-                        : !!spec.comingSoon
+                    {specificationsLoading && selectableSpecs.length === 0 ? (
+                      <TableRow>
+                        <TableCell
+                          colSpan={6}
+                          className="px-4 py-8 text-center text-[13px] text-muted-foreground"
+                        >
+                          Loading specifications…
+                        </TableCell>
+                      </TableRow>
+                    ) : selectableSpecs.length === 0 ? (
+                      <TableRow>
+                        <TableCell
+                          colSpan={6}
+                          className="px-4 py-8 text-center text-[13px] text-muted-foreground"
+                        >
+                          No specifications are available for your plan.
+                        </TableCell>
+                      </TableRow>
+                    ) : (
+                    selectableSpecs.map((spec) => {
+                      const locked = !!spec.comingSoon
                       const isSelected = selectedSpec?.id === spec.id
                       return (
                         <TableRow
@@ -548,7 +719,7 @@ export function CreateDatabaseWizardView() {
                                 variant="inactive"
                                 className="text-[10px] shrink-0"
                               >
-                                Coming soon
+                                Upgrade
                               </Badge>
                             ) : (
                               <span className="inline-block text-right text-[13px] font-semibold tabular-nums tracking-tight text-foreground">
@@ -558,7 +729,8 @@ export function CreateDatabaseWizardView() {
                           </TableCell>
                         </TableRow>
                       )
-                    })}
+                    })
+                    )}
                   </TableBody>
                 </Table>
               </RadioGroup>
@@ -571,6 +743,19 @@ export function CreateDatabaseWizardView() {
                 />
               </div>
             )}
+          </section>
+        )}
+
+        {showDedicatedOptions && (
+          <section className="pt-6 border-t border-border">
+            <CreateDatabaseDedicatedOptions
+              basePriceUsd={basePriceUsd}
+              pricing={dedicatedPricing}
+              replicaCount={haReplicaCount}
+              onReplicaCountChange={setHaReplicaCount}
+              pitrEnabled={pitrEnabled}
+              onPitrEnabledChange={setPitrEnabled}
+            />
           </section>
         )}
       </div>

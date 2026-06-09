@@ -3,6 +3,7 @@
  * Aligned with Supabase-style compute add-ons.
  */
 
+import type { Models } from '@appwrite.io/console'
 import { DatabaseType } from '@appwrite.io/console'
 
 export type SpecOption = {
@@ -13,6 +14,8 @@ export type SpecOption = {
   /** Max direct database connections for the tier. */
   connections: string
   price: string
+  /** Monthly base tier price in USD (when available from the API). */
+  priceUsd?: number
   comingSoon?: boolean
 }
 
@@ -118,6 +121,57 @@ export function isServerlessDatabaseMonitoring(
 
 export function getSpecOptionById(specId: string): SpecOption | undefined {
   return TABLE_DB_SPEC_OPTIONS.find((s) => s.id === specId)
+}
+
+export function formatDedicatedSpecCpu(millicores: number): string {
+  if (millicores <= 0) return '—'
+  const cores = millicores / 1000
+  const label =
+    Number.isInteger(cores) ? String(cores) : cores.toFixed(1).replace(/\.0$/, '')
+  return `${label}-core`
+}
+
+export function formatDedicatedSpecMemory(memoryMb: number): string {
+  if (memoryMb <= 0) return '—'
+  if (memoryMb >= 1024 && memoryMb % 1024 === 0) {
+    return `${memoryMb / 1024} GB`
+  }
+  if (memoryMb >= 1024) {
+    return `${(memoryMb / 1024).toFixed(1).replace(/\.0$/, '')} GB`
+  }
+  return `${memoryMb} MB`
+}
+
+export function formatDedicatedSpecPrice(priceUsd: number): string {
+  if (priceUsd <= 0) return 'Included'
+  return `$${priceUsd}/mo`
+}
+
+/** Map Compute API specification to wizard table rows. */
+export function dedicatedDatabaseSpecificationToSpecOption(
+  spec: Models.DedicatedDatabaseSpecification,
+): SpecOption {
+  return {
+    id: spec.slug,
+    label: spec.name,
+    cpu: formatDedicatedSpecCpu(spec.cpu),
+    memory: formatDedicatedSpecMemory(spec.memory),
+    connections: String(spec.maxConnections),
+    price: formatDedicatedSpecPrice(spec.price),
+    priceUsd: spec.price,
+    comingSoon: !spec.enabled,
+  }
+}
+
+export function mapDedicatedDatabaseSpecifications(
+  specifications: Models.DedicatedDatabaseSpecification[] | undefined,
+): SpecOption[] {
+  return (specifications ?? []).map(dedicatedDatabaseSpecificationToSpecOption)
+}
+
+/** First enabled spec slug, if any. */
+export function getDefaultEnabledSpecId(specs: SpecOption[]): string | null {
+  return specs.find((spec) => !spec.comingSoon)?.id ?? null
 }
 
 /** True when the spec list includes tiers that are not yet selectable. */

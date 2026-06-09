@@ -1164,46 +1164,7 @@ html[data-init-ticket-video-capturing] [data-init-ticket-video-capture] * {
 /* Home product bento tile hover */
 .product-bento-hover-light {
   z-index: 20;
-  border-radius: 0;
-}
-
-/* Stacked layout: round top/bottom outer corners (mobile only) */
-@media (max-width: 1023px) {
-  .product-bento-grid > article:first-child .product-bento-hover-light {
-    border-top-left-radius: calc(0.75rem - 1px);
-    border-top-right-radius: calc(0.75rem - 1px);
-  }
-
-  .product-bento-grid > article:last-child .product-bento-hover-light {
-    border-bottom-left-radius: calc(0.75rem - 1px);
-    border-bottom-right-radius: calc(0.75rem - 1px);
-  }
-}
-
-@media (min-width: 1024px) {
-  .product-bento-grid > article .product-bento-hover-light {
-    border-radius: 0;
-  }
-
-  .product-bento-grid > article:nth-child(1) .product-bento-hover-light {
-    border-top-left-radius: calc(0.75rem - 1px);
-    border-top-right-radius: 0;
-  }
-
-  .product-bento-grid > article:nth-child(2) .product-bento-hover-light {
-    border-top-right-radius: calc(0.75rem - 1px);
-    border-top-left-radius: 0;
-  }
-
-  .product-bento-grid > article:nth-child(6) .product-bento-hover-light {
-    border-bottom-left-radius: calc(0.75rem - 1px);
-    border-bottom-right-radius: 0;
-  }
-
-  .product-bento-grid > article:nth-child(8) .product-bento-hover-light {
-    border-bottom-right-radius: calc(0.75rem - 1px);
-    border-bottom-left-radius: 0;
-  }
+  border-radius: calc(0.75rem - 1px);
 }
 
 /* Home product bento mock UI */

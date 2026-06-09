@@ -21,6 +21,7 @@ import {
 } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
 import { ConsoleLayout } from '@/components/global/layout/ConsoleLayout'
+import { MarketingProductPills } from '@/components/pages/marketing/MarketingProductPills'
 import { InitOrgPromoBanner } from '@/components/pages/organizations/$orgId/overview/_components/InitOrgPromoBanner'
 import { AiSection } from '@/components/pages/home/AiSection'
 import { NetworkSection } from '@/components/pages/home/NetworkSection'
@@ -36,6 +37,7 @@ import { ProductBentoVisual } from '@/components/pages/home/product-bento/Produc
 import { StandaloneCommandCenterScope } from '@/components/global/providers/KeyboardShortcuts'
 import { Button } from '@/components/ui/button'
 import { getActiveProfileFeatures } from '@/lib/console-profiles'
+import { marketingProductToolkit } from '@/lib/marketing/product-toolkit'
 import { consoleAccountQueryOptions } from '@/lib/react-query/hooks/auth'
 import { pageTitle } from '@/lib/utils/page-title'
 
@@ -69,6 +71,8 @@ const productBentoItems: {
   className: string
   label?: string
   tall?: boolean
+  /** Tighter copy block so the visual gets more room (bottom row). */
+  compact?: boolean
   /** Taller article + visual min-heights below lg (complex stacked visuals). */
   mobileVisualTall?: boolean
 }[] = [
@@ -121,7 +125,8 @@ const productBentoItems: {
       'Send email, SMS, and push messages through a unified messaging service.',
     icon: MessageSquare,
     className:
-      'lg:col-span-4 lg:col-start-1 lg:row-start-7 lg:row-span-1',
+      'lg:col-span-4 lg:col-start-1 lg:row-start-7 lg:row-span-2',
+    compact: true,
   },
   {
     title: 'Firewall',
@@ -130,7 +135,8 @@ const productBentoItems: {
       'Protect apps with traffic rules, abuse controls, and edge security for every project.',
     icon: Shield,
     className:
-      'lg:col-span-4 lg:col-start-5 lg:row-start-7 lg:row-span-1',
+      'lg:col-span-4 lg:col-start-5 lg:row-start-7 lg:row-span-2',
+    compact: true,
   },
   {
     title: 'Realtime',
@@ -138,7 +144,8 @@ const productBentoItems: {
       'Subscribe and react to events across your project as they happen.',
     icon: Radio,
     className:
-      'lg:col-span-4 lg:col-start-9 lg:row-start-7 lg:row-span-1',
+      'lg:col-span-4 lg:col-start-9 lg:row-start-7 lg:row-span-2',
+    compact: true,
   },
 ]
 
@@ -378,20 +385,29 @@ function HomePage() {
               </p>
             </div>
 
-            <div className="product-bento-grid mt-10 grid overflow-hidden rounded-xl border border-border bg-card/50 lg:grid-cols-12 lg:grid-rows-[repeat(6,minmax(0,1fr))_auto] lg:min-h-[720px]">
+            <MarketingProductPills
+              build={marketingProductToolkit.build}
+              deploy={marketingProductToolkit.deploy}
+              protect={marketingProductToolkit.protect}
+              scale={{ href: '#scale' }}
+            />
+
+            <div className="product-bento-grid mt-10 grid gap-3 sm:gap-4 lg:grid-cols-12 lg:grid-rows-[repeat(8,minmax(0,1fr))] lg:min-h-[960px]">
               {productBentoItems.map((item) => {
                 const Icon = item.icon
 
                 return (
                   <article
                     key={item.title}
-                    className={`${item.className} group relative border-b border-border transition-colors hover:bg-accent/12 lg:border-r lg:[&:nth-child(2)]:border-r-0 lg:[&:nth-child(5)]:border-r-0 lg:[&:nth-child(8)]:border-r-0 lg:[&:nth-child(n+6)]:border-b-0`}
+                    className={`${item.className} group relative flex flex-col overflow-hidden rounded-xl border border-border bg-card/50 transition-colors hover:bg-accent/10 ${item.mobileVisualTall ? 'min-h-[540px]' : 'min-h-[380px]'} ${item.tall ? 'lg:min-h-0' : ''}`}
                   >
-                    <ProductBentoHoverLight />
+                    <ProductBentoHoverLight tall={item.tall} />
                     <div
-                      className={`relative flex flex-col lg:h-full lg:min-h-0 ${item.mobileVisualTall ? 'min-h-[480px]' : 'min-h-[320px]'} ${item.tall ? 'lg:min-h-full' : ''}`}
+                      className={`relative flex min-h-0 flex-1 flex-col lg:h-full ${item.tall ? 'lg:min-h-full' : ''}`}
                     >
-                      <div className="space-y-3 px-5 pt-5 pb-4">
+                      <div
+                        className={`relative z-10 shrink-0 px-4 pt-4 ${item.compact ? 'pb-2' : 'pb-2.5'}`}
+                      >
                         <div className="flex items-center gap-2">
                           <span className="flex size-7 items-center justify-center rounded-md border border-border bg-muted/40">
                             <Icon
@@ -408,19 +424,33 @@ function HomePage() {
                             </span>
                           ) : null}
                         </div>
-                        <p className="min-h-10 max-w-xl text-[13px] leading-5 text-muted-foreground">
+                        <p
+                          className={`mt-2 min-h-10 max-w-xl text-[13px] leading-5 text-muted-foreground ${item.compact ? 'line-clamp-2' : 'line-clamp-3'}`}
+                        >
                           {item.description}
                         </p>
                       </div>
 
                       <div
-                        className={`relative isolate min-h-0 flex-1 overflow-hidden border-t border-border bg-muted/[0.06] ${item.mobileVisualTall ? 'min-h-[240px] max-lg:min-h-[400px]' : 'min-h-[240px]'} ${item.tall ? 'lg:min-h-0' : ''}`}
-                        aria-hidden
+                        className={`relative flex min-h-0 flex-1 flex-col px-3 pb-3 sm:px-3.5 sm:pb-3.5 ${item.mobileVisualTall ? 'max-lg:min-h-[460px]' : ''}`}
                       >
-                        <ProductBentoSoftLights />
-                        <div className="absolute inset-0 px-3 pt-3 pb-0 sm:px-4 sm:pt-4 sm:pb-0">
-                          <div className="relative h-full min-h-0 w-full opacity-[0.94] transition-opacity duration-300 group-hover:opacity-100 motion-reduce:opacity-100">
-                            <ProductBentoVisual title={item.title} />
+                        <div
+                          className={`relative isolate min-h-0 flex-1 overflow-hidden rounded-lg border border-border bg-muted/20 shadow-sm ${
+                            item.mobileVisualTall
+                              ? 'min-h-[280px] lg:min-h-[15rem]'
+                              : item.compact
+                                ? 'min-h-[240px] lg:min-h-[11rem]'
+                                : item.tall
+                                  ? 'min-h-[260px] lg:min-h-[14rem]'
+                                  : 'min-h-[260px] lg:min-h-[12rem]'
+                          }`}
+                          aria-hidden
+                        >
+                          <ProductBentoSoftLights />
+                          <div className="absolute inset-0 p-2 sm:p-2.5">
+                            <div className="relative h-full min-h-0 w-full opacity-[0.94] transition-opacity duration-300 group-hover:opacity-100 motion-reduce:opacity-100">
+                              <ProductBentoVisual title={item.title} />
+                            </div>
                           </div>
                         </div>
                       </div>

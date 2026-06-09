@@ -26,6 +26,10 @@ const avatarClassName = cn(
 
 const iconClassName = 'size-4 text-muted-foreground/70 sm:size-[17px]'
 
+function isExternalHref(href: string) {
+  return href.startsWith('http://') || href.startsWith('https://')
+}
+
 export function ProductAvatarsList({
   items,
   className,
@@ -50,8 +54,9 @@ export function ProductAvatarsList({
                 {item.href ? (
                   <a
                     href={item.href}
-                    target="_blank"
-                    rel="noopener noreferrer"
+                    {...(isExternalHref(item.href)
+                      ? { target: '_blank', rel: 'noopener noreferrer' }
+                      : {})}
                     className={cn(avatarClassName, 'cursor-pointer')}
                     aria-label={item.name}
                   >
