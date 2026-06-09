@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Tests\E2E\Services\Console;
 
 use Tests\E2E\Client;
@@ -7,7 +9,7 @@ use Tests\E2E\Scopes\ProjectConsole;
 use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\SideClient;
 
-class ConsoleConsoleClientTest extends Scope
+final class ConsoleConsoleClientTest extends Scope
 {
     use ConsoleBase;
     use ProjectConsole;
@@ -53,7 +55,7 @@ class ConsoleConsoleClientTest extends Scope
         $this->assertIsInt($response['body']['total']);
         $this->assertIsArray($response['body']['oAuth2Providers']);
         $this->assertGreaterThan(0, $response['body']['total']);
-        $this->assertEquals($response['body']['total'], \count($response['body']['oAuth2Providers']));
+        $this->assertCount($response['body']['total'], $response['body']['oAuth2Providers']);
 
         $providerIds = \array_column($response['body']['oAuth2Providers'], '$id');
         $this->assertEquals('amazon', $providerIds[0]);
@@ -142,7 +144,7 @@ class ConsoleConsoleClientTest extends Scope
         $this->assertIsInt($response['body']['total']);
         $this->assertIsArray($response['body']['scopes']);
         $this->assertGreaterThan(0, $response['body']['total']);
-        $this->assertEquals($response['body']['total'], \count($response['body']['scopes']));
+        $this->assertCount($response['body']['total'], $response['body']['scopes']);
 
         $scopeIds = \array_column($response['body']['scopes'], '$id');
 
@@ -187,7 +189,7 @@ class ConsoleConsoleClientTest extends Scope
         $this->assertIsInt($response['body']['total']);
         $this->assertIsArray($response['body']['scopes']);
         $this->assertGreaterThan(0, $response['body']['total']);
-        $this->assertEquals($response['body']['total'], \count($response['body']['scopes']));
+        $this->assertCount($response['body']['total'], $response['body']['scopes']);
 
         $scopeIds = \array_column($response['body']['scopes'], '$id');
 

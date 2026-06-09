@@ -108,6 +108,41 @@ class User extends Model
                 'default' => false,
                 'example' => true,
             ])
+            ->addRule('emailCanonical', [
+                'type' => self::TYPE_STRING,
+                'description' => 'Canonical form of the user email address.',
+                'required' => false,
+                'default' => '',
+                'example' => 'john@appwrite.io',
+            ])
+            ->addRule('emailIsFree', [
+                'type' => self::TYPE_BOOLEAN,
+                'description' => 'Whether the user email is from a free email provider.',
+                'required' => false,
+                'default' => null,
+                'example' => true,
+            ])
+            ->addRule('emailIsDisposable', [
+                'type' => self::TYPE_BOOLEAN,
+                'description' => 'Whether the user email is from a disposable email provider.',
+                'required' => false,
+                'default' => null,
+                'example' => false,
+            ])
+            ->addRule('emailIsCorporate', [
+                'type' => self::TYPE_BOOLEAN,
+                'description' => 'Whether the user email is from a corporate domain.',
+                'required' => false,
+                'default' => null,
+                'example' => true,
+            ])
+            ->addRule('emailIsCanonical', [
+                'type' => self::TYPE_BOOLEAN,
+                'description' => 'Whether the user email is in its canonical form.',
+                'required' => false,
+                'default' => null,
+                'example' => true,
+            ])
             ->addRule('phoneVerification', [
                 'type' => self::TYPE_BOOLEAN,
                 'description' => 'Phone verification status.',

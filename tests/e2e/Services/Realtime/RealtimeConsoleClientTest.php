@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Tests\E2E\Services\Realtime;
 
 use Tests\E2E\Client;
@@ -11,7 +13,7 @@ use Utopia\Database\Helpers\ID;
 use Utopia\Database\Helpers\Permission;
 use Utopia\Database\Helpers\Role;
 
-class RealtimeConsoleClientTest extends Scope
+final class RealtimeConsoleClientTest extends Scope
 {
     use FunctionsBase;
     use RealtimeBase;
@@ -609,7 +611,7 @@ class RealtimeConsoleClientTest extends Scope
         $client = $this->getWebsocket(['console'], [
             'origin' => 'http://localhost',
             'cookie' => 'a_session_console=' . $this->getRoot()['session'],
-        ], $projectId);
+        ], $projectId, null, 10);
 
         $response = json_decode($client->receive(), true);
 
@@ -913,7 +915,7 @@ class RealtimeConsoleClientTest extends Scope
         $client = $this->getWebsocket(['console'], [
             'origin' => 'http://localhost',
             'cookie' => 'a_session_console=' . $this->getRoot()['session'],
-        ], $projectId);
+        ], $projectId, null, 10);
 
         $response = json_decode($client->receive(), true);
 
@@ -981,7 +983,7 @@ class RealtimeConsoleClientTest extends Scope
         $client = $this->getWebsocket(['console'], [
             'origin' => 'http://localhost',
             'cookie' => 'a_session_console=' . $this->getRoot()['session'],
-        ], 'console');
+        ], 'console', null, 10);
 
         $response = json_decode($client->receive(), true);
 
@@ -1042,7 +1044,7 @@ class RealtimeConsoleClientTest extends Scope
         $client = $this->getWebsocket(['console'], [
             'origin' => 'http://localhost',
             'cookie' => 'a_session_console=' . $this->getRoot()['session'],
-        ], $projectId);
+        ], $projectId, null, 30);
 
         $response = json_decode($client->receive(), true);
 

@@ -22,7 +22,7 @@ use Appwrite\Usage\Context as UsageContext;
 use Appwrite\Utopia\Database\Documents\User;
 use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
-use Utopia\Agents\Adapters\Ollama;
+use Utopia\Agents\Adapters\Appwrite as AppwriteAdapter;
 use Utopia\Agents\Agent;
 use Utopia\Audit\Adapter\Database as AdapterDatabase;
 use Utopia\Audit\Audit;
@@ -491,9 +491,9 @@ return function (Container $context): void {
         // Impersonation: if current user has impersonator capability and headers/params are set, act as another user
         // Query params mirror the header fallback pattern used by ?project= and ?devKey=,
         // allowing Console to embed impersonation in direct file/image URLs where headers cannot be set.
-        $impersonateUserId = $request->getHeader('x-appwrite-impersonate-user-id', (string)$request->getParam('impersonateUserId', ''));
-        $impersonateEmail = $request->getHeader('x-appwrite-impersonate-user-email', (string)$request->getParam('impersonateEmail', ''));
-        $impersonatePhone = $request->getHeader('x-appwrite-impersonate-user-phone', (string)$request->getParam('impersonatePhone', ''));
+        $impersonateUserId = $request->getHeader('x-appwrite-impersonate-user-id', (string)($request->getParam('impersonateuserid', '') ?: $request->getParam('impersonateUserId', '')));
+        $impersonateEmail = $request->getHeader('x-appwrite-impersonate-user-email', (string)($request->getParam('impersonateemail', '') ?: $request->getParam('impersonateEmail', '')));
+        $impersonatePhone = $request->getHeader('x-appwrite-impersonate-user-phone', (string)($request->getParam('impersonatephone', '') ?: $request->getParam('impersonatePhone', '')));
         if (!$user->isEmpty() && $user->getAttribute('impersonator', false)) {
             $userDb = (APP_MODE_ADMIN === $mode || $project->getId() === 'console') ? $dbForPlatform : $dbForProject;
             $targetUser = null;
@@ -1277,8 +1277,8 @@ return function (Container $context): void {
     $context->set('deviceForBuilds', fn ($project, Telemetry $telemetry) => new Device\Telemetry($telemetry, getDevice(APP_STORAGE_BUILDS . '/app-' . $project->getId())), ['project', 'telemetry']);
 
     $context->set('embeddingAgent', function ($register) {
-        $adapter = new Ollama();
-        $adapter->setEndpoint(System::getEnv('_APP_EMBEDDING_ENDPOINT', 'http://ollama:11434/api/embed'));
+        $adapter = new AppwriteAdapter();
+        $adapter->setEndpoint(System::getEnv('_APP_EMBEDDING_ENDPOINT', 'http://appwrite-embedding:3000/embed'));
         $adapter->setTimeout((int) System::getEnv('_APP_EMBEDDING_TIMEOUT', '30000'));
         return new Agent($adapter);
     }, ['register']);
