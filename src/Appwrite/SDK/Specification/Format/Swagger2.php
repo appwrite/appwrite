@@ -188,7 +188,7 @@ class Swagger2 extends Format
                         continue;
                     }
 
-                    $methodSecurities = [$methodObj->getProjectAuth() => []];
+                    $methodSecurities = [($methodObj->getLocationAuth()[0] ?? 'Project') => []];
                     foreach ($methodObj->getAuth() as $security) {
                         /** @var AuthType $security */
                         if (\array_key_exists($security->value, $this->keys)) {
@@ -365,7 +365,7 @@ class Swagger2 extends Format
             }
 
             if (!empty($scope)) {
-                $securities = [$sdk->getProjectAuth() => []];
+                $securities = [($sdk->getLocationAuth()[0] ?? 'Project') => []];
 
                 foreach ($sdk->getAuth() as $security) {
                     if (\array_key_exists($security->value, $this->keys)) {
@@ -374,6 +374,16 @@ class Swagger2 extends Format
                 }
 
                 $temp['x-appwrite']['auth'] = \array_slice($securities, 0, $this->authCount);
+
+                if ($sdk->getType() === MethodType::LOCATION) {
+                    foreach ($sdk->getLocationAuth() as $key) {
+                        if (\array_key_exists($key, $this->keys)) {
+                            $securities[$key] = [];
+                            $temp['x-appwrite']['auth'][$key] = [];
+                        }
+                    }
+                }
+
                 $temp['security'][] = $securities;
             }
 
@@ -464,6 +474,9 @@ class Swagger2 extends Format
                             $node['x-upload-id'] = true;
                         }
                         $node['type'] = $validator->getType();
+                        $node['x-appwrite'] = [
+                            'idGenerator' => 'ID.unique',
+                        ];
                         $node['x-example'] = ($param['example'] ?? '') ?: '<' . \strtoupper(Template::fromCamelCaseToSnake($node['name'])) . '>';
                         break;
                     case \Utopia\Database\Validator\Datetime::class:
@@ -553,6 +566,7 @@ class Swagger2 extends Format
                         $node['x-example'] = ($param['example'] ?? '') ?: '["' . Role::any()->toString() . '"]';
                         break;
                     case \Appwrite\Auth\Validator\Password::class:
+                    case \Appwrite\SDK\Specification\Validator\PasswordFormat::class:
                         $node['type'] = $validator->getType();
                         $node['format'] = 'password';
                         $node['x-example'] = ($param['example'] ?? '') ?: 'password';
@@ -768,6 +782,10 @@ class Swagger2 extends Format
                         $body['schema']['properties'][$name]['x-enum-keys'] = $node['x-enum-keys'];
                     }
 
+                    if (isset($node['x-appwrite'])) {
+                        $body['schema']['properties'][$name]['x-appwrite'] = $node['x-appwrite'];
+                    }
+
                     if ($parameter['nullable']) {
                         $body['schema']['properties'][$name]['x-nullable'] = true;
                     }
@@ -836,7 +854,7 @@ class Swagger2 extends Format
                 }
 
                 $type = '';
-                $format = null;
+                $format = $rule['format'] ?? null;
                 $items = null;
 
                 $examples[$name] = $rule['example'] ?? null;
