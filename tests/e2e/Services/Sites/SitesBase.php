@@ -76,7 +76,7 @@ trait SitesBase
             if (\trim($this->stdout) !== '0') {
                 $msg = 'Executor has a problem: ' . $this->stderr . ' (' . $this->stdout . '), current status: ';
 
-                Console::execute("docker compose logs openruntimes-executor", '', $this->stdout, $this->stderr);
+                Console::execute("docker logs exc1", '', $this->stdout, $this->stderr);
                 $msg .= $this->stdout . ' (' . $this->stderr . ')';
 
                 throw new Critical($msg . json_encode($deployment['body'], JSON_PRETTY_PRINT));
