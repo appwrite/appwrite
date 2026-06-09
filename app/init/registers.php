@@ -221,12 +221,6 @@ $register->set('pools', function () {
             'multiple' => false,
             'schemes' => ['redis'],
         ],
-        'consumer' => [
-            'type' => 'consumer',
-            'dsns' => $fallbackForRedis,
-            'multiple' => false,
-            'schemes' => ['redis'],
-        ],
         'pubsub' => [
             'type' => 'pubsub',
             'dsns' => $fallbackForRedis,
@@ -343,11 +337,8 @@ $register->set('pools', function () {
 
             // PubSub workers hold one long-lived subscribed connection and also need
             // spare capacity for publishes from the same process.
-            // Consumer pools lease one connection per consume coroutine for the
-            // lifetime of the worker, plus headroom for queue-size reads.
             $connectionPoolSize = match ($type) {
                 'pubsub' => max(2, $poolSize),
-                'consumer' => $poolSize + 2,
                 default => $poolSize,
             };
 
@@ -371,9 +362,12 @@ $register->set('pools', function () {
                             default => null
                         };
                     case 'publisher':
-                    case 'consumer':
+                        // Publishers never block on receive, so one connection backs both broker slots.
                         return match ($dsn->getScheme()) {
-                            'redis' => new Queue\Broker\Redis(new Queue\Connection\Redis($dsn->getHost(), $dsn->getPort())),
+                            'redis' => (function () use ($dsn) {
+                                $connection = new Queue\Connection\Redis($dsn->getHost(), $dsn->getPort());
+                                return new Queue\Broker\Redis($connection, $connection);
+                            })(),
                             default => null
                         };
                     case 'cache':

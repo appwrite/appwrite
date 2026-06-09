@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Tests\E2E\Services\Functions;
 
 use Tests\E2E\Client;
@@ -11,7 +13,7 @@ use Utopia\Database\Helpers\Permission;
 use Utopia\Database\Helpers\Role;
 use Utopia\System\System;
 
-class FunctionsCustomClientTest extends Scope
+final class FunctionsCustomClientTest extends Scope
 {
     use FunctionsBase;
     use ProjectCustom;
@@ -391,7 +393,7 @@ class FunctionsCustomClientTest extends Scope
         $this->assertIsArray($templatesWithIncludeTotalFalse['body']);
         $this->assertIsArray($templatesWithIncludeTotalFalse['body']['templates']);
         $this->assertIsInt($templatesWithIncludeTotalFalse['body']['total']);
-        $this->assertEquals(0, $templatesWithIncludeTotalFalse['body']['total']);
+        $this->assertSame(0, $templatesWithIncludeTotalFalse['body']['total']);
         $this->assertGreaterThan(0, count($templatesWithIncludeTotalFalse['body']['templates']));
 
         foreach ($templates['body']['templates'] as $template) {
@@ -605,7 +607,7 @@ class FunctionsCustomClientTest extends Scope
             $lastExecution = $executions['body']['executions'][0];
             $this->assertEquals('completed', $lastExecution['status']);
             $this->assertEquals(204, $lastExecution['responseStatusCode']);
-            $this->assertStringContainsString($documentId, $lastExecution['logs']);
+            $this->assertStringContainsString($documentId, (string) $lastExecution['logs']);
         }, 20000, 500);
 
         $this->client->call(Client::METHOD_DELETE, '/databases/' . $databaseId, [

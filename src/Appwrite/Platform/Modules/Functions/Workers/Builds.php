@@ -690,25 +690,7 @@ class Builds extends Action
                         } else {
                             $outputDirectory = $deployment->getAttribute('buildOutput') ?? $resource->getAttribute('outputDirectory');
                             if ($resource->getCollection() === 'sites') {
-                                $listFilesCommand = '';
-
-                                // Start separation, enter build folder
-                                $listFilesCommand .= 'echo "{APPWRITE_DETECTION_SEPARATOR_START}" && cd /usr/local/build';
-
-                                // Enter output directory, if set
-                                if (! empty($outputDirectory)) {
-                                    $listFilesCommand .= ' && cd ' . \escapeshellarg($outputDirectory);
-                                }
-
-                                // Print files, and end separation
-                                $listFilesCommand .= ' && find . -name \'node_modules\' -prune -o -type f -print && echo "{APPWRITE_DETECTION_SEPARATOR_END}"';
-
-                                // Use SSR file listing
-                                if (empty($command)) {
-                                    $command = $listFilesCommand;
-                                } else {
-                                    $command .= ' && ' . $listFilesCommand;
-                                }
+                                $command = $this->prepareSiteBuildCommand($command, $outputDirectory ?? '');
                             }
 
                             $command = 'tar -zxf /tmp/code.tar.gz -C /mnt/code && helpers/build.sh ' . \trim(\escapeshellarg($command));
@@ -809,6 +791,10 @@ class Builds extends Action
                                         $streamLog = \str_replace('{APPWRITE_LINEBREAK_PLACEHOLDER}', "\n", $streamLog);
                                         $streamParts = \explode(' ', $streamLog, 2);
 
+                                        if (! isset($streamParts[1])) {
+                                            continue;
+                                        }
+
                                         // TODO: use part[0] as timestamp when switching to dbForLogs for build logs
                                         $currentLogs .= $streamParts[1];
 
@@ -871,31 +857,13 @@ class Builds extends Action
                 $logs .= $log['content'];
             }
 
-            // Separate logs for SSR detection
-            $detectionLogs = '';
-            if (\str_contains($logs, '{APPWRITE_DETECTION_SEPARATOR_START}')) {
-                [$logsBefore, $detectionLogsStart] = \explode('{APPWRITE_DETECTION_SEPARATOR_START}', $logs, 2);
-                [$detectionLogs, $logsAfter] = \explode('{APPWRITE_DETECTION_SEPARATOR_END}', $detectionLogsStart, 2);
-                $logs = $logsBefore . $logsAfter;
-            }
+            ['logs' => $logs, 'detectionLogs' => $detectionLogs] = $this->splitSiteDetectionLogs($logs);
 
             $deployment->setAttribute('buildLogs', $logs);
 
             $adapter = null;
             if ($resource->getCollection() === 'sites' && ! empty($detectionLogs)) {
-                $files = \explode("\n", $detectionLogs); // Parse output
-                $files = \array_filter($files); // Remove empty
-                $files = \array_map(fn ($file) => \trim($file), $files); // Remove whitepsaces
-                $files = \array_map(fn ($file) => \str_starts_with($file, './') ? \substr($file, 2) : $file, $files); // Remove beginning ./
-
-                $detector = new Rendering($resource->getAttribute('framework', ''));
-                foreach ($files as $file) {
-                    $detector->addInput($file);
-                }
-                $detector
-                    ->addOption(new SSR())
-                    ->addOption(new XStatic());
-                $detection = $detector->detect();
+                $detection = $this->detectSiteRendering($resource->getAttribute('framework', ''), $detectionLogs);
 
                 $adapter = $resource->getAttribute('adapter', '');
                 if (empty($adapter)) {
@@ -1331,6 +1299,62 @@ class Builds extends Action
         }
 
         return '';
+    }
+
+    protected function prepareSiteBuildCommand(string $command, string $outputDirectory): string
+    {
+        $listFilesCommand = 'echo "{APPWRITE_DETECTION_SEPARATOR_START}" && cd /usr/local/build';
+
+        if (! empty($outputDirectory)) {
+            $listFilesCommand .= ' && cd ' . \escapeshellarg($outputDirectory);
+        }
+
+        $listFilesCommand .= ' && find . -name \'node_modules\' -prune -o -type f -print && echo "{APPWRITE_DETECTION_SEPARATOR_END}"';
+
+        if (empty($command)) {
+            return $listFilesCommand;
+        }
+
+        return "{$command} && {$listFilesCommand}";
+    }
+
+    /**
+     * @return array{logs: string, detectionLogs: string}
+     */
+    protected function splitSiteDetectionLogs(string $logs): array
+    {
+        if (! \str_contains($logs, '{APPWRITE_DETECTION_SEPARATOR_START}')) {
+            return [
+                'logs' => $logs,
+                'detectionLogs' => '',
+            ];
+        }
+
+        [$logsBefore, $detectionLogsStart] = \explode('{APPWRITE_DETECTION_SEPARATOR_START}', $logs, 2);
+        [$detectionLogs, $logsAfter] = \explode('{APPWRITE_DETECTION_SEPARATOR_END}', $detectionLogsStart, 2);
+
+        return [
+            'logs' => "{$logsBefore}{$logsAfter}",
+            'detectionLogs' => $detectionLogs,
+        ];
+    }
+
+    protected function detectSiteRendering(string $framework, string $detectionLogs): object
+    {
+        $files = \explode("\n", $detectionLogs);
+        $files = \array_filter($files);
+        $files = \array_map(\trim(...), $files);
+        $files = \array_map(fn ($file) => \str_starts_with($file, './') ? \substr($file, 2) : $file, $files);
+
+        $detector = new Rendering($framework);
+        foreach ($files as $file) {
+            $detector->addInput($file);
+        }
+
+        return $detector
+            ->addOption(new SSR())
+            ->addOption(new XStatic())
+            ->detect();
     }
 
     /**

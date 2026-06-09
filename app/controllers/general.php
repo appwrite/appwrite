@@ -1192,7 +1192,7 @@ Http::error()
         $line = $error->getLine();
         $trace = $error->getTrace();
 
-        Span::error($error);
+        Span::current()?->setError($error);
 
         switch ($class) {
             case Utopia\Http\Exception::class:

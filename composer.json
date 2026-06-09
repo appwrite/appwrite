@@ -16,6 +16,8 @@
         "analyze": "./vendor/bin/phpstan analyse -c phpstan.neon --memory-limit=1G",
         "bench": "vendor/bin/phpbench run --report=benchmark",
         "check": "./vendor/bin/phpstan analyse -c phpstan.neon --memory-limit=1G",
+        "refactor": "vendor/bin/rector process",
+        "refactor:check": "vendor/bin/rector process --dry-run",
         "installer:clean": "php src/Appwrite/Platform/Installer/Server.php --clean",
         "installer:dev": "docker compose build && composer installer:clean && php src/Appwrite/Platform/Installer/Server.php --docker"
     },
@@ -76,11 +78,11 @@
         "utopia-php/logger": "0.8.*",
         "utopia-php/messaging": "1.0.*",
         "utopia-php/migration": "1.*",
-        "utopia-php/platform": "1.0.0-rc4",
+        "utopia-php/platform": "1.0.0-rc5",
         "utopia-php/pools": "1.*",
-        "utopia-php/span": "1.1.*",
+        "utopia-php/span": "3.0.*",
         "utopia-php/preloader": "0.2.*",
-        "utopia-php/queue": "0.19.*",
+        "utopia-php/queue": "0.20.*",
         "utopia-php/servers": "0.4.*",
         "utopia-php/registry": "0.5.*",
         "utopia-php/storage": "2.*",
@@ -107,7 +109,8 @@
         "phpstan/phpstan": "^2.0",
         "textalk/websocket": "1.5.*",
         "czproject/git-php": "4.*",
-        "laravel/pint": "1.*"
+        "laravel/pint": "1.*",
+        "rector/rector": "^2.4"
     },
     "provide": {
         "ext-phpiredis": "*"
