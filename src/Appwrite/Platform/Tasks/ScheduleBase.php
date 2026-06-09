@@ -289,6 +289,8 @@ abstract class ScheduleBase extends Action
         }
 
         if (!empty($scheduleIdsToDelete)) {
+            Console::info('Deleting ' . count($scheduleIdsToDelete) . ' orphaned schedules');
+
             go(function () use ($dbForPlatform, $scheduleIdsToDelete) {
                 $dbForPlatform->deleteDocuments('schedules', [
                     Query::equal('$id', $scheduleIdsToDelete),
