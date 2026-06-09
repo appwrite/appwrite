@@ -58,6 +58,7 @@ class V26 extends Filter
         $content['authMembershipsMfa'] = $auths->getAttribute('membershipsMfa', false);
         $content['authMembershipsUserId'] = $auths->getAttribute('membershipsUserId', false);
         $content['authMembershipsUserPhone'] = $auths->getAttribute('membershipsUserPhone', false);
+        $content['authMembershipsUserAccessedAt'] = $auths->getAttribute('membershipsUserAccessedAt', false);
         $content['authInvalidateSessions'] = $auths->getAttribute('invalidateSessions', false);
 
         $content['description'] = $raw->getAttribute('description', '');

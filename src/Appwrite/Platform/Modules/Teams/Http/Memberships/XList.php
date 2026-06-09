@@ -130,11 +130,12 @@ class XList extends Action
             'mfa' => $project->getAttribute('auths', [])['membershipsMfa'] ?? true,
             'userId' => $project->getAttribute('auths', [])['membershipsUserId'] ?? true,
             'userPhone' => $project->getAttribute('auths', [])['membershipsUserPhone'] ?? true,
+            'userAccessedAt' => $project->getAttribute('auths', [])['membershipsUserAccessedAt'] ?? false,
         ];
 
         $roles = $authorization->getRoles();
         $isPrivilegedUser = $user->isPrivileged($roles);
-        $isAppUser = $user->isApp($roles);
+        $isAppUser = $user->isKey($roles);
 
         $membershipsPrivacy = array_map(function ($privacy) use ($isPrivilegedUser, $isAppUser) {
             return $privacy || $isPrivilegedUser || $isAppUser;
@@ -178,6 +179,10 @@ class XList extends Action
 
             if ($membershipsPrivacy['userPhone']) {
                 $membership->setAttribute('userPhone', $memberUser->getAttribute('phone'));
+            }
+
+            if ($membershipsPrivacy['userAccessedAt']) {
+                $membership->setAttribute('userAccessedAt', $memberUser->getAttribute('accessedAt'));
             }
 
             $membership->setAttribute('teamName', $team->getAttribute('name'));

@@ -80,6 +80,7 @@ use Appwrite\Platform\Modules\Project\Http\Project\Policies\MembershipPrivacy\Up
 use Appwrite\Platform\Modules\Project\Http\Project\Policies\PasswordDictionary\Update as UpdatePasswordDictionaryPolicy;
 use Appwrite\Platform\Modules\Project\Http\Project\Policies\PasswordHistory\Update as UpdatePasswordHistoryPolicy;
 use Appwrite\Platform\Modules\Project\Http\Project\Policies\PasswordPersonalData\Update as UpdatePasswordPersonalDataPolicy;
+use Appwrite\Platform\Modules\Project\Http\Project\Policies\PasswordStrength\Update as UpdatePasswordStrengthPolicy;
 use Appwrite\Platform\Modules\Project\Http\Project\Policies\SessionAlert\Update as UpdateSessionAlertPolicy;
 use Appwrite\Platform\Modules\Project\Http\Project\Policies\SessionDuration\Update as UpdateSessionDurationPolicy;
 use Appwrite\Platform\Modules\Project\Http\Project\Policies\SessionInvalidation\Update as UpdateSessionInvalidationPolicy;
@@ -141,19 +142,19 @@ class Http extends Service
         $this->addAction(UpdateKey::getName(), new UpdateKey());
 
         // Platforms
-        $this->addAction(DeletePlatform::getName(), new DeletePlatform());
-        $this->addAction(UpdateWebPlatform::getName(), new UpdateWebPlatform());
-        $this->addAction(UpdateApplePlatform::getName(), new UpdateApplePlatform());
-        $this->addAction(UpdateAndroidPlatform::getName(), new UpdateAndroidPlatform());
-        $this->addAction(UpdateWindowsPlatform::getName(), new UpdateWindowsPlatform());
-        $this->addAction(UpdateLinuxPlatform::getName(), new UpdateLinuxPlatform());
+        $this->addAction(ListPlatforms::getName(), new ListPlatforms());
+        $this->addAction(GetPlatform::getName(), new GetPlatform());
         $this->addAction(CreateWebPlatform::getName(), new CreateWebPlatform());
         $this->addAction(CreateApplePlatform::getName(), new CreateApplePlatform());
         $this->addAction(CreateAndroidPlatform::getName(), new CreateAndroidPlatform());
         $this->addAction(CreateWindowsPlatform::getName(), new CreateWindowsPlatform());
         $this->addAction(CreateLinuxPlatform::getName(), new CreateLinuxPlatform());
-        $this->addAction(GetPlatform::getName(), new GetPlatform());
-        $this->addAction(ListPlatforms::getName(), new ListPlatforms());
+        $this->addAction(UpdateWebPlatform::getName(), new UpdateWebPlatform());
+        $this->addAction(UpdateApplePlatform::getName(), new UpdateApplePlatform());
+        $this->addAction(UpdateAndroidPlatform::getName(), new UpdateAndroidPlatform());
+        $this->addAction(UpdateWindowsPlatform::getName(), new UpdateWindowsPlatform());
+        $this->addAction(UpdateLinuxPlatform::getName(), new UpdateLinuxPlatform());
+        $this->addAction(DeletePlatform::getName(), new DeletePlatform());
 
         // Mock Phones
         $this->addAction(CreateMockPhone::getName(), new CreateMockPhone());
@@ -168,6 +169,7 @@ class Http extends Service
         $this->addAction(UpdateMembershipPrivacyPolicy::getName(), new UpdateMembershipPrivacyPolicy());
         $this->addAction(UpdatePasswordDictionaryPolicy::getName(), new UpdatePasswordDictionaryPolicy());
         $this->addAction(UpdatePasswordHistoryPolicy::getName(), new UpdatePasswordHistoryPolicy());
+        $this->addAction(UpdatePasswordStrengthPolicy::getName(), new UpdatePasswordStrengthPolicy());
         $this->addAction(UpdatePasswordPersonalDataPolicy::getName(), new UpdatePasswordPersonalDataPolicy());
         $this->addAction(UpdateSessionAlertPolicy::getName(), new UpdateSessionAlertPolicy());
         $this->addAction(UpdateSessionDurationPolicy::getName(), new UpdateSessionDurationPolicy());

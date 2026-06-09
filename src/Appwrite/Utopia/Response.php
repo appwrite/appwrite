@@ -39,6 +39,7 @@ class Response extends SwooleResponse
     public const MODEL_USAGE_TABLE = 'usageTable';
     public const MODEL_USAGE_COLLECTION = 'usageCollection';
     public const MODEL_USAGE_USERS = 'usageUsers';
+    public const MODEL_USAGE_PRESENCE = 'usagePresence';
     public const MODEL_USAGE_BUCKETS = 'usageBuckets';
     public const MODEL_USAGE_STORAGE = 'usageStorage';
     public const MODEL_USAGE_FUNCTIONS = 'usageFunctions';
@@ -64,6 +65,8 @@ class Response extends SwooleResponse
     public const MODEL_COLUMN_INDEX_LIST = 'columnIndexList';
     public const MODEL_DOCUMENT = 'document';
     public const MODEL_DOCUMENT_LIST = 'documentList';
+    public const MODEL_PRESENCE = 'presence';
+    public const MODEL_PRESENCE_LIST = 'presenceList';
     public const MODEL_ROW = 'row';
     public const MODEL_ROW_LIST = 'rowList';
 
@@ -264,6 +267,7 @@ class Response extends SwooleResponse
     public const MODEL_POLICY_LIST = 'policyList';
     public const MODEL_POLICY_PASSWORD_DICTIONARY = 'policyPasswordDictionary';
     public const MODEL_POLICY_PASSWORD_HISTORY = 'policyPasswordHistory';
+    public const MODEL_POLICY_PASSWORD_STRENGTH = 'policyPasswordStrength';
     public const MODEL_POLICY_PASSWORD_PERSONAL_DATA = 'policyPasswordPersonalData';
     public const MODEL_POLICY_SESSION_ALERT = 'policySessionAlert';
     public const MODEL_POLICY_SESSION_DURATION = 'policySessionDuration';
@@ -334,6 +338,13 @@ class Response extends SwooleResponse
     public const MODEL_HEALTH_ANTIVIRUS = 'healthAntivirus';
     public const MODEL_HEALTH_CERTIFICATE = 'healthCertificate';
     public const MODEL_HEALTH_STATUS_LIST = 'healthStatusList';
+
+    // Advisor
+    public const MODEL_INSIGHT = 'insight';
+    public const MODEL_INSIGHT_LIST = 'insightList';
+    public const MODEL_INSIGHT_CTA = 'insightCTA';
+    public const MODEL_REPORT = 'report';
+    public const MODEL_REPORT_LIST = 'reportList';
 
     // Console
     public const MODEL_CONSOLE_VARIABLES = 'consoleVariables';
@@ -581,7 +592,7 @@ class Response extends SwooleResponse
                 $roles = $this->authorization->getRoles();
                 $user = $this->user ?? new DBUser();
                 $isPrivilegedUser = $user->isPrivileged($roles);
-                $isAppUser = $user->isApp($roles);
+                $isAppUser = $user->isKey($roles);
 
                 if ((!$isPrivilegedUser && !$isAppUser) && !$this->showSensitive) {
                     $data->setAttribute($key, '');

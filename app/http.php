@@ -529,6 +529,7 @@ $swoole->onRequest(function ($utopiaRequest, $utopiaResponse) use ($files, $swoo
     $app->setCompression(System::getEnv('_APP_COMPRESSION_ENABLED', 'enabled') === 'enabled');
     $app->setCompressionMinSize(intval(System::getEnv('_APP_COMPRESSION_MIN_SIZE_BYTES', '1024'))); // 1KB
 
+    $error = null;
     try {
         $authorization = $app->context()->get('authorization');
 
@@ -539,10 +540,10 @@ $swoole->onRequest(function ($utopiaRequest, $utopiaResponse) use ($files, $swoo
 
         $app->run($request, $response);
 
-        $route = $app->getRoute();
+        $route = $app->match($request)?->route;
         Span::add('http.path', $route?->getPath() ?? 'unknown');
     } catch (\Throwable $th) {
-        Span::error($th);
+        $error = $th;
 
         $version = System::getEnv('_APP_VERSION', 'UNKNOWN');
 
@@ -555,7 +556,7 @@ $swoole->onRequest(function ($utopiaRequest, $utopiaResponse) use ($files, $swoo
                 // All good, user is optional information for logger
             }
 
-            $route = $app->getRoute();
+            $route = $app->match($request)?->route;
 
             $log = $app->context()->get("log");
 
@@ -631,7 +632,7 @@ $swoole->onRequest(function ($utopiaRequest, $utopiaResponse) use ($files, $swoo
         $swooleResponse->end(\json_encode($output));
     } finally {
         Span::add('http.response.code', $response->getStatusCode());
-        Span::current()?->finish();
+        Span::current()?->finish(error: $error);
     }
 });
 

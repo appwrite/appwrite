@@ -14,6 +14,7 @@ use Appwrite\Utopia\Database\Documents\User;
 use Appwrite\Utopia\Response as UtopiaResponse;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
+use Utopia\Database\Exception\NotFound as NotFoundException;
 use Utopia\Database\Exception\Order as OrderException;
 use Utopia\Database\Exception\Query as QueryException;
 use Utopia\Database\Exception\Timeout;
@@ -87,7 +88,7 @@ class XList extends Action
 
     public function action(string $databaseId, string $collectionId, array $queries, ?string $transactionId, bool $includeTotal, int $ttl, UtopiaResponse $response, Database $dbForProject, User $user, callable $getDatabasesDB, Context $usage, TransactionState $transactionState, Authorization $authorization, ?Http $utopia = null): void
     {
-        $isAPIKey = $user->isApp($authorization->getRoles());
+        $isAPIKey = $user->isKey($authorization->getRoles());
         $isPrivilegedUser = $user->isPrivileged($authorization->getRoles());
 
         $database = $authorization->skip(fn () => $dbForProject->getDocument('databases', $databaseId));
@@ -118,7 +119,14 @@ class XList extends Action
 
             $documentId = $cursor->getValue();
 
-            $cursorDocument = $authorization->skip(fn () => $dbForDatabases->getDocument('database_' . $database->getSequence() . '_collection_' . $collection->getSequence(), $documentId));
+            try {
+                $cursorDocument = $authorization->skip(fn () => $dbForDatabases->getDocument('database_' . $database->getSequence() . '_collection_' . $collection->getSequence(), $documentId));
+            } catch (NotFoundException) {
+                // The collection metadata document exists but the backing store (e.g. a
+                // dedicated DocumentsDB shard) has no table for it. Treat this as a
+                // not-found on the collection so the caller sees a 404 instead of a 500.
+                throw new Exception($this->getParentNotFoundException(), params: [$collectionId]);
+            }
 
             if ($cursorDocument->isEmpty()) {
                 $type = ucfirst($this->getContext());
@@ -199,6 +207,11 @@ class XList extends Action
                 $documents = $find();
                 $total = $includeTotal ? $dbForDatabases->count($collectionTableId, $queries, APP_LIMIT_COUNT) : 0;
             }
+        } catch (NotFoundException) {
+            // The collection metadata document exists but the backing store (e.g. a
+            // dedicated DocumentsDB shard) has no table for it. Treat this as a
+            // not-found on the collection so the caller sees a 404 instead of a 500.
+            throw new Exception($this->getParentNotFoundException(), params: [$collectionId]);
         } catch (OrderException $e) {
             $documents = $this->isCollectionsAPI() ? 'documents' : 'rows';
             $attribute = $this->isCollectionsAPI() ? 'attribute' : 'column';

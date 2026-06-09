@@ -34,6 +34,7 @@ class Realtime extends MessagingAdapter
         'account',
         'teams',
         'memberships',
+        'presences'
     ];
 
     /**
@@ -44,6 +45,7 @@ class Realtime extends MessagingAdapter
      *      'roles' -> [ROLE_x, ROLE_Y]
      *      'userId' -> [USER_ID]
      *      'channels' -> [CHANNEL_NAME_X, CHANNEL_NAME_Y, CHANNEL_NAME_Z]
+     *      'presences' -> [PRESENCE_ID_1, PRESENCE_ID_2, ...]
      */
     public array $connections = [];
 
@@ -146,6 +148,7 @@ class Realtime extends MessagingAdapter
             'roles' => \array_values(\array_unique(\array_merge($existingRoles, $roles))),
             'userId' => $userId ?? ($existing['userId'] ?? ''),
             'channels' => \array_values(\array_unique(\array_merge($existingChannels, $channels))),
+            'presences' => $this->connections[$identifier]['presences'] ?? []
         ];
 
         if (\array_key_exists('authorization', $existing)) {
@@ -200,6 +203,74 @@ class Realtime extends MessagingAdapter
         }
 
         return $subscriptions;
+    }
+
+    /**
+     * Dedup delete presence triggers.
+     * Scenario: when client is connected to realtime and a delete call is made throught rest.
+     * If not dedupe then two delete events will get triggered. So remove the presenceIds
+     *
+     * @param string $projectId
+     * @param string $presenceId
+     * @return int Number of connections whose presences map was updated.
+     */
+    public function removePresenceFromConnections(string $projectId, string $presenceId): int
+    {
+        if ($projectId === '' || $presenceId === '') {
+            return 0;
+        }
+
+        $removed = 0;
+        foreach ($this->connections as $connectionId => $connection) {
+            if (($connection['projectId'] ?? null) !== $projectId) {
+                continue;
+            }
+            if (!isset($connection['presences'][$presenceId])) {
+                continue;
+            }
+            unset($this->connections[$connectionId]['presences'][$presenceId]);
+            $removed++;
+        }
+
+        return $removed;
+    }
+
+    /**
+     * Returns the presence ID carried by a `presences.{id}.delete` event payload,
+     * or null when the event is not a presence delete.
+     *
+     * @param array $event Decoded pubsub payload produced by self::send().
+     * @return string|null
+     */
+    public static function extractDeletedPresenceId(array $event): ?string
+    {
+        $events = $event['data']['events'] ?? [];
+        if (!\is_array($events)) {
+            return null;
+        }
+
+        $isPresenceDelete = false;
+        foreach ($events as $eventName) {
+            if (
+                \is_string($eventName)
+                && \str_starts_with($eventName, 'presences.')
+                && \str_ends_with($eventName, '.delete')
+            ) {
+                $isPresenceDelete = true;
+                break;
+            }
+        }
+
+        if (!$isPresenceDelete) {
+            return null;
+        }
+
+        $presenceId = $event['data']['payload']['$id'] ?? null;
+        if (!\is_string($presenceId) || $presenceId === '') {
+            return null;
+        }
+
+        return $presenceId;
     }
 
     /**
@@ -773,6 +844,26 @@ class Realtime extends MessagingAdapter
                     $projectId = 'console';
                     $roles = [Role::team($project->getAttribute('teamId'))->toString()];
                 }
+                break;
+            case 'reports':
+                // Plain report event: `reports.{reportId}.{action}`
+                $channels[] = 'reports';
+                if (isset($parts[1])) {
+                    $channels[] = 'reports.' . $parts[1];
+                }
+                // Nested insight event: `reports.{reportId}.insights.{insightId}.{action}`
+                if (isset($parts[2]) && $parts[2] === 'insights') {
+                    $channels[] = 'reports.' . $parts[1] . '.insights';
+                    if (isset($parts[3])) {
+                        $channels[] = 'reports.' . $parts[1] . '.insights.' . $parts[3];
+                    }
+                }
+                $roles = [Role::team($project->getAttribute('teamId'))->toString()];
+                break;
+            case 'presences':
+                $channels[] = 'presences';
+                $channels[] = 'presences.' . $parts[1];
+                $roles = $payload->getRead();
                 break;
         }
 

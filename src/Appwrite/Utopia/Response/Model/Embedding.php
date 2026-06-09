@@ -22,7 +22,7 @@ class Embedding extends Model
             ->addRule('model', [
                 'type' => self::TYPE_STRING,
                 'description' => 'Embedding model used to generate embeddings.',
-                'example' => 'embeddinggemma'
+                'example' => 'nomic-embed-text'
             ])
             ->addRule('dimension', [
                 'type' => self::TYPE_INTEGER,

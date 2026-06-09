@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Tests\E2E\Services\Account;
 
 use Appwrite\Tests\Retry;
@@ -14,7 +16,7 @@ use Utopia\Database\Validator\Datetime as DatetimeValidator;
 
 use function sleep;
 
-class AccountCustomClientTest extends Scope
+final class AccountCustomClientTest extends Scope
 {
     use AccountBase;
     use ProjectCustom;
@@ -383,7 +385,7 @@ class AccountCustomClientTest extends Scope
         ]);
 
         $lastEmail = $this->getLastEmailByAddress($email, function ($email) {
-            $this->assertStringContainsString('Password Reset', $email['subject']);
+            $this->assertStringContainsString('Password Reset', (string) $email['subject']);
         });
         $tokens = $this->extractQueryParamsFromEmailLink($lastEmail['html']);
         $recovery = $tokens['secret'];
@@ -410,7 +412,7 @@ class AccountCustomClientTest extends Scope
 
         // Use a truly unique phone number for parallel test safety
         // Combine microtime, PID, and random digits to avoid collisions across parallel processes
-        $number = '+1' . substr(str_replace('.', '', microtime(true)) . getmypid() . random_int(100, 999), -9);
+        $number = '+1' . substr(str_replace('.', '', (string) microtime(true)) . getmypid() . random_int(100, 999), -9);
 
         $response = $this->client->call(Client::METHOD_POST, '/account/tokens/phone', array_merge([
             'origin' => 'http://localhost',
@@ -569,7 +571,7 @@ class AccountCustomClientTest extends Scope
         $data = $this->setupPhoneConvertedToPassword();
         $session = $data['session'];
         // Use a truly unique phone number to avoid target conflicts across parallel test runs
-        $newPhone = '+456' . substr(str_replace('.', '', microtime(true)) . getmypid() . random_int(100, 999), -8);
+        $newPhone = '+456' . substr(str_replace('.', '', (string) microtime(true)) . getmypid() . random_int(100, 999), -8);
 
         $response = $this->client->call(Client::METHOD_PATCH, '/account/phone', array_merge([
             'origin' => 'http://localhost',
@@ -1026,123 +1028,101 @@ class AccountCustomClientTest extends Scope
         // Use fresh account for predictable log count
         $data = $this->createFreshAccountWithSession();
         $session = $data['session'];
+        $headers = array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $session,
+        ]);
 
         /**
          * Test for SUCCESS
          */
-        $response = $this->client->call(Client::METHOD_GET, '/account/logs', array_merge([
-            'origin' => 'http://localhost',
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $session,
-        ]));
+        $this->assertEventually(function () use ($headers) {
+            $response = $this->client->call(Client::METHOD_GET, '/account/logs', $headers);
 
-        $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertIsArray($response['body']['logs']);
-        $this->assertNotEmpty($response['body']['logs']);
-        // Fresh account: session.create is always logged. user.create audit may or may not
-        // be present depending on async audit processing timing.
-        $logCount = count($response['body']['logs']);
-        $this->assertContains($logCount, [1, 2]);
-        $this->assertIsNumeric($response['body']['total']);
+            $this->assertEquals(200, $response['headers']['status-code']);
+            $this->assertIsArray($response['body']['logs']);
+            $this->assertNotEmpty($response['body']['logs']);
+            $logCount = count($response['body']['logs']);
+            $this->assertContains($logCount, [1, 2]);
+            $this->assertIsNumeric($response['body']['total']);
 
-        // Check session.create log (logs[0] - most recent)
-        $this->assertEquals('Windows', $response['body']['logs'][0]['osName']);
-        $this->assertEquals('WIN', $response['body']['logs'][0]['osCode']);
-        $this->assertEquals('10', $response['body']['logs'][0]['osVersion']);
+            $this->assertEquals('session.create', $response['body']['logs'][0]['event']);
+            $this->assertEquals('Windows', $response['body']['logs'][0]['osName']);
+            $this->assertEquals('WIN', $response['body']['logs'][0]['osCode']);
+            $this->assertEquals('10', $response['body']['logs'][0]['osVersion']);
 
-        $this->assertEquals('browser', $response['body']['logs'][0]['clientType']);
-        $this->assertEquals('Chrome', $response['body']['logs'][0]['clientName']);
-        $this->assertEquals('CH', $response['body']['logs'][0]['clientCode']);
-        $this->assertEquals('70.0', $response['body']['logs'][0]['clientVersion']);
-        $this->assertEquals('Blink', $response['body']['logs'][0]['clientEngine']);
+            $this->assertEquals('browser', $response['body']['logs'][0]['clientType']);
+            $this->assertEquals('Chrome', $response['body']['logs'][0]['clientName']);
+            $this->assertEquals('CH', $response['body']['logs'][0]['clientCode']);
+            $this->assertEquals('70.0', $response['body']['logs'][0]['clientVersion']);
+            $this->assertEquals('Blink', $response['body']['logs'][0]['clientEngine']);
 
-        $this->assertEquals('desktop', $response['body']['logs'][0]['deviceName']);
-        $this->assertEquals('', $response['body']['logs'][0]['deviceBrand']);
-        $this->assertEquals('', $response['body']['logs'][0]['deviceModel']);
-        $this->assertEquals(filter_var($response['body']['logs'][0]['ip'], FILTER_VALIDATE_IP), $response['body']['logs'][0]['ip']);
+            $this->assertEquals('desktop', $response['body']['logs'][0]['deviceName']);
+            $this->assertEquals('', $response['body']['logs'][0]['deviceBrand']);
+            $this->assertEquals('', $response['body']['logs'][0]['deviceModel']);
+            $this->assertEquals(filter_var($response['body']['logs'][0]['ip'], FILTER_VALIDATE_IP), $response['body']['logs'][0]['ip']);
 
-        $this->assertEquals('--', $response['body']['logs'][0]['countryCode']);
-        $this->assertEquals('Unknown', $response['body']['logs'][0]['countryName']);
+            $this->assertEquals('--', $response['body']['logs'][0]['countryCode']);
+            $this->assertEquals('Unknown', $response['body']['logs'][0]['countryName']);
 
-        if ($logCount === 2) {
-            // Check user.create log (logs[1] - oldest)
-            $this->assertEquals('user.create', $response['body']['logs'][1]['event']);
-            $this->assertEquals(filter_var($response['body']['logs'][1]['ip'], FILTER_VALIDATE_IP), $response['body']['logs'][1]['ip']);
-            $this->assertTrue((new DatetimeValidator())->isValid($response['body']['logs'][1]['time']));
-        }
+            if ($logCount === 2) {
+                $this->assertEquals('user.create', $response['body']['logs'][1]['event']);
+                $this->assertEquals(filter_var($response['body']['logs'][1]['ip'], FILTER_VALIDATE_IP), $response['body']['logs'][1]['ip']);
+                $this->assertTrue((new DatetimeValidator())->isValid($response['body']['logs'][1]['time']));
+            }
 
-        $responseLimit = $this->client->call(Client::METHOD_GET, '/account/logs', array_merge([
-            'origin' => 'http://localhost',
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $session,
-        ]), [
-            'queries' => [
-                Query::limit(1)->toString()
-            ]
-        ]);
+            $responseLimit = $this->client->call(Client::METHOD_GET, '/account/logs', $headers, [
+                'queries' => [
+                    Query::limit(1)->toString()
+                ]
+            ]);
 
-        $this->assertEquals(200, $responseLimit['headers']['status-code']);
-        $this->assertIsArray($responseLimit['body']['logs']);
-        $this->assertNotEmpty($responseLimit['body']['logs']);
-        $this->assertCount(1, $responseLimit['body']['logs']);
-        $this->assertIsNumeric($responseLimit['body']['total']);
+            $this->assertEquals(200, $responseLimit['headers']['status-code']);
+            $this->assertIsArray($responseLimit['body']['logs']);
+            $this->assertNotEmpty($responseLimit['body']['logs']);
+            $this->assertCount(1, $responseLimit['body']['logs']);
+            $this->assertIsNumeric($responseLimit['body']['total']);
 
-        $this->assertEquals($response['body']['logs'][0], $responseLimit['body']['logs'][0]);
+            $this->assertEquals($response['body']['logs'][0], $responseLimit['body']['logs'][0]);
 
-        $responseOffset = $this->client->call(Client::METHOD_GET, '/account/logs', array_merge([
-            'origin' => 'http://localhost',
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $session,
-        ]), [
-            'queries' => [
-                Query::offset(1)->toString()
-            ]
-        ]);
+            $responseOffset = $this->client->call(Client::METHOD_GET, '/account/logs', $headers, [
+                'queries' => [
+                    Query::offset(1)->toString()
+                ]
+            ]);
 
-        $this->assertEquals($responseOffset['headers']['status-code'], 200);
-        $this->assertIsArray($responseOffset['body']['logs']);
-        // With offset(1), remaining logs = logCount - 1
-        $this->assertCount($logCount - 1, $responseOffset['body']['logs']);
-        $this->assertIsNumeric($responseOffset['body']['total']);
+            $this->assertEquals(200, $responseOffset['headers']['status-code']);
+            $this->assertIsArray($responseOffset['body']['logs']);
+            $this->assertCount($logCount - 1, $responseOffset['body']['logs']);
+            $this->assertIsNumeric($responseOffset['body']['total']);
 
-        if ($logCount === 2) {
-            $this->assertEquals($response['body']['logs'][1], $responseOffset['body']['logs'][0]);
-        }
+            if ($logCount === 2) {
+                $this->assertEquals($response['body']['logs'][1], $responseOffset['body']['logs'][0]);
+            }
 
-        $responseLimitOffset = $this->client->call(Client::METHOD_GET, '/account/logs', array_merge([
-            'origin' => 'http://localhost',
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $session,
-        ]), [
-            'queries' => [
-                Query::offset(1)->toString(),
-                Query::limit(1)->toString()
-            ]
-        ]);
+            $responseLimitOffset = $this->client->call(Client::METHOD_GET, '/account/logs', $headers, [
+                'queries' => [
+                    Query::offset(1)->toString(),
+                    Query::limit(1)->toString()
+                ]
+            ]);
 
-        $this->assertEquals(200, $responseLimitOffset['headers']['status-code']);
-        $this->assertIsArray($responseLimitOffset['body']['logs']);
-        // With offset(1)+limit(1), remaining logs = min(1, logCount - 1)
-        $this->assertCount(min(1, $logCount - 1), $responseLimitOffset['body']['logs']);
-        $this->assertIsNumeric($responseLimitOffset['body']['total']);
+            $this->assertEquals(200, $responseLimitOffset['headers']['status-code']);
+            $this->assertIsArray($responseLimitOffset['body']['logs']);
+            $this->assertCount(min(1, $logCount - 1), $responseLimitOffset['body']['logs']);
+            $this->assertIsNumeric($responseLimitOffset['body']['total']);
 
-        if ($logCount === 2) {
-            $this->assertEquals($response['body']['logs'][1], $responseLimitOffset['body']['logs'][0]);
-        }
+            if ($logCount === 2) {
+                $this->assertEquals($response['body']['logs'][1], $responseLimitOffset['body']['logs'][0]);
+            }
+        });
 
         /**
          * Test for total=false
          */
-        $logsWithIncludeTotalFalse = $this->client->call(Client::METHOD_GET, '/account/logs', array_merge([
-            'origin' => 'http://localhost',
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $session,
-        ]), [
+        $logsWithIncludeTotalFalse = $this->client->call(Client::METHOD_GET, '/account/logs', $headers, [
             'total' => false
         ]);
 
@@ -1150,7 +1130,7 @@ class AccountCustomClientTest extends Scope
         $this->assertIsArray($logsWithIncludeTotalFalse['body']);
         $this->assertIsArray($logsWithIncludeTotalFalse['body']['logs']);
         $this->assertIsInt($logsWithIncludeTotalFalse['body']['total']);
-        $this->assertEquals(0, $logsWithIncludeTotalFalse['body']['total']);
+        $this->assertSame(0, $logsWithIncludeTotalFalse['body']['total']);
         $this->assertGreaterThan(0, count($logsWithIncludeTotalFalse['body']['logs']));
 
         /**
@@ -1923,7 +1903,7 @@ class AccountCustomClientTest extends Scope
         $this->assertTrue((new DatetimeValidator())->isValid($response['body']['expire']));
 
         $lastEmail = $this->getLastEmailByAddress($email, function ($email) {
-            $this->assertStringContainsString('Password Reset', $email['subject']);
+            $this->assertStringContainsString('Password Reset', (string) $email['subject']);
         });
 
         $this->assertNotEmpty($lastEmail, 'Email not found for address: ' . $email);
@@ -2103,10 +2083,10 @@ class AccountCustomClientTest extends Scope
         $lastEmail = $this->getLastEmailByAddress($email);
 
         $this->assertNotEmpty($lastEmail, 'Email not found for address: ' . $email);
-        $this->assertStringContainsString('Security alert: new session', $lastEmail['subject']);
-        $this->assertStringContainsString($response['body']['ip'], $lastEmail['text']); // IP Address
-        $this->assertStringContainsString('Unknown', $lastEmail['text']); // Country
-        $this->assertStringContainsString($response['body']['clientName'], $lastEmail['text']); // Client name
+        $this->assertStringContainsString('Security alert: new session', (string) $lastEmail['subject']);
+        $this->assertStringContainsString($response['body']['ip'], (string) $lastEmail['text']); // IP Address
+        $this->assertStringContainsString('Unknown', (string) $lastEmail['text']); // Country
+        $this->assertStringContainsString($response['body']['clientName'], (string) $lastEmail['text']); // Client name
         $this->assertStringNotContainsStringIgnoringCase('Appwrite logo', $lastEmail['html']);
 
         // Verify no alert sent in OTP login
@@ -2119,7 +2099,7 @@ class AccountCustomClientTest extends Scope
             'email' => 'otpuser3@appwrite.io'
         ]);
 
-        $this->assertEquals($response['headers']['status-code'], 201);
+        $this->assertEquals(201, $response['headers']['status-code']);
         $this->assertNotEmpty($response['body']['$id']);
         $this->assertNotEmpty($response['body']['$createdAt']);
         $this->assertNotEmpty($response['body']['userId']);
@@ -2569,7 +2549,7 @@ class AccountCustomClientTest extends Scope
         ]);
 
         $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertStringContainsString('a_session_' . $this->getProject()['$id'] . '=deleted', $response['headers']['set-cookie']);
+        $this->assertStringContainsString('a_session_' . $this->getProject()['$id'] . '=deleted', (string) $response['headers']['set-cookie']);
         $this->assertEquals('[]', $response['headers']['x-fallback-cookies']);
 
         $response = $this->client->call(Client::METHOD_GET, '/account', array_merge([
@@ -3481,7 +3461,7 @@ class AccountCustomClientTest extends Scope
     public function testUpdatePhone(): void
     {
         $data = $this->setupPhoneConvertedToPassword();
-        $newPhone = '+456' . substr(str_replace('.', '', microtime(true)) . getmypid() . random_int(100, 999), -8);
+        $newPhone = '+456' . substr(str_replace('.', '', (string) microtime(true)) . getmypid() . random_int(100, 999), -8);
         $session = $data['session'];
 
         /**
