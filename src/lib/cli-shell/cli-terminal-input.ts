@@ -13,6 +13,7 @@ type TabCompleteFn = (
 ) => { input: string; cursor: number } | null
 
 const CLEAR_COMMANDS = new Set(['clear', 'cls'])
+const INTERRUPT_SEQUENCE = '\x03'
 
 type CliTerminalInputOptions = {
   terminal: Terminal
@@ -20,6 +21,9 @@ type CliTerminalInputOptions = {
   getPrompt: () => string
   onRunCommand: (command: string) => void
   onTabComplete: TabCompleteFn
+  initialHistory?: string[]
+  onHistoryChange?: (history: string[]) => void
+  onCancelRunning?: () => void
 }
 
 export type CliTerminalInputSession = {
@@ -34,6 +38,8 @@ export type CliTerminalInputSession = {
   clearScreen: () => void
   /** Prefill the input line without submitting (user presses Enter to run). */
   setInput: (command: string) => void
+  getLastCommand: () => string | null
+  getHistory: () => string[]
 }
 
 export function createCliTerminalInputHandler(
@@ -41,12 +47,18 @@ export function createCliTerminalInputHandler(
 ): CliTerminalInputSession {
   let inputBuffer = ''
   let cursorPos = 0
-  const history: string[] = []
+  const history: string[] = [...(options.initialHistory ?? [])]
   let historyIndex: number | null = null
   let lastTab: { input: string; cursor: number; at: number } | null = null
   let awaitingPrompt = true
   let promptVisible = false
   let welcomeOutputComplete = false
+  let lastSubmittedCommand: string | null =
+    history.length > 0 ? history[history.length - 1] ?? null : null
+
+  const persistHistory = () => {
+    options.onHistoryChange?.([...history])
+  }
 
   const writePrompt = () => {
     if (!welcomeOutputComplete || options.terminal.cols <= 0) return
@@ -77,7 +89,8 @@ export function createCliTerminalInputHandler(
 
     const buffer = options.terminal.buffer.active
     const line = buffer.getLine(buffer.baseY + buffer.cursorY)
-    const lineLength = line?.translateToString(false).replace(/\s+$/, '').length ?? 0
+    const lineLength =
+      line?.translateToString(false).replace(/\s+$/, '').length ?? 0
 
     if (lineLength > 0) {
       options.terminal.write('\r\n')
@@ -122,7 +135,6 @@ export function createCliTerminalInputHandler(
 
   const redrawInputLine = () => {
     if (!welcomeOutputComplete) return
-    // Overwrite in place so the cursor never sits on a blank line before the prompt.
     options.terminal.write(
       `\r${options.getPrompt()}${inputBuffer}${CLI_TERMINAL_RESET}\x1b[K`,
     )
@@ -228,7 +240,9 @@ export function createCliTerminalInputHandler(
     if (command) {
       if (history[history.length - 1] !== command) {
         history.push(command)
+        persistHistory()
       }
+      lastSubmittedCommand = command
       markAwaitingPrompt()
       void options.onRunCommand(command)
     } else {
@@ -287,7 +301,9 @@ export function createCliTerminalInputHandler(
     options.terminal.write(text)
   }
 
-  const applyKeyAction = (action: ReturnType<typeof resolveTerminalKeyAction>) => {
+  const applyKeyAction = (
+    action: ReturnType<typeof resolveTerminalKeyAction>,
+  ) => {
     if (!action) return
 
     switch (action.type) {
@@ -345,7 +361,20 @@ export function createCliTerminalInputHandler(
     }
   }
 
+  const handleInterrupt = () => {
+    if (options.getIsRunning()) {
+      options.onCancelRunning?.()
+      return
+    }
+    applyKeyAction({ type: 'clear-line' })
+  }
+
   const handleLocalData = (data: string) => {
+    if (data === INTERRUPT_SEQUENCE) {
+      handleInterrupt()
+      return
+    }
+
     const action = resolveTerminalKeyAction(data)
     if (action) {
       if (action.type === 'submit' && data === '\n' && inputBuffer === '') {
@@ -369,16 +398,19 @@ export function createCliTerminalInputHandler(
   }
 
   const onData = (data: string) => {
+    if (data === INTERRUPT_SEQUENCE || data.includes(INTERRUPT_SEQUENCE)) {
+      handleInterrupt()
+      return
+    }
+
     if (options.getIsRunning()) return
 
-    // Escape sequences (arrows, home/end, etc.) must stay atomic.
     if (data.startsWith('\x1b') || data.length === 1) {
       ensurePromptBeforeInput(data)
       handleLocalData(data)
       return
     }
 
-    // Paste or batched input — try whole chunk first, then per-sequence tokens.
     ensurePromptBeforeInput(data[0] ?? '')
     const action = resolveTerminalKeyAction(data)
     if (action?.type === 'insert' && data.length > 1) {
@@ -434,5 +466,7 @@ export function createCliTerminalInputHandler(
     markWelcomeComplete,
     clearScreen,
     setInput,
+    getLastCommand: () => lastSubmittedCommand,
+    getHistory: () => [...history],
   }
 }

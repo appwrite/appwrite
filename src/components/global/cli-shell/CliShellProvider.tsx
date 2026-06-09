@@ -22,6 +22,7 @@ import {
 import {
   CLI_BOOTSTRAP_READY_MESSAGE,
   CLI_PROJECT_CWD,
+  CLI_SHELL_TRY_COMMANDS,
   createCliShellWelcomeLines,
 } from '@/lib/cli-shell/constants'
 import { resolveConsoleCliAuth } from '@/lib/cli-shell/console-session'
@@ -62,18 +63,41 @@ import { useKeyboardShortcut } from '@/hooks/use-keyboard-shortcuts'
 import { CLI_SHELL_TOGGLE_SHORTCUT_COMBOS } from '@/lib/cli-shell/cli-terminal-shortcuts'
 import {
   useCliShellHeight,
+  useCliShellHistory,
   useCliShellOpen,
+  useCliShellSessionsPrefs,
   type ConsoleAccountCache,
 } from '@/lib/react-query/hooks/auth'
 import { useProject } from '@/lib/react-query/hooks'
+import { downloadTextFile } from '@/lib/cli-shell/cli-terminal-buffer'
 import {
-  createDefaultCliShellSession,
+  CLI_SHELL_FULLSCREEN_SHORTCUT_COMBOS,
+  CLI_SHELL_SEARCH_SHORTCUT_COMBOS,
+} from '@/lib/cli-shell/cli-terminal-shortcuts'
+import {
   createCliShellSessionId,
-  getInitialCliShellSessionState,
+  createInitialCliShellSessionState,
   nextCliShellSessionName,
   type CliShellSession,
 } from '@/lib/cli-shell/cli-shell-sessions'
-import { clampCliShellHeightPx } from '@/lib/user-prefs-keys'
+import {
+  clampCliShellHeightPx,
+  MAX_CLI_SHELL_SESSIONS,
+  MAX_CLI_SHELL_SESSION_NAME_LENGTH,
+  parseCliShellSessions,
+  type UserPrefs,
+} from '@/lib/user-prefs-keys'
+import type { CliTerminalSearchResults } from '@/lib/cli-shell/cli-terminal-search-label'
+import { toast } from 'sonner'
+
+export type { CliTerminalSearchResults }
+
+export type CliTerminalSearchController = {
+  search: (query: string, options: { caseSensitive: boolean }) => boolean
+  findNext: () => boolean
+  findPrevious: () => boolean
+  clear: () => void
+}
 
 type CliShellContextValue = {
   open: boolean
@@ -85,6 +109,7 @@ type CliShellContextValue = {
   setActiveSessionId: (sessionId: string) => void
   createSession: () => void
   removeSession: (sessionId: string) => void
+  renameSession: (sessionId: string, name: string) => void
   registerTerminal: (sessionId: string, api: CliTerminalApi) => void
   unregisterTerminal: (sessionId: string) => void
   writeSessionWelcome: (sessionId: string) => boolean
@@ -96,8 +121,10 @@ type CliShellContextValue = {
     listOnly?: boolean,
     sessionId?: string,
   ) => { input: string; cursor: number } | null
-  cancelRunning: () => void
+  cancelRunning: (sessionId?: string) => void
   isRunning: boolean
+  runningSessionId: string | null
+  isSessionRunning: (sessionId: string) => boolean
   height: number
   setHeight: (height: number) => void
   fullscreen: boolean
@@ -106,6 +133,32 @@ type CliShellContextValue = {
   retryBootstrap: () => void
   bootstrapError: string | null
   getTerminalPrompt: () => string
+  getCommandHistory: () => string[]
+  persistCommandHistory: (history: string[]) => void
+  getSuggestionCommands: () => readonly string[]
+  registerSearchController: (
+    sessionId: string,
+    controller: CliTerminalSearchController,
+  ) => void
+  unregisterSearchController: (sessionId: string) => void
+  terminalSearchOpen: boolean
+  setTerminalSearchOpen: (open: boolean) => void
+  terminalSearchResults: CliTerminalSearchResults | null
+  reportSearchResults: (
+    sessionId: string,
+    results: CliTerminalSearchResults,
+  ) => void
+  toggleTerminalSearch: () => void
+  searchTerminalOutput: (
+    query: string,
+    options: { caseSensitive: boolean },
+  ) => void
+  findNextTerminalMatch: () => void
+  findPreviousTerminalMatch: () => void
+  copyTerminalSelection: () => void
+  copyLastCommand: () => void
+  copyTerminalOutput: () => void
+  exportTerminalOutput: () => void
 }
 
 const CliShellContext = createContext<CliShellContextValue | null>(null)
@@ -135,19 +188,41 @@ export function CliShellProvider({ projectId, children }: CliShellProviderProps)
   const consoleAccount = account as ConsoleAccountCache | undefined
   const { isOpen: open, setIsOpen: setOpen } = useCliShellOpen(consoleAccount)
   const { heightPx, setHeightPx } = useCliShellHeight(consoleAccount)
+  const { history: commandHistory, persistHistory: persistCommandHistory } =
+    useCliShellHistory(consoleAccount, projectId)
+  const { persistSessions } = useCliShellSessionsPrefs(
+    consoleAccount,
+    projectId,
+  )
   const height = clampCliShellHeightPx(heightPx)
 
   const [status, setStatus] = useState<CliShellStatus>('idle')
-  const [isRunning, setIsRunning] = useState(false)
+  const [runningSessionId, setRunningSessionId] = useState<string | null>(null)
   const [bootstrapError, setBootstrapError] = useState<string | null>(null)
+  const [terminalSearchOpen, setTerminalSearchOpenState] = useState(false)
+  const [terminalSearchResults, setTerminalSearchResults] =
+    useState<CliTerminalSearchResults | null>(null)
   const [sessions, setSessions] = useState<CliShellSession[]>(
-    () => getInitialCliShellSessionState().sessions,
+    () => createInitialCliShellSessionState().sessions,
   )
   const [activeSessionId, setActiveSessionId] = useState<string>(
-    () => getInitialCliShellSessionState().activeSessionId,
+    () => createInitialCliShellSessionState().activeSessionId,
   )
-  const isRunningRef = useRef(false)
-  isRunningRef.current = isRunning
+  const isRunning = runningSessionId !== null
+  const runningSessionIdRef = useRef<string | null>(null)
+  runningSessionIdRef.current = runningSessionId
+  const commandHistoryRef = useRef(commandHistory)
+  commandHistoryRef.current = commandHistory
+  const suggestionCommandsRef = useRef<readonly string[]>(CLI_SHELL_TRY_COMMANDS)
+  const searchControllersRef = useRef<Map<string, CliTerminalSearchController>>(
+    new Map(),
+  )
+  const runDismissedRef = useRef(false)
+  const lastSearchQueryRef = useRef('')
+  const sessionsHydratedForProjectRef = useRef<string | null>(null)
+  const lastPersistedSessionsRef = useRef('')
+  const persistSessionsRef = useRef(persistSessions)
+  persistSessionsRef.current = persistSessions
 
   const containerRef = useRef<CliShellContainer | null>(null)
   const terminalApisRef = useRef<Map<string, CliTerminalApi>>(new Map())
@@ -176,7 +251,8 @@ export function CliShellProvider({ projectId, children }: CliShellProviderProps)
   }, [])
 
   const showInputPromptIfIdle = useCallback((sessionId?: string) => {
-    if (isRunningRef.current) return
+    const id = sessionId ?? activeSessionIdRef.current
+    if (runningSessionIdRef.current === id) return
 
     const api = getTerminalApi(sessionId)
     if (!api) return
@@ -384,7 +460,7 @@ export function CliShellProvider({ projectId, children }: CliShellProviderProps)
       writeCliShellLine(
         getTerminalApi(sessionId),
         { type: 'system', text },
-        { showPromptAfter: !isRunningRef.current },
+        { showPromptAfter: runningSessionIdRef.current === null },
       )
     },
     [getTerminalApi],
@@ -651,16 +727,58 @@ export function CliShellProvider({ projectId, children }: CliShellProviderProps)
     setStatus('idle')
     setBootstrapError(null)
     resetBootstrapLine()
-    setIsRunning(false)
+    runDismissedRef.current = false
+    runningSessionIdRef.current = null
+    setRunningSessionId(null)
     terminalContentReadyRef.current.clear()
     welcomeInitInProgressRef.current.clear()
     terminalApisRef.current.clear()
+    searchControllersRef.current.clear()
     pendingBootstrapMessagesRef.current = []
-    const defaultSession = createDefaultCliShellSession()
-    setSessions([defaultSession])
-    setActiveSessionId(defaultSession.id)
+    suggestionCommandsRef.current = CLI_SHELL_TRY_COMMANDS
+    sessionsHydratedForProjectRef.current = null
+    lastPersistedSessionsRef.current = ''
+    const nextState = createInitialCliShellSessionState()
+    setSessions(nextState.sessions)
+    setActiveSessionId(nextState.activeSessionId)
     removeCliFetchBridge()
   }, [projectId, resetBootstrapLine])
+
+  useEffect(() => {
+    if (!consoleAccount) return
+    if (sessionsHydratedForProjectRef.current === projectId) return
+
+    const saved = parseCliShellSessions(
+      consoleAccount.prefs as UserPrefs | undefined,
+      projectId,
+    )
+    if (saved) {
+      setSessions(saved.sessions)
+      setActiveSessionId(saved.activeSessionId)
+      lastPersistedSessionsRef.current = JSON.stringify({
+        sessions: saved.sessions,
+        activeSessionId: saved.activeSessionId,
+      })
+    } else {
+      const defaultState = createInitialCliShellSessionState()
+      lastPersistedSessionsRef.current = JSON.stringify({
+        sessions: defaultState.sessions,
+        activeSessionId: defaultState.activeSessionId,
+      })
+    }
+
+    sessionsHydratedForProjectRef.current = projectId
+  }, [consoleAccount, projectId])
+
+  useEffect(() => {
+    if (sessionsHydratedForProjectRef.current !== projectId) return
+
+    const payload = JSON.stringify({ sessions, activeSessionId })
+    if (lastPersistedSessionsRef.current === payload) return
+
+    lastPersistedSessionsRef.current = payload
+    persistSessionsRef.current({ sessions, activeSessionId })
+  }, [activeSessionId, projectId, sessions])
 
   useEffect(() => {
     return () => {
@@ -713,10 +831,24 @@ export function CliShellProvider({ projectId, children }: CliShellProviderProps)
     return true
   }, [])
 
+  const renameSession = useCallback((sessionId: string, name: string) => {
+    const trimmed = name.trim().slice(0, MAX_CLI_SHELL_SESSION_NAME_LENGTH)
+    if (!trimmed) return
+    setSessions((prev) =>
+      prev.map((session) =>
+        session.id === sessionId ? { ...session, name: trimmed } : session,
+      ),
+    )
+  }, [])
+
   const createSession = useCallback(() => {
     const nextSessionId = createCliShellSessionId()
 
     setSessions((prev) => {
+      if (prev.length >= MAX_CLI_SHELL_SESSIONS) {
+        toast.error(`Maximum ${MAX_CLI_SHELL_SESSIONS} terminal sessions.`)
+        return prev
+      }
       const nextSession: CliShellSession = {
         id: nextSessionId,
         name: nextCliShellSessionName(prev),
@@ -791,7 +923,9 @@ export function CliShellProvider({ projectId, children }: CliShellProviderProps)
         return
       }
 
-      setIsRunning(true)
+      runDismissedRef.current = false
+      runningSessionIdRef.current = targetSessionId
+      setRunningSessionId(targetSessionId)
       setStatus('running')
 
       let streamedStdout = false
@@ -847,9 +981,19 @@ export function CliShellProvider({ projectId, children }: CliShellProviderProps)
       } finally {
         stdoutLinkifier.flush(getOutputApi())
         stderrLinkifier.flush(getOutputApi())
-        setIsRunning(false)
+
+        const dismissed = runDismissedRef.current
+        if (dismissed) {
+          runDismissedRef.current = false
+        }
+
+        runningSessionIdRef.current = null
+        setRunningSessionId(null)
         setStatus(containerRef.current ? 'ready' : 'error')
-        showInputPromptIfIdle(targetSessionId)
+
+        if (!dismissed) {
+          showInputPromptIfIdle(targetSessionId)
+        }
       }
     },
     [
@@ -861,9 +1005,147 @@ export function CliShellProvider({ projectId, children }: CliShellProviderProps)
     ],
   )
 
-  const cancelRunning = useCallback(() => {
-    /* Command cancellation is not supported in the browser shell. */
+  const cancelRunning = useCallback(
+    (sessionId?: string) => {
+      const targetSessionId = sessionId ?? activeSessionIdRef.current
+      if (runningSessionIdRef.current !== targetSessionId) return
+
+      runDismissedRef.current = true
+      runningSessionIdRef.current = null
+      setRunningSessionId(null)
+      setStatus(containerRef.current ? 'ready' : 'error')
+
+      writeSystemLine('^C', targetSessionId)
+      writeSystemLine('Command cancelled.', targetSessionId)
+      showInputPromptIfIdle(targetSessionId)
+    },
+    [showInputPromptIfIdle, writeSystemLine],
+  )
+
+  const isSessionRunning = useCallback((sessionId: string) => {
+    return runningSessionIdRef.current === sessionId
   }, [])
+
+  const getCommandHistory = useCallback(() => commandHistoryRef.current, [])
+
+  const getSuggestionCommands = useCallback(
+    () => suggestionCommandsRef.current,
+    [],
+  )
+
+  const registerSearchController = useCallback(
+    (sessionId: string, controller: CliTerminalSearchController) => {
+      searchControllersRef.current.set(sessionId, controller)
+    },
+    [],
+  )
+
+  const unregisterSearchController = useCallback((sessionId: string) => {
+    searchControllersRef.current.delete(sessionId)
+  }, [])
+
+  const getActiveSearchController = useCallback(() => {
+    return searchControllersRef.current.get(activeSessionIdRef.current) ?? null
+  }, [])
+
+  const clearTerminalSearchState = useCallback(() => {
+    lastSearchQueryRef.current = ''
+    setTerminalSearchResults(null)
+    getActiveSearchController()?.clear()
+  }, [getActiveSearchController])
+
+  const setTerminalSearchOpen = useCallback(
+    (open: boolean) => {
+      setTerminalSearchOpenState(open)
+      if (!open) {
+        clearTerminalSearchState()
+      }
+    },
+    [clearTerminalSearchState],
+  )
+
+  const reportSearchResults = useCallback(
+    (sessionId: string, results: CliTerminalSearchResults) => {
+      if (sessionId !== activeSessionIdRef.current) return
+      setTerminalSearchResults(results)
+    },
+    [],
+  )
+
+  useEffect(() => {
+    if (!terminalSearchOpen) return
+    setTerminalSearchResults(null)
+    lastSearchQueryRef.current = ''
+    getActiveSearchController()?.clear()
+  }, [activeSessionId, getActiveSearchController, terminalSearchOpen])
+
+  const toggleTerminalSearch = useCallback(() => {
+    const nextOpen = !terminalSearchOpen
+    if (nextOpen) {
+      setOpen(true)
+    }
+    setTerminalSearchOpen(nextOpen)
+  }, [setOpen, setTerminalSearchOpen, terminalSearchOpen])
+
+  const searchTerminalOutput = useCallback(
+    (query: string, options: { caseSensitive: boolean }) => {
+      lastSearchQueryRef.current = query
+      if (!query.trim()) {
+        clearTerminalSearchState()
+        return
+      }
+      getActiveSearchController()?.search(query, options)
+    },
+    [clearTerminalSearchState, getActiveSearchController],
+  )
+
+  const findNextTerminalMatch = useCallback(() => {
+    getActiveSearchController()?.findNext()
+  }, [getActiveSearchController])
+
+  const findPreviousTerminalMatch = useCallback(() => {
+    getActiveSearchController()?.findPrevious()
+  }, [getActiveSearchController])
+
+  const copyTextToClipboard = useCallback(async (text: string, label: string) => {
+    if (!text) {
+      toast.error(`Nothing to copy for ${label}.`)
+      return
+    }
+    try {
+      await navigator.clipboard.writeText(text)
+      toast.success(`Copied ${label}`)
+    } catch {
+      toast.error(`Failed to copy ${label}`)
+    }
+  }, [])
+
+  const copyTerminalSelection = useCallback(() => {
+    const api = getTerminalApi()
+    copyTextToClipboard(api?.getSelection?.() ?? '', 'selection')
+  }, [copyTextToClipboard, getTerminalApi])
+
+  const copyLastCommand = useCallback(() => {
+    const api = getTerminalApi()
+    copyTextToClipboard(api?.getLastCommand?.() ?? '', 'last command')
+  }, [copyTextToClipboard, getTerminalApi])
+
+  const copyTerminalOutput = useCallback(() => {
+    const api = getTerminalApi()
+    copyTextToClipboard(api?.getBufferText?.() ?? '', 'terminal output')
+  }, [copyTextToClipboard, getTerminalApi])
+
+  const exportTerminalOutput = useCallback(() => {
+    const api = getTerminalApi()
+    const content = api?.getBufferText?.() ?? ''
+    if (!content.trim()) {
+      toast.error('Nothing to export.')
+      return
+    }
+    const stamp = new Date().toISOString().replace(/[:.]/g, '-')
+    downloadTextFile(`terminal-${projectId}-${stamp}.txt`, content)
+    toast.success('Terminal output downloaded')
+  }, [getTerminalApi, projectId])
 
   const toggle = useCallback(() => {
     setOpen((prev) => {
@@ -879,6 +1161,10 @@ export function CliShellProvider({ projectId, children }: CliShellProviderProps)
   useKeyboardShortcut(
     'escape',
     () => {
+      if (terminalSearchOpen) {
+        setTerminalSearchOpen(false)
+        return
+      }
       exitFullscreen()
     },
     {
@@ -922,6 +1208,34 @@ export function CliShellProvider({ projectId, children }: CliShellProviderProps)
     capture: true,
   })
 
+  useKeyboardShortcut(CLI_SHELL_FULLSCREEN_SHORTCUT_COMBOS[0], enterFullscreen, {
+    enabled: open && !fullscreen,
+    ignoreInputs: false,
+    capture: true,
+    stopPropagation: true,
+  })
+  useKeyboardShortcut(CLI_SHELL_FULLSCREEN_SHORTCUT_COMBOS[1], enterFullscreen, {
+    enabled: open && !fullscreen,
+    ignoreInputs: false,
+    capture: true,
+    stopPropagation: true,
+  })
+
+  const onToggleTerminalSearchShortcut = useCallback(() => {
+    toggleTerminalSearch()
+  }, [toggleTerminalSearch])
+
+  useKeyboardShortcut(CLI_SHELL_SEARCH_SHORTCUT_COMBOS[0], onToggleTerminalSearchShortcut, {
+    enabled: open,
+    ignoreInputs: false,
+    capture: true,
+  })
+  useKeyboardShortcut(CLI_SHELL_SEARCH_SHORTCUT_COMBOS[1], onToggleTerminalSearchShortcut, {
+    enabled: open,
+    ignoreInputs: false,
+    capture: true,
+  })
+
   const value = useMemo<CliShellContextValue>(
     () => ({
       open,
@@ -933,6 +1247,7 @@ export function CliShellProvider({ projectId, children }: CliShellProviderProps)
       setActiveSessionId,
       createSession,
       removeSession,
+      renameSession,
       registerTerminal,
       unregisterTerminal,
       writeSessionWelcome,
@@ -941,6 +1256,8 @@ export function CliShellProvider({ projectId, children }: CliShellProviderProps)
       completeTab,
       cancelRunning,
       isRunning,
+      runningSessionId,
+      isSessionRunning,
       height,
       setHeight,
       fullscreen,
@@ -949,6 +1266,23 @@ export function CliShellProvider({ projectId, children }: CliShellProviderProps)
       retryBootstrap,
       bootstrapError,
       getTerminalPrompt,
+      getCommandHistory,
+      persistCommandHistory,
+      getSuggestionCommands,
+      registerSearchController,
+      unregisterSearchController,
+      terminalSearchOpen,
+      setTerminalSearchOpen,
+      terminalSearchResults,
+      reportSearchResults,
+      toggleTerminalSearch,
+      searchTerminalOutput,
+      findNextTerminalMatch,
+      findPreviousTerminalMatch,
+      copyTerminalSelection,
+      copyLastCommand,
+      copyTerminalOutput,
+      exportTerminalOutput,
     }),
     [
       open,
@@ -959,6 +1293,7 @@ export function CliShellProvider({ projectId, children }: CliShellProviderProps)
       activeSessionId,
       createSession,
       removeSession,
+      renameSession,
       registerTerminal,
       unregisterTerminal,
       writeSessionWelcome,
@@ -967,6 +1302,8 @@ export function CliShellProvider({ projectId, children }: CliShellProviderProps)
       completeTab,
       cancelRunning,
       isRunning,
+      runningSessionId,
+      isSessionRunning,
       height,
       setHeight,
       fullscreen,
@@ -975,6 +1312,23 @@ export function CliShellProvider({ projectId, children }: CliShellProviderProps)
       retryBootstrap,
       bootstrapError,
       getTerminalPrompt,
+      getCommandHistory,
+      persistCommandHistory,
+      getSuggestionCommands,
+      registerSearchController,
+      unregisterSearchController,
+      terminalSearchOpen,
+      setTerminalSearchOpen,
+      terminalSearchResults,
+      reportSearchResults,
+      toggleTerminalSearch,
+      searchTerminalOutput,
+      findNextTerminalMatch,
+      findPreviousTerminalMatch,
+      copyTerminalSelection,
+      copyLastCommand,
+      copyTerminalOutput,
+      exportTerminalOutput,
     ],
   )
 

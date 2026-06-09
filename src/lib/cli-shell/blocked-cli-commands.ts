@@ -1,3 +1,13 @@
+/** Interactive / local-only subcommands shown in the welcome message. */
+export const WELCOME_BLOCKED_APPWRITE_SUBCOMMANDS = [
+  'pull',
+  'push',
+  'init',
+  'login',
+  'run',
+  'deploy',
+] as const
+
 /** Top-level Appwrite CLI commands that require prompts or a local environment. */
 const BLOCKED_APPWRITE_SUBCOMMANDS: Record<string, string> = {
   login: [

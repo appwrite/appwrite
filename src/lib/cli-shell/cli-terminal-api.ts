@@ -13,8 +13,10 @@ export type CliTerminalApi = {
   clearScreen?: () => void
   /** Returns the current interactive prompt prefix (user@project $). */
   getPrompt?: () => string
-  /** Called after each completed output line to register link underlines. */
-  afterOutputLine?: () => void
+  getLastCommand?: () => string | null
+  getSelection?: () => string
+  getBufferText?: () => string
+  openSearch?: () => void
 }
 
 /** Uses xterm `brightBlack`, mapped to `--muted-foreground` in the terminal theme. */
@@ -69,7 +71,7 @@ export function formatCliTerminalPrompt(options: {
   return `${CLI_TERMINAL_GREEN}${username}@${projectName}${CLI_TERMINAL_RESET}${CLI_TERMINAL_CYAN}$${CLI_TERMINAL_RESET} `
 }
 
-/** Bright blue link text; solid underline is drawn by the terminal link addon. */
+/** Bright blue link text; underline appears on hover via the link provider. */
 export function formatTerminalLink(text: string): string {
   return `${CLI_TERMINAL_BRIGHT_BLUE}${text}${CLI_TERMINAL_RESET}`
 }
@@ -84,9 +86,7 @@ export function createTerminalOutputLinkifier() {
   let pending = ''
 
   function writeLine(api: CliTerminalApi, line: string) {
-    api.write(linkifyTerminalText(line), () => {
-      api.afterOutputLine?.()
-    })
+    api.write(linkifyTerminalText(line))
   }
 
   return {
@@ -126,17 +126,13 @@ export function writeCliShellLine(
       api.writeln(`${CLI_TERMINAL_MUTED}${line.text}${CLI_TERMINAL_RESET}`)
       break
     case 'rich':
-      api.writeln(line.text, () => {
-        api.afterOutputLine?.()
-      })
+      api.writeln(line.text)
       break
     case 'stderr':
       api.writeln(`${CLI_TERMINAL_STDERR}${line.text}${CLI_TERMINAL_RESET}`)
       break
     case 'stdout':
-      api.writeln(linkifyTerminalText(line.text), () => {
-        api.afterOutputLine?.()
-      })
+      api.writeln(linkifyTerminalText(line.text))
       break
     case 'command': {
       const prompt = api.getPrompt?.() ?? CLI_TERMINAL_PROMPT
@@ -152,9 +148,6 @@ export function writeCliShellLine(
         .join(`${CLI_TERMINAL_MUTED}, ${CLI_TERMINAL_RESET}`)
       api.writeln(
         `${CLI_TERMINAL_BLUE}Try:${CLI_TERMINAL_RESET} ${parts}${CLI_TERMINAL_RESET}`,
-        () => {
-          api.afterOutputLine?.()
-        },
       )
       break
     }
@@ -175,14 +168,10 @@ export function writeCliTerminalRaw(
   const tail = lines.pop()
 
   for (const line of lines) {
-    api.write(linkifyTerminalText(`${line}\n`), () => {
-      api.afterOutputLine?.()
-    })
+    api.write(linkifyTerminalText(`${line}\n`))
   }
 
   if (tail) {
-    api.write(linkifyTerminalText(tail), () => {
-      api.afterOutputLine?.()
-    })
+    api.write(linkifyTerminalText(tail))
   }
 }

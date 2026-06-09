@@ -29,4 +29,5 @@ export type CliShellRunOptions = {
   cwd?: string
   onStdout?: (chunk: string) => void
   onStderr?: (chunk: string) => void
+  signal?: AbortSignal
 }

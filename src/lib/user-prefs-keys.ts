@@ -1084,6 +1084,16 @@ export const USER_PREFS_KEY_CLI_SHELL_OPEN = 'console.cliShell.open'
 /** Full key: `console.cliShell.heightPx` - terminal height in pixels (string number). */
 export const USER_PREFS_KEY_CLI_SHELL_HEIGHT_PX = 'console.cliShell.heightPx'
 
+/** Prefix: `console.cliShell.history.<projectId>` - JSON string[] of recent commands. */
+export const USER_PREFS_KEY_CLI_SHELL_HISTORY_PREFIX = 'console.cliShell.history'
+
+/** Prefix: `console.cliShell.sessions.<projectId>` - JSON session layout. */
+export const USER_PREFS_KEY_CLI_SHELL_SESSIONS_PREFIX = 'console.cliShell.sessions'
+
+export const MAX_CLI_SHELL_HISTORY_ENTRIES = 200
+export const MAX_CLI_SHELL_SESSIONS = 10
+export const MAX_CLI_SHELL_SESSION_NAME_LENGTH = 48
+
 /** @deprecated Migrated to account prefs; cleared after first sync. */
 export const LEGACY_LOCAL_STORAGE_CLI_SHELL_HEIGHT = 'console.cliShellHeight'
 
@@ -1168,6 +1178,118 @@ export function readLegacyCliShellHeightFromLocalStorage(): number | null {
     return null
   } catch {
     return null
+  }
+}
+
+export function getCliShellHistoryKey(projectId: string): string {
+  return `${USER_PREFS_KEY_CLI_SHELL_HISTORY_PREFIX}.${projectId}`
+}
+
+export function getCliShellSessionsKey(projectId: string): string {
+  return `${USER_PREFS_KEY_CLI_SHELL_SESSIONS_PREFIX}.${projectId}`
+}
+
+export type PersistedCliShellSession = {
+  id: string
+  name: string
+}
+
+export type PersistedCliShellSessionsState = {
+  sessions: PersistedCliShellSession[]
+  activeSessionId: string
+}
+
+export function parseCliShellHistory(
+  prefs: UserPrefs | null | undefined,
+  projectId: string,
+): string[] {
+  const key = getCliShellHistoryKey(projectId)
+  if (!prefs || typeof prefs[key] !== 'string') return []
+  try {
+    const raw = JSON.parse(prefs[key] as string)
+    if (!Array.isArray(raw)) return []
+    return raw
+      .filter((item): item is string => typeof item === 'string' && item.trim().length > 0)
+      .slice(-MAX_CLI_SHELL_HISTORY_ENTRIES)
+  } catch {
+    return []
+  }
+}
+
+export function mergeCliShellHistoryIntoPrefs(
+  prefs: UserPrefs,
+  projectId: string,
+  history: string[],
+): UserPrefs {
+  const key = getCliShellHistoryKey(projectId)
+  const trimmed = history.slice(-MAX_CLI_SHELL_HISTORY_ENTRIES)
+  return {
+    ...prefs,
+    [key]: JSON.stringify(trimmed),
+  }
+}
+
+export function parseCliShellSessions(
+  prefs: UserPrefs | null | undefined,
+  projectId: string,
+): PersistedCliShellSessionsState | null {
+  const key = getCliShellSessionsKey(projectId)
+  if (!prefs || typeof prefs[key] !== 'string') return null
+  try {
+    const raw = JSON.parse(prefs[key] as string)
+    if (!raw || typeof raw !== 'object') return null
+    const sessions = Array.isArray((raw as PersistedCliShellSessionsState).sessions)
+      ? (raw as PersistedCliShellSessionsState).sessions
+          .filter(
+            (item): item is PersistedCliShellSession =>
+              item != null &&
+              typeof item === 'object' &&
+              typeof item.id === 'string' &&
+              typeof item.name === 'string',
+          )
+          .map((item) => ({
+            id: item.id,
+            name: String(item.name).slice(0, MAX_CLI_SHELL_SESSION_NAME_LENGTH),
+          }))
+          .slice(0, MAX_CLI_SHELL_SESSIONS)
+      : []
+    const activeSessionId =
+      typeof (raw as PersistedCliShellSessionsState).activeSessionId === 'string'
+        ? (raw as PersistedCliShellSessionsState).activeSessionId
+        : ''
+    if (sessions.length === 0) return null
+    const activeExists = sessions.some((session) => session.id === activeSessionId)
+    return {
+      sessions,
+      activeSessionId: activeExists ? activeSessionId : sessions[0].id,
+    }
+  } catch {
+    return null
+  }
+}
+
+export function mergeCliShellSessionsIntoPrefs(
+  prefs: UserPrefs,
+  projectId: string,
+  state: PersistedCliShellSessionsState,
+): UserPrefs {
+  const key = getCliShellSessionsKey(projectId)
+  const sessions = state.sessions
+    .slice(0, MAX_CLI_SHELL_SESSIONS)
+    .map((session) => ({
+      id: session.id,
+      name: String(session.name).slice(0, MAX_CLI_SHELL_SESSION_NAME_LENGTH),
+    }))
+  const activeExists = sessions.some((session) => session.id === state.activeSessionId)
+  const payload: PersistedCliShellSessionsState = {
+    sessions,
+    activeSessionId: activeExists
+      ? state.activeSessionId
+      : (sessions[0]?.id ?? ''),
+  }
+  return {
+    ...prefs,
+    [key]: JSON.stringify(payload),
   }
 }
 

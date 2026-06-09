@@ -16,11 +16,35 @@ export const CLI_SHELL_TOGGLE_SHORTCUT_COMBOS = [
 ] as const
 
 /** Console-level shortcut for opening/closing the project terminal panel. */
+export const CLI_SHELL_FULLSCREEN_SHORTCUT_RAW = 'mod+enter'
+
+export const CLI_SHELL_FULLSCREEN_SHORTCUT_COMBOS = [
+  'meta+enter',
+  'control+enter',
+] as const
+
+export const CLI_SHELL_SEARCH_SHORTCUT_RAW = 'mod+f'
+
+export const CLI_SHELL_SEARCH_SHORTCUT_COMBOS = [
+  'meta+f',
+  'control+f',
+] as const
+
 export const CLI_SHELL_CONSOLE_SHORTCUTS: readonly TerminalShortcutRef[] = [
   {
     id: 'terminal.toggle',
     description: 'Toggle terminal',
     raw: CLI_SHELL_TOGGLE_SHORTCUT_RAW,
+  },
+  {
+    id: 'terminal.fullscreen',
+    description: 'Enter full screen',
+    raw: CLI_SHELL_FULLSCREEN_SHORTCUT_RAW,
+  },
+  {
+    id: 'terminal.search',
+    description: 'Search output',
+    raw: CLI_SHELL_SEARCH_SHORTCUT_RAW,
   },
 ]
 
@@ -80,7 +104,7 @@ export const CLI_TERMINAL_INPUT_SHORTCUTS: readonly TerminalShortcutRef[] = [
   },
   {
     id: 'terminal.clear-line',
-    description: 'Clear input line',
+    description: 'Clear input line or cancel command',
     raw: 'ctrl+c',
   },
   {

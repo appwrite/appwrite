@@ -1525,12 +1525,27 @@ html[data-init-ticket-video-capturing] [data-init-ticket-video-capture] * {
 /* Browser CLI terminal (xterm.js) */
 .cli-terminal {
   box-sizing: border-box;
+  padding-top: 8px;
   padding-bottom: 6px;
 }
 
+/* xterm adds `.xterm` to the same node as `.cli-terminal` (not a child). */
+.cli-terminal.xterm,
 .cli-terminal .xterm {
   padding: 0;
   background-color: transparent !important;
+  cursor: text;
+}
+
+.cli-terminal.xterm.xterm-cursor-pointer,
+.cli-terminal .xterm.xterm-cursor-pointer,
+.cli-terminal.xterm.xterm-cursor-pointer .xterm-screen,
+.cli-terminal.xterm.xterm-cursor-pointer .xterm-viewport,
+.cli-terminal.xterm.xterm-cursor-pointer canvas,
+.cli-terminal .xterm.xterm-cursor-pointer .xterm-screen,
+.cli-terminal .xterm.xterm-cursor-pointer .xterm-viewport,
+.cli-terminal .xterm.xterm-cursor-pointer canvas {
+  cursor: pointer;
 }
 
 .cli-terminal .xterm-viewport {
@@ -1544,9 +1559,13 @@ html[data-init-ticket-video-capturing] [data-init-ticket-video-capture] * {
   overflow-clip-margin: 2px;
 }
 
+.cli-terminal .xterm-viewport canvas {
+  cursor: text;
+}
+
 .cli-terminal .xterm-rows {
-  padding-top: 8px;
-  padding-bottom: 4px;
+  padding-top: 0;
+  padding-bottom: 0;
 }
 
 .cli-terminal .xterm-helper-textarea {
@@ -1580,13 +1599,9 @@ html[data-init-ticket-video-capturing] [data-init-ticket-video-capture] * {
   background-color: var(--muted-foreground);
 }
 
-.cli-terminal .cli-terminal-url-underline {
+.cli-terminal .xterm-find-result-decoration {
   box-sizing: border-box;
-  border-bottom: 1px solid #3b82f6;
-}
-
-.cli-terminal .cli-terminal-suggestion-underline {
-  box-sizing: border-box;
-  border-bottom: 1px solid #22d3ee;
+  border-radius: 2px;
+  pointer-events: none;
 }
 

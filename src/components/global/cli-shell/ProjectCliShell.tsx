@@ -4,21 +4,34 @@ import {
   useRef,
   useState,
   type MouseEvent as ReactMouseEvent,
+  type ReactNode,
 } from 'react'
 import {
+  Download,
+  Ellipsis,
   Loader2,
   Maximize2,
   Minimize2,
   Plus,
   RotateCcw,
+  Search,
   Terminal as TerminalIcon,
   Trash2,
   ChevronDown,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
 import { cn } from '@/lib/utils'
 import { CLI_SHELL_COLLAPSED_HEIGHT_PX } from '@/lib/cli-shell/constants'
 import { CliSessionSidebar } from './CliSessionSidebar'
+import { CliTerminalSearch } from './CliTerminalSearch'
 import { CliTerminalSession } from './CliTerminalSession'
 import { useCliShell } from './CliShellProvider'
 
@@ -89,20 +102,81 @@ export function ProjectCliShell() {
   )
 }
 
+function CliShellHeaderDivider() {
+  return <div className="mx-0.5 h-4 w-px shrink-0 bg-border" aria-hidden="true" />
+}
+
+function CliShellHeaderIconButton({
+  title,
+  'aria-label': ariaLabel,
+  onClick,
+  pressed,
+  children,
+}: {
+  title: string
+  'aria-label'?: string
+  onClick: () => void
+  pressed?: boolean
+  children: ReactNode
+}) {
+  return (
+    <Button
+      type="button"
+      variant="ghost"
+      size="icon"
+      className={cn(
+        'h-8 w-8 shrink-0 text-muted-foreground',
+        pressed && 'bg-muted text-foreground',
+      )}
+      onClick={onClick}
+      title={title}
+      aria-label={ariaLabel ?? title}
+      aria-pressed={pressed}
+    >
+      {children}
+    </Button>
+  )
+}
+
 function CliShellHeaderTitle({
   showBootstrapSpinner = false,
+  showRetry = false,
+  onRetry,
 }: {
   showBootstrapSpinner?: boolean
+  showRetry?: boolean
+  onRetry?: () => void
 }) {
   return (
     <div className="flex min-w-0 items-center gap-2">
-      <TerminalIcon className="h-3.5 w-3.5 shrink-0 text-muted-foreground" strokeWidth={3} />
-      <span className="truncate text-[13px] font-semibold text-foreground">
-        Terminal
-      </span>
-      {showBootstrapSpinner ? (
-        <Loader2 className="h-3.5 w-3.5 shrink-0 animate-spin text-muted-foreground" />
-      ) : null}
+      <TerminalIcon
+        className="h-3.5 w-3.5 shrink-0 text-muted-foreground"
+        strokeWidth={2.5}
+        aria-hidden="true"
+      />
+      <div className="flex min-w-0 items-center gap-2">
+        <span className="truncate text-[13px] font-semibold text-foreground">
+          Terminal
+        </span>
+        {showBootstrapSpinner ? (
+          <Loader2
+            className="h-3.5 w-3.5 shrink-0 animate-spin text-muted-foreground"
+            aria-label="Setting up CLI"
+          />
+        ) : null}
+        {showRetry ? (
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            className="h-7 shrink-0 gap-1.5 px-2 text-[12px] text-destructive hover:text-destructive"
+            onClick={onRetry}
+          >
+            <RotateCcw className="h-3 w-3" />
+            Retry setup
+          </Button>
+        ) : null}
+      </div>
     </div>
   )
 }
@@ -142,6 +216,17 @@ function ProjectCliShellPanel({ onResizingChange }: ProjectCliShellPanelProps) {
     bootstrapError,
     fullscreen,
     toggleFullscreen,
+    terminalSearchOpen,
+    setTerminalSearchOpen,
+    terminalSearchResults,
+    toggleTerminalSearch,
+    searchTerminalOutput,
+    findNextTerminalMatch,
+    findPreviousTerminalMatch,
+    copyTerminalSelection,
+    copyLastCommand,
+    copyTerminalOutput,
+    exportTerminalOutput,
   } = useCliShell()
 
   const [isResizing, setIsResizing] = useState(false)
@@ -229,81 +314,127 @@ function ProjectCliShellPanel({ onResizingChange }: ProjectCliShellPanelProps) {
         />
       )}
 
-      <div className="flex shrink-0 items-center justify-between gap-3 border-b border-border bg-card/50 px-4 py-2.5 sm:px-6">
-        <CliShellHeaderTitle showBootstrapSpinner={isBootstrapping} />
+      <div
+        className="flex h-11 shrink-0 items-center justify-between gap-4 border-b border-border bg-muted/20 px-4 sm:px-6"
+      >
+        <CliShellHeaderTitle
+          showBootstrapSpinner={isBootstrapping}
+          showRetry={status === 'error' || !!bootstrapError}
+          onRetry={retryBootstrap}
+        />
 
         <div
           className={cn(
-            'flex shrink-0 items-center gap-0.5 transition-opacity ease-out',
+            'flex shrink-0 items-center transition-opacity ease-out',
             headerActionsVisible
               ? 'opacity-100'
               : 'pointer-events-none opacity-0',
           )}
           style={{ transitionDuration: `${CLI_SHELL_COLLAPSE_MS}ms` }}
         >
-          {(status === 'error' || bootstrapError) && (
-            <Button
-              type="button"
-              variant="ghost"
-              size="icon"
-              className="h-8 w-8 text-muted-foreground"
-              onClick={retryBootstrap}
-              title="Retry setup"
-            >
-              <RotateCcw className="h-3.5 w-3.5" />
-            </Button>
-          )}
-          <Button
-            type="button"
-            variant="ghost"
-            size="icon"
-            className="h-8 w-8 text-muted-foreground"
-            onClick={createSession}
+          <CliShellHeaderIconButton
             title="New terminal"
-            aria-label="New terminal"
+            onClick={createSession}
           >
             <Plus className="h-3.5 w-3.5" />
-          </Button>
-          <Button
-            type="button"
-            variant="ghost"
-            size="icon"
-            className="h-8 w-8 text-muted-foreground"
-            onClick={() => clearOutput(activeSessionId)}
-            title="Clear output"
+          </CliShellHeaderIconButton>
+
+          <CliShellHeaderDivider />
+
+          <CliShellHeaderIconButton
+            title={
+              terminalSearchOpen ? 'Close search' : 'Search output (⌘F)'
+            }
+            aria-label={
+              terminalSearchOpen
+                ? 'Close terminal search'
+                : 'Search terminal output'
+            }
+            pressed={terminalSearchOpen}
+            onClick={toggleTerminalSearch}
           >
-            <Trash2 className="h-3.5 w-3.5" />
-          </Button>
-          <Button
-            type="button"
-            variant="ghost"
-            size="icon"
-            className="h-8 w-8 text-muted-foreground"
-            onClick={toggleFullscreen}
+            <Search className="h-3.5 w-3.5" />
+          </CliShellHeaderIconButton>
+
+          <CliShellHeaderDivider />
+
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                className="h-8 w-8 shrink-0 text-muted-foreground"
+                title="Output actions"
+                aria-label="Output actions"
+              >
+                <Ellipsis className="h-3.5 w-3.5" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="min-w-48">
+              <DropdownMenuLabel className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+                Copy
+              </DropdownMenuLabel>
+              <DropdownMenuItem onClick={copyTerminalSelection}>
+                Copy selection
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={copyLastCommand}>
+                Copy last command
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={copyTerminalOutput}>
+                Copy all output
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuLabel className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+                Output
+              </DropdownMenuLabel>
+              <DropdownMenuItem
+                onClick={exportTerminalOutput}
+                className="gap-1.5"
+              >
+                <Download className="h-3.5 w-3.5" />
+                Download output
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                onClick={() => clearOutput(activeSessionId)}
+                className="gap-1.5"
+              >
+                <Trash2 className="h-3.5 w-3.5" />
+                Clear output
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+
+          <CliShellHeaderDivider />
+
+          <CliShellHeaderIconButton
             title={fullscreen ? 'Exit full screen' : 'Full screen'}
+            onClick={toggleFullscreen}
           >
             {fullscreen ? (
               <Minimize2 className="h-3.5 w-3.5" />
             ) : (
               <Maximize2 className="h-3.5 w-3.5" />
             )}
-          </Button>
-          <Button
-            type="button"
-            variant="ghost"
-            size="icon"
-            className="h-8 w-8 text-muted-foreground"
-            onClick={toggle}
-            title="Minimize shell"
-          >
+          </CliShellHeaderIconButton>
+          <CliShellHeaderIconButton title="Minimize shell" onClick={toggle}>
             <ChevronDown className="h-3.5 w-3.5" />
-          </Button>
+          </CliShellHeaderIconButton>
         </div>
       </div>
 
       <div className="flex min-h-0 flex-1 overflow-hidden">
         <div className="min-h-0 flex-1 overflow-hidden px-4 pb-4 pt-3 sm:px-6 sm:pb-4">
           <div className="relative h-full min-h-0">
+            <CliTerminalSearch
+              open={terminalSearchOpen}
+              fullscreen={fullscreen}
+              onOpenChange={setTerminalSearchOpen}
+              results={terminalSearchResults}
+              onSearch={searchTerminalOutput}
+              onFindNext={findNextTerminalMatch}
+              onFindPrevious={findPreviousTerminalMatch}
+            />
             {sessions.map((session) => (
               <CliTerminalSession
                 key={session.id}

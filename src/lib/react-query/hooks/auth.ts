@@ -52,7 +52,12 @@ import {
   mergeApiExplorerResponseSplitLayoutIntoPrefs,
   mergeBuildNotificationsOptedOutIntoPrefs,
   mergeCliShellHeightPxIntoPrefs,
+  mergeCliShellHistoryIntoPrefs,
   mergeCliShellOpenIntoPrefs,
+  mergeCliShellSessionsIntoPrefs,
+  parseCliShellHistory,
+  parseCliShellSessions,
+  type PersistedCliShellSessionsState,
   mergeStorageFilesTablePaneWidthPxIntoPrefs,
   parseAIChatPanelOpen,
   parseAIChatPanelWidthPx,
@@ -1495,6 +1500,152 @@ export function useCliShellHeight(account: ConsoleAccountCache | undefined) {
   }, [])
 
   return { heightPx, setHeightPx }
+}
+
+const CLI_SHELL_PREFS_PERSIST_DEBOUNCE_MS = 400
+
+/**
+ * Persisted CLI command history for a project (`console.cliShell.history.<projectId>`).
+ */
+export function useCliShellHistory(
+  account: ConsoleAccountCache | undefined,
+  projectId: string,
+) {
+  const queryClient = useQueryClient()
+  const history = parseCliShellHistory(
+    account?.prefs as UserPrefs | undefined,
+    projectId,
+  )
+  const persistTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  const updateMutation = useMutation({
+    mutationFn: async (value: string[]) => {
+      if (!account) {
+        throw new Error('Account data not available')
+      }
+      return await updateAccountPrefs(
+        mergeCliShellHistoryIntoPrefs(
+          (account.prefs ?? {}) as UserPrefs,
+          projectId,
+          value,
+        ),
+      )
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['account', 'console'] })
+    },
+  })
+
+  const persistHistory = useCallback(
+    (value: string[]) => {
+      if (!account) return
+      const patch = mergeCliShellHistoryIntoPrefs(
+        (account.prefs ?? {}) as UserPrefs,
+        projectId,
+        value,
+      )
+      queryClient.setQueriesData<{ prefs?: Record<string, unknown> }>(
+        { queryKey: ['account', 'console'] },
+        (current) =>
+          current
+            ? {
+                ...current,
+                prefs: { ...current.prefs, ...patch },
+              }
+            : current,
+      )
+      if (persistTimerRef.current !== null) {
+        clearTimeout(persistTimerRef.current)
+      }
+      persistTimerRef.current = setTimeout(() => {
+        persistTimerRef.current = null
+        updateMutation.mutate(value)
+      }, CLI_SHELL_PREFS_PERSIST_DEBOUNCE_MS)
+    },
+    [account, projectId, queryClient, updateMutation],
+  )
+
+  useEffect(() => {
+    return () => {
+      if (persistTimerRef.current !== null) {
+        clearTimeout(persistTimerRef.current)
+      }
+    }
+  }, [])
+
+  return { history, persistHistory }
+}
+
+/**
+ * Persisted CLI session tabs for a project (`console.cliShell.sessions.<projectId>`).
+ */
+export function useCliShellSessionsPrefs(
+  account: ConsoleAccountCache | undefined,
+  projectId: string,
+) {
+  const queryClient = useQueryClient()
+  const savedSessions = parseCliShellSessions(
+    account?.prefs as UserPrefs | undefined,
+    projectId,
+  )
+  const persistTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  const updateMutation = useMutation({
+    mutationFn: async (value: PersistedCliShellSessionsState) => {
+      if (!account) {
+        throw new Error('Account data not available')
+      }
+      return await updateAccountPrefs(
+        mergeCliShellSessionsIntoPrefs(
+          (account.prefs ?? {}) as UserPrefs,
+          projectId,
+          value,
+        ),
+      )
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['account', 'console'] })
+    },
+  })
+
+  const persistSessions = useCallback(
+    (value: PersistedCliShellSessionsState) => {
+      if (!account) return
+      const patch = mergeCliShellSessionsIntoPrefs(
+        (account.prefs ?? {}) as UserPrefs,
+        projectId,
+        value,
+      )
+      queryClient.setQueriesData<{ prefs?: Record<string, unknown> }>(
+        { queryKey: ['account', 'console'] },
+        (current) =>
+          current
+            ? {
+                ...current,
+                prefs: { ...current.prefs, ...patch },
+              }
+            : current,
+      )
+      if (persistTimerRef.current !== null) {
+        clearTimeout(persistTimerRef.current)
+      }
+      persistTimerRef.current = setTimeout(() => {
+        persistTimerRef.current = null
+        updateMutation.mutate(value)
+      }, CLI_SHELL_PREFS_PERSIST_DEBOUNCE_MS)
+    },
+    [account, projectId, queryClient, updateMutation],
+  )
+
+  useEffect(() => {
+    return () => {
+      if (persistTimerRef.current !== null) {
+        clearTimeout(persistTimerRef.current)
+      }
+    }
+  }, [])
+
+  return { savedSessions, persistSessions }
 }
 
 /**

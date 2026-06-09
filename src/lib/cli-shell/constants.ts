@@ -1,3 +1,4 @@
+import { WELCOME_BLOCKED_APPWRITE_SUBCOMMANDS } from './blocked-cli-commands'
 import {
   CLI_TERMINAL_BLUE,
   CLI_TERMINAL_CYAN,
@@ -48,8 +49,7 @@ export const CLI_SHELL_TRY_COMMANDS = [
 ] as const
 
 export function createCliShellWelcomeLines(): CliShellLine[] {
-  const blocked = ['pull', 'push', 'init', 'login', 'run'] as const
-  const blockedList = blocked
+  const blockedList = WELCOME_BLOCKED_APPWRITE_SUBCOMMANDS
     .map((name) => `${CLI_TERMINAL_YELLOW}${name}${CLI_TERMINAL_MUTED}`)
     .join(', ')
 

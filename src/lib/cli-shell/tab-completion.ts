@@ -1,4 +1,8 @@
 import type { CliShellContainer } from './types'
+import {
+  APPWRITE_CLI_SUBCOMMANDS,
+  APPWRITE_CLI_TOPICS,
+} from './cli-appwrite-commands'
 import { CLI_PROJECT_CWD } from './constants'
 
 type CliVfs = Pick<
@@ -72,42 +76,6 @@ const FILE_ARG_COMMANDS = new Set([
   'tail',
   'touch',
 ])
-
-const APPWRITE_TOPICS = [
-  'account',
-  'client',
-  'databases',
-  'deploy',
-  'functions',
-  'graphql',
-  'init',
-  'locale',
-  'login',
-  'logout',
-  'messaging',
-  'projects',
-  'proxy',
-  'sites',
-  'storage',
-  'tables',
-  'teams',
-  'tokens',
-  'users',
-  'vcs',
-  'webhooks',
-  'whoami',
-] as const
-
-const APPWRITE_SUBCOMMANDS: Record<string, readonly string[]> = {
-  users: ['list', 'create', 'get', 'update', 'delete', 'count'],
-  functions: ['list', 'create', 'get', 'update', 'delete', 'create-deployment'],
-  databases: ['list', 'create', 'get', 'update', 'delete'],
-  storage: ['list-buckets', 'create-bucket', 'list-files', 'get-file'],
-  teams: ['list', 'create', 'get', 'update', 'delete'],
-  sites: ['list', 'create', 'get', 'update', 'delete'],
-  projects: ['list', 'get', 'update'],
-  account: ['get', 'update'],
-}
 
 export function getWordBounds(
   input: string,
@@ -333,11 +301,11 @@ export function tabComplete(
 
   if (command === 'appwrite') {
     if (tokenIndex === 1) {
-      return completeFromCandidates(word, [...APPWRITE_TOPICS], listOnly)
+      return completeFromCandidates(word, [...APPWRITE_CLI_TOPICS], listOnly)
     }
     if (tokenIndex === 2) {
       const topic = input.trim().split(/\s+/)[1] ?? ''
-      const subcommands = APPWRITE_SUBCOMMANDS[topic] ?? []
+      const subcommands = APPWRITE_CLI_SUBCOMMANDS[topic] ?? []
       if (subcommands.length > 0) {
         return completeFromCandidates(word, [...subcommands], listOnly)
       }

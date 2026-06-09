@@ -35,17 +35,22 @@ export function createInitialCliShellSessionState(): {
   return { sessions: [session], activeSessionId: session.id }
 }
 
-let cachedInitialCliShellSessionState:
-  | ReturnType<typeof createInitialCliShellSessionState>
-  | null = null
-
-/** Shared lazy initial state so session list and active id stay in sync on first mount. */
-export function getInitialCliShellSessionState(): {
+export function resolveCliShellSessionState(
+  saved: { sessions: CliShellSession[]; activeSessionId: string } | null,
+): {
   sessions: CliShellSession[]
   activeSessionId: string
 } {
-  if (!cachedInitialCliShellSessionState) {
-    cachedInitialCliShellSessionState = createInitialCliShellSessionState()
+  if (saved && saved.sessions.length > 0) {
+    const activeExists = saved.sessions.some(
+      (session) => session.id === saved.activeSessionId,
+    )
+    return {
+      sessions: saved.sessions,
+      activeSessionId: activeExists
+        ? saved.activeSessionId
+        : saved.sessions[0].id,
+    }
   }
-  return cachedInitialCliShellSessionState
+  return createInitialCliShellSessionState()
 }
