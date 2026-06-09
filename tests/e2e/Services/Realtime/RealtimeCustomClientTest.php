@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Tests\E2E\Services\Realtime;
 
 use CURLFile;
@@ -16,7 +18,7 @@ use Utopia\Database\Helpers\Role;
 use WebSocket\ConnectionException;
 use WebSocket\TimeoutException;
 
-class RealtimeCustomClientTest extends Scope
+final class RealtimeCustomClientTest extends Scope
 {
     use FunctionsBase;
     use RealtimeBase;
@@ -239,7 +241,7 @@ class RealtimeCustomClientTest extends Scope
         $this->assertEquals('error', $response['type']);
         $this->assertNotEmpty($response['data']);
         $this->assertEquals(1003, $response['data']['code']);
-        $this->assertEquals('Payload is not valid.', $response['data']['message']);
+        $this->assertEquals('Payload is not valid. Session is required', $response['data']['message']);
 
         $client->send(\json_encode([
             'type' => 'unknown',
@@ -458,7 +460,7 @@ class RealtimeCustomClientTest extends Scope
         $this->assertContains("users.*", $response['data']['events']);
 
         $lastEmail = $this->getLastEmailByAddress('torsten@appwrite.io', function ($email) use ($userId) {
-            $this->assertStringContainsString($userId, $email['html']);
+            $this->assertStringContainsString($userId, (string) $email['html']);
         });
         $tokens = $this->extractQueryParamsFromEmailLink($lastEmail['html']);
         $verificationSecret = $tokens['secret'];
@@ -674,8 +676,8 @@ class RealtimeCustomClientTest extends Scope
         $response = json_decode($client->receive(), true);
 
         $lastEmail = $this->getLastEmailByAddress('torsten@appwrite.io', function ($email) use ($userId) {
-            $this->assertStringContainsString($userId, $email['html']);
-            $this->assertStringContainsString('recovery', $email['html']);
+            $this->assertStringContainsString($userId, (string) $email['html']);
+            $this->assertStringContainsString('recovery', (string) $email['html']);
         });
         $tokens = $this->extractQueryParamsFromEmailLink($lastEmail['html']);
         $recoverySecret = $tokens['secret'];
@@ -741,6 +743,30 @@ class RealtimeCustomClientTest extends Scope
         $this->assertNotEmpty($response['data']['payload']);
 
         $client->close();
+
+        /**
+         * The password change and password-recovery completion above invalidate
+         * every existing session of this user, including the one cached in
+         * self::$user. Re-authenticate the SAME account (its email is now
+         * torsten@appwrite.io and its password 'test-recovery' after the flow
+         * above) and refresh only the cached session, so later tests in this
+         * process keep the same user $id but connect with a valid session
+         * instead of falling back to a guest connection.
+         */
+        $refreshedSession = $this->client->call(Client::METHOD_POST, '/account/sessions/email', [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ], [
+            'email' => 'torsten@appwrite.io',
+            'password' => 'test-recovery',
+        ]);
+
+        $this->assertEquals(201, $refreshedSession['headers']['status-code']);
+
+        self::$user[$projectId]['email'] = 'torsten@appwrite.io';
+        self::$user[$projectId]['session'] = $refreshedSession['cookies']['a_session_' . $projectId];
+        self::$user[$projectId]['sessionId'] = $refreshedSession['body']['$id'];
     }
 
     public function testChannelDatabase()
@@ -3139,7 +3165,7 @@ class RealtimeCustomClientTest extends Scope
         $client = $this->getWebsocket(['documents'], [
             'origin' => 'http://localhost',
             'cookie' => 'a_session_' . $projectId . '=' . $session
-        ]);
+        ], null, null, 10);
 
         $response = json_decode($client->receive(), true);
 
@@ -3406,7 +3432,7 @@ class RealtimeCustomClientTest extends Scope
         ], [
             'origin' => 'http://localhost',
             'cookie' => 'a_session_' . $projectId . '=' . $session,
-        ]);
+        ], null, null, 10);
 
         $connected = json_decode($legacyClient->receive(), true);
         $this->assertEquals('connected', $connected['type']);
@@ -3500,7 +3526,7 @@ class RealtimeCustomClientTest extends Scope
         ], [
             'origin' => 'http://localhost',
             'cookie' => 'a_session_' . $projectId . '=' . $session,
-        ]);
+        ], null, null, 10);
 
         $connected = json_decode($tablesClient->receive(), true);
         $this->assertEquals('connected', $connected['type']);
@@ -3574,7 +3600,7 @@ class RealtimeCustomClientTest extends Scope
         ], [
             'origin' => 'http://localhost',
             'cookie' => 'a_session_' . $projectId . '=' . $session,
-        ]);
+        ], null, null, 10);
 
         $connected = json_decode($documentsClient->receive(), true);
         $this->assertEquals('connected', $connected['type']);

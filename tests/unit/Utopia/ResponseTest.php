@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Tests\Unit\Utopia;
 
 use Appwrite\Utopia\Response;
@@ -11,7 +13,7 @@ use Tests\Unit\Utopia\Response\Filters\First;
 use Tests\Unit\Utopia\Response\Filters\Second;
 use Utopia\Database\Document;
 
-class ResponseTest extends TestCase
+final class ResponseTest extends TestCase
 {
     protected ?Response $response = null;
 
@@ -34,10 +36,11 @@ class ResponseTest extends TestCase
         $this->assertTrue($this->response->hasFilters());
         $this->assertCount(2, $this->response->getFilters());
 
-        $output = $this->response->applyFilters([
+        $content = [
             'initial' => true,
             'first' => false
-        ], 'test');
+        ];
+        $output = $this->response->applyFilters($content, 'test', raw: new Document($content));
 
         $this->assertArrayHasKey('initial', $output);
         $this->assertTrue($output['initial']);
