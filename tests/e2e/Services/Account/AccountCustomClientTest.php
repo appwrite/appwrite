@@ -133,12 +133,18 @@ final class AccountCustomClientTest extends Scope
 
     protected function getNextTOTP(\OTPHP\TOTP $totp, string $previousOtp): string
     {
+        $deadline = time() + 35;
+
         do {
             sleep(1);
             $otp = $totp->now();
-        } while ($otp === $previousOtp);
 
-        return $otp;
+            if ($otp !== $previousOtp) {
+                return $otp;
+            }
+        } while (time() < $deadline);
+
+        $this->fail('TOTP did not rotate within the expected time window.');
     }
 
     /**
