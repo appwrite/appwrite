@@ -204,10 +204,9 @@ class HTTPTest extends Scope
             $allowOrigin = $response['headers']['access-control-allow-origin'] ?? null;
             $allowCredentials = $response['headers']['access-control-allow-credentials'] ?? null;
 
-            if ($allowCredentials === 'true') {
-                $this->assertNotEquals('*', $allowOrigin, "Wildcard origin must never be paired with credentials ($method)");
-                $this->assertEquals('http://localhost', $allowOrigin, "Server must echo the specific origin ($method)");
-            }
+            $this->assertEquals('true', $allowCredentials, "Server must return credentials header for a trusted origin ($method)");
+            $this->assertNotEquals('*', $allowOrigin, "Wildcard origin must never be paired with credentials ($method)");
+            $this->assertEquals('http://localhost', $allowOrigin, "Server must echo the specific origin ($method)");
         }
     }
 
