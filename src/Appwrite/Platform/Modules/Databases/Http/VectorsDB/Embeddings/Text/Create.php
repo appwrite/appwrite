@@ -44,7 +44,7 @@ class Create extends CreateDocumentAction
         $this
             ->setHttpMethod(self::HTTP_REQUEST_METHOD_POST)
             ->setHttpPath('/v1/vectorsdb/embeddings/text')
-            ->desc('Create Text Embeddings')
+            ->desc('Create text embeddings')
             ->groups(['api', 'database'])
             ->label('scope', 'documents.write')
             ->label('resourceType', RESOURCE_TYPE_EMBEDDINGS_TEXT)
