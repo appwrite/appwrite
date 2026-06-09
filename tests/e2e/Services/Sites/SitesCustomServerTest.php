@@ -2340,15 +2340,18 @@ final class SitesCustomServerTest extends Scope
 
         $this->assertEquals(202, $deployment['headers']['status-code']);
 
-        $deploymentId2 = $deployment['body']['$id'];
-        $this->assertNotEmpty($deploymentId2);
+        $cliDeploymentId = $deployment['body']['$id'];
+        $this->assertNotEmpty($cliDeploymentId);
 
-        $deployment = $this->getDeployment($siteId, $deploymentId2);
+        $deployment = $this->getDeployment($siteId, $cliDeploymentId);
         $this->assertEquals(200, $deployment['headers']['status-code']);
         $this->assertGreaterThan(0, $deployment['body']['sourceSize']);
         $this->assertEquals(0, $deployment['body']['buildSize']);
         $this->assertEquals($deployment['body']['sourceSize'], $deployment['body']['totalSize']);
         $this->assertEquals('cli', $deployment['body']['type']);
+
+        $this->waitDeploymentReady($siteId, $cliDeploymentId);
+        $this->waitDeploymentActivated($siteId, $cliDeploymentId);
 
         // create another duplicate deployment with manual trigger
         $deployment = $this->client->call(Client::METHOD_POST, '/sites/' . $siteId . '/deployments/duplicate', array_merge([
@@ -2360,25 +2363,23 @@ final class SitesCustomServerTest extends Scope
 
         $this->assertEquals(202, $deployment['headers']['status-code']);
 
-        $deploymentId2 = $deployment['body']['$id'];
-        $this->assertNotEmpty($deploymentId2);
+        $manualDeploymentId = $deployment['body']['$id'];
+        $this->assertNotEmpty($manualDeploymentId);
 
-        $deployment = $this->getDeployment($siteId, $deploymentId2);
+        $deployment = $this->getDeployment($siteId, $manualDeploymentId);
         $this->assertEquals(200, $deployment['headers']['status-code']);
         $this->assertGreaterThan(0, $deployment['body']['sourceSize']);
         $this->assertEquals(0, $deployment['body']['buildSize']);
         $this->assertEquals($deployment['body']['sourceSize'], $deployment['body']['totalSize']);
         $this->assertEquals('manual', $deployment['body']['type']);
 
-        $this->assertEventually(function () use ($siteId, $deploymentId2) {
-            $site = $this->getSite($siteId);
-            $this->assertEquals($deploymentId2, $site['body']['deploymentId']);
-        }, 120000, 500);
+        $this->waitDeploymentReady($siteId, $manualDeploymentId);
+        $this->waitDeploymentActivated($siteId, $manualDeploymentId);
 
         $response = $proxyClient->call(Client::METHOD_GET, '/not-found');
         $this->assertStringContainsString("Index page", (string) $response['body']);
 
-        $deployment = $this->getDeployment($siteId, $deploymentId2);
+        $deployment = $this->getDeployment($siteId, $manualDeploymentId);
         $this->assertEquals(200, $deployment['headers']['status-code']);
         $this->assertGreaterThan(0, $deployment['body']['sourceSize']);
         $this->assertGreaterThan(0, $deployment['body']['buildSize']);
