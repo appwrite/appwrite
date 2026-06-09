@@ -4,7 +4,7 @@
  * Handles auth limits, sessions, passwords, and MFA.
  */
 
-import { useCallback, useEffect, useMemo, useRef } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import {
   useMutation,
   useQuery,
@@ -47,12 +47,18 @@ import {
   hasStorageFilesTablePaneWidthPref,
   mergeAIChatPanelOpenIntoPrefs,
   mergeAIChatPanelWidthPxIntoPrefs,
+  mergeApiExplorerColumnsLayoutIntoPrefs,
+  mergeApiExplorerExpandedProductGroupIntoPrefs,
+  mergeApiExplorerResponseSplitLayoutIntoPrefs,
   mergeBuildNotificationsOptedOutIntoPrefs,
   mergeCliShellHeightPxIntoPrefs,
   mergeCliShellOpenIntoPrefs,
   mergeStorageFilesTablePaneWidthPxIntoPrefs,
   parseAIChatPanelOpen,
   parseAIChatPanelWidthPx,
+  parseApiExplorerColumnsLayout,
+  parseApiExplorerExpandedProductGroup,
+  parseApiExplorerResponseSplitLayout,
   parseBuildNotificationsOptedOut,
   parseCliShellHeightPx,
   parseCliShellOpen,
@@ -64,6 +70,12 @@ import {
   readLegacyStorageFilesTablePaneWidthFromLocalStorage,
   type UserPrefs,
 } from '@/lib/user-prefs-keys'
+import {
+  API_EXPLORER_COLUMNS_DEFAULT_LAYOUT,
+  API_EXPLORER_RESPONSE_SPLIT_DEFAULT_LAYOUT,
+  normalizeApiExplorerColumnsLayout,
+  normalizeApiExplorerResponseSplitLayout,
+} from '@/lib/resizable-layout'
 import type {
   SavedFilter,
   SavedImageTransformPreset,
@@ -940,6 +952,172 @@ export function useTableViewSidebarWidth(
   )
 
   return { widthPx, persistSidebarWidthPx }
+}
+
+// ============================================================================
+// API EXPLORER PANEL LAYOUTS (ACCOUNT PREFERENCES)
+// ============================================================================
+
+function usePersistedPanelLayoutPref(
+  account: ConsoleAccountCache | undefined,
+  parseLayout: (prefs: UserPrefs | null | undefined) => number[] | null,
+  normalizeLayout: (layout: number[]) => number[],
+  defaultLayout: readonly number[],
+  mergeIntoPrefs: (prefs: UserPrefs, layout: number[]) => UserPrefs,
+) {
+  const queryClient = useQueryClient()
+
+  const layout = useMemo(
+    () =>
+      normalizeLayout(
+        parseLayout(account?.prefs as UserPrefs | undefined) ?? [
+          ...defaultLayout,
+        ],
+      ),
+    [account?.prefs, defaultLayout, normalizeLayout, parseLayout],
+  )
+
+  const updateMutation = useMutation({
+    mutationFn: async (value: number[]) => {
+      if (!account) {
+        throw new Error('Account data not available')
+      }
+      return await updateAccountPrefs(
+        mergeIntoPrefs((account.prefs ?? {}) as UserPrefs, value),
+      )
+    },
+    onMutate: async (value) => {
+      const patch = mergeIntoPrefs((account?.prefs ?? {}) as UserPrefs, value)
+      queryClient.setQueriesData<{ prefs?: Record<string, unknown> }>(
+        { queryKey: ['account', 'console'] },
+        (current) =>
+          current
+            ? {
+                ...current,
+                prefs: { ...current.prefs, ...patch },
+              }
+            : current,
+      )
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['account', 'console'] })
+    },
+  })
+
+  const persistLayout = useCallback(
+    (value: number[]) => {
+      if (!account) return
+      updateMutation.mutate(normalizeLayout(value))
+    },
+    [account, normalizeLayout, updateMutation],
+  )
+
+  return { layout, persistLayout }
+}
+
+/** Services | methods | request column split (`console.apiExplorer.columnsLayout`). */
+export function useApiExplorerColumnsLayout(
+  account: ConsoleAccountCache | undefined,
+) {
+  return usePersistedPanelLayoutPref(
+    account,
+    parseApiExplorerColumnsLayout,
+    normalizeApiExplorerColumnsLayout,
+    API_EXPLORER_COLUMNS_DEFAULT_LAYOUT,
+    mergeApiExplorerColumnsLayoutIntoPrefs,
+  )
+}
+
+/** Request form | response split (`console.apiExplorer.responseSplitLayout`). */
+export function useApiExplorerResponseSplitLayout(
+  account: ConsoleAccountCache | undefined,
+) {
+  return usePersistedPanelLayoutPref(
+    account,
+    parseApiExplorerResponseSplitLayout,
+    normalizeApiExplorerResponseSplitLayout,
+    API_EXPLORER_RESPONSE_SPLIT_DEFAULT_LAYOUT,
+    mergeApiExplorerResponseSplitLayoutIntoPrefs,
+  )
+}
+
+/** Open services product group in the API explorer (`console.apiExplorer.expandedProductGroup`). */
+export function useApiExplorerExpandedProductGroup(
+  account: ConsoleAccountCache | undefined,
+) {
+  const queryClient = useQueryClient()
+  const [expandedProductGroupId, setExpandedProductGroupId] = useState<string | null>(
+    null,
+  )
+  const hydratedRef = useRef(false)
+  const expandedProductGroupIdRef = useRef<string | null>(null)
+
+  useEffect(() => {
+    if (!account) {
+      hydratedRef.current = false
+      return
+    }
+    if (hydratedRef.current) return
+    hydratedRef.current = true
+    const parsed = parseApiExplorerExpandedProductGroup(
+      account.prefs as UserPrefs | undefined,
+    )
+    expandedProductGroupIdRef.current = parsed
+    setExpandedProductGroupId(parsed)
+  }, [account])
+
+  const updateMutation = useMutation({
+    mutationFn: async (value: string | null) => {
+      if (!account) {
+        throw new Error('Account data not available')
+      }
+      return await updateAccountPrefs(
+        mergeApiExplorerExpandedProductGroupIntoPrefs(
+          (account.prefs ?? {}) as UserPrefs,
+          value,
+        ),
+      )
+    },
+    onMutate: async (value) => {
+      const patch = mergeApiExplorerExpandedProductGroupIntoPrefs(
+        (account?.prefs ?? {}) as UserPrefs,
+        value,
+      )
+      queryClient.setQueriesData<{ prefs?: Record<string, unknown> }>(
+        { queryKey: ['account', 'console'] },
+        (current) =>
+          current
+            ? {
+                ...current,
+                prefs: { ...current.prefs, ...patch },
+              }
+            : current,
+      )
+    },
+  })
+
+  const persistExpandedRef = useRef(updateMutation.mutate)
+  persistExpandedRef.current = updateMutation.mutate
+
+  const setExpandedProductGroup = useCallback(
+    (groupId: string | undefined) => {
+      const next = groupId ?? null
+      if (expandedProductGroupIdRef.current === next) return
+      expandedProductGroupIdRef.current = next
+      setExpandedProductGroupId(next)
+      if (account) persistExpandedRef.current(next)
+    },
+    [account],
+  )
+
+  useEffect(() => {
+    expandedProductGroupIdRef.current = expandedProductGroupId
+  }, [expandedProductGroupId])
+
+  return {
+    expandedProductGroupId,
+    setExpandedProductGroup,
+  }
 }
 
 // ============================================================================

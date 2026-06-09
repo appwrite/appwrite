@@ -24,6 +24,10 @@ import { cn } from '@/lib/utils'
 export interface SearchableSelectItem {
   value: string
   label: string
+  /** Extra text included in filter matching (defaults to label). */
+  searchText?: string
+  /** Secondary line shown in the dropdown list. */
+  description?: string
 }
 
 export interface SearchableSelectProps {
@@ -38,6 +42,8 @@ export interface SearchableSelectProps {
   emptyMessage?: string
   /** When true, trigger shows placeholder-style text when no value selected */
   showPlaceholderWhenEmpty?: boolean
+  /** When set, search is handled externally and cmdk filtering is disabled. */
+  onSearchChange?: (query: string) => void
 }
 
 export function SearchableSelect({
@@ -51,6 +57,7 @@ export function SearchableSelect({
   contentClassName,
   emptyMessage = 'No results',
   showPlaceholderWhenEmpty = true,
+  onSearchChange,
 }: SearchableSelectProps) {
   const [open, setOpen] = useState(false)
   const selectedLabel = items.find((i) => i.value === value)?.label ?? ''
@@ -89,10 +96,11 @@ export function SearchableSelect({
           event.stopPropagation()
         }}
       >
-        <Command>
+        <Command shouldFilter={!onSearchChange}>
           <CommandInput
             placeholder={searchPlaceholder}
             className="h-9 text-[13px]"
+            onValueChange={onSearchChange}
           />
           <CommandList className="max-h-[240px] overflow-y-auto overscroll-contain">
             <CommandEmpty className="py-4 text-center text-[13px] text-muted-foreground">
@@ -102,14 +110,23 @@ export function SearchableSelect({
               {items.map((item) => (
                 <CommandItem
                   key={item.value}
-                  value={item.label}
+                  value={item.searchText ?? item.label}
                   className="text-[13px]"
                   onSelect={() => {
                     onValueChange(item.value)
                     setOpen(false)
                   }}
                 >
-                  {item.label}
+                  {item.description ? (
+                    <div className="flex min-w-0 flex-col gap-0.5">
+                      <span className="truncate">{item.label}</span>
+                      <span className="truncate text-[11px] text-muted-foreground">
+                        {item.description}
+                      </span>
+                    </div>
+                  ) : (
+                    item.label
+                  )}
                 </CommandItem>
               ))}
             </CommandGroup>

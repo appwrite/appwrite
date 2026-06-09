@@ -40,6 +40,7 @@ import {
   BarChart2,
   AlertTriangle,
   Radio,
+  ListTree,
   type LucideIcon,
 } from 'lucide-react'
 import { ProjectSelector } from '@/components/pages/projects/$projectId/shared/ProjectSelector'
@@ -88,6 +89,12 @@ const getNavItems = (projectId: string) => {
           label: 'API Keys',
           icon: Key,
           path: `/projects/${projectId}/api-keys`,
+        },
+        {
+          id: 'explorer',
+          label: 'Explorer',
+          icon: ListTree,
+          path: `/projects/${projectId}/explorer`,
         },
       ],
     },

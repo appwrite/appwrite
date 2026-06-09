@@ -17,6 +17,9 @@ importers:
       '@appwrite.io/console':
         specifier: https://pkg.vc/-/@appwrite/@appwrite.io/console@bc990c4
         version: https://pkg.vc/-/@appwrite/@appwrite.io/console@bc990c4
+      '@appwrite.io/specs':
+        specifier: github:appwrite/specs
+        version: https://codeload.github.com/appwrite/specs/tar.gz/570c9de01b4d6c54a28a746fb6dd2a6ecbdc6da4
       '@dnd-kit/core':
         specifier: ^6.3.1
         version: 6.3.1(react-dom@19.1.1(react@19.1.1))(react@19.1.1)
@@ -422,6 +425,10 @@ packages:
     resolution: {tarball: https://pkg.vc/-/@appwrite/@appwrite.io/console@bc990c4}
     version: 13.1.0
     engines: {node: '>=18.0.0'}
+
+  '@appwrite.io/specs@https://codeload.github.com/appwrite/specs/tar.gz/570c9de01b4d6c54a28a746fb6dd2a6ecbdc6da4':
+    resolution: {tarball: https://codeload.github.com/appwrite/specs/tar.gz/570c9de01b4d6c54a28a746fb6dd2a6ecbdc6da4}
+    version: 0.0.0
 
   '@asamuzakjp/css-color@3.2.0':
     resolution: {integrity: sha512-K1A6z8tS3XsmCMM86xoWdn7Fkdn9m6RSVtocUrJYIwZnFVkng/PvkEoWtOWmP+Scc6saYWHWZYbndEEXxl24jw==}
@@ -7226,6 +7233,8 @@ snapshots:
   '@appwrite.io/console@https://pkg.vc/-/@appwrite/@appwrite.io/console@bc990c4':
     dependencies:
       json-bigint: 1.0.0
+
+  '@appwrite.io/specs@https://codeload.github.com/appwrite/specs/tar.gz/570c9de01b4d6c54a28a746fb6dd2a6ecbdc6da4': {}
 
   '@asamuzakjp/css-color@3.2.0':
     dependencies:

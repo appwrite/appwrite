@@ -264,6 +264,7 @@ function ProjectLayout() {
     activeSection === 'usage' ||
     activeSection === 'activity' ||
     activeSection === 'storage' ||
+    activeSection === 'explorer' ||
     isFunctionsEditorView ||
     isFunctionExecutionsTab ||
     isSiteLogsTab
@@ -277,6 +278,7 @@ function ProjectLayout() {
     isSiteLogsTab ||
     activeSection === 'activity' ||
     activeSection === 'storage' ||
+    activeSection === 'explorer' ||
     isFunctionsEditorView
 
   // Close sidebar on route change

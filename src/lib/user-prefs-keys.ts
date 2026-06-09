@@ -1181,6 +1181,104 @@ export function clearLegacyCliShellHeightLocalStorage(): void {
 }
 
 // ---------------------------------------------------------------------------
+// API Explorer panel layouts (account prefs)
+// ---------------------------------------------------------------------------
+
+/** Full key: `console.apiExplorer.columnsLayout` - JSON `[services%, methods%, request%]`. */
+export const USER_PREFS_KEY_API_EXPLORER_COLUMNS_LAYOUT =
+  'console.apiExplorer.columnsLayout'
+
+/** Full key: `console.apiExplorer.responseSplitLayout` - JSON `[request%, response%]`. */
+export const USER_PREFS_KEY_API_EXPLORER_RESPONSE_SPLIT_LAYOUT =
+  'console.apiExplorer.responseSplitLayout'
+
+function parsePanelLayoutPref(
+  prefs: UserPrefs | null | undefined,
+  key: string,
+  expectedLength: number,
+): number[] | null {
+  const raw = prefs?.[key]
+  if (typeof raw !== 'string' || raw.length === 0) return null
+  try {
+    const parsed = JSON.parse(raw) as unknown
+    if (!Array.isArray(parsed) || parsed.length !== expectedLength) return null
+    const sizes = parsed.map((value) =>
+      typeof value === 'number' ? value : Number(value),
+    )
+    if (sizes.some((value) => !Number.isFinite(value))) return null
+    return sizes
+  } catch {
+    return null
+  }
+}
+
+export function parseApiExplorerColumnsLayout(
+  prefs: UserPrefs | null | undefined,
+): number[] | null {
+  return parsePanelLayoutPref(
+    prefs,
+    USER_PREFS_KEY_API_EXPLORER_COLUMNS_LAYOUT,
+    3,
+  )
+}
+
+export function parseApiExplorerResponseSplitLayout(
+  prefs: UserPrefs | null | undefined,
+): number[] | null {
+  return parsePanelLayoutPref(
+    prefs,
+    USER_PREFS_KEY_API_EXPLORER_RESPONSE_SPLIT_LAYOUT,
+    2,
+  )
+}
+
+export function mergeApiExplorerColumnsLayoutIntoPrefs(
+  prefs: UserPrefs,
+  layout: number[],
+): UserPrefs {
+  return {
+    ...prefs,
+    [USER_PREFS_KEY_API_EXPLORER_COLUMNS_LAYOUT]: JSON.stringify(layout),
+  }
+}
+
+export function mergeApiExplorerResponseSplitLayoutIntoPrefs(
+  prefs: UserPrefs,
+  layout: number[],
+): UserPrefs {
+  return {
+    ...prefs,
+    [USER_PREFS_KEY_API_EXPLORER_RESPONSE_SPLIT_LAYOUT]: JSON.stringify(layout),
+  }
+}
+
+/** Full key: `console.apiExplorer.expandedProductGroup` - id of the open services product group. */
+export const USER_PREFS_KEY_API_EXPLORER_EXPANDED_PRODUCT_GROUP =
+  'console.apiExplorer.expandedProductGroup'
+
+export function parseApiExplorerExpandedProductGroup(
+  prefs: UserPrefs | null | undefined,
+): string | null {
+  const raw = prefs?.[USER_PREFS_KEY_API_EXPLORER_EXPANDED_PRODUCT_GROUP]
+  return typeof raw === 'string' && raw.length > 0 ? raw : null
+}
+
+export function mergeApiExplorerExpandedProductGroupIntoPrefs(
+  prefs: UserPrefs,
+  groupId: string | null | undefined,
+): UserPrefs {
+  if (!groupId) {
+    const next = { ...prefs }
+    delete next[USER_PREFS_KEY_API_EXPLORER_EXPANDED_PRODUCT_GROUP]
+    return next
+  }
+  return {
+    ...prefs,
+    [USER_PREFS_KEY_API_EXPLORER_EXPANDED_PRODUCT_GROUP]: groupId,
+  }
+}
+
+// ---------------------------------------------------------------------------
 // Build completion browser notifications (account prefs)
 // ---------------------------------------------------------------------------
 

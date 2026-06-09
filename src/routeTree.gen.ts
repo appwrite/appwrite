@@ -58,6 +58,7 @@ import { Route as PublicProjectsProjectIdMessagingRouteImport } from './routes/_
 import { Route as PublicProjectsProjectIdImagineRouteImport } from './routes/_public/projects.$projectId.imagine'
 import { Route as PublicProjectsProjectIdFunctionsRouteImport } from './routes/_public/projects.$projectId.functions'
 import { Route as PublicProjectsProjectIdFirewallRouteImport } from './routes/_public/projects.$projectId.firewall'
+import { Route as PublicProjectsProjectIdExplorerRouteImport } from './routes/_public/projects.$projectId.explorer'
 import { Route as PublicProjectsProjectIdDatabasesRouteImport } from './routes/_public/projects.$projectId.databases'
 import { Route as PublicProjectsProjectIdAuthRouteImport } from './routes/_public/projects.$projectId.auth'
 import { Route as PublicProjectsProjectIdAppsRouteImport } from './routes/_public/projects.$projectId.apps'
@@ -500,6 +501,12 @@ const PublicProjectsProjectIdFirewallRoute =
   PublicProjectsProjectIdFirewallRouteImport.update({
     id: '/firewall',
     path: '/firewall',
+    getParentRoute: () => PublicProjectsProjectIdRoute,
+  } as any)
+const PublicProjectsProjectIdExplorerRoute =
+  PublicProjectsProjectIdExplorerRouteImport.update({
+    id: '/explorer',
+    path: '/explorer',
     getParentRoute: () => PublicProjectsProjectIdRoute,
   } as any)
 const PublicProjectsProjectIdDatabasesRoute =
@@ -1785,6 +1792,7 @@ export interface FileRoutesByFullPath {
   '/projects/$projectId/apps': typeof PublicProjectsProjectIdAppsRouteWithChildren
   '/projects/$projectId/auth': typeof PublicProjectsProjectIdAuthRouteWithChildren
   '/projects/$projectId/databases': typeof PublicProjectsProjectIdDatabasesRouteWithChildren
+  '/projects/$projectId/explorer': typeof PublicProjectsProjectIdExplorerRoute
   '/projects/$projectId/firewall': typeof PublicProjectsProjectIdFirewallRoute
   '/projects/$projectId/functions': typeof PublicProjectsProjectIdFunctionsRouteWithChildren
   '/projects/$projectId/imagine': typeof PublicProjectsProjectIdImagineRoute
@@ -2012,6 +2020,7 @@ export interface FileRoutesByTo {
   '/projects/$projectId/analytics': typeof PublicProjectsProjectIdAnalyticsRouteWithChildren
   '/projects/$projectId/api-keys': typeof PublicProjectsProjectIdApiKeysRoute
   '/projects/$projectId/apps': typeof PublicProjectsProjectIdAppsRouteWithChildren
+  '/projects/$projectId/explorer': typeof PublicProjectsProjectIdExplorerRoute
   '/projects/$projectId/firewall': typeof PublicProjectsProjectIdFirewallRoute
   '/projects/$projectId/imagine': typeof PublicProjectsProjectIdImagineRoute
   '/projects/$projectId/onboarding': typeof PublicProjectsProjectIdOnboardingRoute
@@ -2224,6 +2233,7 @@ export interface FileRoutesById {
   '/_public/projects/$projectId/apps': typeof PublicProjectsProjectIdAppsRouteWithChildren
   '/_public/projects/$projectId/auth': typeof PublicProjectsProjectIdAuthRouteWithChildren
   '/_public/projects/$projectId/databases': typeof PublicProjectsProjectIdDatabasesRouteWithChildren
+  '/_public/projects/$projectId/explorer': typeof PublicProjectsProjectIdExplorerRoute
   '/_public/projects/$projectId/firewall': typeof PublicProjectsProjectIdFirewallRoute
   '/_public/projects/$projectId/functions': typeof PublicProjectsProjectIdFunctionsRouteWithChildren
   '/_public/projects/$projectId/imagine': typeof PublicProjectsProjectIdImagineRoute
@@ -2459,6 +2469,7 @@ export interface FileRouteTypes {
     | '/projects/$projectId/apps'
     | '/projects/$projectId/auth'
     | '/projects/$projectId/databases'
+    | '/projects/$projectId/explorer'
     | '/projects/$projectId/firewall'
     | '/projects/$projectId/functions'
     | '/projects/$projectId/imagine'
@@ -2686,6 +2697,7 @@ export interface FileRouteTypes {
     | '/projects/$projectId/analytics'
     | '/projects/$projectId/api-keys'
     | '/projects/$projectId/apps'
+    | '/projects/$projectId/explorer'
     | '/projects/$projectId/firewall'
     | '/projects/$projectId/imagine'
     | '/projects/$projectId/onboarding'
@@ -2897,6 +2909,7 @@ export interface FileRouteTypes {
     | '/_public/projects/$projectId/apps'
     | '/_public/projects/$projectId/auth'
     | '/_public/projects/$projectId/databases'
+    | '/_public/projects/$projectId/explorer'
     | '/_public/projects/$projectId/firewall'
     | '/_public/projects/$projectId/functions'
     | '/_public/projects/$projectId/imagine'
@@ -3446,6 +3459,13 @@ declare module '@tanstack/react-router' {
       path: '/firewall'
       fullPath: '/projects/$projectId/firewall'
       preLoaderRoute: typeof PublicProjectsProjectIdFirewallRouteImport
+      parentRoute: typeof PublicProjectsProjectIdRoute
+    }
+    '/_public/projects/$projectId/explorer': {
+      id: '/_public/projects/$projectId/explorer'
+      path: '/explorer'
+      fullPath: '/projects/$projectId/explorer'
+      preLoaderRoute: typeof PublicProjectsProjectIdExplorerRouteImport
       parentRoute: typeof PublicProjectsProjectIdRoute
     }
     '/_public/projects/$projectId/databases': {
@@ -5784,6 +5804,7 @@ interface PublicProjectsProjectIdRouteChildren {
   PublicProjectsProjectIdAppsRoute: typeof PublicProjectsProjectIdAppsRouteWithChildren
   PublicProjectsProjectIdAuthRoute: typeof PublicProjectsProjectIdAuthRouteWithChildren
   PublicProjectsProjectIdDatabasesRoute: typeof PublicProjectsProjectIdDatabasesRouteWithChildren
+  PublicProjectsProjectIdExplorerRoute: typeof PublicProjectsProjectIdExplorerRoute
   PublicProjectsProjectIdFirewallRoute: typeof PublicProjectsProjectIdFirewallRoute
   PublicProjectsProjectIdFunctionsRoute: typeof PublicProjectsProjectIdFunctionsRouteWithChildren
   PublicProjectsProjectIdImagineRoute: typeof PublicProjectsProjectIdImagineRoute
@@ -5814,6 +5835,7 @@ const PublicProjectsProjectIdRouteChildren: PublicProjectsProjectIdRouteChildren
       PublicProjectsProjectIdAuthRouteWithChildren,
     PublicProjectsProjectIdDatabasesRoute:
       PublicProjectsProjectIdDatabasesRouteWithChildren,
+    PublicProjectsProjectIdExplorerRoute: PublicProjectsProjectIdExplorerRoute,
     PublicProjectsProjectIdFirewallRoute: PublicProjectsProjectIdFirewallRoute,
     PublicProjectsProjectIdFunctionsRoute:
       PublicProjectsProjectIdFunctionsRouteWithChildren,

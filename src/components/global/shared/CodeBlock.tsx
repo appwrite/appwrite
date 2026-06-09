@@ -187,6 +187,8 @@ export interface CodeBlockProps {
   transparentBackground?: boolean
   /** Show fullscreen button (default false) */
   showFullscreen?: boolean
+  /** Wrap long lines instead of horizontal scrolling */
+  wrapLines?: boolean
 }
 
 export function CodeBlock({
@@ -200,6 +202,7 @@ export function CodeBlock({
   label,
   transparentBackground = false,
   showFullscreen = false,
+  wrapLines = false,
 }: CodeBlockProps) {
   const [copied, setCopied] = useState(false)
   const [isFullscreenOpen, setIsFullscreenOpen] = useState(false)
@@ -254,6 +257,12 @@ export function CodeBlock({
     : themes.vsLight
 
   const isHeadless = variant === 'headless'
+
+  const preOverflowClasses = wrapLines
+    ? 'overflow-x-hidden whitespace-pre-wrap break-words [overflow-wrap:anywhere]'
+    : 'overflow-x-auto'
+
+  const lineWrapClasses = wrapLines ? 'min-w-0 w-full break-all' : undefined
 
   const renderCopyButton = () => {
     if (!showCopy) return null
@@ -355,7 +364,8 @@ export function CodeBlock({
               ref={preRef}
               onWheel={handleWheel}
               className={cn(
-                'rounded-none overflow-x-auto p-4 text-[12px] font-mono',
+                'rounded-none p-4 text-[12px] font-mono',
+                preOverflowClasses,
                 fixedHeight && 'min-h-0 flex-1 overflow-y-auto',
                 transparentBackground ? '!bg-transparent' : '!bg-background',
                 preClassName,
@@ -370,7 +380,10 @@ export function CodeBlock({
             >
               <code className="text-left block">
                 {tokens.map((line, i) => (
-                  <div key={i} {...getLineProps({ line })}>
+                  <div
+                    key={i}
+                    {...getLineProps({ line, className: lineWrapClasses })}
+                  >
                     {line.map((token, key) => (
                       <span key={key} {...getTokenProps({ token })} />
                     ))}
@@ -408,7 +421,8 @@ export function CodeBlock({
               }) => (
                 <pre
                   className={cn(
-                    'overflow-x-auto p-6 text-[12px] font-mono',
+                    'p-6 text-[12px] font-mono',
+                    preOverflowClasses,
                     preClassName,
                   )}
                   style={{
@@ -419,7 +433,10 @@ export function CodeBlock({
                 >
                   <code className="text-left block">
                     {tokens.map((line, i) => (
-                      <div key={i} {...getLineProps({ line })}>
+                      <div
+                        key={i}
+                        {...getLineProps({ line, className: lineWrapClasses })}
+                      >
                         {line.map((token, key) => (
                           <span key={key} {...getTokenProps({ token })} />
                         ))}

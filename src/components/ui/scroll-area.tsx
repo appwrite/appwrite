@@ -22,7 +22,11 @@ function ScrollArea({
       <ScrollAreaPrimitive.Viewport
         ref={viewportRef}
         data-slot="scroll-area-viewport"
-        className="focus-visible:ring-ring/50 size-full rounded-[inherit] transition-[color,box-shadow] outline-none focus-visible:ring-[3px] focus-visible:outline-1"
+        className={cn(
+          'focus-visible:ring-ring/50 size-full overflow-x-hidden rounded-[inherit] transition-[color,box-shadow] outline-none focus-visible:ring-[3px] focus-visible:outline-1',
+          // Radix wraps children in display:table, which expands to content width and breaks truncation.
+          '[&>div]:!block [&>div]:!w-full [&>div]:!min-w-0 [&>div]:!max-w-full',
+        )}
       >
         {children}
       </ScrollAreaPrimitive.Viewport>

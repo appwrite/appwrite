@@ -104,9 +104,7 @@ function CliShellHeaderTitle({
 }) {
   return (
     <div className="flex min-w-0 items-center gap-2">
-      <span className="flex size-7 shrink-0 items-center justify-center rounded-md border border-border bg-muted/50 text-muted-foreground">
-        <TerminalIcon className="h-3.5 w-3.5" />
-      </span>
+      <TerminalIcon className="h-3.5 w-3.5 shrink-0 text-muted-foreground" strokeWidth={3} />
       <span className="truncate text-[13px] font-semibold text-foreground">
         Terminal
       </span>
@@ -339,7 +337,12 @@ function ProjectCliShellPanel({ onResizingChange }: ProjectCliShellPanelProps) {
   }, [isRunning])
 
   useEffect(() => {
-    if (open) fitTerminal()
+    if (!open) return
+    fitTerminal()
+    const focusRaf = requestAnimationFrame(() => {
+      terminalRef.current?.focus()
+    })
+    return () => cancelAnimationFrame(focusRaf)
   }, [fitTerminal, fullscreen, open])
 
   useEffect(() => {

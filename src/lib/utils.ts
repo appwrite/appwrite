@@ -21,6 +21,16 @@ export function truncateMiddle(str: string, maxLength: number): string {
 }
 
 /**
+ * Truncate a string at the start when it exceeds maxLength, keeping the end visible.
+ * e.g. truncateStart('/tablesdb/{databaseId}/tables/{tableId}/rows', 20) → '.../tables/{tableId}/rows'
+ */
+export function truncateStart(str: string, maxLength: number): string {
+  if (typeof str !== 'string' || str.length <= maxLength) return str
+  const take = maxLength - ELLIPSIS.length
+  return `${ELLIPSIS}${str.slice(-take)}`
+}
+
+/**
  * Scroll the console shell main region to top. List views use `#main-content`
  * (overflow-y-auto); window/document scroll is often zero, so pagination must
  * target this element.

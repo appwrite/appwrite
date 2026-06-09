@@ -82,8 +82,8 @@ function UseCaseRow({ useCase }: { useCase: UseCase }) {
 
 export function FunctionsProductVisual() {
   return (
-    <div className="absolute inset-0 flex flex-col overflow-hidden bg-background transition-transform duration-500 group-hover:-translate-y-1 motion-reduce:group-hover:translate-y-0">
-      <div className="mx-auto flex h-full min-h-0 w-full max-w-[20rem] flex-col overflow-hidden rounded-t-xl border border-border border-b-0 bg-background shadow-sm">
+    <div className="absolute inset-0 flex flex-col overflow-hidden transition-transform duration-500 group-hover:-translate-y-1 motion-reduce:group-hover:translate-y-0">
+      <div className={cn('mx-auto flex h-full min-h-0 w-full max-w-[20rem] flex-col', productBentoContainer.shell)}>
         <div className={cn(productBentoContainer.header, 'px-3 py-2')}>
           <p className={cn('text-[11px] font-medium', productBentoIdle.text)}>My functions</p>
           <p className="mt-0.5 text-[10px] text-muted-foreground">

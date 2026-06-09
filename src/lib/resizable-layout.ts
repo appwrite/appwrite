@@ -144,6 +144,57 @@ export function clampTableViewSidebarWidthPx(px: number): number {
   )
 }
 
+/** API Explorer: services | methods | request (%). */
+export const API_EXPLORER_COLUMNS_DEFAULT_LAYOUT = [20, 24, 56] as const
+export const API_EXPLORER_COLUMNS_MIN = [14, 18, 36] as const
+export const API_EXPLORER_COLUMNS_MAX = [28, 34, 100] as const
+
+/** API Explorer: request form | response (%). */
+export const API_EXPLORER_RESPONSE_SPLIT_DEFAULT_LAYOUT = [58, 42] as const
+export const API_EXPLORER_RESPONSE_SPLIT_MIN = [20, 15] as const
+export const API_EXPLORER_RESPONSE_SPLIT_MAX = [85, 75] as const
+
+function normalizePanelLayout(
+  sizes: number[],
+  mins: readonly number[],
+  maxs: readonly number[],
+  fallback: readonly number[],
+): number[] {
+  if (sizes.length !== mins.length) return [...fallback]
+  const clamped = sizes.map((size, index) => {
+    if (typeof size !== 'number' || !Number.isFinite(size)) {
+      return fallback[index] ?? 0
+    }
+    const min = mins[index] ?? 0
+    const max = maxs[index] ?? 100
+    return Math.min(max, Math.max(min, size))
+  })
+  const sum = clamped.reduce((total, size) => total + size, 0)
+  if (sum <= 0) return [...fallback]
+  if (Math.abs(sum - 100) < 0.01) return clamped
+  return clamped.map((size) => (size / sum) * 100)
+}
+
+export function normalizeApiExplorerColumnsLayout(sizes: number[]): number[] {
+  return normalizePanelLayout(
+    sizes,
+    API_EXPLORER_COLUMNS_MIN,
+    API_EXPLORER_COLUMNS_MAX,
+    API_EXPLORER_COLUMNS_DEFAULT_LAYOUT,
+  )
+}
+
+export function normalizeApiExplorerResponseSplitLayout(
+  sizes: number[],
+): number[] {
+  return normalizePanelLayout(
+    sizes,
+    API_EXPLORER_RESPONSE_SPLIT_MIN,
+    API_EXPLORER_RESPONSE_SPLIT_MAX,
+    API_EXPLORER_RESPONSE_SPLIT_DEFAULT_LAYOUT,
+  )
+}
+
 /**
  * Values below {@link TABLE_VIEW_SIDEBAR_MIN_WIDTH_PX} in account prefs were
  * stored as percent (typically 5–60). Convert using a fixed reference width.
