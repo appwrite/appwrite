@@ -14,7 +14,7 @@ use Utopia\Database\Helpers\ID;
 use Utopia\Database\Helpers\Permission;
 use Utopia\Database\Helpers\Role;
 
-class DatabasesCustomServerTest extends Scope
+final class DatabasesCustomServerTest extends Scope
 {
     use DatabasesBase;
     use ProjectCustom;

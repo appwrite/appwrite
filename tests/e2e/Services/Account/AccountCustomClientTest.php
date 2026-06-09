@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Tests\E2E\Services\Account;
 
 use Appwrite\Tests\Retry;
@@ -14,7 +16,7 @@ use Utopia\Database\Validator\Datetime as DatetimeValidator;
 
 use function sleep;
 
-class AccountCustomClientTest extends Scope
+final class AccountCustomClientTest extends Scope
 {
     use AccountBase;
     use ProjectCustom;
@@ -393,7 +395,7 @@ class AccountCustomClientTest extends Scope
         ]);
 
         $lastEmail = $this->getLastEmailByAddress($email, function ($email) {
-            $this->assertStringContainsString('Password Reset', $email['subject']);
+            $this->assertStringContainsString('Password Reset', (string) $email['subject']);
         });
         $tokens = $this->extractQueryParamsFromEmailLink($lastEmail['html']);
         $recovery = $tokens['secret'];
@@ -420,7 +422,7 @@ class AccountCustomClientTest extends Scope
 
         // Use a truly unique phone number for parallel test safety
         // Combine microtime, PID, and random digits to avoid collisions across parallel processes
-        $number = '+1' . substr(str_replace('.', '', microtime(true)) . getmypid() . random_int(100, 999), -9);
+        $number = '+1' . substr(str_replace('.', '', (string) microtime(true)) . getmypid() . random_int(100, 999), -9);
 
         $response = $this->client->call(Client::METHOD_POST, '/account/tokens/phone', array_merge([
             'origin' => 'http://localhost',
@@ -579,7 +581,7 @@ class AccountCustomClientTest extends Scope
         $data = $this->setupPhoneConvertedToPassword();
         $session = $data['session'];
         // Use a truly unique phone number to avoid target conflicts across parallel test runs
-        $newPhone = '+456' . substr(str_replace('.', '', microtime(true)) . getmypid() . random_int(100, 999), -8);
+        $newPhone = '+456' . substr(str_replace('.', '', (string) microtime(true)) . getmypid() . random_int(100, 999), -8);
 
         $response = $this->client->call(Client::METHOD_PATCH, '/account/phone', array_merge([
             'origin' => 'http://localhost',
@@ -1138,7 +1140,7 @@ class AccountCustomClientTest extends Scope
         $this->assertIsArray($logsWithIncludeTotalFalse['body']);
         $this->assertIsArray($logsWithIncludeTotalFalse['body']['logs']);
         $this->assertIsInt($logsWithIncludeTotalFalse['body']['total']);
-        $this->assertEquals(0, $logsWithIncludeTotalFalse['body']['total']);
+        $this->assertSame(0, $logsWithIncludeTotalFalse['body']['total']);
         $this->assertGreaterThan(0, count($logsWithIncludeTotalFalse['body']['logs']));
 
         /**
@@ -1911,7 +1913,7 @@ class AccountCustomClientTest extends Scope
         $this->assertTrue((new DatetimeValidator())->isValid($response['body']['expire']));
 
         $lastEmail = $this->getLastEmailByAddress($email, function ($email) {
-            $this->assertStringContainsString('Password Reset', $email['subject']);
+            $this->assertStringContainsString('Password Reset', (string) $email['subject']);
         });
 
         $this->assertNotEmpty($lastEmail, 'Email not found for address: ' . $email);
@@ -2091,10 +2093,10 @@ class AccountCustomClientTest extends Scope
         $lastEmail = $this->getLastEmailByAddress($email);
 
         $this->assertNotEmpty($lastEmail, 'Email not found for address: ' . $email);
-        $this->assertStringContainsString('Security alert: new session', $lastEmail['subject']);
-        $this->assertStringContainsString($response['body']['ip'], $lastEmail['text']); // IP Address
-        $this->assertStringContainsString('Unknown', $lastEmail['text']); // Country
-        $this->assertStringContainsString($response['body']['clientName'], $lastEmail['text']); // Client name
+        $this->assertStringContainsString('Security alert: new session', (string) $lastEmail['subject']);
+        $this->assertStringContainsString($response['body']['ip'], (string) $lastEmail['text']); // IP Address
+        $this->assertStringContainsString('Unknown', (string) $lastEmail['text']); // Country
+        $this->assertStringContainsString($response['body']['clientName'], (string) $lastEmail['text']); // Client name
         $this->assertStringNotContainsStringIgnoringCase('Appwrite logo', $lastEmail['html']);
 
         // Verify no alert sent in OTP login
@@ -2107,7 +2109,7 @@ class AccountCustomClientTest extends Scope
             'email' => 'otpuser3@appwrite.io'
         ]);
 
-        $this->assertEquals($response['headers']['status-code'], 201);
+        $this->assertEquals(201, $response['headers']['status-code']);
         $this->assertNotEmpty($response['body']['$id']);
         $this->assertNotEmpty($response['body']['$createdAt']);
         $this->assertNotEmpty($response['body']['userId']);
@@ -2557,7 +2559,7 @@ class AccountCustomClientTest extends Scope
         ]);
 
         $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertStringContainsString('a_session_' . $this->getProject()['$id'] . '=deleted', $response['headers']['set-cookie']);
+        $this->assertStringContainsString('a_session_' . $this->getProject()['$id'] . '=deleted', (string) $response['headers']['set-cookie']);
         $this->assertEquals('[]', $response['headers']['x-fallback-cookies']);
 
         $response = $this->client->call(Client::METHOD_GET, '/account', array_merge([
@@ -3469,7 +3471,7 @@ class AccountCustomClientTest extends Scope
     public function testUpdatePhone(): void
     {
         $data = $this->setupPhoneConvertedToPassword();
-        $newPhone = '+456' . substr(str_replace('.', '', microtime(true)) . getmypid() . random_int(100, 999), -8);
+        $newPhone = '+456' . substr(str_replace('.', '', (string) microtime(true)) . getmypid() . random_int(100, 999), -8);
         $session = $data['session'];
 
         /**

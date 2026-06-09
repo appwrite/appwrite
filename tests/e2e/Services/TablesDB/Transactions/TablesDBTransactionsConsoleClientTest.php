@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Tests\E2E\Services\TablesDB\Transactions;
 
 use Tests\E2E\Scopes\ApiTablesDB;
@@ -9,7 +11,7 @@ use Tests\E2E\Scopes\SideConsole;
 use Tests\E2E\Services\Databases\Transactions\TransactionsBase;
 use Tests\E2E\Traits\DatabasesUrlHelpers;
 
-class TablesDBTransactionsConsoleClientTest extends Scope
+final class TablesDBTransactionsConsoleClientTest extends Scope
 {
     use TransactionsBase;
     use DatabasesUrlHelpers;

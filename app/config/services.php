@@ -281,6 +281,20 @@ return [
         'icon' => '',
         'platforms' => ['client', 'server', 'console'],
     ],
+    'organization' => [
+        'key' => 'organization',
+        'name' => 'Organization',
+        'subtitle' => 'The Organization service allows you to manage organization-level projects.',
+        'description' => '',
+        'controller' => '', // Uses modules
+        'sdk' => true,
+        'docs' => true,
+        'docsUrl' => '',
+        'tests' => false,
+        'optional' => false,
+        'icon' => '',
+        'platforms' => ['server', 'console'],
+    ],
     'migrations' => [
         'key' => 'migrations',
         'name' => 'Migrations',
