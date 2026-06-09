@@ -26,6 +26,15 @@ trait WebhooksBase
 
             $this->assertEquals(200, $deployment['headers']['status-code']);
             $this->assertEquals('ready', $deployment['body']['status'], \json_encode($deployment['body']));
+
+            $function = $this->client->call(Client::METHOD_GET, '/functions/' . $functionId, [
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+                'x-appwrite-key' => $this->getProject()['apiKey'],
+            ]);
+
+            $this->assertEquals(200, $function['headers']['status-code']);
+            $this->assertEquals($deploymentId, $function['body']['deploymentId'] ?? '', \json_encode($function['body']));
         }, 120000, 500);
     }
 
