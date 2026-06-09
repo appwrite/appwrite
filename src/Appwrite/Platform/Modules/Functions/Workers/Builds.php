@@ -1542,7 +1542,7 @@ class Builds extends Action
 
                 break;
             } catch (TransactionException $exception) {
-                if ($exception->getCode() !== 112 || ++$attempts >= 5) {
+                if (++$attempts >= 5) {
                     throw $exception;
                 }
             }
