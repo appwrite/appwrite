@@ -1,5 +1,5 @@
-import { ProductAvatarsList } from '@/components/global/shared/ProductAvatarsList'
-import { formatPricingServiceList, pricingServices } from '@/lib/pricing/services'
+import { MarketingProductPills } from '@/components/pages/marketing/MarketingProductPills'
+import { marketingProductToolkit } from '@/lib/marketing/product-toolkit'
 
 export function PricingServicesAvatars() {
   return (
@@ -8,12 +8,13 @@ export function PricingServicesAvatars() {
         All platform services included
       </p>
       <p className="mx-auto mt-2 max-w-2xl text-[13px] leading-6 text-muted-foreground sm:text-[14px] sm:leading-7">
-        Every plan includes {formatPricingServiceList()}.
+        Every plan includes the full Appwrite platform toolkit.
       </p>
-      <ProductAvatarsList
+      <MarketingProductPills
         className="mt-5 sm:mt-6"
-        items={pricingServices}
-        ariaLabel="Included Appwrite services"
+        build={marketingProductToolkit.build}
+        deploy={marketingProductToolkit.deploy}
+        protect={marketingProductToolkit.protect}
       />
     </div>
   )
