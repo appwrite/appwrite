@@ -459,7 +459,7 @@ return function (Container $context): void {
                 $sessionExpiry = !empty($session) ? $session->getAttribute('expire') : null;
                 if (
                     empty($session)
-                    || (!empty($sessionExpiry) && DatabaseDateTime::formatTz(DatabaseDateTime::format(new \DateTime($sessionExpiry))) < DatabaseDateTime::formatTz(DatabaseDateTime::now()))
+                    || (!empty($sessionExpiry) && $sessionExpiry < DatabaseDateTime::formatTz(DatabaseDateTime::now()))
                 ) { // Match JWT to active, non-expired session
                     $user = new User([]);
                 }
