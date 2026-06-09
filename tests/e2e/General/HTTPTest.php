@@ -195,11 +195,12 @@ class HTTPTest extends Scope
         $endpoint = '/v1/account';
 
         foreach ([Client::METHOD_GET, Client::METHOD_OPTIONS] as $method) {
-            $response = $this->client->call($method, $endpoint, [
-                'origin' => 'http://localhost',
-                'access-control-request-headers' => 'X-Appwrite-Project, X-Appwrite-Dev-Key',
-                'access-control-request-method' => 'POST',
-            ]);
+            $headers = ['origin' => 'http://localhost'];
+            if ($method === Client::METHOD_OPTIONS) {
+                $headers['access-control-request-headers'] = 'X-Appwrite-Project, X-Appwrite-Dev-Key';
+                $headers['access-control-request-method'] = 'POST';
+            }
+            $response = $this->client->call($method, $endpoint, $headers);
 
             $allowOrigin = $response['headers']['access-control-allow-origin'] ?? null;
             $allowCredentials = $response['headers']['access-control-allow-credentials'] ?? null;
