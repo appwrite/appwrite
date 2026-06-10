@@ -18,13 +18,16 @@ import { sdk } from '@/lib/appwrite/sdk'
 import { createOrganization } from '@/lib/react-query/hooks/organizations'
 import { fetchOrganizations } from '@/lib/react-query/hooks/organizations'
 import { fetchOrganizationProjects } from '@/lib/react-query/hooks/organizations'
-import { updateAccountPrefs } from '@/lib/react-query/hooks/auth'
+import {
+  fetchConsoleAccount,
+  updateAccountPrefs,
+} from '@/lib/react-query/hooks/auth'
 
 const PERSONAL_ORG_NAME = 'Personal Projects'
 const FIRST_PROJECT_NAME = 'My first project'
 
 export async function ensurePersonalOrgAndFirstProject(): Promise<string> {
-  const account = await sdk.forConsole.account.get()
+  const account = await fetchConsoleAccount()
   const prefs = (account.prefs || {}) as Record<string, unknown>
 
   const response = await fetchOrganizations()

@@ -47,6 +47,11 @@ import {
   subscribeToDebugEndpointChange,
 } from '@/lib/debug-endpoint'
 import { wrapServiceObject } from '@/lib/appwrite/slow-call-reporting'
+import { clearConsoleAccountCache } from '@/lib/console-account-cache'
+import {
+  fetchConsoleAccount,
+  registerConsoleAccountGet,
+} from '@/lib/console-account-get'
 import {
   CONSOLE_IMPERSONATION_TARGET_KEY,
   clearConsoleImpersonationSession,
@@ -161,6 +166,12 @@ export function getProjectRegion(projectId: string): string | undefined {
 export function getProjectApiEndpoint(projectId: string): string {
   const region = projectRegions.get(projectId)
   return getApiEndpoint(region)
+}
+
+function wrapConsoleAccountGet<T extends { account: Account }>(sdkRaw: T): T {
+  sdkRaw.account.get = (() =>
+    fetchConsoleAccount()) as typeof sdkRaw.account.get
+  return sdkRaw
 }
 
 // Create Console SDK instance (raw, no slow-call wrapping)
@@ -311,6 +322,7 @@ export function clearConsoleSessionLocally(): void {
 
   clearConsoleImpersonateUser()
   clearConsoleImpersonationSession()
+  clearConsoleAccountCache()
 
   try {
     window.localStorage.removeItem('cookieFallback')
@@ -434,11 +446,15 @@ const sdkForProject = wrapServiceObject(
   'forProject',
 ) as typeof sdkForProjectRaw
 
+const consoleSdkRawBase = createConsoleSdkRaw(clientConsole)
+registerConsoleAccountGet(consoleSdkRawBase.account.get.bind(consoleSdkRawBase.account))
+const consoleSdkRaw = wrapConsoleAccountGet(consoleSdkRawBase)
+
 // Export SDK instances
 export const sdk = {
   // Console SDK - for managing console-level resources (wrapped for slow-call reporting)
   forConsole: wrapServiceObject(
-    createConsoleSdkRaw(clientConsole) as Record<string, unknown>,
+    consoleSdkRaw as Record<string, unknown>,
     'forConsole',
   ) as ReturnType<typeof createConsoleSdkRaw>,
 
@@ -448,7 +464,9 @@ export const sdk = {
     const regionClient = new Client()
     regionClient.setEndpoint(regionEndpoint).setProject('console')
     return wrapServiceObject(
-      createConsoleSdkRaw(regionClient) as Record<string, unknown>,
+      wrapConsoleAccountGet(
+        createConsoleSdkRaw(regionClient),
+      ) as Record<string, unknown>,
       'forConsoleIn',
     ) as ReturnType<typeof createConsoleSdkRaw>
   },

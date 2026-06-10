@@ -1,4 +1,4 @@
-import { sdk, getBaseEndpoint } from '@/lib/appwrite/sdk'
+import { getBaseEndpoint, sdk } from '@/lib/appwrite/sdk'
 import { BROWSER_PROXY_SESSION_COOKIE } from './constants'
 
 const CONSOLE_SESSION_KEY = 'a_session_console'
@@ -106,17 +106,9 @@ export async function resolveConsoleCliAuth(): Promise<ResolvedCliAuth | null> {
     return { sessionCookie: syncCookie, mode: 'cookie' }
   }
 
-  try {
-    await sdk.forConsole.account.get()
-  } catch {
-    return null
-  }
-
-  const refreshedCookie = getConsoleCliCookie()
-  if (refreshedCookie) {
-    return { sessionCookie: refreshedCookie, mode: 'cookie' }
-  }
-
+  // httpOnly console sessions cannot be copied into CLI prefs. The fetch bridge
+  // forwards browser cookies for almostnode CLI requests. Auth is already
+  // verified by the shared React Query account fetch — no extra account.get here.
   return {
     sessionCookie: BROWSER_PROXY_SESSION_COOKIE,
     mode: 'browser-proxy',

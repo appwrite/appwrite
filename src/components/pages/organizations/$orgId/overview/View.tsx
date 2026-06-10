@@ -68,6 +68,7 @@ import {
   useResendMembershipInvite,
   useUpdateMembershipRole,
   useRemoveTeamMember,
+  syncConsoleAccountAfterMutation,
 } from '@/lib/react-query/hooks'
 import {
   parsePinnedProjectIds,
@@ -1053,23 +1054,12 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
               }
             : current,
       )
+      syncConsoleAccountAfterMutation(queryClient)
     },
     onSuccess: (updatedAccount) => {
-      queryClient.setQueriesData<{ prefs?: Record<string, unknown> }>(
-        { queryKey: ['account', 'console'] },
-        (current) =>
-          current
-            ? {
-                ...current,
-                ...updatedAccount,
-                prefs: {
-                  ...current.prefs,
-                  ...(updatedAccount as { prefs?: Record<string, unknown> })
-                    .prefs,
-                },
-              }
-            : current,
-      )
+      syncConsoleAccountAfterMutation(queryClient, {
+        apiResult: updatedAccount,
+      })
     },
   })
 

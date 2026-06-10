@@ -12,8 +12,15 @@ import {
   queryOptions,
   type QueryClient,
 } from '@tanstack/react-query'
+import type { Models } from '@appwrite.io/console'
 import { ProjectAuthMethodId } from '@appwrite.io/console'
 import { sdk } from '@/lib/appwrite/sdk'
+import { setConsoleAccountCache } from '@/lib/console-account-cache'
+import {
+  fetchConsoleAccount,
+  getConsoleAccountFromSingleton,
+  type FetchConsoleAccountOptions,
+} from '@/lib/console-account-get'
 import { getConsoleAccountQueryRevision } from '@/lib/console-impersonation'
 import {
   buildDatabasesSidebarWidthPrefs,
@@ -111,8 +118,90 @@ export function getConsoleAccountFromCache(
   return undefined
 }
 
-/** Same stale window as `RequireAuth` / `useAuth` account query. */
-export const CONSOLE_ACCOUNT_STALE_TIME_MS = 5 * 60 * 1000
+/** Account query stays fresh for the session; only explicit invalidation refetches. */
+export const CONSOLE_ACCOUNT_STALE_TIME_MS = Number.POSITIVE_INFINITY
+
+export type { FetchConsoleAccountOptions }
+export {
+  fetchConsoleAccount,
+  getConsoleAccountFromSingleton as getConsoleAccountSync,
+} from '@/lib/console-account-get'
+export {
+  clearConsoleAccountCache,
+  setConsoleAccountCache,
+} from '@/lib/console-account-cache'
+
+function isConsoleAccountUser(value: unknown): value is Models.User {
+  return !!value && typeof value === 'object' && '$id' in value
+}
+
+/** Write account to both the module singleton and every cached React Query entry. */
+export function commitConsoleAccountToCaches(
+  queryClient: QueryClient,
+  account: Models.User,
+  revision: number = getConsoleAccountQueryRevision(),
+): void {
+  setConsoleAccountCache(account, revision)
+  queryClient.setQueriesData<Models.User>(
+    { queryKey: ['account', 'console'] },
+    account,
+  )
+}
+
+/**
+ * After any account mutation, keep React Query and the module singleton in sync.
+ * Pass `apiResult` when the API returns a user; otherwise uses the React Query
+ * cache (e.g. after optimistic pref updates in `onMutate`).
+ */
+export function syncConsoleAccountAfterMutation(
+  queryClient: QueryClient,
+  options?: {
+    apiResult?: unknown
+    patch?: Partial<Models.User>
+    updater?: (current: Models.User) => Models.User
+  },
+): void {
+  const revision = getConsoleAccountQueryRevision()
+  const cached =
+    (getConsoleAccountFromCache(queryClient) as Models.User | undefined) ??
+    getConsoleAccountFromSingleton(revision)
+
+  let next: Models.User | undefined
+
+  if (options?.apiResult && isConsoleAccountUser(options.apiResult)) {
+    next = cached
+      ? ({
+          ...cached,
+          ...options.apiResult,
+          prefs: options.apiResult.prefs ?? cached.prefs,
+        } as Models.User)
+      : options.apiResult
+  } else if (options?.updater && cached) {
+    next = options.updater(cached)
+  } else if (options?.patch && cached) {
+    next = { ...cached, ...options.patch } as Models.User
+  } else {
+    const fromQuery = getConsoleAccountFromCache(queryClient) as
+      | Models.User
+      | undefined
+    next = fromQuery ?? cached
+  }
+
+  if (next && options?.patch) {
+    next = { ...next, ...options.patch } as Models.User
+  }
+
+  if (next) {
+    commitConsoleAccountToCaches(queryClient, next, revision)
+  }
+}
+
+/** @deprecated Use `syncConsoleAccountAfterMutation`. */
+export function syncConsoleAccountSingletonFromQueryClient(
+  queryClient: QueryClient,
+): void {
+  syncConsoleAccountAfterMutation(queryClient)
+}
 
 /**
  * Console `account.get` — shared by route loaders (prefetch prefs before child
@@ -125,9 +214,12 @@ export function consoleAccountQueryOptions(options?: {
   const revision = options?.revision ?? getConsoleAccountQueryRevision()
   return queryOptions({
     queryKey: ['account', 'console', revision],
-    queryFn: () => sdk.forConsole.account.get(),
+    queryFn: () => fetchConsoleAccount({ revision }),
     staleTime: CONSOLE_ACCOUNT_STALE_TIME_MS,
     retry: false,
+    refetchOnMount: false,
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: false,
     enabled: typeof window !== 'undefined',
   })
 }
@@ -769,14 +861,17 @@ export async function flushRecentImpersonationUsersToAccountPrefs(
   const list = readRecentImpersonationSessionList(operatorId)
   if (list.length === 0) return
   clearRecentImpersonationSessionList(operatorId)
-  const account = await sdk.forConsole.account.get()
+  const account = await fetchConsoleAccount({ force: true })
   const fromPrefs = parseRecentImpersonationUsers(account.prefs as UserPrefs)
   const merged = mergeRecentImpersonationLists(fromPrefs, list)
-  await updateAccountPrefs(
-    mergeRecentImpersonationIntoAccountPrefs(
-      account.prefs as UserPrefs,
-      merged,
-    ),
+  const updatedPrefs = mergeRecentImpersonationIntoAccountPrefs(
+    account.prefs as UserPrefs,
+    merged,
+  )
+  const updatedAccount = await updateAccountPrefs(updatedPrefs)
+  setConsoleAccountCache(
+    (updatedAccount ?? { ...account, prefs: updatedPrefs }) as Models.User,
+    getConsoleAccountQueryRevision(),
   )
 }
 
@@ -829,9 +924,10 @@ export function useToggleFeatureNotification() {
 
       return await updateAccountPrefs(updatedPrefs)
     },
-    onSuccess: () => {
-      // Invalidate account query to refetch with new prefs
-      queryClient.invalidateQueries({ queryKey: ['account', 'console'] })
+    onSuccess: (updatedAccount) => {
+      syncConsoleAccountAfterMutation(queryClient, {
+        apiResult: updatedAccount,
+      })
     },
   })
 }
@@ -881,8 +977,10 @@ export function useSidebarCollapsed(
             : current,
       )
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['account', 'console'] })
+    onSuccess: (updatedAccount) => {
+      syncConsoleAccountAfterMutation(queryClient, {
+        apiResult: updatedAccount,
+      })
     },
   })
 
@@ -949,8 +1047,10 @@ export function useTableViewSidebarWidth(
             : current,
       )
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['account', 'console'] })
+    onSuccess: (updatedAccount) => {
+      syncConsoleAccountAfterMutation(queryClient, {
+        apiResult: updatedAccount,
+      })
     },
   })
 
@@ -999,8 +1099,10 @@ export function usePostgresSqlEditorHeight(
             : current,
       )
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['account', 'console'] })
+    onSuccess: (updatedAccount) => {
+      syncConsoleAccountAfterMutation(queryClient, {
+        apiResult: updatedAccount,
+      })
     },
   })
 
@@ -1059,8 +1161,10 @@ function usePersistedPanelLayoutPref(
             : current,
       )
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['account', 'console'] })
+    onSuccess: (updatedAccount) => {
+      syncConsoleAccountAfterMutation(queryClient, {
+        apiResult: updatedAccount,
+      })
     },
   })
 
@@ -1243,12 +1347,15 @@ async function migrateLegacyBrowserPrefsToAccount(
     return
   }
 
-  await updateAccountPrefs(next)
+  const updatedAccount = await updateAccountPrefs(next)
   clearLegacyAIChatLocalStorage()
   clearLegacyBuildNotificationsOptedOutLocalStorage()
   clearLegacyCliShellHeightLocalStorage()
   clearLegacyStorageFilesTablePaneWidthLocalStorage()
-  queryClient.invalidateQueries({ queryKey: ['account', 'console'] })
+  commitConsoleAccountToCaches(
+    queryClient,
+    (updatedAccount ?? { ...account, prefs: next }) as Models.User,
+  )
 }
 
 let legacyBrowserPrefsMigrationPromise: Promise<void> | null = null
@@ -1310,8 +1417,10 @@ export function useAIChatPanelOpen(
             : current,
       )
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['account', 'console'] })
+    onSuccess: (updatedAccount) => {
+      syncConsoleAccountAfterMutation(queryClient, {
+        apiResult: updatedAccount,
+      })
     },
   })
 
@@ -1371,8 +1480,10 @@ export function useAIChatPanelWidth(
             : current,
       )
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['account', 'console'] })
+    onSuccess: (updatedAccount) => {
+      syncConsoleAccountAfterMutation(queryClient, {
+        apiResult: updatedAccount,
+      })
     },
   })
 
@@ -1452,8 +1563,10 @@ export function useCliShellOpen(account: ConsoleAccountCache | undefined) {
             : current,
       )
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['account', 'console'] })
+    onSuccess: (updatedAccount) => {
+      syncConsoleAccountAfterMutation(queryClient, {
+        apiResult: updatedAccount,
+      })
     },
   })
 
@@ -1511,8 +1624,10 @@ export function useCliShellHeight(account: ConsoleAccountCache | undefined) {
             : current,
       )
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['account', 'console'] })
+    onSuccess: (updatedAccount) => {
+      syncConsoleAccountAfterMutation(queryClient, {
+        apiResult: updatedAccount,
+      })
     },
   })
 
@@ -1602,8 +1717,10 @@ export function useCliShellSessionsSidebarWidth(
             : current,
       )
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['account', 'console'] })
+    onSuccess: (updatedAccount) => {
+      syncConsoleAccountAfterMutation(queryClient, {
+        apiResult: updatedAccount,
+      })
     },
   })
 
@@ -1675,8 +1792,10 @@ export function useCliShellHistory(
         ),
       )
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['account', 'console'] })
+    onSuccess: (updatedAccount) => {
+      syncConsoleAccountAfterMutation(queryClient, {
+        apiResult: updatedAccount,
+      })
     },
   })
 
@@ -1747,8 +1866,10 @@ export function useCliShellSessionsPrefs(
         ),
       )
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['account', 'console'] })
+    onSuccess: (updatedAccount) => {
+      syncConsoleAccountAfterMutation(queryClient, {
+        apiResult: updatedAccount,
+      })
     },
   })
 
@@ -1832,8 +1953,10 @@ export function useBuildNotificationsOptedOut(
             : current,
       )
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['account', 'console'] })
+    onSuccess: (updatedAccount) => {
+      syncConsoleAccountAfterMutation(queryClient, {
+        apiResult: updatedAccount,
+      })
     },
   })
 
@@ -1890,8 +2013,10 @@ export function useStorageFilesTablePaneWidth(
             : current,
       )
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['account', 'console'] })
+    onSuccess: (updatedAccount) => {
+      syncConsoleAccountAfterMutation(queryClient, {
+        apiResult: updatedAccount,
+      })
     },
   })
 
@@ -1965,8 +2090,10 @@ export function useSavedFilters(
         ...buildSavedFiltersPrefs(scope, next),
       })
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['account', 'console'] })
+    onSuccess: (updatedAccount) => {
+      syncConsoleAccountAfterMutation(queryClient, {
+        apiResult: updatedAccount,
+      })
     },
   })
 
@@ -2024,8 +2151,10 @@ export function useSavedFilters(
         ...buildSavedFiltersPrefs(scope, next),
       })
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['account', 'console'] })
+    onSuccess: (updatedAccount) => {
+      syncConsoleAccountAfterMutation(queryClient, {
+        apiResult: updatedAccount,
+      })
     },
   })
 
@@ -2065,8 +2194,10 @@ export function useSavedFilters(
         ...buildSavedFiltersPrefs(scope, orderedFilters),
       })
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['account', 'console'] })
+    onSuccess: (updatedAccount) => {
+      syncConsoleAccountAfterMutation(queryClient, {
+        apiResult: updatedAccount,
+      })
     },
   })
 
@@ -2145,8 +2276,10 @@ export function useSavedFilters(
         ...buildSavedFiltersPrefs(scope, next),
       })
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['account', 'console'] })
+    onSuccess: (updatedAccount) => {
+      syncConsoleAccountAfterMutation(queryClient, {
+        apiResult: updatedAccount,
+      })
     },
   })
 
@@ -2242,8 +2375,10 @@ export function useTablesDbRowsListColumns(
         ),
       )
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['account', 'console'] })
+    onSuccess: (updatedAccount) => {
+      syncConsoleAccountAfterMutation(queryClient, {
+        apiResult: updatedAccount,
+      })
     },
   })
 
@@ -2303,8 +2438,10 @@ export function useImageTransformSavedPresets(
         ...buildSavedImageTransformPresetsPrefs(next),
       })
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['account', 'console'] })
+    onSuccess: (updatedAccount) => {
+      syncConsoleAccountAfterMutation(queryClient, {
+        apiResult: updatedAccount,
+      })
     },
   })
 
@@ -2350,8 +2487,10 @@ export function useImageTransformSavedPresets(
         ...buildSavedImageTransformPresetsPrefs(next),
       })
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['account', 'console'] })
+    onSuccess: (updatedAccount) => {
+      syncConsoleAccountAfterMutation(queryClient, {
+        apiResult: updatedAccount,
+      })
     },
   })
 
@@ -2384,8 +2523,10 @@ export function useImageTransformSavedPresets(
         ...buildSavedImageTransformPresetsPrefs(ordered),
       })
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['account', 'console'] })
+    onSuccess: (updatedAccount) => {
+      syncConsoleAccountAfterMutation(queryClient, {
+        apiResult: updatedAccount,
+      })
     },
   })
 
@@ -2422,8 +2563,10 @@ export function useImageTransformSavedPresets(
         ...buildSavedImageTransformPresetsPrefs(next),
       })
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['account', 'console'] })
+    onSuccess: (updatedAccount) => {
+      syncConsoleAccountAfterMutation(queryClient, {
+        apiResult: updatedAccount,
+      })
     },
   })
 

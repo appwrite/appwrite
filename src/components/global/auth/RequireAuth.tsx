@@ -11,10 +11,7 @@ import { Loader2 } from 'lucide-react'
 import { useConsoleImpersonationRevision } from '@/hooks/use-console-impersonation-revision'
 import { clearConsoleImpersonationSession } from '@/lib/console-impersonation'
 import { isHttpForbiddenError } from '@/lib/utils/error-formatting'
-import {
-  consoleAccountQueryOptions,
-  CONSOLE_ACCOUNT_STALE_TIME_MS,
-} from '@/lib/react-query/hooks/auth'
+import { consoleAccountQueryOptions } from '@/lib/react-query/hooks/auth'
 import { AccountAccessBlockedScreen } from '@/components/global/auth/AccountAccessBlockedScreen'
 import { ConsoleImpersonationBanner } from '@/components/global/shared/ConsoleImpersonationBanner'
 import { getActiveProfileFeatures } from '@/lib/console-profiles'
@@ -292,10 +289,9 @@ export function RequireAuth({
     data: account,
     isLoading,
     error,
-  } = useQuery({
-    ...consoleAccountQueryOptions({ revision: consoleImpersonationRevision }),
-    refetchOnMount: true, // Refetch when component mounts
-  })
+  } = useQuery(
+    consoleAccountQueryOptions({ revision: consoleImpersonationRevision }),
+  )
 
   useAuthErrorNavigation(error, location)
 
@@ -372,10 +368,9 @@ export function useAuth(): AuthData {
     data: account,
     isLoading,
     error,
-  } = useQuery({
-    ...consoleAccountQueryOptions({ revision: consoleImpersonationRevision }),
-    refetchOnMount: true,
-  })
+  } = useQuery(
+    consoleAccountQueryOptions({ revision: consoleImpersonationRevision }),
+  )
 
   useAuthErrorNavigation(error, location)
 

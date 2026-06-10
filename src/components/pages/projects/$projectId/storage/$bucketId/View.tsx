@@ -34,6 +34,8 @@ import {
   fileQueryOptions,
   getBucketFromProjectCaches,
   getConsoleAccountFromCache,
+  fetchConsoleAccount,
+  syncConsoleAccountAfterMutation,
   useStorageFilesTablePaneWidth,
 } from '@/lib/react-query/hooks'
 import { ServiceHeader, type Tab } from '../../shared/ServiceHeader'
@@ -1206,7 +1208,9 @@ export function View() {
     let cancelled = false
     void (async () => {
       try {
-        const acct = await sdk.forConsole.account.get()
+        const acct =
+          account ??
+          (await fetchConsoleAccount())
         if (cancelled) return
         const raw = getStorageFilesListColumnWidthsFromPrefs(
           acct.prefs as UserPrefs | undefined,
@@ -1265,13 +1269,17 @@ export function View() {
   const persistFileListColumnWidths = useCallback(
     async (widths: Record<StorageFilesListColumnWidthKey, number>) => {
       try {
-        const acct = await sdk.forConsole.account.get()
+        const acct = await fetchConsoleAccount()
         const prefs = mergeStorageFilesListColumnWidthsIntoPrefs(
           (acct.prefs || {}) as UserPrefs,
           widths as Record<string, number>,
         )
-        await sdk.forConsole.account.updatePrefs({ prefs })
-        queryClient.invalidateQueries({ queryKey: ['account', 'console'] })
+        const updatedAccount = await sdk.forConsole.account.updatePrefs({
+          prefs,
+        })
+        syncConsoleAccountAfterMutation(queryClient, {
+          apiResult: updatedAccount,
+        })
       } catch {
         /* preference save is best-effort */
       }

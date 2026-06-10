@@ -92,6 +92,8 @@ import {
   createProjectTableIndex,
   deleteProjectTableIndex,
   useProjectTableIndexes,
+  fetchConsoleAccount,
+  syncConsoleAccountAfterMutation,
 } from '@/lib/react-query/hooks'
 import {
   COLUMNS_INDEXES_DEFAULT_PAGE_SIZE,
@@ -3555,15 +3557,19 @@ export function RowsSpreadsheet({
         }
       }
       try {
-        const acct = await sdk.forConsole.account.get()
+        const acct = await fetchConsoleAccount()
         const prefs = mergeDatabaseTableRowColumnWidthsTableIntoPrefs(
           (acct.prefs || {}) as UserPrefs,
           databaseId,
           tableId,
           pruned,
         )
-        await sdk.forConsole.account.updatePrefs({ prefs })
-        queryClient.invalidateQueries({ queryKey: ['account', 'console'] })
+        const updatedAccount = await sdk.forConsole.account.updatePrefs({
+          prefs,
+        })
+        syncConsoleAccountAfterMutation(queryClient, {
+          apiResult: updatedAccount,
+        })
       } catch {
         /* preference save is best-effort */
       }
@@ -8607,21 +8613,21 @@ export function TableSettings({
     },
     onSuccess: async () => {
       try {
-        const acct = await sdk.forConsole.account.get()
+        const acct = await fetchConsoleAccount()
         const prefsAfterWidths = deleteDatabaseTableRowColumnWidthsFromPrefs(
           (acct.prefs || {}) as UserPrefs,
           databaseId,
           tableId,
         )
-        await sdk.forConsole.account.updatePrefs({
+        const updatedAccount = await sdk.forConsole.account.updatePrefs({
           prefs: deleteTablesDbRowsListColumnsFromPrefs(
             prefsAfterWidths,
             databaseId,
             tableId,
           ),
         })
-        await queryClient.invalidateQueries({
-          queryKey: ['account', 'console'],
+        syncConsoleAccountAfterMutation(queryClient, {
+          apiResult: updatedAccount,
         })
       } catch {
         // Silently handle preference deletion error

@@ -1,3 +1,5 @@
+import { clearConsoleAccountCache } from '@/lib/console-account-cache'
+
 /**
  * Console operator impersonation (Console Auth users via console SDK - not project Auth users).
  * Persists target user id in sessionStorage so impersonation headers can be restored after refresh.
@@ -103,6 +105,7 @@ export function clearConsoleImpersonationSession(
 export function notifyConsoleImpersonationChanged() {
   if (typeof window === 'undefined') return
   consoleAccountQueryRevision += 1
+  clearConsoleAccountCache()
   window.dispatchEvent(new Event(CONSOLE_IMPERSONATION_CHANGED_EVENT))
 }
 

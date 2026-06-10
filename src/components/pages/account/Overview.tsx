@@ -2,7 +2,12 @@ import { useState, useEffect, useRef, type FormEvent } from 'react'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
 import { sdk } from '@/lib/appwrite/sdk'
-import { useAccountIdentities, useMFAFactors } from '@/lib/react-query/hooks'
+import {
+  clearConsoleAccountCache,
+  syncConsoleAccountAfterMutation,
+  useAccountIdentities,
+  useMFAFactors,
+} from '@/lib/react-query/hooks'
 import { useAuth } from '@/components/global/auth/RequireAuth'
 import { useConsoleProfile } from '@/hooks/use-console-profile'
 import { Button } from '@/components/ui/button'
@@ -127,8 +132,11 @@ function UpdateNameSection() {
     mutationFn: async (newName: string) => {
       return await sdk.forConsole.account.updateName({ name: newName })
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: Dependencies.ACCOUNT })
+    onSuccess: (updatedAccount, newName) => {
+      syncConsoleAccountAfterMutation(queryClient, {
+        apiResult: updatedAccount,
+        patch: { name: newName },
+      })
       toast.success('Name has been updated')
     },
     onError: (error: Error) => {
@@ -214,8 +222,11 @@ function UpdateEmailSection() {
     }) => {
       return await sdk.forConsole.account.updateEmail({ email, password })
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: Dependencies.ACCOUNT })
+    onSuccess: (updatedAccount, { email }) => {
+      syncConsoleAccountAfterMutation(queryClient, {
+        apiResult: updatedAccount,
+        patch: { email },
+      })
       queryClient.invalidateQueries({ queryKey: Dependencies.FACTORS })
       setEmailPassword('')
       toast.success('Email has been updated')
@@ -327,8 +338,10 @@ function UpdatePasswordSection() {
         oldPassword,
       })
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: Dependencies.ACCOUNT })
+    onSuccess: (updatedAccount) => {
+      syncConsoleAccountAfterMutation(queryClient, {
+        apiResult: updatedAccount,
+      })
       setOldPassword('')
       setNewPassword('')
       toast.success('Password has been updated')
@@ -621,8 +634,11 @@ function MFASection() {
     mutationFn: async (mfa: boolean) => {
       return await sdk.forConsole.account.updateMFA({ mfa })
     },
-    onSuccess: async (_, mfa) => {
-      queryClient.invalidateQueries({ queryKey: Dependencies.ACCOUNT })
+    onSuccess: async (updatedAccount, mfa) => {
+      syncConsoleAccountAfterMutation(queryClient, {
+        apiResult: updatedAccount,
+        patch: { mfa },
+      })
       queryClient.invalidateQueries({ queryKey: Dependencies.FACTORS })
 
       // Auto-setup email MFA if enabling MFA and email is verified but email MFA not set up
@@ -770,9 +786,11 @@ function TOTPMethod({ factors }: { factors: Models.MfaFactors }) {
         otp: code,
       })
     },
-    onSuccess: () => {
+    onSuccess: (updatedAccount) => {
       queryClient.invalidateQueries({ queryKey: Dependencies.FACTORS })
-      queryClient.invalidateQueries({ queryKey: Dependencies.ACCOUNT })
+      syncConsoleAccountAfterMutation(queryClient, {
+        apiResult: updatedAccount,
+      })
       setSetupDialogOpen(false)
       setVerifyDialogOpen(false)
       resetSetupState()
@@ -1430,7 +1448,8 @@ function DeleteAccountSection() {
       return await sdk.forConsole.account.delete()
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: Dependencies.ACCOUNT })
+      clearConsoleAccountCache()
+      queryClient.removeQueries({ queryKey: Dependencies.ACCOUNT })
       toast.success('Account was deleted')
       // User will be logged out by backend
       window.location.href = '/sign-in'

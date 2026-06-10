@@ -1,3 +1,8 @@
+import {
+  fetchConsoleAccount,
+  getConsoleAccountFromSingleton,
+} from '@/lib/console-account-get'
+
 let originalFetch: typeof globalThis.fetch | null = null
 let activeEndpointPrefixes: string[] = []
 
@@ -22,6 +27,29 @@ function isAppwriteApiRequest(url: string, endpointPrefixes: string[]): boolean 
   } catch {
     return endpointPrefixes.some((prefix) => url.startsWith(prefix))
   }
+}
+
+function isConsoleAccountGetRequest(url: string, method?: string): boolean {
+  const normalizedMethod = (method ?? 'GET').toUpperCase()
+  if (normalizedMethod !== 'GET') return false
+  try {
+    const parsed = new URL(url)
+    return (
+      parsed.pathname === '/v1/account' ||
+      parsed.pathname.endsWith('/v1/account')
+    )
+  } catch {
+    return /\/v1\/account\/?(?:\?|$)/.test(url)
+  }
+}
+
+async function resolveBridgedConsoleAccountResponse(): Promise<Response> {
+  const cached = getConsoleAccountFromSingleton()
+  const account = cached ?? (await fetchConsoleAccount())
+  return new Response(JSON.stringify(account), {
+    status: 200,
+    headers: { 'Content-Type': 'application/json' },
+  })
 }
 
 function buildBridgedHeaders(init?: RequestInit): Headers {
@@ -67,6 +95,14 @@ export function installCliFetchBridge(endpointPrefixes: string[]): void {
       const url = resolveRequestUrl(input)
       if (!isAppwriteApiRequest(url, activeEndpointPrefixes)) {
         return originalFetch!(input, init)
+      }
+
+      if (isConsoleAccountGetRequest(url, init?.method)) {
+        try {
+          return await resolveBridgedConsoleAccountResponse()
+        } catch {
+          /* fall through to network fetch for auth errors */
+        }
       }
 
       const headers = buildBridgedHeaders(init)

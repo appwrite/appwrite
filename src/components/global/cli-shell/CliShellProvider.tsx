@@ -272,7 +272,10 @@ export function CliShellProvider({ projectId, children }: CliShellProviderProps)
   const bootstrapSilentRef = useRef(false)
   const bootstrapReadyAnnouncedRef = useRef(false)
   const bootstrapLastWrittenRef = useRef<string | null>(null)
+  /** Bumped when bootstrap finishes or resets so throttled line timers are ignored. */
+  const bootstrapEpochRef = useRef(0)
   const authInitializedRef = useRef(false)
+  const authInitInFlightRef = useRef<Promise<void> | null>(null)
   const heightBeforeFullscreenRef = useRef<number | null>(null)
 
   const [fullscreen, setFullscreen] = useState(false)
@@ -318,6 +321,12 @@ export function CliShellProvider({ projectId, children }: CliShellProviderProps)
     let shouldShowPrompt = bootstrapReadyAnnouncedRef.current
 
     for (const message of pendingBootstrapMessagesRef.current) {
+      if (
+        message !== CLI_BOOTSTRAP_READY_MESSAGE &&
+        bootstrapReadyAnnouncedRef.current
+      ) {
+        continue
+      }
       if (
         message === CLI_BOOTSTRAP_READY_MESSAGE &&
         bootstrapReadyAnnouncedRef.current
@@ -398,6 +407,12 @@ export function CliShellProvider({ projectId, children }: CliShellProviderProps)
     ) {
       return
     }
+    if (
+      text !== CLI_BOOTSTRAP_READY_MESSAGE &&
+      bootstrapReadyAnnouncedRef.current
+    ) {
+      return
+    }
     if (bootstrapLastWrittenRef.current === text) {
       return
     }
@@ -434,9 +449,19 @@ export function CliShellProvider({ projectId, children }: CliShellProviderProps)
 
   const scheduleBootstrapLine = useCallback(
     (text: string) => {
+      if (
+        text !== CLI_BOOTSTRAP_READY_MESSAGE &&
+        bootstrapReadyAnnouncedRef.current
+      ) {
+        return
+      }
+
+      const scheduleEpoch = bootstrapEpochRef.current
       bootstrapPendingRef.current = text
 
       const flush = () => {
+        if (scheduleEpoch !== bootstrapEpochRef.current) return
+
         bootstrapTimerRef.current = null
         const pending = bootstrapPendingRef.current
         if (pending !== null) {
@@ -464,6 +489,7 @@ export function CliShellProvider({ projectId, children }: CliShellProviderProps)
 
   const finalizeBootstrapLine = useCallback(
     (text: string) => {
+      bootstrapEpochRef.current += 1
       if (bootstrapTimerRef.current !== null) {
         clearTimeout(bootstrapTimerRef.current)
         bootstrapTimerRef.current = null
@@ -475,6 +501,7 @@ export function CliShellProvider({ projectId, children }: CliShellProviderProps)
   )
 
   const resetBootstrapLine = useCallback(() => {
+    bootstrapEpochRef.current += 1
     if (bootstrapTimerRef.current !== null) {
       clearTimeout(bootstrapTimerRef.current)
       bootstrapTimerRef.current = null
@@ -546,42 +573,57 @@ export function CliShellProvider({ projectId, children }: CliShellProviderProps)
   const initializeCliAuth = useCallback(
     async (container: CliShellContainer): Promise<void> => {
       if (authInitializedRef.current || isAccountLoading) return
+      if (authInitInFlightRef.current) {
+        await authInitInFlightRef.current
+        return
+      }
 
       const accountUser = account as Models.User | undefined
       const email = accountUser?.email?.trim()
       if (!email) return
 
-      const auth = await resolveConsoleCliAuth()
-      if (!auth) {
-        throw new Error(
-          'No active console session. Sign in again to use the Appwrite CLI.',
-        )
+      const initPromise = (async () => {
+        const auth = await resolveConsoleCliAuth()
+        if (!auth) {
+          throw new Error(
+            'No active console session. Sign in again to use the Appwrite CLI.',
+          )
+        }
+
+        const projectEndpoint = getProjectApiEndpoint(projectId)
+        const consoleEndpoint = getBaseEndpoint()
+
+        if (auth.mode === 'browser-proxy') {
+          installCliFetchBridge([consoleEndpoint, projectEndpoint])
+        } else {
+          removeCliFetchBridge()
+        }
+
+        syncCliAuthFiles(container.vfs, {
+          projectId,
+          projectEndpoint,
+          consoleEndpoint,
+          email,
+          auth,
+        })
+
+        syncCliProjectConfig(container.vfs, {
+          projectId,
+          projectEndpoint,
+          organizationId,
+        })
+
+        authInitializedRef.current = true
+      })()
+
+      authInitInFlightRef.current = initPromise
+      try {
+        await initPromise
+      } finally {
+        if (authInitInFlightRef.current === initPromise) {
+          authInitInFlightRef.current = null
+        }
       }
-
-      const projectEndpoint = getProjectApiEndpoint(projectId)
-      const consoleEndpoint = getBaseEndpoint()
-
-      if (auth.mode === 'browser-proxy') {
-        installCliFetchBridge([consoleEndpoint, projectEndpoint])
-      } else {
-        removeCliFetchBridge()
-      }
-
-      syncCliAuthFiles(container.vfs, {
-        projectId,
-        projectEndpoint,
-        consoleEndpoint,
-        email,
-        auth,
-      })
-
-      syncCliProjectConfig(container.vfs, {
-        projectId,
-        projectEndpoint,
-        organizationId,
-      })
-
-      authInitializedRef.current = true
     },
     [account, isAccountLoading, organizationId, projectId],
   )
@@ -646,16 +688,16 @@ export function CliShellProvider({ projectId, children }: CliShellProviderProps)
           projectBootstrap.container = container
           projectBootstrap.promise = null
 
-          try {
-            await initializeCliAuth(container)
-            setBootstrapError(null)
-          } catch (error: unknown) {
-            const message =
-              error instanceof Error
-                ? error.message
-                : 'Failed to configure Appwrite CLI session.'
-            setBootstrapError(message)
-            if (!bootstrapSilentRef.current) {
+          if (!bootstrapSilentRef.current) {
+            try {
+              await initializeCliAuth(container)
+              setBootstrapError(null)
+            } catch (error: unknown) {
+              const message =
+                error instanceof Error
+                  ? error.message
+                  : 'Failed to configure Appwrite CLI session.'
+              setBootstrapError(message)
               resetBootstrapLine()
               writeStderrLine(message)
             }
@@ -711,6 +753,7 @@ export function CliShellProvider({ projectId, children }: CliShellProviderProps)
   }, [organizationId, projectId])
 
   useEffect(() => {
+    if (!open) return
     const container = containerRef.current
     if (!container || isAccountLoading || authInitializedRef.current) return
     void initializeCliAuth(container)
@@ -722,13 +765,14 @@ export function CliShellProvider({ projectId, children }: CliShellProviderProps)
             : 'Failed to configure Appwrite CLI session.'
         setBootstrapError(message)
       })
-  }, [account, initializeCliAuth, isAccountLoading])
+  }, [open, account, initializeCliAuth, isAccountLoading])
 
   const retryBootstrap = useCallback(() => {
     containerRef.current = null
     bootstrapPromiseRef.current = null
     bootstrapReadyAnnouncedRef.current = false
     authInitializedRef.current = false
+    authInitInFlightRef.current = null
     const projectBootstrap = getProjectBootstrapState(projectId)
     projectBootstrap.container = null
     projectBootstrap.promise = null
@@ -755,7 +799,8 @@ export function CliShellProvider({ projectId, children }: CliShellProviderProps)
   }, [retryBootstrap])
 
   useEffect(() => {
-    void ensureRuntime({ silent: !open }).catch(() => {})
+    if (!open) return
+    void ensureRuntime({ silent: false }).catch(() => {})
   }, [ensureRuntime, open])
 
   useEffect(() => {
@@ -764,6 +809,7 @@ export function CliShellProvider({ projectId, children }: CliShellProviderProps)
     bootstrapReadyAnnouncedRef.current = false
     bootstrapLastWrittenRef.current = null
     authInitializedRef.current = false
+    authInitInFlightRef.current = null
     deleteProjectBootstrapState(projectId)
     setStatus('idle')
     setBootstrapError(null)
@@ -1094,6 +1140,18 @@ export function CliShellProvider({ projectId, children }: CliShellProviderProps)
       }
 
       if (isAppwriteCliCommand(rawCommand) && !authInitializedRef.current) {
+        try {
+          await initializeCliAuth(container)
+        } catch (error: unknown) {
+          const message =
+            error instanceof Error
+              ? error.message
+              : 'Failed to configure Appwrite CLI session.'
+          setBootstrapError(message)
+        }
+      }
+
+      if (isAppwriteCliCommand(rawCommand) && !authInitializedRef.current) {
         writeStderrLine(
           bootstrapError ??
             'Appwrite CLI session is not ready. Retry setup or refresh the page.',
@@ -1180,6 +1238,7 @@ export function CliShellProvider({ projectId, children }: CliShellProviderProps)
     [
       bootstrapError,
       ensureRuntime,
+      initializeCliAuth,
       showInputPromptIfIdle,
       writeStderrLine,
       writeSystemLine,

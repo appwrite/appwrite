@@ -19,25 +19,51 @@ const SECRET =
   ''
 const CACHE_TTL_MS = 60 * 60 * 1000 // 1 hour
 
-/** Cached server timestamp and local time it was observed (for interpolation). */
-let serverTimeCache: { serverSecs: number; fetchedAtMs: number } | null = null
-let serverTimeSyncPromise: Promise<void> | null = null
+const GLOBAL_SERVER_TIME_KEY = '__vibesFingerprintServerTime__'
+
+type ServerTimeCache = { serverSecs: number; fetchedAtMs: number }
+
+type FingerprintServerTimeGlobal = {
+  cache: ServerTimeCache | null
+  inflight: Map<string, Promise<void>>
+}
+
+function getFingerprintServerTimeGlobal(): FingerprintServerTimeGlobal {
+  const g = globalThis as typeof globalThis & {
+    [GLOBAL_SERVER_TIME_KEY]?: FingerprintServerTimeGlobal
+  }
+  if (!g[GLOBAL_SERVER_TIME_KEY]) {
+    g[GLOBAL_SERVER_TIME_KEY] = {
+      cache: null,
+      inflight: new Map(),
+    }
+  }
+  return g[GLOBAL_SERVER_TIME_KEY]
+}
+
+function serverTimeSyncKey(endpoint: string, projectId: string): string {
+  return `${endpoint.replace(/\/$/, '')}|${projectId}`
+}
 
 /**
  * Record server unix time (seconds). Only the first successful sync is kept, matching
  * console/src/lib/helpers/fingerprint.ts.
  */
 export function syncServerTime(serverTimeSecs: number): void {
-  if (serverTimeCache) return
-  serverTimeCache = { serverSecs: serverTimeSecs, fetchedAtMs: Date.now() }
+  const state = getFingerprintServerTimeGlobal()
+  if (state.cache) return
+  state.cache = { serverSecs: serverTimeSecs, fetchedAtMs: Date.now() }
 }
 
 /** Clear cached server clock (e.g. when the API endpoint changes in debug menu). */
 export function resetFingerprintServerTimeCache(): void {
-  serverTimeCache = null
+  const state = getFingerprintServerTimeGlobal()
+  state.cache = null
+  state.inflight.clear()
 }
 
 function getServerTimestamp(): number {
+  const serverTimeCache = getFingerprintServerTimeGlobal().cache
   if (!serverTimeCache) {
     return Math.floor(Date.now() / 1000)
   }
@@ -56,14 +82,18 @@ export function ensureFingerprintServerTimeSynced(
   endpoint: string,
   projectId: string,
 ): Promise<void> {
-  if (serverTimeCache) return Promise.resolve()
-  if (serverTimeSyncPromise) return serverTimeSyncPromise
+  const state = getFingerprintServerTimeGlobal()
+  if (state.cache) return Promise.resolve()
   if (!endpoint?.trim() || !projectId?.trim()) {
     return Promise.resolve()
   }
 
+  const key = serverTimeSyncKey(endpoint, projectId)
+  const existing = state.inflight.get(key)
+  if (existing) return existing
+
   const url = `${endpoint.replace(/\/$/, '')}/health/version`
-  serverTimeSyncPromise = fetch(url, {
+  const promise = fetch(url, {
     headers: { 'X-Appwrite-Project': projectId },
   })
     .then((response) => {
@@ -77,10 +107,14 @@ export function ensureFingerprintServerTimeSynced(
       /* fall back to local clock in getServerTimestamp */
     })
     .finally(() => {
-      serverTimeSyncPromise = null
+      const globalState = getFingerprintServerTimeGlobal()
+      if (globalState.inflight.get(key) === promise) {
+        globalState.inflight.delete(key)
+      }
     })
 
-  return serverTimeSyncPromise
+  state.inflight.set(key, promise)
+  return promise
 }
 
 async function sha256(message: string): Promise<string> {

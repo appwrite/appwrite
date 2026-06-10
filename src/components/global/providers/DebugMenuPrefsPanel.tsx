@@ -7,6 +7,9 @@ import { toast } from 'sonner'
 import { sdk } from '@/lib/appwrite/sdk'
 import { useConsoleImpersonationRevision } from '@/hooks/use-console-impersonation-revision'
 import {
+  commitConsoleAccountToCaches,
+  CONSOLE_ACCOUNT_STALE_TIME_MS,
+  fetchConsoleAccount,
   updateAccountPrefs,
   updateConsoleTeamPrefs,
   useConsoleTeam,
@@ -79,8 +82,9 @@ export function DebugMenuPrefsPanel() {
     refetch: refetchAccount,
   } = useQuery({
     queryKey: ['account', 'console', consoleImpersonationRevision],
-    queryFn: () => sdk.forConsole.account.get(),
-    staleTime: 0,
+    queryFn: () =>
+      fetchConsoleAccount({ revision: consoleImpersonationRevision }),
+    staleTime: CONSOLE_ACCOUNT_STALE_TIME_MS,
     retry: false,
   })
 
@@ -113,9 +117,17 @@ export function DebugMenuPrefsPanel() {
     setTeamDraft(stringifyPrefs(team.prefs as Record<string, unknown>))
   }, [resolvedTeamId, team])
 
-  const invalidateAccount = useCallback(() => {
-    void queryClient.invalidateQueries({ queryKey: ['account', 'console'] })
-  }, [queryClient])
+  const invalidateAccount = useCallback(async () => {
+    const refreshed = await fetchConsoleAccount({
+      revision: consoleImpersonationRevision,
+      force: true,
+    })
+    commitConsoleAccountToCaches(
+      queryClient,
+      refreshed,
+      consoleImpersonationRevision,
+    )
+  }, [consoleImpersonationRevision, queryClient])
 
   const invalidateTeam = useCallback(() => {
     if (!resolvedTeamId) return
