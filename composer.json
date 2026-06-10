@@ -37,6 +37,12 @@
     },
     "minimum-stability": "dev",
     "prefer-stable": true,
+    "repositories": [
+        {
+            "type": "vcs",
+            "url": "https://github.com/utopia-php/migration"
+        }
+    ],
     "require": {
         "php": ">=8.3.0",
         "ext-curl": "*",
@@ -77,7 +83,7 @@
         "utopia-php/lock": "0.2.*",
         "utopia-php/logger": "0.8.*",
         "utopia-php/messaging": "1.0.*",
-        "utopia-php/migration": "1.*",
+        "utopia-php/migration": "dev-feat/drop-compound-resource-id#183f0e25080b1d29bd78a9b9f81cb2479fd6a594 as 1.14.0",
         "utopia-php/platform": "1.0.0-rc5",
         "utopia-php/pools": "1.*",
         "utopia-php/span": "3.0.*",
