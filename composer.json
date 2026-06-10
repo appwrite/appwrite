@@ -80,7 +80,7 @@
         "utopia-php/migration": "1.*",
         "utopia-php/platform": "1.0.0-rc5",
         "utopia-php/pools": "1.*",
-        "utopia-php/span": "1.1.*",
+        "utopia-php/span": "3.0.*",
         "utopia-php/preloader": "0.2.*",
         "utopia-php/queue": "0.20.*",
         "utopia-php/servers": "0.4.*",

@@ -30,6 +30,7 @@ use Utopia\Database\Exception\Conflict;
 use Utopia\Database\Exception\Duplicate;
 use Utopia\Database\Exception\Restricted;
 use Utopia\Database\Exception\Structure;
+use Utopia\Database\Exception\Transaction as TransactionException;
 use Utopia\Database\Query;
 use Utopia\Detector\Detection\Rendering\SSR;
 use Utopia\Detector\Detection\Rendering\XStatic;
@@ -247,6 +248,7 @@ class Builds extends Action
             ->setParam('deploymentId', $deployment->getId());
 
         if ($deployment->getAttribute('status') === 'canceled') {
+            $resource = $this->updateLatestDeployment($dbForProject, $resource);
             $this->cancelDeployment($deployment->getId(), $dbForProject, $queueForRealtime);
 
             return;
@@ -261,9 +263,7 @@ class Builds extends Action
             'status' => 'processing',
         ]));
 
-        if ($deployment->getSequence() === $resource->getAttribute('latestDeploymentInternalId', '')) {
-            $resource = $dbForProject->updateDocument($resource->getCollection(), $resource->getId(), new Document(['latestDeploymentStatus' => $deployment->getAttribute('status', '')]));
-        }
+        $resource = $this->updateLatestDeployment($dbForProject, $resource);
 
         Span::add('deployment.status', 'processing');
 
@@ -537,9 +537,7 @@ class Builds extends Action
             ]));
             Span::add('deployment.status', 'building');
 
-            if ($deployment->getSequence() === $resource->getAttribute('latestDeploymentInternalId', '')) {
-                $resource = $dbForProject->updateDocument($resource->getCollection(), $resource->getId(), new Document(['latestDeploymentStatus' => $deployment->getAttribute('status', '')]));
-            }
+            $resource = $this->updateLatestDeployment($dbForProject, $resource);
 
             $queueForRealtime
                 ->setPayload($deployment->getArrayCopy())
@@ -690,25 +688,7 @@ class Builds extends Action
                         } else {
                             $outputDirectory = $deployment->getAttribute('buildOutput') ?? $resource->getAttribute('outputDirectory');
                             if ($resource->getCollection() === 'sites') {
-                                $listFilesCommand = '';
-
-                                // Start separation, enter build folder
-                                $listFilesCommand .= 'echo "{APPWRITE_DETECTION_SEPARATOR_START}" && cd /usr/local/build';
-
-                                // Enter output directory, if set
-                                if (! empty($outputDirectory)) {
-                                    $listFilesCommand .= ' && cd ' . \escapeshellarg($outputDirectory);
-                                }
-
-                                // Print files, and end separation
-                                $listFilesCommand .= ' && find . -name \'node_modules\' -prune -o -type f -print && echo "{APPWRITE_DETECTION_SEPARATOR_END}"';
-
-                                // Use SSR file listing
-                                if (empty($command)) {
-                                    $command = $listFilesCommand;
-                                } else {
-                                    $command .= ' && ' . $listFilesCommand;
-                                }
+                                $command = $this->prepareSiteBuildCommand($command, $outputDirectory ?? '');
                             }
 
                             $command = 'tar -zxf /tmp/code.tar.gz -C /mnt/code && helpers/build.sh ' . \trim(\escapeshellarg($command));
@@ -875,31 +855,13 @@ class Builds extends Action
                 $logs .= $log['content'];
             }
 
-            // Separate logs for SSR detection
-            $detectionLogs = '';
-            if (\str_contains($logs, '{APPWRITE_DETECTION_SEPARATOR_START}')) {
-                [$logsBefore, $detectionLogsStart] = \explode('{APPWRITE_DETECTION_SEPARATOR_START}', $logs, 2);
-                [$detectionLogs, $logsAfter] = \explode('{APPWRITE_DETECTION_SEPARATOR_END}', $detectionLogsStart, 2);
-                $logs = $logsBefore . $logsAfter;
-            }
+            ['logs' => $logs, 'detectionLogs' => $detectionLogs] = $this->splitSiteDetectionLogs($logs);
 
             $deployment->setAttribute('buildLogs', $logs);
 
             $adapter = null;
             if ($resource->getCollection() === 'sites' && ! empty($detectionLogs)) {
-                $files = \explode("\n", $detectionLogs); // Parse output
-                $files = \array_filter($files); // Remove empty
-                $files = \array_map(fn ($file) => \trim($file), $files); // Remove whitepsaces
-                $files = \array_map(fn ($file) => \str_starts_with($file, './') ? \substr($file, 2) : $file, $files); // Remove beginning ./
-
-                $detector = new Rendering($resource->getAttribute('framework', ''));
-                foreach ($files as $file) {
-                    $detector->addInput($file);
-                }
-                $detector
-                    ->addOption(new SSR())
-                    ->addOption(new XStatic());
-                $detection = $detector->detect();
+                $detection = $this->detectSiteRendering($resource->getAttribute('framework', ''), $detectionLogs);
 
                 $adapter = $resource->getAttribute('adapter', '');
                 if (empty($adapter)) {
@@ -934,16 +896,21 @@ class Builds extends Action
             $deployment->setAttribute('buildLogs', $logs);
 
             /** Update the status */
+            $endTime = DateTime::now();
+            $durationEnd = \microtime(true);
+            $deployment->setAttribute('buildEndedAt', $endTime);
+            $deployment->setAttribute('buildDuration', \intval(\ceil($durationEnd - $durationStart)));
             $deployment->setAttribute('status', 'ready');
             $deployment = $dbForProject->updateDocument('deployments', $deploymentId, new Document([
+                'buildEndedAt' => $deployment->getAttribute('buildEndedAt'),
+                'buildDuration' => $deployment->getAttribute('buildDuration'),
                 'buildLogs' => $deployment->getAttribute('buildLogs'),
                 'status' => 'ready',
             ]));
             Span::add('deployment.status', 'ready');
+            Span::add('build.duration', $deployment->getAttribute('buildDuration'));
 
-            if ($deployment->getSequence() === $resource->getAttribute('latestDeploymentInternalId', '')) {
-                $resource = $dbForProject->updateDocument($resource->getCollection(), $resource->getId(), new Document(['latestDeploymentStatus' => $deployment->getAttribute('status', '')]));
-            }
+            $resource = $this->updateLatestDeployment($dbForProject, $resource);
 
             if ($isVcsEnabled) {
                 $this->runGitAction('ready', $github, $providerCommitHash, $owner, $repositoryName, $project, $resource, $deployment->getId(), $dbForProject, $dbForPlatform, $queueForRealtime, $platform);
@@ -1030,6 +997,8 @@ class Builds extends Action
                 Span::add('build.activated', true);
             }
 
+            $resource = $this->updateLatestDeployment($dbForProject, $resource);
+
             $this->afterDeploymentSuccess(
                 $project,
                 $deployment,
@@ -1099,13 +1068,6 @@ class Builds extends Action
                 }
             }
 
-            $endTime = DateTime::now();
-            $durationEnd = \microtime(true);
-            $deployment = $dbForProject->updateDocument('deployments', $deployment->getId(), new Document([
-                'buildEndedAt' => $endTime,
-                'buildDuration' => \intval(\ceil($durationEnd - $durationStart)),
-            ]));
-            Span::add('build.duration', $deployment->getAttribute('buildDuration'));
             $queueForRealtime
                 ->setPayload($deployment->getArrayCopy())
                 ->trigger();
@@ -1186,9 +1148,7 @@ class Builds extends Action
                 'buildLogs' => $message,
             ]));
 
-            if ($deployment->getSequence() === $resource->getAttribute('latestDeploymentInternalId', '')) {
-                $resource = $dbForProject->updateDocument($resource->getCollection(), $resource->getId(), new Document(['latestDeploymentStatus' => $deployment->getAttribute('status', '')]));
-            }
+            $resource = $this->updateLatestDeployment($dbForProject, $resource);
 
             $queueForRealtime
                 ->setPayload($deployment->getArrayCopy())
@@ -1337,6 +1297,62 @@ class Builds extends Action
         return '';
     }
 
+    protected function prepareSiteBuildCommand(string $command, string $outputDirectory): string
+    {
+        $listFilesCommand = 'echo "{APPWRITE_DETECTION_SEPARATOR_START}" && cd /usr/local/build';
+
+        if (! empty($outputDirectory)) {
+            $listFilesCommand .= ' && cd ' . \escapeshellarg($outputDirectory);
+        }
+
+        $listFilesCommand .= ' && find . -name \'node_modules\' -prune -o -type f -print && echo "{APPWRITE_DETECTION_SEPARATOR_END}"';
+
+        if (empty($command)) {
+            return $listFilesCommand;
+        }
+
+        return "{$command} && {$listFilesCommand}";
+    }
+
+    /**
+     * @return array{logs: string, detectionLogs: string}
+     */
+    protected function splitSiteDetectionLogs(string $logs): array
+    {
+        if (! \str_contains($logs, '{APPWRITE_DETECTION_SEPARATOR_START}')) {
+            return [
+                'logs' => $logs,
+                'detectionLogs' => '',
+            ];
+        }
+
+        [$logsBefore, $detectionLogsStart] = \explode('{APPWRITE_DETECTION_SEPARATOR_START}', $logs, 2);
+        [$detectionLogs, $logsAfter] = \explode('{APPWRITE_DETECTION_SEPARATOR_END}', $detectionLogsStart, 2);
+
+        return [
+            'logs' => "{$logsBefore}{$logsAfter}",
+            'detectionLogs' => $detectionLogs,
+        ];
+    }
+
+    protected function detectSiteRendering(string $framework, string $detectionLogs): object
+    {
+        $files = \explode("\n", $detectionLogs);
+        $files = \array_filter($files);
+        $files = \array_map(\trim(...), $files);
+        $files = \array_map(fn ($file) => \str_starts_with($file, './') ? \substr($file, 2) : $file, $files);
+
+        $detector = new Rendering($framework);
+        foreach ($files as $file) {
+            $detector->addInput($file);
+        }
+
+        return $detector
+            ->addOption(new SSR())
+            ->addOption(new XStatic())
+            ->detect();
+    }
+
     /**
      * @throws Structure
      * @throws \Utopia\Database\Exception
@@ -1476,20 +1492,61 @@ class Builds extends Action
         }
     }
 
+    private function updateLatestDeployment(Database $dbForProject, Document $resource): Document
+    {
+        $latestDeployment = $dbForProject->findOne('deployments', [
+            Query::equal('resourceType', [$resource->getCollection()]),
+            Query::equal('resourceInternalId', [$resource->getSequence()]),
+            Query::orderDesc('$createdAt'),
+        ]);
+
+        $updates = $latestDeployment->isEmpty()
+            ? [
+                'latestDeploymentCreatedAt' => '',
+                'latestDeploymentInternalId' => '',
+                'latestDeploymentId' => '',
+                'latestDeploymentStatus' => '',
+            ]
+            : [
+                'latestDeploymentCreatedAt' => $latestDeployment->getCreatedAt(),
+                'latestDeploymentInternalId' => $latestDeployment->getSequence(),
+                'latestDeploymentId' => $latestDeployment->getId(),
+                'latestDeploymentStatus' => $latestDeployment->getAttribute('status', ''),
+            ];
+
+        return $dbForProject->updateDocument(
+            $resource->getCollection(),
+            $resource->getId(),
+            new Document($updates)
+        );
+    }
+
     private function cancelDeployment(string $deploymentId, Database $dbForProject, Realtime $queueForRealtime)
     {
         Span::add('deployment.status', 'canceled');
 
-        $deployment = $dbForProject->getDocument('deployments', $deploymentId);
+        $attempts = 0;
 
-        $logs = $deployment->getAttribute('buildLogs', '');
-        $date = \date('H:i:s');
-        $logs .= "\033[90m[$date] \033[90m[\033[0mappwrite\033[90m]\033[33m Build has been canceled. \033[0m\n";
+        while (true) {
+            try {
+                $deployment = $dbForProject->getDocument('deployments', $deploymentId);
 
-        $deployment->setAttribute('buildLogs', $logs);
-        $deployment = $dbForProject->updateDocument('deployments', $deployment->getId(), new Document([
-            'buildLogs' => $deployment->getAttribute('buildLogs'),
-        ]));
+                $logs = $deployment->getAttribute('buildLogs', '');
+                $date = \date('H:i:s');
+                $logs .= "\033[90m[$date] \033[90m[\033[0mappwrite\033[90m]\033[33m Build has been canceled. \033[0m\n";
+
+                $deployment->setAttribute('buildLogs', $logs);
+                $deployment = $dbForProject->updateDocument('deployments', $deployment->getId(), new Document([
+                    'buildLogs' => $deployment->getAttribute('buildLogs'),
+                ]));
+
+                break;
+            } catch (TransactionException $exception) {
+                if (++$attempts >= 5) {
+                    throw $exception;
+                }
+            }
+        }
 
         $queueForRealtime
             ->setPayload($deployment->getArrayCopy())

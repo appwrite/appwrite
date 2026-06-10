@@ -70,28 +70,20 @@ class Swagger2 extends Format
             ],
         ];
 
-        if (isset($output['securityDefinitions']['Project'])) {
-            $output['securityDefinitions']['Project']['x-appwrite'] = ['demo' => '<YOUR_PROJECT_ID>'];
-        }
-
-        if (isset($output['securityDefinitions']['ProjectQuery'])) {
-            $output['securityDefinitions']['ProjectQuery']['x-appwrite'] = ['demo' => '<YOUR_PROJECT_ID>'];
-        }
-
-        if (isset($output['securityDefinitions']['Key'])) {
-            $output['securityDefinitions']['Key']['x-appwrite'] = ['demo' => '<YOUR_API_KEY>'];
-        }
-
-        if (isset($output['securityDefinitions']['JWT'])) {
-            $output['securityDefinitions']['JWT']['x-appwrite'] = ['demo' => '<YOUR_JWT>'];
-        }
-
-        if (isset($output['securityDefinitions']['Locale'])) {
-            $output['securityDefinitions']['Locale']['x-appwrite'] = ['demo' => 'en'];
-        }
-
-        if (isset($output['securityDefinitions']['Mode'])) {
-            $output['securityDefinitions']['Mode']['x-appwrite'] = ['demo' => ''];
+        foreach ([
+            'Project' => '<YOUR_PROJECT_ID>',
+            'ProjectPath' => '<YOUR_PROJECT_ID>',
+            'Key' => '<YOUR_API_KEY>',
+            'JWT' => '<YOUR_JWT>',
+            'Locale' => 'en',
+            'Mode' => '',
+        ] as $key => $demo) {
+            if (isset($output['securityDefinitions'][$key])) {
+                $output['securityDefinitions'][$key]['x-appwrite'] = \array_merge(
+                    $output['securityDefinitions'][$key]['x-appwrite'] ?? [],
+                    ['demo' => $demo]
+                );
+            }
         }
 
         $usedModels = [];
@@ -474,6 +466,9 @@ class Swagger2 extends Format
                             $node['x-upload-id'] = true;
                         }
                         $node['type'] = $validator->getType();
+                        $node['x-appwrite'] = [
+                            'idGenerator' => 'ID.unique',
+                        ];
                         $node['x-example'] = ($param['example'] ?? '') ?: '<' . \strtoupper(Template::fromCamelCaseToSnake($node['name'])) . '>';
                         break;
                     case \Utopia\Database\Validator\Datetime::class:
@@ -563,6 +558,7 @@ class Swagger2 extends Format
                         $node['x-example'] = ($param['example'] ?? '') ?: '["' . Role::any()->toString() . '"]';
                         break;
                     case \Appwrite\Auth\Validator\Password::class:
+                    case \Appwrite\SDK\Specification\Validator\PasswordFormat::class:
                         $node['type'] = $validator->getType();
                         $node['format'] = 'password';
                         $node['x-example'] = ($param['example'] ?? '') ?: 'password';
@@ -778,6 +774,10 @@ class Swagger2 extends Format
                         $body['schema']['properties'][$name]['x-enum-keys'] = $node['x-enum-keys'];
                     }
 
+                    if (isset($node['x-appwrite'])) {
+                        $body['schema']['properties'][$name]['x-appwrite'] = $node['x-appwrite'];
+                    }
+
                     if ($parameter['nullable']) {
                         $body['schema']['properties'][$name]['x-nullable'] = true;
                     }
@@ -846,7 +846,7 @@ class Swagger2 extends Format
                 }
 
                 $type = '';
-                $format = null;
+                $format = $rule['format'] ?? null;
                 $items = null;
 
                 $examples[$name] = $rule['example'] ?? null;

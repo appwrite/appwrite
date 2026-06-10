@@ -139,11 +139,15 @@ class Specs extends Action
                     'description' => 'Your project ID',
                     'in' => 'header',
                 ],
-                'ProjectQuery' => [
+                'ProjectPath' => [
                     'type' => 'apiKey',
                     'name' => 'project',
                     'description' => 'Your project ID',
                     'in' => 'query',
+                    'x-appwrite' => [
+                        'location' => 'path',
+                        'param' => 'project_id',
+                    ],
                 ],
                 'JWT' => [
                     'type' => 'apiKey',
@@ -181,35 +185,17 @@ class Specs extends Action
                     'description' => 'Impersonate a user by ID on an already user-authenticated request. Requires the current request to be authenticated as a user with impersonator capability; X-Appwrite-Key alone is not sufficient. Impersonator users are intentionally granted users.read so they can discover a target before impersonation begins. Internal audit logs still attribute actions to the original impersonator and record the impersonated target only in internal audit payload data.',
                     'in' => 'header',
                 ],
-                'ImpersonateUserQuery' => [
-                    'type' => 'apiKey',
-                    'name' => 'impersonateUserId',
-                    'description' => 'Impersonate a user by ID via query param. Used for location-type methods where headers cannot be set.',
-                    'in' => 'query',
-                ],
                 'ImpersonateUserEmail' => [
                     'type' => 'apiKey',
                     'name' => 'X-Appwrite-Impersonate-User-Email',
                     'description' => 'Impersonate a user by email on an already user-authenticated request. Requires the current request to be authenticated as a user with impersonator capability; X-Appwrite-Key alone is not sufficient. Impersonator users are intentionally granted users.read so they can discover a target before impersonation begins. Internal audit logs still attribute actions to the original impersonator and record the impersonated target only in internal audit payload data.',
                     'in' => 'header',
                 ],
-                'ImpersonateUserEmailQuery' => [
-                    'type' => 'apiKey',
-                    'name' => 'impersonateEmail',
-                    'description' => 'Impersonate a user by email via query param. Used for location-type methods where headers cannot be set.',
-                    'in' => 'query',
-                ],
                 'ImpersonateUserPhone' => [
                     'type' => 'apiKey',
                     'name' => 'X-Appwrite-Impersonate-User-Phone',
                     'description' => 'Impersonate a user by phone on an already user-authenticated request. Requires the current request to be authenticated as a user with impersonator capability; X-Appwrite-Key alone is not sufficient. Impersonator users are intentionally granted users.read so they can discover a target before impersonation begins. Internal audit logs still attribute actions to the original impersonator and record the impersonated target only in internal audit payload data.',
                     'in' => 'header',
-                ],
-                'ImpersonateUserPhoneQuery' => [
-                    'type' => 'apiKey',
-                    'name' => 'impersonatePhone',
-                    'description' => 'Impersonate a user by phone via query param. Used for location-type methods where headers cannot be set.',
-                    'in' => 'query',
                 ],
             ],
             APP_SDK_PLATFORM_SERVER => [
@@ -219,11 +205,15 @@ class Specs extends Action
                     'description' => 'Your project ID',
                     'in' => 'header',
                 ],
-                'ProjectQuery' => [
+                'ProjectPath' => [
                     'type' => 'apiKey',
                     'name' => 'project',
                     'description' => 'Your project ID',
                     'in' => 'query',
+                    'x-appwrite' => [
+                        'location' => 'path',
+                        'param' => 'project_id',
+                    ],
                 ],
                 'Key' => [
                     'type' => 'apiKey',
@@ -273,35 +263,17 @@ class Specs extends Action
                     'description' => 'Impersonate a user by ID on an already user-authenticated request. Requires the current request to be authenticated as a user with impersonator capability; X-Appwrite-Key alone is not sufficient. Impersonator users are intentionally granted users.read so they can discover a target before impersonation begins. Internal audit logs still attribute actions to the original impersonator and record the impersonated target only in internal audit payload data.',
                     'in' => 'header',
                 ],
-                'ImpersonateUserQuery' => [
-                    'type' => 'apiKey',
-                    'name' => 'impersonateUserId',
-                    'description' => 'Impersonate a user by ID via query param. Used for location-type methods where headers cannot be set.',
-                    'in' => 'query',
-                ],
                 'ImpersonateUserEmail' => [
                     'type' => 'apiKey',
                     'name' => 'X-Appwrite-Impersonate-User-Email',
                     'description' => 'Impersonate a user by email on an already user-authenticated request. Requires the current request to be authenticated as a user with impersonator capability; X-Appwrite-Key alone is not sufficient. Impersonator users are intentionally granted users.read so they can discover a target before impersonation begins. Internal audit logs still attribute actions to the original impersonator and record the impersonated target only in internal audit payload data.',
                     'in' => 'header',
                 ],
-                'ImpersonateUserEmailQuery' => [
-                    'type' => 'apiKey',
-                    'name' => 'impersonateEmail',
-                    'description' => 'Impersonate a user by email via query param. Used for location-type methods where headers cannot be set.',
-                    'in' => 'query',
-                ],
                 'ImpersonateUserPhone' => [
                     'type' => 'apiKey',
                     'name' => 'X-Appwrite-Impersonate-User-Phone',
                     'description' => 'Impersonate a user by phone on an already user-authenticated request. Requires the current request to be authenticated as a user with impersonator capability; X-Appwrite-Key alone is not sufficient. Impersonator users are intentionally granted users.read so they can discover a target before impersonation begins. Internal audit logs still attribute actions to the original impersonator and record the impersonated target only in internal audit payload data.',
                     'in' => 'header',
-                ],
-                'ImpersonateUserPhoneQuery' => [
-                    'type' => 'apiKey',
-                    'name' => 'impersonatePhone',
-                    'description' => 'Impersonate a user by phone via query param. Used for location-type methods where headers cannot be set.',
-                    'in' => 'query',
                 ],
             ],
             APP_SDK_PLATFORM_CONSOLE => [
@@ -311,11 +283,15 @@ class Specs extends Action
                     'description' => 'Your project ID',
                     'in' => 'header',
                 ],
-                'ProjectQuery' => [
+                'ProjectPath' => [
                     'type' => 'apiKey',
                     'name' => 'project',
                     'description' => 'Your project ID',
                     'in' => 'query',
+                    'x-appwrite' => [
+                        'location' => 'path',
+                        'param' => 'project_id',
+                    ],
                 ],
                 'Key' => [
                     'type' => 'apiKey',
@@ -365,35 +341,17 @@ class Specs extends Action
                     'description' => 'Impersonate a user by ID on an already user-authenticated request. Requires the current request to be authenticated as a user with impersonator capability; X-Appwrite-Key alone is not sufficient. Impersonator users are intentionally granted users.read so they can discover a target before impersonation begins. Internal audit logs still attribute actions to the original impersonator and record the impersonated target only in internal audit payload data.',
                     'in' => 'header',
                 ],
-                'ImpersonateUserQuery' => [
-                    'type' => 'apiKey',
-                    'name' => 'impersonateUserId',
-                    'description' => 'Impersonate a user by ID via query param. Used for location-type methods where headers cannot be set.',
-                    'in' => 'query',
-                ],
                 'ImpersonateUserEmail' => [
                     'type' => 'apiKey',
                     'name' => 'X-Appwrite-Impersonate-User-Email',
                     'description' => 'Impersonate a user by email on an already user-authenticated request. Requires the current request to be authenticated as a user with impersonator capability; X-Appwrite-Key alone is not sufficient. Impersonator users are intentionally granted users.read so they can discover a target before impersonation begins. Internal audit logs still attribute actions to the original impersonator and record the impersonated target only in internal audit payload data.',
                     'in' => 'header',
                 ],
-                'ImpersonateUserEmailQuery' => [
-                    'type' => 'apiKey',
-                    'name' => 'impersonateEmail',
-                    'description' => 'Impersonate a user by email via query param. Used for location-type methods where headers cannot be set.',
-                    'in' => 'query',
-                ],
                 'ImpersonateUserPhone' => [
                     'type' => 'apiKey',
                     'name' => 'X-Appwrite-Impersonate-User-Phone',
                     'description' => 'Impersonate a user by phone on an already user-authenticated request. Requires the current request to be authenticated as a user with impersonator capability; X-Appwrite-Key alone is not sufficient. Impersonator users are intentionally granted users.read so they can discover a target before impersonation begins. Internal audit logs still attribute actions to the original impersonator and record the impersonated target only in internal audit payload data.',
                     'in' => 'header',
-                ],
-                'ImpersonateUserPhoneQuery' => [
-                    'type' => 'apiKey',
-                    'name' => 'impersonatePhone',
-                    'description' => 'Impersonate a user by phone via query param. Used for location-type methods where headers cannot be set.',
-                    'in' => 'query',
                 ],
             ],
         ];

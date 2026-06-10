@@ -10,7 +10,6 @@ use Appwrite\Role;
 use Exception;
 use Utopia\Compression\Compression;
 use Utopia\Config\Config;
-use Utopia\Console;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Helpers\ID;
@@ -18,6 +17,7 @@ use Utopia\Database\Query;
 use Utopia\Fetch\Client as FetchClient;
 use Utopia\Platform\Action;
 use Utopia\Queue\Message;
+use Utopia\Span\Span;
 use Utopia\Storage\Device;
 use Utopia\System\System;
 use Utopia\Telemetry\Adapter as Telemetry;
@@ -59,7 +59,7 @@ class Screenshots extends Action
         Device $deviceForFiles,
         Telemetry $telemetry
     ): void {
-        Console::log('Screenshot action started');
+        Span::add('project.id', $project->getId());
 
         $payload = $message->getPayload();
 
@@ -70,9 +70,8 @@ class Screenshots extends Action
         $screenshotMessage = Screenshot::fromArray($payload);
         $counter = $telemetry->createCounter('worker.screenshots.capture');
 
-        Console::log('Site screenshot started');
-
         $deploymentId = $screenshotMessage->deploymentId;
+        Span::add('deployment.id', $deploymentId);
         $deployment = $dbForProject->getDocument('deployments', $deploymentId);
 
         if ($deployment->isEmpty()) {
@@ -80,11 +79,14 @@ class Screenshots extends Action
         }
 
         $siteId = $deployment->getAttribute('resourceId');
+        Span::add('site.id', $siteId);
         $site = $dbForProject->getDocument('sites', $siteId);
 
         if ($site->isEmpty()) {
             throw new \Exception('Site not found');
         }
+
+        Span::add('site.framework', $site->getAttribute('framework', ''));
 
         // Realtime preparation
         $event = "sites.[siteId].deployments.[deploymentId].update";
@@ -205,6 +207,8 @@ class Screenshots extends Action
                 throw new \Exception($screenshotError);
             }
 
+            Span::add('screenshot.count', \count($screenshots));
+
             $mimeType = "image/png";
             $updates = new Document([]);
 
@@ -268,10 +272,6 @@ class Screenshots extends Action
                 'deploymentScreenshotLight' => $deployment->getAttribute('screenshotLight', ''),
             ]));
         } catch (\Throwable $th) {
-            Console::warning("Screenshot failed to generate:");
-            Console::warning($th->getMessage());
-            Console::warning($th->getTraceAsString());
-
             $date = \date('H:i:s');
             $this->appendToLogs($dbForProject, $deployment->getId(), $queueForRealtime, "[90m[$date] [90m[[0mappwrite[90m][33m Screenshot capturing failed. Deployment will continue. [0m\n");
 

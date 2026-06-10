@@ -303,12 +303,6 @@ class Create extends Action
                             'type' => $type
                         ]));
 
-                        $function = $dbForProject->updateDocument('functions', $function->getId(), new Document([
-                            'latestDeploymentId' => $deployment->getId(),
-                            'latestDeploymentInternalId' => $deployment->getSequence(),
-                            'latestDeploymentCreatedAt' => $deployment->getCreatedAt(),
-                            'latestDeploymentStatus' => $deployment->getAttribute('status', ''),
-                        ]));
                     } else {
                         $deployment = $dbForProject->updateDocument('deployments', $deploymentId, new Document([
                             'sourceSize' => $fileSize,
@@ -350,12 +344,6 @@ class Create extends Action
                             'type' => $type
                         ]));
 
-                        $function = $dbForProject->updateDocument('functions', $function->getId(), new Document([
-                            'latestDeploymentId' => $deployment->getId(),
-                            'latestDeploymentInternalId' => $deployment->getSequence(),
-                            'latestDeploymentCreatedAt' => $deployment->getCreatedAt(),
-                            'latestDeploymentStatus' => $deployment->getAttribute('status', ''),
-                        ]));
                     } else {
                         $deployment = $dbForProject->updateDocument('deployments', $deploymentId, new Document([
                             'sourceChunksUploaded' => $chunksUploaded,
