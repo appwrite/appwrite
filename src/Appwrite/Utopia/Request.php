@@ -180,51 +180,27 @@ class Request extends UtopiaRequest
     /**
      * Get headers
      *
-     * Method for getting all HTTP header parameters, including cookies.
+     * Method for getting all HTTP headers, including a synthesized `cookie`
+     * header. Swoole parses the incoming Cookie header into its own cookie jar,
+     * so it is absent from the raw header map; rebuild it here so consumers that
+     * forward request headers (e.g. function/site executions) still receive it.
      *
-     * @return array<string,mixed>
+     * @return array<string, array<int, string>>
      */
     public function getHeaders(): array
     {
-        try {
-            $headers = $this->generateHeaders();
-        } catch (\Throwable) {
-            $headers = [];
-        }
+        $headers = parent::getHeaders();
 
-        if (empty($this->swoole->cookie)) {
-            return $headers;
-        }
-
-        $cookieHeaders = [];
-        foreach ($this->swoole->cookie as $key => $value) {
-            $cookieHeaders[] = "{$key}={$value}";
-        }
-
-        if (!empty($cookieHeaders)) {
-            $headers['cookie'] = \implode('; ', $cookieHeaders);
+        $cookies = $this->getCookieParams();
+        if (!empty($cookies)) {
+            $pairs = [];
+            foreach ($cookies as $key => $value) {
+                $pairs[] = "{$key}={$value}";
+            }
+            $headers['cookie'] = [\implode('; ', $pairs)];
         }
 
         return $headers;
-    }
-
-    /**
-     * Get header
-     *
-     * Method for querying HTTP header parameters. If $key is not found $default value will be returned.
-     *
-     * @param  string  $key
-     * @param  string  $default
-     * @return string
-     */
-    public function getHeader(string $key, string $default = ''): string
-    {
-        $headers = $this->getHeaders();
-        $value = $headers[$key] ?? $default;
-        if (\is_array($value)) {
-            $value = $value[0] ?? $default;
-        }
-        return \is_string($value) ? $value : $default;
     }
 
     /**
@@ -237,7 +213,7 @@ class Request extends UtopiaRequest
      */
     public function getUserAgent(string $default = ''): string
     {
-        $forwardedUserAgent = $this->getHeader('x-forwarded-user-agent');
+        $forwardedUserAgent = $this->getHeaderLine('x-forwarded-user-agent');
         if (!empty($forwardedUserAgent)) {
             $roles = $this->authorization->getRoles();
             $isAppUser = $this->user?->isKey($roles) ?? false;
@@ -264,7 +240,7 @@ class Request extends UtopiaRequest
             $params = array_intersect_key($params, array_flip($allowedParams));
         }
         if (!isset($params['project'])) {
-            $params['project'] = $this->getHeader('x-appwrite-project', '');
+            $params['project'] = $this->getHeaderLine('x-appwrite-project', '');
         }
         ksort($params);
         return md5($this->getURI() . '*' . serialize($params) . '*' . APP_CACHE_BUSTER);

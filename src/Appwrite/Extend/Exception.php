@@ -45,6 +45,7 @@ class Exception extends \Exception
     public const string GENERAL_SERVICE_DISABLED = 'general_service_disabled';
     public const string GENERAL_UNAUTHORIZED_SCOPE = 'general_unauthorized_scope';
     public const string GENERAL_RATE_LIMIT_EXCEEDED = 'general_rate_limit_exceeded';
+    public const string GENERAL_RESOURCE_LOCKED = 'general_resource_locked';
     public const string GENERAL_SMTP_DISABLED = 'general_smtp_disabled';
     public const string GENERAL_PHONE_DISABLED = 'general_phone_disabled';
     public const string GENERAL_ARGUMENT_INVALID = 'general_argument_invalid';

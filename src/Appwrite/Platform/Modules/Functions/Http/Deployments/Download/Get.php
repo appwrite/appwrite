@@ -107,7 +107,7 @@ class Get extends Action
             ->addHeader('Content-Disposition', 'attachment; filename="' . $deploymentId . '-' . $type . '.tar.gz"');
 
         $size = $device->getFileSize($path);
-        $rangeHeader = $request->getHeader('range');
+        $rangeHeader = $request->getHeaderLine('range');
 
         if (!empty($rangeHeader)) {
             $start = $request->getRangeStart();

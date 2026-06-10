@@ -308,7 +308,7 @@ class Create extends Base
         ]));
 
         // Backwards compatibility with 1.6 behaviour
-        $requestFormat = $request->getHeader('x-appwrite-response-format', System::getEnv('_APP_SYSTEM_RESPONSE_FORMAT', ''));
+        $requestFormat = $request->getHeaderLine('x-appwrite-response-format', System::getEnv('_APP_SYSTEM_RESPONSE_FORMAT', ''));
         if ($requestFormat && version_compare($requestFormat, '1.7.0', '<')) {
             // build from template
             $template = new Document([]);

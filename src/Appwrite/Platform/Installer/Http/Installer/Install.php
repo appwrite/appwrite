@@ -73,7 +73,7 @@ class Install extends Action
         Config $config,
         array $paths
     ): void {
-        $acceptHeader = $request->getHeader('accept');
+        $acceptHeader = $request->getHeaderLine('accept');
         $wantsStream = stripos($acceptHeader, 'text/event-stream') !== false;
 
         if ($wantsStream) {
