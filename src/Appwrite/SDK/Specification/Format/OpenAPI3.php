@@ -497,11 +497,36 @@ class OpenAPI3 extends Format
                     case \Utopia\Database\Validator\Spatial::class:
                         /** @var Spatial $validator */
                         $node['schema']['type'] = 'array';
-                        $node['schema']['items'] = [
-                            'oneOf' => [
-                                ['type' => 'array']
-                            ]
-                        ];
+                        $node['schema']['items'] = match ($validator->getSpatialType()) {
+                            Database::VAR_POINT => [
+                                'type' => 'number',
+                                'format' => 'double',
+                            ],
+                            Database::VAR_LINESTRING => [
+                                'type' => 'array',
+                                'items' => [
+                                    'type' => 'number',
+                                    'format' => 'double',
+                                ],
+                            ],
+                            Database::VAR_POLYGON => [
+                                'type' => 'array',
+                                'items' => [
+                                    'type' => 'array',
+                                    'items' => [
+                                        'type' => 'number',
+                                        'format' => 'double',
+                                    ],
+                                ],
+                            ],
+                            default => [
+                                'type' => 'array',
+                                'items' => [
+                                    'type' => 'number',
+                                    'format' => 'double',
+                                ],
+                            ],
+                        };
                         $node['schema']['x-example'] = ($param['example'] ?? '') ?: match ($validator->getSpatialType()) {
                             Database::VAR_POINT => '[1, 2]',
                             Database::VAR_LINESTRING => '[[1, 2], [3, 4], [5, 6]]',
@@ -777,7 +802,7 @@ class OpenAPI3 extends Format
                 if ($isPathParam) { // Param is in URL path (directly or through alias)
                     $node['in'] = 'path';
                     $temp['parameters'][] = $node;
-                } elseif ($route->getMethod() == 'GET') { // Param is in query
+                } elseif (\in_array($route->getMethod(), ['GET', 'DELETE'], true)) { // Param is in query
                     $node['in'] = 'query';
                     $temp['parameters'][] = $node;
                 } else { // Param is in payload
@@ -852,7 +877,7 @@ class OpenAPI3 extends Format
         }
 
         foreach ($this->models as $model) {
-            if (!in_array($model->getType(), $usedModels) && $model->getType() !== 'error') {
+            if (!in_array($model->getType(), $usedModels)) {
                 continue;
             }
 
@@ -910,6 +935,7 @@ class OpenAPI3 extends Format
 
                     case 'array':
                         $type = 'array';
+                        $items = $this->getArrayItemsSchema($rule['example'] ?? []);
                         break;
 
                     case 'integer':
@@ -1001,7 +1027,19 @@ class OpenAPI3 extends Format
                     }
                 }
                 if ($items) {
-                    $output['components']['schemas'][$model->getType()]['properties'][$name]['items'] = $items;
+                    if ($rule['array'] || $rule['type'] === 'array') {
+                        $output['components']['schemas'][$model->getType()]['properties'][$name]['items'] = $items;
+                    } else {
+                        if (isset($items['$ref']) || isset($items['oneOf'])) {
+                            $items = ['allOf' => [$items]];
+                        }
+                        /** @var array<string, mixed> $property */
+                        $property = $output['components']['schemas'][$model->getType()]['properties'][$name];
+                        $output['components']['schemas'][$model->getType()]['properties'][$name] = [
+                            ...$property,
+                            ...$items,
+                        ];
+                    }
                 }
                 if ($rule['type'] === 'enum' && !empty($rule['enum'])) {
                     if ($rule['array']) {
