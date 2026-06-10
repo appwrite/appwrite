@@ -35,6 +35,7 @@ import { CLI_SHELL_COLLAPSED_HEIGHT_PX } from '@/lib/cli-shell/constants'
 import { CLI_SHELL_NEW_TERMINAL_SHORTCUT_RAW } from '@/lib/cli-shell/cli-terminal-shortcuts'
 import { formatDisplayKeys } from '@/lib/keyboard-shortcuts/display'
 import { CliSessionSidebar } from './CliSessionSidebar'
+import { CliTerminalResizableLayout } from './CliTerminalResizableLayout'
 import { CliTerminalSearch } from './CliTerminalSearch'
 import { CliTerminalSessionsLayout } from './CliTerminalSessionsLayout'
 import { useCliShell } from './CliShellProvider'
@@ -248,6 +249,7 @@ function ProjectCliShellPanel({ onResizingChange }: ProjectCliShellPanelProps) {
 
   const [isResizing, setIsResizing] = useState(false)
   const [isSplitResizing, setIsSplitResizing] = useState(false)
+  const [isSidebarResizing, setIsSidebarResizing] = useState(false)
   const resizeSessionRef = useRef<{
     startY: number
     startHeight: number
@@ -266,8 +268,8 @@ function ProjectCliShellPanel({ onResizingChange }: ProjectCliShellPanelProps) {
   )
 
   useEffect(() => {
-    onResizingChange?.(isResizing || isSplitResizing)
-  }, [isResizing, isSplitResizing, onResizingChange])
+    onResizingChange?.(isResizing || isSplitResizing || isSidebarResizing)
+  }, [isResizing, isSplitResizing, isSidebarResizing, onResizingChange])
 
   useEffect(() => {
     if (!isResizing || fullscreen) return
@@ -439,48 +441,53 @@ function ProjectCliShellPanel({ onResizingChange }: ProjectCliShellPanelProps) {
         </div>
       </div>
 
-      <div className="flex min-h-0 flex-1 overflow-hidden">
-        <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
-          {terminalSearchOpen ? (
-            <CliTerminalSearch
-              open={true}
-              onOpenChange={setTerminalSearchOpen}
-              results={terminalSearchResults}
-              onSearch={(query, options) =>
-                searchTerminalOutput(query, options, focusedSessionId)
-              }
-              onFindNext={findNextTerminalMatch}
-              onFindPrevious={findPreviousTerminalMatch}
-            />
-          ) : null}
-          <div
-            className={cn(
-              'flex min-h-0 flex-1 flex-col overflow-hidden',
-              visiblePaneSessionIds.length > 1
-                ? 'px-0'
-                : 'px-4 pb-4 pt-3 sm:px-6 sm:pb-4',
-              terminalSearchOpen &&
-                visiblePaneSessionIds.length <= 1 &&
-                'pt-0',
-            )}
-          >
-          <div className="h-full min-h-0 flex-1">
-            <CliTerminalSessionsLayout
-              sessions={sessions}
-              displaySessionIds={
+      <CliTerminalResizableLayout
+        onSidebarResizingChange={setIsSidebarResizing}
+        main={
+          <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
+            {terminalSearchOpen ? (
+              <CliTerminalSearch
+                open={true}
+                onOpenChange={setTerminalSearchOpen}
+                results={terminalSearchResults}
+                onSearch={(query, options) =>
+                  searchTerminalOutput(query, options, focusedSessionId)
+                }
+                onFindNext={findNextTerminalMatch}
+                onFindPrevious={findPreviousTerminalMatch}
+              />
+            ) : null}
+            <div
+              className={cn(
+                'flex min-h-0 flex-1 flex-col overflow-hidden',
                 visiblePaneSessionIds.length > 1
-                  ? visiblePaneSessionIds
-                  : [activeSessionId]
-              }
-              focusedSessionId={focusedSessionId}
-              isPanelResizing={isResizing}
-              onSplitResizingChange={setIsSplitResizing}
-            />
+                  ? 'px-0'
+                  : 'px-4 pb-4 pt-3 sm:px-6 sm:pb-4',
+                terminalSearchOpen &&
+                  visiblePaneSessionIds.length <= 1 &&
+                  'pt-0',
+              )}
+            >
+              <div className="h-full min-h-0 flex-1">
+                <CliTerminalSessionsLayout
+                  sessions={sessions}
+                  displaySessionIds={
+                    visiblePaneSessionIds.length > 1
+                      ? visiblePaneSessionIds
+                      : [activeSessionId]
+                  }
+                  focusedSessionId={focusedSessionId}
+                  isPanelResizing={
+                    isResizing || isSplitResizing || isSidebarResizing
+                  }
+                  onSplitResizingChange={setIsSplitResizing}
+                />
+              </div>
+            </div>
           </div>
-          </div>
-        </div>
-        <CliSessionSidebar />
-      </div>
+        }
+        sidebar={<CliSessionSidebar />}
+      />
     </div>
   )
 }

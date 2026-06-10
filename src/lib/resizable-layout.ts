@@ -18,6 +18,12 @@ export const FUNCTIONS_EDITOR_EXPLORER_MAX_WIDTH_PX = 480
 export const FUNCTIONS_EDITOR_EXPLORER_DEFAULT_WIDTH_PX = 280
 export const FUNCTIONS_EDITOR_MAIN_MIN_WIDTH_PX = 400
 
+/** CLI terminal: main output area | sessions list (right). */
+export const CLI_SHELL_SESSIONS_SIDEBAR_MIN_WIDTH_PX = 176
+export const CLI_SHELL_SESSIONS_SIDEBAR_MAX_WIDTH_PX = 320
+export const CLI_SHELL_SESSIONS_SIDEBAR_DEFAULT_WIDTH_PX = 208
+export const CLI_SHELL_TERMINAL_MAIN_MIN_WIDTH_PX = 240
+
 const LEGACY_SIDEBAR_PERCENT_MAX = 60
 
 /** Use when the group has not been measured yet so % ↔ px math stays consistent. */
@@ -141,6 +147,13 @@ export function clampTableViewSidebarWidthPx(px: number): number {
   return Math.min(
     TABLE_VIEW_SIDEBAR_MAX_WIDTH_PX,
     Math.max(TABLE_VIEW_SIDEBAR_MIN_WIDTH_PX, Math.round(px)),
+  )
+}
+
+export function clampCliShellSessionsSidebarWidthPx(px: number): number {
+  return Math.min(
+    CLI_SHELL_SESSIONS_SIDEBAR_MAX_WIDTH_PX,
+    Math.max(CLI_SHELL_SESSIONS_SIDEBAR_MIN_WIDTH_PX, Math.round(px)),
   )
 }
 

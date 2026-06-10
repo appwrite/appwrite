@@ -58,6 +58,7 @@ import {
   mergeCliShellHistoryIntoPrefs,
   mergeCliShellOpenIntoPrefs,
   mergeCliShellSessionsIntoPrefs,
+  mergeCliShellSessionsSidebarWidthPxIntoPrefs,
   parseCliShellHistory,
   parseCliShellSessions,
   type PersistedCliShellSessionsState,
@@ -70,6 +71,7 @@ import {
   parseBuildNotificationsOptedOut,
   parseCliShellHeightPx,
   parseCliShellOpen,
+  parseCliShellSessionsSidebarWidthPx,
   parseStorageFilesTablePaneWidthPx,
   readLegacyAIChatPanelOpenFromLocalStorage,
   readLegacyAIChatPanelWidthFromLocalStorage,
@@ -1553,6 +1555,95 @@ export function useCliShellHeight(account: ConsoleAccountCache | undefined) {
   }, [])
 
   return { heightPx, setHeightPx }
+}
+
+const CLI_SHELL_SESSIONS_SIDEBAR_WIDTH_PERSIST_DEBOUNCE_MS = 250
+
+/**
+ * CLI terminal sessions list width (`console.cliShell.sessionsSidebarWidthPx`).
+ * Debounces writes while resizing.
+ */
+export function useCliShellSessionsSidebarWidth(
+  account: ConsoleAccountCache | undefined,
+) {
+  const queryClient = useQueryClient()
+
+  const widthPx = parseCliShellSessionsSidebarWidthPx(
+    account?.prefs as UserPrefs | undefined,
+  )
+
+  const persistTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  const updateMutation = useMutation({
+    mutationFn: async (value: number) => {
+      if (!account) {
+        throw new Error('Account data not available')
+      }
+      return await updateAccountPrefs(
+        mergeCliShellSessionsSidebarWidthPxIntoPrefs(
+          (account.prefs ?? {}) as UserPrefs,
+          value,
+        ),
+      )
+    },
+    onMutate: async (value) => {
+      const patch = mergeCliShellSessionsSidebarWidthPxIntoPrefs(
+        (account.prefs ?? {}) as UserPrefs,
+        value,
+      )
+      queryClient.setQueriesData<{ prefs?: Record<string, unknown> }>(
+        { queryKey: ['account', 'console'] },
+        (current) =>
+          current
+            ? {
+                ...current,
+                prefs: { ...current.prefs, ...patch },
+              }
+            : current,
+      )
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['account', 'console'] })
+    },
+  })
+
+  const persistSidebarWidthPx = useCallback(
+    (value: number) => {
+      if (!account) return
+      if (persistTimerRef.current !== null) {
+        clearTimeout(persistTimerRef.current)
+      }
+      const patch = mergeCliShellSessionsSidebarWidthPxIntoPrefs(
+        (account.prefs ?? {}) as UserPrefs,
+        value,
+      )
+      queryClient.setQueriesData<{ prefs?: Record<string, unknown> }>(
+        { queryKey: ['account', 'console'] },
+        (current) =>
+          current
+            ? {
+                ...current,
+                prefs: { ...current.prefs, ...patch },
+              }
+            : current,
+      )
+      persistTimerRef.current = setTimeout(() => {
+        persistTimerRef.current = null
+        updateMutation.mutate(value)
+      }, CLI_SHELL_SESSIONS_SIDEBAR_WIDTH_PERSIST_DEBOUNCE_MS)
+    },
+    [account, queryClient, updateMutation],
+  )
+
+  useEffect(() => {
+    return () => {
+      if (persistTimerRef.current !== null) {
+        clearTimeout(persistTimerRef.current)
+      }
+    }
+  }, [])
+
+  return { widthPx, persistSidebarWidthPx }
 }
 
 const CLI_SHELL_PREFS_PERSIST_DEBOUNCE_MS = 400

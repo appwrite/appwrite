@@ -6,8 +6,10 @@
  */
 
 import {
+  clampCliShellSessionsSidebarWidthPx,
   clampPostgresSqlEditorHeightPx,
   clampTableViewSidebarWidthPx,
+  CLI_SHELL_SESSIONS_SIDEBAR_DEFAULT_WIDTH_PX,
   normalizeLegacySidebarWidthPrefValue,
   POSTGRES_SQL_EDITOR_DEFAULT_HEIGHT_PX,
   TABLE_VIEW_SIDEBAR_DEFAULT_WIDTH_PX,
@@ -1123,6 +1125,10 @@ export const USER_PREFS_KEY_CLI_SHELL_OPEN = 'console.cliShell.open'
 /** Full key: `console.cliShell.heightPx` - terminal height in pixels (string number). */
 export const USER_PREFS_KEY_CLI_SHELL_HEIGHT_PX = 'console.cliShell.heightPx'
 
+/** Full key: `console.cliShell.sessionsSidebarWidthPx` - sessions list width in px. */
+export const USER_PREFS_KEY_CLI_SHELL_SESSIONS_SIDEBAR_WIDTH_PX =
+  'console.cliShell.sessionsSidebarWidthPx'
+
 /** Prefix: `console.cliShell.history.<projectId>` - JSON string[] of recent commands. */
 export const USER_PREFS_KEY_CLI_SHELL_HISTORY_PREFIX = 'console.cliShell.history'
 
@@ -1201,6 +1207,34 @@ export function mergeCliShellHeightPxIntoPrefs(
     ...prefs,
     [USER_PREFS_KEY_CLI_SHELL_HEIGHT_PX]: String(
       clampCliShellHeightPx(heightPx),
+    ),
+  }
+}
+
+export function parseCliShellSessionsSidebarWidthPx(
+  prefs: UserPrefs | null | undefined,
+): number {
+  const raw = prefs?.[USER_PREFS_KEY_CLI_SHELL_SESSIONS_SIDEBAR_WIDTH_PX]
+  const n =
+    typeof raw === 'number'
+      ? raw
+      : typeof raw === 'string'
+        ? parseInt(raw, 10)
+        : NaN
+  if (Number.isFinite(n)) {
+    return clampCliShellSessionsSidebarWidthPx(n)
+  }
+  return CLI_SHELL_SESSIONS_SIDEBAR_DEFAULT_WIDTH_PX
+}
+
+export function mergeCliShellSessionsSidebarWidthPxIntoPrefs(
+  prefs: UserPrefs,
+  widthPx: number,
+): UserPrefs {
+  return {
+    ...prefs,
+    [USER_PREFS_KEY_CLI_SHELL_SESSIONS_SIDEBAR_WIDTH_PX]: String(
+      clampCliShellSessionsSidebarWidthPx(widthPx),
     ),
   }
 }

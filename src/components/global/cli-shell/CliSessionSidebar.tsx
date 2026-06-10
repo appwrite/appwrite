@@ -492,7 +492,7 @@ export function CliSessionSidebar() {
 
   return (
     <div
-      className="flex w-44 shrink-0 flex-col border-l border-border bg-muted/20 pb-1 sm:w-52"
+      className="flex h-full min-w-0 w-full flex-col bg-muted/20 pb-1"
       aria-label="Terminal sessions"
     >
       <div className="min-h-0 flex-1 overflow-y-auto">
@@ -528,9 +528,7 @@ export function CliSessionSidebar() {
           </SortableContext>
           <DragOverlay dropAnimation={null}>
             {activeDragSession ? (
-              <div
-                className="w-44 rounded-md bg-muted/60 shadow-md ring-1 ring-border sm:w-52"
-              >
+              <div className="w-full rounded-md bg-muted/60 shadow-md ring-1 ring-border">
                 <RootSessionGroupBody
                   session={activeDragSession}
                   canReorder={canReorder}
