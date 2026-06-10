@@ -425,10 +425,7 @@ abstract class Base extends Action
             'oAuthProviders' => $oAuthProviders
         ]);
 
-        $project = $authorization->skip(fn () => $dbForPlatform->updateDocument('projects', $project->getId(), $updates));
-        $authorization->skip(fn () => $dbForPlatform->purgeCachedDocument('projects', $project->getId()));
-
-        return $project;
+        return $authorization->skip(fn () => $dbForPlatform->updateDocument('projects', $project->getId(), $updates));
     }
 
     public function action(
