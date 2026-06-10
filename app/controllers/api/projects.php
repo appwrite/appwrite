@@ -59,6 +59,7 @@ Http::patch('/v1/projects/:projectId/oauth2')
         }
 
         $project = $dbForPlatform->updateDocument('projects', $project->getId(), $project->setAttribute('oAuthProviders', $providers));
+        $dbForPlatform->purgeCachedDocument('projects', $project->getId());
 
         $response->dynamic($project, Response::MODEL_PROJECT);
     });
@@ -93,6 +94,7 @@ Http::patch('/v1/projects/:projectId/auth/mock-numbers')
         $auths['mockNumbers'] = $numbers;
 
         $project = $dbForPlatform->updateDocument('projects', $project->getId(), $project->setAttribute('auths', $auths));
+        $dbForPlatform->purgeCachedDocument('projects', $project->getId());
 
         $response->dynamic($project, Response::MODEL_PROJECT);
     });
@@ -120,6 +122,7 @@ Http::delete('/v1/projects/:projectId/templates/email')
         unset($templates['email.' . $type . '-' . $locale]);
 
         $project = $dbForPlatform->updateDocument('projects', $project->getId(), $project->setAttribute('templates', $templates));
+        $dbForPlatform->purgeCachedDocument('projects', $project->getId());
 
         $response->noContent();
     });
