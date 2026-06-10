@@ -26,8 +26,7 @@ abstract class Gauge
                 private ?string $unit,
                 private ?string $description,
                 private array $advisory,
-            ) {
-            }
+            ) {}
 
             /**
              * @param iterable<non-empty-string, array<mixed>|bool|float|int|string|null> $attributes

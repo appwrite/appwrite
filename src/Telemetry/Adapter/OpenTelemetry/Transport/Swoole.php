@@ -8,10 +8,10 @@ use OpenTelemetry\SDK\Common\Future\CancellationInterface;
 use OpenTelemetry\SDK\Common\Future\CompletedFuture;
 use OpenTelemetry\SDK\Common\Future\ErrorFuture;
 use OpenTelemetry\SDK\Common\Future\FutureInterface;
-use Utopia\Telemetry\Exception;
 use Swoole\Atomic;
 use Swoole\Coroutine\Channel;
 use Swoole\Coroutine\Http\Client;
+use Utopia\Telemetry\Exception;
 
 /**
  * Swoole coroutine-native HTTP transport for OpenTelemetry.
@@ -66,18 +66,18 @@ class Swoole implements TransportInterface
         $this->shutdown = new Atomic(0);
         $this->pool = new Channel($this->poolSize);
 
-        $this->baseHeaders = \array_merge(
+        $this->baseHeaders = array_merge(
             [
                 'Content-Type' => $this->contentType,
                 'Connection' => 'keep-alive',
             ],
-            $this->headers
+            $this->headers,
         );
         $this->settings = [
             'timeout' => $this->timeout,
-            'connect_timeout' => \max(0.5, $this->timeout),
-            'read_timeout' => \max(1.0, $this->timeout),
-            'write_timeout' => \max(1.0, $this->timeout),
+            'connect_timeout' => max(0.5, $this->timeout),
+            'read_timeout' => max(1.0, $this->timeout),
+            'write_timeout' => max(1.0, $this->timeout),
             'keep_alive' => true,
             'open_tcp_nodelay' => true,
             'open_tcp_keepalive' => true,
@@ -140,7 +140,7 @@ class Swoole implements TransportInterface
                 $forceClose = true;
             }
 
-            $statusCodeStr = \is_int($statusCode) ? (string)$statusCode : 'unknown';
+            $statusCodeStr = \is_int($statusCode) ? (string) $statusCode : 'unknown';
             return new ErrorFuture(new Exception("OTLP export failed with status {$statusCodeStr}: {$bodyStr}"));
         } catch (\Throwable $e) {
             $forceClose = true;

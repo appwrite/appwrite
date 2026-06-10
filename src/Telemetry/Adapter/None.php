@@ -16,13 +16,11 @@ class None implements Adapter
      */
     public function createCounter(string $name, ?string $unit = null, ?string $description = null, array $advisory = []): Counter
     {
-        return new class () extends Counter {
+        return new class extends Counter {
             /**
              * @param iterable<non-empty-string, array<mixed>|bool|float|int|string|null> $attributes
              */
-            public function add(float|int $amount, iterable $attributes = []): void
-            {
-            }
+            public function add(float|int $amount, iterable $attributes = []): void {}
         };
     }
 
@@ -31,13 +29,11 @@ class None implements Adapter
      */
     public function createHistogram(string $name, ?string $unit = null, ?string $description = null, array $advisory = []): Histogram
     {
-        return new class () extends Histogram {
+        return new class extends Histogram {
             /**
              * @param iterable<non-empty-string, array<mixed>|bool|float|int|string|null> $attributes
              */
-            public function record(float|int $amount, iterable $attributes = []): void
-            {
-            }
+            public function record(float|int $amount, iterable $attributes = []): void {}
         };
     }
 
@@ -46,13 +42,11 @@ class None implements Adapter
      */
     public function createGauge(string $name, ?string $unit = null, ?string $description = null, array $advisory = []): Gauge
     {
-        return new class () extends Gauge {
+        return new class extends Gauge {
             /**
              * @param iterable<non-empty-string, array<mixed>|bool|float|int|string|null> $attributes
              */
-            public function record(float|int $amount, iterable $attributes = []): void
-            {
-            }
+            public function record(float|int $amount, iterable $attributes = []): void {}
         };
     }
 
@@ -61,13 +55,11 @@ class None implements Adapter
      */
     public function createUpDownCounter(string $name, ?string $unit = null, ?string $description = null, array $advisory = []): UpDownCounter
     {
-        return new class () extends UpDownCounter {
+        return new class extends UpDownCounter {
             /**
              * @param iterable<non-empty-string, array<mixed>|bool|float|int|string|null> $attributes
              */
-            public function add(float|int $amount, iterable $attributes = []): void
-            {
-            }
+            public function add(float|int $amount, iterable $attributes = []): void {}
         };
     }
 
@@ -76,10 +68,8 @@ class None implements Adapter
      */
     public function createObservableGauge(string $name, ?string $unit = null, ?string $description = null, array $advisory = []): ObservableGauge
     {
-        return new class () extends ObservableGauge {
-            public function observe(callable $callback): void
-            {
-            }
+        return new class extends ObservableGauge {
+            public function observe(callable $callback): void {}
         };
     }
 

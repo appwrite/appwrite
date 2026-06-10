@@ -3,14 +3,17 @@
 namespace Tests\Telemetry\Adapter\OpenTelemetry\Swoole;
 
 use Swoole\Coroutine;
+
+use function Swoole\Coroutine\go;
+
 use Swoole\Coroutine\Http\Client;
 use Swoole\Coroutine\Http\Server;
+
+use function Swoole\Coroutine\run;
+
 use Swoole\Http\Request;
 use Swoole\Http\Response;
 use Utopia\Telemetry\Exception;
-
-use function Swoole\Coroutine\go;
-use function Swoole\Coroutine\run;
 
 /**
  * Mock OTLP server for integration testing.
@@ -46,7 +49,7 @@ class MockOtlpServer
      */
     public function getEndpoint(): string
     {
-        return 'http://'.self::HOST.':'.$this->port.'/v1/metrics';
+        return 'http://' . self::HOST . ':' . $this->port . '/v1/metrics';
     }
 
     /**
@@ -101,7 +104,7 @@ class MockOtlpServer
             $response->end($this->responseBody);
         });
 
-        go(fn () => $this->server->start());
+        go(fn() => $this->server->start());
 
         $this->waitUntilReady();
     }
@@ -135,11 +138,11 @@ class MockOtlpServer
             Coroutine::sleep(0.01);
         }
 
-        throw new Exception(sprintf(
+        throw new Exception(\sprintf(
             'MockOtlpServer failed to start: could not connect to %s:%d within %.1f seconds',
             self::HOST,
             $this->port,
-            $timeout
+            $timeout,
         ));
     }
 
@@ -158,7 +161,7 @@ class MockOtlpServer
      */
     public function getRequestCount(): int
     {
-        return count($this->requests);
+        return \count($this->requests);
     }
 
     /**
@@ -168,7 +171,7 @@ class MockOtlpServer
      */
     public function getLastRequest(): ?array
     {
-        return $this->requests[count($this->requests) - 1] ?? null;
+        return $this->requests[\count($this->requests) - 1] ?? null;
     }
 
     /**

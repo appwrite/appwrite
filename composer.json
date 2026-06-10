@@ -1,5 +1,6 @@
 {
     "name": "utopia-php/telemetry",
+    "description": "A lite & fast telemetry library, with adapters for OpenTelemetry",
     "type": "library",
     "keywords": [
         "php",
@@ -19,10 +20,7 @@
         }
     },
     "scripts": {
-        "lint": "vendor/bin/pint --test",
-        "format": "vendor/bin/pint",
-        "check": "vendor/bin/phpstan analyse -c phpstan.neon",
-        "test": "vendor/bin/phpunit --configuration phpunit.xml",
+        "test": "phpunit --configuration phpunit.xml",
         "bench": "vendor/bin/phpbench run --report=benchmark"
     },
     "require": {
@@ -35,9 +33,6 @@
         "symfony/http-client": "7.*"
     },
     "require-dev": {
-        "phpunit/phpunit": "11.*",
-        "laravel/pint": "1.*",
-        "phpstan/phpstan": "2.*",
         "phpbench/phpbench": "1.*",
         "swoole/ide-helper": "6.*"
     },

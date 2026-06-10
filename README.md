@@ -1,5 +1,8 @@
 # Utopia Telemetry
 
+> [!IMPORTANT]
+> This repository is a read-only mirror of the [utopia-php monorepo](https://github.com/utopia-php/monorepo). Development happens in [`packages/telemetry`](https://github.com/utopia-php/monorepo/tree/main/packages/telemetry) — please open issues and pull requests there.
+
 ![Total Downloads](https://img.shields.io/packagist/dt/utopia-php/telemetry.svg)
 [![Discord](https://img.shields.io/discord/564160730845151244?label=discord)](https://appwrite.io/discord)
 

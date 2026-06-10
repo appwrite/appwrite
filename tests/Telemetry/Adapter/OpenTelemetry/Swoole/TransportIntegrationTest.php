@@ -5,11 +5,12 @@ namespace Tests\Telemetry\Adapter\OpenTelemetry\Swoole;
 use OpenTelemetry\Contrib\Otlp\ContentTypes;
 use PHPUnit\Framework\Attributes\RequiresPhpExtension;
 use PHPUnit\Framework\TestCase;
-use Utopia\Telemetry\Adapter\OpenTelemetry\Transport\Swoole;
-use Utopia\Telemetry\Exception;
 
 use function Swoole\Coroutine\go;
 use function Swoole\Coroutine\run;
+
+use Utopia\Telemetry\Adapter\OpenTelemetry\Transport\Swoole;
+use Utopia\Telemetry\Exception;
 
 /**
  * Integration tests for the Swoole Transport.
@@ -35,7 +36,7 @@ class TransportIntegrationTest extends TestCase
             $request = $server->getLastRequest();
             $this->assertEquals($testPayload, $request['payload']);
             $this->assertEquals(ContentTypes::PROTOBUF, $request['headers']['content-type']);
-            $this->assertEquals((string) strlen($testPayload), $request['headers']['content-length']);
+            $this->assertEquals((string) \strlen($testPayload), $request['headers']['content-length']);
 
             $transport->shutdown();
         });
@@ -49,7 +50,7 @@ class TransportIntegrationTest extends TestCase
                 headers: [
                     'Authorization' => 'Bearer test-token',
                     'X-Custom-Header' => 'custom-value',
-                ]
+                ],
             );
 
             $transport->send('payload')->await();
@@ -201,7 +202,7 @@ class TransportIntegrationTest extends TestCase
             $transport->send($largePayload)->await();
 
             $request = $server->getLastRequest();
-            $this->assertEquals(strlen($largePayload), strlen($request['payload']));
+            $this->assertEquals(\strlen($largePayload), \strlen($request['payload']));
 
             $transport->shutdown();
         });

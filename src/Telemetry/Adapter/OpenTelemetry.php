@@ -58,7 +58,7 @@ class OpenTelemetry implements Adapter
         string $serviceNamespace,
         string $serviceName,
         string $serviceInstanceId,
-        protected ?TransportInterface $transport = null
+        protected ?TransportInterface $transport = null,
     ) {
         if ($this->transport === null) {
             $this->transport = (new OtlpHttpTransportFactory())
@@ -132,9 +132,7 @@ class OpenTelemetry implements Adapter
             $counter = $this->meter->createCounter($name, $unit, $description, $advisory);
 
             return new class ($counter) extends Counter {
-                public function __construct(private CounterInterface $counter)
-                {
-                }
+                public function __construct(private CounterInterface $counter) {}
 
                 /**
                  * @param iterable<non-empty-string, array<mixed>|bool|float|int|string|null> $attributes
@@ -158,9 +156,7 @@ class OpenTelemetry implements Adapter
             $histogram = $this->meter->createHistogram($name, $unit, $description, $advisory);
 
             return new class ($histogram) extends Histogram {
-                public function __construct(private HistogramInterface $histogram)
-                {
-                }
+                public function __construct(private HistogramInterface $histogram) {}
 
                 /**
                  * @param iterable<non-empty-string, array<mixed>|bool|float|int|string|null> $attributes
@@ -184,9 +180,7 @@ class OpenTelemetry implements Adapter
             $gauge = $this->meter->createGauge($name, $unit, $description, $advisory);
 
             return new class ($gauge) extends Gauge {
-                public function __construct(private GaugeInterface $gauge)
-                {
-                }
+                public function __construct(private GaugeInterface $gauge) {}
 
                 /**
                  * @param iterable<non-empty-string, array<mixed>|bool|float|int|string|null> $attributes
@@ -210,9 +204,7 @@ class OpenTelemetry implements Adapter
             $upDownCounter = $this->meter->createUpDownCounter($name, $unit, $description, $advisory);
 
             return new class ($upDownCounter) extends UpDownCounter {
-                public function __construct(private UpDownCounterInterface $upDownCounter)
-                {
-                }
+                public function __construct(private UpDownCounterInterface $upDownCounter) {}
 
                 /**
                  * @param iterable<non-empty-string, array<mixed>|bool|float|int|string|null> $attributes

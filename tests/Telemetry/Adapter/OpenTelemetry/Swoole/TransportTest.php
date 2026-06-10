@@ -5,10 +5,11 @@ namespace Tests\Telemetry\Adapter\OpenTelemetry\Swoole;
 use OpenTelemetry\Contrib\Otlp\ContentTypes;
 use PHPUnit\Framework\Attributes\RequiresPhpExtension;
 use PHPUnit\Framework\TestCase;
-use Utopia\Telemetry\Adapter\OpenTelemetry\Transport\Swoole;
-use Utopia\Telemetry\Exception;
 
 use function Swoole\Coroutine\run;
+
+use Utopia\Telemetry\Adapter\OpenTelemetry\Transport\Swoole;
+use Utopia\Telemetry\Exception;
 
 /**
  * Unit tests for the Swoole Transport implementation.
@@ -60,7 +61,7 @@ class TransportTest extends TestCase
     {
         $transport = new Swoole(
             'http://localhost:4318/v1/metrics',
-            ContentTypes::JSON
+            ContentTypes::JSON,
         );
 
         $this->assertEquals(ContentTypes::JSON, $transport->contentType());
@@ -71,7 +72,7 @@ class TransportTest extends TestCase
         $transport = new Swoole(
             'http://localhost:4318/v1/metrics',
             ContentTypes::PROTOBUF,
-            ['Authorization' => 'Bearer token123']
+            ['Authorization' => 'Bearer token123'],
         );
 
         $this->assertEquals(ContentTypes::PROTOBUF, $transport->contentType());
@@ -83,7 +84,7 @@ class TransportTest extends TestCase
             'http://localhost:4318/v1/metrics',
             ContentTypes::PROTOBUF,
             [],
-            5.0
+            5.0,
         );
 
         $this->assertEquals(ContentTypes::PROTOBUF, $transport->contentType());
@@ -96,7 +97,7 @@ class TransportTest extends TestCase
             ContentTypes::PROTOBUF,
             [],
             10.0,
-            16
+            16,
         );
 
         $this->assertEquals(ContentTypes::PROTOBUF, $transport->contentType());
@@ -110,7 +111,7 @@ class TransportTest extends TestCase
             [],
             10.0,
             8,
-            128 * 1024
+            128 * 1024,
         );
 
         $this->assertEquals(ContentTypes::PROTOBUF, $transport->contentType());

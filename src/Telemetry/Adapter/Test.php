@@ -44,7 +44,7 @@ class Test implements Adapter
      */
     public function createCounter(string $name, ?string $unit = null, ?string $description = null, array $advisory = []): Counter
     {
-        $counter = new class () extends Counter {
+        $counter = new class extends Counter {
             /**
              * @var array<int, float|int>
              */
@@ -67,7 +67,7 @@ class Test implements Adapter
      */
     public function createHistogram(string $name, ?string $unit = null, ?string $description = null, array $advisory = []): Histogram
     {
-        $histogram = new class () extends Histogram {
+        $histogram = new class extends Histogram {
             /**
              * @var array<int, float|int>
              */
@@ -90,7 +90,7 @@ class Test implements Adapter
      */
     public function createGauge(string $name, ?string $unit = null, ?string $description = null, array $advisory = []): Gauge
     {
-        $gauge = new class () extends Gauge {
+        $gauge = new class extends Gauge {
             /**
              * @var array<int, float|int>
              */
@@ -113,7 +113,7 @@ class Test implements Adapter
      */
     public function createUpDownCounter(string $name, ?string $unit = null, ?string $description = null, array $advisory = []): UpDownCounter
     {
-        $upDownCounter = new class () extends UpDownCounter {
+        $upDownCounter = new class extends UpDownCounter {
             /**
              * @var array<int, float|int>
              */
@@ -136,7 +136,7 @@ class Test implements Adapter
      */
     public function createObservableGauge(string $name, ?string $unit = null, ?string $description = null, array $advisory = []): ObservableGauge
     {
-        $gauge = new class () extends ObservableGauge {
+        $gauge = new class extends ObservableGauge {
             public ?\Closure $callback = null;
 
             public function observe(callable $callback): void
