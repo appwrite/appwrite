@@ -11,6 +11,7 @@ use Redis;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Validator\Authorization;
+use Utopia\DSN\DSN;
 use Utopia\Logger\Log;
 use Utopia\Telemetry\Adapter\None as NoTelemetry;
 
@@ -34,8 +35,7 @@ final class LockTest extends TestCase
 
     protected function setUp(): void
     {
-        $host = \getenv('_APP_REDIS_HOST') ?: 'redis';
-        $port = (int) (\getenv('_APP_REDIS_PORT') ?: 6379);
+        [$host, $port] = $this->getRedisConnection();
 
         $this->redis = new Redis();
         $this->redis->connect($host, $port, 1.0);
@@ -48,6 +48,27 @@ final class LockTest extends TestCase
         $this->log = new Log();
 
         $this->cleanupKeys();
+    }
+
+    /**
+     * @return array{0: string, 1: int}
+     */
+    private function getRedisConnection(): array
+    {
+        $dsn = \getenv('_APP_CONNECTIONS_CACHE') ?: '';
+
+        if ($dsn !== '') {
+            $dsn = \explode(',', $dsn, 2)[0];
+            $dsn = \explode('=', $dsn, 2)[1] ?? $dsn;
+            $parsed = new DSN($dsn);
+
+            return [$parsed->getHost(), (int) ($parsed->getPort() ?? '6379')];
+        }
+
+        return [
+            \getenv('_APP_REDIS_HOST') ?: 'redis',
+            (int) (\getenv('_APP_REDIS_PORT') ?: 6379),
+        ];
     }
 
     protected function tearDown(): void
