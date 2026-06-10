@@ -9,7 +9,7 @@ use Utopia\Console;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Validator\Authorization;
-use Utopia\Lock\Distributed as DistributedLock;
+use Utopia\Lock\Lock as LockBackend;
 use Utopia\Logger\Log;
 use Utopia\Logger\Logger;
 use Utopia\System\System;
@@ -44,8 +44,13 @@ final class Lock
     /** @var array<string,int> */
     private static array $lastReportAt = [];
 
+    /**
+     * @var Closure(string, int, Closure(LockBackend): mixed): mixed
+     */
+    private readonly Closure $withLock;
+
     public function __construct(
-        private readonly \Redis $redis,
+        Closure $withLock,
         Telemetry $telemetry,
         private readonly Database $dbForPlatform,
         private readonly Authorization $authorization,
@@ -53,6 +58,7 @@ final class Lock
         private readonly ?Logger $logger,
         Document $project,
     ) {
+        $this->withLock = $withLock;
         $this->enabled = System::getEnv('_APP_LOCKING_ENABLED', 'enabled') !== 'disabled';
         $this->attempts = $telemetry->createCounter('lock.attempts', null, 'Distributed lock acquire outcomes');
         $sequence = $project->getSequence();
@@ -142,40 +148,41 @@ final class Lock
             return $fn();
         }
 
-        $lock = new DistributedLock($this->redis, $key, $ttl);
         $labels = ['target' => $target, 'project' => $this->projectInternalId];
 
-        try {
-            $acquired = $orFail ? $lock->acquire($waitTimeout) : $lock->tryAcquire();
-        } catch (\RedisException $e) {
-            $this->attempts->add(1, ['outcome' => self::OUTCOME_BACKEND_ERROR, ...$labels]);
-            $this->reportError(self::OUTCOME_BACKEND_ERROR, $key, $target, $e);
-
-            return $fn();
-        }
-
-        if (! $acquired) {
-            if ($orFail) {
-                $this->attempts->add(1, ['outcome' => self::OUTCOME_CONTENDED, ...$labels]);
-                // No custom message — the lock key embeds collection + document id.
-                throw new Exception(Exception::GENERAL_RESOURCE_LOCKED);
-            }
-            $this->attempts->add(1, ['outcome' => self::OUTCOME_SKIPPED, ...$labels]);
-
-            return null;
-        }
-
-        $this->attempts->add(1, ['outcome' => self::OUTCOME_ACQUIRED, ...$labels]);
-        try {
-            return $fn();
-        } finally {
+        return ($this->withLock)($key, $ttl, function (LockBackend $lock) use ($key, $target, $fn, $orFail, $waitTimeout, $labels) {
             try {
-                $lock->release();
-            } catch (Throwable $e) {
-                $this->attempts->add(1, ['outcome' => self::OUTCOME_RELEASE_ERROR, ...$labels]);
-                $this->reportError(self::OUTCOME_RELEASE_ERROR, $key, $target, $e);
+                $acquired = $orFail ? $lock->acquire($waitTimeout) : $lock->tryAcquire();
+            } catch (\RedisException $e) {
+                $this->attempts->add(1, ['outcome' => self::OUTCOME_BACKEND_ERROR, ...$labels]);
+                $this->reportError(self::OUTCOME_BACKEND_ERROR, $key, $target, $e);
+
+                return $fn();
             }
-        }
+
+            if (! $acquired) {
+                if ($orFail) {
+                    $this->attempts->add(1, ['outcome' => self::OUTCOME_CONTENDED, ...$labels]);
+                    // No custom message: the lock key embeds collection and document ID.
+                    throw new Exception(Exception::GENERAL_RESOURCE_LOCKED);
+                }
+                $this->attempts->add(1, ['outcome' => self::OUTCOME_SKIPPED, ...$labels]);
+
+                return;
+            }
+
+            $this->attempts->add(1, ['outcome' => self::OUTCOME_ACQUIRED, ...$labels]);
+            try {
+                return $fn();
+            } finally {
+                try {
+                    $lock->release();
+                } catch (Throwable $e) {
+                    $this->attempts->add(1, ['outcome' => self::OUTCOME_RELEASE_ERROR, ...$labels]);
+                    $this->reportError(self::OUTCOME_RELEASE_ERROR, $key, $target, $e);
+                }
+            }
+        });
     }
 
     /**
