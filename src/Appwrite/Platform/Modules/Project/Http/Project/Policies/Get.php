@@ -125,7 +125,10 @@ class Get extends Action
             'password-personal-data' => [
                 new Document([
                     '$id' => 'password-personal-data',
-                    'enabled' => $auths['personalDataCheck'] ?? false,
+                    'userId' => $auths['personalDataCheckUserId'] ?? false,
+                    'userEmail' => $auths['personalDataCheckUserEmail'] ?? false,
+                    'userName' => $auths['personalDataCheckUserName'] ?? false,
+                    'userPhone' => $auths['personalDataCheckUserPhone'] ?? false,
                 ]),
                 Response::MODEL_POLICY_PASSWORD_PERSONAL_DATA,
             ],
