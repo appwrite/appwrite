@@ -1,16 +1,16 @@
 # Compute Service Methods
 
-Source: `@appwrite.io/console` v13.2.0 (`c7819a3`)
+Source: `@appwrite.io/console` v13.2.0 (`a9ccdc9`)
 
 Access via `sdk.forProject(projectId).compute` or `sdk.forConsole.compute`.
 
 ## Databases
 
 - `listDatabases(params?: { queries?: string[] }): Promise<Models.DedicatedDatabaseList>`
-- `createDatabase(params: { databaseId: string; name: string; database?: string; engine?: string; version?: string; region?: string; type?: string; specification?: string; backend?: string; cpu?: number; memory?: number; storage?: number; storageClass?: string; storageMaxGb?: number; highAvailability?: boolean; highAvailabilityReplicaCount?: number; highAvailabilitySyncMode?: string; networkMaxConnections?: number; networkIdleTimeoutSeconds?: number; networkIPAllowlist?: string[]; idleTimeoutMinutes?: number; backupEnabled?: boolean; backupPitr?: boolean; backupCron?: string; backupRetentionDays?: number; pitrRetentionDays?: number; storageAutoscaling?: boolean; storageAutoscalingThresholdPercent?: number; storageAutoscalingMaxGb?: number; metricsEnabled?: boolean; poolerEnabled?: boolean }): Promise<Models.DedicatedDatabase>`
+- `createDatabase(params: { databaseId: string; name: string; database?: string; engine?: string; version?: string; type?: string; specification?: string; backend?: string; cpu?: number; memory?: number; storage?: number; storageClass?: string; storageMaxGb?: number; replicas?: number; highAvailabilitySyncMode?: string; networkMaxConnections?: number; networkIdleTimeoutSeconds?: number; networkIPAllowlist?: string[]; idleTimeoutMinutes?: number; backupEnabled?: boolean; backupPitr?: boolean; backupCron?: string; backupRetentionDays?: number; pitrRetentionDays?: number; storageAutoscaling?: boolean; storageAutoscalingThresholdPercent?: number; storageAutoscalingMaxGb?: number; metricsEnabled?: boolean; poolerEnabled?: boolean; api?: string }): Promise<Models.DedicatedDatabase>`
 - `listDatabaseSpecifications(): Promise<Models.DedicatedDatabaseSpecificationList>`
 - `getDatabase(params: { databaseId: string }): Promise<Models.DedicatedDatabase>`
-- `updateDatabase(params: { databaseId: string; name?: string; status?: string; specification?: string; cpu?: number; memory?: number; storage?: number; storageClass?: string; highAvailability?: boolean; highAvailabilityReplicaCount?: number; highAvailabilitySyncMode?: string; networkMaxConnections?: number; networkIdleTimeoutSeconds?: number; networkIPAllowlist?: string[]; idleTimeoutMinutes?: number; backupEnabled?: boolean; backupPitr?: boolean; backupCron?: string; backupRetentionDays?: number; pitrRetentionDays?: number; storageAutoscaling?: boolean; storageAutoscalingThresholdPercent?: number; storageAutoscalingMaxGb?: number; poolerEnabled?: boolean; metricsEnabled?: boolean; metricsTraceSampleRate?: number; metricsSlowQueryLogThresholdMs?: number; sqlApiEnabled?: boolean; sqlApiAllowedStatements?: string[]; sqlApiMaxRows?: number; sqlApiMaxBytes?: number; sqlApiTimeoutSeconds?: number }): Promise<Models.DedicatedDatabase>`
+- `updateDatabase(params: { databaseId: string; name?: string; status?: string; specification?: string; cpu?: number; memory?: number; storage?: number; storageClass?: string; replicas?: number; highAvailabilitySyncMode?: string; networkMaxConnections?: number; networkIdleTimeoutSeconds?: number; networkIPAllowlist?: string[]; idleTimeoutMinutes?: number; backupEnabled?: boolean; backupPitr?: boolean; backupCron?: string; backupRetentionDays?: number; pitrRetentionDays?: number; storageAutoscaling?: boolean; storageAutoscalingThresholdPercent?: number; storageAutoscalingMaxGb?: number; poolerEnabled?: boolean; metricsEnabled?: boolean; metricsTraceSampleRate?: number; metricsSlowQueryLogThresholdMs?: number; sqlApiEnabled?: boolean; sqlApiAllowedStatements?: string[]; sqlApiMaxRows?: number; sqlApiMaxBytes?: number; sqlApiTimeoutSeconds?: number }): Promise<Models.DedicatedDatabase>`
 - `deleteDatabase(params: { databaseId: string }): Promise<{}>`
 - `createDatabaseMigration(params: { databaseId: string; targetType: string; specification?: string }): Promise<Models.DedicatedDatabase>`
 - `getDatabaseStatus(params: { databaseId: string }): Promise<Models.DatabaseStatus>`
@@ -59,11 +59,6 @@ Access via `sdk.forProject(projectId).compute` or `sdk.forConsole.compute`.
 - `getDatabaseHAStatus(params: { databaseId: string }): Promise<Models.DedicatedDatabaseHAStatus>`
 - `createDatabaseFailover(params: { databaseId: string; targetReplicaId?: string }): Promise<Models.DedicatedDatabase>`
 
-## Insights & Metrics
-
-- `getDatabaseInsights(params: { databaseId: string; period?: string; limit?: number }): Promise<Models.DedicatedDatabasePerformanceInsights>`
-- `getDatabaseMetrics(params: { databaseId: string; period?: string }): Promise<Models.DedicatedDatabaseMetrics>`
-
 ## Pooler
 
 - `getDatabasePooler(params: { databaseId: string }): Promise<Models.DedicatedDatabasePooler>`
@@ -74,8 +69,3 @@ Access via `sdk.forProject(projectId).compute` or `sdk.forConsole.compute`.
 - `listDatabaseRestorations(params: { databaseId: string; status?: string; type?: string; limit?: number; offset?: number }): Promise<Models.DedicatedDatabaseRestorationList>`
 - `createDatabaseRestoration(params: { databaseId: string; type?: string; backupId?: string; targetTime?: number }): Promise<Models.DedicatedDatabaseRestoration>`
 - `getDatabaseRestoration(params: { databaseId: string; restorationId: string }): Promise<Models.DedicatedDatabaseRestoration>`
-
-## Schema
-
-- `getDatabaseSchema(params: { databaseId: string }): Promise<Models.DedicatedDatabaseSchema>`
-- `createDatabaseSchemaPreview(params: { databaseId: string; sql: string }): Promise<Models.DedicatedDatabaseSchemaPreview>`

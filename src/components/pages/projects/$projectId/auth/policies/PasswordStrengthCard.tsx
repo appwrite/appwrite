@@ -27,7 +27,11 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from '@/components/ui/collapsible'
-import { useUpdateAuthPasswordStrength } from '@/lib/react-query/hooks'
+import { useAuth } from '@/components/global/auth/RequireAuth'
+import {
+  useAuthPasswordStrengthComplianceOpen,
+  useUpdateAuthPasswordStrength,
+} from '@/lib/react-query/hooks'
 import {
   clampPasswordMinLength,
   checkStandardCompliance,
@@ -40,6 +44,7 @@ import {
   type PasswordStrengthPolicy,
   validatePasswordAgainstPolicy,
 } from '@/lib/password-strength'
+import { cn } from '@/lib/utils'
 
 type PasswordStrengthCardProps = {
   projectId: string
@@ -55,6 +60,9 @@ export function PasswordStrengthCard({
   const [demoPassword, setDemoPassword] = useState('')
   const [showDemoPassword, setShowDemoPassword] = useState(false)
   const [demoChecked, setDemoChecked] = useState(false)
+  const { account } = useAuth()
+  const { isOpen: complianceOpen, setIsOpen: setComplianceOpen } =
+    useAuthPasswordStrengthComplianceOpen(account)
   const mutation = useUpdateAuthPasswordStrength(projectId)
   const lastSubmittedValue = useRef<string | null>(null)
 
@@ -103,6 +111,16 @@ export function PasswordStrengthCard({
     () => findMatchingPasswordStrengthPreset(policy)?.id,
     [policy],
   )
+
+  const complianceSummary = useMemo(() => {
+    const compliantCount = standardResults.filter((r) => r.compliant).length
+    const total = standardResults.length
+    return {
+      compliantCount,
+      gapCount: total - compliantCount,
+      total,
+    }
+  }, [standardResults])
 
   const handleSubmit = () => {
     const payload = { ...policy }
@@ -384,31 +402,58 @@ export function PasswordStrengthCard({
       </div>
 
       <div className="border-t border-border" />
-      <div className="px-6 py-4 space-y-6">
-        <div className="space-y-3">
-          <div>
-            <p className="text-[13px] font-medium text-foreground">
-              Compliance
-            </p>
-            <p className="text-[12px] text-muted-foreground mt-1">
+      <div className="px-6 py-4">
+        <Collapsible open={complianceOpen} onOpenChange={setComplianceOpen}>
+          <CollapsibleTrigger asChild>
+            <button
+              type="button"
+              className="flex w-full cursor-pointer items-center justify-between gap-4 py-1 text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded-md"
+              aria-expanded={complianceOpen}
+            >
+              <div className="flex min-w-0 flex-1 flex-wrap items-center gap-x-2 gap-y-1">
+                <span className="text-[13px] font-semibold text-foreground">
+                  Compliance
+                </span>
+                <Badge variant="success" className="text-[10px] shrink-0">
+                  {complianceSummary.compliantCount}/{complianceSummary.total}{' '}
+                  compliant
+                </Badge>
+                {complianceSummary.gapCount > 0 && (
+                  <Badge variant="error" className="text-[10px] shrink-0">
+                    {complianceSummary.gapCount}{' '}
+                    {complianceSummary.gapCount === 1 ? 'gap' : 'gaps'}
+                  </Badge>
+                )}
+              </div>
+              <ChevronDown
+                className={cn(
+                  'h-4 w-4 shrink-0 text-muted-foreground transition-transform duration-200',
+                  complianceOpen && 'rotate-180',
+                )}
+                aria-hidden
+              />
+            </button>
+          </CollapsibleTrigger>
+          <CollapsibleContent className="space-y-3 pt-3">
+            <p className="text-[12px] text-muted-foreground leading-relaxed">
               See whether your current settings meet widely used password
               guidance. Stricter policies than a standard still count as
               compliant.
             </p>
-          </div>
-          <div className="rounded-lg border border-border overflow-hidden grid lg:grid-cols-2 divide-y lg:divide-y-0 lg:divide-x divide-border">
-            {standardResultColumns.map((column, columnIndex) => (
-              <div
-                key={columnIndex}
-                className="divide-y divide-border bg-muted/10"
-              >
-                {column.map((result) => (
-                  <StandardRow key={result.standard.id} result={result} />
-                ))}
-              </div>
-            ))}
-          </div>
-        </div>
+            <div className="rounded-lg border border-border overflow-hidden grid lg:grid-cols-2 divide-y lg:divide-y-0 lg:divide-x divide-border">
+              {standardResultColumns.map((column, columnIndex) => (
+                <div
+                  key={columnIndex}
+                  className="divide-y divide-border bg-muted/10"
+                >
+                  {column.map((result) => (
+                    <StandardRow key={result.standard.id} result={result} />
+                  ))}
+                </div>
+              ))}
+            </div>
+          </CollapsibleContent>
+        </Collapsible>
       </div>
       <div className="px-6 py-4 border-t border-border bg-muted/30">
         <Button

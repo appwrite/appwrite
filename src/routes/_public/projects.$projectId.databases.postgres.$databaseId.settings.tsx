@@ -8,20 +8,15 @@ import { pageTitle } from '@/lib/utils/page-title'
 export const Route = createFileRoute(
   '/_public/projects/$projectId/databases/postgres/$databaseId/settings',
 )({
-  head: ({ loaderData }) => ({
+  head: () => ({
     meta: [
       {
-        title: pageTitle(
-          loaderData?.database?.name
-            ? `${POSTGRES_DATABASE_TAB_LABELS.settings} · ${loaderData.database.name}`
-            : POSTGRES_DATABASE_TAB_LABELS.settings,
-          'Databases',
-        ),
+        title: pageTitle(POSTGRES_DATABASE_TAB_LABELS.settings, 'Databases'),
       },
     ],
   }),
   loader: async ({ params, context }) => {
-    if (typeof window === 'undefined') return
+    if (typeof window === 'undefined') return { database: null }
     return prefetchPostgresShellData(
       context.queryClient,
       params.projectId,

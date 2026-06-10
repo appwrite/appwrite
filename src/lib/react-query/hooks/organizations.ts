@@ -136,6 +136,7 @@ function createSelfHostedOrganizationPlan(): OrganizationPlan {
     budgeting: false,
     supportsMockNumbers: true,
     supportsOrganizationRoles: false,
+    supportsProjectSpecificRoles: false,
     supportsCredits: false,
     supportsDisposableEmailValidation: false,
     supportsCanonicalEmailValidation: false,

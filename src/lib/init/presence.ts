@@ -97,7 +97,7 @@ export function parseInitPresenceMetadata(
   }
 }
 
-type InitPresenceRecord = Models.DefaultPresence
+type InitPresenceRecord = Models.Presence
 
 export function presenceMatchesInitEvent(
   presence: InitPresenceRecord,

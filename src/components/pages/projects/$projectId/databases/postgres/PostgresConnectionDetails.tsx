@@ -126,9 +126,9 @@ export function PostgresConnectionDetails({
                           v{database.version}
                         </Badge>
                       ) : null}
-                      {database.region ? (
-                        <Badge variant="info" className="text-[10px] shrink-0 uppercase">
-                          {database.region}
+                      {database.replicas > 0 ? (
+                        <Badge variant="info" className="text-[10px] shrink-0">
+                          {database.replicas} replica{database.replicas === 1 ? '' : 's'}
                         </Badge>
                       ) : null}
                     </div>

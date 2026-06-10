@@ -116,8 +116,8 @@ function DedicatedDatabaseCard({
           value: db.specification || 'Not set',
         },
         {
-          label: 'Region',
-          value: db.region?.toUpperCase() || 'Not set',
+          label: 'Replicas',
+          value: db.replicas > 0 ? String(db.replicas) : 'None',
         },
       ]}
     />
@@ -221,7 +221,7 @@ export function DedicatedDatabasesSection({
                       Status
                     </TableHead>
                     <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider text-right">
-                      Region
+                      Replicas
                     </TableHead>
                     <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider text-right">
                       Created
@@ -271,8 +271,8 @@ export function DedicatedDatabasesSection({
                           <DedicatedDatabaseStatusBadge status={db.status} />
                         </div>
                       </TableCell>
-                      <TableCell className="px-4 py-3 text-right text-[13px] text-muted-foreground uppercase">
-                        {db.region || 'Not set'}
+                      <TableCell className="px-4 py-3 text-right text-[13px] text-muted-foreground">
+                        {db.replicas > 0 ? db.replicas : 'None'}
                       </TableCell>
                       <TableCell className="px-4 py-3 text-right">
                         <DateTooltip

@@ -12,7 +12,7 @@ import {
   keepPreviousData,
 } from '@tanstack/react-query'
 import { useMemo } from 'react'
-import { Query, FunctionRuntime, FunctionTemplateUseCase, ID } from '@appwrite.io/console'
+import { Query, Runtime, FunctionTemplateUseCase, ID } from '@appwrite.io/console'
 import type { Models } from '@appwrite.io/console'
 import { sdk } from '@/lib/appwrite/sdk'
 import {
@@ -213,10 +213,10 @@ function templatesSortKey(arr: string[] | undefined): string {
 function listTemplatesFilterPayload(
   runtimes: string[] | undefined,
   useCases: string[] | undefined,
-): { runtimes?: FunctionRuntime[]; useCases?: FunctionTemplateUseCase[] } {
+): { runtimes?: Runtime[]; useCases?: FunctionTemplateUseCase[] } {
   return {
     runtimes: runtimes?.length
-      ? (runtimes as unknown as FunctionRuntime[])
+      ? (runtimes as unknown as Runtime[])
       : undefined,
     useCases: useCases?.length
       ? (useCases as unknown as FunctionTemplateUseCase[])

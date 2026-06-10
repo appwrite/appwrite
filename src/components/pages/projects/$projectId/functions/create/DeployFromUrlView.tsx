@@ -25,7 +25,7 @@ import { useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
 import {
   ID,
-  FunctionRuntime,
+  Runtime,
   TemplateReferenceType,
 } from '@appwrite.io/console'
 import { sdk } from '@/lib/appwrite/sdk'
@@ -146,7 +146,7 @@ export function DeployFromUrlView({
       await projectSdk.functions.create({
         functionId: finalFunctionId,
         name: functionName.trim(),
-        runtime: runtime as FunctionRuntime,
+        runtime: runtime as Runtime,
         execute: isPublic ? ['any'] : [],
         entrypoint: entrypoint.trim() || undefined,
         commands: commands.trim() || undefined,

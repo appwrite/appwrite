@@ -109,8 +109,8 @@ const EMPTY_STATE: InitOnlinePresenceState = {
 }
 
 type PresenceMaps = {
-  online: Map<string, Models.DefaultPresence>
-  away: Map<string, Models.DefaultPresence>
+  online: Map<string, Models.Presence>
+  away: Map<string, Models.Presence>
 }
 
 const createEmptyPresenceMaps = (): PresenceMaps => ({
@@ -610,7 +610,7 @@ export function useInitOnlinePresence(
       const scopeEventId = eventIdRef.current
       if (!scopeEventId) return
 
-      const payload = event.payload as Models.DefaultPresence | undefined
+      const payload = event.payload as Models.Presence | undefined
       const isDelete = isPresenceDeleteEvent(event.events)
       const isMutation = isPresenceMutationEvent(event.events)
 

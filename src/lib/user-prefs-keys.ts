@@ -1074,6 +1074,34 @@ export function mergeAIChatPanelWidthPxIntoPrefs(
   }
 }
 
+// ---------------------------------------------------------------------------
+// Auth password strength compliance panel (account prefs)
+// ---------------------------------------------------------------------------
+
+/** Full key: `console.auth.passwordStrengthComplianceOpen` - compliance section expanded when true. */
+export const USER_PREFS_KEY_AUTH_PASSWORD_STRENGTH_COMPLIANCE_OPEN =
+  'console.auth.passwordStrengthComplianceOpen'
+
+export function parseAuthPasswordStrengthComplianceOpen(
+  prefs: UserPrefs | null | undefined,
+): boolean {
+  return (
+    parseBooleanAccountPref(
+      prefs?.[USER_PREFS_KEY_AUTH_PASSWORD_STRENGTH_COMPLIANCE_OPEN],
+    ) ?? false
+  )
+}
+
+export function mergeAuthPasswordStrengthComplianceOpenIntoPrefs(
+  prefs: UserPrefs,
+  open: boolean,
+): UserPrefs {
+  return {
+    ...prefs,
+    [USER_PREFS_KEY_AUTH_PASSWORD_STRENGTH_COMPLIANCE_OPEN]: open,
+  }
+}
+
 export function readLegacyAIChatPanelOpenFromLocalStorage(): boolean | null {
   if (typeof window === 'undefined') return null
   try {

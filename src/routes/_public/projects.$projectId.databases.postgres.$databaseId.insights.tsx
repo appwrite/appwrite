@@ -22,20 +22,15 @@ export const Route = createFileRoute(
       })
     }
   },
-  head: ({ loaderData }) => ({
+  head: () => ({
     meta: [
       {
-        title: pageTitle(
-          loaderData?.database?.name
-            ? `${POSTGRES_DATABASE_TAB_LABELS.insights} · ${loaderData.database.name}`
-            : POSTGRES_DATABASE_TAB_LABELS.insights,
-          'Databases',
-        ),
+        title: pageTitle(POSTGRES_DATABASE_TAB_LABELS.insights, 'Databases'),
       },
     ],
   }),
   loader: async ({ params, context }) => {
-    if (typeof window === 'undefined') return
+    if (typeof window === 'undefined') return { database: null }
     return prefetchPostgresShellData(
       context.queryClient,
       params.projectId,

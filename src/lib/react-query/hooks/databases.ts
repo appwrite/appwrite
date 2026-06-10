@@ -198,17 +198,18 @@ export async function fetchProjectDatabases(
   }
 
   const projectSdk = sdk.forProject(projectId)
+  const searchArg = search?.trim() || undefined
   const mergeQueries = [
     ...(filterQueries ?? []),
+    ...(searchArg ? [Query.search('name', searchArg)] : []),
     Query.orderDesc('$createdAt'),
     Query.limit(MERGED_DATABASE_LIST_LIMIT),
   ]
-  const searchArg = search?.trim() || undefined
 
   const settled = await Promise.allSettled([
-    projectSdk.tablesDB.list({ queries: mergeQueries, search: searchArg }),
-    projectSdk.documentsDB.list({ queries: mergeQueries, search: searchArg }),
-    projectSdk.vectorsDB.list({ queries: mergeQueries, search: searchArg }),
+    projectSdk.tablesDB.list({ queries: mergeQueries }),
+    projectSdk.documentsDB.list({ queries: mergeQueries }),
+    projectSdk.vectorsDB.list({ queries: mergeQueries }),
   ])
 
   const merged: Models.Database[] = []
@@ -386,10 +387,8 @@ export async function createNativeDatabase(
     name: data.name.trim(),
     engine: data.engine,
     specification: data.specification.trim(),
-    region,
     type: 'dedicated',
-    highAvailability: haReplicaCount > 0,
-    highAvailabilityReplicaCount: haReplicaCount,
+    replicas: haReplicaCount,
     backupEnabled: pitrEnabled,
     backupPitr: pitrEnabled,
   })
@@ -1852,24 +1851,24 @@ export async function createProjectTableColumn(
         databaseId,
         tableId,
         key: colKey,
-        required,
-        xdefault,
+        required: required as boolean,
+        xdefault: xdefault as number[] | undefined,
       })
     case 'linestring':
       return await projectSdk.tablesDB.createLineColumn({
         databaseId,
         tableId,
         key: colKey,
-        required,
-        xdefault,
+        required: required as boolean,
+        xdefault: xdefault as number[][] | undefined,
       })
     case 'polygon':
       return await projectSdk.tablesDB.createPolygonColumn({
         databaseId,
         tableId,
         key: colKey,
-        required,
-        xdefault,
+        required: required as boolean,
+        xdefault: xdefault as number[][] | undefined,
       })
     default:
       throw new Error(`Unsupported column type: ${type}`)

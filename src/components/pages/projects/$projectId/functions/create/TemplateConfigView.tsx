@@ -29,7 +29,7 @@ import { toast } from 'sonner'
 import {
   ID,
   TemplateReferenceType,
-  type FunctionRuntime,
+  type Runtime,
 } from '@appwrite.io/console'
 import { sdk } from '@/lib/appwrite/sdk'
 import {
@@ -261,7 +261,7 @@ export function TemplateConfigView({
       await projectSdk.functions.create({
         functionId: finalFunctionId,
         name: functionName.trim(),
-        runtime: runtime as FunctionRuntime,
+        runtime: runtime as Runtime,
         execute: isPublic
           ? ['any']
           : template.permissions?.length

@@ -57,6 +57,7 @@ import {
   hasStorageFilesTablePaneWidthPref,
   mergeAIChatPanelOpenIntoPrefs,
   mergeAIChatPanelWidthPxIntoPrefs,
+  mergeAuthPasswordStrengthComplianceOpenIntoPrefs,
   mergeApiExplorerColumnsLayoutIntoPrefs,
   mergeApiExplorerExpandedProductGroupIntoPrefs,
   mergeApiExplorerResponseSplitLayoutIntoPrefs,
@@ -72,6 +73,7 @@ import {
   mergeStorageFilesTablePaneWidthPxIntoPrefs,
   parseAIChatPanelOpen,
   parseAIChatPanelWidthPx,
+  parseAuthPasswordStrengthComplianceOpen,
   parseApiExplorerColumnsLayout,
   parseApiExplorerExpandedProductGroup,
   parseApiExplorerResponseSplitLayout,
@@ -1452,6 +1454,65 @@ export function useAIChatPanelOpen(
             ? {
                 ...current,
                 prefs: mergeAIChatPanelOpenIntoPrefs(
+                  (current.prefs ?? {}) as UserPrefs,
+                  value,
+                ),
+              }
+            : current,
+      )
+    },
+    onSuccess: (updatedAccount) => {
+      syncConsoleAccountAfterMutation(queryClient, {
+        apiResult: updatedAccount,
+      })
+    },
+  })
+
+  const setIsOpen = useCallback(
+    (value: boolean | ((prev: boolean) => boolean)) => {
+      const nextValue = typeof value === 'function' ? value(isOpen) : value
+      if (!account) return
+      updateMutation.mutate(nextValue)
+    },
+    [account, isOpen, updateMutation],
+  )
+
+  return { isOpen, setIsOpen }
+}
+
+/**
+ * Password strength compliance section open state
+ * (`console.auth.passwordStrengthComplianceOpen`).
+ */
+export function useAuthPasswordStrengthComplianceOpen(
+  account: ConsoleAccountCache | undefined,
+) {
+  const queryClient = useQueryClient()
+
+  const isOpen = parseAuthPasswordStrengthComplianceOpen(
+    account?.prefs as UserPrefs | undefined,
+  )
+
+  const updateMutation = useMutation({
+    mutationFn: async (value: boolean) => {
+      if (!account) {
+        throw new Error('Account data not available')
+      }
+      return await updateAccountPrefs(
+        mergeAuthPasswordStrengthComplianceOpenIntoPrefs(
+          (account.prefs ?? {}) as UserPrefs,
+          value,
+        ),
+      )
+    },
+    onMutate: async (value) => {
+      queryClient.setQueriesData<{ prefs?: Record<string, unknown> }>(
+        { queryKey: ['account', 'console'] },
+        (current) =>
+          current
+            ? {
+                ...current,
+                prefs: mergeAuthPasswordStrengthComplianceOpenIntoPrefs(
                   (current.prefs ?? {}) as UserPrefs,
                   value,
                 ),

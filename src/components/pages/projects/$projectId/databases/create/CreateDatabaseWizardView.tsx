@@ -37,7 +37,7 @@ import {
   useProject,
 } from '@/lib/react-query/hooks'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
-import { DatabaseType } from '@appwrite.io/console'
+import { DatabaseType, type Models } from '@appwrite.io/console'
 import { cn } from '@/lib/utils'
 import { useConsoleProfile } from '@/hooks/use-console-profile'
 import {
@@ -320,8 +320,12 @@ export function CreateDatabaseWizardView() {
     })
   }
 
-  const createMutation = useMutation({
-    mutationFn: (data: { databaseId?: string; name: string }) => {
+  const createMutation = useMutation<
+    Models.Database | Models.DedicatedDatabase,
+    Error,
+    { databaseId?: string; name: string }
+  >({
+    mutationFn: (data) => {
       if (!dbType) {
         throw new Error('Database type is required')
       }
