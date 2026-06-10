@@ -106,6 +106,13 @@ abstract class Format
      */
     protected function getArrayItemsSchema(mixed $example): array
     {
+        if (\is_string($example)) {
+            $decoded = \json_decode($example, true);
+            if (\is_array($decoded)) {
+                $example = $decoded;
+            }
+        }
+
         if (!\is_array($example) || empty($example)) {
             return ['type' => 'object'];
         }

@@ -1038,7 +1038,7 @@ class OpenAPI3 extends Format
                     if ($rule['array'] || $rule['type'] === 'array') {
                         $output['components']['schemas'][$model->getType()]['properties'][$name]['items'] = $items;
                     } else {
-                        if (isset($items['$ref'])) {
+                        if (isset($items['$ref']) || isset($items['oneOf'])) {
                             $items = ['allOf' => [$items]];
                         }
                         /** @var array<string, mixed> $property */

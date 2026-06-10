@@ -10,6 +10,13 @@ use Appwrite\SDK\Specification\Format\Swagger2;
 use Appwrite\SDK\Specification\Validator\PasswordFormat;
 use Appwrite\Utopia\Database\Validator\CustomId;
 use Appwrite\Utopia\Response;
+use Appwrite\Utopia\Response\Model\AlgoArgon2;
+use Appwrite\Utopia\Response\Model\AlgoBcrypt;
+use Appwrite\Utopia\Response\Model\AlgoMd5;
+use Appwrite\Utopia\Response\Model\AlgoPhpass;
+use Appwrite\Utopia\Response\Model\AlgoScrypt;
+use Appwrite\Utopia\Response\Model\AlgoScryptModified;
+use Appwrite\Utopia\Response\Model\AlgoSha;
 use Appwrite\Utopia\Response\Model\AttributeLine;
 use Appwrite\Utopia\Response\Model\Error as ErrorModel;
 use Appwrite\Utopia\Response\Model\HealthStatus;
@@ -21,6 +28,7 @@ use Appwrite\Utopia\Response\Model\PlatformWeb;
 use Appwrite\Utopia\Response\Model\PlatformWindows;
 use Appwrite\Utopia\Response\Model\Preferences;
 use Appwrite\Utopia\Response\Model\Team;
+use Appwrite\Utopia\Response\Model\User;
 use Appwrite\Utopia\Response\Model\Webhook;
 use PHPUnit\Framework\TestCase;
 use Utopia\Database\Database;
@@ -45,6 +53,11 @@ class TestFormat extends Format
     public function requestParameterConfig(bool $optional, bool $nullable, mixed $default, string $methodName = '', string $paramName = ''): array
     {
         return $this->getRequestParameterConfig($optional, $nullable, $default, $methodName, $paramName);
+    }
+
+    public function arrayItemsSchema(mixed $example): array
+    {
+        return $this->getArrayItemsSchema($example);
     }
 }
 
@@ -194,6 +207,89 @@ final class FormatTest extends TestCase
         $this->assertArrayNotHasKey('error', $swagger['definitions']);
         $this->assertSame('object', $swaggerPrefs['type']);
         $this->assertSame([['$ref' => '#/definitions/preferences']], $swaggerPrefs['allOf']);
+    }
+
+    public function testArrayItemsSchemaInfersTypesFromJsonStringExamples(): void
+    {
+        $this->assertSame(
+            [
+                'type' => 'array',
+                'items' => [
+                    'type' => 'number',
+                    'format' => 'double',
+                ],
+            ],
+            $this->format->arrayItemsSchema('[[1,2],[3,4]]')
+        );
+
+        $this->assertSame(
+            [
+                'type' => 'object',
+                'additionalProperties' => true,
+            ],
+            $this->format->arrayItemsSchema('[{"resource":"Database","id":"public"}]')
+        );
+
+        $this->assertSame(
+            ['type' => 'string'],
+            $this->format->arrayItemsSchema('["topt", "email"]')
+        );
+
+        $this->assertSame(
+            ['type' => 'object'],
+            $this->format->arrayItemsSchema('[SHARED_SECRET]')
+        );
+    }
+
+    public function testMultiTypePropertiesWrapOneOfInAllOf(): void
+    {
+        Method::$processed = [];
+        Method::$errors = [];
+
+        $route = (new Route('GET', '/v1/tests/user'))
+            ->desc('Get test')
+            ->label('sdk', new Method(
+                namespace: 'test',
+                group: null,
+                name: 'getUserTest',
+                description: 'Get test.',
+                auth: [],
+                responses: [
+                    new SDKResponse(
+                        code: 200,
+                        model: Response::MODEL_USER,
+                    ),
+                ],
+            ));
+
+        $models = [
+            new User(),
+            new AlgoArgon2(),
+            new AlgoScrypt(),
+            new AlgoScryptModified(),
+            new AlgoBcrypt(),
+            new AlgoPhpass(),
+            new AlgoSha(),
+            new AlgoMd5(),
+        ];
+
+        $openApi = (new OpenAPI3(new Container(), [], [$route], $models, [], 0, 'console'))->parse();
+        $swagger = (new Swagger2(new Container(), [], [$route], $models, [], 0, 'console'))->parse();
+
+        $openApiHashOptions = $openApi['components']['schemas']['user']['properties']['hashOptions'];
+        $swaggerHashOptions = $swagger['definitions']['user']['properties']['hashOptions'];
+
+        $this->assertSame('object', $openApiHashOptions['type']);
+        $this->assertArrayNotHasKey('items', $openApiHashOptions);
+        $this->assertArrayNotHasKey('oneOf', $openApiHashOptions);
+        $this->assertCount(1, $openApiHashOptions['allOf']);
+        $this->assertCount(7, $openApiHashOptions['allOf'][0]['oneOf']);
+        $this->assertSame(['$ref' => '#/components/schemas/algoArgon2'], $openApiHashOptions['allOf'][0]['oneOf'][0]);
+
+        $this->assertSame('object', $swaggerHashOptions['type']);
+        $this->assertArrayNotHasKey('items', $swaggerHashOptions);
+        $this->assertCount(7, $swaggerHashOptions['x-oneOf']);
+        $this->assertSame(['$ref' => '#/definitions/algoArgon2'], $swaggerHashOptions['x-oneOf'][0]);
     }
 
     public function testArraySchemasEmitItems(): void
