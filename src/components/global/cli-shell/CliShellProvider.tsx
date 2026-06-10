@@ -43,6 +43,7 @@ import {
   resolveCliTerminalUsername,
   type CliTerminalApi,
   writeCliShellLine,
+  writeCliShellSuggestions,
   writeCliTerminalRaw,
 } from '@/lib/cli-shell/cli-terminal-api'
 import type { CliShellRunOptions } from '@/lib/cli-shell/types'
@@ -78,8 +79,15 @@ import {
   createCliShellSessionId,
   createInitialCliShellSessionState,
   nextCliShellSessionName,
+  reorderCliShellRootSessions,
   type CliShellSession,
 } from '@/lib/cli-shell/cli-shell-sessions'
+import {
+  collectCliShellSessionsToRemove,
+  getCliShellSessionRootId,
+  getCliShellVisiblePaneSessionIds,
+  normalizeCliShellSplitPaneIds,
+} from '@/lib/cli-shell/cli-shell-split'
 import {
   clampCliShellHeightPx,
   MAX_CLI_SHELL_SESSIONS,
@@ -87,17 +95,14 @@ import {
   parseCliShellSessions,
   type UserPrefs,
 } from '@/lib/user-prefs-keys'
-import type { CliTerminalSearchResults } from '@/lib/cli-shell/cli-terminal-search-label'
+import {
+  aggregateCliTerminalSearchResults,
+  resolveGlobalMatchPosition,
+  type CliTerminalSearchResults,
+} from '@/lib/cli-shell/cli-terminal-search-label'
 import { toast } from 'sonner'
 
 export type { CliTerminalSearchResults }
-
-export type CliTerminalSearchController = {
-  search: (query: string, options: { caseSensitive: boolean }) => boolean
-  findNext: () => boolean
-  findPrevious: () => boolean
-  clear: () => void
-}
 
 type CliShellContextValue = {
   open: boolean
@@ -107,12 +112,19 @@ type CliShellContextValue = {
   sessions: CliShellSession[]
   activeSessionId: string
   setActiveSessionId: (sessionId: string) => void
+  selectSession: (sessionId: string) => void
+  focusedSessionId: string
+  focusSessionPane: (sessionId: string) => void
+  splitPaneSessionIds: string[]
+  visiblePaneSessionIds: string[]
+  splitSession: (sessionId: string) => void
   createSession: () => void
   removeSession: (sessionId: string) => void
   renameSession: (sessionId: string, name: string) => void
+  reorderRootSessions: (fromIndex: number, toIndex: number) => void
   registerTerminal: (sessionId: string, api: CliTerminalApi) => void
   unregisterTerminal: (sessionId: string) => void
-  writeSessionWelcome: (sessionId: string) => boolean
+  writeSessionWelcome: (sessionId: string) => Promise<boolean>
   runCommand: (command: string, sessionId?: string) => Promise<void>
   clearOutput: (sessionId?: string) => void
   completeTab: (
@@ -136,12 +148,10 @@ type CliShellContextValue = {
   getCommandHistory: () => string[]
   persistCommandHistory: (history: string[]) => void
   getSuggestionCommands: () => readonly string[]
-  registerSearchController: (
-    sessionId: string,
-    controller: CliTerminalSearchController,
-  ) => void
-  unregisterSearchController: (sessionId: string) => void
   terminalSearchOpen: boolean
+  terminalSearchQuery: string
+  searchSessionIds: string[]
+  searchCaseSensitive: boolean
   setTerminalSearchOpen: (open: boolean) => void
   terminalSearchResults: CliTerminalSearchResults | null
   reportSearchResults: (
@@ -152,6 +162,7 @@ type CliShellContextValue = {
   searchTerminalOutput: (
     query: string,
     options: { caseSensitive: boolean },
+    sessionId?: string,
   ) => void
   findNextTerminalMatch: () => void
   findPreviousTerminalMatch: () => void
@@ -200,12 +211,26 @@ export function CliShellProvider({ projectId, children }: CliShellProviderProps)
   const [runningSessionId, setRunningSessionId] = useState<string | null>(null)
   const [bootstrapError, setBootstrapError] = useState<string | null>(null)
   const [terminalSearchOpen, setTerminalSearchOpenState] = useState(false)
+  const terminalSearchOpenRef = useRef(terminalSearchOpen)
+  terminalSearchOpenRef.current = terminalSearchOpen
   const [terminalSearchResults, setTerminalSearchResults] =
     useState<CliTerminalSearchResults | null>(null)
+  const [terminalSearchQuery, setTerminalSearchQuery] = useState('')
+  const [searchSessionIds, setSearchSessionIds] = useState<string[]>([])
+  const searchSessionIdsRef = useRef(searchSessionIds)
+  searchSessionIdsRef.current = searchSessionIds
+  const searchResultsBySessionRef = useRef(
+    new Map<string, CliTerminalSearchResults>(),
+  )
+  const [searchCaseSensitive, setSearchCaseSensitive] = useState(false)
   const [sessions, setSessions] = useState<CliShellSession[]>(
     () => createInitialCliShellSessionState().sessions,
   )
-  const [activeSessionId, setActiveSessionId] = useState<string>(
+  const [activeSessionId, setActiveSessionIdState] = useState<string>(
+    () => createInitialCliShellSessionState().activeSessionId,
+  )
+  const [splitPaneSessionIds, setSplitPaneSessionIds] = useState<string[]>([])
+  const [focusedSessionId, setFocusedSessionId] = useState<string>(
     () => createInitialCliShellSessionState().activeSessionId,
   )
   const isRunning = runningSessionId !== null
@@ -214,11 +239,12 @@ export function CliShellProvider({ projectId, children }: CliShellProviderProps)
   const commandHistoryRef = useRef(commandHistory)
   commandHistoryRef.current = commandHistory
   const suggestionCommandsRef = useRef<readonly string[]>(CLI_SHELL_TRY_COMMANDS)
-  const searchControllersRef = useRef<Map<string, CliTerminalSearchController>>(
-    new Map(),
-  )
   const runDismissedRef = useRef(false)
   const lastSearchQueryRef = useRef('')
+  const lastSearchSessionIdRef = useRef<string | null>(null)
+  const lastGlobalSearchIndexRef = useRef(-1)
+  const suppressSearchFocusRerunRef = useRef(false)
+  const suppressSearchReportRef = useRef(false)
   const sessionsHydratedForProjectRef = useRef<string | null>(null)
   const lastPersistedSessionsRef = useRef('')
   const persistSessionsRef = useRef(persistSessions)
@@ -230,6 +256,12 @@ export function CliShellProvider({ projectId, children }: CliShellProviderProps)
   const welcomeInitInProgressRef = useRef<Set<string>>(new Set())
   const activeSessionIdRef = useRef(activeSessionId)
   activeSessionIdRef.current = activeSessionId
+  const sessionsRef = useRef(sessions)
+  sessionsRef.current = sessions
+  const splitPaneSessionIdsRef = useRef(splitPaneSessionIds)
+  splitPaneSessionIdsRef.current = splitPaneSessionIds
+  const focusedSessionIdRef = useRef(focusedSessionId)
+  focusedSessionIdRef.current = focusedSessionId
   const pendingBootstrapMessagesRef = useRef<string[]>([])
   const bootstrapPromiseRef = useRef<Promise<CliShellContainer> | null>(null)
   const bootstrapPendingRef = useRef<string | null>(null)
@@ -246,12 +278,12 @@ export function CliShellProvider({ projectId, children }: CliShellProviderProps)
   const BOOTSTRAP_LINE_MIN_INTERVAL_MS = 250
 
   const getTerminalApi = useCallback((sessionId?: string) => {
-    const id = sessionId ?? activeSessionIdRef.current
+    const id = sessionId ?? focusedSessionIdRef.current
     return terminalApisRef.current.get(id) ?? null
   }, [])
 
   const showInputPromptIfIdle = useCallback((sessionId?: string) => {
-    const id = sessionId ?? activeSessionIdRef.current
+    const id = sessionId ?? focusedSessionIdRef.current
     if (runningSessionIdRef.current === id) return
 
     const api = getTerminalApi(sessionId)
@@ -265,9 +297,13 @@ export function CliShellProvider({ projectId, children }: CliShellProviderProps)
     api.showInputPrompt?.()
   }, [getTerminalApi])
 
-  const writeWelcome = useCallback((api: CliTerminalApi) => {
+  const writeWelcome = useCallback(async (api: CliTerminalApi) => {
     for (const line of createCliShellWelcomeLines()) {
-      writeCliShellLine(api, line)
+      if (line.type === 'suggestions') {
+        await writeCliShellSuggestions(api, line.commands)
+      } else {
+        writeCliShellLine(api, line)
+      }
     }
   }, [])
 
@@ -306,7 +342,7 @@ export function CliShellProvider({ projectId, children }: CliShellProviderProps)
   )
 
   const writeSessionWelcome = useCallback(
-    (sessionId: string): boolean => {
+    async (sessionId: string): Promise<boolean> => {
       const api = terminalApisRef.current.get(sessionId)
       if (!api) return false
 
@@ -322,7 +358,7 @@ export function CliShellProvider({ projectId, children }: CliShellProviderProps)
 
       try {
         api.resetForWelcome?.()
-        writeWelcome(api)
+        await writeWelcome(api)
 
         let shouldShowPrompt = false
         if (sessionId === activeSessionIdRef.current) {
@@ -331,7 +367,10 @@ export function CliShellProvider({ projectId, children }: CliShellProviderProps)
 
         api.markWelcomeComplete?.()
 
-        if (sessionId === activeSessionIdRef.current && shouldShowPrompt) {
+        const isActiveRoot = sessionId === activeSessionIdRef.current
+        if (isActiveRoot && shouldShowPrompt) {
+          showInputPromptIfIdle(sessionId)
+        } else if (!isActiveRoot) {
           showInputPromptIfIdle(sessionId)
         }
 
@@ -733,14 +772,15 @@ export function CliShellProvider({ projectId, children }: CliShellProviderProps)
     terminalContentReadyRef.current.clear()
     welcomeInitInProgressRef.current.clear()
     terminalApisRef.current.clear()
-    searchControllersRef.current.clear()
     pendingBootstrapMessagesRef.current = []
     suggestionCommandsRef.current = CLI_SHELL_TRY_COMMANDS
     sessionsHydratedForProjectRef.current = null
     lastPersistedSessionsRef.current = ''
     const nextState = createInitialCliShellSessionState()
     setSessions(nextState.sessions)
-    setActiveSessionId(nextState.activeSessionId)
+    setActiveSessionIdState(nextState.activeSessionId)
+    setFocusedSessionId(nextState.activeSessionId)
+    setSplitPaneSessionIds([])
     removeCliFetchBridge()
   }, [projectId, resetBootstrapLine])
 
@@ -755,15 +795,18 @@ export function CliShellProvider({ projectId, children }: CliShellProviderProps)
     if (saved) {
       setSessions(saved.sessions)
       setActiveSessionId(saved.activeSessionId)
+      setSplitPaneSessionIds(saved.splitPaneSessionIds ?? [])
       lastPersistedSessionsRef.current = JSON.stringify({
         sessions: saved.sessions,
         activeSessionId: saved.activeSessionId,
+        splitPaneSessionIds: saved.splitPaneSessionIds,
       })
     } else {
       const defaultState = createInitialCliShellSessionState()
       lastPersistedSessionsRef.current = JSON.stringify({
         sessions: defaultState.sessions,
         activeSessionId: defaultState.activeSessionId,
+        splitPaneSessionIds: undefined,
       })
     }
 
@@ -773,12 +816,22 @@ export function CliShellProvider({ projectId, children }: CliShellProviderProps)
   useEffect(() => {
     if (sessionsHydratedForProjectRef.current !== projectId) return
 
-    const payload = JSON.stringify({ sessions, activeSessionId })
+    const persistedSplitPaneIds =
+      splitPaneSessionIds.length > 1 ? splitPaneSessionIds : undefined
+    const payload = JSON.stringify({
+      sessions,
+      activeSessionId,
+      splitPaneSessionIds: persistedSplitPaneIds,
+    })
     if (lastPersistedSessionsRef.current === payload) return
 
     lastPersistedSessionsRef.current = payload
-    persistSessionsRef.current({ sessions, activeSessionId })
-  }, [activeSessionId, projectId, sessions])
+    persistSessionsRef.current({
+      sessions,
+      activeSessionId,
+      splitPaneSessionIds: persistedSplitPaneIds,
+    })
+  }, [activeSessionId, projectId, sessions, splitPaneSessionIds])
 
   useEffect(() => {
     return () => {
@@ -813,23 +866,112 @@ export function CliShellProvider({ projectId, children }: CliShellProviderProps)
       if (outcome.kind === 'none') return null
 
       if (outcome.kind === 'list') {
+        const api = getTerminalApi(sessionId)
+        if (api) {
+          api.writeln('')
+        }
         writeSystemLine(outcome.matches.join('  '), sessionId)
         return { input, cursor }
       }
 
       return applyTabCompletion(input, cursor, outcome)
     },
-    [writeSystemLine],
+    [getTerminalApi, writeSystemLine],
   )
 
   const focusSession = useCallback((sessionId: string) => {
     const api = terminalApisRef.current.get(sessionId)
     if (!api) return false
+    if (terminalSearchOpen) return true
     requestAnimationFrame(() => {
       api.focus()
     })
     return true
+  }, [terminalSearchOpen])
+
+  const setActiveSessionId = useCallback((sessionId: string) => {
+    setActiveSessionIdState(sessionId)
+    setFocusedSessionId(sessionId)
   }, [])
+
+  const selectSession = useCallback(
+    (sessionId: string) => {
+      const rootId = getCliShellSessionRootId(sessionId, sessionsRef.current)
+      setActiveSessionIdState(rootId)
+      setFocusedSessionId(sessionId)
+      focusSession(sessionId)
+    },
+    [focusSession],
+  )
+
+  const focusSessionPane = useCallback(
+    (sessionId: string) => {
+      setFocusedSessionId(sessionId)
+      focusSession(sessionId)
+    },
+    [focusSession],
+  )
+
+  const splitSession = useCallback(
+    (sessionId: string) => {
+      const rootId = getCliShellSessionRootId(
+        sessionId,
+        sessionsRef.current,
+      )
+      const nextSessionId = createCliShellSessionId()
+      let added = false
+
+      setSessions((prev) => {
+        if (prev.length >= MAX_CLI_SHELL_SESSIONS) {
+          toast.error(`Maximum ${MAX_CLI_SHELL_SESSIONS} terminal sessions.`)
+          return prev
+        }
+        added = true
+        const nextSession: CliShellSession = {
+          id: nextSessionId,
+          name: nextCliShellSessionName(prev),
+          parentSessionId: rootId,
+        }
+        return [...prev, nextSession]
+      })
+
+      if (!added) return
+
+      setSplitPaneSessionIds((prev) => {
+        const panes =
+          prev.length > 1
+            ? [...prev]
+            : sessionsRef.current.some((session) => session.id === sessionId)
+              ? [sessionId]
+              : [rootId]
+
+        if (!panes.includes(sessionId)) {
+          if (!panes.includes(rootId)) {
+            panes.unshift(rootId)
+          }
+          if (sessionId !== rootId) {
+            const rootIndex = panes.indexOf(rootId)
+            panes.splice(rootIndex + 1, 0, sessionId)
+          }
+        }
+
+        const index = panes.indexOf(sessionId)
+        const next = [...panes]
+        next.splice(index >= 0 ? index + 1 : next.length, 0, nextSessionId)
+        return next
+      })
+
+      setActiveSessionIdState(rootId)
+      setFocusedSessionId(nextSessionId)
+
+      const focusNewSession = (attempt = 0) => {
+        if (focusSession(nextSessionId) || attempt >= 30) return
+        requestAnimationFrame(() => focusNewSession(attempt + 1))
+      }
+      requestAnimationFrame(() => focusNewSession())
+    },
+    [focusSession],
+  )
 
   const renameSession = useCallback((sessionId: string, name: string) => {
     const trimmed = name.trim().slice(0, MAX_CLI_SHELL_SESSION_NAME_LENGTH)
@@ -840,6 +982,15 @@ export function CliShellProvider({ projectId, children }: CliShellProviderProps)
       ),
     )
   }, [])
+
+  const reorderRootSessions = useCallback(
+    (fromIndex: number, toIndex: number) => {
+      setSessions((prev) =>
+        reorderCliShellRootSessions(prev, fromIndex, toIndex),
+      )
+    },
+    [],
+  )
 
   const createSession = useCallback(() => {
     const nextSessionId = createCliShellSessionId()
@@ -855,7 +1006,8 @@ export function CliShellProvider({ projectId, children }: CliShellProviderProps)
       }
       return [...prev, nextSession]
     })
-    setActiveSessionId(nextSessionId)
+    setActiveSessionIdState(nextSessionId)
+    setFocusedSessionId(nextSessionId)
 
     const focusNewSession = (attempt = 0) => {
       if (focusSession(nextSessionId) || attempt >= 30) return
@@ -865,17 +1017,42 @@ export function CliShellProvider({ projectId, children }: CliShellProviderProps)
   }, [focusSession])
 
   const removeSession = useCallback((sessionId: string) => {
+    const toRemove = collectCliShellSessionsToRemove(
+      sessionId,
+      sessionsRef.current,
+    )
+    if (sessionsRef.current.length - toRemove.length < 1) return
+
+    const remaining = sessionsRef.current.filter(
+      (session) => !toRemove.includes(session.id),
+    )
+    const nextActive =
+      remaining.find((session) => !session.parentSessionId)?.id ??
+      remaining[0]?.id ??
+      ''
+    const nextFocused = toRemove.includes(focusedSessionIdRef.current)
+      ? remaining.find((session) => session.parentSessionId === nextActive)?.id ??
+        nextActive
+      : focusedSessionIdRef.current
+
     setSessions((prev) => {
-      if (prev.length <= 1) return prev
-      const nextSessions = prev.filter((session) => session.id !== sessionId)
-      if (activeSessionIdRef.current === sessionId) {
-        setActiveSessionId(nextSessions[0]?.id ?? '')
+      if (prev.length - toRemove.length < 1) return prev
+      for (const id of toRemove) {
+        terminalContentReadyRef.current.delete(id)
+        welcomeInitInProgressRef.current.delete(id)
+        terminalApisRef.current.delete(id)
       }
-      terminalContentReadyRef.current.delete(sessionId)
-      welcomeInitInProgressRef.current.delete(sessionId)
-      terminalApisRef.current.delete(sessionId)
-      return nextSessions
+      return prev.filter((session) => !toRemove.includes(session.id))
     })
+
+    setActiveSessionIdState(nextActive)
+    setFocusedSessionId(nextFocused)
+    setSplitPaneSessionIds((prev) =>
+      normalizeCliShellSplitPaneIds(
+        prev.filter((id) => !toRemove.includes(id)),
+        remaining,
+      ),
+    )
   }, [])
 
   const runCommand = useCallback(
@@ -1033,26 +1210,70 @@ export function CliShellProvider({ projectId, children }: CliShellProviderProps)
     [],
   )
 
-  const registerSearchController = useCallback(
-    (sessionId: string, controller: CliTerminalSearchController) => {
-      searchControllersRef.current.set(sessionId, controller)
+  const resolveTerminalApiSessionId = useCallback(
+    (preferredSessionId?: string | null) => {
+      const candidates = [
+        preferredSessionId,
+        focusedSessionIdRef.current,
+        activeSessionIdRef.current,
+        ...getCliShellVisiblePaneSessionIds(
+          activeSessionIdRef.current,
+          sessionsRef.current,
+          splitPaneSessionIdsRef.current,
+        ),
+        lastSearchSessionIdRef.current,
+      ].filter((id): id is string => Boolean(id))
+
+      for (const id of candidates) {
+        if (terminalApisRef.current.has(id)) return id
+      }
+
+      return terminalApisRef.current.keys().next().value ?? null
     },
     [],
   )
 
-  const unregisterSearchController = useCallback((sessionId: string) => {
-    searchControllersRef.current.delete(sessionId)
+  const getVisibleSearchPaneIds = useCallback(() => {
+    return getCliShellVisiblePaneSessionIds(
+      activeSessionIdRef.current,
+      sessionsRef.current,
+      splitPaneSessionIdsRef.current,
+    )
   }, [])
 
-  const getActiveSearchController = useCallback(() => {
-    return searchControllersRef.current.get(activeSessionIdRef.current) ?? null
+  const getSearchTargetSessionIds = useCallback(
+    (preferredSessionId?: string | null) => {
+      const paneIds = getVisibleSearchPaneIds().filter((id) =>
+        terminalApisRef.current.has(id),
+      )
+
+      if (paneIds.length > 1) {
+        return paneIds
+      }
+
+      const singleId = resolveTerminalApiSessionId(preferredSessionId)
+      return singleId ? [singleId] : []
+    },
+    [getVisibleSearchPaneIds, resolveTerminalApiSessionId],
+  )
+
+  const clearAllTerminalSearch = useCallback((exceptSessionId?: string) => {
+    for (const [sessionId, api] of terminalApisRef.current) {
+      if (exceptSessionId && sessionId === exceptSessionId) continue
+      api.clearTerminalSearch?.()
+    }
   }, [])
 
   const clearTerminalSearchState = useCallback(() => {
     lastSearchQueryRef.current = ''
+    lastSearchSessionIdRef.current = null
+    lastGlobalSearchIndexRef.current = -1
+    searchResultsBySessionRef.current.clear()
+    setTerminalSearchQuery('')
+    setSearchSessionIds([])
     setTerminalSearchResults(null)
-    getActiveSearchController()?.clear()
-  }, [getActiveSearchController])
+    clearAllTerminalSearch()
+  }, [clearAllTerminalSearch])
 
   const setTerminalSearchOpen = useCallback(
     (open: boolean) => {
@@ -1066,46 +1287,319 @@ export function CliShellProvider({ projectId, children }: CliShellProviderProps)
 
   const reportSearchResults = useCallback(
     (sessionId: string, results: CliTerminalSearchResults) => {
-      if (sessionId !== activeSessionIdRef.current) return
-      setTerminalSearchResults(results)
+      if (!terminalSearchOpenRef.current) return
+      if (suppressSearchReportRef.current) return
+
+      const targetIds = searchSessionIdsRef.current
+      if (targetIds.length <= 1) {
+        setTerminalSearchResults(results)
+        if (results.resultCount > 0) {
+          lastSearchSessionIdRef.current = sessionId
+        }
+        return
+      }
+
+      if (!targetIds.includes(sessionId)) return
+
+      searchResultsBySessionRef.current.set(sessionId, results)
+      const aggregated = aggregateCliTerminalSearchResults(
+        targetIds,
+        searchResultsBySessionRef.current,
+        lastSearchSessionIdRef.current,
+      )
+      if (aggregated.activeSessionId) {
+        lastSearchSessionIdRef.current = aggregated.activeSessionId
+      }
+      if (aggregated.resultIndex >= 0) {
+        lastGlobalSearchIndexRef.current = aggregated.resultIndex
+      }
+      setTerminalSearchResults({
+        resultIndex: aggregated.resultIndex,
+        resultCount: aggregated.resultCount,
+      })
     },
     [],
   )
 
+  const goToSplitSearchMatch = useCallback(
+    (
+      sessionId: string,
+      localIndex: number,
+      query: string,
+      globalIndex: number,
+      totalCount: number,
+    ) => {
+      const api = terminalApisRef.current.get(sessionId)
+      if (!api?.findFirstMatch?.(query)) return
+
+      const sessionCount =
+        searchResultsBySessionRef.current.get(sessionId)?.resultCount ?? 0
+      if (sessionCount <= 0) return
+
+      suppressSearchReportRef.current = true
+      try {
+        for (let step = 0; step < localIndex; step++) {
+          if (!api.findNextMatch?.(query)) break
+        }
+      } finally {
+        suppressSearchReportRef.current = false
+      }
+
+      searchResultsBySessionRef.current.set(sessionId, {
+        resultIndex: localIndex,
+        resultCount: sessionCount,
+      })
+
+      suppressSearchFocusRerunRef.current = true
+      focusSessionPane(sessionId)
+      suppressSearchFocusRerunRef.current = false
+
+      lastSearchSessionIdRef.current = sessionId
+      lastGlobalSearchIndexRef.current = globalIndex
+      setTerminalSearchResults({
+        resultIndex: globalIndex,
+        resultCount: totalCount,
+      })
+    },
+    [focusSessionPane],
+  )
+
+  const goToSplitSearchMatchReverse = useCallback(
+    (
+      sessionId: string,
+      localIndex: number,
+      query: string,
+      globalIndex: number,
+      totalCount: number,
+    ) => {
+      const api = terminalApisRef.current.get(sessionId)
+      if (!api?.findLastMatch?.(query)) return
+
+      const sessionCount =
+        searchResultsBySessionRef.current.get(sessionId)?.resultCount ?? 0
+      if (sessionCount <= 0) return
+
+      const stepsBack = sessionCount - 1 - localIndex
+
+      suppressSearchReportRef.current = true
+      try {
+        for (let step = 0; step < stepsBack; step++) {
+          if (!api.findPreviousMatch?.(query)) break
+        }
+      } finally {
+        suppressSearchReportRef.current = false
+      }
+
+      searchResultsBySessionRef.current.set(sessionId, {
+        resultIndex: localIndex,
+        resultCount: sessionCount,
+      })
+
+      suppressSearchFocusRerunRef.current = true
+      focusSessionPane(sessionId)
+      suppressSearchFocusRerunRef.current = false
+
+      lastSearchSessionIdRef.current = sessionId
+      lastGlobalSearchIndexRef.current = globalIndex
+      setTerminalSearchResults({
+        resultIndex: globalIndex,
+        resultCount: totalCount,
+      })
+    },
+    [focusSessionPane],
+  )
+
   useEffect(() => {
-    if (!terminalSearchOpen) return
-    setTerminalSearchResults(null)
-    lastSearchQueryRef.current = ''
-    getActiveSearchController()?.clear()
-  }, [activeSessionId, getActiveSearchController, terminalSearchOpen])
+    if (!terminalSearchOpen || suppressSearchFocusRerunRef.current) return
+    if (!terminalSearchQuery.trim()) {
+      setTerminalSearchResults(null)
+      clearAllTerminalSearch()
+      return
+    }
+
+    const targetIds = getSearchTargetSessionIds()
+    const currentIds = searchSessionIdsRef.current
+    const idsChanged =
+      targetIds.length !== currentIds.length ||
+      targetIds.some((id, index) => id !== currentIds[index])
+
+    if (idsChanged) {
+      searchResultsBySessionRef.current.clear()
+      setSearchSessionIds(targetIds)
+    }
+  }, [
+    clearAllTerminalSearch,
+    focusedSessionId,
+    getSearchTargetSessionIds,
+    terminalSearchOpen,
+    terminalSearchQuery,
+  ])
 
   const toggleTerminalSearch = useCallback(() => {
     const nextOpen = !terminalSearchOpen
     if (nextOpen) {
       setOpen(true)
+      const targetIds = getSearchTargetSessionIds()
+      const focusTarget =
+        targetIds.find((id) => id === focusedSessionIdRef.current) ??
+        targetIds[0]
+      if (focusTarget && focusedSessionIdRef.current !== focusTarget) {
+        setFocusedSessionId(focusTarget)
+      }
+      if (targetIds.length > 0) {
+        setSearchSessionIds(targetIds)
+      }
     }
     setTerminalSearchOpen(nextOpen)
-  }, [setOpen, setTerminalSearchOpen, terminalSearchOpen])
+  }, [
+    getSearchTargetSessionIds,
+    setOpen,
+    setTerminalSearchOpen,
+    terminalSearchOpen,
+  ])
 
   const searchTerminalOutput = useCallback(
-    (query: string, options: { caseSensitive: boolean }) => {
+    (
+      query: string,
+      options: { caseSensitive: boolean },
+      sessionId?: string,
+    ) => {
       lastSearchQueryRef.current = query
       if (!query.trim()) {
         clearTerminalSearchState()
         return
       }
-      getActiveSearchController()?.search(query, options)
+
+      const targetIds = getSearchTargetSessionIds(sessionId)
+      if (targetIds.length === 0) {
+        setTerminalSearchResults({ resultIndex: -1, resultCount: 0 })
+        return
+      }
+
+      const focusTarget =
+        sessionId && targetIds.includes(sessionId)
+          ? sessionId
+          : targetIds.find((id) => id === focusedSessionIdRef.current) ??
+            targetIds[0]
+
+      lastSearchSessionIdRef.current = focusTarget
+      searchResultsBySessionRef.current.clear()
+      clearAllTerminalSearch()
+      setSearchCaseSensitive(options.caseSensitive)
+      setSearchSessionIds(targetIds)
+      setTerminalSearchQuery(query)
     },
-    [clearTerminalSearchState, getActiveSearchController],
+    [clearAllTerminalSearch, clearTerminalSearchState, getSearchTargetSessionIds],
   )
 
   const findNextTerminalMatch = useCallback(() => {
-    getActiveSearchController()?.findNext()
-  }, [getActiveSearchController])
+    const query = lastSearchQueryRef.current.trim()
+    if (!query) return
+
+    const splitPaneIds =
+      searchSessionIdsRef.current.length > 1
+        ? searchSessionIdsRef.current
+        : null
+
+    if (!splitPaneIds) {
+      const sessionId =
+        lastSearchSessionIdRef.current ?? resolveTerminalApiSessionId()
+      if (!sessionId) return
+      lastSearchSessionIdRef.current = sessionId
+      terminalApisRef.current.get(sessionId)?.findNextMatch?.(query)
+      return
+    }
+
+    const paneIds = splitPaneIds
+    const aggregated = aggregateCliTerminalSearchResults(
+      paneIds,
+      searchResultsBySessionRef.current,
+      lastSearchSessionIdRef.current,
+    )
+    const totalCount = aggregated.resultCount
+    if (totalCount === 0) return
+
+    const current =
+      lastGlobalSearchIndexRef.current >= 0
+        ? lastGlobalSearchIndexRef.current
+        : aggregated.resultIndex >= 0
+          ? aggregated.resultIndex
+          : 0
+
+    const nextGlobal = current + 1 >= totalCount ? 0 : current + 1
+    const target = resolveGlobalMatchPosition(
+      nextGlobal,
+      paneIds,
+      searchResultsBySessionRef.current,
+    )
+    if (!target) return
+
+    goToSplitSearchMatch(
+      target.sessionId,
+      target.localIndex,
+      query,
+      nextGlobal,
+      totalCount,
+    )
+  }, [
+    goToSplitSearchMatch,
+    resolveTerminalApiSessionId,
+  ])
 
   const findPreviousTerminalMatch = useCallback(() => {
-    getActiveSearchController()?.findPrevious()
-  }, [getActiveSearchController])
+    const query = lastSearchQueryRef.current.trim()
+    if (!query) return
+
+    const splitPaneIds =
+      searchSessionIdsRef.current.length > 1
+        ? searchSessionIdsRef.current
+        : null
+
+    if (!splitPaneIds) {
+      const sessionId =
+        lastSearchSessionIdRef.current ?? resolveTerminalApiSessionId()
+      if (!sessionId) return
+      lastSearchSessionIdRef.current = sessionId
+      terminalApisRef.current.get(sessionId)?.findPreviousMatch?.(query)
+      return
+    }
+
+    const paneIds = splitPaneIds
+    const aggregated = aggregateCliTerminalSearchResults(
+      paneIds,
+      searchResultsBySessionRef.current,
+      lastSearchSessionIdRef.current,
+    )
+    const totalCount = aggregated.resultCount
+    if (totalCount === 0) return
+
+    const current =
+      lastGlobalSearchIndexRef.current >= 0
+        ? lastGlobalSearchIndexRef.current
+        : aggregated.resultIndex >= 0
+          ? aggregated.resultIndex
+          : 0
+
+    const prevGlobal =
+      current - 1 < 0 ? totalCount - 1 : current - 1
+    const target = resolveGlobalMatchPosition(
+      prevGlobal,
+      paneIds,
+      searchResultsBySessionRef.current,
+    )
+    if (!target) return
+
+    goToSplitSearchMatchReverse(
+      target.sessionId,
+      target.localIndex,
+      query,
+      prevGlobal,
+      totalCount,
+    )
+  }, [
+    goToSplitSearchMatchReverse,
+    resolveTerminalApiSessionId,
+  ])
 
   const copyTextToClipboard = useCallback(async (text: string, label: string) => {
     if (!text) {
@@ -1168,7 +1662,7 @@ export function CliShellProvider({ projectId, children }: CliShellProviderProps)
       exitFullscreen()
     },
     {
-      enabled: fullscreen,
+      enabled: open && (terminalSearchOpen || fullscreen),
       ignoreInputs: false,
       capture: true,
       stopPropagation: true,
@@ -1236,6 +1730,16 @@ export function CliShellProvider({ projectId, children }: CliShellProviderProps)
     capture: true,
   })
 
+  const visiblePaneSessionIds = useMemo(
+    () =>
+      getCliShellVisiblePaneSessionIds(
+        activeSessionId,
+        sessions,
+        splitPaneSessionIds,
+      ),
+    [activeSessionId, sessions, splitPaneSessionIds],
+  )
+
   const value = useMemo<CliShellContextValue>(
     () => ({
       open,
@@ -1245,9 +1749,16 @@ export function CliShellProvider({ projectId, children }: CliShellProviderProps)
       sessions,
       activeSessionId,
       setActiveSessionId,
+      selectSession,
+      focusedSessionId,
+      focusSessionPane,
+      splitPaneSessionIds,
+      visiblePaneSessionIds,
+      splitSession,
       createSession,
       removeSession,
       renameSession,
+      reorderRootSessions,
       registerTerminal,
       unregisterTerminal,
       writeSessionWelcome,
@@ -1269,10 +1780,11 @@ export function CliShellProvider({ projectId, children }: CliShellProviderProps)
       getCommandHistory,
       persistCommandHistory,
       getSuggestionCommands,
-      registerSearchController,
-      unregisterSearchController,
       terminalSearchOpen,
       setTerminalSearchOpen,
+      terminalSearchQuery,
+      searchSessionIds,
+      searchCaseSensitive,
       terminalSearchResults,
       reportSearchResults,
       toggleTerminalSearch,
@@ -1291,9 +1803,17 @@ export function CliShellProvider({ projectId, children }: CliShellProviderProps)
       status,
       sessions,
       activeSessionId,
+      setActiveSessionId,
+      selectSession,
+      focusedSessionId,
+      focusSessionPane,
+      splitPaneSessionIds,
+      visiblePaneSessionIds,
+      splitSession,
       createSession,
       removeSession,
       renameSession,
+      reorderRootSessions,
       registerTerminal,
       unregisterTerminal,
       writeSessionWelcome,
@@ -1315,10 +1835,11 @@ export function CliShellProvider({ projectId, children }: CliShellProviderProps)
       getCommandHistory,
       persistCommandHistory,
       getSuggestionCommands,
-      registerSearchController,
-      unregisterSearchController,
       terminalSearchOpen,
       setTerminalSearchOpen,
+      terminalSearchQuery,
+      searchSessionIds,
+      searchCaseSensitive,
       terminalSearchResults,
       reportSearchResults,
       toggleTerminalSearch,

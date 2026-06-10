@@ -36,6 +36,14 @@ export function canShowConnectSection(
   return whenOrgRoles(access, features, access.isOwner || access.isDeveloper)
 }
 
+/** Built-in project CLI terminal: owners and developers only. */
+export function canShowProjectTerminal(
+  access: ConsoleAccess,
+  features: AccessCheckFeatures,
+): boolean {
+  return whenOrgRoles(access, features, access.isOwner || access.isDeveloper)
+}
+
 /** Alias for same rule as Connect (owners and developers). */
 export function canShowGetStartedSection(
   access: ConsoleAccess,

@@ -1525,8 +1525,6 @@ html[data-init-ticket-video-capturing] [data-init-ticket-video-capture] * {
 /* Browser CLI terminal (xterm.js) */
 .cli-terminal {
   box-sizing: border-box;
-  padding-top: 8px;
-  padding-bottom: 6px;
 }
 
 /* xterm adds `.xterm` to the same node as `.cli-terminal` (not a child). */
@@ -1550,13 +1548,11 @@ html[data-init-ticket-video-capturing] [data-init-ticket-video-capture] * {
 
 .cli-terminal .xterm-viewport {
   background-color: transparent !important;
-  overflow-clip-margin: 2px;
 }
 
 .cli-terminal .xterm-screen {
   outline: none;
   cursor: text;
-  overflow-clip-margin: 2px;
 }
 
 .cli-terminal .xterm-viewport canvas {

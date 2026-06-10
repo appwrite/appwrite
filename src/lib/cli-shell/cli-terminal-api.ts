@@ -1,4 +1,5 @@
 import type { CliShellLine } from './types'
+import type { SuggestionCommandLinkRange } from './cli-terminal-suggestion-links'
 import { CLI_TERMINAL_URL_REGEX } from './cli-terminal-web-links'
 
 export type CliTerminalApi = {
@@ -16,7 +17,15 @@ export type CliTerminalApi = {
   getLastCommand?: () => string | null
   getSelection?: () => string
   getBufferText?: () => string
+  clearTerminalSearch?: () => void
+  findNextMatch?: (query: string) => boolean
+  findPreviousMatch?: (query: string) => boolean
+  findFirstMatch?: (query: string) => boolean
+  findLastMatch?: (query: string) => boolean
   openSearch?: () => void
+  /** 1-based buffer cursor position (xterm link coordinates). */
+  getBufferCursor?: () => { x: number; y: number }
+  registerSuggestionCommandLinks?: (links: SuggestionCommandLinkRange[]) => void
 }
 
 /** Uses xterm `brightBlack`, mapped to `--muted-foreground` in the terminal theme. */
@@ -114,6 +123,48 @@ function showInputPromptIfIdle(api: CliTerminalApi): void {
   api.showInputPrompt?.()
 }
 
+function writeSegment(api: CliTerminalApi, data: string): Promise<void> {
+  return new Promise((resolve) => {
+    api.write(data, () => resolve())
+  })
+}
+
+function isValidSuggestionLinkRange(
+  start: { x: number; y: number },
+  end: { x: number; y: number },
+): boolean {
+  return end.y > start.y || (end.y === start.y && end.x > start.x)
+}
+
+/** Writes the Try suggestions line and registers click targets after xterm flushes. */
+export async function writeCliShellSuggestions(
+  api: CliTerminalApi,
+  commands: readonly string[],
+): Promise<void> {
+  const links: SuggestionCommandLinkRange[] = []
+
+  await writeSegment(api, `${CLI_TERMINAL_BLUE}Try:${CLI_TERMINAL_RESET}  `)
+
+  for (let index = 0; index < commands.length; index++) {
+    const command = commands[index]
+    const start = api.getBufferCursor?.()
+    await writeSegment(
+      api,
+      `${CLI_TERMINAL_CYAN}${command}${CLI_TERMINAL_RESET}`,
+    )
+    const end = api.getBufferCursor?.()
+    if (start && end && isValidSuggestionLinkRange(start, end)) {
+      links.push({ command, start, end })
+    }
+    if (index < commands.length - 1) {
+      await writeSegment(api, `${CLI_TERMINAL_MUTED}, ${CLI_TERMINAL_RESET}`)
+    }
+  }
+
+  await writeSegment(api, `${CLI_TERMINAL_RESET}\n`)
+  api.registerSuggestionCommandLinks?.(links)
+}
+
 export function writeCliShellLine(
   api: CliTerminalApi | null,
   line: CliShellLine,
@@ -140,16 +191,12 @@ export function writeCliShellLine(
       break
     }
     case 'suggestions': {
-      const parts = line.commands
-        .map(
-          (command) =>
-            `${CLI_TERMINAL_CYAN}${command}${CLI_TERMINAL_RESET}`,
-        )
-        .join(`${CLI_TERMINAL_MUTED}, ${CLI_TERMINAL_RESET}`)
-      api.writeln(
-        `${CLI_TERMINAL_BLUE}Try:${CLI_TERMINAL_RESET} ${parts}${CLI_TERMINAL_RESET}`,
-      )
-      break
+      void writeCliShellSuggestions(api, line.commands).then(() => {
+        if (options?.showPromptAfter) {
+          showInputPromptIfIdle(api)
+        }
+      })
+      return
     }
   }
 

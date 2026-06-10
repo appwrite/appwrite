@@ -9,20 +9,67 @@ import { createCliTerminalInputHandler } from '@/lib/cli-shell/cli-terminal-inpu
 import { getCliTerminalTheme } from '@/lib/cli-shell/cli-terminal-theme'
 import { getTerminalBufferText } from '@/lib/cli-shell/cli-terminal-buffer'
 import { getCliTerminalSearchOptions } from '@/lib/cli-shell/cli-terminal-search-options'
+import {
+  countTextSearchMatches,
+  navigateCliTerminalSearch,
+  runCliTerminalSearch,
+  type CliTerminalSearchNavigation,
+} from '@/lib/cli-shell/cli-terminal-search-run'
 import type { CliTerminalApi } from '@/lib/cli-shell/cli-terminal-api'
 import { cn } from '@/lib/utils'
 import { useCliShell } from './CliShellProvider'
 
 type CliTerminalSessionProps = {
   sessionId: string
-  isActive: boolean
+  isVisible: boolean
+  isFocused: boolean
   isPanelResizing?: boolean
+  isSplitPane?: boolean
+}
+
+function runTerminalSearchNavigation(
+  sessionId: string,
+  searchAddon: SearchAddon,
+  terminal: Terminal,
+  query: string,
+  direction: CliTerminalSearchNavigation,
+  options: {
+    resolvedTheme: string | undefined
+    caseSensitive: boolean
+    reportSearchResults: (
+      sessionId: string,
+      results: { resultIndex: number; resultCount: number },
+    ) => void
+    terminalSearchOpen: boolean
+  },
+): boolean {
+  const term = query.trim()
+  if (!term || !options.terminalSearchOpen) return false
+
+  const result = navigateCliTerminalSearch(
+    terminal,
+    searchAddon,
+    term,
+    getCliTerminalSearchOptions(options.resolvedTheme, options.caseSensitive),
+    direction,
+  )
+
+  if (result.found && result.matchCount > 0) {
+    options.reportSearchResults(sessionId, {
+      resultIndex: result.resultIndex,
+      resultCount: result.matchCount,
+    })
+  }
+
+  return result.found
 }
 
 export function CliTerminalSession({
   sessionId,
-  isActive,
+  isVisible,
+  isFocused,
   isPanelResizing = false,
+  isSplitPane = false,
 }: CliTerminalSessionProps) {
   const {
     open,
@@ -40,14 +87,18 @@ export function CliTerminalSession({
     getCommandHistory,
     persistCommandHistory,
     getSuggestionCommands,
-    registerSearchController,
-    unregisterSearchController,
+    focusSessionPane,
     reportSearchResults,
     terminalSearchOpen,
+    terminalSearchQuery,
+    searchSessionIds,
+    searchCaseSensitive,
     setTerminalSearchOpen,
   } = useCliShell()
 
   const { resolvedTheme } = useTheme()
+  const resolvedThemeRef = useRef(resolvedTheme)
+  resolvedThemeRef.current = resolvedTheme
 
   const terminalContainerRef = useRef<HTMLDivElement>(null)
   const terminalRef = useRef<Terminal | null>(null)
@@ -65,49 +116,49 @@ export function CliTerminalSession({
   const registerTerminalRef = useRef(registerTerminal)
   const unregisterTerminalRef = useRef(unregisterTerminal)
   const writeSessionWelcomeRef = useRef(writeSessionWelcome)
-  const isActiveRef = useRef(isActive)
+  const isFocusedRef = useRef(isFocused)
+  const isVisibleRef = useRef(isVisible)
   const welcomeFitAttemptsRef = useRef(0)
   const welcomeCompleteRef = useRef(false)
   const fullscreenRef = useRef(fullscreen)
   const toggleFullscreenRef = useRef(toggleFullscreen)
   const exitFullscreenRef = useRef(exitFullscreen)
   const getTerminalPromptRef = useRef(getTerminalPrompt)
-  const sessionIdRef = useRef(sessionId)
   const getSuggestionCommandsRef = useRef(getSuggestionCommands)
+  const sessionIdRef = useRef(sessionId)
   const persistCommandHistoryRef = useRef(persistCommandHistory)
   const cancelRunningRef = useRef(cancelRunning)
   const getCommandHistoryRef = useRef(getCommandHistory)
-  const registerSearchControllerRef = useRef(registerSearchController)
-  const unregisterSearchControllerRef = useRef(unregisterSearchController)
   const reportSearchResultsRef = useRef(reportSearchResults)
   const terminalSearchOpenRef = useRef(terminalSearchOpen)
   const setTerminalSearchOpenRef = useRef(setTerminalSearchOpen)
+  const searchCaseSensitiveRef = useRef(searchCaseSensitive)
 
   isSessionRunningRef.current = isSessionRunning
   fullscreenRef.current = fullscreen
   toggleFullscreenRef.current = toggleFullscreen
   exitFullscreenRef.current = exitFullscreen
   getTerminalPromptRef.current = getTerminalPrompt
+  getSuggestionCommandsRef.current = getSuggestionCommands
   isPanelResizingRef.current = isPanelResizing
   runCommandRef.current = runCommand
   completeTabRef.current = completeTab
   registerTerminalRef.current = registerTerminal
   unregisterTerminalRef.current = unregisterTerminal
   writeSessionWelcomeRef.current = writeSessionWelcome
-  isActiveRef.current = isActive
+  isFocusedRef.current = isFocused
+  isVisibleRef.current = isVisible
   sessionIdRef.current = sessionId
-  getSuggestionCommandsRef.current = getSuggestionCommands
   persistCommandHistoryRef.current = persistCommandHistory
   cancelRunningRef.current = cancelRunning
   getCommandHistoryRef.current = getCommandHistory
-  registerSearchControllerRef.current = registerSearchController
-  unregisterSearchControllerRef.current = unregisterSearchController
   reportSearchResultsRef.current = reportSearchResults
   terminalSearchOpenRef.current = terminalSearchOpen
   setTerminalSearchOpenRef.current = setTerminalSearchOpen
+  searchCaseSensitiveRef.current = searchCaseSensitive
 
-  const tryWriteSessionWelcome = useCallback(() => {
-    if (!isActiveRef.current) return
+  const tryWriteSessionWelcome = useCallback(async () => {
+    if (!isVisibleRef.current) return
 
     const fitAddon = fitAddonRef.current
     const terminal = terminalRef.current
@@ -124,7 +175,10 @@ export function CliTerminalSession({
 
     welcomeFitAttemptsRef.current = 0
 
-    if (!writeSessionWelcomeRef.current(sessionIdRef.current)) {
+    const welcomeWritten = await writeSessionWelcomeRef.current(
+      sessionIdRef.current,
+    )
+    if (!welcomeWritten) {
       return
     }
 
@@ -137,7 +191,7 @@ export function CliTerminalSession({
     }
 
     requestAnimationFrame(() => {
-      if (isActiveRef.current) {
+      if (isFocusedRef.current) {
         terminal.focus()
       }
     })
@@ -166,6 +220,22 @@ export function CliTerminalSession({
         }
 
         fitAddon.fit()
+        // Refit once layout settles (e.g. horizontal scrollbar in narrow panes).
+        requestAnimationFrame(() => {
+          try {
+            const next = fitAddon.proposeDimensions()
+            if (
+              next &&
+              next.cols > 0 &&
+              next.rows > 0 &&
+              (next.cols !== terminal.cols || next.rows !== terminal.rows)
+            ) {
+              fitAddon.fit()
+            }
+          } catch {
+            /* container may have zero size during layout */
+          }
+        })
       } catch {
         /* container may have zero size during layout */
       }
@@ -187,6 +257,8 @@ export function CliTerminalSession({
       convertEol: true,
       allowTransparency: true,
       scrollSensitivity: 1,
+      // Required by @xterm/addon-search match highlighting (registerDecoration).
+      allowProposedApi: true,
     })
 
     const fitAddon = new FitAddon()
@@ -196,7 +268,7 @@ export function CliTerminalSession({
       event.preventDefault()
     }
     const webLinksAddon = createCliTerminalWebLinksAddon(openLink)
-    const suggestionLinksAddon = createCliTerminalSuggestionLinksAddon(
+    const suggestionLinksController = createCliTerminalSuggestionLinksAddon(
       () => getSuggestionCommandsRef.current(),
       (event, command) => {
         event.preventDefault()
@@ -207,7 +279,7 @@ export function CliTerminalSession({
     terminal.loadAddon(fitAddon)
     terminal.loadAddon(searchAddon)
     terminal.loadAddon(webLinksAddon)
-    terminal.loadAddon(suggestionLinksAddon)
+    terminal.loadAddon(suggestionLinksController.addon)
     terminal.attachCustomKeyEventHandler((event) => {
       if (event.type !== 'keydown') return true
 
@@ -219,14 +291,17 @@ export function CliTerminalSession({
         return false
       }
 
-      if (event.key === 'Escape' && fullscreenRef.current) {
-        event.preventDefault()
+      if (event.key === 'Escape') {
         if (terminalSearchOpenRef.current) {
+          event.preventDefault()
           setTerminalSearchOpenRef.current(false)
-        } else {
-          exitFullscreenRef.current()
+          return false
         }
-        return false
+        if (fullscreenRef.current) {
+          event.preventDefault()
+          exitFullscreenRef.current()
+          return false
+        }
       }
 
       return true
@@ -262,50 +337,98 @@ export function CliTerminalSession({
       focus: () => terminal.focus(),
       showInputPrompt: inputSession.showPrompt,
       prepareInputLine: inputSession.prepareInputLine,
-      resetForWelcome: inputSession.resetForWelcome,
+      resetForWelcome: () => {
+        suggestionLinksController.clearSuggestionCommandLinks()
+        inputSession.resetForWelcome()
+      },
       markWelcomeComplete: inputSession.markWelcomeComplete,
       clearScreen: inputSession.clearScreen,
       getPrompt: () => getTerminalPromptRef.current(),
       getLastCommand: () => inputSession.getLastCommand(),
       getSelection: () => terminal.getSelection(),
       getBufferText: () => getTerminalBufferText(terminal),
+      getBufferCursor: () => {
+        const buffer = terminal.buffer.active
+        return {
+          x: buffer.cursorX + 1,
+          y: buffer.baseY + buffer.cursorY + 1,
+        }
+      },
+      registerSuggestionCommandLinks: (links) => {
+        suggestionLinksController.setSuggestionCommandLinks(links)
+      },
+      clearTerminalSearch: () => {
+        searchAddon.clearDecorations()
+      },
+      findNextMatch: (query) =>
+        runTerminalSearchNavigation(
+          currentSessionId,
+          searchAddon,
+          terminal,
+          query,
+          'next',
+          {
+            resolvedTheme: resolvedThemeRef.current,
+            caseSensitive: searchCaseSensitiveRef.current,
+            reportSearchResults: reportSearchResultsRef.current,
+            terminalSearchOpen: terminalSearchOpenRef.current,
+          },
+        ),
+      findPreviousMatch: (query) =>
+        runTerminalSearchNavigation(
+          currentSessionId,
+          searchAddon,
+          terminal,
+          query,
+          'previous',
+          {
+            resolvedTheme: resolvedThemeRef.current,
+            caseSensitive: searchCaseSensitiveRef.current,
+            reportSearchResults: reportSearchResultsRef.current,
+            terminalSearchOpen: terminalSearchOpenRef.current,
+          },
+        ),
+      findFirstMatch: (query) =>
+        runTerminalSearchNavigation(
+          currentSessionId,
+          searchAddon,
+          terminal,
+          query,
+          'first',
+          {
+            resolvedTheme: resolvedThemeRef.current,
+            caseSensitive: searchCaseSensitiveRef.current,
+            reportSearchResults: reportSearchResultsRef.current,
+            terminalSearchOpen: terminalSearchOpenRef.current,
+          },
+        ),
+      findLastMatch: (query) =>
+        runTerminalSearchNavigation(
+          currentSessionId,
+          searchAddon,
+          terminal,
+          query,
+          'last',
+          {
+            resolvedTheme: resolvedThemeRef.current,
+            caseSensitive: searchCaseSensitiveRef.current,
+            reportSearchResults: reportSearchResultsRef.current,
+            terminalSearchOpen: terminalSearchOpenRef.current,
+          },
+        ),
     }
 
     showInputPromptRef.current = inputSession.showPrompt
 
     registerTerminalRef.current(currentSessionId, api)
-    let lastSearchQuery = ''
-    const searchOptionsFor = (caseSensitive: boolean) =>
-      getCliTerminalSearchOptions(resolvedTheme, caseSensitive)
 
     const resultsDisposable = searchAddon.onDidChangeResults((results) => {
-      reportSearchResultsRef.current(currentSessionId, results)
-    })
-
-    registerSearchControllerRef.current(currentSessionId, {
-      search: (query, options) => {
-        lastSearchQuery = query
-        return searchAddon.findNext(
-          query,
-          searchOptionsFor(options.caseSensitive),
-        )
-      },
-      findNext: () =>
-        lastSearchQuery
-          ? searchAddon.findNext(lastSearchQuery, searchOptionsFor(false))
-          : false,
-      findPrevious: () =>
-        lastSearchQuery
-          ? searchAddon.findPrevious(lastSearchQuery, searchOptionsFor(false))
-          : false,
-      clear: () => {
-        lastSearchQuery = ''
-        searchAddon.clearDecorations()
-        reportSearchResultsRef.current(currentSessionId, {
-          resultIndex: -1,
-          resultCount: 0,
-        })
-      },
+      if (!terminalSearchOpenRef.current) return
+      if (results.resultCount <= 0) return
+      reportSearchResultsRef.current(currentSessionId, {
+        resultIndex: results.resultIndex,
+        resultCount: results.resultCount,
+      })
     })
 
     requestAnimationFrame(tryWriteSessionWelcome)
@@ -331,7 +454,6 @@ export function CliTerminalSession({
       resultsDisposable.dispose()
       resizeObserver.disconnect()
       unregisterTerminalRef.current(currentSessionId)
-      unregisterSearchControllerRef.current(currentSessionId)
       terminal.dispose()
       showInputPromptRef.current = null
       inputSessionRef.current = null
@@ -350,18 +472,24 @@ export function CliTerminalSession({
   }, [resolvedTheme])
 
   useEffect(() => {
-    if (!open || !isActive) return
+    if (!open || !isVisible) return
     requestAnimationFrame(tryWriteSessionWelcome)
-  }, [isActive, open, tryWriteSessionWelcome])
+  }, [isVisible, open, tryWriteSessionWelcome])
 
   useEffect(() => {
-    if (!open || !isActive) return
+    if (!open || !isFocused) return
     fitTerminal()
+    if (terminalSearchOpen) return
     const focusRaf = requestAnimationFrame(() => {
       terminalRef.current?.focus()
     })
     return () => cancelAnimationFrame(focusRaf)
-  }, [fitTerminal, fullscreen, isActive, open])
+  }, [fitTerminal, fullscreen, isFocused, open, terminalSearchOpen])
+
+  useEffect(() => {
+    if (!isVisible) return
+    fitTerminal()
+  }, [fitTerminal, isVisible])
 
   useEffect(() => {
     if (!isPanelResizing) {
@@ -369,19 +497,77 @@ export function CliTerminalSession({
     }
   }, [fitTerminal, isPanelResizing])
 
+  useEffect(() => {
+    if (!open || !terminalSearchOpen) return
+
+    const query = terminalSearchQuery.trim()
+    if (!query || !searchSessionIds.includes(sessionId)) return
+
+    const terminal = terminalRef.current
+    const searchAddon = searchAddonRef.current
+    if (!terminal || !searchAddon) return
+
+    const result = runCliTerminalSearch(
+      terminal,
+      searchAddon,
+      query,
+      getCliTerminalSearchOptions(resolvedTheme, searchCaseSensitive),
+    )
+
+    let matchCount = result.matchCount
+    let resultIndex = result.resultIndex
+
+    if (matchCount === 0) {
+      matchCount = countTextSearchMatches(
+        getTerminalBufferText(terminal),
+        query,
+        searchCaseSensitive,
+      )
+      if (matchCount > 0 && resultIndex < 0) {
+        resultIndex = result.found ? 0 : -1
+      }
+    }
+
+    if (matchCount > 0 && resultIndex < 0) {
+      resultIndex = 0
+    }
+
+    reportSearchResults(sessionId, {
+      resultIndex,
+      resultCount: matchCount,
+    })
+  }, [
+    open,
+    reportSearchResults,
+    resolvedTheme,
+    searchCaseSensitive,
+    searchSessionIds,
+    sessionId,
+    terminalSearchOpen,
+    terminalSearchQuery,
+  ])
+
   return (
     <div
-      ref={terminalContainerRef}
       className={cn(
-        'cli-terminal h-full min-h-0',
-        '[&_.xterm]:h-full [&_.xterm-viewport]:!overflow-y-auto',
-        !isActive && 'hidden',
+        'relative flex h-full min-h-0 flex-col',
+        !isSplitPane && 'pt-2 pb-1.5',
+        !isVisible && 'hidden',
       )}
-      onPointerDown={() => {
-        if (isActive) {
-          terminalRef.current?.focus()
-        }
-      }}
-    />
+    >
+      <div
+        ref={terminalContainerRef}
+        className={cn(
+          'cli-terminal min-h-0 w-full flex-1 overflow-hidden',
+          '[&_.xterm]:h-full [&_.xterm-viewport]:!overflow-y-auto',
+        )}
+        onPointerDown={() => {
+          focusSessionPane(sessionId)
+          if (!terminalSearchOpenRef.current) {
+            terminalRef.current?.focus()
+          }
+        }}
+      />
+    </div>
   )
 }

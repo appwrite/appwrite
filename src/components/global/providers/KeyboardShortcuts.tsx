@@ -30,7 +30,7 @@ import {
   canShowProjectSettings,
 } from '@/lib/console-access-checks'
 import { CommandCenter } from '@/components/global/shared/CommandCenter'
-import { useCliShell } from '@/components/global/cli-shell/CliShellProvider'
+import { useCliShellOptional } from '@/components/global/cli-shell/CliShellProvider'
 
 interface KeyboardShortcutsContextValue {
   openCommandCenter: () => void
@@ -71,7 +71,8 @@ export function KeyboardShortcutsProvider({
   const { features } = useConsoleProfile()
   const { project } = useProject(projectId)
   const { access } = useOrganizationScopes(project?.teamId)
-  const { toggle: toggleTerminal } = useCliShell()
+  const cliShell = useCliShellOptional()
+  const toggleTerminal = cliShell?.toggle
 
   const navigateToSection = useCallback(
     (section: string) => {

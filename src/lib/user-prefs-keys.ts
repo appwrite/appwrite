@@ -1192,11 +1192,13 @@ export function getCliShellSessionsKey(projectId: string): string {
 export type PersistedCliShellSession = {
   id: string
   name: string
+  parentSessionId?: string | null
 }
 
 export type PersistedCliShellSessionsState = {
   sessions: PersistedCliShellSession[]
   activeSessionId: string
+  splitPaneSessionIds?: string[]
 }
 
 export function parseCliShellHistory(
@@ -1250,6 +1252,10 @@ export function parseCliShellSessions(
           .map((item) => ({
             id: item.id,
             name: String(item.name).slice(0, MAX_CLI_SHELL_SESSION_NAME_LENGTH),
+            parentSessionId:
+              typeof item.parentSessionId === 'string'
+                ? item.parentSessionId
+                : null,
           }))
           .slice(0, MAX_CLI_SHELL_SESSIONS)
       : []
@@ -1257,11 +1263,24 @@ export function parseCliShellSessions(
       typeof (raw as PersistedCliShellSessionsState).activeSessionId === 'string'
         ? (raw as PersistedCliShellSessionsState).activeSessionId
         : ''
+    const splitPaneSessionIds = Array.isArray(
+      (raw as PersistedCliShellSessionsState).splitPaneSessionIds,
+    )
+      ? (raw as PersistedCliShellSessionsState).splitPaneSessionIds!
+          .filter(
+            (id): id is string =>
+              typeof id === 'string' &&
+              sessions.some((session) => session.id === id),
+          )
+          .slice(0, MAX_CLI_SHELL_SESSIONS)
+      : []
     if (sessions.length === 0) return null
     const activeExists = sessions.some((session) => session.id === activeSessionId)
     return {
       sessions,
       activeSessionId: activeExists ? activeSessionId : sessions[0].id,
+      splitPaneSessionIds:
+        splitPaneSessionIds.length > 1 ? splitPaneSessionIds : undefined,
     }
   } catch {
     return null
@@ -1279,13 +1298,21 @@ export function mergeCliShellSessionsIntoPrefs(
     .map((session) => ({
       id: session.id,
       name: String(session.name).slice(0, MAX_CLI_SHELL_SESSION_NAME_LENGTH),
+      parentSessionId: session.parentSessionId ?? null,
     }))
   const activeExists = sessions.some((session) => session.id === state.activeSessionId)
+  const splitPaneSessionIds = Array.isArray(state.splitPaneSessionIds)
+    ? state.splitPaneSessionIds
+        .filter((id) => sessions.some((session) => session.id === id))
+        .slice(0, MAX_CLI_SHELL_SESSIONS)
+    : []
   const payload: PersistedCliShellSessionsState = {
     sessions,
     activeSessionId: activeExists
       ? state.activeSessionId
       : (sessions[0]?.id ?? ''),
+    splitPaneSessionIds:
+      splitPaneSessionIds.length > 1 ? splitPaneSessionIds : undefined,
   }
   return {
     ...prefs,

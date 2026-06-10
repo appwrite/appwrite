@@ -6,6 +6,18 @@ import type {
 } from '@xterm/xterm'
 import { withCliTerminalLinkCursor } from './cli-terminal-link-cursor'
 
+export type SuggestionCommandLinkRange = {
+  command: string
+  start: { x: number; y: number }
+  end: { x: number; y: number }
+}
+
+type SuggestionLinksController = {
+  addon: ITerminalAddon
+  setSuggestionCommandLinks: (links: SuggestionCommandLinkRange[]) => void
+  clearSuggestionCommandLinks: () => void
+}
+
 function findCommandsInLine(
   lineText: string,
   commands: readonly string[],
@@ -40,22 +52,85 @@ function findCommandsInLine(
   return matches.sort((a, b) => a.startX - b.startX)
 }
 
+function linksForStoredRangeOnLine(
+  terminal: Terminal,
+  y: number,
+  range: SuggestionCommandLinkRange,
+  handler: (event: MouseEvent, command: string) => void,
+): ILink[] {
+  const { command, start, end } = range
+  if (y < start.y || y > end.y) return []
+
+  const linkStartX = y === start.y ? start.x : 1
+  const linkEndX = y === end.y ? end.x : terminal.cols
+
+  if (linkEndX <= linkStartX) return []
+
+  const linkRange = {
+    start: { x: linkStartX, y },
+    end: { x: linkEndX, y },
+  }
+
+  return [
+    withCliTerminalLinkCursor(terminal, {
+      text: command,
+      range: linkRange,
+      decorations: { underline: true, pointerCursor: true },
+      activate: (event) => {
+        handler(event, command)
+        event.preventDefault()
+      },
+    }),
+  ]
+}
+
+function linksFromLineText(
+  terminal: Terminal,
+  y: number,
+  lineText: string,
+  commands: readonly string[],
+  handler: (event: MouseEvent, command: string) => void,
+): ILink[] {
+  const links: ILink[] = []
+
+  for (const { command, startX } of findCommandsInLine(lineText, commands)) {
+    const range = {
+      start: { x: startX, y },
+      end: { x: startX + command.length, y },
+    }
+
+    links.push(
+      withCliTerminalLinkCursor(terminal, {
+        text: command,
+        range,
+        decorations: { underline: true, pointerCursor: true },
+        activate: (event) => {
+          handler(event, command)
+          event.preventDefault()
+        },
+      }),
+    )
+  }
+
+  return links
+}
+
 export function createCliTerminalSuggestionLinksAddon(
   getCommands: () => readonly string[],
   handler: (event: MouseEvent, command: string) => void,
-): ITerminalAddon {
+): SuggestionLinksController {
   let terminal: Terminal | null = null
+  let storedRanges: SuggestionCommandLinkRange[] = []
   const disposables: IDisposable[] = []
 
-  return {
+  const addon: ITerminalAddon = {
     activate(nextTerminal) {
       terminal = nextTerminal
 
       disposables.push(
         terminal.registerLinkProvider({
           provideLinks(y, callback) {
-            const commands = getCommands()
-            if (!terminal || commands.length === 0) {
+            if (!terminal) {
               callback(undefined)
               return
             }
@@ -69,25 +144,21 @@ export function createCliTerminalSuggestionLinksAddon(
             const lineText = line.translateToString(true)
             const links: ILink[] = []
 
-            for (const { command, startX } of findCommandsInLine(
-              lineText,
-              commands,
-            )) {
-              const range = {
-                start: { x: startX, y },
-                end: { x: startX + command.length, y },
+            if (storedRanges.length > 0) {
+              for (const range of storedRanges) {
+                links.push(
+                  ...linksForStoredRangeOnLine(terminal, y, range, handler),
+                )
               }
-
+            } else if (lineText.includes('Try:')) {
               links.push(
-                withCliTerminalLinkCursor(terminal, {
-                  text: command,
-                  range,
-                  decorations: { underline: true, pointerCursor: true },
-                  activate: (event) => {
-                    handler(event, command)
-                    event.preventDefault()
-                  },
-                }),
+                ...linksFromLineText(
+                  terminal,
+                  y,
+                  lineText,
+                  getCommands(),
+                  handler,
+                ),
               )
             }
 
@@ -101,7 +172,18 @@ export function createCliTerminalSuggestionLinksAddon(
         disposable.dispose()
       }
       disposables.length = 0
+      storedRanges = []
       terminal = null
+    },
+  }
+
+  return {
+    addon,
+    setSuggestionCommandLinks: (links) => {
+      storedRanges = links
+    },
+    clearSuggestionCommandLinks: () => {
+      storedRanges = []
     },
   }
 }

@@ -2,16 +2,11 @@ import { createFileRoute, Outlet, useLocation } from '@tanstack/react-router'
 import { useState, useEffect, useRef, useMemo } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { CloudStatusBanner } from '@/components/global/layout/CloudStatusBanner'
-import { ConsoleLayout } from '@/components/global/layout/ConsoleLayout'
 import { PausedProjectCurtain } from '@/components/global/layout/PausedProjectCurtain'
-import { KeyboardShortcutsProvider } from '@/components/global/providers/KeyboardShortcuts'
-import { ProjectConnectDialogProvider } from '@/components/pages/projects/$projectId/shared/ProjectConnectDialogContext'
 import { RealtimeProvider } from '@/components/global/providers/RealtimeProvider'
 import { BuildNotificationsProvider } from '@/components/global/providers/BuildNotificationsProvider'
 import { RequireAuth } from '@/components/global/auth/RequireAuth'
-import { CsvExportBox, CsvImportBox } from '@/components/global/csv-migrations'
 import { SessionMigrationsProvider } from '@/components/global/providers/SessionMigrationsContext'
-import { GlobalUploadProgress } from '@/components/global/shared/GlobalUploadProgress'
 import { OrganizationFailedInvoiceHeaderBanner } from '@/components/global/shared/OrganizationFailedInvoiceHeaderBanner'
 import {
   fetchProject,
@@ -29,8 +24,7 @@ import { ErrorComponent } from '@/components/error/Component'
 import { ConsoleImpersonationBanner } from '@/components/global/shared/ConsoleImpersonationBanner'
 import { reportConsoleAccess } from '@/lib/appwrite/console-access'
 import { useConsoleProfile } from '@/hooks/use-console-profile'
-import { CliShellProvider } from '@/components/global/cli-shell/CliShellProvider'
-import { ProjectCliShell } from '@/components/global/cli-shell/ProjectCliShell'
+import { ProjectCliShellLayout } from '@/components/global/cli-shell/ProjectCliShellLayout'
 /** Tab segment for routes under `.../tables/:tableId/<tab>` or `.../collections/:id/<tab>` */
 const DATABASE_TABLE_VIEW_TABS = new Set([
   'rows',
@@ -377,40 +371,26 @@ function ProjectLayout() {
       <SessionMigrationsProvider>
         <RealtimeProvider projectId={projectId}>
           <BuildNotificationsProvider projectId={projectId} />
-          <CliShellProvider projectId={projectId}>
-            <KeyboardShortcutsProvider projectId={projectId}>
-              <ProjectConnectDialogProvider projectId={projectId}>
-                <ConsoleLayout
-                  sidebar={{
-                    projectId,
-                    activeSection,
-                    mobileOpen: sidebarOpen,
-                    onMobileClose: () => setSidebarOpen(false),
-                    onMenuClick: () => setSidebarOpen(true),
-                  }}
-                  header={{ projectId }}
-                  headerBanner={
-                    <OrganizationFailedInvoiceHeaderBanner
-                      organizationId={teamIdForBilling}
-                      show={showFailedInvoiceBanner}
-                      orgBillingReadonly={orgBillingReadonlyForFailedInvoice}
-                    />
-                  }
-                  showFooter={false}
-                  fixedLayout={isFixedLayoutView}
-                  bottomPanel={<ProjectCliShell />}
-                >
-                  <Outlet />
-                </ConsoleLayout>
-              {/* Unified progress panel: file uploads + CSV export/import (same style, no collision) */}
-              <div className="fixed bottom-4 right-4 z-50 flex flex-col gap-2 max-w-sm w-full">
-                <GlobalUploadProgress embedded />
-                <CsvImportBox projectId={projectId} />
-                <CsvExportBox projectId={projectId} />
-              </div>
-              </ProjectConnectDialogProvider>
-            </KeyboardShortcutsProvider>
-          </CliShellProvider>
+          <ProjectCliShellLayout
+            projectId={projectId}
+            sidebar={{
+              projectId,
+              activeSection,
+              mobileOpen: sidebarOpen,
+              onMobileClose: () => setSidebarOpen(false),
+              onMenuClick: () => setSidebarOpen(true),
+            }}
+            headerBanner={
+              <OrganizationFailedInvoiceHeaderBanner
+                organizationId={teamIdForBilling}
+                show={showFailedInvoiceBanner}
+                orgBillingReadonly={orgBillingReadonlyForFailedInvoice}
+              />
+            }
+            fixedLayout={isFixedLayoutView}
+          >
+            <Outlet />
+          </ProjectCliShellLayout>
         </RealtimeProvider>
       </SessionMigrationsProvider>
     </RequireAuth>

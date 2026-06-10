@@ -1,4 +1,5 @@
 import { Terminal } from 'lucide-react'
+import { canShowProjectTerminal } from '@/lib/console-access-checks'
 import { CLI_SHELL_TOGGLE_SHORTCUT_RAW } from '@/lib/cli-shell/cli-terminal-shortcuts'
 import { registerCommands } from '../registry'
 import type { CommandEntry } from '../types'
@@ -21,7 +22,9 @@ const PROJECT_ACTIONS: CommandEntry[] = [
       'appwrite',
       'console',
     ],
-    available: (ctx) => Boolean(ctx.handlers.onToggleTerminal),
+    available: (ctx) =>
+      canShowProjectTerminal(ctx.access, ctx.features) &&
+      Boolean(ctx.handlers.onToggleTerminal),
     perform: (ctx) => {
       ctx.handlers.onToggleTerminal?.()
       ctx.closeCommandCenter()

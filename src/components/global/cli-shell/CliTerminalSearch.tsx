@@ -1,5 +1,11 @@
-import { useCallback, useEffect, useRef, useState } from 'react'
-import { Search, X } from 'lucide-react'
+import {
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+  type KeyboardEvent,
+} from 'react'
+import { ChevronDown, ChevronUp, Search, X } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { formatCliTerminalSearchLabel } from '@/lib/cli-shell/cli-terminal-search-label'
@@ -7,7 +13,6 @@ import type { CliTerminalSearchResults } from '@/lib/cli-shell/cli-terminal-sear
 
 type CliTerminalSearchProps = {
   open: boolean
-  fullscreen: boolean
   onOpenChange: (open: boolean) => void
   results: CliTerminalSearchResults | null
   onSearch: (query: string, options: { caseSensitive: boolean }) => void
@@ -17,7 +22,6 @@ type CliTerminalSearchProps = {
 
 export function CliTerminalSearch({
   open,
-  fullscreen,
   onOpenChange,
   results,
   onSearch,
@@ -53,23 +57,54 @@ export function CliTerminalSearch({
     [onSearch, query],
   )
 
+  const handleEscape = useCallback(
+    (event: KeyboardEvent) => {
+      if (event.key !== 'Escape') return
+      event.preventDefault()
+      event.stopPropagation()
+      handleClose()
+    },
+    [handleClose],
+  )
+
+  const handleInputKeyDown = useCallback(
+    (event: KeyboardEvent<HTMLInputElement>) => {
+      if (event.key === 'Escape') {
+        handleEscape(event)
+        return
+      }
+      if (event.key === 'Enter') {
+        event.preventDefault()
+        if (event.shiftKey) {
+          onFindPrevious()
+        } else {
+          onFindNext()
+        }
+      }
+    },
+    [handleEscape, onFindNext, onFindPrevious],
+  )
+
+  const preventInputBlur = useCallback((event: { preventDefault: () => void }) => {
+    event.preventDefault()
+  }, [])
+
   const matchLabel = formatCliTerminalSearchLabel(query, results)
+  const hasMatches = Boolean(query.trim() && results && results.resultCount > 0)
 
   if (!open) return null
 
   return (
     <div
-      className="absolute right-0 top-2 z-20 flex items-center gap-2 rounded-lg border border-border bg-background/95 p-2 shadow-md backdrop-blur-sm"
-      onKeyDown={(event) => {
-        if (event.key === 'Escape' && fullscreen) {
-          event.preventDefault()
-          handleClose()
-        }
-      }}
+      className="flex h-11 w-full shrink-0 items-center border-b border-border bg-muted/20 px-4 sm:px-6"
+      onKeyDown={handleEscape}
     >
-      <form onSubmit={handleSubmit} className="flex items-center gap-2">
-        <div className="relative">
-          <Search className="absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
+      <form
+        onSubmit={handleSubmit}
+        className="flex w-full min-w-0 items-center gap-2"
+      >
+        <div className="flex min-w-0 flex-1 items-center">
+          <Search className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
           <Input
             ref={inputRef}
             value={query}
@@ -78,40 +113,54 @@ export function CliTerminalSearch({
               setQuery(next)
               onSearch(next, { caseSensitive: false })
             }}
+            onKeyDown={handleInputKeyDown}
             placeholder="Search output"
-            className="h-8 w-44 pl-8 text-[13px] sm:w-52"
+            className="h-8 min-w-0 flex-1 border-0 bg-transparent px-2 text-[13px] shadow-none focus-visible:border-transparent focus-visible:ring-0 dark:bg-transparent"
             aria-label="Search terminal output"
           />
+          {query.trim() ? (
+            <div className="flex shrink-0 items-center gap-0.5 pl-1">
+              <span
+                className="min-w-[4.5rem] shrink-0 px-1 text-right text-[11px] tabular-nums text-muted-foreground"
+                aria-live="polite"
+              >
+                {matchLabel}
+              </span>
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                className="h-7 w-7 shrink-0 text-muted-foreground"
+                onMouseDown={preventInputBlur}
+                onClick={onFindPrevious}
+                disabled={!hasMatches}
+                title="Previous match"
+                aria-label="Previous match"
+              >
+                <ChevronUp className="h-3.5 w-3.5" />
+              </Button>
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                className="h-7 w-7 shrink-0 text-muted-foreground"
+                onMouseDown={preventInputBlur}
+                onClick={onFindNext}
+                disabled={!hasMatches}
+                title="Next match"
+                aria-label="Next match"
+              >
+                <ChevronDown className="h-3.5 w-3.5" />
+              </Button>
+            </div>
+          ) : null}
         </div>
-        <span
-          className="w-[5.75rem] shrink-0 text-right text-[12px] tabular-nums text-muted-foreground"
-          aria-live="polite"
-        >
-          {matchLabel}
-        </span>
-        <Button
-          type="button"
-          variant="outline"
-          size="sm"
-          className="h-8 text-[12px]"
-          onClick={onFindPrevious}
-        >
-          Prev
-        </Button>
-        <Button
-          type="button"
-          variant="outline"
-          size="sm"
-          className="h-8 text-[12px]"
-          onClick={onFindNext}
-        >
-          Next
-        </Button>
         <Button
           type="button"
           variant="ghost"
           size="icon"
-          className="h-8 w-8 text-muted-foreground"
+          className="h-8 w-8 shrink-0 text-muted-foreground"
+          onMouseDown={preventInputBlur}
           onClick={handleClose}
           title="Close search"
           aria-label="Close search"
