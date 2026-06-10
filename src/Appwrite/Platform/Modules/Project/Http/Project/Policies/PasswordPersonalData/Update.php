@@ -40,7 +40,7 @@ class Update extends Action
                 group: 'policies',
                 name: 'updatePasswordPersonalDataPolicy',
                 description: <<<EOT
-                Updating this policy allows you to control if password strength is checked against personal data. When enabled, and user sets or changes their password, the password must not contain user ID, name, email or phone number.
+                Updating this policy allows you to control which personal data fields are checked against passwords. When a field is enabled, the password must not contain that value. Each field can be toggled independently. Existing passwords remain valid when changing this policy.
                 EOT,
                 auth: [AuthType::ADMIN, AuthType::KEY],
                 responses: [
@@ -50,8 +50,10 @@ class Update extends Action
                     )
                 ],
             ))
-            // TODO: Split into more toggles, simiplar to membership privacy policy
-            ->param('enabled', null, new Boolean(), 'Toggle password personal data policy. Set to true if you want to block passwords including user\'s personal data, or false to allow it. When changing this policy, existing passwords remain valid.')
+            ->param('userId', null, new Boolean(), 'Set to true to block passwords containing the user ID, or false to allow it.', optional: true)
+            ->param('userEmail', null, new Boolean(), 'Set to true to block passwords containing the user email (or email local part), or false to allow it.', optional: true)
+            ->param('userName', null, new Boolean(), 'Set to true to block passwords containing the user name, or false to allow it.', optional: true)
+            ->param('userPhone', null, new Boolean(), 'Set to true to block passwords containing the user phone number, or false to allow it.', optional: true)
             ->inject('response')
             ->inject('dbForPlatform')
             ->inject('project')
@@ -61,7 +63,10 @@ class Update extends Action
     }
 
     public function action(
-        bool $enabled,
+        ?bool $userId,
+        ?bool $userEmail,
+        ?bool $userName,
+        ?bool $userPhone,
         Response $response,
         Database $dbForPlatform,
         Document $project,
@@ -69,7 +74,19 @@ class Update extends Action
         Event $queueForEvents,
     ): void {
         $auths = $project->getAttribute('auths', []);
-        $auths['personalDataCheck'] = $enabled;
+
+        if ($userId !== null) {
+            $auths['personalDataCheckUserId'] = $userId;
+        }
+        if ($userEmail !== null) {
+            $auths['personalDataCheckUserEmail'] = $userEmail;
+        }
+        if ($userName !== null) {
+            $auths['personalDataCheckUserName'] = $userName;
+        }
+        if ($userPhone !== null) {
+            $auths['personalDataCheckUserPhone'] = $userPhone;
+        }
 
         $updates = new Document([
             'auths' => $auths,
