@@ -433,6 +433,57 @@ export function useDatabaseSpecifications(
   return useQuery(databaseSpecificationsQueryOptions(projectId))
 }
 
+export async function fetchProjectDedicatedDatabases(projectId: string) {
+  if (!projectId) {
+    return { databases: [] as Models.DedicatedDatabase[], total: 0 }
+  }
+
+  const response = await sdk.forProject(projectId).compute.listDatabases({
+    queries: [
+      Query.orderDesc('$createdAt'),
+      Query.limit(MERGED_DATABASE_LIST_LIMIT),
+    ],
+  })
+
+  return {
+    databases: response.databases ?? [],
+    total: response.total ?? response.databases?.length ?? 0,
+  }
+}
+
+export function dedicatedDatabasesQueryOptions(
+  projectId: string | null | undefined,
+) {
+  return queryOptions({
+    queryKey: ['dedicated-databases', 'project', projectId],
+    queryFn: () => fetchProjectDedicatedDatabases(projectId!),
+    enabled: !!projectId,
+    staleTime: DEFAULT_STALE_TIME,
+    retry: false,
+    refetchOnMount: false,
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: false,
+    gcTime: projectId ? 5 * 60 * 1000 : 0,
+  })
+}
+
+export function useProjectDedicatedDatabases(
+  projectId: string | null | undefined,
+) {
+  const { data, isLoading, isFetching, error, refetch } = useQuery(
+    dedicatedDatabasesQueryOptions(projectId),
+  )
+
+  return {
+    databases: data?.databases ?? [],
+    total: data?.total ?? 0,
+    isLoading,
+    isFetching,
+    error,
+    refetch,
+  }
+}
+
 /**
  * Create a new table (collection) in a database
  *

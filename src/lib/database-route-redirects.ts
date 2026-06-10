@@ -1,5 +1,9 @@
 import { redirect } from '@tanstack/react-router'
 import {
+  POSTGRES_DB_KIND,
+  postgresDatabaseHome,
+} from '@/lib/postgres-database-routes'
+import {
   type DatabaseRouteKind,
   usesCollectionsPath,
 } from '@/lib/database-routes'
@@ -26,6 +30,26 @@ export const DATABASE_LEVEL_TAB_PATH = {
 } as const
 
 export type DatabaseLevelTab = keyof typeof DATABASE_LEVEL_TAB_PATH
+
+/** Redirect mistaken `$dbKind=postgres` matches to the dedicated Postgres route tree. */
+export function throwRedirectPostgresDbKind(
+  dbKind: string,
+  params: {
+    projectId: string
+    databaseId: string
+    tableId?: string
+  },
+): void {
+  if (dbKind !== POSTGRES_DB_KIND) return
+  throw redirect({
+    ...postgresDatabaseHome({
+      projectId: params.projectId,
+      databaseId: params.databaseId,
+      tableId: params.tableId ?? '-',
+    }),
+    replace: true,
+  })
+}
 
 function isDatabaseLevelTab(tab: string): tab is DatabaseLevelTab {
   return Object.prototype.hasOwnProperty.call(DATABASE_LEVEL_TAB_PATH, tab)

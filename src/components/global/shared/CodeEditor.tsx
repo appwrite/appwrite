@@ -93,6 +93,7 @@ export type CodeEditorLanguage =
   | 'csharp'
   | 'go'
   | 'java'
+  | 'sql'
   | 'plaintext'
 
 export interface CodeEditorRef {

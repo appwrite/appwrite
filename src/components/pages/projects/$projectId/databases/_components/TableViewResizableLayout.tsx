@@ -211,7 +211,9 @@ export function TableViewResizableLayout({
           >
             {sidebar}
           </div>
-          <div className="min-h-0 min-w-0 flex-1">{children}</div>
+          <div className="flex h-full min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
+            {children}
+          </div>
         </div>
       </div>
     )
@@ -246,7 +248,9 @@ export function TableViewResizableLayout({
           minSize={panelLayout.secondMinPercent}
           className="min-w-0"
         >
-          {children}
+          <div className="flex h-full min-h-0 min-w-0 flex-col overflow-hidden">
+            {children}
+          </div>
         </ResizablePanel>
       </ResizablePanelGroup>
     </div>

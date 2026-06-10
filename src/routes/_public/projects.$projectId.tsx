@@ -76,6 +76,7 @@ const DATABASE_LEVEL_LAYOUT_SEGMENTS = new Set([
   'browser',
   'security',
   'settings',
+  'connections',
 ])
 
 function getDatabaseLevelLayoutSegment(

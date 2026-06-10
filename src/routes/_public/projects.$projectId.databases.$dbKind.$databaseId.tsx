@@ -4,6 +4,7 @@ import {
   isDatabaseRouteKind,
   databaseRouteKindFromApiType,
 } from '@/lib/database-routes'
+import { throwRedirectPostgresDbKind } from '@/lib/database-route-redirects'
 import type { DatabaseType } from '@appwrite.io/console'
 import {
   databaseQueryOptions,
@@ -17,6 +18,7 @@ export const Route = createFileRoute(
   beforeLoad: async ({ params, context }) => {
     if (typeof window === 'undefined') return
     const { projectId, dbKind, databaseId } = params
+    throwRedirectPostgresDbKind(dbKind, { projectId, databaseId })
     if (!isDatabaseRouteKind(dbKind)) {
       throw redirect({
         to: '/projects/$projectId/databases',

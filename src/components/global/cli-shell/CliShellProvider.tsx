@@ -19,6 +19,7 @@ import {
   syncCliAuthFiles,
   syncCliProjectConfig,
 } from '@/lib/cli-shell/bootstrap-cli-container'
+import { withIsolatedAmdGlobals } from '@/lib/cli-shell/amd-globals'
 import {
   CLI_BOOTSTRAP_READY_MESSAGE,
   CLI_PROJECT_CWD,
@@ -1130,7 +1131,9 @@ export function CliShellProvider({ projectId, children }: CliShellProviderProps)
       }
 
       try {
-        const result = await container.run(command, runOptions)
+        const result = await withIsolatedAmdGlobals(() =>
+          container.run(command, runOptions),
+        )
 
         if (result.stdout && !streamedStdout) {
           writeCliTerminalRaw(getOutputApi(), result.stdout)

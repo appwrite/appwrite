@@ -109,6 +109,7 @@
     "remark-gfm": "^4.0.1",
     "resolve.exports": "^2.0.3",
     "sonner": "^2.0.7",
+    "sql-formatter": "^15.8.1",
     "tailwind-merge": "^3.0.2",
     "tailwindcss": "^4.1.13",
     "three": "^0.184.0",

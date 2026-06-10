@@ -47,6 +47,7 @@ import { CreateTable, createTableVariantForDbRoute } from './CreateTable'
 import { TableContextMenu } from './_components/TableContextMenu'
 import { DatabaseContextMenu } from './_components/DatabaseContextMenu'
 import { DatabaseBackupsNavLink } from './_components/DatabaseBackupsNavLink'
+import { DedicatedDatabasesSection } from './_components/DedicatedDatabasesSection'
 
 import {
   canCreateDatabase,
@@ -1111,6 +1112,13 @@ export function View() {
             )}
           </>
         )}
+
+        {features.dedicatedDbsSupport && projectId ? (
+          <DedicatedDatabasesSection
+            projectId={projectId}
+            viewMode={viewMode}
+          />
+        ) : null}
 
         {/* Bulk Delete Action Bar */}
         {selectedDatabases.size > 0 && (

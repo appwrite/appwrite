@@ -7,6 +7,7 @@ import {
 import { ROWS_DEFAULT_PAGE_SIZE } from '@/lib/react-query/hooks/constants'
 import { pageTitle } from '@/lib/utils/page-title'
 import { dbNavLink, type DatabaseRouteKind } from '@/lib/database-routes'
+import { throwRedirectPostgresDbKind } from '@/lib/database-route-redirects'
 
 export const Route = createFileRoute(
   '/_public/projects/$projectId/databases/$dbKind/$databaseId/',
@@ -19,6 +20,8 @@ export const Route = createFileRoute(
     const { queryClient } = context
 
     if (!projectId || !databaseId) return
+
+    throwRedirectPostgresDbKind(dbKind, { projectId, databaseId })
 
     await queryClient.ensureQueryData(projectQueryOptions(projectId))
     await queryClient.ensureQueryData(

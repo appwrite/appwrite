@@ -17,11 +17,14 @@ import { sdk } from '@/lib/appwrite/sdk'
 import { getConsoleAccountQueryRevision } from '@/lib/console-impersonation'
 import {
   buildDatabasesSidebarWidthPrefs,
+  buildPostgresSqlEditorHeightPrefs,
   buildSavedFiltersPrefs,
   buildSavedImageTransformPresetsPrefs,
   buildStorageSidebarWidthPrefs,
   DATABASES_SIDEBAR_DEFAULT_WIDTH_PX,
+  POSTGRES_SQL_EDITOR_DEFAULT_HEIGHT_PX,
   parseDatabasesSidebarWidthPx,
+  parsePostgresSqlEditorHeightPx,
   parseStorageSidebarWidthPx,
   parseSavedFilters,
   parseSavedImageTransformPresets,
@@ -957,6 +960,56 @@ export function useTableViewSidebarWidth(
   )
 
   return { widthPx, persistSidebarWidthPx }
+}
+
+/**
+ * Persisted SQL editor container height in px for the Postgres SQL workbench.
+ */
+export function usePostgresSqlEditorHeight(
+  account: { prefs?: Record<string, unknown> } | undefined,
+) {
+  const queryClient = useQueryClient()
+
+  const heightPx =
+    parsePostgresSqlEditorHeightPx(account?.prefs as UserPrefs | undefined) ??
+    POSTGRES_SQL_EDITOR_DEFAULT_HEIGHT_PX
+
+  const updateMutation = useMutation({
+    mutationFn: async (value: number) => {
+      if (!account) {
+        throw new Error('Account data not available')
+      }
+      return await updateAccountPrefs({
+        ...account.prefs,
+        ...buildPostgresSqlEditorHeightPrefs(value),
+      })
+    },
+    onMutate: async (value) => {
+      const patch = buildPostgresSqlEditorHeightPrefs(value)
+      queryClient.setQueriesData<{ prefs?: Record<string, unknown> }>(
+        { queryKey: ['account', 'console'] },
+        (current) =>
+          current
+            ? {
+                ...current,
+                prefs: { ...current.prefs, ...patch },
+              }
+            : current,
+      )
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['account', 'console'] })
+    },
+  })
+
+  const persistEditorHeightPx = useCallback(
+    (value: number) => {
+      updateMutation.mutate(value)
+    },
+    [updateMutation],
+  )
+
+  return { heightPx, persistEditorHeightPx }
 }
 
 // ============================================================================

@@ -58,6 +58,7 @@ import {
   getDedicatedDatabaseIdError,
   formatDedicatedDatabaseCreateError,
 } from '@/lib/dedicated-database-id'
+import { postgresDatabaseHome } from '@/lib/postgres-database-routes'
 
 export type DatabaseTypeOption =
   | 'TablesDB'
@@ -340,10 +341,16 @@ export function CreateDatabaseWizardView() {
       return createProjectDatabase(pid, data, wizardBackend(dbType))
     },
     onSuccess: async (database) => {
-      await queryClient.refetchQueries({
-        queryKey: ['databases', 'project', pid],
-        type: 'all',
-      })
+      await Promise.all([
+        queryClient.refetchQueries({
+          queryKey: ['databases', 'project', pid],
+          type: 'all',
+        }),
+        queryClient.refetchQueries({
+          queryKey: ['dedicated-databases', 'project', pid],
+          type: 'all',
+        }),
+      ])
       track('Resource Created', {
         surface: 'create_database_wizard',
         resource: 'database',
@@ -353,8 +360,18 @@ export function CreateDatabaseWizardView() {
       })
       toast.success('Database created')
       if (isNativeDatabaseType(dbType)) {
+        if (dbType === 'Postgres') {
+          navigate({
+            ...postgresDatabaseHome({
+              projectId: pid,
+              databaseId: database.$id,
+              tableId: '-',
+            }),
+          })
+          return
+        }
         navigate({
-          to: '/projects/$projectId/databases/',
+          to: '/projects/$projectId/databases',
           params: { projectId: pid },
         })
         return

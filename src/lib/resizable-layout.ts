@@ -144,6 +144,19 @@ export function clampTableViewSidebarWidthPx(px: number): number {
   )
 }
 
+/** Postgres SQL workbench: resizable editor container height (toolbar + editor). */
+export const POSTGRES_SQL_EDITOR_MIN_HEIGHT_PX = 120
+export const POSTGRES_SQL_EDITOR_MAX_HEIGHT_PX = 720
+export const POSTGRES_SQL_EDITOR_DEFAULT_HEIGHT_PX = 220
+export const POSTGRES_SQL_RESULTS_MIN_HEIGHT_PX = 160
+
+export function clampPostgresSqlEditorHeightPx(px: number): number {
+  return Math.min(
+    POSTGRES_SQL_EDITOR_MAX_HEIGHT_PX,
+    Math.max(POSTGRES_SQL_EDITOR_MIN_HEIGHT_PX, Math.round(px)),
+  )
+}
+
 /** API Explorer: services | methods | request (%). */
 export const API_EXPLORER_COLUMNS_DEFAULT_LAYOUT = [20, 24, 56] as const
 export const API_EXPLORER_COLUMNS_MIN = [14, 18, 36] as const

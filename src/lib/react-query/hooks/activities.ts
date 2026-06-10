@@ -85,15 +85,14 @@ export async function fetchProjectActivities({
     queries.push(q)
   }
 
-  // The SDK type definition for `listEvents` declares `queries: string`, but
-  // the runtime accepts the same `string[]` shape used by every other list
-  // endpoint and serializes it as `queries[]=...`. Cast to satisfy the type.
   const projectSdk = sdk.forProject(projectId)
-  const endpoint = projectSdk.client.config.endpoint as string
-  const uri = new URL(`${endpoint}/activities/events`)
-  const response = (await projectSdk.client.call('get', uri, {}, {
+  // Use the Activities service so `X-Appwrite-Project` is set from the project
+  // client config. Raw `client.call` only sends `this.headers` (admin mode) and
+  // omits the project header, which makes the API treat the request as console.
+  const response = (await projectSdk.activities.listEvents({
+    // SDK types declare `queries: string`, but runtime accepts `string[]` like
+    // other list endpoints (`queries[]=...`).
     queries: queries as unknown as string,
-    total: false,
   })) as Models.ActivityEventList
 
   const events = response.events ?? []

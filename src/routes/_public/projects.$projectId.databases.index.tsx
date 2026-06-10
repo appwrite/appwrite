@@ -3,9 +3,11 @@ import { z } from 'zod'
 import { View } from '@/components/pages/projects/$projectId/databases/View'
 import {
   databasesQueryOptions,
+  dedicatedDatabasesQueryOptions,
   projectQueryOptions,
   organizationPlanQueryOptions,
 } from '@/lib/react-query/hooks'
+import { getActiveProfileFeatures } from '@/lib/console-profiles'
 import {
   GRID_DEFAULT_PAGE_SIZE,
   ROWS_DEFAULT_PAGE_SIZE,
@@ -64,6 +66,11 @@ export const Route = createFileRoute('/_public/projects/$projectId/databases/')(
             undefined,
           ),
         ),
+        getActiveProfileFeatures().dedicatedDbsSupport
+          ? queryClient.ensureQueryData(
+              dedicatedDatabasesQueryOptions(projectId),
+            )
+          : Promise.resolve(),
         projectData?.teamId
           ? queryClient.ensureQueryData(
               organizationPlanQueryOptions(projectData.teamId),

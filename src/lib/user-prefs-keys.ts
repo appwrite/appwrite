@@ -6,8 +6,10 @@
  */
 
 import {
+  clampPostgresSqlEditorHeightPx,
   clampTableViewSidebarWidthPx,
   normalizeLegacySidebarWidthPrefValue,
+  POSTGRES_SQL_EDITOR_DEFAULT_HEIGHT_PX,
   TABLE_VIEW_SIDEBAR_DEFAULT_WIDTH_PX,
 } from '@/lib/resizable-layout'
 import {
@@ -237,6 +239,43 @@ function buildSidebarWidthPxPrefsForKey(
 
 /** Default when account pref is unset. */
 export { TABLE_VIEW_SIDEBAR_DEFAULT_WIDTH_PX as DATABASES_SIDEBAR_DEFAULT_WIDTH_PX }
+
+// ---------------------------------------------------------------------------
+// Postgres: SQL editor container height (vertical split in SQL workbench)
+// ---------------------------------------------------------------------------
+
+/**
+ * Full key: `console.databases.postgresSqlEditorHeight` - SQL editor container
+ * height in px (includes toolbar).
+ */
+export const USER_PREFS_KEY_POSTGRES_SQL_EDITOR_HEIGHT =
+  'console.databases.postgresSqlEditorHeight'
+
+export function parsePostgresSqlEditorHeightPx(
+  prefs: UserPrefs | null | undefined,
+): number | null {
+  if (!prefs) return null
+  const raw = prefs[USER_PREFS_KEY_POSTGRES_SQL_EDITOR_HEIGHT]
+  let value: number | null = null
+  if (typeof raw === 'number' && Number.isFinite(raw)) {
+    value = raw
+  } else if (typeof raw === 'string' && raw.length > 0) {
+    const parsed = Number(raw)
+    if (Number.isFinite(parsed)) value = parsed
+  }
+  if (value === null) return null
+  return clampPostgresSqlEditorHeightPx(value)
+}
+
+export function buildPostgresSqlEditorHeightPrefs(heightPx: number): UserPrefs {
+  return {
+    [USER_PREFS_KEY_POSTGRES_SQL_EDITOR_HEIGHT]: String(
+      clampPostgresSqlEditorHeightPx(heightPx),
+    ),
+  }
+}
+
+export { POSTGRES_SQL_EDITOR_DEFAULT_HEIGHT_PX }
 
 // ---------------------------------------------------------------------------
 // Storage: files list column widths (account - same widths for every bucket)

@@ -1,0 +1,42 @@
+import {
+  POSTGRES_DATABASE_TAB_LABELS,
+  type PostgresDatabaseTab,
+} from '@/lib/postgres-database-routes'
+
+const TAB_DESCRIPTIONS: Partial<Record<PostgresDatabaseTab, string>> = {
+  visualizer:
+    'Explore database schema structure from the compute API schema endpoint.',
+  monitor: 'View database metrics and usage over time.',
+  'db-security':
+    'Manage network access, IP allowlists, and connection security settings.',
+  insights:
+    'Review performance insights and slow query logs for this database.',
+  backups: 'Create backups, configure policies, and manage point-in-time recovery.',
+  connections:
+    'View connection strings, credentials, and database user connections.',
+  settings:
+    'Update database name, compute resources, pooler, and maintenance settings.',
+}
+
+type TabPlaceholderProps = {
+  tab: PostgresDatabaseTab
+}
+
+export function TabPlaceholder({ tab }: TabPlaceholderProps) {
+  const title = POSTGRES_DATABASE_TAB_LABELS[tab]
+  const description = TAB_DESCRIPTIONS[tab]
+
+  return (
+    <div className="flex flex-1 flex-col items-center justify-center px-6 py-16 text-center">
+      <h2 className="text-[15px] font-semibold text-foreground">{title}</h2>
+      {description ? (
+        <p className="mt-2 max-w-md text-[13px] text-muted-foreground">
+          {description}
+        </p>
+      ) : null}
+      <p className="mt-4 text-[12px] text-muted-foreground">
+        This view is not implemented yet.
+      </p>
+    </div>
+  )
+}

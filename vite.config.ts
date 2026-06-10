@@ -17,6 +17,14 @@ const sprintfJsShim = path.resolve(
   projectRoot,
   'src/lib/cli-shell/shims/sprintf-js.ts',
 )
+const decimalJsLightShim = path.resolve(
+  projectRoot,
+  'src/lib/shims/decimal-js-light.ts',
+)
+const decimalJsShim = path.resolve(
+  projectRoot,
+  'src/lib/shims/decimal-js.ts',
+)
 const almostnodeSrc = path.resolve(projectRoot, 'node_modules/almostnode/src')
 
 export default defineConfig(async () => {
@@ -58,6 +66,14 @@ export default defineConfig(async () => {
     resolve: {
       dedupe: ['react', 'react-dom', 'use-sync-external-store'],
       alias: [
+        {
+          find: /^decimal\.js-light$/,
+          replacement: decimalJsLightShim,
+        },
+        {
+          find: /^decimal\.js$/,
+          replacement: decimalJsShim,
+        },
         {
           find: /^sprintf-js$/,
           replacement: sprintfJsShim,

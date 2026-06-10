@@ -18,7 +18,7 @@ import {
   parseListSearch,
 } from '@/lib/table-filters'
 import { pageTitle } from '@/lib/utils/page-title'
-import { throwRedirectCollectionsDbFromTablesChild } from '@/lib/database-route-redirects'
+import { throwRedirectCollectionsDbFromTablesChild, throwRedirectPostgresDbKind } from '@/lib/database-route-redirects'
 
 const TABLES_PER_PAGE = 100
 const DEFAULT_PAGE = 1
@@ -57,6 +57,8 @@ export const Route = createFileRoute(
     const { queryClient } = context
 
     if (!projectId || !databaseId) return
+
+    throwRedirectPostgresDbKind(dbKind, { projectId, databaseId, tableId })
 
     throwRedirectCollectionsDbFromTablesChild(dbKind, 'dataGrid', {
       projectId,
