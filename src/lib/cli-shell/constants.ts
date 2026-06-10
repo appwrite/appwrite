@@ -35,6 +35,9 @@ export const BROWSER_PROXY_SESSION_COOKIE =
 /** Matches {@link ConsoleFooter} compact bar height (`min-h-[54px]`). */
 export const CLI_SHELL_COLLAPSED_HEIGHT_PX = 54
 
+/** Panel expand/collapse animation duration (ms). */
+export const CLI_SHELL_COLLAPSE_MS = 200
+
 export const CLI_SHELL_MIN_HEIGHT_PX = 160
 export const CLI_SHELL_MAX_HEIGHT_RATIO = 0.55
 export const CLI_SHELL_DEFAULT_HEIGHT_PX = 280

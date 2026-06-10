@@ -31,7 +31,10 @@ import {
 } from '@/components/ui/dropdown-menu'
 import { cn } from '@/lib/utils'
 import { usePlatform } from '@/hooks/use-keyboard-shortcuts'
-import { CLI_SHELL_COLLAPSED_HEIGHT_PX } from '@/lib/cli-shell/constants'
+import {
+  CLI_SHELL_COLLAPSED_HEIGHT_PX,
+  CLI_SHELL_COLLAPSE_MS,
+} from '@/lib/cli-shell/constants'
 import { CLI_SHELL_NEW_TERMINAL_SHORTCUT_RAW } from '@/lib/cli-shell/cli-terminal-shortcuts'
 import { formatDisplayKeys } from '@/lib/keyboard-shortcuts/display'
 import { CliSessionSidebar } from './CliSessionSidebar'
@@ -40,22 +43,18 @@ import { CliTerminalSearch } from './CliTerminalSearch'
 import { CliTerminalSessionsLayout } from './CliTerminalSessionsLayout'
 import { useCliShell } from './CliShellProvider'
 
-const CLI_SHELL_COLLAPSE_MS = 200
-
 export function ProjectCliShell() {
-  const { open, fullscreen, height } = useCliShell()
-  const [hasOpenedPanel, setHasOpenedPanel] = useState(open)
+  const { open, fullscreen, height, panelEverOpened } = useCliShell()
   const [isCollapsing, setIsCollapsing] = useState(false)
   const [isResizing, setIsResizing] = useState(false)
 
   useEffect(() => {
     if (open) {
-      setHasOpenedPanel(true)
       setIsCollapsing(false)
       return
     }
 
-    if (!hasOpenedPanel) return
+    if (!panelEverOpened) return
 
     setIsCollapsing(true)
     const timer = window.setTimeout(
@@ -63,10 +62,10 @@ export function ProjectCliShell() {
       CLI_SHELL_COLLAPSE_MS,
     )
     return () => window.clearTimeout(timer)
-  }, [open, hasOpenedPanel])
+  }, [open, panelEverOpened])
 
-  const showPanel = open || isCollapsing
   const showCollapsedBar = !open && !isCollapsing
+  const isFullyCollapsed = showCollapsedBar && !fullscreen
   const isFullscreenOpen = open && fullscreen
   const containerHeight =
     open && !fullscreen ? height : CLI_SHELL_COLLAPSED_HEIGHT_PX
@@ -79,7 +78,7 @@ export function ProjectCliShell() {
           ? 'fixed inset-0 z-[140] flex min-h-0 flex-col'
           : cn(
               'relative shrink-0 overflow-hidden border-t border-border',
-              !isResizing && 'transition-[height] ease-out',
+              !isResizing && 'transition-[height] ease-in-out',
             ),
       )}
       style={
@@ -91,18 +90,32 @@ export function ProjectCliShell() {
             }
       }
     >
-      {hasOpenedPanel ? (
+      {panelEverOpened ? (
         <div
           className={cn(
             'flex min-h-0 flex-col',
-            isFullscreenOpen ? 'h-full flex-1' : 'h-full',
-            !showPanel && 'hidden',
+            isFullscreenOpen ? 'h-full flex-1' : undefined,
+            !isFullscreenOpen && !open && 'pointer-events-none',
+            isFullyCollapsed && 'opacity-0',
           )}
+          style={
+            isFullscreenOpen
+              ? undefined
+              : {
+                  height,
+                  minHeight: height,
+                }
+          }
+          aria-hidden={!isFullscreenOpen && !open}
         >
           <ProjectCliShellPanel onResizingChange={setIsResizing} />
         </div>
       ) : null}
-      {showCollapsedBar ? <ProjectCliShellCollapsedBar /> : null}
+      {showCollapsedBar ? (
+        <div className="absolute inset-0 z-10 flex min-h-0 flex-col">
+          <ProjectCliShellCollapsedBar />
+        </div>
+      ) : null}
     </div>
   )
 }
@@ -194,7 +207,7 @@ function ProjectCliShellCollapsedBar() {
     <button
       type="button"
       onClick={() => setOpen(true)}
-      className="flex h-full w-full cursor-pointer items-center justify-between gap-4 bg-card/50 px-4 text-left transition-colors hover:bg-muted/40 sm:px-6"
+      className="flex h-full w-full cursor-pointer items-center justify-between gap-4 bg-background px-4 text-left transition-colors hover:bg-muted/40 sm:px-6"
       aria-label="Open terminal"
     >
       <CliShellHeaderTitle showBootstrapSpinner={isBootstrapping} />
@@ -300,18 +313,10 @@ function ProjectCliShellPanel({ onResizingChange }: ProjectCliShellPanelProps) {
 
   const isBootstrapping = status === 'bootstrapping'
 
-  const [headerActionsVisible, setHeaderActionsVisible] = useState(false)
+  const [headerActionsVisible, setHeaderActionsVisible] = useState(open)
 
   useEffect(() => {
-    if (!open) {
-      setHeaderActionsVisible(false)
-      return
-    }
-
-    const raf = requestAnimationFrame(() => {
-      setHeaderActionsVisible(true)
-    })
-    return () => cancelAnimationFrame(raf)
+    setHeaderActionsVisible(open)
   }, [open])
 
   return (
@@ -345,12 +350,11 @@ function ProjectCliShellPanel({ onResizingChange }: ProjectCliShellPanelProps) {
 
         <div
           className={cn(
-            'flex shrink-0 items-center transition-opacity ease-out',
+            'flex shrink-0 items-center',
             headerActionsVisible
               ? 'opacity-100'
               : 'pointer-events-none opacity-0',
           )}
-          style={{ transitionDuration: `${CLI_SHELL_COLLAPSE_MS}ms` }}
         >
           <CliShellHeaderIconButton
             title={`New terminal (${newTerminalShortcutKeys})`}

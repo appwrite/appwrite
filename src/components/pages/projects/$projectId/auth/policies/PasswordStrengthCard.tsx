@@ -259,7 +259,7 @@ export function PasswordStrengthCard({
           </div>
 
           <Card
-            className="w-full max-w-sm mx-auto overflow-hidden py-0 bg-background border-border shadow-md ring-1 ring-border/80"
+            className="w-full max-w-sm mx-auto overflow-hidden py-0 bg-background border-border ring-1 ring-border/80"
           >
             <div className="px-5 py-6 space-y-5">
               <div className="space-y-1">

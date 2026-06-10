@@ -23,6 +23,7 @@ import { withIsolatedAmdGlobals } from '@/lib/cli-shell/amd-globals'
 import {
   CLI_BOOTSTRAP_READY_MESSAGE,
   CLI_PROJECT_CWD,
+  CLI_SHELL_COLLAPSE_MS,
   CLI_SHELL_TRY_COMMANDS,
   createCliShellWelcomeLines,
 } from '@/lib/cli-shell/constants'
@@ -109,6 +110,8 @@ export type { CliTerminalSearchResults }
 type CliShellContextValue = {
   open: boolean
   setOpen: (open: boolean) => void
+  /** True once the panel has been opened; keeps terminal instances mounted when minimized. */
+  panelEverOpened: boolean
   toggle: () => void
   status: CliShellStatus
   sessions: CliShellSession[]
@@ -203,11 +206,12 @@ export function CliShellProvider({ projectId, children }: CliShellProviderProps)
   const { heightPx, setHeightPx } = useCliShellHeight(consoleAccount)
   const { history: commandHistory, persistHistory: persistCommandHistory } =
     useCliShellHistory(consoleAccount, projectId)
-  const { persistSessions } = useCliShellSessionsPrefs(
+  const { persistSessions, flushPersistSessions } = useCliShellSessionsPrefs(
     consoleAccount,
     projectId,
   )
   const height = clampCliShellHeightPx(heightPx)
+  const [panelEverOpened, setPanelEverOpened] = useState(open)
 
   const [status, setStatus] = useState<CliShellStatus>('idle')
   const [runningSessionId, setRunningSessionId] = useState<string | null>(null)
@@ -248,9 +252,13 @@ export function CliShellProvider({ projectId, children }: CliShellProviderProps)
   const suppressSearchFocusRerunRef = useRef(false)
   const suppressSearchReportRef = useRef(false)
   const sessionsHydratedForProjectRef = useRef<string | null>(null)
+  const sessionsDirtyRef = useRef(false)
+  const previousProjectIdRef = useRef<string | null>(null)
   const lastPersistedSessionsRef = useRef('')
   const persistSessionsRef = useRef(persistSessions)
   persistSessionsRef.current = persistSessions
+  const flushPersistSessionsRef = useRef(flushPersistSessions)
+  flushPersistSessionsRef.current = flushPersistSessions
 
   const containerRef = useRef<CliShellContainer | null>(null)
   const terminalApisRef = useRef<Map<string, CliTerminalApi>>(new Map())
@@ -564,11 +572,22 @@ export function CliShellProvider({ projectId, children }: CliShellProviderProps)
   }, [enterFullscreen, exitFullscreen, fullscreen])
 
   useEffect(() => {
+    if (open) {
+      setPanelEverOpened(true)
+    }
+  }, [open])
+
+  useEffect(() => {
     if (!open && fullscreen) {
       heightBeforeFullscreenRef.current = null
       setFullscreen(false)
     }
   }, [fullscreen, open])
+
+  useEffect(() => {
+    if (open) return
+    flushPersistSessionsRef.current()
+  }, [open])
 
   const initializeCliAuth = useCallback(
     async (container: CliShellContainer): Promise<void> => {
@@ -804,6 +823,12 @@ export function CliShellProvider({ projectId, children }: CliShellProviderProps)
   }, [ensureRuntime, open])
 
   useEffect(() => {
+    const previousProjectId = previousProjectIdRef.current
+    previousProjectIdRef.current = projectId
+    if (previousProjectId === null || previousProjectId === projectId) {
+      return
+    }
+
     containerRef.current = null
     bootstrapPromiseRef.current = null
     bootstrapReadyAnnouncedRef.current = false
@@ -823,6 +848,7 @@ export function CliShellProvider({ projectId, children }: CliShellProviderProps)
     pendingBootstrapMessagesRef.current = []
     suggestionCommandsRef.current = CLI_SHELL_TRY_COMMANDS
     sessionsHydratedForProjectRef.current = null
+    sessionsDirtyRef.current = false
     lastPersistedSessionsRef.current = ''
     const nextState = createInitialCliShellSessionState()
     setSessions(nextState.sessions)
@@ -835,6 +861,10 @@ export function CliShellProvider({ projectId, children }: CliShellProviderProps)
   useEffect(() => {
     if (!consoleAccount) return
     if (sessionsHydratedForProjectRef.current === projectId) return
+    if (sessionsDirtyRef.current) {
+      sessionsHydratedForProjectRef.current = projectId
+      return
+    }
 
     const saved = parseCliShellSessions(
       consoleAccount.prefs as UserPrefs | undefined,
@@ -932,10 +962,26 @@ export function CliShellProvider({ projectId, children }: CliShellProviderProps)
     if (!api) return false
     if (terminalSearchOpen) return true
     requestAnimationFrame(() => {
+      if (api.focusInputLine) {
+        api.focusInputLine()
+        return
+      }
       api.focus()
     })
     return true
   }, [terminalSearchOpen])
+
+  useEffect(() => {
+    if (!open || terminalSearchOpen) return
+    const sessionId = focusedSessionIdRef.current
+    const timer = window.setTimeout(() => {
+      focusSession(sessionId)
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(new Event('resize'))
+      }
+    }, CLI_SHELL_COLLAPSE_MS)
+    return () => window.clearTimeout(timer)
+  }, [focusSession, open, terminalSearchOpen])
 
   const setActiveSessionId = useCallback((sessionId: string) => {
     setActiveSessionIdState(sessionId)
@@ -962,6 +1008,7 @@ export function CliShellProvider({ projectId, children }: CliShellProviderProps)
 
   const splitSession = useCallback(
     (sessionId: string) => {
+      sessionsDirtyRef.current = true
       const rootId = getCliShellSessionRootId(
         sessionId,
         sessionsRef.current,
@@ -1024,6 +1071,7 @@ export function CliShellProvider({ projectId, children }: CliShellProviderProps)
   const renameSession = useCallback((sessionId: string, name: string) => {
     const trimmed = name.trim().slice(0, MAX_CLI_SHELL_SESSION_NAME_LENGTH)
     if (!trimmed) return
+    sessionsDirtyRef.current = true
     setSessions((prev) =>
       prev.map((session) =>
         session.id === sessionId ? { ...session, name: trimmed } : session,
@@ -1033,6 +1081,7 @@ export function CliShellProvider({ projectId, children }: CliShellProviderProps)
 
   const reorderRootSessions = useCallback(
     (fromIndex: number, toIndex: number) => {
+      sessionsDirtyRef.current = true
       setSessions((prev) =>
         reorderCliShellRootSessions(prev, fromIndex, toIndex),
       )
@@ -1041,6 +1090,7 @@ export function CliShellProvider({ projectId, children }: CliShellProviderProps)
   )
 
   const createSession = useCallback(() => {
+    sessionsDirtyRef.current = true
     const nextSessionId = createCliShellSessionId()
 
     setSessions((prev) => {
@@ -1065,6 +1115,7 @@ export function CliShellProvider({ projectId, children }: CliShellProviderProps)
   }, [focusSession])
 
   const removeSession = useCallback((sessionId: string) => {
+    sessionsDirtyRef.current = true
     const toRemove = collectCliShellSessionsToRemove(
       sessionId,
       sessionsRef.current,
@@ -1831,6 +1882,7 @@ export function CliShellProvider({ projectId, children }: CliShellProviderProps)
     () => ({
       open,
       setOpen,
+      panelEverOpened,
       toggle,
       status,
       sessions,
@@ -1886,6 +1938,7 @@ export function CliShellProvider({ projectId, children }: CliShellProviderProps)
     [
       open,
       setOpen,
+      panelEverOpened,
       toggle,
       status,
       sessions,

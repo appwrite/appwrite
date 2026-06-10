@@ -17,6 +17,7 @@ import {
 } from '@/lib/cli-shell/cli-terminal-search-run'
 import type { CliTerminalApi } from '@/lib/cli-shell/cli-terminal-api'
 import { cn } from '@/lib/utils'
+import { CLI_SHELL_COLLAPSE_MS } from '@/lib/cli-shell/constants'
 import { useCliShell } from './CliShellProvider'
 
 type CliTerminalSessionProps = {
@@ -133,6 +134,9 @@ export function CliTerminalSession({
   const terminalSearchOpenRef = useRef(terminalSearchOpen)
   const setTerminalSearchOpenRef = useRef(setTerminalSearchOpen)
   const searchCaseSensitiveRef = useRef(searchCaseSensitive)
+  const prevOpenForFitRef = useRef(open)
+  const wasPanelResizingRef = useRef(isPanelResizing)
+  const prevIsFocusedRef = useRef(isFocused)
 
   isSessionRunningRef.current = isSessionRunning
   fullscreenRef.current = fullscreen
@@ -335,6 +339,10 @@ export function CliTerminalSession({
       writeln: (data, callback) => terminal.writeln(data, callback),
       clear: () => terminal.clear(),
       focus: () => terminal.focus(),
+      focusInputLine: () => {
+        terminal.scrollToBottom()
+        terminal.focus()
+      },
       showInputPrompt: inputSession.showPrompt,
       prepareInputLine: inputSession.prepareInputLine,
       resetForWelcome: () => {
@@ -477,25 +485,37 @@ export function CliTerminalSession({
   }, [isVisible, open, tryWriteSessionWelcome])
 
   useEffect(() => {
-    if (!open || !isFocused) return
-    fitTerminal()
-    if (terminalSearchOpen) return
-    const focusRaf = requestAnimationFrame(() => {
-      terminalRef.current?.focus()
-    })
-    return () => cancelAnimationFrame(focusRaf)
-  }, [fitTerminal, fullscreen, isFocused, open, terminalSearchOpen])
+    const opening = open && !prevOpenForFitRef.current
+    prevOpenForFitRef.current = open
+    if (!isVisible || !open || isPanelResizing) return
 
-  useEffect(() => {
-    if (!isVisible) return
-    fitTerminal()
-  }, [fitTerminal, isVisible])
-
-  useEffect(() => {
-    if (!isPanelResizing) {
-      fitTerminal()
+    const runFit = () => fitTerminal()
+    if (opening) {
+      const timer = window.setTimeout(runFit, CLI_SHELL_COLLAPSE_MS)
+      return () => clearTimeout(timer)
     }
-  }, [fitTerminal, isPanelResizing])
+    runFit()
+  }, [fitTerminal, isPanelResizing, isVisible, open])
+
+  useEffect(() => {
+    const wasResizing = wasPanelResizingRef.current
+    wasPanelResizingRef.current = isPanelResizing
+    if (!open || !isVisible || isPanelResizing || !wasResizing) return
+    fitTerminal()
+  }, [fitTerminal, isPanelResizing, isVisible, open])
+
+  useEffect(() => {
+    const wasFocused = prevIsFocusedRef.current
+    prevIsFocusedRef.current = isFocused
+    if (!open || !isFocused || !isVisible || terminalSearchOpen) return
+    if (wasFocused === isFocused) return
+    requestAnimationFrame(() => {
+      const terminal = terminalRef.current
+      if (!terminal) return
+      terminal.scrollToBottom()
+      terminal.focus()
+    })
+  }, [isFocused, isVisible, open, terminalSearchOpen])
 
   useEffect(() => {
     if (!open || !terminalSearchOpen) return

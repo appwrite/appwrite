@@ -7,6 +7,8 @@ export type CliTerminalApi = {
   writeln: (data: string, callback?: () => void) => void
   clear: () => void
   focus: () => void
+  /** Scroll the viewport to the active input line, then focus for typing. */
+  focusInputLine?: () => void
   showInputPrompt?: () => void
   prepareInputLine?: () => void
   resetForWelcome?: () => void

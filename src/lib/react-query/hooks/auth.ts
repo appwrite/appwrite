@@ -173,7 +173,10 @@ export function syncConsoleAccountAfterMutation(
       ? ({
           ...cached,
           ...options.apiResult,
-          prefs: options.apiResult.prefs ?? cached.prefs,
+          prefs: {
+            ...(cached.prefs ?? {}),
+            ...(options.apiResult.prefs ?? {}),
+          },
         } as Models.User)
       : options.apiResult
   } else if (options?.updater && cached) {
@@ -1580,11 +1583,15 @@ export function useCliShellOpen(account: ConsoleAccountCache | undefined) {
 
   const updateMutation = useMutation({
     mutationFn: async (value: boolean) => {
-      if (!account) {
+      const currentAccount = getConsoleAccountFromCache(queryClient)
+      if (!currentAccount) {
         throw new Error('Account data not available')
       }
       return await updateAccountPrefs(
-        mergeCliShellOpenIntoPrefs((account.prefs ?? {}) as UserPrefs, value),
+        mergeCliShellOpenIntoPrefs(
+          (currentAccount.prefs ?? {}) as UserPrefs,
+          value,
+        ),
       )
     },
     onMutate: async (value) => {
@@ -1891,15 +1898,17 @@ export function useCliShellSessionsPrefs(
     projectId,
   )
   const persistTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const pendingPersistRef = useRef<PersistedCliShellSessionsState | null>(null)
 
   const updateMutation = useMutation({
     mutationFn: async (value: PersistedCliShellSessionsState) => {
-      if (!account) {
+      const currentAccount = getConsoleAccountFromCache(queryClient)
+      if (!currentAccount) {
         throw new Error('Account data not available')
       }
       return await updateAccountPrefs(
         mergeCliShellSessionsIntoPrefs(
-          (account.prefs ?? {}) as UserPrefs,
+          (currentAccount.prefs ?? {}) as UserPrefs,
           projectId,
           value,
         ),
@@ -1915,6 +1924,7 @@ export function useCliShellSessionsPrefs(
   const persistSessions = useCallback(
     (value: PersistedCliShellSessionsState) => {
       if (!account) return
+      pendingPersistRef.current = value
       const patch = mergeCliShellSessionsIntoPrefs(
         (account.prefs ?? {}) as UserPrefs,
         projectId,
@@ -1935,11 +1945,23 @@ export function useCliShellSessionsPrefs(
       }
       persistTimerRef.current = setTimeout(() => {
         persistTimerRef.current = null
+        pendingPersistRef.current = null
         updateMutation.mutate(value)
       }, CLI_SHELL_PREFS_PERSIST_DEBOUNCE_MS)
     },
     [account, projectId, queryClient, updateMutation],
   )
+
+  const flushPersistSessions = useCallback(() => {
+    if (persistTimerRef.current !== null) {
+      clearTimeout(persistTimerRef.current)
+      persistTimerRef.current = null
+    }
+    const pending = pendingPersistRef.current
+    if (!pending) return
+    pendingPersistRef.current = null
+    updateMutation.mutate(pending)
+  }, [updateMutation])
 
   useEffect(() => {
     return () => {
@@ -1949,7 +1971,7 @@ export function useCliShellSessionsPrefs(
     }
   }, [])
 
-  return { savedSessions, persistSessions }
+  return { savedSessions, persistSessions, flushPersistSessions }
 }
 
 /**
