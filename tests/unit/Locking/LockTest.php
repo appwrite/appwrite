@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Tests\Unit\Locking;
 
 use Appwrite\Extend\Exception;
@@ -12,7 +14,7 @@ use Utopia\Database\Validator\Authorization;
 use Utopia\Logger\Log;
 use Utopia\Telemetry\Adapter\None as NoTelemetry;
 
-class LockTest extends TestCase
+final class LockTest extends TestCase
 {
     private Redis $redis;
 
