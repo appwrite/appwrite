@@ -1,11 +1,13 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Tests\Unit\Detector;
 
 use Appwrite\Detector\Detector;
 use PHPUnit\Framework\TestCase;
 
-class DetectorTest extends TestCase
+final class DetectorTest extends TestCase
 {
     protected ?Detector $object = null;
 

@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Tests\Unit\Utopia\Database\Documents;
 
 use Appwrite\Utopia\Database\Documents\User;
@@ -12,7 +14,7 @@ use Utopia\Database\Helpers\Role;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\Roles;
 
-class UserTest extends TestCase
+final class UserTest extends TestCase
 {
     private $authorization;
 
@@ -90,9 +92,9 @@ class UserTest extends TestCase
         ]);
 
         $this->assertEquals('token1', $user1->sessionVerify($secret, $proofForToken));
-        $this->assertEquals($user1->sessionVerify('false-secret', $proofForToken), false);
-        $this->assertEquals($user2->sessionVerify($secret, $proofForToken), false);
-        $this->assertEquals($user2->sessionVerify('false-secret', $proofForToken), false);
+        $this->assertEquals(false, $user1->sessionVerify('false-secret', $proofForToken));
+        $this->assertEquals(false, $user2->sessionVerify($secret, $proofForToken));
+        $this->assertEquals(false, $user2->sessionVerify('false-secret', $proofForToken));
     }
 
     public function testTokenVerify(): void
@@ -162,11 +164,11 @@ class UserTest extends TestCase
 
         $this->assertEquals($user1->tokenVerify(TOKEN_TYPE_RECOVERY, $secret, $proofForToken), $tokens1[0]);
         $this->assertEquals($user1->tokenVerify(null, $secret, $proofForToken), $tokens1[0]);
-        $this->assertEquals($user1->tokenVerify(TOKEN_TYPE_RECOVERY, 'false-secret', $proofForToken), false);
-        $this->assertEquals($user2->tokenVerify(TOKEN_TYPE_RECOVERY, $secret, $proofForToken), false);
-        $this->assertEquals($user2->tokenVerify(TOKEN_TYPE_RECOVERY, 'false-secret', $proofForToken), false);
-        $this->assertEquals($user3->tokenVerify(TOKEN_TYPE_RECOVERY, $secret, $proofForToken), false);
-        $this->assertEquals($user3->tokenVerify(TOKEN_TYPE_RECOVERY, 'false-secret', $proofForToken), false);
+        $this->assertEquals(false, $user1->tokenVerify(TOKEN_TYPE_RECOVERY, 'false-secret', $proofForToken));
+        $this->assertEquals(false, $user2->tokenVerify(TOKEN_TYPE_RECOVERY, $secret, $proofForToken));
+        $this->assertEquals(false, $user2->tokenVerify(TOKEN_TYPE_RECOVERY, 'false-secret', $proofForToken));
+        $this->assertEquals(false, $user3->tokenVerify(TOKEN_TYPE_RECOVERY, $secret, $proofForToken));
+        $this->assertEquals(false, $user3->tokenVerify(TOKEN_TYPE_RECOVERY, 'false-secret', $proofForToken));
     }
 
     public function testIsPrivilegedUser(): void
@@ -179,11 +181,11 @@ class UserTest extends TestCase
         $this->assertEquals(true, $user->isPrivileged([User::ROLE_ADMIN]));
         $this->assertEquals(true, $user->isPrivileged([User::ROLE_DEVELOPER]));
         $this->assertEquals(true, $user->isPrivileged([User::ROLE_OWNER]));
-        $this->assertEquals(false, $user->isPrivileged([User::ROLE_APPS]));
+        $this->assertEquals(false, $user->isPrivileged([User::ROLE_KEYS]));
         $this->assertEquals(false, $user->isPrivileged([User::ROLE_SYSTEM]));
 
-        $this->assertEquals(false, $user->isPrivileged([User::ROLE_APPS, User::ROLE_APPS]));
-        $this->assertEquals(false, $user->isPrivileged([User::ROLE_APPS, Role::guests()->toString()]));
+        $this->assertEquals(false, $user->isPrivileged([User::ROLE_KEYS, User::ROLE_KEYS]));
+        $this->assertEquals(false, $user->isPrivileged([User::ROLE_KEYS, Role::guests()->toString()]));
         $this->assertEquals(true, $user->isPrivileged([User::ROLE_OWNER, Role::guests()->toString()]));
         $this->assertEquals(true, $user->isPrivileged([User::ROLE_OWNER, User::ROLE_ADMIN, User::ROLE_DEVELOPER]));
     }
@@ -192,19 +194,19 @@ class UserTest extends TestCase
     {
         $user = new User();
 
-        $this->assertEquals(false, $user->isApp([]));
-        $this->assertEquals(false, $user->isApp([Role::guests()->toString()]));
-        $this->assertEquals(false, $user->isApp([Role::users()->toString()]));
-        $this->assertEquals(false, $user->isApp([User::ROLE_ADMIN]));
-        $this->assertEquals(false, $user->isApp([User::ROLE_DEVELOPER]));
-        $this->assertEquals(false, $user->isApp([User::ROLE_OWNER]));
-        $this->assertEquals(true, $user->isApp([User::ROLE_APPS]));
-        $this->assertEquals(false, $user->isApp([User::ROLE_SYSTEM]));
+        $this->assertEquals(false, $user->isKey([]));
+        $this->assertEquals(false, $user->isKey([Role::guests()->toString()]));
+        $this->assertEquals(false, $user->isKey([Role::users()->toString()]));
+        $this->assertEquals(false, $user->isKey([User::ROLE_ADMIN]));
+        $this->assertEquals(false, $user->isKey([User::ROLE_DEVELOPER]));
+        $this->assertEquals(false, $user->isKey([User::ROLE_OWNER]));
+        $this->assertEquals(true, $user->isKey([User::ROLE_KEYS]));
+        $this->assertEquals(false, $user->isKey([User::ROLE_SYSTEM]));
 
-        $this->assertEquals(true, $user->isApp([User::ROLE_APPS, User::ROLE_APPS]));
-        $this->assertEquals(true, $user->isApp([User::ROLE_APPS, Role::guests()->toString()]));
-        $this->assertEquals(false, $user->isApp([User::ROLE_OWNER, Role::guests()->toString()]));
-        $this->assertEquals(false, $user->isApp([User::ROLE_OWNER, User::ROLE_ADMIN, User::ROLE_DEVELOPER]));
+        $this->assertEquals(true, $user->isKey([User::ROLE_KEYS, User::ROLE_KEYS]));
+        $this->assertEquals(true, $user->isKey([User::ROLE_KEYS, Role::guests()->toString()]));
+        $this->assertEquals(false, $user->isKey([User::ROLE_OWNER, Role::guests()->toString()]));
+        $this->assertEquals(false, $user->isKey([User::ROLE_OWNER, User::ROLE_ADMIN, User::ROLE_DEVELOPER]));
     }
 
     public function testGuestRoles(): void
@@ -327,7 +329,7 @@ class UserTest extends TestCase
 
     public function testAppUserRoles(): void
     {
-        $this->getAuthorization()->addRole(User::ROLE_APPS);
+        $this->getAuthorization()->addRole(User::ROLE_KEYS);
         $user  = new User([
             '$id' => ID::custom('123'),
             'memberships' => [

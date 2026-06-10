@@ -6,7 +6,6 @@ use Appwrite\GraphQL\Exception as GQLException;
 use Appwrite\Promises\Swoole;
 use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
-use Utopia\DI\Container;
 use Utopia\Http\Exception;
 use Utopia\Http\Http;
 use Utopia\Http\Route;
@@ -54,22 +53,6 @@ class Resolvers
     }
 
     /**
-     * Get the current request container.
-     */
-    private static function getResolverContainer(Http $utopia): Container
-    {
-        $container = $utopia->getResource('container');
-
-        if ($container instanceof Container || (\is_object($container) && \method_exists($container, 'get') && \method_exists($container, 'set'))) {
-            /** @var Container $container */
-            return $container;
-        }
-
-        /** @var callable(): Container $container */
-        return $container();
-    }
-
-    /**
      * Get the request-scoped lock shared by GraphQL resolver coroutines
      * for the current HTTP request.
      */
@@ -95,9 +78,9 @@ class Resolvers
         ?Route $route,
     ): callable {
         return static fn ($type, $args, $context, $info) => new Swoole(function (callable $resolve, callable $reject) use ($utopia, $route, $args) {
-            $utopia = $utopia->getResource('utopia:graphql');
-            $request = $utopia->getResource('request');
-            $response = $utopia->getResource('response');
+            $utopia = $utopia->context()->get('utopia:graphql');
+            $request = $utopia->context()->get('request');
+            $response = $utopia->context()->get('response');
 
             self::resolve(
                 $utopia,
@@ -167,9 +150,9 @@ class Resolvers
         callable $url,
     ): callable {
         return static fn ($type, $args, $context, $info) => new Swoole(function (callable $resolve, callable $reject) use ($utopia, $databaseId, $collectionId, $url, $args) {
-            $utopia = $utopia->getResource('utopia:graphql');
-            $request = $utopia->getResource('request');
-            $response = $utopia->getResource('response');
+            $utopia = $utopia->context()->get('utopia:graphql');
+            $request = $utopia->context()->get('request');
+            $response = $utopia->context()->get('response');
 
             self::resolve(
                 $utopia,
@@ -203,9 +186,9 @@ class Resolvers
         callable $params,
     ): callable {
         return static fn ($type, $args, $context, $info) => new Swoole(function (callable $resolve, callable $reject) use ($utopia, $databaseId, $collectionId, $url, $params, $args) {
-            $utopia = $utopia->getResource('utopia:graphql');
-            $request = $utopia->getResource('request');
-            $response = $utopia->getResource('response');
+            $utopia = $utopia->context()->get('utopia:graphql');
+            $request = $utopia->context()->get('request');
+            $response = $utopia->context()->get('response');
 
             $beforeResolve = function ($payload) {
                 return $payload['documents'];
@@ -245,9 +228,9 @@ class Resolvers
         callable $params,
     ): callable {
         return static fn ($type, $args, $context, $info) => new Swoole(function (callable $resolve, callable $reject) use ($utopia, $databaseId, $collectionId, $url, $params, $args) {
-            $utopia = $utopia->getResource('utopia:graphql');
-            $request = $utopia->getResource('request');
-            $response = $utopia->getResource('response');
+            $utopia = $utopia->context()->get('utopia:graphql');
+            $request = $utopia->context()->get('request');
+            $response = $utopia->context()->get('response');
 
             self::resolve(
                 $utopia,
@@ -282,9 +265,9 @@ class Resolvers
         callable $params,
     ): callable {
         return static fn ($type, $args, $context, $info) => new Swoole(function (callable $resolve, callable $reject) use ($utopia, $databaseId, $collectionId, $url, $params, $args) {
-            $utopia = $utopia->getResource('utopia:graphql');
-            $request = $utopia->getResource('request');
-            $response = $utopia->getResource('response');
+            $utopia = $utopia->context()->get('utopia:graphql');
+            $request = $utopia->context()->get('request');
+            $response = $utopia->context()->get('response');
 
             self::resolve(
                 $utopia,
@@ -317,9 +300,9 @@ class Resolvers
         callable $url,
     ): callable {
         return static fn ($type, $args, $context, $info) => new Swoole(function (callable $resolve, callable $reject) use ($utopia, $databaseId, $collectionId, $url, $args) {
-            $utopia = $utopia->getResource('utopia:graphql');
-            $request = $utopia->getResource('request');
-            $response = $utopia->getResource('response');
+            $utopia = $utopia->context()->get('utopia:graphql');
+            $request = $utopia->context()->get('request');
+            $response = $utopia->context()->get('response');
 
             self::resolve(
                 $utopia,
@@ -359,9 +342,9 @@ class Resolvers
 
         $lock->acquire();
 
-        $original = $utopia->getRoute();
         try {
             $request = clone $request;
+            $request->addHeader('x-appwrite-source', 'graphql');
 
             // Drop json content type so post args are used directly.
             if (\str_starts_with($request->getHeader('content-type'), 'application/json')) {
@@ -373,17 +356,15 @@ class Resolvers
             }
 
             /** @var Response $resolverResponse */
-            $resolverResponse = clone $utopia->getResource('response');
-            $container = self::getResolverContainer($utopia);
-            $container->set('request', static fn () => $request);
-            $container->set('response', static fn () => $resolverResponse);
+            $resolverResponse = clone $utopia->context()->get('response');
+            $utopia->context()->set('request', static fn () => $request);
+            $utopia->context()->set('response', static fn () => $resolverResponse);
             $resolverResponse->setContentType(Response::CONTENT_TYPE_NULL);
             $resolverResponse->setSent(false);
 
-            $route = $utopia->match($request, fresh: true);
-            $request->setRoute($route);
+            $request->setRoute($utopia->match($request)?->route);
 
-            $utopia->execute($route, $request, $resolverResponse);
+            $utopia->execute($request, $resolverResponse);
 
             self::mergeResponseSideEffects($resolverResponse, $response);
 
@@ -402,10 +383,6 @@ class Resolvers
             $reject($e);
             return;
         } finally {
-            if ($original !== null) {
-                $utopia->setRoute($original);
-            }
-
             $lock->release();
             unset(self::$locks[\spl_object_hash($utopia)]);
         }

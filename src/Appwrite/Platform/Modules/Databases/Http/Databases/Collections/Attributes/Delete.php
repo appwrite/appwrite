@@ -2,8 +2,9 @@
 
 namespace Appwrite\Platform\Modules\Databases\Http\Databases\Collections\Attributes;
 
-use Appwrite\Event\Database as EventDatabase;
 use Appwrite\Event\Event;
+use Appwrite\Event\Message\Database as DatabaseMessage;
+use Appwrite\Event\Publisher\Database as DatabasePublisher;
 use Appwrite\Extend\Exception;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\ContentType;
@@ -66,13 +67,13 @@ class Delete extends Action
             ->param('key', '', fn (Database $dbForProject) => new Key(false, $dbForProject->getAdapter()->getMaxUIDLength()), 'Attribute Key.', false, ['dbForProject'])
             ->inject('response')
             ->inject('dbForProject')
-            ->inject('queueForDatabase')
+            ->inject('publisherForDatabase')
             ->inject('queueForEvents')
             ->inject('authorization')
             ->callback($this->action(...));
     }
 
-    public function action(string $databaseId, string $collectionId, string $key, UtopiaResponse $response, Database $dbForProject, EventDatabase $queueForDatabase, Event $queueForEvents, Authorization $authorization): void
+    public function action(string $databaseId, string $collectionId, string $key, UtopiaResponse $response, Database $dbForProject, DatabasePublisher $publisherForDatabase, Event $queueForEvents, Authorization $authorization): void
     {
         $db = $authorization->skip(fn () => $dbForProject->getDocument('databases', $databaseId));
         if ($db->isEmpty()) {
@@ -129,20 +130,6 @@ class Delete extends Action
             }
         }
 
-        $queueForDatabase
-            ->setDatabase($db)
-            ->setType(DATABASE_TYPE_DELETE_ATTRIBUTE);
-
-        if ($this->isCollectionsAPI()) {
-            $queueForDatabase
-                ->setRow($attribute)
-                ->setTable($collection);
-        } else {
-            $queueForDatabase
-                ->setDocument($attribute)
-                ->setCollection($collection);
-        }
-
         $type = $attribute->getAttribute('type');
         $format = $attribute->getAttribute('format');
 
@@ -157,6 +144,18 @@ class Delete extends Action
             ->setParam('columnId', $attribute->getId())
             ->setPayload($response->output($attribute, $model))
             ->setContext($this->getCollectionsEventsContext(), $collection);
+
+        $publisherForDatabase->enqueue(new DatabaseMessage(
+            project: $queueForEvents->getProject(),
+            user: $queueForEvents->getUser(),
+            type: DATABASE_TYPE_DELETE_ATTRIBUTE,
+            database: $db,
+            collection: $this->isCollectionsAPI() ? null : $collection,
+            document: $this->isCollectionsAPI() ? null : $attribute,
+            table: $this->isCollectionsAPI() ? $collection : null,
+            row: $this->isCollectionsAPI() ? $attribute : null,
+            events: Event::generateEvents($queueForEvents->getEvent(), $queueForEvents->getParams()),
+        ));
 
         $response->noContent();
     }

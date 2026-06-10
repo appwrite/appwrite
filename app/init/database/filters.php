@@ -231,6 +231,7 @@ Database::addFilter(
         return $database->getAuthorization()->skip(fn () => $database
             ->find('authenticators', [
                 Query::equal('userInternalId', [$document->getSequence()]),
+                Query::orderDesc('$createdAt'),
                 Query::limit(APP_LIMIT_SUBQUERY),
             ]));
     }
@@ -473,5 +474,19 @@ Database::addFilter(
                 Query::equal('resourceInternalId', [$document->getSequence()]),
                 Query::limit(APP_LIMIT_SUBQUERY),
             ]));
+    }
+);
+
+Database::addFilter(
+    'subQueryReportInsights',
+    function (mixed $value) {
+        return;
+    },
+    function (mixed $value, Document $document, Database $database) {
+        return $database->getAuthorization()->skip(fn () => $database->find('insights', [
+            Query::equal('projectInternalId', [$document->getAttribute('projectInternalId')]),
+            Query::equal('reportInternalId', [$document->getSequence()]),
+            Query::limit(APP_LIMIT_SUBQUERY),
+        ]));
     }
 );

@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Tests\E2E\Services\Projects;
 
 use Tests\E2E\Client;
@@ -8,7 +10,7 @@ use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\SideServer;
 use Utopia\System\System;
 
-class ProjectsCustomServerTest extends Scope
+final class ProjectsCustomServerTest extends Scope
 {
     use ProjectsBase;
     use ProjectCustom;

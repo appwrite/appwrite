@@ -2,7 +2,7 @@
 
 namespace Appwrite\Platform\Modules\Health\Http\Health\Queue\Messaging;
 
-use Appwrite\Event\Messaging;
+use Appwrite\Event\Publisher\Messaging as MessagingPublisher;
 use Appwrite\Platform\Modules\Health\Http\Health\Queue\Base;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\ContentType;
@@ -42,16 +42,16 @@ class Get extends Base
                 contentType: ContentType::JSON
             ))
             ->param('threshold', 5000, new Integer(true), 'Queue size threshold. When hit (equal or higher), endpoint returns server error. Default value is 5000.', true)
-            ->inject('queueForMessaging')
+            ->inject('publisherForMessaging')
             ->inject('response')
             ->callback($this->action(...));
     }
 
-    public function action(int|string $threshold, Messaging $queueForMessaging, Response $response): void
+    public function action(int|string $threshold, MessagingPublisher $publisherForMessaging, Response $response): void
     {
         $threshold = (int) $threshold;
 
-        $size = $queueForMessaging->getSize();
+        $size = $publisherForMessaging->getSize();
 
         $this->assertQueueThreshold($size, $threshold);
 

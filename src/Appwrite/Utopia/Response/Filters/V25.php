@@ -11,37 +11,23 @@ class V25 extends Filter
     public function parse(array $content, string $model): array
     {
         return match ($model) {
-            Response::MODEL_MIGRATION => $this->parseMigration($content),
-            Response::MODEL_MIGRATION_LIST => $this->handleList($content, 'migrations', fn ($item) => $this->parseMigration($item)),
+            Response::MODEL_OAUTH2_OIDC => $this->parseOAuth2Oidc($content),
+            Response::MODEL_OAUTH2_PROVIDER_LIST => $this->handleList($content, 'providers', fn ($item) => ($item['$id'] ?? null) === 'oidc' ? $this->parseOAuth2Oidc($item) : $item),
             default => $content,
         };
     }
 
-    /**
-     * Reassemble the legacy "{databaseId}:{collectionId}" composite into the
-     * single resourceId field that pre-1.9.4 SDKs expect, and surface the
-     * legacy database-family resourceType (1.9.3 stored the parent type in
-     * resourceType, not parentResourceType). Strip the new fields so the
-     * payload matches the 1.9.3 schema exactly.
-     */
-    protected function parseMigration(array $content): array
+    private function parseOAuth2Oidc(array $content): array
     {
-        $parentResourceId = $content['parentResourceId'] ?? '';
-        $resourceId = $content['resourceId'] ?? '';
-
-        if ($parentResourceId !== '' && $resourceId !== '') {
-            $content['resourceId'] = $parentResourceId . ':' . $resourceId;
+        if (isset($content['tokenURL'])) {
+            $content['tokenUrl'] = $content['tokenURL'];
+            unset($content['tokenURL']);
         }
 
-        $parentResourceType = $content['parentResourceType'] ?? '';
-        if ($parentResourceType !== '') {
-            $content['resourceType'] = $parentResourceType;
+        if (isset($content['userInfoURL'])) {
+            $content['userInfoUrl'] = $content['userInfoURL'];
+            unset($content['userInfoURL']);
         }
-
-        unset($content['resourceInternalId']);
-        unset($content['parentResourceId']);
-        unset($content['parentResourceInternalId']);
-        unset($content['parentResourceType']);
 
         return $content;
     }

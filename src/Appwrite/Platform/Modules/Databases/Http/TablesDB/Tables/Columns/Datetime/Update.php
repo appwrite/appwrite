@@ -33,7 +33,7 @@ class Update extends DatetimeUpdate
         $this
             ->setHttpMethod(self::HTTP_REQUEST_METHOD_PATCH)
             ->setHttpPath('/v1/tablesdb/:databaseId/tables/:tableId/columns/datetime/:key')
-            ->desc('Update dateTime column')
+            ->desc('Update datetime column')
             ->groups(['api', 'database', 'schema'])
             ->label('scope', ['tables.write', 'collections.write', 'columns.write', 'attributes.write'])
             ->label('resourceType', RESOURCE_TYPE_DATABASES)

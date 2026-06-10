@@ -19,15 +19,18 @@ use Utopia\Database\Document;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\UID;
+use Utopia\Migration\Destinations\OnDuplicate;
 use Utopia\Migration\Resource;
 use Utopia\Migration\Sources\Appwrite as AppwriteSource;
 use Utopia\Migration\Sources\CSV;
 use Utopia\Migration\Transfer;
 use Utopia\Platform\Action;
+use Utopia\Platform\Enum;
 use Utopia\Platform\Scope\HTTP;
 use Utopia\Storage\Device;
 use Utopia\System\System;
 use Utopia\Validator\Boolean;
+use Utopia\Validator\WhiteList;
 
 class Create extends Action
 {
@@ -67,6 +70,7 @@ class Create extends Action
             ->param('databaseId', '', new UID(), 'Database ID containing the target collection.')
             ->param('collectionId', '', new UID(), 'Collection ID to import documents into.')
             ->param('internalFile', false, new Boolean(), 'Is the file stored in an internal bucket?', true)
+            ->param('onDuplicate', OnDuplicate::Fail->value, new WhiteList(OnDuplicate::values()), 'Behavior when a row with an existing $id is encountered. "fail" (default): abort on first conflict. "skip": silently ignore. "overwrite": replace existing row.', true, enum: new Enum(name: 'OnDuplicate'))
             ->inject('response')
             ->inject('dbForProject')
             ->inject('dbForPlatform')
@@ -86,6 +90,7 @@ class Create extends Action
         string $databaseId,
         string $collectionId,
         bool $internalFile,
+        string $onDuplicate,
         Response $response,
         Database $dbForProject,
         Database $dbForPlatform,
@@ -197,6 +202,7 @@ class Create extends Action
             'options' => [
                 'path' => $newPath,
                 'size' => $fileSize,
+                'onDuplicate' => $onDuplicate,
             ],
         ]));
 

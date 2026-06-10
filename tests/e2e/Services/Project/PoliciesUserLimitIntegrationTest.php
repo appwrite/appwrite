@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Tests\E2E\Services\Project;
 
 use Tests\E2E\Client;
@@ -8,7 +10,7 @@ use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\SideServer;
 use Utopia\Database\Helpers\ID;
 
-class PoliciesUserLimitIntegrationTest extends Scope
+final class PoliciesUserLimitIntegrationTest extends Scope
 {
     use ProjectCustom;
     use SideServer;
@@ -22,6 +24,7 @@ class PoliciesUserLimitIntegrationTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $projectId,
             'x-appwrite-key' => $apiKey,
+            'x-appwrite-response-format' => '1.9.4',
         ];
 
         $signupHeaders = [
