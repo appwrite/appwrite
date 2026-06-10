@@ -35,6 +35,15 @@ return [
                 'filter' => ''
             ],
             [
+                'name' => '_APP_LOCKING_ENABLED',
+                'description' => 'Enable distributed locking for platform writes. Locks coordinate concurrent updates across API pods so that read-modify-write operations on shared documents do not lose updates. By default, set to \'enabled\'. Set to \'disabled\' as an emergency kill switch — locks become no-ops (fail-open) and concurrent writes will race.',
+                'introduction' => '1.9.3',
+                'default' => 'enabled',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
                 'name' => '_APP_OPTIONS_FORCE_HTTPS',
                 'description' => 'Allows you to force HTTPS connection to your API. This feature redirects any HTTP call to HTTPS and adds the \'Strict-Transport-Security\' header to all HTTP responses. By default, set to \'enabled\'. To disable, set to \'disabled\'. This feature will work only when your ports are set to default 80 and 443, and you have set up wildcard certificates with DNS challenge.',
                 'introduction' => '',

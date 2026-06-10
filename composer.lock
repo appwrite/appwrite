@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "e922d0ba4d0c7d12cc24cff52b552803",
+    "content-hash": "1cc46b6b8e657c29ee41fd975a2033f8",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -4106,16 +4106,16 @@
         },
         {
             "name": "utopia-php/http",
-            "version": "2.0.0-rc4",
+            "version": "2.0.0-rc5",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/http.git",
-                "reference": "0396a959c6a3be7c16b4b72283347327a75d1f92"
+                "reference": "ec968c1fd7a4281d8febb3ed771207be0b852b14"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/http/zipball/0396a959c6a3be7c16b4b72283347327a75d1f92",
-                "reference": "0396a959c6a3be7c16b4b72283347327a75d1f92",
+                "url": "https://api.github.com/repos/utopia-php/http/zipball/ec968c1fd7a4281d8febb3ed771207be0b852b14",
+                "reference": "ec968c1fd7a4281d8febb3ed771207be0b852b14",
                 "shasum": ""
             },
             "require": {
@@ -4156,9 +4156,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/http/issues",
-                "source": "https://github.com/utopia-php/http/tree/2.0.0-rc4"
+                "source": "https://github.com/utopia-php/http/tree/2.0.0-rc5"
             },
-            "time": "2026-06-02T04:17:22+00:00"
+            "time": "2026-06-04T13:35:09+00:00"
         },
         {
             "name": "utopia-php/image",
@@ -5160,16 +5160,16 @@
         },
         {
             "name": "utopia-php/vcs",
-            "version": "4.2.1",
+            "version": "4.2.2",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/vcs.git",
-                "reference": "59b64833fafb6c6e88c1eff8545e4e6adb8f5993"
+                "reference": "bb42584d3efb95ff4eb241605bb15165c56974de"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/vcs/zipball/59b64833fafb6c6e88c1eff8545e4e6adb8f5993",
-                "reference": "59b64833fafb6c6e88c1eff8545e4e6adb8f5993",
+                "url": "https://api.github.com/repos/utopia-php/vcs/zipball/bb42584d3efb95ff4eb241605bb15165c56974de",
+                "reference": "bb42584d3efb95ff4eb241605bb15165c56974de",
                 "shasum": ""
             },
             "require": {
@@ -5203,9 +5203,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/vcs/issues",
-                "source": "https://github.com/utopia-php/vcs/tree/4.2.1"
+                "source": "https://github.com/utopia-php/vcs/tree/4.2.2"
             },
-            "time": "2026-05-29T10:47:49+00:00"
+            "time": "2026-06-10T08:08:48+00:00"
         },
         {
             "name": "utopia-php/websocket",
