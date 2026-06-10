@@ -6,6 +6,7 @@
  */
 
 import { useMemo, useState } from 'react'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { MapPin, Link as LinkIcon, Plus, Pencil, Trash2 } from 'lucide-react'
 import { MenuItemContent, MenuItemIcon } from '@/components/global/shared/ContextMenuIcon'
 import { RowActionsMenuTrigger } from '@/components/global/shared/RowActionsMenuTrigger'
@@ -38,21 +39,35 @@ import {
   useCountries,
   useDeleteBillingAddress,
   organizationsFullQueryOptions,
+  billingAddressesQueryOptions,
 } from '@/lib/react-query/hooks'
-import { useQuery } from '@tanstack/react-query'
 import type { Models } from '@appwrite.io/console'
 import { AddressModal } from './Address'
 import { DeleteAddressModal } from './DeleteAddress'
 
 export function AccountBillingAddresses() {
+  const queryClient = useQueryClient()
   const { addresses: allAddresses, isLoading: addressesLoading } =
     useBillingAddresses()
   const { data: countriesData } = useCountries()
   useDeleteBillingAddress()
 
+  const cachedAddresses = queryClient.getQueryData<{
+    addresses: Models.BillingAddress[]
+    total: number
+  }>(billingAddressesQueryOptions().queryKey)
+  const addresses =
+    allAddresses.length > 0 ? allAddresses : cachedAddresses?.addresses ?? []
+  const showAddressesLoading =
+    addressesLoading && allAddresses.length === 0 && !cachedAddresses
+
   const { data: organizationsData } = useQuery(organizationsFullQueryOptions())
 
-  const organizations = organizationsData || []
+  const cachedOrganizations = queryClient.getQueryData<
+    Models.Organization[]
+  >(organizationsFullQueryOptions().queryKey)
+
+  const organizations = organizationsData || cachedOrganizations || []
 
   const [addModalOpen, setAddModalOpen] = useState(false)
   const [editModalOpen, setEditModalOpen] = useState(false)
@@ -120,7 +135,7 @@ export function AccountBillingAddresses() {
     return parts.join(', ') || '-'
   }
 
-  if (addressesLoading && allAddresses.length === 0) {
+  if (showAddressesLoading) {
     return (
       <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
         <div className="px-6 py-4">
@@ -145,7 +160,7 @@ export function AccountBillingAddresses() {
     )
   }
 
-  if (allAddresses.length === 0) {
+  if (addresses.length === 0) {
     return (
       <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
         <div className="px-6 py-4">
@@ -217,7 +232,7 @@ export function AccountBillingAddresses() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {allAddresses.map((address: Models.BillingAddress) => {
+                {addresses.map((address: Models.BillingAddress) => {
                   const linkedOrgs = getLinkedOrganizations(address.$id)
                   const isLinked = linkedOrgs.length > 0
 

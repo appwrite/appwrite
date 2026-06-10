@@ -3,13 +3,13 @@ import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
 import { sdk } from '@/lib/appwrite/sdk'
 import {
+  accountIdentitiesQueryOptions,
   clearConsoleAccountCache,
   syncConsoleAccountAfterMutation,
   useAccountIdentities,
   useMFAFactors,
 } from '@/lib/react-query/hooks'
 import { useAuth } from '@/components/global/auth/RequireAuth'
-import { useConsoleProfile } from '@/hooks/use-console-profile'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -68,34 +68,20 @@ const Dependencies = {
   FACTORS: ['factors', 'account'],
 } as const
 
-export function AccountOverview() {
-  const { features } = useConsoleProfile()
-  return (
-    <div className="mx-auto w-full max-w-7xl px-4 py-4 sm:px-6">
-      <div className="space-y-6">
-        <AccountIdSection />
-        <UpdateNameSection />
-        <UpdateEmailSection />
-        <UpdatePasswordSection />
-        {features.accountIdentities && <IdentitiesSection />}
-        {features.accountMfa && <MFASection />}
-        <DeleteAccountSection />
-      </div>
-    </div>
-  )
-}
-
 // ============================================================================
 // ACCOUNT ID SECTION
 // ============================================================================
 
-function AccountIdSection() {
+export function AccountIdSection() {
   const { account } = useAuth()
 
   if (!account?.$id) return null
 
   return (
-    <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
+    <div
+      data-card-id="account-id"
+      className="rounded-xl border border-border bg-card/50 overflow-hidden"
+    >
       <div className="px-6 py-4">
         <h3 className="text-[15px] font-semibold text-foreground">
           Account ID
@@ -117,7 +103,7 @@ function AccountIdSection() {
 // UPDATE NAME SECTION
 // ============================================================================
 
-function UpdateNameSection() {
+export function UpdateNameSection() {
   const { account } = useAuth()
   const queryClient = useQueryClient()
   const [name, setName] = useState('')
@@ -155,7 +141,10 @@ function UpdateNameSection() {
   }
 
   return (
-    <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
+    <div
+      data-card-id="name"
+      className="rounded-xl border border-border bg-card/50 overflow-hidden"
+    >
       <div className="px-6 py-4">
         <h3 className="text-[15px] font-semibold text-foreground">
           Update name
@@ -200,7 +189,7 @@ function UpdateNameSection() {
 // UPDATE EMAIL SECTION
 // ============================================================================
 
-function UpdateEmailSection() {
+export function UpdateEmailSection() {
   const { account } = useAuth()
   const queryClient = useQueryClient()
   const [email, setEmail] = useState('')
@@ -249,7 +238,10 @@ function UpdateEmailSection() {
   }
 
   return (
-    <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
+    <div
+      data-card-id="email"
+      className="rounded-xl border border-border bg-card/50 overflow-hidden"
+    >
       <div className="px-6 py-4">
         <div className="flex items-center gap-2">
           <h3 className="text-[15px] font-semibold text-foreground">
@@ -320,7 +312,7 @@ function UpdateEmailSection() {
 // UPDATE PASSWORD SECTION
 // ============================================================================
 
-function UpdatePasswordSection() {
+export function UpdatePasswordSection() {
   const [oldPassword, setOldPassword] = useState('')
   const [newPassword, setNewPassword] = useState('')
   const queryClient = useQueryClient()
@@ -362,7 +354,10 @@ function UpdatePasswordSection() {
   }
 
   return (
-    <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
+    <div
+      data-card-id="password"
+      className="rounded-xl border border-border bg-card/50 overflow-hidden"
+    >
       <div className="px-6 py-4">
         <h3 className="text-[15px] font-semibold text-foreground">
           Update password
@@ -431,10 +426,15 @@ function UpdatePasswordSection() {
 // IDENTITIES SECTION
 // ============================================================================
 
-function IdentitiesSection() {
+export function IdentitiesSection() {
   const { data, isLoading } = useAccountIdentities()
   const queryClient = useQueryClient()
-  const identities = data?.identities || []
+  const cachedData = queryClient.getQueryData<{
+    identities: Models.Identity[]
+    total: number
+  }>(accountIdentitiesQueryOptions().queryKey)
+  const identities = data?.identities || cachedData?.identities || []
+  const identitiesLoading = isLoading && !data && !cachedData
 
   const deleteIdentityMutation = useMutation({
     mutationFn: async (identityId: string) => {
@@ -477,7 +477,7 @@ function IdentitiesSection() {
     return nameMap[provider.toLowerCase()] || provider
   }
 
-  if (isLoading) {
+  if (identitiesLoading) {
     return (
       <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
         <div className="px-6 py-4">
@@ -487,7 +487,7 @@ function IdentitiesSection() {
         </div>
         <div className="border-t border-border" />
         <div className="px-6 py-4">
-          <div className="text-sm text-muted-foreground">Loading...</div>
+          <p className="text-[13px] text-muted-foreground">Loading identities...</p>
         </div>
       </div>
     )
@@ -517,7 +517,10 @@ function IdentitiesSection() {
   }
 
   return (
-    <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
+    <div
+      data-card-id="identities"
+      className="rounded-xl border border-border bg-card/50 overflow-hidden"
+    >
       <div className="px-6 py-4">
         <h3 className="text-[15px] font-semibold text-foreground">
           Identities
@@ -611,7 +614,7 @@ function IdentitiesSection() {
 // MFA SECTION
 // ============================================================================
 
-function MFASection() {
+export function MFASection() {
   const { account } = useAuth()
   const { data: factorsData } = useMFAFactors()
   const queryClient = useQueryClient()
@@ -672,7 +675,10 @@ function MFASection() {
   const hasAnyMfaMethod = factors.totp || factors.email || factors.phone
 
   return (
-    <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
+    <div
+      data-card-id="mfa"
+      className="rounded-xl border border-border bg-card/50 overflow-hidden"
+    >
       <div className="px-6 py-4">
         <h3 className="text-[15px] font-semibold text-foreground">
           Multi-factor authentication
@@ -1437,7 +1443,7 @@ function CopyButton({ text }: { text: string }) {
 // DELETE ACCOUNT SECTION
 // ============================================================================
 
-function DeleteAccountSection() {
+export function DeleteAccountSection() {
   const { account } = useAuth()
   const queryClient = useQueryClient()
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
@@ -1466,7 +1472,10 @@ function DeleteAccountSection() {
 
   return (
     <>
-      <div className="rounded-xl border border-red-500/30 bg-card/50 overflow-hidden">
+      <div
+        data-card-id="delete-account"
+        className="rounded-xl border border-red-500/30 bg-card/50 overflow-hidden"
+      >
         <div className="px-6 py-4">
           <h3 className="text-[15px] font-semibold text-red-600 dark:text-red-400">
             Delete account

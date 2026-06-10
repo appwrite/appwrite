@@ -9,7 +9,6 @@ import {
   ChevronDown,
   LogOut,
   User,
-  CreditCard,
   Menu,
   Copy,
   Check,
@@ -29,7 +28,6 @@ import {
   DatabaseZap,
   ShieldAlert,
   Home,
-  Monitor,
   LayoutDashboard,
 } from 'lucide-react'
 import {
@@ -957,28 +955,6 @@ export function ConsoleHeader({
                       <span>Account</span>
                     </Link>
                   </DropdownMenuItem>
-
-                  <DropdownMenuItem asChild>
-                    <Link
-                      to="/account/sessions"
-                      className={ACCOUNT_MENU_ITEM_CLASS}
-                    >
-                      <Monitor className="h-4 w-4" />
-                      <span>Sessions</span>
-                    </Link>
-                  </DropdownMenuItem>
-
-                  {features.billing && (
-                    <DropdownMenuItem asChild>
-                      <Link
-                        to="/account/payments"
-                        className={ACCOUNT_MENU_ITEM_CLASS}
-                      >
-                        <CreditCard className="h-4 w-4" />
-                        <span>Payments</span>
-                      </Link>
-                    </DropdownMenuItem>
-                  )}
 
                   <DropdownMenuSeparator className="my-1 bg-border" />
 

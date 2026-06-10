@@ -47,8 +47,9 @@ import {
   useUpdatePaymentMethod,
   useDeletePaymentMethod,
   organizationsFullQueryOptions,
+  paymentMethodsQueryOptions,
 } from '@/lib/react-query/hooks'
-import { useQuery } from '@tanstack/react-query'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
 import type { Models } from '@appwrite.io/console'
 import { EditPaymentMethodModal } from './EditPaymentMethod'
 import { DeletePaymentMethodModal } from './DeletePaymentMethod'
@@ -60,15 +61,31 @@ interface AccountPaymentMethodsProps {
 export function AccountPaymentMethods({
   onAddPaymentMethod,
 }: AccountPaymentMethodsProps) {
+  const queryClient = useQueryClient()
   const { paymentMethods: allPaymentMethods, isLoading: methodsLoading } =
     usePaymentMethods()
   useUpdatePaymentMethod()
   useDeletePaymentMethod()
 
+  const cachedMethods = queryClient.getQueryData<{
+    paymentMethods: Models.PaymentMethod[]
+    total: number
+  }>(paymentMethodsQueryOptions().queryKey)
+  const paymentMethodsList =
+    allPaymentMethods.length > 0
+      ? allPaymentMethods
+      : cachedMethods?.paymentMethods ?? []
+  const showMethodsLoading =
+    methodsLoading && allPaymentMethods.length === 0 && !cachedMethods
+
   const { data: organizationsData } = useQuery(organizationsFullQueryOptions())
 
+  const cachedOrganizations = queryClient.getQueryData<
+    Models.Organization[]
+  >(organizationsFullQueryOptions().queryKey)
+
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  const organizations = organizationsData || []
+  const organizations = organizationsData || cachedOrganizations || []
 
   const [editModalOpen, setEditModalOpen] = useState(false)
   const [deleteModalOpen, setDeleteModalOpen] = useState(false)
@@ -77,8 +94,8 @@ export function AccountPaymentMethods({
 
   // Filter to only show completed cards (with last4)
   const completedPaymentMethods = useMemo(() => {
-    return allPaymentMethods.filter((pm: Models.PaymentMethod) => pm.last4)
-  }, [allPaymentMethods])
+    return paymentMethodsList.filter((pm: Models.PaymentMethod) => pm.last4)
+  }, [paymentMethodsList])
 
   // Get linked payment method IDs from organizations
   const linkedMethodIds = useMemo(() => {
@@ -127,7 +144,7 @@ export function AccountPaymentMethods({
     setSelectedPaymentMethod(null)
   }
 
-  if (methodsLoading && completedPaymentMethods.length === 0) {
+  if (showMethodsLoading) {
     return (
       <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
         <div className="px-6 py-4">

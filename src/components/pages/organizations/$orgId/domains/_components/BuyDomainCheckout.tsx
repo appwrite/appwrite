@@ -489,8 +489,7 @@ export function BuyDomainCheckout({
               </p>
             )}
             <Link
-              to="/account/$tab"
-              params={{ tab: 'payments' }}
+              to="/account/billing-addresses"
               className="inline-block text-[13px] text-primary underline-offset-4 hover:underline"
             >
               Manage addresses in account settings

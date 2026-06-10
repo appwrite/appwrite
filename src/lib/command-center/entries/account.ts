@@ -2,20 +2,30 @@
  * Account-scope entries (the user's own account at /account).
  */
 
-import { CreditCard, KeyRound, LogOut, Shield, User } from 'lucide-react'
+import { CreditCard, KeyRound, LogOut, MapPin, Shield, User } from 'lucide-react'
 import { registerCommands } from '../registry'
 import type { CommandEntry } from '../types'
 
 const ACCOUNT: CommandEntry[] = [
   {
-    id: 'account.nav.overview',
+    id: 'account.nav.general',
     scopes: ['account'],
     kind: 'navigation',
-    label: 'Account · Overview',
-    description: 'Profile, name, email and preferences',
+    label: 'Account · General',
+    description: 'Profile, name, email and account ID',
     icon: User,
-    keywords: ['profile', 'overview', 'me', 'name', 'email'],
+    keywords: ['profile', 'general', 'me', 'name', 'email'],
     to: () => '/account',
+  },
+  {
+    id: 'account.nav.security',
+    scopes: ['account'],
+    kind: 'navigation',
+    label: 'Account · Security',
+    description: 'Password, identities and MFA',
+    icon: Shield,
+    keywords: ['security', 'password', 'mfa', '2fa', 'identities'],
+    to: () => '/account/security',
   },
   {
     id: 'account.nav.sessions',
@@ -28,15 +38,26 @@ const ACCOUNT: CommandEntry[] = [
     to: () => '/account/sessions',
   },
   {
-    id: 'account.nav.payments',
+    id: 'account.nav.payment-methods',
     scopes: ['account'],
     kind: 'navigation',
-    label: 'Account · Payments',
-    description: 'Payment methods and billing details',
+    label: 'Account · Payment methods',
+    description: 'Saved cards and payment methods',
     icon: CreditCard,
     keywords: ['payments', 'billing', 'cards', 'methods'],
     available: (ctx) => Boolean(ctx.features.billing),
-    to: () => '/account/payments',
+    to: () => '/account/payment-methods',
+  },
+  {
+    id: 'account.nav.billing-addresses',
+    scopes: ['account'],
+    kind: 'navigation',
+    label: 'Account · Billing addresses',
+    description: 'Billing addresses on your account',
+    icon: MapPin,
+    keywords: ['address', 'billing', 'country', 'postal'],
+    available: (ctx) => Boolean(ctx.features.billing),
+    to: () => '/account/billing-addresses',
   },
   {
     id: 'account.card.security.password',
@@ -47,7 +68,7 @@ const ACCOUNT: CommandEntry[] = [
     description: 'Update your account password',
     icon: KeyRound,
     keywords: ['password', 'change', 'security', 'reset'],
-    to: () => '/account#card-password',
+    to: () => '/account/security#card-password',
   },
   {
     id: 'account.card.security.mfa',
@@ -59,7 +80,7 @@ const ACCOUNT: CommandEntry[] = [
     icon: Shield,
     keywords: ['mfa', '2fa', 'totp', 'authenticator', 'security'],
     available: (ctx) => Boolean(ctx.features.accountMfa),
-    to: () => '/account#card-mfa',
+    to: () => '/account/security#card-mfa',
   },
 ]
 

@@ -40,11 +40,16 @@ import { Route as AuthRecoveryRouteImport } from './routes/_auth/recovery'
 import { Route as AuthMfaRouteImport } from './routes/_auth/mfa'
 import { Route as AuthJoinRouteImport } from './routes/_auth/join'
 import { Route as ApiHelloRouteImport } from './routes/_api/hello'
+import { Route as PublicAccountIndexRouteImport } from './routes/_public/account.index'
 import { Route as PublicProjectsProjectIdRouteImport } from './routes/_public/projects.$projectId'
 import { Route as PublicOrganizationsOrgIdRouteImport } from './routes/_public/organizations.$orgId'
 import { Route as PublicDebugOrgSetupPreviewRouteImport } from './routes/_public/debug.org-setup-preview'
 import { Route as PublicDebugErrorPreviewRouteImport } from './routes/_public/debug.error-preview'
-import { Route as PublicAccountTabRouteImport } from './routes/_public/account.$tab'
+import { Route as PublicAccountSessionsRouteImport } from './routes/_public/account.sessions'
+import { Route as PublicAccountSecurityRouteImport } from './routes/_public/account.security'
+import { Route as PublicAccountPaymentsRouteImport } from './routes/_public/account.payments'
+import { Route as PublicAccountPaymentMethodsRouteImport } from './routes/_public/account.payment-methods'
+import { Route as PublicAccountBillingAddressesRouteImport } from './routes/_public/account.billing-addresses'
 import { Route as PublicProjectsProjectIdIndexRouteImport } from './routes/_public/projects.$projectId.index'
 import { Route as PublicOrganizationsOrgIdIndexRouteImport } from './routes/_public/organizations.$orgId.index'
 import { Route as PublicProjectsProjectIdUsageRouteImport } from './routes/_public/projects.$projectId.usage'
@@ -408,6 +413,11 @@ const ApiHelloRoute = ApiHelloRouteImport.update({
   path: '/hello',
   getParentRoute: () => rootRouteImport,
 } as any)
+const PublicAccountIndexRoute = PublicAccountIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => PublicAccountRoute,
+} as any)
 const PublicProjectsProjectIdRoute = PublicProjectsProjectIdRouteImport.update({
   id: '/projects/$projectId',
   path: '/projects/$projectId',
@@ -430,11 +440,33 @@ const PublicDebugErrorPreviewRoute = PublicDebugErrorPreviewRouteImport.update({
   path: '/debug/error-preview',
   getParentRoute: () => PublicRoute,
 } as any)
-const PublicAccountTabRoute = PublicAccountTabRouteImport.update({
-  id: '/$tab',
-  path: '/$tab',
+const PublicAccountSessionsRoute = PublicAccountSessionsRouteImport.update({
+  id: '/sessions',
+  path: '/sessions',
   getParentRoute: () => PublicAccountRoute,
 } as any)
+const PublicAccountSecurityRoute = PublicAccountSecurityRouteImport.update({
+  id: '/security',
+  path: '/security',
+  getParentRoute: () => PublicAccountRoute,
+} as any)
+const PublicAccountPaymentsRoute = PublicAccountPaymentsRouteImport.update({
+  id: '/payments',
+  path: '/payments',
+  getParentRoute: () => PublicAccountRoute,
+} as any)
+const PublicAccountPaymentMethodsRoute =
+  PublicAccountPaymentMethodsRouteImport.update({
+    id: '/payment-methods',
+    path: '/payment-methods',
+    getParentRoute: () => PublicAccountRoute,
+  } as any)
+const PublicAccountBillingAddressesRoute =
+  PublicAccountBillingAddressesRouteImport.update({
+    id: '/billing-addresses',
+    path: '/billing-addresses',
+    getParentRoute: () => PublicAccountRoute,
+  } as any)
 const PublicProjectsProjectIdIndexRoute =
   PublicProjectsProjectIdIndexRouteImport.update({
     id: '/',
@@ -1860,11 +1892,16 @@ export interface FileRoutesByFullPath {
   '/reset': typeof PublicResetRoute
   '/upgrade': typeof PublicUpgradeRoute
   '/': typeof PublicIndexRoute
-  '/account/$tab': typeof PublicAccountTabRoute
+  '/account/billing-addresses': typeof PublicAccountBillingAddressesRoute
+  '/account/payment-methods': typeof PublicAccountPaymentMethodsRoute
+  '/account/payments': typeof PublicAccountPaymentsRoute
+  '/account/security': typeof PublicAccountSecurityRoute
+  '/account/sessions': typeof PublicAccountSessionsRoute
   '/debug/error-preview': typeof PublicDebugErrorPreviewRoute
   '/debug/org-setup-preview': typeof PublicDebugOrgSetupPreviewRoute
   '/organizations/$orgId': typeof PublicOrganizationsOrgIdRouteWithChildren
   '/projects/$projectId': typeof PublicProjectsProjectIdRouteWithChildren
+  '/account/': typeof PublicAccountIndexRoute
   '/init/calendar/$eventSlug': typeof ApiInitCalendarEventSlugRoute
   '/init/ticket/$eventSlug': typeof ApiInitTicketEventSlugRoute
   '/organizations/$orgId/billing': typeof PublicOrganizationsOrgIdBillingRoute
@@ -2096,7 +2133,6 @@ export interface FileRoutesByTo {
   '/sign-up': typeof AuthSignUpRoute
   '/verify-email': typeof AuthVerifyEmailRoute
   '/example-protected-route': typeof ProtectedExampleProtectedRouteRoute
-  '/account': typeof PublicAccountRouteWithChildren
   '/blocks': typeof PublicBlocksRoute
   '/cache': typeof PublicCacheRoute
   '/comps': typeof PublicCompsRoute
@@ -2104,9 +2140,14 @@ export interface FileRoutesByTo {
   '/reset': typeof PublicResetRoute
   '/upgrade': typeof PublicUpgradeRoute
   '/': typeof PublicIndexRoute
-  '/account/$tab': typeof PublicAccountTabRoute
+  '/account/billing-addresses': typeof PublicAccountBillingAddressesRoute
+  '/account/payment-methods': typeof PublicAccountPaymentMethodsRoute
+  '/account/payments': typeof PublicAccountPaymentsRoute
+  '/account/security': typeof PublicAccountSecurityRoute
+  '/account/sessions': typeof PublicAccountSessionsRoute
   '/debug/error-preview': typeof PublicDebugErrorPreviewRoute
   '/debug/org-setup-preview': typeof PublicDebugOrgSetupPreviewRoute
+  '/account': typeof PublicAccountIndexRoute
   '/init/calendar/$eventSlug': typeof ApiInitCalendarEventSlugRoute
   '/init/ticket/$eventSlug': typeof ApiInitTicketEventSlugRoute
   '/organizations/$orgId/billing': typeof PublicOrganizationsOrgIdBillingRoute
@@ -2320,11 +2361,16 @@ export interface FileRoutesById {
   '/_public/reset': typeof PublicResetRoute
   '/_public/upgrade': typeof PublicUpgradeRoute
   '/_public/': typeof PublicIndexRoute
-  '/_public/account/$tab': typeof PublicAccountTabRoute
+  '/_public/account/billing-addresses': typeof PublicAccountBillingAddressesRoute
+  '/_public/account/payment-methods': typeof PublicAccountPaymentMethodsRoute
+  '/_public/account/payments': typeof PublicAccountPaymentsRoute
+  '/_public/account/security': typeof PublicAccountSecurityRoute
+  '/_public/account/sessions': typeof PublicAccountSessionsRoute
   '/_public/debug/error-preview': typeof PublicDebugErrorPreviewRoute
   '/_public/debug/org-setup-preview': typeof PublicDebugOrgSetupPreviewRoute
   '/_public/organizations/$orgId': typeof PublicOrganizationsOrgIdRouteWithChildren
   '/_public/projects/$projectId': typeof PublicProjectsProjectIdRouteWithChildren
+  '/_public/account/': typeof PublicAccountIndexRoute
   '/_api/init/calendar/$eventSlug': typeof ApiInitCalendarEventSlugRoute
   '/_api/init/ticket/$eventSlug': typeof ApiInitTicketEventSlugRoute
   '/_public/organizations/$orgId/billing': typeof PublicOrganizationsOrgIdBillingRoute
@@ -2566,11 +2612,16 @@ export interface FileRouteTypes {
     | '/reset'
     | '/upgrade'
     | '/'
-    | '/account/$tab'
+    | '/account/billing-addresses'
+    | '/account/payment-methods'
+    | '/account/payments'
+    | '/account/security'
+    | '/account/sessions'
     | '/debug/error-preview'
     | '/debug/org-setup-preview'
     | '/organizations/$orgId'
     | '/projects/$projectId'
+    | '/account/'
     | '/init/calendar/$eventSlug'
     | '/init/ticket/$eventSlug'
     | '/organizations/$orgId/billing'
@@ -2802,7 +2853,6 @@ export interface FileRouteTypes {
     | '/sign-up'
     | '/verify-email'
     | '/example-protected-route'
-    | '/account'
     | '/blocks'
     | '/cache'
     | '/comps'
@@ -2810,9 +2860,14 @@ export interface FileRouteTypes {
     | '/reset'
     | '/upgrade'
     | '/'
-    | '/account/$tab'
+    | '/account/billing-addresses'
+    | '/account/payment-methods'
+    | '/account/payments'
+    | '/account/security'
+    | '/account/sessions'
     | '/debug/error-preview'
     | '/debug/org-setup-preview'
+    | '/account'
     | '/init/calendar/$eventSlug'
     | '/init/ticket/$eventSlug'
     | '/organizations/$orgId/billing'
@@ -3025,11 +3080,16 @@ export interface FileRouteTypes {
     | '/_public/reset'
     | '/_public/upgrade'
     | '/_public/'
-    | '/_public/account/$tab'
+    | '/_public/account/billing-addresses'
+    | '/_public/account/payment-methods'
+    | '/_public/account/payments'
+    | '/_public/account/security'
+    | '/_public/account/sessions'
     | '/_public/debug/error-preview'
     | '/_public/debug/org-setup-preview'
     | '/_public/organizations/$orgId'
     | '/_public/projects/$projectId'
+    | '/_public/account/'
     | '/_api/init/calendar/$eventSlug'
     | '/_api/init/ticket/$eventSlug'
     | '/_public/organizations/$orgId/billing'
@@ -3480,6 +3540,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiHelloRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_public/account/': {
+      id: '/_public/account/'
+      path: '/'
+      fullPath: '/account/'
+      preLoaderRoute: typeof PublicAccountIndexRouteImport
+      parentRoute: typeof PublicAccountRoute
+    }
     '/_public/projects/$projectId': {
       id: '/_public/projects/$projectId'
       path: '/projects/$projectId'
@@ -3508,11 +3575,39 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PublicDebugErrorPreviewRouteImport
       parentRoute: typeof PublicRoute
     }
-    '/_public/account/$tab': {
-      id: '/_public/account/$tab'
-      path: '/$tab'
-      fullPath: '/account/$tab'
-      preLoaderRoute: typeof PublicAccountTabRouteImport
+    '/_public/account/sessions': {
+      id: '/_public/account/sessions'
+      path: '/sessions'
+      fullPath: '/account/sessions'
+      preLoaderRoute: typeof PublicAccountSessionsRouteImport
+      parentRoute: typeof PublicAccountRoute
+    }
+    '/_public/account/security': {
+      id: '/_public/account/security'
+      path: '/security'
+      fullPath: '/account/security'
+      preLoaderRoute: typeof PublicAccountSecurityRouteImport
+      parentRoute: typeof PublicAccountRoute
+    }
+    '/_public/account/payments': {
+      id: '/_public/account/payments'
+      path: '/payments'
+      fullPath: '/account/payments'
+      preLoaderRoute: typeof PublicAccountPaymentsRouteImport
+      parentRoute: typeof PublicAccountRoute
+    }
+    '/_public/account/payment-methods': {
+      id: '/_public/account/payment-methods'
+      path: '/payment-methods'
+      fullPath: '/account/payment-methods'
+      preLoaderRoute: typeof PublicAccountPaymentMethodsRouteImport
+      parentRoute: typeof PublicAccountRoute
+    }
+    '/_public/account/billing-addresses': {
+      id: '/_public/account/billing-addresses'
+      path: '/billing-addresses'
+      fullPath: '/account/billing-addresses'
+      preLoaderRoute: typeof PublicAccountBillingAddressesRouteImport
       parentRoute: typeof PublicAccountRoute
     }
     '/_public/projects/$projectId/': {
@@ -5016,11 +5111,21 @@ const ProtectedRouteWithChildren = ProtectedRoute._addFileChildren(
 )
 
 interface PublicAccountRouteChildren {
-  PublicAccountTabRoute: typeof PublicAccountTabRoute
+  PublicAccountBillingAddressesRoute: typeof PublicAccountBillingAddressesRoute
+  PublicAccountPaymentMethodsRoute: typeof PublicAccountPaymentMethodsRoute
+  PublicAccountPaymentsRoute: typeof PublicAccountPaymentsRoute
+  PublicAccountSecurityRoute: typeof PublicAccountSecurityRoute
+  PublicAccountSessionsRoute: typeof PublicAccountSessionsRoute
+  PublicAccountIndexRoute: typeof PublicAccountIndexRoute
 }
 
 const PublicAccountRouteChildren: PublicAccountRouteChildren = {
-  PublicAccountTabRoute: PublicAccountTabRoute,
+  PublicAccountBillingAddressesRoute: PublicAccountBillingAddressesRoute,
+  PublicAccountPaymentMethodsRoute: PublicAccountPaymentMethodsRoute,
+  PublicAccountPaymentsRoute: PublicAccountPaymentsRoute,
+  PublicAccountSecurityRoute: PublicAccountSecurityRoute,
+  PublicAccountSessionsRoute: PublicAccountSessionsRoute,
+  PublicAccountIndexRoute: PublicAccountIndexRoute,
 }
 
 const PublicAccountRouteWithChildren = PublicAccountRoute._addFileChildren(

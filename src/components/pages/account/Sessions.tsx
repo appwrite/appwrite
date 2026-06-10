@@ -29,7 +29,6 @@ import {
   Smartphone,
   Tablet,
   Monitor,
-  Loader2,
 } from 'lucide-react'
 import { PUBLIC_ICON_MUTED_CLASSES } from '@/lib/public-icon-classes'
 import { DateTooltip } from '@/components/global/shared/DateTooltip'
@@ -288,32 +287,31 @@ export function AccountSessions() {
 
   if (sessionsLoading) {
     return (
-      <div className="mx-auto w-full max-w-7xl px-4 pt-4 pb-4 sm:px-6 sm:pt-6 sm:pb-6">
-        <div className="flex items-center justify-center py-12">
-          <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+      <div className="flex flex-col items-center justify-center py-16 text-center">
+        <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-muted">
+          <Monitor className="h-6 w-6 text-muted-foreground" />
         </div>
+        <p className="text-[13px] text-muted-foreground">Loading sessions...</p>
       </div>
     )
   }
 
   if (sessions.length === 0) {
     return (
-      <div className="mx-auto w-full max-w-7xl px-4 pt-4 pb-4 sm:px-6 sm:pt-6 sm:pb-6">
-        <EmptyState
-          icon={Monitor}
-          title="No active sessions"
-          description="You don't have any active sessions at the moment."
-          isEmpty={true}
-          variant="card"
-          iconSize="md"
-        />
-      </div>
+      <EmptyState
+        icon={Monitor}
+        title="No active sessions"
+        description="You don't have any active sessions at the moment."
+        isEmpty={true}
+        variant="card"
+        iconSize="md"
+      />
     )
   }
 
   return (
     <>
-      <div className="mx-auto w-full max-w-7xl px-4 pt-4 pb-4 sm:px-6 sm:pt-6 sm:pb-6">
+      <div>
         {sessions.length > 1 && (
           <div className="mb-4 flex justify-end">
             <Button
