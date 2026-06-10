@@ -71,7 +71,14 @@ const NAV_ITEMS = [
     label: 'Passwords',
     to: '/projects/$projectId/auth/policies/passwords' as const,
     icon: KeyRound,
-    keywords: ['password', 'history', 'dictionary', 'personal data'],
+    keywords: [
+      'password',
+      'strength',
+      'length',
+      'history',
+      'dictionary',
+      'personal data',
+    ],
   },
 ]
 

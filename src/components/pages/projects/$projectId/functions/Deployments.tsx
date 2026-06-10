@@ -114,7 +114,7 @@ import {
   isSpecificationAllowedInPlan,
 } from '@/lib/specifications'
 import { sdk } from '@/lib/appwrite/sdk'
-import { DeploymentDownloadType } from '@appwrite.io/console'
+import { DeploymentDownloadType, type Models } from '@appwrite.io/console'
 import { toast } from 'sonner'
 import { Route } from '@/routes/_public/projects.$projectId.functions.$functionId.index'
 import { CreateExecutionDrawer } from './CreateExecutionDrawer'
@@ -392,6 +392,25 @@ export function View() {
     const interval = setInterval(() => setTick((t) => t + 1), 1000)
     return () => clearInterval(interval)
   }, [hasInProgressDeployment])
+
+  // Refresh stale in-progress rows when returning from deployment detail
+  useEffect(() => {
+    if (!projectId || !functionId) return
+    const queries = queryClient.getQueriesData<{
+      deployments?: Models.Deployment[]
+    }>({
+      queryKey: ['deployments', 'function', projectId, functionId],
+      exact: false,
+    })
+    const hasInProgressInCache = queries.some(([, data]) =>
+      data?.deployments?.some((d) => isDeploymentInProgress(d.status)),
+    )
+    if (!hasInProgressInCache) return
+    void queryClient.refetchQueries({
+      queryKey: ['deployments', 'function', projectId, functionId],
+      exact: false,
+    })
+  }, [projectId, functionId, queryClient])
 
   // Fetch domains for the function (filter by active deployment)
   // Use same params as domains tab to share cache

@@ -4,6 +4,7 @@ import {
   PasswordDictionaryCard,
   PersonalDataCard,
 } from '../Security'
+import { PasswordStrengthCard } from './PasswordStrengthCard'
 import {
   SettingsCardsList,
   type SettingsCardItem,
@@ -17,6 +18,29 @@ export function PasswordsPolicies({ projectId }: PasswordsProps) {
   const security = useAuthSecuritySnapshot(projectId)
 
   const cards: SettingsCardItem[] = [
+    {
+      id: 'strength',
+      search: {
+        title: 'Strength',
+        keywords: [
+          'length',
+          'uppercase',
+          'lowercase',
+          'number',
+          'symbol',
+          'complexity',
+          'nist',
+          'owasp',
+          'pci',
+        ],
+      },
+      node: (
+        <PasswordStrengthCard
+          projectId={projectId}
+          currentPolicy={security.authPasswordStrength}
+        />
+      ),
+    },
     {
       id: 'history',
       search: {

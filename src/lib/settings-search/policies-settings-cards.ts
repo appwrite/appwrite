@@ -48,6 +48,18 @@ export const POLICIES_SETTINGS_CARD_INDEX: SettingsCardIndexEntry[] = [
   },
   {
     sectionId: 'passwords',
+    title: 'Strength',
+    keywords: [
+      'length',
+      'uppercase',
+      'lowercase',
+      'complexity',
+      'nist',
+      'owasp',
+    ],
+  },
+  {
+    sectionId: 'passwords',
     title: 'History',
     keywords: ['reuse', 'previous passwords'],
   },

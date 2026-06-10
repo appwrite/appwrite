@@ -67,6 +67,129 @@ function mergeMigrationPayloadIntoCache(
   )
 }
 
+type DeploymentResourceType = 'site' | 'function'
+
+/**
+ * Merge a deployment realtime payload into list and detail caches.
+ * Keeps build duration/status in sync when the deployments list is unmounted
+ * (e.g. user is on the deployment detail page while a build finishes).
+ */
+function mergeDeploymentPayloadIntoCache(
+  queryClient: QueryClient,
+  projectId: string,
+  resourceType: DeploymentResourceType,
+  payload: Record<string, unknown>,
+): void {
+  const id = payload.$id as string | undefined
+  if (!id) return
+
+  const resourceId = payload.resourceId as string | undefined
+  if (!resourceId) return
+
+  const listPrefix =
+    resourceType === 'site'
+      ? ['deployments', 'site', projectId, resourceId]
+      : ['deployments', 'function', projectId, resourceId]
+
+  queryClient.setQueriesData(
+    { queryKey: listPrefix, exact: false },
+    (old: unknown) => {
+      const data = old as
+        | { deployments?: Array<Record<string, unknown>>; total?: number }
+        | undefined
+      if (!data?.deployments || !Array.isArray(data.deployments)) return old
+      const idx = data.deployments.findIndex((d) => d.$id === id)
+      if (idx < 0) return old
+      const next = [...data.deployments]
+      next[idx] = { ...next[idx], ...payload }
+      return { ...data, deployments: next }
+    },
+  )
+
+  const detailKey =
+    resourceType === 'site'
+      ? ['deployment', 'site', projectId, resourceId, id]
+      : ['deployment', 'function', projectId, resourceId, id]
+
+  queryClient.setQueryData(detailKey, (old: unknown) => {
+    if (!old || typeof old !== 'object') return payload
+    return { ...(old as Record<string, unknown>), ...payload }
+  })
+}
+
+function isDeploymentDeleteEvent(events: string[]): boolean {
+  return (
+    hasEvent(events, REALTIME_EVENTS.SITES_DEPLOYMENT_DELETE) ||
+    hasEvent(events, REALTIME_EVENTS.FUNCTIONS_DEPLOYMENT_DELETE) ||
+    events.some((e) => e.includes('.deployments.') && e.endsWith('.delete'))
+  )
+}
+
+function isDeploymentCreateEvent(events: string[]): boolean {
+  return (
+    hasEvent(events, REALTIME_EVENTS.SITES_DEPLOYMENT_CREATE) ||
+    hasEvent(events, REALTIME_EVENTS.FUNCTIONS_DEPLOYMENT_CREATE) ||
+    events.some((e) => e.includes('.deployments.') && e.endsWith('.create'))
+  )
+}
+
+function extractDeploymentResourceIdFromEvents(
+  events: string[],
+  resourceType: DeploymentResourceType,
+): string | undefined {
+  const prefix = resourceType === 'site' ? 'sites.' : 'functions.'
+  for (const event of events) {
+    const match = event.match(new RegExp(`^${prefix}([^.]+)\\.deployments\\.`))
+    const id = match?.[1]
+    if (id && id !== '*') return id
+  }
+  return undefined
+}
+
+function handleDeploymentRealtimeEvent(
+  queryClient: QueryClient,
+  projectId: string,
+  resourceType: DeploymentResourceType,
+  events: string[],
+  payload: Record<string, unknown> | null,
+  parentQueryKey: string[],
+): void {
+  const isCreate = isDeploymentCreateEvent(events)
+  const isDelete = isDeploymentDeleteEvent(events)
+  const resourceId =
+    (payload?.resourceId as string | undefined) ??
+    extractDeploymentResourceIdFromEvents(events, resourceType)
+  const canMerge =
+    payload != null &&
+    typeof payload.$id === 'string' &&
+    !!resourceId &&
+    !isCreate &&
+    !isDelete
+
+  if (canMerge) {
+    mergeDeploymentPayloadIntoCache(queryClient, projectId, resourceType, {
+      ...payload,
+      resourceId,
+    })
+  }
+
+  const listKey =
+    resourceType === 'site'
+      ? ['deployments', 'site', projectId]
+      : ['deployments', 'function', projectId]
+  const detailKey =
+    resourceType === 'site'
+      ? ['deployment', 'site', projectId]
+      : ['deployment', 'function', projectId]
+
+  if (isCreate || isDelete || !canMerge) {
+    queryClient.invalidateQueries({ queryKey: listKey })
+    queryClient.invalidateQueries({ queryKey: detailKey })
+  }
+
+  queryClient.invalidateQueries({ queryKey: parentQueryKey })
+}
+
 /**
  * Merge a rule realtime payload into all proxy-rules list caches.
  * Avoids refetching on every rule status update (e.g. 18 rules → 18 refetches).
@@ -204,13 +327,14 @@ function handleRealtimeEvent(
     hasEvent(events, REALTIME_EVENTS.SITES_DEPLOYMENT_DELETE) ||
     eventMatches(events, REALTIME_EVENTS.SITES_DEPLOYMENTS_ANY)
   ) {
-    queryClient.invalidateQueries({
-      queryKey: ['deployments', 'site', projectId],
-    })
-    queryClient.invalidateQueries({
-      queryKey: ['deployment', 'site', projectId],
-    })
-    queryClient.invalidateQueries({ queryKey: ['site', 'project', projectId] })
+    handleDeploymentRealtimeEvent(
+      queryClient,
+      projectId,
+      'site',
+      events,
+      payload,
+      ['site', 'project', projectId],
+    )
   }
   if (hasEvent(events, REALTIME_EVENTS.SITES_EXECUTIONS_ANY)) {
     queryClient.invalidateQueries({ queryKey: ['logs', 'site', projectId] })
@@ -228,12 +352,14 @@ function handleRealtimeEvent(
     queryClient.invalidateQueries({
       queryKey: ['function', 'project', projectId],
     })
-    queryClient.invalidateQueries({
-      queryKey: ['deployment', 'function', projectId],
-    })
-    queryClient.invalidateQueries({
-      queryKey: ['deployments', 'function', projectId],
-    })
+    handleDeploymentRealtimeEvent(
+      queryClient,
+      projectId,
+      'function',
+      events,
+      payload,
+      ['function', 'project', projectId],
+    )
   }
   if (hasEvent(events, REALTIME_EVENTS.FUNCTIONS_EXECUTIONS_ANY)) {
     queryClient.invalidateQueries({

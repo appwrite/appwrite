@@ -9,6 +9,10 @@ import {
 import { queryOptions } from '@tanstack/react-query'
 import { listConsoleProjects } from '@/lib/appwrite/console-projects'
 import { sdk, setProjectRegion } from '@/lib/appwrite/sdk'
+import {
+  DEFAULT_PASSWORD_STRENGTH_POLICY,
+  type PasswordStrengthPolicy,
+} from '@/lib/password-strength'
 
 type ProjectPolicy = Models.PolicyList['policies'][number]
 
@@ -24,6 +28,7 @@ export type ProjectAuthSecuritySnapshot = {
   authDuration: number
   authSessionsLimit: number
   authPasswordHistory: number
+  authPasswordStrength: PasswordStrengthPolicy
   authPasswordDictionary: boolean
   authPersonalDataCheck: boolean
   authSessionAlerts: boolean
@@ -46,6 +51,7 @@ const DEFAULT_AUTH_SECURITY: ProjectAuthSecuritySnapshot = {
   authDuration: 0,
   authSessionsLimit: 10,
   authPasswordHistory: 0,
+  authPasswordStrength: DEFAULT_PASSWORD_STRENGTH_POLICY,
   authPasswordDictionary: false,
   authPersonalDataCheck: false,
   authSessionAlerts: false,
@@ -89,6 +95,22 @@ function parsePolicyCountLimit(
   return total
 }
 
+function parsePasswordStrengthPolicy(
+  policy: ProjectPolicy | undefined,
+): PasswordStrengthPolicy {
+  if (!policy || !('min' in policy)) {
+    return DEFAULT_PASSWORD_STRENGTH_POLICY
+  }
+  const strength = policy as Models.PolicyPasswordStrength
+  return {
+    min: strength.min ?? DEFAULT_PASSWORD_STRENGTH_POLICY.min,
+    uppercase: strength.uppercase ?? false,
+    lowercase: strength.lowercase ?? false,
+    number: strength.number ?? false,
+    symbols: strength.symbols ?? false,
+  }
+}
+
 export function parseProjectAuthSecurity(
   policies: ProjectPolicy[] | undefined,
   mockNumbers: Models.MockNumber[] | undefined,
@@ -102,6 +124,10 @@ export function parseProjectAuthSecurity(
   const passwordHistory = policyById(
     policies,
     ProjectPolicyId.Passwordhistory,
+  )
+  const passwordStrength = policyById(
+    policies,
+    ProjectPolicyId.Passwordstrength,
   )
   const passwordDictionary = policyById(
     policies,
@@ -138,6 +164,7 @@ export function parseProjectAuthSecurity(
         : 0,
     authSessionsLimit: parsePolicyCountLimit(sessionLimit, 10),
     authPasswordHistory: parsePolicyCountLimit(passwordHistory, 0),
+    authPasswordStrength: parsePasswordStrengthPolicy(passwordStrength),
     authPasswordDictionary:
       passwordDictionary && 'enabled' in passwordDictionary
         ? (passwordDictionary.enabled ?? false)

@@ -372,6 +372,45 @@ export function useUpdateAuthPasswordHistory(
 }
 
 /**
+ * Hook to update project password strength requirements
+ */
+export function useUpdateAuthPasswordStrength(
+  projectId: string | null | undefined,
+) {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: async (policy: {
+      min: number
+      uppercase: boolean
+      lowercase: boolean
+      number: boolean
+      symbols: boolean
+    }) => {
+      if (!projectId) {
+        throw new Error('Project ID is required')
+      }
+      if (policy.min < 8 || policy.min > 256) {
+        throw new Error('Minimum length must be between 8 and 256 characters')
+      }
+
+      return await sdk
+        .forProject(projectId)
+        .project.updatePasswordStrengthPolicy({
+          min: policy.min,
+          uppercase: policy.uppercase,
+          lowercase: policy.lowercase,
+          number: policy.number,
+          symbols: policy.symbols,
+        })
+    },
+    onSuccess: () => {
+      invalidateProjectAuthQueries(queryClient, projectId)
+    },
+  })
+}
+
+/**
  * Hook to update project password dictionary check
  *
  * @param projectId - The project ID

@@ -440,6 +440,25 @@ export function View() {
     return () => clearInterval(interval)
   }, [hasInProgressDeployment])
 
+  // Refresh stale in-progress rows when returning from deployment detail
+  useEffect(() => {
+    if (!projectId || !siteId) return
+    const queries = queryClient.getQueriesData<{
+      deployments?: Models.Deployment[]
+    }>({
+      queryKey: ['deployments', 'site', projectId, siteId],
+      exact: false,
+    })
+    const hasInProgressInCache = queries.some(([, data]) =>
+      data?.deployments?.some((d) => isDeploymentInProgress(d.status)),
+    )
+    if (!hasInProgressInCache) return
+    void queryClient.refetchQueries({
+      queryKey: ['deployments', 'site', projectId, siteId],
+      exact: false,
+    })
+  }, [projectId, siteId, queryClient])
+
   // Screenshot theme: user override or current active app theme (resolvedTheme when available)
   const defaultScreenshotTheme =
     resolvedTheme === 'dark' || resolvedTheme === 'light'
