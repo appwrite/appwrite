@@ -1,6 +1,7 @@
 import fs from 'node:fs'
 import path from 'node:path'
 import type { Plugin } from 'vite'
+import { patchAlmostnodeBundle } from './almostnode-patches'
 
 const RUNTIME_WORKER_PREFIX = 'runtime-worker-'
 
@@ -37,16 +38,48 @@ function stripViteModuleId(id: string): string {
 }
 
 function isAlmostnodeMainEntry(id: string): boolean {
-  return stripViteModuleId(id)
-    .replace(/\\/g, '/')
-    .includes('almostnode/dist/index.mjs')
+  const normalized = stripViteModuleId(id).replace(/\\/g, '/')
+  return (
+    normalized.includes('almostnode/dist/index.mjs') ||
+    normalized.includes('.cache/almostnode/index.mjs')
+  )
 }
 
-function patchAlmostnodeBundle(code: string): string {
-  return code.replace(
-    /new URL\(\s*\/\*\s*@vite-ignore\s*\*\/\s*"([^"]+)",\s*import\.meta\.url\s*\)/gs,
-    '"$1"',
+function writeIfChanged(filePath: string, contents: string): void {
+  if (fs.existsSync(filePath) && fs.readFileSync(filePath, 'utf8') === contents) {
+    return
+  }
+  fs.mkdirSync(path.dirname(filePath), { recursive: true })
+  fs.writeFileSync(filePath, contents)
+}
+
+/**
+ * Materialize patched almostnode bundles under `.cache/almostnode` so Vite always
+ * serves the fixed entry (load/transform hooks alone are not reliable in dev).
+ */
+export function ensureAlmostnodePatchCache(
+  almostnodeDistDir: string,
+  cacheDir: string,
+): { indexEntry: string; workerFileName: string | null } {
+  const indexSrc = path.join(almostnodeDistDir, 'index.mjs')
+  const indexDest = path.join(cacheDir, 'index.mjs')
+  writeIfChanged(
+    indexDest,
+    patchAlmostnodeBundle(fs.readFileSync(indexSrc, 'utf8')),
   )
+
+  const assetsDir = path.join(almostnodeDistDir, 'assets')
+  const workerFileName = findRuntimeWorkerAsset(assetsDir)
+  if (workerFileName) {
+    const workerSrc = path.join(assetsDir, workerFileName)
+    const workerDest = path.join(cacheDir, 'assets', workerFileName)
+    writeIfChanged(
+      workerDest,
+      patchAlmostnodeBundle(fs.readFileSync(workerSrc, 'utf8')),
+    )
+  }
+
+  return { indexEntry: indexDest, workerFileName }
 }
 
 function readRuntimeWorkerSource(
@@ -65,13 +98,21 @@ function readRuntimeWorkerSource(
  * points at almostnode's own build output. Rewrite the URL to a plain string
  * and emit the worker asset into the app bundle.
  */
-export function almostnodeBuildPlugin(almostnodeDistDir: string): Plugin {
+export function almostnodeBuildPlugin(
+  almostnodeDistDir: string,
+  cacheDir: string,
+): Plugin {
   const assetsDir = path.join(almostnodeDistDir, 'assets')
+  const cacheAssetsDir = path.join(cacheDir, 'assets')
   let workerFileName = findRuntimeWorkerAsset(assetsDir)
 
   return {
     name: 'almostnode-build-fix',
     enforce: 'pre',
+    buildStart() {
+      const cached = ensureAlmostnodePatchCache(almostnodeDistDir, cacheDir)
+      workerFileName = cached.workerFileName ?? workerFileName
+    },
     load(id) {
       if (!isAlmostnodeMainEntry(id)) return null
       const filePath = stripViteModuleId(id)
@@ -79,7 +120,10 @@ export function almostnodeBuildPlugin(almostnodeDistDir: string): Plugin {
     },
     transform(code, id) {
       const normalizedId = stripViteModuleId(id).replace(/\\/g, '/')
-      if (normalizedId.includes('almostnode/dist/assets/runtime-worker-')) {
+      if (
+        normalizedId.includes('almostnode/dist/assets/runtime-worker-') ||
+        normalizedId.includes('.cache/almostnode/assets/runtime-worker-')
+      ) {
         const transformed = patchAlmostnodeBundle(code)
         if (transformed === code) return null
         return { code: transformed, map: null }
@@ -100,7 +144,10 @@ export function almostnodeBuildPlugin(almostnodeDistDir: string): Plugin {
           return
         }
 
-        const workerPath = path.join(assetsDir, workerFile)
+        const cachedWorkerPath = path.join(cacheAssetsDir, workerFile)
+        const workerPath = fs.existsSync(cachedWorkerPath)
+          ? cachedWorkerPath
+          : path.join(assetsDir, workerFile)
         if (!fs.existsSync(workerPath)) {
           next()
           return
@@ -108,19 +155,22 @@ export function almostnodeBuildPlugin(almostnodeDistDir: string): Plugin {
 
         res.setHeader('Content-Type', 'application/javascript')
         res.setHeader('Cache-Control', 'no-store')
-        res.end(readRuntimeWorkerSource(assetsDir, workerFile))
+        res.end(readRuntimeWorkerSource(path.dirname(workerPath), workerFile))
       })
     },
     generateBundle() {
       if (!workerFileName) return
 
-      const workerPath = path.join(assetsDir, workerFileName)
+      const cachedWorkerPath = path.join(cacheAssetsDir, workerFileName)
+      const workerPath = fs.existsSync(cachedWorkerPath)
+        ? cachedWorkerPath
+        : path.join(assetsDir, workerFileName)
       if (!fs.existsSync(workerPath)) return
 
       this.emitFile({
         type: 'asset',
         fileName: `assets/${workerFileName}`,
-        source: readRuntimeWorkerSource(assetsDir, workerFileName),
+        source: readRuntimeWorkerSource(path.dirname(workerPath), workerFileName),
       })
     },
   }

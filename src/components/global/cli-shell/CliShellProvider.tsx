@@ -36,6 +36,7 @@ import { getBlockedCliCommandMessage } from '@/lib/cli-shell/blocked-cli-command
 import { isAppwriteCliCommand } from '@/lib/cli-shell/is-appwrite-command'
 import { ensureAppwriteBinStub } from '@/lib/cli-shell/install-appwrite-cli'
 import { prepareCliCommand } from '@/lib/cli-shell/prepare-command'
+import { shouldWriteCliStderr } from '@/lib/cli-shell/almostnode-patches'
 import {
   CLI_TERMINAL_MUTED,
   CLI_TERMINAL_RESET,
@@ -1218,8 +1219,9 @@ export function CliShellProvider({ projectId, children }: CliShellProviderProps)
 
       let streamedStdout = false
       let streamedStderr = false
+      let stdoutAccum = ''
+      let stderrAccum = ''
       const stdoutLinkifier = createTerminalOutputLinkifier()
-      const stderrLinkifier = createTerminalOutputLinkifier()
       const getOutputApi = () =>
         terminalApisRef.current.get(targetSessionId) ?? null
 
@@ -1230,12 +1232,13 @@ export function CliShellProvider({ projectId, children }: CliShellProviderProps)
         onStdout: (chunk) => {
           if (!chunk) return
           streamedStdout = true
+          stdoutAccum += chunk
           stdoutLinkifier.write(getOutputApi(), chunk)
         },
         onStderr: (chunk) => {
           if (!chunk) return
           streamedStderr = true
-          stderrLinkifier.write(getOutputApi(), chunk)
+          stderrAccum += chunk
         },
       }
 
@@ -1245,9 +1248,15 @@ export function CliShellProvider({ projectId, children }: CliShellProviderProps)
         )
 
         if (result.stdout && !streamedStdout) {
+          stdoutAccum = result.stdout
           writeCliTerminalRaw(getOutputApi(), result.stdout)
         }
-        if (result.stderr && !streamedStderr) {
+        if (
+          result.stderr &&
+          !streamedStderr &&
+          shouldWriteCliStderr(result.stdout, result.stderr)
+        ) {
+          stderrAccum = result.stderr
           writeCliTerminalRaw(getOutputApi(), result.stderr)
         }
         if (
@@ -1270,7 +1279,9 @@ export function CliShellProvider({ projectId, children }: CliShellProviderProps)
         writeStderrLine(message, { sessionId: targetSessionId })
       } finally {
         stdoutLinkifier.flush(getOutputApi())
-        stderrLinkifier.flush(getOutputApi())
+        if (shouldWriteCliStderr(stdoutAccum, stderrAccum)) {
+          writeCliTerminalRaw(getOutputApi(), stderrAccum)
+        }
 
         const dismissed = runDismissedRef.current
         if (dismissed) {

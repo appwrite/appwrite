@@ -7,6 +7,7 @@ export const APPWRITE_CLI_TOPICS = [
   'databases',
   'functions',
   'graphql',
+  'help',
   'init',
   'locale',
   'login',
@@ -69,6 +70,7 @@ export const APPWRITE_CLI_SUBCOMMANDS: Record<string, readonly string[]> = {
     'delete-variable',
   ],
   graphql: ['query'],
+  help: APPWRITE_CLI_TOPICS.filter((topic) => topic !== 'help'),
   locale: ['list-codes', 'list-countries', 'list-continents', 'list-currencies'],
   messaging: [
     'list-topics',

@@ -8,7 +8,7 @@ import { PolicyLayout } from '@/components/pages/legal/PolicyLayout'
 type LegalPolicyViewProps = {
   title: string
   content: string
-  currentPolicy: PolicySlug
+  currentPolicy?: PolicySlug
 }
 
 export function LegalPolicyView({

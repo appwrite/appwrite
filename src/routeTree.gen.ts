@@ -19,6 +19,7 @@ import { Route as EducationRouteImport } from './routes/education'
 import { Route as CookiesRouteImport } from './routes/cookies'
 import { Route as CompanyRouteImport } from './routes/company'
 import { Route as CommunityRouteImport } from './routes/community'
+import { Route as BaaRouteImport } from './routes/baa'
 import { Route as AssetsRouteImport } from './routes/assets'
 import { Route as PublicRouteImport } from './routes/_public'
 import { Route as ProtectedRouteImport } from './routes/_protected'
@@ -308,6 +309,11 @@ const CompanyRoute = CompanyRouteImport.update({
 const CommunityRoute = CommunityRouteImport.update({
   id: '/community',
   path: '/community',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const BaaRoute = BaaRouteImport.update({
+  id: '/baa',
+  path: '/baa',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AssetsRoute = AssetsRouteImport.update({
@@ -1865,6 +1871,7 @@ const PublicProjectsProjectIdDatabasesDbKindDatabaseIdCollectionsCollectionIdBac
 
 export interface FileRoutesByFullPath {
   '/assets': typeof AssetsRoute
+  '/baa': typeof BaaRoute
   '/community': typeof CommunityRoute
   '/company': typeof CompanyRoute
   '/cookies': typeof CookiesRoute
@@ -2114,6 +2121,7 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/assets': typeof AssetsRoute
+  '/baa': typeof BaaRoute
   '/community': typeof CommunityRoute
   '/company': typeof CompanyRoute
   '/cookies': typeof CookiesRoute
@@ -2334,6 +2342,7 @@ export interface FileRoutesById {
   '/_protected': typeof ProtectedRouteWithChildren
   '/_public': typeof PublicRouteWithChildren
   '/assets': typeof AssetsRoute
+  '/baa': typeof BaaRoute
   '/community': typeof CommunityRoute
   '/company': typeof CompanyRoute
   '/cookies': typeof CookiesRoute
@@ -2585,6 +2594,7 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/assets'
+    | '/baa'
     | '/community'
     | '/company'
     | '/cookies'
@@ -2834,6 +2844,7 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/assets'
+    | '/baa'
     | '/community'
     | '/company'
     | '/cookies'
@@ -3053,6 +3064,7 @@ export interface FileRouteTypes {
     | '/_protected'
     | '/_public'
     | '/assets'
+    | '/baa'
     | '/community'
     | '/company'
     | '/cookies'
@@ -3306,6 +3318,7 @@ export interface RootRouteChildren {
   ProtectedRoute: typeof ProtectedRouteWithChildren
   PublicRoute: typeof PublicRouteWithChildren
   AssetsRoute: typeof AssetsRoute
+  BaaRoute: typeof BaaRoute
   CommunityRoute: typeof CommunityRoute
   CompanyRoute: typeof CompanyRoute
   CookiesRoute: typeof CookiesRoute
@@ -3391,6 +3404,13 @@ declare module '@tanstack/react-router' {
       path: '/community'
       fullPath: '/community'
       preLoaderRoute: typeof CommunityRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/baa': {
+      id: '/baa'
+      path: '/baa'
+      fullPath: '/baa'
+      preLoaderRoute: typeof BaaRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/assets': {
@@ -6269,6 +6289,7 @@ const rootRouteChildren: RootRouteChildren = {
   ProtectedRoute: ProtectedRouteWithChildren,
   PublicRoute: PublicRouteWithChildren,
   AssetsRoute: AssetsRoute,
+  BaaRoute: BaaRoute,
   CommunityRoute: CommunityRoute,
   CompanyRoute: CompanyRoute,
   CookiesRoute: CookiesRoute,

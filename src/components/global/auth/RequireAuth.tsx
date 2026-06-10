@@ -46,7 +46,8 @@ export function isOptionalAuthPage(pathname: string): boolean {
     pathname === '/community' ||
     pathname === '/terms' ||
     pathname === '/privacy' ||
-    pathname === '/cookies'
+    pathname === '/cookies' ||
+    pathname === '/baa'
   )
 }
 

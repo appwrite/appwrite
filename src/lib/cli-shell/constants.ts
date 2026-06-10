@@ -45,6 +45,7 @@ export const CLI_SHELL_DEFAULT_HEIGHT_PX = 280
 export const CLI_BOOTSTRAP_READY_MESSAGE = 'Appwrite CLI is ready.'
 
 export const CLI_SHELL_TRY_COMMANDS = [
+  'appwrite help',
   'appwrite whoami',
   'appwrite users list --json',
   'appwrite functions list',

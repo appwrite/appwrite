@@ -6,10 +6,18 @@ import viteReact from '@vitejs/plugin-react'
 import viteTsConfigPaths from 'vite-tsconfig-paths'
 import tailwindcss from '@tailwindcss/vite'
 import devtoolsJson from 'vite-plugin-devtools-json'
-import { almostnodeBuildPlugin } from './src/lib/cli-shell/vite-almostnode-plugin'
+import {
+  almostnodeBuildPlugin,
+  ensureAlmostnodePatchCache,
+} from './src/lib/cli-shell/vite-almostnode-plugin'
 
 const projectRoot = path.dirname(fileURLToPath(import.meta.url))
 const almostnodeDist = path.resolve(projectRoot, 'node_modules/almostnode/dist')
+const almostnodeCacheDir = path.resolve(projectRoot, '.cache/almostnode')
+const almostnodeEntry = ensureAlmostnodePatchCache(
+  almostnodeDist,
+  almostnodeCacheDir,
+).indexEntry
 const justBashBrowserEntry = fileURLToPath(
   import.meta.resolve('just-bash/browser'),
 )
@@ -50,7 +58,7 @@ export default defineConfig(async () => {
       tailwindcss(),
       tanstackStart(),
       devtoolsJson(),
-      almostnodeBuildPlugin(almostnodeDist),
+      almostnodeBuildPlugin(almostnodeDist, almostnodeCacheDir),
       viteReact(),
       ...sentryPlugins,
     ],
@@ -100,10 +108,7 @@ export default defineConfig(async () => {
         },
         {
           find: /^almostnode$/,
-          replacement: path.resolve(
-            projectRoot,
-            'node_modules/almostnode/dist/index.mjs',
-          ),
+          replacement: almostnodeEntry,
         },
       ],
     },
