@@ -1588,7 +1588,7 @@ export function useCliShellSessionsSidebarWidth(
     },
     onMutate: async (value) => {
       const patch = mergeCliShellSessionsSidebarWidthPxIntoPrefs(
-        (account.prefs ?? {}) as UserPrefs,
+        (account?.prefs ?? {}) as UserPrefs,
         value,
       )
       queryClient.setQueriesData<{ prefs?: Record<string, unknown> }>(
