@@ -3889,7 +3889,8 @@ trait MigrationsBase
         $first = $this->performCsvMigration([
             'fileId' => $fileId,
             'bucketId' => $bucketId,
-            'resourceId' => $databaseId . ':' . $tableId,
+            'databaseId' => $databaseId,
+            'collectionId' => $tableId,
         ]);
         $this->assertEventually(function () use ($first) {
             $migration = $this->client->call(Client::METHOD_GET, '/migrations/' . $first['body']['$id'], array_merge([
@@ -3915,7 +3916,8 @@ trait MigrationsBase
         $second = $this->performCsvMigration([
             'fileId' => $fileId,
             'bucketId' => $bucketId,
-            'resourceId' => $databaseId . ':' . $tableId,
+            'databaseId' => $databaseId,
+            'collectionId' => $tableId,
             'onDuplicate' => 'skip',
         ]);
         $this->assertEventually(function () use ($second) {
@@ -3956,7 +3958,8 @@ trait MigrationsBase
         $first = $this->performCsvMigration([
             'fileId' => $fileId,
             'bucketId' => $bucketId,
-            'resourceId' => $databaseId . ':' . $tableId,
+            'databaseId' => $databaseId,
+            'collectionId' => $tableId,
         ]);
         $this->assertEventually(function () use ($first) {
             $migration = $this->client->call(Client::METHOD_GET, '/migrations/' . $first['body']['$id'], array_merge([
@@ -3982,7 +3985,8 @@ trait MigrationsBase
         $second = $this->performCsvMigration([
             'fileId' => $fileId,
             'bucketId' => $bucketId,
-            'resourceId' => $databaseId . ':' . $tableId,
+            'databaseId' => $databaseId,
+            'collectionId' => $tableId,
             'onDuplicate' => 'overwrite',
         ]);
         $this->assertEventually(function () use ($second) {
@@ -4024,7 +4028,8 @@ trait MigrationsBase
         $first = $this->performCsvMigration([
             'fileId' => $fileId,
             'bucketId' => $bucketId,
-            'resourceId' => $databaseId . ':' . $tableId,
+            'databaseId' => $databaseId,
+            'collectionId' => $tableId,
         ]);
         $this->assertEventually(function () use ($first) {
             $migration = $this->client->call(Client::METHOD_GET, '/migrations/' . $first['body']['$id'], array_merge([
@@ -4038,7 +4043,8 @@ trait MigrationsBase
         $second = $this->performCsvMigration([
             'fileId' => $fileId,
             'bucketId' => $bucketId,
-            'resourceId' => $databaseId . ':' . $tableId,
+            'databaseId' => $databaseId,
+            'collectionId' => $tableId,
         ]);
         $this->assertEventually(function () use ($second) {
             $migration = $this->client->call(Client::METHOD_GET, '/migrations/' . $second['body']['$id'], array_merge([
@@ -4149,7 +4155,8 @@ trait MigrationsBase
         $first = $this->performJsonMigration([
             'fileId' => $fileId,
             'bucketId' => $bucketId,
-            'resourceId' => $databaseId . ':' . $tableId,
+            'databaseId' => $databaseId,
+            'collectionId' => $tableId,
         ]);
         $this->assertEventually(function () use ($first) {
             $migration = $this->client->call(Client::METHOD_GET, '/migrations/' . $first['body']['$id'], array_merge([
@@ -4174,7 +4181,8 @@ trait MigrationsBase
         $second = $this->performJsonMigration([
             'fileId' => $fileId,
             'bucketId' => $bucketId,
-            'resourceId' => $databaseId . ':' . $tableId,
+            'databaseId' => $databaseId,
+            'collectionId' => $tableId,
             'onDuplicate' => 'skip',
         ]);
         $this->assertEventually(function () use ($second) {
@@ -4212,7 +4220,8 @@ trait MigrationsBase
         $first = $this->performJsonMigration([
             'fileId' => $fileId,
             'bucketId' => $bucketId,
-            'resourceId' => $databaseId . ':' . $tableId,
+            'databaseId' => $databaseId,
+            'collectionId' => $tableId,
         ]);
         $this->assertEventually(function () use ($first) {
             $migration = $this->client->call(Client::METHOD_GET, '/migrations/' . $first['body']['$id'], array_merge([
@@ -4236,7 +4245,8 @@ trait MigrationsBase
         $second = $this->performJsonMigration([
             'fileId' => $fileId,
             'bucketId' => $bucketId,
-            'resourceId' => $databaseId . ':' . $tableId,
+            'databaseId' => $databaseId,
+            'collectionId' => $tableId,
             'onDuplicate' => 'overwrite',
         ]);
         $this->assertEventually(function () use ($second) {
@@ -4274,7 +4284,8 @@ trait MigrationsBase
         $first = $this->performJsonMigration([
             'fileId' => $fileId,
             'bucketId' => $bucketId,
-            'resourceId' => $databaseId . ':' . $tableId,
+            'databaseId' => $databaseId,
+            'collectionId' => $tableId,
         ]);
         $this->assertEventually(function () use ($first) {
             $migration = $this->client->call(Client::METHOD_GET, '/migrations/' . $first['body']['$id'], array_merge([
@@ -4287,7 +4298,8 @@ trait MigrationsBase
         $second = $this->performJsonMigration([
             'fileId' => $fileId,
             'bucketId' => $bucketId,
-            'resourceId' => $databaseId . ':' . $tableId,
+            'databaseId' => $databaseId,
+            'collectionId' => $tableId,
         ]);
         $this->assertEventually(function () use ($second) {
             $migration = $this->client->call(Client::METHOD_GET, '/migrations/' . $second['body']['$id'], array_merge([
