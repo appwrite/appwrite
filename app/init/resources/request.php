@@ -44,6 +44,7 @@ use Utopia\DI\Container;
 use Utopia\Domains\Domain;
 use Utopia\Http\Http;
 use Utopia\Locale\Locale;
+use Utopia\Lock\Distributed as DistributedLock;
 use Utopia\Logger\Log;
 use Utopia\Logger\Logger;
 use Utopia\Pools\Group;
@@ -67,9 +68,19 @@ return function (Container $context): void {
 
     $context->set('logger', fn ($register) => $register->get('logger'), ['register']);
 
-    $context->set('lock', function (\Redis $redis, Telemetry $telemetry, Database $dbForPlatform, Authorization $authorization, Log $log, ?Logger $logger, Document $project): Lock {
-        return new Lock($redis, $telemetry, $dbForPlatform, $authorization, $log, $logger, $project);
-    }, ['redis', 'telemetry', 'dbForPlatform', 'authorization', 'log', 'logger', 'project']);
+    $context->set('lock', function (Group $pools, Telemetry $telemetry, Database $dbForPlatform, Authorization $authorization, Log $log, ?Logger $logger, Document $project): Lock {
+        return new Lock(
+            fn (string $key, int $ttl, Closure $callback): mixed => $pools->get('lock')->use(
+                fn (\Redis $redis): mixed => $callback(new DistributedLock($redis, $key, $ttl))
+            ),
+            $telemetry,
+            $dbForPlatform,
+            $authorization,
+            $log,
+            $logger,
+            $project
+        );
+    }, ['pools', 'telemetry', 'dbForPlatform', 'authorization', 'log', 'logger', 'project']);
 
     $context->set('authorization', fn () => new Authorization(), []);
 
