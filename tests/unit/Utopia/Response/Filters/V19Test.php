@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Tests\Unit\Utopia\Response\Filters;
 
 use Appwrite\Utopia\Response;
@@ -8,7 +10,7 @@ use Appwrite\Utopia\Response\Filters\V19;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 
-class V19Test extends TestCase
+final class V19Test extends TestCase
 {
     protected Filter $filter;
 
@@ -21,26 +23,24 @@ class V19Test extends TestCase
     {
     }
 
-    public static function functionProvider(): array
+    public static function functionProvider(): \Iterator
     {
-        return [
-            'change deploymentId to deployment' => [
-                [
-                    'deploymentId' => 'deployment123',
-                ],
-                [
-                    'deployment' => 'deployment123',
-                ]
+        yield 'change deploymentId to deployment' => [
+            [
+                'deploymentId' => 'deployment123',
             ],
-            'handle empty deploymentId' => [
-                [
-                    'name' => 'test-function',
-                ],
-                [
-                    'deployment' => '',
-                    'name' => 'test-function',
-                ]
+            [
+                'deployment' => 'deployment123',
+            ]
+        ];
+        yield 'handle empty deploymentId' => [
+            [
+                'name' => 'test-function',
             ],
+            [
+                'deployment' => '',
+                'name' => 'test-function',
+            ]
         ];
     }
 
@@ -54,47 +54,45 @@ class V19Test extends TestCase
         $this->assertEquals($expected, $result);
     }
 
-    public static function functionListProvider(): array
+    public static function functionListProvider(): \Iterator
     {
-        return [
-            'convert list of functions' => [
-                [
-                    'total' => 2,
-                    'functions' => [
-                        [
-                            'deploymentId' => 'deployment123',
-                            'name' => 'function-1',
-                        ],
-                        [
-                            'deploymentId' => 'deployment456',
-                            'name' => 'function-2',
-                        ],
+        yield 'convert list of functions' => [
+            [
+                'total' => 2,
+                'functions' => [
+                    [
+                        'deploymentId' => 'deployment123',
+                        'name' => 'function-1',
+                    ],
+                    [
+                        'deploymentId' => 'deployment456',
+                        'name' => 'function-2',
                     ],
                 ],
-                [
-                    'total' => 2,
-                    'functions' => [
-                        [
-                            'deployment' => 'deployment123',
-                            'name' => 'function-1',
-                        ],
-                        [
-                            'deployment' => 'deployment456',
-                            'name' => 'function-2',
-                        ],
+            ],
+            [
+                'total' => 2,
+                'functions' => [
+                    [
+                        'deployment' => 'deployment123',
+                        'name' => 'function-1',
                     ],
-                ]
-            ],
-            'handle empty function list' => [
-                [
-                    'total' => 0,
-                    'functions' => [],
+                    [
+                        'deployment' => 'deployment456',
+                        'name' => 'function-2',
+                    ],
                 ],
-                [
-                    'total' => 0,
-                    'functions' => [],
-                ]
+            ]
+        ];
+        yield 'handle empty function list' => [
+            [
+                'total' => 0,
+                'functions' => [],
             ],
+            [
+                'total' => 0,
+                'functions' => [],
+            ]
         ];
     }
 
@@ -108,31 +106,29 @@ class V19Test extends TestCase
         $this->assertEquals($expected, $result);
     }
 
-    public static function deploymentProvider(): array
+    public static function deploymentProvider(): \Iterator
     {
-        return [
-            'rename sourceSize to size and buildDuration to buildTime' => [
-                [
-                    'sourceSize' => 1024,
-                    'buildDuration' => 60,
-                    'id' => 'deployment123',
-                ],
-                [
-                    'size' => 1024,
-                    'buildTime' => 60,
-                    'id' => 'deployment123',
-                ]
+        yield 'rename sourceSize to size and buildDuration to buildTime' => [
+            [
+                'sourceSize' => 1024,
+                'buildDuration' => 60,
+                'id' => 'deployment123',
             ],
-            'handle missing sourceSize and buildDuration' => [
-                [
-                    'id' => 'deployment123',
-                ],
-                [
-                    'size' => '',
-                    'buildTime' => '',
-                    'id' => 'deployment123',
-                ]
+            [
+                'size' => 1024,
+                'buildTime' => 60,
+                'id' => 'deployment123',
+            ]
+        ];
+        yield 'handle missing sourceSize and buildDuration' => [
+            [
+                'id' => 'deployment123',
             ],
+            [
+                'size' => '',
+                'buildTime' => '',
+                'id' => 'deployment123',
+            ]
         ];
     }
 
@@ -146,31 +142,29 @@ class V19Test extends TestCase
         $this->assertEquals($expected, $result);
     }
 
-    public static function proxyRuleProvider(): array
+    public static function proxyRuleProvider(): \Iterator
     {
-        return [
-            'rename deployment resource fields' => [
-                [
-                    'deploymentResourceType' => 'function',
-                    'deploymentResourceId' => 'func123',
-                    'domain' => 'example.com',
-                ],
-                [
-                    'resourceType' => 'function',
-                    'resourceId' => 'func123',
-                    'domain' => 'example.com',
-                ]
+        yield 'rename deployment resource fields' => [
+            [
+                'deploymentResourceType' => 'function',
+                'deploymentResourceId' => 'func123',
+                'domain' => 'example.com',
             ],
-            'handle missing deployment resource fields' => [
-                [
-                    'domain' => 'example.com',
-                ],
-                [
-                    'resourceType' => '',
-                    'resourceId' => '',
-                    'domain' => 'example.com',
-                ]
+            [
+                'resourceType' => 'function',
+                'resourceId' => 'func123',
+                'domain' => 'example.com',
+            ]
+        ];
+        yield 'handle missing deployment resource fields' => [
+            [
+                'domain' => 'example.com',
             ],
+            [
+                'resourceType' => '',
+                'resourceId' => '',
+                'domain' => 'example.com',
+            ]
         ];
     }
 
@@ -184,26 +178,24 @@ class V19Test extends TestCase
         $this->assertEquals($expected, $result);
     }
 
-    public static function migrationProvider(): array
+    public static function migrationProvider(): \Iterator
     {
-        return [
-            'remove resourceId field' => [
-                [
-                    'resourceId' => 'resource123',
-                    'status' => 'completed',
-                ],
-                [
-                    'status' => 'completed',
-                ]
+        yield 'remove resourceId field' => [
+            [
+                'resourceId' => 'resource123',
+                'status' => 'completed',
             ],
-            'handle content without resourceId' => [
-                [
-                    'status' => 'completed',
-                ],
-                [
-                    'status' => 'completed',
-                ]
+            [
+                'status' => 'completed',
+            ]
+        ];
+        yield 'handle content without resourceId' => [
+            [
+                'status' => 'completed',
             ],
+            [
+                'status' => 'completed',
+            ]
         ];
     }
 
@@ -217,26 +209,24 @@ class V19Test extends TestCase
         $this->assertEquals($expected, $result);
     }
 
-    public static function projectProvider(): array
+    public static function projectProvider(): \Iterator
     {
-        return [
-            'remove devKeys field' => [
-                [
-                    'devKeys' => ['key1', 'key2'],
-                    'name' => 'test-project',
-                ],
-                [
-                    'name' => 'test-project',
-                ]
+        yield 'remove devKeys field' => [
+            [
+                'devKeys' => ['key1', 'key2'],
+                'name' => 'test-project',
             ],
-            'handle content without devKeys' => [
-                [
-                    'name' => 'test-project',
-                ],
-                [
-                    'name' => 'test-project',
-                ]
+            [
+                'name' => 'test-project',
+            ]
+        ];
+        yield 'handle content without devKeys' => [
+            [
+                'name' => 'test-project',
             ],
+            [
+                'name' => 'test-project',
+            ]
         ];
     }
 
@@ -250,26 +240,24 @@ class V19Test extends TestCase
         $this->assertEquals($expected, $result);
     }
 
-    public static function providerRepositoryProvider(): array
+    public static function providerRepositoryProvider(): \Iterator
     {
-        return [
-            'remove runtime field' => [
-                [
-                    'runtime' => 'nodejs',
-                    'name' => 'test-repo',
-                ],
-                [
-                    'name' => 'test-repo',
-                ]
+        yield 'remove runtime field' => [
+            [
+                'runtime' => 'nodejs',
+                'name' => 'test-repo',
             ],
-            'handle content without runtime' => [
-                [
-                    'name' => 'test-repo',
-                ],
-                [
-                    'name' => 'test-repo',
-                ]
+            [
+                'name' => 'test-repo',
+            ]
+        ];
+        yield 'handle content without runtime' => [
+            [
+                'name' => 'test-repo',
             ],
+            [
+                'name' => 'test-repo',
+            ]
         ];
     }
 
@@ -283,26 +271,24 @@ class V19Test extends TestCase
         $this->assertEquals($expected, $result);
     }
 
-    public static function templateVariableProvider(): array
+    public static function templateVariableProvider(): \Iterator
     {
-        return [
-            'remove secret field' => [
-                [
-                    'secret' => 'secret-value',
-                    'name' => 'test-variable',
-                ],
-                [
-                    'name' => 'test-variable',
-                ]
+        yield 'remove secret field' => [
+            [
+                'secret' => 'secret-value',
+                'name' => 'test-variable',
             ],
-            'handle content without secret' => [
-                [
-                    'name' => 'test-variable',
-                ],
-                [
-                    'name' => 'test-variable',
-                ]
+            [
+                'name' => 'test-variable',
+            ]
+        ];
+        yield 'handle content without secret' => [
+            [
+                'name' => 'test-variable',
             ],
+            [
+                'name' => 'test-variable',
+            ]
         ];
     }
 
@@ -316,30 +302,28 @@ class V19Test extends TestCase
         $this->assertEquals($expected, $result);
     }
 
-    public static function usageFunctionProvider(): array
+    public static function usageFunctionProvider(): \Iterator
     {
-        return [
-            'remove build-related fields' => [
-                [
-                    'buildsSuccessTotal' => 10,
-                    'buildsFailedTotal' => 2,
-                    'buildsTimeAverage' => 30,
-                    'buildsSuccess' => 5,
-                    'buildsFailed' => 1,
-                    'executions' => 100,
-                ],
-                [
-                    'executions' => 100,
-                ]
+        yield 'remove build-related fields' => [
+            [
+                'buildsSuccessTotal' => 10,
+                'buildsFailedTotal' => 2,
+                'buildsTimeAverage' => 30,
+                'buildsSuccess' => 5,
+                'buildsFailed' => 1,
+                'executions' => 100,
             ],
-            'handle content without build fields' => [
-                [
-                    'executions' => 100,
-                ],
-                [
-                    'executions' => 100,
-                ]
+            [
+                'executions' => 100,
+            ]
+        ];
+        yield 'handle content without build fields' => [
+            [
+                'executions' => 100,
             ],
+            [
+                'executions' => 100,
+            ]
         ];
     }
 
@@ -353,29 +337,27 @@ class V19Test extends TestCase
         $this->assertEquals($expected, $result);
     }
 
-    public static function usageFunctionsProvider(): array
+    public static function usageFunctionsProvider(): \Iterator
     {
-        return [
-            'remove build-related fields' => [
-                [
-                    'buildsSuccessTotal' => 20,
-                    'buildsFailedTotal' => 4,
-                    'buildsSuccess' => 10,
-                    'buildsFailed' => 2,
-                    'executions' => 200,
-                ],
-                [
-                    'executions' => 200,
-                ]
+        yield 'remove build-related fields' => [
+            [
+                'buildsSuccessTotal' => 20,
+                'buildsFailedTotal' => 4,
+                'buildsSuccess' => 10,
+                'buildsFailed' => 2,
+                'executions' => 200,
             ],
-            'handle content without build fields' => [
-                [
-                    'executions' => 200,
-                ],
-                [
-                    'executions' => 200,
-                ]
+            [
+                'executions' => 200,
+            ]
+        ];
+        yield 'handle content without build fields' => [
+            [
+                'executions' => 200,
             ],
+            [
+                'executions' => 200,
+            ]
         ];
     }
 
@@ -389,26 +371,24 @@ class V19Test extends TestCase
         $this->assertEquals($expected, $result);
     }
 
-    public static function variableProvider(): array
+    public static function variableProvider(): \Iterator
     {
-        return [
-            'remove secret field' => [
-                [
-                    'secret' => 'secret-value',
-                    'name' => 'test-variable',
-                ],
-                [
-                    'name' => 'test-variable',
-                ]
+        yield 'remove secret field' => [
+            [
+                'secret' => 'secret-value',
+                'name' => 'test-variable',
             ],
-            'handle content without secret' => [
-                [
-                    'name' => 'test-variable',
-                ],
-                [
-                    'name' => 'test-variable',
-                ]
+            [
+                'name' => 'test-variable',
+            ]
+        ];
+        yield 'handle content without secret' => [
+            [
+                'name' => 'test-variable',
             ],
+            [
+                'name' => 'test-variable',
+            ]
         ];
     }
 

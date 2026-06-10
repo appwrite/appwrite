@@ -2,8 +2,9 @@
 
 namespace Appwrite\Platform\Modules\Sites\Http\Deployments;
 
-use Appwrite\Event\Build;
 use Appwrite\Event\Event;
+use Appwrite\Event\Message\Build as BuildMessage;
+use Appwrite\Event\Publisher\Build as BuildPublisher;
 use Appwrite\Extend\Exception;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\ContentType;
@@ -20,6 +21,7 @@ use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\UID;
 use Utopia\Http\Adapter\Swoole\Request;
+use Utopia\Lock\Exception\Contention as LockContention;
 use Utopia\Platform\Action;
 use Utopia\Platform\Scope\HTTP;
 use Utopia\Storage\Device;
@@ -85,10 +87,11 @@ class Create extends Action
             ->inject('queueForEvents')
             ->inject('deviceForSites')
             ->inject('deviceForLocal')
-            ->inject('queueForBuilds')
+            ->inject('publisherForBuilds')
             ->inject('plan')
             ->inject('authorization')
             ->inject('platform')
+            ->inject('locks')
             ->callback($this->action(...));
     }
 
@@ -107,10 +110,11 @@ class Create extends Action
         Event $queueForEvents,
         Device $deviceForSites,
         Device $deviceForLocal,
-        Build $queueForBuilds,
+        BuildPublisher $publisherForBuilds,
         array $plan,
         Authorization $authorization,
         array $platform,
+        callable $locks,
     ) {
         $activate = \strval($activate) === 'true' || \strval($activate) === '1';
 
@@ -192,20 +196,39 @@ class Create extends Action
         // Save to storage
         $fileSize ??= $deviceForLocal->getFileSize($fileTmpName);
         $path = $deviceForSites->getPath($deploymentId . '.' . \pathinfo($fileName, PATHINFO_EXTENSION));
-        $deployment = $dbForProject->getDocument('deployments', $deploymentId);
+
+        $lockKey = 'sites:deployment:' . $project->getId() . ':' . $siteId . ':' . $deploymentId;
 
         $metadata = ['content_type' => $deviceForLocal->getFileMimeType($fileTmpName)];
-        if (!$deployment->isEmpty()) {
-            $chunks = $deployment->getAttribute('sourceChunksTotal', 1);
-            $uploaded = $deployment->getAttribute('sourceChunksUploaded', 0);
-            $metadata = $deployment->getAttribute('sourceMetadata', []);
+        $completed = false;
 
-            if ($uploaded === $chunks) {
-                $response
-                    ->setStatusCode(Response::STATUS_CODE_ACCEPTED)
-                    ->dynamic($deployment, Response::MODEL_DEPLOYMENT);
-                return;
-            }
+        try {
+            $locks($lockKey, 600, function () use (&$chunks, $dbForProject, $deploymentId, &$metadata, &$completed, $response): void {
+                $deployment = $dbForProject->getDocument('deployments', $deploymentId);
+
+                if (!$deployment->isEmpty()) {
+                    $chunks = $deployment->getAttribute('sourceChunksTotal', 1);
+                    $uploaded = $deployment->getAttribute('sourceChunksUploaded', 0);
+                    $metadata = $deployment->getAttribute('sourceMetadata', []);
+
+                    if ($uploaded === $chunks) {
+                        $response
+                            ->setStatusCode(Response::STATUS_CODE_ACCEPTED)
+                            ->dynamic($deployment, Response::MODEL_DEPLOYMENT);
+
+                        $completed = true;
+                        return;
+                    }
+                }
+            }, timeout: 120.0);
+        } catch (LockContention) {
+            $response->addHeader('Retry-After', '5');
+            throw new Exception(Exception::GENERAL_RATE_LIMIT_EXCEEDED, 'Deployment upload is busy. Try again.');
+        }
+
+        if ($completed) {
+            $queueForEvents->reset();
+            return;
         }
 
         $chunksUploaded = $deviceForSites->upload($fileTmpName, $path, $chunk, $chunks, $metadata);
@@ -224,181 +247,186 @@ class Create extends Action
             $commands[] = $buildCommand;
         }
 
-        if ($chunksUploaded === $chunks) {
-            if ($activate) {
-                // Remove deploy for all other deployments.
-                $activeDeployments = $dbForProject->find('deployments', [
-                    Query::equal('activate', [true]),
-                    Query::equal('resourceId', [$siteId]),
-                    Query::equal('resourceType', ['sites'])
-                ]);
+        try {
+            $locks($lockKey, 600, function () use ($activate, $authorization, $commands, &$chunks, $chunksUploaded, $dbForPlatform, $dbForProject, $deploymentId, $deviceForSites, $fileSize, &$metadata, $outputDirectory, $path, $platform, $project, $publisherForBuilds, $queueForEvents, $response, &$site, $siteId, $type): void {
+                $deployment = $dbForProject->getDocument('deployments', $deploymentId);
+                $uploaded = 0;
 
-                foreach ($activeDeployments as $activeDeployment) {
-                    $activeDeployment->setAttribute('activate', false);
-                    $dbForProject->updateDocument('deployments', $activeDeployment->getId(), new Document(['activate' => false]));
+                if (!$deployment->isEmpty()) {
+                    $chunks = $deployment->getAttribute('sourceChunksTotal', 1);
+                    $uploaded = $deployment->getAttribute('sourceChunksUploaded', 0);
+                    $metadata = \array_merge($deployment->getAttribute('sourceMetadata', []), $metadata);
+
+                    if ($uploaded === $chunks) {
+                        $queueForEvents->reset();
+
+                        $response
+                            ->setStatusCode(Response::STATUS_CODE_ACCEPTED)
+                            ->dynamic($deployment, Response::MODEL_DEPLOYMENT);
+                        return;
+                    }
                 }
-            }
 
-            $fileSize = $deviceForSites->getFileSize($path);
+                $chunksUploaded = max($uploaded, $chunksUploaded);
 
-            if ($deployment->isEmpty()) {
-                $deployment = $dbForProject->createDocument('deployments', new Document([
-                    '$id' => $deploymentId,
-                    '$permissions' => [
-                        Permission::read(Role::any()),
-                        Permission::update(Role::any()),
-                        Permission::delete(Role::any()),
-                    ],
-                    'resourceInternalId' => $site->getSequence(),
-                    'resourceId' => $site->getId(),
-                    'resourceType' => 'sites',
-                    'buildCommands' => \implode(' && ', $commands),
-                    'startCommand' => $site->getAttribute('startCommand', ''),
-                    'buildOutput' => $outputDirectory,
-                    'adapter' => $site->getAttribute('adapter', ''),
-                    'fallbackFile' => $site->getAttribute('fallbackFile', ''),
-                    'sourcePath' => $path,
-                    'sourceSize' => $fileSize,
-                    'totalSize' => $fileSize,
-                    'sourceChunksTotal' => $chunks,
-                    'sourceChunksUploaded' => $chunksUploaded,
-                    'activate' => $activate,
-                    'sourceMetadata' => $metadata,
-                    'type' => $type,
-                ]));
+                if ($chunksUploaded === $chunks && $uploaded < $chunks) {
+                    if ($activate) {
+                        // Remove deploy for all other deployments.
+                        $activeDeployments = $dbForProject->find('deployments', [
+                            Query::equal('activate', [true]),
+                            Query::equal('resourceId', [$siteId]),
+                            Query::equal('resourceType', ['sites'])
+                        ]);
 
-                $site = $site
-                    ->setAttribute('latestDeploymentId', $deployment->getId())
-                    ->setAttribute('latestDeploymentInternalId', $deployment->getSequence())
-                    ->setAttribute('latestDeploymentCreatedAt', $deployment->getCreatedAt())
-                    ->setAttribute('latestDeploymentStatus', $deployment->getAttribute('status', ''));
-                $dbForProject->updateDocument('sites', $site->getId(), new Document([
-                    'latestDeploymentId' => $deployment->getId(),
-                    'latestDeploymentInternalId' => $deployment->getSequence(),
-                    'latestDeploymentCreatedAt' => $deployment->getCreatedAt(),
-                    'latestDeploymentStatus' => $deployment->getAttribute('status', ''),
-                ]));
+                        foreach ($activeDeployments as $activeDeployment) {
+                            $dbForProject->updateDocument('deployments', $activeDeployment->getId(), new Document(['activate' => false]));
+                        }
+                    }
 
-                $sitesDomain = $platform['sitesDomain'];
-                $domain = ID::unique() . "." . $sitesDomain;
+                    $fileSize = $deviceForSites->getFileSize($path);
 
-                // TODO: (@Meldiron) Remove after 1.7.x migration
-                $isMd5 = System::getEnv('_APP_RULES_FORMAT') === 'md5';
-                $ruleId = $isMd5 ? md5($domain) : ID::unique();
+                    if ($deployment->isEmpty()) {
+                        $deployment = $dbForProject->createDocument('deployments', new Document([
+                            '$id' => $deploymentId,
+                            '$permissions' => [
+                                Permission::read(Role::any()),
+                                Permission::update(Role::any()),
+                                Permission::delete(Role::any()),
+                            ],
+                            'resourceInternalId' => $site->getSequence(),
+                            'resourceId' => $site->getId(),
+                            'resourceType' => 'sites',
+                            'buildCommands' => \implode(' && ', $commands),
+                            'startCommand' => $site->getAttribute('startCommand', ''),
+                            'buildOutput' => $outputDirectory,
+                            'adapter' => $site->getAttribute('adapter', ''),
+                            'fallbackFile' => $site->getAttribute('fallbackFile', ''),
+                            'sourcePath' => $path,
+                            'sourceSize' => $fileSize,
+                            'totalSize' => $fileSize,
+                            'sourceChunksTotal' => $chunks,
+                            'sourceChunksUploaded' => $chunksUploaded,
+                            'activate' => $activate,
+                            'sourceMetadata' => $metadata,
+                            'type' => $type,
+                        ]));
 
-                $authorization->skip(
-                    fn () => $dbForPlatform->createDocument('rules', new Document([
-                        '$id' => $ruleId,
-                        'projectId' => $project->getId(),
-                        'projectInternalId' => $project->getSequence(),
-                        'domain' => $domain,
-                        'type' => 'deployment',
-                        'trigger' => 'deployment',
-                        'deploymentId' => $deployment->isEmpty() ? '' : $deployment->getId(),
-                        'deploymentInternalId' => $deployment->isEmpty() ? '' : $deployment->getSequence(),
-                        'deploymentResourceType' => 'site',
-                        'deploymentResourceId' => $site->getId(),
-                        'deploymentResourceInternalId' => $site->getSequence(),
-                        'status' => 'verified',
-                        'certificateId' => '',
-                        'search' => implode(' ', [$ruleId, $domain]),
-                        'owner' => 'Appwrite',
-                        'region' => $project->getAttribute('region')
-                    ]))
-                );
-            } else {
-                $deployment = $dbForProject->updateDocument('deployments', $deploymentId, new Document([
-                    'sourceSize' => $fileSize,
-                    'sourceChunksUploaded' => $chunksUploaded,
-                    'sourceMetadata' => $metadata,
-                ]));
-            }
+                        $sitesDomain = $platform['sitesDomain'];
+                        $domain = ID::unique() . "." . $sitesDomain;
 
-            // Start the build
-            $queueForBuilds
-                ->setType(BUILD_TYPE_DEPLOYMENT)
-                ->setResource($site)
-                ->setDeployment($deployment);
-        } else {
-            if ($deployment->isEmpty()) {
-                $deployment = $dbForProject->createDocument('deployments', new Document([
-                    '$id' => $deploymentId,
-                    '$permissions' => [
-                        Permission::read(Role::any()),
-                        Permission::update(Role::any()),
-                        Permission::delete(Role::any()),
-                    ],
-                    'resourceInternalId' => $site->getSequence(),
-                    'resourceId' => $site->getId(),
-                    'resourceType' => 'sites',
-                    'buildCommands' => \implode(' && ', $commands),
-                    'startCommand' => $site->getAttribute('startCommand', ''),
-                    'buildOutput' => $outputDirectory,
-                    'adapter' => $site->getAttribute('adapter', ''),
-                    'fallbackFile' => $site->getAttribute('fallbackFile', ''),
-                    'sourcePath' => $path,
-                    'sourceSize' => $fileSize,
-                    'totalSize' => $fileSize,
-                    'sourceChunksTotal' => $chunks,
-                    'sourceChunksUploaded' => $chunksUploaded,
-                    'activate' => $activate,
-                    'sourceMetadata' => $metadata,
-                    'type' => $type,
-                ]));
+                        // TODO: (@Meldiron) Remove after 1.7.x migration
+                        $isMd5 = System::getEnv('_APP_RULES_FORMAT') === 'md5';
+                        $ruleId = $isMd5 ? md5($domain) : ID::unique();
 
-                $site = $site
-                    ->setAttribute('latestDeploymentId', $deployment->getId())
-                    ->setAttribute('latestDeploymentInternalId', $deployment->getSequence())
-                    ->setAttribute('latestDeploymentCreatedAt', $deployment->getCreatedAt())
-                    ->setAttribute('latestDeploymentStatus', $deployment->getAttribute('status', ''));
-                $dbForProject->updateDocument('sites', $site->getId(), new Document([
-                    'latestDeploymentId' => $site->getAttribute('latestDeploymentId'),
-                    'latestDeploymentInternalId' => $site->getAttribute('latestDeploymentInternalId'),
-                    'latestDeploymentCreatedAt' => $site->getAttribute('latestDeploymentCreatedAt'),
-                    'latestDeploymentStatus' => $site->getAttribute('latestDeploymentStatus'),
-                ]));
+                        $authorization->skip(
+                            fn () => $dbForPlatform->createDocument('rules', new Document([
+                                '$id' => $ruleId,
+                                'projectId' => $project->getId(),
+                                'projectInternalId' => $project->getSequence(),
+                                'domain' => $domain,
+                                'type' => 'deployment',
+                                'trigger' => 'deployment',
+                                'deploymentId' => $deployment->isEmpty() ? '' : $deployment->getId(),
+                                'deploymentInternalId' => $deployment->isEmpty() ? '' : $deployment->getSequence(),
+                                'deploymentResourceType' => 'site',
+                                'deploymentResourceId' => $site->getId(),
+                                'deploymentResourceInternalId' => $site->getSequence(),
+                                'status' => 'verified',
+                                'certificateId' => '',
+                                'search' => implode(' ', [$ruleId, $domain]),
+                                'owner' => 'Appwrite',
+                                'region' => $project->getAttribute('region')
+                            ]))
+                        );
+                    } else {
+                        $deployment = $dbForProject->updateDocument('deployments', $deploymentId, new Document([
+                            'sourceSize' => $fileSize,
+                            'sourceChunksUploaded' => $chunksUploaded,
+                            'sourceMetadata' => $metadata,
+                        ]));
+                    }
 
-                $sitesDomain = $platform['sitesDomain'];
-                $domain = ID::unique() . "." . $sitesDomain;
-                $ruleId = md5($domain);
-                $authorization->skip(
-                    fn () => $dbForPlatform->createDocument('rules', new Document([
-                        '$id' => $ruleId,
-                        'projectId' => $project->getId(),
-                        'projectInternalId' => $project->getSequence(),
-                        'domain' => $domain,
-                        'type' => 'deployment',
-                        'trigger' => 'deployment',
-                        'deploymentId' => $deployment->isEmpty() ? '' : $deployment->getId(),
-                        'deploymentInternalId' => $deployment->isEmpty() ? '' : $deployment->getSequence(),
-                        'deploymentResourceType' => 'site',
-                        'deploymentResourceId' => $site->getId(),
-                        'deploymentResourceInternalId' => $site->getSequence(),
-                        'status' => 'verified',
-                        'certificateId' => '',
-                        'search' => implode(' ', [$ruleId, $domain]),
-                        'owner' => 'Appwrite',
-                        'region' => $project->getAttribute('region')
-                    ]))
-                );
-            } else {
-                $deployment = $dbForProject->updateDocument('deployments', $deploymentId, new Document([
-                    'sourceChunksUploaded' => $chunksUploaded,
-                    'sourceMetadata' => $metadata,
-                ]));
-            }
+                    // Start the build
+                    $publisherForBuilds->enqueue(new BuildMessage(
+                        project: $project,
+                        resource: $site,
+                        deployment: $deployment,
+                        type: BUILD_TYPE_DEPLOYMENT,
+                        platform: $platform,
+                    ));
+                } else {
+                    if ($deployment->isEmpty()) {
+                        $deployment = $dbForProject->createDocument('deployments', new Document([
+                            '$id' => $deploymentId,
+                            '$permissions' => [
+                                Permission::read(Role::any()),
+                                Permission::update(Role::any()),
+                                Permission::delete(Role::any()),
+                            ],
+                            'resourceInternalId' => $site->getSequence(),
+                            'resourceId' => $site->getId(),
+                            'resourceType' => 'sites',
+                            'buildCommands' => \implode(' && ', $commands),
+                            'startCommand' => $site->getAttribute('startCommand', ''),
+                            'buildOutput' => $outputDirectory,
+                            'adapter' => $site->getAttribute('adapter', ''),
+                            'fallbackFile' => $site->getAttribute('fallbackFile', ''),
+                            'sourcePath' => $path,
+                            'sourceSize' => $fileSize,
+                            'totalSize' => $fileSize,
+                            'sourceChunksTotal' => $chunks,
+                            'sourceChunksUploaded' => $chunksUploaded,
+                            'activate' => $activate,
+                            'sourceMetadata' => $metadata,
+                            'type' => $type,
+                        ]));
+
+                        $sitesDomain = $platform['sitesDomain'];
+                        $domain = ID::unique() . "." . $sitesDomain;
+                        $ruleId = md5($domain);
+                        $authorization->skip(
+                            fn () => $dbForPlatform->createDocument('rules', new Document([
+                                '$id' => $ruleId,
+                                'projectId' => $project->getId(),
+                                'projectInternalId' => $project->getSequence(),
+                                'domain' => $domain,
+                                'type' => 'deployment',
+                                'trigger' => 'deployment',
+                                'deploymentId' => $deployment->isEmpty() ? '' : $deployment->getId(),
+                                'deploymentInternalId' => $deployment->isEmpty() ? '' : $deployment->getSequence(),
+                                'deploymentResourceType' => 'site',
+                                'deploymentResourceId' => $site->getId(),
+                                'deploymentResourceInternalId' => $site->getSequence(),
+                                'status' => 'verified',
+                                'certificateId' => '',
+                                'search' => implode(' ', [$ruleId, $domain]),
+                                'owner' => 'Appwrite',
+                                'region' => $project->getAttribute('region')
+                            ]))
+                        );
+                    } else {
+                        $deployment = $dbForProject->updateDocument('deployments', $deploymentId, new Document([
+                            'sourceChunksUploaded' => $chunksUploaded,
+                            'sourceMetadata' => $metadata,
+                        ]));
+                    }
+                }
+
+                $metadata = null;
+
+                if ($chunksUploaded === $chunks) {
+                    $queueForEvents
+                        ->setParam('siteId', $site->getId())
+                        ->setParam('deploymentId', $deployment->getId());
+                }
+
+                $response
+                    ->setStatusCode(Response::STATUS_CODE_ACCEPTED)
+                    ->dynamic($deployment, Response::MODEL_DEPLOYMENT);
+            }, timeout: 120.0);
+        } catch (LockContention) {
+            $response->addHeader('Retry-After', '5');
+            throw new Exception(Exception::GENERAL_RATE_LIMIT_EXCEEDED, 'Deployment upload is busy. Try again.');
         }
-
-
-
-        $metadata = null;
-
-        $queueForEvents
-            ->setParam('siteId', $site->getId())
-            ->setParam('deploymentId', $deployment->getId());
-
-        $response
-            ->setStatusCode(Response::STATUS_CODE_ACCEPTED)
-            ->dynamic($deployment, Response::MODEL_DEPLOYMENT);
     }
 }

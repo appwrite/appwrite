@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Tests\E2E\Services\GraphQL\Legacy;
 
 use Tests\E2E\Client;
@@ -11,7 +13,7 @@ use Utopia\Database\Helpers\ID;
 use Utopia\Database\Helpers\Permission;
 use Utopia\Database\Helpers\Role;
 
-class AuthTest extends Scope
+final class AuthTest extends Scope
 {
     use ProjectCustom;
     use SideClient;

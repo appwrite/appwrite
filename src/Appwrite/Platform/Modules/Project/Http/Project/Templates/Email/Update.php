@@ -14,6 +14,7 @@ use Utopia\Database\Document;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Emails\Validator\Email;
 use Utopia\Platform\Action;
+use Utopia\Platform\Enum;
 use Utopia\Platform\Scope\HTTP;
 use Utopia\System\System;
 use Utopia\Validator\Nullable;
@@ -56,13 +57,13 @@ class Update extends Action
                     )
                 ]
             ))
-            ->param('templateId', '', new WhiteList(Config::getParam('locale-templates')['email'] ?? [], true), 'Custom email template type. Can be one of: '.\implode(', ', Config::getParam('locale-templates')['email'] ?? []))
-            ->param('locale', '', fn ($localeCodes) => new WhiteList($localeCodes), 'Custom email template locale. If left empty, the fallback locale (en) will be used.', optional: true, injections: ['localeCodes'])
+            ->param('templateId', '', new WhiteList(Config::getParam('locale-templates')['email'] ?? [], true), 'Custom email template type. Can be one of: '.\implode(', ', Config::getParam('locale-templates')['email'] ?? []), enum: new Enum(name: 'ProjectEmailTemplateId'))
+            ->param('locale', '', fn ($localeCodes) => new WhiteList($localeCodes), 'Custom email template locale. If left empty, the fallback locale (en) will be used.', optional: true, injections: ['localeCodes'], enum: new Enum(name: 'ProjectEmailTemplateLocale'))
             ->param('subject', null, new Nullable(new Text(255)), 'Subject of the email template. Can be up to 255 characters.', optional: true)
             ->param('message', null, new Nullable(new Text(10485760)), 'Plain or HTML body of the email template message. Can be up to 10MB of content.', optional: true)
             ->param('senderName', null, new Nullable(new Text(255, 0)), 'Name of the email sender.', optional: true)
-            ->param('senderEmail', null, new Nullable(new Email()), 'Email of the sender.', optional: true)
-            ->param('replyToEmail', null, new Nullable(new Email()), 'Reply to email.', optional: true)
+            ->param('senderEmail', null, new Nullable(new Email(allowEmpty: true)), 'Email of the sender. Pass an empty string to clear a previously set value.', optional: true)
+            ->param('replyToEmail', null, new Nullable(new Email(allowEmpty: true)), 'Reply to email. Pass an empty string to clear a previously set value.', optional: true)
             ->param('replyToName', null, new Nullable(new Text(255, 0)), 'Reply to name.', optional: true)
             ->inject('response')
             ->inject('queueForEvents')
@@ -99,7 +100,8 @@ class Update extends Action
         $templates = $project->getAttribute('templates', []);
         $template = $templates['email.' . $templateId . '-' . $locale] ?? [];
 
-        // Apply changes
+        // Apply changes — null means "not provided, keep existing".
+        // Empty string explicitly clears a previously-set value.
         $keys = ['senderName', 'senderEmail', 'replyToEmail', 'replyToName', 'message', 'subject'];
         foreach ($keys as $key) {
             if (!\is_null(${$key})) {

@@ -1,0 +1,1 @@
+Update a presence log by its unique ID. Using the patch method you can pass only specific fields that will get updated.

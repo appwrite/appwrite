@@ -55,6 +55,9 @@ class V24 extends Migration
         if ($this->project->getSequence() != 'console') {
             Console::info('Migrating Databases');
             $this->migrateDatabases();
+
+            Console::info('Creating presence logs collection');
+            $this->createPresenceLogsCollection();
         }
 
         Console::info('Migrating Buckets');
@@ -210,6 +213,15 @@ class V24 extends Migration
                     $this->dbForProject->purgeCachedCollection($id);
                     break;
 
+                case 'tokens':
+                    try {
+                        $this->createIndexFromCollection($this->dbForProject, $id, '_key_type_expire');
+                    } catch (Throwable $th) {
+                        Console::warning("Failed to create index \"_key_type_expire\" from {$id}: {$th->getMessage()}");
+                    }
+                    $this->dbForProject->purgeCachedCollection($id);
+                    break;
+
                 case 'databases':
                     if ($collectionType === 'projects') {
                         try {
@@ -328,6 +340,30 @@ class V24 extends Migration
                 $this->dbForProject->purgeCachedCollection($collectionTable);
             });
         });
+    }
+
+    /**
+     * Ensure the presenceLogs collection exists for project databases.
+     *
+     * @return void
+     * @throws Throwable
+     */
+    private function createPresenceLogsCollection(): void
+    {
+        $collectionId = 'presenceLogs';
+
+        try {
+            Console::info("Ensuring collection \"{$collectionId}\" exists for project \"{$this->project->getId()}\".");
+            $this->dbForProject->purgeCachedCollection($collectionId);
+            $this->dbForProject->purgeCachedDocument(Database::METADATA, $collectionId);
+
+            $this->createCollection($collectionId);
+        } catch (Throwable $th) {
+            Console::warning("Failed to create collection \"{$collectionId}\": {$th->getMessage()}");
+
+            // Re-throw so the migration fails fast and doesn't leave the system in a partially migrated state.
+            throw $th;
+        }
     }
 
     /**

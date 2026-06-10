@@ -23,6 +23,7 @@ class Attributes extends Validator
     protected array $supportedTypes = [
         Database::VAR_STRING,
         Database::VAR_INTEGER,
+        Database::VAR_BIGINT,
         Database::VAR_FLOAT,
         Database::VAR_BOOLEAN,
         Database::VAR_DATETIME,
@@ -181,9 +182,9 @@ class Attributes extends Validator
                 return false;
             }
 
-            // Validate signed only for integer/float types
-            if (isset($attribute['signed']) && !in_array($attribute['type'], [Database::VAR_INTEGER, Database::VAR_FLOAT])) {
-                $this->message = "Attribute '" . $attribute['key'] . "': 'signed' can only be used with integer or float types";
+            // Validate signed only for integer/bigint/float types
+            if (isset($attribute['signed']) && !in_array($attribute['type'], [Database::VAR_INTEGER, Database::VAR_BIGINT, Database::VAR_FLOAT])) {
+                $this->message = "Attribute '" . $attribute['key'] . "': 'signed' can only be used with integer, bigint or float types";
                 return false;
             }
 
@@ -199,10 +200,10 @@ class Attributes extends Validator
                 return false;
             }
 
-            // Validate min/max range for integer/float
+            // Validate min/max range for integer/bigint/float
             if (isset($attribute['min']) || isset($attribute['max'])) {
-                if (!in_array($attribute['type'], [Database::VAR_INTEGER, Database::VAR_FLOAT])) {
-                    $this->message = "Attribute '" . $attribute['key'] . "': min/max can only be used with integer or float types";
+                if (!in_array($attribute['type'], [Database::VAR_INTEGER, Database::VAR_BIGINT, Database::VAR_FLOAT])) {
+                    $this->message = "Attribute '" . $attribute['key'] . "': min/max can only be used with integer, bigint or float types";
                     return false;
                 }
 
@@ -264,9 +265,26 @@ class Attributes extends Validator
                         if (isset($attribute['min']) || isset($attribute['max'])) {
                             $min = $attribute['min'] ?? \PHP_INT_MIN;
                             $max = $attribute['max'] ?? \PHP_INT_MAX;
-                            $rangeValidator = new Range($min, $max, Database::VAR_INTEGER);
+                            $rangeValidator = new Range($min, $max, Range::TYPE_INTEGER);
                             if (!$rangeValidator->isValid($attribute['default'])) {
                                 $this->message = "Default value for integer attribute '" . $attribute['key'] . "' must be between $min and $max";
+                                return false;
+                            }
+                        }
+                        break;
+
+                    case Database::VAR_BIGINT:
+                        if (!is_int($attribute['default'])) {
+                            $this->message = "Default value for bigint attribute '" . $attribute['key'] . "' must be an integer";
+                            return false;
+                        }
+                        // Validate within range if min/max specified
+                        if (isset($attribute['min']) || isset($attribute['max'])) {
+                            $min = $attribute['min'] ?? \PHP_INT_MIN;
+                            $max = $attribute['max'] ?? \PHP_INT_MAX;
+                            $rangeValidator = new Range($min, $max, Range::TYPE_INTEGER);
+                            if (!$rangeValidator->isValid($attribute['default'])) {
+                                $this->message = "Default value for bigint attribute '" . $attribute['key'] . "' must be between $min and $max";
                                 return false;
                             }
                         }
@@ -281,7 +299,7 @@ class Attributes extends Validator
                         if (isset($attribute['min']) || isset($attribute['max'])) {
                             $min = $attribute['min'] ?? -\PHP_FLOAT_MAX;
                             $max = $attribute['max'] ?? \PHP_FLOAT_MAX;
-                            $rangeValidator = new Range($min, $max, Database::VAR_FLOAT);
+                            $rangeValidator = new Range($min, $max, Range::TYPE_FLOAT);
                             if (!$rangeValidator->isValid((float)$attribute['default'])) {
                                 $this->message = "Default value for float attribute '" . $attribute['key'] . "' must be between $min and $max";
                                 return false;
