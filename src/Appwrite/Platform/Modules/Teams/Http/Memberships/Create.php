@@ -204,6 +204,10 @@ class Create extends Action
                 throw new Exception(Exception::USER_EMAIL_FREE);
             }
 
+            if ((($project->getId() === 'console') || ($plan['supportsCorporateEmailValidation'] ?? false)) && ($project->getAttribute('auths', [])['corporateEmails'] ?? false) && !($emailMetadata['emailIsCorporate'] ?? true)) {
+                throw new Exception(Exception::USER_EMAIL_NOT_CORPORATE);
+            }
+
             $hash = $proofForPassword->hash($proofForPassword->generate());
 
             $userId = ID::unique();
