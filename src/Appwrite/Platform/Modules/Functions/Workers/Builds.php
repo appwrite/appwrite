@@ -30,6 +30,7 @@ use Utopia\Database\Exception\Conflict;
 use Utopia\Database\Exception\Duplicate;
 use Utopia\Database\Exception\Restricted;
 use Utopia\Database\Exception\Structure;
+use Utopia\Database\Exception\Transaction as TransactionException;
 use Utopia\Database\Query;
 use Utopia\Detector\Detection\Rendering\SSR;
 use Utopia\Detector\Detection\Rendering\XStatic;
@@ -247,6 +248,7 @@ class Builds extends Action
             ->setParam('deploymentId', $deployment->getId());
 
         if ($deployment->getAttribute('status') === 'canceled') {
+            $resource = $this->updateLatestDeployment($dbForProject, $resource);
             $this->cancelDeployment($deployment->getId(), $dbForProject, $queueForRealtime);
 
             return;
@@ -261,9 +263,7 @@ class Builds extends Action
             'status' => 'processing',
         ]));
 
-        if ($deployment->getSequence() === $resource->getAttribute('latestDeploymentInternalId', '')) {
-            $resource = $dbForProject->updateDocument($resource->getCollection(), $resource->getId(), new Document(['latestDeploymentStatus' => $deployment->getAttribute('status', '')]));
-        }
+        $resource = $this->updateLatestDeployment($dbForProject, $resource);
 
         Span::add('deployment.status', 'processing');
 
@@ -537,9 +537,7 @@ class Builds extends Action
             ]));
             Span::add('deployment.status', 'building');
 
-            if ($deployment->getSequence() === $resource->getAttribute('latestDeploymentInternalId', '')) {
-                $resource = $dbForProject->updateDocument($resource->getCollection(), $resource->getId(), new Document(['latestDeploymentStatus' => $deployment->getAttribute('status', '')]));
-            }
+            $resource = $this->updateLatestDeployment($dbForProject, $resource);
 
             $queueForRealtime
                 ->setPayload($deployment->getArrayCopy())
@@ -898,16 +896,21 @@ class Builds extends Action
             $deployment->setAttribute('buildLogs', $logs);
 
             /** Update the status */
+            $endTime = DateTime::now();
+            $durationEnd = \microtime(true);
+            $deployment->setAttribute('buildEndedAt', $endTime);
+            $deployment->setAttribute('buildDuration', \intval(\ceil($durationEnd - $durationStart)));
             $deployment->setAttribute('status', 'ready');
             $deployment = $dbForProject->updateDocument('deployments', $deploymentId, new Document([
+                'buildEndedAt' => $deployment->getAttribute('buildEndedAt'),
+                'buildDuration' => $deployment->getAttribute('buildDuration'),
                 'buildLogs' => $deployment->getAttribute('buildLogs'),
                 'status' => 'ready',
             ]));
             Span::add('deployment.status', 'ready');
+            Span::add('build.duration', $deployment->getAttribute('buildDuration'));
 
-            if ($deployment->getSequence() === $resource->getAttribute('latestDeploymentInternalId', '')) {
-                $resource = $dbForProject->updateDocument($resource->getCollection(), $resource->getId(), new Document(['latestDeploymentStatus' => $deployment->getAttribute('status', '')]));
-            }
+            $resource = $this->updateLatestDeployment($dbForProject, $resource);
 
             if ($isVcsEnabled) {
                 $this->runGitAction('ready', $github, $providerCommitHash, $owner, $repositoryName, $project, $resource, $deployment->getId(), $dbForProject, $dbForPlatform, $queueForRealtime, $platform);
@@ -994,6 +997,8 @@ class Builds extends Action
                 Span::add('build.activated', true);
             }
 
+            $resource = $this->updateLatestDeployment($dbForProject, $resource);
+
             $this->afterDeploymentSuccess(
                 $project,
                 $deployment,
@@ -1063,13 +1068,6 @@ class Builds extends Action
                 }
             }
 
-            $endTime = DateTime::now();
-            $durationEnd = \microtime(true);
-            $deployment = $dbForProject->updateDocument('deployments', $deployment->getId(), new Document([
-                'buildEndedAt' => $endTime,
-                'buildDuration' => \intval(\ceil($durationEnd - $durationStart)),
-            ]));
-            Span::add('build.duration', $deployment->getAttribute('buildDuration'));
             $queueForRealtime
                 ->setPayload($deployment->getArrayCopy())
                 ->trigger();
@@ -1150,9 +1148,7 @@ class Builds extends Action
                 'buildLogs' => $message,
             ]));
 
-            if ($deployment->getSequence() === $resource->getAttribute('latestDeploymentInternalId', '')) {
-                $resource = $dbForProject->updateDocument($resource->getCollection(), $resource->getId(), new Document(['latestDeploymentStatus' => $deployment->getAttribute('status', '')]));
-            }
+            $resource = $this->updateLatestDeployment($dbForProject, $resource);
 
             $queueForRealtime
                 ->setPayload($deployment->getArrayCopy())
@@ -1496,20 +1492,61 @@ class Builds extends Action
         }
     }
 
+    private function updateLatestDeployment(Database $dbForProject, Document $resource): Document
+    {
+        $latestDeployment = $dbForProject->findOne('deployments', [
+            Query::equal('resourceType', [$resource->getCollection()]),
+            Query::equal('resourceInternalId', [$resource->getSequence()]),
+            Query::orderDesc('$createdAt'),
+        ]);
+
+        $updates = $latestDeployment->isEmpty()
+            ? [
+                'latestDeploymentCreatedAt' => '',
+                'latestDeploymentInternalId' => '',
+                'latestDeploymentId' => '',
+                'latestDeploymentStatus' => '',
+            ]
+            : [
+                'latestDeploymentCreatedAt' => $latestDeployment->getCreatedAt(),
+                'latestDeploymentInternalId' => $latestDeployment->getSequence(),
+                'latestDeploymentId' => $latestDeployment->getId(),
+                'latestDeploymentStatus' => $latestDeployment->getAttribute('status', ''),
+            ];
+
+        return $dbForProject->updateDocument(
+            $resource->getCollection(),
+            $resource->getId(),
+            new Document($updates)
+        );
+    }
+
     private function cancelDeployment(string $deploymentId, Database $dbForProject, Realtime $queueForRealtime)
     {
         Span::add('deployment.status', 'canceled');
 
-        $deployment = $dbForProject->getDocument('deployments', $deploymentId);
+        $attempts = 0;
 
-        $logs = $deployment->getAttribute('buildLogs', '');
-        $date = \date('H:i:s');
-        $logs .= "\033[90m[$date] \033[90m[\033[0mappwrite\033[90m]\033[33m Build has been canceled. \033[0m\n";
+        while (true) {
+            try {
+                $deployment = $dbForProject->getDocument('deployments', $deploymentId);
 
-        $deployment->setAttribute('buildLogs', $logs);
-        $deployment = $dbForProject->updateDocument('deployments', $deployment->getId(), new Document([
-            'buildLogs' => $deployment->getAttribute('buildLogs'),
-        ]));
+                $logs = $deployment->getAttribute('buildLogs', '');
+                $date = \date('H:i:s');
+                $logs .= "\033[90m[$date] \033[90m[\033[0mappwrite\033[90m]\033[33m Build has been canceled. \033[0m\n";
+
+                $deployment->setAttribute('buildLogs', $logs);
+                $deployment = $dbForProject->updateDocument('deployments', $deployment->getId(), new Document([
+                    'buildLogs' => $deployment->getAttribute('buildLogs'),
+                ]));
+
+                break;
+            } catch (TransactionException $exception) {
+                if (++$attempts >= 5) {
+                    throw $exception;
+                }
+            }
+        }
 
         $queueForRealtime
             ->setPayload($deployment->getArrayCopy())

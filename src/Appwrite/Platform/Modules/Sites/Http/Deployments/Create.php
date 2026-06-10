@@ -311,18 +311,6 @@ class Create extends Action
                             'type' => $type,
                         ]));
 
-                        $site = $site
-                            ->setAttribute('latestDeploymentId', $deployment->getId())
-                            ->setAttribute('latestDeploymentInternalId', $deployment->getSequence())
-                            ->setAttribute('latestDeploymentCreatedAt', $deployment->getCreatedAt())
-                            ->setAttribute('latestDeploymentStatus', $deployment->getAttribute('status', ''));
-                        $dbForProject->updateDocument('sites', $site->getId(), new Document([
-                            'latestDeploymentId' => $deployment->getId(),
-                            'latestDeploymentInternalId' => $deployment->getSequence(),
-                            'latestDeploymentCreatedAt' => $deployment->getCreatedAt(),
-                            'latestDeploymentStatus' => $deployment->getAttribute('status', ''),
-                        ]));
-
                         $sitesDomain = $platform['sitesDomain'];
                         $domain = ID::unique() . "." . $sitesDomain;
 
@@ -391,18 +379,6 @@ class Create extends Action
                             'activate' => $activate,
                             'sourceMetadata' => $metadata,
                             'type' => $type,
-                        ]));
-
-                        $site = $site
-                            ->setAttribute('latestDeploymentId', $deployment->getId())
-                            ->setAttribute('latestDeploymentInternalId', $deployment->getSequence())
-                            ->setAttribute('latestDeploymentCreatedAt', $deployment->getCreatedAt())
-                            ->setAttribute('latestDeploymentStatus', $deployment->getAttribute('status', ''));
-                        $dbForProject->updateDocument('sites', $site->getId(), new Document([
-                            'latestDeploymentId' => $site->getAttribute('latestDeploymentId'),
-                            'latestDeploymentInternalId' => $site->getAttribute('latestDeploymentInternalId'),
-                            'latestDeploymentCreatedAt' => $site->getAttribute('latestDeploymentCreatedAt'),
-                            'latestDeploymentStatus' => $site->getAttribute('latestDeploymentStatus'),
                         ]));
 
                         $sitesDomain = $platform['sitesDomain'];

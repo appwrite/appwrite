@@ -44,6 +44,7 @@ class Get extends Action
                 description: '/docs/references/avatars/get-initials.md',
                 auth: [AuthType::ADMIN, AuthType::SESSION, AuthType::KEY, AuthType::JWT],
                 type: MethodType::LOCATION,
+                locationAuth: ['Project', 'ImpersonateUserId'],
                 responses: [
                     new SDKResponse(
                         code: Response::STATUS_CODE_OK,

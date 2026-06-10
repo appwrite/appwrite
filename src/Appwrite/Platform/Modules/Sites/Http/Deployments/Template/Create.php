@@ -184,18 +184,6 @@ class Create extends Base
             'activate' => $activate,
         ]));
 
-        $site = $site
-            ->setAttribute('latestDeploymentId', $deployment->getId())
-            ->setAttribute('latestDeploymentInternalId', $deployment->getSequence())
-            ->setAttribute('latestDeploymentCreatedAt', $deployment->getCreatedAt())
-            ->setAttribute('latestDeploymentStatus', $deployment->getAttribute('status', ''));
-        $dbForProject->updateDocument('sites', $site->getId(), new Document([
-            'latestDeploymentId' => $site->getAttribute('latestDeploymentId'),
-            'latestDeploymentInternalId' => $site->getAttribute('latestDeploymentInternalId'),
-            'latestDeploymentCreatedAt' => $site->getAttribute('latestDeploymentCreatedAt'),
-            'latestDeploymentStatus' => $site->getAttribute('latestDeploymentStatus'),
-        ]));
-
         $sitesDomain = $platform['sitesDomain'];
         $domain = ID::unique() . "." . $sitesDomain;
 

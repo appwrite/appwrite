@@ -1759,6 +1759,11 @@ final class SitesCustomServerTest extends Scope
             $deployment = $this->getDeployment($siteId, $deploymentId);
 
             $this->assertEquals('ready', $deployment['body']['status']);
+            $this->assertTrue(
+                \str_contains((string) $deployment['body']['buildLogs'], 'Screenshot capturing finished.')
+                || \str_contains((string) $deployment['body']['buildLogs'], 'Screenshot capturing failed.'),
+                'Screenshot worker did not finish: ' . json_encode($deployment['body'], JSON_PRETTY_PRINT)
+            );
         }, 120000, 500);
 
         /**
@@ -2340,15 +2345,18 @@ final class SitesCustomServerTest extends Scope
 
         $this->assertEquals(202, $deployment['headers']['status-code']);
 
-        $deploymentId2 = $deployment['body']['$id'];
-        $this->assertNotEmpty($deploymentId2);
+        $cliDeploymentId = $deployment['body']['$id'];
+        $this->assertNotEmpty($cliDeploymentId);
 
-        $deployment = $this->getDeployment($siteId, $deploymentId2);
+        $deployment = $this->getDeployment($siteId, $cliDeploymentId);
         $this->assertEquals(200, $deployment['headers']['status-code']);
         $this->assertGreaterThan(0, $deployment['body']['sourceSize']);
         $this->assertEquals(0, $deployment['body']['buildSize']);
         $this->assertEquals($deployment['body']['sourceSize'], $deployment['body']['totalSize']);
         $this->assertEquals('cli', $deployment['body']['type']);
+
+        $this->waitDeploymentReady($siteId, $cliDeploymentId);
+        $this->waitDeploymentActivated($siteId, $cliDeploymentId);
 
         // create another duplicate deployment with manual trigger
         $deployment = $this->client->call(Client::METHOD_POST, '/sites/' . $siteId . '/deployments/duplicate', array_merge([
@@ -2360,25 +2368,23 @@ final class SitesCustomServerTest extends Scope
 
         $this->assertEquals(202, $deployment['headers']['status-code']);
 
-        $deploymentId2 = $deployment['body']['$id'];
-        $this->assertNotEmpty($deploymentId2);
+        $manualDeploymentId = $deployment['body']['$id'];
+        $this->assertNotEmpty($manualDeploymentId);
 
-        $deployment = $this->getDeployment($siteId, $deploymentId2);
+        $deployment = $this->getDeployment($siteId, $manualDeploymentId);
         $this->assertEquals(200, $deployment['headers']['status-code']);
         $this->assertGreaterThan(0, $deployment['body']['sourceSize']);
         $this->assertEquals(0, $deployment['body']['buildSize']);
         $this->assertEquals($deployment['body']['sourceSize'], $deployment['body']['totalSize']);
         $this->assertEquals('manual', $deployment['body']['type']);
 
-        $this->assertEventually(function () use ($siteId, $deploymentId2) {
-            $site = $this->getSite($siteId);
-            $this->assertEquals($deploymentId2, $site['body']['deploymentId']);
-        }, 120000, 500);
+        $this->waitDeploymentReady($siteId, $manualDeploymentId);
+        $this->waitDeploymentActivated($siteId, $manualDeploymentId);
 
         $response = $proxyClient->call(Client::METHOD_GET, '/not-found');
         $this->assertStringContainsString("Index page", (string) $response['body']);
 
-        $deployment = $this->getDeployment($siteId, $deploymentId2);
+        $deployment = $this->getDeployment($siteId, $manualDeploymentId);
         $this->assertEquals(200, $deployment['headers']['status-code']);
         $this->assertGreaterThan(0, $deployment['body']['sourceSize']);
         $this->assertGreaterThan(0, $deployment['body']['buildSize']);
@@ -2540,12 +2546,14 @@ final class SitesCustomServerTest extends Scope
         $this->assertNotEmpty($response['cookies']['a_jwt_console']);
         $this->assertEquals($jwt['body']['jwt'], $response['cookies']['a_jwt_console']);
 
-        $response = $proxyClient->call(Client::METHOD_GET, '/contact', headers: [
-            'cookie' => 'a_jwt_console=' . $jwt['body']['jwt']
-        ], followRedirects: false);
-        $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertStringContainsString("Contact page", (string) $response['body']);
-        $this->assertStringContainsString("Preview by", (string) $response['body']);
+        $this->assertEventually(function () use ($proxyClient, $jwt) {
+            $response = $proxyClient->call(Client::METHOD_GET, '/contact', headers: [
+                'cookie' => 'a_jwt_console=' . $jwt['body']['jwt']
+            ], followRedirects: false);
+            $this->assertEquals(200, $response['headers']['status-code']);
+            $this->assertStringContainsString("Contact page", (string) $response['body']);
+            $this->assertStringContainsString("Preview by", (string) $response['body']);
+        });
 
         // Failure: Session missing (old bad, new ok)
         $session = $this->client->call(Client::METHOD_DELETE, '/account/sessions/current', array_merge([
@@ -2573,12 +2581,14 @@ final class SitesCustomServerTest extends Scope
         $this->assertEquals(201, $jwt['headers']['status-code']);
         $this->assertNotEmpty($jwt['body']['jwt']);
 
-        $response = $proxyClient->call(Client::METHOD_GET, '/contact', headers: [
-            'cookie' => 'a_jwt_console=' . $jwt['body']['jwt']
-        ], followRedirects: false);
-        $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertStringContainsString("Contact page", (string) $response['body']);
-        $this->assertStringContainsString("Preview by", (string) $response['body']);
+        $this->assertEventually(function () use ($proxyClient, $jwt) {
+            $response = $proxyClient->call(Client::METHOD_GET, '/contact', headers: [
+                'cookie' => 'a_jwt_console=' . $jwt['body']['jwt']
+            ], followRedirects: false);
+            $this->assertEquals(200, $response['headers']['status-code']);
+            $this->assertStringContainsString("Contact page", (string) $response['body']);
+            $this->assertStringContainsString("Preview by", (string) $response['body']);
+        });
 
         $user = $this->client->call(Client::METHOD_PATCH, '/account/status', array_merge([
             'origin' => 'http://localhost',
