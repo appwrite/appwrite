@@ -14,6 +14,7 @@ import {
 } from '@/components/ui/resizable'
 import { cn } from '@/lib/utils'
 import type { CliShellSession } from '@/lib/cli-shell/cli-shell-sessions'
+import { useCliShell } from './CliShellProvider'
 import { CliTerminalSession } from './CliTerminalSession'
 
 const SPLIT_HANDLE_CLASS = cn(
@@ -53,7 +54,12 @@ export function CliTerminalSessionsLayout({
   isPanelResizing = false,
   onSplitResizingChange,
 }: CliTerminalSessionsLayoutProps) {
+  const { open } = useCliShell()
   const [isSplitResizing, setIsSplitResizing] = useState(false)
+  const [activatedSessions, setActivatedSessions] = useState<
+    Map<string, { deferInit: boolean }>
+  >(() => new Map())
+  const panelOpenRef = useRef(false)
   const panelRefs = useRef<Record<string, ImperativePanelHandle | null>>({})
   const isSplit = displaySessionIds.length > 1
   const displayedCount = displaySessionIds.length
@@ -77,6 +83,24 @@ export function CliTerminalSessionsLayout({
   useEffect(() => {
     handleSplitLayout()
   }, [displaySessionIds, handleSplitLayout])
+
+  useEffect(() => {
+    const wasOpen = panelOpenRef.current
+    panelOpenRef.current = open
+    const deferInitForNewSessions = open && !wasOpen
+
+    setActivatedSessions((previous) => {
+      const next = new Map(previous)
+      let changed = false
+      for (const sessionId of displaySessionIds) {
+        if (!next.has(sessionId)) {
+          next.set(sessionId, { deferInit: deferInitForNewSessions })
+          changed = true
+        }
+      }
+      return changed ? next : previous
+    })
+  }, [displaySessionIds, open])
 
   useEffect(() => {
     if (!isSplitResizing) return
@@ -143,6 +167,8 @@ export function CliTerminalSessionsLayout({
           displayIndex > 0 &&
           hasDisplayedBeforeInList
 
+        const activation = activatedSessions.get(session.id)
+
         return (
           <Fragment key={session.id}>
             {showHandle ? (
@@ -182,13 +208,18 @@ export function CliTerminalSessionsLayout({
                       getSplitPaneContentClass(displayIndex, displayedCount),
                   )}
                 >
-                  <CliTerminalSession
-                    sessionId={session.id}
-                    isVisible={isDisplayed}
-                    isFocused={focusedSessionId === session.id}
-                    isPanelResizing={isResizing}
-                    isSplitPane={isSplit && isDisplayed}
-                  />
+                  {activation ? (
+                    <CliTerminalSession
+                      sessionId={session.id}
+                      isVisible={isDisplayed}
+                      isFocused={focusedSessionId === session.id}
+                      isPanelResizing={isResizing}
+                      isSplitPane={isSplit && isDisplayed}
+                      deferInit={activation.deferInit}
+                    />
+                  ) : (
+                    <div className="h-full min-h-0" aria-hidden="true" />
+                  )}
                 </div>
               </div>
             </ResizablePanel>

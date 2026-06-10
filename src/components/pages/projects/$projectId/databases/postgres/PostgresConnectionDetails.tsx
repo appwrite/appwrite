@@ -1,6 +1,5 @@
-import { useState } from 'react'
 import type { Models } from '@appwrite.io/console'
-import { AlertCircle, Check, Copy, Loader2, Plug } from 'lucide-react'
+import { AlertCircle, Loader2, Plug } from 'lucide-react'
 import {
   usePostgresDatabase,
   usePostgresDatabaseConnections,
@@ -9,8 +8,6 @@ import { getErrorMessage } from '@/lib/utils/error-formatting'
 import { cn } from '@/lib/utils'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { Badge } from '@/components/ui/badge'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
 import {
   Table,
   TableBody,
@@ -21,67 +18,14 @@ import {
 } from '@/components/ui/table'
 import { CopyableId } from '@/components/global/shared/CopyableId'
 import { DateTooltip } from '@/components/global/shared/DateTooltip'
+import { PostgresCopyableField } from './_components/PostgresCopyableField'
+import { PostgresConnectionCredentialFields } from './_components/PostgresConnectionCredentialFields'
 
 type PostgresConnectionDetailsProps = {
   projectId: string
   databaseId: string
   /** Center content vertically when shown in the SQL workbench results panel. */
   centerInPanel?: boolean
-}
-
-type CopyableFieldProps = {
-  label: string
-  value: string
-  mono?: boolean
-  masked?: boolean
-}
-
-function CopyableField({
-  label,
-  value,
-  mono = true,
-  masked = false,
-}: CopyableFieldProps) {
-  const [copied, setCopied] = useState(false)
-
-  if (!value) return null
-
-  const handleCopy = () => {
-    void navigator.clipboard.writeText(value)
-    setCopied(true)
-    setTimeout(() => setCopied(false), 2000)
-  }
-
-  return (
-    <div>
-      <Label className="mb-1.5 block text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
-        {label}
-      </Label>
-      <div className="relative">
-        <Input
-          value={value}
-          readOnly
-          type={masked ? 'password' : 'text'}
-          className={cn(
-            'h-9 border-border bg-muted/30 pr-10 text-[13px] shadow-none',
-            mono && 'font-mono',
-          )}
-        />
-        <button
-          type="button"
-          onClick={handleCopy}
-          className="absolute right-2 top-1/2 flex h-7 w-7 -translate-y-1/2 items-center justify-center rounded-md transition-colors hover:bg-accent"
-          aria-label={`Copy ${label}`}
-        >
-          {copied ? (
-            <Check className="h-4 w-4 text-emerald-500" />
-          ) : (
-            <Copy className="h-4 w-4 text-muted-foreground" />
-          )}
-        </button>
-      </div>
-    </div>
-  )
 }
 
 function connectionRoleVariant(
@@ -193,8 +137,11 @@ export function PostgresConnectionDetails({
                 <div className="min-w-0 flex-1">
                   <div className="grid gap-4">
                     <div className="grid gap-4 sm:grid-cols-[minmax(0,1fr)_6.5rem]">
-                      <CopyableField label="Host" value={database.hostname} />
-                      <CopyableField
+                      <PostgresCopyableField
+                        label="Host"
+                        value={database.hostname}
+                      />
+                      <PostgresCopyableField
                         label="Port"
                         value={
                           database.connectionPort
@@ -203,21 +150,22 @@ export function PostgresConnectionDetails({
                         }
                       />
                     </div>
-                    <div className="grid gap-4 sm:grid-cols-2">
-                      <CopyableField
-                        label="Username"
-                        value={database.connectionUser}
-                      />
-                      <CopyableField
-                        label="Password"
-                        value={database.connectionPassword}
-                        masked
-                      />
+
+                    <div className="border-t border-border pt-4">
+                      <h4 className="text-[13px] font-semibold text-foreground">
+                        Connection credentials
+                      </h4>
+                      <p className="mt-1 text-[12px] text-muted-foreground">
+                        Use these values to authenticate external clients and
+                        tools.
+                      </p>
+                      <div className="mt-4">
+                        <PostgresConnectionCredentialFields
+                          projectId={projectId}
+                          databaseId={databaseId}
+                        />
+                      </div>
                     </div>
-                    <CopyableField
-                      label="Connection string"
-                      value={database.connectionString}
-                    />
                   </div>
                 </div>
               </div>
@@ -302,7 +250,13 @@ export function PostgresConnectionDetails({
                             </Badge>
                           </TableCell>
                           <TableCell className="px-4 py-3">
-                            <DateTooltip date={connection.$createdAt} />
+                            {connection.$createdAt ? (
+                              <DateTooltip date={connection.$createdAt} />
+                            ) : (
+                              <span className="text-[13px] text-muted-foreground">
+                                Unknown
+                              </span>
+                            )}
                           </TableCell>
                           <TableCell className="px-4 py-3 text-right">
                             <CopyableId

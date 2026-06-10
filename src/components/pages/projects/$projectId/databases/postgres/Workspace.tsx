@@ -12,6 +12,7 @@ import { Pagination } from '@/components/global/shared/Pagination'
 import { SqlWorkbench } from './SqlWorkbench'
 import { PostgresShell } from './PostgresShell'
 import { PostgresConnectionDetails } from './PostgresConnectionDetails'
+import { PostgresTableRowsEmptyState } from './_components/PostgresTableRowsEmptyState'
 
 export type PostgresWorkspaceProps = {
   databaseId: string
@@ -79,7 +80,12 @@ export function Workspace({ databaseId, tableId }: PostgresWorkspaceProps) {
       }
       isLoading={rowsLoading || rowsFetching}
       loadingLabel="Loading rows…"
-      emptyLabel="No rows found in this table."
+      emptyContent={
+        <PostgresTableRowsEmptyState
+          projectId={projectId}
+          databaseId={databaseId}
+        />
+      }
       header={
         <div className="flex flex-wrap items-center gap-2">
           <span className="text-[13px] font-semibold text-foreground">

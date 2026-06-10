@@ -824,6 +824,36 @@ export function CliShellProvider({ projectId, children }: CliShellProviderProps)
   }, [ensureRuntime, open])
 
   useEffect(() => {
+    if (typeof window === 'undefined') return
+    if (!organizationId || isAccountLoading) return
+
+    let cancelled = false
+    let idleId: number | undefined
+    let timeoutId: ReturnType<typeof globalThis.setTimeout> | undefined
+
+    const preloadRuntime = () => {
+      if (cancelled) return
+      void ensureRuntime({ silent: true }).catch(() => {})
+    }
+
+    if (typeof window.requestIdleCallback === 'function') {
+      idleId = window.requestIdleCallback(preloadRuntime, { timeout: 4000 })
+    } else {
+      timeoutId = globalThis.setTimeout(preloadRuntime, 2000)
+    }
+
+    return () => {
+      cancelled = true
+      if (idleId !== undefined) {
+        window.cancelIdleCallback(idleId)
+      }
+      if (timeoutId !== undefined) {
+        globalThis.clearTimeout(timeoutId)
+      }
+    }
+  }, [ensureRuntime, isAccountLoading, organizationId])
+
+  useEffect(() => {
     const previousProjectId = previousProjectIdRef.current
     previousProjectIdRef.current = projectId
     if (previousProjectId === null || previousProjectId === projectId) {

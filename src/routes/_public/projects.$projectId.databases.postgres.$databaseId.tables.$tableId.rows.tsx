@@ -3,6 +3,7 @@ import type { QueryClient } from '@tanstack/react-query'
 import { Workspace } from '@/components/pages/projects/$projectId/databases/postgres/Workspace'
 import {
   postgresDatabaseConnectionsQueryOptions,
+  postgresDatabaseCredentialsQueryOptions,
   postgresDatabaseQueryOptions,
   postgresSchemasQueryOptions,
   postgresTableRowsQueryOptions,
@@ -36,6 +37,9 @@ async function prefetchPostgresRouteData(
       ),
       queryClient.ensureQueryData(
         postgresDatabaseConnectionsQueryOptions(projectId, databaseId),
+      ),
+      queryClient.ensureQueryData(
+        postgresDatabaseCredentialsQueryOptions(projectId, databaseId),
       ),
     ])
     return
@@ -78,6 +82,9 @@ async function prefetchPostgresRouteData(
           ),
         )
       : Promise.resolve(),
+    queryClient.ensureQueryData(
+      postgresDatabaseCredentialsQueryOptions(projectId, databaseId),
+    ),
   ])
 }
 

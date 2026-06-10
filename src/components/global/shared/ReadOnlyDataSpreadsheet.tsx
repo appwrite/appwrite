@@ -25,6 +25,8 @@ export type ReadOnlyDataSpreadsheetProps = {
   isLoading?: boolean
   loadingLabel?: string
   emptyLabel?: string
+  /** Custom empty state content; takes precedence over `emptyLabel`. */
+  emptyContent?: ReactNode
   className?: string
   header?: ReactNode
   footer?: ReactNode
@@ -48,6 +50,7 @@ export function ReadOnlyDataSpreadsheet({
   isLoading = false,
   loadingLabel = 'Loading rows…',
   emptyLabel = 'No rows to display.',
+  emptyContent,
   className,
   header,
   footer,
@@ -78,9 +81,11 @@ export function ReadOnlyDataSpreadsheet({
 
       <div className="min-h-0 flex-1 overflow-auto">
         {normalizedColumns.length === 0 || rows.length === 0 ? (
-          <div className="flex h-full min-h-[12rem] items-center justify-center px-4 text-center text-[13px] text-muted-foreground">
-            {emptyLabel}
-          </div>
+          emptyContent ?? (
+            <div className="flex h-full min-h-[12rem] items-center justify-center px-4 text-center text-[13px] text-muted-foreground">
+              {emptyLabel}
+            </div>
+          )
         ) : (
           <table className="w-full min-w-max border-collapse text-left">
             <colgroup>

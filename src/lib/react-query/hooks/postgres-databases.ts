@@ -198,6 +198,15 @@ export async function fetchPostgresDatabaseConnections(
   })
 }
 
+export async function fetchPostgresDatabaseCredentials(
+  projectId: string,
+  databaseId: string,
+): Promise<Models.DedicatedDatabaseCredentials> {
+  return await sdk.forProject(projectId).compute.getDatabaseCredentials({
+    databaseId,
+  })
+}
+
 export function postgresDatabaseConnectionsQueryOptions(
   projectId: string | null | undefined,
   databaseId: string | null | undefined,
@@ -211,6 +220,29 @@ export function postgresDatabaseConnectionsQueryOptions(
     ],
     queryFn: () =>
       fetchPostgresDatabaseConnections(projectId!, databaseId!),
+    enabled: !!projectId && !!databaseId,
+    staleTime: DEFAULT_STALE_TIME,
+    retry: false,
+    refetchOnMount: false,
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: false,
+    gcTime: projectId && databaseId ? 5 * 60 * 1000 : 0,
+  })
+}
+
+export function postgresDatabaseCredentialsQueryOptions(
+  projectId: string | null | undefined,
+  databaseId: string | null | undefined,
+) {
+  return queryOptions({
+    queryKey: [
+      'postgres-database-credentials',
+      'project',
+      projectId,
+      databaseId,
+    ],
+    queryFn: () =>
+      fetchPostgresDatabaseCredentials(projectId!, databaseId!),
     enabled: !!projectId && !!databaseId,
     staleTime: DEFAULT_STALE_TIME,
     retry: false,
@@ -304,6 +336,22 @@ export function usePostgresDatabaseConnections(
   return {
     connections: data?.connections ?? [],
     total: data?.total ?? 0,
+    isLoading,
+    isFetching,
+    error,
+    refetch,
+  }
+}
+
+export function usePostgresDatabaseCredentials(
+  projectId: string | null | undefined,
+  databaseId: string | null | undefined,
+) {
+  const { data, isLoading, isFetching, error, refetch } = useQuery(
+    postgresDatabaseCredentialsQueryOptions(projectId, databaseId),
+  )
+  return {
+    credentials: data ?? null,
     isLoading,
     isFetching,
     error,

@@ -7,6 +7,11 @@ import {
 } from '@/components/ui/popover'
 import { cn } from '@/lib/utils'
 
+function parseTooltipDate(date: string | Date): Date | null {
+  const dateObj = typeof date === 'string' ? new Date(date) : date
+  return Number.isNaN(dateObj.getTime()) ? null : dateObj
+}
+
 interface DateTooltipProps {
   /** ISO timestamp string or Date object */
   date: string | Date
@@ -20,6 +25,10 @@ interface DateTooltipProps {
   liveUpdateMs?: number
 }
 
+type DateTooltipContentProps = Omit<DateTooltipProps, 'date'> & {
+  dateObj: Date
+}
+
 /**
  * Formats a date to show relative time with detailed popover
  * showing precise breakdown, UTC time, and local time
@@ -31,7 +40,32 @@ export function DateTooltip({
   live = false,
   liveUpdateMs = 30_000,
 }: DateTooltipProps) {
-  const dateObj = typeof date === 'string' ? new Date(date) : date
+  const dateObj = parseTooltipDate(date)
+
+  if (!dateObj) {
+    return (
+      <span className={cn('text-muted-foreground', className)}>Unknown</span>
+    )
+  }
+
+  return (
+    <DateTooltipContent
+      dateObj={dateObj}
+      className={className}
+      showFormattedDate={showFormattedDate}
+      live={live}
+      liveUpdateMs={liveUpdateMs}
+    />
+  )
+}
+
+function DateTooltipContent({
+  dateObj,
+  className,
+  showFormattedDate = false,
+  live = false,
+  liveUpdateMs = 30_000,
+}: DateTooltipContentProps) {
   const [nowMs, setNowMs] = useState(() => Date.now())
 
   useEffect(() => {
@@ -286,7 +320,8 @@ export function DateTooltip({
  * Uses international format: "11 Dec 2025"
  */
 export function formatDate(date: string | Date): string {
-  const dateObj = typeof date === 'string' ? new Date(date) : date
+  const dateObj = parseTooltipDate(date)
+  if (!dateObj) return 'Unknown'
   return dateObj.toLocaleDateString('en-GB', {
     day: 'numeric',
     month: 'short',
@@ -298,7 +333,8 @@ export function formatDate(date: string | Date): string {
  * Utility function to get simple relative time string
  */
 export function getRelativeTimeString(date: string | Date): string {
-  const dateObj = typeof date === 'string' ? new Date(date) : date
+  const dateObj = parseTooltipDate(date)
+  if (!dateObj) return 'Unknown'
   const now = new Date()
   const diffMs = now.getTime() - dateObj.getTime()
   const diffMinutes = Math.floor(diffMs / 60000)
