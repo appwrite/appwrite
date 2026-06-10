@@ -101,6 +101,10 @@ function getTokenIndex(input: string, cursor: number): number {
       inWord = true
     }
   }
+  // Cursor after whitespace is completing the next token (e.g. `appwrite ` → topics).
+  if (cursor > 0 && /\s/.test(input[cursor - 1] ?? '') && !inWord) {
+    return count
+  }
   return Math.max(0, count - 1)
 }
 
@@ -289,16 +293,6 @@ export function tabComplete(
   const pathDirs = context.pathDirs ?? DEFAULT_PATH_DIRS
   const vfs = context.vfs
 
-  if (tokenIndex === 0) {
-    const commands = [
-      'appwrite',
-      ...SHELL_BUILTINS,
-      ...listPathExecutables(vfs, pathDirs),
-    ]
-    const unique = [...new Set(commands)].sort()
-    return completeFromCandidates(word, unique, listOnly)
-  }
-
   if (command === 'appwrite') {
     if (tokenIndex === 1) {
       return completeFromCandidates(word, [...APPWRITE_CLI_TOPICS], listOnly)
@@ -310,6 +304,23 @@ export function tabComplete(
         return completeFromCandidates(word, [...subcommands], listOnly)
       }
     }
+    if (tokenIndex === 0) {
+      if (listOnly && word === 'appwrite') {
+        return { kind: 'list', matches: [...APPWRITE_CLI_TOPICS] }
+      }
+      return completeFromCandidates(word, ['appwrite'], listOnly)
+    }
+    return { kind: 'none' }
+  }
+
+  if (tokenIndex === 0) {
+    const commands = [
+      'appwrite',
+      ...SHELL_BUILTINS,
+      ...listPathExecutables(vfs, pathDirs),
+    ]
+    const unique = [...new Set(commands)].sort()
+    return completeFromCandidates(word, unique, listOnly)
   }
 
   if (shouldCompletePaths(command, tokenIndex, word) && vfs) {
