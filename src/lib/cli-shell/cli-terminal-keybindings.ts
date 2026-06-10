@@ -13,6 +13,7 @@ export type TerminalKeyAction =
   | { type: 'kill-line-before' }
   | { type: 'kill-line-after' }
   | { type: 'clear-line' }
+  | { type: 'clear-screen' }
   | { type: 'submit' }
   | { type: 'tab' }
   | { type: 'insert'; text: string }
@@ -47,6 +48,7 @@ const KEY_BINDINGS: ReadonlyArray<readonly [string, TerminalKeyAction]> = [
   ['\x15', { type: 'kill-line-before' }], // Ctrl+U
   ['\x0b', { type: 'kill-line-after' }], // Ctrl+K
   ['\x03', { type: 'clear-line' }], // Ctrl+C
+  ['\x0c', { type: 'clear-screen' }], // Ctrl+L
   // Actions
   ['\r', { type: 'submit' }],
   ['\r\n', { type: 'submit' }],
@@ -74,6 +76,61 @@ export function resolveTerminalKeyAction(
   }
 
   return null
+}
+
+/**
+ * Consume a terminal escape sequence starting at `start` without inserting its
+ * payload into the interactive input buffer.
+ */
+export function consumeTerminalEscapeSequence(
+  data: string,
+  start: number,
+): number {
+  if (data[start] !== '\x1b') return start + 1
+  if (start + 1 >= data.length) return start + 1
+
+  const second = data[start + 1]
+
+  if (second === '[') {
+    let index = start + 2
+    while (index < data.length) {
+      const code = data.charCodeAt(index)
+      if (code >= 0x40 && code <= 0x7e) {
+        return index + 1
+      }
+      index += 1
+    }
+    return data.length
+  }
+
+  if (second === ']') {
+    let index = start + 2
+    while (index < data.length) {
+      if (data[index] === '\x07') return index + 1
+      if (data[index] === '\x1b' && data[index + 1] === '\\') {
+        return index + 2
+      }
+      index += 1
+    }
+    return data.length
+  }
+
+  if (second === 'O' && start + 2 < data.length) {
+    return start + 3
+  }
+
+  if (second === 'P') {
+    let index = start + 2
+    while (index < data.length) {
+      if (data[index] === '\x1b' && data[index + 1] === '\\') {
+        return index + 2
+      }
+      index += 1
+    }
+    return data.length
+  }
+
+  return start + 2
 }
 
 export function findWordBoundaryLeft(text: string, pos: number): number {

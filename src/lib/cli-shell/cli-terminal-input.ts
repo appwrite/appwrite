@@ -1,6 +1,8 @@
 import type { Terminal } from '@xterm/xterm'
+import { stripAnsi } from './cli-terminal-buffer'
 import { CLI_TERMINAL_RESET } from './cli-terminal-api'
 import {
+  consumeTerminalEscapeSequence,
   findWordBoundaryLeft,
   findWordBoundaryRight,
   resolveTerminalKeyAction,
@@ -14,6 +16,16 @@ type TabCompleteFn = (
 
 const CLEAR_COMMANDS = new Set(['clear', 'cls'])
 const INTERRUPT_SEQUENCE = '\x03'
+
+function normalizeSubmittedCommand(raw: string): string {
+  return stripAnsi(raw).trim()
+}
+
+function isPersistableHistoryCommand(command: string): boolean {
+  if (!command) return false
+  if (!/[a-zA-Z0-9]/.test(command)) return false
+  return /^[\x20-\x7e]+$/.test(command)
+}
 
 type CliTerminalInputOptions = {
   terminal: Terminal
@@ -130,6 +142,7 @@ export function createCliTerminalInputHandler(
     welcomeOutputComplete = true
     resetInputState()
     options.terminal.reset()
+    resetInputState()
     showPrompt()
   }
 
@@ -228,17 +241,28 @@ export function createCliTerminalInputHandler(
   }
 
   const submitCommand = () => {
-    const command = inputBuffer.trim()
+    const command = normalizeSubmittedCommand(inputBuffer)
     resetInputState()
 
     if (command && CLEAR_COMMANDS.has(command)) {
+      if (
+        isPersistableHistoryCommand(command) &&
+        history[history.length - 1] !== command
+      ) {
+        history.push(command)
+        persistHistory()
+      }
+      lastSubmittedCommand = command
       clearScreen()
       return
     }
 
     options.terminal.writeln('')
     if (command) {
-      if (history[history.length - 1] !== command) {
+      if (
+        isPersistableHistoryCommand(command) &&
+        history[history.length - 1] !== command
+      ) {
         history.push(command)
         persistHistory()
       }
@@ -349,6 +373,9 @@ export function createCliTerminalInputHandler(
       case 'clear-line':
         clearLine()
         return
+      case 'clear-screen':
+        clearScreen()
+        return
       case 'submit':
         submitCommand()
         return
@@ -426,17 +453,14 @@ export function createCliTerminalInputHandler(
     let index = 0
     while (index < data.length) {
       if (data[index] === '\x1b') {
-        let end = index + 1
-        while (end < data.length && end - index < 8 && data[end]! >= '\x40') {
-          end += 1
-        }
-        if (end - index < 2) {
+        const nextIndex = consumeTerminalEscapeSequence(data, index)
+        if (nextIndex <= index + 1) {
           index += 1
           continue
         }
-        const sequence = data.slice(index, end)
+        const sequence = data.slice(index, nextIndex)
         applyKeyAction(resolveTerminalKeyAction(sequence))
-        index = end
+        index = nextIndex
         continue
       }
 

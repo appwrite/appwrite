@@ -73,6 +73,7 @@ import { useProject } from '@/lib/react-query/hooks'
 import { downloadTextFile } from '@/lib/cli-shell/cli-terminal-buffer'
 import {
   CLI_SHELL_FULLSCREEN_SHORTCUT_COMBOS,
+  CLI_SHELL_NEW_TERMINAL_SHORTCUT_COMBOS,
   CLI_SHELL_SEARCH_SHORTCUT_COMBOS,
 } from '@/lib/cli-shell/cli-terminal-shortcuts'
 import {
@@ -1729,6 +1730,30 @@ export function CliShellProvider({ projectId, children }: CliShellProviderProps)
     ignoreInputs: false,
     capture: true,
   })
+
+  const onCreateTerminalShortcut = useCallback(() => {
+    setOpen(true)
+    createSession()
+  }, [setOpen, createSession])
+
+  useKeyboardShortcut(
+    CLI_SHELL_NEW_TERMINAL_SHORTCUT_COMBOS[0],
+    onCreateTerminalShortcut,
+    {
+      enabled: true,
+      ignoreInputs: false,
+      capture: true,
+    },
+  )
+  useKeyboardShortcut(
+    CLI_SHELL_NEW_TERMINAL_SHORTCUT_COMBOS[1],
+    onCreateTerminalShortcut,
+    {
+      enabled: true,
+      ignoreInputs: false,
+      capture: true,
+    },
+  )
 
   const visiblePaneSessionIds = useMemo(
     () =>

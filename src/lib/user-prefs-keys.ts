@@ -1201,6 +1201,13 @@ export type PersistedCliShellSessionsState = {
   splitPaneSessionIds?: string[]
 }
 
+function isPersistableCliShellHistoryCommand(command: string): boolean {
+  const trimmed = command.trim()
+  if (!trimmed) return false
+  if (!/[a-zA-Z0-9]/.test(trimmed)) return false
+  return /^[\x20-\x7e]+$/.test(trimmed)
+}
+
 export function parseCliShellHistory(
   prefs: UserPrefs | null | undefined,
   projectId: string,
@@ -1211,7 +1218,10 @@ export function parseCliShellHistory(
     const raw = JSON.parse(prefs[key] as string)
     if (!Array.isArray(raw)) return []
     return raw
-      .filter((item): item is string => typeof item === 'string' && item.trim().length > 0)
+      .filter(
+        (item): item is string =>
+          typeof item === 'string' && isPersistableCliShellHistoryCommand(item),
+      )
       .slice(-MAX_CLI_SHELL_HISTORY_ENTRIES)
   } catch {
     return []

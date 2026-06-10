@@ -1,0 +1,200 @@
+import {
+  Fragment,
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useRef,
+  useState,
+} from 'react'
+import type { ImperativePanelHandle } from 'react-resizable-panels'
+import {
+  ResizableHandle,
+  ResizablePanel,
+  ResizablePanelGroup,
+} from '@/components/ui/resizable'
+import { cn } from '@/lib/utils'
+import type { CliShellSession } from '@/lib/cli-shell/cli-shell-sessions'
+import { CliTerminalSession } from './CliTerminalSession'
+
+const SPLIT_HANDLE_CLASS = cn(
+  'relative z-10 h-full w-px shrink-0 self-stretch items-stretch bg-border',
+  'before:pointer-events-none before:absolute before:inset-y-0 before:left-1/2 before:w-2 before:-translate-x-1/2 before:bg-border before:opacity-0 before:transition-opacity',
+  'hover:before:opacity-100 data-[resize-handle-state=drag]:before:opacity-100',
+  'after:absolute after:inset-y-0 after:left-1/2 after:w-3 after:-translate-x-1/2',
+)
+
+function getSplitPaneContentClass(index: number, total: number): string {
+  if (total <= 1) return ''
+
+  const beforeSeparator = 'pr-3'
+  const afterSeparator = 'pl-5 sm:pl-6'
+
+  if (index === 0) {
+    return cn('pl-4 sm:pl-6', total > 1 && beforeSeparator)
+  }
+  if (index === total - 1) {
+    return cn(afterSeparator, 'pr-4 sm:pr-6')
+  }
+  return cn(afterSeparator, beforeSeparator)
+}
+
+type CliTerminalSessionsLayoutProps = {
+  sessions: CliShellSession[]
+  displaySessionIds: string[]
+  focusedSessionId: string
+  isPanelResizing?: boolean
+  onSplitResizingChange?: (isResizing: boolean) => void
+}
+
+export function CliTerminalSessionsLayout({
+  sessions,
+  displaySessionIds,
+  focusedSessionId,
+  isPanelResizing = false,
+  onSplitResizingChange,
+}: CliTerminalSessionsLayoutProps) {
+  const [isSplitResizing, setIsSplitResizing] = useState(false)
+  const panelRefs = useRef<Record<string, ImperativePanelHandle | null>>({})
+  const isSplit = displaySessionIds.length > 1
+  const displayedCount = displaySessionIds.length
+  const defaultPaneSize =
+    displayedCount > 0 ? 100 / displayedCount : 100
+  const isResizing = isPanelResizing || isSplitResizing
+
+  const handleSplitDragging = useCallback(
+    (dragging: boolean) => {
+      setIsSplitResizing(dragging)
+      onSplitResizingChange?.(dragging)
+    },
+    [onSplitResizingChange],
+  )
+
+  const handleSplitLayout = useCallback(() => {
+    if (typeof window === 'undefined') return
+    window.dispatchEvent(new Event('resize'))
+  }, [])
+
+  useEffect(() => {
+    handleSplitLayout()
+  }, [displaySessionIds, handleSplitLayout])
+
+  useEffect(() => {
+    if (!isSplitResizing) return
+    document.body.style.cursor = 'col-resize'
+    document.body.style.userSelect = 'none'
+    return () => {
+      document.body.style.cursor = ''
+      document.body.style.userSelect = ''
+    }
+  }, [isSplitResizing])
+
+  useLayoutEffect(() => {
+    const activeDisplayId =
+      displaySessionIds.length === 1 ? displaySessionIds[0] : null
+    const splitSize = isSplit ? 100 / displayedCount : 100
+
+    for (const session of sessions) {
+      const panel = panelRefs.current[session.id]
+      if (!panel) continue
+
+      const isDisplayed = displaySessionIds.includes(session.id)
+      if (!isDisplayed) {
+        if (!panel.isCollapsed()) {
+          panel.collapse()
+        }
+        continue
+      }
+
+      if (panel.isCollapsed()) {
+        panel.expand()
+      }
+
+      if (isSplit) {
+        const currentSize = panel.getSize()
+        if (Math.abs(currentSize - splitSize) > 0.5) {
+          panel.resize(splitSize)
+        }
+      } else if (activeDisplayId === session.id) {
+        if (panel.getSize() < 99) {
+          panel.resize(100)
+        }
+      } else if (!panel.isCollapsed()) {
+        panel.collapse()
+      }
+    }
+  }, [displaySessionIds, displayedCount, isSplit, sessions])
+
+  return (
+    <ResizablePanelGroup
+      direction="horizontal"
+      autoSaveId="cli-shell-terminal-panels"
+      className="h-full min-h-0 min-w-0 items-stretch gap-0"
+      onLayout={handleSplitLayout}
+    >
+      {sessions.map((session, index) => {
+        const isDisplayed = displaySessionIds.includes(session.id)
+        const displayIndex = displaySessionIds.indexOf(session.id)
+        const hasDisplayedBeforeInList = sessions
+          .slice(0, index)
+          .some((item) => displaySessionIds.includes(item.id))
+        const showHandle =
+          isSplit &&
+          isDisplayed &&
+          displayIndex > 0 &&
+          hasDisplayedBeforeInList
+
+        return (
+          <Fragment key={session.id}>
+            {showHandle ? (
+              <ResizableHandle
+                className={SPLIT_HANDLE_CLASS}
+                onDragging={handleSplitDragging}
+              />
+            ) : null}
+            <ResizablePanel
+              id={session.id}
+              order={index + 1}
+              ref={(panel) => {
+                panelRefs.current[session.id] = panel
+              }}
+              defaultSize={
+                isDisplayed ? (isSplit ? defaultPaneSize : 100) : 0
+              }
+              minSize={isDisplayed ? 12 : 0}
+              collapsible
+              collapsedSize={0}
+              className={cn(
+                'flex min-h-0 min-w-0 flex-col',
+                !isDisplayed && 'min-w-0 max-w-0 overflow-hidden',
+              )}
+            >
+              <div
+                className={cn(
+                  'flex h-full min-h-0 flex-col',
+                  isSplit && isDisplayed && 'py-3 sm:pb-4',
+                )}
+              >
+                <div
+                  className={cn(
+                    'box-border flex min-h-0 w-full min-w-0 flex-1 flex-col overflow-hidden',
+                    isSplit &&
+                      isDisplayed &&
+                      getSplitPaneContentClass(displayIndex, displayedCount),
+                  )}
+                >
+                  <CliTerminalSession
+                    sessionId={session.id}
+                    isVisible={isDisplayed}
+                    isFocused={focusedSessionId === session.id}
+                    isPanelResizing={isResizing}
+                    isSplitPane={isSplit && isDisplayed}
+                  />
+                </div>
+              </div>
+            </ResizablePanel>
+          </Fragment>
+        )
+      })}
+    </ResizablePanelGroup>
+  )
+}

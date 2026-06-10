@@ -13,7 +13,6 @@ import {
   Loader2,
   Terminal as TerminalIcon,
   Trash2,
-  X,
 } from 'lucide-react'
 import {
   DndContext,
@@ -224,10 +223,10 @@ function SessionRow({
             event.stopPropagation()
             onCloseSplit()
           }}
-          title="Close split"
-          aria-label={`Close split ${session.name}`}
+          title="Delete terminal"
+          aria-label={`Delete ${session.name}`}
         >
-          <X className="h-3.5 w-3.5" />
+          <Trash2 className="h-3.5 w-3.5" />
         </Button>
       ) : canRemoveRoot ? (
         <Button

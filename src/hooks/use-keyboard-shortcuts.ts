@@ -61,6 +61,12 @@ function eventMatchesRequiredKey(
   // US QWERTY: ? is shift+/ but e.key is '?'.
   if (requiredKey === '/' && pressed === '?') return true
   if (
+    (requiredKey === ';' || requiredKey === ':') &&
+    (pressed === ';' || pressed === ':')
+  ) {
+    return true
+  }
+  if (
     (requiredKey === 'backquote' || requiredKey === '`') &&
     isBackquoteKey(e)
   ) {

@@ -30,6 +30,13 @@ export const CLI_SHELL_SEARCH_SHORTCUT_COMBOS = [
   'control+f',
 ] as const
 
+export const CLI_SHELL_NEW_TERMINAL_SHORTCUT_RAW = 'mod+shift+;'
+
+export const CLI_SHELL_NEW_TERMINAL_SHORTCUT_COMBOS = [
+  'meta+shift+;',
+  'control+shift+;',
+] as const
+
 export const CLI_SHELL_CONSOLE_SHORTCUTS: readonly TerminalShortcutRef[] = [
   {
     id: 'terminal.toggle',
@@ -45,6 +52,11 @@ export const CLI_SHELL_CONSOLE_SHORTCUTS: readonly TerminalShortcutRef[] = [
     id: 'terminal.search',
     description: 'Search output',
     raw: CLI_SHELL_SEARCH_SHORTCUT_RAW,
+  },
+  {
+    id: 'terminal.new',
+    description: 'New terminal',
+    raw: CLI_SHELL_NEW_TERMINAL_SHORTCUT_RAW,
   },
 ]
 

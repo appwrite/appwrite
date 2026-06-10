@@ -18,6 +18,7 @@ import {
   Terminal as TerminalIcon,
   Trash2,
   ChevronDown,
+  ChevronUp,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import {
@@ -29,11 +30,13 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { cn } from '@/lib/utils'
+import { usePlatform } from '@/hooks/use-keyboard-shortcuts'
 import { CLI_SHELL_COLLAPSED_HEIGHT_PX } from '@/lib/cli-shell/constants'
+import { CLI_SHELL_NEW_TERMINAL_SHORTCUT_RAW } from '@/lib/cli-shell/cli-terminal-shortcuts'
+import { formatDisplayKeys } from '@/lib/keyboard-shortcuts/display'
 import { CliSessionSidebar } from './CliSessionSidebar'
 import { CliTerminalSearch } from './CliTerminalSearch'
-import { CliTerminalPaneGroup } from './CliTerminalPaneGroup'
-import { CliTerminalSession } from './CliTerminalSession'
+import { CliTerminalSessionsLayout } from './CliTerminalSessionsLayout'
 import { useCliShell } from './CliShellProvider'
 
 const CLI_SHELL_COLLAPSE_MS = 200
@@ -190,10 +193,16 @@ function ProjectCliShellCollapsedBar() {
     <button
       type="button"
       onClick={() => setOpen(true)}
-      className="flex h-full w-full cursor-pointer items-center bg-card/50 px-4 py-2.5 text-left transition-colors hover:bg-muted/40 sm:px-6"
+      className="flex h-full w-full cursor-pointer items-center justify-between gap-4 bg-card/50 px-4 text-left transition-colors hover:bg-muted/40 sm:px-6"
       aria-label="Open terminal"
     >
       <CliShellHeaderTitle showBootstrapSpinner={isBootstrapping} />
+      <span
+        className="flex h-8 w-8 shrink-0 items-center justify-center text-muted-foreground"
+        aria-hidden="true"
+      >
+        <ChevronUp className="h-3.5 w-3.5" />
+      </span>
     </button>
   )
 }
@@ -203,10 +212,16 @@ type ProjectCliShellPanelProps = {
 }
 
 function ProjectCliShellPanel({ onResizingChange }: ProjectCliShellPanelProps) {
+  const { isMac } = usePlatform()
+  const newTerminalShortcutKeys = formatDisplayKeys(
+    CLI_SHELL_NEW_TERMINAL_SHORTCUT_RAW,
+    isMac,
+  ).join('')
   const {
     open,
     toggle,
     status,
+    sessions,
     activeSessionId,
     focusedSessionId,
     visiblePaneSessionIds,
@@ -336,7 +351,7 @@ function ProjectCliShellPanel({ onResizingChange }: ProjectCliShellPanelProps) {
           style={{ transitionDuration: `${CLI_SHELL_COLLAPSE_MS}ms` }}
         >
           <CliShellHeaderIconButton
-            title="New terminal"
+            title={`New terminal (${newTerminalShortcutKeys})`}
             onClick={createSession}
           >
             <Plus className="h-3.5 w-3.5" />
@@ -450,21 +465,17 @@ function ProjectCliShellPanel({ onResizingChange }: ProjectCliShellPanelProps) {
             )}
           >
           <div className="h-full min-h-0 flex-1">
-            {visiblePaneSessionIds.length > 1 ? (
-              <CliTerminalPaneGroup
-                paneSessionIds={visiblePaneSessionIds}
-                focusedSessionId={focusedSessionId}
-                isPanelResizing={isResizing}
-                onSplitResizingChange={setIsSplitResizing}
-              />
-            ) : (
-              <CliTerminalSession
-                sessionId={activeSessionId}
-                isVisible={true}
-                isFocused={focusedSessionId === activeSessionId}
-                isPanelResizing={isResizing || isSplitResizing}
-              />
-            )}
+            <CliTerminalSessionsLayout
+              sessions={sessions}
+              displaySessionIds={
+                visiblePaneSessionIds.length > 1
+                  ? visiblePaneSessionIds
+                  : [activeSessionId]
+              }
+              focusedSessionId={focusedSessionId}
+              isPanelResizing={isResizing}
+              onSplitResizingChange={setIsSplitResizing}
+            />
           </div>
           </div>
         </div>
