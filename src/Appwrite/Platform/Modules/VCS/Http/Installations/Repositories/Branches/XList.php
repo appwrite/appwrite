@@ -96,18 +96,40 @@ class XList extends Action
             throw new Exception(Exception::PROVIDER_REPOSITORY_NOT_FOUND);
         }
 
+        $branches = $github->listBranches($owner, $repositoryName, 100, 1, $search);
+
+        $total = \count($branches);
         [
             'limit' => $limit,
             'offset' => $offset,
         ] = Query::groupByType($queries);
+        $cursorQuery = \current(Query::getCursorQueries($queries, false));
 
         $limit ??= APP_LIMIT_LIST_DEFAULT;
         $offset ??= 0;
 
-        $page = (int) floor($offset / $limit) + 1;
-        $branches = $github->listBranches($owner, $repositoryName, $limit, $page, $search);
-        $fetched = \count($branches);
-        $total = $fetched < $limit ? $offset + $fetched : $offset + $fetched + 1;
+        if ($cursorQuery instanceof Query) {
+            $cursor = $cursorQuery->getValue();
+            $cursorDirection = $cursorQuery->getMethod() === Query::TYPE_CURSOR_AFTER
+                ? Database::CURSOR_AFTER
+                : Database::CURSOR_BEFORE;
+
+            $cursorIndex = \array_search($cursor, $branches, true);
+            if ($cursorIndex === false) {
+                throw new Exception(Exception::GENERAL_CURSOR_NOT_FOUND, "Branch '{$cursor}' for the 'cursor' value not found.");
+            }
+
+            $offset += $cursorDirection === Database::CURSOR_AFTER ? $cursorIndex + 1 : 0;
+
+            if ($cursorDirection === Database::CURSOR_BEFORE) {
+                $start = \max(0, $cursorIndex - $limit);
+                $branches = \array_slice($branches, $start, $cursorIndex - $start);
+            } else {
+                $branches = \array_slice($branches, $offset, $limit);
+            }
+        } else {
+            $branches = \array_slice($branches, $offset, $limit);
+        }
 
         $response->dynamic(new Document([
             'branches' => \array_map(function ($branch) {
