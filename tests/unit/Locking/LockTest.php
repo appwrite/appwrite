@@ -8,10 +8,8 @@ use Appwrite\Extend\Exception;
 use Appwrite\Locking\Lock;
 use PHPUnit\Framework\TestCase;
 use Utopia\Config\Config;
-use Utopia\Database\Database;
 use Utopia\Database\Document;
-use Utopia\Database\Validator\Authorization;
-use Utopia\Lock\Lock as LockBackend;
+use Utopia\Lock\Lock as UtopiaLock;
 use Utopia\Logger\Log;
 use Utopia\Telemetry\Adapter\None as NoTelemetry;
 
@@ -23,8 +21,6 @@ final class LockTest extends TestCase
     private array $heldLocks = [];
 
     private Document $project;
-
-    private Authorization $authorization;
 
     private Log $log;
 
@@ -45,17 +41,14 @@ final class LockTest extends TestCase
             '$id' => 'test-project',
             '$sequence' => self::PROJECT_SEQUENCE,
         ]);
-        $this->authorization = new Authorization();
         $this->log = new Log();
     }
 
-    private function makeLock(?Database $db = null, ?Authorization $auth = null): Lock
+    private function makeLock(): Lock
     {
         return new Lock(
             $this->withLock(),
             new NoTelemetry(),
-            $db ?? $this->createStub(Database::class),
-            $auth ?? $this->authorization,
             $this->log,
             null,
             $this->project,
@@ -65,57 +58,6 @@ final class LockTest extends TestCase
     private function withLock(): \Closure
     {
         return fn (string $key, int $ttl, \Closure $callback): mixed => $callback(new MemoryLock($key, $this->heldLocks));
-    }
-
-    public function test_set_uses_per_attribute_key_and_auth_skipped_update(): void
-    {
-        $captured = null;
-        $db = $this->createMock(Database::class);
-        $db->expects($this->once())
-            ->method('updateDocument')
-            ->with('projects', 'p1', $this->callback(function (Document $doc) use (&$captured) {
-                $captured = $doc->getArrayCopy();
-
-                return true;
-            }))
-            ->willReturnArgument(2);
-
-        $lock = $this->makeLock($db);
-        $lock->set('projects', 'p1', 'accessedAt', '2024-06-01 12:00:00');
-
-        $this->assertSame(['accessedAt' => '2024-06-01 12:00:00'], $captured);
-        $this->assertArrayNotHasKey(self::KEY_PREFIX.'projects:p1:accessedAt', $this->heldLocks);
-    }
-
-    public function test_set_skips_on_contention(): void
-    {
-        $key = self::KEY_PREFIX.'projects:p1:accessedAt';
-        $this->heldLocks[$key] = true;
-
-        $db = $this->createMock(Database::class);
-        $db->expects($this->never())->method('updateDocument');
-
-        $lock = $this->makeLock($db);
-        $lock->set('projects', 'p1', 'accessedAt', '2024-06-01 12:00:00');
-
-        $this->assertArrayHasKey($key, $this->heldLocks);
-    }
-
-    public function test_set_different_attributes_do_not_compete(): void
-    {
-        $heldKey = self::KEY_PREFIX.'projects:p1:accessedAt';
-        $this->heldLocks[$heldKey] = true;
-
-        $db = $this->createMock(Database::class);
-        $db->expects($this->once())
-            ->method('updateDocument')
-            ->with('projects', 'p1', $this->isInstanceOf(Document::class))
-            ->willReturnArgument(2);
-
-        $lock = $this->makeLock($db);
-        $lock->set('projects', 'p1', 'mcpAccessedAt', '2024-06-01 12:00:00');
-
-        $this->assertArrayHasKey($heldKey, $this->heldLocks);
     }
 
     public function test_run_uses_per_document_key_and_invokes_callback(): void
@@ -143,6 +85,42 @@ final class LockTest extends TestCase
 
         $this->assertFalse($called);
         $this->assertArrayHasKey($key, $this->heldLocks);
+    }
+
+    public function test_backend_acquire_error_runs_callback_unlocked(): void
+    {
+        $lock = new Lock(
+            fn (string $key, int $ttl, \Closure $callback): mixed => $callback(new FailingLock(new \RedisException('redis unavailable'))),
+            new NoTelemetry(),
+            $this->log,
+            null,
+            $this->project,
+        );
+
+        $called = false;
+        $lock->run('keys', 'k1', function () use (&$called) {
+            $called = true;
+        });
+
+        $this->assertTrue($called);
+    }
+
+    public function test_pool_checkout_error_runs_callback_unlocked(): void
+    {
+        $lock = new Lock(
+            fn (string $key, int $ttl, \Closure $callback): mixed => throw new \RedisException('redis unavailable'),
+            new NoTelemetry(),
+            $this->log,
+            null,
+            $this->project,
+        );
+
+        $called = false;
+        $lock->run('keys', 'k1', function () use (&$called) {
+            $called = true;
+        });
+
+        $this->assertTrue($called);
     }
 
     public function test_run_or_fail_throws_on_contention(): void
@@ -220,8 +198,6 @@ final class LockTest extends TestCase
         $lock = new Lock(
             $this->withLock(),
             new NoTelemetry(),
-            $this->createStub(Database::class),
-            $this->authorization,
             $this->log,
             null,
             $emptyProject,
@@ -240,7 +216,7 @@ final class LockTest extends TestCase
     }
 }
 
-final class MemoryLock implements LockBackend
+final class MemoryLock implements UtopiaLock
 {
     private bool $acquired = false;
 
@@ -291,5 +267,31 @@ final class MemoryLock implements LockBackend
         } finally {
             $this->release();
         }
+    }
+}
+
+final class FailingLock implements UtopiaLock
+{
+    public function __construct(private readonly \RedisException $error)
+    {
+    }
+
+    public function acquire(float $timeout = 0.0): bool
+    {
+        throw $this->error;
+    }
+
+    public function tryAcquire(): bool
+    {
+        throw $this->error;
+    }
+
+    public function release(): void
+    {
+    }
+
+    public function withLock(callable $callback, float $timeout = 0.0): mixed
+    {
+        throw $this->error;
     }
 }
