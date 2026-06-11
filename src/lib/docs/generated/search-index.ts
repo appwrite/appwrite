@@ -2169,12 +2169,12 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
   {
     "slug": "products/messaging/apns",
     "title": "Apple Push Notification service",
-    "description": "Send push notifications to apps on Apple devices through Apple Push Notification service (APNs) using Appwrite Messaging.",
-    "excerpt": "Apple Push Notification service (APNs) lets you send push notifications to Apple devices like macOS, iOS, tvOS, iPadOS, and watchOS devices. APNs is a best-effort service, and will attempt to deliver you messages to your device when it's online and available again. APNs will save the last message for 30 days or less and attempt delivery as soon as it's online. To add APNs as a provider, navigate to **Messaging** > **Providers** > **Create provider** > **Push notification**. Give your…",
+    "description": "Send push notifications to apps on Apple devices through Apple Push Notification service (APNS) using Appwrite Messaging.",
+    "excerpt": "Apple Push Notification service (APNS) lets you send push notifications to Apple devices like macOS, iOS, tvOS, iPadOS, and watchOS devices. APNS is a best-effort service, and will attempt to deliver you messages to your device when it's online and available again. APNS will save the last message for 30 days or less and attempt delivery as soon as it's online. To add APNS as a provider, navigate to **Messaging** > **Providers** > **Create provider** > **Push notification**. Give your…",
     "breadcrumbs": [
       "Messaging",
       "Providers",
-      "Push with APNs"
+      "Push with APNS"
     ]
   },
   {

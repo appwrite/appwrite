@@ -197,7 +197,7 @@
 - [Runtimes](https://appwrite.io/docs/products/functions/runtimes): Choose the right runtime environment for your serverless functions in Appwrite. Explore available runtimes, dependencies, and runtime-specific considerations.
 - [Templates](https://appwrite.io/docs/products/functions/templates): Learn about Appwrite Functions' templates that let you jump start function development to extend your Appwrite APIs.
 - [Messaging](https://appwrite.io/docs/products/messaging): Send push notifications, text, or emails to users or groups of users using your app.
-- [Apple Push Notification service](https://appwrite.io/docs/products/messaging/apns): Send push notifications to apps on Apple devices through Apple Push Notification service (APNs) using Appwrite Messaging.
+- [Apple Push Notification service](https://appwrite.io/docs/products/messaging/apns): Send push notifications to apps on Apple devices through Apple Push Notification service (APNS) using Appwrite Messaging.
 - [Firebase Cloud Messaging](https://appwrite.io/docs/products/messaging/fcm): Send push notifications to Android, Apple, or Web app with Firebase Cloud Messaging (FCM).
 - [Mailgun](https://appwrite.io/docs/products/messaging/mailgun): Send emails to your Appwrite users using Mailgun and Appwrite Messaging.
 - [Messages](https://appwrite.io/docs/products/messaging/messages): Learn about Appwrite messages, the different types of messages, what can be sent in different message types.

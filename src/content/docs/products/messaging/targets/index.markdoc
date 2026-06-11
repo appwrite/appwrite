@@ -58,7 +58,7 @@ Push notifications require configuration on both the Appwrite platform and your 
 1. Register and download your `google-services.json` config file.
 1. Head to **Apple Developer Member Center** > **Program resources** > **Certificates, Identifiers & Profiles** > **Keys**. The key needs **Apple Push Notification Service** enabled.
 1. Create a new key, note down the key ID and download your key.
-1. In Firebase console, go to *Settings** > **Cloud Messaging** > **APNs authentication key** > click **Upload**. Upload your key here.
+1. In Firebase console, go to *Settings** > **Cloud Messaging** > **APNS authentication key** > click **Upload**. Upload your key here.
 1. Add push notification capability to your app by clicking your root-level app in XCode > **Signing & Capabilities** > {% icon icon="plus" size="m" /%} Capabilities > Search for **Push Notifications**.
 1. If using SwiftUI, disable swizzling by setting `FirebaseAppDelegateProxyEnabled` to `NO` in your `Info.plist`.
 
@@ -81,7 +81,7 @@ Push notifications require configuration on both the Appwrite platform and your 
 ```
 {% /tabsitem %}
 
-{% tabsitem #APNs-ios title="iOS with APNs" %}
+{% tabsitem #APNS-ios title="iOS with APNS" %}
 1. Head to **Apple Developer Member Center** > **Program resources** > **Certificates, Identifiers & Profiles** > **Keys**. The key needs **Apple Push Notification Service** enabled.
 1. Create a new key, note down the key ID and download your key.
 1. Add push notification capability to your app by clicking your root-level app in XCode > **Signing & Capabilities** > {% icon icon="plus" size="m" /%} Capabilities > Search for **Push Notifications**.

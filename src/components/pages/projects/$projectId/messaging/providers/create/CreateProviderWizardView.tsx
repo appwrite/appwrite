@@ -359,7 +359,7 @@ const PROVIDERS: ProviderConfig[] = [
     id: 'apns',
     name: 'Apple Push Notifications',
     type: 'push',
-    description: 'Send push notifications via APNs (iOS).',
+    description: 'Send push notifications via APNS (iOS).',
     icon: 'apple.svg',
     fields: [
       COMMON_NAME_FIELD,

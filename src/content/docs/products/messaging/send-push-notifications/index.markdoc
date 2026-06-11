@@ -15,7 +15,7 @@ You must configure these services before you can send your first push notificati
 
 {% cards %}
 {% cards_item href="/docs/products/messaging/apns" title="APNS" icon="icon-apple" %}
-Configure APNs for push notification to Apple devices.
+Configure APNS for push notification to Apple devices.
 {% /cards_item %}
 {% cards_item href="/docs/products/messaging/fcm" title="FCM" icon="web-icon-firebase" %}
 Configure FCM for push notification to Android and Apple devices.
@@ -28,7 +28,7 @@ Before sending your first push notification, your application must register itse
 then provide the device token to Appwrite.
 
 {% tabs %}
-{% tabsitem #apple-apns title="APNs for Apple" %}
+{% tabsitem #apple-apns title="APNS for Apple" %}
 First, enable push notification in your app.
 Add push notification capability to your app by clicking your root-level app in XCode > **Signing & Capabilities** > {% icon icon="plus" size="m" /%} Capabilities > Search for **Push Notifications**.
 
@@ -173,10 +173,10 @@ Before you can send push notifications using FCM, make sure you'd followed the s
 After adding Firebase to your iOS project and adding the `GoogleService-Info.plist` to the root of your project.
 
 
-Next, add your APNs key to Firebase.
+Next, add your APNS key to Firebase.
 1. Head to **Apple Developer Member Center** > **Program resources** > **Certificates, Identifiers & Profiles** > **Keys**. The key needs **Apple Push Notification Service** enabled.
 1. Create a new key, note down the key ID and download your key.
-1. In Firebase console, go to *Settings** > **Cloud Messaging** > **APNs authentication key** > click **Upload**. Upload your key here.
+1. In Firebase console, go to *Settings** > **Cloud Messaging** > **APNS authentication key** > click **Upload**. Upload your key here.
 1. Add push notification capability to your app by clicking your root-level app in XCode > **Signing & Capabilities** > {% icon icon="plus" size="m" /%} Capabilities > Search for **Push Notifications**.
 1. If using SwiftUI, disable swizzling by setting `FirebaseAppDelegateProxyEnabled` to `NO` in your `Info.plist`.
 
@@ -239,7 +239,7 @@ func login() async {
 ```
 
 If you have disabled method swizzling, or you are building a SwiftUI app,
-you'll need to explicitly map your APNs token to the FCM registration token.
+you'll need to explicitly map your APNS token to the FCM registration token.
 Implement the `didRegisterForRemoteNotificationsWithDeviceToken` method to get the device token and save it to FCM.
 ```swift
 func application(
@@ -257,7 +257,7 @@ func application(
 Your app must ask for permission to receive push notification from the user.
 
 {% tabs %}
-{% tabsitem #apple-apns title="Apple with APNs" %}
+{% tabsitem #apple-apns title="Apple with APNS" %}
 Before your app can receive push notifications, you need to request the user for permissions.
 Appwrite provides a utility to help request permissions to display notificaitons.
 
@@ -309,7 +309,7 @@ Messaging.messaging().autoInitEnabled = true
 You can send messages in both the Appwrite Console and programmatically using the Appwrite Server SDK.
 
 {% info title="Sandbox" %}
-If you enabled **Sandbox** on your APNs provider, Appwrite will send push notifications to the development APNs environment.
+If you enabled **Sandbox** on your APNS provider, Appwrite will send push notifications to the development APNS environment.
 This requires you to use a **Development profile** in XCode.
 
 If XCode is not default to a development profile,

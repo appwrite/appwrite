@@ -1093,7 +1093,7 @@ export const DOCS_SECTION_NAVS: DocsSectionNavConfig[] = [
           label: "Providers",
           items: [
             {
-              label: "Push with APNs",
+              label: "Push with APNS",
               href: "/docs/products/messaging/apns",
             },
             {
