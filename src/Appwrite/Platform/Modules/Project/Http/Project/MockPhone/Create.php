@@ -5,6 +5,7 @@ namespace Appwrite\Platform\Modules\Project\Http\Project\MockPhone;
 use Appwrite\Auth\Validator\Phone;
 use Appwrite\Event\Event as QueueEvent;
 use Appwrite\Extend\Exception;
+use Appwrite\Platform\Action;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
@@ -13,7 +14,6 @@ use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 use Utopia\Database\Validator\Authorization;
-use Utopia\Platform\Action;
 use Utopia\Platform\Scope\HTTP;
 use Utopia\Validator\Text;
 
@@ -71,20 +71,6 @@ class Create extends Action
         Database $dbForPlatform,
         Authorization $authorization,
     ) {
-        $auths = $project->getAttribute('auths', []);
-
-        $mockNumbers = $auths['mockNumbers'] ?? [];
-
-        if (\count($mockNumbers) >= APP_LIMIT_COUNT) {
-            throw new Exception(Exception::MOCK_NUMBER_LIMIT_EXCEEDED);
-        }
-
-        foreach ($mockNumbers as $mockNumber) {
-            if ($mockNumber['phone'] === $number) {
-                throw new Exception(Exception::MOCK_NUMBER_ALREADY_EXISTS);
-            }
-        }
-
         // Set to now date
         $mockNumber = [
             'phone' => $number,
@@ -93,14 +79,26 @@ class Create extends Action
             '$updatedAt' => DateTime::now(),
         ];
 
-        $mockNumbers[] = $mockNumber;
-        $auths['mockNumbers'] = $mockNumbers;
+        $this->updateProject($dbForPlatform, $authorization, $project, function (Document $current) use ($number, $mockNumber) {
+            $auths = $current->getAttribute('auths', []);
 
-        $updates = new Document([
-            'auths' => $auths,
-        ]);
+            $mockNumbers = $auths['mockNumbers'] ?? [];
 
-        $authorization->skip(fn () => $dbForPlatform->updateDocument('projects', $project->getId(), $updates));
+            if (\count($mockNumbers) >= APP_LIMIT_COUNT) {
+                throw new Exception(Exception::MOCK_NUMBER_LIMIT_EXCEEDED);
+            }
+
+            foreach ($mockNumbers as $mock) {
+                if ($mock['phone'] === $number) {
+                    throw new Exception(Exception::MOCK_NUMBER_ALREADY_EXISTS);
+                }
+            }
+
+            $mockNumbers[] = $mockNumber;
+            $auths['mockNumbers'] = $mockNumbers;
+
+            return ['auths' => $auths];
+        });
 
         $queueForEvents->setParam('number', $number);
 

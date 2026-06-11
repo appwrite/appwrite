@@ -381,39 +381,32 @@ abstract class Base extends Action
             throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Provider ' . $providerId . ' is not supported by server configuration.');
         }
 
-        $oAuthProviders = $project->getAttribute('oAuthProviders', []);
-
         $appIdKey = $providerId . 'Appid';
         $appSecretKey = $providerId . 'Secret';
         $enabledKey = $providerId . 'Enabled';
 
-        if (!\is_null($clientId)) {
-            $oAuthProviders[$appIdKey] = $clientId;
-        }
+        // Validate against the merged view (request params over current values)
+        // before taking the row lock: verifyCredentials performs network calls.
+        $oAuthProviders = $project->getAttribute('oAuthProviders', []);
+        $appId = $clientId ?? $oAuthProviders[$appIdKey] ?? '';
+        $appSecret = $clientSecret ?? $oAuthProviders[$appSecretKey] ?? '';
 
-        if (!\is_null($clientSecret)) {
-            $oAuthProviders[$appSecretKey] = $clientSecret;
-        }
-
-        if (!\is_null($enabled)) {
-            $oAuthProviders[$enabledKey] = $enabled;
-        }
-
+        $validatedEnabled = $enabled;
         if ($enabled === true || \is_null($enabled)) {
             try {
-                if (empty($oAuthProviders[$appIdKey]) || empty($oAuthProviders[$appSecretKey])) {
+                if (empty($appId) || empty($appSecret)) {
                     throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'Client ID and Client Secret are required when enabling OAuth2 provider.');
                 }
 
                 $providerClass = static::getProviderClass();
-                $providerInstance = new $providerClass(appId: $oAuthProviders[$appIdKey], appSecret: $oAuthProviders[$appSecretKey], callback: '', state: [], scopes: []);
+                $providerInstance = new $providerClass(appId: $appId, appSecret: $appSecret, callback: '', state: [], scopes: []);
 
                 // E2E integration check
                 if (\method_exists($providerInstance, 'verifyCredentials')) {
                     $providerInstance->verifyCredentials();
                 }
 
-                $oAuthProviders[$enabledKey] = true;
+                $validatedEnabled = true;
             } catch (\Throwable $err) {
                 if ($enabled === true) {
                     throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'Could not enable OAuth2 provider: ' . $err->getMessage());
@@ -421,11 +414,23 @@ abstract class Base extends Action
             }
         }
 
-        $updates = new Document([
-            'oAuthProviders' => $oAuthProviders
-        ]);
+        return $this->updateProject($dbForPlatform, $authorization, $project, function (Document $current) use ($appIdKey, $appSecretKey, $enabledKey, $clientId, $clientSecret, $validatedEnabled) {
+            $oAuthProviders = $current->getAttribute('oAuthProviders', []);
 
-        return $authorization->skip(fn () => $dbForPlatform->updateDocument('projects', $project->getId(), $updates));
+            if (!\is_null($clientId)) {
+                $oAuthProviders[$appIdKey] = $clientId;
+            }
+
+            if (!\is_null($clientSecret)) {
+                $oAuthProviders[$appSecretKey] = $clientSecret;
+            }
+
+            if (!\is_null($validatedEnabled)) {
+                $oAuthProviders[$enabledKey] = $validatedEnabled;
+            }
+
+            return ['oAuthProviders' => $oAuthProviders];
+        });
     }
 
     public function action(

@@ -75,34 +75,36 @@ class Update extends Action
         Authorization $authorization,
         Event $queueForEvents,
     ): void {
+        $project = $this->updateProject($dbForPlatform, $authorization, $project, function (Document $current) use ($min, $uppercase, $lowercase, $number, $symbols) {
+            $auths = $current->getAttribute('auths', []);
+            $auths['passwordStrength'] = \array_merge([
+                'min' => 8,
+                'uppercase' => false,
+                'lowercase' => false,
+                'number' => false,
+                'symbols' => false,
+            ], $auths['passwordStrength'] ?? []);
+
+            if ($min !== null) {
+                $auths['passwordStrength']['min'] = $min;
+            }
+            if ($uppercase !== null) {
+                $auths['passwordStrength']['uppercase'] = $uppercase;
+            }
+            if ($lowercase !== null) {
+                $auths['passwordStrength']['lowercase'] = $lowercase;
+            }
+            if ($number !== null) {
+                $auths['passwordStrength']['number'] = $number;
+            }
+            if ($symbols !== null) {
+                $auths['passwordStrength']['symbols'] = $symbols;
+            }
+
+            return ['auths' => $auths];
+        });
+
         $auths = $project->getAttribute('auths', []);
-        $auths['passwordStrength'] = \array_merge([
-            'min' => 8,
-            'uppercase' => false,
-            'lowercase' => false,
-            'number' => false,
-            'symbols' => false,
-        ], $auths['passwordStrength'] ?? []);
-
-        if ($min !== null) {
-            $auths['passwordStrength']['min'] = $min;
-        }
-        if ($uppercase !== null) {
-            $auths['passwordStrength']['uppercase'] = $uppercase;
-        }
-        if ($lowercase !== null) {
-            $auths['passwordStrength']['lowercase'] = $lowercase;
-        }
-        if ($number !== null) {
-            $auths['passwordStrength']['number'] = $number;
-        }
-        if ($symbols !== null) {
-            $auths['passwordStrength']['symbols'] = $symbols;
-        }
-
-        $project = $authorization->skip(fn () => $dbForPlatform->updateDocument('projects', $project->getId(), new Document([
-            'auths' => $auths,
-        ])));
 
         $queueForEvents
             ->setParam('projectId', $project->getId())

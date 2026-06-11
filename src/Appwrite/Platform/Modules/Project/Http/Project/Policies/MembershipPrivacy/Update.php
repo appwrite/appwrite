@@ -77,32 +77,30 @@ class Update extends Action
         Authorization $authorization,
         Event $queueForEvents,
     ): void {
-        $auths = $project->getAttribute('auths', []);
+        $project = $this->updateProject($dbForPlatform, $authorization, $project, function (Document $current) use ($userId, $userEmail, $userPhone, $userName, $userMFA, $userAccessedAt) {
+            $auths = $current->getAttribute('auths', []);
 
-        if ($userId !== null) {
-            $auths['membershipsUserId'] = $userId;
-        }
-        if ($userEmail !== null) {
-            $auths['membershipsUserEmail'] = $userEmail;
-        }
-        if ($userPhone !== null) {
-            $auths['membershipsUserPhone'] = $userPhone;
-        }
-        if ($userName !== null) {
-            $auths['membershipsUserName'] = $userName;
-        }
-        if ($userMFA !== null) {
-            $auths['membershipsMfa'] = $userMFA;
-        }
-        if ($userAccessedAt !== null) {
-            $auths['membershipsUserAccessedAt'] = $userAccessedAt;
-        }
+            if ($userId !== null) {
+                $auths['membershipsUserId'] = $userId;
+            }
+            if ($userEmail !== null) {
+                $auths['membershipsUserEmail'] = $userEmail;
+            }
+            if ($userPhone !== null) {
+                $auths['membershipsUserPhone'] = $userPhone;
+            }
+            if ($userName !== null) {
+                $auths['membershipsUserName'] = $userName;
+            }
+            if ($userMFA !== null) {
+                $auths['membershipsMfa'] = $userMFA;
+            }
+            if ($userAccessedAt !== null) {
+                $auths['membershipsUserAccessedAt'] = $userAccessedAt;
+            }
 
-        $updates = new Document([
-            'auths' => $auths,
-        ]);
-
-        $project = $authorization->skip(fn () => $dbForPlatform->updateDocument('projects', $project->getId(), $updates));
+            return ['auths' => $auths];
+        });
 
         $queueForEvents
             ->setParam('projectId', $project->getId())

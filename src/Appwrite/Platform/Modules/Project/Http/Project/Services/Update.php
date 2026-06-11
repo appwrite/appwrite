@@ -73,12 +73,12 @@ class Update extends Action
         Authorization $authorization,
         Event $queueForEvents
     ): void {
-        $services = $project->getAttribute('services', []);
-        $services[$serviceId] = $enabled;
+        $project = $this->updateProject($dbForPlatform, $authorization, $project, function (Document $current) use ($serviceId, $enabled) {
+            $services = $current->getAttribute('services', []);
+            $services[$serviceId] = $enabled;
 
-        $project = $authorization->skip(fn () => $dbForPlatform->updateDocument('projects', $project->getId(), new Document([
-            'services' => $services,
-        ])));
+            return ['services' => $services];
+        });
 
         $queueForEvents->setParam('serviceId', $serviceId);
 

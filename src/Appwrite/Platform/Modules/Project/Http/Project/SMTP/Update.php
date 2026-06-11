@@ -164,12 +164,27 @@ class Update extends Action
             }
         }
 
-        // Save configuration
-        $updates = new Document([
-            'smtp' => $smtp,
-        ]);
+        $validatedEnabled = $enabled ?? ((($smtp['enabled'] ?? null) === true) ? true : null);
 
-        $project = $authorization->skip(fn () => $dbForPlatform->updateDocument('projects', $project->getId(), $updates));
+        $project = $this->updateProject($dbForPlatform, $authorization, $project, function (Document $current) use ($host, $port, $username, $password, $senderEmail, $senderName, $replyToEmail, $replyToName, $secure, $validatedEnabled) {
+            // Re-merge onto the locked row: request params and the validated enabled outcome win, untouched keys keep concurrent writes.
+            $smtp = $current->getAttribute('smtp', []);
+
+            $keys = ['host', 'port', 'username', 'password', 'senderEmail', 'senderName', 'replyToEmail', 'replyToName', 'secure'];
+            foreach ($keys as $key) {
+                if (!\is_null(${$key})) {
+                    $smtp[$key] = ${$key};
+                }
+            }
+
+            $smtp['replyToEmail'] = $smtp['replyToEmail'] ?? $smtp['replyTo'] ?? '';
+
+            if (!\is_null($validatedEnabled)) {
+                $smtp['enabled'] = $validatedEnabled;
+            }
+
+            return ['smtp' => $smtp];
+        });
 
         $response->dynamic($project, Response::MODEL_PROJECT);
     }

@@ -8,6 +8,7 @@ use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 use Utopia\Database\Query;
+use Utopia\Database\Validator\Authorization;
 use Utopia\Platform\Action as UtopiaAction;
 
 class Action extends UtopiaAction
@@ -103,6 +104,32 @@ class Action extends UtopiaAction
 
             $latestDocument = $results[array_key_last($results)];
         }
+    }
+
+    /**
+     * Update the project document from a locked read of the current row.
+     *
+     * Project configuration lives in map attributes (services, auths, smtp,
+     * apis, oAuthProviders, templates) that endpoints merge a single key into.
+     * Computing that merge from the request-scoped project resource loses
+     * concurrent writes: the resource is a cached read taken at request start,
+     * and writing the merged map back replaces the whole attribute. The
+     * changes callback receives the current row, read under a row lock inside
+     * a transaction, so the merge is atomic with the write.
+     *
+     * @param callable(Document): array<string, mixed> $changes
+     */
+    protected function updateProject(
+        Database $dbForPlatform,
+        Authorization $authorization,
+        Document $project,
+        callable $changes
+    ): Document {
+        return $dbForPlatform->withTransaction(fn () => $authorization->skip(function () use ($dbForPlatform, $project, $changes) {
+            $current = $dbForPlatform->getDocument('projects', $project->getId(), forUpdate: true);
+
+            return $dbForPlatform->updateDocument('projects', $project->getId(), new Document($changes($current)));
+        }));
     }
 
     public function disableSubqueries(array $filters = []): void

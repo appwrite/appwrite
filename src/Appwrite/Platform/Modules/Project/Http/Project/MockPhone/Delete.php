@@ -5,6 +5,7 @@ namespace Appwrite\Platform\Modules\Project\Http\Project\MockPhone;
 use Appwrite\Auth\Validator\Phone;
 use Appwrite\Event\Event as QueueEvent;
 use Appwrite\Extend\Exception;
+use Appwrite\Platform\Action;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\ContentType;
 use Appwrite\SDK\Method;
@@ -13,7 +14,6 @@ use Appwrite\Utopia\Response;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Validator\Authorization;
-use Utopia\Platform\Action;
 use Utopia\Platform\Scope\HTTP;
 
 class Delete extends Action
@@ -69,32 +69,30 @@ class Delete extends Action
         Database $dbForPlatform,
         Authorization $authorization,
     ) {
-        $auths = $project->getAttribute('auths', []);
+        $this->updateProject($dbForPlatform, $authorization, $project, function (Document $current) use ($number) {
+            $auths = $current->getAttribute('auths', []);
 
-        $mockNumbers = $auths['mockNumbers'] ?? [];
+            $mockNumbers = $auths['mockNumbers'] ?? [];
 
-        $mockNumberIndex = null;
-        foreach ($mockNumbers as $index => $mock) {
-            if ($mock['phone'] === $number) {
-                $mockNumberIndex = $index;
-                break;
+            $mockNumberIndex = null;
+            foreach ($mockNumbers as $index => $mock) {
+                if ($mock['phone'] === $number) {
+                    $mockNumberIndex = $index;
+                    break;
+                }
             }
-        }
 
-        if (\is_null($mockNumberIndex)) {
-            throw new Exception(Exception::MOCK_NUMBER_NOT_FOUND);
-        }
+            if (\is_null($mockNumberIndex)) {
+                throw new Exception(Exception::MOCK_NUMBER_NOT_FOUND);
+            }
 
-        unset($mockNumbers[$mockNumberIndex]);
-        $mockNumbers = array_values($mockNumbers);
+            unset($mockNumbers[$mockNumberIndex]);
+            $mockNumbers = array_values($mockNumbers);
 
-        $auths['mockNumbers'] = $mockNumbers;
+            $auths['mockNumbers'] = $mockNumbers;
 
-        $updates = new Document([
-            'auths' => $auths,
-        ]);
-
-        $authorization->skip(fn () => $dbForPlatform->updateDocument('projects', $project->getId(), $updates));
+            return ['auths' => $auths];
+        });
 
         $queueForEvents->setParam('number', $number);
 
