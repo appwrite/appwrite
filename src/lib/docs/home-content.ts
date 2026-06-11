@@ -1,6 +1,6 @@
 import type { LucideIcon } from 'lucide-react'
 import {
-  Braces,
+  ArrowUpDown,
   Database,
   Folder,
   Globe,
@@ -328,7 +328,7 @@ export const DOCS_HOME_MIGRATIONS: DocsHomeMigrationCard[] = [
 
 export const DOCS_HOME_INTEGRATION_ICONS = {
   sdks: Share2,
-  rest: Braces,
+  rest: ArrowUpDown,
   realtime: Radio,
 } as const
 

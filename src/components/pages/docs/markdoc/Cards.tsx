@@ -114,7 +114,7 @@ export function CardsItem({
           </div>
         ) : null}
         {href ? (
-          <ArrowRight className="mt-4 size-4 text-muted-foreground transition-transform group-hover:translate-x-0.5 group-hover:text-[var(--brand-cta)]" />
+          <ArrowRight className="mt-4 size-4 text-muted-foreground" />
         ) : null}
       </div>
     </div>

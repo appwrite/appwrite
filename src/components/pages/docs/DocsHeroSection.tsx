@@ -70,12 +70,12 @@ export function DocsHeroSection() {
                 href={tool.href}
                 aria-label={tool.name}
                 title={tool.name}
-                className="group flex size-9 items-center justify-center transition-transform duration-200 hover:scale-110"
+                className="flex size-9 items-center justify-center"
               >
                 <img
                   src={tool.iconSrc}
                   alt=""
-                  className={cn('size-7', PUBLIC_ICON_MUTED_CLASSES, 'group-hover:opacity-80')}
+                  className={cn('size-7', PUBLIC_ICON_MUTED_CLASSES)}
                 />
               </DocsRouteLink>
             ))}

@@ -49,11 +49,8 @@ function DocsProductTileHoverLight({ variant }: { variant: number }) {
 
 function ProductTileIcon({ icon: Icon }: { icon: LucideIcon }) {
   return (
-    <span className="flex size-9 items-center justify-center rounded-lg border border-border bg-muted/40 transition-[border-color,background-color] duration-300 group-hover:border-[color-mix(in_srgb,var(--brand-cta)_25%,var(--border))] group-hover:bg-[color-mix(in_srgb,var(--brand-cta)_8%,var(--muted))]">
-      <Icon
-        className="size-4 text-muted-foreground transition-colors duration-300 group-hover:text-[var(--brand-cta)]"
-        aria-hidden
-      />
+    <span className="flex size-9 items-center justify-center rounded-lg border border-border bg-muted/40">
+      <Icon className="size-4 text-muted-foreground" aria-hidden />
     </span>
   )
 }
@@ -77,7 +74,7 @@ export function DocsProductsBento() {
               <DocsProductTileHoverLight variant={index} />
               <div className="relative z-10">
                 <ProductTileIcon icon={Icon} />
-                <h3 className="mt-3 text-[14px] font-semibold text-foreground transition-colors duration-300 group-hover:text-foreground">
+                <h3 className="mt-3 text-[14px] font-semibold text-foreground">
                   {product.title}
                 </h3>
                 <p className="mt-2 text-[13px] leading-5 text-muted-foreground">

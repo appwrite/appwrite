@@ -68,7 +68,7 @@ function DocsAiToolColumn({
   className?: string
 }) {
   return (
-    <div className={cn('relative overflow-hidden py-6 lg:py-0', className)}>
+    <div className={cn('relative py-6 lg:py-0', className)}>
       <AiTileSoftLight tone={tone} />
       <div className="relative space-y-1.5">
         <h3 className="text-[15px] font-semibold text-foreground">{title}</h3>
@@ -117,7 +117,6 @@ export function DocsAiSection() {
             <AiFeatureCard
               title="MCP"
               description="Connect agents to your Appwrite project, APIs, and docs."
-              titleBadge={{ label: 'Official', variant: 'info' }}
               shade="mcp"
               className="border-b border-border lg:border-b-0 lg:border-r"
               cta={
@@ -134,7 +133,6 @@ export function DocsAiSection() {
             <AiFeatureCard
               title="Agent skills"
               description="Teach agents your backend so they make SDK-accurate calls."
-              titleBadge={{ label: 'Official', variant: 'info' }}
               shade="skills"
               className="border-b border-border lg:border-b-0 lg:border-r"
               cta={
@@ -151,7 +149,6 @@ export function DocsAiSection() {
             <AiFeatureCard
               title="Quickstart prompts"
               description="Scaffold auth, databases, storage, and more from a prompt."
-              titleBadge={{ label: 'Official', variant: 'info' }}
               shade="plugins"
               cta={
                 <Button variant="outline" className="h-9 text-[13px]" asChild>
@@ -166,7 +163,7 @@ export function DocsAiSection() {
           </div>
         </div>
 
-        <div className="mt-10 grid overflow-hidden lg:grid-cols-2 lg:divide-x lg:divide-border">
+        <div className="mt-10 grid overflow-visible pb-4 lg:grid-cols-2 lg:divide-x lg:divide-border">
           <DocsAiToolColumn
             title="IDEs & coding agents"
             description="Editors and agents where you ship code locally or in the terminal."

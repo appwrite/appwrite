@@ -298,7 +298,10 @@ export function CodeBlock({
   const preRef = useRef<HTMLPreElement>(null)
   const prismLanguage = getPrismLanguage(language)
   const needsExtra = EXTRA_LANGUAGES.includes(prismLanguage)
-  const [extrasReady, setExtrasReady] = useState(!needsExtra)
+  const languageIsRegistered =
+    !needsExtra || loadedLanguages.has(prismLanguage)
+  // Bump when async Prism grammars finish loading so Highlight re-tokenizes.
+  const [, setLoadGeneration] = useState(0)
   const { resolvedTheme } = useTheme()
 
   const handleWheel = (e: React.WheelEvent<HTMLPreElement>) => {
@@ -329,9 +332,15 @@ export function CodeBlock({
   }
 
   useEffect(() => {
-    if (!needsExtra) return
-    loadLanguage(prismLanguage).then(() => setExtrasReady(true))
-  }, [prismLanguage, needsExtra])
+    if (languageIsRegistered) return
+    let cancelled = false
+    loadLanguage(prismLanguage).then(() => {
+      if (!cancelled) setLoadGeneration((n) => n + 1)
+    })
+    return () => {
+      cancelled = true
+    }
+  }, [prismLanguage, languageIsRegistered])
 
   const handleCopy = () => {
     navigator.clipboard.writeText(displayCode)
@@ -340,7 +349,7 @@ export function CodeBlock({
     setTimeout(() => setCopied(false), 2000)
   }
 
-  const effectiveLanguage = extrasReady ? prismLanguage : 'plaintext'
+  const effectiveLanguage = languageIsRegistered ? prismLanguage : 'plaintext'
   const displayCode = useMemo(() => normalizeCodeBlockContent(code), [code])
   const prismTheme = useMemo(
     () => buildCodeBlockPrismTheme(resolvedTheme),
@@ -447,6 +456,7 @@ export function CodeBlock({
           </div>
         )}
         <Highlight
+          key={effectiveLanguage}
           theme={prismTheme}
           code={displayCode}
           language={effectiveLanguage}
@@ -513,6 +523,7 @@ export function CodeBlock({
         >
           <div>
             <Highlight
+              key={effectiveLanguage}
               theme={prismTheme}
               code={displayCode}
               language={effectiveLanguage}

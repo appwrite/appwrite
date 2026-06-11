@@ -1,6 +1,7 @@
 import { useState, type ComponentType } from 'react'
 import { useLocation } from '@tanstack/react-router'
 import {
+  ArrowUpDown,
   ArrowUpRight,
   BookOpen,
   ChevronDown,
@@ -19,7 +20,6 @@ import {
   Puzzle,
   Radio,
   RefreshCw,
-  Route,
   Send,
   Server,
   Share2,
@@ -76,7 +76,7 @@ const ICON_MAP: Record<string, LucideIcon> = {
   share: Share2,
   shield: Shield,
   server: Server,
-  rest: Route,
+  rest: ArrowUpDown,
   command: Command,
   text: Type,
   platform: Layers,
