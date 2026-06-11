@@ -62,6 +62,7 @@ export function CliTerminalResizableLayout({
 
   const [mountedSidebarPx, setMountedSidebarPx] = useState<number | null>(null)
   const isSidebarResizingRef = useRef(false)
+  const effectiveSidebarPx = mountedSidebarPx ?? sidebarWidthPx
 
   useLayoutEffect(() => {
     const el = containerRef.current
@@ -83,10 +84,10 @@ export function CliTerminalResizableLayout({
   }, [containerWidth, sidebarWidthPx])
 
   const panelLayout = useMemo(() => {
-    if (mountedSidebarPx === null || containerWidth <= 0) return null
+    if (containerWidth <= 0) return null
     return computeTwoPanelHorizontalLayout({
       containerWidth,
-      firstPx: containerWidth - mountedSidebarPx,
+      firstPx: containerWidth - effectiveSidebarPx,
       firstMinPx: Math.max(
         CLI_SHELL_TERMINAL_MAIN_MIN_WIDTH_PX,
         containerWidth - CLI_SHELL_SESSIONS_SIDEBAR_MAX_WIDTH_PX,
@@ -94,7 +95,7 @@ export function CliTerminalResizableLayout({
       firstMaxPx: containerWidth - CLI_SHELL_SESSIONS_SIDEBAR_MIN_WIDTH_PX,
       secondMinPx: CLI_SHELL_SESSIONS_SIDEBAR_MIN_WIDTH_PX,
     })
-  }, [containerWidth, mountedSidebarPx])
+  }, [containerWidth, effectiveSidebarPx])
 
   const persistTimerRef = useRef<number | null>(null)
   const lastPersistedPxRef = useRef(sidebarWidthPx)
@@ -200,7 +201,6 @@ export function CliTerminalResizableLayout({
       className="flex h-full min-h-0 min-w-0 flex-1 overflow-hidden"
     >
       <ResizablePanelGroup
-        key={`cli-terminal-sessions-${mountedSidebarPx}`}
         direction="horizontal"
         className="h-full min-h-0 min-w-0 flex-1"
         onLayout={handleLayout}
