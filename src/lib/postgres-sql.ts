@@ -62,6 +62,30 @@ export function executionResultRows<T extends Record<string, unknown>>(
   return []
 }
 
+export function formatPostgresRowCount(count: number): string {
+  const formatted = count.toLocaleString()
+  return `${formatted} row${count === 1 ? '' : 's'}`
+}
+
+export function formatPostgresQueryDurationMs(ms: number): string {
+  if (ms < 1) return '< 1 ms'
+  if (ms < 1000) {
+    if (ms < 10) {
+      const rounded = Math.round(ms * 10) / 10
+      return `${rounded} ms`
+    }
+    return `${Math.round(ms)} ms`
+  }
+  const seconds = ms / 1000
+  if (seconds < 60) {
+    return seconds < 10 ? `${seconds.toFixed(2)} s` : `${seconds.toFixed(1)} s`
+  }
+  const minutes = Math.floor(seconds / 60)
+  const remainingSeconds = seconds % 60
+  if (remainingSeconds < 0.05) return `${minutes} min`
+  return `${minutes} min ${remainingSeconds.toFixed(0)} s`
+}
+
 export function buildPostgresSelectSql(
   schema: string,
   table: string,

@@ -4,22 +4,16 @@ import {
   usePostgresSchemas,
   usePostgresTables,
 } from '@/lib/react-query/hooks'
-import {
-  POSTGRES_DATABASE_TAB_LABELS,
-  postgresTableRows,
-  type PostgresDatabaseTab,
-} from '@/lib/postgres-database-routes'
-import { Link, useNavigate, useParams } from '@tanstack/react-router'
-import { ArrowLeft, AlertCircle } from 'lucide-react'
-import { Button } from '@/components/ui/button'
-import { CopyableId } from '@/components/global/shared/CopyableId'
-import { Badge } from '@/components/ui/badge'
+import { postgresTableRows, type PostgresDatabaseTab } from '@/lib/postgres-database-routes'
+import { useNavigate, useParams } from '@tanstack/react-router'
+import { AlertCircle } from 'lucide-react'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import type { ReactNode } from 'react'
-import { ServiceHeader } from '@/components/pages/projects/$projectId/shared/ServiceHeader'
 import { TableViewResizableLayout } from '@/components/pages/projects/$projectId/databases/_components/TableViewResizableLayout'
 import { useMediaMinWidth } from '@/hooks/use-media-min-width'
-import { PostgresSidebarProvider } from './_components/PostgresSidebarContext'
+import { usePostgresSidebar } from './_components/PostgresSidebarContext'
+import { PostgresDatabaseHeader } from './_components/PostgresDatabaseHeader'
+import { PostgresSidebarDatabaseBar } from './_components/PostgresSidebarDatabaseBar'
 import { SchemaTablesSidebar } from './SchemaTablesSidebar'
 
 export type PostgresShellProps = {
@@ -29,27 +23,6 @@ export type PostgresShellProps = {
   children: ReactNode
 }
 
-function dedicatedStatusVariant(
-  status: string,
-): 'success' | 'warning' | 'error' | 'info' {
-  switch (status.toLowerCase()) {
-    case 'ready':
-      return 'success'
-    case 'provisioning':
-    case 'restoring':
-    case 'scaling':
-      return 'info'
-    case 'inactive':
-    case 'paused':
-      return 'warning'
-    case 'failed':
-    case 'deleted':
-      return 'error'
-    default:
-      return 'info'
-  }
-}
-
 export function PostgresShell({
   databaseId,
   tableId,
@@ -57,7 +30,6 @@ export function PostgresShell({
   children,
 }: PostgresShellProps) {
   const { projectId } = useParams({ strict: false }) as { projectId: string }
-  const navigate = useNavigate()
 
   const { database, isLoading: databaseLoading, error: databaseError } =
     usePostgresDatabase(projectId, databaseId)
@@ -78,10 +50,6 @@ export function PostgresShell({
     tables.length === 0
 
   const showDesktopSidebar = useMediaMinWidth(1024)
-
-  const handleOpenTable = (nextTableId: string) => {
-    navigate(postgresTableRows({ projectId, databaseId, tableId: nextTableId }))
-  }
 
   if (databaseLoading && !database) {
     return (
@@ -108,47 +76,77 @@ export function PostgresShell({
   }
 
   return (
-    <PostgresSidebarProvider>
-    <div className="flex h-full min-h-0 flex-1 flex-col overflow-hidden">
-      <ServiceHeader
-        fullWidthBorder
-        fullWidth
-        title={
-          <div className="flex min-w-0 items-center gap-2">
-            <Button
-              variant="ghost"
-              size="sm"
-              asChild
-              className="h-7 w-7 shrink-0 p-0"
-              aria-label="Back to databases"
-            >
-              <Link to="/projects/$projectId/databases" params={{ projectId }}>
-                <ArrowLeft className="h-4 w-4" />
-              </Link>
-            </Button>
-            <span className="min-w-0 truncate">
-              {databaseTab
-                ? POSTGRES_DATABASE_TAB_LABELS[databaseTab]
-                : database.name}
-            </span>
-            {!databaseTab ? (
-              <>
-                <CopyableId id={database.$id} size="xs" className="shrink-0" />
-                <Badge
-                  variant={dedicatedStatusVariant(database.status)}
-                  className="text-[10px] shrink-0"
-                >
-                  {database.status}
-                </Badge>
-                <Badge variant="info" className="text-[10px] shrink-0">
-                  PostgreSQL
-                </Badge>
-              </>
-            ) : null}
-          </div>
-        }
-      />
+    <PostgresShellLayout
+      projectId={projectId}
+      databaseId={databaseId}
+      tableId={tableId}
+      databaseTab={databaseTab}
+      database={database}
+      schemas={schemas}
+      tables={tables}
+      sidebarLoading={sidebarLoading}
+      showDesktopSidebar={showDesktopSidebar}
+    >
+      {children}
+    </PostgresShellLayout>
+  )
+}
 
+type PostgresShellLayoutProps = {
+  projectId: string
+  databaseId: string
+  tableId?: string
+  databaseTab?: PostgresDatabaseTab
+  database: NonNullable<ReturnType<typeof usePostgresDatabase>['database']>
+  schemas: string[]
+  tables: ReturnType<typeof usePostgresTables>['tables']
+  sidebarLoading: boolean
+  showDesktopSidebar: boolean
+  children: ReactNode
+}
+
+function PostgresShellLayout({
+  projectId,
+  databaseId,
+  tableId,
+  databaseTab,
+  database,
+  schemas,
+  tables,
+  sidebarLoading,
+  showDesktopSidebar,
+  children,
+}: PostgresShellLayoutProps) {
+  const navigate = useNavigate()
+  const { activeTab, openTableTab } = usePostgresSidebar()
+  const selectedTableId = databaseTab ? undefined : activeTab.tableId
+  const editorActive = !databaseTab && tableId === '-'
+
+  const handleOpenTable = (nextTableId: string) => {
+    openTableTab(nextTableId)
+    navigate(postgresTableRows({ projectId, databaseId, tableId: nextTableId }))
+  }
+
+  const mainPanel = (
+    <div className="flex h-full min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
+      {!showDesktopSidebar ? (
+        <PostgresSidebarDatabaseBar
+          projectId={projectId}
+          databaseId={databaseId}
+          databaseName={database.name}
+        />
+      ) : null}
+      {databaseTab ? (
+        <PostgresDatabaseHeader databaseTab={databaseTab} />
+      ) : null}
+      <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
+        {children}
+      </div>
+    </div>
+  )
+
+  return (
+    <div className="flex h-full min-h-0 flex-1 flex-col overflow-hidden">
       {showDesktopSidebar ? (
         <TableViewResizableLayout
           className="min-h-0 flex-1"
@@ -156,25 +154,23 @@ export function PostgresShell({
             <SchemaTablesSidebar
               projectId={projectId}
               databaseId={databaseId}
+              databaseName={database.name}
+              databaseEngine={database.engine}
               schemas={schemas}
               tables={tables}
-              selectedTableId={databaseTab ? undefined : tableId}
+              selectedTableId={selectedTableId}
               databaseTab={databaseTab}
+              editorActive={editorActive}
               isLoading={sidebarLoading}
               onSelectTable={handleOpenTable}
             />
           }
         >
-          <div className="flex h-full min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
-            {children}
-          </div>
+          {mainPanel}
         </TableViewResizableLayout>
       ) : (
-        <div className="flex h-full min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
-          {children}
-        </div>
+        mainPanel
       )}
     </div>
-    </PostgresSidebarProvider>
   )
 }

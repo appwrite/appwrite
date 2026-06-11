@@ -1,3 +1,4 @@
+import { useCallback, useEffect, useRef, useState } from 'react'
 import {
   queryOptions,
   useMutation,
@@ -19,6 +20,23 @@ import {
   type PostgresTableRow,
 } from '@/lib/postgres-sql'
 import { parsePostgresTableId } from '@/lib/postgres-database-routes'
+import {
+  buildPostgresSavedQueriesPrefs,
+  buildPostgresSavedQueriesScopePrefs,
+  MAX_SAVED_POSTGRES_QUERIES,
+  MAX_SAVED_POSTGRES_QUERY_NAME_LENGTH,
+  MAX_SAVED_POSTGRES_QUERY_SQL_CHARS,
+  parsePostgresSavedQueries,
+  parsePostgresSavedQueriesScope,
+  resolvePostgresSavedQueriesScope,
+  type SavedPostgresQuery,
+} from '@/lib/user-prefs-keys'
+import {
+  getConsoleAccountFromCache,
+  syncConsoleAccountAfterMutation,
+  updateAccountPrefs,
+} from './auth'
+import { useConsoleTeam, useUpdateConsoleTeamPrefs } from './teams'
 import { DEFAULT_STALE_TIME } from './constants'
 
 function isPostgresEngine(engine: string | undefined): boolean {
@@ -456,4 +474,254 @@ export function useExecutePostgresSql(
       })
     },
   })
+}
+
+export type PostgresSavedQueryLevel = 'user' | 'team'
+
+export function usePostgresSavedQueryScope(
+  databaseId: string | null | undefined,
+  account: { prefs?: Record<string, unknown> } | undefined,
+  teamId: string | null | undefined,
+) {
+  const queryClient = useQueryClient()
+  const { isLoading: teamLoading } = useConsoleTeam(teamId)
+  const { userQueries, teamQueries, hasTeamLevel } = usePostgresSavedQueries(
+    databaseId,
+    account,
+    teamId,
+  )
+
+  const [savedQueryLevel, setSavedQueryLevelState] =
+    useState<PostgresSavedQueryLevel>('user')
+  const initializedDatabaseIdRef = useRef<string | null>(null)
+
+  useEffect(() => {
+    if (!databaseId) return
+    if (initializedDatabaseIdRef.current === databaseId) return
+    if (!account) return
+    if (teamId && teamLoading) return
+
+    const next = resolvePostgresSavedQueriesScope({
+      persisted: parsePostgresSavedQueriesScope(
+        account.prefs as Record<string, unknown> | undefined,
+        databaseId,
+      ),
+      hasTeamLevel,
+      userQueryCount: userQueries.length,
+      teamQueryCount: teamQueries.length,
+    })
+
+    setSavedQueryLevelState(next)
+    initializedDatabaseIdRef.current = databaseId
+  }, [
+    account,
+    databaseId,
+    hasTeamLevel,
+    teamId,
+    teamLoading,
+    teamQueries.length,
+    userQueries.length,
+  ])
+
+  useEffect(() => {
+    initializedDatabaseIdRef.current = null
+  }, [databaseId])
+
+  const setSavedQueryLevel = useCallback(
+    (level: PostgresSavedQueryLevel) => {
+      setSavedQueryLevelState(level)
+      if (!databaseId || !account) return
+
+      void updateAccountPrefs({
+        ...(account.prefs ?? {}),
+        ...buildPostgresSavedQueriesScopePrefs(databaseId, level),
+      })
+        .then((updatedAccount) => {
+          syncConsoleAccountAfterMutation(queryClient, {
+            apiResult: updatedAccount,
+          })
+        })
+        .catch(() => {
+          /* keep local selection on prefs write failure */
+        })
+    },
+    [account, databaseId, queryClient],
+  )
+
+  return { savedQueryLevel, setSavedQueryLevel }
+}
+
+/**
+ * Saved PostgreSQL queries for a dedicated database (account + team prefs).
+ */
+export function usePostgresSavedQueries(
+  databaseId: string | null | undefined,
+  account: { prefs?: Record<string, unknown> } | undefined,
+  teamId: string | null | undefined,
+) {
+  const queryClient = useQueryClient()
+  const { data: team } = useConsoleTeam(teamId)
+  const updateTeamPrefs = useUpdateConsoleTeamPrefs(teamId)
+
+  const userQueries: SavedPostgresQuery[] =
+    databaseId && account?.prefs
+      ? parsePostgresSavedQueries(account.prefs, databaseId)
+      : []
+
+  const teamQueries: SavedPostgresQuery[] =
+    databaseId && team?.prefs && teamId
+      ? parsePostgresSavedQueries(
+          team.prefs as Record<string, unknown>,
+          databaseId,
+        )
+      : []
+
+  const addUserMutation = useMutation({
+    mutationFn: async ({ name, sql }: { name: string; sql: string }) => {
+      const currentAccount = getConsoleAccountFromCache(queryClient)
+      if (!currentAccount || !databaseId) {
+        throw new Error('Account or database not available')
+      }
+      const trimmedSql = sql.trim()
+      if (!trimmedSql) throw new Error('SQL is required')
+      if (trimmedSql.length > MAX_SAVED_POSTGRES_QUERY_SQL_CHARS) {
+        throw new Error('Query is too large to save')
+      }
+      const current = parsePostgresSavedQueries(currentAccount.prefs, databaseId)
+      const trimmedName = name.trim().slice(0, MAX_SAVED_POSTGRES_QUERY_NAME_LENGTH)
+      if (!trimmedName) throw new Error('Name is required')
+      if (current.length >= MAX_SAVED_POSTGRES_QUERIES) {
+        throw new Error(`Maximum ${MAX_SAVED_POSTGRES_QUERIES} saved queries`)
+      }
+      const next: SavedPostgresQuery[] = [
+        { id: crypto.randomUUID(), name: trimmedName, sql: trimmedSql },
+        ...current,
+      ]
+      return await updateAccountPrefs({
+        ...currentAccount.prefs,
+        ...buildPostgresSavedQueriesPrefs(databaseId, next),
+      })
+    },
+    onSuccess: (updatedAccount) => {
+      syncConsoleAccountAfterMutation(queryClient, {
+        apiResult: updatedAccount,
+      })
+    },
+  })
+
+  const addTeamMutation = useMutation({
+    mutationFn: async ({ name, sql }: { name: string; sql: string }) => {
+      const currentTeam = queryClient.getQueryData<{
+        prefs?: Record<string, unknown>
+      }>(['team', 'console', teamId])
+      if (!currentTeam || !databaseId || !teamId) {
+        throw new Error('Team or database not available')
+      }
+      const trimmedSql = sql.trim()
+      if (!trimmedSql) throw new Error('SQL is required')
+      if (trimmedSql.length > MAX_SAVED_POSTGRES_QUERY_SQL_CHARS) {
+        throw new Error('Query is too large to save')
+      }
+      const current = parsePostgresSavedQueries(
+        currentTeam.prefs as Record<string, unknown>,
+        databaseId,
+      )
+      const trimmedName = name.trim().slice(0, MAX_SAVED_POSTGRES_QUERY_NAME_LENGTH)
+      if (!trimmedName) throw new Error('Name is required')
+      if (current.length >= MAX_SAVED_POSTGRES_QUERIES) {
+        throw new Error(`Maximum ${MAX_SAVED_POSTGRES_QUERIES} saved queries`)
+      }
+      const next: SavedPostgresQuery[] = [
+        { id: crypto.randomUUID(), name: trimmedName, sql: trimmedSql },
+        ...current,
+      ]
+      await updateTeamPrefs.mutateAsync({
+        ...(currentTeam.prefs as Record<string, unknown>),
+        ...buildPostgresSavedQueriesPrefs(databaseId, next),
+      })
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['team', 'console', teamId] })
+    },
+  })
+
+  const deleteUserMutation = useMutation({
+    mutationFn: async (id: string) => {
+      const currentAccount = getConsoleAccountFromCache(queryClient)
+      if (!currentAccount || !databaseId) {
+        throw new Error('Account or database not available')
+      }
+      const current = parsePostgresSavedQueries(currentAccount.prefs, databaseId)
+      const next = current.filter((query) => query.id !== id)
+      return await updateAccountPrefs({
+        ...currentAccount.prefs,
+        ...buildPostgresSavedQueriesPrefs(databaseId, next),
+      })
+    },
+    onSuccess: (updatedAccount) => {
+      syncConsoleAccountAfterMutation(queryClient, {
+        apiResult: updatedAccount,
+      })
+    },
+  })
+
+  const deleteTeamMutation = useMutation({
+    mutationFn: async (id: string) => {
+      const currentTeam = queryClient.getQueryData<{
+        prefs?: Record<string, unknown>
+      }>(['team', 'console', teamId])
+      if (!currentTeam || !databaseId || !teamId) {
+        throw new Error('Team or database not available')
+      }
+      const current = parsePostgresSavedQueries(
+        currentTeam.prefs as Record<string, unknown>,
+        databaseId,
+      )
+      const next = current.filter((query) => query.id !== id)
+      await updateTeamPrefs.mutateAsync({
+        ...(currentTeam.prefs as Record<string, unknown>),
+        ...buildPostgresSavedQueriesPrefs(databaseId, next),
+      })
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['team', 'console', teamId] })
+    },
+  })
+
+  const addSavedQuery = async (args: {
+    name: string
+    sql: string
+    level: PostgresSavedQueryLevel
+  }) => {
+    if (args.level === 'team' && teamId) {
+      return addTeamMutation.mutateAsync({
+        name: args.name,
+        sql: args.sql,
+      })
+    }
+    return addUserMutation.mutateAsync({
+      name: args.name,
+      sql: args.sql,
+    })
+  }
+
+  const deleteSavedQuery = async (
+    id: string,
+    level: PostgresSavedQueryLevel,
+  ) => {
+    if (level === 'team' && teamId) {
+      return deleteTeamMutation.mutateAsync(id)
+    }
+    return deleteUserMutation.mutateAsync(id)
+  }
+
+  return {
+    userQueries,
+    teamQueries,
+    addSavedQuery,
+    deleteSavedQuery,
+    isAdding: addUserMutation.isPending || addTeamMutation.isPending,
+    isDeleting: deleteUserMutation.isPending || deleteTeamMutation.isPending,
+    hasTeamLevel: !!teamId,
+  }
 }

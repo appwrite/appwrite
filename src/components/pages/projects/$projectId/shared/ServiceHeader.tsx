@@ -362,7 +362,7 @@ export const ServiceHeader = forwardRef<ServiceHeaderRef, ServiceHeaderProps>(
           <div
             className={cn(
               'flex flex-col gap-1 px-4 pt-6 sm:px-6',
-              hasTabs ? 'pb-4' : 'pb-6',
+              hasTabs ? 'pb-4' : contentAfterBorder ? 'pb-4' : 'pb-6',
               fullWidthBorder && !fullWidth && 'mx-auto w-full max-w-7xl',
               fullWidthBorder && fullWidth && 'w-full',
             )}
@@ -412,7 +412,14 @@ export const ServiceHeader = forwardRef<ServiceHeaderRef, ServiceHeaderProps>(
         {!isCollapsed && (
           <>
             {fullWidthBorder ? (
-              <div className="w-full border-b border-border">{tabsContent}</div>
+              <div
+                className={cn(
+                  'w-full',
+                  hasTabs && 'border-b border-border',
+                )}
+              >
+                {tabsContent}
+              </div>
             ) : hasTabs ? (
               <div
                 className="flex gap-0 overflow-x-auto border-b border-border px-4 sm:px-6"
@@ -474,7 +481,7 @@ export const ServiceHeader = forwardRef<ServiceHeaderRef, ServiceHeaderProps>(
                   )
                 })}
               </div>
-            ) : (
+            ) : contentAfterBorder ? null : (
               <div className="border-b border-border" />
             )}
           </>

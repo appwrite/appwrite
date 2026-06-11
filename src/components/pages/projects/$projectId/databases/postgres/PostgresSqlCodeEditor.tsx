@@ -14,6 +14,7 @@ import {
 type PostgresSqlCodeEditorProps = {
   projectId: string
   databaseId: string
+  tabId: string
   sql: string
   onSqlChange: (value: string) => void
   onRun?: () => void
@@ -30,6 +31,7 @@ let getCompletionCatalog: () => PostgresSqlCompletionCatalog = () => ({
 export function PostgresSqlCodeEditor({
   projectId,
   databaseId,
+  tabId,
   sql,
   onSqlChange,
   onRun,
@@ -166,15 +168,18 @@ export function PostgresSqlCodeEditor({
   )
 
   return (
-    <div className="relative min-h-0 flex-1" data-postgres-sql-editor>
+    <div
+      className="relative h-full min-h-0 flex-1 overflow-hidden"
+      data-postgres-sql-editor
+    >
       <div className="absolute inset-0 overflow-hidden">
         <CodeEditor
-          key={`postgres-sql-${projectId}-${databaseId}`}
+          key={`postgres-sql-${projectId}-${databaseId}-${tabId}`}
           value={sql}
           onChange={handleSqlChange}
           language="sql"
           height="100%"
-          modelPath={`postgres-sql/${projectId}/${databaseId}`}
+          modelPath={`postgres-sql/${projectId}/${databaseId}/${tabId}`}
           className="h-full rounded-none border-0"
           onEditorMount={handleEditorMount}
         />

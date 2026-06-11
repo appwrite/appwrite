@@ -7,18 +7,24 @@ import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group'
 import { PostgresDatabaseNav } from './PostgresDatabaseNav'
 import { PostgresSpecificationCard } from './PostgresSpecificationCard'
 import {
-  queryPreviewLabel,
   usePostgresSidebar,
   type PostgresSidebarPanel,
 } from './_components/PostgresSidebarContext'
+import { PostgresHistorySidebarPanel } from './_components/PostgresHistorySidebarPanel'
+import { PostgresQueriesSidebarPanel } from './_components/PostgresQueriesSidebarPanel'
+import { PostgresSidebarDatabaseBar } from './_components/PostgresSidebarDatabaseBar'
+import { POSTGRES_TOP_HEADER_BAR_CLASS } from './_components/postgres-chrome'
 
 type SchemaTablesSidebarProps = {
   projectId: string
   databaseId: string
+  databaseName: string
+  databaseEngine?: string | null
   schemas: string[]
   tables: PostgresTableRow[]
   selectedTableId?: string
   databaseTab?: PostgresDatabaseTab
+  editorActive?: boolean
   isLoading?: boolean
   onSelectTable: (tableId: string) => void
 }
@@ -26,20 +32,17 @@ type SchemaTablesSidebarProps = {
 export function SchemaTablesSidebar({
   projectId,
   databaseId,
+  databaseName,
+  databaseEngine,
   schemas,
   tables,
   selectedTableId,
   databaseTab,
+  editorActive,
   isLoading,
   onSelectTable,
 }: SchemaTablesSidebarProps) {
-  const {
-    panel,
-    setPanel,
-    recentQueries,
-    selectedQueryId,
-    selectQuery,
-  } = usePostgresSidebar()
+  const { panel, setPanel, recentQueries } = usePostgresSidebar()
 
   const tablesBySchema = useMemo(() => {
     const map = new Map<string, PostgresTableRow[]>()
@@ -88,14 +91,23 @@ export function SchemaTablesSidebar({
 
   return (
     <aside className="flex h-full min-h-0 w-full flex-col bg-muted/20">
-      <div className="flex h-11 shrink-0 items-center border-b border-border bg-muted/20 px-2">
+      <PostgresSidebarDatabaseBar
+        projectId={projectId}
+        databaseId={databaseId}
+        databaseName={databaseName}
+      />
+      <div className={cn('flex px-2', POSTGRES_TOP_HEADER_BAR_CLASS)}>
         <ToggleGroup
           type="single"
           variant="outline"
           size="sm"
           value={panel}
           onValueChange={(value) => {
-            if (value === 'schemas' || value === 'queries') {
+            if (
+              value === 'schemas' ||
+              value === 'queries' ||
+              value === 'history'
+            ) {
               setPanel(value as PostgresSidebarPanel)
             }
           }}
@@ -104,15 +116,26 @@ export function SchemaTablesSidebar({
         >
           <ToggleGroupItem
             value="schemas"
-            className="h-7 flex-1 text-[12px] font-medium data-[state=on]:bg-background data-[state=on]:text-foreground"
+            className="h-8 flex-1 px-1.5 text-[11px] font-medium data-[state=on]:bg-background data-[state=on]:text-foreground sm:text-[12px]"
           >
             Schemas
           </ToggleGroupItem>
           <ToggleGroupItem
             value="queries"
-            className="h-7 flex-1 text-[12px] font-medium data-[state=on]:bg-background data-[state=on]:text-foreground"
+            className="h-8 flex-1 px-1.5 text-[11px] font-medium data-[state=on]:bg-background data-[state=on]:text-foreground sm:text-[12px]"
           >
             Queries
+          </ToggleGroupItem>
+          <ToggleGroupItem
+            value="history"
+            className="h-8 flex-1 px-1.5 text-[11px] font-medium data-[state=on]:bg-background data-[state=on]:text-foreground sm:text-[12px]"
+          >
+            History
+            {recentQueries.length > 0 ? (
+              <span className="ml-1 text-[10px] tabular-nums text-muted-foreground">
+                {recentQueries.length}
+              </span>
+            ) : null}
           </ToggleGroupItem>
         </ToggleGroup>
       </div>
@@ -183,36 +206,21 @@ export function SchemaTablesSidebar({
               No schemas found.
             </p>
           )
-        ) : recentQueries.length > 0 ? (
-          <div className="space-y-0.5">
-            {recentQueries.map((query) => (
-              <button
-                key={query.id}
-                type="button"
-                onClick={() => selectQuery(query)}
-                className={cn(
-                  'flex w-full cursor-pointer flex-col rounded-md px-3 py-2 text-left transition-colors',
-                  selectedQueryId === query.id
-                    ? 'bg-background text-foreground shadow-sm'
-                    : 'text-muted-foreground hover:bg-background/70 hover:text-foreground',
-                )}
-              >
-                <span className="truncate font-mono text-[12px] font-medium text-foreground">
-                  {queryPreviewLabel(query.sql)}
-                </span>
-              </button>
-            ))}
-          </div>
+        ) : panel === 'queries' ? (
+          <PostgresQueriesSidebarPanel
+            projectId={projectId}
+            databaseId={databaseId}
+          />
         ) : (
-          <p className="px-2 py-3 text-[12px] text-muted-foreground">
-            No queries yet. Run a query in the editor to see it here.
-          </p>
+          <PostgresHistorySidebarPanel />
         )}
       </div>
       <PostgresDatabaseNav
         projectId={projectId}
         databaseId={databaseId}
+        databaseEngine={databaseEngine}
         activeTab={databaseTab}
+        editorActive={editorActive}
       />
       <PostgresSpecificationCard
         projectId={projectId}

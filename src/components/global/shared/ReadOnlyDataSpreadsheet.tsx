@@ -31,6 +31,11 @@ export type ReadOnlyDataSpreadsheetProps = {
   header?: ReactNode
   footer?: ReactNode
   minColumnWidthPx?: number
+  /** SQL studio styling: uppercase column headers, row numbers, taller cells. */
+  variant?: 'default' | 'studio'
+  showRowNumbers?: boolean
+  /** Starting index for the row number column (e.g. pagination offset). */
+  rowNumberOffset?: number
 }
 
 function normalizeColumns(
@@ -55,8 +60,12 @@ export function ReadOnlyDataSpreadsheet({
   header,
   footer,
   minColumnWidthPx = 150,
+  variant = 'default',
+  showRowNumbers = false,
+  rowNumberOffset = 0,
 }: ReadOnlyDataSpreadsheetProps) {
   const normalizedColumns = normalizeColumns(columns)
+  const isStudio = variant === 'studio'
 
   if (isLoading && rows.length === 0) {
     return (
@@ -74,14 +83,23 @@ export function ReadOnlyDataSpreadsheet({
   return (
     <div className={cn('flex min-h-0 flex-1 flex-col overflow-hidden', className)}>
       {header ? (
-        <div className="shrink-0 border-b border-border bg-background px-4 py-2 sm:px-6">
+        <div
+          className={cn(
+            'shrink-0 border-b border-border bg-background px-4 sm:px-6',
+            isStudio ? 'py-3' : 'py-2',
+          )}
+        >
           {header}
         </div>
       ) : null}
 
       <div className="min-h-0 flex-1 overflow-auto">
         {normalizedColumns.length === 0 || rows.length === 0 ? (
-          emptyContent ?? (
+          emptyContent ? (
+            <div className="flex h-full min-h-[12rem] items-center justify-center px-4">
+              {emptyContent}
+            </div>
+          ) : (
             <div className="flex h-full min-h-[12rem] items-center justify-center px-4 text-center text-[13px] text-muted-foreground">
               {emptyLabel}
             </div>
@@ -89,6 +107,9 @@ export function ReadOnlyDataSpreadsheet({
         ) : (
           <table className="w-full min-w-max border-collapse text-left">
             <colgroup>
+              {showRowNumbers ? (
+                <col style={{ width: '3rem' }} />
+              ) : null}
               {normalizedColumns.map((column) => (
                 <col
                   key={column.key}
@@ -98,11 +119,23 @@ export function ReadOnlyDataSpreadsheet({
             </colgroup>
             <thead className={stickyTheadClass}>
               <tr>
+                {showRowNumbers ? (
+                  <th
+                    className={cn(
+                      'w-12 px-3 py-3 text-right text-[12px] font-semibold uppercase tracking-wider text-muted-foreground',
+                      headerCellBorderClass,
+                    )}
+                  >
+                    #
+                  </th>
+                ) : null}
                 {normalizedColumns.map((column) => (
                   <th
                     key={column.key}
                     className={cn(
-                      'px-3 py-2 text-left text-[12px] font-medium text-foreground',
+                      isStudio
+                        ? 'px-4 py-3 text-left text-[12px] font-semibold uppercase tracking-wider text-muted-foreground'
+                        : 'px-3 py-2 text-left text-[12px] font-medium text-foreground',
                       headerCellBorderClass,
                     )}
                   >
@@ -117,8 +150,23 @@ export function ReadOnlyDataSpreadsheet({
                 return (
                   <tr
                     key={rowKey}
-                    className="transition-colors hover:bg-muted/50"
+                    className={cn(
+                      'transition-colors hover:bg-muted/50',
+                      isStudio && rowIndex % 2 === 1 && 'bg-muted/15',
+                    )}
                   >
+                    {showRowNumbers ? (
+                      <td
+                        className={cn(
+                          isStudio ? 'px-3 py-2.5' : 'px-3 py-1.5',
+                          bodyCellBorderClass,
+                        )}
+                      >
+                        <span className="block text-right text-[11px] tabular-nums text-muted-foreground">
+                          {rowNumberOffset + rowIndex + 1}
+                        </span>
+                      </td>
+                    ) : null}
                     {normalizedColumns.map((column) => {
                       const { full, display, isNull } = formatSpreadsheetCellValue(
                         row[column.key],
@@ -127,7 +175,10 @@ export function ReadOnlyDataSpreadsheet({
                       return (
                         <td
                           key={column.key}
-                          className={cn('px-3 py-1.5', bodyCellBorderClass)}
+                          className={cn(
+                            isStudio ? 'px-4 py-2.5' : 'px-3 py-1.5',
+                            bodyCellBorderClass,
+                          )}
                         >
                           <span
                             className={cn(

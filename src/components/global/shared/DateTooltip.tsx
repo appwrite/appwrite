@@ -23,6 +23,8 @@ interface DateTooltipProps {
   live?: boolean
   /** Refresh interval for live mode (default: 30s) */
   liveUpdateMs?: number
+  /** If true, shows the time label without the detail popover */
+  disableTooltip?: boolean
 }
 
 type DateTooltipContentProps = Omit<DateTooltipProps, 'date'> & {
@@ -39,6 +41,7 @@ export function DateTooltip({
   showFormattedDate = false,
   live = false,
   liveUpdateMs = 30_000,
+  disableTooltip = false,
 }: DateTooltipProps) {
   const dateObj = parseTooltipDate(date)
 
@@ -55,6 +58,7 @@ export function DateTooltip({
       showFormattedDate={showFormattedDate}
       live={live}
       liveUpdateMs={liveUpdateMs}
+      disableTooltip={disableTooltip}
     />
   )
 }
@@ -65,6 +69,7 @@ function DateTooltipContent({
   showFormattedDate = false,
   live = false,
   liveUpdateMs = 30_000,
+  disableTooltip = false,
 }: DateTooltipContentProps) {
   const [nowMs, setNowMs] = useState(() => Date.now())
 
@@ -230,6 +235,14 @@ function DateTooltipContent({
     window.setTimeout(() => setCopiedField(null), 2000)
   }
 
+  const timeLabel = showFormattedDate
+    ? formatDateTime(dateObj)
+    : getSimpleRelativeTime()
+
+  if (disableTooltip) {
+    return <span className={className}>{timeLabel}</span>
+  }
+
   return (
     <Popover open={isOpen} onOpenChange={setIsOpen}>
       <PopoverTrigger asChild>
@@ -238,9 +251,7 @@ function DateTooltipContent({
           onMouseEnter={openPopover}
           onMouseLeave={scheduleClosePopover}
         >
-          {showFormattedDate
-            ? formatDateTime(dateObj)
-            : getSimpleRelativeTime()}
+          {timeLabel}
         </span>
       </PopoverTrigger>
       <PopoverContent

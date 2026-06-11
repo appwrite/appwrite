@@ -3,18 +3,24 @@ import {
   usePostgresTableRows,
 } from '@/lib/react-query/hooks'
 import { ROWS_DEFAULT_PAGE_SIZE } from '@/lib/react-query/hooks/constants'
-import { parsePostgresTableId } from '@/lib/postgres-database-routes'
-import { buildPostgresSelectSql } from '@/lib/postgres-sql'
-import { useCallback, useEffect, useState } from 'react'
-import { useParams } from '@tanstack/react-router'
-import { Badge } from '@/components/ui/badge'
-import type { Models } from '@appwrite.io/console'
+import {
+  parsePostgresTableId,
+  postgresTableRows,
+} from '@/lib/postgres-database-routes'
+import { useCallback, useEffect, useRef, useState } from 'react'
+import { useNavigate, useParams } from '@tanstack/react-router'
+import { useAuth } from '@/components/global/auth/RequireAuth'
+import { canSaveTeamFilters } from '@/lib/console-access-checks'
+import { useConsoleProfile } from '@/hooks/use-console-profile'
+import { useOrganizationScopes } from '@/lib/react-query/hooks/organizations'
+import { useProject } from '@/lib/react-query/hooks/projects'
 import { ReadOnlyDataSpreadsheet } from '@/components/global/shared/ReadOnlyDataSpreadsheet'
+import { PostgresQueryResultsMeta } from './_components/PostgresQueryResultsMeta'
 import { Pagination } from '@/components/global/shared/Pagination'
 import { SqlWorkbench } from './SqlWorkbench'
 import { PostgresShell } from './PostgresShell'
-import { PostgresConnectionDetails } from './PostgresConnectionDetails'
 import { PostgresTableRowsEmptyState } from './_components/PostgresTableRowsEmptyState'
+import { SqlWorkbenchPanelEmptyState } from './_components/SqlWorkbenchPanelEmptyState'
 import { usePostgresSidebar } from './_components/PostgresSidebarContext'
 
 export type PostgresWorkspaceProps = {
@@ -22,22 +28,9 @@ export type PostgresWorkspaceProps = {
   tableId: string
 }
 
-const DEFAULT_SQL = 'SELECT NOW() AS current_time;'
-
-function sqlForTable(tableId: string, limit = ROWS_DEFAULT_PAGE_SIZE): string {
-  if (tableId === '-') return DEFAULT_SQL
-  const { schema, table } = parsePostgresTableId(tableId)
-  return buildPostgresSelectSql(schema, table, limit, 0)
-}
-
 export function Workspace({ databaseId, tableId }: PostgresWorkspaceProps) {
-  const isDatabaseLevelView = tableId === '-'
-
   return (
-    <PostgresShell
-      databaseId={databaseId}
-      tableId={isDatabaseLevelView ? undefined : tableId}
-    >
+    <PostgresShell databaseId={databaseId} tableId={tableId}>
       <WorkspaceContent databaseId={databaseId} tableId={tableId} />
     </PostgresShell>
   )
@@ -45,23 +38,59 @@ export function Workspace({ databaseId, tableId }: PostgresWorkspaceProps) {
 
 function WorkspaceContent({ databaseId, tableId }: PostgresWorkspaceProps) {
   const { projectId } = useParams({ strict: false }) as { projectId: string }
-  const isDatabaseLevelView = tableId === '-'
-  const selectedTable = isDatabaseLevelView ? undefined : parsePostgresTableId(tableId)
+  const navigate = useNavigate()
+  const { account } = useAuth()
+  const { project } = useProject(projectId)
+  const teamId = project?.teamId ?? null
+  const { features } = useConsoleProfile()
+  const { access } = useOrganizationScopes(teamId ?? undefined)
+  const canSaveTeam = canSaveTeamFilters(access, features)
 
-  const [sql, setSql] = useState(() => sqlForTable(tableId))
-  const [manualResult, setManualResult] =
-    useState<Models.DedicatedDatabaseExecution | null>(null)
-  const [manualError, setManualError] = useState<unknown>(null)
+  const {
+    tabs,
+    activeTabId,
+    activeTab,
+    setActiveTabId,
+    updateActiveTabSql,
+    setActiveTabResult,
+    createTab,
+    closeTab,
+    reorderTabs,
+    addRecentQuery,
+    openTableTab,
+  } = usePostgresSidebar()
+
+  const isDatabaseLevelView = tableId === '-'
+  const preferQueryTabRef = useRef(false)
+
+  useEffect(() => {
+    preferQueryTabRef.current = false
+  }, [tableId])
+
+  useEffect(() => {
+    if (!isDatabaseLevelView) {
+      if (preferQueryTabRef.current) return
+      openTableTab(tableId)
+    }
+  }, [isDatabaseLevelView, openTableTab, tableId])
+
+  const handleCreateTab = useCallback(() => {
+    preferQueryTabRef.current = true
+    createTab()
+  }, [createTab])
+
+  const activeTableId = activeTab.tableId
+  const selectedTable = activeTableId
+    ? parsePostgresTableId(activeTableId)
+    : undefined
+
   const [page, setPage] = useState(1)
   const [pageSize, setPageSize] = useState(ROWS_DEFAULT_PAGE_SIZE)
 
   useEffect(() => {
-    setSql(sqlForTable(tableId))
-    setManualResult(null)
-    setManualError(null)
     setPage(1)
     setPageSize(ROWS_DEFAULT_PAGE_SIZE)
-  }, [tableId])
+  }, [activeTableId])
 
   const {
     rows,
@@ -74,21 +103,12 @@ function WorkspaceContent({ databaseId, tableId }: PostgresWorkspaceProps) {
   } = usePostgresTableRows(
     projectId,
     databaseId,
-    isDatabaseLevelView ? null : tableId,
+    activeTableId ?? null,
     page - 1,
     pageSize,
   )
 
   const executeSql = useExecutePostgresSql(projectId, databaseId)
-  const { registerSqlLoader, addRecentQuery } = usePostgresSidebar()
-
-  useEffect(() => {
-    registerSqlLoader((nextSql) => {
-      setSql(nextSql)
-      setManualResult(null)
-      setManualError(null)
-    })
-  }, [registerSqlLoader])
 
   const tableColumns =
     columns.length > 0
@@ -98,21 +118,46 @@ function WorkspaceContent({ databaseId, tableId }: PostgresWorkspaceProps) {
         : []
 
   const handleRunSql = useCallback(async () => {
-    const trimmed = sql.trim()
+    const trimmed = activeTab.sql.trim()
     if (!trimmed) return
-    setManualError(null)
+    setActiveTabResult(null, null)
     try {
       const result = await executeSql.mutateAsync(trimmed)
-      setManualResult(result)
+      setActiveTabResult(result, null)
       addRecentQuery(trimmed)
     } catch (error) {
-      setManualResult(null)
-      setManualError(error)
+      setActiveTabResult(null, error)
     }
-  }, [addRecentQuery, executeSql, sql])
+  }, [
+    activeTab.sql,
+    addRecentQuery,
+    executeSql,
+    setActiveTabResult,
+  ])
 
-  const tableRowsPanel = !isDatabaseLevelView && selectedTable ? (
+  const handleSelectTab = useCallback(
+    (tabId: string) => {
+      setActiveTabId(tabId)
+      const tab = tabs.find((entry) => entry.id === tabId)
+      if (!tab?.tableId || tab.tableId === tableId) return
+
+      navigate({
+        ...postgresTableRows({
+          projectId,
+          databaseId,
+          tableId: tab.tableId,
+        }),
+        replace: true,
+      })
+    },
+    [databaseId, navigate, projectId, setActiveTabId, tableId, tabs],
+  )
+
+  const tableRowsPanel = selectedTable ? (
     <ReadOnlyDataSpreadsheet
+      variant="studio"
+      showRowNumbers
+      rowNumberOffset={(page - 1) * pageSize}
       columns={tableColumns}
       rows={rows}
       getRowKey={(row, index) =>
@@ -120,28 +165,14 @@ function WorkspaceContent({ databaseId, tableId }: PostgresWorkspaceProps) {
       }
       isLoading={rowsLoading || rowsFetching}
       loadingLabel="Loading rows…"
-      emptyContent={
-        <PostgresTableRowsEmptyState
-          projectId={projectId}
-          databaseId={databaseId}
-        />
-      }
+      emptyContent={<PostgresTableRowsEmptyState />}
       header={
-        <div className="flex flex-wrap items-center gap-2">
-          <span className="text-[13px] font-semibold text-foreground">
-            {selectedTable.schema}.{selectedTable.table}
-          </span>
-          {typeof durationMs === 'number' ? (
-            <Badge variant="info" className="text-[10px] shrink-0">
-              {durationMs} ms
-            </Badge>
-          ) : null}
-          {truncated ? (
-            <Badge variant="warning" className="text-[10px] shrink-0">
-              Truncated
-            </Badge>
-          ) : null}
-        </div>
+        <PostgresQueryResultsMeta
+          title={`${selectedTable.schema}.${selectedTable.table}`}
+          rowCount={total}
+          durationMs={durationMs}
+          truncated={truncated}
+        />
       }
       footer={
         <Pagination
@@ -160,11 +191,7 @@ function WorkspaceContent({ databaseId, tableId }: PostgresWorkspaceProps) {
       }
     />
   ) : (
-    <PostgresConnectionDetails
-      projectId={projectId}
-      databaseId={databaseId}
-      centerInPanel
-    />
+    <SqlWorkbenchPanelEmptyState variant="results" />
   )
 
   return (
@@ -172,12 +199,21 @@ function WorkspaceContent({ databaseId, tableId }: PostgresWorkspaceProps) {
       <SqlWorkbench
         projectId={projectId}
         databaseId={databaseId}
-        sql={sql}
-        onSqlChange={setSql}
-          onRun={handleRunSql}
+        tabs={tabs}
+        activeTabId={activeTabId}
+        sql={activeTab.sql}
+        onSqlChange={updateActiveTabSql}
+        onSelectTab={handleSelectTab}
+        onCreateTab={handleCreateTab}
+        onCloseTab={closeTab}
+        onReorderTabs={reorderTabs}
+        onRun={handleRunSql}
         isRunning={executeSql.isPending}
-        error={manualError ?? executeSql.error}
-        result={manualResult}
+        error={activeTab.error ?? executeSql.error}
+        result={activeTab.result}
+        account={account}
+        teamId={teamId}
+        canSaveTeam={canSaveTeam}
       >
         {tableRowsPanel}
       </SqlWorkbench>

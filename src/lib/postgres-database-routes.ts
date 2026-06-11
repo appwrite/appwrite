@@ -77,6 +77,9 @@ export function postgresNav(params: PostgresNavBase) {
         },
       }
     },
+    editor() {
+      return this.tables({ tableId: '-' })
+    },
     visualizer() {
       return {
         to: '/projects/$projectId/databases/postgres/$databaseId/visualizer' as const,

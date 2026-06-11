@@ -8,6 +8,7 @@
 
 import { useState, useEffect, useMemo } from 'react'
 import { ChevronDown, Database, Loader2, Plus, Table2 } from 'lucide-react'
+import { DatabaseTypeIcon } from './DatabaseTypeIcon'
 import { Button } from '@/components/ui/button'
 import {
   Popover,
@@ -95,10 +96,12 @@ export function DatabaseSelector({
 
   const databases = useMemo(() => data?.databases ?? [], [data?.databases])
 
+  const selectedDatabase = value
+    ? databases.find((d) => d.$id === value)
+    : undefined
+
   const displayValue =
-    selectedName ||
-    (value ? databases.find((d) => d.$id === value)?.name : null) ||
-    placeholder
+    selectedName || selectedDatabase?.name || placeholder
 
   const bothCreateDisabled = createDatabaseDisabled && createTableDisabled
   const triggerDisabledTooltip =
@@ -117,7 +120,7 @@ export function DatabaseSelector({
             )}
           >
             <span className="flex min-w-0 items-center gap-1.5">
-              <Database className="h-4 w-4 shrink-0 text-muted-foreground" />
+              <DatabaseTypeIcon apiType={selectedDatabase?.type} />
               <span className="truncate">{displayValue}</span>
             </span>
             <ChevronDown className="h-3.5 w-3.5 shrink-0 opacity-50" />
@@ -162,7 +165,7 @@ export function DatabaseSelector({
                     }}
                     className="flex w-full cursor-pointer items-center gap-1.5 rounded-sm px-2 py-1.5 text-left text-[13px] outline-none transition-colors hover:bg-accent hover:text-accent-foreground"
                   >
-                    <Database className="h-4 w-4 shrink-0 text-muted-foreground" />
+                    <DatabaseTypeIcon apiType={db.type} />
                     <span className="truncate">{db.name}</span>
                   </button>
                 ))}

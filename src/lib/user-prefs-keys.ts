@@ -166,6 +166,129 @@ export function buildSavedImageTransformPresetsPrefs(
 }
 
 // ---------------------------------------------------------------------------
+// Databases: PostgreSQL saved SQL queries (account + team prefs, per database)
+// ---------------------------------------------------------------------------
+
+/**
+ * Preference key prefix for saved PostgreSQL queries.
+ * Full key: `console.postgresSavedQueries.<databaseId>`
+ * Value: JSON string of SavedPostgresQuery[].
+ */
+export const USER_PREFS_KEY_POSTGRES_SAVED_QUERIES_PREFIX =
+  'console.postgresSavedQueries'
+
+export const MAX_SAVED_POSTGRES_QUERIES = 30
+export const MAX_SAVED_POSTGRES_QUERY_NAME_LENGTH = 64
+export const MAX_SAVED_POSTGRES_QUERY_SQL_CHARS = 48000
+
+export interface SavedPostgresQuery {
+  id: string
+  name: string
+  sql: string
+}
+
+export function getPostgresSavedQueriesKey(databaseId: string): string {
+  return `${USER_PREFS_KEY_POSTGRES_SAVED_QUERIES_PREFIX}.${databaseId}`
+}
+
+export function parsePostgresSavedQueries(
+  prefs: UserPrefs | null | undefined,
+  databaseId: string,
+): SavedPostgresQuery[] {
+  if (!prefs || !databaseId) return []
+  const key = getPostgresSavedQueriesKey(databaseId)
+  if (typeof prefs[key] !== 'string') return []
+  try {
+    const raw = JSON.parse(prefs[key] as string)
+    if (!Array.isArray(raw)) return []
+    return raw
+      .filter(
+        (item): item is SavedPostgresQuery =>
+          item != null &&
+          typeof item === 'object' &&
+          typeof (item as SavedPostgresQuery).id === 'string' &&
+          typeof (item as SavedPostgresQuery).name === 'string' &&
+          typeof (item as SavedPostgresQuery).sql === 'string',
+      )
+      .map((item) => {
+        const query = item as SavedPostgresQuery
+        return {
+          id: query.id,
+          name: String(query.name).slice(
+            0,
+            MAX_SAVED_POSTGRES_QUERY_NAME_LENGTH,
+          ),
+          sql: String(query.sql).slice(0, MAX_SAVED_POSTGRES_QUERY_SQL_CHARS),
+        }
+      })
+      .slice(0, MAX_SAVED_POSTGRES_QUERIES)
+  } catch {
+    return []
+  }
+}
+
+export function buildPostgresSavedQueriesPrefs(
+  databaseId: string,
+  list: SavedPostgresQuery[],
+): UserPrefs {
+  const key = getPostgresSavedQueriesKey(databaseId)
+  return {
+    [key]: JSON.stringify(list.slice(0, MAX_SAVED_POSTGRES_QUERIES)),
+  }
+}
+
+export type PostgresSavedQueryScope = 'user' | 'team'
+
+/**
+ * Preference key for the saved-queries scope toggle (For me / For team).
+ * Full key: `console.postgresSavedQueriesScope.<databaseId>`
+ * Value: `"user"` or `"team"`.
+ */
+export const USER_PREFS_KEY_POSTGRES_SAVED_QUERIES_SCOPE_PREFIX =
+  'console.postgresSavedQueriesScope'
+
+export function getPostgresSavedQueriesScopeKey(databaseId: string): string {
+  return `${USER_PREFS_KEY_POSTGRES_SAVED_QUERIES_SCOPE_PREFIX}.${databaseId}`
+}
+
+export function parsePostgresSavedQueriesScope(
+  prefs: UserPrefs | null | undefined,
+  databaseId: string,
+): PostgresSavedQueryScope | null {
+  if (!prefs || !databaseId) return null
+  const key = getPostgresSavedQueriesScopeKey(databaseId)
+  const value = prefs[key]
+  if (value === 'user' || value === 'team') return value
+  return null
+}
+
+export function buildPostgresSavedQueriesScopePrefs(
+  databaseId: string,
+  scope: PostgresSavedQueryScope,
+): UserPrefs {
+  return {
+    [getPostgresSavedQueriesScopeKey(databaseId)]: scope,
+  }
+}
+
+export function resolvePostgresSavedQueriesScope(args: {
+  persisted: PostgresSavedQueryScope | null
+  hasTeamLevel: boolean
+  userQueryCount: number
+  teamQueryCount: number
+}): PostgresSavedQueryScope {
+  const { persisted, hasTeamLevel, userQueryCount, teamQueryCount } = args
+
+  if (persisted === 'user') return 'user'
+  if (persisted === 'team' && hasTeamLevel) return 'team'
+
+  if (!hasTeamLevel) return 'user'
+  if (userQueryCount > 0 && teamQueryCount === 0) return 'user'
+  if (teamQueryCount > 0 && userQueryCount === 0) return 'team'
+  return 'user'
+}
+
+// ---------------------------------------------------------------------------
 // Databases: tables sidebar width (single shared setting across all databases)
 // ---------------------------------------------------------------------------
 
