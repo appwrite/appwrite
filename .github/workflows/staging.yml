@@ -1,0 +1,97 @@
+name: Staging deployment
+
+on:
+    workflow_dispatch:
+    push:
+        branches:
+            - main
+
+concurrency:
+    group: ${{ github.workflow }}
+    cancel-in-progress: false
+
+env:
+    ENVIRONMENT: staging
+    PROJECT: vibes
+    DECLARATIVE_OWNER: appwrite-labs
+    DECLARATIVE_REPOSITORY: assets-applications
+    REGISTRY_GITHUB: ghcr.io
+    REGISTRY_DOCKERHUB: docker.io
+    IMAGE_NAME: appwrite/vibes
+    TAG: ${{ github.sha }}
+
+jobs:
+    build:
+        runs-on: ubuntu-latest
+        steps:
+            - name: Checkout the repo
+              uses: actions/checkout@v6
+
+            - name: Login to GitHub Container Registry
+              uses: docker/login-action@v3
+              with:
+                  registry: ${{ env.REGISTRY_GITHUB }}
+                  username: ${{ github.actor }}
+                  password: ${{ secrets.GITHUB_TOKEN }}
+
+            - name: Login to Docker Hub
+              uses: docker/login-action@v3
+              with:
+                  registry: ${{ env.REGISTRY_DOCKERHUB }}
+                  username: ${{ secrets.DOCKERHUB_USERNAME }}
+                  password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+            - name: Build and push
+              uses: docker/build-push-action@v6
+              with:
+                  context: .
+                  push: true
+                  tags: |
+                      ${{ env.REGISTRY_GITHUB }}/${{ env.IMAGE_NAME }}:${{ env.TAG }}
+                      ${{ env.REGISTRY_DOCKERHUB }}/${{ env.IMAGE_NAME }}:${{ env.TAG }}
+                  build-args: |
+                      "VITE_APPWRITE_ENDPOINT=${{ secrets.VITE_APPWRITE_ENDPOINT }}"
+                      "VITE_APPWRITE_PROJECT_ID=${{ vars.VITE_APPWRITE_PROJECT_ID }}"
+                      "VITE_STRIPE_PUBLISHABLE_KEY=${{ secrets.VITE_STRIPE_PUBLISHABLE_KEY }}"
+                      "VITE_GROWTH_ENDPOINT=${{ vars.VITE_GROWTH_ENDPOINT }}"
+                      "VITE_COMPANY_NAME=${{ vars.VITE_COMPANY_NAME }}"
+                      "VITE_CONTACT_SALES_URL=${{ vars.VITE_CONTACT_SALES_URL }}"
+                      "VITE_LEGAL_EMAIL=${{ vars.VITE_LEGAL_EMAIL }}"
+                      "VITE_INSTRUMENTATION_SCRIPT_SRC=${{ vars.VITE_INSTRUMENTATION_SCRIPT_SRC }}"
+                      "VITE_PLAUSIBLE_SCRIPT_SRC=${{ vars.VITE_PLAUSIBLE_SCRIPT_SRC }}"
+                      "VITE_SENTRY_DSN=${{ vars.VITE_SENTRY_DSN }}"
+                      "SENTRY_AUTH_TOKEN=${{ secrets.SENTRY_AUTH_TOKEN }}"
+
+    deploy:
+        needs: build
+        runs-on: ubuntu-latest
+        steps:
+            - name: Get token for ${{ env.DECLARATIVE_REPOSITORY }}
+              id: app-token
+              uses: actions/create-github-app-token@v2
+              with:
+                  app-id: ${{ vars.DECLARATIVE_DEPLOYMENT_GITHUB_APP_ID }}
+                  private-key: ${{ secrets.DECLARATIVE_DEPLOYMENT_GITHUB_APP_PRIVATE_KEY }}
+                  owner: ${{ env.DECLARATIVE_OWNER }}
+                  repositories: ${{ env.DECLARATIVE_REPOSITORY }}
+
+            - name: Checkout ${{ env.DECLARATIVE_REPOSITORY }}
+              uses: actions/checkout@v6
+              with:
+                  repository: ${{ env.DECLARATIVE_OWNER }}/${{ env.DECLARATIVE_REPOSITORY }}
+                  token: ${{ steps.app-token.outputs.token }}
+
+            - name: Update image tag
+              run: yq -i '.${{ env.PROJECT }}.image.tag = strenv(TAG)' ${{ env.ENVIRONMENT }}/${{ env.PROJECT }}/fra1.yaml
+
+            - name: Commit and push
+              run: |
+                  git config user.name "github-actions[bot]"
+                  git config user.email "github-actions[bot]@users.noreply.github.com"
+                  git add ${{ env.ENVIRONMENT }}/${{ env.PROJECT }}/fra1.yaml
+                  if git diff --cached --quiet; then
+                    echo "No changes to commit"
+                  else
+                    git commit -m "chore(${{ env.ENVIRONMENT }}): ${{ env.PROJECT }} image tag to ${{ env.TAG }}"
+                    git push
+                  fi
