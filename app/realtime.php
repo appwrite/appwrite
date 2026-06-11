@@ -499,15 +499,19 @@ $server->onWorkerStart(function (int $workerId) use ($server, $register, $stats,
                 }
             });
         } catch (Throwable $th) {
-            $logError($th, "pubSubConnection");
-
             Console::error('Pub/sub error: ' . $th->getMessage());
             $attempts++;
+
+            if (!($th instanceof \RedisException)) {
+                $logError($th, "pubSubConnection");
+            }
+
             sleep(DATABASE_RECONNECT_SLEEP);
             continue;
         }
     }
 
+    $logError(new \RedisException('Failed to restart pub/sub after 300 attempts'), "pubSubConnection");
     Console::error('Failed to restart pub/sub...');
 });
 
