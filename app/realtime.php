@@ -699,8 +699,15 @@ $server->onWorkerStart(function (int $workerId) use ($server, $register, $stats,
                                 );
                             }
 
+
                             // Restore authorization after subscribe
-                            if ($authorization !== null) {
+                            // meta can be empty as well as the channels are not required query param to connect
+                            // channels and queries can be sent via message later on
+                            // so if meta is empty we are not subscribing above to the projectId
+                            if (!isset($realtime->connections[$connection])) {
+                                $realtime->subscribe($projectId, $connection, '', $roles, [], [], $userId);
+                            }
+                            if ($authorization !== null && isset($realtime->connections[$connection])) {
                                 $realtime->connections[$connection]['authorization'] = $authorization;
                             }
 
