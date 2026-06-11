@@ -5,7 +5,8 @@
 /**
  * Reusable code block with syntax highlighting for all Appwrite SDK and runtime languages.
  * Supports: JavaScript, TypeScript, Node/Deno/Bun, Python, PHP, Ruby, Dart, Swift, Kotlin, Java,
- * Go, C#/.NET, JSON, Bash, PowerShell, HCL (Terraform), markup, plaintext, and .env (dotenv).
+ * Go, C#/.NET, C++, Rust, JSON, YAML, TOML, Bash, PowerShell, HCL (Terraform), GraphQL, HTTP,
+ * Markdown, Diff, markup, plaintext, and .env (dotenv).
  * Uses prism-react-renderer; extra languages are loaded on demand. Built-in Prism themes;
  * Editor surface is transparent so the page background shows through the frame.
  */
@@ -72,6 +73,11 @@ export type CodeBlockLanguage =
   | 'groovy'
   | 'docker'
   | 'css'
+  | 'yaml'
+  | 'toml'
+  | 'cpp'
+  | 'markdown'
+  | 'diff'
   // Appwrite runtime keys (map to Prism languages below)
   | 'node'
   | 'deno'
@@ -121,6 +127,11 @@ export function getCodeLanguageLabel(lang: CodeBlockLanguage): string {
     groovy: 'Groovy',
     docker: 'Dockerfile',
     css: 'CSS',
+    yaml: 'YAML',
+    toml: 'TOML',
+    cpp: 'C++',
+    markdown: 'Markdown',
+    diff: 'Diff',
     node: 'Node.js',
     deno: 'Deno',
     bun: 'Bun',
@@ -151,6 +162,11 @@ const EXTRA_LANGUAGES: string[] = [
   'groovy',
   'docker',
   'css',
+  'yaml',
+  'toml',
+  'cpp',
+  'markdown',
+  'diff',
 ]
 
 const PRISM_LOADERS: Record<string, () => Promise<unknown>> = {
@@ -181,6 +197,16 @@ const PRISM_LOADERS: Record<string, () => Promise<unknown>> = {
   groovy: () => import('prismjs/components/prism-groovy'),
   docker: () => import('prismjs/components/prism-docker'),
   css: () => import('prismjs/components/prism-css'),
+  yaml: () => import('prismjs/components/prism-yaml'),
+  toml: () => import('prismjs/components/prism-toml'),
+  c: () => import('prismjs/components/prism-c'),
+  cpp: () =>
+    loadLanguage('c').then(() => import('prismjs/components/prism-cpp')),
+  markdown: () =>
+    loadLanguage('markup').then(
+      () => import('prismjs/components/prism-markdown'),
+    ),
+  diff: () => import('prismjs/components/prism-diff'),
 }
 
 const loadedLanguages = new Set<string>()

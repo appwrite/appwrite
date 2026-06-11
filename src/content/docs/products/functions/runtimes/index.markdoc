@@ -14,7 +14,7 @@ While still in beta, Appwrite Cloud has limited support for Cloud runtimes. As w
 {% tabsitem #all title="All runtimes" %}
 {% table %}
 * &nbsp; {% width=48 %}
-* Name {% width=100 %}
+* Name {% width=140 %}
 * Versions
 * Architectures
 ---
@@ -158,7 +158,7 @@ While still in beta, Appwrite Cloud has limited support for Cloud runtimes. As w
 {% tabsitem #available-on-cloud title="Available on Cloud" %}
 {% table %}
 * &nbsp; {% width=48 %}
-* Name {% width=120 %}
+* Name {% width=140 %}
 * Versions
 * Architectures
 ---

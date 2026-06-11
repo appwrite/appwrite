@@ -134,38 +134,38 @@ The Appwrite SDK works with your favorite Web frameworks.
 
 Learn to use Appwrite by adding authentication to a simple web app.
 {% cards %}
-{% cards_item href="/docs/quick-starts/nextjs" title="Next.js" %}
+{% cards_item href="/docs/quick-starts/nextjs" title="Next.js" icon="icon-nextjs" %}
 Get started with Appwrite and Next.js
 {% /cards_item %}
-{% cards_item href="/docs/quick-starts/react" title="React" %}
+{% cards_item href="/docs/quick-starts/react" title="React" icon="icon-react" %}
 Get started with Appwrite and React
 {% /cards_item %}
-{% cards_item href="/docs/quick-starts/vue" title="Vue.js" %}
+{% cards_item href="/docs/quick-starts/vue" title="Vue.js" icon="web-icon-vue" %}
 Get started with Appwrite and Vue.js
 {% /cards_item %}
-{% cards_item href="/docs/quick-starts/nuxt" title="Nuxt" %}
+{% cards_item href="/docs/quick-starts/nuxt" title="Nuxt" icon="icon-nuxt" %}
 Get started with Appwrite and Nuxt
 {% /cards_item %}
-{% cards_item href="/docs/quick-starts/sveltekit" title="SvelteKit" %}
+{% cards_item href="/docs/quick-starts/sveltekit" title="SvelteKit" icon="icon-svelte" %}
 Get started with Appwrite and SvelteKit
 {% /cards_item %}
-{% cards_item href="/docs/quick-starts/angular" title="Angular" %}
+{% cards_item href="/docs/quick-starts/angular" title="Angular" icon="icon-angular" %}
 Get started with Appwrite and Angular
 {% /cards_item %}
 {% /cards %}
 
 Learn to use Appwrite by building an idea tracker app.
 {% cards %}
-{% cards_item href="/docs/tutorials/react" title="React" %}
+{% cards_item href="/docs/tutorials/react" title="React" icon="icon-react" %}
 Get started with Appwrite and React
 {% /cards_item %}
-{% cards_item href="/docs/tutorials/vue" title="Vue.js" %}
+{% cards_item href="/docs/tutorials/vue" title="Vue.js" icon="web-icon-vue" %}
 Get started with Appwrite and Vue.js
 {% /cards_item %}
-{% cards_item href="/docs/tutorials/nuxt" title="Nuxt" %}
+{% cards_item href="/docs/tutorials/nuxt" title="Nuxt" icon="icon-nuxt" %}
 Get started with Appwrite and Nuxt
 {% /cards_item %}
-{% cards_item href="/docs/tutorials/sveltekit" title="SvelteKit" %}
+{% cards_item href="/docs/tutorials/sveltekit" title="SvelteKit" icon="icon-svelte" %}
 Get started with Appwrite and SvelteKit
 {% /cards_item %}
 {% /cards %}

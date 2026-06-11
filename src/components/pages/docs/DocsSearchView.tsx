@@ -59,10 +59,7 @@ export function DocsSearchView({
 
   return (
     <Command
-      className={cn(
-        'flex min-h-0 flex-col bg-transparent',
-        isMobile ? 'flex-1' : 'max-h-[min(480px,62dvh)]',
-      )}
+      className={cn('bg-transparent', isMobile && 'flex flex-col flex-1')}
       onKeyDown={handleViewKeyDown}
       shouldFilter={false}
     >
@@ -92,7 +89,12 @@ export function DocsSearchView({
           </button>
         ) : null}
       </div>
-      <CommandList className="min-h-0 flex-1 overflow-y-auto p-2">
+      <CommandList
+        className={cn(
+          'p-2',
+          isMobile ? 'max-h-none flex-1 min-h-0' : 'max-h-[min(420px,58dvh)]',
+        )}
+      >
         {!hasQuery ? (
           <DocsSearchIdle onSuggest={setQuery} onSelect={onSelect} />
         ) : results.length > 0 ? (

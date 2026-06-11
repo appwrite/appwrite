@@ -21,8 +21,8 @@ export const FRAMEWORK_ICON_MAP: Record<string, string> = {
   react: 'react.svg',
   reactjs: 'react.svg',
   'react-js': 'react.svg',
-  'react-native': 'react.svg',
-  reactnative: 'react.svg',
+  'react-native': 'react-native.svg',
+  reactnative: 'react-native.svg',
 
   nextjs: 'nextjs.svg',
   'next-js': 'nextjs.svg',
@@ -101,6 +101,67 @@ export const FRAMEWORK_ICON_MAP: Record<string, string> = {
 
   static: 'js.svg',
   vanilla: 'js.svg',
+  web: 'js.svg',
+  javascript: 'js.svg',
+  js: 'js.svg',
+
+  bun: 'bun.svg',
+  java: 'java.svg',
+  cpp: 'cpp.svg',
+  'c++': 'cpp.svg',
+
+  // Cloud & hosting vendors
+  aws: 'amazon.svg',
+  amazon: 'amazon.svg',
+  google: 'google.svg',
+  microsoft: 'microsoft.svg',
+  azure: 'microsoft.svg',
+  vercel: 'vercel.svg',
+  digitalocean: 'digitalocean.svg',
+  'digital-ocean': 'digitalocean.svg',
+  coolify: 'coolify.svg',
+  rxdb: 'rxdb.svg',
+  firebase: 'firebase.svg',
+  supabase: 'supabase.svg',
+  nhost: 'nhost.svg',
+
+  // AI tools & IDEs
+  claude: 'claude.svg',
+  'claude-code': 'claude.svg',
+  'claude-desktop': 'claude.svg',
+  codex: 'chatgpt.svg',
+  openai: 'chatgpt.svg',
+  chatgpt: 'chatgpt.svg',
+  cursor: 'cursor-ai.svg',
+  'cursor-ai': 'cursor-ai.svg',
+  vscode: 'vscode.svg',
+  'vs-code': 'vscode.svg',
+  opencode: 'opencode.svg',
+  antigravity: 'google-antigravity.svg',
+  'google-antigravity': 'google-antigravity.svg',
+  lovable: 'lovable.svg',
+  emergent: 'emergent.svg',
+  bolt: 'bolt.svg',
+  zenflow: 'zenflow.svg',
+  windsurf: 'windsurf.svg',
+  zed: 'zed.svg',
+  'zed-industries': 'zed.svg',
+
+  // Messaging & email providers
+  mailgun: 'mailgun.svg',
+  sendgrid: 'sendgrid.svg',
+  twilio: 'twilio.svg',
+  msg91: 'msg91.svg',
+  vonage: 'vonage.svg',
+  textmagic: 'textmagic.svg',
+  telesign: 'telesign.svg',
+  fcm: 'firebase.svg',
+  apns: 'apple.svg',
+
+  // Dev tools
+  github: 'github.svg',
+  terraform: 'terraform.svg',
+  graphql: 'graphql.svg',
 }
 
 /**

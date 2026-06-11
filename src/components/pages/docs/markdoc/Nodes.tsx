@@ -153,10 +153,65 @@ export function MarkdocTableTag({ children }: { children?: ReactNode }) {
   return <>{children}</>
 }
 
+function extractMarkdocTableColumnWidths(children: ReactNode): Array<number | undefined> {
+  const widths: Array<number | undefined> = []
+
+  Children.forEach(children, (section) => {
+    if (!isValidElement<{ children?: ReactNode }>(section)) return
+    if (section.type !== MarkdocTableHeader) return
+
+    Children.forEach(section.props.children, (row) => {
+      if (!isValidElement<{ children?: ReactNode }>(row)) return
+      if (row.type !== MarkdocTableRow) return
+
+      Children.forEach(row.props.children, (cell, index) => {
+        if (!isValidElement<{ width?: number }>(cell)) return
+        if (cell.type !== MarkdocTableHead) return
+        if (widths.length <= index) {
+          widths.length = index + 1
+        }
+        if (typeof cell.props.width === 'number') {
+          widths[index] = cell.props.width
+        }
+      })
+    })
+  })
+
+  return widths
+}
+
 export function MarkdocTableRoot({ children }: { children?: ReactNode }) {
+  const columnWidths = useMemo(
+    () => extractMarkdocTableColumnWidths(children),
+    [children],
+  )
+  const hasColumnWidths = columnWidths.some((width) => width != null)
+  const fillColumnIndices = columnWidths.reduce<number[]>((indices, width, index) => {
+    if (width == null) indices.push(index)
+    return indices
+  }, [])
+  const primaryFillColumnIndex =
+    fillColumnIndices.length === 1 ? fillColumnIndices[0] : undefined
+
   return (
     <div className="not-prose my-6 overflow-hidden rounded-lg border border-border bg-card/50">
-      <Table withScrollContainer>
+      <Table withScrollContainer className={hasColumnWidths ? 'table-fixed' : undefined}>
+        {hasColumnWidths ? (
+          <colgroup>
+            {columnWidths.map((width, index) => (
+              <col
+                key={index}
+                style={
+                  width != null
+                    ? { width: `${width}px`, minWidth: `${width}px` }
+                    : index === primaryFillColumnIndex
+                      ? { width: '100%' }
+                      : undefined
+                }
+              />
+            ))}
+          </colgroup>
+        ) : null}
         {children}
       </Table>
     </div>
@@ -180,12 +235,20 @@ export function MarkdocTableRow({ children }: { children?: ReactNode }) {
 }
 
 export function MarkdocTableHead({ children }: { children?: ReactNode }) {
-  return <TableHead className={tableHeadClassName}>{children}</TableHead>
+  return (
+    <TableHead className={cn(tableHeadClassName, 'whitespace-normal')}>{children}</TableHead>
+  )
 }
 
 export function MarkdocTableCell({ children }: { children?: ReactNode }) {
   return (
-    <TableCell className={cn(tableCellClassName, '[&_strong]:font-semibold [&_strong]:text-foreground')}>
+    <TableCell
+      className={cn(
+        tableCellClassName,
+        'whitespace-normal',
+        '[&_strong]:font-semibold [&_strong]:text-foreground',
+      )}
+    >
       <DocsMarkdocInTableProvider>{children}</DocsMarkdocInTableProvider>
     </TableCell>
   )

@@ -16,3 +16,9 @@ declare module 'prismjs/components/prism-http' {}
 declare module 'prismjs/components/prism-groovy' {}
 declare module 'prismjs/components/prism-docker' {}
 declare module 'prismjs/components/prism-css' {}
+declare module 'prismjs/components/prism-yaml' {}
+declare module 'prismjs/components/prism-toml' {}
+declare module 'prismjs/components/prism-c' {}
+declare module 'prismjs/components/prism-cpp' {}
+declare module 'prismjs/components/prism-markdown' {}
+declare module 'prismjs/components/prism-diff' {}

@@ -11,7 +11,12 @@ export const docsMarkdocConfig: Config = {
     cards: { render: 'Cards' },
     cards_item: {
       render: 'CardsItem',
-      attributes: { href: { type: String }, title: { type: String }, icon: { type: String } },
+      attributes: {
+        href: { type: String },
+        title: { type: String },
+        icon: { type: String },
+        image: { type: String },
+      },
     },
     only_light: { render: 'OnlyLight' },
     only_dark: { render: 'OnlyDark' },

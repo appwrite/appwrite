@@ -1,4 +1,4 @@
-import { ArrowRight } from 'lucide-react'
+import { ArrowRight, type LucideIcon } from 'lucide-react'
 import { Children, cloneElement, isValidElement, type ReactNode } from 'react'
 import { resolveMarkdocCardIcon, MARKDOC_BRAND_ICON_CLASS } from '@/lib/docs/markdoc-icons'
 import { PUBLIC_ICON_MUTED_CLASSES } from '@/lib/public-icon-classes'
@@ -62,10 +62,11 @@ function CardHoverLight({ variant }: { variant: number }) {
   )
 }
 
-function CardItemIcon({ icon }: { icon: string }) {
-  const resolved = resolveMarkdocCardIcon(icon)
-  if (!resolved) return null
+type ResolvedCardIcon =
+  | { type: 'image'; src: string }
+  | { type: 'lucide'; Icon: LucideIcon }
 
+function CardItemIcon({ resolved }: { resolved: ResolvedCardIcon }) {
   return (
     <span className="mb-3 flex size-9 shrink-0 items-center justify-center rounded-lg border border-border bg-muted/40">
       {resolved.type === 'image' ? (
@@ -85,22 +86,25 @@ export function CardsItem({
   href,
   title,
   icon,
+  image,
   children,
   cardIndex = 0,
 }: {
   href?: string
   title?: string
   icon?: string
+  image?: string
   children?: ReactNode
   cardIndex?: number
 }) {
   const lightVariant = getCardLightVariant(href ?? title ?? '', cardIndex)
+  const resolvedIcon = resolveMarkdocCardIcon({ icon, image, title, href })
 
   const content = (
     <div className="group relative isolate flex h-full flex-col overflow-hidden rounded-xl border border-border bg-card/50 p-5">
       <CardHoverLight variant={lightVariant} />
       <div className="relative z-10 flex h-full flex-col">
-        {icon ? <CardItemIcon icon={icon} /> : null}
+        {resolvedIcon ? <CardItemIcon resolved={resolvedIcon} /> : null}
         {title ? (
           <h3 className="text-[17px] font-semibold text-foreground/90 sm:text-[18px]">{title}</h3>
         ) : null}

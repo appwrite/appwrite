@@ -124,29 +124,15 @@ Update the `mcp.json` file to include the docs server:
 
 You can also **directly add the MCP servers to Cursor** using the following links:
 
-{% only_light %}
 {% cards %}
 
-{% cards_item href="https://apwr.dev/api-mcp-cursor?ref=docs" title="API server" image="/images/docs/mcp/logos/cursor-ai.svg" %}
+{% cards_item href="https://apwr.dev/api-mcp-cursor?ref=docs" title="API server" icon="icon-cursor-ai" %}
 {% /cards_item %}
 
-{% cards_item href="https://apwr.dev/docs-mcp-cursor?ref=docs" title="Docs server" image="/images/docs/mcp/logos/cursor-ai.svg" %}
+{% cards_item href="https://apwr.dev/docs-mcp-cursor?ref=docs" title="Docs server" icon="icon-cursor-ai" %}
 {% /cards_item %}
 
 {% /cards %}
-{% /only_light %}
-
-{% only_dark %}
-{% cards %}
-
-{% cards_item href="https://apwr.dev/api-mcp-cursor?ref=docs" title="API server" image="/images/docs/mcp/logos/dark/cursor-ai.svg" %}
-{% /cards_item %}
-
-{% cards_item href="https://apwr.dev/docs-mcp-cursor?ref=docs" title="Docs server" image="/images/docs/mcp/logos/dark/cursor-ai.svg" %}
-{% /cards_item %}
-
-{% /cards %}
-{% /only_dark %}
 
 Once you save the details, Cursor will connect with the MCP server(s) and load all available tools. You may need to restart Cursor if it is unable to start the MCP server.
 

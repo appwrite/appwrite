@@ -86,19 +86,19 @@ Choose the deployment method that best fits your needs:
 For custom deployments on major cloud providers:
 
 {% cards %}
-{% cards_item href="/docs/advanced/self-hosting/platforms/aws" title="Amazon Web Services" %}
+{% cards_item href="/docs/advanced/self-hosting/platforms/aws" title="Amazon Web Services" icon="icon-aws" %}
 One-click AWS Marketplace deployment with custom configuration options.
 {% /cards_item %}
 
-{% cards_item href="/docs/advanced/self-hosting/platforms/digitalocean" title="DigitalOcean" %}
+{% cards_item href="/docs/advanced/self-hosting/platforms/digitalocean" title="DigitalOcean" icon="icon-digitalocean" %}
 Marketplace installation with simple Droplet configuration.
 {% /cards_item %}
 
-{% cards_item href="/docs/advanced/self-hosting/platforms/google-cloud" title="Google Cloud" %}
+{% cards_item href="/docs/advanced/self-hosting/platforms/google-cloud" title="Google Cloud" icon="icon-google" %}
 Deploy using Cloud Run, Compute Engine, or other Google Cloud services.
 {% /cards_item %}
 
-{% cards_item href="/docs/advanced/self-hosting/platforms/azure" title="Microsoft Azure" %}
+{% cards_item href="/docs/advanced/self-hosting/platforms/azure" title="Microsoft Azure" icon="icon-microsoft" %}
 Deploy using Container Apps, Virtual Machines, or other Azure services.
 {% /cards_item %}
 {% /cards %}
@@ -108,7 +108,7 @@ Deploy using Container Apps, Virtual Machines, or other Azure services.
 Deploy Appwrite on modern PaaS platforms for simplified management:
 
 {% cards %}
-{% cards_item href="/docs/advanced/self-hosting/platforms/coolify" title="Coolify" %}
+{% cards_item href="/docs/advanced/self-hosting/platforms/coolify" title="Coolify" icon="icon-coolify" %}
 Open-source platform for easy self-hosting with one-click deployments.
 {% /cards_item %}
 {% /cards %}

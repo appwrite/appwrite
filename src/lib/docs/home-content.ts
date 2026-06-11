@@ -131,6 +131,11 @@ export const DOCS_HOME_IDE_AI_TOOLS: DocsHomeToolCard[] = [
     iconSrc: '/icons/vscode.svg',
   },
   {
+    title: 'Zed',
+    href: '/docs/tooling/ai/agents/zed',
+    iconSrc: '/icons/zed.svg',
+  },
+  {
     title: 'OpenCode',
     href: '/docs/tooling/ai/agents/opencode',
     iconSrc: '/icons/opencode.svg',

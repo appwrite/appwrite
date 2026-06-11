@@ -10,105 +10,53 @@ Appwrite provides a comprehensive set of tools and resources to help you build w
 
 AI-powered IDEs and code editors provide intelligent code completion and context-aware assistance as you write code. These tools support our MCP servers, giving AI agents direct access to your Appwrite project.
 
-{% only_light %}
 {% cards %}
 
-{% cards_item href="/docs/tooling/ai/agents/claude-code" title="Claude Code" image="/images/docs/mcp/logos/claude.svg" %}
+{% cards_item href="/docs/tooling/ai/agents/claude-code" title="Claude Code" icon="icon-claude" %}
 {% /cards_item %}
 
-{% cards_item href="/docs/tooling/ai/agents/codex" title="Codex" image="/images/docs/mcp/logos/openai.svg" %}
+{% cards_item href="/docs/tooling/ai/agents/codex" title="Codex" icon="icon-codex" %}
 {% /cards_item %}
 
-{% cards_item href="/docs/tooling/ai/agents/cursor" title="Cursor" image="/images/docs/mcp/logos/cursor-ai.svg" %}
+{% cards_item href="/docs/tooling/ai/agents/cursor" title="Cursor" icon="icon-cursor-ai" %}
 {% /cards_item %}
 
-{% cards_item href="/docs/tooling/ai/agents/vscode" title="VS Code" image="/images/docs/mcp/logos/vscode.svg" %}
+{% cards_item href="/docs/tooling/ai/agents/vscode" title="VS Code" icon="icon-vscode" %}
 {% /cards_item %}
 
-{% cards_item href="/docs/tooling/ai/agents/zed" title="Zed" image="/images/docs/mcp/logos/zed.svg" %}
+{% cards_item href="/docs/tooling/ai/agents/zed" title="Zed" icon="icon-zed" %}
 {% /cards_item %}
 
-{% cards_item href="/docs/tooling/ai/agents/opencode" title="OpenCode" image="/images/docs/mcp/logos/opencode.svg" %}
+{% cards_item href="/docs/tooling/ai/agents/opencode" title="OpenCode" icon="icon-opencode" %}
 {% /cards_item %}
 
-{% cards_item href="/docs/tooling/ai/agents/antigravity" title="Antigravity" image="/images/docs/mcp/logos/google-antigravity.svg" %}
+{% cards_item href="/docs/tooling/ai/agents/antigravity" title="Antigravity" icon="icon-google-antigravity" %}
 {% /cards_item %}
 
 {% /cards %}
-{% /only_light %}
-
-{% only_dark %}
-{% cards %}
-
-{% cards_item href="/docs/tooling/ai/agents/claude-code" title="Claude Code" image="/images/docs/mcp/logos/dark/claude.svg" %}
-{% /cards_item %}
-
-{% cards_item href="/docs/tooling/ai/agents/codex" title="Codex" image="/images/docs/mcp/logos/dark/openai.svg" %}
-{% /cards_item %}
-
-{% cards_item href="/docs/tooling/ai/agents/cursor" title="Cursor" image="/images/docs/mcp/logos/dark/cursor-ai.svg" %}
-{% /cards_item %}
-
-{% cards_item href="/docs/tooling/ai/agents/vscode" title="VS Code" image="/images/docs/mcp/logos/dark/vscode.svg" %}
-{% /cards_item %}
-
-{% cards_item href="/docs/tooling/ai/agents/zed" title="Zed" image="/images/docs/mcp/logos/dark/zed.svg" %}
-{% /cards_item %}
-
-{% cards_item href="/docs/tooling/ai/agents/opencode" title="OpenCode" image="/images/docs/mcp/logos/dark/opencode.svg" %}
-{% /cards_item %}
-
-{% cards_item href="/docs/tooling/ai/agents/antigravity" title="Antigravity" image="/images/docs/mcp/logos/dark/google-antigravity.svg" %}
-{% /cards_item %}
-
-{% /cards %}
-{% /only_dark %}
 
 # Vibe coding {% #vibe-coding %}
 
 Vibe coding platforms let you build applications through natural language. Describe what you want to build and the AI generates the application for you.
 
-{% only_light %}
 {% cards %}
 
-{% cards_item href="/docs/tooling/ai/vibe-coding/claude-desktop" title="Claude Desktop" image="/images/docs/mcp/logos/claude.svg" %}
+{% cards_item href="/docs/tooling/ai/vibe-coding/claude-desktop" title="Claude Desktop" icon="icon-claude" %}
 {% /cards_item %}
 
-{% cards_item href="/docs/tooling/ai/vibe-coding/lovable" title="Lovable" image="/images/docs/mcp/logos/lovable.svg" %}
+{% cards_item href="/docs/tooling/ai/vibe-coding/lovable" title="Lovable" icon="icon-lovable" %}
 {% /cards_item %}
 
-{% cards_item href="/docs/tooling/ai/vibe-coding/emergent" title="Emergent" image="/images/docs/mcp/logos/emergent.svg" %}
+{% cards_item href="/docs/tooling/ai/vibe-coding/emergent" title="Emergent" icon="icon-emergent" %}
 {% /cards_item %}
 
-{% cards_item href="/docs/tooling/ai/vibe-coding/bolt" title="Bolt" image="/images/docs/mcp/logos/bolt.svg" %}
+{% cards_item href="/docs/tooling/ai/vibe-coding/bolt" title="Bolt" icon="icon-bolt" %}
 {% /cards_item %}
 
-{% cards_item href="/docs/tooling/ai/vibe-coding/zenflow" title="Zenflow" image="/images/docs/mcp/logos/zenflow.svg" %}
+{% cards_item href="/docs/tooling/ai/vibe-coding/zenflow" title="Zenflow" icon="icon-zenflow" %}
 {% /cards_item %}
 
 {% /cards %}
-{% /only_light %}
-
-{% only_dark %}
-{% cards %}
-
-{% cards_item href="/docs/tooling/ai/vibe-coding/claude-desktop" title="Claude Desktop" image="/images/docs/mcp/logos/dark/claude.svg" %}
-{% /cards_item %}
-
-{% cards_item href="/docs/tooling/ai/vibe-coding/lovable" title="Lovable" image="/images/docs/mcp/logos/dark/lovable.svg" %}
-{% /cards_item %}
-
-{% cards_item href="/docs/tooling/ai/vibe-coding/emergent" title="Emergent" image="/images/docs/mcp/logos/dark/emergent.svg" %}
-{% /cards_item %}
-
-{% cards_item href="/docs/tooling/ai/vibe-coding/bolt" title="Bolt" image="/images/docs/mcp/logos/dark/bolt.svg" %}
-{% /cards_item %}
-
-{% cards_item href="/docs/tooling/ai/vibe-coding/zenflow" title="Zenflow" image="/images/docs/mcp/logos/dark/zenflow.svg" %}
-{% /cards_item %}
-
-{% /cards %}
-{% /only_dark %}
 
 # Tooling {% #tooling %}
 
