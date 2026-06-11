@@ -129,6 +129,7 @@ class OpenAPI3 extends Format
             $specs = new Specs();
             $sdkPlatforms = $specs->getSDKPlatformsForRouteSecurity($routeSecurity);
 
+            $sdkPlatforms = array_values(array_unique($sdkPlatforms));
             $namespace = $sdk->getNamespace();
 
             $descContents = $this->getDescriptionContents($desc);
@@ -323,6 +324,17 @@ class OpenAPI3 extends Format
                             'image/bmp',
                         ]) ? 'Image' : 'File',
                     ];
+
+                    if ($produces !== '') {
+                        $temp['responses'][(string)$response->getCode()]['content'] = [
+                            $produces => [
+                                'schema' => [
+                                    'type' => 'string',
+                                    'format' => 'binary',
+                                ],
+                            ],
+                        ];
+                    }
                 } else {
                     if (\is_array($model)) {
                         $modelDescription = \join(', or ', \array_map(fn ($m) => $m->getName(), $model));
@@ -359,10 +371,27 @@ class OpenAPI3 extends Format
                     }
                 }
 
-                if ($response->getCode() === 204) {
+                if (in_array($response->getCode(), [204, 301, 302, 308], true)) {
                     $temp['responses'][(string)$response->getCode()]['description'] = 'No content';
+                }
+
+                if ($response->getCode() === 204) {
                     unset($temp['responses'][(string)$response->getCode()]['content']);
                 }
+            }
+
+            // No response declares content (e.g. 204 No content): keep the produced
+            // content type available for SDK generation.
+            $hasResponseContent = false;
+            foreach ($temp['responses'] as $responseData) {
+                if (isset($responseData['content'])) {
+                    $hasResponseContent = true;
+                    break;
+                }
+            }
+
+            if (!$hasResponseContent && $produces !== '') {
+                $temp['x-appwrite']['produces'] = [$produces];
             }
 
             if (!empty($scope)) {
@@ -402,7 +431,12 @@ class OpenAPI3 extends Format
 
             $bodyRequired = [];
 
-            foreach ($route->getParams() as $name => $param) { // Set params
+            $parameters = \array_merge(
+                $route->getParams(),
+                $sdk->getAdditionalParameters(),
+            );
+
+            foreach ($parameters as $name => $param) { // Set params
                 if (($param['deprecated'] ?? false) === true) {
                     continue;
                 }
@@ -548,8 +582,8 @@ class OpenAPI3 extends Format
                         break;
                     case \Utopia\Validator\JSON::class:
                     case \Utopia\Validator\Assoc::class:
-                        $param['default'] = (empty($param['default'])) ? new \stdClass() : $param['default'];
                         $node['schema']['type'] = 'object';
+                        $node['schema']['default'] = (empty($param['default'])) ? new \stdClass() : $param['default'];
                         $node['schema']['x-example'] = ($param['example'] ?? '') ?: '{}';
                         break;
                     case \Utopia\Storage\Validator\File::class:
@@ -679,19 +713,15 @@ class OpenAPI3 extends Format
                                     }
 
                                     $enumKeys = [];
-                                    if (!empty($enum->map)) {
-                                        foreach ($enumValues as $enumValue) {
-                                            $enumKeys[] = $enum->map[$enumValue] ?? $enumValue;
-                                        }
+                                    foreach ($enumValues as $enumValue) {
+                                        $enumKeys[] = $enum->map[$enumValue] ?? $enumValue;
                                     }
 
                                     $node['schema']['items']['enum'] = $enumValues;
                                     if (!empty($enum->name)) {
                                         $node['schema']['items']['x-enum-name'] = $enum->name;
                                     }
-                                    if (!empty($enumKeys)) {
-                                        $node['schema']['items']['x-enum-keys'] = $enumKeys;
-                                    }
+                                    $node['schema']['items']['x-enum-keys'] = $enumKeys;
                                 }
                             }
                             if ($validator->getType() === 'integer') {
@@ -720,19 +750,15 @@ class OpenAPI3 extends Format
                                     }
 
                                     $enumKeys = [];
-                                    if (!empty($enum->map)) {
-                                        foreach ($enumValues as $enumValue) {
-                                            $enumKeys[] = $enum->map[$enumValue] ?? $enumValue;
-                                        }
+                                    foreach ($enumValues as $enumValue) {
+                                        $enumKeys[] = $enum->map[$enumValue] ?? $enumValue;
                                     }
 
                                     $node['schema']['enum'] = $enumValues;
                                     if (!empty($enum->name)) {
                                         $node['schema']['x-enum-name'] = $enum->name;
                                     }
-                                    if (!empty($enumKeys)) {
-                                        $node['schema']['x-enum-keys'] = $enumKeys;
-                                    }
+                                    $node['schema']['x-enum-keys'] = $enumKeys;
                                 }
                             }
                             if ($validator->getType() === 'integer') {
@@ -829,9 +855,7 @@ class OpenAPI3 extends Format
                         /// If the enum flag is Set, add the enum values to the body
                         $body['content'][$consumes[0]]['schema']['properties'][$name]['enum'] = $node['schema']['enum'];
                         $body['content'][$consumes[0]]['schema']['properties'][$name]['x-enum-name'] = $node['schema']['x-enum-name'] ?? null;
-                        if (isset($node['schema']['x-enum-keys'])) {
-                            $body['content'][$consumes[0]]['schema']['properties'][$name]['x-enum-keys'] = $node['schema']['x-enum-keys'];
-                        }
+                        $body['content'][$consumes[0]]['schema']['properties'][$name]['x-enum-keys'] = $node['schema']['x-enum-keys'];
                     }
 
                     if ($node['schema']['x-upload-id'] ?? false) {
@@ -930,7 +954,6 @@ class OpenAPI3 extends Format
 
                     case 'json':
                         $type = 'object';
-                        $output['components']['schemas'][$model->getType()]['properties'][$name]['additionalProperties'] = true;
                         break;
 
                     case 'array':
@@ -996,6 +1019,20 @@ class OpenAPI3 extends Format
                 }
 
                 $readOnly = $rule['readOnly'] ?? false;
+                if ($rule['type'] == 'json') {
+                    $output['components']['schemas'][$model->getType()]['properties'][$name] = [
+                        'type' => $type,
+                        'additionalProperties' => true,
+                        'description' => $rule['description'] ?? '',
+                        'x-example' => $rule['example'] ?? null,
+                    ];
+
+                    if ($readOnly) {
+                        $output['components']['schemas'][$model->getType()]['properties'][$name]['readOnly'] = true;
+                    }
+                    continue;
+                }
+
                 if ($rule['array']) {
                     $output['components']['schemas'][$model->getType()]['properties'][$name] = [
                         'type' => 'array',
