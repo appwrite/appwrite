@@ -915,7 +915,7 @@ $server->onOpen(function (int $connection, SwooleRequest $request) use ($server,
         $channels = Realtime::convertChannels($request->getQuery('channels', []), $user->getId());
         $channelCount = \count($channels);
 
-        $updateStats = static function (string $projectId, ?string $teamId, string $payloadJson) use ($register, $stats): void {
+        $updateStats = static function (string $projectId, ?string $teamId) use ($register, $stats): void {
             $register->get('telemetry.connectionCounter')->add(1);
             $register->get('telemetry.workerClientCounter')->add(1, $register->get('telemetry.workerAttributes'));
             $register->get('telemetry.connectionCreatedCounter')->add(1);
@@ -929,7 +929,6 @@ $server->onOpen(function (int $connection, SwooleRequest $request) use ($server,
 
             triggerStats([
                 METRIC_REALTIME_CONNECTIONS => 1,
-                METRIC_REALTIME_OUTBOUND => \strlen($payloadJson),
             ], $projectId);
         };
 
@@ -950,9 +949,12 @@ $server->onOpen(function (int $connection, SwooleRequest $request) use ($server,
 
             $realtime->subscribe($project->getId(), $connection, '', $roles, [], [], $user->getId());
             $realtime->connections[$connection]['authorization'] = $authorization;
+            $updateStats($project->getId(), $project->getAttribute('teamId'));
             $server->send([$connection], $connectedPayloadJson);
             $outboundBytes += \strlen($connectedPayloadJson);
-            $updateStats($project->getId(), $project->getAttribute('teamId'), $connectedPayloadJson);
+            triggerStats([
+                METRIC_REALTIME_OUTBOUND => \strlen($connectedPayloadJson),
+            ], $project->getId());
             $subscriptionMode = 'message';
             $success = true;
             return;
@@ -970,6 +972,8 @@ $server->onOpen(function (int $connection, SwooleRequest $request) use ($server,
             throw new Exception(Exception::REALTIME_POLICY_VIOLATION, $e->getMessage());
         }
 
+        $sanitizedUser = empty($user->getId()) ? null : $response->output($user, Response::MODEL_ACCOUNT);
+
         $mapping = [];
         foreach ($subscriptions as $index => $subscription) {
             $subscriptionId = ID::unique();
@@ -986,27 +990,29 @@ $server->onOpen(function (int $connection, SwooleRequest $request) use ($server,
 
             $mapping[$index] = $subscriptionId;
         }
+
+        $realtime->connections[$connection]['authorization'] = $authorization;
+        $updateStats($project->getId(), $project->getAttribute('teamId'));
+
         $subscriptionCount = \count($subscriptions);
         if (!empty($subscriptions)) {
             $register->get('telemetry.workerSubscriptionCounter')->add(\count($subscriptions), $register->get('telemetry.workerAttributes'));
         }
-
-        $realtime->connections[$connection]['authorization'] = $authorization;
-
-        $user = empty($user->getId()) ? null : $response->output($user, Response::MODEL_ACCOUNT);
 
         $connectedPayloadJson = json_encode([
             'type' => 'connected',
             'data' => [
                 'channels' => $names,
                 'subscriptions' => $mapping,
-                'user' => $user
+                'user' => $sanitizedUser
             ]
         ]);
 
         $server->send([$connection], $connectedPayloadJson);
         $outboundBytes += \strlen($connectedPayloadJson);
-        $updateStats($project->getId(), $project->getAttribute('teamId'), $connectedPayloadJson);
+        triggerStats([
+            METRIC_REALTIME_OUTBOUND => \strlen($connectedPayloadJson),
+        ], $project->getId());
         $success = true;
 
     } catch (Throwable $th) {
@@ -1281,14 +1287,16 @@ $server->onClose(function (int $connection) use ($realtime, $stats, $register, $
 
     try {
         if (array_key_exists($connection, $realtime->connections)) {
-            // A connection can exist without a stored projectId (e.g. it was torn down
-            // before subscribing, or only carries an authorization entry), so guard every
-            // project-scoped bookkeeping call. $projectId is read defensively above.
+            // These decrements are symmetric with the increments in updateStats (onOpen),
+            // which run when the connection enters $realtime->connections — the same gate as the
+            // array_key_exists check above. The connectionsTotal stat is keyed by project, so it's
+            // additionally guarded: a connection can exist without a stored projectId (e.g. only an
+            // authorization entry left after an orphaning re-subscribe).
+            $register->get('telemetry.connectionCounter')->add(-1);
+            $register->get('telemetry.workerClientCounter')->add(-1, $register->get('telemetry.workerAttributes'));
             if (!empty($projectId)) {
                 $stats->decr($projectId, 'connectionsTotal');
             }
-            $register->get('telemetry.connectionCounter')->add(-1);
-            $register->get('telemetry.workerClientCounter')->add(-1, $register->get('telemetry.workerAttributes'));
             $subscriptionsBeforeClose = \count($realtime->getSubscriptionMetadata($connection));
             if ($subscriptionsBeforeClose > 0) {
                 $register->get('telemetry.workerSubscriptionCounter')->add(-$subscriptionsBeforeClose, $register->get('telemetry.workerAttributes'));
