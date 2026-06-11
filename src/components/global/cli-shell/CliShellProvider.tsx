@@ -74,6 +74,7 @@ import {
 } from '@/lib/react-query/hooks/auth'
 import { useProject } from '@/lib/react-query/hooks'
 import { downloadTextFile } from '@/lib/cli-shell/cli-terminal-buffer'
+import { isFocusWithinCliShell } from '@/lib/cli-shell/cli-shell-focus'
 import {
   CLI_SHELL_FULLSCREEN_SHORTCUT_COMBOS,
   CLI_SHELL_NEW_TERMINAL_SHORTCUT_COMBOS,
@@ -1857,18 +1858,31 @@ export function CliShellProvider({ projectId, children }: CliShellProviderProps)
     capture: true,
   })
 
-  useKeyboardShortcut(CLI_SHELL_FULLSCREEN_SHORTCUT_COMBOS[0], enterFullscreen, {
-    enabled: open && !fullscreen,
-    ignoreInputs: false,
-    capture: true,
-    stopPropagation: true,
-  })
-  useKeyboardShortcut(CLI_SHELL_FULLSCREEN_SHORTCUT_COMBOS[1], enterFullscreen, {
-    enabled: open && !fullscreen,
-    ignoreInputs: false,
-    capture: true,
-    stopPropagation: true,
-  })
+  const onEnterFullscreenShortcut = useCallback(() => {
+    if (!isFocusWithinCliShell()) return
+    enterFullscreen()
+  }, [enterFullscreen])
+
+  useKeyboardShortcut(
+    CLI_SHELL_FULLSCREEN_SHORTCUT_COMBOS[0],
+    onEnterFullscreenShortcut,
+    {
+      enabled: open && !fullscreen,
+      ignoreInputs: false,
+      capture: true,
+      stopPropagation: true,
+    },
+  )
+  useKeyboardShortcut(
+    CLI_SHELL_FULLSCREEN_SHORTCUT_COMBOS[1],
+    onEnterFullscreenShortcut,
+    {
+      enabled: open && !fullscreen,
+      ignoreInputs: false,
+      capture: true,
+      stopPropagation: true,
+    },
+  )
 
   const onToggleTerminalSearchShortcut = useCallback(() => {
     toggleTerminalSearch()

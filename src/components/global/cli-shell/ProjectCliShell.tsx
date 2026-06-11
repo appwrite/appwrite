@@ -72,6 +72,7 @@ export function ProjectCliShell() {
 
   return (
     <div
+      data-cli-shell
       className={cn(
         'bg-background',
         isFullscreenOpen

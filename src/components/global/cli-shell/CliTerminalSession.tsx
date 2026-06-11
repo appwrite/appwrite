@@ -307,14 +307,6 @@ export function CliTerminalSession({
       terminal.attachCustomKeyEventHandler((event) => {
         if (event.type !== 'keydown') return true
 
-        if (event.key === 'Enter' && (event.metaKey || event.ctrlKey)) {
-          event.preventDefault()
-          if (!fullscreenRef.current) {
-            toggleFullscreenRef.current()
-          }
-          return false
-        }
-
         if (event.key === 'Escape') {
           if (terminalSearchOpenRef.current) {
             event.preventDefault()

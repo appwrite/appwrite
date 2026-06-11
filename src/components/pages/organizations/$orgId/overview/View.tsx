@@ -98,6 +98,7 @@ import {
   canShowOrgBillingNav,
   canShowOrgComplianceNav,
 } from '@/lib/console-access-checks'
+import { OrgMemberContextMenu } from './_components/OrgMemberContextMenu'
 import { ProjectContextMenu } from './_components/ProjectContextMenu'
 import { LightningCollectorGame } from './_components/LightningCollectorGame'
 import { InitOrgPromoBanner } from './_components/InitOrgPromoBanner'
@@ -3169,11 +3170,45 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                                         } = orgMembershipRoleDisplay(
                                           member.role,
                                         )
+                                        const canManageMembers =
+                                          canInviteOrgMember(access, features)
                                         return (
-                                          <TableRow
+                                          <OrgMemberContextMenu
                                             key={member.$id}
-                                            className="border-b border-border/50 hover:bg-muted/30 transition-colors"
+                                            orgId={orgId!}
+                                            member={member}
+                                            canManageMembers={canManageMembers}
+                                            onUpdate={
+                                              canManageMembers &&
+                                              member.status !== 'pending'
+                                                ? () => {
+                                                    setSelectedMember(member)
+                                                    setSelectedRole(
+                                                      member.role as
+                                                        | 'owner'
+                                                        | 'developer'
+                                                        | 'editor'
+                                                        | 'analyst'
+                                                        | 'billing',
+                                                    )
+                                                    setUpdateRoleDialogOpen(
+                                                      true,
+                                                    )
+                                                  }
+                                                : undefined
+                                            }
+                                            onRemove={
+                                              canManageMembers
+                                                ? () => {
+                                                    setSelectedMember(member)
+                                                    setRemoveMemberDialogOpen(
+                                                      true,
+                                                    )
+                                                  }
+                                                : undefined
+                                            }
                                           >
+                                            <TableRow className="border-b border-border/50 hover:bg-muted/30 transition-colors">
                                             <TableCell className="px-4 py-3">
                                               <div className="flex items-center gap-3 min-w-0">
                                                 <InitialsAvatar
@@ -3427,7 +3462,8 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                                                 )}
                                               </div>
                                             </TableCell>
-                                          </TableRow>
+                                            </TableRow>
+                                          </OrgMemberContextMenu>
                                         )
                                       })}
                                     </TableBody>
