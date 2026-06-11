@@ -82,6 +82,11 @@ export function createCliTerminalInputHandler(
     if (promptVisible && inputBuffer.length === 0 && cursorPos === 0) {
       return
     }
+    if (options.terminal.cols <= 0) {
+      awaitingPrompt = true
+      promptVisible = false
+      return
+    }
     writePrompt()
     promptVisible = true
     awaitingPrompt = false

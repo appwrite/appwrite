@@ -114,7 +114,10 @@ export interface CodeEditorProps {
   /** Entrypoint filename for deployment (e.g. "index.js"). Used when building the gzip package. */
   entrypoint?: string
   /** Called when the Monaco editor instance is ready (e.g. for undo/redo toolbar). */
-  onEditorMount?: (instance: editor.IStandaloneCodeEditor) => void
+  onEditorMount?: (
+    instance: editor.IStandaloneCodeEditor,
+    monaco: typeof import('monaco-editor'),
+  ) => void
   /**
    * Stable Monaco model URI path (see @monaco-editor/react `path`). Keeps one model per
    * document so undo/redo isn’t reset when the wrapper swaps models.
@@ -202,9 +205,9 @@ export const CodeEditor = forwardRef<CodeEditorRef, CodeEditorProps>(
     )
 
     const handleEditorMount: OnMount = useCallback(
-      (editorInstance) => {
+      (editorInstance, monaco) => {
         editorRef.current = editorInstance
-        onEditorMount?.(editorInstance)
+        onEditorMount?.(editorInstance, monaco)
       },
       [onEditorMount],
     )

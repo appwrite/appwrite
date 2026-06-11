@@ -34,6 +34,7 @@ export function SqlWorkbench({
   result,
   children,
 }: SqlWorkbenchProps) {
+  const canRunQuery = !isRunning && !!sql.trim()
   const errorMessage = error ? getErrorMessage(error) : null
   const resultRows = useMemo(
     () => (result ? executionResultRows<Record<string, unknown>>(result) : []),
@@ -74,7 +75,7 @@ export function SqlWorkbench({
               size="sm"
               className="h-7 px-3 text-[12px]"
               onClick={onRun}
-              disabled={isRunning || !sql.trim()}
+              disabled={!canRunQuery}
             >
               Run query
             </Button>
@@ -84,6 +85,8 @@ export function SqlWorkbench({
             databaseId={databaseId}
             sql={sql}
             onSqlChange={onSqlChange}
+            onRun={onRun}
+            canRun={canRunQuery}
           />
         </div>
       }

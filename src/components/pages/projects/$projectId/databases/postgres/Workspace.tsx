@@ -2,8 +2,10 @@ import {
   useExecutePostgresSql,
   usePostgresTableRows,
 } from '@/lib/react-query/hooks'
+import { ROWS_DEFAULT_PAGE_SIZE } from '@/lib/react-query/hooks/constants'
 import { parsePostgresTableId } from '@/lib/postgres-database-routes'
-import { useState } from 'react'
+import { buildPostgresSelectSql } from '@/lib/postgres-sql'
+import { useEffect, useState } from 'react'
 import { useParams } from '@tanstack/react-router'
 import { Badge } from '@/components/ui/badge'
 import type { Models } from '@appwrite.io/console'
@@ -13,6 +15,7 @@ import { SqlWorkbench } from './SqlWorkbench'
 import { PostgresShell } from './PostgresShell'
 import { PostgresConnectionDetails } from './PostgresConnectionDetails'
 import { PostgresTableRowsEmptyState } from './_components/PostgresTableRowsEmptyState'
+import { usePostgresSidebar } from './_components/PostgresSidebarContext'
 
 export type PostgresWorkspaceProps = {
   databaseId: string
@@ -21,17 +24,44 @@ export type PostgresWorkspaceProps = {
 
 const DEFAULT_SQL = 'SELECT NOW() AS current_time;'
 
+function sqlForTable(tableId: string, limit = ROWS_DEFAULT_PAGE_SIZE): string {
+  if (tableId === '-') return DEFAULT_SQL
+  const { schema, table } = parsePostgresTableId(tableId)
+  return buildPostgresSelectSql(schema, table, limit, 0)
+}
+
 export function Workspace({ databaseId, tableId }: PostgresWorkspaceProps) {
+  const isDatabaseLevelView = tableId === '-'
+
+  return (
+    <PostgresShell
+      databaseId={databaseId}
+      tableId={isDatabaseLevelView ? undefined : tableId}
+    >
+      <WorkspaceContent databaseId={databaseId} tableId={tableId} />
+    </PostgresShell>
+  )
+}
+
+function WorkspaceContent({ databaseId, tableId }: PostgresWorkspaceProps) {
   const { projectId } = useParams({ strict: false }) as { projectId: string }
   const isDatabaseLevelView = tableId === '-'
   const selectedTable = isDatabaseLevelView ? undefined : parsePostgresTableId(tableId)
 
-  const [sql, setSql] = useState(DEFAULT_SQL)
+  const [sql, setSql] = useState(() => sqlForTable(tableId))
   const [manualResult, setManualResult] =
     useState<Models.DedicatedDatabaseExecution | null>(null)
   const [manualError, setManualError] = useState<unknown>(null)
   const [page, setPage] = useState(1)
-  const [pageSize, setPageSize] = useState(25)
+  const [pageSize, setPageSize] = useState(ROWS_DEFAULT_PAGE_SIZE)
+
+  useEffect(() => {
+    setSql(sqlForTable(tableId))
+    setManualResult(null)
+    setManualError(null)
+    setPage(1)
+    setPageSize(ROWS_DEFAULT_PAGE_SIZE)
+  }, [tableId])
 
   const {
     rows,
@@ -50,6 +80,15 @@ export function Workspace({ databaseId, tableId }: PostgresWorkspaceProps) {
   )
 
   const executeSql = useExecutePostgresSql(projectId, databaseId)
+  const { registerSqlLoader, addRecentQuery } = usePostgresSidebar()
+
+  useEffect(() => {
+    registerSqlLoader((nextSql) => {
+      setSql(nextSql)
+      setManualResult(null)
+      setManualError(null)
+    })
+  }, [registerSqlLoader])
 
   const tableColumns =
     columns.length > 0
@@ -65,6 +104,7 @@ export function Workspace({ databaseId, tableId }: PostgresWorkspaceProps) {
     try {
       const result = await executeSql.mutateAsync(trimmed)
       setManualResult(result)
+      addRecentQuery(trimmed)
     } catch (error) {
       setManualResult(null)
       setManualError(error)
@@ -115,6 +155,7 @@ export function Workspace({ databaseId, tableId }: PostgresWorkspaceProps) {
             setPage(1)
           }}
           itemLabel="rows"
+          className="h-full min-h-0 border-0 mt-0 py-0"
         />
       }
     />
@@ -127,24 +168,19 @@ export function Workspace({ databaseId, tableId }: PostgresWorkspaceProps) {
   )
 
   return (
-    <PostgresShell
-      databaseId={databaseId}
-      tableId={isDatabaseLevelView ? undefined : tableId}
-    >
-      <div className="flex h-full min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
-        <SqlWorkbench
-          projectId={projectId}
-          databaseId={databaseId}
-          sql={sql}
-          onSqlChange={setSql}
-          onRun={() => void handleRunSql()}
-          isRunning={executeSql.isPending}
-          error={manualError ?? executeSql.error}
-          result={manualResult}
-        >
-          {tableRowsPanel}
-        </SqlWorkbench>
-      </div>
-    </PostgresShell>
+    <div className="flex h-full min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
+      <SqlWorkbench
+        projectId={projectId}
+        databaseId={databaseId}
+        sql={sql}
+        onSqlChange={setSql}
+        onRun={() => void handleRunSql()}
+        isRunning={executeSql.isPending}
+        error={manualError ?? executeSql.error}
+        result={manualResult}
+      >
+        {tableRowsPanel}
+      </SqlWorkbench>
+    </div>
   )
 }

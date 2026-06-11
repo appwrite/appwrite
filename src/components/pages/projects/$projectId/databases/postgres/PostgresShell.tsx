@@ -19,6 +19,7 @@ import type { ReactNode } from 'react'
 import { ServiceHeader } from '@/components/pages/projects/$projectId/shared/ServiceHeader'
 import { TableViewResizableLayout } from '@/components/pages/projects/$projectId/databases/_components/TableViewResizableLayout'
 import { useMediaMinWidth } from '@/hooks/use-media-min-width'
+import { PostgresSidebarProvider } from './_components/PostgresSidebarContext'
 import { SchemaTablesSidebar } from './SchemaTablesSidebar'
 
 export type PostgresShellProps = {
@@ -107,6 +108,7 @@ export function PostgresShell({
   }
 
   return (
+    <PostgresSidebarProvider>
     <div className="flex h-full min-h-0 flex-1 flex-col overflow-hidden">
       <ServiceHeader
         fullWidthBorder
@@ -173,5 +175,6 @@ export function PostgresShell({
         </div>
       )}
     </div>
+    </PostgresSidebarProvider>
   )
 }

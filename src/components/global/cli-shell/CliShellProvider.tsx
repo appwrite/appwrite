@@ -580,6 +580,27 @@ export function CliShellProvider({ projectId, children }: CliShellProviderProps)
   }, [open])
 
   useEffect(() => {
+    if (!open) return
+    if (status !== 'ready' || !containerRef.current) return
+    if (bootstrapReadyAnnouncedRef.current) return
+
+    finalizeBootstrapLine(CLI_BOOTSTRAP_READY_MESSAGE)
+  }, [finalizeBootstrapLine, open, status])
+
+  useEffect(() => {
+    if (!open || runningSessionIdRef.current !== null) return
+
+    const timer = window.setTimeout(() => {
+      const activeId = activeSessionIdRef.current
+      if (!terminalContentReadyRef.current.has(activeId)) return
+      if (!bootstrapReadyAnnouncedRef.current) return
+      showInputPromptIfIdle(activeId)
+    }, CLI_SHELL_COLLAPSE_MS)
+
+    return () => clearTimeout(timer)
+  }, [open, showInputPromptIfIdle])
+
+  useEffect(() => {
     if (!open && fullscreen) {
       heightBeforeFullscreenRef.current = null
       setFullscreen(false)
@@ -1858,8 +1879,10 @@ export function CliShellProvider({ projectId, children }: CliShellProviderProps)
     capture: true,
   })
 
-  const onEnterFullscreenShortcut = useCallback(() => {
+  const onEnterFullscreenShortcut = useCallback((e: KeyboardEvent) => {
     if (!isFocusWithinCliShell()) return
+    e.preventDefault()
+    e.stopPropagation()
     enterFullscreen()
   }, [enterFullscreen])
 
@@ -1870,7 +1893,8 @@ export function CliShellProvider({ projectId, children }: CliShellProviderProps)
       enabled: open && !fullscreen,
       ignoreInputs: false,
       capture: true,
-      stopPropagation: true,
+      preventDefault: false,
+      stopPropagation: false,
     },
   )
   useKeyboardShortcut(
@@ -1880,7 +1904,8 @@ export function CliShellProvider({ projectId, children }: CliShellProviderProps)
       enabled: open && !fullscreen,
       ignoreInputs: false,
       capture: true,
-      stopPropagation: true,
+      preventDefault: false,
+      stopPropagation: false,
     },
   )
 

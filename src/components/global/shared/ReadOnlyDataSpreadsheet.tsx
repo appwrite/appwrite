@@ -151,8 +151,10 @@ export function ReadOnlyDataSpreadsheet({
       </div>
 
       {footer ? (
-        <div className="shrink-0 border-t border-border bg-background px-4 py-3 sm:px-6">
-          {footer}
+        <div className="h-[54px] shrink-0 border-t border-border bg-background">
+          <div className="@container flex h-full items-center px-4 sm:px-6">
+            <div className="min-w-0 flex-1">{footer}</div>
+          </div>
         </div>
       ) : null}
     </div>

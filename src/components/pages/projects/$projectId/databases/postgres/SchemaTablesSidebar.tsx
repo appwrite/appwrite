@@ -1,10 +1,16 @@
 import { cn } from '@/lib/utils'
 import type { PostgresTableRow } from '@/lib/postgres-sql'
 import { postgresTableId, type PostgresDatabaseTab } from '@/lib/postgres-database-routes'
-import { ChevronDown, ChevronRight, Database } from 'lucide-react'
+import { ChevronDown, ChevronRight } from 'lucide-react'
 import { useEffect, useMemo, useState } from 'react'
+import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group'
 import { PostgresDatabaseNav } from './PostgresDatabaseNav'
 import { PostgresSpecificationCard } from './PostgresSpecificationCard'
+import {
+  queryPreviewLabel,
+  usePostgresSidebar,
+  type PostgresSidebarPanel,
+} from './_components/PostgresSidebarContext'
 
 type SchemaTablesSidebarProps = {
   projectId: string
@@ -27,6 +33,14 @@ export function SchemaTablesSidebar({
   isLoading,
   onSelectTable,
 }: SchemaTablesSidebarProps) {
+  const {
+    panel,
+    setPanel,
+    recentQueries,
+    selectedQueryId,
+    selectQuery,
+  } = usePostgresSidebar()
+
   const tablesBySchema = useMemo(() => {
     const map = new Map<string, PostgresTableRow[]>()
     for (const schema of schemas) {
@@ -74,76 +88,124 @@ export function SchemaTablesSidebar({
 
   return (
     <aside className="flex h-full min-h-0 w-full flex-col bg-muted/20">
-      <div className="flex h-11 shrink-0 items-center border-b border-border bg-muted/20 px-4 sm:px-6">
-        <div className="flex items-center gap-2 text-[13px] font-semibold text-foreground">
-          <Database className="h-4 w-4 text-muted-foreground" />
-          Schemas
-        </div>
+      <div className="flex h-11 shrink-0 items-center border-b border-border bg-muted/20 px-2">
+        <ToggleGroup
+          type="single"
+          variant="outline"
+          size="sm"
+          value={panel}
+          onValueChange={(value) => {
+            if (value === 'schemas' || value === 'queries') {
+              setPanel(value as PostgresSidebarPanel)
+            }
+          }}
+          className="w-full"
+          aria-label="Sidebar panel"
+        >
+          <ToggleGroupItem
+            value="schemas"
+            className="h-7 flex-1 text-[12px] font-medium data-[state=on]:bg-background data-[state=on]:text-foreground"
+          >
+            Schemas
+          </ToggleGroupItem>
+          <ToggleGroupItem
+            value="queries"
+            className="h-7 flex-1 text-[12px] font-medium data-[state=on]:bg-background data-[state=on]:text-foreground"
+          >
+            Queries
+          </ToggleGroupItem>
+        </ToggleGroup>
       </div>
       <div className="min-h-0 flex-1 overflow-y-auto p-2">
-        {isLoading && tablesBySchema.length === 0 ? (
-          <p className="px-2 py-3 text-[12px] text-muted-foreground">
-            Loading schemas…
-          </p>
-        ) : tablesBySchema.length > 0 ? (
-          tablesBySchema.map(([schema, schemaTables]) => {
-            const isExpanded = expandedSchemas.has(schema)
-            return (
-              <div key={schema} className="mb-1">
-                <button
-                  type="button"
-                  onClick={() => toggleSchema(schema)}
-                  className="flex w-full items-center gap-1.5 rounded-md px-2 py-1.5 text-left text-[12px] font-semibold uppercase tracking-wide text-muted-foreground transition-colors hover:bg-background/70 hover:text-foreground"
-                >
-                  {isExpanded ? (
-                    <ChevronDown className="h-3.5 w-3.5 shrink-0" />
-                  ) : (
-                    <ChevronRight className="h-3.5 w-3.5 shrink-0" />
-                  )}
-                  <span className="truncate">{schema}</span>
-                  <span className="ml-auto text-[10px] font-medium normal-case tracking-normal">
-                    {schemaTables.length}
-                  </span>
-                </button>
-                {isExpanded ? (
-                  <div className="mt-0.5 space-y-0.5 pl-2">
-                    {schemaTables.length > 0 ? (
-                      schemaTables.map((table) => {
-                        const id = postgresTableId(
-                          table.table_schema,
-                          table.table_name,
-                        )
-                        return (
-                          <button
-                            key={id}
-                            type="button"
-                            onClick={() => onSelectTable(id)}
-                            className={cn(
-                              'flex w-full items-center rounded-md px-3 py-2 text-left transition-colors',
-                              selectedTableId === id
-                                ? 'bg-background text-foreground shadow-sm'
-                                : 'text-muted-foreground hover:bg-background/70 hover:text-foreground',
-                            )}
-                          >
-                            <span className="truncate text-[13px] font-medium">
-                              {table.table_name}
-                            </span>
-                          </button>
-                        )
-                      })
+        {panel === 'schemas' ? (
+          isLoading && tablesBySchema.length === 0 ? (
+            <p className="px-2 py-3 text-[12px] text-muted-foreground">
+              Loading schemas…
+            </p>
+          ) : tablesBySchema.length > 0 ? (
+            tablesBySchema.map(([schema, schemaTables]) => {
+              const isExpanded = expandedSchemas.has(schema)
+              return (
+                <div key={schema} className="mb-1">
+                  <button
+                    type="button"
+                    onClick={() => toggleSchema(schema)}
+                    className="flex w-full items-center gap-1.5 rounded-md px-2 py-1.5 text-left text-[12px] font-semibold uppercase tracking-wide text-muted-foreground transition-colors hover:bg-background/70 hover:text-foreground"
+                  >
+                    {isExpanded ? (
+                      <ChevronDown className="h-3.5 w-3.5 shrink-0" />
                     ) : (
-                      <p className="px-3 py-2 text-[11px] text-muted-foreground">
-                        No tables
-                      </p>
+                      <ChevronRight className="h-3.5 w-3.5 shrink-0" />
                     )}
-                  </div>
-                ) : null}
-              </div>
-            )
-          })
+                    <span className="truncate">{schema}</span>
+                    <span className="ml-auto text-[10px] font-medium normal-case tracking-normal">
+                      {schemaTables.length}
+                    </span>
+                  </button>
+                  {isExpanded ? (
+                    <div className="mt-0.5 space-y-0.5 pl-2">
+                      {schemaTables.length > 0 ? (
+                        schemaTables.map((table) => {
+                          const id = postgresTableId(
+                            table.table_schema,
+                            table.table_name,
+                          )
+                          return (
+                            <button
+                              key={id}
+                              type="button"
+                              onClick={() => onSelectTable(id)}
+                              className={cn(
+                                'flex w-full cursor-pointer items-center rounded-md px-3 py-2 text-left transition-colors',
+                                selectedTableId === id
+                                  ? 'bg-background text-foreground shadow-sm'
+                                  : 'text-muted-foreground hover:bg-background/70 hover:text-foreground',
+                              )}
+                            >
+                              <span className="truncate text-[13px] font-medium">
+                                {table.table_name}
+                              </span>
+                            </button>
+                          )
+                        })
+                      ) : (
+                        <p className="px-3 py-2 text-[11px] text-muted-foreground">
+                          No tables
+                        </p>
+                      )}
+                    </div>
+                  ) : null}
+                </div>
+              )
+            })
+          ) : (
+            <p className="px-2 py-3 text-[12px] text-muted-foreground">
+              No schemas found.
+            </p>
+          )
+        ) : recentQueries.length > 0 ? (
+          <div className="space-y-0.5">
+            {recentQueries.map((query) => (
+              <button
+                key={query.id}
+                type="button"
+                onClick={() => selectQuery(query)}
+                className={cn(
+                  'flex w-full cursor-pointer flex-col rounded-md px-3 py-2 text-left transition-colors',
+                  selectedQueryId === query.id
+                    ? 'bg-background text-foreground shadow-sm'
+                    : 'text-muted-foreground hover:bg-background/70 hover:text-foreground',
+                )}
+              >
+                <span className="truncate font-mono text-[12px] font-medium text-foreground">
+                  {queryPreviewLabel(query.sql)}
+                </span>
+              </button>
+            ))}
+          </div>
         ) : (
           <p className="px-2 py-3 text-[12px] text-muted-foreground">
-            No schemas found.
+            No queries yet. Run a query in the editor to see it here.
           </p>
         )}
       </div>

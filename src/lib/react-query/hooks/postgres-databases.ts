@@ -11,8 +11,10 @@ import {
   buildPostgresCountSql,
   buildPostgresSelectSql,
   executionResultRows,
+  POSTGRES_LIST_COLUMNS_SQL,
   POSTGRES_LIST_SCHEMAS_SQL,
   POSTGRES_LIST_TABLES_SQL,
+  type PostgresColumnRow,
   type PostgresSchemaRow,
   type PostgresTableRow,
 } from '@/lib/postgres-sql'
@@ -92,6 +94,21 @@ export async function fetchPostgresTables(projectId: string, databaseId: string)
   const rows = executionResultRows<PostgresTableRow>(execution)
   return {
     tables: rows.filter((row) => row.table_schema && row.table_name),
+    total: rows.length,
+  }
+}
+
+export async function fetchPostgresColumns(projectId: string, databaseId: string) {
+  const execution = await executePostgresDatabaseSql(
+    projectId,
+    databaseId,
+    POSTGRES_LIST_COLUMNS_SQL,
+  )
+  const rows = executionResultRows<PostgresColumnRow>(execution)
+  return {
+    columns: rows.filter(
+      (row) => row.table_schema && row.table_name && row.column_name,
+    ),
     total: rows.length,
   }
 }
@@ -179,6 +196,23 @@ export function postgresTablesQueryOptions(
   return queryOptions({
     queryKey: ['postgres-tables', 'project', projectId, databaseId],
     queryFn: () => fetchPostgresTables(projectId!, databaseId!),
+    enabled: !!projectId && !!databaseId,
+    staleTime: DEFAULT_STALE_TIME,
+    retry: false,
+    refetchOnMount: false,
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: false,
+    gcTime: projectId && databaseId ? 5 * 60 * 1000 : 0,
+  })
+}
+
+export function postgresColumnsQueryOptions(
+  projectId: string | null | undefined,
+  databaseId: string | null | undefined,
+) {
+  return queryOptions({
+    queryKey: ['postgres-columns', 'project', projectId, databaseId],
+    queryFn: () => fetchPostgresColumns(projectId!, databaseId!),
     enabled: !!projectId && !!databaseId,
     staleTime: DEFAULT_STALE_TIME,
     retry: false,
@@ -326,6 +360,23 @@ export function usePostgresTables(
   }
 }
 
+export function usePostgresColumns(
+  projectId: string | null | undefined,
+  databaseId: string | null | undefined,
+) {
+  const { data, isLoading, error, refetch, isFetching } = useQuery(
+    postgresColumnsQueryOptions(projectId, databaseId),
+  )
+  return {
+    columns: data?.columns ?? [],
+    total: data?.total ?? 0,
+    isLoading,
+    isFetching,
+    error,
+    refetch,
+  }
+}
+
 export function usePostgresDatabaseConnections(
   projectId: string | null | undefined,
   databaseId: string | null | undefined,
@@ -396,6 +447,9 @@ export function useExecutePostgresSql(
       })
       void queryClient.invalidateQueries({
         queryKey: ['postgres-tables', 'project', projectId, databaseId],
+      })
+      void queryClient.invalidateQueries({
+        queryKey: ['postgres-columns', 'project', projectId, databaseId],
       })
       void queryClient.invalidateQueries({
         queryKey: ['postgres-table-rows', 'project', projectId, databaseId],

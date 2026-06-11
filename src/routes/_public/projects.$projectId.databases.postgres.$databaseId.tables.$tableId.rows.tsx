@@ -2,6 +2,7 @@ import { createFileRoute, redirect } from '@tanstack/react-router'
 import type { QueryClient } from '@tanstack/react-query'
 import { Workspace } from '@/components/pages/projects/$projectId/databases/postgres/Workspace'
 import {
+  postgresColumnsQueryOptions,
   postgresDatabaseConnectionsQueryOptions,
   postgresDatabaseCredentialsQueryOptions,
   postgresDatabaseQueryOptions,
@@ -34,6 +35,9 @@ async function prefetchPostgresRouteData(
       ),
       queryClient.ensureQueryData(
         postgresTablesQueryOptions(projectId, databaseId),
+      ),
+      queryClient.ensureQueryData(
+        postgresColumnsQueryOptions(projectId, databaseId),
       ),
       queryClient.ensureQueryData(
         postgresDatabaseConnectionsQueryOptions(projectId, databaseId),
@@ -70,6 +74,9 @@ async function prefetchPostgresRouteData(
   await Promise.allSettled([
     queryClient.ensureQueryData(
       postgresSchemasQueryOptions(projectId, databaseId),
+    ),
+    queryClient.ensureQueryData(
+      postgresColumnsQueryOptions(projectId, databaseId),
     ),
     tableId !== '-'
       ? queryClient.ensureQueryData(

@@ -228,6 +228,9 @@ export function CliTerminalSession({
         }
 
         fitAddon.fit()
+        if (welcomeCompleteRef.current) {
+          showInputPromptRef.current?.()
+        }
         // Refit once layout settles (e.g. horizontal scrollbar in narrow panes).
         requestAnimationFrame(() => {
           try {
@@ -239,6 +242,9 @@ export function CliTerminalSession({
               (next.cols !== terminal.cols || next.rows !== terminal.rows)
             ) {
               fitAddon.fit()
+            }
+            if (welcomeCompleteRef.current) {
+              showInputPromptRef.current?.()
             }
           } catch {
             /* container may have zero size during layout */

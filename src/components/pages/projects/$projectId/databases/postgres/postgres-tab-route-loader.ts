@@ -1,6 +1,7 @@
 import type { QueryClient } from '@tanstack/react-query'
 import type { Models } from '@appwrite.io/console'
 import {
+  postgresColumnsQueryOptions,
   postgresDatabaseQueryOptions,
   postgresSchemasQueryOptions,
   postgresTablesQueryOptions,
@@ -27,6 +28,9 @@ export async function prefetchPostgresShellData(
     ),
     queryClient.ensureQueryData(
       postgresTablesQueryOptions(projectId, databaseId),
+    ),
+    queryClient.ensureQueryData(
+      postgresColumnsQueryOptions(projectId, databaseId),
     ),
   ])
 
