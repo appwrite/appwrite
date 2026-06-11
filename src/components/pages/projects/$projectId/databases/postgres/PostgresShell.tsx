@@ -137,7 +137,9 @@ function PostgresShellLayout({
         />
       ) : null}
       {databaseTab ? (
-        <PostgresDatabaseHeader databaseTab={databaseTab} />
+        <div className="shrink-0 bg-background">
+          <PostgresDatabaseHeader databaseTab={databaseTab} />
+        </div>
       ) : null}
       <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
         {children}
@@ -155,7 +157,6 @@ function PostgresShellLayout({
               projectId={projectId}
               databaseId={databaseId}
               databaseName={database.name}
-              databaseEngine={database.engine}
               schemas={schemas}
               tables={tables}
               selectedTableId={selectedTableId}

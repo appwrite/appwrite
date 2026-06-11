@@ -19,7 +19,13 @@ import {
 import { CSS } from '@dnd-kit/utilities'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
-import { Plus, X } from 'lucide-react'
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@/components/ui/tooltip'
+import { ChevronUp, Plus, X } from 'lucide-react'
 import type { SqlEditorTab } from './PostgresSidebarContext'
 
 type SqlEditorTabBarProps = {
@@ -29,6 +35,8 @@ type SqlEditorTabBarProps = {
   onCreateTab: () => void
   onCloseTab: (tabId: string) => void
   onReorderTabs: (activeId: string, overId: string) => void
+  headerCollapsed?: boolean
+  onToggleHeaderCollapsed?: () => void
 }
 
 type SortableTabProps = {
@@ -135,6 +143,8 @@ export function SqlEditorTabBar({
   onCreateTab,
   onCloseTab,
   onReorderTabs,
+  headerCollapsed = false,
+  onToggleHeaderCollapsed,
 }: SqlEditorTabBarProps) {
   const [activeDragTabId, setActiveDragTabId] = useState<string | null>(null)
   const tabListRef = useRef<HTMLDivElement>(null)
@@ -207,32 +217,60 @@ export function SqlEditorTabBar({
   )
 
   return (
-    <div className="flex min-h-11 shrink-0 items-end border-b border-border bg-background px-4 pb-px sm:px-6">
-      {canReorder ? (
-        <DndContext
-          sensors={sensors}
-          collisionDetection={closestCenter}
-          onDragStart={handleDragStart}
-          onDragEnd={handleDragEnd}
-        >
-          <SortableContext
-            items={tabs.map((tab) => tab.id)}
-            strategy={horizontalListSortingStrategy}
+    <div className="flex min-h-11 shrink-0 items-end gap-2 border-b border-border bg-background px-4 pb-px sm:px-6">
+      <div className="flex min-w-0 flex-1 items-end">
+        {canReorder ? (
+          <DndContext
+            sensors={sensors}
+            collisionDetection={closestCenter}
+            onDragStart={handleDragStart}
+            onDragEnd={handleDragEnd}
           >
-            {tabList}
-          </SortableContext>
-          <DragOverlay dropAnimation={null}>
-            {activeDragTab ? (
-              <TabPreview
-                tab={activeDragTab}
-                isActive={activeDragTab.id === activeTabId}
-              />
-            ) : null}
-          </DragOverlay>
-        </DndContext>
-      ) : (
-        tabList
-      )}
+            <SortableContext
+              items={tabs.map((tab) => tab.id)}
+              strategy={horizontalListSortingStrategy}
+            >
+              {tabList}
+            </SortableContext>
+            <DragOverlay dropAnimation={null}>
+              {activeDragTab ? (
+                <TabPreview
+                  tab={activeDragTab}
+                  isActive={activeDragTab.id === activeTabId}
+                />
+              ) : null}
+            </DragOverlay>
+          </DndContext>
+        ) : (
+          tabList
+        )}
+      </div>
+      {onToggleHeaderCollapsed ? (
+        <TooltipProvider delayDuration={0}>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                onClick={onToggleHeaderCollapsed}
+                className="h-7 w-7 shrink-0 self-center text-muted-foreground hover:text-foreground"
+                aria-label={headerCollapsed ? 'Expand header' : 'Collapse header'}
+              >
+                <ChevronUp
+                  className={cn(
+                    'h-3 w-3 transition-transform duration-200',
+                    headerCollapsed && 'rotate-180',
+                  )}
+                />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent side="bottom">
+              <p>{headerCollapsed ? 'Expand header' : 'Collapse header'}</p>
+            </TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
+      ) : null}
     </div>
   )
 }

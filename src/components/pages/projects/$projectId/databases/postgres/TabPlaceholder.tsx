@@ -7,8 +7,6 @@ const TAB_DESCRIPTIONS: Partial<Record<PostgresDatabaseTab, string>> = {
   visualizer:
     'Explore database schema structure from the compute API schema endpoint.',
   monitor: 'View database metrics and usage over time.',
-  'db-security':
-    'Manage network access, IP allowlists, and connection security settings.',
   insights:
     'Review performance insights and slow query logs for this database.',
   backups: 'Create backups, configure policies, and manage point-in-time recovery.',

@@ -10,6 +10,7 @@ import { canCreateDatabase } from '@/lib/console-access-checks'
 import {
   formatDedicatedSpecCpu,
   formatDedicatedSpecMemory,
+  formatDedicatedSpecStorage,
   mapDedicatedDatabaseSpecifications,
   type SpecOption,
 } from '@/lib/database-specs'
@@ -22,6 +23,7 @@ import {
   useProject,
 } from '@/lib/react-query/hooks'
 import { getActiveProfileFeatures } from '@/lib/console-profiles'
+import { cn } from '@/lib/utils'
 import { useMemo } from 'react'
 
 type PostgresSpecificationCardProps = {
@@ -51,6 +53,58 @@ function getNextLockedSpec(
     : -1
   const start = currentIndex >= 0 ? currentIndex + 1 : 0
   return specs.slice(start).find((spec) => spec.comingSoon === true)
+}
+
+function SpecMetric({
+  label,
+  value,
+  className,
+}: {
+  label: string
+  value: string
+  className?: string
+}) {
+  return (
+    <div className={cn('min-w-0 px-3 py-2', className)}>
+      <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+        {label}
+      </p>
+      <p className="mt-0.5 truncate text-[12px] font-medium tabular-nums text-foreground">
+        {value}
+      </p>
+    </div>
+  )
+}
+
+function SpecCardSkeleton() {
+  return (
+    <div className="shrink-0 border-t border-border bg-background px-2.5 py-2">
+      <div className="overflow-hidden rounded-xl border border-border bg-card/50">
+        <div className="px-3 py-2.5">
+          <div className="space-y-2">
+            <div className="h-2.5 w-16 animate-pulse rounded bg-muted" />
+            <div className="h-3.5 w-24 animate-pulse rounded bg-muted" />
+          </div>
+        </div>
+        <div className="border-t border-border">
+          <div className="grid grid-cols-3 divide-x divide-border">
+            <div className="px-3 py-2">
+              <div className="h-2.5 w-8 animate-pulse rounded bg-muted" />
+              <div className="mt-1.5 h-3 w-14 animate-pulse rounded bg-muted" />
+            </div>
+            <div className="px-3 py-2">
+              <div className="h-2.5 w-12 animate-pulse rounded bg-muted" />
+              <div className="mt-1.5 h-3 w-14 animate-pulse rounded bg-muted" />
+            </div>
+            <div className="px-3 py-2">
+              <div className="h-2.5 w-12 animate-pulse rounded bg-muted" />
+              <div className="mt-1.5 h-3 w-14 animate-pulse rounded bg-muted" />
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  )
 }
 
 export function PostgresSpecificationCard({
@@ -101,13 +155,8 @@ export function PostgresSpecificationCard({
     (database?.memory ? formatDedicatedSpecMemory(database.memory) : '—')
   const storageLabel =
     database?.storage && database.storage > 0
-      ? `${database.storage} GB`
-      : '—'
-  const connectionsLabel =
-    currentSpec?.connections ??
-    (database?.networkMaxConnections
-      ? String(database.networkMaxConnections)
-      : null)
+      ? formatDedicatedSpecStorage(database.storage)
+      : (currentSpec?.storage ?? '—')
 
   const isLoading =
     (databaseLoading && !database) ||
@@ -116,47 +165,27 @@ export function PostgresSpecificationCard({
   const showPlanUpgrade = !nextEnabledSpec && !!nextLockedSpec && billingEnabled
   const showComputeUpgrade = !!nextEnabledSpec && canUpgrade
 
-  const specItems = [
-    { label: 'CPU', value: cpuLabel },
-    { label: 'Memory', value: memoryLabel },
-    { label: 'Storage', value: storageLabel },
-    ...(connectionsLabel
-      ? [{ label: 'Connections', value: connectionsLabel }]
-      : []),
-  ]
-
   if (isLoading) {
-    return (
-      <div className="shrink-0 border-t border-border bg-background px-4 py-4">
-        <div className="h-3 w-24 animate-pulse rounded bg-muted" />
-        <div className="mt-2 h-4 w-32 animate-pulse rounded bg-muted" />
-        <div className="mt-4 space-y-2.5">
-          <div className="h-3.5 animate-pulse rounded bg-muted" />
-          <div className="h-3.5 animate-pulse rounded bg-muted" />
-          <div className="h-3.5 animate-pulse rounded bg-muted" />
-          <div className="h-3.5 animate-pulse rounded bg-muted" />
-        </div>
-      </div>
-    )
+    return <SpecCardSkeleton />
   }
 
   if (!database) return null
 
-  const upgradeButton = showComputeUpgrade ? (
+  const upgradeAction = showComputeUpgrade ? (
     <Button
       asChild
-      variant="outline"
+      variant="ghost"
       size="sm"
-      className="mt-4 h-8 w-full text-[13px]"
+      className="h-7 w-full rounded-none text-[11px] font-medium text-muted-foreground hover:bg-accent hover:text-foreground"
     >
       <Link {...nav.settings()}>Upgrade compute</Link>
     </Button>
   ) : showPlanUpgrade ? (
     <Button
       asChild
-      variant="outline"
+      variant="ghost"
       size="sm"
-      className="mt-4 h-8 w-full text-[13px]"
+      className="h-7 w-full rounded-none text-[11px] font-medium text-muted-foreground hover:bg-accent hover:text-foreground"
     >
       {billingEnabled && project?.teamId ? (
         <Link to="/upgrade" search={{ orgId: project.teamId }}>
@@ -172,11 +201,11 @@ export function PostgresSpecificationCard({
     <TooltipProvider delayDuration={0}>
       <Tooltip>
         <TooltipTrigger asChild>
-          <span className="mt-4 block w-full">
+          <span className="block w-full">
             <Button
-              variant="outline"
+              variant="ghost"
               size="sm"
-              className="h-8 w-full text-[13px]"
+              className="h-7 w-full rounded-none text-[11px] font-medium"
               disabled
             >
               Upgrade compute
@@ -193,29 +222,29 @@ export function PostgresSpecificationCard({
   ) : null
 
   return (
-    <div className="shrink-0 border-t border-border bg-background px-4 py-4">
-      <p className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
-        Specification
-      </p>
-      <p className="mt-1.5 truncate text-[14px] font-semibold text-foreground">
-        {specLabel}
-      </p>
+    <div className="shrink-0 border-t border-border bg-background px-2.5 py-2">
+      <div className="overflow-hidden rounded-xl border border-border bg-card/50">
+        <div className="px-3 py-2.5">
+          <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+            Compute tier
+          </p>
+          <p className="mt-0.5 truncate text-[13px] font-semibold leading-tight text-foreground">
+            {specLabel}
+          </p>
+        </div>
 
-      <dl className="mt-4 space-y-2.5">
-        {specItems.map((item) => (
-          <div
-            key={item.label}
-            className="flex items-baseline justify-between gap-4 text-[13px]"
-          >
-            <dt className="shrink-0 text-muted-foreground">{item.label}</dt>
-            <dd className="min-w-0 truncate text-right font-medium tabular-nums text-foreground">
-              {item.value}
-            </dd>
+        <div className="border-t border-border">
+          <div className="grid grid-cols-3 divide-x divide-border">
+            <SpecMetric label="CPU" value={cpuLabel} />
+            <SpecMetric label="Memory" value={memoryLabel} />
+            <SpecMetric label="Storage" value={storageLabel} />
           </div>
-        ))}
-      </dl>
+        </div>
 
-      {upgradeButton}
+        {upgradeAction ? (
+          <div className="border-t border-border bg-muted/20">{upgradeAction}</div>
+        ) : null}
+      </div>
     </div>
   )
 }

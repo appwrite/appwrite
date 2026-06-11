@@ -12,6 +12,7 @@ export type SpecOption = {
   label: string
   cpu: string
   memory: string
+  storage: string
   /** Max direct database connections for the tier. */
   connections: string
   price: string
@@ -26,6 +27,7 @@ export const TABLE_DB_SPEC_OPTIONS: SpecOption[] = [
     label: 'Shared',
     cpu: 'Shared',
     memory: 'Shared',
+    storage: 'Shared',
     connections: 'Shared',
     price: 'Pay as you go (disk + DB ops)',
   },
@@ -34,6 +36,7 @@ export const TABLE_DB_SPEC_OPTIONS: SpecOption[] = [
     label: 'Micro',
     cpu: '2-core (shared)',
     memory: '1 GB',
+    storage: '—',
     connections: '60',
     price: '$10/mo',
     comingSoon: true,
@@ -43,6 +46,7 @@ export const TABLE_DB_SPEC_OPTIONS: SpecOption[] = [
     label: 'Small',
     cpu: '2-core (shared)',
     memory: '2 GB',
+    storage: '—',
     connections: '90',
     price: '$15/mo',
     comingSoon: true,
@@ -52,6 +56,7 @@ export const TABLE_DB_SPEC_OPTIONS: SpecOption[] = [
     label: 'Medium',
     cpu: '2-core (shared)',
     memory: '4 GB',
+    storage: '—',
     connections: '120',
     price: '$60/mo',
     comingSoon: true,
@@ -61,6 +66,7 @@ export const TABLE_DB_SPEC_OPTIONS: SpecOption[] = [
     label: 'Large',
     cpu: '2-core (dedicated)',
     memory: '8 GB',
+    storage: '—',
     connections: '160',
     price: '$110/mo',
     comingSoon: true,
@@ -70,6 +76,7 @@ export const TABLE_DB_SPEC_OPTIONS: SpecOption[] = [
     label: 'XL',
     cpu: '4-core (dedicated)',
     memory: '16 GB',
+    storage: '—',
     connections: '240',
     price: '$210/mo',
     comingSoon: true,
@@ -79,6 +86,7 @@ export const TABLE_DB_SPEC_OPTIONS: SpecOption[] = [
     label: '2XL',
     cpu: '8-core (dedicated)',
     memory: '32 GB',
+    storage: '—',
     connections: '380',
     price: '$410/mo',
     comingSoon: true,
@@ -88,6 +96,7 @@ export const TABLE_DB_SPEC_OPTIONS: SpecOption[] = [
     label: '4XL',
     cpu: '16-core (dedicated)',
     memory: '64 GB',
+    storage: '—',
     connections: '480',
     price: '$960/mo',
     comingSoon: true,
@@ -143,6 +152,17 @@ export function formatDedicatedSpecMemory(memoryMb: number): string {
   return `${memoryMb} MB`
 }
 
+export function formatDedicatedSpecStorage(storageGb: number): string {
+  if (storageGb <= 0) return '—'
+  if (storageGb >= 1024 && storageGb % 1024 === 0) {
+    return `${storageGb / 1024} TB`
+  }
+  if (storageGb >= 1024) {
+    return `${(storageGb / 1024).toFixed(1).replace(/\.0$/, '')} TB`
+  }
+  return `${storageGb} GB`
+}
+
 export function formatDedicatedSpecPrice(priceUsd: number): string {
   return formatDedicatedMonthlyPrice(Math.max(0, priceUsd))
 }
@@ -156,6 +176,7 @@ export function dedicatedDatabaseSpecificationToSpecOption(
     label: spec.name,
     cpu: formatDedicatedSpecCpu(spec.cpu),
     memory: formatDedicatedSpecMemory(spec.memory),
+    storage: formatDedicatedSpecStorage(spec.includedStorage),
     connections: String(spec.maxConnections),
     price: formatDedicatedSpecPrice(spec.price),
     priceUsd: spec.price,

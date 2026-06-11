@@ -19,7 +19,6 @@ type SchemaTablesSidebarProps = {
   projectId: string
   databaseId: string
   databaseName: string
-  databaseEngine?: string | null
   schemas: string[]
   tables: PostgresTableRow[]
   selectedTableId?: string
@@ -33,7 +32,6 @@ export function SchemaTablesSidebar({
   projectId,
   databaseId,
   databaseName,
-  databaseEngine,
   schemas,
   tables,
   selectedTableId,
@@ -218,7 +216,6 @@ export function SchemaTablesSidebar({
       <PostgresDatabaseNav
         projectId={projectId}
         databaseId={databaseId}
-        databaseEngine={databaseEngine}
         activeTab={databaseTab}
         editorActive={editorActive}
       />

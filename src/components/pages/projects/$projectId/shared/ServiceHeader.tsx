@@ -260,6 +260,7 @@ export const ServiceHeader = forwardRef<ServiceHeaderRef, ServiceHeaderProps>(
       showExport ||
       beforeCreateButtons ||
       beforeRefreshButtons
+    const showToolbarRow = hasToolbar || collapsible
 
     // Show tabs if we have tabs and either:
     // 1. activeTab + onTabChange (button-based tabs), OR
@@ -415,7 +416,7 @@ export const ServiceHeader = forwardRef<ServiceHeaderRef, ServiceHeaderProps>(
               <div
                 className={cn(
                   'w-full',
-                  hasTabs && 'border-b border-border',
+                  (hasTabs || !contentAfterBorder) && 'border-b border-border',
                 )}
               >
                 {tabsContent}
@@ -491,11 +492,12 @@ export const ServiceHeader = forwardRef<ServiceHeaderRef, ServiceHeaderProps>(
         {contentAfterBorder}
 
         {/* Toolbar Row - Search, Filters, CTA */}
-        {hasToolbar && (
+        {showToolbarRow && (
           <div
             className={cn(
               SERVICE_HEADER_CONTAINER,
-              'flex min-w-0 flex-nowrap items-center gap-2 px-4 py-4 @[640px]:gap-3 sm:px-6',
+              'flex min-w-0 flex-nowrap items-center gap-2 px-4 @[640px]:gap-3 sm:px-6',
+              hasToolbar ? 'py-4' : 'py-2',
               fullWidthBorder && !fullWidth && 'mx-auto w-full max-w-7xl',
               fullWidthBorder && fullWidth && 'w-full',
               (isCollapsed || showToolbarBottomBorder) &&

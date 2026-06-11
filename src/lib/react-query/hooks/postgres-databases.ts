@@ -9,6 +9,10 @@ import { Query } from '@appwrite.io/console'
 import type { Models } from '@appwrite.io/console'
 import { sdk } from '@/lib/appwrite/sdk'
 import {
+  normalizePostgresExecutionResult,
+  wrapPostgresSqlForDisplay,
+} from '@/lib/postgres-execution-values'
+import {
   buildPostgresCountSql,
   buildPostgresSelectSql,
   executionResultRows,
@@ -83,11 +87,12 @@ export async function executePostgresDatabaseSql(
   sql: string,
   timeoutSeconds?: number,
 ): Promise<Models.DedicatedDatabaseExecution> {
-  return await sdk.forProject(projectId).compute.createDatabaseExecution({
+  const execution = await sdk.forProject(projectId).compute.createDatabaseExecution({
     databaseId,
-    sql,
+    sql: wrapPostgresSqlForDisplay(sql),
     timeoutSeconds,
   })
+  return normalizePostgresExecutionResult(execution)
 }
 
 export async function fetchPostgresSchemas(projectId: string, databaseId: string) {

@@ -1,7 +1,8 @@
-import { useMemo, useState, type ReactNode } from 'react'
+import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import type { Models } from '@appwrite.io/console'
 import { executionResultRows, formatPostgresSql } from '@/lib/postgres-sql'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
+import { cn } from '@/lib/utils'
 import { ReadOnlyDataSpreadsheet } from '@/components/global/shared/ReadOnlyDataSpreadsheet'
 import { PostgresQueryResultsMeta } from './_components/PostgresQueryResultsMeta'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
@@ -9,10 +10,12 @@ import { AlertCircle } from 'lucide-react'
 import { ServiceHeader } from '@/components/pages/projects/$projectId/shared/ServiceHeader'
 import { PostgresSqlEditorContainer } from './PostgresSqlEditorContainer'
 import { PostgresSqlCodeEditor } from './PostgresSqlCodeEditor'
+import type { PostgresSqlCodeEditorRef } from './PostgresSqlCodeEditor'
 import { SqlEditorActionBar } from './_components/SqlEditorActionBar'
 import { SqlEditorTabBar } from './_components/SqlEditorTabBar'
 import { SqlWorkbenchPanelEmptyState } from './_components/SqlWorkbenchPanelEmptyState'
 import { SavePostgresQueryDialog } from './_components/SavePostgresQueryDialog'
+import { POSTGRES_SQL_EDITOR_SURFACE_CLASS } from './_components/postgres-chrome'
 import type { SqlEditorTab } from './_components/PostgresSidebarContext'
 
 type SqlWorkbenchProps = {
@@ -58,6 +61,10 @@ export function SqlWorkbench({
   children,
 }: SqlWorkbenchProps) {
   const [saveDialogOpen, setSaveDialogOpen] = useState(false)
+  const [isHeaderCollapsed, setIsHeaderCollapsed] = useState(false)
+  const [canUndo, setCanUndo] = useState(false)
+  const [canRedo, setCanRedo] = useState(false)
+  const sqlEditorRef = useRef<PostgresSqlCodeEditorRef>(null)
   const hasSql = !!sql.trim()
   const canRunQuery = !isRunning && hasSql
   const canSaveQuery = hasSql
@@ -80,6 +87,11 @@ export function SqlWorkbench({
       : []
   }, [result?.columns, resultRows])
 
+  useEffect(() => {
+    setCanUndo(false)
+    setCanRedo(false)
+  }, [activeTabId])
+
   return (
     <>
     <PostgresSqlEditorContainer
@@ -91,8 +103,13 @@ export function SqlWorkbench({
               title="SQL editor"
               fullWidthBorder
               fullWidth
+              hideTitle={isHeaderCollapsed}
               contentAfterBorder={
-                <div className="pt-2">
+                <div
+                  className={cn(
+                    isHeaderCollapsed ? 'pt-3 sm:pt-4' : 'pt-2',
+                  )}
+                >
                   <SqlEditorTabBar
                     tabs={tabs}
                     activeTabId={activeTabId}
@@ -100,13 +117,23 @@ export function SqlWorkbench({
                     onCreateTab={onCreateTab}
                     onCloseTab={onCloseTab}
                     onReorderTabs={onReorderTabs}
+                    headerCollapsed={isHeaderCollapsed}
+                    onToggleHeaderCollapsed={() =>
+                      setIsHeaderCollapsed((collapsed) => !collapsed)
+                    }
                   />
                 </div>
               }
             />
           </div>
-          <div className="relative flex min-h-0 flex-1 flex-col overflow-hidden">
+          <div
+            className={cn(
+              'flex min-h-0 flex-1 flex-col overflow-hidden',
+              POSTGRES_SQL_EDITOR_SURFACE_CLASS,
+            )}
+          >
             <PostgresSqlCodeEditor
+              ref={sqlEditorRef}
               projectId={projectId}
               databaseId={databaseId}
               tabId={activeTabId}
@@ -114,8 +141,16 @@ export function SqlWorkbench({
               onSqlChange={onSqlChange}
               onRun={onRun}
               canRun={canRunQuery}
+              onUndoRedoStateChange={({ canUndo: nextCanUndo, canRedo: nextCanRedo }) => {
+                setCanUndo(nextCanUndo)
+                setCanRedo(nextCanRedo)
+              }}
             />
             <SqlEditorActionBar
+              canUndo={canUndo}
+              canRedo={canRedo}
+              onUndo={() => sqlEditorRef.current?.undo()}
+              onRedo={() => sqlEditorRef.current?.redo()}
               canSave={canSaveQuery}
               canFormat={canFormatQuery}
               canRun={canRunQuery}

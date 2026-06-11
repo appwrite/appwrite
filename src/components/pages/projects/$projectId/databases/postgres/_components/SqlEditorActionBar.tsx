@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react'
-import { Bookmark, Braces, Loader2, Play } from 'lucide-react'
+import { Bookmark, Braces, Loader2, Play, Redo2, Undo2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import {
   Tooltip,
@@ -7,12 +7,17 @@ import {
   TooltipTrigger,
 } from '@/components/ui/tooltip'
 import { cn } from '@/lib/utils'
+import { POSTGRES_SQL_EDITOR_SURFACE_CLASS } from './postgres-chrome'
 
 type SqlEditorActionBarProps = {
+  canUndo: boolean
+  canRedo: boolean
   canSave: boolean
   canFormat: boolean
   canRun: boolean
   isRunning: boolean
+  onUndo: () => void
+  onRedo: () => void
   onSave: () => void
   onFormat: () => void
   onRun: () => void
@@ -46,23 +51,65 @@ function DisabledActionTooltip({
 }
 
 export function SqlEditorActionBar({
+  canUndo,
+  canRedo,
   canSave,
   canFormat,
   canRun,
   isRunning,
+  onUndo,
+  onRedo,
   onSave,
   onFormat,
   onRun,
 }: SqlEditorActionBarProps) {
   return (
-    <div className="pointer-events-none absolute inset-x-0 bottom-0 z-10 flex justify-center px-4 pb-4">
-      <div
-        className={cn(
-          'pointer-events-auto flex items-center gap-0.5 rounded-xl border border-border/80',
-          'bg-background/92 p-1 shadow-lg shadow-black/[0.06] backdrop-blur-md',
-          'ring-1 ring-black/[0.04] dark:bg-background/88 dark:shadow-black/20 dark:ring-white/[0.06]',
-        )}
-      >
+    <div
+      className={cn(
+        'shrink-0 border-t border-border px-4 py-2.5 sm:px-6',
+        POSTGRES_SQL_EDITOR_SURFACE_CLASS,
+      )}
+    >
+      <div className="flex items-center justify-between gap-2">
+        <div className="flex items-center gap-0.5">
+          <DisabledActionTooltip
+            disabled={!canUndo}
+            reason="Nothing to undo."
+          >
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              className="h-8 w-8 p-0 text-muted-foreground hover:bg-muted/70 hover:text-foreground"
+              onMouseDown={(event) => event.preventDefault()}
+              onClick={onUndo}
+              disabled={!canUndo}
+              aria-label="Undo"
+            >
+              <Undo2 className="h-3.5 w-3.5 shrink-0" />
+            </Button>
+          </DisabledActionTooltip>
+
+          <DisabledActionTooltip
+            disabled={!canRedo}
+            reason="Nothing to redo."
+          >
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              className="h-8 w-8 p-0 text-muted-foreground hover:bg-muted/70 hover:text-foreground"
+              onMouseDown={(event) => event.preventDefault()}
+              onClick={onRedo}
+              disabled={!canRedo}
+              aria-label="Redo"
+            >
+              <Redo2 className="h-3.5 w-3.5 shrink-0" />
+            </Button>
+          </DisabledActionTooltip>
+        </div>
+
+        <div className={cn('flex items-center gap-0.5')}>
         <DisabledActionTooltip
           disabled={!canSave}
           reason="Write SQL before saving a query."
@@ -125,6 +172,7 @@ export function SqlEditorActionBar({
             Run query
           </Button>
         </DisabledActionTooltip>
+        </div>
       </div>
     </div>
   )

@@ -1,4 +1,10 @@
-import { useCallback, useEffect, useRef } from 'react'
+import {
+  forwardRef,
+  useCallback,
+  useEffect,
+  useImperativeHandle,
+  useRef,
+} from 'react'
 import type { editor, IDisposable } from 'monaco-editor'
 import { CodeEditor } from '@/components/global/shared/CodeEditor'
 import {
@@ -10,6 +16,8 @@ import {
   registerPostgresSqlCompletionProvider,
   type PostgresSqlCompletionCatalog,
 } from '@/lib/postgres-sql-completion'
+import { cn } from '@/lib/utils'
+import { POSTGRES_SQL_EDITOR_SURFACE_CLASS } from './_components/postgres-chrome'
 
 type PostgresSqlCodeEditorProps = {
   projectId: string
@@ -19,6 +27,15 @@ type PostgresSqlCodeEditorProps = {
   onSqlChange: (value: string) => void
   onRun?: () => void
   canRun?: boolean
+  onUndoRedoStateChange?: (state: {
+    canUndo: boolean
+    canRedo: boolean
+  }) => void
+}
+
+export type PostgresSqlCodeEditorRef = {
+  undo: () => void
+  redo: () => void
 }
 
 let completionDisposable: IDisposable | null = null
@@ -28,15 +45,22 @@ let getCompletionCatalog: () => PostgresSqlCompletionCatalog = () => ({
   columns: [],
 })
 
-export function PostgresSqlCodeEditor({
-  projectId,
-  databaseId,
-  tabId,
-  sql,
-  onSqlChange,
-  onRun,
-  canRun = false,
-}: PostgresSqlCodeEditorProps) {
+export const PostgresSqlCodeEditor = forwardRef<
+  PostgresSqlCodeEditorRef,
+  PostgresSqlCodeEditorProps
+>(function PostgresSqlCodeEditor(
+  {
+    projectId,
+    databaseId,
+    tabId,
+    sql,
+    onSqlChange,
+    onRun,
+    canRun = false,
+    onUndoRedoStateChange,
+  },
+  ref,
+) {
   const { schemas } = usePostgresSchemas(projectId, databaseId)
   const { tables } = usePostgresTables(projectId, databaseId)
   const { columns } = usePostgresColumns(projectId, databaseId)
@@ -46,7 +70,26 @@ export function PostgresSqlCodeEditor({
   const sqlRef = useRef(sql)
   const editorRef = useRef<editor.IStandaloneCodeEditor | null>(null)
   const keyDownDisposeRef = useRef<IDisposable | null>(null)
+  const undoRedoDisposeRef = useRef<IDisposable | null>(null)
   const isApplyingExternalSqlRef = useRef(false)
+  const onUndoRedoStateChangeRef = useRef(onUndoRedoStateChange)
+
+  useEffect(() => {
+    onUndoRedoStateChangeRef.current = onUndoRedoStateChange
+  }, [onUndoRedoStateChange])
+
+  useImperativeHandle(ref, () => ({
+    undo: () => {
+      const model = editorRef.current?.getModel()
+      if (!model?.canUndo()) return
+      void model.undo()
+    },
+    redo: () => {
+      const model = editorRef.current?.getModel()
+      if (!model?.canRedo()) return
+      void model.redo()
+    },
+  }))
 
   useEffect(() => {
     onRunRef.current = onRun
@@ -83,9 +126,39 @@ export function PostgresSqlCodeEditor({
     return () => {
       keyDownDisposeRef.current?.dispose()
       keyDownDisposeRef.current = null
+      undoRedoDisposeRef.current?.()
+      undoRedoDisposeRef.current = null
       editorRef.current = null
     }
   }, [])
+
+  const attachUndoRedoListeners = useCallback(
+    (editorInstance: editor.IStandaloneCodeEditor) => {
+      undoRedoDisposeRef.current?.()
+      undoRedoDisposeRef.current = null
+
+      const refreshUndoRedoState = () => {
+        queueMicrotask(() => {
+          const model = editorInstance.getModel()
+          onUndoRedoStateChangeRef.current?.({
+            canUndo: model?.canUndo() ?? false,
+            canRedo: model?.canRedo() ?? false,
+          })
+        })
+      }
+
+      refreshUndoRedoState()
+      const contentDispose = editorInstance.onDidChangeModelContent(refreshUndoRedoState)
+      const modelDispose = editorInstance.onDidChangeModel(refreshUndoRedoState)
+
+      undoRedoDisposeRef.current = () => {
+        contentDispose.dispose()
+        modelDispose.dispose()
+        undoRedoDisposeRef.current = null
+      }
+    },
+    [],
+  )
 
   const handleEditorMount = useCallback(
     (
@@ -93,6 +166,7 @@ export function PostgresSqlCodeEditor({
       monaco: typeof import('monaco-editor'),
     ) => {
       editorRef.current = editorInstance
+      attachUndoRedoListeners(editorInstance)
 
       if (!completionDisposable) {
         completionDisposable = registerPostgresSqlCompletionProvider(
@@ -156,7 +230,7 @@ export function PostgresSqlCodeEditor({
         isApplyingExternalSqlRef.current = false
       }
     },
-    [databaseId, projectId],
+    [attachUndoRedoListeners, databaseId, projectId],
   )
 
   const handleSqlChange = useCallback(
@@ -180,10 +254,13 @@ export function PostgresSqlCodeEditor({
           language="sql"
           height="100%"
           modelPath={`postgres-sql/${projectId}/${databaseId}/${tabId}`}
-          className="h-full rounded-none border-0"
+          className={cn(
+            'h-full rounded-none border-0',
+            POSTGRES_SQL_EDITOR_SURFACE_CLASS,
+          )}
           onEditorMount={handleEditorMount}
         />
       </div>
     </div>
   )
-}
+})

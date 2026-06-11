@@ -10,7 +10,6 @@ export type PostgresNavParams = {
 export type PostgresDatabaseTab =
   | 'visualizer'
   | 'monitor'
-  | 'db-security'
   | 'insights'
   | 'backups'
   | 'connections'
@@ -22,7 +21,6 @@ export const POSTGRES_DATABASE_TAB_LABELS: Record<
 > = {
   visualizer: 'Visualizer',
   monitor: 'Monitor',
-  'db-security': 'Security',
   insights: 'Insights',
   backups: 'Backups',
   connections: 'Connections',
@@ -89,12 +87,6 @@ export function postgresNav(params: PostgresNavBase) {
     monitor() {
       return {
         to: '/projects/$projectId/databases/postgres/$databaseId/monitor' as const,
-        params: base,
-      }
-    },
-    dbSecurity() {
-      return {
-        to: '/projects/$projectId/databases/postgres/$databaseId/db-security' as const,
         params: base,
       }
     },

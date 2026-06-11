@@ -1,5 +1,5 @@
 import type { Models } from '@appwrite.io/console'
-import { AlertCircle, Loader2, Plug } from 'lucide-react'
+import { AlertCircle, Users } from 'lucide-react'
 import {
   usePostgresDatabase,
   usePostgresDatabaseConnections,
@@ -18,6 +18,7 @@ import {
 } from '@/components/ui/table'
 import { CopyableId } from '@/components/global/shared/CopyableId'
 import { DateTooltip } from '@/components/global/shared/DateTooltip'
+import { EmptyState } from '@/components/global/shared/EmptyState'
 import { PostgresCopyableField } from './_components/PostgresCopyableField'
 import { PostgresConnectionCredentialFields } from './_components/PostgresConnectionCredentialFields'
 
@@ -46,96 +47,80 @@ export function PostgresConnectionDetails({
   databaseId,
   centerInPanel = false,
 }: PostgresConnectionDetailsProps) {
-  const { database, isLoading: databaseLoading } = usePostgresDatabase(
-    projectId,
-    databaseId,
-  )
+  const { database } = usePostgresDatabase(projectId, databaseId)
   const {
     connections,
-    total,
     isLoading: connectionsLoading,
-    isFetching,
     error,
   } = usePostgresDatabaseConnections(projectId, databaseId)
 
-  const isLoading = databaseLoading || connectionsLoading
   const errorMessage = error ? getErrorMessage(error) : null
 
-  if (isLoading && !database) {
-    return (
-      <div className="flex min-h-0 flex-1 items-center justify-center gap-2 text-[13px] text-muted-foreground">
-        <Loader2 className="h-4 w-4 animate-spin" />
-        Loading connection details…
-      </div>
-    )
-  }
+  if (!database) return null
 
   return (
-    <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-y-auto bg-muted/10">
+    <div
+      className={cn(
+        'flex min-h-0 flex-1 flex-col overflow-y-auto',
+        centerInPanel && 'items-center justify-center',
+      )}
+    >
       <div
         className={cn(
-          'mx-auto w-full max-w-4xl space-y-4 p-4 sm:p-6',
+          'mx-auto w-full max-w-7xl px-4 py-4 sm:px-6',
           centerInPanel && 'my-auto shrink-0',
         )}
       >
-        {errorMessage ? (
-          <Alert variant="destructive">
-            <AlertCircle className="h-4 w-4" />
-            <AlertTitle>Failed to load connections</AlertTitle>
-            <AlertDescription className="text-[13px]">
-              {errorMessage}
-            </AlertDescription>
-          </Alert>
-        ) : null}
+        <div className="space-y-6">
+          {errorMessage ? (
+            <Alert variant="destructive">
+              <AlertCircle className="h-4 w-4" />
+              <AlertTitle>Failed to load connections</AlertTitle>
+              <AlertDescription className="text-[13px]">
+                {errorMessage}
+              </AlertDescription>
+            </Alert>
+          ) : null}
 
-        {database ? (
           <div className="overflow-hidden rounded-xl border border-border bg-card/50">
             <div className="px-6 py-4">
-              <div className="flex flex-wrap items-center gap-2">
-                <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-muted text-muted-foreground">
-                  <Plug className="h-4 w-4" />
-                </div>
-                <div className="min-w-0 flex-1">
-                  <div className="flex flex-wrap items-center gap-2">
-                    <h3 className="text-[15px] font-semibold text-foreground">
-                      Connection endpoint
-                    </h3>
-                  </div>
-                  <p className="mt-1 text-[13px] text-muted-foreground">
-                    Connect external clients, ORMs, and BI tools using these
-                    credentials.
-                  </p>
-                </div>
-              </div>
+              <h3 className="text-[15px] font-semibold text-foreground">
+                Connection endpoint
+              </h3>
+              <p className="mt-2 text-[13px] text-muted-foreground">
+                Host, port, credentials, and DSN for connecting external clients,
+                ORMs, and CLI tools.
+              </p>
             </div>
             <div className="border-t border-border" />
             <div className="px-6 py-4 @container">
               <div className="flex flex-col gap-6 @[600px]:flex-row">
-                <div className="shrink-0 @[600px]:w-56">
+                <div className="shrink-0 @[600px]:w-64">
                   <p className="text-[13px] text-muted-foreground">
-                    Use the host and port for direct TCP connections. The
-                    connection string includes authentication and SSL settings.
+                    Configure clients field by field, or copy the DSN for tools
+                    that accept a single connection URI.
                   </p>
                   {database.engine ? (
                     <div className="mt-4 flex flex-wrap gap-2">
-                      <Badge variant="info" className="text-[10px] shrink-0">
+                      <Badge variant="info" className="shrink-0 text-[10px]">
                         {database.engine}
                       </Badge>
                       {database.version ? (
-                        <Badge variant="info" className="text-[10px] shrink-0">
+                        <Badge variant="info" className="shrink-0 text-[10px]">
                           v{database.version}
                         </Badge>
                       ) : null}
                       {database.replicas > 0 ? (
-                        <Badge variant="info" className="text-[10px] shrink-0">
-                          {database.replicas} replica{database.replicas === 1 ? '' : 's'}
+                        <Badge variant="info" className="shrink-0 text-[10px]">
+                          {database.replicas} replica
+                          {database.replicas === 1 ? '' : 's'}
                         </Badge>
                       ) : null}
                     </div>
                   ) : null}
                 </div>
                 <div className="min-w-0 flex-1">
-                  <div className="grid gap-4">
+                  <div className="space-y-4">
                     <div className="grid gap-4 sm:grid-cols-[minmax(0,1fr)_6.5rem]">
                       <PostgresCopyableField
                         label="Host"
@@ -150,65 +135,37 @@ export function PostgresConnectionDetails({
                         }
                       />
                     </div>
-
-                    <div className="border-t border-border pt-4">
-                      <h4 className="text-[13px] font-semibold text-foreground">
-                        Connection credentials
-                      </h4>
-                      <p className="mt-1 text-[12px] text-muted-foreground">
-                        Use these values to authenticate external clients and
-                        tools.
-                      </p>
-                      <div className="mt-4">
-                        <PostgresConnectionCredentialFields
-                          projectId={projectId}
-                          databaseId={databaseId}
-                        />
-                      </div>
-                    </div>
+                    <PostgresConnectionCredentialFields
+                      projectId={projectId}
+                      databaseId={databaseId}
+                    />
                   </div>
                 </div>
               </div>
             </div>
           </div>
-        ) : null}
 
-        <div className="overflow-hidden rounded-xl border border-border bg-card/50">
-          <div className="px-6 py-4">
-            <div className="flex flex-wrap items-center justify-between gap-2">
-              <div>
-                <h3 className="text-[15px] font-semibold text-foreground">
-                  Database users
-                </h3>
-                <p className="mt-1 text-[13px] text-muted-foreground">
-                  User accounts provisioned for this database instance.
-                </p>
-              </div>
-              <div className="flex items-center gap-2">
-                {total > 0 ? (
-                  <Badge variant="info" className="text-[10px] shrink-0">
-                    {total} user{total === 1 ? '' : 's'}
-                  </Badge>
-                ) : null}
-                {isFetching && !connectionsLoading ? (
-                  <Loader2 className="h-3.5 w-3.5 animate-spin text-muted-foreground" />
-                ) : null}
-              </div>
+          <div className="overflow-hidden rounded-xl border border-border bg-card/50">
+            <div className="px-6 py-4">
+              <h3 className="text-[15px] font-semibold text-foreground">
+                Database users
+              </h3>
+              <p className="mt-2 text-[13px] text-muted-foreground">
+                User accounts provisioned for this database instance.
+              </p>
             </div>
-          </div>
-          <div className="border-t border-border" />
-          <div className="px-6 py-4">
-            {connections.length === 0 && !connectionsLoading ? (
-              <div className="rounded-lg border border-dashed border-border bg-muted/20 px-4 py-10 text-center">
-                <p className="text-[13px] font-medium text-foreground">
-                  No database users yet
-                </p>
-                <p className="mt-1 text-[12px] text-muted-foreground">
-                  User connections will appear here once they are created.
-                </p>
-              </div>
-            ) : (
-              <div className="overflow-hidden rounded-lg border border-border">
+            <div className="border-t border-border" />
+            <div className="px-6 py-4">
+              {connections.length === 0 && !connectionsLoading ? (
+                <EmptyState
+                  icon={Users}
+                  title="No database users yet"
+                  description="User connections will appear here once they are created."
+                  isEmpty
+                  variant="card"
+                  iconSize="md"
+                />
+              ) : (
                 <Table>
                   <TableHeader>
                     <TableRow className="border-b border-border hover:bg-transparent">
@@ -244,7 +201,7 @@ export function PostgresConnectionDetails({
                           <TableCell className="px-4 py-3">
                             <Badge
                               variant={connectionRoleVariant(connection.role)}
-                              className="text-[10px] shrink-0 capitalize"
+                              className="shrink-0 text-[10px] capitalize"
                             >
                               {connection.role || 'Unknown'}
                             </Badge>
@@ -271,8 +228,8 @@ export function PostgresConnectionDetails({
                     )}
                   </TableBody>
                 </Table>
-              </div>
-            )}
+              )}
+            </div>
           </div>
         </div>
       </div>
