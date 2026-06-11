@@ -3,7 +3,7 @@
  * pulling in the full component file.
  */
 
-export type CommandCenterContext = 'project' | 'org' | 'account'
+export type CommandCenterContext = 'project' | 'org' | 'account' | 'docs'
 
 export type CreateResourceType =
   | 'database'

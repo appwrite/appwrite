@@ -11,7 +11,11 @@ import {
 } from '@/components/ui/sheet'
 import { isDocsNavGroup } from '@/lib/docs/navigation'
 import type { DocsNavLink, DocsNavParent, DocsNavTree } from '@/lib/docs/types'
-import { docsSidebarNavLinkClassName } from '@/lib/docs/nav-styles'
+import {
+  DOCS_SECTION_HEADER_CLASS,
+  docsSidebarNavLinkClassName,
+} from '@/lib/docs/nav-styles'
+import { cn } from '@/lib/utils'
 import { DocsRouteLink } from './DocsRouteLink'
 
 const DOCS_MENU_ICON_STROKE = 1.25
@@ -164,7 +168,7 @@ export function DocsSectionSubnavPanel({
       aria-label={parent?.label ? `${parent.label} section navigation` : 'Section navigation'}
     >
       {parent ? (
-        <div className="shrink-0 border-b border-border bg-background px-3 py-3">
+        <div className={cn(DOCS_SECTION_HEADER_CLASS, 'px-3')}>
           <SectionParentLink parent={parent} />
         </div>
       ) : null}

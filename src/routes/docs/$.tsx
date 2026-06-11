@@ -1,6 +1,7 @@
-import { createFileRoute, notFound } from '@tanstack/react-router'
+import { createFileRoute, notFound, redirect } from '@tanstack/react-router'
 import { View } from '@/components/pages/docs/View'
 import { getDocsMarkdownExport, getDocsPage } from '@/lib/docs/content'
+import { getDocsRedirectTarget } from '@/lib/docs/redirects'
 import { getDocsMetaTags } from '@/lib/docs/route-meta'
 import {
   getDocsArticleSchema,
@@ -36,6 +37,15 @@ export const Route = createFileRoute('/docs/$')({
     const splat = params._splat ?? ''
     if (splat.endsWith('.md')) {
       throw notFound()
+    }
+
+    const redirectTarget = getDocsRedirectTarget(splat)
+    if (redirectTarget) {
+      throw redirect({
+        to: redirectTarget.pathname,
+        hash: redirectTarget.hash,
+        replace: true,
+      })
     }
 
     const page = getDocsPage(splat)

@@ -6,2874 +6,5259 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "slug": "advanced/integration",
     "title": "Integration",
     "description": "Learn how to use Appwrite Migrations service to move projects from other vendors to Appwrite Cloud or from self-hosting to Cloud and the other way around.",
-    "excerpt": "Integration"
+    "excerpt": "Integration",
+    "breadcrumbs": [
+      "Integration",
+      "Getting started",
+      "Overview"
+    ]
   },
   {
     "slug": "advanced/migrations",
     "title": "Migrations",
     "description": "Learn how to use Appwrite Migrations service to move projects from other vendors to Appwrite Cloud or from self-hosting to Cloud and the other way around.",
-    "excerpt": "If you're looking to migrate existing projects to Appwrite, Migrations can help you make the move more quickly. You can move your app from Firebase, Supabase, Nhost, and even move between self-hosted and Cloud projects using Migrations. You can also use Migrations to move between two self-hosted instances or even to duplicate projects on the same instance. Migrations will automatically move accounts, database rows, and storage files from one source to another. Sources Appwrite supports multiple source destinations for migrating…"
+    "excerpt": "If you're looking to migrate existing projects to Appwrite, Migrations can help you make the move more quickly. You can move your app from Firebase, Supabase, Nhost, and even move between self-hosted and Cloud projects using Migrations. You can also use Migrations to move between two self-hosted instances or even to duplicate projects on the same instance. Migrations will automatically move accounts, database rows, and storage files from one source to another. Sources Appwrite supports multiple source destinations for migrating…",
+    "breadcrumbs": [
+      "Migrations",
+      "Getting started",
+      "Overview"
+    ]
   },
   {
     "slug": "advanced/migrations/cloud",
     "title": "Migrate from Cloud",
     "description": "Self-hosted application migration made easy with Appwrite. Discover the steps and strategies for migrating your self-hosted apps to Appwrite's managed platform.",
-    "excerpt": "Migrations make it as easy as a couple of clicks to move all your Appwrite Cloud data into a self-hosted instance. 1. Data transferred by migrations will reset and timestamps to the date of the migration. 2. Your self-hosted Appwrite project must be accessible from the internet for the migration to work. 3. Migrations are non-destructive. No data will be deleted or lost in the source project. To begin migrating to self-hosted, make sure to read the migration overview and…"
+    "excerpt": "Migrations make it as easy as a couple of clicks to move all your Appwrite Cloud data into a self-hosted instance. 1. Data transferred by migrations will reset and timestamps to the date of the migration. 2. Your self-hosted Appwrite project must be accessible from the internet for the migration to work. 3. Migrations are non-destructive. No data will be deleted or lost in the source project. To begin migrating to self-hosted, make sure to read the migration overview and…",
+    "breadcrumbs": [
+      "Migrations",
+      "Guides",
+      "From Cloud"
+    ]
   },
   {
     "slug": "advanced/migrations/firebase",
     "title": "Migrate from Firebase",
     "description": "Migrate seamlessly from Firebase to Appwrite. Learn how to transfer data, authentication, and services from Firebase to leverage Appwrite's capabilities.",
-    "excerpt": "Appwrite migrations help you quickly migrate your data from Firebase or other sources to Appwrite. You can follow the instructions on the Appwrite Console migration wizard or use this guide to perform your data migration. While migrations are a great way to move your data from other services to Appwrite and get started quickly, they're not perfect. Make sure to understand the different limitations before completing your migration. When you migrate data from Firebase to Appwrite Cloud, the resource usage…"
+    "excerpt": "Appwrite migrations help you quickly migrate your data from Firebase or other sources to Appwrite. You can follow the instructions on the Appwrite Console migration wizard or use this guide to perform your data migration. While migrations are a great way to move your data from other services to Appwrite and get started quickly, they're not perfect. Make sure to understand the different limitations before completing your migration. When you migrate data from Firebase to Appwrite Cloud, the resource usage…",
+    "breadcrumbs": [
+      "Migrations",
+      "Guides",
+      "From Firebase"
+    ]
   },
   {
     "slug": "advanced/migrations/nhost",
     "title": "Migrate from Nhost",
     "description": "Transition to Appwrite from NHost with confidence. Explore migration steps, considerations, and tools to ensure a successful migration process.",
-    "excerpt": "Appwrite migrations help you quickly migrate your data from Nhost or other sources to Appwrite. You can follow the instructions on the Appwrite Console migration wizard or use this guide to perform your data migration. While migrations are a great way to move your data from other services to Appwrite and get started quickly, they're not perfect. Make sure to understand the different limitations before completing your migration. When you migrate data from Nhost to Appwrite Cloud, the resource usage…"
+    "excerpt": "Appwrite migrations help you quickly migrate your data from Nhost or other sources to Appwrite. You can follow the instructions on the Appwrite Console migration wizard or use this guide to perform your data migration. While migrations are a great way to move your data from other services to Appwrite and get started quickly, they're not perfect. Make sure to understand the different limitations before completing your migration. When you migrate data from Nhost to Appwrite Cloud, the resource usage…",
+    "breadcrumbs": [
+      "Migrations",
+      "Guides",
+      "From Nhost"
+    ]
   },
   {
     "slug": "advanced/migrations/self-hosted",
     "title": "Migrate from self-hosted",
     "description": "Migrate to Appwrite from self-hosted platforms seamlessly. Learn how to move your applications and data to Appwrite for enhanced flexibility and control.",
-    "excerpt": "Migrations makes it as easy as a couple clicks to move all of your self-hosted project data to a Cloud instance. 1. Data transferred by migrations will reset and timestamps to the date of the migration. 2. Your self-hosted Appwrite project must be accessible from the internet for the migration to work. 3. Migrations are non-destructive. No data will be deleted or lost in the source project. To begin migrating to Cloud, make sure to read the migration overview and…"
+    "excerpt": "Migrations makes it as easy as a couple clicks to move all of your self-hosted project data to a Cloud instance. 1. Data transferred by migrations will reset and timestamps to the date of the migration. 2. Your self-hosted Appwrite project must be accessible from the internet for the migration to work. 3. Migrations are non-destructive. No data will be deleted or lost in the source project. To begin migrating to Cloud, make sure to read the migration overview and…",
+    "breadcrumbs": [
+      "Migrations",
+      "Guides",
+      "From self-hosted"
+    ]
   },
   {
     "slug": "advanced/migrations/supabase",
     "title": "Migrate from Supabase",
     "description": "Effortlessly migrate from Supabase to Appwrite. Discover migration strategies, data transfer methods, and tips for a smooth transition to Appwrite.",
-    "excerpt": "Appwrite migrations help you quickly migrate your data from Supabase or other sources to Appwrite. You can follow the instructions on the Appwrite Console migration wizard or use this guide to perform your data migration. While migrations are a great way to move your data from other services to Appwrite and get started quickly, they're not perfect. Make sure to understand the different limitations before completing your migration. When you migrate data from Supabase to Appwrite Cloud, the resource usage…"
+    "excerpt": "Appwrite migrations help you quickly migrate your data from Supabase or other sources to Appwrite. You can follow the instructions on the Appwrite Console migration wizard or use this guide to perform your data migration. While migrations are a great way to move your data from other services to Appwrite and get started quickly, they're not perfect. Make sure to understand the different limitations before completing your migration. When you migrate data from Supabase to Appwrite Cloud, the resource usage…",
+    "breadcrumbs": [
+      "Migrations",
+      "Guides",
+      "From Supabase"
+    ]
   },
   {
     "slug": "advanced/platform",
     "title": "Platform",
     "description": "Appwrite is a development platform designed to adapt to your unique use cases. It provides features that help you maintain and scale your application.",
-    "excerpt": "Appwrite is a development platform designed to adapt your unique use cases. Appwrite provides features that help you maintain, scale, and integrate Appwrite with other platforms. Integration Appwrite is designed to integrate with both frontend and backend apps. Learn about advanced integrations and API response codes. Appwrite allows you to react to events that occur on the platform. Use webhooks to update backend integrations about Appwrite events. Learn about response codes and errors returned by Appwrite APIs. Access control Appwrite…"
+    "excerpt": "Appwrite is a development platform designed to adapt your unique use cases. Appwrite provides features that help you maintain, scale, and integrate Appwrite with other platforms. Integration Appwrite is designed to integrate with both frontend and backend apps. Learn about advanced integrations and API response codes. Appwrite allows you to react to events that occur on the platform. Use webhooks to update backend integrations about Appwrite events. Learn about response codes and errors returned by Appwrite APIs. Access control Appwrite…",
+    "breadcrumbs": [
+      "Platform",
+      "Platform",
+      "Overview"
+    ]
   },
   {
     "slug": "advanced/platform/abuse",
     "title": "Abuse policy",
     "description": "Guidelines on abusive behavior, prohibited activities, and reporting mechanisms under our Fair Use Policy.",
-    "excerpt": "Appwrite is committed to providing a fair, secure, and high-quality experience for all users. This Abuse Policy, as part of our overall Fair Use Policy, outlines unacceptable behaviors and the steps you can take to report any suspected abuse. Our goal is to maintain a safe environment where everyone can build, innovate, and collaborate without fear of harmful or illegal activity. Reporting Abuse If you observe or suspect any prohibited activity, please report it as soon as possible to abuse@appwrite.io.…"
+    "excerpt": "Appwrite is committed to providing a fair, secure, and high-quality experience for all users. This Abuse Policy, as part of our overall Fair Use Policy, outlines unacceptable behaviors and the steps you can take to report any suspected abuse. Our goal is to maintain a safe environment where everyone can build, innovate, and collaborate without fear of harmful or illegal activity. Reporting Abuse If you observe or suspect any prohibited activity, please report it as soon as possible to abuse@appwrite.io.…",
+    "breadcrumbs": [
+      "Platform",
+      "Policies",
+      "Abuse"
+    ]
   },
   {
     "slug": "advanced/platform/api-keys",
     "title": "API keys",
     "description": "Secure your application with Appwrite API Keys. Discover how to create and manage API keys to control access and enhance your application's security.",
-    "excerpt": "API keys are secrets used by Appwrite Server SDKs and the Appwrite CLI to prove their identity. What can be accessed each API key is restricted by scopes instead of permissions. It is a best practice to grant only the scopes you need to meet your project's goals to an API key. API keys should be treated as a secret. Never share the API key and keep API keys out of client applications. API keys vs Dev keys API keys…"
+    "excerpt": "API keys are secrets used by Appwrite Server SDKs and the Appwrite CLI to prove their identity. What can be accessed each API key is restricted by scopes instead of permissions. It is a best practice to grant only the scopes you need to meet your project's goals to an API key. API keys should be treated as a secret. Never share the API key and keep API keys out of client applications. API keys vs Dev keys API keys…",
+    "breadcrumbs": [
+      "Platform",
+      "Access control",
+      "API keys"
+    ]
   },
   {
     "slug": "advanced/platform/billing",
     "title": "Billing",
     "description": "Understand Appwrite's billing features, like budget caps, billing periods, taxes, and more.",
-    "excerpt": "Appwrite allows you to configure billing per organization. You can access your organizations billing information under the **Billing** tab of your organization. Plans You can view or change your organization's plan under the **Billing** section. You'll also find the expected cost, as well as the start and end date of the current billing period. Billing period Billing periods begin the day you change your plan, and lasts 30 days. Your resource limits are reset at the beginning of each billing…"
+    "excerpt": "Appwrite allows you to configure billing per organization. You can access your organizations billing information under the **Billing** tab of your organization. Plans You can view or change your organization's plan under the **Billing** section. You'll also find the expected cost, as well as the start and end date of the current billing period. Billing period Billing periods begin the day you change your plan, and lasts 30 days. Your resource limits are reset at the beginning of each billing…",
+    "breadcrumbs": [
+      "Platform",
+      "Plans",
+      "Billing"
+    ]
   },
   {
     "slug": "advanced/platform/compute",
     "title": "Compute",
     "description": "Learn about CPU and memory options for Appwrite Functions and Sites on Cloud, including separate build and runtime specifications and plan build timeouts.",
-    "excerpt": "On Appwrite Cloud, paid plans let you choose how much **CPU** and **memory** apply to **build** work and to **runtime** work. Functions and Sites each expose two settings: a **build specification** (install, compile, bundle, package) and a **runtime specification** (executions for functions; serving traffic and SSR for sites). You can pick different tiers for each phase so heavy builds do not force you to oversize steady execution, and vice versa. These options help you tune performance and cost: for example,…"
+    "excerpt": "On Appwrite Cloud, paid plans let you choose how much **CPU** and **memory** apply to **build** work and to **runtime** work. Functions and Sites each expose two settings: a **build specification** (install, compile, bundle, package) and a **runtime specification** (executions for functions; serving traffic and SSR for sites). You can pick different tiers for each phase so heavy builds do not force you to oversize steady execution, and vice versa. These options help you tune performance and cost: for example,…",
+    "breadcrumbs": [
+      "Platform",
+      "Add ons",
+      "Compute"
+    ]
   },
   {
     "slug": "advanced/platform/custom-domains",
     "title": "Custom domains",
     "description": "Customize your Appwrite platform with custom domains. Learn how to set up and configure custom domains to provide a branded experience for your users.",
-    "excerpt": "Appwrite custom domains allows you to use your own domain as your Appwrite API endpoint. Third-party cookies A recent change made in modern browsers will not allow your web app to use 3rd-party cookies. This change is done to protect your users' privacy from malicious web tracking services. When accessing Appwrite from a 3rd party domain, like or , some browsers will treat our secure cookies as 3rd-party cookies and block them, as a fallback Appwrite will store your users'…"
+    "excerpt": "Appwrite custom domains allows you to use your own domain as your Appwrite API endpoint. Third-party cookies A recent change made in modern browsers will not allow your web app to use 3rd-party cookies. This change is done to protect your users' privacy from malicious web tracking services. When accessing Appwrite from a 3rd party domain, like or , some browsers will treat our secure cookies as 3rd-party cookies and block them, as a fallback Appwrite will store your users'…",
+    "breadcrumbs": [
+      "Platform",
+      "Configuration",
+      "Custom domains"
+    ]
   },
   {
     "slug": "advanced/platform/database-reads-and-writes",
     "title": "Database Reads and Writes",
     "description": "Learn how Appwrite handles database reads and writes and their associated costs.",
-    "excerpt": "Updated pricing will take effect on April 10th, 2025. Check out this blog post for more information. Appwrite provides powerful database capabilities through its Database API, allowing you to perform read and write operations across your application data. Understanding how these operations are counted and billed is essential for planning your application's scalability. Database Operations Database operations in Appwrite are categorized into two types: **Read Operations**: Any action that retrieves data from your database, including: - Fetching rows with or…"
+    "excerpt": "Updated pricing will take effect on April 10th, 2025. Check out this blog post for more information. Appwrite provides powerful database capabilities through its Database API, allowing you to perform read and write operations across your application data. Understanding how these operations are counted and billed is essential for planning your application's scalability. Database Operations Database operations in Appwrite are categorized into two types: **Read Operations**: Any action that retrieves data from your database, including: - Fetching rows with or…",
+    "breadcrumbs": [
+      "Platform",
+      "Add ons",
+      "Database Reads and Writes"
+    ]
   },
   {
     "slug": "advanced/platform/dev-keys",
     "title": "Dev keys",
     "description": "Bypass Appwrite rate limits and CORS errors in your development environment with Appwrite Dev keys.",
-    "excerpt": "Dev keys are secrets used by Appwrite Client SDKs to avoid abuse limits in testing. They are meant to be used specifically in development environments, where they hold several developer experience-related benefits: - Appwrite rate limits and CORS errors are bypassed - Configurable expiration date with 1 day, 7 days, and 30 day options This is highly beneficial in scenarios where you are repeatedly sending the same requests to Appwrite in a short period of time, such as manual or…"
+    "excerpt": "Dev keys are secrets used by Appwrite Client SDKs to avoid abuse limits in testing. They are meant to be used specifically in development environments, where they hold several developer experience-related benefits: - Appwrite rate limits and CORS errors are bypassed - Configurable expiration date with 1 day, 7 days, and 30 day options This is highly beneficial in scenarios where you are repeatedly sending the same requests to Appwrite in a short period of time, such as manual or…",
+    "breadcrumbs": [
+      "Platform",
+      "Access control",
+      "Dev keys"
+    ]
   },
   {
     "slug": "advanced/platform/enterprise",
     "title": "Enterprise",
     "description": "How Appwrite can accelerate enterprise development teams and provide custom support and hosting options.",
-    "excerpt": "Enterprise development teams face unique challenges and have unique needs. Appwrite can provide tailored solutions for enterprise customers with custom hosting, training, and support needs. If you're interested to learn about what Appwrite can do for your enterprise development teams, contact us for more details."
+    "excerpt": "Enterprise development teams face unique challenges and have unique needs. Appwrite can provide tailored solutions for enterprise customers with custom hosting, training, and support needs. If you're interested to learn about what Appwrite can do for your enterprise development teams, contact us for more details.",
+    "breadcrumbs": [
+      "Platform",
+      "Plans",
+      "Enterprise"
+    ]
   },
   {
     "slug": "advanced/platform/environment-variables",
     "title": "Environment variables",
     "description": "Use project, function, and site environment variables to pass constants and secrets to your Appwrite Functions and Appwrite Sites at build and runtime.",
-    "excerpt": "Environment variables let you pass constants and secrets such as API keys, connection strings, and feature flags into your Appwrite Functions and Appwrite Sites at build and runtime. Storing values outside your source keeps secrets out of version control and lets you change configuration without code changes. Appwrite supports three scopes of environment variables: - **Project variables** are shared across every function and site in the project. Use them for values consumed by more than one resource, such as a…"
+    "excerpt": "Environment variables let you pass constants and secrets such as API keys, connection strings, and feature flags into your Appwrite Functions and Appwrite Sites at build and runtime. Storing values outside your source keeps secrets out of version control and lets you change configuration without code changes. Appwrite supports three scopes of environment variables: - **Project variables** are shared across every function and site in the project. Use them for values consumed by more than one resource, such as a…",
+    "breadcrumbs": [
+      "Platform",
+      "Configuration",
+      "Environment variables"
+    ]
   },
   {
     "slug": "advanced/platform/error-handling",
     "title": "Error handling",
     "description": "Best practices for handling Appwrite errors in your applications. Learn how to provide friendly error messages to your users while effectively troubleshooting issues.",
-    "excerpt": "When integrating Appwrite into your applications, proper error handling is important for delivering a good user experience while still being able to troubleshoot issues effectively. Consider user-friendly error messages **It's generally best to avoid returning Appwrite's raw error messages directly to your users.** These messages are designed for developers and may contain technical details that: - Could confuse non-technical users - Might expose implementation details - Often create an inconsistent user experience Instead, consider this approach: 1. Catch errors from…"
+    "excerpt": "When integrating Appwrite into your applications, proper error handling is important for delivering a good user experience while still being able to troubleshoot issues effectively. Consider user-friendly error messages **It's generally best to avoid returning Appwrite's raw error messages directly to your users.** These messages are designed for developers and may contain technical details that: - Could confuse non-technical users - Might expose implementation details - Often create an inconsistent user experience Instead, consider this approach: 1. Catch errors from…",
+    "breadcrumbs": [
+      "Platform",
+      "Integration",
+      "Error handling"
+    ]
   },
   {
     "slug": "advanced/platform/events",
     "title": "Events",
     "description": "Harness the power of events in Appwrite. Explore event-driven architecture, event types, and how to use events to create dynamic applications.",
-    "excerpt": "Appwrite provides a variety of events that allows your application to react to changes as they happen. An event will fire when a change occurs in your Appwrite project, like when a new user registers or a new file is uploaded to Appwrite. You can subscribe to these events with Appwrite Functions, Realtime, or Webhooks. You can subscribe to events for specific resources using their ID or subscribe to changes of all resources of the same type by using a…"
+    "excerpt": "Appwrite provides a variety of events that allows your application to react to changes as they happen. An event will fire when a change occurs in your Appwrite project, like when a new user registers or a new file is uploaded to Appwrite. You can subscribe to these events with Appwrite Functions, Realtime, or Webhooks. You can subscribe to events for specific resources using their ID or subscribe to changes of all resources of the same type by using a…",
+    "breadcrumbs": [
+      "Platform",
+      "Integration",
+      "Events"
+    ]
   },
   {
     "slug": "advanced/platform/fair-use-policy",
     "title": "Fair use policy",
     "description": "Understand Appwrite's usage limits, prohibited activities, and enforcement actions.",
-    "excerpt": "At Appwrite, we are committed to providing high-quality, reliable, and scalable backend services for all users. Our Fair Use Policy ensures that resources are used responsibly and that every user receives a consistent experience. This policy applies to all users and outlines acceptable usage patterns and limitations. Definitions and scope - **Normal usage:** Resource usage that falls within expected thresholds for a user's selected plan. - **Excessive usage:** Usage that exceeds defined thresholds and may affect the platform's performance for…"
+    "excerpt": "At Appwrite, we are committed to providing high-quality, reliable, and scalable backend services for all users. Our Fair Use Policy ensures that resources are used responsibly and that every user receives a consistent experience. This policy applies to all users and outlines acceptable usage patterns and limitations. Definitions and scope - **Normal usage:** Resource usage that falls within expected thresholds for a user's selected plan. - **Excessive usage:** Usage that exceeds defined thresholds and may affect the platform's performance for…",
+    "breadcrumbs": [
+      "Platform",
+      "Policies",
+      "Fair use"
+    ]
   },
   {
     "slug": "advanced/platform/free",
     "title": "Free",
     "description": "Appwrite's Free plan provides a generous free tier. Perfect for budding projects, hobbiests, and side-projects.",
-    "excerpt": "Appwrite Cloud provides a **Free** plan to all developers to start building with Appwrite. Appwrite Free plan is perfect for personal hobby projects for students and professional developers alike. Learn more about the Free plan's generous resource limits on the pricing page. Create a Free plan organization Appwrite Cloud's different plans are applied at an organization level. Resources on the Free plan are shared across projects, while paid plans offer dedicated resources per project. When you create your Appwrite Cloud…"
+    "excerpt": "Appwrite Cloud provides a **Free** plan to all developers to start building with Appwrite. Appwrite Free plan is perfect for personal hobby projects for students and professional developers alike. Learn more about the Free plan's generous resource limits on the pricing page. Create a Free plan organization Appwrite Cloud's different plans are applied at an organization level. Resources on the Free plan are shared across projects, while paid plans offer dedicated resources per project. When you create your Appwrite Cloud…",
+    "breadcrumbs": [
+      "Platform",
+      "Plans",
+      "Free"
+    ]
   },
   {
     "slug": "advanced/platform/image-transformations",
     "title": "Image Transformations",
     "description": "Learn how to transform images using Appwrite's storage API.",
-    "excerpt": "Changes will take effect on April 1st, 2025. Check out this blog post for more information. Appwrite enables the transformation of images before retrieval using the getFilePreview endpoint. This functionality supports resizing images by width and height, adjusting quality, and applying filters such as opacity, border colour, border radius, and more. Origin Image An \"origin image\" represents the original, unmodified image file in Appwrite Storage. Each origin image serves as the base for unlimited transformations, allowing the creation of multiple…"
+    "excerpt": "Changes will take effect on April 1st, 2025. Check out this blog post for more information. Appwrite enables the transformation of images before retrieval using the getFilePreview endpoint. This functionality supports resizing images by width and height, adjusting quality, and applying filters such as opacity, border colour, border radius, and more. Origin Image An \"origin image\" represents the original, unmodified image file in Appwrite Storage. Each origin image serves as the base for unlimited transformations, allowing the creation of multiple…",
+    "breadcrumbs": [
+      "Platform",
+      "Add ons",
+      "Image Transformations"
+    ]
   },
   {
     "slug": "advanced/platform/message-templates",
     "title": "Message templates",
     "description": "Communicate using your brand and voice by customizing email and SMS message templates, localized to your user's language.",
-    "excerpt": "Appwrite uses emails to communicate with users to perform authentication and verification actions. Emails can be customized to fit your app's design and voice. Each Appwrite project can have its own set of unique templates. Templates also support localization, so every template can be written in multiple languages and served depending on the configured locale. Custom SMTP server Appwrite Cloud has a default SMTP server to get you started. This SMTP server sends generic emails and doesn't allow customizing SMTP…"
+    "excerpt": "Appwrite uses emails to communicate with users to perform authentication and verification actions. Emails can be customized to fit your app's design and voice. Each Appwrite project can have its own set of unique templates. Templates also support localization, so every template can be written in multiple languages and served depending on the configured locale. Custom SMTP server Appwrite Cloud has a default SMTP server to get you started. This SMTP server sends generic emails and doesn't allow customizing SMTP…",
+    "breadcrumbs": [
+      "Platform",
+      "Configuration",
+      "Message templates"
+    ]
   },
   {
     "slug": "advanced/platform/oss",
     "title": "Open source",
     "description": "Learn how Appwrite supports open-source projects by providing free credits and other benefits.",
-    "excerpt": "Appwrite remains open source and continues to support open-source maintainers that build fundamental software that modern developers depend upon with the OSS Program. The OSS Program supports open-projects and their maintainers by alleviating financial burdens and promoting growth. You will receive a free Appwrite Pro subscription and benefit from all its resources and support. The program has no fixed end date but will be reviewed annually to ensure optimal mutual support. Criteria To apply for this program, you must adhere…"
+    "excerpt": "Appwrite remains open source and continues to support open-source maintainers that build fundamental software that modern developers depend upon with the OSS Program. The OSS Program supports open-projects and their maintainers by alleviating financial burdens and promoting growth. You will receive a free Appwrite Pro subscription and benefit from all its resources and support. The program has no fixed end date but will be reviewed annually to ensure optimal mutual support. Criteria To apply for this program, you must adhere…",
+    "breadcrumbs": [
+      "Platform",
+      "Plans",
+      "Open source"
+    ]
   },
   {
     "slug": "advanced/platform/permissions",
     "title": "Permissions",
     "description": "Enhance data security and access control with Appwrite platform permissions. Learn how to set fine-grained permissions to protect user data and resources.",
-    "excerpt": "Appwrite's permission mechanism offers a simple, yet flexible way to manage which users, teams, or roles can access a specific resource in your project, such as rows and files. Using permissions, you can decide that only **user A** and **user B** will have read and update access to a specific database row, while **user C** and **team X** will be the only ones with delete access. As the name suggests, read permission allows a user to read a resource, create…"
+    "excerpt": "Appwrite's permission mechanism offers a simple, yet flexible way to manage which users, teams, or roles can access a specific resource in your project, such as rows and files. Using permissions, you can decide that only **user A** and **user B** will have read and update access to a specific database row, while **user C** and **team X** will be the only ones with delete access. As the name suggests, read permission allows a user to read a resource, create…",
+    "breadcrumbs": [
+      "Platform",
+      "Access control",
+      "Permissions"
+    ]
   },
   {
     "slug": "advanced/platform/phone-otp",
     "title": "Phone OTP",
     "description": "Learn how Appwrite handles SMS-based OTP authentication for secure user verification.",
-    "excerpt": "Changes will take effect on February 10th, 2025. Check out this blog post for more information. Appwrite supports SMS-based OTP (One-Time Password) authentication to provide secure and reliable user verification. This feature enhances your app's security by adding an extra layer of authentication. Free testing You can use the Mock phone numbers feature to test your integrations without incurring any costs. SMS messages You'll be charged per SMS sent. The cost for additional messages is calculated based on two factors:…"
+    "excerpt": "Changes will take effect on February 10th, 2025. Check out this blog post for more information. Appwrite supports SMS-based OTP (One-Time Password) authentication to provide secure and reliable user verification. This feature enhances your app's security by adding an extra layer of authentication. Free testing You can use the Mock phone numbers feature to test your integrations without incurring any costs. SMS messages You'll be charged per SMS sent. The cost for additional messages is calculated based on two factors:…",
+    "breadcrumbs": [
+      "Platform",
+      "Add ons",
+      "Phone OTP"
+    ]
   },
   {
     "slug": "advanced/platform/pro",
     "title": "Pro",
     "description": "Understand Appwrite's pricing plans, behaviors, billing cycles, and limitations.",
-    "excerpt": "Appwrite Cloud's Pro plan is designed for professional developers or development teams that need to build applications at scale. When applications outgrow Appwrite's Free plan, organizations can switch to a Pro plan to continue growing their apps. You can learn more about the Pro plan on the pricing page. Create a Pro plan organization Appwrite's plans are applied to an entire organization, but resources are allocated per project. Get started with a Pro plan organization by visiting the pricing page…"
+    "excerpt": "Appwrite Cloud's Pro plan is designed for professional developers or development teams that need to build applications at scale. When applications outgrow Appwrite's Free plan, organizations can switch to a Pro plan to continue growing their apps. You can learn more about the Pro plan on the pricing page. Create a Pro plan organization Appwrite's plans are applied to an entire organization, but resources are allocated per project. Get started with a Pro plan organization by visiting the pricing page…",
+    "breadcrumbs": [
+      "Platform",
+      "Plans",
+      "Pro"
+    ]
   },
   {
     "slug": "advanced/platform/rate-limits",
     "title": "Rate-limits",
     "description": "Optimize application performance with Appwrite rate limits. Explore rate limiting strategies, configurations, and how to prevent abuse of your services.",
-    "excerpt": "Some of Appwrite's API endpoints have a rate limit to avoid abuse or brute-force attacks against Appwrite's REST API. Each Appwrite route documentation has information about any rate limits that might apply to them. Rate limits only apply to Client SDKs. Rate limits do not apply when accessing Appwrite with a Server SDK authenticated using an API key. Headers You can check the returned HTTP headers of any API request to see your current rate limit status: The headers tell…"
+    "excerpt": "Some of Appwrite's API endpoints have a rate limit to avoid abuse or brute-force attacks against Appwrite's REST API. Each Appwrite route documentation has information about any rate limits that might apply to them. Rate limits only apply to Client SDKs. Rate limits do not apply when accessing Appwrite with a Server SDK authenticated using an API key. Headers You can check the returned HTTP headers of any API request to see your current rate limit status: The headers tell…",
+    "breadcrumbs": [
+      "Platform",
+      "Access control",
+      "Rate limits"
+    ]
   },
   {
     "slug": "advanced/platform/refund-policy",
     "title": "Refund policy",
     "description": "Learn about Appwrite's refund policy for services, including eligibility criteria and the request process.",
-    "excerpt": "At Appwrite, we strive to provide exceptional backend services that meet your development needs. This policy outlines our approach to refunds for Appwrite services and ensures a fair and consistent process for all customers. General policy Appwrite services are **non-refundable by default**. All purchases, including self-hosted support plans, Appwrite Cloud subscriptions, and professional services (e.g., onboarding, solution engineering, consulting) are considered final transactions. However, we recognize that exceptional circumstances may arise. In rare and specific situations where service performance, billing,…"
+    "excerpt": "At Appwrite, we strive to provide exceptional backend services that meet your development needs. This policy outlines our approach to refunds for Appwrite services and ensures a fair and consistent process for all customers. General policy Appwrite services are **non-refundable by default**. All purchases, including self-hosted support plans, Appwrite Cloud subscriptions, and professional services (e.g., onboarding, solution engineering, consulting) are considered final transactions. However, we recognize that exceptional circumstances may arise. In rare and specific situations where service performance, billing,…",
+    "breadcrumbs": [
+      "Platform",
+      "Policies",
+      "Refund"
+    ]
   },
   {
     "slug": "advanced/platform/release-policy",
     "title": "Release policy",
     "description": "Understand how Appwrite releases and versions its platforms and APIs.",
-    "excerpt": "We value the trust of developers in Appwrite as the backbone of their applications. Our release policy is designed to provide developers with a reliable and consistent experience when using Appwrite. We are committed to providing support for our API, SDKs, and product versions for a reasonable length of time, and we follow industry-standard versioning protocols. Appwrite will prioritize security updates and will release new versions as soon as possible to fix any security vulnerabilities. Schedule We work to release…"
+    "excerpt": "We value the trust of developers in Appwrite as the backbone of their applications. Our release policy is designed to provide developers with a reliable and consistent experience when using Appwrite. We are committed to providing support for our API, SDKs, and product versions for a reasonable length of time, and we follow industry-standard versioning protocols. Appwrite will prioritize security updates and will release new versions as soon as possible to fix any security vulnerabilities. Schedule We work to release…",
+    "breadcrumbs": [
+      "Platform",
+      "Policies",
+      "Release"
+    ]
   },
   {
     "slug": "advanced/platform/response-codes",
     "title": "Response codes",
     "description": "Understand Appwrite platform response codes for effective error handling. Learn how to interpret and handle response codes to enhance your application's reliability.",
-    "excerpt": "Appwrite uses conventional HTTP response codes to indicate the success or failure of an API request. - Codes in the range indicate success. - Codes in the range indicate an error caused by invalid request, usually caused by user error. - Codes in the range indicate an error with Appwrite, please check Docker container logs. Response codes | Code | Text | Description | |------|------------------------|------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------| | 200 | OK | Success! | | 201 | Created | The requested resource…"
+    "excerpt": "Appwrite uses conventional HTTP response codes to indicate the success or failure of an API request. - Codes in the range indicate success. - Codes in the range indicate an error caused by invalid request, usually caused by user error. - Codes in the range indicate an error with Appwrite, please check Docker container logs. Response codes | Code | Text | Description | |------|------------------------|------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------| | 200 | OK | Success! | | 201 | Created | The requested resource…",
+    "breadcrumbs": [
+      "Platform",
+      "Integration",
+      "Response codes"
+    ]
   },
   {
     "slug": "advanced/platform/roles",
     "title": "Roles",
     "description": "Learn how to setup role-based access controls in the Appwrite Console",
-    "excerpt": "The Appwrite Console supports granular permissions to improve team collaboration and security. Each member of your Console team can be assigned a specific role that grants them access to certain areas of your organization's projects. Below is a breakdown of the new roles available, detailing their permissions and intended use cases. This page covers organization member roles for the Appwrite Console. Visit the Auth roles documentation if you want to learn more about roles for the Teams service. Owner The…"
+    "excerpt": "The Appwrite Console supports granular permissions to improve team collaboration and security. Each member of your Console team can be assigned a specific role that grants them access to certain areas of your organization's projects. Below is a breakdown of the new roles available, detailing their permissions and intended use cases. This page covers organization member roles for the Appwrite Console. Visit the Auth roles documentation if you want to learn more about roles for the Teams service. Owner The…",
+    "breadcrumbs": [
+      "Platform",
+      "Platform",
+      "Roles"
+    ]
   },
   {
     "slug": "advanced/platform/scale",
     "title": "Scale",
     "description": "Appwrite's Scale plan fully supports scaling your application.",
-    "excerpt": "Appwrite's Scale plan is designed for growing development teams and agencies with many organizational members and large projects. The plan offers unlimited seats across your organization and dedicated resources per project. Scale plan organizations will receive additional compliance measures, organization roles, and dedicated support."
+    "excerpt": "Appwrite's Scale plan is designed for growing development teams and agencies with many organizational members and large projects. The plan offers unlimited seats across your organization and dedicated resources per project. Scale plan organizations will receive additional compliance measures, organization roles, and dedicated support.",
+    "breadcrumbs": [
+      "Platform",
+      "Scale"
+    ]
   },
   {
     "slug": "advanced/platform/shortcuts",
     "title": "Keyboard shortcuts",
     "description": "Learn to navigate the Appwrite Console efficiently and effectively with your keyboard",
-    "excerpt": "The Appwrite Console was designed with a keyboard first approach. The Appwrite Console supports keyboard shortcuts that make it easier to navigate and perform actions quicker. Shortcuts The Appwrite Console supports keyboard shortcuts that make it easier to navigate and perform common actions quicker. The shortcuts use the following pattern: use the first letter from the call to action followed by the resource, product, service, or page you're targeting. For example, the shortcut keys + navigates to the project's Storage…"
+    "excerpt": "The Appwrite Console was designed with a keyboard first approach. The Appwrite Console supports keyboard shortcuts that make it easier to navigate and perform actions quicker. Shortcuts The Appwrite Console supports keyboard shortcuts that make it easier to navigate and perform common actions quicker. The shortcuts use the following pattern: use the first letter from the call to action followed by the resource, product, service, or page you're targeting. For example, the shortcut keys + navigates to the project's Storage…",
+    "breadcrumbs": [
+      "Platform",
+      "Platform",
+      "Shortcuts"
+    ]
   },
   {
     "slug": "advanced/platform/support-sla",
     "title": "Support SLA",
     "description": "Learn about Appwrite's support service level agreement (SLA) including response times, severity levels, and support commitments for different subscription tiers.",
-    "excerpt": "This Support Service Level Agreement (\"SLA\") describes the support services provided by APPWRITE (\"we,\" \"us,\" or \"our\") to users of our products and services (\"you\" or \"user\"). By using our services, you agree to the terms of this SLA. Scope This SLA outlines our commitments for providing support services via email, including response and resolution processes based on issue severity. The specific response times depend on the support tier associated with your support plan: **Silver**, **Gold**, or **Platinum**. Severity levels…"
+    "excerpt": "This Support Service Level Agreement (\"SLA\") describes the support services provided by APPWRITE (\"we,\" \"us,\" or \"our\") to users of our products and services (\"you\" or \"user\"). By using our services, you agree to the terms of this SLA. Scope This SLA outlines our commitments for providing support services via email, including response and resolution processes based on issue severity. The specific response times depend on the support tier associated with your support plan: **Silver**, **Gold**, or **Platinum**. Severity levels…",
+    "breadcrumbs": [
+      "Platform",
+      "Policies",
+      "Support SLA"
+    ]
   },
   {
     "slug": "advanced/platform/uptime-sla",
     "title": "Uptime SLA",
     "description": "Learn about Appwrite's uptime service level agreement and commitments for different subscription plans.",
-    "excerpt": "This Uptime Service Level Agreement (\"SLA\") describes the uptime commitments and related service credit terms provided by APPWRITE (\"we,\" \"us,\" or \"our\") to users of our products and services (\"you\" or \"user\"). By using our services, you agree to the terms of this SLA. Uptime commitments We commit to maintaining the following monthly uptime percentages based on your subscription plan: | Plan | Monthly Uptime Commitment | | --- | --- | | **Free** | N/A | | **Pro** |…"
+    "excerpt": "This Uptime Service Level Agreement (\"SLA\") describes the uptime commitments and related service credit terms provided by APPWRITE (\"we,\" \"us,\" or \"our\") to users of our products and services (\"you\" or \"user\"). By using our services, you agree to the terms of this SLA. Uptime commitments We commit to maintaining the following monthly uptime percentages based on your subscription plan: | Plan | Monthly Uptime Commitment | | --- | --- | | **Free** | N/A | | **Pro** |…",
+    "breadcrumbs": [
+      "Platform",
+      "Policies",
+      "Uptime SLA"
+    ]
   },
   {
     "slug": "advanced/platform/webhooks",
     "title": "Webhooks",
     "description": "Leverage webhooks in the Appwrite platform for real-time updates. Learn how to configure, manage, and integrate webhooks to keep your applications in sync.",
-    "excerpt": "Webhooks allow you to build or set up integrations which subscribe to certain events on Appwrite. When one of those events is triggered, we'll send an HTTP POST payload to the webhook's configured URL. Webhooks can be used to purge cache from CDN, calculate data or send a Slack notification. You're only limited by your imagination. Getting started To add a webhook from the Appwrite Console: 1. Navigate to your project's **Settings** page. 2. Select the **Webhooks** tab. 3. Click…"
+    "excerpt": "Webhooks allow you to build or set up integrations which subscribe to certain events on Appwrite. When one of those events is triggered, we'll send an HTTP POST payload to the webhook's configured URL. Webhooks can be used to purge cache from CDN, calculate data or send a Slack notification. You're only limited by your imagination. Getting started To add a webhook from the Appwrite Console: 1. Navigate to your project's **Settings** page. 2. Select the **Webhooks** tab. 3. Click…",
+    "breadcrumbs": [
+      "Platform",
+      "Integration",
+      "Webhooks"
+    ]
   },
   {
     "slug": "advanced/security",
     "title": "Security",
     "description": "Learn how Appwrite keeps your project, users, and data secure through security measures and compliance.",
-    "excerpt": "Appwrite helps you build secure apps by applying various security and compliance measures. Appwrite is compliant with GDPR, CCPA, HIPAA, and SOC 2. Appwrite also employs enhanced password protection and encryption, rate limits, robust permission systems, and HTTPS/TLS to protect you and your users' data. Compliance The safeguarding of your and your users' data is taken seriously at Appwrite. Appwrite works to achieve compliance with a variety of standards to protect sensitive data, as well as maintain trust and credibility.…"
+    "excerpt": "Appwrite helps you build secure apps by applying various security and compliance measures. Appwrite is compliant with GDPR, CCPA, HIPAA, and SOC 2. Appwrite also employs enhanced password protection and encryption, rate limits, robust permission systems, and HTTPS/TLS to protect you and your users' data. Compliance The safeguarding of your and your users' data is taken seriously at Appwrite. Appwrite works to achieve compliance with a variety of standards to protect sensitive data, as well as maintain trust and credibility.…",
+    "breadcrumbs": [
+      "Security",
+      "Getting started",
+      "Overview"
+    ]
   },
   {
     "slug": "advanced/security/abuse-protection",
     "title": "Abuse protection",
     "description": "Learn how Appwrite protects your apps from abuse through rate limiting and cross-site scripting protection.",
-    "excerpt": "Appwrite comes packaged with tools to protect against various forms of abuse, like brute force attacks, data scraping, and many other common forms of abuse. Rate limiting Appwrite uses rate limits on some endpoints to avoid abuse or brute-force attacks against Appwrite's REST API. Each Appwrite route documentation has information about any rate limits that might apply to them. Rate limits limit the number of requests a user or IP can make against an API within a period of time.…"
+    "excerpt": "Appwrite comes packaged with tools to protect against various forms of abuse, like brute force attacks, data scraping, and many other common forms of abuse. Rate limiting Appwrite uses rate limits on some endpoints to avoid abuse or brute-force attacks against Appwrite's REST API. Each Appwrite route documentation has information about any rate limits that might apply to them. Rate limits limit the number of requests a user or IP can make against an API within a period of time.…",
+    "breadcrumbs": [
+      "Security",
+      "Measures",
+      "Abuse protection"
+    ]
   },
   {
     "slug": "advanced/security/audit-logs",
     "title": "Audit logs",
     "description": "Appwrite provides audit logs to help detect anomalies and investigate security incidents.",
-    "excerpt": "All Appwrite products, like Authentication, Databases, Storage, Functions, and Messaging, provide detailed audit logs. Audit logs are important in detecting and responding to security incidents. Through audit logs, you can detect incidents through anomalous activities, trace the source of security incidents, and understand the scope of users affected so you can respond more quickly and effectively. Access audit logs You can access audit logs for different products under the **Activity** tab where applicable. Logs are available for tables, rows, and…"
+    "excerpt": "All Appwrite products, like Authentication, Databases, Storage, Functions, and Messaging, provide detailed audit logs. Audit logs are important in detecting and responding to security incidents. Through audit logs, you can detect incidents through anomalous activities, trace the source of security incidents, and understand the scope of users affected so you can respond more quickly and effectively. Access audit logs You can access audit logs for different products under the **Activity** tab where applicable. Logs are available for tables, rows, and…",
+    "breadcrumbs": [
+      "Security",
+      "Measures",
+      "Audit logs"
+    ]
   },
   {
     "slug": "advanced/security/authentication",
     "title": "Authentication",
     "description": "Learn how Appwrite protects your passwords and helps users pick better passwords.",
-    "excerpt": "Appwrite helps you implement secure authentication in your applications by using password hashing to protect passwords in storage. Appwrite also provides tools to help users pick better passwords, making them harder to break."
+    "excerpt": "Appwrite helps you implement secure authentication in your applications by using password hashing to protect passwords in storage. Appwrite also provides tools to help users pick better passwords, making them harder to break.",
+    "breadcrumbs": [
+      "Security",
+      "Measures",
+      "Authentication"
+    ]
   },
   {
     "slug": "advanced/security/backups",
     "title": "Backups",
     "description": "Appwrite provides both self-managed project backups and automated disaster recovery backups to ensure data security and availability.",
-    "excerpt": "Preventing downtime and maintaining data availability is crucial for digital security. Appwrite provides both self-managed backups and automated disaster recovery backups. Self-managed backups are available for Pro plans and above. These backups allow you to: - Configure automatic backup policies - Initiate manual backups through the Console - Recover from accidental data deletion - Restore data to a previous point in time For detailed information about self-managed backup features, configuration options, and restoration procedures, visit our Backup Documentation. For platform-wide…"
+    "excerpt": "Preventing downtime and maintaining data availability is crucial for digital security. Appwrite provides both self-managed backups and automated disaster recovery backups. Self-managed backups are available for Pro plans and above. These backups allow you to: - Configure automatic backup policies - Initiate manual backups through the Console - Recover from accidental data deletion - Restore data to a previous point in time For detailed information about self-managed backup features, configuration options, and restoration procedures, visit our Backup Documentation. For platform-wide…",
+    "breadcrumbs": [
+      "Security",
+      "Measures",
+      "Backups"
+    ]
   },
   {
     "slug": "advanced/security/ccpa",
     "title": "CCPA",
     "description": "Protecting your and your users' data privacy is a priority at Appwrite. Learn about Appwrite's compliance with the California Consumer Privacy Act (CCPA).",
-    "excerpt": "Appwrite is compliant with the California Consumer Privacy Act (CCPA). The CCPA is a privacy law that gives California residents more control over their personal information, helping ensure their data privacy rights. To confirm Appwrite's compliance with the CCPA, we have ensured the following rights for users: - **Right to know:** Appwrite users can request information about the personal data that is collected, shared, or sold. - **Right to delete:** Users can request that Appwrite delete their personal data, with…"
+    "excerpt": "Appwrite is compliant with the California Consumer Privacy Act (CCPA). The CCPA is a privacy law that gives California residents more control over their personal information, helping ensure their data privacy rights. To confirm Appwrite's compliance with the CCPA, we have ensured the following rights for users: - **Right to know:** Appwrite users can request information about the personal data that is collected, shared, or sold. - **Right to delete:** Users can request that Appwrite delete their personal data, with…",
+    "breadcrumbs": [
+      "Security",
+      "Compliances",
+      "CCPA"
+    ]
   },
   {
     "slug": "advanced/security/encryption",
     "title": "Encryption",
     "description": "Learn about Appwrite's use of encryption across Appwrite's databases and storage buckets to protect user data.",
-    "excerpt": "Other than applying encryption in authentication, enforcing HTTPS, and generating TLS certificate for domains, Appwrite also uses encryption for Storage, and Databases to come. Encryption helps secure your files and data in storage. In the event that an attack happens and a malicious actor gains access to files or data, encrypted files and data cannot be deciphered, adding a further layer of protection. Storage For storage, buckets can have its files encrypted. If enabled, files uploaded to the bucket that…"
+    "excerpt": "Other than applying encryption in authentication, enforcing HTTPS, and generating TLS certificate for domains, Appwrite also uses encryption for Storage, and Databases to come. Encryption helps secure your files and data in storage. In the event that an attack happens and a malicious actor gains access to files or data, encrypted files and data cannot be deciphered, adding a further layer of protection. Storage For storage, buckets can have its files encrypted. If enabled, files uploaded to the bucket that…",
+    "breadcrumbs": [
+      "Security",
+      "Measures",
+      "Encryption"
+    ]
   },
   {
     "slug": "advanced/security/gdpr",
     "title": "GDPR",
     "description": "The safeguarding of your and your users' data is taken seriously at Appwrite. Learn about Appwrite's measures and compliance with the European General Data Protection Regulation (GDPR).",
-    "excerpt": "Appwrite is compliant with the European General Data Protection Regulation (GDPR). GDPR is an EU regulation that concerns data privacy and security in the European Union and the European Economic Area. By attesting that Appwrite is GDPR compliant, we have done the following. - Appwrite users will retain access to their personal information including the right to correct and delete it. - Impose the same rules upon the organization's sub-processors who assist in providing Appwrite's services as described in the…"
+    "excerpt": "Appwrite is compliant with the European General Data Protection Regulation (GDPR). GDPR is an EU regulation that concerns data privacy and security in the European Union and the European Economic Area. By attesting that Appwrite is GDPR compliant, we have done the following. - Appwrite users will retain access to their personal information including the right to correct and delete it. - Impose the same rules upon the organization's sub-processors who assist in providing Appwrite's services as described in the…",
+    "breadcrumbs": [
+      "Security",
+      "Compliances",
+      "GDPR"
+    ]
   },
   {
     "slug": "advanced/security/hipaa",
     "title": "HIPAA",
     "description": "Learn about Appwrite Cloud's measures to achieve HIPAA compliance.",
-    "excerpt": "Appwrite is compliant with HIPAA (Health Insurance Portability and Accountability Act) regulations. HIPAA is an important regulation that protects patients' health data from being disclosed without consent or knowledge. If you're building apps that handle information that is considered PHI (Personal Health Information) for an U.S. user base, data must be stored in a HIPAA-compliant environment. To attain HIPAA compliance, we've taken extensive measures, ensuring that our practices align with the highest data protection standards. We have implemented robust measures…"
+    "excerpt": "Appwrite is compliant with HIPAA (Health Insurance Portability and Accountability Act) regulations. HIPAA is an important regulation that protects patients' health data from being disclosed without consent or knowledge. If you're building apps that handle information that is considered PHI (Personal Health Information) for an U.S. user base, data must be stored in a HIPAA-compliant environment. To attain HIPAA compliance, we've taken extensive measures, ensuring that our practices align with the highest data protection standards. We have implemented robust measures…",
+    "breadcrumbs": [
+      "Security",
+      "Compliances",
+      "HIPAA"
+    ]
   },
   {
     "slug": "advanced/security/https",
     "title": "HTTPS",
     "description": "Learn how Appwrite Cloud enforces secure connections by enforcing HTTPS on all endpoints.",
-    "excerpt": "Appwrite Cloud serves all endpoints over an HTTPS connection by default. Requests made through an unsecure HTTP connection will be redirected to. Redirected requests will show a response status. Appwrite Cloud does not support HTTP, which is a common practice in modern development, because unencrypted HTTP traffic is dangerous and exposes sensitive user data to malicious attackers. Strict-Transport-Security Appwrite uses the Strict-Transport-Security header to inform browsers that the website should only be accessed using HTTPS, further protecting against man-in-the-middle attacks…"
+    "excerpt": "Appwrite Cloud serves all endpoints over an HTTPS connection by default. Requests made through an unsecure HTTP connection will be redirected to. Redirected requests will show a response status. Appwrite Cloud does not support HTTP, which is a common practice in modern development, because unencrypted HTTP traffic is dangerous and exposes sensitive user data to malicious attackers. Strict-Transport-Security Appwrite uses the Strict-Transport-Security header to inform browsers that the website should only be accessed using HTTPS, further protecting against man-in-the-middle attacks…",
+    "breadcrumbs": [
+      "Security",
+      "Measures",
+      "HTTPS"
+    ]
   },
   {
     "slug": "advanced/security/mfa",
     "title": "Multi-factor Authentication",
     "description": "Appwrite helps you secure your developer accounts with MFA (multi-factor authentication).",
-    "excerpt": "Multi-factor authentication (MFA) adds multiple layers of authentication to your Appwrite account. When MFA is enabled, a malicious actor needs to compromise multiple authentication factors to gain unauthorized access. Appwrite currently supports MFA using TOTP (Time-based One-Time Password) with an authenticator app. More factors of authentication will be added in the future. This page covers MFA for your Appwrite Console account. If you're looking to add MFA to your app, follow the Multi-factor authentication journey. Enable MFA To enable MFA…"
+    "excerpt": "Multi-factor authentication (MFA) adds multiple layers of authentication to your Appwrite account. When MFA is enabled, a malicious actor needs to compromise multiple authentication factors to gain unauthorized access. Appwrite currently supports MFA using TOTP (Time-based One-Time Password) with an authenticator app. More factors of authentication will be added in the future. This page covers MFA for your Appwrite Console account. If you're looking to add MFA to your app, follow the Multi-factor authentication journey. Enable MFA To enable MFA…",
+    "breadcrumbs": [
+      "Security",
+      "Measures",
+      "Multi-Factor authentication"
+    ]
   },
   {
     "slug": "advanced/security/pci",
     "title": "PCI",
     "description": "Learn about Appwrite's measure to achieve PCI compliance when handling payments and transactions, ensuring secure and safe handling of payment information and personal data.",
-    "excerpt": "The Payment Card Industry Data Security Standard (PCI) is a standard that concerns the handling of credit card information, transactions, and payments. Appwrite uses Stripe to securely handle payments for Appwrite Pro and Scale plans. Stripe is a PCI Service Provider Level 1 provider with a strong commitment to security and privacy that matches Appwrite's core values. If you're looking to add payment or subscription services to your apps built on Appwrite, we recommend that you **do not store credit…"
+    "excerpt": "The Payment Card Industry Data Security Standard (PCI) is a standard that concerns the handling of credit card information, transactions, and payments. Appwrite uses Stripe to securely handle payments for Appwrite Pro and Scale plans. Stripe is a PCI Service Provider Level 1 provider with a strong commitment to security and privacy that matches Appwrite's core values. If you're looking to add payment or subscription services to your apps built on Appwrite, we recommend that you **do not store credit…",
+    "breadcrumbs": [
+      "Security",
+      "Compliances",
+      "PCI"
+    ]
   },
   {
     "slug": "advanced/security/penetration-tests",
     "title": "Penetration tests",
     "description": "Learn about how Appwrite keeps your data safe by employing manual third-party penetration tests to discover vulnerabilities.",
-    "excerpt": "Appwrite undertakes regular penetration testing and vulnerability assessments conducted by third-party agencies to attest our security standing. These penetration tests and vulnerability assessments are performed periodically. Penetration tests performed by a third-party helps identify vulnerabilities and suggest action plans to constantly improve Appwrite's security. Appwrite has processes for external and internal information security risk management that seek to identify, assess and address risks using a risk treatment plan to implement recommendations and decisions. The risk assessment methodologies utilized include pen-test…"
+    "excerpt": "Appwrite undertakes regular penetration testing and vulnerability assessments conducted by third-party agencies to attest our security standing. These penetration tests and vulnerability assessments are performed periodically. Penetration tests performed by a third-party helps identify vulnerabilities and suggest action plans to constantly improve Appwrite's security. Appwrite has processes for external and internal information security risk management that seek to identify, assess and address risks using a risk treatment plan to implement recommendations and decisions. The risk assessment methodologies utilized include pen-test…",
+    "breadcrumbs": [
+      "Security",
+      "Measures",
+      "Penetration tests"
+    ]
   },
   {
     "slug": "advanced/security/soc2",
     "title": "SOC 2",
     "description": "Learn about Appwrite Cloud's measures to achieve SOC 2 compliance.",
-    "excerpt": "SOC 2 refers to the Service Organization Control 2 standards. SOC 2 is a set of standards are designed to ensure that service providers like Appwrite securely manage data to protect the privacy of developers and users. SOC 2 is a set of standards defined by the American Institute of CPAs (AICPA) that assess organizations on the criteria of security, availability, processing integrity, confidentiality, and privacy. While SOC 2 compliance is voluntary, Appwrite is committed to safeguard the data of…"
+    "excerpt": "SOC 2 refers to the Service Organization Control 2 standards. SOC 2 is a set of standards are designed to ensure that service providers like Appwrite securely manage data to protect the privacy of developers and users. SOC 2 is a set of standards defined by the American Institute of CPAs (AICPA) that assess organizations on the criteria of security, availability, processing integrity, confidentiality, and privacy. While SOC 2 compliance is voluntary, Appwrite is committed to safeguard the data of…",
+    "breadcrumbs": [
+      "Security",
+      "Compliances",
+      "SOC 2"
+    ]
   },
   {
     "slug": "advanced/security/tls",
     "title": "TLS",
     "description": "Appwrite helps keep the web secure by generating TLS (Transport Layer Security) certificates for all user and generated domains.",
-    "excerpt": "Appwrite generates TLS certificates to ensure your API traffic is appropriately encrypted. The certificate authority used depends on your deployment type: - **Self-hosted deployments** use Let's Encrypt, an open source and not-for-profit certificate authority provided by the Internet Security Research Group (ISRG) that secures more than 363 million websites. - **Appwrite Cloud** uses Certainly, Fastly's certificate authority, for Sites and Functions. TLS certificates are generated for all of the following. - Appwrite products and endpoints, like Databases, Storage, Authentication, Functions,…"
+    "excerpt": "Appwrite generates TLS certificates to ensure your API traffic is appropriately encrypted. The certificate authority used depends on your deployment type: - **Self-hosted deployments** use Let's Encrypt, an open source and not-for-profit certificate authority provided by the Internet Security Research Group (ISRG) that secures more than 363 million websites. - **Appwrite Cloud** uses Certainly, Fastly's certificate authority, for Sites and Functions. TLS certificates are generated for all of the following. - Appwrite products and endpoints, like Databases, Storage, Authentication, Functions,…",
+    "breadcrumbs": [
+      "Security",
+      "Measures",
+      "TLS"
+    ]
   },
   {
     "slug": "advanced/self-hosting",
     "title": "Self-hosting",
     "description": "Set up your self-hosted Appwrite instance easily. Read the installation guide to configure and deploy Appwrite on your infrastructure for complete control.",
-    "excerpt": "Appwrite was designed from the ground up with self-hosting in mind. You can install and run Appwrite on any operating system that can run a Docker CLI. Self-hosted Appwrite instances can be configured flexibly with access to the same features found on Appwrite Cloud. If you are migrating from an older version of Appwrite, you need to follow the migration instructions Cloud vs Self-hosting Choose the deployment method that fits your needs. | Feature | Appwrite Cloud | Self-hosting |…"
+    "excerpt": "Appwrite was designed from the ground up with self-hosting in mind. You can install and run Appwrite on any operating system that can run a Docker CLI. Self-hosted Appwrite instances can be configured flexibly with access to the same features found on Appwrite Cloud. If you are migrating from an older version of Appwrite, you need to follow the migration instructions Cloud vs Self-hosting Choose the deployment method that fits your needs. | Feature | Appwrite Cloud | Self-hosting |…",
+    "breadcrumbs": [
+      "Self-hosting",
+      "Getting started",
+      "Overview"
+    ]
   },
   {
     "slug": "advanced/self-hosting/configuration/databases",
     "title": "Databases",
     "description": "Configure the database backend for your self-hosted Appwrite instance. Learn about the supported database options and their configuration.",
-    "excerpt": "Appwrite supports MongoDB and MariaDB as database backends. The database is selected during installation via the setup wizard and **cannot be changed after installation**. Regardless of which database you choose, the Appwrite API remains the same. Only the underlying storage engine differs. MongoDB is the default database as of Appwrite 1.9.0. CLI installation If you prefer to skip the setup wizard, you can set the database directly using the flag: Accepted values are and . Supported databases MongoDB MongoDB is…"
+    "excerpt": "Appwrite supports MongoDB and MariaDB as database backends. The database is selected during installation via the setup wizard and **cannot be changed after installation**. Regardless of which database you choose, the Appwrite API remains the same. Only the underlying storage engine differs. MongoDB is the default database as of Appwrite 1.9.0. CLI installation If you prefer to skip the setup wizard, you can set the database directly using the flag: Accepted values are and . Supported databases MongoDB MongoDB is…",
+    "breadcrumbs": [
+      "Self-hosting",
+      "Configuration",
+      "Databases"
+    ]
   },
   {
     "slug": "advanced/self-hosting/configuration/email",
     "title": "Email delivery",
     "description": "Configure email services for your self-hosted Appwrite instance. Learn how to set up email notifications, templates, and delivery for your applications.",
-    "excerpt": "Appwrite v0.7 and above come with support for easy integrations with 3rd party SMTP providers. In order for emails to work, you will need to set up proper SMTP configuration as described below. Because email deliverability can be both tricky and hard, it is often easier to delegate this responsibility to a 3rd-party SMTP provider. These providers help you abstract the complexity of passing SPAM filters by doing a lot of the advanced configuration and validation for you. In this…"
+    "excerpt": "Appwrite v0.7 and above come with support for easy integrations with 3rd party SMTP providers. In order for emails to work, you will need to set up proper SMTP configuration as described below. Because email deliverability can be both tricky and hard, it is often easier to delegate this responsibility to a 3rd-party SMTP provider. These providers help you abstract the complexity of passing SPAM filters by doing a lot of the advanced configuration and validation for you. In this…",
+    "breadcrumbs": [
+      "Self-hosting",
+      "Configuration",
+      "Email delivery"
+    ]
   },
   {
     "slug": "advanced/self-hosting/configuration/environment-variables",
     "title": "Environment variables",
     "description": "Customize the behavior of your self-hosted Appwrite instance to your unique needs. Customize SMTP, SMS, functions, S3 adaptor, database, and other behaiors.",
-    "excerpt": "Appwrite environment variables allow you to edit your server setup configuration and customize it. You can easily change the environment variables by changing them when running Appwrite using Docker CLI or Docker Compose. Updating your Appwrite environment variables requires you to edit your Appwrite file. Your Docker files should be located inside the \"appwrite\" folder at the location where you first run the Appwrite installation script. It's recommended to use the file as a central point for updating your Appwrite…"
+    "excerpt": "Appwrite environment variables allow you to edit your server setup configuration and customize it. You can easily change the environment variables by changing them when running Appwrite using Docker CLI or Docker Compose. Updating your Appwrite environment variables requires you to edit your Appwrite file. Your Docker files should be located inside the \"appwrite\" folder at the location where you first run the Appwrite installation script. It's recommended to use the file as a central point for updating your Appwrite…",
+    "breadcrumbs": [
+      "Self-hosting",
+      "Configuration",
+      "Environment variables"
+    ]
   },
   {
     "slug": "advanced/self-hosting/configuration/functions",
     "title": "Functions",
     "description": "Harness the full power of self-hosted functions with Appwrite. Explore function deployment, management, and integration in your self-hosted environment.",
-    "excerpt": "This guide covers how to configure functions in your self-hosted Appwrite instance. For GitHub repository integration with functions, see the version control configuration. Configure function runtimes Not all function runtimes are enabled by default. Enable the runtimes that you need and disable unused runtimes to save disk space on your server. To enable a runtime, add it to the environment variable as a comma-separated list. The example below would enable Dart 3.11, .NET 6.0, and Java 18 runtimes. You can…"
+    "excerpt": "This guide covers how to configure functions in your self-hosted Appwrite instance. For GitHub repository integration with functions, see the version control configuration. Configure function runtimes Not all function runtimes are enabled by default. Enable the runtimes that you need and disable unused runtimes to save disk space on your server. To enable a runtime, add it to the environment variable as a comma-separated list. The example below would enable Dart 3.11, .NET 6.0, and Java 18 runtimes. You can…",
+    "breadcrumbs": [
+      "Self-hosting",
+      "Configuration",
+      "Functions"
+    ]
   },
   {
     "slug": "advanced/self-hosting/configuration/sites",
     "title": "Sites",
     "description": "Harness the full power of self-hosted sites with Appwrite. Explore site deployment, management, and integration in your self-hosted environment.",
-    "excerpt": "This guide covers how to configure sites in your self-hosted Appwrite instance. For GitHub repository integration with sites, see the version control configuration. Configure sites runtimes Not all site runtimes are enabled by default. Enable the runtimes that you need and disable unused runtimes to save disk space on your server. To enable a runtime, add it to the environment variable as a comma-separated list. The three runtimes currently available for Sites are the Static, Node.js 22, and Flutter 3.41…"
+    "excerpt": "This guide covers how to configure sites in your self-hosted Appwrite instance. For GitHub repository integration with sites, see the version control configuration. Configure sites runtimes Not all site runtimes are enabled by default. Enable the runtimes that you need and disable unused runtimes to save disk space on your server. To enable a runtime, add it to the environment variable as a comma-separated list. The three runtimes currently available for Sites are the Static, Node.js 22, and Flutter 3.41…",
+    "breadcrumbs": [
+      "Self-hosting",
+      "Configuration",
+      "Sites"
+    ]
   },
   {
     "slug": "advanced/self-hosting/configuration/sms",
     "title": "SMS delivery",
     "description": "Set up SMS services for your self-hosted Appwrite instance. Discover how to configure SMS notifications, verification, and messaging for your applications.",
-    "excerpt": "Appwrite supports phone authentication, which allows users to create accounts and log in using SMS messages. Appwrite requires an SMS provider to be set up before using Phone authentication. This page describes how to setup messaging for your self-hosted Appwrite instance to send one-time passwords during phone login. If you are looking to send custom messages for promotions, reminders, and other purposes, view the documentation for Appwrite Messaging documentation. SMS providers Appwrite supports a growing list of SMS providers that…"
+    "excerpt": "Appwrite supports phone authentication, which allows users to create accounts and log in using SMS messages. Appwrite requires an SMS provider to be set up before using Phone authentication. This page describes how to setup messaging for your self-hosted Appwrite instance to send one-time passwords during phone login. If you are looking to send custom messages for promotions, reminders, and other purposes, view the documentation for Appwrite Messaging documentation. SMS providers Appwrite supports a growing list of SMS providers that…",
+    "breadcrumbs": [
+      "Self-hosting",
+      "Configuration",
+      "SMS delivery"
+    ]
   },
   {
     "slug": "advanced/self-hosting/configuration/storage",
     "title": "Storage",
     "description": "Manage self-hosted storage options with Appwrite. Explore file storage, uploads, and customization in your self-hosted Appwrite environment.",
-    "excerpt": "Appwrite's Storage Service can be configured to store files locally, or with self-hosted and cloud storage services. By default, Appwrite's Storage Service **stores files on your server's local storage**. If you expect large volumes of data or the need to have scalable data storage, you may choose to use a separate storage service. Available adapters Appwrite supports AWS S3, Digital Ocean Spaces, Backblaze, Akamai Object Storage, and Wasabi as storage adapters. Some of these services can be self-hosted, just like…"
+    "excerpt": "Appwrite's Storage Service can be configured to store files locally, or with self-hosted and cloud storage services. By default, Appwrite's Storage Service **stores files on your server's local storage**. If you expect large volumes of data or the need to have scalable data storage, you may choose to use a separate storage service. Available adapters Appwrite supports AWS S3, Digital Ocean Spaces, Backblaze, Akamai Object Storage, and Wasabi as storage adapters. Some of these services can be self-hosted, just like…",
+    "breadcrumbs": [
+      "Self-hosting",
+      "Configuration",
+      "Storage"
+    ]
   },
   {
     "slug": "advanced/self-hosting/configuration/tls-certificates",
     "title": "TLS Certificates",
     "description": "Secure your self-hosted Appwrite instance with TLS certificates. Learn how to obtain, configure, and manage TLS certificates for enhanced security.",
-    "excerpt": "Appwrite uses Let's Encrypt to auto-generate TLS certificates for your Appwrite instance to ensure your API traffic is appropriately encrypted. For Appwrite to properly generate certificates, a few conditions need to be met. 1. You need to use a public-facing domain with a known TLD pointing to your Appwrite instance. 2. Your environment variable should be set for production mode. The default Appwrite setup comes with this predefined setting, so you should be OK unless you change it. 3. You…"
+    "excerpt": "Appwrite uses Let's Encrypt to auto-generate TLS certificates for your Appwrite instance to ensure your API traffic is appropriately encrypted. For Appwrite to properly generate certificates, a few conditions need to be met. 1. You need to use a public-facing domain with a known TLD pointing to your Appwrite instance. 2. Your environment variable should be set for production mode. The default Appwrite setup comes with this predefined setting, so you should be OK unless you change it. 3. You…",
+    "breadcrumbs": [
+      "Self-hosting",
+      "Configuration",
+      "TLS certificates"
+    ]
   },
   {
     "slug": "advanced/self-hosting/configuration/version-control",
     "title": "Version control",
     "description": "Configure version control integration for Functions and Sites in your self-hosted Appwrite instance.",
-    "excerpt": "Apply configuration After creating your GitHub App, restart your Appwrite services to apply the configuration: Verify configuration To verify that your GitHub App is correctly configured: 1. Open the Appwrite Console and navigate to a project. 2. Go to either the Functions or Sites section. 3. Try creating a new Function or Site using GitHub as the source. 4. You should be prompted to install your GitHub App on your repositories. Troubleshooting If you encounter issues with your GitHub App…"
+    "excerpt": "Apply configuration After creating your GitHub App, restart your Appwrite services to apply the configuration: Verify configuration To verify that your GitHub App is correctly configured: 1. Open the Appwrite Console and navigate to a project. 2. Go to either the Functions or Sites section. 3. Try creating a new Function or Site using GitHub as the source. 4. You should be prompted to install your GitHub App on your repositories. Troubleshooting If you encounter issues with your GitHub App…",
+    "breadcrumbs": [
+      "Self-hosting",
+      "Configuration",
+      "Version control"
+    ]
   },
   {
     "slug": "advanced/self-hosting/installation",
     "title": "Installation",
     "description": "Step-by-step guide to install Appwrite using Docker. Learn how to set up a self-hosted Appwrite instance with Docker Compose on any operating system.",
-    "excerpt": "This guide will walk you through installing Appwrite on your server using Docker. Appwrite is designed to run on any operating system that supports Docker. System requirements Before installing Appwrite, ensure your system meets these minimum requirements: - **2 CPU cores** - **4GB of RAM** - **2GB of swap memory** - **Operating system** that supports Docker - **Docker Compose Version 2** Install with Docker The easiest way to install Appwrite is using our Docker installer. The installer launches a web-based…"
+    "excerpt": "This guide will walk you through installing Appwrite on your server using Docker. Appwrite is designed to run on any operating system that supports Docker. System requirements Before installing Appwrite, ensure your system meets these minimum requirements: - **2 CPU cores** - **4GB of RAM** - **2GB of swap memory** - **Operating system** that supports Docker - **Docker Compose Version 2** Install with Docker The easiest way to install Appwrite is using our Docker installer. The installer launches a web-based…",
+    "breadcrumbs": [
+      "Self-hosting",
+      "Getting started",
+      "Installation"
+    ]
   },
   {
     "slug": "advanced/self-hosting/platforms/aws",
     "title": "AWS deployment",
     "description": "Deploy Appwrite on Amazon Web Services using the one-click Marketplace app.",
-    "excerpt": "Deploy Appwrite on AWS using the pre-configured Marketplace app. One-click installation 1. Visit the Appwrite AWS Marketplace page 2. Click **Continue to Subscribe** 3. Review and accept the subscription terms 4. Click **Continue to Configuration** 5. Choose your preferred region and software version 6. Click **Continue to Launch** 1. Choose **Launch through EC2** action 2. Select instance type: - **t3.medium** minimum (2 vCPU, 4 GB RAM) - **t3.large** or larger for production 3. Configure security group to allow: - HTTP…"
+    "excerpt": "Deploy Appwrite on AWS using the pre-configured Marketplace app. One-click installation 1. Visit the Appwrite AWS Marketplace page 2. Click **Continue to Subscribe** 3. Review and accept the subscription terms 4. Click **Continue to Configuration** 5. Choose your preferred region and software version 6. Click **Continue to Launch** 1. Choose **Launch through EC2** action 2. Select instance type: - **t3.medium** minimum (2 vCPU, 4 GB RAM) - **t3.large** or larger for production 3. Configure security group to allow: - HTTP…",
+    "breadcrumbs": [
+      "Self-hosting",
+      "Platform deployment",
+      "AWS"
+    ]
   },
   {
     "slug": "advanced/self-hosting/platforms/azure",
     "title": "Azure deployment",
     "description": "Deploy Appwrite on Microsoft Azure using Virtual Machines. Learn how to set up a production-ready Appwrite instance on Azure.",
-    "excerpt": "Deploy Appwrite on Microsoft Azure using Virtual Machines. Virtual Machines deployment Azure Virtual Machines provide full control over your infrastructure where you can deploy Appwrite. Create a VM with at least 2 vCPU and 4 GB RAM, configure network security groups to allow HTTP/HTTPS traffic, then follow the general installation guide for Docker setup. Custom installations For manual installations on Azure Virtual Machines or other configurations, follow the general installation guide which covers Docker setup and configuration for any Linux…"
+    "excerpt": "Deploy Appwrite on Microsoft Azure using Virtual Machines. Virtual Machines deployment Azure Virtual Machines provide full control over your infrastructure where you can deploy Appwrite. Create a VM with at least 2 vCPU and 4 GB RAM, configure network security groups to allow HTTP/HTTPS traffic, then follow the general installation guide for Docker setup. Custom installations For manual installations on Azure Virtual Machines or other configurations, follow the general installation guide which covers Docker setup and configuration for any Linux…",
+    "breadcrumbs": [
+      "Self-hosting",
+      "Platform deployment",
+      "Azure"
+    ]
   },
   {
     "slug": "advanced/self-hosting/platforms/coolify",
     "title": "Coolify",
     "description": "Learn how to self-host Appwrite on your infrastructure with Coolify.",
-    "excerpt": "Coolify is an open-source, self-hosted platform that simplifies application deployment through an intuitive interface and automated workflows. With its one-click deployment feature, you can quickly deploy various services, including Appwrite's comprehensive backend solution. To explore the full range of supported services, visit the Coolify Docs. This guide will walk you through setting up Appwrite on your Coolify instance and provide necessary troubleshooting tips. Prerequisites Before starting, ensure your server meets the minimum requirements for hosting Appwrite with Coolify. Installation Install…"
+    "excerpt": "Coolify is an open-source, self-hosted platform that simplifies application deployment through an intuitive interface and automated workflows. With its one-click deployment feature, you can quickly deploy various services, including Appwrite's comprehensive backend solution. To explore the full range of supported services, visit the Coolify Docs. This guide will walk you through setting up Appwrite on your Coolify instance and provide necessary troubleshooting tips. Prerequisites Before starting, ensure your server meets the minimum requirements for hosting Appwrite with Coolify. Installation Install…",
+    "breadcrumbs": [
+      "Self-hosting",
+      "Platform deployment",
+      "Coolify"
+    ]
   },
   {
     "slug": "advanced/self-hosting/platforms/digitalocean",
     "title": "DigitalOcean deployment",
     "description": "Deploy Appwrite on DigitalOcean using the one-click Marketplace app.",
-    "excerpt": "Deploy Appwrite on DigitalOcean using the pre-configured Marketplace app. One-click installation 1. Visit the Appwrite Marketplace page 2. Click **Create Appwrite Droplet** 3. Choose your configuration: - **Plan**: Minimum 4GB RAM recommended - **Region**: Select closest to your users - **SSH keys**: Add your SSH key for access 4. Click **Create Droplet** 1. Wait for Droplet provisioning to complete 2. Navigate to your Droplet's IP address in a web browser 3. Complete the initial setup wizard following the prompts Custom…"
+    "excerpt": "Deploy Appwrite on DigitalOcean using the pre-configured Marketplace app. One-click installation 1. Visit the Appwrite Marketplace page 2. Click **Create Appwrite Droplet** 3. Choose your configuration: - **Plan**: Minimum 4GB RAM recommended - **Region**: Select closest to your users - **SSH keys**: Add your SSH key for access 4. Click **Create Droplet** 1. Wait for Droplet provisioning to complete 2. Navigate to your Droplet's IP address in a web browser 3. Complete the initial setup wizard following the prompts Custom…",
+    "breadcrumbs": [
+      "Self-hosting",
+      "Platform deployment",
+      "DigitalOcean"
+    ]
   },
   {
     "slug": "advanced/self-hosting/platforms/google-cloud",
     "title": "Google Cloud deployment",
     "description": "Deploy Appwrite on Google Cloud Platform using Compute Engine. Learn how to set up a production-ready Appwrite instance on GCP.",
-    "excerpt": "Deploy Appwrite on Google Cloud Platform using Compute Engine virtual machines. Compute Engine deployment Google Cloud Compute Engine provides virtual machines where you can deploy Appwrite with full control over the infrastructure. Create a VM instance with at least 2 vCPU and 4 GB RAM, configure firewall rules to allow HTTP/HTTPS traffic, then follow the general installation guide for Docker setup. Custom installations For manual installations on Compute Engine VMs or other Google Cloud services, follow the general installation guide…"
+    "excerpt": "Deploy Appwrite on Google Cloud Platform using Compute Engine virtual machines. Compute Engine deployment Google Cloud Compute Engine provides virtual machines where you can deploy Appwrite with full control over the infrastructure. Create a VM instance with at least 2 vCPU and 4 GB RAM, configure firewall rules to allow HTTP/HTTPS traffic, then follow the general installation guide for Docker setup. Custom installations For manual installations on Compute Engine VMs or other Google Cloud services, follow the general installation guide…",
+    "breadcrumbs": [
+      "Self-hosting",
+      "Platform deployment",
+      "Google Cloud"
+    ]
   },
   {
     "slug": "advanced/self-hosting/production",
     "title": "Preparation",
     "description": "Optimize self-hosted Appwrite for production environments. Learn key concepts and best practices for deploying Appwrite in production.",
-    "excerpt": "Appwrite's default setup is designed to help you start building quickly. To succeed with Appwrite in a production environment, you should follow key concepts and best practices outlined in this section. This guide assumes you have some basic understanding of Docker and Docker Compose command-line tools. Production checklist Before deploying Appwrite to production, ensure you have configured: - **Security** - Implement essential security practices - **Scaling** - Configure horizontal and vertical scaling for your containers - **Rate limits** - Enable…"
+    "excerpt": "Appwrite's default setup is designed to help you start building quickly. To succeed with Appwrite in a production environment, you should follow key concepts and best practices outlined in this section. This guide assumes you have some basic understanding of Docker and Docker Compose command-line tools. Production checklist Before deploying Appwrite to production, ensure you have configured: - **Security** - Implement essential security practices - **Scaling** - Configure horizontal and vertical scaling for your containers - **Rate limits** - Enable…",
+    "breadcrumbs": [
+      "Self-hosting",
+      "Production",
+      "Preparation"
+    ]
   },
   {
     "slug": "advanced/self-hosting/production/backups",
     "title": "Backups",
     "description": "Learn how to set up and manage backups for your self-hosted Appwrite instance to ensure data safety and disaster recovery.",
-    "excerpt": "Appwrite Cloud offers automated Backups as a Service with scheduling and one-click restore. For self-hosted instances, you'll need to implement manual backup procedures as outlined on this page. Self-hosted Appwrite requires manual backup procedures to protect your data. What to back up Your Appwrite installation has several components that need backing up: 1. **Database** - User data, documents, and configuration 2. **Storage volumes** - Uploaded files and function code 3. **Environment variables** - Configuration in 4. **System snapshots** - Complete…"
+    "excerpt": "Appwrite Cloud offers automated Backups as a Service with scheduling and one-click restore. For self-hosted instances, you'll need to implement manual backup procedures as outlined on this page. Self-hosted Appwrite requires manual backup procedures to protect your data. What to back up Your Appwrite installation has several components that need backing up: 1. **Database** - User data, documents, and configuration 2. **Storage volumes** - Uploaded files and function code 3. **Environment variables** - Configuration in 4. **System snapshots** - Complete…",
+    "breadcrumbs": [
+      "Self-hosting",
+      "Production",
+      "Backups"
+    ]
   },
   {
     "slug": "advanced/self-hosting/production/debugging",
     "title": "Debug",
     "description": "Master debugging techniques for self-hosted Appwrite. Discover best practices and tools for troubleshooting and maintaining a robust deployment.",
-    "excerpt": "Appwrite comes with a few built-in tools and methods that easily debug and investigate issues on your Appwrite stack environment. Doctor CLI The doctor CLI helps you validate your server health and best practices. Using the Doctor CLI, you can verify your server configuration for best practices, validate your Appwrite stack connectivity and storage read and write access, and available storage space. To run the Doctor check, simply run the following command from your terminal. You might need to replace…"
+    "excerpt": "Appwrite comes with a few built-in tools and methods that easily debug and investigate issues on your Appwrite stack environment. Doctor CLI The doctor CLI helps you validate your server health and best practices. Using the Doctor CLI, you can verify your server configuration for best practices, validate your Appwrite stack connectivity and storage read and write access, and available storage space. To run the Doctor check, simply run the following command from your terminal. You might need to replace…",
+    "breadcrumbs": [
+      "Self-hosting",
+      "Production",
+      "Debugging"
+    ]
   },
   {
     "slug": "advanced/self-hosting/production/emails",
     "title": "Email delivery",
     "description": "Configure reliable email delivery for your self-hosted Appwrite instance in production environments.",
-    "excerpt": "Sending emails is hard. There are a lot of spam rules and configurations to master in order to set up a functional SMTP server. While it is okay to use a self-hosted SMTP server during development, you should use a third-party SMTP provider for production so your email doesn't get labeled as spam. You can change Appwrite's SMTP settings and credentials to any 3rd party provider you like that supports SMTP integration using our Docker environment variables. Most SMTP providers…"
+    "excerpt": "Sending emails is hard. There are a lot of spam rules and configurations to master in order to set up a functional SMTP server. While it is okay to use a self-hosted SMTP server during development, you should use a third-party SMTP provider for production so your email doesn't get labeled as spam. You can change Appwrite's SMTP settings and credentials to any 3rd party provider you like that supports SMTP integration using our Docker environment variables. Most SMTP providers…",
+    "breadcrumbs": [
+      "Self-hosting",
+      "Production",
+      "Email delivery"
+    ]
   },
   {
     "slug": "advanced/self-hosting/production/errors",
     "title": "Error monitoring",
     "description": "Configure error reporting and monitoring for your self-hosted Appwrite instance in production.",
-    "excerpt": "By default, your Appwrite installation comes with error reporting turned off. You can enable dev mode to get access to more verbose error logs and stack traces. In production, it is highly recommended to turn error reporting off. To do so, make sure the Appwrite container environment variable is set to and not . To monitor errors in production, configure the environment variable with your provider's DSN. The supported DSN formats are: - Sentry: - LogOwl: - Raygun: - AppSignal:"
+    "excerpt": "By default, your Appwrite installation comes with error reporting turned off. You can enable dev mode to get access to more verbose error logs and stack traces. In production, it is highly recommended to turn error reporting off. To do so, make sure the Appwrite container environment variable is set to and not . To monitor errors in production, configure the environment variable with your provider's DSN. The supported DSN formats are: - Sentry: - LogOwl: - Raygun: - AppSignal:",
+    "breadcrumbs": [
+      "Self-hosting",
+      "Production",
+      "Error monitoring"
+    ]
   },
   {
     "slug": "advanced/self-hosting/production/rate-limits",
     "title": "Rate limits",
     "description": "Configure rate limiting for your self-hosted Appwrite instance to protect against abuse and attacks.",
-    "excerpt": "If you disabled rate limits during development, make sure you re-enable them when moving to production environments. Rate limiting can be enabled by setting the environment variable to . Rate limits are an important mechanism to protect your app. Without rate limits, malicious actors can spam your APIs to perform denial-of-service type attacks or brute-force user passwords. How rate limits work Rate limits in self-hosted Appwrite apply differently depending on how you're accessing the API: - **Client SDKs**: Rate limits…"
+    "excerpt": "If you disabled rate limits during development, make sure you re-enable them when moving to production environments. Rate limiting can be enabled by setting the environment variable to . Rate limits are an important mechanism to protect your app. Without rate limits, malicious actors can spam your APIs to perform denial-of-service type attacks or brute-force user passwords. How rate limits work Rate limits in self-hosted Appwrite apply differently depending on how you're accessing the API: - **Client SDKs**: Rate limits…",
+    "breadcrumbs": [
+      "Self-hosting",
+      "Production",
+      "Rate limits"
+    ]
   },
   {
     "slug": "advanced/self-hosting/production/scaling",
     "title": "Scaling",
     "description": "Learn how to scale your self-hosted Appwrite instance horizontally and vertically to handle increased load.",
-    "excerpt": "Appwrite is built with scalability in mind. Appwrite can scale both horizontally and vertically. Each Appwrite instance is composed of many containers, each with its unique job. Appwrite's functions and worker containers are stateless. To scale them, all you need is to replicate them and set up a load balancer to distribute their load. If you decide to set up a load balancer to scale a container, make sure **all** communication are routed through the load balancer and not directly…"
+    "excerpt": "Appwrite is built with scalability in mind. Appwrite can scale both horizontally and vertically. Each Appwrite instance is composed of many containers, each with its unique job. Appwrite's functions and worker containers are stateless. To scale them, all you need is to replicate them and set up a load balancer to distribute their load. If you decide to set up a load balancer to scale a container, make sure **all** communication are routed through the load balancer and not directly…",
+    "breadcrumbs": [
+      "Self-hosting",
+      "Production",
+      "Scaling"
+    ]
   },
   {
     "slug": "advanced/self-hosting/production/security",
     "title": "Security",
     "description": "Implement essential security practices for your self-hosted Appwrite instance to protect your data and infrastructure.",
-    "excerpt": "Securing your self-hosted Appwrite instance is crucial to protect your data and infrastructure. This guide covers the essential security configurations and requirements for production Appwrite deployments. Encryption Appwrite does not generate a unique encryption key during a default setup. This key encrypts your files and sensitive data like webhook passwords or API keys to keep them secure. To take advantage of this feature, you must generate a unique key and set it as the value of the environment variable. You…"
+    "excerpt": "Securing your self-hosted Appwrite instance is crucial to protect your data and infrastructure. This guide covers the essential security configurations and requirements for production Appwrite deployments. Encryption Appwrite does not generate a unique encryption key during a default setup. This key encrypts your files and sensitive data like webhook passwords or API keys to keep them secure. To take advantage of this feature, you must generate a unique key and set it as the value of the environment variable. You…",
+    "breadcrumbs": [
+      "Self-hosting",
+      "Production",
+      "Security"
+    ]
   },
   {
     "slug": "advanced/self-hosting/production/updates",
     "title": "Updates and migrations",
     "description": "Keep your self-hosted Appwrite instance up-to-date. Learn how to perform updates, manage versions, and ensure your self-hosted Appwrite stays current.",
-    "excerpt": "To upgrade your Appwrite server from an older version, you should use the Appwrite migration tool *after you have installed the new version*. The migration tool will adjust your Appwrite data to the new version's structure to make sure your Appwrite data is compatible with any internal changes. You can upgrade to a newer patch version without running the migration unless the release notes indicate a migration is required. For example, you can upgrade from [](https://github.com/appwrite/appwrite/releases/tag/1.6.0) to [](https://github.com/appwrite/appwrite/releases/tag/1.6.1) without running…"
+    "excerpt": "To upgrade your Appwrite server from an older version, you should use the Appwrite migration tool *after you have installed the new version*. The migration tool will adjust your Appwrite data to the new version's structure to make sure your Appwrite data is compatible with any internal changes. You can upgrade to a newer patch version without running the migration unless the release notes indicate a migration is required. For example, you can upgrade from [](https://github.com/appwrite/appwrite/releases/tag/1.6.0) to [](https://github.com/appwrite/appwrite/releases/tag/1.6.1) without running…",
+    "breadcrumbs": [
+      "Self-hosting",
+      "Production",
+      "Updates and migrations"
+    ]
   },
   {
     "slug": "apis/graphql",
     "title": "GraphQL",
     "description": "Get to know Appwrite GraphQL API for flexible data querying & manipulation. Our docs cover the schema, queries, mutations, integration tips and more.",
-    "excerpt": "Appwrite supports multiple protocols for accessing the platform, including REST, GraphQL, and Realtime. The GraphQL API allows you to query and mutate any resource type on the Appwrite platform through the endpoint . Every endpoint available through REST is available through GraphQL, except for OAuth. Requests Although every query executes through the same endpoint, there are multiple ways to make a GraphQL request. All requests, however, share a common structure. | Name | Type | Description | |----------------|--------|---------------------------------------------------------------------------| | query…"
+    "excerpt": "Appwrite supports multiple protocols for accessing the platform, including REST, GraphQL, and Realtime. The GraphQL API allows you to query and mutate any resource type on the Appwrite platform through the endpoint . Every endpoint available through REST is available through GraphQL, except for OAuth. Requests Although every query executes through the same endpoint, there are multiple ways to make a GraphQL request. All requests, however, share a common structure. | Name | Type | Description | |----------------|--------|---------------------------------------------------------------------------| | query…",
+    "breadcrumbs": [
+      "GraphQL",
+      "apis",
+      "GraphQL"
+    ]
   },
   {
     "slug": "apis/realtime",
     "title": "Realtime",
     "description": "Want to build dynamic and interactive applications with real-time data updates? Appwrite Realtime API makes it possible, get started with our intro guide.",
-    "excerpt": "Appwrite supports multiple protocols for accessing the server, including REST, GraphQL, and Realtime. The Appwrite Realtime allows you to listen to any Appwrite events in realtime using the service. Instead of requesting new data via HTTP, the subscription will receive new data every time it changes, any connected client receives that update within milliseconds via a WebSocket connection. This lets you build an interactive and responsive user experience by providing information from all of Appwrite's services in realtime. The example…"
+    "excerpt": "Appwrite supports multiple protocols for accessing the server, including REST, GraphQL, and Realtime. The Appwrite Realtime allows you to listen to any Appwrite events in realtime using the service. Instead of requesting new data via HTTP, the subscription will receive new data every time it changes, any connected client receives that update within milliseconds via a WebSocket connection. This lets you build an interactive and responsive user experience by providing information from all of Appwrite's services in realtime. The example…",
+    "breadcrumbs": [
+      "Realtime",
+      "Getting started",
+      "Overview"
+    ]
   },
   {
     "slug": "apis/realtime/authentication",
     "title": "Authentication",
     "description": "Learn how authentication works with Appwrite Realtime subscriptions and how to handle session-based access.",
-    "excerpt": "Realtime authenticates using an existing user session. If you authenticate **after** creating a subscription, the subscription will not receive updates for the newly authenticated user. You will need to re-create the subscription to work with the new user. More information and examples of authenticating users can be found in the dedicated authentication docs. All subscriptions are secured by the permissions system offered by Appwrite, meaning a user will only receive updates to resources they have permission to access. Using on…"
+    "excerpt": "Realtime authenticates using an existing user session. If you authenticate **after** creating a subscription, the subscription will not receive updates for the newly authenticated user. You will need to re-create the subscription to work with the new user. More information and examples of authenticating users can be found in the dedicated authentication docs. All subscriptions are secured by the permissions system offered by Appwrite, meaning a user will only receive updates to resources they have permission to access. Using on…",
+    "breadcrumbs": [
+      "Realtime",
+      "Getting started",
+      "Authentication"
+    ]
   },
   {
     "slug": "apis/realtime/channels",
     "title": "Channels",
     "description": "Explore the available Realtime channels and learn how to use Channel helpers for type-safe subscriptions in Appwrite.",
-    "excerpt": "Channels define which Appwrite resources you want to subscribe to. When subscribing to a channel, you will receive callbacks for events related to that channel's resources. The Appwrite SDKs provide a helper class to build type-safe channel subscriptions using a fluent API. Channel helpers Instead of manually writing channel strings, you can use the helper class to build type-safe channel subscriptions. The helper provides a fluent API that makes it easier to construct channel strings and reduces errors. The helper…"
+    "excerpt": "Channels define which Appwrite resources you want to subscribe to. When subscribing to a channel, you will receive callbacks for events related to that channel's resources. The Appwrite SDKs provide a helper class to build type-safe channel subscriptions using a fluent API. Channel helpers Instead of manually writing channel strings, you can use the helper class to build type-safe channel subscriptions. The helper provides a fluent API that makes it easier to construct channel strings and reduces errors. The helper…",
+    "breadcrumbs": [
+      "Realtime",
+      "Concepts",
+      "Channels"
+    ]
   },
   {
     "slug": "apis/realtime/custom-endpoint",
     "title": "Custom endpoint",
     "description": "Learn how to configure a custom WebSocket endpoint for the Appwrite Realtime API when using a custom proxy.",
-    "excerpt": "The SDK will guess the endpoint of the Realtime API when setting the endpoint of your Appwrite instance. If you are running Appwrite with a custom proxy and changed the route of the Realtime API, you can call the method on the Client SDK and set your new endpoint value. By default the endpoint is ."
+    "excerpt": "The SDK will guess the endpoint of the Realtime API when setting the endpoint of your Appwrite instance. If you are running Appwrite with a custom proxy and changed the route of the Realtime API, you can call the method on the Client SDK and set your new endpoint value. By default the endpoint is .",
+    "breadcrumbs": [
+      "Realtime",
+      "Configuration",
+      "Custom endpoint"
+    ]
   },
   {
     "slug": "apis/realtime/payload",
     "title": "Payload",
     "description": "Understand the structure of Appwrite Realtime subscription payloads and learn how to work with the response data.",
-    "excerpt": "When you receive an update from a Realtime subscription, the payload contains information about the event and the affected resource. Understanding this structure helps you handle updates effectively in your application. Response structure The payload from the subscription will contain the following properties: * Name * Type * Description --- * events * string[] * The Appwrite events that triggered this update. --- * channels * string[] * An array of channels that can receive this message. --- * timestamp…"
+    "excerpt": "When you receive an update from a Realtime subscription, the payload contains information about the event and the affected resource. Understanding this structure helps you handle updates effectively in your application. Response structure The payload from the subscription will contain the following properties: * Name * Type * Description --- * events * string[] * The Appwrite events that triggered this update. --- * channels * string[] * An array of channels that can receive this message. --- * timestamp…",
+    "breadcrumbs": [
+      "Realtime",
+      "Concepts",
+      "Payload"
+    ]
   },
   {
     "slug": "apis/realtime/presences",
     "title": "Presences",
     "description": "Use the Appwrite Presences API to track which users are currently active, broadcast their status, and subscribe to live presence updates over Realtime.",
-    "excerpt": "The Appwrite **Presences API** tracks which users are currently active in your app and lets every connected client see those statuses in realtime. You can use it to render online indicators next to teammates, show who is viewing a document, broadcast a \"typing\" status in a chat, or surface \"looking at the same page\" cues during collaboration. A presence is a short-lived record tied to a user. Each record carries a , a string (for example , , ), an…"
+    "excerpt": "The Appwrite **Presences API** tracks which users are currently active in your app and lets every connected client see those statuses in realtime. You can use it to render online indicators next to teammates, show who is viewing a document, broadcast a \"typing\" status in a chat, or surface \"looking at the same page\" cues during collaboration. A presence is a short-lived record tied to a user. Each record carries a , a string (for example , , ), an…",
+    "breadcrumbs": [
+      "Realtime",
+      "Concepts",
+      "Presences"
+    ]
   },
   {
     "slug": "apis/realtime/queries",
     "title": "Queries",
     "description": "Filter realtime events using queries. Use familiar SDK query methods to receive only the updates that match your conditions.",
-    "excerpt": "You can filter realtime events by passing queries as a third parameter when subscribing. Events are filtered server-side based on your queries, so your callback only receives updates that match your conditions. This allows you to use familiar SDK queries like to automatically filter events instead of filtering manually in your callback. Supported queries The following query methods are supported for realtime filtering: * Category * Queries --- * Comparison * , , , , , --- * Null checks…"
+    "excerpt": "You can filter realtime events by passing queries as a third parameter when subscribing. Events are filtered server-side based on your queries, so your callback only receives updates that match your conditions. This allows you to use familiar SDK queries like to automatically filter events instead of filtering manually in your callback. Supported queries The following query methods are supported for realtime filtering: * Category * Queries --- * Comparison * , , , , , --- * Null checks…",
+    "breadcrumbs": [
+      "Realtime",
+      "Concepts",
+      "Queries"
+    ]
   },
   {
     "slug": "apis/realtime/subscribe",
     "title": "Subscribe",
     "description": "Learn how to subscribe to realtime events from Appwrite services. Subscribe to single or multiple channels and manage your subscriptions.",
-    "excerpt": "The Appwrite Realtime API lets you subscribe to events from any Appwrite service through channels. You can subscribe to a single channel, multiple channels at once, and unsubscribe when you no longer need updates. On supported client SDKs (including the Web SDK), multiple subscriptions share one WebSocket and can be added, **updated**, or removed without reconnecting the whole client until you call **** on . Subscribe to a channel In this example we are subscribing to all updates related to…"
+    "excerpt": "The Appwrite Realtime API lets you subscribe to events from any Appwrite service through channels. You can subscribe to a single channel, multiple channels at once, and unsubscribe when you no longer need updates. On supported client SDKs (including the Web SDK), multiple subscriptions share one WebSocket and can be added, **updated**, or removed without reconnecting the whole client until you call **** on . Subscribe to a channel In this example we are subscribing to all updates related to…",
+    "breadcrumbs": [
+      "Realtime",
+      "Getting started",
+      "Subscribe"
+    ]
   },
   {
     "slug": "apis/rest",
     "title": "REST",
     "description": "Discover the Appwrite REST API for building robust and scalable applications. Access detailed documentation on REST endpoints, authentication, and data management.",
-    "excerpt": "Appwrite supports multiple protocols for accessing the server, including REST, GraphQL, and Realtime. The REST API allows you to access your Appwrite server through HTTP requests without needing an SDK. Each endpoint in the API represents a specific operation on a specific resource. Headers Appwrite's REST APIs expect certain headers to be included with each request: - Header - - Description --- - X-Appwrite-Project: [PROJECT-ID] - required - The ID of your Appwrite project --- - Content-Type: application/json - required…"
+    "excerpt": "Appwrite supports multiple protocols for accessing the server, including REST, GraphQL, and Realtime. The REST API allows you to access your Appwrite server through HTTP requests without needing an SDK. Each endpoint in the API represents a specific operation on a specific resource. Headers Appwrite's REST APIs expect certain headers to be included with each request: - Header - - Description --- - X-Appwrite-Project: [PROJECT-ID] - required - The ID of your Appwrite project --- - Content-Type: application/json - required…",
+    "breadcrumbs": [
+      "REST",
+      "apis",
+      "REST"
+    ]
   },
   {
     "slug": "products/ai",
     "title": "Artificial intelligence",
     "description": "Learn how to implement machine learning models in your applications.",
-    "excerpt": "Appwrite allows you to build powerful AI powered applications with ease. Leverage Appwrite's powerful functions architecture and start building the future. Explore capabilities Detailed explanations and deep dives into how you can implement different machine techniques in your Appwrite projects. Label and understand the contents of images Understand and generate human language Process and generate audio data Show me some code If you learn best from code examples, follow one of our tutorials. Computer vision Understand and label the contents…"
+    "excerpt": "Appwrite allows you to build powerful AI powered applications with ease. Leverage Appwrite's powerful functions architecture and start building the future. Explore capabilities Detailed explanations and deep dives into how you can implement different machine techniques in your Appwrite projects. Label and understand the contents of images Understand and generate human language Process and generate audio data Show me some code If you learn best from code examples, follow one of our tutorials. Computer vision Understand and label the contents…",
+    "breadcrumbs": [
+      "AI",
+      "Getting started",
+      "Overview"
+    ]
   },
   {
     "slug": "products/ai/audio-processing",
     "title": "Audio processing",
     "description": "Learn about the basics of audio processing, the most popular tasks and applications of audio processing with ML and how we can leverage Appwrite to build audio processing enabled applications.",
-    "excerpt": "Audio processing is a field of machine learning that deals with allowing machines to understand, analyze, and manipulate various audio signals. The applications are vast and varied, from speech recognition to music generation and all the way to noise reduction. it's used in many everyday tools you use including voice assistants, music streaming services and for noise reduction in online calls. Tutorials Recognize and transcribe spoken language into text Convert written text into spoken language"
+    "excerpt": "Audio processing is a field of machine learning that deals with allowing machines to understand, analyze, and manipulate various audio signals. The applications are vast and varied, from speech recognition to music generation and all the way to noise reduction. it's used in many everyday tools you use including voice assistants, music streaming services and for noise reduction in online calls. Tutorials Recognize and transcribe spoken language into text Convert written text into spoken language",
+    "breadcrumbs": [
+      "AI",
+      "Concepts",
+      "Audio processing"
+    ]
   },
   {
     "slug": "products/ai/computer-vision",
     "title": "Computer vision",
     "description": "Learn about the basics of computer vision, the most popular tasks and applications of computer vision and how we can leverage Appwrite to build computer vision enabled applications.",
-    "excerpt": "Computer vision is a field of AI aiming to provide machines with a comprehensive understanding of visual data from a variety of sources. Images, Videos, Point Clouds, X-Rays, and MRI's from medical devices can be processed with the goal of parsing relevant information for subsequent tasks. Tutorials Understand and label the contents of images Detect and label objects in images"
+    "excerpt": "Computer vision is a field of AI aiming to provide machines with a comprehensive understanding of visual data from a variety of sources. Images, Videos, Point Clouds, X-Rays, and MRI's from medical devices can be processed with the goal of parsing relevant information for subsequent tasks. Tutorials Understand and label the contents of images Detect and label objects in images",
+    "breadcrumbs": [
+      "AI",
+      "Concepts",
+      "Computer vision"
+    ]
   },
   {
     "slug": "products/ai/integrations/anyscale",
     "title": "Integrating Anyscale",
     "description": "Learn how to integrate Anyscale into your Appwrite project.",
-    "excerpt": "The Anyscale API is a powerful tool for generating text using the leading open-source models. This tutorial will guide you through setting up the Anyscale API and integrating it into your Appwrite project. You'll create a simple function that takes a text prompt and generates a completion using Mistral's Mixtral 8x7B model. Then, using Appwrite functions, you'll create a UI that allows users to input text and see the generated completion. Prerequisites - An Appwrite Project - An Anyscale API…"
+    "excerpt": "The Anyscale API is a powerful tool for generating text using the leading open-source models. This tutorial will guide you through setting up the Anyscale API and integrating it into your Appwrite project. You'll create a simple function that takes a text prompt and generates a completion using Mistral's Mixtral 8x7B model. Then, using Appwrite functions, you'll create a UI that allows users to input text and see the generated completion. Prerequisites - An Appwrite Project - An Anyscale API…",
+    "breadcrumbs": [
+      "AI",
+      "Integrations",
+      "Anyscale"
+    ]
   },
   {
     "slug": "products/ai/integrations/elevenlabs",
     "title": "Integrating ElevenLabs",
     "description": "Learn how to integrate ElevenLabs into your Appwrite project.",
-    "excerpt": "ElevenLabs is an text to speech tool that can generate natural sounding audio from text. It's an excellent tool for dubbing content, creating audiobooks, or even for accessibility purposes. Integrating ElevenLabs into your Appwrite project is simple. This tutorial will guide you through the process of setting up the ElevenLabs API and integrating it into your Appwrite project. Prerequisites - An Appwrite Project - An ElevenLabs API Key Head to the Appwrite Console then click on **Functions** in the left…"
+    "excerpt": "ElevenLabs is an text to speech tool that can generate natural sounding audio from text. It's an excellent tool for dubbing content, creating audiobooks, or even for accessibility purposes. Integrating ElevenLabs into your Appwrite project is simple. This tutorial will guide you through the process of setting up the ElevenLabs API and integrating it into your Appwrite project. Prerequisites - An Appwrite Project - An ElevenLabs API Key Head to the Appwrite Console then click on **Functions** in the left…",
+    "breadcrumbs": [
+      "AI",
+      "Integrations",
+      "ElevenLabs"
+    ]
   },
   {
     "slug": "products/ai/integrations/fal-ai",
     "title": "Integrating fal.ai",
     "description": "Learn how to integrate fal.ai into your Appwrite project.",
-    "excerpt": "fal.ai is an AI inference platform with popular models such as Stable Diffusion XL, ControlNet, Whisper available as ready-to-use APIs so that you can easily integrate them into your applications. This tutorial will guide you through the process of setting up the fal.ai API to generate an image using the SDXL model and integrating it into your Appwrite project. Prerequisites - An Appwrite Project - A fal.ai API Key Head to the Appwrite Console then click on **Functions** in the…"
+    "excerpt": "fal.ai is an AI inference platform with popular models such as Stable Diffusion XL, ControlNet, Whisper available as ready-to-use APIs so that you can easily integrate them into your applications. This tutorial will guide you through the process of setting up the fal.ai API to generate an image using the SDXL model and integrating it into your Appwrite project. Prerequisites - An Appwrite Project - A fal.ai API Key Head to the Appwrite Console then click on **Functions** in the…",
+    "breadcrumbs": [
+      "AI",
+      "Integrations",
+      "fal.ai"
+    ]
   },
   {
     "slug": "products/ai/integrations/langchain",
     "title": "Integrating LangChain",
     "description": "Learn how to integrate LangChain into your Appwrite project.",
-    "excerpt": "Prerequisites - An Appwrite project - An Appwrite table - An OpenAI API key - A Pinecone API key - A Pinecone index Head to the Appwrite Console then click on **Functions** in the left sidebar and then click on the **Create Function** button. 1. In the Appwrite Console's sidebar, click **Functions**. 1. Click **Create function**. 1. Under **Connect Git repository**, select your provider. 1. After connecting to GitHub, under **Quick start**, select the **Node.js** starter template. 1. In the…"
+    "excerpt": "Prerequisites - An Appwrite project - An Appwrite table - An OpenAI API key - A Pinecone API key - A Pinecone index Head to the Appwrite Console then click on **Functions** in the left sidebar and then click on the **Create Function** button. 1. In the Appwrite Console's sidebar, click **Functions**. 1. Click **Create function**. 1. Under **Connect Git repository**, select your provider. 1. After connecting to GitHub, under **Quick start**, select the **Node.js** starter template. 1. In the…",
+    "breadcrumbs": [
+      "AI",
+      "Integrations",
+      "LangChain"
+    ]
   },
   {
     "slug": "products/ai/integrations/lmnt",
     "title": "Integrating LMNT",
     "description": "Learn how to integrate LMNT into your Appwrite project.",
-    "excerpt": "LMNT is a text-to-speech tool that can generate natural-sounding audio from text. It's an excellent tool for dubbing content, creating audiobooks, or even for accessibility. Integrating LMNT into your Appwrite project is simple. This tutorial will guide you through setting up the LMNT API and incorporating it into your Appwrite project. Prerequisites - An Appwrite Project - An Appwrite Bucket - An LMNT API Key Head to the Appwrite Console, click on **Functions** in the left sidebar and click the…"
+    "excerpt": "LMNT is a text-to-speech tool that can generate natural-sounding audio from text. It's an excellent tool for dubbing content, creating audiobooks, or even for accessibility. Integrating LMNT into your Appwrite project is simple. This tutorial will guide you through setting up the LMNT API and incorporating it into your Appwrite project. Prerequisites - An Appwrite Project - An Appwrite Bucket - An LMNT API Key Head to the Appwrite Console, click on **Functions** in the left sidebar and click the…",
+    "breadcrumbs": [
+      "AI",
+      "Integrations",
+      "LMNT"
+    ]
   },
   {
     "slug": "products/ai/integrations/openai",
     "title": "Integrating OpenAI",
     "description": "Learn how to integrate OpenAI into your Appwrite project.",
-    "excerpt": "The OpenAI API is a powerful tool that can be used to generate text, images, and more. This tutorial will guide you through the process of setting up the OpenAI API and integrating it into your Appwrite project. We'll create a simple function that takes a text prompt and generates a completion using OpenAI's GPT-3 model. Then, using Appwrite functions we'll create a user interface that allows users to input text and see the generated completion. Prerequisites - An Appwrite…"
+    "excerpt": "The OpenAI API is a powerful tool that can be used to generate text, images, and more. This tutorial will guide you through the process of setting up the OpenAI API and integrating it into your Appwrite project. We'll create a simple function that takes a text prompt and generates a completion using OpenAI's GPT-3 model. Then, using Appwrite functions we'll create a user interface that allows users to input text and see the generated completion. Prerequisites - An Appwrite…",
+    "breadcrumbs": [
+      "AI",
+      "Integrations",
+      "OpenAI"
+    ]
   },
   {
     "slug": "products/ai/integrations/perplexity",
     "title": "Integrating Perplexity",
     "description": "Learn how to integrate the Perplexity API into your Appwrite project.",
-    "excerpt": "Integrating Perplexity into your Appwrite project is simple. This tutorial will guide you through the process of setting up the Perplexity API and integrating it into your Appwrite project. Prerequisites - An Appwrite Project - A Perplexity API Key Head to the Appwrite Console then click on **Functions** in the left sidebar and then click on the **Create Function** button. 1. In the Appwrite Console's sidebar, click **Functions**. 1. Click **Create function**. 1. Under **Connect Git repository**, select your provider.…"
+    "excerpt": "Integrating Perplexity into your Appwrite project is simple. This tutorial will guide you through the process of setting up the Perplexity API and integrating it into your Appwrite project. Prerequisites - An Appwrite Project - A Perplexity API Key Head to the Appwrite Console then click on **Functions** in the left sidebar and then click on the **Create Function** button. 1. In the Appwrite Console's sidebar, click **Functions**. 1. Click **Create function**. 1. Under **Connect Git repository**, select your provider.…",
+    "breadcrumbs": [
+      "AI",
+      "Integrations",
+      "Perplexity"
+    ]
   },
   {
     "slug": "products/ai/integrations/pinecone",
     "title": "Integrating Pinecone",
     "description": "Learn how to integrate Pinecone into your Appwrite project.",
-    "excerpt": "Pinecone is a vector database that allows you to store and query high-dimensional vectors. It is a great tool for building recommendation systems, search engines, and more. In this tutorial, we'll show you how to integrate Pinecone into your Appwrite project. Inside an Appwrite Function, we'll create a method to that indexes an Appwrite table into Pinecone. We'll also create a method to query the Pinecone index and return the results. Prerequisites - An Appwrite project - An Appwrite table…"
+    "excerpt": "Pinecone is a vector database that allows you to store and query high-dimensional vectors. It is a great tool for building recommendation systems, search engines, and more. In this tutorial, we'll show you how to integrate Pinecone into your Appwrite project. Inside an Appwrite Function, we'll create a method to that indexes an Appwrite table into Pinecone. We'll also create a method to query the Pinecone index and return the results. Prerequisites - An Appwrite project - An Appwrite table…",
+    "breadcrumbs": [
+      "AI",
+      "Integrations",
+      "Pinecone"
+    ]
   },
   {
     "slug": "products/ai/integrations/replicate",
     "title": "Integrating Replicate",
     "description": "Learn how to integrate Replicate into your Appwrite project.",
-    "excerpt": "Integrating Replicate into your Appwrite project is simple. This tutorial will guide you through the process of setting up the Replicate API and integrating it into your Appwrite project. Prerequisites - An Appwrite Project - A Replicate API Key Head to the Appwrite Console then click on **Functions** in the left sidebar and then click on the **Create Function** button. 1. In the Appwrite Console's sidebar, click **Functions**. 1. Click **Create function**. 1. Under **Connect Git repository**, select your provider.…"
+    "excerpt": "Integrating Replicate into your Appwrite project is simple. This tutorial will guide you through the process of setting up the Replicate API and integrating it into your Appwrite project. Prerequisites - An Appwrite Project - A Replicate API Key Head to the Appwrite Console then click on **Functions** in the left sidebar and then click on the **Create Function** button. 1. In the Appwrite Console's sidebar, click **Functions**. 1. Click **Create function**. 1. Under **Connect Git repository**, select your provider.…",
+    "breadcrumbs": [
+      "AI",
+      "Integrations",
+      "Replicate"
+    ]
   },
   {
     "slug": "products/ai/integrations/tensorflow",
     "title": "Integrating TensorFlow with Appwrite",
     "description": "Learn how to integrate TensorFlow into your Appwrite project.",
-    "excerpt": "The TensorFlow API allows you to create powerful machine learning models for various tasks. This tutorial will guide you through the process of setting up a TensorFlow-based text generation model and integrating it into your Appwrite project. We'll create a function that uses TensorFlow to generate text completions based on a given prompt. Using Appwrite functions, we'll build a user interface that allows users to input text and see the generated completion. Prerequisites - An Appwrite Project - Basic knowledge…"
+    "excerpt": "The TensorFlow API allows you to create powerful machine learning models for various tasks. This tutorial will guide you through the process of setting up a TensorFlow-based text generation model and integrating it into your Appwrite project. We'll create a function that uses TensorFlow to generate text completions based on a given prompt. Using Appwrite functions, we'll build a user interface that allows users to input text and see the generated completion. Prerequisites - An Appwrite Project - Basic knowledge…",
+    "breadcrumbs": [
+      "AI",
+      "integrations",
+      "Integrating TensorFlow with Appwrite"
+    ]
   },
   {
     "slug": "products/ai/integrations/togetherai",
     "title": "Integrating Together AI",
     "description": "Learn how to integrate Together AI into your Appwrite project.",
-    "excerpt": "Together AI is an AI as a Service provider that's powered by an industry-leading inference engine providing fast and cheap inference. The platform can generate text and images using leading open-source models such as LLaMA 3 and Stable Diffusion. Integrating Together AI into your Appwrite project is simple. This tutorial will guide you through setting up the Together AI API and integrating it into your Appwrite project. Prerequisites - An Appwrite Project - An Appwrite Bucket - A Together AI…"
+    "excerpt": "Together AI is an AI as a Service provider that's powered by an industry-leading inference engine providing fast and cheap inference. The platform can generate text and images using leading open-source models such as LLaMA 3 and Stable Diffusion. Integrating Together AI into your Appwrite project is simple. This tutorial will guide you through setting up the Together AI API and integrating it into your Appwrite project. Prerequisites - An Appwrite Project - An Appwrite Bucket - A Together AI…",
+    "breadcrumbs": [
+      "AI",
+      "Integrations",
+      "Together AI"
+    ]
   },
   {
     "slug": "products/ai/natural-language",
     "title": "Natural language processing",
     "description": "Learn about the basics of natural language processing, the most popular tasks and applications of natural language processing and how we can leverage Appwrite to build natural language processing enabled applications.",
-    "excerpt": "Natural language processing (NLP) is a fascinating intersection of computer science, artificial intelligence, and linguistics. It's about teaching computers to understand, interpret, and generate human language (Jones et al., 2018). Translating languages, answering questions, or helping find information, NLP is at the heart of many technologies we use every day. Tutorials Generate text from a prompt Translate text from one language to another"
+    "excerpt": "Natural language processing (NLP) is a fascinating intersection of computer science, artificial intelligence, and linguistics. It's about teaching computers to understand, interpret, and generate human language (Jones et al., 2018). Translating languages, answering questions, or helping find information, NLP is at the heart of many technologies we use every day. Tutorials Generate text from a prompt Translate text from one language to another",
+    "breadcrumbs": [
+      "AI",
+      "Concepts",
+      "Natural language processing"
+    ]
   },
   {
     "slug": "products/ai/tutorials/image-classification",
     "title": "Image classification with Hugging Face",
     "description": "Build image classification powered apps with Appwrite and learn how to use Hugging Face's image classification models.",
-    "excerpt": "Learn to setup an Appwrite Function utilizing image classification with Hugging Face. Prerequisites - An Appwrite project - A Hugging Face API key Head to the Appwrite Console then click on **Functions** in the left sidebar and then click on the **Create Function** button. 1. In the Appwrite Console's sidebar, click **Functions**. 1. Click **Create function**. 1. Under **Connect Git repository**, select your provider. 1. After connecting to GitHub, under **Quick start**, select the **Node.js** starter template. 1. In the…"
+    "excerpt": "Learn to setup an Appwrite Function utilizing image classification with Hugging Face. Prerequisites - An Appwrite project - A Hugging Face API key Head to the Appwrite Console then click on **Functions** in the left sidebar and then click on the **Create Function** button. 1. In the Appwrite Console's sidebar, click **Functions**. 1. Click **Create function**. 1. Under **Connect Git repository**, select your provider. 1. After connecting to GitHub, under **Quick start**, select the **Node.js** starter template. 1. In the…",
+    "breadcrumbs": [
+      "AI",
+      "Computer vision",
+      "Image classification"
+    ]
   },
   {
     "slug": "products/ai/tutorials/language-translation",
     "title": "Language translation with Hugging Face",
     "description": "Implement language translation into your app with Appwrite and Hugging Face.",
-    "excerpt": "Learn to setup an Appwrite Function utilizing language translation with Hugging Face. Prerequisites - An Appwrite project - A Hugging Face API key Head to the Appwrite Console then click on **Functions** in the left sidebar and then click on the **Create Function** button. 1. In the Appwrite Console's sidebar, click **Functions**. 1. Click **Create function**. 1. Under **Connect Git repository**, select your provider. 1. After connecting to GitHub, under **Quick start**, select the **Node.js** starter template. 1. In the…"
+    "excerpt": "Learn to setup an Appwrite Function utilizing language translation with Hugging Face. Prerequisites - An Appwrite project - A Hugging Face API key Head to the Appwrite Console then click on **Functions** in the left sidebar and then click on the **Create Function** button. 1. In the Appwrite Console's sidebar, click **Functions**. 1. Click **Create function**. 1. Under **Connect Git repository**, select your provider. 1. After connecting to GitHub, under **Quick start**, select the **Node.js** starter template. 1. In the…",
+    "breadcrumbs": [
+      "AI",
+      "Natural language processing",
+      "Language translation"
+    ]
   },
   {
     "slug": "products/ai/tutorials/music-generation",
     "title": "Music generation with Hugging Face",
     "description": "Learn how to integrate Hugging Face into your Appwrite project for music generation.",
-    "excerpt": "Hugging Face is a platform that hosts ML models for all types of applications, including music generation. This example uses the \"facebook/musicgen-large\" from Hugging Face to convert text to music, but the same concept can be applied to other models. Prerequisites - An Appwrite project - A Hugging Face API keys Head to the Appwrite Console then click on **Functions** in the left sidebar and then click on the **Create Function** button. 1. In the Appwrite Console's sidebar, click **Functions**.…"
+    "excerpt": "Hugging Face is a platform that hosts ML models for all types of applications, including music generation. This example uses the \"facebook/musicgen-large\" from Hugging Face to convert text to music, but the same concept can be applied to other models. Prerequisites - An Appwrite project - A Hugging Face API keys Head to the Appwrite Console then click on **Functions** in the left sidebar and then click on the **Create Function** button. 1. In the Appwrite Console's sidebar, click **Functions**.…",
+    "breadcrumbs": [
+      "AI",
+      "Audio processing",
+      "Music generation"
+    ]
   },
   {
     "slug": "products/ai/tutorials/object-detection",
     "title": "Object detection with Hugging Face",
     "description": "Build object recognition powered apps with Appwrite and learn how to use Hugging Face's image classification models.",
-    "excerpt": "Learn to setup an Appwrite Function utilizing object detection with Hugging Face. Prerequisites - An Appwrite project - A Hugging Face API key Head to the Appwrite Console then click on **Functions** in the left sidebar and then click on the **Create Function** button. 1. In the Appwrite Console's sidebar, click **Functions**. 1. Click **Create function**. 1. Under **Connect Git repository**, select your provider. 1. After connecting to GitHub, under **Quick start**, select the **Node.js** starter template. 1. In the…"
+    "excerpt": "Learn to setup an Appwrite Function utilizing object detection with Hugging Face. Prerequisites - An Appwrite project - A Hugging Face API key Head to the Appwrite Console then click on **Functions** in the left sidebar and then click on the **Create Function** button. 1. In the Appwrite Console's sidebar, click **Functions**. 1. Click **Create function**. 1. Under **Connect Git repository**, select your provider. 1. After connecting to GitHub, under **Quick start**, select the **Node.js** starter template. 1. In the…",
+    "breadcrumbs": [
+      "AI",
+      "Computer vision",
+      "Object detection"
+    ]
   },
   {
     "slug": "products/ai/tutorials/speech-recognition",
     "title": "Speech recognition with Hugging Face",
     "description": "Implement speech recognition into your app with Appwrite and Hugging Face.",
-    "excerpt": "Hugging Face is a platform that hosts ML models for all types of applications, including for speech recognition. This example uses the from Hugging Face to perform speech recognition. Prerequisites - An Appwrite project - A Hugging Face API key Head to the Appwrite Console then click on **Functions** in the left sidebar and then click on the **Create Function** button. 1. In the Appwrite Console's sidebar, click **Functions**. 1. Click **Create function**. 1. Under **Connect Git repository**, select your…"
+    "excerpt": "Hugging Face is a platform that hosts ML models for all types of applications, including for speech recognition. This example uses the from Hugging Face to perform speech recognition. Prerequisites - An Appwrite project - A Hugging Face API key Head to the Appwrite Console then click on **Functions** in the left sidebar and then click on the **Create Function** button. 1. In the Appwrite Console's sidebar, click **Functions**. 1. Click **Create function**. 1. Under **Connect Git repository**, select your…",
+    "breadcrumbs": [
+      "AI",
+      "Audio processing",
+      "Speech recognition"
+    ]
   },
   {
     "slug": "products/ai/tutorials/text-generation",
     "title": "Text generation with Hugging Face",
     "description": "Implement text generation into your app with Appwrite and Hugging Face.",
-    "excerpt": "Learn to setup an Appwrite Function utilizing text generation with Hugging Face. Prerequisites - An Appwrite project - A Hugging Face API keys Head to the Appwrite Console then click on **Functions** in the left sidebar and then click on the **Create Function** button. 1. In the Appwrite Console's sidebar, click **Functions**. 1. Click **Create function**. 1. Under **Connect Git repository**, select your provider. 1. After connecting to GitHub, under **Quick start**, select the **Node.js** starter template. 1. In the…"
+    "excerpt": "Learn to setup an Appwrite Function utilizing text generation with Hugging Face. Prerequisites - An Appwrite project - A Hugging Face API keys Head to the Appwrite Console then click on **Functions** in the left sidebar and then click on the **Create Function** button. 1. In the Appwrite Console's sidebar, click **Functions**. 1. Click **Create function**. 1. Under **Connect Git repository**, select your provider. 1. After connecting to GitHub, under **Quick start**, select the **Node.js** starter template. 1. In the…",
+    "breadcrumbs": [
+      "AI",
+      "Natural language processing",
+      "Text generation"
+    ]
   },
   {
     "slug": "products/ai/tutorials/text-to-speech",
     "title": "Text to Speech with Hugging Face",
     "description": "Learn how to integrate Hugging Face into your Appwrite project for text to speech processing.",
-    "excerpt": "Hugging Face is a platform that hosts ML models for all types of applications, including text to speech. This example uses the \"ESPnet2 TTS pretrained model\" from Hugging Face to convert text to speech, but the same concept can be applied to other models. Prerequisites - An Appwrite project - A Hugging Face API keys Head to the Appwrite Console then click on **Functions** in the left sidebar and then click on the **Create Function** button. 1. In the Appwrite…"
+    "excerpt": "Hugging Face is a platform that hosts ML models for all types of applications, including text to speech. This example uses the \"ESPnet2 TTS pretrained model\" from Hugging Face to convert text to speech, but the same concept can be applied to other models. Prerequisites - An Appwrite project - A Hugging Face API keys Head to the Appwrite Console then click on **Functions** in the left sidebar and then click on the **Create Function** button. 1. In the Appwrite…",
+    "breadcrumbs": [
+      "AI",
+      "Audio processing",
+      "Text to speech"
+    ]
   },
   {
     "slug": "products/ai/video-processing",
     "title": "Video processing",
     "description": "Learn about the basics of video processing, the most popular tasks and applications of video processing with ML and how we can leverage Appwrite to build video processing enabled applications.",
-    "excerpt": ""
+    "excerpt": "",
+    "breadcrumbs": [
+      "AI",
+      "Video processing"
+    ]
   },
   {
     "slug": "products/auth",
     "title": "Authentication",
     "description": "Explore Appwrite's powerful authentication solutions. Learn how to implement secure user authentication, manage user identities, and enhance your application's security.\"",
-    "excerpt": "Appwrite **Authentication** delivers more than just user sign up and log in. Authentication makes it easy to build secure and robust authentication with support for many different authentication methods. Add authentication to your app in 5 minutes Authentication methods Appwrite supports a variety of authentication methods to fit every app and every niche. Explore Appwrite's authentication flows. Email and password login with just a few lines of code secured with state of the art Argon2 hashing. Log in users without…"
+    "excerpt": "Appwrite **Authentication** delivers more than just user sign up and log in. Authentication makes it easy to build secure and robust authentication with support for many different authentication methods. Add authentication to your app in 5 minutes Authentication methods Appwrite supports a variety of authentication methods to fit every app and every niche. Explore Appwrite's authentication flows. Email and password login with just a few lines of code secured with state of the art Argon2 hashing. Log in users without…",
+    "breadcrumbs": [
+      "Auth",
+      "Getting started",
+      "Overview"
+    ]
   },
   {
     "slug": "products/auth/accounts",
     "title": "Accounts",
     "description": "Unlock advanced user management - Appwrite's Account API for seamless signups, authentication, and dynamic permissions.",
-    "excerpt": "Appwrite Account API is used for user signup and login in client applications. Users can be organized into teams and be given labels, so they can be given different permissions and access different resources. Signup and login You can signup and login a user with an account create through email password, phone (SMS), Anonymous, magic URL, and OAuth 2 authentication. To control which email addresses can sign up, enable email policies to block free, aliased, or disposable email providers. Permissions…"
+    "excerpt": "Appwrite Account API is used for user signup and login in client applications. Users can be organized into teams and be given labels, so they can be given different permissions and access different resources. Signup and login You can signup and login a user with an account create through email password, phone (SMS), Anonymous, magic URL, and OAuth 2 authentication. To control which email addresses can sign up, enable email policies to block free, aliased, or disposable email providers. Permissions…",
+    "breadcrumbs": [
+      "Auth",
+      "Concepts",
+      "Accounts"
+    ]
   },
   {
     "slug": "products/auth/anonymous",
     "title": "Anonymous login",
     "description": "Manage user identities and profiles effectively with Appwrite. Dive into user management features, account settings, and user data customization.",
-    "excerpt": "Anonymous sessions allow you to implement **guest** users. Guest users let you store user information like items in their cart or theme preferences before they create an account. This reduces the friction for your users to get started with your app. **If a user later creates an account**, their information will be inherited by the newly created account. Create anonymous session Create an anonymous session with Create Anonymous Session method. Attaching an account Anonymous users cannot sign back in. If…"
+    "excerpt": "Anonymous sessions allow you to implement **guest** users. Guest users let you store user information like items in their cart or theme preferences before they create an account. This reduces the friction for your users to get started with your app. **If a user later creates an account**, their information will be inherited by the newly created account. Create anonymous session Create an anonymous session with Create Anonymous Session method. Attaching an account Anonymous users cannot sign back in. If…",
+    "breadcrumbs": [
+      "Auth",
+      "Journeys",
+      "Anonymous login"
+    ]
   },
   {
     "slug": "products/auth/checking-auth-status",
     "title": "Checking auth status",
     "description": "Learn how to check a user's authentication status in your Appwrite application and handle authentication flow appropriately.",
-    "excerpt": "One of the first things your application needs to do when starting up is to check if the user is authenticated. This is an important step in creating a great user experience, as it determines whether to show login screens or protected content. Check auth with The recommended approach for checking authentication status is to use the method when your application starts: Missing scope error When a user is not authenticated and you call , you might see an error…"
+    "excerpt": "One of the first things your application needs to do when starting up is to check if the user is authenticated. This is an important step in creating a great user experience, as it determines whether to show login screens or protected content. Check auth with The recommended approach for checking authentication status is to use the method when your application starts: Missing scope error When a user is not authenticated and you call , you might see an error…",
+    "breadcrumbs": [
+      "Auth",
+      "Journeys",
+      "Auth status check"
+    ]
   },
   {
     "slug": "products/auth/custom-token",
     "title": "Custom token login",
     "description": "Limitless authentication flow in Appwrite. Find out how to implement custom authentication flow or connect to 3rd party authentication providers.",
-    "excerpt": "Tokens are short-lived secrets created by an Appwrite Server SDK that can be exchanged for session by a Client SDK to log in users. You may already be familiar with tokens if you checked out Magic URL login, Email OTP login or Phone (SMS) login. Custom token allows you to use Server SDK to generate tokens for your own implementations. This allows you to code your own authentication methods using Appwrite Functions or your own backend. You could implement username…"
+    "excerpt": "Tokens are short-lived secrets created by an Appwrite Server SDK that can be exchanged for session by a Client SDK to log in users. You may already be familiar with tokens if you checked out Magic URL login, Email OTP login or Phone (SMS) login. Custom token allows you to use Server SDK to generate tokens for your own implementations. This allows you to code your own authentication methods using Appwrite Functions or your own backend. You could implement username…",
+    "breadcrumbs": [
+      "Auth",
+      "Journeys",
+      "Custom token login"
+    ]
   },
   {
     "slug": "products/auth/email-otp",
     "title": "Email OTP",
     "description": "Seamless sign in with Email OTP authentication in Appwrite. Learn how to provide simple and secure passwordless user accounts.",
-    "excerpt": "Email OTP (one-time password) authentication lets users create accounts using their email address and log in using a 6 digit code delivered to their email inbox. This method is similar to Magic URL login, but can provide better user experience in some scenarios. Email OTP sends an email with a 6 digit code that user needs to enter into the app, while Magic URL delivers a clickable button or a link to user's inbox. Both allow passwordless login flows with…"
+    "excerpt": "Email OTP (one-time password) authentication lets users create accounts using their email address and log in using a 6 digit code delivered to their email inbox. This method is similar to Magic URL login, but can provide better user experience in some scenarios. Email OTP sends an email with a 6 digit code that user needs to enter into the app, while Magic URL delivers a clickable button or a link to user's inbox. Both allow passwordless login flows with…",
+    "breadcrumbs": [
+      "Auth",
+      "Journeys",
+      "Email OTP login"
+    ]
   },
   {
     "slug": "products/auth/email-password",
     "title": "Email and password login",
     "description": "Implement email and password authentication with Appwrite. Securely register and authenticate users in your applications using Appwrite's robust email-based authentication system.",
-    "excerpt": "Email and password login is the most commonly used authentication method. Appwrite Authentication promotes a safer internet by providing secure APIs and promoting better password choices to end users. Appwrite supports added security features like password strength requirements, blocking personal info in passwords, password dictionary, and password history to help users choose good passwords. You can also restrict which addresses can sign up by enabling email policies to block free, aliased, or disposable email providers. Signup You can use the…"
+    "excerpt": "Email and password login is the most commonly used authentication method. Appwrite Authentication promotes a safer internet by providing secure APIs and promoting better password choices to end users. Appwrite supports added security features like password strength requirements, blocking personal info in passwords, password dictionary, and password history to help users choose good passwords. You can also restrict which addresses can sign up by enabling email policies to block free, aliased, or disposable email providers. Signup You can use the…",
+    "breadcrumbs": [
+      "Auth",
+      "Journeys",
+      "Email and password login"
+    ]
   },
   {
     "slug": "products/auth/email-policies",
     "title": "Email policies",
     "description": "Control which email addresses can sign up for your Appwrite project by blocking free, aliased, or disposable email providers from the Console or Project API.",
-    "excerpt": "Email policies let you restrict which email addresses can be used for user creation and email updates on a project. Each policy is an independent toggle that runs at sign-up time and when an existing user changes their email. Policies do not affect session creation, so existing users can still sign in if their address would not pass the current policy. Three policies are available: | Policy | Blocks | Example | | --- | --- | --- | |…"
+    "excerpt": "Email policies let you restrict which email addresses can be used for user creation and email updates on a project. Each policy is an independent toggle that runs at sign-up time and when an existing user changes their email. Policies do not affect session creation, so existing users can still sign in if their address would not pass the current policy. Three policies are available: | Policy | Blocks | Example | | --- | --- | --- | |…",
+    "breadcrumbs": [
+      "Auth",
+      "Concepts",
+      "Email policies"
+    ]
   },
   {
     "slug": "products/auth/identities",
     "title": "Identities",
     "description": "Handle multiple authentication methods per user through a unified system that maintains consistent identity across providers.",
-    "excerpt": "Identities enable linking multiple authentication methods to a single user account. This allows users to access a unified account through various OAuth2 providers. An identity is another way to refer to a user account. A single user can have multiple identities, each corresponding to different authentication methods. Currently, identities are primarily used with OAuth2 providers. When a user logs in via an OAuth2 provider, an identity is created and linked to their Appwrite account. This system enables: - Connecting multiple…"
+    "excerpt": "Identities enable linking multiple authentication methods to a single user account. This allows users to access a unified account through various OAuth2 providers. An identity is another way to refer to a user account. A single user can have multiple identities, each corresponding to different authentication methods. Currently, identities are primarily used with OAuth2 providers. When a user logs in via an OAuth2 provider, an identity is created and linked to their Appwrite account. This system enables: - Connecting multiple…",
+    "breadcrumbs": [
+      "Auth",
+      "Concepts",
+      "Identities"
+    ]
   },
   {
     "slug": "products/auth/impersonation",
     "title": "User impersonation",
     "description": "Let trusted operators act as another user in Appwrite Auth for support, QA, and troubleshooting while keeping the flow controlled and auditable.",
-    "excerpt": "User impersonation lets a trusted operator temporarily act as another user in the same Appwrite project, without sharing credentials. The operator signs in as themselves first, then sets a single impersonation target on the client. Appwrite resolves that target and executes requests using their permissions. This is especially useful when you need to: - Reproduce a bug that only appears for a specific user - Verify permissions and feature access from the user's point of view - Help customer support…"
+    "excerpt": "User impersonation lets a trusted operator temporarily act as another user in the same Appwrite project, without sharing credentials. The operator signs in as themselves first, then sets a single impersonation target on the client. Appwrite resolves that target and executes requests using their permissions. This is especially useful when you need to: - Reproduce a bug that only appears for a specific user - Verify permissions and feature access from the user's point of view - Help customer support…",
+    "breadcrumbs": [
+      "Auth",
+      "Concepts",
+      "Impersonation"
+    ]
   },
   {
     "slug": "products/auth/jwt",
     "title": "JWT login",
     "description": "Integrate Appwrite's authentication into your server-side applications. Explore server integrations, best practices, and security considerations for seamless authentication.",
-    "excerpt": "You can extend Appwrite's APIs by building backend apps using Server SDKs. To secure your backend app's APIs, client apps must prove their identity against your backend app before accessing sensitive information. You can secure these APIs and enforce access permissions in your backend app by using JWT authentication. If you are already authenticated on your client-side app and need your backend app to **act on behalf of the user**, this guide will walk you through the process. Proof of…"
+    "excerpt": "You can extend Appwrite's APIs by building backend apps using Server SDKs. To secure your backend app's APIs, client apps must prove their identity against your backend app before accessing sensitive information. You can secure these APIs and enforce access permissions in your backend app by using JWT authentication. If you are already authenticated on your client-side app and need your backend app to **act on behalf of the user**, this guide will walk you through the process. Proof of…",
+    "breadcrumbs": [
+      "Auth",
+      "Journeys",
+      "JWT login"
+    ]
   },
   {
     "slug": "products/auth/labels",
     "title": "Labels",
     "description": "Organize your users and grant custom permissions for subscriptions or VIP users with labels.",
-    "excerpt": "Labels are a good way to categorize a user to grant them access to resources. For example, a label can be added to a user once they've purchased a subscription. This would correspond with the permissions below. | Description | Code Snippet | | ------------------------------------------- | ------------------------------------------- | | Read | | | Update | | | Delete | | | Create | | Learn more about permissions"
+    "excerpt": "Labels are a good way to categorize a user to grant them access to resources. For example, a label can be added to a user once they've purchased a subscription. This would correspond with the permissions below. | Description | Code Snippet | | ------------------------------------------- | ------------------------------------------- | | Read | | | Update | | | Delete | | | Create | | Learn more about permissions",
+    "breadcrumbs": [
+      "Auth",
+      "Concepts",
+      "Labels"
+    ]
   },
   {
     "slug": "products/auth/magic-url",
     "title": "Magic URL login",
     "description": "Add magic URL to your authentication in Appwrite. Explore the convenience of passwordless login and email-based authentication using magic links.",
-    "excerpt": "Magic URL is a password-less way to authenticate users. When a user logs in by providing their email, they will receive an email with a \"magic\" link that contains a secret used to log in the user. The user can simply click the link to be logged in. Send email Initialize the log in process with the Create Magic URL Token route. If the email has never been used, a **new account is created** using the provided , then the…"
+    "excerpt": "Magic URL is a password-less way to authenticate users. When a user logs in by providing their email, they will receive an email with a \"magic\" link that contains a secret used to log in the user. The user can simply click the link to be logged in. Send email Initialize the log in process with the Create Magic URL Token route. If the email has never been used, a **new account is created** using the provided , then the…",
+    "breadcrumbs": [
+      "Auth",
+      "Journeys",
+      "Magic URL login"
+    ]
   },
   {
     "slug": "products/auth/mfa",
     "title": "Multi-factor authentication",
     "description": "Add multiple layers of authentication to your applications powered by Appwrite Authentication.",
-    "excerpt": "Multi-factor authentication (MFA) greatly increases the security of your apps by adding additional layers of protection. When MFA is enabled, a malicious actor needs to compromise multiple authentication factors to gain unauthorized access. Appwrite Authentication lets you easily implement MFA in your apps, letting you build more securely and quickly. This page covers MFA for your app's end-users. If you are looking for MFA on your Appwrite Console account, please refer to the Console MFA page. Appwrite currently allows two…"
+    "excerpt": "Multi-factor authentication (MFA) greatly increases the security of your apps by adding additional layers of protection. When MFA is enabled, a malicious actor needs to compromise multiple authentication factors to gain unauthorized access. Appwrite Authentication lets you easily implement MFA in your apps, letting you build more securely and quickly. This page covers MFA for your app's end-users. If you are looking for MFA on your Appwrite Console account, please refer to the Console MFA page. Appwrite currently allows two…",
+    "breadcrumbs": [
+      "Auth",
+      "Journeys",
+      "Multi-factor authentication"
+    ]
   },
   {
     "slug": "products/auth/multi-tenancy",
     "title": "Multi-tenancy with Teams",
     "description": "Learn how to implement multi-tenancy in your applications using Appwrite Teams.",
-    "excerpt": "Appwrite Teams provides an effective way to implement multi-tenancy in your applications. Create a team for each tenant to handle multi-tenant apps with built-in data isolation. Learn more about Teams What is multi-tenancy? Multi-tenancy is a design pattern where a single instance of software serves multiple user groups (tenants). With Appwrite Teams, you can: - Create a team for each tenant in your application - Control access to resources using team-based permissions - Define different roles within each tenant -…"
+    "excerpt": "Appwrite Teams provides an effective way to implement multi-tenancy in your applications. Create a team for each tenant to handle multi-tenant apps with built-in data isolation. Learn more about Teams What is multi-tenancy? Multi-tenancy is a design pattern where a single instance of software serves multiple user groups (tenants). With Appwrite Teams, you can: - Create a team for each tenant in your application - Control access to resources using team-based permissions - Define different roles within each tenant -…",
+    "breadcrumbs": [
+      "Auth",
+      "Journeys",
+      "Multi-tenancy"
+    ]
   },
   {
     "slug": "products/auth/oauth2",
     "title": "OAuth 2 login",
     "description": "Integrate OAuth2 authentication seamlessly with Appwrite. Learn how to connect your application with third-party OAuth2 providers for secure user login and access.",
-    "excerpt": "OAuth authentication allows users to log in using accounts from other popular services. This can be convenient for users because they can start using your app without creating a new account. It can also be more secure, because the user has one less password that could become vulnerable. When using OAuth to authenticate, the authentication request is initiated from the client application. The user is then redirected to an OAuth 2 provider to complete the authentication step, and finally, the…"
+    "excerpt": "OAuth authentication allows users to log in using accounts from other popular services. This can be convenient for users because they can start using your app without creating a new account. It can also be more secure, because the user has one less password that could become vulnerable. When using OAuth to authenticate, the authentication request is initiated from the client application. The user is then redirected to an OAuth 2 provider to complete the authentication step, and finally, the…",
+    "breadcrumbs": [
+      "Auth",
+      "Journeys",
+      "OAuth2 login"
+    ]
   },
   {
     "slug": "products/auth/phone-sms",
     "title": "Phone (SMS) login",
     "description": "Enhance security with SMS and phone authentication in Appwrite. Add multi-factor authentication via SMS, verify phone numbers, and protect user accounts.",
-    "excerpt": "OTPs are billed per message, with rates varying by country. See the phone OTP rates for more information. Phone authentication lets users create accounts using their phone numbers and log in through SMS messages. Create and use mock phone numbers to initiate a phone authentication process without an actual phone number. Send SMS message Phone authentication is done using a two-step authentication process. When using phone authentication, the authentication request is initiated from the client application and an SMS message…"
+    "excerpt": "OTPs are billed per message, with rates varying by country. See the phone OTP rates for more information. Phone authentication lets users create accounts using their phone numbers and log in through SMS messages. Create and use mock phone numbers to initiate a phone authentication process without an actual phone number. Send SMS message Phone authentication is done using a two-step authentication process. When using phone authentication, the authentication request is initiated from the client application and an SMS message…",
+    "breadcrumbs": [
+      "Auth",
+      "Journeys",
+      "Phone (SMS) login"
+    ]
   },
   {
     "slug": "products/auth/preferences",
     "title": "Preferences",
     "description": "Store and manage user preferences in Appwrite using Account API and Teams API for individual and shared settings.",
-    "excerpt": "Preferences allow you to store settings like theme choice, language selection, or notification preferences that are specific to individual users or shared across teams. User preferences You can store user preferences on a user's account using Appwrite's Update Preferences endpoint. Preferences are stored as a key-value JSON object. The maximum allowed size for preferences is 64kB, and an error will be thrown if this limit is exceeded. Update user preferences Use the method to store user preferences as a JSON…"
+    "excerpt": "Preferences allow you to store settings like theme choice, language selection, or notification preferences that are specific to individual users or shared across teams. User preferences You can store user preferences on a user's account using Appwrite's Update Preferences endpoint. Preferences are stored as a key-value JSON object. The maximum allowed size for preferences is 64kB, and an error will be thrown if this limit is exceeded. Update user preferences Use the method to store user preferences as a JSON…",
+    "breadcrumbs": [
+      "Auth",
+      "Concepts",
+      "Preferences"
+    ]
   },
   {
     "slug": "products/auth/presences",
     "title": "Presences",
     "description": "Track which signed-in users are active right now and broadcast their status in realtime with the Appwrite Presences API.",
-    "excerpt": "Authentication tells you **who a user is**. Presences tell you **whether they are around right now**. The Appwrite **Presences API** records a live status for each signed-in user and broadcasts every change over Realtime, so your app can render online indicators, \"viewing this page\" cues, typing signals, and collaboration banners without writing any socket plumbing. A presence is a short-lived record attached to a user. It carries a , a string, an optional JSON object for richer context, and an…"
+    "excerpt": "Authentication tells you **who a user is**. Presences tell you **whether they are around right now**. The Appwrite **Presences API** records a live status for each signed-in user and broadcasts every change over Realtime, so your app can render online indicators, \"viewing this page\" cues, typing signals, and collaboration banners without writing any socket plumbing. A presence is a short-lived record attached to a user. It carries a , a string, an optional JSON object for richer context, and an…",
+    "breadcrumbs": [
+      "Auth",
+      "Concepts",
+      "Presences"
+    ]
   },
   {
     "slug": "products/auth/quick-start",
     "title": "Start with Authentication",
     "description": "Effortlessly add authentication to your apps - simple signup & login in just minutes with Appwrite Authentication",
-    "excerpt": "You can get up and running with Appwrite Authentication in minutes. You can add basic email and password authentication to your app with just a few lines of code. You can use the Appwrite Client SDKs to create an account using email and password. After you've created your account, users can be logged in using the Create Email Session method. After logging in, you can check the authentication state of the user. Appwrite's SDKs are stateless, so you need to…"
+    "excerpt": "You can get up and running with Appwrite Authentication in minutes. You can add basic email and password authentication to your app with just a few lines of code. You can use the Appwrite Client SDKs to create an account using email and password. After you've created your account, users can be logged in using the Create Email Session method. After logging in, you can check the authentication state of the user. Appwrite's SDKs are stateless, so you need to…",
+    "breadcrumbs": [
+      "Auth",
+      "Getting started",
+      "Quick start"
+    ]
   },
   {
     "slug": "products/auth/security",
     "title": "Security",
     "description": "Prioritize security in your applications with Appwrite. Discover best practices, security features, and guidelines to protect user data and ensure authentication integrity.",
-    "excerpt": "Appwrite provides many security features to keep both your Appwrite project and your user's information secure."
+    "excerpt": "Appwrite provides many security features to keep both your Appwrite project and your user's information secure.",
+    "breadcrumbs": [
+      "Auth",
+      "Concepts",
+      "Security"
+    ]
   },
   {
     "slug": "products/auth/server-side-rendering",
     "title": "SSR login",
     "description": "How to implement SSR authentication with Appwrite",
-    "excerpt": "Server-side rendering (SSR) is fully supported with Appwrite. You can use Appwrite with many SSR-oriented frameworks, such as Next.js, SvelteKit, Nuxt, Gatsby, Remix, and more. SSR is a technique where the server renders a web page and sending the fully rendered page to the client's web browser. This is in contrast to client-side rendering (CSR), where the client's web browser renders the page using JavaScript. This guide will walk you through the process of implementing an SSR application with Appwrite.…"
+    "excerpt": "Server-side rendering (SSR) is fully supported with Appwrite. You can use Appwrite with many SSR-oriented frameworks, such as Next.js, SvelteKit, Nuxt, Gatsby, Remix, and more. SSR is a technique where the server renders a web page and sending the fully rendered page to the client's web browser. This is in contrast to client-side rendering (CSR), where the client's web browser renders the page using JavaScript. This guide will walk you through the process of implementing an SSR application with Appwrite.…",
+    "breadcrumbs": [
+      "Auth",
+      "Journeys",
+      "SSR login"
+    ]
   },
   {
     "slug": "products/auth/team-invites",
     "title": "Team invites",
     "description": "Learn how to manage team invites in Appwrite. Implement both client-side email invites and server-side custom flows for team memberships.",
-    "excerpt": "Appwrite provides two approaches for adding members to teams: client-side email invites and server-side custom flows. Each approach serves different use cases and offers unique benefits. Invite client-side Client-side email invites are perfect for implementing user-to-user invitations, allowing your users to invite others to join their teams, organizations, or shared resources. When creating a membership, Appwrite: 1. Creates a new user account if one doesn't exist for the email address 2. Sends an automated email invitation to the user 3.…"
+    "excerpt": "Appwrite provides two approaches for adding members to teams: client-side email invites and server-side custom flows. Each approach serves different use cases and offers unique benefits. Invite client-side Client-side email invites are perfect for implementing user-to-user invitations, allowing your users to invite others to join their teams, organizations, or shared resources. When creating a membership, Appwrite: 1. Creates a new user account if one doesn't exist for the email address 2. Sends an automated email invitation to the user 3.…",
+    "breadcrumbs": [
+      "Auth",
+      "Journeys",
+      "Team invites"
+    ]
   },
   {
     "slug": "products/auth/teams",
     "title": "Teams",
     "description": "Master team management in the Appwrite Cloud. Explore team-related functions, permissions, and more.",
-    "excerpt": "Teams are a good way to allow users to share access to resources. For example, in a todo app, a user can create a team for one of their todo lists and invite another user to the team to grant the other user access. You can further give special rights to parts of a team using team roles. The invited user can accept the invitation to gain access. If the user's ever removed from the team, they'll lose access again.…"
+    "excerpt": "Teams are a good way to allow users to share access to resources. For example, in a todo app, a user can create a team for one of their todo lists and invite another user to the team to grant the other user access. You can further give special rights to parts of a team using team roles. The invited user can accept the invitation to gain access. If the user's ever removed from the team, they'll lose access again.…",
+    "breadcrumbs": [
+      "Auth",
+      "Concepts",
+      "Teams"
+    ]
   },
   {
     "slug": "products/auth/tokens",
     "title": "Tokens",
     "description": "What are tokens and how to use them in Appwrite",
-    "excerpt": "Tokens are short-lived secrets created by an Appwrite Server SDK that can be exchanged for session by a Client SDK to log in users. Some auth methods like Magic URL login, Email OTP login, or Phone (SMS) login already generate tokens. You can also create custom tokens using the Create token endpoint of the Users API. This can be used to implement **custom authentication flows**. Tokens are created with the following properties: | Property | Type | Description | |…"
+    "excerpt": "Tokens are short-lived secrets created by an Appwrite Server SDK that can be exchanged for session by a Client SDK to log in users. Some auth methods like Magic URL login, Email OTP login, or Phone (SMS) login already generate tokens. You can also create custom tokens using the Create token endpoint of the Users API. This can be used to implement **custom authentication flows**. Tokens are created with the following properties: | Property | Type | Description | |…",
+    "breadcrumbs": [
+      "Auth",
+      "Concepts",
+      "Tokens"
+    ]
   },
   {
     "slug": "products/auth/users",
     "title": "Manage users",
     "description": "Manage user identities and profiles effectively with Appwrite. Dive into user management features, account settings, and user data customization",
-    "excerpt": "Appwrite Users API is used for managing users in server applications. Users API can only be used with an API key and the Server SDK to manage all users. If you need to act on behalf of users through an Appwrite Function or your own backend, use JWT login. Need to troubleshoot from a user's point of view? Use user impersonation to let trusted operators temporarily act as another user without sharing credentials. The users API can be used to…"
+    "excerpt": "Appwrite Users API is used for managing users in server applications. Users API can only be used with an API key and the Server SDK to manage all users. If you need to act on behalf of users through an Appwrite Function or your own backend, use JWT login. Need to troubleshoot from a user's point of view? Use user impersonation to let trusted operators temporarily act as another user without sharing credentials. The users API can be used to…",
+    "breadcrumbs": [
+      "Auth",
+      "Concepts",
+      "Users"
+    ]
   },
   {
     "slug": "products/auth/verify-user",
     "title": "Verify user",
     "description": "Learn about Appwrite's email and phone verification system, including verification flows and role-based access control.",
-    "excerpt": "User verification in Appwrite allows you to verify user email addresses and phone numbers. Users don't need to be verified to log in, but you can restrict resource access to verified users only using permissions. Verify email To verify a user's email, first ensure the user is logged in so that the verification email can be sent to the user who created the account. Then, send the verification email specifying a redirect URL. The verification secrets will be appended as…"
+    "excerpt": "User verification in Appwrite allows you to verify user email addresses and phone numbers. Users don't need to be verified to log in, but you can restrict resource access to verified users only using permissions. Verify email To verify a user's email, first ensure the user is logged in so that the verification email can be sent to the user who created the account. Then, send the verification email specifying a redirect URL. The verification secrets will be appended as…",
+    "breadcrumbs": [
+      "Auth",
+      "Journeys",
+      "User verification"
+    ]
   },
   {
     "slug": "products/avatars",
     "title": "Avatars",
     "description": "Generate avatars, icons, and images for your applications. Use Appwrite Avatars to create user initials, QR codes, country flags, browser icons, and more.",
-    "excerpt": "Appwrite **Avatars** provides a comprehensive set of utilities for generating and manipulating images, icons, and avatars for your applications. The Avatars service helps you complete everyday tasks related to app images, icons, and avatars without managing complex image processing infrastructure. All Avatars endpoints support image transformations including resizing, cropping, and quality adjustments to optimize performance and ensure images display correctly across different devices and screen sizes. Get started with Avatars in minutes Capabilities Appwrite Avatars supports multiple image generation and…"
+    "excerpt": "Appwrite **Avatars** provides a comprehensive set of utilities for generating and manipulating images, icons, and avatars for your applications. The Avatars service helps you complete everyday tasks related to app images, icons, and avatars without managing complex image processing infrastructure. All Avatars endpoints support image transformations including resizing, cropping, and quality adjustments to optimize performance and ensure images display correctly across different devices and screen sizes. Get started with Avatars in minutes Capabilities Appwrite Avatars supports multiple image generation and…",
+    "breadcrumbs": [
+      "Avatars",
+      "Getting started",
+      "Overview"
+    ]
   },
   {
     "slug": "products/avatars/browsers",
     "title": "Browser icons",
     "description": "Retrieve browser icons for displaying user agent information and device compatibility.",
-    "excerpt": "The browser icon endpoint provides access to icons for popular web browsers. This is useful for displaying user agent information, browser compatibility indicators, and device compatibility in your application. Get browser icon Retrieve a browser icon by browser code. Parameters The method accepts the following parameters: | Parameter | Type | Description | | --------- | ---- | ----------- | | code | string | The browser code. Supported codes include , , , , , and others. | |…"
+    "excerpt": "The browser icon endpoint provides access to icons for popular web browsers. This is useful for displaying user agent information, browser compatibility indicators, and device compatibility in your application. Get browser icon Retrieve a browser icon by browser code. Parameters The method accepts the following parameters: | Parameter | Type | Description | | --------- | ---- | ----------- | | code | string | The browser code. Supported codes include , , , , , and others. | |…",
+    "breadcrumbs": [
+      "Avatars",
+      "Concepts",
+      "Browser icons"
+    ]
   },
   {
     "slug": "products/avatars/favicons",
     "title": "Favicons",
     "description": "Fetch favicons from remote websites for link previews and bookmark displays.",
-    "excerpt": "The favicon endpoint retrieves favicons from remote websites. This is useful for displaying website icons in link previews, bookmarks, and social sharing interfaces. Get favicon Retrieve a favicon from a remote website URL. Parameters The method accepts the following parameters: | Parameter | Type | Description | | --------- | ---- | ----------- | | url | string | The URL of the website to fetch the favicon from. Must be a valid HTTP or HTTPS URL. | | width…"
+    "excerpt": "The favicon endpoint retrieves favicons from remote websites. This is useful for displaying website icons in link previews, bookmarks, and social sharing interfaces. Get favicon Retrieve a favicon from a remote website URL. Parameters The method accepts the following parameters: | Parameter | Type | Description | | --------- | ---- | ----------- | | url | string | The URL of the website to fetch the favicon from. Must be a valid HTTP or HTTPS URL. | | width…",
+    "breadcrumbs": [
+      "Avatars",
+      "Concepts",
+      "Favicons"
+    ]
   },
   {
     "slug": "products/avatars/flags",
     "title": "Country flags",
     "description": "Retrieve country flag icons by country code for displaying user locations and regional information.",
-    "excerpt": "The country flag endpoint provides access to flag icons for all countries. This is useful for displaying user locations, regional settings, and country-specific information in your application. Get country flag Retrieve a country flag icon by its ISO 3166-1 country code. Parameters The method accepts the following parameters: | Parameter | Type | Description | | --------- | ---- | ----------- | | code | string | The ISO ISO 3166-1 country code (e.g., , , ). | | width…"
+    "excerpt": "The country flag endpoint provides access to flag icons for all countries. This is useful for displaying user locations, regional settings, and country-specific information in your application. Get country flag Retrieve a country flag icon by its ISO 3166-1 country code. Parameters The method accepts the following parameters: | Parameter | Type | Description | | --------- | ---- | ----------- | | code | string | The ISO ISO 3166-1 country code (e.g., , , ). | | width…",
+    "breadcrumbs": [
+      "Avatars",
+      "Concepts",
+      "Country flags"
+    ]
   },
   {
     "slug": "products/avatars/image-manipulation",
     "title": "Image proxy",
     "description": "Transform remote images with resizing, cropping, and quality adjustments for optimal display and performance.",
-    "excerpt": "The image proxy endpoint allows you to fetch and transform images from remote URLs. You can resize, crop, and adjust the quality of images to optimize them for your application's display requirements and performance needs. Proxy remote image Fetch and transform an image from a remote URL with various transformation options. Parameters The method accepts the following parameters: | Parameter | Type | Description | | --------- | ---- | ----------- | | url | string | The URL of…"
+    "excerpt": "The image proxy endpoint allows you to fetch and transform images from remote URLs. You can resize, crop, and adjust the quality of images to optimize them for your application's display requirements and performance needs. Proxy remote image Fetch and transform an image from a remote URL with various transformation options. Parameters The method accepts the following parameters: | Parameter | Type | Description | | --------- | ---- | ----------- | | url | string | The URL of…",
+    "breadcrumbs": [
+      "Avatars",
+      "Concepts",
+      "Image proxy"
+    ]
   },
   {
     "slug": "products/avatars/initials",
     "title": "User initials",
     "description": "Generate avatar images from user names or initials with customizable appearance and dimensions.",
-    "excerpt": "The user initials endpoint generates avatar images from names or initials. This is particularly useful for displaying user profiles when no profile picture is available, creating a consistent visual identity across your application. Generate initials Generate an avatar image from a user's name. The service automatically extracts initials from the name and displays them on a colored background. Parameters The method accepts the following parameters: | Parameter | Type | Description | | --------- | ---- | ----------- | |…"
+    "excerpt": "The user initials endpoint generates avatar images from names or initials. This is particularly useful for displaying user profiles when no profile picture is available, creating a consistent visual identity across your application. Generate initials Generate an avatar image from a user's name. The service automatically extracts initials from the name and displays them on a colored background. Parameters The method accepts the following parameters: | Parameter | Type | Description | | --------- | ---- | ----------- | |…",
+    "breadcrumbs": [
+      "Avatars",
+      "Concepts",
+      "User initials"
+    ]
   },
   {
     "slug": "products/avatars/payment-methods",
     "title": "Payment methods",
     "description": "Retrieve payment method logos for checkout flows and transaction displays.",
-    "excerpt": "The payment method endpoint provides access to logos for popular payment methods and credit card brands. This is useful for displaying accepted payment methods in checkout flows, transaction history, and payment settings. Get payment method logo Retrieve a payment method or credit card logo by code. Parameters The method accepts the following parameters: | Parameter | Type | Description | | --------- | ---- | ----------- | | code | string | The payment method or credit card code. Supported…"
+    "excerpt": "The payment method endpoint provides access to logos for popular payment methods and credit card brands. This is useful for displaying accepted payment methods in checkout flows, transaction history, and payment settings. Get payment method logo Retrieve a payment method or credit card logo by code. Parameters The method accepts the following parameters: | Parameter | Type | Description | | --------- | ---- | ----------- | | code | string | The payment method or credit card code. Supported…",
+    "breadcrumbs": [
+      "Avatars",
+      "Concepts",
+      "Payment methods"
+    ]
   },
   {
     "slug": "products/avatars/qr-codes",
     "title": "QR codes",
     "description": "Generate QR codes from text strings with customizable size and margin for authentication, sharing, and data encoding.",
-    "excerpt": "The QR code endpoint generates QR code images from any text string. QR codes are commonly used for two-factor authentication, sharing links, encoding data, and enabling quick access to information. Generate QR code Generate a QR code image from a text string. The QR code can be scanned by any standard QR code reader. Parameters The method accepts the following parameters: | Parameter | Type | Description | | --------- | ---- | ----------- | | text | string |…"
+    "excerpt": "The QR code endpoint generates QR code images from any text string. QR codes are commonly used for two-factor authentication, sharing links, encoding data, and enabling quick access to information. Generate QR code Generate a QR code image from a text string. The QR code can be scanned by any standard QR code reader. Parameters The method accepts the following parameters: | Parameter | Type | Description | | --------- | ---- | ----------- | | text | string |…",
+    "breadcrumbs": [
+      "Avatars",
+      "Concepts",
+      "QR codes"
+    ]
   },
   {
     "slug": "products/avatars/quick-start",
     "title": "Start with Avatars",
     "description": "Get started quickly with Appwrite Avatars. Learn how to generate user initials, QR codes, and other avatar images in minutes.",
-    "excerpt": "You can start using Appwrite Avatars immediately. The service is publicly accessible and does not require authentication or API keys. Initialize the client First, initialize the Appwrite client with your project endpoint and project ID. Generate user initials Generate an avatar image from a user's name or initials. This is useful for displaying user profiles when no profile picture is available. Generate QR code Create a QR code from any text string. This is commonly used for two-factor authentication, sharing…"
+    "excerpt": "You can start using Appwrite Avatars immediately. The service is publicly accessible and does not require authentication or API keys. Initialize the client First, initialize the Appwrite client with your project endpoint and project ID. Generate user initials Generate an avatar image from a user's name or initials. This is useful for displaying user profiles when no profile picture is available. Generate QR code Create a QR code from any text string. This is commonly used for two-factor authentication, sharing…",
+    "breadcrumbs": [
+      "Avatars",
+      "Getting started",
+      "Quick start"
+    ]
   },
   {
     "slug": "products/avatars/screenshots",
     "title": "Screenshots",
     "description": "Capture webpage screenshots with customizable viewport, theme, browser settings, and geolocation options for comprehensive web page documentation.",
-    "excerpt": "The screenshots endpoint allows you to capture full webpage screenshots with extensive customization options. You can control the browser viewport size, theme, user agent, geolocation, permissions, and other browser settings to capture web pages exactly as they would appear in different scenarios. This is valuable for various use cases, including generating visual documentation, creating link previews, automating QA testing across different devices and browsers, or archiving web pages for compliance and record-keeping. Instead of manually taking screenshots or setting up…"
+    "excerpt": "The screenshots endpoint allows you to capture full webpage screenshots with extensive customization options. You can control the browser viewport size, theme, user agent, geolocation, permissions, and other browser settings to capture web pages exactly as they would appear in different scenarios. This is valuable for various use cases, including generating visual documentation, creating link previews, automating QA testing across different devices and browsers, or archiving web pages for compliance and record-keeping. Instead of manually taking screenshots or setting up…",
+    "breadcrumbs": [
+      "Avatars",
+      "Concepts",
+      "Screenshots"
+    ]
   },
   {
     "slug": "products/databases",
     "title": "Databases",
     "description": "Store and query structured data with Appwrite Databases. Databases provide performant and scalable storage for your application, business, and user data.",
-    "excerpt": "Appwrite Databases let you store and query structured data. Databases provide high-performance and scalable data storage for your key application, business, and user data. Databases store data, if you need to store files like images, PDFs or videos, use Appwrite Storage. You can organize data into databases, tables, and rows. You can also paginate, order, and query rows. For complex business logic, Appwrite supports relationships to help you model your data. Quick start"
+    "excerpt": "Appwrite Databases let you store and query structured data. Databases provide high-performance and scalable data storage for your key application, business, and user data. Databases store data, if you need to store files like images, PDFs or videos, use Appwrite Storage. You can organize data into databases, tables, and rows. You can also paginate, order, and query rows. For complex business logic, Appwrite supports relationships to help you model your data. Quick start",
+    "breadcrumbs": [
+      "Databases",
+      "Getting started",
+      "Overview"
+    ]
   },
   {
     "slug": "products/databases/ai-suggestions",
     "title": "AI suggestions",
     "description": "Use AI suggestions to automatically generate database schemas. Learn how to create tables with recommended columns and indexes based on your table name and context.",
-    "excerpt": "AI suggestions generate columns and indexes for your tables based on the table name, existing database structure, and optional context you provide. This feature analyzes your database to recommend appropriate schema designs that follow best practices. Navigate to **Databases** in the Appwrite Console, select your database, and click **Create table**. Enter a descriptive table name. AI suggestions will use this name to generate relevant columns and indexes. In the table creation dialog, enable **AI suggestions**. Optionally, provide additional context about…"
+    "excerpt": "AI suggestions generate columns and indexes for your tables based on the table name, existing database structure, and optional context you provide. This feature analyzes your database to recommend appropriate schema designs that follow best practices. Navigate to **Databases** in the Appwrite Console, select your database, and click **Create table**. Enter a descriptive table name. AI suggestions will use this name to generate relevant columns and indexes. In the table creation dialog, enable **AI suggestions**. Optionally, provide additional context about…",
+    "breadcrumbs": [
+      "Databases",
+      "Journeys",
+      "AI suggestions"
+    ]
   },
   {
     "slug": "products/databases/atomic-numeric-operations",
     "title": "Atomic numeric operations",
     "description": "Safely increment and decrement numeric fields without race conditions. Perfect for counters, quotas, inventory, and usage metrics in high-concurrency applications.",
-    "excerpt": "Atomic numeric operations allow you to safely increase or decrease numeric fields without fetching the full row. This eliminates race conditions and reduces bandwidth usage when updating any numeric values that need to be modified atomically, such as counters, scores, balances, and other fast-moving numeric data. These operations work with , , and columns. Use columns when your counters or accumulators may exceed the 32-bit integer range. How atomic operations work Instead of the traditional read-modify-write pattern, atomic numeric operations…"
+    "excerpt": "Atomic numeric operations allow you to safely increase or decrease numeric fields without fetching the full row. This eliminates race conditions and reduces bandwidth usage when updating any numeric values that need to be modified atomically, such as counters, scores, balances, and other fast-moving numeric data. These operations work with , , and columns. Use columns when your counters or accumulators may exceed the 32-bit integer range. How atomic operations work Instead of the traditional read-modify-write pattern, atomic numeric operations…",
+    "breadcrumbs": [
+      "Databases",
+      "Journeys",
+      "Atomic numeric operations"
+    ]
   },
   {
     "slug": "products/databases/backups",
     "title": "Backups",
     "description": "Learn how to efficiently back up your databases on Appwrite Cloud, ensuring data security and seamless recovery.",
-    "excerpt": "Appwrite Backups enable seamless, **encrypted** database backups on Cloud. All backups are **hot** backups, ensuring zero downtime and fast recovery. Learn how to efficiently back up your databases to ensure data security and smooth recovery. Appwrite Backups allow you to automate database backups using backup policies, supporting pre-defined, custom retention & other options. You can also create manual backups whenever necessary. Backup policies Backup policies allow you to automate your backup process. The Scale and Enterprise plans allow for more…"
+    "excerpt": "Appwrite Backups enable seamless, **encrypted** database backups on Cloud. All backups are **hot** backups, ensuring zero downtime and fast recovery. Learn how to efficiently back up your databases to ensure data security and smooth recovery. Appwrite Backups allow you to automate database backups using backup policies, supporting pre-defined, custom retention & other options. You can also create manual backups whenever necessary. Backup policies Backup policies allow you to automate your backup process. The Scale and Enterprise plans allow for more…",
+    "breadcrumbs": [
+      "Databases",
+      "Concepts",
+      "Backups"
+    ]
   },
   {
     "slug": "products/databases/bulk-operations",
     "title": "Bulk operations",
     "description": "Perform bulk operations on rows within your tables for efficient data handling.",
-    "excerpt": "Appwrite Databases supports bulk operations for rows, allowing you to create, update, or delete multiple rows in a single request. This can significantly improve performance for apps as it allows you to reduce the number of API calls needed while working with large data sets. Bulk operations can only be performed via the server-side SDKs. The client-side SDKs do not support bulk operations by design to prevent abuse and protect against unexpected costs. This ensures that only trusted server environments…"
+    "excerpt": "Appwrite Databases supports bulk operations for rows, allowing you to create, update, or delete multiple rows in a single request. This can significantly improve performance for apps as it allows you to reduce the number of API calls needed while working with large data sets. Bulk operations can only be performed via the server-side SDKs. The client-side SDKs do not support bulk operations by design to prevent abuse and protect against unexpected costs. This ensures that only trusted server environments…",
+    "breadcrumbs": [
+      "Databases",
+      "Journeys",
+      "Bulk operations"
+    ]
   },
   {
     "slug": "products/databases/csv-exports",
     "title": "CSV exports",
     "description": "Export table data to CSV files from the Console. Share clean datasets with your team without writing custom scripts.",
-    "excerpt": "Appwrite's CSV Export feature allows you to export rows from a table to a CSV file. This is especially useful for reporting, sharing data with non-technical team members, creating custom backups, or handing off datasets to analytics tools. This feature is available in both Appwrite Cloud and the self-hosted version. Export configuration Before exporting, you can configure several options to control the output format and contents. These settings ensure you get exactly the data you need in the format your…"
+    "excerpt": "Appwrite's CSV Export feature allows you to export rows from a table to a CSV file. This is especially useful for reporting, sharing data with non-technical team members, creating custom backups, or handing off datasets to analytics tools. This feature is available in both Appwrite Cloud and the self-hosted version. Export configuration Before exporting, you can configure several options to control the output format and contents. These settings ensure you get exactly the data you need in the format your…",
+    "breadcrumbs": [
+      "Databases",
+      "Journeys",
+      "CSV exports"
+    ]
   },
   {
     "slug": "products/databases/csv-imports",
     "title": "CSV imports",
     "description": "Master row imports with Appwrite's CSV Import feature. Learn how to create rows within your tables by uploading a CSV file.",
-    "excerpt": "Appwrite's CSV Import feature allows you to create multiple rows in a table by uploading a single CSV file. This is especially useful for importing existing data, seeding test environments, or migrating from other systems. This feature is available in both Appwrite Cloud and the self-hosted version. Prepare your table To get started, create a table in your database and define its columns. Your CSV file must match the structure of this table. All required columns must be present in…"
+    "excerpt": "Appwrite's CSV Import feature allows you to create multiple rows in a table by uploading a single CSV file. This is especially useful for importing existing data, seeding test environments, or migrating from other systems. This feature is available in both Appwrite Cloud and the self-hosted version. Prepare your table To get started, create a table in your database and define its columns. Your CSV file must match the structure of this table. All required columns must be present in…",
+    "breadcrumbs": [
+      "Databases",
+      "Journeys",
+      "CSV imports"
+    ]
   },
   {
     "slug": "products/databases/databases",
     "title": "Databases",
     "description": "Dive deeper into Appwrite Databases and their configuration. Learn how to create, manage, and optimize multiple databases for your application.",
-    "excerpt": "Databases are the largest organizational unit in Appwrite. Each database contains a group of tables. In future versions, different databases may be backed by a different database technology of your choosing. Create in Console The easiest way to create a database using the Appwrite Console. You can create a database by navigating to the **Databases** page and clicking **Create database**. Create using Server SDKs You can programmatically create databases using a Server SDK. Appwrite Server SDKs require an API key."
+    "excerpt": "Databases are the largest organizational unit in Appwrite. Each database contains a group of tables. In future versions, different databases may be backed by a different database technology of your choosing. Create in Console The easiest way to create a database using the Appwrite Console. You can create a database by navigating to the **Databases** page and clicking **Create database**. Create using Server SDKs You can programmatically create databases using a Server SDK. Appwrite Server SDKs require an API key.",
+    "breadcrumbs": [
+      "Databases",
+      "Concepts",
+      "Databases"
+    ]
   },
   {
     "slug": "products/databases/geo-queries",
     "title": "Geo queries",
     "description": "Query geographic data with distance, intersects, overlaps, and other location-based operations using spatial columns.",
-    "excerpt": "Geo queries let you perform location-based operations on geographic data stored in your database. Find nearby locations, check if coordinates fall within boundaries, calculate distances between points, and more. Appwrite supports geo queries through spatial columns that store coordinates, shapes, and areas as first-class data types. In database terminology, these could also be known as **spatial queries**. Coordinates are specified as arrays. Distance measurements can be specified in meters or degrees. Use cases Use geo queries for location-based features: -…"
+    "excerpt": "Geo queries let you perform location-based operations on geographic data stored in your database. Find nearby locations, check if coordinates fall within boundaries, calculate distances between points, and more. Appwrite supports geo queries through spatial columns that store coordinates, shapes, and areas as first-class data types. In database terminology, these could also be known as **spatial queries**. Coordinates are specified as arrays. Distance measurements can be specified in meters or degrees. Use cases Use geo queries for location-based features: -…",
+    "breadcrumbs": [
+      "Databases",
+      "Concepts",
+      "Geo queries"
+    ]
   },
   {
     "slug": "products/databases/legacy/atomic-numeric-operations",
     "title": "Atomic numeric operations",
     "description": "Safely increment and decrement numeric fields without race conditions. Perfect for counters, quotas, inventory, and usage metrics in high-concurrency applications.",
-    "excerpt": "Atomic numeric operations allow you to safely increase or decrease numeric fields without fetching the full document. This eliminates race conditions and reduces bandwidth usage when updating any numeric values that need to be modified atomically, such as counters, scores, balances, and other fast-moving numeric data. How atomic operations work Instead of the traditional read-modify-write pattern, atomic numeric operations use dedicated methods to modify values directly on the server. The server applies the change atomically under concurrency control and returns…"
+    "excerpt": "Atomic numeric operations allow you to safely increase or decrease numeric fields without fetching the full document. This eliminates race conditions and reduces bandwidth usage when updating any numeric values that need to be modified atomically, such as counters, scores, balances, and other fast-moving numeric data. How atomic operations work Instead of the traditional read-modify-write pattern, atomic numeric operations use dedicated methods to modify values directly on the server. The server applies the change atomically under concurrency control and returns…",
+    "breadcrumbs": [
+      "Databases",
+      "legacy",
+      "Atomic numeric operations"
+    ]
   },
   {
     "slug": "products/databases/legacy/bulk-operations",
     "title": "Bulk operations",
     "description": "Perform bulk operations on documents within your collections for efficient data handling.",
-    "excerpt": "Appwrite Databases supports bulk operations for documents, allowing you to create, update, or delete multiple documents in a single request. This can significantly improve performance for apps as it allows you to reduce the number of API calls needed while working with large data sets. Bulk operations can only be performed via the server-side SDKs. The client-side SDKs do not support bulk operations by design to prevent abuse and protect against unexpected costs. This ensures that only trusted server environments…"
+    "excerpt": "Appwrite Databases supports bulk operations for documents, allowing you to create, update, or delete multiple documents in a single request. This can significantly improve performance for apps as it allows you to reduce the number of API calls needed while working with large data sets. Bulk operations can only be performed via the server-side SDKs. The client-side SDKs do not support bulk operations by design to prevent abuse and protect against unexpected costs. This ensures that only trusted server environments…",
+    "breadcrumbs": [
+      "Databases",
+      "legacy",
+      "Bulk operations"
+    ]
   },
   {
     "slug": "products/databases/legacy/collections",
     "title": "Collections",
     "description": "Organize your data with Appwrite Collections. Explore how to create and configure collections to store and structure your data effectively.",
-    "excerpt": "Appwrite uses collections as containers of documents. Each collection contains many documents identical in structure. The terms collections and documents are used because the Appwrite JSON REST API resembles the API of a traditional NoSQL database, making it intuitive and user-friendly, even though Appwrite uses SQL under the hood. That said, Appwrite is designed to support both SQL and NoSQL database adapters like MariaDB, MySQL, or MongoDB in future versions. Create collection You can create collections using the Appwrite Console,…"
+    "excerpt": "Appwrite uses collections as containers of documents. Each collection contains many documents identical in structure. The terms collections and documents are used because the Appwrite JSON REST API resembles the API of a traditional NoSQL database, making it intuitive and user-friendly, even though Appwrite uses SQL under the hood. That said, Appwrite is designed to support both SQL and NoSQL database adapters like MariaDB, MySQL, or MongoDB in future versions. Create collection You can create collections using the Appwrite Console,…",
+    "breadcrumbs": [
+      "Databases",
+      "legacy",
+      "Collections"
+    ]
   },
   {
     "slug": "products/databases/legacy/databases",
     "title": "Databases",
     "description": "Dive deeper into Appwrite Databases and their configuration. Learn how to create, manage, and optimize multiple databases for your application.",
-    "excerpt": "Databases are the largest organizational unit in Appwrite. Each database contains a group of collections. In future versions, different databases may be backed by a different database technology of your choosing. Create in Console The easiest way to create a database using the Appwrite Console. You can create a database by navigating to the **Databases** page and clicking **Create database**. Create using Server SDKs You can programmatically create databases using a Server SDK. Appwrite Server SDKs require an API key."
+    "excerpt": "Databases are the largest organizational unit in Appwrite. Each database contains a group of collections. In future versions, different databases may be backed by a different database technology of your choosing. Create in Console The easiest way to create a database using the Appwrite Console. You can create a database by navigating to the **Databases** page and clicking **Create database**. Create using Server SDKs You can programmatically create databases using a Server SDK. Appwrite Server SDKs require an API key.",
+    "breadcrumbs": [
+      "Databases",
+      "legacy",
+      "Databases"
+    ]
   },
   {
     "slug": "products/databases/legacy/documents",
     "title": "Documents",
     "description": "Master document management with Appwrite Databases. Learn how to create, update, and query documents within your collections for dynamic data storage.",
-    "excerpt": "Each piece of data or information in Appwrite Databases is a document. Documents have a structure defined by the parent collection. Create documents You must grant **create** permissions to users at the **collection level** before users can create documents. Learn more about permissions In most use cases, you will create documents programmatically. During testing, you might prefer to create documents in the Appwrite Console. To do so, navigate to the **Documents** tab of your collection and click the **Add document**…"
+    "excerpt": "Each piece of data or information in Appwrite Databases is a document. Documents have a structure defined by the parent collection. Create documents You must grant **create** permissions to users at the **collection level** before users can create documents. Learn more about permissions In most use cases, you will create documents programmatically. During testing, you might prefer to create documents in the Appwrite Console. To do so, navigate to the **Documents** tab of your collection and click the **Add document**…",
+    "breadcrumbs": [
+      "Databases",
+      "legacy",
+      "Documents"
+    ]
   },
   {
     "slug": "products/databases/legacy/order",
     "title": "Order",
     "description": "Understand how to do data ordering in Appwrite Databases. Learn how to order and sort your database records for efficient data retrieval.\"",
-    "excerpt": "You can order results returned by Appwrite Databases by using an order query. For best performance, create an index on the column you plan to order by. Ordering one column When querying using the listDocuments endpoint, you can specify the order of the documents returned using the and query methods. Multiple columns To sort based on multiple attributes, simply provide multiple query methods. For better performance, create an index on the first attribute that you order by. In the example…"
+    "excerpt": "You can order results returned by Appwrite Databases by using an order query. For best performance, create an index on the column you plan to order by. Ordering one column When querying using the listDocuments endpoint, you can specify the order of the documents returned using the and query methods. Multiple columns To sort based on multiple attributes, simply provide multiple query methods. For better performance, create an index on the first attribute that you order by. In the example…",
+    "breadcrumbs": [
+      "Databases",
+      "legacy",
+      "Order"
+    ]
   },
   {
     "slug": "products/databases/legacy/pagination",
     "title": "Pagination",
     "description": "Implement pagination for large data sets in Appwrite Databases. Explore techniques for splitting and displaying data across multiple pages.",
-    "excerpt": "As your database grows in size, you'll need to paginate results returned. Pagination improves performance by returning a subset of results that match a query at a time, called a page. By default, list operations return 25 items per page, which can be changed using the operator. There is no hard limit on the number of items you can request. However, beware that **large pages can degrade performance**. Offset pagination Offset pagination works by dividing documents into pages containing documents.…"
+    "excerpt": "As your database grows in size, you'll need to paginate results returned. Pagination improves performance by returning a subset of results that match a query at a time, called a page. By default, list operations return 25 items per page, which can be changed using the operator. There is no hard limit on the number of items you can request. However, beware that **large pages can degrade performance**. Offset pagination Offset pagination works by dividing documents into pages containing documents.…",
+    "breadcrumbs": [
+      "Databases",
+      "legacy",
+      "Pagination"
+    ]
   },
   {
     "slug": "products/databases/legacy/permissions",
     "title": "Database permissions",
     "description": "Enhance data security and access control with Appwrite Database Permissions. Learn how to set permissions and access rules for your database collections",
-    "excerpt": "Permissions define who can access documents in a collection. By default **no permissions** are granted to any users, so no user can access any documents. Permissions exist at two levels, collection level and document level permissions. In Appwrite, permissions are **granted**, meaning a user has no access by default and receive access when granted. A user with access granted at either collection level or document level will be able to access a document. Users **don't need access at both levels**…"
+    "excerpt": "Permissions define who can access documents in a collection. By default **no permissions** are granted to any users, so no user can access any documents. Permissions exist at two levels, collection level and document level permissions. In Appwrite, permissions are **granted**, meaning a user has no access by default and receive access when granted. A user with access granted at either collection level or document level will be able to access a document. Users **don't need access at both levels**…",
+    "breadcrumbs": [
+      "Databases",
+      "legacy",
+      "Database permissions"
+    ]
   },
   {
     "slug": "products/databases/legacy/queries",
     "title": "Queries",
     "description": "Harness the power of querying with Appwrite Databases. Discover various query options, filtering, sorting, and advanced querying techniques.",
-    "excerpt": "Many list endpoints in Appwrite allow you to filter, sort, and paginate results using queries. Appwrite provides a common set of syntax to build queries. Query class Appwrite SDKs provide a class to help you build queries. The class has methods for each type of supported query operation. Building queries Queries are passed to an endpoint through the parameter as an array of query strings, which can be generated using the class. Each query method is logically separated via operations.…"
+    "excerpt": "Many list endpoints in Appwrite allow you to filter, sort, and paginate results using queries. Appwrite provides a common set of syntax to build queries. Query class Appwrite SDKs provide a class to help you build queries. The class has methods for each type of supported query operation. Building queries Queries are passed to an endpoint through the parameter as an array of query strings, which can be generated using the class. Each query method is logically separated via operations.…",
+    "breadcrumbs": [
+      "Databases",
+      "legacy",
+      "Queries"
+    ]
   },
   {
     "slug": "products/databases/legacy/quick-start",
     "title": "Start with Databases",
     "description": "Get started with Appwrite Databases. Follow a step-by-step guide to create your first database, define collections, and perform basic data operations.",
-    "excerpt": "Head to your Appwrite Console and create a database and name it . Optionally, add a custom database ID. Create a collection and name it . Optionally, add a custom collection ID. Navigate to **Attributes** and create attributes by clicking **Create attribute** and select **String**. Attributes define the structure of your collection's documents. Enter **Attribute key** and **Size**. For example, and . Navigate to **Settings** > **Permissions** and add a new role **Any**. Check the **CREATE** and **READ** permissions, so…"
+    "excerpt": "Head to your Appwrite Console and create a database and name it . Optionally, add a custom database ID. Create a collection and name it . Optionally, add a custom collection ID. Navigate to **Attributes** and create attributes by clicking **Create attribute** and select **String**. Attributes define the structure of your collection's documents. Enter **Attribute key** and **Size**. For example, and . Navigate to **Settings** > **Permissions** and add a new role **Any**. Check the **CREATE** and **READ** permissions, so…",
+    "breadcrumbs": [
+      "Databases",
+      "legacy",
+      "Start with Databases"
+    ]
   },
   {
     "slug": "products/databases/legacy/relationships",
     "title": "Relationships",
     "description": "Manage complex data relationships with Appwrite Databases. Discover how to define and work with relationships between documents for interconnected data.",
-    "excerpt": "Relationships describe how documents in different collections are associated, so that related documents can be read, updated, or deleted together. Entities in real-life often associate with each other in an organic and logical way, like a person and their dog, an album and its songs, or friends in a social network. These types of association between entities can be modeled in Appwrite using relationships. Relationship Attributes Relationships are represented in a collection using **relationship attributes**. The relationship attribute contains the…"
+    "excerpt": "Relationships describe how documents in different collections are associated, so that related documents can be read, updated, or deleted together. Entities in real-life often associate with each other in an organic and logical way, like a person and their dog, an album and its songs, or friends in a social network. These types of association between entities can be modeled in Appwrite using relationships. Relationship Attributes Relationships are represented in a collection using **relationship attributes**. The relationship attribute contains the…",
+    "breadcrumbs": [
+      "Databases",
+      "legacy",
+      "Relationships"
+    ]
   },
   {
     "slug": "products/databases/legacy/type-generation",
     "title": "Type generation",
     "description": "Generate types from your Appwrite database schema. Learn how to use the Appwrite CLI to create and manage your types effectively.",
-    "excerpt": "The Appwrite CLI provides a simple way to generate types based on your Appwrite database schema. This feature is particularly useful for developers who want to ensure type safety in their applications by generating type definitions that match their database collections and attributes. To generate types, the CLI reads the database schema from your project's file and generates type definitions for each collection. Generating types First, ensure you have the Appwrite CLI installed and your project is initialised. Then, run…"
+    "excerpt": "The Appwrite CLI provides a simple way to generate types based on your Appwrite database schema. This feature is particularly useful for developers who want to ensure type safety in their applications by generating type definitions that match their database collections and attributes. To generate types, the CLI reads the database schema from your project's file and generates type definitions for each collection. Generating types First, ensure you have the Appwrite CLI installed and your project is initialised. Then, run…",
+    "breadcrumbs": [
+      "Databases",
+      "legacy",
+      "Type generation"
+    ]
   },
   {
     "slug": "products/databases/offline",
     "title": "Offline sync",
     "description": "Enable offline synchronization of data between your apps and Appwrite Databases.",
-    "excerpt": "Offline synchronization (or offline sync) is a mechanism that allows apps to store and update data locally when a user is offline (i.e., loses internet connectivity), and then synchronize that data with an Appwrite database once the user is back online. This capability is crucial for building resilient and responsive applications, especially in environments with unreliable or intermittent internet connectivity. Suppose you are driving from one city to another and lose internet connectivitity while passing through a rural area, locally-downloaded…"
+    "excerpt": "Offline synchronization (or offline sync) is a mechanism that allows apps to store and update data locally when a user is offline (i.e., loses internet connectivity), and then synchronize that data with an Appwrite database once the user is back online. This capability is crucial for building resilient and responsive applications, especially in environments with unreliable or intermittent internet connectivity. Suppose you are driving from one city to another and lose internet connectivitity while passing through a rural area, locally-downloaded…",
+    "breadcrumbs": [
+      "Databases",
+      "Journeys",
+      "Offline sync"
+    ]
   },
   {
     "slug": "products/databases/operators",
     "title": "Operators",
     "description": "Update multiple fields atomically without fetching the full row. Perform numeric, array, string, and date updates in a single, consistent workflow.",
-    "excerpt": "Database operators let you update fields directly on the server without fetching the full row. Instead of sending new values, you describe the action you want: increment, append, replace, or adjust. This eliminates race conditions and reduces bandwidth usage when updating any values that need to be modified atomically. The operation is applied atomically at the storage layer for safe, concurrent updates. - Atomic by field: Each operation is applied safely at the storage layer to prevent lost updates under…"
+    "excerpt": "Database operators let you update fields directly on the server without fetching the full row. Instead of sending new values, you describe the action you want: increment, append, replace, or adjust. This eliminates race conditions and reduces bandwidth usage when updating any values that need to be modified atomically. The operation is applied atomically at the storage layer for safe, concurrent updates. - Atomic by field: Each operation is applied safely at the storage layer to prevent lost updates under…",
+    "breadcrumbs": [
+      "Databases",
+      "Concepts",
+      "Operators"
+    ]
   },
   {
     "slug": "products/databases/order",
     "title": "Order",
     "description": "Understand how to do data ordering in Appwrite Databases. Learn how to order and sort your database records for efficient data retrieval.",
-    "excerpt": "You can order results returned by Appwrite Databases by using an order query. For best performance, create an index on the column you plan to order by. Ordering one column When querying using the listRows endpoint, you can specify the order of the rows returned using the and query methods. Multiple columns To sort based on multiple columns, simply provide multiple query methods. For better performance, create an index on the first column that you order by. In the example…"
+    "excerpt": "You can order results returned by Appwrite Databases by using an order query. For best performance, create an index on the column you plan to order by. Ordering one column When querying using the listRows endpoint, you can specify the order of the rows returned using the and query methods. Multiple columns To sort based on multiple columns, simply provide multiple query methods. For better performance, create an index on the first column that you order by. In the example…",
+    "breadcrumbs": [
+      "Databases",
+      "Concepts",
+      "Order"
+    ]
   },
   {
     "slug": "products/databases/pagination",
     "title": "Pagination",
     "description": "Implement pagination for large data sets in Appwrite Databases. Explore techniques for splitting and displaying data across multiple pages.",
-    "excerpt": "As your database grows in size, you'll need to paginate results returned. Pagination improves performance by returning a subset of results that match a query at a time, called a page. By default, list operations return 25 items per page, which can be changed using the operator. There is no hard limit on the number of items you can request. However, beware that **large pages can degrade performance**. Offset pagination Offset pagination works by dividing rows into pages containing rows.…"
+    "excerpt": "As your database grows in size, you'll need to paginate results returned. Pagination improves performance by returning a subset of results that match a query at a time, called a page. By default, list operations return 25 items per page, which can be changed using the operator. There is no hard limit on the number of items you can request. However, beware that **large pages can degrade performance**. Offset pagination Offset pagination works by dividing rows into pages containing rows.…",
+    "breadcrumbs": [
+      "Databases",
+      "Journeys",
+      "Pagination"
+    ]
   },
   {
     "slug": "products/databases/permissions",
     "title": "Database permissions",
     "description": "Enhance data security and access control with Appwrite Database Permissions. Learn how to set permissions and access rules for your database tables",
-    "excerpt": "Permissions define who can access rows in a table. By default **no permissions** are granted to any users, so no user can access any rows. Permissions exist at two levels, table level and row level permissions. In Appwrite, permissions are **granted**, meaning a user has no access by default and receive access when granted. A user with access granted at either table level or row level will be able to access a row. Users **don't need access at both levels**…"
+    "excerpt": "Permissions define who can access rows in a table. By default **no permissions** are granted to any users, so no user can access any rows. Permissions exist at two levels, table level and row level permissions. In Appwrite, permissions are **granted**, meaning a user has no access by default and receive access when granted. A user with access granted at either table level or row level will be able to access a row. Users **don't need access at both levels**…",
+    "breadcrumbs": [
+      "Databases",
+      "Concepts",
+      "Permissions"
+    ]
   },
   {
     "slug": "products/databases/queries",
     "title": "Queries",
     "description": "Harness the power of querying with Appwrite tablesDB. Discover various query options, filtering, sorting, and advanced querying techniques.",
-    "excerpt": "Many list endpoints in Appwrite allow you to filter, sort, and paginate results using queries. Appwrite provides a common set of syntax to build queries. Query class Appwrite SDKs provide a class to help you build queries. The class has methods for each type of supported query operation. Building queries Queries are passed to an endpoint through the parameter as an array of query strings, which can be generated using the class. Each query method is logically separated via operations.…"
+    "excerpt": "Many list endpoints in Appwrite allow you to filter, sort, and paginate results using queries. Appwrite provides a common set of syntax to build queries. Query class Appwrite SDKs provide a class to help you build queries. The class has methods for each type of supported query operation. Building queries Queries are passed to an endpoint through the parameter as an array of query strings, which can be generated using the class. Each query method is logically separated via operations.…",
+    "breadcrumbs": [
+      "Databases",
+      "Concepts",
+      "Queries"
+    ]
   },
   {
     "slug": "products/databases/quick-start",
     "title": "Start with Databases",
     "description": "Get started with Appwrite Databases. Follow a step-by-step guide to create your first database, define tables, and perform basic data operations.",
-    "excerpt": "Head to your Appwrite Console and create a database and name it . Optionally, add a custom database ID. Create a table and name it . Optionally, add a custom table ID. Navigate to **Columns** and create columns by clicking **Create column** and select **String**. Columns define the structure of your table's rows. Enter **Column key** and **Size**. For example, and . Navigate to **Settings** > **Permissions** and add a new role **Any**. Check the **CREATE** and **READ** permissions, so…"
+    "excerpt": "Head to your Appwrite Console and create a database and name it . Optionally, add a custom database ID. Create a table and name it . Optionally, add a custom table ID. Navigate to **Columns** and create columns by clicking **Create column** and select **String**. Columns define the structure of your table's rows. Enter **Column key** and **Size**. For example, and . Navigate to **Settings** > **Permissions** and add a new role **Any**. Check the **CREATE** and **READ** permissions, so…",
+    "breadcrumbs": [
+      "Databases",
+      "Getting started",
+      "Quick start"
+    ]
   },
   {
     "slug": "products/databases/relationships",
     "title": "Relationships",
     "description": "Manage complex data relationships with Appwrite Databases. Discover how to define and work with relationships between rows for interconnected data.",
-    "excerpt": "Relationships describe how rows in different tables are associated, so that related rows can be read, updated, or deleted together. Entities in real-life often associate with each other in an organic and logical way, like a person and their dog, an album and its songs, or friends in a social network. These types of association between entities can be modeled in Appwrite using relationships. Relationship columns Relationships are represented in a table using **relationship columns**. The relationship column contains the…"
+    "excerpt": "Relationships describe how rows in different tables are associated, so that related rows can be read, updated, or deleted together. Entities in real-life often associate with each other in an organic and logical way, like a person and their dog, an album and its songs, or friends in a social network. These types of association between entities can be modeled in Appwrite using relationships. Relationship columns Relationships are represented in a table using **relationship columns**. The relationship column contains the…",
+    "breadcrumbs": [
+      "Databases",
+      "Concepts",
+      "Relationships"
+    ]
   },
   {
     "slug": "products/databases/rows",
     "title": "Rows",
     "description": "Master row management with Appwrite Databases. Learn how to create, update, upsert, and query rows within your tables for dynamic data storage.",
-    "excerpt": "Each piece of data or information in Appwrite Databases is a row. Rows have a structure defined by the parent table. Create rows You must grant _create_ permissions to users at the _table level_ before users can create rows. Learn more about permissions In most use cases, you will create rows programmatically. During testing, you might prefer to create rows in the Appwrite Console. To do so, navigate to the **Rows** tab of your table and click the **Add row**…"
+    "excerpt": "Each piece of data or information in Appwrite Databases is a row. Rows have a structure defined by the parent table. Create rows You must grant _create_ permissions to users at the _table level_ before users can create rows. Learn more about permissions In most use cases, you will create rows programmatically. During testing, you might prefer to create rows in the Appwrite Console. To do so, navigate to the **Rows** tab of your table and click the **Add row**…",
+    "breadcrumbs": [
+      "Databases",
+      "Concepts",
+      "Rows"
+    ]
   },
   {
     "slug": "products/databases/tables",
     "title": "Tables",
     "description": "Organize your data with Appwrite Tables. Explore how to create and configure tables to store and structure your data effectively.",
-    "excerpt": "Appwrite uses tables as containers of rows. Each tables contains many rows identical in structure. The terms tables and rows are used because the Appwrite JSON REST API resembles the API of a traditional NoSQL database, making it intuitive and user-friendly, even though Appwrite uses SQL under the hood. That said, Appwrite is designed to support both SQL and NoSQL database adapters like MariaDB, MySQL, or MongoDB in future versions. Create table You can create tables using the Appwrite Console,…"
+    "excerpt": "Appwrite uses tables as containers of rows. Each tables contains many rows identical in structure. The terms tables and rows are used because the Appwrite JSON REST API resembles the API of a traditional NoSQL database, making it intuitive and user-friendly, even though Appwrite uses SQL under the hood. That said, Appwrite is designed to support both SQL and NoSQL database adapters like MariaDB, MySQL, or MongoDB in future versions. Create table You can create tables using the Appwrite Console,…",
+    "breadcrumbs": [
+      "Databases",
+      "Concepts",
+      "Tables"
+    ]
   },
   {
     "slug": "products/databases/timestamp-overrides",
     "title": "Timestamp overrides",
     "description": "Set custom $createdAt and $updatedAt timestamps for your documents when using server SDKs.",
-    "excerpt": "When creating or updating documents, Appwrite automatically sets and timestamps. However, there are scenarios where you might need to set these timestamps manually, such as when migrating data from another system or backfilling historical records. To manually set and , you must use a **server SDK** with an **API key**. These attributes can be passed inside the parameter on any of the create, update, or upsert routes (single or bulk). Setting custom timestamps You can override a document's timestamps by…"
+    "excerpt": "When creating or updating documents, Appwrite automatically sets and timestamps. However, there are scenarios where you might need to set these timestamps manually, such as when migrating data from another system or backfilling historical records. To manually set and , you must use a **server SDK** with an **API key**. These attributes can be passed inside the parameter on any of the create, update, or upsert routes (single or bulk). Setting custom timestamps You can override a document's timestamps by…",
+    "breadcrumbs": [
+      "Databases",
+      "Journeys",
+      "Timestamp overrides"
+    ]
   },
   {
     "slug": "products/databases/transactions",
     "title": "Transactions",
     "description": "Stage multiple database operations and commit them atomically. Group changes across databases and tables with ordering, isolation, and conflict detection.",
-    "excerpt": "Transactions let you stage multiple database operations and apply them together, atomically. Use transactions to keep related changes consistent, even when they span multiple databases and tables. How transactions work 1. Call the createTransaction method to create a transaction. This will return a transaction model, including its ID. 2. Stage operations by passing the parameter to supported row, bulk, and atomic numeric methods. You can stage many operations at once with the createOperations method. 3. Call the updateTransaction method to…"
+    "excerpt": "Transactions let you stage multiple database operations and apply them together, atomically. Use transactions to keep related changes consistent, even when they span multiple databases and tables. How transactions work 1. Call the createTransaction method to create a transaction. This will return a transaction model, including its ID. 2. Stage operations by passing the parameter to supported row, bulk, and atomic numeric methods. You can stage many operations at once with the createOperations method. 3. Call the updateTransaction method to…",
+    "breadcrumbs": [
+      "Databases",
+      "Journeys",
+      "Transactions"
+    ]
   },
   {
     "slug": "products/databases/type-generation",
     "title": "Type generation",
     "description": "Generate types from your Appwrite database schema. Learn how to use the Appwrite CLI to create and manage your types effectively.",
-    "excerpt": "The Appwrite CLI provides a simple way to generate types based on your Appwrite database schema. This feature is particularly useful for developers who want to ensure type safety in their applications by generating type definitions that match their database tables and columns. To generate types, the CLI reads the database schema from your project's file and generates type definitions for each table. Generating types First, ensure you have the Appwrite CLI installed and your project is initialised. Then, run…"
+    "excerpt": "The Appwrite CLI provides a simple way to generate types based on your Appwrite database schema. This feature is particularly useful for developers who want to ensure type safety in their applications by generating type definitions that match their database tables and columns. To generate types, the CLI reads the database schema from your project's file and generates type definitions for each table. Generating types First, ensure you have the Appwrite CLI installed and your project is initialised. Then, run…",
+    "breadcrumbs": [
+      "Databases",
+      "Journeys",
+      "Type generation"
+    ]
   },
   {
     "slug": "products/functions",
     "title": "Functions",
     "description": "Appwrite Functions is your gateway to scalable applications. Explore our complete guide to building and deploying serverless functions effortlessly.",
-    "excerpt": "Appwrite Functions unlock limitless potential for developers to extend Appwrite with code snippets. Appwrite Functions are user-defined functions that can start small and scale big, deploying automatically from source control. These Functions can be triggered by HTTP requests, SDK methods, server events, webhooks, and scheduled executions. Each function will have its own URL, execute in its own isolated container, and have its own configurable environment variables and permissions. Getting started Appwrite Functions let you build anything you can imagine, but…"
+    "excerpt": "Appwrite Functions unlock limitless potential for developers to extend Appwrite with code snippets. Appwrite Functions are user-defined functions that can start small and scale big, deploying automatically from source control. These Functions can be triggered by HTTP requests, SDK methods, server events, webhooks, and scheduled executions. Each function will have its own URL, execute in its own isolated container, and have its own configurable environment variables and permissions. Getting started Appwrite Functions let you build anything you can imagine, but…",
+    "breadcrumbs": [
+      "Functions",
+      "Getting started",
+      "Overview"
+    ]
   },
   {
     "slug": "products/functions/deploy-from-git",
     "title": "Deploy from Git",
     "description": "Learn to version and update your Appwrite Functions' code with deployments.",
-    "excerpt": "Appwrite Functions are mini-applications in Appwrite with their own endpoints. Each function can have many deployments, which can be thought of as versions of the mini-application. Appwrite Functions can be automatically deployed from Git repositories, so you can track changes to your function's code naturally as a part of you development workflow. Create deployment The recommended way to manage your Appwrite Function deployments is to use a version control system, like Git. This offers simple versioning and collaboration that will…"
+    "excerpt": "Appwrite Functions are mini-applications in Appwrite with their own endpoints. Each function can have many deployments, which can be thought of as versions of the mini-application. Appwrite Functions can be automatically deployed from Git repositories, so you can track changes to your function's code naturally as a part of you development workflow. Create deployment The recommended way to manage your Appwrite Function deployments is to use a version control system, like Git. This offers simple versioning and collaboration that will…",
+    "breadcrumbs": [
+      "Functions",
+      "Journeys",
+      "Deploy from Git"
+    ]
   },
   {
     "slug": "products/functions/deploy-manually",
     "title": "Deploy manually",
     "description": "Learn to deploy Appwrite functions manually from the Appwrite CLI or the Appwrite Console.",
-    "excerpt": "Appwrite Functions are mini-applications in Appwrite with their own endpoints. Each function can have many deployments, which can be thought of as versions of the mini-application. While we recommend you create deployments through automatic Git deployments, you can also create deployments manually or through the Appwrite CLI. CLI Configure CLI deployments If you need to target a different project, API endpoint, change the path or entry point of your function, or update any of the other configuration options, you can…"
+    "excerpt": "Appwrite Functions are mini-applications in Appwrite with their own endpoints. Each function can have many deployments, which can be thought of as versions of the mini-application. While we recommend you create deployments through automatic Git deployments, you can also create deployments manually or through the Appwrite CLI. CLI Configure CLI deployments If you need to target a different project, API endpoint, change the path or entry point of your function, or update any of the other configuration options, you can…",
+    "breadcrumbs": [
+      "Functions",
+      "Journeys",
+      "Deploy manually"
+    ]
   },
   {
     "slug": "products/functions/deployments",
     "title": "Deployments",
     "description": "Efficiently deploy your serverless functions with Appwrite. Explore deployment options, strategies, and best practices for seamless function execution.",
-    "excerpt": "Each function can have many deployments, which can be thought of as versions of the mini-application. Functions can be created and deployed in different ways to meet your unique development habits. Deployment status Throughout the life cycle of a deployment, it could have the following status. * Status * description --- * * The deployment is built and currently activated and ready to be executed. A function can have one active deployment and deployment a must be active before being…"
+    "excerpt": "Each function can have many deployments, which can be thought of as versions of the mini-application. Functions can be created and deployed in different ways to meet your unique development habits. Deployment status Throughout the life cycle of a deployment, it could have the following status. * Status * description --- * * The deployment is built and currently activated and ready to be executed. A function can have one active deployment and deployment a must be active before being…",
+    "breadcrumbs": [
+      "Functions",
+      "Concepts",
+      "Deployments"
+    ]
   },
   {
     "slug": "products/functions/develop",
     "title": "Develop Appwrite Functions",
     "description": "Master serverless function development with Appwrite. Learn how to write and test functions locally, debug code, and optimize for efficient execution.",
-    "excerpt": "Appwrite Functions offer a familiar interface if you've developed REST endpoints. Each function is handled following a request and response pattern. Lifecycle There is a clear lifecycle for all Appwrite Functions, from beginning to end. Here's everything that happens during a function execution. 1. The function is invoked. 1. The active deployment's executor will handle the request. 1. The Executor passes in request information like headers, body or path through the object of your exported function. 1. The runtime executes…"
+    "excerpt": "Appwrite Functions offer a familiar interface if you've developed REST endpoints. Each function is handled following a request and response pattern. Lifecycle There is a clear lifecycle for all Appwrite Functions, from beginning to end. Here's everything that happens during a function execution. 1. The function is invoked. 1. The active deployment's executor will handle the request. 1. The Executor passes in request information like headers, body or path through the object of your exported function. 1. The runtime executes…",
+    "breadcrumbs": [
+      "Functions",
+      "Journeys",
+      "Develop"
+    ]
   },
   {
     "slug": "products/functions/develop-locally",
     "title": "Develop locally",
     "description": "Learn to develop Appwrite functions locally.",
-    "excerpt": "Develop your Appwrite functions locally to make code changes without redeploying your function on every code change and hot reload your code for faster testing. Setup We use Docker to replicate the production environment for the local deployment of functions. These can be executed locally with the CLI command, which requires initializing a project with an file and having local code to run the function locally. The CLI also supports various other CLI commands. 1. Install the Docker CLI 2.…"
+    "excerpt": "Develop your Appwrite functions locally to make code changes without redeploying your function on every code change and hot reload your code for faster testing. Setup We use Docker to replicate the production environment for the local deployment of functions. These can be executed locally with the CLI command, which requires initializing a project with an file and having local code to run the function locally. The CLI also supports various other CLI commands. 1. Install the Docker CLI 2.…",
+    "breadcrumbs": [
+      "Functions",
+      "Journeys",
+      "Develop locally"
+    ]
   },
   {
     "slug": "products/functions/domains",
     "title": "Domains",
     "description": "Execute Appwrite Functions through domains using standard HTTP GET, POST, or other request methods to serve static, JSON, HTML, or other content.",
-    "excerpt": "Each deployed function can have its own domain, generated or developer defined. You can use this domain to execute Appwrite Functions through HTTP methods. You can use common practices like using paths, query parameters, headers, HTTP methods, formdata, and all the typical HTTP concepts to implement Appwrite Functions. Appwrite generates TLS certificates to enforce HTTPS on all Appwrite Functions domains, generated or custom. These domains are safe to use and access in production. Learn about Function development Generated domains Each…"
+    "excerpt": "Each deployed function can have its own domain, generated or developer defined. You can use this domain to execute Appwrite Functions through HTTP methods. You can use common practices like using paths, query parameters, headers, HTTP methods, formdata, and all the typical HTTP concepts to implement Appwrite Functions. Appwrite generates TLS certificates to enforce HTTPS on all Appwrite Functions domains, generated or custom. These domains are safe to use and access in production. Learn about Function development Generated domains Each…",
+    "breadcrumbs": [
+      "Functions",
+      "Concepts",
+      "Domains"
+    ]
   },
   {
     "slug": "products/functions/environment-variables",
     "title": "Environment variables",
     "description": "Set environment variables for your Appwrite Functions to pass constants and secrets at build and runtime.",
-    "excerpt": "Appwrite Functions can read environment variables at build and runtime. Use them to pass constants and secrets such as API keys, connection strings, and feature flags without hardcoding them in your source. A function reads from three sources, in this order of precedence: 1. **Project variables** are shared across every function and site in your project. Set them once and every function inherits them automatically. See project variables for the platform-wide reference. 2. **Function variables** are scoped to a single…"
+    "excerpt": "Appwrite Functions can read environment variables at build and runtime. Use them to pass constants and secrets such as API keys, connection strings, and feature flags without hardcoding them in your source. A function reads from three sources, in this order of precedence: 1. **Project variables** are shared across every function and site in your project. Set them once and every function inherits them automatically. See project variables for the platform-wide reference. 2. **Function variables** are scoped to a single…",
+    "breadcrumbs": [
+      "Functions",
+      "Concepts",
+      "Environment variables"
+    ]
   },
   {
     "slug": "products/functions/examples",
     "title": "Examples",
     "description": "Accelerate your serverless development with Appwrite Functions examples. Access a library of code samples and use cases to jumpstart your projects.",
-    "excerpt": "Appwrite Functions is all about flexibility. Behind the simple workflow hides some useful examples that can help you accomplish your goals faster. Take a look at the following. Here's a currency conversion API that converts from Euros and Indian Rupees to US Dollars. We'll use an external API to get the latest exchange rates and query it using a dependency specific to each runtime. Prerequisites Run the following bash command to create a file. This file is used to manage…"
+    "excerpt": "Appwrite Functions is all about flexibility. Behind the simple workflow hides some useful examples that can help you accomplish your goals faster. Take a look at the following. Here's a currency conversion API that converts from Euros and Indian Rupees to US Dollars. We'll use an external API to get the latest exchange rates and query it using a dependency specific to each runtime. Prerequisites Run the following bash command to create a file. This file is used to manage…",
+    "breadcrumbs": [
+      "Functions",
+      "Examples"
+    ]
   },
   {
     "slug": "products/functions/execute",
     "title": "Execution",
     "description": "Understand serverless function execution in Appwrite. Explore how triggers, events, and data flow enable dynamic execution of your code.",
-    "excerpt": "Appwrite Functions can be executed in several ways. Executions can be invoked through the Appwrite SDK and visiting its REST endpoint. Functions can also be triggered by events and scheduled executions. Here are all the different ways to consume your Appwrite Functions. Execution modes Appwrite Functions support two execution modes: **synchronous** and **asynchronous**. Synchronous executions Synchronous executions are those where Appwrite makes the request to the function runtime synchronously and waits for the response. The client making the request will…"
+    "excerpt": "Appwrite Functions can be executed in several ways. Executions can be invoked through the Appwrite SDK and visiting its REST endpoint. Functions can also be triggered by events and scheduled executions. Here are all the different ways to consume your Appwrite Functions. Execution modes Appwrite Functions support two execution modes: **synchronous** and **asynchronous**. Synchronous executions Synchronous executions are those where Appwrite makes the request to the function runtime synchronously and waits for the response. The client making the request will…",
+    "breadcrumbs": [
+      "Functions",
+      "Journeys",
+      "Execute"
+    ]
   },
   {
     "slug": "products/functions/executions",
     "title": "Execution",
     "description": "Learn how Appwrite handles serverless function executions. More specifically, execution status, details and function logging.",
-    "excerpt": "Each time an Appwrite Function runs, an **execution** is created. Each execution has a unique ID. If you enable execution logs in your function, you can find function executions logged in the **Executions** tab. Execution table In your function's **Executions** tab, you will see a table of your recent executions. Here's the information shown on this table. - Column - Description --- - Execution ID - Unique identifier for each execution --- - Status - The current status of the…"
+    "excerpt": "Each time an Appwrite Function runs, an **execution** is created. Each execution has a unique ID. If you enable execution logs in your function, you can find function executions logged in the **Executions** tab. Execution table In your function's **Executions** tab, you will see a table of your recent executions. Here's the information shown on this table. - Column - Description --- - Execution ID - Unique identifier for each execution --- - Status - The current status of the…",
+    "breadcrumbs": [
+      "Functions",
+      "Concepts",
+      "Executions"
+    ]
   },
   {
     "slug": "products/functions/functions",
     "title": "Functions",
     "description": "Learn what an Appwrite Function can do for you and how to create a new Appwrite Function",
-    "excerpt": "Each Appwrite Function is a piece of developer defined code that can be executed on demand. When you create a new Appwrite Function, you select a name, ID, and runtime language. Each time a function's code is updated, a deployment is created, which is like a version of a function. Each function has a single active deployment, which is the version of code that's executed when it's called. You can update the Appwrite Function's code by creating new deployments. You…"
+    "excerpt": "Each Appwrite Function is a piece of developer defined code that can be executed on demand. When you create a new Appwrite Function, you select a name, ID, and runtime language. Each time a function's code is updated, a deployment is created, which is like a version of a function. Each function has a single active deployment, which is the version of code that's executed when it's called. You can update the Appwrite Function's code by creating new deployments. You…",
+    "breadcrumbs": [
+      "Functions",
+      "Concepts",
+      "Functions"
+    ]
   },
   {
     "slug": "products/functions/quick-start",
     "title": "Start with Functions",
     "description": "Get started quickly with Appwrite Functions. Follow a step-by-step guide to create your first serverless function, define triggers, and execute code.",
-    "excerpt": "You can create and execute your first Appwrite Function in minutes. Create function Before deploying your function with Git, create a new function attached to your Git repository. 1. In the Appwrite Console's sidebar, click **Functions**. 2. Click **Create function**. 3. Under **Connect Git repository**, select your provider. 4. After connecting to GitHub, under **Quick start**, select a starter template. 5. Follow the step-by-step wizard and create the function. 6. The function will be created and a build will begin.…"
+    "excerpt": "You can create and execute your first Appwrite Function in minutes. Create function Before deploying your function with Git, create a new function attached to your Git repository. 1. In the Appwrite Console's sidebar, click **Functions**. 2. Click **Create function**. 3. Under **Connect Git repository**, select your provider. 4. After connecting to GitHub, under **Quick start**, select a starter template. 5. Follow the step-by-step wizard and create the function. 6. The function will be created and a build will begin.…",
+    "breadcrumbs": [
+      "Functions",
+      "Getting started",
+      "Quick start"
+    ]
   },
   {
     "slug": "products/functions/runtimes",
     "title": "Runtimes",
     "description": "Choose the right runtime environment for your serverless functions in Appwrite. Explore available runtimes, dependencies, and runtime-specific considerations.",
-    "excerpt": "Appwrite Functions supports an extensive list of runtimes to meet your unique tech preferences. Not all runtimes are available on Appwrite Cloud yet. Check the list below to know which ones are available on Appwrite Cloud. Available runtimes Below is a list of available Functions runtimes. The Appwrite team continually adds support for new runtimes. While still in beta, Appwrite Cloud has limited support for Cloud runtimes. As we continue to improve our Cloud offering, we will add support for…"
+    "excerpt": "Appwrite Functions supports an extensive list of runtimes to meet your unique tech preferences. Not all runtimes are available on Appwrite Cloud yet. Check the list below to know which ones are available on Appwrite Cloud. Available runtimes Below is a list of available Functions runtimes. The Appwrite team continually adds support for new runtimes. While still in beta, Appwrite Cloud has limited support for Cloud runtimes. As we continue to improve our Cloud offering, we will add support for…",
+    "breadcrumbs": [
+      "Functions",
+      "Concepts",
+      "Runtimes"
+    ]
   },
   {
     "slug": "products/functions/templates",
     "title": "Templates",
     "description": "Learn about Appwrite Functions' templates that let you jump start function development to extend your Appwrite APIs.",
-    "excerpt": "Appwrite provides a variety of Function Templates to help you jump start your function development. You can use Appwrite Function Templates as examples or boilerplates to add new functionality to your Appwrite project. Find templates You can find all available templates by navigating to the Appwrite Console, under your project > **Functions** > **Templates**. You can filter functions by searching, filter by use case, or filter by runtime. Click **Create function** to create a function from a template. Create with…"
+    "excerpt": "Appwrite provides a variety of Function Templates to help you jump start your function development. You can use Appwrite Function Templates as examples or boilerplates to add new functionality to your Appwrite project. Find templates You can find all available templates by navigating to the Appwrite Console, under your project > **Functions** > **Templates**. You can filter functions by searching, filter by use case, or filter by runtime. Click **Create function** to create a function from a template. Create with…",
+    "breadcrumbs": [
+      "Functions",
+      "Journeys",
+      "Templates"
+    ]
   },
   {
     "slug": "products/messaging",
     "title": "Messaging",
     "description": "Send push notifications, text, or emails to users or groups of users using your app.",
-    "excerpt": "Appwrite Messaging helps you communicate with your users through push notifications, emails, and SMS text messages. Sending personalized communication for marketing, updates, and realtime alerts can increase user engagement and retention. You can also use Appwrite Messaging to implement security checks and custom authentication flows. Explore what you can build with Appwrite Messaging. Send newsletters, invoices, promotions and other emails. Send SMS messages straight to your user's phone. Send push notifications to your user's devices."
+    "excerpt": "Appwrite Messaging helps you communicate with your users through push notifications, emails, and SMS text messages. Sending personalized communication for marketing, updates, and realtime alerts can increase user engagement and retention. You can also use Appwrite Messaging to implement security checks and custom authentication flows. Explore what you can build with Appwrite Messaging. Send newsletters, invoices, promotions and other emails. Send SMS messages straight to your user's phone. Send push notifications to your user's devices.",
+    "breadcrumbs": [
+      "Messaging",
+      "Getting started",
+      "Overview"
+    ]
   },
   {
     "slug": "products/messaging/apns",
     "title": "Apple Push Notification service",
     "description": "Send push notifications to apps on Apple devices through Apple Push Notification service (APNs) using Appwrite Messaging.",
-    "excerpt": "Apple Push Notification service (APNs) lets you send push notifications to Apple devices like macOS, iOS, tvOS, iPadOS, and watchOS devices. APNs is a best-effort service, and will attempt to deliver you messages to your device when it's online and available again. APNs will save the last message for 30 days or less and attempt delivery as soon as it's online. To add APNs as a provider, navigate to **Messaging** > **Providers** > **Create provider** > **Push notification**. Give your…"
+    "excerpt": "Apple Push Notification service (APNs) lets you send push notifications to Apple devices like macOS, iOS, tvOS, iPadOS, and watchOS devices. APNs is a best-effort service, and will attempt to deliver you messages to your device when it's online and available again. APNs will save the last message for 30 days or less and attempt delivery as soon as it's online. To add APNs as a provider, navigate to **Messaging** > **Providers** > **Create provider** > **Push notification**. Give your…",
+    "breadcrumbs": [
+      "Messaging",
+      "Providers",
+      "Push with APNs"
+    ]
   },
   {
     "slug": "products/messaging/fcm",
     "title": "Firebase Cloud Messaging",
     "description": "Send push notifications to Android, Apple, or Web app with Firebase Cloud Messaging (FCM).",
-    "excerpt": "Firebase Cloud Messaging (FCM) lets you send push notifications to your iOS, Android, and web apps through Appwrite Messaging. Before you can deliver messages, you must connect to a messaging provider. To add FCM as a provider, navigate to **Messaging** > **Providers** > **Add provider** > **Push notification**. Give your provider a name > choose **FCM** > click **Save and continue**. The provider will be saved to your project, but not enabled until you complete its configuration. In the **Configure**…"
+    "excerpt": "Firebase Cloud Messaging (FCM) lets you send push notifications to your iOS, Android, and web apps through Appwrite Messaging. Before you can deliver messages, you must connect to a messaging provider. To add FCM as a provider, navigate to **Messaging** > **Providers** > **Add provider** > **Push notification**. Give your provider a name > choose **FCM** > click **Save and continue**. The provider will be saved to your project, but not enabled until you complete its configuration. In the **Configure**…",
+    "breadcrumbs": [
+      "Messaging",
+      "Providers",
+      "Push with FCM"
+    ]
   },
   {
     "slug": "products/messaging/mailgun",
     "title": "Mailgun",
     "description": "Send emails to your Appwrite users using Mailgun and Appwrite Messaging.",
-    "excerpt": "Mailgun lets you send customized email messages to your users. These emails can be sent immediately or scheduled. You can send emails for purposes like reminders, promotions, announcements, and even custom authentication flows. To add Mailgun as a provider, navigate to **Messaging** > **Providers** > **Add provider** > **Email**. Give your provider a name > choose **Mailgun** > click **Save and continue**. The provider will be saved to your project, but not enabled until you complete its configuration. In the…"
+    "excerpt": "Mailgun lets you send customized email messages to your users. These emails can be sent immediately or scheduled. You can send emails for purposes like reminders, promotions, announcements, and even custom authentication flows. To add Mailgun as a provider, navigate to **Messaging** > **Providers** > **Add provider** > **Email**. Give your provider a name > choose **Mailgun** > click **Save and continue**. The provider will be saved to your project, but not enabled until you complete its configuration. In the…",
+    "breadcrumbs": [
+      "Messaging",
+      "Providers",
+      "Email with Mailgun"
+    ]
   },
   {
     "slug": "products/messaging/messages",
     "title": "Messages",
     "description": "Learn about Appwrite messages, the different types of messages, what can be sent in different message types.",
-    "excerpt": "Each time you send or schedule a push notification, email, or SMS text, it's recorded in Appwrite as a **message** is displayed in the **Messages** tab. Messages Each message displays with the following information. * Column * Description --- * Message ID * The unique ID of the message. --- * Description * The developer defined description of the message. End users do not see this description. --- * Message * The message delivered to end users. --- * Type…"
+    "excerpt": "Each time you send or schedule a push notification, email, or SMS text, it's recorded in Appwrite as a **message** is displayed in the **Messages** tab. Messages Each message displays with the following information. * Column * Description --- * Message ID * The unique ID of the message. --- * Description * The developer defined description of the message. End users do not see this description. --- * Message * The message delivered to end users. --- * Type…",
+    "breadcrumbs": [
+      "Messaging",
+      "Concepts",
+      "Messages"
+    ]
   },
   {
     "slug": "products/messaging/msg91",
     "title": "MSG91",
     "description": "Send SMS messages to your Appwrite users using MSG91 and Appwrite Messaging.",
-    "excerpt": "MSG91 lets you send customized SMS messages to your users. These SMS messages can be sent immediately or scheduled. You can send SMS messages for purposes like reminders, promotions, announcements, and even custom authentication flows. To add MSG91 as a provider, navigate to **Messaging** > **Providers** > **Add provider** > **SMS**. Give your provider a name > choose **MSG91** > click **Save and continue**. The provider will be saved to your project, but not enabled until you complete its configuration.…"
+    "excerpt": "MSG91 lets you send customized SMS messages to your users. These SMS messages can be sent immediately or scheduled. You can send SMS messages for purposes like reminders, promotions, announcements, and even custom authentication flows. To add MSG91 as a provider, navigate to **Messaging** > **Providers** > **Add provider** > **SMS**. Give your provider a name > choose **MSG91** > click **Save and continue**. The provider will be saved to your project, but not enabled until you complete its configuration.…",
+    "breadcrumbs": [
+      "Messaging",
+      "Providers",
+      "SMS with MSG91"
+    ]
   },
   {
     "slug": "products/messaging/providers",
     "title": "Providers",
     "description": "Learn the different providers that you can use to send messages with Appwrite.",
-    "excerpt": "Appwrite allows you to connect to a variety of third-party messaging providers to deliver push notifications, emails, and SMS messages to your users. Before you can deliver messages, you must connect to a messaging provider. Push notifications Send push notifications, which are little notification messages that appear on a user's browser or device to alert them of events or updates. Configure one of the following providers to send push notifications. Send push notifications to apps on Apple devices through Apple…"
+    "excerpt": "Appwrite allows you to connect to a variety of third-party messaging providers to deliver push notifications, emails, and SMS messages to your users. Before you can deliver messages, you must connect to a messaging provider. Push notifications Send push notifications, which are little notification messages that appear on a user's browser or device to alert them of events or updates. Configure one of the following providers to send push notifications. Send push notifications to apps on Apple devices through Apple…",
+    "breadcrumbs": [
+      "Messaging",
+      "Concepts",
+      "Providers"
+    ]
   },
   {
     "slug": "products/messaging/send-email-messages",
     "title": "Send email messages",
     "description": "Send email messages to your users using Appwrite Messaging.",
-    "excerpt": "You can send custom email messages to your app's users using Appwrite Messaging and a connected SMTP service. This guide takes you through the implementation path of adding email messaging to your app. Add a provider Appwrite supports Mailgun and Sendgrid as SMTP providers. You must configure one of them as a provider. To add a new provider navigate to **Messaging** > **Providers** > **Add provider** > **Email** and follow the wizard. You can find more details about configuring in…"
+    "excerpt": "You can send custom email messages to your app's users using Appwrite Messaging and a connected SMTP service. This guide takes you through the implementation path of adding email messaging to your app. Add a provider Appwrite supports Mailgun and Sendgrid as SMTP providers. You must configure one of them as a provider. To add a new provider navigate to **Messaging** > **Providers** > **Add provider** > **Email** and follow the wizard. You can find more details about configuring in…",
+    "breadcrumbs": [
+      "Messaging",
+      "Journeys",
+      "Send email messages"
+    ]
   },
   {
     "slug": "products/messaging/send-push-notifications",
     "title": "Send push notification",
     "description": "Send push notification to your users using Appwrite Messaging.",
-    "excerpt": "You can send, schedule, and manage push notifications to your apps using Appwrite Messaging. Push notifications can be used to deliver new message notifications, app updates, promotional offers, and other messages straight to your user's devices. Push notifications must be sent through third-party providers, like Apple Push Notification service and Firebase Cloud Messaging. The push notification APIs for Apple and Android devices can only be accessed through these services. You must configure these services before you can send your first…"
+    "excerpt": "You can send, schedule, and manage push notifications to your apps using Appwrite Messaging. Push notifications can be used to deliver new message notifications, app updates, promotional offers, and other messages straight to your user's devices. Push notifications must be sent through third-party providers, like Apple Push Notification service and Firebase Cloud Messaging. The push notification APIs for Apple and Android devices can only be accessed through these services. You must configure these services before you can send your first…",
+    "breadcrumbs": [
+      "Messaging",
+      "Journeys",
+      "Send push notifications"
+    ]
   },
   {
     "slug": "products/messaging/send-sms-messages",
     "title": "Send SMS messages",
     "description": "Send SMS messages to your users using Appwrite Messaging.",
-    "excerpt": "You can send custom SMS messages to your app's users using Appwrite Messaging and a connected SMTP service. This guide takes you through the implementation path of adding SMS messaging to your app. Add a provider Appwrite supports Twilio, MSG91, Telesign, Textmagic, and Vonage as SMS providers. You must configure one of them as a provider. To add a new provider navigate to **Messaging** > **Providers** > **Add provider** > **SMS** and follow the wizard. You can find more details…"
+    "excerpt": "You can send custom SMS messages to your app's users using Appwrite Messaging and a connected SMTP service. This guide takes you through the implementation path of adding SMS messaging to your app. Add a provider Appwrite supports Twilio, MSG91, Telesign, Textmagic, and Vonage as SMS providers. You must configure one of them as a provider. To add a new provider navigate to **Messaging** > **Providers** > **Add provider** > **SMS** and follow the wizard. You can find more details…",
+    "breadcrumbs": [
+      "Messaging",
+      "Journeys",
+      "Send SMS messages"
+    ]
   },
   {
     "slug": "products/messaging/sendgrid",
     "title": "SendGrid",
     "description": "Send emails to your Appwrite users using SendGrid and Appwrite Messaging.",
-    "excerpt": "SendGrid lets you send customized email messages to your users. These emails can be sent immediately or scheduled. You can send emails for purposes like reminders, promotions, announcements, and even custom authentication flows. To add SendGrid as a provider, navigate to **Messaging** > **Providers** > **Add provider** > **Email**. Give your provider a name > choose **SendGrid** > click **Save and continue**. The provider will be saved to your project, but not enabled until you complete its configuration. In the…"
+    "excerpt": "SendGrid lets you send customized email messages to your users. These emails can be sent immediately or scheduled. You can send emails for purposes like reminders, promotions, announcements, and even custom authentication flows. To add SendGrid as a provider, navigate to **Messaging** > **Providers** > **Add provider** > **Email**. Give your provider a name > choose **SendGrid** > click **Save and continue**. The provider will be saved to your project, but not enabled until you complete its configuration. In the…",
+    "breadcrumbs": [
+      "Messaging",
+      "Providers",
+      "Email with SendGrid"
+    ]
   },
   {
     "slug": "products/messaging/smtp",
     "title": "SMTP",
     "description": "Send emails to your Appwrite users using SMTP and Appwrite Messaging.",
-    "excerpt": "If you wish to use a third-party SMTP provider that Appwrite doesn't yet support or host your own SMTP server, you can setup a custom SMTP provider for your project. To add a custom SMTP server as a provider, navigate to **Messaging** > **Providers** > **Add provider** > **Email**. Give your provider a name > choose **SMTP** > click **Save and continue**. The provider will be saved to your project, but not enabled until you complete its configuration. In the…"
+    "excerpt": "If you wish to use a third-party SMTP provider that Appwrite doesn't yet support or host your own SMTP server, you can setup a custom SMTP provider for your project. To add a custom SMTP server as a provider, navigate to **Messaging** > **Providers** > **Add provider** > **Email**. Give your provider a name > choose **SMTP** > click **Save and continue**. The provider will be saved to your project, but not enabled until you complete its configuration. In the…",
+    "breadcrumbs": [
+      "Messaging",
+      "Providers",
+      "Email with SMTP"
+    ]
   },
   {
     "slug": "products/messaging/targets",
     "title": "Targets",
     "description": "Manage avenues of communication by targetting user's device, email, or phone number in your notification and messages.",
-    "excerpt": "Targets are different ways a user can be reached. For example, a user might have two emails, a phone number as well as a phone and a tablet with your app installed. This means, the user has five different targets that you can deliver messages to. Topics and targets A user can have multiple targets, such as emails, phone numbers, and devices with your app installed. These targets can subscribe to a topic, so when messages are published to a…"
+    "excerpt": "Targets are different ways a user can be reached. For example, a user might have two emails, a phone number as well as a phone and a tablet with your app installed. This means, the user has five different targets that you can deliver messages to. Topics and targets A user can have multiple targets, such as emails, phone numbers, and devices with your app installed. These targets can subscribe to a topic, so when messages are published to a…",
+    "breadcrumbs": [
+      "Messaging",
+      "Concepts",
+      "Targets"
+    ]
   },
   {
     "slug": "products/messaging/telesign",
     "title": "Telesign",
     "description": "Send SMS messages to your Appwrite users using Telesign and Appwrite Messaging.",
-    "excerpt": "Telesign lets you send customized SMS messages to your users. These SMS messages can be sent immediately or scheduled. You can send SMS messages for purposes like reminders, promotions, announcements, and even custom authentication flows. To add Telesign as a provider, navigate to **Messaging** > **Providers** > **Add provider** > **SMS**. Give your provider a name > choose **Telesign** > click **Save and continue**. The provider will be saved to your project, but not enabled until you complete its configuration.…"
+    "excerpt": "Telesign lets you send customized SMS messages to your users. These SMS messages can be sent immediately or scheduled. You can send SMS messages for purposes like reminders, promotions, announcements, and even custom authentication flows. To add Telesign as a provider, navigate to **Messaging** > **Providers** > **Add provider** > **SMS**. Give your provider a name > choose **Telesign** > click **Save and continue**. The provider will be saved to your project, but not enabled until you complete its configuration.…",
+    "breadcrumbs": [
+      "Messaging",
+      "Providers",
+      "SMS with Telesign"
+    ]
   },
   {
     "slug": "products/messaging/textmagic",
     "title": "Textmagic",
     "description": "Send SMS messages to your Appwrite users using Textmagic and Appwrite Messaging.",
-    "excerpt": "Textmagic lets you send customized SMS messages to your users. These SMS messages can be sent immediately or scheduled. You can send SMS messages for purposes like reminders, promotions, announcements, and even custom authentication flows. To add Textmagic as a provider, navigate to **Messaging** > **Providers** > **Add provider** > **SMS**. Give your provider a name > choose **Textmagic** > click **Save and continue**. The provider will be saved to your project, but not enabled until you complete its configuration.…"
+    "excerpt": "Textmagic lets you send customized SMS messages to your users. These SMS messages can be sent immediately or scheduled. You can send SMS messages for purposes like reminders, promotions, announcements, and even custom authentication flows. To add Textmagic as a provider, navigate to **Messaging** > **Providers** > **Add provider** > **SMS**. Give your provider a name > choose **Textmagic** > click **Save and continue**. The provider will be saved to your project, but not enabled until you complete its configuration.…",
+    "breadcrumbs": [
+      "Messaging",
+      "Providers",
+      "SMS with Textmagic"
+    ]
   },
   {
     "slug": "products/messaging/topics",
     "title": "Topics",
     "description": "Allow groups of users to subscribe to a common topic and receive the same notifications.",
-    "excerpt": "In Appwrite Messaging, you can use topics to deliver messages to groups of users at once. Topics and targets A user can have multiple targets, such as emails, phone numbers, and devices with your app installed. These targets can subscribe to a topic, so when messages are published to a topic, all subscribed targets receive the message. Learn more about targets Organizing topics A topic should have semantic meaning. For example, a topic can represent a group of customers that…"
+    "excerpt": "In Appwrite Messaging, you can use topics to deliver messages to groups of users at once. Topics and targets A user can have multiple targets, such as emails, phone numbers, and devices with your app installed. These targets can subscribe to a topic, so when messages are published to a topic, all subscribed targets receive the message. Learn more about targets Organizing topics A topic should have semantic meaning. For example, a topic can represent a group of customers that…",
+    "breadcrumbs": [
+      "Messaging",
+      "Concepts",
+      "Topics"
+    ]
   },
   {
     "slug": "products/messaging/twilio",
     "title": "Twilio",
     "description": "Send SMS messages to your Appwrite users using Twilio and Appwrite Messaging.",
-    "excerpt": "Twilio lets you send customized SMS messages to your users. These SMS messages can be sent immediately or scheduled. You can send SMS messages for purposes like reminders, promotions, announcements, and even custom authentication flows. To add Twilio as a provider, navigate to **Messaging** > **Providers** > **Add provider** > **SMS**. Give your provider a name > choose **Twilio** > click **Save and continue**. The provider will be saved to your project, but not enabled until you complete its configuration.…"
+    "excerpt": "Twilio lets you send customized SMS messages to your users. These SMS messages can be sent immediately or scheduled. You can send SMS messages for purposes like reminders, promotions, announcements, and even custom authentication flows. To add Twilio as a provider, navigate to **Messaging** > **Providers** > **Add provider** > **SMS**. Give your provider a name > choose **Twilio** > click **Save and continue**. The provider will be saved to your project, but not enabled until you complete its configuration.…",
+    "breadcrumbs": [
+      "Messaging",
+      "Providers",
+      "SMS with Twilio"
+    ]
   },
   {
     "slug": "products/messaging/vonage",
     "title": "Vonage",
     "description": "Send SMS messages to your Appwrite users using Vonage and Appwrite Messaging.",
-    "excerpt": "Vonage lets you send customized SMS messages to your users. These SMS messages can be sent immediately or scheduled. You can send SMS messages for purposes like reminders, promotions, announcements, and even custom authentication flows. To add Vonage as a provider, navigate to **Messaging** > **Providers** > **Add provider** > **SMS**. Give your provider a name > choose **Vonage** > click **Save and continue**. The provider will be saved to your project, but not enabled until you complete its configuration.…"
+    "excerpt": "Vonage lets you send customized SMS messages to your users. These SMS messages can be sent immediately or scheduled. You can send SMS messages for purposes like reminders, promotions, announcements, and even custom authentication flows. To add Vonage as a provider, navigate to **Messaging** > **Providers** > **Add provider** > **SMS**. Give your provider a name > choose **Vonage** > click **Save and continue**. The provider will be saved to your project, but not enabled until you complete its configuration.…",
+    "breadcrumbs": [
+      "Messaging",
+      "Providers",
+      "SMS with Vonage"
+    ]
   },
   {
     "slug": "products/network",
     "title": "Network",
     "description": "Discover Appwrite's network architecture with global regions, edge nodes, and optimized routing. Explore how it ensures low latency, reliable performance, and scalable infrastructure for modern applications.",
-    "excerpt": "Appwrite's network is designed to deliver low-latency, high-performance experiences for developers and end-users alike. It leverages a robust Content Delivery Network (CDN) with edge locations across multiple regions to ensure fast and reliable data delivery. With distributed infrastructure and multiple deployment regions, Appwrite enables developers to build globally scalable applications while maintaining data sovereignty. Its architecture integrates seamlessly with APIs, storage, and databases, optimizing both speed and availability. Components The Appwrite Network is composed of multiple components that work together…"
+    "excerpt": "Appwrite's network is designed to deliver low-latency, high-performance experiences for developers and end-users alike. It leverages a robust Content Delivery Network (CDN) with edge locations across multiple regions to ensure fast and reliable data delivery. With distributed infrastructure and multiple deployment regions, Appwrite enables developers to build globally scalable applications while maintaining data sovereignty. Its architecture integrates seamlessly with APIs, storage, and databases, optimizing both speed and availability. Components The Appwrite Network is composed of multiple components that work together…",
+    "breadcrumbs": [
+      "Network",
+      "Getting started",
+      "Overview"
+    ]
   },
   {
     "slug": "products/network/caa-records",
     "title": "Certification Authority Authorization (CAA) records",
     "description": "Learn what DNS Certification Authority Authorization (CAA) records are, when they are required to use a custom domain with Appwrite, and how to configure one or more of them at your DNS provider.",
-    "excerpt": "A Certification Authority Authorization (CAA) record is a DNS record that specifies which certificate authorities (CAs) are allowed to issue TLS certificates for your domain. CAA records help prevent unauthorized certificate issuance and are defined in RFC 8659. When Appwrite issues a TLS certificate for a custom domain, an Appwrite Sites domain, or a Function domain, the certificate authority used by Appwrite checks your domain's CAA records before issuing. If your domain has no CAA records at all, any CA,…"
+    "excerpt": "A Certification Authority Authorization (CAA) record is a DNS record that specifies which certificate authorities (CAs) are allowed to issue TLS certificates for your domain. CAA records help prevent unauthorized certificate issuance and are defined in RFC 8659. When Appwrite issues a TLS certificate for a custom domain, an Appwrite Sites domain, or a Function domain, the certificate authority used by Appwrite checks your domain's CAA records before issuing. If your domain has no CAA records at all, any CA,…",
+    "breadcrumbs": [
+      "Network",
+      "Features",
+      "CAA records"
+    ]
   },
   {
     "slug": "products/network/caching",
     "title": "Caching",
     "description": "Learn how Appwrite uses smart caching strategies at the region, edge, and CDN levels to optimize performance and protect dynamic APIs, with advanced options for enterprise customers.",
-    "excerpt": "Appwrite employs a multi-layered caching approach to enhance the performance of your applications. By utilizing caching at the **region**, **edge**, and **CDN** levels, Appwrite ensures faster response times, optimized resource usage, and efficient handling of dynamic workloads. Region-level At the region level, Appwrite provides smart in-memory caching for various resources: - **Documents**: Frequently accessed rows are cached in memory and automatically purged when updated, ensuring data consistency without manual intervention. - **Storage files**: Frequently accessed files are cached in memory…"
+    "excerpt": "Appwrite employs a multi-layered caching approach to enhance the performance of your applications. By utilizing caching at the **region**, **edge**, and **CDN** levels, Appwrite ensures faster response times, optimized resource usage, and efficient handling of dynamic workloads. Region-level At the region level, Appwrite provides smart in-memory caching for various resources: - **Documents**: Frequently accessed rows are cached in memory and automatically purged when updated, ensuring data consistency without manual intervention. - **Storage files**: Frequently accessed files are cached in memory…",
+    "breadcrumbs": [
+      "Network",
+      "Features",
+      "Caching"
+    ]
   },
   {
     "slug": "products/network/cdn",
     "title": "Content Delivery Network (CDN)",
     "description": "Learn about Appwrite's CDN, designed to optimize content delivery with compression, and edge optimization for improved performance and reduced latency.",
-    "excerpt": "Appwrite's CDN (Content Delivery Network) is a globally distributed system designed to enhance the speed, reliability, and security of your application's content delivery. With points of presence (PoPs) in over 120 cities worldwide, the CDN ensures low latency and consistent performance for users, no matter their location. Key features - Global coverage: Fast access to content for users across continents through over 120 PoPs worldwide. Available on all projects. - Reduced latency: By caching static content at edge nodes, the…"
+    "excerpt": "Appwrite's CDN (Content Delivery Network) is a globally distributed system designed to enhance the speed, reliability, and security of your application's content delivery. With points of presence (PoPs) in over 120 cities worldwide, the CDN ensures low latency and consistent performance for users, no matter their location. Key features - Global coverage: Fast access to content for users across continents through over 120 PoPs worldwide. Available on all projects. - Reduced latency: By caching static content at edge nodes, the…",
+    "breadcrumbs": [
+      "Network",
+      "Concepts",
+      "CDN"
+    ]
   },
   {
     "slug": "products/network/compression",
     "title": "Compression",
     "description": "Appwrite is leveraging compression algorithms to both boost the performance of your app and to reduce and optimize…",
-    "excerpt": "Appwrite is leveraging compression algorithms to both boost the performance of your app and to reduce and optimize bandwidth and storage costs for Appwrite developers. This page provides an in-depth explanation of the compression algorithms supported by Appwrite for API responses, image transformations, and storage buckets. API Appwrite supports two primary algorithms for text-based responses: **Brotli** and **Gzip**. These algorithms are integral for improving data transfer speeds across the HTTP based APIs, especially when dealing with textual content, which tends…"
+    "excerpt": "Appwrite is leveraging compression algorithms to both boost the performance of your app and to reduce and optimize bandwidth and storage costs for Appwrite developers. This page provides an in-depth explanation of the compression algorithms supported by Appwrite for API responses, image transformations, and storage buckets. API Appwrite supports two primary algorithms for text-based responses: **Brotli** and **Gzip**. These algorithms are integral for improving data transfer speeds across the HTTP based APIs, especially when dealing with textual content, which tends…",
+    "breadcrumbs": [
+      "Network",
+      "Features",
+      "Compression"
+    ]
   },
   {
     "slug": "products/network/ddos",
     "title": "DDoS mitigation",
     "description": "Learn how Appwrite protects your applications from Distributed Denial-of-Service (DDoS) attacks with built-in, always-on protection for all Appwrite Cloud plans.",
-    "excerpt": "Distributed Denial-of-Service (DDoS) attacks are one of the most common threats to online applications, aimed at overwhelming servers with malicious traffic to disrupt services. Appwrite provides robust, always-on DDoS protection across all Appwrite Cloud plans to ensure the reliability and security of your applications. Appwrite's network is designed to detect and mitigate malicious traffic before it reaches your application. Using a combination of automated filtering and intelligent traffic analysis, our DDoS protection: - Identifies and blocks large-scale attack patterns in…"
+    "excerpt": "Distributed Denial-of-Service (DDoS) attacks are one of the most common threats to online applications, aimed at overwhelming servers with malicious traffic to disrupt services. Appwrite provides robust, always-on DDoS protection across all Appwrite Cloud plans to ensure the reliability and security of your applications. Appwrite's network is designed to detect and mitigate malicious traffic before it reaches your application. Using a combination of automated filtering and intelligent traffic analysis, our DDoS protection: - Identifies and blocks large-scale attack patterns in…",
+    "breadcrumbs": [
+      "Network",
+      "Features",
+      "DDoS mitigation"
+    ]
   },
   {
     "slug": "products/network/dns",
     "title": "Appwrite DNS service",
     "description": "Learn about Appwrite's DNS service and how to configure domain records for your applications",
-    "excerpt": "Appwrite provides a dedicated DNS (Domain Name System) service through its nameservers to help you manage domain records for your applications. This service is ideal for apex domains (root domains) that cannot use CNAME records due to DNS protocol limitations. The DNS service enables you to configure custom domains for Sites, Functions, and APIs while providing automatic SSL certificate management and high availability. Whether you need to set up subdomains or apex domains, Appwrite's DNS service offers a complete solution.…"
+    "excerpt": "Appwrite provides a dedicated DNS (Domain Name System) service through its nameservers to help you manage domain records for your applications. This service is ideal for apex domains (root domains) that cannot use CNAME records due to DNS protocol limitations. The DNS service enables you to configure custom domains for Sites, Functions, and APIs while providing automatic SSL certificate management and high availability. Whether you need to set up subdomains or apex domains, Appwrite's DNS service offers a complete solution.…",
+    "breadcrumbs": [
+      "Network",
+      "Features",
+      "DNS"
+    ]
   },
   {
     "slug": "products/network/edges",
     "title": "Edges",
     "description": "Learn about Appwrite edges, where lightweight compute tasks like caching, request routing, and content delivery are handled. Understand how edges enhance performance by bringing operations closer to end-users.",
-    "excerpt": "Appwrite edges are strategically distributed locations designed to process requests closer to your users. These edge nodes handle latency-sensitive operations, such as caching, routing, and quick computations, to deliver faster, more efficient interactions while reducing the load on your application's core infrastructure. Currently, Appwrite's edge network includes 6 locations. We are actively working to expand the number of edge locations globally. New locations will be strategically prioritized to ensure the best possible global coverage and performance for all users. List…"
+    "excerpt": "Appwrite edges are strategically distributed locations designed to process requests closer to your users. These edge nodes handle latency-sensitive operations, such as caching, routing, and quick computations, to deliver faster, more efficient interactions while reducing the load on your application's core infrastructure. Currently, Appwrite's edge network includes 6 locations. We are actively working to expand the number of edge locations globally. New locations will be strategically prioritized to ensure the best possible global coverage and performance for all users. List…",
+    "breadcrumbs": [
+      "Network",
+      "Concepts",
+      "Edges"
+    ]
   },
   {
     "slug": "products/network/endpoints",
     "title": "Endpoints",
     "description": "Understand the differences between Appwrite's endpoints, including geo-balanced edges, region-specific services, and custom domains for compute processes.",
-    "excerpt": "Appwrite offers multiple endpoints to access its services, each designed to optimize specific aspects of performance, routing, and compute. Understanding these endpoints helps you determine the most efficient way to interact with your Appwrite project. Edge The **** domain provides geo-balanced endpoints that route traffic to the nearest edge node based on the user's geographic location. The edge network endpoints are designed for: - **Latency-sensitive operations**: Quickly serving cached content, routing requests, or performing lightweight edge computations. - **Global traffic…"
+    "excerpt": "Appwrite offers multiple endpoints to access its services, each designed to optimize specific aspects of performance, routing, and compute. Understanding these endpoints helps you determine the most efficient way to interact with your Appwrite project. Edge The **** domain provides geo-balanced endpoints that route traffic to the nearest edge node based on the user's geographic location. The edge network endpoints are designed for: - **Latency-sensitive operations**: Quickly serving cached content, routing requests, or performing lightweight edge computations. - **Global traffic…",
+    "breadcrumbs": [
+      "Network",
+      "Concepts",
+      "Endpoints"
+    ]
   },
   {
     "slug": "products/network/regions",
     "title": "Regions",
     "description": "Learn about Appwrite regions, where core services like databases, auth, functions, sites, and storage are hosted. Understand data sovereignty, fault isolation, and scalability for compliant, high-performance deployments",
-    "excerpt": "Appwrite regions are geographic locations where all your application's core infrastructure is deployed. Each region operates as an independent, highly available cluster, managing the storage, processing, and serving of your data and Appwrite services. List Appwrite is currently available in the following list of regions: | Region | Code | Endpoint | Status | |---------------------|--------|-----------------------------------------|-----------------| | Frankfurt | FRA | | Available | | New York | NYC | | Available | | Sydney | SYD | | Available |…"
+    "excerpt": "Appwrite regions are geographic locations where all your application's core infrastructure is deployed. Each region operates as an independent, highly available cluster, managing the storage, processing, and serving of your data and Appwrite services. List Appwrite is currently available in the following list of regions: | Region | Code | Endpoint | Status | |---------------------|--------|-----------------------------------------|-----------------| | Frankfurt | FRA | | Available | | New York | NYC | | Available | | Sydney | SYD | | Available |…",
+    "breadcrumbs": [
+      "Network",
+      "Concepts",
+      "Regions"
+    ]
   },
   {
     "slug": "products/network/tls",
     "title": "Transport Layer Security (TLS)",
     "description": "Learn how Appwrite uses TLS to encrypt data in transit, ensuring secure and private communication between clients and servers.",
-    "excerpt": "Transport Layer Security (TLS) is a critical feature of the Appwrite Network, ensuring that all data exchanged between clients and servers is encrypted and secure. By using TLS, Appwrite protects sensitive information from interception, tampering, and unauthorized access during transit. TLS operates at the **transport layer** of the OSI model (Layer 4), encrypting all data before it is transmitted over the network. This includes securing HTTP traffic via HTTPS. When a client connects to Appwrite services, a TLS handshake is…"
+    "excerpt": "Transport Layer Security (TLS) is a critical feature of the Appwrite Network, ensuring that all data exchanged between clients and servers is encrypted and secure. By using TLS, Appwrite protects sensitive information from interception, tampering, and unauthorized access during transit. TLS operates at the **transport layer** of the OSI model (Layer 4), encrypting all data before it is transmitted over the network. This includes securing HTTP traffic via HTTPS. When a client connects to Appwrite services, a TLS handshake is…",
+    "breadcrumbs": [
+      "Network",
+      "Features",
+      "TLS"
+    ]
   },
   {
     "slug": "products/network/waf",
     "title": "Web application firewall (WAF)",
     "description": "Appwrite's Web Application Firewall (WAF) provides enterprise-grade protection against web vulnerabilities like SQL injection, XSS, and DDoS attacks.",
-    "excerpt": "The Web Application Firewall (WAF) is a critical feature of the Appwrite Network, designed to protect applications from common web vulnerabilities and attacks. Available exclusively to enterprise customers, WAF can be configured through your Appwrite success manager to meet the specific security needs of your application. The WAF feature is available exclusively to enterprise customers as part of the Appwrite enterprise offering. Setup and configuration are managed through your dedicated Appwrite success manager, who ensures that the WAF aligns with…"
+    "excerpt": "The Web Application Firewall (WAF) is a critical feature of the Appwrite Network, designed to protect applications from common web vulnerabilities and attacks. Available exclusively to enterprise customers, WAF can be configured through your Appwrite success manager to meet the specific security needs of your application. The WAF feature is available exclusively to enterprise customers as part of the Appwrite enterprise offering. Setup and configuration are managed through your dedicated Appwrite success manager, who ensures that the WAF aligns with…",
+    "breadcrumbs": [
+      "Network",
+      "Features",
+      "WAF"
+    ]
   },
   {
     "slug": "products/sites",
     "title": "Sites",
     "description": "Appwrite Sites is your gateway to scalable web applications. Explore our complete guide to building and deploying websites effortlessly.",
-    "excerpt": "Appwrite Sites empowers developers to host and manage web applications seamlessly within the Appwrite ecosystem. Appwrite Sites provides a fast, scalable, and secure way to deploy web apps directly from source control, allowing for quick iterations and live updates. Each site has a dedicated URL, runs within its own isolated container, and can be configured with custom domains and environment variables. Appwrite Sites leverages the Appwrite Network infrastructure to enhance your sites' performance and reliability. Your deployed sites automatically benefit…"
+    "excerpt": "Appwrite Sites empowers developers to host and manage web applications seamlessly within the Appwrite ecosystem. Appwrite Sites provides a fast, scalable, and secure way to deploy web apps directly from source control, allowing for quick iterations and live updates. Each site has a dedicated URL, runs within its own isolated container, and can be configured with custom domains and environment variables. Appwrite Sites leverages the Appwrite Network infrastructure to enhance your sites' performance and reliability. Your deployed sites automatically benefit…",
+    "breadcrumbs": [
+      "Sites",
+      "Getting started",
+      "Overview"
+    ]
   },
   {
     "slug": "products/sites/deploy-from-cli",
     "title": "Deploy from CLI",
     "description": "Learn to deploy Appwrite Sites from the Appwrite CLI.",
-    "excerpt": "Appwrite Sites allows you to host and deploy websites directly within the Appwrite platform. Each site can have many deployments, which can be thought of as versions of the web application. While we recommend you create deployments through automatic Git deployments, you can also create deployments via the Appwrite CLI. CLI Configure CLI deployments If you need to target a different project, API endpoint, change the path or entry point of your site, or update any of the other configuration…"
+    "excerpt": "Appwrite Sites allows you to host and deploy websites directly within the Appwrite platform. Each site can have many deployments, which can be thought of as versions of the web application. While we recommend you create deployments through automatic Git deployments, you can also create deployments via the Appwrite CLI. CLI Configure CLI deployments If you need to target a different project, API endpoint, change the path or entry point of your site, or update any of the other configuration…",
+    "breadcrumbs": [
+      "Sites",
+      "Journeys",
+      "Deploy from CLI"
+    ]
   },
   {
     "slug": "products/sites/deploy-from-git",
     "title": "Deploy from Git",
     "description": "Learn to version and update your Appwrite Sites' code with deployments.",
-    "excerpt": "Appwrite Sites allows you to host and deploy websites directly within the Appwrite platform. Each site can have many deployments, which can be thought of as versions of the web application. With Appwrite Sites, you can seamlessly deploy updates from Git repositories, enabling you to track changes to your web app as part of your development workflow. This versioning approach ensures that your site stays up-to-date and your deployment process is fully integrated with your source control, streamlining collaboration and…"
+    "excerpt": "Appwrite Sites allows you to host and deploy websites directly within the Appwrite platform. Each site can have many deployments, which can be thought of as versions of the web application. With Appwrite Sites, you can seamlessly deploy updates from Git repositories, enabling you to track changes to your web app as part of your development workflow. This versioning approach ensures that your site stays up-to-date and your deployment process is fully integrated with your source control, streamlining collaboration and…",
+    "breadcrumbs": [
+      "Sites",
+      "Journeys",
+      "Deploy from Git"
+    ]
   },
   {
     "slug": "products/sites/deploy-manually",
     "title": "Deploy manually",
     "description": "Learn to deploy Appwrite Sites manually via the Appwrite Console.",
-    "excerpt": "Appwrite Sites allows you to host and deploy websites directly within the Appwrite platform. Each site can have many deployments, which can be thought of as versions of the web application. While we recommend you create deployments through automatic Git deployments, you can also create deployments manually by uploading the source code to the Appwrite Console. Manual Deployment You can upload your sites to be deployed using the Appwrite Console. The example below shows a skeleton SvelteKit app. First, create…"
+    "excerpt": "Appwrite Sites allows you to host and deploy websites directly within the Appwrite platform. Each site can have many deployments, which can be thought of as versions of the web application. While we recommend you create deployments through automatic Git deployments, you can also create deployments manually by uploading the source code to the Appwrite Console. Manual Deployment You can upload your sites to be deployed using the Appwrite Console. The example below shows a skeleton SvelteKit app. First, create…",
+    "breadcrumbs": [
+      "Sites",
+      "Journeys",
+      "Deploy manually"
+    ]
   },
   {
     "slug": "products/sites/deployments",
     "title": "Deployments",
     "description": "Efficiently deploy your web apps with Appwrite. Explore deployment options, strategies, and best practices.",
-    "excerpt": "Each site can have many deployments, which can be thought of as versions of the web application. Sites can be created and deployed using different methods to meet your unique development habits. Deployment status Throughout the life cycle of a deployment, it can have any of the following status: | Status | Description | | --- | --- | | | The deployment is built and currently activated and ready to be accessed. A site can have one active deployment…"
+    "excerpt": "Each site can have many deployments, which can be thought of as versions of the web application. Sites can be created and deployed using different methods to meet your unique development habits. Deployment status Throughout the life cycle of a deployment, it can have any of the following status: | Status | Description | | --- | --- | | | The deployment is built and currently activated and ready to be accessed. A site can have one active deployment…",
+    "breadcrumbs": [
+      "Sites",
+      "Concepts",
+      "Deployments"
+    ]
   },
   {
     "slug": "products/sites/develop",
     "title": "Develop Appwrite Sites",
     "description": "Master site development with Appwrite.",
-    "excerpt": "Rendering strategies Appwrite allows you to host both statically-generated and server-rendered websites. Static sites are websites that are pre-built and served as-is to clients. They do not execute server-side code on each request. They are ideal for use-cases such as Single Page Applications (SPAs), documentation sites, personal blogs, and portfolio websites. Server-side rendered (SSR) sites generate content dynamically on the server and send fully rendered pages for each request. They are ideal for use-cases with substantial dynamic content or server-side…"
+    "excerpt": "Rendering strategies Appwrite allows you to host both statically-generated and server-rendered websites. Static sites are websites that are pre-built and served as-is to clients. They do not execute server-side code on each request. They are ideal for use-cases such as Single Page Applications (SPAs), documentation sites, personal blogs, and portfolio websites. Server-side rendered (SSR) sites generate content dynamically on the server and send fully rendered pages for each request. They are ideal for use-cases with substantial dynamic content or server-side…",
+    "breadcrumbs": [
+      "Sites",
+      "Journeys",
+      "Develop"
+    ]
   },
   {
     "slug": "products/sites/domains",
     "title": "Domains",
     "description": "Discover how domains can be managed for an Appwrite Site",
-    "excerpt": "Each deployed site can have its own domain, which can be Appwrite-generated or custom. You can use this domain to consume web apps deployed on Appwrite Sites. Appwrite generates TLS certificates to enforce HTTPS on all Appwrite Sites domains. These domains are safe to use and access in production. Learn about Sites development > Generated domains Each site automatically receives a unique Appwrite-generated domain that's ready to use immediately. 1. In the Appwrite Console's sidebar, click **Sites**. 2. Under the…"
+    "excerpt": "Each deployed site can have its own domain, which can be Appwrite-generated or custom. You can use this domain to consume web apps deployed on Appwrite Sites. Appwrite generates TLS certificates to enforce HTTPS on all Appwrite Sites domains. These domains are safe to use and access in production. Learn about Sites development > Generated domains Each site automatically receives a unique Appwrite-generated domain that's ready to use immediately. 1. In the Appwrite Console's sidebar, click **Sites**. 2. Under the…",
+    "breadcrumbs": [
+      "Sites",
+      "Concepts",
+      "Domains"
+    ]
   },
   {
     "slug": "products/sites/environment-variables",
     "title": "Environment variables",
     "description": "Set environment variables for your Appwrite Sites to pass constants and secrets at build and runtime.",
-    "excerpt": "Appwrite Sites can read environment variables at build and runtime. Use them to pass constants and secrets such as API keys, connection strings, and feature flags without hardcoding them in your source. A site reads from three sources, in this order of precedence: 1. **Project variables** are shared across every function and site in your project. Set them once and every site inherits them automatically. See project variables for the platform-wide reference. 2. **Site variables** are scoped to a single…"
+    "excerpt": "Appwrite Sites can read environment variables at build and runtime. Use them to pass constants and secrets such as API keys, connection strings, and feature flags without hardcoding them in your source. A site reads from three sources, in this order of precedence: 1. **Project variables** are shared across every function and site in your project. Set them once and every site inherits them automatically. See project variables for the platform-wide reference. 2. **Site variables** are scoped to a single…",
+    "breadcrumbs": [
+      "Sites",
+      "Concepts",
+      "Environment variables"
+    ]
   },
   {
     "slug": "products/sites/frameworks",
     "title": "Frameworks",
     "description": "Discover which frameworks are supported out-of-the-box by Appwrite Sites.",
-    "excerpt": "Appwrite Sites allows web apps developed with a variety of frameworks to be hosted and served to your users. Appwrite Sites allows web apps developed with a variety of frameworks to be hosted and served to your users. When we say a framework is \"supported,\" it means Appwrite can automatically detect, build, and optimize deployments for that framework with minimal configuration from you. Zero-configuration approach Appwrite Sites uses a zero-config approach to make deployments as frictionless as possible. When you…"
+    "excerpt": "Appwrite Sites allows web apps developed with a variety of frameworks to be hosted and served to your users. Appwrite Sites allows web apps developed with a variety of frameworks to be hosted and served to your users. When we say a framework is \"supported,\" it means Appwrite can automatically detect, build, and optimize deployments for that framework with minimal configuration from you. Zero-configuration approach Appwrite Sites uses a zero-config approach to make deployments as frictionless as possible. When you…",
+    "breadcrumbs": [
+      "Sites",
+      "Concepts",
+      "Frameworks"
+    ]
   },
   {
     "slug": "products/sites/instant-rollbacks",
     "title": "Instant rollbacks",
     "description": "Safely revert a site to a previous deployment using instant rollbacks.",
-    "excerpt": "If a site needs to be reverted to a previously functional state for any reason (runtime errors, security flaw, etc.), you can roll your site back to an existing ready deployment. Instant rollbacks don't delete, modify, or re-deploy your code. Instead, they simply change which deployment is being served to visitors. This makes rollbacks near-instantaneous, with zero downtime. Use instant rollbacks To use the instant rollback feature, follow these steps: 1. Navigate to your site on Appwrite Console. 2. Under…"
+    "excerpt": "If a site needs to be reverted to a previously functional state for any reason (runtime errors, security flaw, etc.), you can roll your site back to an existing ready deployment. Instant rollbacks don't delete, modify, or re-deploy your code. Instead, they simply change which deployment is being served to visitors. This makes rollbacks near-instantaneous, with zero downtime. Use instant rollbacks To use the instant rollback feature, follow these steps: 1. Navigate to your site on Appwrite Console. 2. Under…",
+    "breadcrumbs": [
+      "Sites",
+      "Concepts",
+      "Instant rollbacks"
+    ]
   },
   {
     "slug": "products/sites/logs",
     "title": "Logs",
     "description": "Learn how Appwrite Sites handles logs",
-    "excerpt": "Each time a URL path on an Appwrite Site is requested, a log is created. Each log has a unique ID. You can find site logs logged in the **Logs** tab. Logs table In your site's **Logs** tab, you will see a table of your recent logs. The following information is shown in this table: | Column | Description | | --- | --- | | Log ID | Unique identifier for each log | | Status code | The…"
+    "excerpt": "Each time a URL path on an Appwrite Site is requested, a log is created. Each log has a unique ID. You can find site logs logged in the **Logs** tab. Logs table In your site's **Logs** tab, you will see a table of your recent logs. The following information is shown in this table: | Column | Description | | --- | --- | | Log ID | Unique identifier for each log | | Status code | The…",
+    "breadcrumbs": [
+      "Sites",
+      "Concepts",
+      "Logs"
+    ]
   },
   {
     "slug": "products/sites/migrations/vercel",
     "title": "Migrating from Vercel to Appwrite Sites",
     "description": "A step-by-step guide to migrate your web applications from Vercel to Appwrite Sites.",
-    "excerpt": "This guide walks you through migrating from Vercel to Appwrite Sites, covering project setup, configuration, routing, and serverless functionality. Prerequisites Before starting your migration: - Have access to your Vercel project dashboard - Ensure you can modify your domain's DNS settings - Prepare your source code repository Platform differences Understanding the key differences between Vercel and Appwrite Sites will help you plan your migration effectively. - Feature - Vercel - Appwrite Sites --- - DNS configuration - Uses A records…"
+    "excerpt": "This guide walks you through migrating from Vercel to Appwrite Sites, covering project setup, configuration, routing, and serverless functionality. Prerequisites Before starting your migration: - Have access to your Vercel project dashboard - Ensure you can modify your domain's DNS settings - Prepare your source code repository Platform differences Understanding the key differences between Vercel and Appwrite Sites will help you plan your migration effectively. - Feature - Vercel - Appwrite Sites --- - DNS configuration - Uses A records…",
+    "breadcrumbs": [
+      "Sites",
+      "migrations",
+      "Migrating from Vercel to Appwrite Sites"
+    ]
   },
   {
     "slug": "products/sites/previews",
     "title": "Previews",
     "description": "Preview site deployments to test changes before promoting to production.",
-    "excerpt": "If you create a new Pull Request on the GitHub repo for your site, Appwrite Sites will create a preview deployment that you can view and test before promoting to production. Visit preview deployments To access a preview deployment, follow these steps: 1. Navigate to your site on Appwrite Console. 2. Under the **Deployments** tab, click on a ready deployment. 3. Click on the **Visit** button. This preview URL is also visible under the **Domains** section. Appwrite Sites will then…"
+    "excerpt": "If you create a new Pull Request on the GitHub repo for your site, Appwrite Sites will create a preview deployment that you can view and test before promoting to production. Visit preview deployments To access a preview deployment, follow these steps: 1. Navigate to your site on Appwrite Console. 2. Under the **Deployments** tab, click on a ready deployment. 3. Click on the **Visit** button. This preview URL is also visible under the **Domains** section. Appwrite Sites will then…",
+    "breadcrumbs": [
+      "Sites",
+      "Concepts",
+      "Previews"
+    ]
   },
   {
     "slug": "products/sites/quick-start",
     "title": "Start with Sites",
     "description": "Get started quickly with Appwrite Sites. Follow a step-by-step guide to create your first Appwrite Site and deploy a web app.",
-    "excerpt": "Start with Sites You can create and execute your first Appwrite Site in minutes. Create site Before deploying your web app with Git, create a new Site attached to your GitHub repository. 1. In the Appwrite Console's sidebar, click **Sites**. 2. Click on the **Create site** button. 3. After clicking on **Connect Git repository**, select your repository. 4. After connecting to GitHub, (optionally) add a name and site ID. 5. Verify that the correct framework is selected. 6. Confirm the…"
+    "excerpt": "Start with Sites You can create and execute your first Appwrite Site in minutes. Create site Before deploying your web app with Git, create a new Site attached to your GitHub repository. 1. In the Appwrite Console's sidebar, click **Sites**. 2. Click on the **Create site** button. 3. After clicking on **Connect Git repository**, select your repository. 4. After connecting to GitHub, (optionally) add a name and site ID. 5. Verify that the correct framework is selected. 6. Confirm the…",
+    "breadcrumbs": [
+      "Sites",
+      "Getting started",
+      "Quick start"
+    ]
   },
   {
     "slug": "products/sites/quick-start/angular",
     "title": "Deploy an Angular app to Appwrite Sites",
     "description": "Learn how to setup and deploy Angular apps on Appwrite Sites.",
-    "excerpt": "First, you must either create an Angular app or setup the Angular starter template. Open your terminal, and run the following command. Push this project to a GitHub repository. Head to the Appwrite Console. If this is your first time using Appwrite, create an account and create your first project. Head to the **Sites** page in your Appwrite project, click on the **Create site** button, and select **Connect a repository**. Connect your GitHub account and select the repository you intend…"
+    "excerpt": "First, you must either create an Angular app or setup the Angular starter template. Open your terminal, and run the following command. Push this project to a GitHub repository. Head to the Appwrite Console. If this is your first time using Appwrite, create an account and create your first project. Head to the **Sites** page in your Appwrite project, click on the **Create site** button, and select **Connect a repository**. Connect your GitHub account and select the repository you intend…",
+    "breadcrumbs": [
+      "Sites",
+      "Start with Sites",
+      "Deploy an Angular app to Appwrite Sites"
+    ]
   },
   {
     "slug": "products/sites/quick-start/astro",
     "title": "Deploy a Astro app to Appwrite Sites",
     "description": "Learn how to setup and deploy Astro apps on Appwrite Sites.",
-    "excerpt": "First, you must either create an Astro app or setup the Astro starter template. Open your terminal, and run the following command. Push this project to a GitHub repository. Head to the Appwrite Console. If this is your first time using Appwrite, create an account and create your first project. Head to the **Sites** page in your Appwrite project, click on the **Create site** button, and select **Connect a repository**. Connect your GitHub account and select the repository you intend…"
+    "excerpt": "First, you must either create an Astro app or setup the Astro starter template. Open your terminal, and run the following command. Push this project to a GitHub repository. Head to the Appwrite Console. If this is your first time using Appwrite, create an account and create your first project. Head to the **Sites** page in your Appwrite project, click on the **Create site** button, and select **Connect a repository**. Connect your GitHub account and select the repository you intend…",
+    "breadcrumbs": [
+      "Sites",
+      "Start with Sites",
+      "Deploy a Astro app to Appwrite Sites"
+    ]
   },
   {
     "slug": "products/sites/quick-start/flutter",
     "title": "Deploy a Flutter Web app to Appwrite Sites",
     "description": "Learn how to setup and deploy Flutter Web apps on Appwrite Sites.",
-    "excerpt": "First, you must either create a Flutter Web app or setup the Flutter Web starter template. Open your terminal, and run the following command. In case you have an existing Flutter app and want to add web support to it, you must run the following command in your project directory: Push this project to a GitHub repository. Head to the Appwrite Console. If this is your first time using Appwrite, create an account and create your first project. Head to…"
+    "excerpt": "First, you must either create a Flutter Web app or setup the Flutter Web starter template. Open your terminal, and run the following command. In case you have an existing Flutter app and want to add web support to it, you must run the following command in your project directory: Push this project to a GitHub repository. Head to the Appwrite Console. If this is your first time using Appwrite, create an account and create your first project. Head to…",
+    "breadcrumbs": [
+      "Sites",
+      "Start with Sites",
+      "Deploy a Flutter Web app to Appwrite Sites"
+    ]
   },
   {
     "slug": "products/sites/quick-start/nextjs",
     "title": "Deploy a Next.js app to Appwrite Sites",
     "description": "Learn how to setup and deploy Next.js apps on Appwrite Sites.",
-    "excerpt": "Appwrite Sites fully supports Next.js out of the box. Unlike other non-Vercel hosting services, the Appwrite Edge runs in a container-based environment for Node.js (and soon Bun as well), managed by a control plane that automatically scales your app as needed. This means all Next.js features work without any extra configuration or the OpenNext adapter. First, you must either create a Next.js app or setup the Next.js starter template. Open your terminal, and run the following command. Push this project…"
+    "excerpt": "Appwrite Sites fully supports Next.js out of the box. Unlike other non-Vercel hosting services, the Appwrite Edge runs in a container-based environment for Node.js (and soon Bun as well), managed by a control plane that automatically scales your app as needed. This means all Next.js features work without any extra configuration or the OpenNext adapter. First, you must either create a Next.js app or setup the Next.js starter template. Open your terminal, and run the following command. Push this project…",
+    "breadcrumbs": [
+      "Sites",
+      "Start with Sites",
+      "Deploy a Next.js app to Appwrite Sites"
+    ]
   },
   {
     "slug": "products/sites/quick-start/nuxt",
     "title": "Deploy a Nuxt app to Appwrite Sites",
     "description": "Learn how to setup and deploy Nuxt apps on Appwrite Sites.",
-    "excerpt": "First, you must either create a Nuxt app or setup the Nuxt starter template. Open your terminal, and run the following command. Push this project to a GitHub repository. Head to the Appwrite Console. If this is your first time using Appwrite, create an account and create your first project. Head to the **Sites** page in your Appwrite project, click on the **Create site** button, and select **Connect a repository**. Connect your GitHub account and select the repository you intend…"
+    "excerpt": "First, you must either create a Nuxt app or setup the Nuxt starter template. Open your terminal, and run the following command. Push this project to a GitHub repository. Head to the Appwrite Console. If this is your first time using Appwrite, create an account and create your first project. Head to the **Sites** page in your Appwrite project, click on the **Create site** button, and select **Connect a repository**. Connect your GitHub account and select the repository you intend…",
+    "breadcrumbs": [
+      "Sites",
+      "Start with Sites",
+      "Deploy a Nuxt app to Appwrite Sites"
+    ]
   },
   {
     "slug": "products/sites/quick-start/react",
     "title": "Deploy a React app to Appwrite Sites",
     "description": "Learn how to setup and deploy React apps on Appwrite Sites.",
-    "excerpt": "First, you must either create a React app or setup the React starter template. Open your terminal, and run the following command. Push this project to a GitHub repository. Head to the Appwrite Console. If this is your first time using Appwrite, create an account and create your first project. Head to the **Sites** page in your Appwrite project, click on the **Create site** button, and select **Connect a repository**. Connect your GitHub account and select the repository you intend…"
+    "excerpt": "First, you must either create a React app or setup the React starter template. Open your terminal, and run the following command. Push this project to a GitHub repository. Head to the Appwrite Console. If this is your first time using Appwrite, create an account and create your first project. Head to the **Sites** page in your Appwrite project, click on the **Create site** button, and select **Connect a repository**. Connect your GitHub account and select the repository you intend…",
+    "breadcrumbs": [
+      "Sites",
+      "Start with Sites",
+      "Deploy a React app to Appwrite Sites"
+    ]
   },
   {
     "slug": "products/sites/quick-start/react-native",
     "title": "Deploy a React Native app to Appwrite Sites",
     "description": "Learn how to setup and deploy React Native apps on Appwrite Sites.",
-    "excerpt": "First, you must either create a React Native app or setup the React Native starter template. Open your terminal, and run the following command. Once the app is created, navigate to the project directory, open the file and add the following line under : Push this project to a GitHub repository. Head to the Appwrite Console. If this is your first time using Appwrite, create an account and create your first project. Head to the **Sites** page in your Appwrite…"
+    "excerpt": "First, you must either create a React Native app or setup the React Native starter template. Open your terminal, and run the following command. Once the app is created, navigate to the project directory, open the file and add the following line under : Push this project to a GitHub repository. Head to the Appwrite Console. If this is your first time using Appwrite, create an account and create your first project. Head to the **Sites** page in your Appwrite…",
+    "breadcrumbs": [
+      "Sites",
+      "Start with Sites",
+      "Deploy a React Native app to Appwrite Sites"
+    ]
   },
   {
     "slug": "products/sites/quick-start/remix",
     "title": "Deploy a Remix app to Appwrite Sites",
     "description": "Learn how to setup and deploy Remix apps on Appwrite Sites.",
-    "excerpt": "First, you must either create a Remix app or setup the Remix starter template. Open your terminal, and run the following command. Push this project to a GitHub repository. Head to the Appwrite Console. If this is your first time using Appwrite, create an account and create your first project. Head to the **Sites** page in your Appwrite project, click on the **Create site** button, and select **Connect a repository**. Connect your GitHub account and select the repository you intend…"
+    "excerpt": "First, you must either create a Remix app or setup the Remix starter template. Open your terminal, and run the following command. Push this project to a GitHub repository. Head to the Appwrite Console. If this is your first time using Appwrite, create an account and create your first project. Head to the **Sites** page in your Appwrite project, click on the **Create site** button, and select **Connect a repository**. Connect your GitHub account and select the repository you intend…",
+    "breadcrumbs": [
+      "Sites",
+      "Start with Sites",
+      "Deploy a Remix app to Appwrite Sites"
+    ]
   },
   {
     "slug": "products/sites/quick-start/sveltekit",
     "title": "Deploy a SvelteKit app to Appwrite Sites",
     "description": "Learn how to setup and deploy SvelteKit apps on Appwrite Sites.",
-    "excerpt": "First, you must either create a SvelteKit app or setup the SvelteKit starter template. Open your terminal, and run the following command. Push this project to a GitHub repository. Head to the Appwrite Console. If this is your first time using Appwrite, create an account and create your first project. Head to the **Sites** page in your Appwrite project, click on the **Create site** button, and select **Connect a repository**. Connect your GitHub account and select the repository you intend…"
+    "excerpt": "First, you must either create a SvelteKit app or setup the SvelteKit starter template. Open your terminal, and run the following command. Push this project to a GitHub repository. Head to the Appwrite Console. If this is your first time using Appwrite, create an account and create your first project. Head to the **Sites** page in your Appwrite project, click on the **Create site** button, and select **Connect a repository**. Connect your GitHub account and select the repository you intend…",
+    "breadcrumbs": [
+      "Sites",
+      "Start with Sites",
+      "Deploy a SvelteKit app to Appwrite Sites"
+    ]
   },
   {
     "slug": "products/sites/quick-start/tanstack-start",
     "title": "Deploy a TanStack Start app to Appwrite Sites",
     "description": "Learn how to setup and deploy TanStack Start apps on Appwrite Sites.",
-    "excerpt": "First, you must either create a TanStack Start app or setup the TanStack Start starter template. Open your terminal, and run the following command. Push this project to a GitHub repository. Head to the Appwrite Console. If this is your first time using Appwrite, create an account and create your first project. Head to the **Sites** page in your Appwrite project, click on the **Create site** button, and select **Connect a repository**. Connect your GitHub account and select the repository…"
+    "excerpt": "First, you must either create a TanStack Start app or setup the TanStack Start starter template. Open your terminal, and run the following command. Push this project to a GitHub repository. Head to the Appwrite Console. If this is your first time using Appwrite, create an account and create your first project. Head to the **Sites** page in your Appwrite project, click on the **Create site** button, and select **Connect a repository**. Connect your GitHub account and select the repository…",
+    "breadcrumbs": [
+      "Sites",
+      "Start with Sites",
+      "Deploy a TanStack Start app to Appwrite Sites"
+    ]
   },
   {
     "slug": "products/sites/quick-start/vanilla",
     "title": "Deploy a Vanilla JS app to Appwrite Sites",
     "description": "Learn how to setup and deploy Vanilla JS apps on Appwrite Sites.",
-    "excerpt": "Open your terminal, and run the following command. In this directory, create two files with the following code: - - Push this project to a GitHub repository. Head to the Appwrite Console. If this is your first time using Appwrite, create an account and create your first project. Head to the **Sites** page in your Appwrite project, click on the **Create site** button, and select **Connect a repository**. Connect your GitHub account and select the repository you intend to deploy…"
+    "excerpt": "Open your terminal, and run the following command. In this directory, create two files with the following code: - - Push this project to a GitHub repository. Head to the Appwrite Console. If this is your first time using Appwrite, create an account and create your first project. Head to the **Sites** page in your Appwrite project, click on the **Create site** button, and select **Connect a repository**. Connect your GitHub account and select the repository you intend to deploy…",
+    "breadcrumbs": [
+      "Sites",
+      "Start with Sites",
+      "Deploy a Vanilla JS app to Appwrite Sites"
+    ]
   },
   {
     "slug": "products/sites/quick-start/vue",
     "title": "Deploy a Vue.js app to Appwrite Sites",
     "description": "Learn how to setup and deploy Vue.js apps on Appwrite Sites.",
-    "excerpt": "First, you must either create a Vue.js app or setup the Vue.js starter template. Open your terminal, and run the following command. Push this project to a GitHub repository. Head to the Appwrite Console. If this is your first time using Appwrite, create an account and create your first project. Head to the **Sites** page in your Appwrite project, click on the **Create site** button, and select **Connect a repository**. Connect your GitHub account and select the repository you intend…"
+    "excerpt": "First, you must either create a Vue.js app or setup the Vue.js starter template. Open your terminal, and run the following command. Push this project to a GitHub repository. Head to the Appwrite Console. If this is your first time using Appwrite, create an account and create your first project. Head to the **Sites** page in your Appwrite project, click on the **Create site** button, and select **Connect a repository**. Connect your GitHub account and select the repository you intend…",
+    "breadcrumbs": [
+      "Sites",
+      "Start with Sites",
+      "Deploy a Vue.js app to Appwrite Sites"
+    ]
   },
   {
     "slug": "products/sites/rendering",
     "title": "Rendering",
     "description": "Explore how sites are rendered on Appwrite Sites.",
-    "excerpt": "Rendering refers to how your web application's content is processed and delivered to users. Appwrite Sites supports two primary rendering strategies, each with its own advantages and use cases. Understanding these strategies will help you choose the right approach for your project and optimize for performance, SEO, and user experience. Host a static site or SPA Host an SSR site Differences There are several differences between how static hosting and SSR work on Appwrite Sites. | Static/SPA/PWA | SSR |…"
+    "excerpt": "Rendering refers to how your web application's content is processed and delivered to users. Appwrite Sites supports two primary rendering strategies, each with its own advantages and use cases. Understanding these strategies will help you choose the right approach for your project and optimize for performance, SEO, and user experience. Host a static site or SPA Host an SSR site Differences There are several differences between how static hosting and SSR work on Appwrite Sites. | Static/SPA/PWA | SSR |…",
+    "breadcrumbs": [
+      "Sites",
+      "Concepts",
+      "Rendering"
+    ]
   },
   {
     "slug": "products/sites/rendering/ssr",
     "title": "Server Side Rendering",
     "description": "Learn how to host SSR web apps on Appwrite Sites.",
-    "excerpt": "Server Side Rendering (SSR) apps generate HTML content dynamically on the server for each request and send fully rendered pages to the browser. This approach improves performance for the initial load and enhances SEO since search engines can easily index the content. While SSR can be slightly slower than static apps due to server-side processing, it provides a good balance between performance and interactivity. Since Appwrite's CDN supports dynamic content delivery, any server-side processing implemented in your site will be…"
+    "excerpt": "Server Side Rendering (SSR) apps generate HTML content dynamically on the server for each request and send fully rendered pages to the browser. This approach improves performance for the initial load and enhances SEO since search engines can easily index the content. While SSR can be slightly slower than static apps due to server-side processing, it provides a good balance between performance and interactivity. Since Appwrite's CDN supports dynamic content delivery, any server-side processing implemented in your site will be…",
+    "breadcrumbs": [
+      "Sites",
+      "Rendering",
+      "Server Side Rendering"
+    ]
   },
   {
     "slug": "products/sites/rendering/static",
     "title": "Static",
     "description": "Learn how to host static web apps on Appwrite Sites.",
-    "excerpt": "Static apps, also known as static websites, consist of pre-built HTML, CSS, and JavaScript files that are served to users without any backend processing. These apps do not execute server-side code on each request, meaning the content remains the same until manually updated or rebuilt. Since the pages are pre-generated, static apps offer incredibly fast load times. However, they lack dynamic interactivity and are best suited for use cases like personal portfolios, documentation sites, and landing pages. All static content…"
+    "excerpt": "Static apps, also known as static websites, consist of pre-built HTML, CSS, and JavaScript files that are served to users without any backend processing. These apps do not execute server-side code on each request, meaning the content remains the same until manually updated or rebuilt. Since the pages are pre-generated, static apps offer incredibly fast load times. However, they lack dynamic interactivity and are best suited for use cases like personal portfolios, documentation sites, and landing pages. All static content…",
+    "breadcrumbs": [
+      "Sites",
+      "Rendering",
+      "Static"
+    ]
   },
   {
     "slug": "products/sites/templates",
     "title": "Templates",
     "description": "Learn about Appwrite Sites' templates that let you jump start site development.",
-    "excerpt": "Appwrite provides a variety of Site Templates to help you jump-start your web app development. Find templates You can find all available templates by navigating to the Appwrite Console under your project > **Sites** > **Templates**. You can filter sites by searching, filter by use case, or filter by framework. Click **Create site** to create a site from a template. Create with templates The create site wizard for templates will include the following steps: Configure site details Pick a display…"
+    "excerpt": "Appwrite provides a variety of Site Templates to help you jump-start your web app development. Find templates You can find all available templates by navigating to the Appwrite Console under your project > **Sites** > **Templates**. You can filter sites by searching, filter by use case, or filter by framework. Click **Create site** to create a site from a template. Create with templates The create site wizard for templates will include the following steps: Configure site details Pick a display…",
+    "breadcrumbs": [
+      "Sites",
+      "Journeys",
+      "Templates"
+    ]
   },
   {
     "slug": "products/storage",
     "title": "Storage",
     "description": "Unlock the power of cloud storage with Appwrite Storage. Learn how to store, manage, and retrieve files and media assets securely in your applications.",
-    "excerpt": "Appwrite Storage allows you to manage files in your project. You can use it to store images, videos, rows, and other files for your projects. It provides APIs to upload, download, delete, and list files, with many added utilities. Appwrite Storage stores files like images, PDFs or videos. If you need to store data like profiles, recipes, or transactions, use Appwrite Databases. Get started Get started with Appwrite Storage. Learn to setup up a bucket, upload, and download your first…"
+    "excerpt": "Appwrite Storage allows you to manage files in your project. You can use it to store images, videos, rows, and other files for your projects. It provides APIs to upload, download, delete, and list files, with many added utilities. Appwrite Storage stores files like images, PDFs or videos. If you need to store data like profiles, recipes, or transactions, use Appwrite Databases. Get started Get started with Appwrite Storage. Learn to setup up a bucket, upload, and download your first…",
+    "breadcrumbs": [
+      "Storage",
+      "Getting started",
+      "Overview"
+    ]
   },
   {
     "slug": "products/storage/buckets",
     "title": "Buckets",
     "description": "Organize and manage your files effectively with Appwrite Storage Buckets. Explore how to create, configure, and use storage buckets for seamless file organization.",
-    "excerpt": "Storage buckets are a group of files, similar to tables in Appwrite Databases. Buckets let you limit file size and extensions, whether or not to encrypt the files, and more. Create Bucket You can create your bucket from the Appwrite Console, a Server SDK, or the CLI. You can create a bucket by heading to the **Storage** page and clicking **Create bucket**. You can also create tables programmatically using a Server SDK. Appwrite Server SDKs require an API key. You…"
+    "excerpt": "Storage buckets are a group of files, similar to tables in Appwrite Databases. Buckets let you limit file size and extensions, whether or not to encrypt the files, and more. Create Bucket You can create your bucket from the Appwrite Console, a Server SDK, or the CLI. You can create a bucket by heading to the **Storage** page and clicking **Create bucket**. You can also create tables programmatically using a Server SDK. Appwrite Server SDKs require an API key. You…",
+    "breadcrumbs": [
+      "Storage",
+      "Concepts",
+      "Buckets"
+    ]
   },
   {
     "slug": "products/storage/file-tokens",
     "title": "File tokens",
     "description": "Easily share files with external users using file tokens.",
-    "excerpt": "File tokens are a type of secret that allow you to share files publicly with anyone. By using file tokens, you can let any external user access your file without having to configure bucket or file permissions. File tokens can either be set to expire on a specific date or work indefinitely. File tokens vs secure cookies Currently, Appwrite uses secure cookies to manage sessions for users, which are essential for any Appwrite products with permissions configured. However, because the…"
+    "excerpt": "File tokens are a type of secret that allow you to share files publicly with anyone. By using file tokens, you can let any external user access your file without having to configure bucket or file permissions. File tokens can either be set to expire on a specific date or work indefinitely. File tokens vs secure cookies Currently, Appwrite uses secure cookies to manage sessions for users, which are essential for any Appwrite products with permissions configured. However, because the…",
+    "breadcrumbs": [
+      "Storage",
+      "Concepts",
+      "File tokens"
+    ]
   },
   {
     "slug": "products/storage/images",
     "title": "Image transformations",
     "description": "Optimize image storage and processing with Appwrite. Explore image resizing, transformations, and manipulation to deliver rich media experiences in your apps.",
-    "excerpt": "Appwrite provides utilities to manipulate images for previewing images in your apps. Appwrite Storage's preview endpoint let you manipulate resolution, add borders and the border-radius, add background-color, set the opacity for the image, and get the image in the appropriate output format. You can manipulate images resolution to display appropriately on responsive websites. You can also adjust the image border, background color, and border-radius to match the theming of your application. The Appwrite Storage also allows you to change the…"
+    "excerpt": "Appwrite provides utilities to manipulate images for previewing images in your apps. Appwrite Storage's preview endpoint let you manipulate resolution, add borders and the border-radius, add background-color, set the opacity for the image, and get the image in the appropriate output format. You can manipulate images resolution to display appropriately on responsive websites. You can also adjust the image border, background color, and border-radius to match the theming of your application. The Appwrite Storage also allows you to change the…",
+    "breadcrumbs": [
+      "Storage",
+      "Journeys",
+      "Image transformations"
+    ]
   },
   {
     "slug": "products/storage/permissions",
     "title": "Storage permissions",
     "description": "Enhance data security and control with Appwrite Storage Permissions. Learn how to set access rules, permissions, and restrictions for your stored files.",
-    "excerpt": "Permissions define who can access files within a bucket. By default **no permissions** are granted to any users, so no user can access any files. Permissions exist at two levels, bucket level and file level permissions. In Appwrite, permissions are **granted**, meaning a user has no access by default and receive access when granted. A user with access granted at either bucket level or file level will be able to access a file. Users **don't need access at both levels**…"
+    "excerpt": "Permissions define who can access files within a bucket. By default **no permissions** are granted to any users, so no user can access any files. Permissions exist at two levels, bucket level and file level permissions. In Appwrite, permissions are **granted**, meaning a user has no access by default and receive access when granted. A user with access granted at either bucket level or file level will be able to access a file. Users **don't need access at both levels**…",
+    "breadcrumbs": [
+      "Storage",
+      "Concepts",
+      "Permissions"
+    ]
   },
   {
     "slug": "products/storage/quick-start",
     "title": "Start with Storage",
     "description": "Get started quickly with Appwrite Storage. Follow step-by-step instructions to set up storage, upload files, and integrate cloud storage into your projects",
-    "excerpt": "You can create your first bucket, upload, and download your first file in minutes. Create bucket You can create a bucket in the Appwrite Console by navigating to **Storage** > **Create bucket**. In your bucket, navigate to **Settings** > **Permissions**, then add a new **Any** role with **CREATE** and **READ** permissions. This allows anyone to create and read files in this bucket. Create file To upload a file, add this to your app. For web apps, you can use the…"
+    "excerpt": "You can create your first bucket, upload, and download your first file in minutes. Create bucket You can create a bucket in the Appwrite Console by navigating to **Storage** > **Create bucket**. In your bucket, navigate to **Settings** > **Permissions**, then add a new **Any** role with **CREATE** and **READ** permissions. This allows anyone to create and read files in this bucket. Create file To upload a file, add this to your app. For web apps, you can use the…",
+    "breadcrumbs": [
+      "Storage",
+      "Getting started",
+      "Quick start"
+    ]
   },
   {
     "slug": "products/storage/upload-download",
     "title": "Upload and download",
     "description": "Effortlessly upload and download files with Appwrite Storage. Learn how to handle file uploads, manage file versions, and ensure secure downloads in your applications.",
-    "excerpt": "You can upload and download files both programmatically using SDKs or through the Appwrite Console. Create file After you create a bucket or have navigated to bucket details, you can access the **Files** tab so you can upload, view, delete and update files in the bucket using the Appwrite project's dashboard. You can also perform all those operations from Appwrite's client SDK, server SDKs, and REST APIs as long as you have the proper permission. When you are in the…"
+    "excerpt": "You can upload and download files both programmatically using SDKs or through the Appwrite Console. Create file After you create a bucket or have navigated to bucket details, you can access the **Files** tab so you can upload, view, delete and update files in the bucket using the Appwrite project's dashboard. You can also perform all those operations from Appwrite's client SDK, server SDKs, and REST APIs as long as you have the proper permission. When you are in the…",
+    "breadcrumbs": [
+      "Storage",
+      "Journeys",
+      "Upload and download"
+    ]
   },
   {
     "slug": "quick-starts/android",
     "title": "Start with Android (Kotlin)",
     "description": "Get started with Appwrite on Android and learn how to build secure and scalable apps using our powerful backend.",
-    "excerpt": "Learn how to setup your first Android project powered by Appwrite and the Appwrite Android SDK. Check out the Start with Android (Java) guide. Open Android Studio and click **New Project** to create a new project. Choose your desired project template, for example **Empty Activity**, and click **Next**. Now enter your app **name** and **package name**. You will need both of these later when you create your project in the Appwrite console. Click **Finish** to create your project. Head to…"
+    "excerpt": "Learn how to setup your first Android project powered by Appwrite and the Appwrite Android SDK. Check out the Start with Android (Java) guide. Open Android Studio and click **New Project** to create a new project. Choose your desired project template, for example **Empty Activity**, and click **Next**. Now enter your app **name** and **package name**. You will need both of these later when you create your project in the Appwrite console. Click **Finish** to create your project. Head to…",
+    "breadcrumbs": [
+      "Quick start",
+      "Mobile and native",
+      "Android"
+    ]
   },
   {
     "slug": "quick-starts/android-java",
     "title": "Start with Android (Java)",
     "description": "Get started with Appwrite on Android using Java and learn how to build secure and scalable apps using our powerful backend.",
-    "excerpt": "Learn how to setup your first Android project powered by Appwrite and the Appwrite Android SDK using Java. Check out the Start with Android (Kotlin) guide. Open Android Studio and click **New Project** to create a new project. Choose your desired project template, for example **Empty Activity**, and click **Next**. Now enter your app **name** and **package name**. You will need both of these later when you create your project in the Appwrite console. Click **Finish** to create your project.…"
+    "excerpt": "Learn how to setup your first Android project powered by Appwrite and the Appwrite Android SDK using Java. Check out the Start with Android (Kotlin) guide. Open Android Studio and click **New Project** to create a new project. Choose your desired project template, for example **Empty Activity**, and click **Next**. Now enter your app **name** and **package name**. You will need both of these later when you create your project in the Appwrite console. Click **Finish** to create your project.…",
+    "breadcrumbs": [
+      "Quick start",
+      "Start with Android (Java)"
+    ]
   },
   {
     "slug": "quick-starts/angular",
     "title": "Start with Angular",
     "description": "Learn how to use Appwrite to add authentication, user management, file storage, and more to your Angular apps.",
-    "excerpt": "Learn how to setup your first Angular project powered by Appwrite. Head to the Appwrite Console. If this is your first time using Appwrite, create an account and create your first project. Then, under **Add a platform**, add a **Web app**. The **Hostname** should be . You can skip optional steps. Create an Angular project. If you don't have Angular CLI installed, run this command. Then, create a project. Install the JavaScript Appwrite SDK. Find your project's ID in the…"
+    "excerpt": "Learn how to setup your first Angular project powered by Appwrite. Head to the Appwrite Console. If this is your first time using Appwrite, create an account and create your first project. Then, under **Add a platform**, add a **Web app**. The **Hostname** should be . You can skip optional steps. Create an Angular project. If you don't have Angular CLI installed, run this command. Then, create a project. Install the JavaScript Appwrite SDK. Find your project's ID in the…",
+    "breadcrumbs": [
+      "Quick start",
+      "Web app",
+      "Angular"
+    ]
   },
   {
     "slug": "quick-starts/apple",
     "title": "Start with Apple",
     "description": "Build iOS apps with Appwrite and learn how to use our powerful backend to add authentication, user management, file storage, and more.",
-    "excerpt": "Learn how to setup your first Apple project powered by Appwrite and the Appwrite Apple SDK. Open Xcode and click **Create a new Xcode project**. Choose your desired project template, for example **iOS App**, and click **Next**. Now enter your app **product name** and **bundle identifier** and click **Next**. You will need both of these values later when you create your project in the Appwrite console. Choose a directory for your project in and click **Create** to create your project.…"
+    "excerpt": "Learn how to setup your first Apple project powered by Appwrite and the Appwrite Apple SDK. Open Xcode and click **Create a new Xcode project**. Choose your desired project template, for example **iOS App**, and click **Next**. Now enter your app **product name** and **bundle identifier** and click **Next**. You will need both of these values later when you create your project in the Appwrite console. Choose a directory for your project in and click **Create** to create your project.…",
+    "breadcrumbs": [
+      "Quick start",
+      "Mobile and native",
+      "Apple"
+    ]
   },
   {
     "slug": "quick-starts/astro",
     "title": "Start with Astro",
     "description": "Learn how to use Appwrite to add authentication, user management, file storage, and more to your Astro apps.",
-    "excerpt": "Improve the docs, add this guide. We still don't have this guide in place, but we do have some great news. The Appwrite docs, just like Appwrite, is completely open sourced. This means, anyone can help improve them and add new guides and tutorials. If you see this page, **we're actively looking for contributions to this page**. Follow our contribution guidelines, open a PR to our Website repo, and collaborate with our core team to improve this page."
+    "excerpt": "Improve the docs, add this guide. We still don't have this guide in place, but we do have some great news. The Appwrite docs, just like Appwrite, is completely open sourced. This means, anyone can help improve them and add new guides and tutorials. If you see this page, **we're actively looking for contributions to this page**. Follow our contribution guidelines, open a PR to our Website repo, and collaborate with our core team to improve this page.",
+    "breadcrumbs": [
+      "Quick start",
+      "Start with Astro"
+    ]
   },
   {
     "slug": "quick-starts/dart",
     "title": "Start with Dart",
     "description": "Build Flutter apps with Appwrite and learn how to use our powerful backend to add authentication, user management, file storage, and more.",
-    "excerpt": "Learn how to setup your first Dart project powered by Appwrite. Head to the Appwrite Console. If this is your first time using Appwrite, create an account and create your first project. Then, under **Integrate with your server**, add an **API Key** with the following scopes. | Category | Required scopes | Purpose | |-----------|-----------------------|---------| | Database | | Allows API key to create, update, and delete databases. | | | | Allows API key to create, update, and delete…"
+    "excerpt": "Learn how to setup your first Dart project powered by Appwrite. Head to the Appwrite Console. If this is your first time using Appwrite, create an account and create your first project. Then, under **Integrate with your server**, add an **API Key** with the following scopes. | Category | Required scopes | Purpose | |-----------|-----------------------|---------| | Database | | Allows API key to create, update, and delete databases. | | | | Allows API key to create, update, and delete…",
+    "breadcrumbs": [
+      "Quick start",
+      "Server",
+      "Dart"
+    ]
   },
   {
     "slug": "quick-starts/deno",
     "title": "Start with Deno",
     "description": "Dive into our step-by-step guide on integrating Appwrite with your Deno server backend application. Get your backend up and running quickly with this tutorial.",
-    "excerpt": "The dedicated Deno SDK has been deprecated in favor of using the Node.js SDK directly through npm specifiers, thanks to Deno's excellent Node.js compatibility. This change simplifies maintenance and ensures you always have access to the latest features. Learn how to setup your first Deno project powered by Appwrite. Head to the Appwrite Console. If this is your first time using Appwrite, create an account and create your first project. Then, under **Integrate with your server**, add an **API Key**…"
+    "excerpt": "The dedicated Deno SDK has been deprecated in favor of using the Node.js SDK directly through npm specifiers, thanks to Deno's excellent Node.js compatibility. This change simplifies maintenance and ensures you always have access to the latest features. Learn how to setup your first Deno project powered by Appwrite. Head to the Appwrite Console. If this is your first time using Appwrite, create an account and create your first project. Then, under **Integrate with your server**, add an **API Key**…",
+    "breadcrumbs": [
+      "Quick start",
+      "Server",
+      "Deno"
+    ]
   },
   {
     "slug": "quick-starts/dotnet",
     "title": "Start with .NET",
     "description": "Learn to get started with server integrations with Appwrite .NET SDK.",
-    "excerpt": "Learn how to setup your first .NET project powered by Appwrite. Head to the Appwrite Console. If this is your first time using Appwrite, create an account and create your first project. Then, under **Integrate with your server**, add an **API Key** with the following scopes. | Category | Required scopes | Purpose | |-----------|-----------------------|---------| | Database | | Allows API key to create, update, and delete databases. | | | | Allows API key to create, update, and delete…"
+    "excerpt": "Learn how to setup your first .NET project powered by Appwrite. Head to the Appwrite Console. If this is your first time using Appwrite, create an account and create your first project. Then, under **Integrate with your server**, add an **API Key** with the following scopes. | Category | Required scopes | Purpose | |-----------|-----------------------|---------| | Database | | Allows API key to create, update, and delete databases. | | | | Allows API key to create, update, and delete…",
+    "breadcrumbs": [
+      "Quick start",
+      "Server",
+      ".NET"
+    ]
   },
   {
     "slug": "quick-starts/flutter",
     "title": "Start with Flutter",
     "description": "Build Flutter apps with Appwrite and learn how to use our powerful backend to add authentication, user management, file storage, and more.",
-    "excerpt": "Learn how to setup your first Flutter project powered by Appwrite. Create a Flutter project. Head to the Appwrite Console. If this is your first time using Appwrite, create an account and create your first project. Then, under **Add a platform**, add a **Flutter app**. You can choose between many different platforms. Add your app **name** and **Hostname**. If you're testing your app locally, **Hostname** should be . For web, in order to capture the OAuth2 callback URL and send…"
+    "excerpt": "Learn how to setup your first Flutter project powered by Appwrite. Create a Flutter project. Head to the Appwrite Console. If this is your first time using Appwrite, create an account and create your first project. Then, under **Add a platform**, add a **Flutter app**. You can choose between many different platforms. Add your app **name** and **Hostname**. If you're testing your app locally, **Hostname** should be . For web, in order to capture the OAuth2 callback URL and send…",
+    "breadcrumbs": [
+      "Quick start",
+      "Mobile and native",
+      "Flutter"
+    ]
   },
   {
     "slug": "quick-starts/go",
     "title": "Start with Go",
     "description": "Integrating Appwrite with your Go backend application is a quick and simple process. Get your backend up and running with our step-by-step guide.",
-    "excerpt": "Learn how to set up your first Go project powered by Appwrite. Head to the Appwrite Console. If this is your first time using Appwrite, create an account and create your first project. Then, under **Integrate with your server**, add an **API Key** with the following scopes. | Category | Required scopes | Purpose | |-----------|-----------------------|---------| | Database | | Allows API key to create, update, and delete databases. | | | | Allows API key to create, update, and…"
+    "excerpt": "Learn how to set up your first Go project powered by Appwrite. Head to the Appwrite Console. If this is your first time using Appwrite, create an account and create your first project. Then, under **Integrate with your server**, add an **API Key** with the following scopes. | Category | Required scopes | Purpose | |-----------|-----------------------|---------| | Database | | Allows API key to create, update, and delete databases. | | | | Allows API key to create, update, and…",
+    "breadcrumbs": [
+      "Quick start",
+      "Server",
+      "Go"
+    ]
   },
   {
     "slug": "quick-starts/kotlin",
     "title": "Start with Kotlin",
     "description": "Learn to get started with server integrations with Appwrite Kotlin SDK.",
-    "excerpt": "Learn how to setup your first Kotlin project powered by Appwrite. Head to the Appwrite Console. This tutorial is for the Kotlin Server SDK, meant for server and backend applications. If you're trying to build a client-side app, like an Android app, follow the Start with Android guide. If this is your first time using Appwrite, create an account and create your first project. Then, under **Integrate with your server**, add an **API Key** with the following scopes. | Category…"
+    "excerpt": "Learn how to setup your first Kotlin project powered by Appwrite. Head to the Appwrite Console. This tutorial is for the Kotlin Server SDK, meant for server and backend applications. If you're trying to build a client-side app, like an Android app, follow the Start with Android guide. If this is your first time using Appwrite, create an account and create your first project. Then, under **Integrate with your server**, add an **API Key** with the following scopes. | Category…",
+    "breadcrumbs": [
+      "Quick start",
+      "Server",
+      "Kotlin"
+    ]
   },
   {
     "slug": "quick-starts/nextjs",
     "title": "Start with Next.js",
     "description": "Learn how to use Appwrite to add authentication, user management, file storage, and more to your Next.js apps.",
-    "excerpt": "Learn how to setup your first Next.js project powered by Appwrite. Head to the Appwrite Console. If this is your first time using Appwrite, create an account and create your first project. Then, under **Add a platform**, add a **Web app**. The **Hostname** should be . You can skip optional steps. Create a Next.js project by running the following command: When prompted, configure your project with these recommended settings: - **Would you like to use TypeScript?** → No - **Would…"
+    "excerpt": "Learn how to setup your first Next.js project powered by Appwrite. Head to the Appwrite Console. If this is your first time using Appwrite, create an account and create your first project. Then, under **Add a platform**, add a **Web app**. The **Hostname** should be . You can skip optional steps. Create a Next.js project by running the following command: When prompted, configure your project with these recommended settings: - **Would you like to use TypeScript?** → No - **Would…",
+    "breadcrumbs": [
+      "Quick start",
+      "Web app",
+      "Next.js"
+    ]
   },
   {
     "slug": "quick-starts/node",
     "title": "Start with Node.js",
     "description": "Dive into our step-by-step guide on integrating Appwrite with your Node.js server backend application. Get your backend up and running quickly with this tutorial.",
-    "excerpt": "Learn how to setup your first Node.js project powered by Appwrite. Head to the Appwrite Console. If this is your first time using Appwrite, create an account and create your first project. Then, under **Integrate with your server**, add an **API Key** with the following scopes. | Category | Required scopes | Purpose | |-----------|-----------------------|---------| | Database | | Allows API key to create, update, and delete databases. | | | | Allows API key to create, update, and delete…"
+    "excerpt": "Learn how to setup your first Node.js project powered by Appwrite. Head to the Appwrite Console. If this is your first time using Appwrite, create an account and create your first project. Then, under **Integrate with your server**, add an **API Key** with the following scopes. | Category | Required scopes | Purpose | |-----------|-----------------------|---------| | Database | | Allows API key to create, update, and delete databases. | | | | Allows API key to create, update, and delete…",
+    "breadcrumbs": [
+      "Quick start",
+      "Server",
+      "Node.js"
+    ]
   },
   {
     "slug": "quick-starts/nuxt",
     "title": "Start with Nuxt",
     "description": "Build Nuxt.js apps with Appwrite and learn how to use our powerful backend to add authentication, user management, file storage, and more.",
-    "excerpt": "Learn how to setup your first Nuxt project powered by Appwrite. Head to the Appwrite Console. If this is your first time using Appwrite, create an account and create your first project. Then, under **Add a platform**, add a **Web app**. The **Hostname** should be . You can skip optional steps. Create a Nuxt project. Install the JavaScript Appwrite SDK. Find your project's ID in the **Settings** page. Create a new file and add the following code to it, replace…"
+    "excerpt": "Learn how to setup your first Nuxt project powered by Appwrite. Head to the Appwrite Console. If this is your first time using Appwrite, create an account and create your first project. Then, under **Add a platform**, add a **Web app**. The **Hostname** should be . You can skip optional steps. Create a Nuxt project. Install the JavaScript Appwrite SDK. Find your project's ID in the **Settings** page. Create a new file and add the following code to it, replace…",
+    "breadcrumbs": [
+      "Quick start",
+      "Web app",
+      "Nuxt"
+    ]
   },
   {
     "slug": "quick-starts/php",
     "title": "Start with PHP",
     "description": "Dive into our step-by-step guide on integrating Appwrite with your PHP server backend application. Get your backend up and running quickly with this tutorial.",
-    "excerpt": "Learn how to setup your first PHP project powered by Appwrite. Head to the Appwrite Console. If this is your first time using Appwrite, create an account and create your first project. Then, under **Integrate with your server**, add an **API Key** with the following scopes. | Category | Required scopes | Purpose | |-----------|-----------------------|---------| | Database | | Allows API key to create, update, and delete databases. | | | | Allows API key to create, update, and delete…"
+    "excerpt": "Learn how to setup your first PHP project powered by Appwrite. Head to the Appwrite Console. If this is your first time using Appwrite, create an account and create your first project. Then, under **Integrate with your server**, add an **API Key** with the following scopes. | Category | Required scopes | Purpose | |-----------|-----------------------|---------| | Database | | Allows API key to create, update, and delete databases. | | | | Allows API key to create, update, and delete…",
+    "breadcrumbs": [
+      "Quick start",
+      "Server",
+      "PHP"
+    ]
   },
   {
     "slug": "quick-starts/python",
     "title": "Start with Python",
     "description": "Learn to get started with server integrations with Appwrite Python SDK.",
-    "excerpt": "Learn how to setup your first Python project powered by Appwrite. Head to the Appwrite Console. If this is your first time using Appwrite, create an account and create your first project. Then, under **Integrate with your server**, add an **API Key** with the following scopes. | Category | Required scopes | Purpose | |-----------|-----------------------|---------| | Database | | Allows API key to create, update, and delete databases. | | | | Allows API key to create, update, and delete…"
+    "excerpt": "Learn how to setup your first Python project powered by Appwrite. Head to the Appwrite Console. If this is your first time using Appwrite, create an account and create your first project. Then, under **Integrate with your server**, add an **API Key** with the following scopes. | Category | Required scopes | Purpose | |-----------|-----------------------|---------| | Database | | Allows API key to create, update, and delete databases. | | | | Allows API key to create, update, and delete…",
+    "breadcrumbs": [
+      "Quick start",
+      "Server",
+      "Python"
+    ]
   },
   {
     "slug": "quick-starts/qwik",
     "title": "Start with Qwik",
     "description": "Learn how to use Appwrite to add authentication, user management, file storage, and more to your Qwik apps.",
-    "excerpt": "Improve the docs, add this guide. We still don't have this guide in place, but we do have some great news. The Appwrite docs, just like Appwrite, is completely open sourced. This means, anyone can help improve them and add new guides and tutorials. If you see this page, **we're actively looking for contributions to this page**. Follow our contribution guidelines, open a PR to our Website repo, and collaborate with our core team to improve this page."
+    "excerpt": "Improve the docs, add this guide. We still don't have this guide in place, but we do have some great news. The Appwrite docs, just like Appwrite, is completely open sourced. This means, anyone can help improve them and add new guides and tutorials. If you see this page, **we're actively looking for contributions to this page**. Follow our contribution guidelines, open a PR to our Website repo, and collaborate with our core team to improve this page.",
+    "breadcrumbs": [
+      "Quick start",
+      "Start with Qwik"
+    ]
   },
   {
     "slug": "quick-starts/react",
     "title": "Start with React",
     "description": "Build React apps with Appwrite and learn how to use our powerful backend to add authentication, user management, file storage, and more.",
-    "excerpt": "Learn how to setup your first React project powered by Appwrite. Head to the Appwrite Console. If this is your first time using Appwrite, create an account and create your first project. Then, under **Add a platform**, add a **Web app**. The **Hostname** should be . You can skip optional steps. Create a Vite project. Install the JavaScript Appwrite SDK. Find your project's ID in the **Settings** page. Create a new file and add the following code to it, replace…"
+    "excerpt": "Learn how to setup your first React project powered by Appwrite. Head to the Appwrite Console. If this is your first time using Appwrite, create an account and create your first project. Then, under **Add a platform**, add a **Web app**. The **Hostname** should be . You can skip optional steps. Create a Vite project. Install the JavaScript Appwrite SDK. Find your project's ID in the **Settings** page. Create a new file and add the following code to it, replace…",
+    "breadcrumbs": [
+      "Quick start",
+      "Web app",
+      "React"
+    ]
   },
   {
     "slug": "quick-starts/react-native",
     "title": "Start with React Native",
     "description": "Discover how to leverage Appwrite's powerful backend to help you build React Native apps for iOS, Android and other native platforms.",
-    "excerpt": "Learn how to setup your first React Native project powered by Appwrite. The React Native SDK is still in . Proceed with caution if you plan to use this SDK in production. Looking to start with React for web? Follow the React quickstart and React tutorial flows. Create a React Native project using npx. Head to the Appwrite Console. If this is your first time using Appwrite, create an account and create your first project. Then, under **Add a platform**,…"
+    "excerpt": "Learn how to setup your first React Native project powered by Appwrite. The React Native SDK is still in . Proceed with caution if you plan to use this SDK in production. Looking to start with React for web? Follow the React quickstart and React tutorial flows. Create a React Native project using npx. Head to the Appwrite Console. If this is your first time using Appwrite, create an account and create your first project. Then, under **Add a platform**,…",
+    "breadcrumbs": [
+      "Quick start",
+      "Mobile and native",
+      "React Native"
+    ]
   },
   {
     "slug": "quick-starts/refine",
     "title": "Start with Refine",
     "description": "Build Refine apps with Appwrite and learn how to use our powerful backend to add authentication, user management, file storage, and more.",
-    "excerpt": "Learn how to setup your first Refine project powered by Appwrite. Head to the Appwrite Console. If this is your first time using Appwrite, create an account and create your first project. Then, under **Add a platform**, add a **Web app**. The **Hostname** should be . You can skip optional steps. Create a Refine project with Appwrite support. Using the preset eliminates the need for extra dependencies for a quick start. If you want to integrate Appwrite into an existing…"
+    "excerpt": "Learn how to setup your first Refine project powered by Appwrite. Head to the Appwrite Console. If this is your first time using Appwrite, create an account and create your first project. Then, under **Add a platform**, add a **Web app**. The **Hostname** should be . You can skip optional steps. Create a Refine project with Appwrite support. Using the preset eliminates the need for extra dependencies for a quick start. If you want to integrate Appwrite into an existing…",
+    "breadcrumbs": [
+      "Quick start",
+      "Web app",
+      "Refine"
+    ]
   },
   {
     "slug": "quick-starts/ruby",
     "title": "Start with Ruby",
     "description": "Dive into our step-by-step guide on integrating Appwrite with your Ruby server backend application. Get your backend up and running quickly with this tutorial.",
-    "excerpt": "Learn how to setup your first Ruby project powered by Appwrite. Head to the Appwrite Console. If this is your first time using Appwrite, create an account and create your first project. Then, under **Integrate with your server**, add an **API Key** with the following scopes. | Category | Required scopes | Purpose | |-----------|-----------------------|---------| | Database | | Allows API key to create, update, and delete databases. | | | | Allows API key to create, update, and delete…"
+    "excerpt": "Learn how to setup your first Ruby project powered by Appwrite. Head to the Appwrite Console. If this is your first time using Appwrite, create an account and create your first project. Then, under **Integrate with your server**, add an **API Key** with the following scopes. | Category | Required scopes | Purpose | |-----------|-----------------------|---------| | Database | | Allows API key to create, update, and delete databases. | | | | Allows API key to create, update, and delete…",
+    "breadcrumbs": [
+      "Quick start",
+      "Server",
+      "Ruby"
+    ]
   },
   {
     "slug": "quick-starts/rust",
     "title": "Start with Rust",
     "description": "Learn to get started with server integrations with Appwrite Rust SDK.",
-    "excerpt": "Learn how to setup your first Rust project powered by Appwrite. Head to the Appwrite Console. If this is your first time using Appwrite, create an account and create your first project. Then, under **Integrate with your server**, add an **API Key** with the following scopes. | Category | Required scopes | Purpose | |-----------|-----------------------|---------| | Database | | Allows API key to create, update, and delete databases. | | | | Allows API key to create, update, and delete…"
+    "excerpt": "Learn how to setup your first Rust project powered by Appwrite. Head to the Appwrite Console. If this is your first time using Appwrite, create an account and create your first project. Then, under **Integrate with your server**, add an **API Key** with the following scopes. | Category | Required scopes | Purpose | |-----------|-----------------------|---------| | Database | | Allows API key to create, update, and delete databases. | | | | Allows API key to create, update, and delete…",
+    "breadcrumbs": [
+      "Quick start",
+      "Server",
+      "Rust"
+    ]
   },
   {
     "slug": "quick-starts/solid",
     "title": "Start with Solid",
     "description": "Build Solid apps with Appwrite and learn how to use our powerful backend to add authentication, user management, file storage, and more.",
-    "excerpt": "Learn how to setup your first Solid project powered by Appwrite. Head to the Appwrite Console. If this is your first time using Appwrite, create an account and create your first project. Then, under **Add a platform**, add a **Web app**. The **Hostname** should be . You can skip optional steps. Create a Vite project. Install the JavaScript Appwrite SDK. Find your project's ID in the **Settings** page. Create a new file and add the following code to it, replace…"
+    "excerpt": "Learn how to setup your first Solid project powered by Appwrite. Head to the Appwrite Console. If this is your first time using Appwrite, create an account and create your first project. Then, under **Add a platform**, add a **Web app**. The **Hostname** should be . You can skip optional steps. Create a Vite project. Install the JavaScript Appwrite SDK. Find your project's ID in the **Settings** page. Create a new file and add the following code to it, replace…",
+    "breadcrumbs": [
+      "Quick start",
+      "Web app",
+      "Solid"
+    ]
   },
   {
     "slug": "quick-starts/sveltekit",
     "title": "Start with SvelteKit",
     "description": "Learn how to use Appwrite to add authentication, user management, file storage, and more to your SvelteKit apps.",
-    "excerpt": "Learn how to setup your first SvelteKit project powered by Appwrite. Head to the Appwrite Console. If this is your first time using Appwrite, create an account and create your first project. Then, under **Add a platform**, add a **Web app**. The **Hostname** should be . You can skip optional steps. Create a SvelteKit project. Install the JavaScript Appwrite SDK. Find your project's ID in the **Settings** page. Create a new file and add the following code to it, replace…"
+    "excerpt": "Learn how to setup your first SvelteKit project powered by Appwrite. Head to the Appwrite Console. If this is your first time using Appwrite, create an account and create your first project. Then, under **Add a platform**, add a **Web app**. The **Hostname** should be . You can skip optional steps. Create a SvelteKit project. Install the JavaScript Appwrite SDK. Find your project's ID in the **Settings** page. Create a new file and add the following code to it, replace…",
+    "breadcrumbs": [
+      "Quick start",
+      "Web app",
+      "SvelteKit"
+    ]
   },
   {
     "slug": "quick-starts/swift",
     "title": "Start with Swift",
     "description": "Learn to get started with server integrations with Appwrite Swift SDK.",
-    "excerpt": "Learn how to setup your first Swift project powered by Appwrite. This tutorial is for the Swift Server SDK, meant for server and backend applications. If you're trying to build a client-side app, like an iOS, macOS, watchOS or tvOS app, follow the Start with Apple guide. Head to the Appwrite Console. If this is your first time using Appwrite, create an account and create your first project. Then, under **Integrate with your server**, add an **API Key** with the…"
+    "excerpt": "Learn how to setup your first Swift project powered by Appwrite. This tutorial is for the Swift Server SDK, meant for server and backend applications. If you're trying to build a client-side app, like an iOS, macOS, watchOS or tvOS app, follow the Start with Apple guide. Head to the Appwrite Console. If this is your first time using Appwrite, create an account and create your first project. Then, under **Integrate with your server**, add an **API Key** with the…",
+    "breadcrumbs": [
+      "Quick start",
+      "Server",
+      "Swift"
+    ]
   },
   {
     "slug": "quick-starts/tanstack-start",
     "title": "Start with TanStack Start",
     "description": "Learn how to use Appwrite to add authentication, user management, file storage, and more to your TanStack Start apps.",
-    "excerpt": "Learn how to setup your first TanStack Start project powered by Appwrite. Head to the Appwrite Console. If this is your first time using Appwrite, create an account and create your first project. Then, under **Add a platform**, add a **Web app**. The **Hostname** should be . You can skip optional steps. Create a TanStack Start project. Install the JavaScript Appwrite SDK. Find your project's ID in the **Settings** page. Create a new file and add the following code to…"
+    "excerpt": "Learn how to setup your first TanStack Start project powered by Appwrite. Head to the Appwrite Console. If this is your first time using Appwrite, create an account and create your first project. Then, under **Add a platform**, add a **Web app**. The **Hostname** should be . You can skip optional steps. Create a TanStack Start project. Install the JavaScript Appwrite SDK. Find your project's ID in the **Settings** page. Create a new file and add the following code to…",
+    "breadcrumbs": [
+      "Quick start",
+      "Web app",
+      "TanStack Start"
+    ]
   },
   {
     "slug": "quick-starts/vue",
     "title": "Start with Vue.js",
     "description": "Build Vue.js apps with Appwrite and learn how to use our powerful backend to add authentication, user management, file storage, and more.",
-    "excerpt": "Learn how to setup your first Vue project powered by Appwrite. Head to the Appwrite Console. If this is your first time using Appwrite, create an account and create your first project. Then, under **Add a platform**, add a **Web app**. The **Hostname** should be . You can skip optional steps. Create a Vue project. Install the JavaScript Appwrite SDK. Find your project's ID in the **Settings** page. Create a new file and add the following code to it, replace…"
+    "excerpt": "Learn how to setup your first Vue project powered by Appwrite. Head to the Appwrite Console. If this is your first time using Appwrite, create an account and create your first project. Then, under **Add a platform**, add a **Web app**. The **Hostname** should be . You can skip optional steps. Create a Vue project. Install the JavaScript Appwrite SDK. Find your project's ID in the **Settings** page. Create a new file and add the following code to it, replace…",
+    "breadcrumbs": [
+      "Quick start",
+      "Web app",
+      "Vue.js"
+    ]
   },
   {
     "slug": "quick-starts/web",
     "title": "Start with Web",
     "description": "Build JavaScript or Typescript web apps with Appwrite. Add authentication, user management, file storage, and more. Read our guide to get started!",
-    "excerpt": "Learn how to add Appwrite to your web apps. Head to the Appwrite Console. If this is your first time using Appwrite, create an account and create your first project. Then, under **Add a platform**, add a **Web app**. The **Hostname** should be or the domain on which you're hosting your web app. You can skip optional steps. You can install the Appwrite Web SDK using a package manager. You can also add the Appwrite Web SDK using CDN by…"
+    "excerpt": "Learn how to add Appwrite to your web apps. Head to the Appwrite Console. If this is your first time using Appwrite, create an account and create your first project. Then, under **Add a platform**, add a **Web app**. The **Hostname** should be or the domain on which you're hosting your web app. You can skip optional steps. You can install the Appwrite Web SDK using a package manager. You can also add the Appwrite Web SDK using CDN by…",
+    "breadcrumbs": [
+      "Quick start",
+      "Web app",
+      "Web"
+    ]
   },
   {
     "slug": "references",
     "title": "API reference",
     "description": "Here's a complete API reference for Appwrite SDK, REST, and GraphQL APIs. Learn how to use Authentication, Databases, Storage, and other Appwrite APIs.",
-    "excerpt": "Appwrite lets you build integrations on web, mobile, native, and server platforms through a set of APIs. You can use one of our many SDKs or integrate directly through the REST API or GraphQL API. Client vs Server APIs Client APIs and SDKs are for integrating with Appwrite to build client-based applications and websites. Client APIs only give access to resources if users have been granted permissions. Server API and SDKs are for integrating with Appwrite to build backend or…"
+    "excerpt": "Appwrite lets you build integrations on web, mobile, native, and server platforms through a set of APIs. You can use one of our many SDKs or integrate directly through the REST API or GraphQL API. Client vs Server APIs Client APIs and SDKs are for integrating with Appwrite to build client-based applications and websites. Client APIs only give access to resources if users have been granted permissions. Server API and SDKs are for integrating with Appwrite to build backend or…",
+    "breadcrumbs": [
+      "API reference",
+      "Getting started",
+      "Overview"
+    ]
   },
   {
     "slug": "references/quick-start",
     "title": "Quick start",
     "description": "Configure the Appwrite SDKs and take the necessary steps to start using Appwrite.",
-    "excerpt": "Follow these steps before you begin using the Appwrite SDKs or accessing Appwrite through the REST and GraphQL API. If you are choosing Appwrite among BaaS platforms or mapping backend infrastructure options first, skim that guide, then return here to wire SDKs. Appwrite has two types of APIs for different use cases, select one or both depending on your use case. If you're creating a **web, mobile, or native application** used by end-users that will register and create accounts, install…"
+    "excerpt": "Follow these steps before you begin using the Appwrite SDKs or accessing Appwrite through the REST and GraphQL API. If you are choosing Appwrite among BaaS platforms or mapping backend infrastructure options first, skim that guide, then return here to wire SDKs. Appwrite has two types of APIs for different use cases, select one or both depending on your use case. If you're creating a **web, mobile, or native application** used by end-users that will register and create accounts, install…",
+    "breadcrumbs": [
+      "API reference",
+      "Getting started",
+      "Quick start"
+    ]
   },
   {
     "slug": "sdks",
     "title": "SDKs",
     "description": "Get started with Appwrite SDKs and learn how to use them to add authentication, user management, file storage, and more to your apps.",
-    "excerpt": "Appwrite provides SDK libraries for major programming languages and platforms so you don't have to write code for interacting with our API protocols from scratch. We're always working on improving and extending the current stack of available platforms and SDKs, listed below is a list of official libraries the Appwrite team is maintaining. Client Client libraries for integrating with Appwrite to build client-based applications and websites. Read one of the many quick starts guides for your framework of choice to…"
+    "excerpt": "Appwrite provides SDK libraries for major programming languages and platforms so you don't have to write code for interacting with our API protocols from scratch. We're always working on improving and extending the current stack of available platforms and SDKs, listed below is a list of official libraries the Appwrite team is maintaining. Client Client libraries for integrating with Appwrite to build client-based applications and websites. Read one of the many quick starts guides for your framework of choice to…",
+    "breadcrumbs": [
+      "SDKs",
+      "SDKs"
+    ]
   },
   {
     "slug": "tooling/ai",
     "title": "AI",
     "description": "Discover Appwrite's AI tooling ecosystem. Build with AI-powered development tools, integrate AI capabilities into your apps, and leverage documentation designed for AI consumption.",
-    "excerpt": "Appwrite provides a comprehensive set of tools and resources to help you build with AI, from AI-powered development tools that accelerate your workflow to infrastructure for building AI-powered applications. IDEs AI-powered IDEs and code editors provide intelligent code completion and context-aware assistance as you write code. These tools support our MCP servers, giving AI agents direct access to your Appwrite project. Vibe coding Vibe coding platforms let you build applications through natural language. Describe what you want to build and…"
+    "excerpt": "Appwrite provides a comprehensive set of tools and resources to help you build with AI, from AI-powered development tools that accelerate your workflow to infrastructure for building AI-powered applications. IDEs AI-powered IDEs and code editors provide intelligent code completion and context-aware assistance as you write code. These tools support our MCP servers, giving AI agents direct access to your Appwrite project. Vibe coding Vibe coding platforms let you build applications through natural language. Describe what you want to build and…",
+    "breadcrumbs": [
+      "AI",
+      "Getting started",
+      "Overview"
+    ]
   },
   {
     "slug": "tooling/ai/agents-md",
     "title": "AGENTS.md",
     "description": "Generate an AGENTS.md file to give AI agents project-specific context about Appwrite SDKs, APIs, and services.",
-    "excerpt": "files are instruction files that developers place in their repositories to provide context and guidelines to AI agents. These files help AI tools understand your project structure, coding conventions, and preferences, resulting in more accurate and consistent code suggestions. Most IDEs and agents support this file. When an AI agent encounters an file, it uses the instructions to tailor its responses to your specific project requirements. This includes details about your tech stack, file organization, naming conventions, and architectural patterns.…"
+    "excerpt": "files are instruction files that developers place in their repositories to provide context and guidelines to AI agents. These files help AI tools understand your project structure, coding conventions, and preferences, resulting in more accurate and consistent code suggestions. Most IDEs and agents support this file. When an AI agent encounters an file, it uses the instructions to tailor its responses to your specific project requirements. This includes details about your tech stack, file organization, naming conventions, and architectural patterns.…",
+    "breadcrumbs": [
+      "AI",
+      "Tooling",
+      "AGENTS.md"
+    ]
   },
   {
     "slug": "tooling/ai/agents/antigravity",
     "title": "Google Antigravity",
     "description": "Learn how you can add the Appwrite MCP servers to Agent Manager in Google Antigravity to interact with both the Appwrite API and documentation.",
-    "excerpt": "Get started quickly with these pre-built prompts for common Appwrite integrations: Browse all quick start prompts Connect Appwrite MCP servers to Antigravity for deeper integration with the Appwrite API and documentation. Before you begin, ensure you have the following **pre-requisites** installed on your system: uv must be installed on your system. Node.js and npm must be installed on your system. To add the Appwrite MCP server, open Antigravity and go to the drop-down (...) menu in the Agent window .…"
+    "excerpt": "Get started quickly with these pre-built prompts for common Appwrite integrations: Browse all quick start prompts Connect Appwrite MCP servers to Antigravity for deeper integration with the Appwrite API and documentation. Before you begin, ensure you have the following **pre-requisites** installed on your system: uv must be installed on your system. Node.js and npm must be installed on your system. To add the Appwrite MCP server, open Antigravity and go to the drop-down (...) menu in the Agent window .…",
+    "breadcrumbs": [
+      "AI",
+      "IDEs",
+      "Google Antigravity"
+    ]
   },
   {
     "slug": "tooling/ai/agents/claude-code",
     "title": "Claude Code",
     "description": "Learn how to use Claude Code with Appwrite through the Appwrite plugin, quick start prompts, and MCP servers for AI-assisted development.",
-    "excerpt": "The fastest way to get started with Appwrite in Claude Code is to install the **Appwrite plugin** from the official marketplace. The plugin includes agent skills for the CLI and all major SDKs and sets up MCP servers for both the Appwrite API and documentation, giving Claude Code everything it needs to work with your Appwrite projects. To install the plugin, run the following command in your terminal: Once installed, run Claude Code and configure the plugin: - Run in…"
+    "excerpt": "The fastest way to get started with Appwrite in Claude Code is to install the **Appwrite plugin** from the official marketplace. The plugin includes agent skills for the CLI and all major SDKs and sets up MCP servers for both the Appwrite API and documentation, giving Claude Code everything it needs to work with your Appwrite projects. To install the plugin, run the following command in your terminal: Once installed, run Claude Code and configure the plugin: - Run in…",
+    "breadcrumbs": [
+      "AI",
+      "IDEs",
+      "Claude Code"
+    ]
   },
   {
     "slug": "tooling/ai/agents/codex",
     "title": "Codex",
     "description": "Learn how to use Codex with Appwrite through the Appwrite plugin, quick start prompts, and MCP servers for AI-assisted development.",
-    "excerpt": "The fastest way to get started with Appwrite in Codex is to install the **Appwrite plugin** from the Appwrite marketplace. The plugin includes agent skills for the Appwrite CLI and all major SDKs and registers the Appwrite Docs MCP server, giving Codex access to the Appwrite documentation so that it follows the latest and suggested code patterns. Add the Appwrite marketplace to Codex by running the following command in your terminal: Then run and open the plugins menu to install…"
+    "excerpt": "The fastest way to get started with Appwrite in Codex is to install the **Appwrite plugin** from the Appwrite marketplace. The plugin includes agent skills for the Appwrite CLI and all major SDKs and registers the Appwrite Docs MCP server, giving Codex access to the Appwrite documentation so that it follows the latest and suggested code patterns. Add the Appwrite marketplace to Codex by running the following command in your terminal: Then run and open the plugins menu to install…",
+    "breadcrumbs": [
+      "AI",
+      "IDEs",
+      "Codex"
+    ]
   },
   {
     "slug": "tooling/ai/agents/cursor",
     "title": "Cursor",
     "description": "Learn how to use Cursor with Appwrite through the Appwrite plugin, quick start prompts, and MCP servers for AI-assisted development.",
-    "excerpt": "The fastest way to get started with Appwrite in Cursor is to install the **Appwrite plugin** from the Cursor Marketplace. The plugin includes agent skills, MCP servers, and commands, giving Cursor's AI agents everything they need to work with your Appwrite projects. To install the plugin: 1. Visit the Appwrite plugin page on the Cursor Marketplace. 2. Sign in with your Cursor account. 3. Click **Add to Cursor**. 4. The plugin will be added to your editor automatically. Once installed,…"
+    "excerpt": "The fastest way to get started with Appwrite in Cursor is to install the **Appwrite plugin** from the Cursor Marketplace. The plugin includes agent skills, MCP servers, and commands, giving Cursor's AI agents everything they need to work with your Appwrite projects. To install the plugin: 1. Visit the Appwrite plugin page on the Cursor Marketplace. 2. Sign in with your Cursor account. 3. Click **Add to Cursor**. 4. The plugin will be added to your editor automatically. Once installed,…",
+    "breadcrumbs": [
+      "AI",
+      "IDEs",
+      "Cursor"
+    ]
   },
   {
     "slug": "tooling/ai/agents/opencode",
     "title": "OpenCode",
     "description": "Learn how you can add the Appwrite MCP servers to OpenCode to interact with both the Appwrite API and documentation.",
-    "excerpt": "Get started quickly with these pre-built prompts for common Appwrite integrations: Browse all quick start prompts Connect Appwrite MCP servers to OpenCode for deeper integration with the Appwrite API and documentation. Before you begin, ensure you have the following **pre-requisites** installed on your system: uv must be installed on your system. Node.js and npm must be installed on your system. Use the following configuration in your file to use the Appwrite MCP servers. **Configuration:** - Replace with your actual Appwrite…"
+    "excerpt": "Get started quickly with these pre-built prompts for common Appwrite integrations: Browse all quick start prompts Connect Appwrite MCP servers to OpenCode for deeper integration with the Appwrite API and documentation. Before you begin, ensure you have the following **pre-requisites** installed on your system: uv must be installed on your system. Node.js and npm must be installed on your system. Use the following configuration in your file to use the Appwrite MCP servers. **Configuration:** - Replace with your actual Appwrite…",
+    "breadcrumbs": [
+      "AI",
+      "IDEs",
+      "OpenCode"
+    ]
   },
   {
     "slug": "tooling/ai/agents/vscode",
     "title": "VS Code",
     "description": "Learn how you can use Appwrite with VS Code and GitHub Copilot for AI-assisted development. Get started quickly with pre-built prompts and connect to Appwrite MCP servers for deeper integration.",
-    "excerpt": "Get started quickly with these pre-built prompts for common Appwrite integrations: Browse all quick start prompts Connect Appwrite MCP servers to VS Code for deeper integration with the Appwrite API and documentation. Before you begin, ensure you have the following **pre-requisites** installed on your system: uv must be installed on your system. Node.js and npm must be installed on your system. In VS Code, open the **Command Palette** (press on Windows or on MacOS) and run the command. Choose which…"
+    "excerpt": "Get started quickly with these pre-built prompts for common Appwrite integrations: Browse all quick start prompts Connect Appwrite MCP servers to VS Code for deeper integration with the Appwrite API and documentation. Before you begin, ensure you have the following **pre-requisites** installed on your system: uv must be installed on your system. Node.js and npm must be installed on your system. In VS Code, open the **Command Palette** (press on Windows or on MacOS) and run the command. Choose which…",
+    "breadcrumbs": [
+      "AI",
+      "IDEs",
+      "VS Code"
+    ]
   },
   {
     "slug": "tooling/ai/agents/windsurf",
     "title": "Windsurf",
     "description": "Learn how you can use Windsurf Editor with Appwrite by leveraging MCP servers and quick start prompts to build applications faster.",
-    "excerpt": "Get started quickly with these pre-built prompts for common Appwrite integrations: Browse all quick start prompts Connect Appwrite MCP servers to Windsurf for deeper integration with the Appwrite API and documentation. Before you begin, ensure you have the following **pre-requisites** installed on your system: uv must be installed on your system. Node.js and npm must be installed on your system. Open the **Windsurf Settings** page, head to the **Cascade** tab, find the **Model Context Protocol (MCP) Servers** section, and click…"
+    "excerpt": "Get started quickly with these pre-built prompts for common Appwrite integrations: Browse all quick start prompts Connect Appwrite MCP servers to Windsurf for deeper integration with the Appwrite API and documentation. Before you begin, ensure you have the following **pre-requisites** installed on your system: uv must be installed on your system. Node.js and npm must be installed on your system. Open the **Windsurf Settings** page, head to the **Cascade** tab, find the **Model Context Protocol (MCP) Servers** section, and click…",
+    "breadcrumbs": [
+      "AI",
+      "agents",
+      "Windsurf"
+    ]
   },
   {
     "slug": "tooling/ai/agents/zed",
     "title": "Zed",
     "description": "Learn how you can use Zed with Appwrite by adding Appwrite MCP servers and installing Appwrite skills for AI-assisted development.",
-    "excerpt": "Get started quickly with these pre-built prompts for common Appwrite integrations: Browse all quick start prompts Connect Appwrite MCP servers to Zed for deeper integration with the Appwrite API and documentation. Before you begin, ensure you have the following **pre-requisites** installed on your system: uv must be installed on your system. No additional prerequisites. The docs server runs as a remote HTTP endpoint. In Zed, open the **Command Palette** (press on MacOS or on Linux), run the action, and choose…"
+    "excerpt": "Get started quickly with these pre-built prompts for common Appwrite integrations: Browse all quick start prompts Connect Appwrite MCP servers to Zed for deeper integration with the Appwrite API and documentation. Before you begin, ensure you have the following **pre-requisites** installed on your system: uv must be installed on your system. No additional prerequisites. The docs server runs as a remote HTTP endpoint. In Zed, open the **Command Palette** (press on MacOS or on Linux), run the action, and choose…",
+    "breadcrumbs": [
+      "AI",
+      "IDEs",
+      "Zed"
+    ]
   },
   {
     "slug": "tooling/ai/ai-in-functions",
     "title": "AI in Functions",
     "description": "Learn how to integrate AI capabilities into your Appwrite Functions using the Vercel AI SDK.",
-    "excerpt": "Appwrite Functions let you run AI workloads on the server side, keeping API keys secure and giving you full control over how your application interacts with AI providers. Using the Vercel AI SDK, you can integrate with providers like OpenAI, Anthropic, Google, and others through a unified interface. This guide shows how to build an Appwrite Function that generates text using the Vercel AI SDK with OpenAI. Appwrite Functions do not currently support streaming responses. Support for streaming is coming…"
+    "excerpt": "Appwrite Functions let you run AI workloads on the server side, keeping API keys secure and giving you full control over how your application interacts with AI providers. Using the Vercel AI SDK, you can integrate with providers like OpenAI, Anthropic, Google, and others through a unified interface. This guide shows how to build an Appwrite Function that generates text using the Vercel AI SDK with OpenAI. Appwrite Functions do not currently support streaming responses. Support for streaming is coming…",
+    "breadcrumbs": [
+      "AI",
+      "Journeys",
+      "AI in Functions"
+    ]
   },
   {
     "slug": "tooling/ai/arena",
     "title": "Appwrite Arena",
     "description": "An open-source benchmark that evaluates how well AI models understand Appwrite's services, SDKs, and APIs.",
-    "excerpt": "Appwrite Arena is an open-source benchmark that evaluates how well AI models understand Appwrite. It tests models across real-world Appwrite usage scenarios, covering services, SDKs, and APIs, to help you choose the best model for building with Appwrite. Arena ranks models by their ability to answer questions drawn from actual Appwrite platform usage, both with and without access to Appwrite skills. This makes it easy to see which models generate the most accurate Appwrite code out of the box and…"
+    "excerpt": "Appwrite Arena is an open-source benchmark that evaluates how well AI models understand Appwrite. It tests models across real-world Appwrite usage scenarios, covering services, SDKs, and APIs, to help you choose the best model for building with Appwrite. Arena ranks models by their ability to answer questions drawn from actual Appwrite platform usage, both with and without access to Appwrite skills. This makes it easy to see which models generate the most accurate Appwrite code out of the box and…",
+    "breadcrumbs": [
+      "AI",
+      "Tooling",
+      "Appwrite Arena"
+    ]
   },
   {
     "slug": "tooling/ai/assistant",
     "title": "Assistant",
     "description": "AI-powered assistant for precise Appwrite tasks. Troubleshoot issues faster, generate code snippets, and search Appwrite's docs with the use of AI.",
-    "excerpt": "The **Appwrite Assistant** is an AI-powered tool engineered to augment Appwrite-related tasks with technical precision. It operates on a foundation of training data sourced from the Appwrite documentation website, enabling it to furnish insights into Appwrite's features, APIs, and documentation. Additionally, it offers functionality for code snippet generation, sample project creation, and problem troubleshooting. While the Appwrite Assistant remains under active development and is considered experimental, it undergoes incremental refinement. Its proficiency in comprehending user queries and delivering relevant responses…"
+    "excerpt": "The **Appwrite Assistant** is an AI-powered tool engineered to augment Appwrite-related tasks with technical precision. It operates on a foundation of training data sourced from the Appwrite documentation website, enabling it to furnish insights into Appwrite's features, APIs, and documentation. Additionally, it offers functionality for code snippet generation, sample project creation, and problem troubleshooting. While the Appwrite Assistant remains under active development and is considered experimental, it undergoes incremental refinement. Its proficiency in comprehending user queries and delivering relevant responses…",
+    "breadcrumbs": [
+      "AI",
+      "Tooling",
+      "Assistant"
+    ]
   },
   {
     "slug": "tooling/ai/docs-as-markdown",
     "title": "Docs as Markdown",
     "description": "Access Appwrite documentation as Markdown for AI consumption.",
-    "excerpt": "Appwrite documentation is available as Markdown, making it easy to use with AI-powered development tools, code editors, and LLMs. Markdown lets AI tools process more content within their context limits and focus on the documentation itself instead of parsing HTML. This leads to more accurate responses based on official documentation. Copy as Markdown Every page in the Appwrite documentation includes a **Copy page** button that copies the entire page content as Markdown to your clipboard. This is useful when you…"
+    "excerpt": "Appwrite documentation is available as Markdown, making it easy to use with AI-powered development tools, code editors, and LLMs. Markdown lets AI tools process more content within their context limits and focus on the documentation itself instead of parsing HTML. This leads to more accurate responses based on official documentation. Copy as Markdown Every page in the Appwrite documentation includes a **Copy page** button that copies the entire page content as Markdown to your clipboard. This is useful when you…",
+    "breadcrumbs": [
+      "AI",
+      "Docs as Markdown"
+    ]
   },
   {
     "slug": "tooling/ai/mcp-servers",
     "title": "Model Context Protocol",
     "description": "Enable LLMs and code-generation tools to interact with your Appwrite project",
-    "excerpt": "Appwrite offers Model Context Protocol (MCP) servers that allow LLMs to directly interact with Appwrite's API and docs. Using MCP servers, you can use applications such as Claude Code, Codex, Cursor, Claude Desktop, and others to operate on your Appwrite project as well as gain context about the latest updates to Appwrite's SDKs, APIs, and CLI. What is MCP? The Model Context Protocol (MCP) is an open standard that enables Large Language Models (LLMs) and AI code-generation tools to interact…"
+    "excerpt": "Appwrite offers Model Context Protocol (MCP) servers that allow LLMs to directly interact with Appwrite's API and docs. Using MCP servers, you can use applications such as Claude Code, Codex, Cursor, Claude Desktop, and others to operate on your Appwrite project as well as gain context about the latest updates to Appwrite's SDKs, APIs, and CLI. What is MCP? The Model Context Protocol (MCP) is an open standard that enables Large Language Models (LLMs) and AI code-generation tools to interact…",
+    "breadcrumbs": [
+      "AI",
+      "Tooling",
+      "MCP servers"
+    ]
   },
   {
     "slug": "tooling/ai/mcp-servers/api",
     "title": "MCP server for Appwrite API",
     "description": "Enable LLMs and code-generation tools to interact with the Appwrite API",
-    "excerpt": "The MCP server for Appwrite API allows LLMs and code-generation tools to interact with the Appwrite platform and perform various operations on your Appwrite resources, such as creating users, managing databases, and more, using natural language commands. Here are some of the key benefits of using the MCP server: - **Direct API interaction**: Enables LLMs to perform actions directly on your Appwrite project - **Real-time data access**: Allows LLMs to fetch and manipulate live data from your Appwrite instance -…"
+    "excerpt": "The MCP server for Appwrite API allows LLMs and code-generation tools to interact with the Appwrite platform and perform various operations on your Appwrite resources, such as creating users, managing databases, and more, using natural language commands. Here are some of the key benefits of using the MCP server: - **Direct API interaction**: Enables LLMs to perform actions directly on your Appwrite project - **Real-time data access**: Allows LLMs to fetch and manipulate live data from your Appwrite instance -…",
+    "breadcrumbs": [
+      "AI",
+      "Model Context Protocol",
+      "MCP server for Appwrite API"
+    ]
   },
   {
     "slug": "tooling/ai/mcp-servers/docs",
     "title": "MCP server for Appwrite docs",
     "description": "Enable LLMs and code-generation tools to interact with the Appwrite docs",
-    "excerpt": "The MCP server for Appwrite documentation allows LLMs and code-generation tools to interact with comprehensive Appwrite documentation, enabling intelligent code generation for Appwrite's APIs and SDKs, troubleshooting assistance, and implementation guidance using natural language commands. Here are some of the key benefits of using the MCP server: - **Complete documentation access**: Provides AI assistants with access to all Appwrite documentation - **Real-time context**: Ensures AI responses are based on the latest documentation - **Intelligent search**: Enables semantic search across documentation…"
+    "excerpt": "The MCP server for Appwrite documentation allows LLMs and code-generation tools to interact with comprehensive Appwrite documentation, enabling intelligent code generation for Appwrite's APIs and SDKs, troubleshooting assistance, and implementation guidance using natural language commands. Here are some of the key benefits of using the MCP server: - **Complete documentation access**: Provides AI assistants with access to all Appwrite documentation - **Real-time context**: Ensures AI responses are based on the latest documentation - **Intelligent search**: Enables semantic search across documentation…",
+    "breadcrumbs": [
+      "AI",
+      "Model Context Protocol",
+      "MCP server for Appwrite docs"
+    ]
   },
   {
     "slug": "tooling/ai/persistent-agents-with-realtime",
     "title": "Persistent Agents with Realtime",
     "description": "Building persistent AI agents using Appwrite Realtime.",
-    "excerpt": "AI agents that maintain conversation history across sessions provide more contextual and personalized responses. By storing LLM responses in Appwrite Databases and subscribing to changes through Realtime, you can build chat applications where multiple clients receive updates instantly. Architecture 1. **Store messages**: Save user messages and LLM responses in an Appwrite table 2. **Subscribe to changes**: Use Realtime to listen for new messages 3. **Maintain context**: Load conversation history to provide context to the LLM Set up the messages table…"
+    "excerpt": "AI agents that maintain conversation history across sessions provide more contextual and personalized responses. By storing LLM responses in Appwrite Databases and subscribing to changes through Realtime, you can build chat applications where multiple clients receive updates instantly. Architecture 1. **Store messages**: Save user messages and LLM responses in an Appwrite table 2. **Subscribe to changes**: Use Realtime to listen for new messages 3. **Maintain context**: Load conversation history to provide context to the LLM Set up the messages table…",
+    "breadcrumbs": [
+      "AI",
+      "Journeys",
+      "Persistent agents with Realtime"
+    ]
   },
   {
     "slug": "tooling/ai/quickstart-prompts",
     "title": "Quick start prompts",
     "description": "Use AI assistants and code-generation tools to build Appwrite-powered applications faster using quick start prompts.",
-    "excerpt": "**Quick start prompts** are pre-built instructions designed to help AI assistants integrate Appwrite into your project. These prompts guide AI tools like Claude Code, Codex, Cursor, and others through the process of setting up authentication, databases, and other Appwrite services in your application. Quick start prompts offer several advantages when building with Appwrite: - **Faster setup**: Skip the manual configuration and let AI handle the boilerplate code and SDK integration. - **Best practices**: Prompts are crafted to follow Appwrite's recommended…"
+    "excerpt": "**Quick start prompts** are pre-built instructions designed to help AI assistants integrate Appwrite into your project. These prompts guide AI tools like Claude Code, Codex, Cursor, and others through the process of setting up authentication, databases, and other Appwrite services in your application. Quick start prompts offer several advantages when building with Appwrite: - **Faster setup**: Skip the manual configuration and let AI handle the boilerplate code and SDK integration. - **Best practices**: Prompts are crafted to follow Appwrite's recommended…",
+    "breadcrumbs": [
+      "AI",
+      "Getting started",
+      "Quick start prompts"
+    ]
   },
   {
     "slug": "tooling/ai/quickstart-prompts/android-java",
     "title": "Android (Java)",
     "description": "Quickstart prompt for integrating Appwrite with Android using Java.",
-    "excerpt": ""
+    "excerpt": "",
+    "breadcrumbs": [
+      "AI",
+      "Quick start prompts",
+      "Android (Java)"
+    ]
   },
   {
     "slug": "tooling/ai/quickstart-prompts/android-kotlin",
     "title": "Android (Kotlin)",
     "description": "Quickstart prompt for integrating Appwrite with Android using Kotlin.",
-    "excerpt": ""
+    "excerpt": "",
+    "breadcrumbs": [
+      "AI",
+      "Quick start prompts",
+      "Android (Kotlin)"
+    ]
   },
   {
     "slug": "tooling/ai/quickstart-prompts/angular",
     "title": "Angular",
     "description": "Quickstart prompt for integrating Appwrite with Angular.",
-    "excerpt": ""
+    "excerpt": "",
+    "breadcrumbs": [
+      "AI",
+      "Quick start prompts",
+      "Angular"
+    ]
   },
   {
     "slug": "tooling/ai/quickstart-prompts/apple",
     "title": "Apple (Swift)",
     "description": "Quickstart prompt for integrating Appwrite with Apple platforms using Swift.",
-    "excerpt": ""
+    "excerpt": "",
+    "breadcrumbs": [
+      "AI",
+      "Quick start prompts",
+      "Apple (Swift)"
+    ]
   },
   {
     "slug": "tooling/ai/quickstart-prompts/dart",
     "title": "Dart",
     "description": "Quickstart prompt for integrating Appwrite with Dart.",
-    "excerpt": ""
+    "excerpt": "",
+    "breadcrumbs": [
+      "AI",
+      "Quick start prompts",
+      "Dart"
+    ]
   },
   {
     "slug": "tooling/ai/quickstart-prompts/deno",
     "title": "Deno",
     "description": "Quickstart prompt for integrating Appwrite with Deno.",
-    "excerpt": ""
+    "excerpt": "",
+    "breadcrumbs": [
+      "AI",
+      "Quick start prompts",
+      "Deno"
+    ]
   },
   {
     "slug": "tooling/ai/quickstart-prompts/dotnet",
     "title": ".NET",
     "description": "Quickstart prompt for integrating Appwrite with .NET.",
-    "excerpt": ""
+    "excerpt": "",
+    "breadcrumbs": [
+      "AI",
+      "Quick start prompts",
+      ".NET"
+    ]
   },
   {
     "slug": "tooling/ai/quickstart-prompts/flutter",
     "title": "Flutter",
     "description": "Quickstart prompt for integrating Appwrite with Flutter.",
-    "excerpt": ""
+    "excerpt": "",
+    "breadcrumbs": [
+      "AI",
+      "Quick start prompts",
+      "Flutter"
+    ]
   },
   {
     "slug": "tooling/ai/quickstart-prompts/go",
     "title": "Go",
     "description": "Quickstart prompt for integrating Appwrite with Go.",
-    "excerpt": ""
+    "excerpt": "",
+    "breadcrumbs": [
+      "AI",
+      "Quick start prompts",
+      "Go"
+    ]
   },
   {
     "slug": "tooling/ai/quickstart-prompts/kotlin",
     "title": "Kotlin",
     "description": "Quickstart prompt for integrating Appwrite with Kotlin.",
-    "excerpt": ""
+    "excerpt": "",
+    "breadcrumbs": [
+      "AI",
+      "Quick start prompts",
+      "Kotlin"
+    ]
   },
   {
     "slug": "tooling/ai/quickstart-prompts/nextjs",
     "title": "Next.js",
     "description": "Quickstart prompt for integrating Appwrite with Next.js.",
-    "excerpt": ""
+    "excerpt": "",
+    "breadcrumbs": [
+      "AI",
+      "Quick start prompts",
+      "Next.js"
+    ]
   },
   {
     "slug": "tooling/ai/quickstart-prompts/node",
     "title": "Node.js",
     "description": "Quickstart prompt for integrating Appwrite with Node.js.",
-    "excerpt": ""
+    "excerpt": "",
+    "breadcrumbs": [
+      "AI",
+      "Quick start prompts",
+      "Node.js"
+    ]
   },
   {
     "slug": "tooling/ai/quickstart-prompts/nuxt",
     "title": "Nuxt",
     "description": "Quickstart prompt for integrating Appwrite with Nuxt.",
-    "excerpt": ""
+    "excerpt": "",
+    "breadcrumbs": [
+      "AI",
+      "Quick start prompts",
+      "Nuxt"
+    ]
   },
   {
     "slug": "tooling/ai/quickstart-prompts/php",
     "title": "PHP",
     "description": "Quickstart prompt for integrating Appwrite with PHP.",
-    "excerpt": ""
+    "excerpt": "",
+    "breadcrumbs": [
+      "AI",
+      "Quick start prompts",
+      "PHP"
+    ]
   },
   {
     "slug": "tooling/ai/quickstart-prompts/python",
     "title": "Python",
     "description": "Quickstart prompt for integrating Appwrite with Python.",
-    "excerpt": ""
+    "excerpt": "",
+    "breadcrumbs": [
+      "AI",
+      "Quick start prompts",
+      "Python"
+    ]
   },
   {
     "slug": "tooling/ai/quickstart-prompts/react",
     "title": "React",
     "description": "Quickstart prompt for integrating Appwrite with React.",
-    "excerpt": ""
+    "excerpt": "",
+    "breadcrumbs": [
+      "AI",
+      "Quick start prompts",
+      "React"
+    ]
   },
   {
     "slug": "tooling/ai/quickstart-prompts/react-native",
     "title": "React Native",
     "description": "Quickstart prompt for integrating Appwrite with React Native.",
-    "excerpt": ""
+    "excerpt": "",
+    "breadcrumbs": [
+      "AI",
+      "Quick start prompts",
+      "React Native"
+    ]
   },
   {
     "slug": "tooling/ai/quickstart-prompts/refine",
     "title": "Refine",
     "description": "Quickstart prompt for integrating Appwrite with Refine.",
-    "excerpt": ""
+    "excerpt": "",
+    "breadcrumbs": [
+      "AI",
+      "Quick start prompts",
+      "Refine"
+    ]
   },
   {
     "slug": "tooling/ai/quickstart-prompts/ruby",
     "title": "Ruby",
     "description": "Quickstart prompt for integrating Appwrite with Ruby.",
-    "excerpt": ""
+    "excerpt": "",
+    "breadcrumbs": [
+      "AI",
+      "Quick start prompts",
+      "Ruby"
+    ]
   },
   {
     "slug": "tooling/ai/quickstart-prompts/rust",
     "title": "Rust",
     "description": "Quickstart prompt for integrating Appwrite with Rust.",
-    "excerpt": ""
+    "excerpt": "",
+    "breadcrumbs": [
+      "AI",
+      "Quick start prompts",
+      "Rust"
+    ]
   },
   {
     "slug": "tooling/ai/quickstart-prompts/solid",
     "title": "Solid",
     "description": "Quickstart prompt for integrating Appwrite with Solid.",
-    "excerpt": ""
+    "excerpt": "",
+    "breadcrumbs": [
+      "AI",
+      "Quick start prompts",
+      "Solid"
+    ]
   },
   {
     "slug": "tooling/ai/quickstart-prompts/sveltekit",
     "title": "SvelteKit",
     "description": "Quickstart prompt for integrating Appwrite with SvelteKit.",
-    "excerpt": ""
+    "excerpt": "",
+    "breadcrumbs": [
+      "AI",
+      "Quick start prompts",
+      "SvelteKit"
+    ]
   },
   {
     "slug": "tooling/ai/quickstart-prompts/swift",
     "title": "Swift",
     "description": "Quickstart prompt for integrating Appwrite with Swift.",
-    "excerpt": ""
+    "excerpt": "",
+    "breadcrumbs": [
+      "AI",
+      "Quick start prompts",
+      "Swift"
+    ]
   },
   {
     "slug": "tooling/ai/quickstart-prompts/tanstack-start",
     "title": "TanStack Start",
     "description": "Quickstart prompt for integrating Appwrite with TanStack Start.",
-    "excerpt": ""
+    "excerpt": "",
+    "breadcrumbs": [
+      "AI",
+      "Quick start prompts",
+      "TanStack Start"
+    ]
   },
   {
     "slug": "tooling/ai/quickstart-prompts/vue",
     "title": "Vue",
     "description": "Quickstart prompt for integrating Appwrite with Vue.",
-    "excerpt": ""
+    "excerpt": "",
+    "breadcrumbs": [
+      "AI",
+      "Quick start prompts",
+      "Vue"
+    ]
   },
   {
     "slug": "tooling/ai/quickstart-prompts/web",
     "title": "Web",
     "description": "Quickstart prompt for integrating Appwrite with Web.",
-    "excerpt": ""
+    "excerpt": "",
+    "breadcrumbs": [
+      "AI",
+      "Quick start prompts",
+      "Web"
+    ]
   },
   {
     "slug": "tooling/ai/responsible-ai",
     "title": "Responsible AI",
     "description": "Best practices for responsible AI usage with Appwrite. Learn how to protect user data, secure API keys, and build transparent AI-powered applications.",
-    "excerpt": "Building AI-powered applications comes with responsibility toward your users and their data. Whether you're using AI development tools to build with Appwrite or integrating AI capabilities into your applications, following these best practices helps you build trustworthy and secure experiences. Protect user data When sending data to AI providers like OpenAI, Anthropic, or others, be mindful of what information leaves your application. - **Avoid sending personal data** to AI providers unless necessary for the feature. Strip personally identifiable information (PII)…"
+    "excerpt": "Building AI-powered applications comes with responsibility toward your users and their data. Whether you're using AI development tools to build with Appwrite or integrating AI capabilities into your applications, following these best practices helps you build trustworthy and secure experiences. Protect user data When sending data to AI providers like OpenAI, Anthropic, or others, be mindful of what information leaves your application. - **Avoid sending personal data** to AI providers unless necessary for the feature. Strip personally identifiable information (PII)…",
+    "breadcrumbs": [
+      "AI",
+      "Responsible AI"
+    ]
   },
   {
     "slug": "tooling/ai/skills",
     "title": "Agent skills",
     "description": "Install Appwrite skills to give AI agents pre-built knowledge of Appwrite SDKs and services for your preferred language.",
-    "excerpt": "Skills are open-source Markdown files that give AI agents deep knowledge of Appwrite SDKs and services. When installed, skills provide your AI tools with accurate, language-specific context about Appwrite APIs, so they generate correct code without needing to look up documentation. You can find all Appwrite skills on GitHub. Skills work across all major AI dev tools that support them. They are installed per-project or globally, and are available for all Appwrite client and server SDKs. Supported tools include but…"
+    "excerpt": "Skills are open-source Markdown files that give AI agents deep knowledge of Appwrite SDKs and services. When installed, skills provide your AI tools with accurate, language-specific context about Appwrite APIs, so they generate correct code without needing to look up documentation. You can find all Appwrite skills on GitHub. Skills work across all major AI dev tools that support them. They are installed per-project or globally, and are available for all Appwrite client and server SDKs. Supported tools include but…",
+    "breadcrumbs": [
+      "AI",
+      "Tooling",
+      "Agent skills"
+    ]
   },
   {
     "slug": "tooling/ai/vector-db-and-embeddings",
     "title": "Vector DB and embeddings",
     "description": "Using vector databases and embeddings with Appwrite.",
-    "excerpt": "Vector databases store high-dimensional vectors (embeddings) that represent text, images, or other data. They enable semantic search, where results are based on meaning rather than exact keyword matches. This makes them essential for AI applications like recommendation systems, search engines, and retrieval-augmented generation (RAG). Embeddings are numerical representations of data that capture semantic meaning. Text with similar meanings will have embeddings that are close together in vector space. Appwrite integrates with vector databases through Functions, allowing you to index your…"
+    "excerpt": "Vector databases store high-dimensional vectors (embeddings) that represent text, images, or other data. They enable semantic search, where results are based on meaning rather than exact keyword matches. This makes them essential for AI applications like recommendation systems, search engines, and retrieval-augmented generation (RAG). Embeddings are numerical representations of data that capture semantic meaning. Text with similar meanings will have embeddings that are close together in vector space. Appwrite integrates with vector databases through Functions, allowing you to index your…",
+    "breadcrumbs": [
+      "AI",
+      "Journeys",
+      "Vector DB and embeddings"
+    ]
   },
   {
     "slug": "tooling/ai/vibe-coding/bolt",
     "title": "Bolt",
     "description": "Learn how to connect the Appwrite docs MCP server to Bolt for AI-assisted development with access to Appwrite documentation.",
-    "excerpt": "To connect the Appwrite docs MCP server to Bolt: 1. Go to **Settings** → **Connectors (MCP)**. 2. Click **Custom MCP server**. 3. Enter the following details: - **Name**: - **URL**: - **Transport Type**: HTTP - **Authentication**: None 4. Click **Add MCP server**. The Appwrite docs MCP server will now be available in your Bolt projects. Once connected, Bolt has access to Appwrite documentation context. You can use prompts like: **Example prompts:** - - - - -"
+    "excerpt": "To connect the Appwrite docs MCP server to Bolt: 1. Go to **Settings** → **Connectors (MCP)**. 2. Click **Custom MCP server**. 3. Enter the following details: - **Name**: - **URL**: - **Transport Type**: HTTP - **Authentication**: None 4. Click **Add MCP server**. The Appwrite docs MCP server will now be available in your Bolt projects. Once connected, Bolt has access to Appwrite documentation context. You can use prompts like: **Example prompts:** - - - - -",
+    "breadcrumbs": [
+      "AI",
+      "Vibe coding",
+      "Bolt"
+    ]
   },
   {
     "slug": "tooling/ai/vibe-coding/claude-desktop",
     "title": "Claude Desktop",
     "description": "Learn how to use Claude Desktop with Appwrite through quick start prompts and MCP servers for AI-assisted development.",
-    "excerpt": "Get started quickly with these pre-built prompts for common Appwrite integrations: Browse all quick start prompts Connect Appwrite MCP servers to Claude Desktop for deeper integration with the Appwrite API and documentation. Before you begin, ensure you have the following **pre-requisites** installed on your system: uv must be installed on your system. Node.js and npm must be installed on your system. In the Claude Desktop app, open the app's **Settings** page (press on Windows or on MacOS) and head to…"
+    "excerpt": "Get started quickly with these pre-built prompts for common Appwrite integrations: Browse all quick start prompts Connect Appwrite MCP servers to Claude Desktop for deeper integration with the Appwrite API and documentation. Before you begin, ensure you have the following **pre-requisites** installed on your system: uv must be installed on your system. Node.js and npm must be installed on your system. In the Claude Desktop app, open the app's **Settings** page (press on Windows or on MacOS) and head to…",
+    "breadcrumbs": [
+      "AI",
+      "Vibe coding",
+      "Claude Desktop"
+    ]
   },
   {
     "slug": "tooling/ai/vibe-coding/emergent",
     "title": "Emergent",
     "description": "Learn how to connect Appwrite MCP servers to Emergent for AI-assisted development with access to the Appwrite API and documentation.",
-    "excerpt": "To connect Appwrite MCP servers to Emergent: 1. On the homepage, click **Advanced Controls**. 2. Click **Select MCP Tools**. 3. Click **New MCP Server**. 4. Enter a name for your server (e.g., or ). 5. Paste one of the following JSON configurations: **Configuration:** - Replace with your actual Appwrite project ID - Replace with your Appwrite API key - Replace with your Appwrite Cloud region (e.g., , ) Once connected, you can use natural language to interact with Appwrite. Try…"
+    "excerpt": "To connect Appwrite MCP servers to Emergent: 1. On the homepage, click **Advanced Controls**. 2. Click **Select MCP Tools**. 3. Click **New MCP Server**. 4. Enter a name for your server (e.g., or ). 5. Paste one of the following JSON configurations: **Configuration:** - Replace with your actual Appwrite project ID - Replace with your Appwrite API key - Replace with your Appwrite Cloud region (e.g., , ) Once connected, you can use natural language to interact with Appwrite. Try…",
+    "breadcrumbs": [
+      "AI",
+      "Vibe coding",
+      "Emergent"
+    ]
   },
   {
     "slug": "tooling/ai/vibe-coding/lovable",
     "title": "Lovable",
     "description": "Learn how to connect the Appwrite docs MCP server to Lovable for AI-assisted development with access to Appwrite documentation.",
-    "excerpt": "To connect the Appwrite docs MCP server to Lovable: 1. Go to **Settings** → **Connectors** → **Personal connectors**. 2. Click **New MCP server**. 3. Enter the following details: - **Server name**: - **Server URL**: - **Authentication**: Select **No authentication** 4. Click **Add server**. The Appwrite docs MCP server will now appear in your list of personal connectors. Once connected, Lovable has access to Appwrite documentation context. You can use prompts like: **Example prompts:** - - - - -"
+    "excerpt": "To connect the Appwrite docs MCP server to Lovable: 1. Go to **Settings** → **Connectors** → **Personal connectors**. 2. Click **New MCP server**. 3. Enter the following details: - **Server name**: - **Server URL**: - **Authentication**: Select **No authentication** 4. Click **Add server**. The Appwrite docs MCP server will now appear in your list of personal connectors. Once connected, Lovable has access to Appwrite documentation context. You can use prompts like: **Example prompts:** - - - - -",
+    "breadcrumbs": [
+      "AI",
+      "Vibe coding",
+      "Lovable"
+    ]
   },
   {
     "slug": "tooling/ai/vibe-coding/zenflow",
     "title": "Zenflow",
     "description": "Learn how to add the Appwrite MCP servers to agents in Zenflow to interact with both the Appwrite API and documentation.",
-    "excerpt": "Get started quickly with these pre-built prompts for common Appwrite integrations: Browse all quick start prompts Connect Appwrite MCP servers to Zenflow for deeper integration with the Appwrite API and documentation. Before you begin, ensure you have the following **pre-requisites** installed on your system: uv must be installed on your system. Node.js and npm must be installed on your system. To add the Appwrite MCP server, open Zenflow and go to the **Settings** > **MCP servers**. From there, select your…"
+    "excerpt": "Get started quickly with these pre-built prompts for common Appwrite integrations: Browse all quick start prompts Connect Appwrite MCP servers to Zenflow for deeper integration with the Appwrite API and documentation. Before you begin, ensure you have the following **pre-requisites** installed on your system: uv must be installed on your system. Node.js and npm must be installed on your system. To add the Appwrite MCP server, open Zenflow and go to the **Settings** > **MCP servers**. From there, select your…",
+    "breadcrumbs": [
+      "AI",
+      "Vibe coding",
+      "Zenflow"
+    ]
   },
   {
     "slug": "tooling/appwriter",
     "title": "The Appwriter",
     "description": "Learn about the custom Appwriter mechanical keyboard and its specifications",
-    "excerpt": "The Appwriter is an exclusive mechanical keyboard custom-designed by the Appwrite team. It is optimized to improve developer productivity and is specially tuned to use with the Appwrite Console. The Appwriter uses icons from the Appwrite Console and Docs on specific keys, making memorizing keyboard shortcuts easier. For example, then is the shortcut for navigating to your project's databases, and the icon on the key matches the icon for Appwrite Databases. What's in the box - Appwriter keyboard - USB-C…"
+    "excerpt": "The Appwriter is an exclusive mechanical keyboard custom-designed by the Appwrite team. It is optimized to improve developer productivity and is specially tuned to use with the Appwrite Console. The Appwriter uses icons from the Appwrite Console and Docs on specific keys, making memorizing keyboard shortcuts easier. For example, then is the shortcut for navigating to your project's databases, and the icon on the key matches the icon for Appwrite Databases. What's in the box - Appwriter keyboard - USB-C…",
+    "breadcrumbs": [
+      "The Appwriter",
+      "tooling",
+      "The Appwriter"
+    ]
   },
   {
     "slug": "tooling/arena",
     "title": "Arena",
     "description": "An open-source benchmark that evaluates how well AI models understand Appwrite's services, SDKs, and APIs.",
-    "excerpt": "Appwrite Arena is an open-source benchmark that evaluates how well AI models understand Appwrite. It tests models across real-world Appwrite usage scenarios, covering services, SDKs, and APIs, to help you choose the best model for building with Appwrite. Arena ranks models by their ability to answer questions drawn from actual Appwrite platform usage, both with and without access to Appwrite skills. This makes it easy to see which models generate the most accurate Appwrite code out of the box and…"
+    "excerpt": "Appwrite Arena is an open-source benchmark that evaluates how well AI models understand Appwrite. It tests models across real-world Appwrite usage scenarios, covering services, SDKs, and APIs, to help you choose the best model for building with Appwrite. Arena ranks models by their ability to answer questions drawn from actual Appwrite platform usage, both with and without access to Appwrite skills. This makes it easy to see which models generate the most accurate Appwrite code out of the box and…",
+    "breadcrumbs": [
+      "tooling",
+      "Arena"
+    ]
   },
   {
     "slug": "tooling/command-center",
     "title": "Command Center",
     "description": "Appwrite Command Center enhances developer experience with AI, keyboard shortcuts, and context-aware search for efficient navigation and task execution.",
-    "excerpt": "The Appwrite **Command Center** is designed to improve the developer experience by enabling straightforward navigation and exploration of features, settings, and sections of the Appwrite Console. The Command Center is enhanced with AI capabilities and is the home of the Appwrite assistant. It allows you to execute tasks and access features within the Appwrite Console efficiently using keyboard shortcuts and advanced context-aware search. Getting started You can access the Command Center by pressing + on Mac or + on Windows…"
+    "excerpt": "The Appwrite **Command Center** is designed to improve the developer experience by enabling straightforward navigation and exploration of features, settings, and sections of the Appwrite Console. The Command Center is enhanced with AI capabilities and is the home of the Appwrite assistant. It allows you to execute tasks and access features within the Appwrite Console efficiently using keyboard shortcuts and advanced context-aware search. Getting started You can access the Command Center by pressing + on Mac or + on Windows…",
+    "breadcrumbs": [
+      "Command Center",
+      "tooling",
+      "Command Center"
+    ]
   },
   {
     "slug": "tooling/command-line/buckets",
     "title": "Buckets",
     "description": "Efficiently deploy your Appwrite buckets using the Command-Line Tool (CLI).",
-    "excerpt": "The Appwrite CLI allows you to configure and deploy buckets across projects. You can also configure your files using the CLI commands. Initialize bucket Create a new bucket using the following command: Pull bucket You can also pull your existing Appwrite buckets from the Appwrite Console using the command in the folder containing your file. appwrite.config.json After initializing your Appwrite project and pulling your existing buckets, your file should look similar to the following: You can also move the array…"
+    "excerpt": "The Appwrite CLI allows you to configure and deploy buckets across projects. You can also configure your files using the CLI commands. Initialize bucket Create a new bucket using the following command: Pull bucket You can also pull your existing Appwrite buckets from the Appwrite Console using the command in the folder containing your file. appwrite.config.json After initializing your Appwrite project and pulling your existing buckets, your file should look similar to the following: You can also move the array…",
+    "breadcrumbs": [
+      "CLI",
+      "Deployments",
+      "Buckets"
+    ]
   },
   {
     "slug": "tooling/command-line/commands",
     "title": "Commands",
     "description": "Learn about Appwrites CLI and the powerful, feature complete commands to manage Appwrite's auth, databases, functions, storage, and more.",
-    "excerpt": "All commands are compatible with the latest version of the CLI. We recommend running the CLI on its latest version. Other than commands to create and push databases, tables, functions, messaging-topics, teams, and buckets, the Appwrite CLI can be used as a Server SDK as well. The Appwrite CLI has a command for every Server API endpoint. Commands generally follow the following syntax: Commands Below is a list of the available commands in the Appwrite CLI. You can get more…"
+    "excerpt": "All commands are compatible with the latest version of the CLI. We recommend running the CLI on its latest version. Other than commands to create and push databases, tables, functions, messaging-topics, teams, and buckets, the Appwrite CLI can be used as a Server SDK as well. The Appwrite CLI has a command for every Server API endpoint. Commands generally follow the following syntax: Commands Below is a list of the available commands in the Appwrite CLI. You can get more…",
+    "breadcrumbs": [
+      "CLI",
+      "Guides",
+      "Commands"
+    ]
   },
   {
     "slug": "tooling/command-line/functions",
     "title": "Functions",
     "description": "Efficiently deploy your Appwrite functions using the Command-Line Tool (CLI).",
-    "excerpt": "The CLI handles the creation, deployment, and execution of Appwrite Functions, as well as the configuration of the variables. You can also develop your function locally using CLI commands. Initialize function Create a new function using the following command: Pull function You can also pull your existing Appwrite Functions from the Appwrite Console using the command in the folder containing your file. appwrite.config.json After initializing your Appwrite project and pulling your existing functions, your file should look similar to the…"
+    "excerpt": "The CLI handles the creation, deployment, and execution of Appwrite Functions, as well as the configuration of the variables. You can also develop your function locally using CLI commands. Initialize function Create a new function using the following command: Pull function You can also pull your existing Appwrite Functions from the Appwrite Console using the command in the folder containing your file. appwrite.config.json After initializing your Appwrite project and pulling your existing functions, your file should look similar to the…",
+    "breadcrumbs": [
+      "CLI",
+      "Deployments",
+      "Functions"
+    ]
   },
   {
     "slug": "tooling/command-line/generate",
     "title": "Generate SDK",
     "description": "Generate a type-safe SDK for your Appwrite project using the Command-Line Tool (CLI). Automatically create typed helpers based on your database schema.",
-    "excerpt": "The command creates a type-safe SDK tailored to your Appwrite project. It reads your database schema and generates typed helpers, so you can interact with your tables using auto-completed methods, resulting in a better developer experience. Generate SDK Run the following command in your project directory: The CLI automatically detects your project's language and generates the SDK to a directory. Options * Option * Description --- * * Output directory for generated files (default: ) --- * * Target language…"
+    "excerpt": "The command creates a type-safe SDK tailored to your Appwrite project. It reads your database schema and generates typed helpers, so you can interact with your tables using auto-completed methods, resulting in a better developer experience. Generate SDK Run the following command in your project directory: The CLI automatically detects your project's language and generates the SDK to a directory. Options * Option * Description --- * * Output directory for generated files (default: ) --- * * Target language…",
+    "breadcrumbs": [
+      "CLI",
+      "Guides",
+      "Generate SDK"
+    ]
   },
   {
     "slug": "tooling/command-line/installation",
     "title": "Installation",
     "description": "Get started with the Appwrite CLI by following the installation guide. Learn how to set up and configure the CLI on your development environment.",
-    "excerpt": "The Appwrite Command Line Interface (CLI) is an application that allows you to interact with Appwrite to perform server-side tasks using your terminal. This includes creating and managing projects, managing resources (rows, files, users), creating and deploying Appwrite Functions, and other operations available through Appwrite's API. Getting started The CLI is packaged both as an npm module as well as a standalone binary for your operating system, making it completely dependency free, platform independent, and language agnostic. If you plan…"
+    "excerpt": "The Appwrite Command Line Interface (CLI) is an application that allows you to interact with Appwrite to perform server-side tasks using your terminal. This includes creating and managing projects, managing resources (rows, files, users), creating and deploying Appwrite Functions, and other operations available through Appwrite's API. Getting started The CLI is packaged both as an npm module as well as a standalone binary for your operating system, making it completely dependency free, platform independent, and language agnostic. If you plan…",
+    "breadcrumbs": [
+      "CLI",
+      "Guides",
+      "Installation"
+    ]
   },
   {
     "slug": "tooling/command-line/non-interactive",
     "title": "Non-interactive",
     "description": "Deploy changes to Appwrite projects to migrate databases and tables schema, functions, teams, buckets, and more.",
-    "excerpt": "The Appwrite CLI can be used in a non-interactive and headless manner, without saving configuration or sessions. This is especially useful when you want to automate tasks on a continuous integration server. You can enable the non-interactive mode for the Appwrite CLI by setting the , , and : When you set the global configuration parameters using the command, they take precedence over the local configuration parameters in your thereby switching the CLI to non-interactive mode. In this mode, the…"
+    "excerpt": "The Appwrite CLI can be used in a non-interactive and headless manner, without saving configuration or sessions. This is especially useful when you want to automate tasks on a continuous integration server. You can enable the non-interactive mode for the Appwrite CLI by setting the , , and : When you set the global configuration parameters using the command, they take precedence over the local configuration parameters in your thereby switching the CLI to non-interactive mode. In this mode, the…",
+    "breadcrumbs": [
+      "CLI",
+      "Guides",
+      "Non interactive"
+    ]
   },
   {
     "slug": "tooling/command-line/sites",
     "title": "Sites",
     "description": "Efficiently deploy your Appwrite Sites using the Command-Line Tool (CLI).",
-    "excerpt": "The CLI handles the creation, deployment, and execution of Appwrite Sites, as well as the configuration of the variables. Initialize site Create a new site using the following command: Pull site You can also pull your existing Appwrite Sites from the Appwrite Console using the command in the folder containing your file. appwrite.config.json After initializing your Appwrite project and pulling your existing sites, your file should look similar to the following: You can also move the array into a separate…"
+    "excerpt": "The CLI handles the creation, deployment, and execution of Appwrite Sites, as well as the configuration of the variables. Initialize site Create a new site using the following command: Pull site You can also pull your existing Appwrite Sites from the Appwrite Console using the command in the folder containing your file. appwrite.config.json After initializing your Appwrite project and pulling your existing sites, your file should look similar to the following: You can also move the array into a separate…",
+    "breadcrumbs": [
+      "CLI",
+      "Deployments",
+      "Sites"
+    ]
   },
   {
     "slug": "tooling/command-line/tables",
     "title": "Tables",
     "description": "Efficiently deploy your Appwrite tables using the Command-Line Tool (CLI).",
-    "excerpt": "Create and manage your tables using the CLI commands. The Appwrite CLI also helps you push your project's databases and tables schema from one project to another. Initialize table Create a new table using the following command: Pull table You can also pull your existing Appwrite tables and databases from the Appwrite Console using the command in the folder containing your file. appwrite.config.json After initializing your Appwrite project and pulling your existing tables, your file should look similar to the…"
+    "excerpt": "Create and manage your tables using the CLI commands. The Appwrite CLI also helps you push your project's databases and tables schema from one project to another. Initialize table Create a new table using the following command: Pull table You can also pull your existing Appwrite tables and databases from the Appwrite Console using the command in the folder containing your file. appwrite.config.json After initializing your Appwrite project and pulling your existing tables, your file should look similar to the…",
+    "breadcrumbs": [
+      "CLI",
+      "Deployments",
+      "Tables"
+    ]
   },
   {
     "slug": "tooling/command-line/teams",
     "title": "Teams",
     "description": "Efficiently deploy your Appwrite teams using the Command-Line Tool (CLI).",
-    "excerpt": "The Appwrite CLI can create teams to organize users. Teams can be used to configure permissions for a group of users. Initialize team Create a new team using the following command: Pull team You can also pull your existing Appwrite teams from the Appwrite Console using the command in the folder containing your file. appwrite.config.json After initializing your Appwrite project and pulling your existing teams, your file should look similar to the following: You can also move the array into…"
+    "excerpt": "The Appwrite CLI can create teams to organize users. Teams can be used to configure permissions for a group of users. Initialize team Create a new team using the following command: Pull team You can also pull your existing Appwrite teams from the Appwrite Console using the command in the folder containing your file. appwrite.config.json After initializing your Appwrite project and pulling your existing teams, your file should look similar to the following: You can also move the array into…",
+    "breadcrumbs": [
+      "CLI",
+      "Deployments",
+      "Teams"
+    ]
   },
   {
     "slug": "tooling/command-line/topics",
     "title": "Topics",
     "description": "Efficiently deploy your Appwrite topics using the Command-Line Tool (CLI).",
-    "excerpt": "The Appwrite CLI can create, update, delete, and get topics, as well as configure the provider and the subscribers. Initialize topic Create a new topic using the following command: Pull topics You can also pull your existing Appwrite topics from the Appwrite Console using the command in the folder containing your file. appwrite.config.json After initializing your Appwrite project and pulling your existing topics, your file should look similar to the following: You can also move the array into a separate…"
+    "excerpt": "The Appwrite CLI can create, update, delete, and get topics, as well as configure the provider and the subscribers. Initialize topic Create a new topic using the following command: Pull topics You can also pull your existing Appwrite topics from the Appwrite Console using the command in the folder containing your file. appwrite.config.json After initializing your Appwrite project and pulling your existing topics, your file should look similar to the following: You can also move the array into a separate…",
+    "breadcrumbs": [
+      "CLI",
+      "Deployments",
+      "Topics"
+    ]
   },
   {
     "slug": "tooling/terraform",
     "title": "Terraform provider",
     "description": "Manage Appwrite infrastructure as code with the official Terraform provider. Works with Appwrite Cloud and Community Edition.",
-    "excerpt": "The Terraform provider for Appwrite lets you declare **TablesDB** (databases, tables, columns, indexes, rows), **Storage** (buckets and files), **Auth** (users and teams), **Functions** (functions and variables), **Sites** (sites and variables), **Messaging** (providers, topics, subscribers), **webhooks**, **backup policies**, and more in files, and apply those changes through HashiCorp Terraform. It is the official way to automate Appwrite project configuration alongside the rest of your stack. Resources Resource types use the prefix and match the Terraform Registry documentation. | Area | Resources…"
+    "excerpt": "The Terraform provider for Appwrite lets you declare **TablesDB** (databases, tables, columns, indexes, rows), **Storage** (buckets and files), **Auth** (users and teams), **Functions** (functions and variables), **Sites** (sites and variables), **Messaging** (providers, topics, subscribers), **webhooks**, **backup policies**, and more in files, and apply those changes through HashiCorp Terraform. It is the official way to automate Appwrite project configuration alongside the rest of your stack. Resources Resource types use the prefix and match the Terraform Registry documentation. | Area | Resources…",
+    "breadcrumbs": [
+      "Terraform provider",
+      "Getting started",
+      "Overview"
+    ]
   },
   {
     "slug": "tooling/terraform/provider",
     "title": "Configuration",
     "description": "Configure the Appwrite Terraform provider for Cloud or Community Edition using endpoints, API keys, and optional environment variables.",
-    "excerpt": "The Appwrite provider is published as on the Terraform Registry. The registry hosts **generated reference docs** for the provider and every resource and data source: latest docs. Full examples and attribute tables also live in the provider repository. Terraform block Declare the provider source in a block. You can add a constraint when you want to pin a release; see published versions on the registry provider page. Appwrite Cloud Replace with your project’s region subdomain (see Regions). Community Edition For…"
+    "excerpt": "The Appwrite provider is published as on the Terraform Registry. The registry hosts **generated reference docs** for the provider and every resource and data source: latest docs. Full examples and attribute tables also live in the provider repository. Terraform block Declare the provider source in a block. You can add a constraint when you want to pin a release; see published versions on the registry provider page. Appwrite Cloud Replace with your project’s region subdomain (see Regions). Community Edition For…",
+    "breadcrumbs": [
+      "Terraform provider",
+      "Getting started",
+      "Configuration"
+    ]
   },
   {
     "slug": "tooling/terraform/resources/auth",
     "title": "Auth",
     "description": "Manage Appwrite users and teams with the Terraform provider.",
-    "excerpt": "The provider exposes **Auth** resources so you can align users and teams with the rest of your infrastructure-as-code workflow. For generated schemas and import syntax, see the Terraform Registry: auth_user and auth_team. The provider repository contains source and examples. Resources | Resource | Purpose | |----------|---------| | | Create and manage users | | | Create and manage teams | Use these together with your normal Auth and permission models; scope API keys appropriately when Terraform manages identity resources. Examples…"
+    "excerpt": "The provider exposes **Auth** resources so you can align users and teams with the rest of your infrastructure-as-code workflow. For generated schemas and import syntax, see the Terraform Registry: auth_user and auth_team. The provider repository contains source and examples. Resources | Resource | Purpose | |----------|---------| | | Create and manage users | | | Create and manage teams | Use these together with your normal Auth and permission models; scope API keys appropriately when Terraform manages identity resources. Examples…",
+    "breadcrumbs": [
+      "Terraform provider",
+      "Resources",
+      "Auth"
+    ]
   },
   {
     "slug": "tooling/terraform/resources/backups",
     "title": "Backups",
     "description": "Configure Appwrite backup policies with Terraform where your plan supports them.",
-    "excerpt": "The resource configures **backup policies** for supported resources. Availability depends on your Appwrite Cloud plan or self-hosted setup. See the Terraform Registry: backup_policy. The provider repository lists the full argument reference. Resource | Resource | Purpose | |----------|---------| | | Configure backup policies for supported resources | Policies use **** (CRON), **** (days), and **** (for example ). Omit **** to cover all databases in the project, or set **** to a specific database ID (often ) to back up…"
+    "excerpt": "The resource configures **backup policies** for supported resources. Availability depends on your Appwrite Cloud plan or self-hosted setup. See the Terraform Registry: backup_policy. The provider repository lists the full argument reference. Resource | Resource | Purpose | |----------|---------| | | Configure backup policies for supported resources | Policies use **** (CRON), **** (days), and **** (for example ). Omit **** to cover all databases in the project, or set **** to a specific database ID (often ) to back up…",
+    "breadcrumbs": [
+      "Terraform provider",
+      "Resources",
+      "Backups"
+    ]
   },
   {
     "slug": "tooling/terraform/resources/databases",
     "title": "Databases",
     "description": "Use Terraform to manage Appwrite TablesDB databases, tables, columns, indexes, and rows with the official Appwrite provider.",
-    "excerpt": "The provider exposes Appwrite **TablesDB** as Terraform resources. Typical order: create a **database** (), then **tables**, then **columns** and **indexes**, and optionally **rows**. For full generated schemas, see the Terraform Registry: tablesdb, tablesdb_table, tablesdb_column, tablesdb_index, and tablesdb_row. The provider repository contains the source and examples. Resources | Resource | Purpose | |----------|---------| | | Create a database in your project | | | Create a table within a database | | | Define columns (types, constraints, defaults) | | |…"
+    "excerpt": "The provider exposes Appwrite **TablesDB** as Terraform resources. Typical order: create a **database** (), then **tables**, then **columns** and **indexes**, and optionally **rows**. For full generated schemas, see the Terraform Registry: tablesdb, tablesdb_table, tablesdb_column, tablesdb_index, and tablesdb_row. The provider repository contains the source and examples. Resources | Resource | Purpose | |----------|---------| | | Create a database in your project | | | Create a table within a database | | | Define columns (types, constraints, defaults) | | |…",
+    "breadcrumbs": [
+      "Terraform provider",
+      "Resources",
+      "Databases"
+    ]
   },
   {
     "slug": "tooling/terraform/resources/functions",
     "title": "Functions",
     "description": "Manage Appwrite Functions, environment variables, and deployments with Terraform.",
-    "excerpt": "Functions can be declared as Terraform resources, including **runtime**, **entrypoint**, **build commands**, **events**, and **per-function environment variables**. The provider also exposes an **** resource so you can ship code from a local tar archive or from a Git template alongside the rest of your configuration. See the Terraform Registry: function, function_variable, and function_deployment. The provider repository includes examples. Resources | Resource | Purpose | |----------|---------| | | Create and update a function (runtime, entrypoint, commands, events, timeout, and related settings)…"
+    "excerpt": "Functions can be declared as Terraform resources, including **runtime**, **entrypoint**, **build commands**, **events**, and **per-function environment variables**. The provider also exposes an **** resource so you can ship code from a local tar archive or from a Git template alongside the rest of your configuration. See the Terraform Registry: function, function_variable, and function_deployment. The provider repository includes examples. Resources | Resource | Purpose | |----------|---------| | | Create and update a function (runtime, entrypoint, commands, events, timeout, and related settings)…",
+    "breadcrumbs": [
+      "Terraform provider",
+      "Resources",
+      "Functions"
+    ]
   },
   {
     "slug": "tooling/terraform/resources/messaging",
     "title": "Messaging",
     "description": "Configure Appwrite Messaging providers, topics, and subscribers with Terraform for email, SMS, and push delivery.",
-    "excerpt": "Messaging integrates email, SMS, and push providers. The Terraform provider exposes **providers** (credentials and channel configuration), **topics** (groupings of subscribers for broadcasts), and **subscribers** (who receives messages on a topic). See the Terraform Registry for generated schemas: messaging_provider, messaging_topic, and messaging_subscriber. The provider repository lists every and optional field in source; provider-specific arguments apply only to the matching provider (for example Twilio , SMTP and , FCM ). Resources | Resource | Purpose | |----------|---------| | | Register an email,…"
+    "excerpt": "Messaging integrates email, SMS, and push providers. The Terraform provider exposes **providers** (credentials and channel configuration), **topics** (groupings of subscribers for broadcasts), and **subscribers** (who receives messages on a topic). See the Terraform Registry for generated schemas: messaging_provider, messaging_topic, and messaging_subscriber. The provider repository lists every and optional field in source; provider-specific arguments apply only to the matching provider (for example Twilio , SMTP and , FCM ). Resources | Resource | Purpose | |----------|---------| | | Register an email,…",
+    "breadcrumbs": [
+      "Terraform provider",
+      "Resources",
+      "Messaging"
+    ]
   },
   {
     "slug": "tooling/terraform/resources/sites",
     "title": "Sites",
     "description": "Manage Appwrite Sites, environment variables, and deployments with Terraform.",
-    "excerpt": "Sites supports Terraform resources for the **site** definition, **build-time environment variables**, and **deployments** that publish your site from a local artifact or a Git template. See the Terraform Registry: site, site_variable, and site_deployment. The provider repository includes examples. Resources | Resource | Purpose | |----------|---------| | | Create and update a site (framework, build and install commands, runtimes, and related settings) | | | Set environment variables for a site (for example keys) | | | Push a new deployment…"
+    "excerpt": "Sites supports Terraform resources for the **site** definition, **build-time environment variables**, and **deployments** that publish your site from a local artifact or a Git template. See the Terraform Registry: site, site_variable, and site_deployment. The provider repository includes examples. Resources | Resource | Purpose | |----------|---------| | | Create and update a site (framework, build and install commands, runtimes, and related settings) | | | Set environment variables for a site (for example keys) | | | Push a new deployment…",
+    "breadcrumbs": [
+      "Terraform provider",
+      "Resources",
+      "Sites"
+    ]
   },
   {
     "slug": "tooling/terraform/resources/storage",
     "title": "Storage",
     "description": "Manage Appwrite Storage buckets and files with the Terraform provider, including file limits, extensions, compression, and security options.",
-    "excerpt": "The resource manages Storage buckets in your Appwrite project: file size limits, allowed extensions, compression, image transformations, encryption, and optional antivirus. The resource uploads and manages **files** inside a bucket from a local path on the machine running Terraform. See the Terraform Registry for generated schemas: storage_bucket and storage_file. The provider repository contains source and examples. Resources | Resource | Purpose | |----------|---------| | | Create and update a storage bucket | | | Upload and manage a file in…"
+    "excerpt": "The resource manages Storage buckets in your Appwrite project: file size limits, allowed extensions, compression, image transformations, encryption, and optional antivirus. The resource uploads and manages **files** inside a bucket from a local path on the machine running Terraform. See the Terraform Registry for generated schemas: storage_bucket and storage_file. The provider repository contains source and examples. Resources | Resource | Purpose | |----------|---------| | | Create and update a storage bucket | | | Upload and manage a file in…",
+    "breadcrumbs": [
+      "Terraform provider",
+      "Resources",
+      "Storage"
+    ]
   },
   {
     "slug": "tooling/terraform/resources/webhooks",
     "title": "Webhooks",
     "description": "Register Appwrite webhooks with Terraform to deliver events to your HTTP endpoints.",
-    "excerpt": "The resource registers a **URL** and **event** subscriptions so Appwrite can notify your services when resources change. Configure **** for TLS verification on the webhook URL, **** and **** when your endpoint expects HTTP basic authentication, and read **** from Terraform state when you verify **incoming** webhook signatures on your server. See the Terraform Registry: webhook. The provider repository lists the full argument reference. Resource | Resource | Purpose | |----------|---------| | | Register a webhook URL and subscribe to…"
+    "excerpt": "The resource registers a **URL** and **event** subscriptions so Appwrite can notify your services when resources change. Configure **** for TLS verification on the webhook URL, **** and **** when your endpoint expects HTTP basic authentication, and read **** from Terraform state when you verify **incoming** webhook signatures on your server. See the Terraform Registry: webhook. The provider repository lists the full argument reference. Resource | Resource | Purpose | |----------|---------| | | Register a webhook URL and subscribe to…",
+    "breadcrumbs": [
+      "Terraform provider",
+      "Resources",
+      "Webhooks"
+    ]
   },
   {
     "slug": "tutorials/android/step-1",
     "title": "Build an ideas tracker with Android",
     "description": "Learn to build an Android app with no backend code using an Appwrite backend.",
-    "excerpt": "**Idea tracker**: an app to track all the side project ideas that you'll start, but probably never finish. In this tutorial, you will build Idea tracker with Appwrite and Android. Concepts This tutorial will introduce the following concepts: 1. Setting up your first project 2. Authentication 3. Databases and tables 4. Queries and pagination Prerequisites 1. Basic knowledge of Kotlin and Android development. 2. Have Android Studio installed on your computer."
+    "excerpt": "**Idea tracker**: an app to track all the side project ideas that you'll start, but probably never finish. In this tutorial, you will build Idea tracker with Appwrite and Android. Concepts This tutorial will introduce the following concepts: 1. Setting up your first project 2. Authentication 3. Databases and tables 4. Queries and pagination Prerequisites 1. Basic knowledge of Kotlin and Android development. 2. Have Android Studio installed on your computer.",
+    "breadcrumbs": [
+      "Android",
+      "Steps",
+      "Introduction"
+    ]
   },
   {
     "slug": "tutorials/android/step-2",
     "title": "Create app",
     "description": "Create a Android app project using Appwrite.",
-    "excerpt": "Create Android project Create a Android app with the Android Studio **New Project** wizard. Select **Empty Activity** as the template. Add dependencies Install the Android Appwrite SDK. Add the following to your dependencies in the file: In case you need to create OAuth 2 sessions in the future, the following activity needs to be added inside the tag, along side the existing tags in your AndroidManifest.xml. Be sure to replace the **** string with your actual Appwrite project ID. You…"
+    "excerpt": "Create Android project Create a Android app with the Android Studio **New Project** wizard. Select **Empty Activity** as the template. Add dependencies Install the Android Appwrite SDK. Add the following to your dependencies in the file: In case you need to create OAuth 2 sessions in the future, the following activity needs to be added inside the tag, along side the existing tags in your AndroidManifest.xml. Be sure to replace the **** string with your actual Appwrite project ID. You…",
+    "breadcrumbs": [
+      "Android",
+      "Steps",
+      "Create app"
+    ]
   },
   {
     "slug": "tutorials/android/step-3",
     "title": "Set up Appwrite",
     "description": "Initialize Appwrite in your Android project.",
-    "excerpt": "Create project Head to the Appwrite Console. If this is your first time using Appwrite, create an account and create your first project. Then, under **Add a platform**, add an **Android app**. The **Package Name** should be the same as the one you used when creating your app. You can skip optional steps. Initialize Appwrite SDK To use Appwrite in our Android app, we'll need to find our project ID. Find your project's ID in the **Settings** page. Create a…"
+    "excerpt": "Create project Head to the Appwrite Console. If this is your first time using Appwrite, create an account and create your first project. Then, under **Add a platform**, add an **Android app**. The **Package Name** should be the same as the one you used when creating your app. You can skip optional steps. Initialize Appwrite SDK To use Appwrite in our Android app, we'll need to find our project ID. Find your project's ID in the **Settings** page. Create a…",
+    "breadcrumbs": [
+      "Android",
+      "Steps",
+      "Set up Appwrite"
+    ]
   },
   {
     "slug": "tutorials/android/step-4",
     "title": "Add authentication",
     "description": "Add Appwrite authentication to you Android app.",
-    "excerpt": "Creating an account service We can use services to abstract business logic from our views. Create a service to handle user authentication with a new file . Add the following code to it. We can now use this service to login, register and logout a user. Integrate the service to the file. Look for to find where the changes made here. Login screen Using this service, we can now create a screen to login or register a user. Create a…"
+    "excerpt": "Creating an account service We can use services to abstract business logic from our views. Create a service to handle user authentication with a new file . Add the following code to it. We can now use this service to login, register and logout a user. Integrate the service to the file. Look for to find where the changes made here. Login screen Using this service, we can now create a screen to login or register a user. Create a…",
+    "breadcrumbs": [
+      "Android",
+      "Steps",
+      "Add authentication"
+    ]
   },
   {
     "slug": "tutorials/android/step-5",
     "title": "Add MainActivity",
     "description": "Add navigation to your Android application.",
-    "excerpt": "Creating the MainActivity To show the new screen, we need to set up our class. Open and update it with following code. This code sets up our with a bottom navigation bar, including a **User** screen. Test the MainActivity Launch the app and you should be able to use the Login screen to register, login, and logout. Confirm your email address is displayed once you are logged in."
+    "excerpt": "Creating the MainActivity To show the new screen, we need to set up our class. Open and update it with following code. This code sets up our with a bottom navigation bar, including a **User** screen. Test the MainActivity Launch the app and you should be able to use the Login screen to register, login, and logout. Confirm your email address is displayed once you are logged in.",
+    "breadcrumbs": [
+      "Android",
+      "Steps",
+      "Add MainActivity"
+    ]
   },
   {
     "slug": "tutorials/android/step-6",
     "title": "Add database",
     "description": "Add databases and queries to store user data in you Android application.",
-    "excerpt": "Create table In Appwrite, data is stored as a table of rows. Create a table in the Appwrite Console to store our ideas. Create a new table with the following columns: | Column | Type | Required | Size | |-------------|--------|----------|----------| | userId | Varchar | Yes | 200 | | title | Varchar | Yes | 200 | | description | Text | No | - | Navigate to the **Settings** tab of your table, add the role **Any**…"
+    "excerpt": "Create table In Appwrite, data is stored as a table of rows. Create a table in the Appwrite Console to store our ideas. Create a new table with the following columns: | Column | Type | Required | Size | |-------------|--------|----------|----------| | userId | Varchar | Yes | 200 | | title | Varchar | Yes | 200 | | description | Text | No | - | Navigate to the **Settings** tab of your table, add the role **Any**…",
+    "breadcrumbs": [
+      "Android",
+      "Steps",
+      "Add database"
+    ]
   },
   {
     "slug": "tutorials/android/step-7",
     "title": "Create ideas page",
     "description": "Add pagination and ordering to you Android application powered by Appwrite Databases.",
-    "excerpt": "Using the , we can build a screen to submit and view ideas. Overwrite the contents of with the following code. Update navigation Update to add the to the navigation bar. Look for to find where the changes made here."
+    "excerpt": "Using the , we can build a screen to submit and view ideas. Overwrite the contents of with the following code. Update navigation Update to add the to the navigation bar. Look for to find where the changes made here.",
+    "breadcrumbs": [
+      "Android",
+      "Steps",
+      "Create ideas page"
+    ]
   },
   {
     "slug": "tutorials/android/step-8",
     "title": "Next steps",
     "description": "View your Android project powered by Appwrite authentication and databases.",
-    "excerpt": "Test your project You can now run your project and test it on your Android device or emulator."
+    "excerpt": "Test your project You can now run your project and test it on your Android device or emulator.",
+    "breadcrumbs": [
+      "Android",
+      "Steps",
+      "Next steps"
+    ]
   },
   {
     "slug": "tutorials/apple/step-1",
     "title": "Coming soon",
     "description": "Learn to build an Apple app with no backend code using an Appwrite backend.",
-    "excerpt": "Improve the docs, add this guide. We still don't have this guide in place, but we do have some great news. The Appwrite docs, just like Appwrite, is completely open sourced. This means, anyone can help improve them and add new guides and tutorials. If you see this page, **we're actively looking for contributions to this page**. Follow our contribution guidelines, open a PR to our Website repo, and collaborate with our core team to improve this page."
+    "excerpt": "Improve the docs, add this guide. We still don't have this guide in place, but we do have some great news. The Appwrite docs, just like Appwrite, is completely open sourced. This means, anyone can help improve them and add new guides and tutorials. If you see this page, **we're actively looking for contributions to this page**. Follow our contribution guidelines, open a PR to our Website repo, and collaborate with our core team to improve this page.",
+    "breadcrumbs": [
+      "Apple",
+      "Steps",
+      "Introduction"
+    ]
   },
   {
     "slug": "tutorials/astro-ssr-auth/step-1",
     "title": "Server-side authentication with Astro",
     "description": "Add SSR authentication to your Astro app with Appwrite",
-    "excerpt": "Appwrite takes away the stress of building and maintaining a backend. Appwrite helps implement authentication, databases, file storage, and respond to real-time events with **secure** APIs out of the box. If you're a Astro developer, the examples in this guide show you how Appwrite can help you add authentication to Astro apps faster. Before you start Before following this tutorial, have the following prepared: - A recent version of Node.js installed on your system. - A basic knowledge of Astro.…"
+    "excerpt": "Appwrite takes away the stress of building and maintaining a backend. Appwrite helps implement authentication, databases, file storage, and respond to real-time events with **secure** APIs out of the box. If you're a Astro developer, the examples in this guide show you how Appwrite can help you add authentication to Astro apps faster. Before you start Before following this tutorial, have the following prepared: - A recent version of Node.js installed on your system. - A basic knowledge of Astro.…",
+    "breadcrumbs": [
+      "Astro SSR",
+      "Steps",
+      "Introduction"
+    ]
   },
   {
     "slug": "tutorials/astro-ssr-auth/step-2",
     "title": "Create project",
     "description": "Add authentication to a Astro project using Appwrite.",
-    "excerpt": "Create an Astro project using: The command prompt will be something similar to this. After the prompt is finished, you can head over to the newly created project. Install Appwrite Appwrite provides a Node SDK that can be used in your Astro apps. You can use Appwrite by installing the Node SDK as an NPM package. The Node SDK is intended for server-side use. If you want to use Appwrite in a client-side application, you should use the Web SDK…"
+    "excerpt": "Create an Astro project using: The command prompt will be something similar to this. After the prompt is finished, you can head over to the newly created project. Install Appwrite Appwrite provides a Node SDK that can be used in your Astro apps. You can use Appwrite by installing the Node SDK as an NPM package. The Node SDK is intended for server-side use. If you want to use Appwrite in a client-side application, you should use the Web SDK…",
+    "breadcrumbs": [
+      "Astro SSR",
+      "Steps",
+      "Create project"
+    ]
   },
   {
     "slug": "tutorials/astro-ssr-auth/step-3",
     "title": "Initialize SDK",
     "description": "Add authentication to a Astro project using Appwrite.",
-    "excerpt": "Before you can use Appwrite, you need to create the Appwrite and set the project ID and endpoint. The client is then used to create services like and , so they all point to the same Appwrite project. Create a function to build services you need in a file like and **exporting the instances**. As part of the function, set the current user's session if they are logged in. This is done by accessing the session cookie from the request…"
+    "excerpt": "Before you can use Appwrite, you need to create the Appwrite and set the project ID and endpoint. The client is then used to create services like and , so they all point to the same Appwrite project. Create a function to build services you need in a file like and **exporting the instances**. As part of the function, set the current user's session if they are logged in. This is done by accessing the session cookie from the request…",
+    "breadcrumbs": [
+      "Astro SSR",
+      "Steps",
+      "Initialize SDK"
+    ]
   },
   {
     "slug": "tutorials/astro-ssr-auth/step-4",
     "title": "Add a server hook",
     "description": "Add authentication to a Astro project using Appwrite.",
-    "excerpt": "Astro middleware are functions that run on the server before a page is displayed to the user. Astro locals are a way to store data that is specific to the current request. We can use these features to store the user's account data, so that it is available to all pages. Create a new file in the directory called : To ensure the object is typed correctly, we can add a type definition for it in a file at the…"
+    "excerpt": "Astro middleware are functions that run on the server before a page is displayed to the user. Astro locals are a way to store data that is specific to the current request. We can use these features to store the user's account data, so that it is available to all pages. Create a new file in the directory called : To ensure the object is typed correctly, we can add a type definition for it in a file at the…",
+    "breadcrumbs": [
+      "Astro SSR",
+      "Steps",
+      "Add a server hook"
+    ]
   },
   {
     "slug": "tutorials/astro-ssr-auth/step-5",
     "title": "Create sign up page",
     "description": "Add authentication to a Astro project using Appwrite.",
-    "excerpt": "We can now implement our sign up page. Create a file in the directory: This is an HTML form with an email and password input. When the form is submitted, we want to send the email and password to Appwrite to authenticate the user. To use Astro form actions, add an statement to the server-side javascript. In the same file, implement the following."
+    "excerpt": "We can now implement our sign up page. Create a file in the directory: This is an HTML form with an email and password input. When the form is submitted, we want to send the email and password to Appwrite to authenticate the user. To use Astro form actions, add an statement to the server-side javascript. In the same file, implement the following.",
+    "breadcrumbs": [
+      "Astro SSR",
+      "Steps",
+      "Create sign up page"
+    ]
   },
   {
     "slug": "tutorials/astro-ssr-auth/step-6",
     "title": "Create account page",
     "description": "Add authentication to a Astro project using Appwrite.",
-    "excerpt": "Now the end-user is able to sign up, we can create the account page. This page will display basic information about the user, and allow the user to log out. Create a new file in the directory called and add the following code:"
+    "excerpt": "Now the end-user is able to sign up, we can create the account page. This page will display basic information about the user, and allow the user to log out. Create a new file in the directory called and add the following code:",
+    "breadcrumbs": [
+      "Astro SSR",
+      "Steps",
+      "Create account page"
+    ]
   },
   {
     "slug": "tutorials/astro-ssr-auth/step-7",
     "title": "OAuth authentication with SSR",
     "description": "Add authentication to a Astro project using Appwrite.",
-    "excerpt": "To support the OAuth flow, we first redirect the user to the OAuth provider, and then handle the callback from the OAuth provider. To redirect, add a button to our sign up page that redirects the user to the OAuth provider. Add a new route to handle the redirect. The method returns a URL to the OAuth provider. After authentication the OAuth provider redirects the user back to the route with the and URL query parameters. Create a new route…"
+    "excerpt": "To support the OAuth flow, we first redirect the user to the OAuth provider, and then handle the callback from the OAuth provider. To redirect, add a button to our sign up page that redirects the user to the OAuth provider. Add a new route to handle the redirect. The method returns a URL to the OAuth provider. After authentication the OAuth provider redirects the user back to the route with the and URL query parameters. Create a new route…",
+    "breadcrumbs": [
+      "Astro SSR",
+      "Steps",
+      "OAuth authentication with SSR"
+    ]
   },
   {
     "slug": "tutorials/astro-ssr-auth/step-8",
     "title": "All set",
     "description": "Add authentication to a Astro project using Appwrite.",
-    "excerpt": "Start a preview of your app by running . If you want to see the complete source code with styling, see the demos-for-astro repository. Other authentication methods Appwrite also supports OAuth, passwordless login, anonymous login, and phone login. Learn more about them in the authentication guide."
+    "excerpt": "Start a preview of your app by running . If you want to see the complete source code with styling, see the demos-for-astro repository. Other authentication methods Appwrite also supports OAuth, passwordless login, anonymous login, and phone login. Learn more about them in the authentication guide.",
+    "breadcrumbs": [
+      "Astro SSR",
+      "Steps",
+      "All set"
+    ]
   },
   {
     "slug": "tutorials/flutter/step-1",
     "title": "Coming soon",
     "description": "Learn to build an Flutter app with no backend code using an Appwrite backend.",
-    "excerpt": "Improve the docs, add this guide. We still don't have this guide in place, but we do have some great news. The Appwrite docs, just like Appwrite, is completely open sourced. This means, anyone can help improve them and add new guides and tutorials. If you see this page, **we're actively looking for contributions to this page**. Follow our contribution guidelines, open a PR to our Website repo, and collaborate with our core team to improve this page."
+    "excerpt": "Improve the docs, add this guide. We still don't have this guide in place, but we do have some great news. The Appwrite docs, just like Appwrite, is completely open sourced. This means, anyone can help improve them and add new guides and tutorials. If you see this page, **we're actively looking for contributions to this page**. Follow our contribution guidelines, open a PR to our Website repo, and collaborate with our core team to improve this page.",
+    "breadcrumbs": [
+      "Flutter",
+      "Steps",
+      "Introduction"
+    ]
   },
   {
     "slug": "tutorials/nextjs-ssr-auth/step-1",
     "title": "Server-side authentication with Next.js",
     "description": "Add SSR authentication to your Next.js app with Appwrite",
-    "excerpt": "Appwrite takes away the stress of building and maintaining a backend. Appwrite helps implement authentication, databases, file storage, and respond to real-time events with **secure** APIs out of the box. If you're a Next.js developer, the examples in this guide show you how Appwrite can help you add authentication to Next.js apps faster. Before you start Before following this tutorial, have the following prepared: - A recent version of Node.js installed on your system. - A basic knowledge of Next.js…"
+    "excerpt": "Appwrite takes away the stress of building and maintaining a backend. Appwrite helps implement authentication, databases, file storage, and respond to real-time events with **secure** APIs out of the box. If you're a Next.js developer, the examples in this guide show you how Appwrite can help you add authentication to Next.js apps faster. Before you start Before following this tutorial, have the following prepared: - A recent version of Node.js installed on your system. - A basic knowledge of Next.js…",
+    "breadcrumbs": [
+      "Next.js SSR",
+      "Steps",
+      "Introduction"
+    ]
   },
   {
     "slug": "tutorials/nextjs-ssr-auth/step-2",
     "title": "Create project",
     "description": "Add authentication to a Next.js project using Appwrite.",
-    "excerpt": "Create a project using Next.js. The command will give you a prompt with several project types. We'll be starting with a skeleton project. The prompt will be something similar to this. After the prompt is finished, you can head over to the newly created project. Install Appwrite Appwrite provides a Node SDK that can be used in your Next.js apps. You can use Appwrite by installing the Node SDK as an NPM package. The Node SDK is intended for server-side…"
+    "excerpt": "Create a project using Next.js. The command will give you a prompt with several project types. We'll be starting with a skeleton project. The prompt will be something similar to this. After the prompt is finished, you can head over to the newly created project. Install Appwrite Appwrite provides a Node SDK that can be used in your Next.js apps. You can use Appwrite by installing the Node SDK as an NPM package. The Node SDK is intended for server-side…",
+    "breadcrumbs": [
+      "Next.js SSR",
+      "Steps",
+      "Create project"
+    ]
   },
   {
     "slug": "tutorials/nextjs-ssr-auth/step-3",
     "title": "Initialize SDK",
     "description": "Add authentication to a Next.js project using Appwrite.",
-    "excerpt": "Before you can use Appwrite, you need to create the Appwrite and set the project ID and endpoint. The client is then used to create services like and , so they all point to the same Appwrite project. Create a function to build services you need in a file like and **exporting the instances**. As part of the function, set the current user's session if they are logged in. This is done by accessing the session cookie from the request…"
+    "excerpt": "Before you can use Appwrite, you need to create the Appwrite and set the project ID and endpoint. The client is then used to create services like and , so they all point to the same Appwrite project. Create a function to build services you need in a file like and **exporting the instances**. As part of the function, set the current user's session if they are logged in. This is done by accessing the session cookie from the request…",
+    "breadcrumbs": [
+      "Next.js SSR",
+      "Steps",
+      "Initialize SDK"
+    ]
   },
   {
     "slug": "tutorials/nextjs-ssr-auth/step-4",
     "title": "Get the logged in user",
     "description": "Add authentication to a Next.js project using Appwrite.",
-    "excerpt": "Build a utility function to get the logged in user from Appwrite. This function will be used in our components and routes to check if a user is logged in, and access the user's details. Edit the file to create a new function called . Now, use the function in the home page to redirect based on the user's login status. Create a new file in the directory called . The user will be redirected to the sign up page…"
+    "excerpt": "Build a utility function to get the logged in user from Appwrite. This function will be used in our components and routes to check if a user is logged in, and access the user's details. Edit the file to create a new function called . Now, use the function in the home page to redirect based on the user's login status. Create a new file in the directory called . The user will be redirected to the sign up page…",
+    "breadcrumbs": [
+      "Next.js SSR",
+      "Steps",
+      "Get the logged in user"
+    ]
   },
   {
     "slug": "tutorials/nextjs-ssr-auth/step-5",
     "title": "Create sign up page",
     "description": "Add authentication to a Next.js project using Appwrite.",
-    "excerpt": "We can now implement our sign up page. Create a file in the directory: This is an HTML form with an email and password input. When the form is submitted, we want to send the email and password to Appwrite to authenticate the user. To use Next.js form actions we create the function in the same file: The function is an async function that takes the form data as an argument. It uses the function to create an admin Appwrite…"
+    "excerpt": "We can now implement our sign up page. Create a file in the directory: This is an HTML form with an email and password input. When the form is submitted, we want to send the email and password to Appwrite to authenticate the user. To use Next.js form actions we create the function in the same file: The function is an async function that takes the form data as an argument. It uses the function to create an admin Appwrite…",
+    "breadcrumbs": [
+      "Next.js SSR",
+      "Steps",
+      "Create sign up page"
+    ]
   },
   {
     "slug": "tutorials/nextjs-ssr-auth/step-6",
     "title": "Create account page",
     "description": "Add authentication to a Next.js project using Appwrite.",
-    "excerpt": "Now the end-user is able to sign up, we can create the account page. This page will display basic information about the user, and allow the user to log out. Create a new file in the directory called and add the following code: This code is similar to the page, but it uses the function to get the user's information. If the user is not logged in, the page will redirect to the sign-in page. Again, we use Next.js form…"
+    "excerpt": "Now the end-user is able to sign up, we can create the account page. This page will display basic information about the user, and allow the user to log out. Create a new file in the directory called and add the following code: This code is similar to the page, but it uses the function to get the user's information. If the user is not logged in, the page will redirect to the sign-in page. Again, we use Next.js form…",
+    "breadcrumbs": [
+      "Next.js SSR",
+      "Steps",
+      "Create account page"
+    ]
   },
   {
     "slug": "tutorials/nextjs-ssr-auth/step-7",
     "title": "OAuth authentication with SSR",
     "description": "Add authentication to a Next.js project using Appwrite.",
-    "excerpt": "Enable OAuth provider To enable the GitHub OAuth provider, navigate to your Appwrite Console > Auth > Settings > OAuth2 Providers > GitHub To support the OAuth flow, we first redirect the user to the OAuth provider, and then handle the callback from the OAuth provider. OAuth server action Add a new server action. Navigate to and create a new file : The method redirects the user to the OAuth provider, and then the OAuth provider redirects the user back…"
+    "excerpt": "Enable OAuth provider To enable the GitHub OAuth provider, navigate to your Appwrite Console > Auth > Settings > OAuth2 Providers > GitHub To support the OAuth flow, we first redirect the user to the OAuth provider, and then handle the callback from the OAuth provider. OAuth server action Add a new server action. Navigate to and create a new file : The method redirects the user to the OAuth provider, and then the OAuth provider redirects the user back…",
+    "breadcrumbs": [
+      "Next.js SSR",
+      "Steps",
+      "OAuth authentication with SSR"
+    ]
   },
   {
     "slug": "tutorials/nextjs-ssr-auth/step-8",
     "title": "All set",
     "description": "Add authentication to a Next.js project using Appwrite.",
-    "excerpt": "If you want to see the complete source code with styling, see the demos-for-react repository. Other authentication methods Appwrite also supports OAuth, passwordless login, anonymous login, and phone login. Learn more about them in the authentication guide."
+    "excerpt": "If you want to see the complete source code with styling, see the demos-for-react repository. Other authentication methods Appwrite also supports OAuth, passwordless login, anonymous login, and phone login. Learn more about them in the authentication guide.",
+    "breadcrumbs": [
+      "Next.js SSR",
+      "Steps",
+      "All set"
+    ]
   },
   {
     "slug": "tutorials/nextjs/step-1",
     "title": "Build an idea tracker with Next.js",
     "description": "Learn to build an idea tracker app with Appwrite and Next.js with authentication, databases and tables, queries, pagination, and file storage.",
-    "excerpt": "**Idea Tracker**: an app to track all the side project ideas that you'll start, but probably never finish. In this tutorial, you will build an Idea Tracker with Appwrite and Next.js. Concepts This tutorial will introduce the following concepts: 1. Setting up your first project 2. Authentication 3. Navigation 4. Databases and tables 5. Queries Prerequisites 1. Basic knowledge of JavaScript and React. 2. Have Node.js and NPM installed on your computer."
+    "excerpt": "**Idea Tracker**: an app to track all the side project ideas that you'll start, but probably never finish. In this tutorial, you will build an Idea Tracker with Appwrite and Next.js. Concepts This tutorial will introduce the following concepts: 1. Setting up your first project 2. Authentication 3. Navigation 4. Databases and tables 5. Queries Prerequisites 1. Basic knowledge of JavaScript and React. 2. Have Node.js and NPM installed on your computer.",
+    "breadcrumbs": [
+      "Next.js",
+      "Steps",
+      "Introduction"
+    ]
   },
   {
     "slug": "tutorials/nextjs/step-2",
     "title": "Create app",
     "description": "Create a Next.js app project and integrate with Appwrite",
-    "excerpt": "Create Next.js project Create a Next.js app with the command. The command will install all the necessary dependencies for you. Add dependencies Once the project is created, change your current working directory and install the JavaScript Appwrite SDK. Open and replace the content with the following to import the relevant style files. You can start your development server to see your app in the browser. This will start a server at ."
+    "excerpt": "Create Next.js project Create a Next.js app with the command. The command will install all the necessary dependencies for you. Add dependencies Once the project is created, change your current working directory and install the JavaScript Appwrite SDK. Open and replace the content with the following to import the relevant style files. You can start your development server to see your app in the browser. This will start a server at .",
+    "breadcrumbs": [
+      "Next.js",
+      "Steps",
+      "Create app"
+    ]
   },
   {
     "slug": "tutorials/nextjs/step-3",
     "title": "Set up Appwrite",
     "description": "Import and configure a project with Appwrite Cloud.",
-    "excerpt": "Create project Head to the Appwrite Console. If this is your first time using Appwrite, create an account and create your first project. Then, under **Add a platform**, add a **Web app**. The **Hostname** should be . You can skip the optional steps. Environment variables To connect to Appwrite in our app, we'll need to configure our project endpoint and project ID. We keep the secrets by using environment variables for the endpoint and project ID. Your project ID is…"
+    "excerpt": "Create project Head to the Appwrite Console. If this is your first time using Appwrite, create an account and create your first project. Then, under **Add a platform**, add a **Web app**. The **Hostname** should be . You can skip the optional steps. Environment variables To connect to Appwrite in our app, we'll need to configure our project endpoint and project ID. We keep the secrets by using environment variables for the endpoint and project ID. Your project ID is…",
+    "breadcrumbs": [
+      "Next.js",
+      "Steps",
+      "Set up Appwrite"
+    ]
   },
   {
     "slug": "tutorials/nextjs/step-4",
     "title": "Add authentication",
     "description": "Add authentication to your Next.js application using Appwrite Web SDK",
-    "excerpt": "For our ideas tracker app, we want any visitor to be able to read the ideas that are stored. On the other hand, we don't want the page spammed with just about anything from anyone just stopping by. To prevent that, or at least making it a bit more difficult, editing ideas will be available for logged in users only. With authentication, we can differentiate between users and decide which users have access to which content. We will build a…"
+    "excerpt": "For our ideas tracker app, we want any visitor to be able to read the ideas that are stored. On the other hand, we don't want the page spammed with just about anything from anyone just stopping by. To prevent that, or at least making it a bit more difficult, editing ideas will be available for logged in users only. With authentication, we can differentiate between users and decide which users have access to which content. We will build a…",
+    "breadcrumbs": [
+      "Next.js",
+      "Steps",
+      "Add authentication"
+    ]
   },
   {
     "slug": "tutorials/nextjs/step-5",
     "title": "Add navigation",
     "description": "Add navigation to your app.",
-    "excerpt": "To help our users navigate the app we want it to have a navigation bar that's visible on all pages. We will use the hook for information about the current user. With this piece of information we will show a login button when no user is logged in and a logout button when one is. We will also put the user's email address next to the logout button. Create a new file and add the code below. Now we need…"
+    "excerpt": "To help our users navigate the app we want it to have a navigation bar that's visible on all pages. We will use the hook for information about the current user. With this piece of information we will show a login button when no user is logged in and a logout button when one is. We will also put the user's email address next to the logout button. Create a new file and add the code below. Now we need…",
+    "breadcrumbs": [
+      "Next.js",
+      "Steps",
+      "Add navigation"
+    ]
   },
   {
     "slug": "tutorials/nextjs/step-6",
     "title": "Add database",
     "description": "Add databases and queries for ideas in your Next.js project.",
-    "excerpt": "In Appwrite, data is stored as a table of rows. Create a new database and table in the Appwrite Console to store the ideas. Create a new table with the following columns: | Field | Type | Required | Size | |-------------|--------|----------|----------| | userId | Varchar | Yes | 200 | | title | Varchar | Yes | 200 | | description | Text | No | - | Change the table's permissions in the settings to give access. Navigate…"
+    "excerpt": "In Appwrite, data is stored as a table of rows. Create a new database and table in the Appwrite Console to store the ideas. Create a new table with the following columns: | Field | Type | Required | Size | |-------------|--------|----------|----------| | userId | Varchar | Yes | 200 | | title | Varchar | Yes | 200 | | description | Text | No | - | Change the table's permissions in the settings to give access. Navigate…",
+    "breadcrumbs": [
+      "Next.js",
+      "Steps",
+      "Add database"
+    ]
   },
   {
     "slug": "tutorials/nextjs/step-7",
     "title": "Ideas page",
     "description": "Add ideas from Appwrite database in your app.",
-    "excerpt": "With the methods in the hook we can get some ideas to the home page for the users to interact with. We will use it in a form component so the logged in users can add their ideas, and in a list component to render the ten most recent ideas. We start with building the form. Idea form On the home page, the logged in users should be able to add their ideas to the Appwrite database. The form needs…"
+    "excerpt": "With the methods in the hook we can get some ideas to the home page for the users to interact with. We will use it in a form component so the logged in users can add their ideas, and in a list component to render the ten most recent ideas. We start with building the form. Idea form On the home page, the logged in users should be able to add their ideas to the Appwrite database. The form needs…",
+    "breadcrumbs": [
+      "Next.js",
+      "Steps",
+      "Ideas page"
+    ]
   },
   {
     "slug": "tutorials/nextjs/step-8",
     "title": "Next steps",
     "description": "View your Next.js app built on Appwrite Cloud.",
-    "excerpt": "Test your project Run your project with and open the URL shown by the NPM command in your browser. Head to the Appwrite Console to see the new users and follow their interactions."
+    "excerpt": "Test your project Run your project with and open the URL shown by the NPM command in your browser. Head to the Appwrite Console to see the new users and follow their interactions.",
+    "breadcrumbs": [
+      "Next.js",
+      "Steps",
+      "Next steps"
+    ]
   },
   {
     "slug": "tutorials/nuxt-ssr-auth/step-1",
     "title": "Server-side authentication with Nuxt",
     "description": "Add SSR authentication to your Nuxt app with Appwrite",
-    "excerpt": "Appwrite takes away the stress of building and maintaining a backend. Appwrite helps implement authentication, databases, file storage, and respond to real-time events with **secure** APIs out of the box. This tutorials shows how Appwrite can help you add authentication to your Nuxt app using server-side rendering (SSR). Before you start Before following this tutorial, have the following prepared: - A recent version of Node.js installed on your system. - A basic knowledge of Vue and Nuxt. If you're inspired…"
+    "excerpt": "Appwrite takes away the stress of building and maintaining a backend. Appwrite helps implement authentication, databases, file storage, and respond to real-time events with **secure** APIs out of the box. This tutorials shows how Appwrite can help you add authentication to your Nuxt app using server-side rendering (SSR). Before you start Before following this tutorial, have the following prepared: - A recent version of Node.js installed on your system. - A basic knowledge of Vue and Nuxt. If you're inspired…",
+    "breadcrumbs": [
+      "Nuxt SSR",
+      "Steps",
+      "Introduction"
+    ]
   },
   {
     "slug": "tutorials/nuxt-ssr-auth/step-2",
     "title": "Create project",
     "description": "Add authentication to a Nuxt project using Appwrite.",
-    "excerpt": "Create a Vue project using Nuxt. The command will give you a prompt with several options, the prompt will be something similar to this. After the prompt is finished, you can head over to the newly created project. Install Appwrite Appwrite provides a Node SDK that can be used in your Nuxt apps. You can use Appwrite by installing the Node SDK as an NPM package. The Node SDK is intended for server-side use. If you want to use Appwrite…"
+    "excerpt": "Create a Vue project using Nuxt. The command will give you a prompt with several options, the prompt will be something similar to this. After the prompt is finished, you can head over to the newly created project. Install Appwrite Appwrite provides a Node SDK that can be used in your Nuxt apps. You can use Appwrite by installing the Node SDK as an NPM package. The Node SDK is intended for server-side use. If you want to use Appwrite…",
+    "breadcrumbs": [
+      "Nuxt SSR",
+      "Steps",
+      "Create project"
+    ]
   },
   {
     "slug": "tutorials/nuxt-ssr-auth/step-3",
     "title": "Initialize SDK",
     "description": "Add authentication to a Nuxt project using Appwrite.",
-    "excerpt": "Before you can use Appwrite, you need to create the Appwrite and set the project ID and endpoint. The client is then used to create services like and , so they all point to the same Appwrite project. Create a function to the build services you need in a file like and **exporting the instances**. As part of the function, set the current user's session if they are logged in. This is done by accessing the session cookie from the…"
+    "excerpt": "Before you can use Appwrite, you need to create the Appwrite and set the project ID and endpoint. The client is then used to create services like and , so they all point to the same Appwrite project. Create a function to the build services you need in a file like and **exporting the instances**. As part of the function, set the current user's session if they are logged in. This is done by accessing the session cookie from the…",
+    "breadcrumbs": [
+      "Nuxt SSR",
+      "Steps",
+      "Initialize SDK"
+    ]
   },
   {
     "slug": "tutorials/nuxt-ssr-auth/step-4",
     "title": "Add server middleware",
     "description": "Add authentication to a Nuxt project using Appwrite.",
-    "excerpt": "Nuxt server middle are functions that run on the server before a route is displayed to the user. Nuxt context allows you to store data for the lifecycle of the current request. We can use this to store the user's account data, so that it is available to all pages. Create a new file in the directory called . To ensure the object is typed correctly, we can add a type definition for it in the file: Now, use the…"
+    "excerpt": "Nuxt server middle are functions that run on the server before a route is displayed to the user. Nuxt context allows you to store data for the lifecycle of the current request. We can use this to store the user's account data, so that it is available to all pages. Create a new file in the directory called . To ensure the object is typed correctly, we can add a type definition for it in the file: Now, use the…",
+    "breadcrumbs": [
+      "Nuxt SSR",
+      "Steps",
+      "Add server middleware"
+    ]
   },
   {
     "slug": "tutorials/nuxt-ssr-auth/step-5",
     "title": "Create sign up page",
     "description": "Add authentication to a Nuxt project using Appwrite.",
-    "excerpt": "We can now implement our sign up page. Create a file in the directory. This is an HTML form with an email and password input. When the form is submitted, we want to send the email and password to Appwrite to authenticate the user. To use Nuxt form actions we create a file in the directory:"
+    "excerpt": "We can now implement our sign up page. Create a file in the directory. This is an HTML form with an email and password input. When the form is submitted, we want to send the email and password to Appwrite to authenticate the user. To use Nuxt form actions we create a file in the directory:",
+    "breadcrumbs": [
+      "Nuxt SSR",
+      "Steps",
+      "Create sign up page"
+    ]
   },
   {
     "slug": "tutorials/nuxt-ssr-auth/step-6",
     "title": "Create account page",
     "description": "Add authentication to a Nuxt project using Appwrite.",
-    "excerpt": "Now the end-user is able to sign up, we can create the account page. This page will display basic information about the user, and allow the user to log out. Before creating the account page, the route should fetch the user data. Create a new file in the directory and add the following code: Create a new file in the directory called and add the following code: This page will display the user's email, name, and ID. It also contains…"
+    "excerpt": "Now the end-user is able to sign up, we can create the account page. This page will display basic information about the user, and allow the user to log out. Before creating the account page, the route should fetch the user data. Create a new file in the directory and add the following code: Create a new file in the directory called and add the following code: This page will display the user's email, name, and ID. It also contains…",
+    "breadcrumbs": [
+      "Nuxt SSR",
+      "Steps",
+      "Create account page"
+    ]
   },
   {
     "slug": "tutorials/nuxt-ssr-auth/step-7",
     "title": "OAuth authentication with SSR",
     "description": "Add authentication to a Nuxt project using Appwrite.",
-    "excerpt": "To support the OAuth flow, we first redirect the user to the OAuth provider, and then handle the callback from the OAuth provider. To redirect, add a button to our sign up page that redirects the user to the OAuth provider. Add a new server route to handle the redirect. The method redirects the user to the OAuth provider, and then the OAuth provider redirects the user back to the route with the and URL query parameters. Handle the callback…"
+    "excerpt": "To support the OAuth flow, we first redirect the user to the OAuth provider, and then handle the callback from the OAuth provider. To redirect, add a button to our sign up page that redirects the user to the OAuth provider. Add a new server route to handle the redirect. The method redirects the user to the OAuth provider, and then the OAuth provider redirects the user back to the route with the and URL query parameters. Handle the callback…",
+    "breadcrumbs": [
+      "Nuxt SSR",
+      "Steps",
+      "OAuth authentication with SSR"
+    ]
   },
   {
     "slug": "tutorials/nuxt-ssr-auth/step-8",
     "title": "Enable the sign up and account pages",
     "description": "Add authentication to a Nuxt project using Appwrite.",
-    "excerpt": "For the last step, we must remove the welcome page and enable the pages we have created so far. For that, head to the file, and replace with so that code looks as follows: Replace with to allow the user to navigate to the pages created so far, such as the sign-up and account pages, instead of the default Nuxt welcome page."
+    "excerpt": "For the last step, we must remove the welcome page and enable the pages we have created so far. For that, head to the file, and replace with so that code looks as follows: Replace with to allow the user to navigate to the pages created so far, such as the sign-up and account pages, instead of the default Nuxt welcome page.",
+    "breadcrumbs": [
+      "Nuxt SSR",
+      "Steps",
+      "Enable the sign up and account pages"
+    ]
   },
   {
     "slug": "tutorials/nuxt-ssr-auth/step-9",
     "title": "All set",
     "description": "Add authentication to a Nuxt project using Appwrite.",
-    "excerpt": "If you want to see the complete source code with styling, see the nuxt-ssr-auth repository. Other authentication methods Appwrite also supports OAuth, passwordless login, anonymous login, and phone login. Learn more about them in the authentication guide."
+    "excerpt": "If you want to see the complete source code with styling, see the nuxt-ssr-auth repository. Other authentication methods Appwrite also supports OAuth, passwordless login, anonymous login, and phone login. Learn more about them in the authentication guide.",
+    "breadcrumbs": [
+      "Nuxt SSR",
+      "Steps",
+      "All set"
+    ]
   },
   {
     "slug": "tutorials/nuxt/step-1",
     "title": "Build an ideas tracker with Nuxt",
     "description": "Learn to build an idea tracker app with Appwrite and Nuxt with authentication, databases and tables, queries, pagination, and file storage.",
-    "excerpt": "**Idea tracker**: an app to track all the side project ideas that you'll start, but probably never finish. In this tutorial, you will build Idea tracker with Appwrite and Nuxt. Concepts This tutorial will introduce the following concepts: 1. Setting up your first project 2. Authentication 3. Navigation 4. Databases and tables 5. Queries Prerequisites 1. Basic knowledge of JavaScript. 2. Have Node.js and NPM installed on your computer."
+    "excerpt": "**Idea tracker**: an app to track all the side project ideas that you'll start, but probably never finish. In this tutorial, you will build Idea tracker with Appwrite and Nuxt. Concepts This tutorial will introduce the following concepts: 1. Setting up your first project 2. Authentication 3. Navigation 4. Databases and tables 5. Queries Prerequisites 1. Basic knowledge of JavaScript. 2. Have Node.js and NPM installed on your computer.",
+    "breadcrumbs": [
+      "Nuxt",
+      "Steps",
+      "Introduction"
+    ]
   },
   {
     "slug": "tutorials/nuxt/step-2",
     "title": "Create app",
     "description": "Create a Nuxt app project and integrate with Appwrite",
-    "excerpt": "Create Nuxt project Create a Nuxt app with the command. The command will install all the necessary dependencies for you. Add dependencies Once the project is created, change your current working directory and install the JavaScript Appwrite SDK. Open and import the relevant style files. Then update to disable SSR for now. SSR support is coming soon to Appwrite, for now, disable SSR. You can start the development server to watch your app update in the browser as you make…"
+    "excerpt": "Create Nuxt project Create a Nuxt app with the command. The command will install all the necessary dependencies for you. Add dependencies Once the project is created, change your current working directory and install the JavaScript Appwrite SDK. Open and import the relevant style files. Then update to disable SSR for now. SSR support is coming soon to Appwrite, for now, disable SSR. You can start the development server to watch your app update in the browser as you make…",
+    "breadcrumbs": [
+      "Nuxt",
+      "Steps",
+      "Create app"
+    ]
   },
   {
     "slug": "tutorials/nuxt/step-3",
     "title": "Set up Appwrite",
     "description": "Import and configure a project with Appwrite Cloud.",
-    "excerpt": "Create project Head to the Appwrite Console. If this is your first time using Appwrite, create an account and create your first project. Then, under **Add a platform**, add a **Web app**. The **Hostname** should be . You can skip the optional steps. Environment variables To connect to Appwrite in our app, we'll need to use sensitive information. We keep the secrets by using environment variables for the endpoint and project id. Your project id is located in the **Settings**…"
+    "excerpt": "Create project Head to the Appwrite Console. If this is your first time using Appwrite, create an account and create your first project. Then, under **Add a platform**, add a **Web app**. The **Hostname** should be . You can skip the optional steps. Environment variables To connect to Appwrite in our app, we'll need to use sensitive information. We keep the secrets by using environment variables for the endpoint and project id. Your project id is located in the **Settings**…",
+    "breadcrumbs": [
+      "Nuxt",
+      "Steps",
+      "Set up Appwrite"
+    ]
   },
   {
     "slug": "tutorials/nuxt/step-4",
     "title": "Add authentication",
     "description": "Add authentication to your Nuxt application using Appwrite Web SDK",
-    "excerpt": "For our ideas tracker app, we want any visitor to be able to read the ideas that are stored. On the other hand, we don't want the page spammed with just about anything from anyone just stopping by. To prevent that, or at least making it a bit more difficult, editing ideas will be available for logged in users only. With a login function, we can differentiate between users and decide which users have access to which content. We will…"
+    "excerpt": "For our ideas tracker app, we want any visitor to be able to read the ideas that are stored. On the other hand, we don't want the page spammed with just about anything from anyone just stopping by. To prevent that, or at least making it a bit more difficult, editing ideas will be available for logged in users only. With a login function, we can differentiate between users and decide which users have access to which content. We will…",
+    "breadcrumbs": [
+      "Nuxt",
+      "Steps",
+      "Add authentication"
+    ]
   },
   {
     "slug": "tutorials/nuxt/step-5",
     "title": "Add navigation",
     "description": "Add navigation to your app.",
-    "excerpt": "To help our users navigate the app we want it to have a navigation bar that's visible on all pages. We will once again use the composable for information about the current user. With this piece of information we will show a login button when no user is logged in and a logout button when one is. We will also put the user's e-mail address next to the logout button. From the directory, create the file and add the code…"
+    "excerpt": "To help our users navigate the app we want it to have a navigation bar that's visible on all pages. We will once again use the composable for information about the current user. With this piece of information we will show a login button when no user is logged in and a logout button when one is. We will also put the user's e-mail address next to the logout button. From the directory, create the file and add the code…",
+    "breadcrumbs": [
+      "Nuxt",
+      "Steps",
+      "Add navigation"
+    ]
   },
   {
     "slug": "tutorials/nuxt/step-6",
     "title": "Add database",
     "description": "Add databases and queries for ideas in your Nuxt project.",
-    "excerpt": "In Appwrite, data is stored as a table of rows. Create a new database and table in the Appwrite Console to store the ideas. Create a new table with the following columns: | Field | Type | Required | Size | |-------------|--------|----------|----------| | userId | Varchar | Yes | 200 | | title | Varchar | Yes | 200 | | description | Text | No | - | Change the table's permissions in the settings to give access. Navigate…"
+    "excerpt": "In Appwrite, data is stored as a table of rows. Create a new database and table in the Appwrite Console to store the ideas. Create a new table with the following columns: | Field | Type | Required | Size | |-------------|--------|----------|----------| | userId | Varchar | Yes | 200 | | title | Varchar | Yes | 200 | | description | Text | No | - | Change the table's permissions in the settings to give access. Navigate…",
+    "breadcrumbs": [
+      "Nuxt",
+      "Steps",
+      "Add database"
+    ]
   },
   {
     "slug": "tutorials/nuxt/step-7",
     "title": "Ideas page",
     "description": "Add ideas from Appwrite database in your app.",
-    "excerpt": "With the methods in the composable we can get some ideas to the home page for the users to interact with. We will use it in a form component so the logged in users can add their ideas, and in a list component to render the ten most recent ideas. We start with building the form. Idea form On the home page, the logged in users should be able to add their ideas to the Appwrite database. The form need…"
+    "excerpt": "With the methods in the composable we can get some ideas to the home page for the users to interact with. We will use it in a form component so the logged in users can add their ideas, and in a list component to render the ten most recent ideas. We start with building the form. Idea form On the home page, the logged in users should be able to add their ideas to the Appwrite database. The form need…",
+    "breadcrumbs": [
+      "Nuxt",
+      "Steps",
+      "Ideas page"
+    ]
   },
   {
     "slug": "tutorials/nuxt/step-8",
     "title": "Next steps",
     "description": "View your Nuxt app built on Appwrite Cloud.",
-    "excerpt": "Test your project Run your project with and open the URL shown by the NPM command in your browser. Head to the Appwrite Console to see the new users and follow their interactions."
+    "excerpt": "Test your project Run your project with and open the URL shown by the NPM command in your browser. Head to the Appwrite Console to see the new users and follow their interactions.",
+    "breadcrumbs": [
+      "Nuxt",
+      "Steps",
+      "Next steps"
+    ]
   },
   {
     "slug": "tutorials/react-native/step-1",
     "title": "Build an ideas tracker with React Native",
     "description": "Learn to build a React Native app with no backend code using an Appwrite backend.",
-    "excerpt": "**Idea tracker**: an app to track all the side project ideas that you'll start, but probably never finish. In this tutorial, you will build Idea tracker with Appwrite and React Native. Concepts This tutorial will introduce the following concepts: 1. Setting up your first project 2. Authentication 3. Databases and tables 4. Queries and pagination Prerequisites 1. Android, iOS simulators, or a physical device to run the app 2. Have Node.js and NPM installed on your computer 3. Basic knowledge…"
+    "excerpt": "**Idea tracker**: an app to track all the side project ideas that you'll start, but probably never finish. In this tutorial, you will build Idea tracker with Appwrite and React Native. Concepts This tutorial will introduce the following concepts: 1. Setting up your first project 2. Authentication 3. Databases and tables 4. Queries and pagination Prerequisites 1. Android, iOS simulators, or a physical device to run the app 2. Have Node.js and NPM installed on your computer 3. Basic knowledge…",
+    "breadcrumbs": [
+      "React Native",
+      "Steps",
+      "Introduction"
+    ]
   },
   {
     "slug": "tutorials/react-native/step-2",
     "title": "Create app",
     "description": "Create a React Native app project and integrate with Appwrite.",
-    "excerpt": "Create React Native project Create a React Native app with the command. Add dependencies Install the React Native Appwrite SDK. Then, install React Navigation to help implement simple navigation logic. Install peer dependencies needed for React Navigation. For iOS with bare React Native project, make sure you have CocoaPods installed. Then install the pods to complete the installation:"
+    "excerpt": "Create React Native project Create a React Native app with the command. Add dependencies Install the React Native Appwrite SDK. Then, install React Navigation to help implement simple navigation logic. Install peer dependencies needed for React Navigation. For iOS with bare React Native project, make sure you have CocoaPods installed. Then install the pods to complete the installation:",
+    "breadcrumbs": [
+      "React Native",
+      "Steps",
+      "Create app"
+    ]
   },
   {
     "slug": "tutorials/react-native/step-3",
     "title": "Set up Appwrite",
     "description": "Import and initialize Appwrite for your React Native application.",
-    "excerpt": "Create project Head to the Appwrite Console. If this is your first time using Appwrite, create an account and create your first project. Then, under **Add a platform**, add a **Android** or **Apple** platform with the package/bundle ID . You can skip optional steps. Initialize Appwrite SDK To use Appwrite in our React Native app, you'll need to find our project ID. Find your project's ID in the **Settings** page. Create a new file to hold our Appwrite related code.…"
+    "excerpt": "Create project Head to the Appwrite Console. If this is your first time using Appwrite, create an account and create your first project. Then, under **Add a platform**, add a **Android** or **Apple** platform with the package/bundle ID . You can skip optional steps. Initialize Appwrite SDK To use Appwrite in our React Native app, you'll need to find our project ID. Find your project's ID in the **Settings** page. Create a new file to hold our Appwrite related code.…",
+    "breadcrumbs": [
+      "React Native",
+      "Steps",
+      "Set up Appwrite"
+    ]
   },
   {
     "slug": "tutorials/react-native/step-4",
     "title": "Add authentication",
     "description": "Add authentication to your React Native application.",
-    "excerpt": "User context In React Native, you can use context to share data between components. You can use a context and a custom hook to manage our user's data. Create a new file and add the following code to it. Now, you can use the hook to access the user's data from any component wrapped by this context's provider. Display toasts For a better user experience, display toasts when the users perform an action, such as login, logout, create new ideas,…"
+    "excerpt": "User context In React Native, you can use context to share data between components. You can use a context and a custom hook to manage our user's data. Create a new file and add the following code to it. Now, you can use the hook to access the user's data from any component wrapped by this context's provider. Display toasts For a better user experience, display toasts when the users perform an action, such as login, logout, create new ideas,…",
+    "breadcrumbs": [
+      "React Native",
+      "Steps",
+      "Add authentication"
+    ]
   },
   {
     "slug": "tutorials/react-native/step-5",
     "title": "Add routing",
     "description": "Add routing to your React Native applicating using Appwrite.",
-    "excerpt": "In this step, you'll add some basic routing to your app. Based on the user's login status, you'll redirect them to the login page or the home page. Home page Create a new file and add the following stub code to it. We'll update this page later to display the ideas posted by other users and allow the user to post their ideas. Basic routing To handle basic routing, you can use the library. This router also consumes the to…"
+    "excerpt": "In this step, you'll add some basic routing to your app. Based on the user's login status, you'll redirect them to the login page or the home page. Home page Create a new file and add the following stub code to it. We'll update this page later to display the ideas posted by other users and allow the user to post their ideas. Basic routing To handle basic routing, you can use the library. This router also consumes the to…",
+    "breadcrumbs": [
+      "React Native",
+      "Steps",
+      "Add routing"
+    ]
   },
   {
     "slug": "tutorials/react-native/step-6",
     "title": "Add database",
     "description": "Connect a database to your React Native application using Appwrite Web SDK.",
-    "excerpt": "In this step, you'll set up a database to store ideas in Appwrite, configure permissions, then create a context to manage ideas in your React Native app. Create table In Appwrite, data is stored as a table of rows. Create a table in the Appwrite Console to store our ideas. Create a new table with the following columns: | Field | Type | Required | |-------------|--------|----------| | userId | Varchar | Yes | | title | Varchar | Yes |…"
+    "excerpt": "In this step, you'll set up a database to store ideas in Appwrite, configure permissions, then create a context to manage ideas in your React Native app. Create table In Appwrite, data is stored as a table of rows. Create a table in the Appwrite Console to store our ideas. Create a new table with the following columns: | Field | Type | Required | |-------------|--------|----------| | userId | Varchar | Yes | | title | Varchar | Yes |…",
+    "breadcrumbs": [
+      "React Native",
+      "Steps",
+      "Add database"
+    ]
   },
   {
     "slug": "tutorials/react-native/step-7",
     "title": "Create ideas page",
     "description": "Add database queries and pagination using Appwrite in your React Native application.",
-    "excerpt": "Using the hook you can now display the ideas on the page and create a form to submit new ideas. If an idea is submitted by the logged-in user, a remove button will be displayed to remove the idea. While this check uses the user ID to determine the render logic, permissions set in step 6 will be used to enforce that only the owner of the idea can remove it. Overwrite the contents of with the following:"
+    "excerpt": "Using the hook you can now display the ideas on the page and create a form to submit new ideas. If an idea is submitted by the logged-in user, a remove button will be displayed to remove the idea. While this check uses the user ID to determine the render logic, permissions set in step 6 will be used to enforce that only the owner of the idea can remove it. Overwrite the contents of with the following:",
+    "breadcrumbs": [
+      "React Native",
+      "Steps",
+      "Create ideas page"
+    ]
   },
   {
     "slug": "tutorials/react-native/step-8",
     "title": "Next steps",
     "description": "Run your React Native project built with Appwrite",
-    "excerpt": "Test your project You can run your projects with . This will start the Metro bundler and open the Expo Go app on your device. You can also run your project on an emulator or simulator by pressing for iOS and for Android. Bundling for production Appwrite's React Native SDK is designed to work with the Expo Metro bundler. When you are ready to build your app for production, you can learn more in the Expo documentation."
+    "excerpt": "Test your project You can run your projects with . This will start the Metro bundler and open the Expo Go app on your device. You can also run your project on an emulator or simulator by pressing for iOS and for Android. Bundling for production Appwrite's React Native SDK is designed to work with the Expo Metro bundler. When you are ready to build your app for production, you can learn more in the Expo documentation.",
+    "breadcrumbs": [
+      "React Native",
+      "Steps",
+      "Next steps"
+    ]
   },
   {
     "slug": "tutorials/react/step-1",
     "title": "Build an ideas tracker with React",
     "description": "Learn to build a React app with no backend code using an Appwrite backend.",
-    "excerpt": "**Idea tracker**: an app to track all the side project ideas that you'll start, but probably never finish. In this tutorial, you will build Idea tracker with Appwrite and React. Concepts This tutorial will introduce the following concepts: 1. Setting up your first project 2. Authentication 3. Databases and tables 4. Queries and pagination Prerequisites 1. Basic knowledge of JavaScript and React. 2. Have Node.js and NPM installed on your computer"
+    "excerpt": "**Idea tracker**: an app to track all the side project ideas that you'll start, but probably never finish. In this tutorial, you will build Idea tracker with Appwrite and React. Concepts This tutorial will introduce the following concepts: 1. Setting up your first project 2. Authentication 3. Databases and tables 4. Queries and pagination Prerequisites 1. Basic knowledge of JavaScript and React. 2. Have Node.js and NPM installed on your computer",
+    "breadcrumbs": [
+      "React",
+      "Steps",
+      "Introduction"
+    ]
   },
   {
     "slug": "tutorials/react/step-2",
     "title": "Create app",
     "description": "Create a React app project and integrate with Appwrite.",
-    "excerpt": "Create React project Create a React app with the command. Add dependencies Install the JavaScript Appwrite SDK. You can start the development server to watch your app update in the browser as you make changes."
+    "excerpt": "Create React project Create a React app with the command. Add dependencies Install the JavaScript Appwrite SDK. You can start the development server to watch your app update in the browser as you make changes.",
+    "breadcrumbs": [
+      "React",
+      "Steps",
+      "Create app"
+    ]
   },
   {
     "slug": "tutorials/react/step-3",
     "title": "Set up Appwrite",
     "description": "Import and initialize Appwrite for your react application.",
-    "excerpt": "Create project Head to the Appwrite Console. If this is your first time using Appwrite, create an account and create your first project. Then, under **Add a platform**, add a **Web app**. The **Hostname** should be localhost. You can skip optional steps. Initialize Appwrite SDK To use Appwrite in our React app, we'll need to find our project ID. Find your project's ID in the **Settings** page. Create a new file to hold our Appwrite related code. Only one instance…"
+    "excerpt": "Create project Head to the Appwrite Console. If this is your first time using Appwrite, create an account and create your first project. Then, under **Add a platform**, add a **Web app**. The **Hostname** should be localhost. You can skip optional steps. Initialize Appwrite SDK To use Appwrite in our React app, we'll need to find our project ID. Find your project's ID in the **Settings** page. Create a new file to hold our Appwrite related code. Only one instance…",
+    "breadcrumbs": [
+      "React",
+      "Steps",
+      "Set up Appwrite"
+    ]
   },
   {
     "slug": "tutorials/react/step-4",
     "title": "Add authentication",
     "description": "Add authentication to your react application.",
-    "excerpt": "User context In React, you can use context to share data between components. We'll use context and a custom hook to manage our user's data. Create a new file and add the following code to it. Now, we can use the hook to access the user's data from any component. However, we first need to wrap our app with the . Basic routing First, wrap the element with the component. Update to the following code. Then, optionally render the component…"
+    "excerpt": "User context In React, you can use context to share data between components. We'll use context and a custom hook to manage our user's data. Create a new file and add the following code to it. Now, we can use the hook to access the user's data from any component. However, we first need to wrap our app with the . Basic routing First, wrap the element with the component. Update to the following code. Then, optionally render the component…",
+    "breadcrumbs": [
+      "React",
+      "Steps",
+      "Add authentication"
+    ]
   },
   {
     "slug": "tutorials/react/step-5",
     "title": "Add navigation",
     "description": "Add navigation to your React applicating using Appwrite.",
-    "excerpt": "In our app we want to have a navigation bar that is always visible. We will add it to the component and use the hook to show either: - a logout button if the user is logged in. - a login button if the user is not logged in. Update the App component in :"
+    "excerpt": "In our app we want to have a navigation bar that is always visible. We will add it to the component and use the hook to show either: - a logout button if the user is logged in. - a login button if the user is not logged in. Update the App component in :",
+    "breadcrumbs": [
+      "React",
+      "Steps",
+      "Add navigation"
+    ]
   },
   {
     "slug": "tutorials/react/step-6",
     "title": "Add database",
     "description": "Add a database to your React application using Appwrite Web SDK.",
-    "excerpt": "Create database To store your ideas, you need to create a database first. 1. Go to the Databases section in your Appwrite Console 2. Click *Create Database* 3. Give it a name and ID. For this tutorial, we'll use as the name and as the ID. 4. You'll need to remember the database ID as you'll need it later. Create table In Appwrite, data is stored as a table of rows. Create a table in the Appwrite Console to store…"
+    "excerpt": "Create database To store your ideas, you need to create a database first. 1. Go to the Databases section in your Appwrite Console 2. Click *Create Database* 3. Give it a name and ID. For this tutorial, we'll use as the name and as the ID. 4. You'll need to remember the database ID as you'll need it later. Create table In Appwrite, data is stored as a table of rows. Create a table in the Appwrite Console to store…",
+    "breadcrumbs": [
+      "React",
+      "Steps",
+      "Add database"
+    ]
   },
   {
     "slug": "tutorials/react/step-7",
     "title": "Create ideas page",
     "description": "Add database queries and pagination using Appwrite in your React application.",
-    "excerpt": "Using the hook we can now display the ideas on the page. We will also add a form to submit new ideas. Overwrite the contents of with the following: In , wrap the element with the component."
+    "excerpt": "Using the hook we can now display the ideas on the page. We will also add a form to submit new ideas. Overwrite the contents of with the following: In , wrap the element with the component.",
+    "breadcrumbs": [
+      "React",
+      "Steps",
+      "Create ideas page"
+    ]
   },
   {
     "slug": "tutorials/react/step-8",
     "title": "Next steps",
     "description": "Run your React project built with Appwrite",
-    "excerpt": "Test your project Run your project with and open http://localhost:3000 in your browser."
+    "excerpt": "Test your project Run your project with and open http://localhost:3000 in your browser.",
+    "breadcrumbs": [
+      "React",
+      "Steps",
+      "Next steps"
+    ]
   },
   {
     "slug": "tutorials/refine/step-1",
     "title": "Build a blog admin panel with Refine",
     "description": "Learn to build a Refine app with no backend code using an Appwrite backend.",
-    "excerpt": "**Blog admin panel**: a CRUD app to manage Blog content. In this tutorial, you will build admin panel app with Appwrite and Refine. Concepts This tutorial will introduce the following concepts: 1. Setting up your first project 2. Authentication 3. Databases and tables 4. Queries and pagination Prerequisites 1. Basic knowledge of Typescript and React. 2. Have Node.js and NPM installed on your computer"
+    "excerpt": "**Blog admin panel**: a CRUD app to manage Blog content. In this tutorial, you will build admin panel app with Appwrite and Refine. Concepts This tutorial will introduce the following concepts: 1. Setting up your first project 2. Authentication 3. Databases and tables 4. Queries and pagination Prerequisites 1. Basic knowledge of Typescript and React. 2. Have Node.js and NPM installed on your computer",
+    "breadcrumbs": [
+      "Refine",
+      "Steps",
+      "Introduction"
+    ]
   },
   {
     "slug": "tutorials/refine/step-2",
     "title": "Create app",
     "description": "Create a Refine app project and integrate with Appwrite.",
-    "excerpt": "Create Refine project Create a Refine app with the command. We're using the preset that installs the [](https://github.com/refinedev/refine/tree/master/packages/appwrite) which already has the Appwrite dependency pre-configured. To make this example more visual, we'll use the Ant Desing UI package which natively supported by Refine. No additional dependencies are required for this tutorial. If you want to integrate Appwrite into an existing Refine app, use the following command. Learn more about adding Appwrite a refine data provider. You can start the development…"
+    "excerpt": "Create Refine project Create a Refine app with the command. We're using the preset that installs the [](https://github.com/refinedev/refine/tree/master/packages/appwrite) which already has the Appwrite dependency pre-configured. To make this example more visual, we'll use the Ant Desing UI package which natively supported by Refine. No additional dependencies are required for this tutorial. If you want to integrate Appwrite into an existing Refine app, use the following command. Learn more about adding Appwrite a refine data provider. You can start the development…",
+    "breadcrumbs": [
+      "Refine",
+      "Steps",
+      "Create app"
+    ]
   },
   {
     "slug": "tutorials/refine/step-3",
     "title": "Set up Appwrite",
     "description": "Import and initialize Appwrite for your react application.",
-    "excerpt": "Create project Head to the Appwrite Console. If this is your first time using Appwrite, create an account and create your first project. Then, under **Add a platform**, add a **Web app**. The **Hostname** should be localhost. You can skip optional steps. Initialize Appwrite SDK To use Appwrite in our Refine app, we'll need to find our project ID. Find your project's ID in the **Settings** page. Navigate to and add your API credentials."
+    "excerpt": "Create project Head to the Appwrite Console. If this is your first time using Appwrite, create an account and create your first project. Then, under **Add a platform**, add a **Web app**. The **Hostname** should be localhost. You can skip optional steps. Initialize Appwrite SDK To use Appwrite in our Refine app, we'll need to find our project ID. Find your project's ID in the **Settings** page. Navigate to and add your API credentials.",
+    "breadcrumbs": [
+      "Refine",
+      "Steps",
+      "Set up Appwrite"
+    ]
   },
   {
     "slug": "tutorials/refine/step-4",
     "title": "Add authentication",
     "description": "Add authentication to your Refine application.",
-    "excerpt": "Authentication provider Upon creating a new project with Appwrite preset, the CLI automatically creates Auth Provider file. You'll see a file named [](https://github.com/refinedev/refine/blob/master/examples/data-provider-appwrite-tutorial-docs/src/utility/authProvider.ts) created by CLI. This auto-generated file contains pre-defined functions using Appwrite Authentication methods internally to perform authentication and authorization operations. The auth provider registered to the Refine app by default in the . Now, we can configure the routing and auth components to manage logins and sign ups. Routing Refine offers router bindings and utilities for React…"
+    "excerpt": "Authentication provider Upon creating a new project with Appwrite preset, the CLI automatically creates Auth Provider file. You'll see a file named [](https://github.com/refinedev/refine/blob/master/examples/data-provider-appwrite-tutorial-docs/src/utility/authProvider.ts) created by CLI. This auto-generated file contains pre-defined functions using Appwrite Authentication methods internally to perform authentication and authorization operations. The auth provider registered to the Refine app by default in the . Now, we can configure the routing and auth components to manage logins and sign ups. Routing Refine offers router bindings and utilities for React…",
+    "breadcrumbs": [
+      "Refine",
+      "Steps",
+      "Add authentication"
+    ]
   },
   {
     "slug": "tutorials/refine/step-5",
     "title": "Add database",
     "description": "Add a database to your React application using Appwrite Web SDK.",
-    "excerpt": "Create table In Appwrite, data is stored as a table of rows. Create a table in the Appwrite Console to store our ideas. Create a new table with the following columns: | Field | Type | Required | |-------------|--------|----------| | title | Varchar | Yes | | content | Text | Yes | Connect database to the Refine app Now that you have a table to hold blog post contents, we can read and write to it from our app.…"
+    "excerpt": "Create table In Appwrite, data is stored as a table of rows. Create a table in the Appwrite Console to store our ideas. Create a new table with the following columns: | Field | Type | Required | |-------------|--------|----------| | title | Varchar | Yes | | content | Text | Yes | Connect database to the Refine app Now that you have a table to hold blog post contents, we can read and write to it from our app.…",
+    "breadcrumbs": [
+      "Refine",
+      "Steps",
+      "Add database"
+    ]
   },
   {
     "slug": "tutorials/refine/step-6",
     "title": "Create CRUD pages",
     "description": "Add database queries and CRUD pages using Appwrite in your Refine application.",
-    "excerpt": "We're going to add CRUD pages to our admin panel so you can list, create, and view blog posts records. List page First, create a listing page to show Appwrite API data in a table by copying the code below into and saving it as . Create page Create a new record page for the Appwrite API by copying the following code and saving it as . Edit page Create a page for editing a records with the following code…"
+    "excerpt": "We're going to add CRUD pages to our admin panel so you can list, create, and view blog posts records. List page First, create a listing page to show Appwrite API data in a table by copying the code below into and saving it as . Create page Create a new record page for the Appwrite API by copying the following code and saving it as . Edit page Create a page for editing a records with the following code…",
+    "breadcrumbs": [
+      "Refine",
+      "Steps",
+      "Create CRUD pages"
+    ]
   },
   {
     "slug": "tutorials/refine/step-7",
     "title": "Next steps",
     "description": "Run your Refine project built with Appwrite",
-    "excerpt": "Test your project Run your project with and open http://localhost:3000 in your browser. Now, we are able to listing the records retrieved from Appwrite backend on table, show the each record, edit the existing records, and delete functionality on records. List Page Create Page Edit Page Show Page"
+    "excerpt": "Test your project Run your project with and open http://localhost:3000 in your browser. Now, we are able to listing the records retrieved from Appwrite backend on table, show the each record, edit the existing records, and delete functionality on records. List Page Create Page Edit Page Show Page",
+    "breadcrumbs": [
+      "Refine",
+      "Steps",
+      "Next steps"
+    ]
   },
   {
     "slug": "tutorials/subscriptions-with-stripe/step-1",
     "title": "Add app subscriptions with Stripe",
     "description": "Add paid app subscription plans to your app with Stripe and Appwrite Functions.",
-    "excerpt": "As you app grows, you may start offering paid services or features. This is an important part of growing your idea into a business. This tutorial will show you how to accept payments and provide subscribers with premium features using **Stripe**, a popular payment platform. Prerequisites 1. A GitHub account and working knowledge with GitHub 1. A Stripe account. 1. An Appwrite Cloud account. 1. Experience with Appwrite Functions."
+    "excerpt": "As you app grows, you may start offering paid services or features. This is an important part of growing your idea into a business. This tutorial will show you how to accept payments and provide subscribers with premium features using **Stripe**, a popular payment platform. Prerequisites 1. A GitHub account and working knowledge with GitHub 1. A Stripe account. 1. An Appwrite Cloud account. 1. Experience with Appwrite Functions.",
+    "breadcrumbs": [
+      "Stripe",
+      "Steps",
+      "Introduction"
+    ]
   },
   {
     "slug": "tutorials/subscriptions-with-stripe/step-2",
     "title": "Setup Stripe",
     "description": "Add paid app subscription plans to your app with Stripe and Appwrite Functions.",
-    "excerpt": "Start by visiting Stripe and creating an account. When successful, you will see Stripe Dashboard. This quick start will use test mode, but the same steps will also work for live mode. API key In the header, you can switch to the **Developers** page, where you can head to the **API Keys** section. On this page, reveal and copy the **Secret key**. Note it down, as you will need it later when setting the environment variable. Webhooks Go to the…"
+    "excerpt": "Start by visiting Stripe and creating an account. When successful, you will see Stripe Dashboard. This quick start will use test mode, but the same steps will also work for live mode. API key In the header, you can switch to the **Developers** page, where you can head to the **API Keys** section. On this page, reveal and copy the **Secret key**. Note it down, as you will need it later when setting the environment variable. Webhooks Go to the…",
+    "breadcrumbs": [
+      "Stripe",
+      "Steps",
+      "Setup Stripe"
+    ]
   },
   {
     "slug": "tutorials/subscriptions-with-stripe/step-3",
     "title": "Create function",
     "description": "Add paid app subscription plans to your app with Stripe and Appwrite Functions.",
-    "excerpt": "Head to the Appwrite Console and create a new project if you haven't already. If this is your first time using Appwrite, you will be asked to sign up first. Create a new function Once inside your project overview, switch to the **Functions** page from the left sidebar. Under the **Templates** section, use the search bar and look for . You will find the **Subscriptions with Stripe** template, which you can use by clicking the **Create function** button. Create a…"
+    "excerpt": "Head to the Appwrite Console and create a new project if you haven't already. If this is your first time using Appwrite, you will be asked to sign up first. Create a new function Once inside your project overview, switch to the **Functions** page from the left sidebar. Under the **Templates** section, use the search bar and look for . You will find the **Subscriptions with Stripe** template, which you can use by clicking the **Create function** button. Create a…",
+    "breadcrumbs": [
+      "Stripe",
+      "Steps",
+      "Create function"
+    ]
   },
   {
     "slug": "tutorials/subscriptions-with-stripe/step-4",
     "title": "Configure web platform",
     "description": "Add paid app subscription plans to your app with Stripe and Appwrite Functions.",
-    "excerpt": "Add platform To showcase the functionality, the template ships with a demo frontend that you can use. To allow this demo, you must add Function's domain as a trusted web platform. Head to your project's **Overview** page in Apwrite Console, and scroll down to the **Integrations** section. Click the **Add platform** button and select **Web App** from the dropdown. Set **Name** to and **Hostname** to your Function's domain. You can find your function's domain under the **Domains** tab. Click the…"
+    "excerpt": "Add platform To showcase the functionality, the template ships with a demo frontend that you can use. To allow this demo, you must add Function's domain as a trusted web platform. Head to your project's **Overview** page in Apwrite Console, and scroll down to the **Integrations** section. Click the **Add platform** button and select **Web App** from the dropdown. Set **Name** to and **Hostname** to your Function's domain. You can find your function's domain under the **Domains** tab. Click the…",
+    "breadcrumbs": [
+      "Stripe",
+      "Steps",
+      "Configure web platform"
+    ]
   },
   {
     "slug": "tutorials/subscriptions-with-stripe/step-5",
     "title": "All set",
     "description": "Add paid app subscription plans to your app with Stripe and Appwrite Functions.",
-    "excerpt": "You are now ready to use the Appwrite Function in your front end. You can initialize the payment process by redirecting your user to the endpoint on the Function's domain. Visit demo You can visit our Function's domain in the browser to see the demo application. In the demo app, click the **Register as anonymous** button to create a guest session. This will create a new user in your Appwrite Project. After registering, the demo app will show that you…"
+    "excerpt": "You are now ready to use the Appwrite Function in your front end. You can initialize the payment process by redirecting your user to the endpoint on the Function's domain. Visit demo You can visit our Function's domain in the browser to see the demo application. In the demo app, click the **Register as anonymous** button to create a guest session. This will create a new user in your Appwrite Project. After registering, the demo app will show that you…",
+    "breadcrumbs": [
+      "Stripe",
+      "Steps",
+      "All set"
+    ]
   },
   {
     "slug": "tutorials/sveltekit-csr-auth/step-1",
     "title": "Authentication with SvelteKit",
     "description": "Add Authentication to a SvelteKit project using Appwrite.",
-    "excerpt": "Appwrite takes away your stress of building and maintaining a backend. Appwrite helps you implement authentication, databases, file storage, and respond to real-time events with **secure** APIs out of the box. If you're a Svelte developer, examples in this guide shows you how Appwrite can help you add authentication to Svelte apps faster. Before you start Even if you've never tried Appwrite, you will get an idea of what it'll feel like to build with Svelte and Appwrite. If you're…"
+    "excerpt": "Appwrite takes away your stress of building and maintaining a backend. Appwrite helps you implement authentication, databases, file storage, and respond to real-time events with **secure** APIs out of the box. If you're a Svelte developer, examples in this guide shows you how Appwrite can help you add authentication to Svelte apps faster. Before you start Even if you've never tried Appwrite, you will get an idea of what it'll feel like to build with Svelte and Appwrite. If you're…",
+    "breadcrumbs": [
+      "SvelteKit",
+      "Steps",
+      "Introduction"
+    ]
   },
   {
     "slug": "tutorials/sveltekit-csr-auth/step-2",
     "title": "Create project",
     "description": "Add Authentication to a SvelteKit project using Appwrite.",
-    "excerpt": "You can create a Svelte project using SvelteKit. The command will give you a prompt with several project types. We'll be starting with a skeleton project. The prompt will be something similar to this. After the prompt is finished, you can head over to the newly created project. Adding Appwrite to your Svelte app Appwrite provides a Web SDK that can be used in your Svelte apps. You can use Appwrite by installing the Web SDK as an NPM package."
+    "excerpt": "You can create a Svelte project using SvelteKit. The command will give you a prompt with several project types. We'll be starting with a skeleton project. The prompt will be something similar to this. After the prompt is finished, you can head over to the newly created project. Adding Appwrite to your Svelte app Appwrite provides a Web SDK that can be used in your Svelte apps. You can use Appwrite by installing the Web SDK as an NPM package.",
+    "breadcrumbs": [
+      "SvelteKit",
+      "Steps",
+      "Create project"
+    ]
   },
   {
     "slug": "tutorials/sveltekit-csr-auth/step-3",
     "title": "Initialize SDK",
     "description": "Add Authentication to a SvelteKit project using Appwrite.",
-    "excerpt": "Before you can use Appwrite, you need to instanciate the Appwrite class with the project ID and endpoint. This tells the SDK where your Appwrite project is hosted and which one to connect to. The client is then used to initialize services like and , so they all point to the same Appwrite project. You can do this by instantiating the services you need in a file like and **exporting the instances**. and are environment variables that are exported in…"
+    "excerpt": "Before you can use Appwrite, you need to instanciate the Appwrite class with the project ID and endpoint. This tells the SDK where your Appwrite project is hosted and which one to connect to. The client is then used to initialize services like and , so they all point to the same Appwrite project. You can do this by instantiating the services you need in a file like and **exporting the instances**. and are environment variables that are exported in…",
+    "breadcrumbs": [
+      "SvelteKit",
+      "Steps",
+      "Initialize SDK"
+    ]
   },
   {
     "slug": "tutorials/sveltekit-csr-auth/step-4",
     "title": "Check if logged in",
     "description": "Add Authentication to a SvelteKit project using Appwrite.",
-    "excerpt": "Before taking a user to the login screen, we should check if they're already logged in. With SvelteKit, you can use the function to check if you're logged in before your app renders. By returning the account data in the root layout, it is globally available to all pages, **before any page is displayed** to the user. If we find the user is not logged in, we can redirect them to log in first. We can get the returned data…"
+    "excerpt": "Before taking a user to the login screen, we should check if they're already logged in. With SvelteKit, you can use the function to check if you're logged in before your app renders. By returning the account data in the root layout, it is globally available to all pages, **before any page is displayed** to the user. If we find the user is not logged in, we can redirect them to log in first. We can get the returned data…",
+    "breadcrumbs": [
+      "SvelteKit",
+      "Steps",
+      "Check if logged in"
+    ]
   },
   {
     "slug": "tutorials/sveltekit-csr-auth/step-5",
     "title": "Create login page",
     "description": "Add Authentication to a SvelteKit project using Appwrite.",
-    "excerpt": "We can now implement our login page. Create a file in the directory: You can see that we added a redirect in the login page to check if the user's already logged in, in which case we redirect them to the homepage. Now we just need to create a form to let the user input sign in data. And that's it. When the user successfully logs in, we use to re-run the relevant functions. In this case, the functions inside…"
+    "excerpt": "We can now implement our login page. Create a file in the directory: You can see that we added a redirect in the login page to check if the user's already logged in, in which case we redirect them to the homepage. Now we just need to create a form to let the user input sign in data. And that's it. When the user successfully logs in, we use to re-run the relevant functions. In this case, the functions inside…",
+    "breadcrumbs": [
+      "SvelteKit",
+      "Steps",
+      "Create login page"
+    ]
   },
   {
     "slug": "tutorials/sveltekit-csr-auth/step-6",
     "title": "Create signup page",
     "description": "Add Authentication to a SvelteKit project using Appwrite.",
-    "excerpt": "For signup, you can copy the login and files into , with some small changes to the file: With this, you have a simple authentication system."
+    "excerpt": "For signup, you can copy the login and files into , with some small changes to the file: With this, you have a simple authentication system.",
+    "breadcrumbs": [
+      "SvelteKit",
+      "Steps",
+      "Create signup page"
+    ]
   },
   {
     "slug": "tutorials/sveltekit-csr-auth/step-7",
     "title": "All set",
     "description": "Add Authentication to a SvelteKit project using Appwrite.",
-    "excerpt": "If you want to see these authentication concepts applied in a more robust manner, you can see them in action in this demo app. Other authentication methods Appwrite also supports OAuth, passwordless login, anonymous login, and phone login. Learn more about them in the authentication guide."
+    "excerpt": "If you want to see these authentication concepts applied in a more robust manner, you can see them in action in this demo app. Other authentication methods Appwrite also supports OAuth, passwordless login, anonymous login, and phone login. Learn more about them in the authentication guide.",
+    "breadcrumbs": [
+      "SvelteKit",
+      "Steps",
+      "All set"
+    ]
   },
   {
     "slug": "tutorials/sveltekit-ssr-auth/step-1",
     "title": "Server-side authentication with SvelteKit",
     "description": "Add SSR authentication to your SvelteKit app with Appwrite",
-    "excerpt": "Appwrite takes away the stress of building and maintaining a backend. Appwrite helps implement authentication, databases, file storage, and respond to real-time events with **secure** APIs out of the box. If you're a Svelte developer, the examples in this guide show you how Appwrite can help you add authentication to Svelte apps faster. Before you start Before following this tutorial, have the following prepared: - A recent version of Node.js installed on your system. - A basic knowledge of Svelte…"
+    "excerpt": "Appwrite takes away the stress of building and maintaining a backend. Appwrite helps implement authentication, databases, file storage, and respond to real-time events with **secure** APIs out of the box. If you're a Svelte developer, the examples in this guide show you how Appwrite can help you add authentication to Svelte apps faster. Before you start Before following this tutorial, have the following prepared: - A recent version of Node.js installed on your system. - A basic knowledge of Svelte…",
+    "breadcrumbs": [
+      "SvelteKit SSR",
+      "Steps",
+      "Introduction"
+    ]
   },
   {
     "slug": "tutorials/sveltekit-ssr-auth/step-2",
     "title": "Create project",
     "description": "Add authentication to a SvelteKit project using Appwrite.",
-    "excerpt": "Create a Svelte project using SvelteKit. The command will give you a prompt with several project types. We'll be starting with a skeleton project. The prompt will be something similar to this. After the prompt is finished, you can head over to the newly created project. Install Appwrite Appwrite provides a Node SDK that can be used in your Svelte apps. You can use Appwrite by installing the Node SDK as an NPM package. The Node SDK is intended for…"
+    "excerpt": "Create a Svelte project using SvelteKit. The command will give you a prompt with several project types. We'll be starting with a skeleton project. The prompt will be something similar to this. After the prompt is finished, you can head over to the newly created project. Install Appwrite Appwrite provides a Node SDK that can be used in your Svelte apps. You can use Appwrite by installing the Node SDK as an NPM package. The Node SDK is intended for…",
+    "breadcrumbs": [
+      "SvelteKit SSR",
+      "Steps",
+      "Create project"
+    ]
   },
   {
     "slug": "tutorials/sveltekit-ssr-auth/step-3",
     "title": "Initialize SDK",
     "description": "Add authentication to a SvelteKit project using Appwrite.",
-    "excerpt": "Before you can use Appwrite, you need to create the Appwrite and set the project ID and endpoint. The client is then used to create services like and , so they all point to the same Appwrite project. Create a function to build services you need in a file like and **exporting the instances**. As part of the function, set the current user's session if they are logged in. This is done by accessing the session cookie from the request…"
+    "excerpt": "Before you can use Appwrite, you need to create the Appwrite and set the project ID and endpoint. The client is then used to create services like and , so they all point to the same Appwrite project. Create a function to build services you need in a file like and **exporting the instances**. As part of the function, set the current user's session if they are logged in. This is done by accessing the session cookie from the request…",
+    "breadcrumbs": [
+      "SvelteKit SSR",
+      "Steps",
+      "Initialize SDK"
+    ]
   },
   {
     "slug": "tutorials/sveltekit-ssr-auth/step-4",
     "title": "Add a server hook",
     "description": "Add authentication to a SvelteKit project using Appwrite.",
-    "excerpt": "SvelteKit hooks which are functions that run on the server before a page is displayed to the user. SvelteKit locals are a way to store data that is specific to the current request. We can use this to store the user's account data, so that it is available to all pages. Create a new file in the directory called : To ensure the object is typed correctly, we can add a type definition for it in the file: Now, use…"
+    "excerpt": "SvelteKit hooks which are functions that run on the server before a page is displayed to the user. SvelteKit locals are a way to store data that is specific to the current request. We can use this to store the user's account data, so that it is available to all pages. Create a new file in the directory called : To ensure the object is typed correctly, we can add a type definition for it in the file: Now, use…",
+    "breadcrumbs": [
+      "SvelteKit SSR",
+      "Steps",
+      "Add a server hook"
+    ]
   },
   {
     "slug": "tutorials/sveltekit-ssr-auth/step-5",
     "title": "Create sign up page",
     "description": "Add authentication to a SvelteKit project using Appwrite.",
-    "excerpt": "We can now implement our sign up page. Create a file in the directory: This is an HTML form with an email and password input. When the form is submitted, we want to send the email and password to Appwrite to authenticate the user. To use SvelteKit form actions we create a file in the same directory:"
+    "excerpt": "We can now implement our sign up page. Create a file in the directory: This is an HTML form with an email and password input. When the form is submitted, we want to send the email and password to Appwrite to authenticate the user. To use SvelteKit form actions we create a file in the same directory:",
+    "breadcrumbs": [
+      "SvelteKit SSR",
+      "Steps",
+      "Create sign up page"
+    ]
   },
   {
     "slug": "tutorials/sveltekit-ssr-auth/step-6",
     "title": "Create account page",
     "description": "Add authentication to a SvelteKit project using Appwrite.",
-    "excerpt": "Now the end-user is able to sign up, we can create the account page. This page will display basic information about the user, and allow the user to log out. Create a new file in the directory called and add the following code: Create a new file in the directory called and add the following code:"
+    "excerpt": "Now the end-user is able to sign up, we can create the account page. This page will display basic information about the user, and allow the user to log out. Create a new file in the directory called and add the following code: Create a new file in the directory called and add the following code:",
+    "breadcrumbs": [
+      "SvelteKit SSR",
+      "Steps",
+      "Create account page"
+    ]
   },
   {
     "slug": "tutorials/sveltekit-ssr-auth/step-7",
     "title": "OAuth authentication with SSR",
     "description": "Add authentication to a SvelteKit project using Appwrite.",
-    "excerpt": "To support the OAuth flow, we first redirect the user to the OAuth provider, and then handle the callback from the OAuth provider. To redirect, add a button to our sign up page that redirects the user to the OAuth provider. Add a new server route to handle the redirect. The method redirects the user to the OAuth provider, and then the OAuth provider redirects the user back to the route with the and URL query parameters. Handle the callback…"
+    "excerpt": "To support the OAuth flow, we first redirect the user to the OAuth provider, and then handle the callback from the OAuth provider. To redirect, add a button to our sign up page that redirects the user to the OAuth provider. Add a new server route to handle the redirect. The method redirects the user to the OAuth provider, and then the OAuth provider redirects the user back to the route with the and URL query parameters. Handle the callback…",
+    "breadcrumbs": [
+      "SvelteKit SSR",
+      "Steps",
+      "OAuth authentication with SSR"
+    ]
   },
   {
     "slug": "tutorials/sveltekit-ssr-auth/step-8",
     "title": "All set",
     "description": "Add authentication to a SvelteKit project using Appwrite.",
-    "excerpt": "If you want to see the complete source code with styling, see the demos-for-svelte repository. Other authentication methods Appwrite also supports OAuth, passwordless login, anonymous login, and phone login. Learn more about them in the authentication guide."
+    "excerpt": "If you want to see the complete source code with styling, see the demos-for-svelte repository. Other authentication methods Appwrite also supports OAuth, passwordless login, anonymous login, and phone login. Learn more about them in the authentication guide.",
+    "breadcrumbs": [
+      "SvelteKit SSR",
+      "Steps",
+      "All set"
+    ]
   },
   {
     "slug": "tutorials/sveltekit/step-1",
     "title": "Build an ideas tracker with SvelteKit",
     "description": "Build a SvelteKit project using Appwrite.",
-    "excerpt": "**Idea tracker**: an app to track all the side project ideas that you'll start, but probably never finish. In this tutorial, you will build Idea tracker with Appwrite and SvelteKit. Concepts This tutorial will introduce the following concepts: 1. Setting up your first project 2. Authentication 3. Databases and tables 4. Queries and pagination Prerequisites 1. Basic knowledge of JavaScript and Svelte. 2. Have Node.js and NPM installed on your computer"
+    "excerpt": "**Idea tracker**: an app to track all the side project ideas that you'll start, but probably never finish. In this tutorial, you will build Idea tracker with Appwrite and SvelteKit. Concepts This tutorial will introduce the following concepts: 1. Setting up your first project 2. Authentication 3. Databases and tables 4. Queries and pagination Prerequisites 1. Basic knowledge of JavaScript and Svelte. 2. Have Node.js and NPM installed on your computer",
+    "breadcrumbs": [
+      "SvelteKit",
+      "Steps",
+      "Introduction"
+    ]
   },
   {
     "slug": "tutorials/sveltekit/step-2",
     "title": "Create app",
     "description": "Create a SvelteKit app project using Appwrite.",
-    "excerpt": "Create SvelteKit project Create a SvelteKit app with the command and select Add dependencies Install the JavaScript Appwrite SDK. You can start the development server to watch your app update in the browser as you make changes. Your app should be available at http://localhost:5173."
+    "excerpt": "Create SvelteKit project Create a SvelteKit app with the command and select Add dependencies Install the JavaScript Appwrite SDK. You can start the development server to watch your app update in the browser as you make changes. Your app should be available at http://localhost:5173.",
+    "breadcrumbs": [
+      "SvelteKit",
+      "Steps",
+      "Create app"
+    ]
   },
   {
     "slug": "tutorials/sveltekit/step-3",
     "title": "Set up Appwrite",
     "description": "Initialize Appwrite in your SvelteKit project.",
-    "excerpt": "Create project Head to the Appwrite Console. If this is your first time using Appwrite, create an account and create your first project. Then, under **Add a platform**, add a **Web app**. The **Hostname** should be localhost. You can skip optional steps. Initialize Appwrite SDK To use Appwrite in our Svelte app, we'll need to find our project ID. Find your project's ID in the **Settings** page. Create a new file to hold our Appwrite related code. Only one instance…"
+    "excerpt": "Create project Head to the Appwrite Console. If this is your first time using Appwrite, create an account and create your first project. Then, under **Add a platform**, add a **Web app**. The **Hostname** should be localhost. You can skip optional steps. Initialize Appwrite SDK To use Appwrite in our Svelte app, we'll need to find our project ID. Find your project's ID in the **Settings** page. Create a new file to hold our Appwrite related code. Only one instance…",
+    "breadcrumbs": [
+      "SvelteKit",
+      "Steps",
+      "Set up Appwrite"
+    ]
   },
   {
     "slug": "tutorials/sveltekit/step-4",
     "title": "Add authentication",
     "description": "Add Appwrite authentication to you Svelte app using your Svelte store.",
-    "excerpt": "Using stores Svelte stores provide an easy way to manage state throughout your application. We'll use a store to keep track of our user's data. Create a new file and add the following code to it. Login page Using this store, we can build a login page. Create a new file and add the following code to it."
+    "excerpt": "Using stores Svelte stores provide an easy way to manage state throughout your application. We'll use a store to keep track of our user's data. Create a new file and add the following code to it. Login page Using this store, we can build a login page. Create a new file and add the following code to it.",
+    "breadcrumbs": [
+      "SvelteKit",
+      "Steps",
+      "Add authentication"
+    ]
   },
   {
     "slug": "tutorials/sveltekit/step-5",
     "title": "Add navigation",
     "description": "Add navigation to your SvelteKit application with Appwrite authentication.",
-    "excerpt": "We'll create a layout component, that's used by all pages, to display a navbar. The navbar will show a login button if the user is not logged in, and a logout button if the user is logged in. Create a new file and add the following code to it."
+    "excerpt": "We'll create a layout component, that's used by all pages, to display a navbar. The navbar will show a login button if the user is not logged in, and a logout button if the user is logged in. Create a new file and add the following code to it.",
+    "breadcrumbs": [
+      "SvelteKit",
+      "Steps",
+      "Add navigation"
+    ]
   },
   {
     "slug": "tutorials/sveltekit/step-6",
     "title": "Add database",
     "description": "Add databases and queries to store user data in you SvelteKit project.",
-    "excerpt": "Create table In Appwrite, data is stored as a table of rows. Create a table inside a database in the Appwrite Console to store our ideas. Create the following columns within the table: | Field | Type | Size | Required | | ----------- | ------ | ---- | -------- | | userId | Varchar | 36 | Yes | | title | Varchar | 128 | Yes | | description | Text | - | No | For this…"
+    "excerpt": "Create table In Appwrite, data is stored as a table of rows. Create a table inside a database in the Appwrite Console to store our ideas. Create the following columns within the table: | Field | Type | Size | Required | | ----------- | ------ | ---- | -------- | | userId | Varchar | 36 | Yes | | title | Varchar | 128 | Yes | | description | Text | - | No | For this…",
+    "breadcrumbs": [
+      "SvelteKit",
+      "Steps",
+      "Add database"
+    ]
   },
   {
     "slug": "tutorials/sveltekit/step-7",
     "title": "Create ideas page",
     "description": "Add pagining and ordering to you SvelteKit application powered by Appwrite Databases.",
-    "excerpt": "Using our created methods, we can build a page to submit and view ideas. First, let's create a load function for our ideas page. This will load the latest ideas from the database. To do so, create a file called with the following content: Simple as that! Now, let's create the page itself. Replace the contents in with the following: With this you have successfully created an Ideas Tracker! You can now submit ideas and view them."
+    "excerpt": "Using our created methods, we can build a page to submit and view ideas. First, let's create a load function for our ideas page. This will load the latest ideas from the database. To do so, create a file called with the following content: Simple as that! Now, let's create the page itself. Replace the contents in with the following: With this you have successfully created an Ideas Tracker! You can now submit ideas and view them.",
+    "breadcrumbs": [
+      "SvelteKit",
+      "Steps",
+      "Create ideas page"
+    ]
   },
   {
     "slug": "tutorials/vue/step-1",
     "title": "Build an ideas tracker with Vue.js",
     "description": "Learn to build an idea tracker app with Appwrite and Vue with authentication, databases and tables, queries, pagination, and file storage.",
-    "excerpt": "**Idea tracker**: an app to track all the side project ideas that you'll start, but probably never finish. In this tutorial, you will build Idea tracker with Appwrite and Vue. Concepts This tutorial will introduce the following concepts: 1. Setting up your first project 2. Authentication 3. Databases and tables 4. Queries and pagination Prerequisites 1. Basic knowledge of JavaScript and Vue. 2. Have Node.js and NPM installed on your computer."
+    "excerpt": "**Idea tracker**: an app to track all the side project ideas that you'll start, but probably never finish. In this tutorial, you will build Idea tracker with Appwrite and Vue. Concepts This tutorial will introduce the following concepts: 1. Setting up your first project 2. Authentication 3. Databases and tables 4. Queries and pagination Prerequisites 1. Basic knowledge of JavaScript and Vue. 2. Have Node.js and NPM installed on your computer.",
+    "breadcrumbs": [
+      "Vue",
+      "Steps",
+      "Introduction"
+    ]
   },
   {
     "slug": "tutorials/vue/step-2",
     "title": "Create app",
     "description": "Create and app with Appwrite Cloud and Vue.js.",
-    "excerpt": "Create Vue project Create a Vue app with the command. Add dependencies Install the JavaScript Appwrite SDK. You can start the development server to watch your app update in the browser as you make changes."
+    "excerpt": "Create Vue project Create a Vue app with the command. Add dependencies Install the JavaScript Appwrite SDK. You can start the development server to watch your app update in the browser as you make changes.",
+    "breadcrumbs": [
+      "Vue",
+      "Steps",
+      "Create app"
+    ]
   },
   {
     "slug": "tutorials/vue/step-3",
     "title": "Set up Appwrite",
     "description": "Import and configure a project with Appwrite Cloud and Vue.js.",
-    "excerpt": "Create project Head to the Appwrite Console. If this is your first time using Appwrite, create an account and create your first project. Then, under **Add a platform**, add a **Web app**. The **Hostname** should be localhost. You can skip optional steps. Initialize Appwrite SDK To use Appwrite in our Vue app, we'll need to find our project ID. Find your project's ID in the **Settings** page. Create a new file to hold our Appwrite related code. Only one instance…"
+    "excerpt": "Create project Head to the Appwrite Console. If this is your first time using Appwrite, create an account and create your first project. Then, under **Add a platform**, add a **Web app**. The **Hostname** should be localhost. You can skip optional steps. Initialize Appwrite SDK To use Appwrite in our Vue app, we'll need to find our project ID. Find your project's ID in the **Settings** page. Create a new file to hold our Appwrite related code. Only one instance…",
+    "breadcrumbs": [
+      "Vue",
+      "Steps",
+      "Set up Appwrite"
+    ]
   },
   {
     "slug": "tutorials/vue/step-4",
     "title": "Add authentication",
     "description": "Add authentication to your Vue application using Appwrite Web SDK.",
-    "excerpt": "User store In Vue, you can use the reactive API to share data between components. We'll create a store to share the user's data between components. Create a new file and add the following code to it. Now, we can import the store in any component and use it to login, logout, or register a user. However, we'll need to call the method to initialize the user's data. Basic routing First, import the store in and call the method when…"
+    "excerpt": "User store In Vue, you can use the reactive API to share data between components. We'll create a store to share the user's data between components. Create a new file and add the following code to it. Now, we can import the store in any component and use it to login, logout, or register a user. However, we'll need to call the method to initialize the user's data. Basic routing First, import the store in and call the method when…",
+    "breadcrumbs": [
+      "Vue",
+      "Steps",
+      "Add authentication"
+    ]
   },
   {
     "slug": "tutorials/vue/step-5",
     "title": "Add navigation",
     "description": "Add navigation to your Vue.js app with Appwrite authentication and pinia stores.",
-    "excerpt": "In our app we want to have a navigation bar that is always visible. Use the store to show either: - a logout button if the user is logged in. - a login button if the user is not logged in. Update the App component in :"
+    "excerpt": "In our app we want to have a navigation bar that is always visible. Use the store to show either: - a logout button if the user is logged in. - a login button if the user is not logged in. Update the App component in :",
+    "breadcrumbs": [
+      "Vue",
+      "Steps",
+      "Add navigation"
+    ]
   },
   {
     "slug": "tutorials/vue/step-6",
     "title": "Add database",
     "description": "Add data storage to your Vue.js project powered by Appwrite Cloud databases.",
-    "excerpt": "Create table In Appwrite, data is stored as a table of rows. Create a table in the Appwrite Console to store our ideas. Create a new table with the following columns: | Field | Type | Required | |-------------|--------|----------| | userId | Varchar | Yes | | title | Varchar | Yes | | description | Text | No | Ideas context Now that you have a table to hold ideas, we can read and write to it from our…"
+    "excerpt": "Create table In Appwrite, data is stored as a table of rows. Create a table in the Appwrite Console to store our ideas. Create a new table with the following columns: | Field | Type | Required | |-------------|--------|----------| | userId | Varchar | Yes | | title | Varchar | Yes | | description | Text | No | Ideas context Now that you have a table to hold ideas, we can read and write to it from our…",
+    "breadcrumbs": [
+      "Vue",
+      "Steps",
+      "Add database"
+    ]
   },
   {
     "slug": "tutorials/vue/step-7",
     "title": "Create ideas page",
     "description": "Add data queries and pagination to your Vue.js project powered by Appwrite Cloud databases.",
-    "excerpt": "Using the store we can now display the ideas on the page. We will also add a form to submit new ideas. Overwrite the contents of with the following:"
+    "excerpt": "Using the store we can now display the ideas on the page. We will also add a form to submit new ideas. Overwrite the contents of with the following:",
+    "breadcrumbs": [
+      "Vue",
+      "Steps",
+      "Create ideas page"
+    ]
   },
   {
     "slug": "tutorials/vue/step-8",
     "title": "Next steps",
     "description": "View your Vue.js app build on Appwrite Cloud.",
-    "excerpt": "Test your project Run your project with and open http://localhost:3000 in your browser."
+    "excerpt": "Test your project Run your project with and open http://localhost:3000 in your browser.",
+    "breadcrumbs": [
+      "Vue",
+      "Steps",
+      "Next steps"
+    ]
   }
 ] as DocsSearchEntry[]

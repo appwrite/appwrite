@@ -6,6 +6,7 @@ import { readdir, readFile, writeFile, mkdir } from 'node:fs/promises'
 import { dirname, join, relative } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import matter from 'gray-matter'
+import { getDocsPageBreadcrumbs } from '../src/lib/docs/breadcrumbs.ts'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 const VIBES_ROOT = join(__dirname, '..')
@@ -22,6 +23,9 @@ type DocsPageEntry = {
   layout: string
   readingTimeMinutes: number
   step?: number
+  category?: string
+  framework?: string
+  draft?: boolean
 }
 
 type DocsSearchEntry = {
@@ -29,6 +33,7 @@ type DocsSearchEntry = {
   title: string
   description: string
   excerpt: string
+  breadcrumbs: string[]
 }
 
 async function walkMarkdocFiles(dir: string): Promise<string[]> {
@@ -107,6 +112,9 @@ async function main() {
       layout: typeof data.layout === 'string' ? data.layout : 'article',
       readingTimeMinutes: getReadingTimeMinutes(raw),
       ...(typeof data.step === 'number' ? { step: data.step } : {}),
+      ...(typeof data.category === 'string' ? { category: data.category.trim() } : {}),
+      ...(typeof data.framework === 'string' ? { framework: data.framework.trim() } : {}),
+      ...(data.draft === true ? { draft: true } : {}),
     })
 
     searchIndex.push({
@@ -114,11 +122,18 @@ async function main() {
       title,
       description,
       excerpt: toExcerpt(raw),
+      breadcrumbs: [],
     })
   }
 
   pages.sort((a, b) => a.slug.localeCompare(b.slug))
   searchIndex.sort((a, b) => a.slug.localeCompare(b.slug))
+
+  const pageMap = Object.fromEntries(pages.map((page) => [page.slug, page]))
+
+  for (const entry of searchIndex) {
+    entry.breadcrumbs = getDocsPageBreadcrumbs(entry.slug, pageMap)
+  }
 
   await mkdir(OUTPUT_DIR, { recursive: true })
 

@@ -13,7 +13,7 @@ import type { ConsoleProfileFeatures } from '@/lib/console-profiles'
 import type { CreateResourceType } from '@/components/global/shared/CommandCenter.types'
 
 /** High-level area of the console that the user is currently in. */
-export type CommandScope = 'account' | 'organization' | 'project'
+export type CommandScope = 'account' | 'organization' | 'project' | 'docs'
 
 /** Bucket that decides default group label and ordering. */
 export type CommandKind =
@@ -37,6 +37,7 @@ export interface CommandContext {
   navigateExternal: (to: string) => void
   closeCommandCenter: () => void
   openShortcutsPage: () => void
+  openDocsSearchPage?: () => void
   /** Optional handlers wired by the parent (e.g. KeyboardShortcutsProvider). */
   handlers: {
     onProjectCreate?: (type: CreateResourceType) => void

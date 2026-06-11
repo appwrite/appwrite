@@ -8,19 +8,20 @@ import {
   useState,
   type ReactNode,
 } from 'react'
+import { CommandCenter } from '@/components/global/shared/CommandCenter'
 import { useGlobalCommandShortcuts } from '@/lib/keyboard-shortcuts/use-global-command-shortcuts'
-import { DocsSearch } from './DocsSearch'
 
-type DocsSearchContextValue = {
+type DocsCommandCenterContextValue = {
   openDocsSearch: () => void
   closeDocsSearch: () => void
   isDocsSearchOpen: boolean
 }
 
-const DocsSearchContext = createContext<DocsSearchContextValue | null>(null)
+const DocsCommandCenterContext =
+  createContext<DocsCommandCenterContextValue | null>(null)
 
 export function useDocsSearchContext() {
-  return useContext(DocsSearchContext)
+  return useContext(DocsCommandCenterContext)
 }
 
 type DocsSearchProviderProps = {
@@ -28,35 +29,52 @@ type DocsSearchProviderProps = {
 }
 
 export function DocsSearchProvider({ children }: DocsSearchProviderProps) {
-  const [open, setOpen] = useState(false)
+  const [commandCenterOpen, setCommandCenterOpen] = useState(false)
+  const [initialSubPage, setInitialSubPage] = useState<string | null>(null)
 
   const openDocsSearch = useCallback(() => {
-    setOpen(true)
+    setInitialSubPage('docs')
+    setCommandCenterOpen(true)
   }, [])
 
   const closeDocsSearch = useCallback(() => {
-    setOpen(false)
+    setCommandCenterOpen(false)
+    setInitialSubPage(null)
+  }, [])
+
+  const openShortcutsHelp = useCallback(() => {
+    setInitialSubPage('shortcuts')
+    setCommandCenterOpen(true)
   }, [])
 
   useGlobalCommandShortcuts({
-    commandCenterOpen: open,
+    commandCenterOpen,
     onOpenCommandCenter: openDocsSearch,
-    onOpenShortcutsHelp: openDocsSearch,
+    onOpenShortcutsHelp: openShortcutsHelp,
   })
 
-  const contextValue = useMemo<DocsSearchContextValue>(
+  const contextValue = useMemo<DocsCommandCenterContextValue>(
     () => ({
       openDocsSearch,
       closeDocsSearch,
-      isDocsSearchOpen: open,
+      isDocsSearchOpen: commandCenterOpen,
     }),
-    [openDocsSearch, closeDocsSearch, open],
+    [openDocsSearch, closeDocsSearch, commandCenterOpen],
   )
 
   return (
-    <DocsSearchContext.Provider value={contextValue}>
+    <DocsCommandCenterContext.Provider value={contextValue}>
       {children}
-      <DocsSearch open={open} onOpenChange={setOpen} />
-    </DocsSearchContext.Provider>
+      <CommandCenter
+        context="docs"
+        open={commandCenterOpen}
+        onOpenChange={(open) => {
+          setCommandCenterOpen(open)
+          if (!open) setInitialSubPage(null)
+        }}
+        initialSubPage={initialSubPage}
+        onInitialSubPageConsumed={() => setInitialSubPage(null)}
+      />
+    </DocsCommandCenterContext.Provider>
   )
 }

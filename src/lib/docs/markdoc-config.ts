@@ -9,7 +9,10 @@ export const docsMarkdocConfig: Config = {
     tabs: { render: 'Tabs' },
     tabsitem: { render: 'TabsItem', attributes: { id: { type: String }, title: { type: String } } },
     cards: { render: 'Cards' },
-    cards_item: { render: 'CardsItem', attributes: { href: { type: String }, title: { type: String } } },
+    cards_item: {
+      render: 'CardsItem',
+      attributes: { href: { type: String }, title: { type: String }, icon: { type: String } },
+    },
     only_light: { render: 'OnlyLight' },
     only_dark: { render: 'OnlyDark' },
     accordion: { render: 'Accordion' },

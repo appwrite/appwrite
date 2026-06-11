@@ -78,19 +78,19 @@ Use your first site as a springboard to explore the flexible and powerful featur
 
 {% cards %}
 
-{% cards_item href="/docs/products/sites/templates" title="Templates" %}
+{% cards_item href="/docs/products/sites/templates" title="Templates" icon="icon-document-text" %}
 Get a template site up and running with a single click.
 {% /cards_item %}
 
-{% cards_item href="/docs/products/sites/develop" title="Develop" %}
+{% cards_item href="/docs/products/sites/develop" title="Develop" icon="icon-code-bracket" %}
 Learn about developing your own Appwrite Site.
 {% /cards_item %}
 
-{% cards_item href="/docs/products/sites/deploy-from-git" title="Deploy" %}
+{% cards_item href="/docs/products/sites/deploy-from-git" title="Deploy" icon="icon-rocket-launch" %}
 Configure and deploy your Appwrite Site from Git.
 {% /cards_item %}
 
-{% cards_item href="/docs/products/sites/frameworks" title="Frameworks" %}
+{% cards_item href="/docs/products/sites/frameworks" title="Frameworks" icon="icon-squares-2x2" %}
 Learn which frameworks are supported by Appwrite Sites.
 {% /cards_item %}
 

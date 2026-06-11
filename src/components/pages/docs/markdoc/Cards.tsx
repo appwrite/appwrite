@@ -1,5 +1,7 @@
 import { ArrowRight } from 'lucide-react'
 import { Children, cloneElement, isValidElement, type ReactNode } from 'react'
+import { resolveMarkdocCardIcon } from '@/lib/docs/markdoc-card-icons'
+import { PUBLIC_ICON_MUTED_CLASSES } from '@/lib/public-icon-classes'
 import { cn } from '@/lib/utils'
 import { DocsRouteLink } from '../DocsRouteLink'
 
@@ -60,14 +62,35 @@ function CardHoverLight({ variant }: { variant: number }) {
   )
 }
 
+function CardItemIcon({ icon }: { icon: string }) {
+  const resolved = resolveMarkdocCardIcon(icon)
+  if (!resolved) return null
+
+  return (
+    <span className="mb-3 flex size-9 shrink-0 items-center justify-center rounded-lg border border-border bg-muted/40">
+      {resolved.type === 'image' ? (
+        <img
+          src={resolved.src}
+          alt=""
+          className={cn('size-4 object-contain', PUBLIC_ICON_MUTED_CLASSES)}
+        />
+      ) : (
+        <resolved.Icon className="size-4 text-muted-foreground" aria-hidden />
+      )}
+    </span>
+  )
+}
+
 export function CardsItem({
   href,
   title,
+  icon,
   children,
   cardIndex = 0,
 }: {
   href?: string
   title?: string
+  icon?: string
   children?: ReactNode
   cardIndex?: number
 }) {
@@ -77,6 +100,7 @@ export function CardsItem({
     <div className="group relative isolate flex h-full flex-col overflow-hidden rounded-xl border border-border bg-card/50 p-5">
       <CardHoverLight variant={lightVariant} />
       <div className="relative z-10 flex h-full flex-col">
+        {icon ? <CardItemIcon icon={icon} /> : null}
         {title ? (
           <h3 className="text-[17px] font-semibold text-foreground/90 sm:text-[18px]">{title}</h3>
         ) : null}

@@ -5,6 +5,7 @@ export type DocsSearchEntry = {
   title: string
   description: string
   excerpt: string
+  breadcrumbs: string[]
 }
 
 export type DocsSearchResult = DocsSearchEntry & {
@@ -30,7 +31,8 @@ function scoreEntry(entry: DocsSearchEntry, query: string): number {
   const excerpt = entry.excerpt.toLowerCase()
   const slug = entry.slug.toLowerCase()
   const slugAsWords = slug.replace(/-/g, ' ')
-  const haystack = `${title} ${description} ${excerpt} ${slugAsWords}`
+  const breadcrumbs = entry.breadcrumbs.join(' ').toLowerCase()
+  const haystack = `${title} ${description} ${excerpt} ${slugAsWords} ${breadcrumbs}`
 
   let score = 0
 
@@ -76,3 +78,32 @@ export function searchDocs(
 export function getDocsSearchHref(slug: string): string {
   return slug ? `/docs/${slug}` : '/docs'
 }
+
+export const DOCS_SEARCH_SUGGESTIONS = [
+  'OAuth login',
+  'API keys',
+  'Storage buckets',
+  'Database queries',
+  'Deploy function',
+] as const
+
+const DOCS_SEARCH_POPULAR_SLUGS = [
+  'quick-starts',
+  'products/auth',
+  'products/databases',
+  'products/storage',
+  'products/functions',
+  'references',
+] as const
+
+export function getDocsSearchPopularPages(
+  index: DocsSearchEntry[] = DOCS_SEARCH_INDEX,
+): DocsSearchEntry[] {
+  const bySlug = new Map(index.map((entry) => [entry.slug, entry]))
+  return DOCS_SEARCH_POPULAR_SLUGS.flatMap((slug) => {
+    const entry = bySlug.get(slug)
+    return entry ? [entry] : []
+  })
+}
+
+export const DOCS_SEARCH_PAGE_COUNT = DOCS_SEARCH_INDEX.length

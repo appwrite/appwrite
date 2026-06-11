@@ -29,6 +29,8 @@ import { Route as DocsIndexRouteImport } from './routes/docs/index'
 import { Route as PublicIndexRouteImport } from './routes/_public/index'
 import { Route as LlmsTxtRouteImport } from './routes/llms.txt'
 import { Route as LlmsFullTxtRouteImport } from './routes/llms-full.txt'
+import { Route as DocsTutorialsRouteImport } from './routes/docs/tutorials'
+import { Route as DocsQuickStartsRouteImport } from './routes/docs/quick-starts'
 import { Route as DocsSplatRouteImport } from './routes/docs/$'
 import { Route as PublicUpgradeRouteImport } from './routes/_public/upgrade'
 import { Route as PublicResetRouteImport } from './routes/_public/reset'
@@ -362,6 +364,16 @@ const LlmsFullTxtRoute = LlmsFullTxtRouteImport.update({
   id: '/llms-full/txt',
   path: '/llms-full/txt',
   getParentRoute: () => rootRouteImport,
+} as any)
+const DocsTutorialsRoute = DocsTutorialsRouteImport.update({
+  id: '/tutorials',
+  path: '/tutorials',
+  getParentRoute: () => DocsRoute,
+} as any)
+const DocsQuickStartsRoute = DocsQuickStartsRouteImport.update({
+  id: '/quick-starts',
+  path: '/quick-starts',
+  getParentRoute: () => DocsRoute,
 } as any)
 const DocsSplatRoute = DocsSplatRouteImport.update({
   id: '/$',
@@ -1930,6 +1942,8 @@ export interface FileRoutesByFullPath {
   '/reset': typeof PublicResetRoute
   '/upgrade': typeof PublicUpgradeRoute
   '/docs/$': typeof DocsSplatRoute
+  '/docs/quick-starts': typeof DocsQuickStartsRoute
+  '/docs/tutorials': typeof DocsTutorialsRoute
   '/llms-full/txt': typeof LlmsFullTxtRoute
   '/llms/txt': typeof LlmsTxtRoute
   '/': typeof PublicIndexRoute
@@ -2183,6 +2197,8 @@ export interface FileRoutesByTo {
   '/reset': typeof PublicResetRoute
   '/upgrade': typeof PublicUpgradeRoute
   '/docs/$': typeof DocsSplatRoute
+  '/docs/quick-starts': typeof DocsQuickStartsRoute
+  '/docs/tutorials': typeof DocsTutorialsRoute
   '/llms-full/txt': typeof LlmsFullTxtRoute
   '/llms/txt': typeof LlmsTxtRoute
   '/': typeof PublicIndexRoute
@@ -2410,6 +2426,8 @@ export interface FileRoutesById {
   '/_public/reset': typeof PublicResetRoute
   '/_public/upgrade': typeof PublicUpgradeRoute
   '/docs/$': typeof DocsSplatRoute
+  '/docs/quick-starts': typeof DocsQuickStartsRoute
+  '/docs/tutorials': typeof DocsTutorialsRoute
   '/llms-full/txt': typeof LlmsFullTxtRoute
   '/llms/txt': typeof LlmsTxtRoute
   '/_public/': typeof PublicIndexRoute
@@ -2667,6 +2685,8 @@ export interface FileRouteTypes {
     | '/reset'
     | '/upgrade'
     | '/docs/$'
+    | '/docs/quick-starts'
+    | '/docs/tutorials'
     | '/llms-full/txt'
     | '/llms/txt'
     | '/'
@@ -2920,6 +2940,8 @@ export interface FileRouteTypes {
     | '/reset'
     | '/upgrade'
     | '/docs/$'
+    | '/docs/quick-starts'
+    | '/docs/tutorials'
     | '/llms-full/txt'
     | '/llms/txt'
     | '/'
@@ -3146,6 +3168,8 @@ export interface FileRouteTypes {
     | '/_public/reset'
     | '/_public/upgrade'
     | '/docs/$'
+    | '/docs/quick-starts'
+    | '/docs/tutorials'
     | '/llms-full/txt'
     | '/llms/txt'
     | '/_public/'
@@ -3536,6 +3560,20 @@ declare module '@tanstack/react-router' {
       fullPath: '/llms-full/txt'
       preLoaderRoute: typeof LlmsFullTxtRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/docs/tutorials': {
+      id: '/docs/tutorials'
+      path: '/tutorials'
+      fullPath: '/docs/tutorials'
+      preLoaderRoute: typeof DocsTutorialsRouteImport
+      parentRoute: typeof DocsRoute
+    }
+    '/docs/quick-starts': {
+      id: '/docs/quick-starts'
+      path: '/quick-starts'
+      fullPath: '/docs/quick-starts'
+      preLoaderRoute: typeof DocsQuickStartsRouteImport
+      parentRoute: typeof DocsRoute
     }
     '/docs/$': {
       id: '/docs/$'
@@ -6382,11 +6420,15 @@ const PublicRouteWithChildren =
 
 interface DocsRouteChildren {
   DocsSplatRoute: typeof DocsSplatRoute
+  DocsQuickStartsRoute: typeof DocsQuickStartsRoute
+  DocsTutorialsRoute: typeof DocsTutorialsRoute
   DocsIndexRoute: typeof DocsIndexRoute
 }
 
 const DocsRouteChildren: DocsRouteChildren = {
   DocsSplatRoute: DocsSplatRoute,
+  DocsQuickStartsRoute: DocsQuickStartsRoute,
+  DocsTutorialsRoute: DocsTutorialsRoute,
   DocsIndexRoute: DocsIndexRoute,
 }
 

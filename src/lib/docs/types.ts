@@ -5,6 +5,9 @@ export type DocsPageMeta = {
   layout: string
   readingTimeMinutes: number
   step?: number
+  category?: string
+  framework?: string
+  draft?: boolean
 }
 
 export type DocsNavLink = {

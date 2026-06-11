@@ -7,6 +7,7 @@ import {
   DOCS_PAGE_EYEBROW_CLASS,
   DOCS_PAGE_TITLE_CLASS,
 } from '@/lib/docs/prose-typography'
+import { DOCS_SECTION_HEADER_CLASS } from '@/lib/docs/nav-styles'
 import { cn, findScrollParent } from '@/lib/utils'
 import { DocsRouteLink } from './DocsRouteLink'
 
@@ -122,14 +123,17 @@ export function DocsArticleHeader({
           aria-label="Article toolbar"
         >
           <div
-            className="pointer-events-auto bg-background/95 py-3 backdrop-blur-sm supports-[backdrop-filter]:bg-background/80"
+            className={cn(
+              DOCS_SECTION_HEADER_CLASS,
+              'pointer-events-auto border-b-0 bg-background/95 backdrop-blur-sm supports-[backdrop-filter]:bg-background/80',
+            )}
             style={{
               marginLeft: stickyBounds.contentInsetLeft,
               width: stickyBounds.contentWidth,
               maxWidth: stickyBounds.contentWidth,
             }}
           >
-            <div className="flex items-center justify-between gap-4">
+            <div className="flex w-full items-center justify-between gap-4">
               <p className={DOCS_STICKY_TITLE_CLASS}>
                 {title}
                 <span className="text-[var(--brand-cta)]">_</span>

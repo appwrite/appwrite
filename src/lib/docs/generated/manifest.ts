@@ -2598,7 +2598,9 @@ export const DOCS_PAGES: DocsPageMeta[] = [
     "description": "Learn to build an Android app with no backend code using an Appwrite backend.",
     "layout": "tutorial",
     "readingTimeMinutes": 1,
-    "step": 1
+    "step": 1,
+    "category": "Mobile and native",
+    "framework": "Android"
   },
   {
     "slug": "tutorials/android/step-2",
@@ -2662,7 +2664,10 @@ export const DOCS_PAGES: DocsPageMeta[] = [
     "description": "Learn to build an Apple app with no backend code using an Appwrite backend.",
     "layout": "tutorial",
     "readingTimeMinutes": 1,
-    "step": 1
+    "step": 1,
+    "category": "Mobile and native",
+    "framework": "Apple",
+    "draft": true
   },
   {
     "slug": "tutorials/astro-ssr-auth/step-1",
@@ -2670,7 +2675,9 @@ export const DOCS_PAGES: DocsPageMeta[] = [
     "description": "Add SSR authentication to your Astro app with Appwrite",
     "layout": "tutorial",
     "readingTimeMinutes": 1,
-    "step": 1
+    "step": 1,
+    "category": "Auth",
+    "framework": "Astro SSR"
   },
   {
     "slug": "tutorials/astro-ssr-auth/step-2",
@@ -2734,7 +2741,10 @@ export const DOCS_PAGES: DocsPageMeta[] = [
     "description": "Learn to build an Flutter app with no backend code using an Appwrite backend.",
     "layout": "tutorial",
     "readingTimeMinutes": 1,
-    "step": 1
+    "step": 1,
+    "category": "Mobile and native",
+    "framework": "Flutter",
+    "draft": true
   },
   {
     "slug": "tutorials/nextjs-ssr-auth/step-1",
@@ -2742,7 +2752,9 @@ export const DOCS_PAGES: DocsPageMeta[] = [
     "description": "Add SSR authentication to your Next.js app with Appwrite",
     "layout": "tutorial",
     "readingTimeMinutes": 1,
-    "step": 1
+    "step": 1,
+    "category": "Auth",
+    "framework": "Next.js SSR"
   },
   {
     "slug": "tutorials/nextjs-ssr-auth/step-2",
@@ -2806,7 +2818,9 @@ export const DOCS_PAGES: DocsPageMeta[] = [
     "description": "Learn to build an idea tracker app with Appwrite and Next.js with authentication, databases and tables, queries, pagination, and file storage.",
     "layout": "tutorial",
     "readingTimeMinutes": 1,
-    "step": 1
+    "step": 1,
+    "category": "Web",
+    "framework": "Next.js"
   },
   {
     "slug": "tutorials/nextjs/step-2",
@@ -2870,7 +2884,9 @@ export const DOCS_PAGES: DocsPageMeta[] = [
     "description": "Add SSR authentication to your Nuxt app with Appwrite",
     "layout": "tutorial",
     "readingTimeMinutes": 1,
-    "step": 1
+    "step": 1,
+    "category": "Auth",
+    "framework": "Nuxt SSR"
   },
   {
     "slug": "tutorials/nuxt-ssr-auth/step-2",
@@ -2942,7 +2958,9 @@ export const DOCS_PAGES: DocsPageMeta[] = [
     "description": "Learn to build an idea tracker app with Appwrite and Nuxt with authentication, databases and tables, queries, pagination, and file storage.",
     "layout": "tutorial",
     "readingTimeMinutes": 1,
-    "step": 1
+    "step": 1,
+    "category": "Web",
+    "framework": "Nuxt"
   },
   {
     "slug": "tutorials/nuxt/step-2",
@@ -3006,7 +3024,9 @@ export const DOCS_PAGES: DocsPageMeta[] = [
     "description": "Learn to build a React Native app with no backend code using an Appwrite backend.",
     "layout": "tutorial",
     "readingTimeMinutes": 1,
-    "step": 1
+    "step": 1,
+    "category": "Mobile and native",
+    "framework": "React Native"
   },
   {
     "slug": "tutorials/react-native/step-2",
@@ -3070,7 +3090,9 @@ export const DOCS_PAGES: DocsPageMeta[] = [
     "description": "Learn to build a React app with no backend code using an Appwrite backend.",
     "layout": "tutorial",
     "readingTimeMinutes": 1,
-    "step": 1
+    "step": 1,
+    "category": "Web",
+    "framework": "React"
   },
   {
     "slug": "tutorials/react/step-2",
@@ -3134,7 +3156,9 @@ export const DOCS_PAGES: DocsPageMeta[] = [
     "description": "Learn to build a Refine app with no backend code using an Appwrite backend.",
     "layout": "tutorial",
     "readingTimeMinutes": 1,
-    "step": 1
+    "step": 1,
+    "category": "Web",
+    "framework": "Refine"
   },
   {
     "slug": "tutorials/refine/step-2",
@@ -3190,7 +3214,9 @@ export const DOCS_PAGES: DocsPageMeta[] = [
     "description": "Add paid app subscription plans to your app with Stripe and Appwrite Functions.",
     "layout": "tutorial",
     "readingTimeMinutes": 1,
-    "step": 1
+    "step": 1,
+    "category": "Functions",
+    "framework": "Stripe"
   },
   {
     "slug": "tutorials/subscriptions-with-stripe/step-2",
@@ -3230,7 +3256,9 @@ export const DOCS_PAGES: DocsPageMeta[] = [
     "description": "Add Authentication to a SvelteKit project using Appwrite.",
     "layout": "tutorial",
     "readingTimeMinutes": 1,
-    "step": 1
+    "step": 1,
+    "category": "Auth",
+    "framework": "SvelteKit"
   },
   {
     "slug": "tutorials/sveltekit-csr-auth/step-2",
@@ -3286,7 +3314,9 @@ export const DOCS_PAGES: DocsPageMeta[] = [
     "description": "Add SSR authentication to your SvelteKit app with Appwrite",
     "layout": "tutorial",
     "readingTimeMinutes": 1,
-    "step": 1
+    "step": 1,
+    "category": "Auth",
+    "framework": "SvelteKit SSR"
   },
   {
     "slug": "tutorials/sveltekit-ssr-auth/step-2",
@@ -3350,7 +3380,9 @@ export const DOCS_PAGES: DocsPageMeta[] = [
     "description": "Build a SvelteKit project using Appwrite.",
     "layout": "tutorial",
     "readingTimeMinutes": 1,
-    "step": 1
+    "step": 1,
+    "category": "Web",
+    "framework": "SvelteKit"
   },
   {
     "slug": "tutorials/sveltekit/step-2",
@@ -3406,7 +3438,9 @@ export const DOCS_PAGES: DocsPageMeta[] = [
     "description": "Learn to build an idea tracker app with Appwrite and Vue with authentication, databases and tables, queries, pagination, and file storage.",
     "layout": "tutorial",
     "readingTimeMinutes": 1,
-    "step": 1
+    "step": 1,
+    "category": "Web",
+    "framework": "Vue"
   },
   {
     "slug": "tutorials/vue/step-2",

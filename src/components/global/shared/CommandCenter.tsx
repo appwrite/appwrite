@@ -10,6 +10,7 @@ import {
   KeyboardShortcutsView,
   ShortcutKeyBadges,
 } from '@/components/global/shared/KeyboardShortcutsView'
+import { CommandCenterListFooter } from '@/components/global/shared/CommandCenterListFooter'
 import {
   Bell,
   Building2,
@@ -74,6 +75,7 @@ import {
 import { canSeeProjectNavItem } from '@/lib/console-access-checks'
 import { FULL_ACCESS } from '@/lib/console-roles'
 import { useCommandCenterResourceSearch } from '@/hooks/use-command-center-resource-search'
+import { DocsSearchView } from '@/components/pages/docs/DocsSearchView'
 import type {
   CommandCenterContext,
   CreateResourceType,
@@ -229,6 +231,7 @@ interface CommandCenterProps {
 function toRegistryScope(ctx: CommandCenterContext): CommandScope {
   if (ctx === 'org') return 'organization'
   if (ctx === 'account') return 'account'
+  if (ctx === 'docs') return 'docs'
   return 'project'
 }
 
@@ -263,6 +266,7 @@ export function CommandCenter({
   const [pages, setPages] = useState<string[]>([])
   const [searchScope, setSearchScope] = useState<ResourceScope | null>(null)
   const inputRef = useRef<HTMLInputElement | null>(null)
+  const docsInputRef = useRef<HTMLInputElement | null>(null)
   const displayedResourceCommandsRef = useRef<RuntimeCommand[]>([])
   const prevSearchScopeRef = useRef<typeof searchScope>(null)
   const currentPage = pages[pages.length - 1]
@@ -272,6 +276,7 @@ export function CommandCenter({
   const { features } = useConsoleProfile()
   const isOrgContext = context === 'org'
   const isProjectContext = context === 'project'
+  const isDocsContext = context === 'docs'
 
   // RBAC: resolve org/team for scopes
   const { project } = useProject(
@@ -290,6 +295,22 @@ export function CommandCenter({
     () => setPages((p) => [...p, 'shortcuts']),
     [],
   )
+  const openDocsSearchPage = useCallback(
+    () => setPages((p) => [...p, 'docs']),
+    [],
+  )
+
+  const handleDocsSelect = useCallback(
+    (slug: string) => {
+      onOpenChange(false)
+      if (!slug) {
+        navigate({ to: '/docs/' })
+        return
+      }
+      navigate({ to: '/docs/$', params: { _splat: slug } })
+    },
+    [navigate, onOpenChange],
+  )
 
   const ctx: CommandContext = useMemo(
     () => ({
@@ -305,6 +326,7 @@ export function CommandCenter({
       },
       closeCommandCenter,
       openShortcutsPage,
+      openDocsSearchPage: isDocsContext ? openDocsSearchPage : undefined,
       handlers: {
         onProjectCreate: onCreateResource,
         onOrgInviteMember: onInviteMember,
@@ -323,6 +345,8 @@ export function CommandCenter({
       navigate,
       closeCommandCenter,
       openShortcutsPage,
+      openDocsSearchPage,
+      isDocsContext,
       onCreateResource,
       onInviteMember,
       onOrgCreateProject,
@@ -333,6 +357,10 @@ export function CommandCenter({
   // When the command center is already open, Cmd/Ctrl+K and / refocus search.
   const focusSearchInput = useCallback(() => {
     if (currentPage === 'shortcuts' || currentPage === 'functions') return
+    if (currentPage === 'docs') {
+      docsInputRef.current?.focus()
+      return
+    }
     inputRef.current?.focus()
   }, [currentPage])
 
@@ -350,7 +378,7 @@ export function CommandCenter({
       e.preventDefault()
       focusSearchInput()
     },
-    { enabled: open && currentPage !== 'shortcuts' },
+    { enabled: open && currentPage !== 'shortcuts' && currentPage !== 'docs' },
   )
 
   // Load entries from registry, lift them into runtime commands.
@@ -1208,6 +1236,11 @@ export function CommandCenter({
   useEffect(() => {
     if (!open) return
     const id = window.requestAnimationFrame(() => {
+      if (currentPage === 'docs') {
+        docsInputRef.current?.focus()
+        return
+      }
+      if (currentPage === 'shortcuts' || currentPage === 'functions') return
       inputRef.current?.focus()
     })
     return () => window.cancelAnimationFrame(id)
@@ -1281,17 +1314,21 @@ export function CommandCenter({
   const dialogTitle =
     currentPage === 'shortcuts'
       ? 'Keyboard shortcuts'
-      : currentPage === 'functions' && context === 'project'
-        ? 'Execute function'
-        : 'Command center'
+      : currentPage === 'docs'
+        ? 'Search documentation'
+        : currentPage === 'functions' && context === 'project'
+          ? 'Execute function'
+          : 'Command center'
 
   const placeholder = searchScope
     ? `Search ${searchScope}...`
-    : context === 'org'
-      ? 'Search projects, settings, members…'
-      : context === 'account'
-        ? 'Search account, sessions, security…'
-        : 'Search anything - pages, tabs, settings, resources…'
+    : context === 'docs'
+      ? 'Search commands and documentation pages…'
+      : context === 'org'
+        ? 'Search projects, settings, members…'
+        : context === 'account'
+          ? 'Search account, sessions, security…'
+          : 'Search anything - pages, tabs, settings, resources…'
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -1315,6 +1352,16 @@ export function CommandCenter({
             onBack={() => setPages([])}
             onClose={() => onOpenChange(false)}
             onKeyDown={handleKeyDown}
+          />
+        ) : currentPage === 'docs' ? (
+          <DocsSearchView
+            isMobile={isMobile}
+            inputRef={docsInputRef}
+            onBack={() => setPages([])}
+            onClose={() => onOpenChange(false)}
+            onKeyDown={handleKeyDown}
+            onSelect={handleDocsSelect}
+            onOpenShortcuts={() => setPages((p) => [...p, 'shortcuts'])}
           />
         ) : currentPage === 'functions' && context === 'project' ? (
           <Command
@@ -1510,35 +1557,9 @@ export function CommandCenter({
             </CommandList>
 
             {!isMobile && (
-              <div className="flex shrink-0 items-center justify-between border-t border-border px-3 py-2">
-                <div className="flex items-center gap-3 text-[11px] text-muted-foreground/60">
-                  <span className="flex items-center gap-1">
-                    <kbd className="rounded bg-accent px-1 py-0.5 text-[10px]">
-                      ↑↓
-                    </kbd>
-                    navigate
-                  </span>
-                  <span className="flex items-center gap-1">
-                    <kbd className="rounded bg-accent px-1 py-0.5 text-[10px]">
-                      ↵
-                    </kbd>
-                    select
-                  </span>
-                  <span className="flex items-center gap-1">
-                    <kbd className="rounded bg-accent px-1 py-0.5 text-[10px]">
-                      esc
-                    </kbd>
-                    close
-                  </span>
-                </div>
-                <button
-                  onClick={() => setPages([...pages, 'shortcuts'])}
-                  className="flex items-center gap-1 text-[11px] text-muted-foreground hover:text-foreground"
-                >
-                  <Keyboard className="h-3 w-3" />
-                  <span>All shortcuts</span>
-                </button>
-              </div>
+              <CommandCenterListFooter
+                onOpenShortcuts={() => setPages([...pages, 'shortcuts'])}
+              />
             )}
           </Command>
         )}
