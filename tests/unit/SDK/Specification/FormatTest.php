@@ -2,6 +2,7 @@
 
 namespace Tests\Unit\SDK\Specification;
 
+use Appwrite\SDK\ContentType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\SDK\Specification\Format;
@@ -20,6 +21,7 @@ use Appwrite\Utopia\Response\Model\AlgoSha;
 use Appwrite\Utopia\Response\Model\AttributeLine;
 use Appwrite\Utopia\Response\Model\Error as ErrorModel;
 use Appwrite\Utopia\Response\Model\HealthStatus;
+use Appwrite\Utopia\Response\Model\None as NoneModel;
 use Appwrite\Utopia\Response\Model\PlatformAndroid;
 use Appwrite\Utopia\Response\Model\PlatformApple;
 use Appwrite\Utopia\Response\Model\PlatformLinux;
@@ -27,6 +29,7 @@ use Appwrite\Utopia\Response\Model\PlatformList;
 use Appwrite\Utopia\Response\Model\PlatformWeb;
 use Appwrite\Utopia\Response\Model\PlatformWindows;
 use Appwrite\Utopia\Response\Model\Preferences;
+use Appwrite\Utopia\Response\Model\Provider;
 use Appwrite\Utopia\Response\Model\Team;
 use Appwrite\Utopia\Response\Model\User;
 use Appwrite\Utopia\Response\Model\Webhook;
@@ -35,6 +38,7 @@ use Utopia\Database\Database;
 use Utopia\Database\Validator\Spatial;
 use Utopia\DI\Container;
 use Utopia\Http\Route;
+use Utopia\Validator\JSON;
 use Utopia\Validator\Nullable;
 use Utopia\Validator\Text;
 
@@ -382,5 +386,144 @@ final class FormatTest extends TestCase
         $this->assertTrue($swaggerProperties['nullablePassword']['x-nullable']);
         $this->assertArrayNotHasKey('format', $swaggerProperties['name']);
         $this->assertSame('password', $swagger['definitions']['webhook']['properties']['authPassword']['format']);
+    }
+
+    public function testNoContentMethodsKeepProducesMetadata(): void
+    {
+        Method::$processed = [];
+        Method::$errors = [];
+
+        $route = (new Route('DELETE', '/v1/tests/:testId'))
+            ->desc('Delete test')
+            ->label('scope', 'tests.write')
+            ->label('sdk', new Method(
+                namespace: 'test',
+                group: null,
+                name: 'deleteTest',
+                description: 'Delete test.',
+                auth: [],
+                responses: [
+                    new SDKResponse(
+                        code: 204,
+                        model: Response::MODEL_NONE,
+                    ),
+                ],
+            ))
+            ->param('testId', '', new Text(256), 'Test ID.');
+
+        $openApi = (new OpenAPI3(new Container(), [], [$route], [new NoneModel()], [], 0, 'console'))->parse();
+        $swagger = (new Swagger2(new Container(), [], [$route], [new NoneModel()], [], 0, 'console'))->parse();
+
+        $openApiMethod = $openApi['paths']['/tests/{testId}']['delete'];
+
+        $this->assertArrayNotHasKey('content', $openApiMethod['responses']['204']);
+        $this->assertSame(['application/json'], $openApiMethod['x-appwrite']['produces']);
+        $this->assertSame(['application/json'], $swagger['paths']['/tests/{testId}']['delete']['produces']);
+    }
+
+    public function testBinaryResponsesEmitResponseContent(): void
+    {
+        Method::$processed = [];
+        Method::$errors = [];
+
+        $route = (new Route('GET', '/v1/tests/icon'))
+            ->desc('Get test icon')
+            ->label('sdk', new Method(
+                namespace: 'test',
+                group: null,
+                name: 'getTestIcon',
+                description: 'Get test icon.',
+                auth: [],
+                responses: [
+                    new SDKResponse(
+                        code: 200,
+                        model: Response::MODEL_NONE,
+                    ),
+                ],
+                contentType: ContentType::IMAGE_PNG,
+            ));
+
+        $openApi = (new OpenAPI3(new Container(), [], [$route], [new NoneModel()], [], 0, 'console'))->parse();
+        $swagger = (new Swagger2(new Container(), [], [$route], [new NoneModel()], [], 0, 'console'))->parse();
+
+        $openApiMethod = $openApi['paths']['/tests/icon']['get'];
+
+        $this->assertSame(
+            ['type' => 'string', 'format' => 'binary'],
+            $openApiMethod['responses']['200']['content']['image/png']['schema']
+        );
+        $this->assertArrayNotHasKey('produces', $openApiMethod['x-appwrite']);
+        $this->assertSame(['image/png'], $swagger['paths']['/tests/icon']['get']['produces']);
+    }
+
+    public function testAdditionalParametersAreIncludedInRequestBody(): void
+    {
+        Method::$processed = [];
+        Method::$errors = [];
+
+        $route = (new Route('POST', '/v1/tests/graphql'))
+            ->desc('GraphQL test endpoint')
+            ->label('sdk', new Method(
+                namespace: 'test',
+                group: null,
+                name: 'queryTest',
+                description: 'GraphQL test endpoint.',
+                auth: [],
+                responses: [],
+                additionalParameters: [
+                    'query' => [
+                        'default' => [],
+                        'validator' => new JSON(),
+                        'description' => 'The query or queries to execute.',
+                        'optional' => false,
+                    ],
+                ],
+            ));
+
+        $openApi = (new OpenAPI3(new Container(), [], [$route], [], [], 0, 'console'))->parse();
+        $swagger = (new Swagger2(new Container(), [], [$route], [], [], 0, 'console'))->parse();
+
+        $openApiQuery = $openApi['paths']['/tests/graphql']['post']['requestBody']['content']['application/json']['schema']['properties']['query'];
+        $swaggerQuery = $swagger['paths']['/tests/graphql']['post']['parameters'][0]['schema']['properties']['query'];
+
+        $this->assertSame('object', $openApiQuery['type']);
+        $this->assertEquals($swaggerQuery, $openApiQuery);
+    }
+
+    public function testJsonModelRulesKeepAdditionalPropertiesAndSkipNullable(): void
+    {
+        Method::$processed = [];
+        Method::$errors = [];
+
+        $route = (new Route('GET', '/v1/tests/provider'))
+            ->desc('Get test provider')
+            ->label('sdk', new Method(
+                namespace: 'test',
+                group: null,
+                name: 'getTestProvider',
+                description: 'Get test provider.',
+                auth: [],
+                responses: [
+                    new SDKResponse(
+                        code: 200,
+                        model: Response::MODEL_PROVIDER,
+                    ),
+                ],
+            ));
+
+        $models = [
+            new Provider(),
+            new ErrorModel(),
+        ];
+
+        $openApi = (new OpenAPI3(new Container(), [], [$route], $models, [], 0, 'console'))->parse();
+        $swagger = (new Swagger2(new Container(), [], [$route], $models, [], 0, 'console'))->parse();
+
+        $openApiOptions = $openApi['components']['schemas']['provider']['properties']['options'];
+        $swaggerOptions = $swagger['definitions']['provider']['properties']['options'];
+
+        $this->assertTrue($openApiOptions['additionalProperties']);
+        $this->assertArrayNotHasKey('nullable', $openApiOptions);
+        $this->assertEquals($swaggerOptions, $openApiOptions);
     }
 }
