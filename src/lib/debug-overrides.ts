@@ -60,7 +60,8 @@ export type DebugOverrides = {
    */
   showFunctionsLocalEditor: boolean
   /**
-   * Mock which Init launch day is "today" (0 = before, 1–5 = during, 6 = after).
+   * Mock which Init launch day is "today" (0 = before, 1–5 = during, 6 = after,
+   * 7 = 7+ days after event, org promo banner hidden).
    * Null uses the real calendar date.
    */
   mockInitCurrentDay: number | null

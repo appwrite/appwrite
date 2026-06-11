@@ -3,7 +3,9 @@ import { Switch } from '@/components/ui/switch'
 import { Slider } from '@/components/ui/slider'
 import {
   formatInitMockCurrentDay,
+  getInitMockCurrentDayMax,
   getInitMockDayAfter,
+  getInitMockDayBannerExpired,
   INIT_LAUNCH_WEEK_DAY_COUNT,
   INIT_MOCK_DAY_BEFORE,
 } from '@/lib/init/mock-current-day'
@@ -14,11 +16,14 @@ import {
 } from '@/lib/debug-overrides'
 
 const MOCK_DAY_MIN = INIT_MOCK_DAY_BEFORE
-const MOCK_DAY_MAX = getInitMockDayAfter()
+const MOCK_DAY_AFTER = getInitMockDayAfter()
+const MOCK_DAY_BANNER_EXPIRED = getInitMockDayBannerExpired()
+const MOCK_DAY_MAX = getInitMockCurrentDayMax()
 
 function mockDaySliderLabel(day: number): string {
   if (day === INIT_MOCK_DAY_BEFORE) return 'Before'
-  if (day === MOCK_DAY_MAX) return 'After'
+  if (day === MOCK_DAY_AFTER) return 'After'
+  if (day === MOCK_DAY_BANNER_EXPIRED) return 'Banner off'
   return `Day ${day}`
 }
 
@@ -26,8 +31,11 @@ function mockDayPreviewCopy(day: number): string {
   if (day === INIT_MOCK_DAY_BEFORE) {
     return 'Simulates before the event - all days stay locked.'
   }
-  if (day === MOCK_DAY_MAX) {
+  if (day === MOCK_DAY_AFTER) {
     return 'Simulates after the event. Recap mode with all days unlocked.'
+  }
+  if (day === MOCK_DAY_BANNER_EXPIRED) {
+    return 'Simulates 7+ days after the event. Org promo banner is hidden.'
   }
   return `Simulates day ${day} - unlocks days 1-${day} (schedule, detail cards, Discord sessions, live badges).`
 }
@@ -66,7 +74,7 @@ export function DebugMenuInitDayPanel() {
             <span className="font-medium text-[#E5DEFF]">
               {mockDaySliderLabel(selectedDay)}
             </span>
-            <span>After</span>
+            <span>Banner off</span>
           </div>
           <Slider
             min={MOCK_DAY_MIN}

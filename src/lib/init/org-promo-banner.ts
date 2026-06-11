@@ -1,5 +1,10 @@
+import { parseDateOnly } from './dates'
 import { resolveInitCurrentDay, resolveInitRecapMode } from './event-visibility'
 import { getActiveLaunchEvent } from './events'
+import {
+  getInitMockDayBannerExpired,
+  INIT_ORG_PROMO_BANNER_DAYS_AFTER_EVENT,
+} from './mock-current-day'
 import type { LaunchEvent, LaunchEventCta } from './types'
 
 export type InitOrgPromoPhase = 'before' | 'during' | 'after'
@@ -24,6 +29,28 @@ function resolveInitOrgPromoPhase(
   return 'during'
 }
 
+export function isInitOrgPromoBannerExpired(
+  event: LaunchEvent,
+  options?: { now?: Date; mockCurrentDay?: number | null },
+): boolean {
+  const now = options?.now ?? new Date()
+  const mockCurrentDay = options?.mockCurrentDay ?? null
+
+  if (mockCurrentDay !== null) {
+    return mockCurrentDay >= getInitMockDayBannerExpired()
+  }
+
+  const end = parseDateOnly(event.endDate)
+  end.setHours(23, 59, 59, 999)
+
+  const hideAfter = new Date(end)
+  hideAfter.setDate(
+    hideAfter.getDate() + INIT_ORG_PROMO_BANNER_DAYS_AFTER_EVENT,
+  )
+
+  return now > hideAfter
+}
+
 export function resolveInitOrgPromoBanner(
   event: LaunchEvent | undefined,
   options?: { now?: Date; mockCurrentDay?: number | null },
@@ -32,6 +59,11 @@ export function resolveInitOrgPromoBanner(
 
   const now = options?.now ?? new Date()
   const mockCurrentDay = options?.mockCurrentDay ?? null
+
+  if (isInitOrgPromoBannerExpired(event, { now, mockCurrentDay })) {
+    return null
+  }
+
   const phase = resolveInitOrgPromoPhase(event, now, mockCurrentDay)
 
   switch (phase) {
