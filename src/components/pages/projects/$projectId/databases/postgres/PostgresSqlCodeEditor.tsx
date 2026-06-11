@@ -20,6 +20,13 @@ type PostgresSqlCodeEditorProps = {
   canRun?: boolean
 }
 
+let completionDisposable: IDisposable | null = null
+let getCompletionCatalog: () => PostgresSqlCompletionCatalog = () => ({
+  schemas: [],
+  tables: [],
+  columns: [],
+})
+
 export function PostgresSqlCodeEditor({
   projectId,
   databaseId,
@@ -34,13 +41,10 @@ export function PostgresSqlCodeEditor({
 
   const onRunRef = useRef(onRun)
   const canRunRef = useRef(canRun)
-  const catalogRef = useRef<PostgresSqlCompletionCatalog>({
-    schemas: [],
-    tables: [],
-    columns: [],
-  })
+  const sqlRef = useRef(sql)
+  const editorRef = useRef<editor.IStandaloneCodeEditor | null>(null)
   const keyDownDisposeRef = useRef<IDisposable | null>(null)
-  const completionDisposeRef = useRef<IDisposable | null>(null)
+  const isApplyingExternalSqlRef = useRef(false)
 
   useEffect(() => {
     onRunRef.current = onRun
@@ -48,15 +52,36 @@ export function PostgresSqlCodeEditor({
   }, [onRun, canRun])
 
   useEffect(() => {
-    catalogRef.current = { schemas, tables, columns }
+    sqlRef.current = sql
+  }, [sql])
+
+  useEffect(() => {
+    getCompletionCatalog = () => ({ schemas, tables, columns })
   }, [schemas, tables, columns])
+
+  useEffect(() => {
+    const editorInstance = editorRef.current
+    const model = editorInstance?.getModel()
+    if (!editorInstance || !model || model.getValue() === sql) return
+
+    isApplyingExternalSqlRef.current = true
+    editorInstance.pushUndoStop()
+    editorInstance.executeEdits('table-switch', [
+      {
+        range: model.getFullModelRange(),
+        text: sql,
+        forceMoveMarkers: true,
+      },
+    ])
+    editorInstance.pushUndoStop()
+    isApplyingExternalSqlRef.current = false
+  }, [sql])
 
   useEffect(() => {
     return () => {
       keyDownDisposeRef.current?.dispose()
       keyDownDisposeRef.current = null
-      completionDisposeRef.current?.dispose()
-      completionDisposeRef.current = null
+      editorRef.current = null
     }
   }, [])
 
@@ -65,11 +90,14 @@ export function PostgresSqlCodeEditor({
       editorInstance: editor.IStandaloneCodeEditor,
       monaco: typeof import('monaco-editor'),
     ) => {
-      completionDisposeRef.current?.dispose()
-      completionDisposeRef.current = registerPostgresSqlCompletionProvider(
-        monaco,
-        () => catalogRef.current,
-      )
+      editorRef.current = editorInstance
+
+      if (!completionDisposable) {
+        completionDisposable = registerPostgresSqlCompletionProvider(
+          monaco,
+          () => getCompletionCatalog(),
+        )
+      }
 
       editorInstance.updateOptions({
         quickSuggestions: {
@@ -84,7 +112,7 @@ export function PostgresSqlCodeEditor({
       keyDownDisposeRef.current?.dispose()
       keyDownDisposeRef.current = null
 
-      if (!onRun) return
+      if (!onRunRef.current) return
 
       editorInstance.addAction({
         id: `postgres-run-query-${projectId}-${databaseId}`,
@@ -110,16 +138,40 @@ export function PostgresSqlCodeEditor({
         e.stopPropagation()
         onRunRef.current?.()
       })
+
+      const model = editorInstance.getModel()
+      if (model && model.getValue() !== sqlRef.current) {
+        isApplyingExternalSqlRef.current = true
+        editorInstance.pushUndoStop()
+        editorInstance.executeEdits('initial-sql', [
+          {
+            range: model.getFullModelRange(),
+            text: sqlRef.current,
+            forceMoveMarkers: true,
+          },
+        ])
+        editorInstance.pushUndoStop()
+        isApplyingExternalSqlRef.current = false
+      }
     },
-    [databaseId, onRun, projectId],
+    [databaseId, projectId],
+  )
+
+  const handleSqlChange = useCallback(
+    (value: string) => {
+      if (isApplyingExternalSqlRef.current) return
+      onSqlChange(value)
+    },
+    [onSqlChange],
   )
 
   return (
     <div className="relative min-h-0 flex-1" data-postgres-sql-editor>
       <div className="absolute inset-0 overflow-hidden">
         <CodeEditor
+          key={`postgres-sql-${projectId}-${databaseId}`}
           value={sql}
-          onChange={onSqlChange}
+          onChange={handleSqlChange}
           language="sql"
           height="100%"
           modelPath={`postgres-sql/${projectId}/${databaseId}`}

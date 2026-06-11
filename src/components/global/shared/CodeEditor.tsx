@@ -212,6 +212,12 @@ export const CodeEditor = forwardRef<CodeEditorRef, CodeEditorProps>(
       [onEditorMount],
     )
 
+    useEffect(() => {
+      return () => {
+        editorRef.current = null
+      }
+    }, [])
+
     const handleChange: OnChange = useCallback(
       (newValue) => {
         valueRef.current = newValue ?? ''
@@ -243,6 +249,7 @@ export const CodeEditor = forwardRef<CodeEditorRef, CodeEditorProps>(
           language={language}
           path={modelPath}
           value={value}
+          keepCurrentModel={Boolean(modelPath)}
           onChange={handleChange}
           beforeMount={handleBeforeMount}
           onMount={handleEditorMount}

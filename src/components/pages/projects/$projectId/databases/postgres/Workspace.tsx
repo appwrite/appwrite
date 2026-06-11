@@ -5,7 +5,7 @@ import {
 import { ROWS_DEFAULT_PAGE_SIZE } from '@/lib/react-query/hooks/constants'
 import { parsePostgresTableId } from '@/lib/postgres-database-routes'
 import { buildPostgresSelectSql } from '@/lib/postgres-sql'
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { useParams } from '@tanstack/react-router'
 import { Badge } from '@/components/ui/badge'
 import type { Models } from '@appwrite.io/console'
@@ -97,7 +97,7 @@ function WorkspaceContent({ databaseId, tableId }: PostgresWorkspaceProps) {
         ? Object.keys(rows[0]).map((key) => ({ key, label: key }))
         : []
 
-  const handleRunSql = async () => {
+  const handleRunSql = useCallback(async () => {
     const trimmed = sql.trim()
     if (!trimmed) return
     setManualError(null)
@@ -109,7 +109,7 @@ function WorkspaceContent({ databaseId, tableId }: PostgresWorkspaceProps) {
       setManualResult(null)
       setManualError(error)
     }
-  }
+  }, [addRecentQuery, executeSql, sql])
 
   const tableRowsPanel = !isDatabaseLevelView && selectedTable ? (
     <ReadOnlyDataSpreadsheet
@@ -174,7 +174,7 @@ function WorkspaceContent({ databaseId, tableId }: PostgresWorkspaceProps) {
         databaseId={databaseId}
         sql={sql}
         onSqlChange={setSql}
-        onRun={() => void handleRunSql()}
+          onRun={handleRunSql}
         isRunning={executeSql.isPending}
         error={manualError ?? executeSql.error}
         result={manualResult}
