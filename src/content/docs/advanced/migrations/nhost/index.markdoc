@@ -1,0 +1,60 @@
+---
+layout: article
+title: Migrate from Nhost
+description: Transition to Appwrite from NHost with confidence. Explore migration steps, considerations, and tools to ensure a successful migration process.
+difficulty: beginner
+readtime: 20
+---
+
+Appwrite migrations help you quickly migrate your data from Nhost or other [sources](/docs/advanced/migrations#sources) to Appwrite. You can follow the instructions on the Appwrite Console migration wizard or use this guide to perform your data migration. While migrations are a great way to move your data from other services to Appwrite and get started quickly, they're not perfect. Make sure to understand the different [limitations](#limitations) before completing your migration.
+
+{% info title="Charges" %}
+When you migrate data from Nhost to Appwrite Cloud, the resource usage during the migration will not count towards your Appwrite Cloud usage charges. However, Nhost, may have data transfer charges.
+{% /info %}
+
+{% section #obtain-credentials step=1 title="Obtain credentials" %}
+Find all of the following credentials from your Nhost project.
+
+| Field               | Description                                                                                                    |
+| ---------------     | -------------------------------------------------------------------------------------------------------------- |
+| **Region**          | The region your Nhost project is hosted in. This can be found in your Nhost project environment variables as `NHOST_REGION`. |
+| **Subdomain**       | The subdomain of your Nhost project. This can be found in your Nhost project environment variables as `NHOST_SUBDOMAIN`. |
+| **Database**        | The name of your Nhost database. This can be found in your Nhost project Database settings. |
+| **Username**        | The username of your Nhost database. This can be found in your Nhost project Database settings. |
+| **Password**        | The password of your Nhost database. You set this when you created your Nhost project, if you don't remember it you can reset it from your Nhost project Database settings. |
+| **Admin Secret**    | The admin secret of your Nhost project. This can be found in your Nhost project environment variables as `NHOST_ADMIN_SECRET`. We use this to transfer your Nhost files to Appwrite. |
+{% /section %}
+
+{% section #migration-process step=2 title="Migrating to Appwrite from Nhost" %}
+
+Before migrating to Appwrite make sure you've read the [migration overview](/docs/advanced/migrations) page.
+
+1. Create a new project and click on the **Migrations** tab in **Project Settings**.
+
+1. Click on the **Create Migration** button and select **Nhost** as your source.
+
+1. Enter the credentials from the [Obtain credentials](#obtain-credentials) step and click **Next**.
+
+1. Select the resources you want to migrate and finally click **Start migration** to begin the migration process.
+
+{% /section %}
+
+{% section #next-steps step=3 title="Next steps" %}
+
+1. In your Appwrite Console, navigate to **Overview** > **Integrations** > **Platforms**, add the platforms for your Web, Flutter, Android, and iOS apps. Appwrite will reject requests from unknown web, Flutter, and mobile apps to protect from malicious attacks. You app **must be added as a platform** for Appwrite to accept requests.
+
+1. Remember to [add appropriate permissions](/docs/advanced/platform/permissions) to the migrated resources to protect user data and privacy.
+
+1. Migrate functions manually, by [pick a runtime](/docs/products/functions/runtimes) and [learn to develop Appwrite Functions](/docs/products/functions/develop).
+
+1. Explore Appwrite's unique features by exploring the rest of the [Appwrite Documentation](/docs).
+
+{% /section %}
+
+# Limitations {% #limitations %}
+
+Not all vendors make their APIs publicly accessible or easy to use for extracting and fully owning your data. Furthermore, due to varying design philosophies, certain resources cannot be migrated on a one-to-one basis. Below, you'll find a list of some known limitations when migrating data from Nhost to Appwrite. It's advisable to review this list before initiating your migration or deploying your product in a production environment.
+
+- Appwrite's Database doesn't support all the features of the PostgreSQL database so postgres centric things like advanced indexes, PostgreSQL functions and scheduling will not be migrated.
+- OAuth users will not be migrated because the sessions are managed by the third-party OAuth provider. Users will need to re-authenticate with your OAuth provider after the migration is complete.
+- Functions are not automatically migrated because of syntax and runtime differences.

@@ -1,0 +1,345 @@
+---
+layout: article
+title: Preferences
+description: Store and manage user preferences in Appwrite using Account API and Teams API for individual and shared settings.
+---
+
+Preferences allow you to store settings like theme choice, language selection, or notification preferences that are specific to individual users or shared across teams.
+
+# User preferences {% #user-preferences %}
+
+You can store user preferences on a user's account using Appwrite's [Update Preferences](/docs/references/cloud/client-web/account#updatePrefs) endpoint.
+
+Preferences are stored as a key-value JSON object. The maximum allowed size for preferences is 64kB, and an error will be thrown if this limit is exceeded.
+
+## Update user preferences
+
+Use the `updatePrefs` method to store user preferences as a JSON object.
+
+{% multicode %}
+```client-web
+import { Client, Account } from "appwrite";
+
+const client = new Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1') // Your API Endpoint
+    .setProject('<PROJECT_ID>');                 // Your project ID
+
+const account = new Account(client);
+
+const promise = account.updatePrefs({darkTheme: true, language: 'en'});
+
+promise.then(function (response) {
+    console.log(response); // Success
+}, function (error) {
+    console.log(error); // Failure
+});
+```
+```client-flutter
+import 'package:appwrite/appwrite.dart';
+
+final client = Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1') // Your API Endpoint
+    .setProject('<PROJECT_ID>');                 // Your project ID
+
+final account = Account(client);
+
+final user = await account.updatePrefs(
+    prefs: {
+        "darkTheme": true,
+        "language": "en",
+    }
+);
+```
+```client-apple
+import Appwrite
+
+let client = Client()
+    .setEndpoint("https://<REGION>.cloud.appwrite.io/v1") // Your API Endpoint
+    .setProject("<PROJECT_ID>")                  // Your project ID
+
+let account = Account(client)
+
+let user = try await account.updatePrefs(
+    prefs: [
+        "darkTheme": true,
+        "language": "en"
+    ]
+)
+```
+```client-android-kotlin
+import io.appwrite.Client
+import io.appwrite.services.Account
+
+val client = Client()
+    .setEndpoint("https://<REGION>.cloud.appwrite.io/v1") // Your API Endpoint
+    .setProject("<PROJECT_ID>")                  // Your project ID
+
+val account = Account(client)
+
+val user = account.updatePrefs(
+    prefs = mapOf(
+        "darkTheme" to true,
+        "language" to "en"
+    )
+)
+```
+```graphql
+mutation {
+    accountUpdatePrefs(
+        prefs: "{\"darkTheme\": true, \"language\": \"en\"}"
+    ) {
+        _id
+        name
+        prefs {
+            data
+        }
+    }
+}
+```
+{% /multicode %}
+
+## Get user preferences
+
+Retrieve stored preferences with the `getPrefs` method.
+
+{% multicode %}
+```client-web
+import { Client, Account } from "appwrite";
+
+const client = new Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1') // Your API Endpoint
+    .setProject('<PROJECT_ID>');                 // Your project ID
+
+const account = new Account(client);
+
+const promise = account.getPrefs();
+
+promise.then(function (response) {
+    console.log(response); // Success
+}, function (error) {
+    console.log(error); // Failure
+});
+```
+```client-flutter
+import 'package:appwrite/appwrite.dart';
+
+final client = Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1') // Your API Endpoint
+    .setProject('<PROJECT_ID>');                 // Your project ID
+
+final account = Account(client);
+
+final prefs = await account.getPrefs();
+```
+```client-android-kotlin
+import io.appwrite.Client
+import io.appwrite.services.Account
+
+val client = Client(context)
+    .setEndpoint("https://<REGION>.cloud.appwrite.io/v1") // Your API Endpoint
+    .setProject("<PROJECT_ID>")                  // Your project ID
+
+val account = Account(client)
+
+val prefs = account.getPrefs()
+```
+```client-apple
+import Appwrite
+
+let client = Client()
+    .setEndpoint("https://<REGION>.cloud.appwrite.io/v1") // Your API Endpoint
+    .setProject("<PROJECT_ID>")                  // Your project ID
+
+let account = Account(client)
+
+let prefs = try await account.getPrefs()
+```
+```graphql
+query {
+    accountGetPrefs {
+        data
+    }
+}
+```
+{% /multicode %}
+
+# Team preferences {% #team-preferences %}
+
+Team preferences let you store settings that apply to an entire team of users. They are well-suited for collaborative features like team-wide themes, notification preferences, or feature toggles.
+
+Team preferences are stored as a JSON object in the team row and are limited to 64kB of data. All team members can access these shared preferences.
+
+{% arrow_link href="/docs/products/auth/teams" %}
+Learn more about Appwrite Teams
+{% /arrow_link %}
+
+## Update team preferences
+
+Store team-wide settings using the `updatePrefs` method with a team ID.
+
+{% multicode %}
+```client-web
+import { Client, Teams } from "appwrite";
+
+const client = new Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1') // Your API Endpoint
+    .setProject('<PROJECT_ID>');                 // Your project ID
+
+const teams = new Teams(client);
+
+const promise = teams.updatePrefs(
+    '<TEAM_ID>',
+    {
+        theme: 'corporate',
+        notificationsEnabled: true,
+        defaultView: 'kanban'
+    }
+);
+
+promise.then(function (response) {
+    console.log(response); // Success
+}, function (error) {
+    console.log(error); // Failure
+});
+```
+```client-flutter
+import 'package:appwrite/appwrite.dart';
+
+final client = Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1') // Your API Endpoint
+    .setProject('<PROJECT_ID>');                 // Your project ID
+
+final teams = Teams(client);
+
+final team = await teams.updatePrefs(
+    teamId: '<TEAM_ID>',
+    prefs: {
+        "theme": "corporate",
+        "notificationsEnabled": true,
+        "defaultView": "kanban"
+    }
+);
+```
+```client-apple
+import Appwrite
+
+let client = Client()
+    .setEndpoint("https://<REGION>.cloud.appwrite.io/v1") // Your API Endpoint
+    .setProject("<PROJECT_ID>")                  // Your project ID
+
+let teams = Teams(client)
+
+let team = try await teams.updatePrefs(
+    teamId: "<TEAM_ID>",
+    prefs: [
+        "theme": "corporate",
+        "notificationsEnabled": true,
+        "defaultView": "kanban"
+    ]
+)
+```
+```client-android-kotlin
+import io.appwrite.Client
+import io.appwrite.services.Teams
+
+val client = Client()
+    .setEndpoint("https://<REGION>.cloud.appwrite.io/v1") // Your API Endpoint
+    .setProject("<PROJECT_ID>")                  // Your project ID
+
+val teams = Teams(client)
+
+val team = teams.updatePrefs(
+    teamId = "<TEAM_ID>",
+    prefs = mapOf(
+        "theme" to "corporate",
+        "notificationsEnabled" to true,
+        "defaultView" to "kanban"
+    )
+)
+```
+{% /multicode %}
+
+## Get team preferences
+
+Fetch team preferences by passing a team ID to the `getPrefs` method.
+
+{% multicode %}
+```client-web
+import { Client, Teams } from "appwrite";
+
+const client = new Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1') // Your API Endpoint
+    .setProject('<PROJECT_ID>');                 // Your project ID
+
+const teams = new Teams(client);
+
+const promise = teams.getPrefs('<TEAM_ID>');
+
+promise.then(function (prefs) {
+    console.log(prefs); // Team preferences
+}, function (error) {
+    console.log(error);
+});
+```
+```client-flutter
+import 'package:appwrite/appwrite.dart';
+
+final client = Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1') // Your API Endpoint
+    .setProject('<PROJECT_ID>');                 // Your project ID
+
+final teams = Teams(client);
+
+final prefs = await teams.getPrefs(
+    teamId: '<TEAM_ID>'
+);
+```
+```client-apple
+import Appwrite
+
+let client = Client()
+    .setEndpoint("https://<REGION>.cloud.appwrite.io/v1") // Your API Endpoint
+    .setProject("<PROJECT_ID>")                  // Your project ID
+
+let teams = Teams(client)
+
+let prefs = try await teams.getPrefs(
+    teamId: "<TEAM_ID>"
+)
+```
+```client-android-kotlin
+import io.appwrite.Client
+import io.appwrite.services.Teams
+
+val client = Client()
+    .setEndpoint("https://<REGION>.cloud.appwrite.io/v1") // Your API Endpoint
+    .setProject("<PROJECT_ID>")                  // Your project ID
+
+val teams = Teams(client)
+
+val prefs = teams.getPrefs(
+    teamId = "<TEAM_ID>"
+)
+```
+{% /multicode %}
+
+# Browser localStorage {% #localstorage %}
+
+For device-specific preferences that don't need to sync across devices, the browser's localStorage API is a simple option.
+
+- Device-specific: Settings are only available on the current device
+- No server-side processing required
+- Data persists even after browser sessions end
+- Limited to ~5MB per origin
+
+```js
+// Store a preference
+localStorage.setItem('darkMode', 'true');
+
+// Retrieve a preference
+const darkMode = localStorage.getItem('darkMode');
+```
+
+{% info title="Storing larger data" %}
+For complex preference structures or when storing larger amounts of data, Appwrite Databases offer a flexible solution. [Learn more about Appwrite Databases](/docs/products/databases).
+{% /info %}

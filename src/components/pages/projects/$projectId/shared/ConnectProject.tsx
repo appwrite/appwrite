@@ -32,6 +32,7 @@ import { FrameworkIcon } from '@/components/global/shared/FrameworkIcon'
 import { PackageManagerIcon } from '@/components/global/shared/PackageManagerIcon'
 import { MCPSection } from '@/components/pages/projects/$projectId/shared/MCPSection'
 import { TerraformConnectSection } from '@/components/pages/projects/$projectId/shared/TerraformConnectSection'
+import { ConnectCodePanel } from '@/components/global/shared/ConnectCodeExample'
 import {
   CodeBlock,
   type CodeBlockLanguage,
@@ -1713,15 +1714,12 @@ export function ConnectProject({
                   )}
                 </div>
                 {selectedFile && (
-                  <div className="min-h-0 flex-1 flex flex-col">
-                    <CodeBlock
-                      code={selectedFile.code}
-                      language={selectedFile.language ?? 'plaintext'}
-                      showCopy={false}
-                      fixedHeight="100%"
-                      className="flex-1 min-h-0 flex flex-col [&>div:last-child]:flex-1 [&>div:last-child]:min-h-0"
-                    />
-                  </div>
+                  <ConnectCodePanel
+                    code={selectedFile.code}
+                    language={selectedFile.language ?? 'plaintext'}
+                    fixedHeight="100%"
+                    className="flex-1 min-h-0"
+                  />
                 )}
               </div>
             </div>

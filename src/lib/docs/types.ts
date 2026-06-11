@@ -1,0 +1,45 @@
+export type DocsPageMeta = {
+  slug: string
+  title: string
+  description: string
+  layout: string
+  readingTimeMinutes: number
+  step?: number
+}
+
+export type DocsNavLink = {
+  label: string
+  href: string
+  icon?: string
+  new?: boolean
+  isParent?: boolean
+  openInNewTab?: boolean
+}
+
+export type DocsNavGroup = {
+  label?: string
+  items: DocsNavLink[]
+  collapsible?: boolean
+  initiallyCollapsed?: boolean
+}
+
+export type DocsNavParent = {
+  label: string
+  href: string
+}
+
+export type DocsNavTree = Array<DocsNavGroup | DocsNavLink>
+
+export type DocsTocItem = {
+  id: string
+  label: string
+  level: number
+  step?: number
+}
+
+export type DocsPageData = {
+  meta: DocsPageMeta
+  content: string
+  rawContent: string
+  toc: DocsTocItem[]
+}

@@ -1,0 +1,123 @@
+---
+layout: article
+title: Functions
+description: Harness the full power of self-hosted functions with Appwrite. Explore function deployment, management, and integration in your self-hosted environment.
+---
+
+This guide covers how to configure functions in your self-hosted Appwrite instance. For GitHub repository integration with functions, see the [version control configuration](/docs/advanced/self-hosting/configuration/version-control).
+
+# Configure function runtimes {% #functions %}
+
+Not all function runtimes are enabled by default. Enable the runtimes that you need and disable unused runtimes to save disk space on your server.
+To enable a runtime, add it to the `_APP_FUNCTIONS_RUNTIMES` environment variable as a comma-separated list.
+
+The example below would enable Dart 3.11, .NET 6.0, and Java 18 runtimes.
+
+```bash
+_APP_FUNCTIONS_RUNTIMES=dart-3.11,dotnet-6.0,java-18.0
+```
+
+You can find a full list of supported runtimes [here](/docs/products/functions/runtimes#available-runtimes).
+
+You can also configure the maximum timeout that can be set on individual Appwrite Functions. The maximum configurable timeout can be increased by changing the `_APP_FUNCTIONS_TIMEOUT` environment variable. This environment variable changes the configurable maximum but does not alter existing configurations of individual functions.
+
+{% partial file="update-variables.md" /%}
+
+# SSL certificates for function domains {% #ssl-certificates %}
+
+Before setting up SSL certificates, ensure you have configured your DNS settings properly. You'll need to create a CNAME record that points your wildcard function domain (e.g. `*.functions.appwrite.myapp.com`) to your Appwrite domain.
+
+Appwrite does not handle certificates for function domains (e.g. `6772722a00331315adc3.functions.appwrite.myapp.com`)
+out of the box, since they require wildcard certificates.
+There are two ways to handle certificate generation.
+
+## Manual certificate generation
+
+The simplest way to generate certificates for function domains is to use the Appwrite SSL command.
+
+```bash
+docker compose exec appwrite ssl --domain="6772722a00331315adc3.functions.appwrite.myapp.com"
+```
+
+The certificate should be generated within a few seconds.
+If you encounter any issues, you can check the certificate worker logs.
+
+```bash
+docker compose logs appwrite-worker-certificates
+```
+
+Note that you'll need to run this command for each function domain, and repeat it every time you create a new function.
+If you have many functions or frequently create new ones, consider using the automated certificate generation method below.
+
+## Automated certificate generation
+
+For automated certificate generation, Appwrite uses Traefik's DNS Challenge feature.
+This is required for wildcard certificates (like `*.functions.appwrite.myapp.com`)
+because Let's Encrypt uses the DNS-01 challenge to validate wildcard domain ownership.
+
+### Using DNS challenge with DigitalOcean
+
+To configure Traefik for automated certificate generation with DigitalOcean,
+you need to modify your `docker-compose.yml`:
+
+1. Add the following under the `traefik` service's `command` section.
+
+```yaml
+command:
+    # ... existing commands ...
+    - --certificatesresolvers.digitalocean.acme.dnschallenge=true
+    - --certificatesresolvers.digitalocean.acme.dnschallenge.provider=digitalocean
+    - --certificatesresolvers.digitalocean.acme.email=$_APP_SYSTEM_SECURITY_EMAIL_ADDRESS
+    - --certificatesresolvers.digitalocean.acme.storage=/storage/certificates/digitalocean.json
+```
+
+2. Add environment variables under the `traefik` service.
+
+```yaml
+environment:
+    - DO_AUTH_TOKEN=$_APP_DOMAIN_DO_TOKEN
+```
+
+3. Add the following `labels` under the `appwrite` service.
+
+```yaml
+labels:
+    # ... existing labels ...
+    - traefik.http.routers.appwrite_api_https.tls.certresolver=digitalocean
+    - traefik.http.routers.appwrite_api_https.tls.domains[0].main=$_APP_DOMAIN_FUNCTIONS
+    - traefik.http.routers.appwrite_api_https.tls.domains[0].sans=*.$_APP_DOMAIN_FUNCTIONS
+```
+
+4. Ensure these environment variables are properly configured in your `.env` file before proceeding:
+    - `_APP_SYSTEM_SECURITY_EMAIL_ADDRESS` must be set to a valid email for Let's Encrypt notifications
+    - `_APP_DOMAIN_FUNCTIONS` must be correctly set to your function domain (e.g., `functions.example.com`)
+    - `_APP_DOMAIN_DO_TOKEN` must be set to a valid DigitalOcean API token (generate this in the DigitalOcean Console)
+
+5. Apply the changes.
+
+```bash
+docker compose up -d --force-recreate
+```
+
+### Troubleshooting DNS propagation
+
+If certificate generation fails, first check the Traefik logs to identify the specific issue.
+
+```bash
+docker compose logs traefik
+```
+
+A common issue is DNS propagation delays. If the logs show DNS verification failures, you can configure longer timeouts in your `docker-compose.yml` under the `traefik` service.
+
+```yaml
+environment:
+    - DO_AUTH_TOKEN=$_APP_DOMAIN_DO_TOKEN
+    - DO_POLLING_INTERVAL=1m
+    - DO_PROPAGATION_TIMEOUT=1h
+```
+
+{% info title="Rate limits" %}
+Let's Encrypt has strict rate limits for certificate requests. If you encounter rate limit errors in the logs, you may need to wait a few hours before trying again.
+{% /info %}
+
+For other DNS providers, refer to [Traefik's DNS providers documentation](https://doc.traefik.io/traefik/https/acme/#providers).

@@ -1,13 +1,12 @@
-import { createFileRoute, redirect } from '@tanstack/react-router'
+import { createFileRoute } from '@tanstack/react-router'
 import { View } from '@/components/pages/community/View'
 import { fetchCommunityGitHubIssues } from '@/lib/community/github-issues'
 import { MarketingPageShell } from '@/lib/marketing/MarketingPageShell'
-import { getActiveProfileFeatures } from '@/lib/console-profiles'
-import { consoleAccountQueryOptions } from '@/lib/react-query/hooks/auth'
+import { marketingPageLoader } from '@/lib/marketing/route-loader'
 import { pageTitle } from '@/lib/utils/page-title'
 
 export const Route = createFileRoute('/community')({
-  ssr: false,
+  ssr: true,
   head: () => ({
     meta: [
       { title: pageTitle('Community') },
@@ -19,15 +18,7 @@ export const Route = createFileRoute('/community')({
     ],
   }),
   loader: async ({ context }) => {
-    if (typeof window === 'undefined') return { issues: [] }
-
-    if (!getActiveProfileFeatures().marketing) {
-      throw redirect({ to: '/', replace: true })
-    }
-
-    void context.queryClient
-      .prefetchQuery(consoleAccountQueryOptions())
-      .catch(() => {})
+    await marketingPageLoader(context.queryClient)
 
     const issues = await fetchCommunityGitHubIssues()
     return { issues }

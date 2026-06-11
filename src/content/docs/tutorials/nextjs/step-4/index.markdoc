@@ -1,0 +1,222 @@
+---
+layout: tutorial
+title: Add authentication
+description: Add authentication to your Next.js application using Appwrite Web SDK
+step: 4
+---
+
+For our ideas tracker app, we want any visitor to be able to read the ideas that are stored.
+On the other hand, we don't want the page spammed with just about anything from anyone just stopping by.
+To prevent that, or at least making it a bit more difficult, editing ideas will be available for logged in users only.
+With authentication, we can differentiate between users and decide which users have access to which content.
+
+We will build a page with a simple login form and store its related logic in a custom hook so it can be reused.
+
+## User session hook {% #user-session-hook %}
+
+There are a few standard functions involved in handling a user session that are added to the hook.
+The user needs to be able to register to an account, login to the account and logout from it.
+
+We are using Appwrite as a backend to handle the user details, so we need to connect to Appwrite by importing the configurations from [step 3](/docs/tutorials/nextjs/step-3).
+The response from these interactions will be stored in state to get more information about the user in our app.
+
+Create a new file `hooks/useAuth.ts` and add the following code.
+
+```ts
+// hooks/useAuth.ts
+
+import { useState, useEffect } from 'react';
+import { account } from '../lib/appwrite';
+import { ID } from 'appwrite';
+import type { Models } from 'appwrite';
+import { useRouter } from 'next/navigation';
+
+export function useAuth() {
+    const [current, setCurrent] = useState<Models.Session | null>(null);
+    const [loading, setLoading] = useState(true);
+    const router = useRouter();
+
+    const register = async (email: string, password: string): Promise<void> => {
+        await account.create({
+            userId: ID.unique(),
+            email,
+            password
+        });
+        await login(email, password);
+    };
+
+    const login = async (email: string, password: string): Promise<void> => {
+        const session = await account.createEmailPasswordSession({
+            email,
+            password
+        });
+        setCurrent(session);
+        router.push('/');
+    };
+
+    const logout = async (): Promise<void> => {
+        await account.deleteSession('current');
+        setCurrent(null);
+        router.push('/');
+    };
+
+    const getCurrentUser = async () => {
+        try {
+            const user = await account.get();
+            setCurrent(user);
+        } catch (error) {
+            setCurrent(null);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    useEffect(() => {
+        getCurrentUser();
+    }, []);
+
+    return {
+        current,
+        loading,
+        login,
+        logout,
+        register,
+    };
+}
+```
+
+## Login page {% #login-page %}
+
+Create a new file `src/app/login/page.tsx`.
+This will create a new page accessible at `/login`.
+
+We will define functions to handle form submissions and show either a signup or a login form.
+
+```tsx
+// src/app/login/page.tsx
+'use client';
+
+import { useState } from 'react';
+import { useAuth } from '../../hooks/useAuth';
+import AuthForm from '../../components/AuthForm';
+
+export default function LoginPage() {
+    const { login, register } = useAuth();
+    const [isSignUp, setIsSignUp] = useState(false);
+
+    const handleLogin = async (event: React.FormEvent<HTMLFormElement>) => {
+        event.preventDefault();
+        const form = event.target as HTMLFormElement;
+        const formData = new FormData(form);
+        
+        await login(
+            formData.get('email') as string,
+            formData.get('password') as string
+        );
+        
+        form.reset();
+    };
+
+    const handleRegistration = async (event: React.FormEvent<HTMLFormElement>) => {
+        event.preventDefault();
+        const form = event.target as HTMLFormElement;
+        const formData = new FormData(form);
+        
+        await register(
+            formData.get('email') as string,
+            formData.get('password') as string
+        );
+        
+        form.reset();
+    };
+
+    return (
+        <div className="u-max-width-650" style={{ margin: '0 auto' }}>
+            <section className="card u-margin-32">
+                <h2 className="eyebrow-heading-2">Login/Register</h2>
+                <AuthForm 
+                    handleSubmit={isSignUp ? handleRegistration : handleLogin}
+                    submitType={isSignUp ? 'Sign Up' : 'Log In'}
+                />
+                <button 
+                    onClick={() => setIsSignUp(!isSignUp)}
+                    className="u-margin-block-start-16"
+                >
+                    {isSignUp 
+                        ? 'Already have an account? Log in' 
+                        : "Don't have an account? Sign up"
+                    }
+                </button>
+            </section>
+        </div>
+    );
+}
+```
+
+This page renders a login or sign up form depending on `isSignUp`'s state.
+We will also show buttons to toggle between the two different types of forms.
+
+## Authentication forms {% #auth-forms %}
+
+In the previous step, we defined an `AuthForm` to handle signup and login.
+Let's build this form now.
+
+Create a new file `src/components/AuthForm.tsx` and add the following code.
+
+```tsx
+// src/components/AuthForm.tsx
+
+interface AuthFormProps {
+    handleSubmit: (event: React.FormEvent<HTMLFormElement>) => void | Promise<void>;
+    submitType: string;
+}
+
+export default function AuthForm({ handleSubmit, submitType }: AuthFormProps) {
+    return (
+        <form
+            className="form u-width-full-line u-max-width-500 u-margin-block-start-16"
+            onSubmit={handleSubmit}
+        >
+            <ul className="form-list">
+                <li className="form-item">
+                    <label className="label">Email</label>
+                    <div className="input-text-wrapper">
+                        <input
+                            type="email"
+                            name="email"
+                            className="input-text"
+                            placeholder="Email"
+                            required
+                        />
+                    </div>
+                </li>
+                <li className="form-item">
+                    <label className="label">Password</label>
+                    <div className="input-text-wrapper">
+                        <input
+                            type="password"
+                            name="password"
+                            className="input-text"
+                            placeholder="Password"
+                            required
+                        />
+                    </div>
+                </li>
+            </ul>
+            <ul className="buttons-list u-margin-block-start-16">
+                <li className="buttons-list-item">
+                    <button
+                        type="submit"
+                        className="button is-small u-margin-inline-start-4"
+                        aria-label={submitType}
+                    >
+                        {submitType}
+                    </button>
+                </li>
+            </ul>
+        </form>
+    );
+}
+```
+
+You can now navigate to `/login` in your browser to check out the new page.

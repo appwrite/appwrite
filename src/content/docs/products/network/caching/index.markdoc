@@ -1,0 +1,61 @@
+---
+layout: article
+title: Caching
+description: Learn how Appwrite uses smart caching strategies at the region, edge, and CDN levels to optimize performance and protect dynamic APIs, with advanced options for enterprise customers.
+---
+
+Appwrite employs a multi-layered caching approach to enhance the performance of your applications. By utilizing caching at the **region**, **edge**, and **CDN** levels, Appwrite ensures faster response times, optimized resource usage, and efficient handling of dynamic workloads.
+
+# Region-level {% #region-level %}
+
+At the region level, Appwrite provides smart in-memory caching for various resources:  
+
+- **Documents**: Frequently accessed rows are cached in memory and automatically purged when updated, ensuring data consistency without manual intervention.  
+- **Storage files**: Frequently accessed files are cached in memory to reduce disk reads and improve performance.  
+- **Image transformations**: Processed images (e.g., resized or converted) are cached in memory for faster repeated requests, reducing processing overhead.  
+
+Region-level caching is tightly integrated with Appwrite's APIs, optimizing performance while preserving data integrity.
+
+# Edge-level {% #edge-level %}
+
+At the edge, Appwrite employs smart caching for specific use cases:  
+
+- **Compute builds**: Caches build artifacts for faster deployments and reduced latency during function executions.  
+- **Cold starts**: Pre-loads frequently accessed resources, reducing latency for new requests and improving application responsiveness.  
+
+Edge-level caching complements region-level caching, ensuring optimal performance for globally distributed applications.
+
+# Private caching {% #cdn-caching %}
+Appwrite's CDN layer includes **private caching**, a caching strategy designed to handle the dynamic and permission-sensitive nature of Appwrite's APIs and resources securely.
+
+**What is private caching?**  
+
+In the HTTP context, private caching allows responses to be cached but ensures they are only served to the specific user or client that requested them. This is achieved using HTTP headers that control caching behavior. For example:  
+
+- `Cache-Control: private, max-age=3600`  
+  Indicates that the response can be cached, but only in a private cache (e.g., the user's browser).  
+
+- `Cache-Control: no-store`  
+  Ensures that no part of the response is cached, useful for highly sensitive or frequently changing data.  
+
+- `Vary: Authorization`  
+  Signals that the cached response varies based on the `Authorization` header, ensuring permission-specific responses are cached and served appropriately.
+
+**Why use private caching?**
+
+Appwrite's APIs often deliver personalized or restricted content based on user roles and permissions. Private caching ensures:  
+
+- **Security**: Sensitive resources are securely cached and only served to the correct user.  
+- **Permission awareness**: API responses are tailored to each user's permissions, ensuring consistent behavior.  
+- **Performance**: By caching user-specific responses, private caching reduces backend load while maintaining secure and accurate data delivery.  
+
+This approach prevents the accidental exposure of user-specific or restricted data through shared caches while still enabling performance optimizations where possible.
+
+# Caching rules {% #custom-caching %}
+
+Enterprise customers can collaborate with their Appwrite success manager to define custom caching rules tailored to their applications. This includes:  
+- Setting custom caching durations for specific resources.  
+- Defining exclusion rules for sensitive or frequently changing data.  
+- Optimizing cache invalidation strategies for complex workflows.
+
+For more information on upgrading to the enterprise plan, [contact sales](https://appwrite.io/contact-us/enterprise).

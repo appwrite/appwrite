@@ -1,0 +1,51 @@
+---
+layout: article
+title: Bolt
+description: Learn how to connect the Appwrite docs MCP server to Bolt for AI-assisted development with access to Appwrite documentation.
+---
+
+{% section #add-mcp-server step=1 title="Add MCP server" %}
+
+To connect the Appwrite docs MCP server to Bolt:
+
+1. Go to **Settings** → **Connectors (MCP)**.
+2. Click **Custom MCP server**.
+
+{% only_dark %}
+![Bolt MCP settings](/images/docs/mcp/bolt/bolt-mcp-settings.avif)
+{% /only_dark %}
+{% only_light %}
+![Bolt MCP settings](/images/docs/mcp/bolt/light/bolt-mcp-settings.avif)
+{% /only_light %}
+
+3. Enter the following details:
+    - **Name**: `Appwrite Docs`
+    - **URL**: `https://mcp-for-docs.appwrite.io`
+    - **Transport Type**: HTTP
+    - **Authentication**: None
+4. Click **Add MCP server**.
+
+{% only_dark %}
+![Bolt add MCP server](/images/docs/mcp/bolt/bolt-add-mcp.avif)
+{% /only_dark %}
+{% only_light %}
+![Bolt add MCP server](/images/docs/mcp/bolt/light/bolt-add-mcp.avif)
+{% /only_light %}
+
+The Appwrite docs MCP server will now be available in your Bolt projects.
+
+{% /section %}
+
+{% section #test-the-integration step=2 title="Test the integration" %}
+
+Once connected, Bolt has access to Appwrite documentation context. You can use prompts like:
+
+**Example prompts:**
+
+- `How do I set up real-time subscriptions in Appwrite?`
+- `Show me how to authenticate users with OAuth`
+- `What are the best practices for database queries?`
+- `How do I implement file uploads with Appwrite Storage?`
+- `Show me an example of using Appwrite Functions`
+
+{% /section %}

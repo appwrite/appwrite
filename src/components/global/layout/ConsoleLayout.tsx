@@ -40,6 +40,9 @@ interface ConsoleLayoutProps {
     onCommandCenterOpen?: () => void
     onCreateOrganization?: () => void
     marketingNav?: boolean
+    headerTitleSuffix?: string
+    centerSearch?: boolean
+    centerSearchPlaceholder?: string
   }
 
   /** Optional strip below impersonation / cloud status, above the main header bar (e.g. {@link HeaderAlertBar}) */
@@ -146,6 +149,9 @@ export function ConsoleLayout({
           onCommandCenterOpen={header?.onCommandCenterOpen}
           onCreateOrganization={header?.onCreateOrganization}
           marketingNav={header?.marketingNav}
+          headerTitleSuffix={header?.headerTitleSuffix}
+          centerSearch={header?.centerSearch}
+          centerSearchPlaceholder={header?.centerSearchPlaceholder}
           hideSearch={showNativeAppBar}
         />
       </div>
@@ -182,8 +188,8 @@ export function ConsoleLayout({
           id="main-content"
           tabIndex={-1}
           className={cn(
-            'flex-1 bg-background flex flex-col min-h-0 outline-none',
-            usesSplitMain ? 'overflow-hidden' : 'overflow-y-auto',
+            'flex-1 min-w-0 bg-background flex flex-col min-h-0 outline-none',
+            usesSplitMain ? 'overflow-hidden' : 'overflow-x-hidden overflow-y-auto',
           )}
         >
           <div

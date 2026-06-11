@@ -52,6 +52,23 @@ export function resetConsoleShellDocumentScroll() {
  * (overflow-y-auto); window/document scroll is often zero, so pagination must
  * target this element.
  */
+/** Nearest ancestor that scrolls vertically (e.g. `#main-content`). */
+export function findScrollParent(el: HTMLElement | null): HTMLElement | null {
+  if (!el) return null
+  let parent = el.parentElement
+  while (parent) {
+    const { overflowY } = getComputedStyle(parent)
+    if (
+      /(auto|scroll|overlay)/.test(overflowY) &&
+      parent.scrollHeight > parent.clientHeight
+    ) {
+      return parent
+    }
+    parent = parent.parentElement
+  }
+  return null
+}
+
 export function scrollConsoleMainToTop() {
   setTimeout(() => {
     if (typeof document === 'undefined') return

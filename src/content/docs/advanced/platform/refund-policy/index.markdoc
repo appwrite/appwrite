@@ -1,0 +1,67 @@
+---
+layout: article
+title: Refund policy
+description: Learn about Appwrite's refund policy for services, including eligibility criteria and the request process.
+---
+
+At Appwrite, we strive to provide exceptional backend services that meet your development needs. This policy outlines our approach to refunds for Appwrite services and ensures a fair and consistent process for all customers.
+
+# General policy {% #general-policy %}
+
+Appwrite services are **non-refundable by default**. All purchases, including self-hosted support plans, Appwrite Cloud subscriptions, and professional services (e.g., onboarding, solution engineering, consulting) are considered final transactions.
+
+However, we recognize that exceptional circumstances may arise. In rare and specific situations where service performance, billing, or delivery significantly deviates from expectations, refunds may be considered upon thorough review and approval.
+
+# Eligible scenarios {% #eligible-scenarios %}
+
+Refunds may be considered in the following circumstances:
+
+## Service delivery failure {% #service-delivery-failure %}
+
+Critical and unresolved service outages affecting paid plans, or confirmed infrastructure issues that significantly impact service availability and performance.
+
+## Billing errors {% #billing-errors %}
+
+Customers who are incorrectly charged due to:
+
+- Duplicate payments
+- Plan mismatches
+- Proven invoicing errors
+
+## Unauthorized transactions {% #unauthorized-transactions %}
+
+Payments made without proper authorization or the account owner's permission, reported within 30 days of the transaction.
+
+## First-time customer dissatisfaction {% #first-time-customer-dissatisfaction %}
+
+First-time cloud users may request a refund within the first 14 days of their subscription, provided they can demonstrate that the platform did not meet critical expectations and no significant usage occurred (subject to technical review at Appwrite's sole discretion).
+
+# Ineligible scenarios {% #ineligible-scenarios %}
+
+The following scenarios do **not** qualify for refunds:
+
+- **Change in business needs or direction:** Decisions to pivot, discontinue use, or change platforms
+- **Incorrect setup or inactivity:** Customer misconfiguration, failure to complete onboarding, or lack of usage
+- **Expired refund window:** Requests submitted more than 30 days after the transaction date
+- **Third-party limitations:** Issues caused by third-party tools, plugins, or unsupported integrations
+- **Terms of service violations:** Any usage found to be in breach of Appwrite's [Terms](/terms) or [Fair use](/docs/advanced/platform/fair-use-policy) policy
+
+# Request process {% #request-process %}
+
+To request a refund, please follow these steps:
+
+1. **Submit a ticket** via the Appwrite Console
+1. **Provide detailed information** about the issue, including relevant evidence and documentation
+1. **Allow for review time** - we aim to respond within 5 business days, with final resolution within 10 business days
+
+## Alternative solutions {% #alternative-solutions %}
+
+Whenever possible, we will first consider non-monetary solutions such as:
+
+- Service credits
+- Extended trial periods
+- Plan adjustments
+
+{% partial file="policy-modifications.md" /%}
+
+{% partial file="policy-contact-us.md" /%}

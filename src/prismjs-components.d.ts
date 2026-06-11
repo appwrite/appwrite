@@ -10,3 +10,9 @@ declare module 'prismjs/components/prism-csharp' {}
 declare module 'prismjs/components/prism-markup' {}
 declare module 'prismjs/components/prism-markup-templating' {}
 declare module 'prismjs/components/prism-hcl' {}
+declare module 'prismjs/components/prism-rust' {}
+declare module 'prismjs/components/prism-graphql' {}
+declare module 'prismjs/components/prism-http' {}
+declare module 'prismjs/components/prism-groovy' {}
+declare module 'prismjs/components/prism-docker' {}
+declare module 'prismjs/components/prism-css' {}

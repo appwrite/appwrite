@@ -1,0 +1,265 @@
+---
+layout: article
+title: QR codes
+description: Generate QR codes from text strings with customizable size and margin for authentication, sharing, and data encoding.
+---
+
+The QR code endpoint generates QR code images from any text string. QR codes are commonly used for two-factor authentication, sharing links, encoding data, and enabling quick access to information.
+
+# Generate QR code {% #generate-qr %}
+
+Generate a QR code image from a text string. The QR code can be scanned by any standard QR code reader.
+
+{% multicode %}
+```client-web
+import { Client, Avatars } from "appwrite";
+
+const client = new Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+    .setProject('<PROJECT_ID>');
+
+const avatars = new Avatars(client);
+
+const result = avatars.getQR({
+    text: 'https://example.com',
+    size: 300,
+    margin: 1,
+    download: false
+});
+
+console.log(result); // Resource URL
+```
+```client-flutter
+import 'package:appwrite/appwrite.dart';
+
+final client = Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+    .setProject('<PROJECT_ID>');
+
+final avatars = Avatars(client);
+
+Future result = avatars.getQR(
+    text: 'https://example.com',
+    size: 300,
+    margin: 1,
+    download: false
+).then((bytes) {
+    // Use the QR code image bytes
+    return bytes;
+}).catchError((error) {
+    print(error.response);
+});
+```
+```client-apple
+import Appwrite
+
+let client = Client()
+    .setEndpoint("https://<REGION>.cloud.appwrite.io/v1")
+    .setProject("<PROJECT_ID>")
+
+let avatars = Avatars(client)
+
+let byteBuffer = try await avatars.getQR(
+    text: "https://example.com",
+    size: 300,
+    margin: 1,
+    download: false
+)
+```
+```client-android-kotlin
+import io.appwrite.Client
+import io.appwrite.services.Avatars
+
+val client = Client()
+    .setEndpoint("https://<REGION>.cloud.appwrite.io/v1")
+    .setProject("<PROJECT_ID>")
+
+val avatars = Avatars(client)
+
+val result = avatars.getQR(
+    text = "https://example.com",
+    size = 300,
+    margin = 1,
+    download = false
+)
+```
+```client-react-native
+import { Client, Avatars } from 'react-native-appwrite';
+
+const client = new Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+    .setProject('<PROJECT_ID>');
+
+const avatars = new Avatars(client);
+
+const result = avatars.getQR({
+    text: 'https://example.com',
+    size: 300,
+    margin: 1,
+    download: false
+});
+
+console.log(result); // Resource URL
+```
+{% /multicode %}
+
+# Parameters {% #parameters %}
+
+The `getQR` method accepts the following parameters:
+
+| Parameter | Type | Description |
+| --------- | ---- | ----------- |
+| text | string | The text string to encode in the QR code. Can be a URL, authentication URI, or any text data. |
+| size | integer | The size of the QR code in pixels. Accepts values between `0-1000`. Defaults to `200` if not provided. |
+| margin | integer | The margin around the QR code in pixels. Accepts values between `0-10`. Defaults to `1` if not provided. |
+| download | boolean | Whether to download the image or return a URL. Defaults to `false`. |
+
+# Two-factor authentication {% #two-factor-authentication %}
+
+QR codes are commonly used for two-factor authentication (2FA). When setting up TOTP authentication, you can generate a QR code from the authenticator URI.
+
+{% multicode %}
+```client-web
+// After creating an MFA authenticator
+const authenticator = await account.createMfaAuthenticator('totp');
+const qrCode = avatars.getQR({
+    text: authenticator.uri,
+    size: 400,
+    margin: 2
+});
+```
+```client-flutter
+// After creating an MFA authenticator
+final authenticator = await account.createMfaAuthenticator('totp');
+final qrCode = avatars.getQR(
+    text: authenticator.uri,
+    size: 400,
+    margin: 2
+);
+```
+```client-apple
+// After creating an MFA authenticator
+let authenticator = try await account.createMfaAuthenticator(type: "totp")
+let qrCode = try await avatars.getQR(
+    text: authenticator.uri,
+    size: 400,
+    margin: 2
+)
+```
+```client-android-kotlin
+// After creating an MFA authenticator
+val authenticator = account.createMfaAuthenticator("totp")
+val qrCode = avatars.getQR(
+    text = authenticator.uri,
+    size = 400,
+    margin = 2
+)
+```
+{% /multicode %}
+
+# Customization {% #customization %}
+
+Adjust the size and margin of QR codes to match your design requirements. Larger sizes improve scanability, while appropriate margins ensure the QR code is properly recognized by scanners.
+
+{% multicode %}
+```client-web
+// Small QR code with minimal margin
+const smallQR = avatars.getQR({
+    text: 'https://example.com',
+    size: 150,
+    margin: 0
+});
+
+// Large QR code for printing
+const largeQR = avatars.getQR({
+    text: 'https://example.com',
+    size: 800,
+    margin: 3
+});
+
+// Standard size for web display
+const standardQR = avatars.getQR({
+    text: 'https://example.com',
+    size: 300,
+    margin: 1
+});
+```
+```client-flutter
+// Small QR code with minimal margin
+Future smallQR = avatars.getQR(
+    text: 'https://example.com',
+    size: 150,
+    margin: 0
+);
+
+// Large QR code for printing
+Future largeQR = avatars.getQR(
+    text: 'https://example.com',
+    size: 800,
+    margin: 3
+);
+
+// Standard size for web display
+Future standardQR = avatars.getQR(
+    text: 'https://example.com',
+    size: 300,
+    margin: 1
+);
+```
+```client-apple
+// Small QR code with minimal margin
+let smallQR = try await avatars.getQR(
+    text: "https://example.com",
+    size: 150,
+    margin: 0
+)
+
+// Large QR code for printing
+let largeQR = try await avatars.getQR(
+    text: "https://example.com",
+    size: 800,
+    margin: 3
+)
+
+// Standard size for web display
+let standardQR = try await avatars.getQR(
+    text: "https://example.com",
+    size: 300,
+    margin: 1
+)
+```
+```client-android-kotlin
+// Small QR code with minimal margin
+val smallQR = avatars.getQR(
+    text = "https://example.com",
+    size = 150,
+    margin = 0
+)
+
+// Large QR code for printing
+val largeQR = avatars.getQR(
+    text = "https://example.com",
+    size = 800,
+    margin = 3
+)
+
+// Standard size for web display
+val standardQR = avatars.getQR(
+    text = "https://example.com",
+    size = 300,
+    margin = 1
+)
+```
+{% /multicode %}
+
+# Use cases {% #use-cases %}
+
+QR codes are commonly used for:
+
+- **Two-factor authentication**: Generate QR codes for TOTP authenticator setup
+- **Team invitations**: Create QR codes for team invite links to enable quick member onboarding
+- **Link sharing**: Create QR codes for URLs to enable quick access
+- **Event tickets**: Generate QR codes for event registration and check-in
+- **Wi-Fi credentials**: Encode Wi-Fi network information for easy connection
+- **Contact information**: Share vCard data encoded in QR codes
+

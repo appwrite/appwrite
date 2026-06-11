@@ -1,0 +1,9 @@
+---
+layout: article
+title: Security
+description: Prioritize security in your applications with Appwrite. Discover best practices, security features, and guidelines to protect user data and ensure authentication integrity.
+---
+
+Appwrite provides many security features to keep both your Appwrite project and your user's information secure.
+
+{% partial file="auth-security.md" /%}

@@ -87,6 +87,7 @@ import { getConsoleHeaderLogoClass } from '@/lib/html-theme'
 import { ConsoleHeaderLogo } from '@/components/global/shared/ConsoleHeaderLogo'
 import { AppwriteWordmark } from '@/components/global/shared/AppwriteWordmark'
 import { resolveInitHeaderNavCta } from '@/lib/init/events'
+import { isMacPlatform } from '@/lib/keyboard-shortcuts/display'
 
 type MarketingHeaderNavItem = {
   label: string
@@ -100,7 +101,7 @@ const DEFAULT_MARKETING_HEADER_NAV: readonly MarketingHeaderNavItem[] = [
     href: 'https://appwrite.io/products/auth',
     hasMenuIndicator: true,
   },
-  { label: 'Docs', href: 'https://appwrite.io/docs' },
+  { label: 'Docs', href: '/docs' },
   { label: 'Pricing', href: '/pricing' },
   { label: 'Enterprise', href: 'https://appwrite.io/contact-us/enterprise' },
   { label: 'Customers', href: 'https://appwrite.io/blog/category/customer-stories' },
@@ -118,6 +119,12 @@ interface ConsoleHeaderProps {
   onCommandCenterOpen?: () => void
   onCreateOrganization?: () => void
   marketingNav?: boolean | readonly MarketingHeaderNavItem[]
+  /** Shown after the wordmark, e.g. "Docs" renders as "| Docs". */
+  headerTitleSuffix?: string
+  /** Wide search field centered in the header instead of marketing links. */
+  centerSearch?: boolean
+  /** Placeholder for search when {@link centerSearch} is enabled. */
+  centerSearchPlaceholder?: string
   /** When true, search is hidden (e.g. when native app bar is shown above) */
   hideSearch?: boolean
 }
@@ -129,6 +136,9 @@ export function ConsoleHeader({
   onCommandCenterOpen,
   onCreateOrganization,
   marketingNav,
+  headerTitleSuffix,
+  centerSearch = false,
+  centerSearchPlaceholder = 'Search in docs',
   hideSearch = false,
 }: ConsoleHeaderProps) {
   const { openCommandCenter: contextOpenCommandCenter } =
@@ -138,7 +148,7 @@ export function ConsoleHeader({
     account,
     signOut,
     isAuthenticated,
-    isLoading: isAuthLoading,
+    isPending: isAuthPending,
   } = useAuth()
   const operatorAccount = account as OperatorAccount | undefined
   const showAdminSection = isOperatorAccount(operatorAccount)
@@ -190,12 +200,15 @@ export function ConsoleHeader({
     : (orgIdFromRoute ?? (account?.prefs?.organization as string | undefined))
 
   // Fetch organization plan to check if upgrade button should be shown
-  const { plan: organizationPlan } = useOrganizationPlan(orgId)
+  const { plan: organizationPlan, isFetched: isPlanFetched } =
+    useOrganizationPlan(orgId)
   const selfService = organizationPlan?.selfService !== false
-  // Only show upgrade when current plan cost is 0 (free); hide when already on a paid plan
+  // Only show upgrade when current plan cost is 0 (free); hide when already on a paid plan.
+  // Wait for plan fetch so we do not flash the button while price is still unknown.
   const showUpgradeButton =
     features.billing &&
     orgId &&
+    isPlanFetched &&
     selfService &&
     (organizationPlan?.price ?? 0) === 0
 
@@ -231,8 +244,9 @@ export function ConsoleHeader({
     ? resolveInitHeaderNavCta({ mockCurrentDay: overrides.mockInitCurrentDay })
     : null
   const isOptionalAuth = isOptionalAuthPage(location.pathname)
-  const optionalAuthPending = isOptionalAuth && isAuthLoading
-  const showGuestHeader = isOptionalAuth && !isAuthenticated && !isAuthLoading
+  const optionalAuthPending = isOptionalAuth && isAuthPending
+  const showGuestHeader =
+    isOptionalAuth && !isAuthPending && !isAuthenticated
   const authRedirect = location.pathname
   const marketingNavItems =
     marketingNav === true
@@ -241,6 +255,10 @@ export function ConsoleHeader({
         ? marketingNav
         : []
   const showMarketingNav = marketingNavItems.length > 0
+  const showMarketingLinks = showMarketingNav && !centerSearch
+  const showCenterSearch = centerSearch && !hideSearch
+  const showRightSearch = !hideSearch && !centerSearch
+  const searchModKey = isMacPlatform() ? '⌘' : 'Ctrl'
   const logoColumnWidth = showMarketingNav ? 158 : 60
 
   return (
@@ -267,7 +285,7 @@ export function ConsoleHeader({
             </button>
           ) : null}
 
-          {showMarketingNav ? (
+          {showMarketingLinks ? (
             <Sheet>
               <SheetTrigger asChild>
                 <button
@@ -347,7 +365,24 @@ export function ConsoleHeader({
             )
 
             if (showMarketingNav) {
-              return logoLink()
+              return (
+                <div className="flex min-w-0 items-center gap-2">
+                  {logoLink()}
+                  {headerTitleSuffix ? (
+                    <>
+                      <span
+                        className="shrink-0 text-[15px] text-muted-foreground/40"
+                        aria-hidden
+                      >
+                        |
+                      </span>
+                      <span className="truncate text-[13px] font-medium text-muted-foreground">
+                        {headerTitleSuffix}
+                      </span>
+                    </>
+                  ) : null}
+                </div>
+              )
             }
 
             if (hasSidebar) {
@@ -380,7 +415,7 @@ export function ConsoleHeader({
             )
           })()}
 
-          {marketingNavItems.length > 0 ? (
+          {showMarketingLinks ? (
             <nav
               className="ml-2 hidden min-w-0 items-center gap-1 @[1280px]:flex @[1536px]:absolute @[1536px]:left-1/2 @[1536px]:ml-0 @[1536px]:-translate-x-1/2"
               aria-label="Website navigation"
@@ -793,6 +828,29 @@ export function ConsoleHeader({
           )}
         </div>
 
+        {showCenterSearch ? (
+          <div className="pointer-events-none absolute left-1/2 hidden w-full max-w-[25rem] -translate-x-1/2 px-4 @[700px]:block">
+            <button
+              type="button"
+              onClick={openCommandCenter}
+              className="pointer-events-auto flex h-9 w-full cursor-pointer items-center gap-2 rounded-md border border-border bg-accent/50 px-3 text-[13px] text-muted-foreground transition-colors hover:border-border hover:bg-accent"
+            >
+              <Search className="h-3.5 w-3.5 shrink-0" />
+              <span className="min-w-0 flex-1 truncate text-left">
+                {centerSearchPlaceholder}
+              </span>
+              <span className="ml-auto flex shrink-0 items-center gap-1">
+                <kbd className="rounded bg-muted px-1.5 py-0.5 text-[10px] font-medium text-foreground/85">
+                  {searchModKey}
+                </kbd>
+                <kbd className="rounded bg-muted px-1.5 py-0.5 text-[10px] font-medium text-foreground/85">
+                  K
+                </kbd>
+              </span>
+            </button>
+          </div>
+        ) : null}
+
         {/* Right: Actions */}
         <div className="flex shrink-0 items-center gap-1 @[640px]:gap-2 min-w-0">
           {optionalAuthPending ? (
@@ -828,29 +886,39 @@ export function ConsoleHeader({
             </>
           ) : (
             <>
-              {/* Search - hidden on small containers or when hideSearch (e.g. native app bar) */}
-              {!hideSearch && (
+              {/* Search - compact on the right, or icon-only when center search is enabled */}
+              {showRightSearch ? (
                 <>
                   <button
+                    type="button"
                     onClick={openCommandCenter}
-                    className="hidden h-9 cursor-pointer items-center gap-2 rounded-md border border-border bg-accent/50 px-3 text-[13px] text-muted-foreground transition-colors hover:border-border hover:bg-accent @[700px]:flex shrink-0"
+                    className="hidden h-9 shrink-0 cursor-pointer items-center gap-2 rounded-md border border-border bg-accent/50 px-3 text-[13px] text-muted-foreground transition-colors hover:border-border hover:bg-accent @[700px]:flex"
                   >
                     <Search className="h-3.5 w-3.5 shrink-0" />
                     <span className="hidden @[850px]:inline">Search...</span>
-                    <kbd className="ml-2 hidden rounded bg-muted px-1.5 py-0.5 text-[10px] font-medium text-foreground/85 @[850px]:inline shrink-0">
-                      ⌘K
+                    <kbd className="ml-2 hidden shrink-0 rounded bg-muted px-1.5 py-0.5 text-[10px] font-medium text-foreground/85 @[850px]:inline">
+                      {searchModKey}K
                     </kbd>
                   </button>
 
-                  {/* Mobile search icon */}
                   <button
+                    type="button"
                     onClick={openCommandCenter}
                     className="flex h-9 w-9 shrink-0 cursor-pointer items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-accent hover:text-foreground @[700px]:hidden"
                   >
                     <Search className="h-4 w-4" />
                   </button>
                 </>
-              )}
+              ) : showCenterSearch ? (
+                <button
+                  type="button"
+                  onClick={openCommandCenter}
+                  className="flex h-9 w-9 shrink-0 cursor-pointer items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-accent hover:text-foreground @[700px]:hidden"
+                  aria-label={centerSearchPlaceholder}
+                >
+                  <Search className="h-4 w-4" />
+                </button>
+              ) : null}
 
               {/* Feedback - hidden on small containers */}
               <div className="hidden @[800px]:flex shrink-0">

@@ -1,0 +1,51 @@
+---
+layout: article
+title: Providers 
+description: Learn the different providers that you can use to send messages with Appwrite.
+back: /docs/products/messaging
+---
+Appwrite allows you to connect to a variety of third-party messaging providers to deliver push notifications, emails, and SMS messages to your users.
+Before you can deliver messages, you must connect to a messaging provider.
+# Push notifications {% #push-notifications %}
+Send push notifications, which are little notification messages that appear on a user's browser or device to alert them
+of events or updates. Configure one of the following providers to send push notifications.
+{% cards %}
+{% cards_item href="/docs/products/messaging/apns" title="APNS" icon="icon-apple" %}
+Send push notifications to apps on Apple devices through Apple Push Notification service (APNs).
+{% /cards_item %}
+{% cards_item href="/docs/products/messaging/fcm" title="FCM" icon="web-icon-firebase" %}
+Send push notifications to Android, Apple, or Web app with Firebase Cloud Messaging (FCM).
+{% /cards_item %}
+{% /cards %}
+# Email {% #email %}
+Deliver customized emails to users to send reminders, updates, promotions, and custom authentication logic.
+{% cards %}
+{% cards_item href="/docs/products/messaging/mailgun" title="Mailgun" icon="web-icon-mailgun" %}
+Deliver custom email messages to users using Mailgun.
+{% /cards_item %}
+{% cards_item href="/docs/products/messaging/sendgrid" title="SendGrid" icon="web-icon-sendgrid" %}
+Deliver custom email messages to users using SendGrid.
+{% /cards_item %}
+{% cards_item href="/docs/products/messaging/smtp" title="SMTP" icon="icon-mail" %}
+Deliver custom email messages to users using standard SMTP settings.
+{% /cards_item %}
+{% /cards %}
+# SMS {% #sms %}
+Send customized SMS messages to users by phone to send reminders, updates, promotions, and one-time passwords.
+{% cards %}
+{% cards_item href="/docs/products/messaging/twilio" title="Twilio" icon="icon-twilio" %}
+Deliver custom SMS messages to users using Twilio.
+{% /cards_item %}
+{% cards_item href="/docs/products/messaging/msg91" title="MSG91" icon="icon-msg91" %}
+Deliver custom SMS messages to users using MSG91.
+{% /cards_item %}
+{% cards_item href="/docs/products/messaging/telesign" title="Telesign" icon="icon-telesign" %}
+Deliver custom SMS messages to users using Telesign.
+{% /cards_item %}
+{% cards_item href="/docs/products/messaging/textmagic" title="Textmagic" icon="icon-textmagic" %}
+Deliver custom SMS messages to users using Textmagic.
+{% /cards_item %}
+{% cards_item href="/docs/products/messaging/vonage" title="Vonage" icon="icon-vonage" %}
+Deliver custom SMS messages to users using Vonage.
+{% /cards_item %}
+{% /cards %}

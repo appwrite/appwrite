@@ -1,0 +1,188 @@
+---
+layout: article
+title: Cursor
+description: Learn how to use Cursor with Appwrite through the Appwrite plugin, quick start prompts, and MCP servers for AI-assisted development.
+---
+
+{% section #install-plugin step=1 title="Install the Appwrite plugin" %}
+
+The fastest way to get started with Appwrite in Cursor is to install the **Appwrite plugin** from the Cursor Marketplace. The plugin includes agent skills, MCP servers, and commands, giving Cursor's AI agents everything they need to work with your Appwrite projects.
+
+To install the plugin:
+
+1. Visit the [Appwrite plugin](https://cursor.com/marketplace/appwrite) page on the Cursor Marketplace.
+2. Sign in with your Cursor account.
+3. Click **Add to Cursor**.
+4. The plugin will be added to your editor automatically.
+
+Once installed, the plugin gives your AI agents access to Appwrite skills for all major SDKs, MCP servers for the Appwrite API and documentation, and commands for deploying functions and sites.
+
+{% info title="Prefer manual setup?" %}
+
+If you'd rather configure MCP servers individually, skip to [Step 3](#step-3).
+
+{% /info %}
+
+{% /section %}
+
+{% section #quick-start-prompts step=2 title="Quick start prompts" %}
+
+Get started quickly with these pre-built prompts for common Appwrite integrations:
+
+{% cards %}
+{% cards_item href="/docs/tooling/ai/quickstart-prompts/nextjs" title="Next.js" icon="icon-nextjs" %}
+{% /cards_item %}
+{% cards_item href="/docs/tooling/ai/quickstart-prompts/tanstack-start" title="TanStack Start" icon="web-icon-tanstack" %}
+{% /cards_item %}
+{% /cards %}
+
+{% arrow_link href="/docs/tooling/ai/quickstart-prompts" %}
+Browse all quick start prompts
+{% /arrow_link %}
+
+{% /section %}
+
+{% section #step-3 step=3 title="Add MCP servers manually" %}
+
+If you installed the Appwrite plugin in [Step 1](#install-plugin), MCP servers are already configured and you can skip to [Step 4](#step-4).
+
+Connect Appwrite MCP servers to Cursor for deeper integration with the Appwrite API and documentation.
+
+Before you begin, ensure you have the following **pre-requisites** installed on your system:
+
+{% tabs %}
+{% tabsitem #api-server-prerequisites title="API server" %}
+
+[uv](https://docs.astral.sh/uv/getting-started/installation/) must be installed on your system.
+
+{% /tabsitem %}
+
+{% tabsitem #docs-server-prerequisites title="Docs server" %}
+
+[Node.js](https://nodejs.org/en/download) and npm must be installed on your system.
+
+{% /tabsitem %}
+{% /tabs %}
+
+Open the **Cursor Settings** page, head to the **MCP** tab, and click on the **Add new global MCP server** button. This will open an `mcp.json` file in your editor.
+
+Choose which MCP server you want to configure:
+
+{% tabs %}
+{% tabsitem #api-only title="API server" %}
+
+Update the `mcp.json` file to include the API server:
+
+```json
+{
+    "mcpServers": {
+        "appwrite-api": {
+            "command": "uvx",
+            "args": [
+                "mcp-server-appwrite"
+            ],
+            "env": {
+                "APPWRITE_API_KEY": "your-api-key",
+                "APPWRITE_PROJECT_ID": "your-project-id",
+                "APPWRITE_ENDPOINT": "https://<REGION>.cloud.appwrite.io/v1"
+            }
+        }
+    }
+}
+
+```
+
+**Configuration:**
+
+- Replace `your-project-id` with your actual Appwrite project ID
+- Replace `your-api-key` with your Appwrite API key
+- Replace `<REGION>` with your Appwrite Cloud region (e.g., `nyc`, `fra`)
+
+{% /tabsitem %}
+
+{% tabsitem #docs-only title="Docs server" %}
+
+Update the `mcp.json` file to include the docs server:
+
+```json
+{
+  "mcpServers": {
+    "appwrite-docs": {
+      "command": "npx",
+      "args": [
+        "mcp-remote",
+        "<https://mcp-for-docs.appwrite.io>"
+      ]
+    }
+  }
+}
+
+```
+
+{% /tabsitem %}
+{% /tabs %}
+
+You can also **directly add the MCP servers to Cursor** using the following links:
+
+{% only_light %}
+{% cards %}
+
+{% cards_item href="https://apwr.dev/api-mcp-cursor?ref=docs" title="API server" image="/images/docs/mcp/logos/cursor-ai.svg" %}
+{% /cards_item %}
+
+{% cards_item href="https://apwr.dev/docs-mcp-cursor?ref=docs" title="Docs server" image="/images/docs/mcp/logos/cursor-ai.svg" %}
+{% /cards_item %}
+
+{% /cards %}
+{% /only_light %}
+
+{% only_dark %}
+{% cards %}
+
+{% cards_item href="https://apwr.dev/api-mcp-cursor?ref=docs" title="API server" image="/images/docs/mcp/logos/dark/cursor-ai.svg" %}
+{% /cards_item %}
+
+{% cards_item href="https://apwr.dev/docs-mcp-cursor?ref=docs" title="Docs server" image="/images/docs/mcp/logos/dark/cursor-ai.svg" %}
+{% /cards_item %}
+
+{% /cards %}
+{% /only_dark %}
+
+Once you save the details, Cursor will connect with the MCP server(s) and load all available tools. You may need to restart Cursor if it is unable to start the MCP server.
+
+{% /section %}
+
+{% section #step-4 step=4 title="Test the integration" %}
+
+Open Cursor Agent and test your MCP integrations. You can try out the following example prompts based on the MCP server you have configured:
+
+{% tabs %}
+{% tabsitem #test-api title="API server" %}
+
+**Example prompts:**
+
+- `Create a new user in my Appwrite project`
+- `List all databases in my project`
+- `Show me the tables in my database`
+- `Create a new row in my table`
+- `Delete a specific user by ID`
+
+{% /tabsitem %}
+
+{% tabsitem #test-docs title="Docs server" %}
+
+**Example prompts:**
+
+- `How do I set up real-time subscriptions in Appwrite?`
+- `Show me how to authenticate users with OAuth`
+- `What are the best practices for database queries?`
+- `How do I implement file uploads with Appwrite Storage?`
+- `Show me an example of using Appwrite Functions`
+
+{% /tabsitem %}
+
+{% /tabs %}
+
+![Create a new user in Appwrite project](/images/docs/mcp/cursor/cursor-create-user.avif)
+
+{% /section %}

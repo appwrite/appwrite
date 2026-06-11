@@ -1,0 +1,233 @@
+---
+layout: article
+title: Teams
+description: Master team management in the Appwrite Cloud. Explore team-related functions, permissions, and more.
+---
+
+Teams are a good way to allow users to share access to resources.
+For example, in a todo app, a user can [create a team](/docs/references/cloud/client-web/teams#create) for one of their todo lists and [invite another user](/docs/references/cloud/client-web/teams#createMembership) to the team to grant the other user access.
+You can further give special rights to parts of a team using team roles.
+
+The invited user can [accept the invitation](/docs/references/cloud/client-web/teams#updateMembershipStatus) to gain access. If the user's ever removed from the team, they'll lose access again.
+
+{% arrow_link href="/docs/products/auth/multi-tenancy" %}
+Learn about using Teams for multi-tenancy
+{% /arrow_link %}
+
+# Create team {% #create %}
+For example, we can create a team called `teachers` with roles `maths`, `sciences`, `arts`, and `literature`.
+
+The creator of the team is also granted the `owner` role. **Only those with the `owner` role can invite and remove members**.
+
+{% multicode %}
+```client-web
+import { Client, Teams } from "appwrite";
+
+const client = new Client();
+
+const teams = new Teams(client);
+
+client
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1') // Your API Endpoint
+    .setProject('<PROJECT_ID>') // Your project ID
+;
+
+const promise = teams.create(
+    'teachers',
+    'Teachers',
+    ['maths', 'sciences', 'arts', 'literature']
+);
+
+promise.then(function (response) {
+    console.log(response); // Success
+}, function (error) {
+    console.log(error); // Failure
+});
+```
+```client-flutter
+import 'package:appwrite/appwrite.dart';
+
+void main() { // Init SDK
+  Client client = Client();
+  Teams teams = Teams(client);
+
+  client
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1') // Your API Endpoint
+    .setProject('<PROJECT_ID>') // Your project ID
+  ;
+  Future result = teams.create(
+    teamId: 'teachers',
+    name: 'Teachers',
+    roles: ['maths', 'sciences', 'arts', 'literature']
+  );
+
+  result
+    .then((response) {
+      print(response);
+    }).catchError((error) {
+      print(error.response);
+  });
+}
+```
+```client-apple
+import Appwrite
+
+let client = Client()
+    .setEndpoint("https://<REGION>.cloud.appwrite.io/v1") // Your API Endpoint
+    .setProject("<PROJECT_ID>") // Your project ID
+
+let teams = Teams(client)
+
+let team = try await teams.create(
+    teamId: "teachers",
+    name: "Teachers",
+    roles: ["maths", "sciences", "arts", "literature"]
+)
+```
+```kotlin
+import io.appwrite.Client
+import io.appwrite.services.Teams
+
+val client = Client(context)
+    .setEndpoint("https://<REGION>.cloud.appwrite.io/v1") // Your API Endpoint
+    .setProject("<PROJECT_ID>") // Your project ID
+
+val teams = Teams(client)
+
+val response = teams.create(
+    teamId = "teachers",
+    name = "Teachers",
+    roles = listOf("maths", "sciences", "arts", "literature")
+)
+```
+
+{% /multicode %}
+
+# Invite a member {% #create-membership %}
+
+You can invite members to a team by creating team memberships. For example, inviting "David" a math teacher, to the teachers team.
+
+{% multicode %}
+```client-web
+import { Client, Teams } from "appwrite";
+
+const client = new Client();
+
+const teams = new Teams(client);
+
+client
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1') // Your API Endpoint
+    .setProject('<PROJECT_ID>') // Your project ID
+;
+
+const promise = teams.createMembership(
+    'teachers',
+    ["maths"],
+    "david@example.com"
+    );
+
+promise.then(function (response) {
+    console.log(response); // Success
+}, function (error) {
+    console.log(error); // Failure
+});
+```
+```client-flutter
+import 'package:appwrite/appwrite.dart';
+
+void main() { // Init SDK
+  Client client = Client();
+  Teams teams = Teams(client);
+
+  client
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1') // Your API Endpoint
+    .setProject('<PROJECT_ID>') // Your project ID
+  ;
+  Future result = teams.createMembership(
+    teamId: 'teachers',
+    roles: ['maths'],
+    email: 'david@example.com'
+  );
+
+  result
+    .then((response) {
+      print(response);
+    }).catchError((error) {
+      print(error.response);
+  });
+}
+```
+```client-apple
+import Appwrite
+
+let client = Client()
+    .setEndpoint("https://<REGION>.cloud.appwrite.io/v1") // Your API Endpoint
+    .setProject("<PROJECT_ID>") // Your project ID
+
+let teams = Teams(client)
+
+let membership = try await teams.createMembership(
+    teamId: "teachers",
+    roles: ["maths"],
+    email: "david@example.com"
+)
+```
+```kotlin
+import io.appwrite.Client
+import io.appwrite.services.Teams
+
+val client = Client(context)
+    .setEndpoint("https://<REGION>.cloud.appwrite.io/v1") // Your API Endpoint
+    .setProject("<PROJECT_ID>") // Your project ID
+
+val teams = Teams(client)
+
+val response = teams.createMembership(
+    teamId = "teachers",
+    roles = listOf("maths"),
+    email = "david@example.com"
+)
+```
+
+{% /multicode %}
+
+# Using the CLI {% #using-the-CLI %}
+
+{% partial file="cli-disclaimer.md" /%}
+
+Use the CLI command `appwrite teams create-membership [options]` to invite a new member into your team.
+
+```sh
+appwrite teams create-membership --team-id "<TEAM_ID>" --roles --phone "+12065550100" --name "<NAME>" --user-id "<USER_ID>"
+```
+
+You can also get, update, and delete a user's membership. However, you cannot use the CLI to configure permissions for team members.
+
+{% arrow_link href="/docs/tooling/command-line/teams#commands" %}
+Learn more about the CLI teams commands
+{% /arrow_link %}
+
+# Permissions {% #permissions %}
+
+You can grant permissions to all members of a team using the `Role.team(<TEAM_ID>)` role or
+individual roles in the team using the `Role.team(<TEAM_ID>, [<ROLE_1>, <ROLE_2>, ...])` role.
+| Description                                 | Role                               |
+| ------------------------------------------- | ------------------------------------------- |
+| All members   | `Role.team(<TEAM_ID>)`|
+| Select roles   | `Role.team(<TEAM_ID>, [<ROLE_1>, <ROLE_2>, ...])`|
+
+
+{% arrow_link href="/docs/advanced/platform/permissions" %}
+Learn more about permissions
+{% /arrow_link %}
+
+# Memberships privacy {% #memberships-privacy %}
+
+In certain use cases, your app may not need to share members' personal information with others. You can safeguard privacy by marking specific membership details as private. To configure this setting, navigate to **Auth** > **Security** > **Memberships privacy**
+
+These details can be made private:
+
+- `userName` - The member's name
+- `userEmail` - The member's email address
+- `mfa` - Whether the member has enabled multi-factor authentication
+

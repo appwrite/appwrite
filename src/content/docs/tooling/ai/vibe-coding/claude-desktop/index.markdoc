@@ -1,0 +1,157 @@
+---
+layout: article
+title: Claude Desktop
+description: Learn how to use Claude Desktop with Appwrite through quick start prompts and MCP servers for AI-assisted development.
+---
+
+{% section #quick-start-prompts step=1 title="Quick start prompts" %}
+
+Get started quickly with these pre-built prompts for common Appwrite integrations:
+
+{% cards %}
+{% cards_item href="/docs/tooling/ai/quickstart-prompts/nextjs" title="Next.js" icon="icon-nextjs" %}
+{% /cards_item %}
+{% cards_item href="/docs/tooling/ai/quickstart-prompts/tanstack-start" title="TanStack Start" icon="web-icon-tanstack" %}
+{% /cards_item %}
+{% /cards %}
+
+{% arrow_link href="/docs/tooling/ai/quickstart-prompts" %}
+Browse all quick start prompts
+{% /arrow_link %}
+
+{% /section %}
+
+{% section #step-2 step=2 title="Add MCP servers" %}
+
+Connect Appwrite MCP servers to Claude Desktop for deeper integration with the Appwrite API and documentation.
+
+Before you begin, ensure you have the following **pre-requisites** installed on your system:
+
+{% tabs %}
+{% tabsitem #api-server-prerequisites title="API server" %}
+
+[uv](https://docs.astral.sh/uv/getting-started/installation/) must be installed on your system.
+
+{% /tabsitem %}
+
+{% tabsitem #docs-server-prerequisites title="Docs server" %}
+
+[Node.js](https://nodejs.org/en/download) and npm must be installed on your system.
+
+{% /tabsitem %}
+{% /tabs %}
+
+In the Claude Desktop app, open the app's **Settings** page (press `CTRL + ,` on Windows or `CMD + ,` on MacOS) and head to the **Developer** tab.
+
+![Claude Settings](/images/docs/mcp/claude-desktop/claude-settings.avif)
+
+Clicking on the **Edit Config** button will take you to the `claude_desktop_config.json` file. In case the file is missing, please visit the [Model Context Protocol](https://modelcontextprotocol.io/quickstart/user#2-add-the-filesystem-mcp-server) docs.
+
+Choose which MCP server you want to configure:
+
+{% tabs %}
+{% tabsitem #api-only title="API server" %}
+
+Add the API server to your configuration:
+
+```json
+{
+    "mcpServers": {
+        "appwrite-api": {
+            "command": "uvx",
+            "args": [
+                "mcp-server-appwrite"
+            ],
+            "env": {
+                "APPWRITE_PROJECT_ID": "your-project-id",
+                "APPWRITE_API_KEY": "your-api-key",
+                "APPWRITE_ENDPOINT": "https://<REGION>.cloud.appwrite.io/v1"
+            }
+        }
+    }
+}
+```
+
+**Configuration:**
+
+- Replace `your-project-id` with your actual Appwrite project ID
+- Replace `your-api-key` with your Appwrite API key
+- Replace `<REGION>` with your Appwrite Cloud region (e.g., `nyc`, `fra`)
+
+{% /tabsitem %}
+
+{% tabsitem #docs-only title="Docs server" %}
+
+Add the docs server to your configuration:
+
+```json
+{
+  "mcpServers": {
+    "appwrite-docs": {
+      "command": "npx",
+      "args": [
+        "mcp-remote",
+        "https://mcp-for-docs.appwrite.io"
+      ]
+    }
+  }
+}
+```
+
+**Why do we use the `mcp-remote` package?**
+
+Unlike other IDEs, Claude Desktop only supports local (stdio) MCP servers and not remote servers. The `mcp-remote` package acts as a proxy to connect to the docs MCP server.
+
+{% /tabsitem %}
+{% /tabs %}
+
+{% /section %}
+
+{% section #step-3 step=3 title="Verify MCP tools" %}
+
+Restart the Claude Desktop app, click on the MCP tools button (at the bottom right section of the prompt input) and click on it to view available Appwrite MCP tools.
+
+![Appwrite MCP tools](/images/docs/mcp/claude-desktop/claude-mcp-tools.avif)
+
+{% info title="uvx ENOENT error" %}
+
+In case you see a `uvx ENOENT` error, ensure that you either add `uvx` to the `PATH` environment variable on your system or use the full path to your `uvx` installation in the config file.
+
+{% /info %}
+
+{% /section %}
+
+{% section #step-4 step=4 title="Test the integration" %}
+
+Try out the following example prompts based on the MCP server you have configured:
+
+{% tabs %}
+{% tabsitem #test-api title="API server" %}
+
+**Example prompts:**
+
+- `Create a new user in my Appwrite project`
+- `List all databases in my project`
+- `Show me the collections in my database`
+- `Create a new document in my collection`
+- `Delete a specific user by ID`
+
+{% /tabsitem %}
+
+{% tabsitem #test-docs title="Docs server" %}
+
+**Example prompts:**
+
+- `How do I set up real-time subscriptions in Appwrite?`
+- `Show me how to authenticate users with OAuth`
+- `What are the best practices for database queries?`
+- `How do I implement file uploads with Appwrite Storage?`
+- `Show me an example of using Appwrite Functions`
+
+{% /tabsitem %}
+
+{% /tabs %}
+
+![List users in Appwrite project](/images/docs/mcp/claude-desktop/claude-list-users.avif)
+
+{% /section %}

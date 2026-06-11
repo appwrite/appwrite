@@ -16,6 +16,7 @@ import { Route as PricingRouteImport } from './routes/pricing'
 import { Route as PartnersRouteImport } from './routes/partners'
 import { Route as HomeRouteImport } from './routes/home'
 import { Route as EducationRouteImport } from './routes/education'
+import { Route as DocsRouteImport } from './routes/docs'
 import { Route as CookiesRouteImport } from './routes/cookies'
 import { Route as CompanyRouteImport } from './routes/company'
 import { Route as CommunityRouteImport } from './routes/community'
@@ -24,7 +25,11 @@ import { Route as AssetsRouteImport } from './routes/assets'
 import { Route as PublicRouteImport } from './routes/_public'
 import { Route as ProtectedRouteImport } from './routes/_protected'
 import { Route as AuthRouteImport } from './routes/_auth'
+import { Route as DocsIndexRouteImport } from './routes/docs/index'
 import { Route as PublicIndexRouteImport } from './routes/_public/index'
+import { Route as LlmsTxtRouteImport } from './routes/llms.txt'
+import { Route as LlmsFullTxtRouteImport } from './routes/llms-full.txt'
+import { Route as DocsSplatRouteImport } from './routes/docs/$'
 import { Route as PublicUpgradeRouteImport } from './routes/_public/upgrade'
 import { Route as PublicResetRouteImport } from './routes/_public/reset'
 import { Route as PublicInitRouteImport } from './routes/_public/init'
@@ -296,6 +301,11 @@ const EducationRoute = EducationRouteImport.update({
   path: '/education',
   getParentRoute: () => rootRouteImport,
 } as any)
+const DocsRoute = DocsRouteImport.update({
+  id: '/docs',
+  path: '/docs',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const CookiesRoute = CookiesRouteImport.update({
   id: '/cookies',
   path: '/cookies',
@@ -333,10 +343,30 @@ const AuthRoute = AuthRouteImport.update({
   id: '/_auth',
   getParentRoute: () => rootRouteImport,
 } as any)
+const DocsIndexRoute = DocsIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => DocsRoute,
+} as any)
 const PublicIndexRoute = PublicIndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => PublicRoute,
+} as any)
+const LlmsTxtRoute = LlmsTxtRouteImport.update({
+  id: '/llms/txt',
+  path: '/llms/txt',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LlmsFullTxtRoute = LlmsFullTxtRouteImport.update({
+  id: '/llms-full/txt',
+  path: '/llms-full/txt',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DocsSplatRoute = DocsSplatRouteImport.update({
+  id: '/$',
+  path: '/$',
+  getParentRoute: () => DocsRoute,
 } as any)
 const PublicUpgradeRoute = PublicUpgradeRouteImport.update({
   id: '/upgrade',
@@ -1875,6 +1905,7 @@ export interface FileRoutesByFullPath {
   '/community': typeof CommunityRoute
   '/company': typeof CompanyRoute
   '/cookies': typeof CookiesRoute
+  '/docs': typeof DocsRouteWithChildren
   '/education': typeof EducationRoute
   '/home': typeof HomeRoute
   '/partners': typeof PartnersRoute
@@ -1898,7 +1929,11 @@ export interface FileRoutesByFullPath {
   '/init': typeof PublicInitRoute
   '/reset': typeof PublicResetRoute
   '/upgrade': typeof PublicUpgradeRoute
+  '/docs/$': typeof DocsSplatRoute
+  '/llms-full/txt': typeof LlmsFullTxtRoute
+  '/llms/txt': typeof LlmsTxtRoute
   '/': typeof PublicIndexRoute
+  '/docs/': typeof DocsIndexRoute
   '/account/billing-addresses': typeof PublicAccountBillingAddressesRoute
   '/account/payment-methods': typeof PublicAccountPaymentMethodsRoute
   '/account/payments': typeof PublicAccountPaymentsRoute
@@ -2147,7 +2182,11 @@ export interface FileRoutesByTo {
   '/init': typeof PublicInitRoute
   '/reset': typeof PublicResetRoute
   '/upgrade': typeof PublicUpgradeRoute
+  '/docs/$': typeof DocsSplatRoute
+  '/llms-full/txt': typeof LlmsFullTxtRoute
+  '/llms/txt': typeof LlmsTxtRoute
   '/': typeof PublicIndexRoute
+  '/docs': typeof DocsIndexRoute
   '/account/billing-addresses': typeof PublicAccountBillingAddressesRoute
   '/account/payment-methods': typeof PublicAccountPaymentMethodsRoute
   '/account/payments': typeof PublicAccountPaymentsRoute
@@ -2346,6 +2385,7 @@ export interface FileRoutesById {
   '/community': typeof CommunityRoute
   '/company': typeof CompanyRoute
   '/cookies': typeof CookiesRoute
+  '/docs': typeof DocsRouteWithChildren
   '/education': typeof EducationRoute
   '/home': typeof HomeRoute
   '/partners': typeof PartnersRoute
@@ -2369,7 +2409,11 @@ export interface FileRoutesById {
   '/_public/init': typeof PublicInitRoute
   '/_public/reset': typeof PublicResetRoute
   '/_public/upgrade': typeof PublicUpgradeRoute
+  '/docs/$': typeof DocsSplatRoute
+  '/llms-full/txt': typeof LlmsFullTxtRoute
+  '/llms/txt': typeof LlmsTxtRoute
   '/_public/': typeof PublicIndexRoute
+  '/docs/': typeof DocsIndexRoute
   '/_public/account/billing-addresses': typeof PublicAccountBillingAddressesRoute
   '/_public/account/payment-methods': typeof PublicAccountPaymentMethodsRoute
   '/_public/account/payments': typeof PublicAccountPaymentsRoute
@@ -2598,6 +2642,7 @@ export interface FileRouteTypes {
     | '/community'
     | '/company'
     | '/cookies'
+    | '/docs'
     | '/education'
     | '/home'
     | '/partners'
@@ -2621,7 +2666,11 @@ export interface FileRouteTypes {
     | '/init'
     | '/reset'
     | '/upgrade'
+    | '/docs/$'
+    | '/llms-full/txt'
+    | '/llms/txt'
     | '/'
+    | '/docs/'
     | '/account/billing-addresses'
     | '/account/payment-methods'
     | '/account/payments'
@@ -2870,7 +2919,11 @@ export interface FileRouteTypes {
     | '/init'
     | '/reset'
     | '/upgrade'
+    | '/docs/$'
+    | '/llms-full/txt'
+    | '/llms/txt'
     | '/'
+    | '/docs'
     | '/account/billing-addresses'
     | '/account/payment-methods'
     | '/account/payments'
@@ -3068,6 +3121,7 @@ export interface FileRouteTypes {
     | '/community'
     | '/company'
     | '/cookies'
+    | '/docs'
     | '/education'
     | '/home'
     | '/partners'
@@ -3091,7 +3145,11 @@ export interface FileRouteTypes {
     | '/_public/init'
     | '/_public/reset'
     | '/_public/upgrade'
+    | '/docs/$'
+    | '/llms-full/txt'
+    | '/llms/txt'
     | '/_public/'
+    | '/docs/'
     | '/_public/account/billing-addresses'
     | '/_public/account/payment-methods'
     | '/_public/account/payments'
@@ -3322,6 +3380,7 @@ export interface RootRouteChildren {
   CommunityRoute: typeof CommunityRoute
   CompanyRoute: typeof CompanyRoute
   CookiesRoute: typeof CookiesRoute
+  DocsRoute: typeof DocsRouteWithChildren
   EducationRoute: typeof EducationRoute
   HomeRoute: typeof HomeRoute
   PartnersRoute: typeof PartnersRoute
@@ -3330,6 +3389,8 @@ export interface RootRouteChildren {
   StartupsRoute: typeof StartupsRoute
   TermsRoute: typeof TermsRoute
   ApiHelloRoute: typeof ApiHelloRoute
+  LlmsFullTxtRoute: typeof LlmsFullTxtRoute
+  LlmsTxtRoute: typeof LlmsTxtRoute
   ApiInitCalendarEventSlugRoute: typeof ApiInitCalendarEventSlugRoute
   ApiInitTicketEventSlugRoute: typeof ApiInitTicketEventSlugRoute
 }
@@ -3383,6 +3444,13 @@ declare module '@tanstack/react-router' {
       path: '/education'
       fullPath: '/education'
       preLoaderRoute: typeof EducationRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/docs': {
+      id: '/docs'
+      path: '/docs'
+      fullPath: '/docs'
+      preLoaderRoute: typeof DocsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/cookies': {
@@ -3441,12 +3509,40 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/docs/': {
+      id: '/docs/'
+      path: '/'
+      fullPath: '/docs/'
+      preLoaderRoute: typeof DocsIndexRouteImport
+      parentRoute: typeof DocsRoute
+    }
     '/_public/': {
       id: '/_public/'
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof PublicIndexRouteImport
       parentRoute: typeof PublicRoute
+    }
+    '/llms/txt': {
+      id: '/llms/txt'
+      path: '/llms/txt'
+      fullPath: '/llms/txt'
+      preLoaderRoute: typeof LlmsTxtRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/llms-full/txt': {
+      id: '/llms-full/txt'
+      path: '/llms-full/txt'
+      fullPath: '/llms-full/txt'
+      preLoaderRoute: typeof LlmsFullTxtRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/docs/$': {
+      id: '/docs/$'
+      path: '/$'
+      fullPath: '/docs/$'
+      preLoaderRoute: typeof DocsSplatRouteImport
+      parentRoute: typeof DocsRoute
     }
     '/_public/upgrade': {
       id: '/_public/upgrade'
@@ -6284,6 +6380,18 @@ const PublicRouteChildren: PublicRouteChildren = {
 const PublicRouteWithChildren =
   PublicRoute._addFileChildren(PublicRouteChildren)
 
+interface DocsRouteChildren {
+  DocsSplatRoute: typeof DocsSplatRoute
+  DocsIndexRoute: typeof DocsIndexRoute
+}
+
+const DocsRouteChildren: DocsRouteChildren = {
+  DocsSplatRoute: DocsSplatRoute,
+  DocsIndexRoute: DocsIndexRoute,
+}
+
+const DocsRouteWithChildren = DocsRoute._addFileChildren(DocsRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
   AuthRoute: AuthRouteWithChildren,
   ProtectedRoute: ProtectedRouteWithChildren,
@@ -6293,6 +6401,7 @@ const rootRouteChildren: RootRouteChildren = {
   CommunityRoute: CommunityRoute,
   CompanyRoute: CompanyRoute,
   CookiesRoute: CookiesRoute,
+  DocsRoute: DocsRouteWithChildren,
   EducationRoute: EducationRoute,
   HomeRoute: HomeRoute,
   PartnersRoute: PartnersRoute,
@@ -6301,6 +6410,8 @@ const rootRouteChildren: RootRouteChildren = {
   StartupsRoute: StartupsRoute,
   TermsRoute: TermsRoute,
   ApiHelloRoute: ApiHelloRoute,
+  LlmsFullTxtRoute: LlmsFullTxtRoute,
+  LlmsTxtRoute: LlmsTxtRoute,
   ApiInitCalendarEventSlugRoute: ApiInitCalendarEventSlugRoute,
   ApiInitTicketEventSlugRoute: ApiInitTicketEventSlugRoute,
 }

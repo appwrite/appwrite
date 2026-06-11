@@ -1,0 +1,39 @@
+---
+layout: article
+title: Version control
+description: Configure version control integration for Functions and Sites in your self-hosted Appwrite instance.
+---
+
+{% partial file="configure-github-app.md" /%}
+
+## Apply configuration
+
+After creating your GitHub App, restart your Appwrite services to apply the configuration:
+
+```bash
+docker compose up -d
+```
+
+## Verify configuration
+
+To verify that your GitHub App is correctly configured:
+
+1. Open the Appwrite Console and navigate to a project.
+2. Go to either the Functions or Sites section.
+3. Try creating a new Function or Site using GitHub as the source.
+4. You should be prompted to install your GitHub App on your repositories.
+
+## Troubleshooting
+
+If you encounter issues with your GitHub App integration:
+
+- Ensure your Appwrite instance is publicly accessible, as GitHub needs to send webhook events.
+- Check that the webhook URL is correctly formatted with your domain.
+- Verify the permissions granted to the GitHub App are correct.
+- Check the Appwrite logs for any errors related to GitHub integration:
+
+```bash
+docker compose logs appwrite
+```
+
+{% partial file="update-variables.md" /%}

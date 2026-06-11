@@ -1,0 +1,1219 @@
+---
+layout: article
+title: Environment variables
+description: Set environment variables for your Appwrite Sites to pass constants and secrets at build and runtime.
+---
+
+Appwrite Sites can read environment variables at build and runtime. Use them to pass constants and secrets such as API keys, connection strings, and feature flags without hardcoding them in your source.
+
+A site reads from three sources, in this order of precedence:
+
+1. **Project variables** are shared across every function and site in your project. Set them once and every site inherits them automatically. See [project variables](/docs/advanced/platform/environment-variables) for the platform-wide reference.
+2. **Site variables** are scoped to a single site. Override a project variable for one site by setting the same key on the site itself.
+3. **Appwrite-injected variables** are set by Appwrite at deployment time (for example, `APPWRITE_SITE_PROJECT_ID`). These take final precedence and cannot be overridden.
+
+{% info title="Redeployment required" %}
+Variable changes only take effect on the next deployment. Redeploy your site after creating, updating, or deleting variables.
+{% /info %}
+
+# Manage in the Console {% #console %}
+
+1. Navigate to your site in the Appwrite Console.
+2. Open the **Settings** tab > **Environment variables** section.
+3. Click **Create variable** and enter a key and value.
+4. Optionally select the **Secret** checkbox to prevent any team member from reading the value after creation.
+5. Click **Create**, then redeploy the site for the change to take effect.
+
+{% only_dark %}
+![Site environment variables](/images/docs/sites/dark/env-variables.avif)
+{% /only_dark %}
+{% only_light %}
+![Site environment variables](/images/docs/sites/env-variables.avif)
+{% /only_light %}
+
+You can also configure global variables that apply to all your sites from your project's **Settings** page. See [project variables](/docs/advanced/platform/environment-variables) for details.
+
+# Manage with a Server SDK {% #server-sdks %}
+
+You can also manage site variables programmatically using a [Server SDK](/docs/sdks#server). Each call requires an [API key](/docs/advanced/platform/api-keys) with the `sites.write` scope to create, update, or delete variables, or the `sites.read` scope to list and read them.
+
+## Create a variable {% #create-variable %}
+
+{% multicode %}
+```server-nodejs
+import { Client, Sites } from 'node-appwrite';
+
+const client = new Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1') // Your API Endpoint
+    .setProject('<YOUR_PROJECT_ID>') // Your project ID
+    .setKey('<YOUR_API_KEY>'); // Your API key
+
+const sites = new Sites(client);
+
+const result = await sites.createVariable({
+    siteId: '<SITE_ID>',
+    key: '<KEY>',
+    value: '<VALUE>',
+    secret: false // optional
+});
+```
+```server-deno
+import { Client, Sites } from "npm:node-appwrite";
+
+const client = new Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1') // Your API Endpoint
+    .setProject('<YOUR_PROJECT_ID>') // Your project ID
+    .setKey('<YOUR_API_KEY>'); // Your API key
+
+const sites = new Sites(client);
+
+const result = await sites.createVariable({
+    siteId: '<SITE_ID>',
+    key: '<KEY>',
+    value: '<VALUE>',
+    secret: false // optional
+});
+```
+```server-php
+<?php
+
+use Appwrite\Client;
+use Appwrite\Services\Sites;
+
+$client = (new Client())
+    ->setEndpoint('https://<REGION>.cloud.appwrite.io/v1') // Your API Endpoint
+    ->setProject('<YOUR_PROJECT_ID>') // Your project ID
+    ->setKey('<YOUR_API_KEY>'); // Your API key
+
+$sites = new Sites($client);
+
+$result = $sites->createVariable(
+    siteId: '<SITE_ID>',
+    key: '<KEY>',
+    value: '<VALUE>',
+    secret: false // optional
+);
+```
+```server-python
+from appwrite.client import Client
+from appwrite.services.sites import Sites
+from appwrite.models import Variable
+
+client = Client()
+client.set_endpoint('https://<REGION>.cloud.appwrite.io/v1') # Your API Endpoint
+client.set_project('<YOUR_PROJECT_ID>') # Your project ID
+client.set_key('<YOUR_API_KEY>') # Your API key
+
+sites = Sites(client)
+
+result: Variable = sites.create_variable(
+    site_id = '<SITE_ID>',
+    key = '<KEY>',
+    value = '<VALUE>',
+    secret = False # optional
+)
+
+print(result.model_dump())
+```
+```server-ruby
+require 'appwrite'
+
+include Appwrite
+
+client = Client.new
+    .set_endpoint('https://<REGION>.cloud.appwrite.io/v1') # Your API Endpoint
+    .set_project('<YOUR_PROJECT_ID>') # Your project ID
+    .set_key('<YOUR_API_KEY>') # Your API key
+
+sites = Sites.new(client)
+
+result = sites.create_variable(
+    site_id: '<SITE_ID>',
+    key: '<KEY>',
+    value: '<VALUE>',
+    secret: false # optional
+)
+```
+```server-dotnet
+using Appwrite;
+using Appwrite.Models;
+using Appwrite.Services;
+
+Client client = new Client()
+    .SetEndPoint("https://<REGION>.cloud.appwrite.io/v1") // Your API Endpoint
+    .SetProject("<YOUR_PROJECT_ID>") // Your project ID
+    .SetKey("<YOUR_API_KEY>"); // Your API key
+
+Sites sites = new Sites(client);
+
+Variable result = await sites.CreateVariable(
+    siteId: "<SITE_ID>",
+    key: "<KEY>",
+    value: "<VALUE>",
+    secret: false // optional
+);
+```
+```server-dart
+import 'package:dart_appwrite/dart_appwrite.dart';
+
+Client client = Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1') // Your API Endpoint
+    .setProject('<YOUR_PROJECT_ID>') // Your project ID
+    .setKey('<YOUR_API_KEY>'); // Your API key
+
+Sites sites = Sites(client);
+
+Variable result = await sites.createVariable(
+    siteId: '<SITE_ID>',
+    key: '<KEY>',
+    value: '<VALUE>',
+    secret: false, // (optional)
+);
+```
+```server-kotlin
+import io.appwrite.Client
+import io.appwrite.coroutines.CoroutineCallback
+import io.appwrite.services.Sites
+
+val client = Client()
+    .setEndpoint("https://<REGION>.cloud.appwrite.io/v1") // Your API Endpoint
+    .setProject("<YOUR_PROJECT_ID>") // Your project ID
+    .setKey("<YOUR_API_KEY>") // Your API key
+
+val sites = Sites(client)
+
+val response = sites.createVariable(
+    siteId = "<SITE_ID>",
+    key = "<KEY>",
+    value = "<VALUE>",
+    secret = false // optional
+)
+```
+```server-java
+import io.appwrite.Client;
+import io.appwrite.coroutines.CoroutineCallback;
+import io.appwrite.services.Sites;
+
+Client client = new Client()
+    .setEndpoint("https://<REGION>.cloud.appwrite.io/v1") // Your API Endpoint
+    .setProject("<YOUR_PROJECT_ID>") // Your project ID
+    .setKey("<YOUR_API_KEY>"); // Your API key
+
+Sites sites = new Sites(client);
+
+sites.createVariable(
+    "<SITE_ID>", // siteId
+    "<KEY>", // key
+    "<VALUE>", // value
+    false, // secret (optional)
+    new CoroutineCallback<>((result, error) -> {
+        if (error != null) {
+            error.printStackTrace();
+            return;
+        }
+
+        System.out.println(result);
+    })
+);
+```
+```server-swift
+import Appwrite
+
+let client = Client()
+    .setEndpoint("https://<REGION>.cloud.appwrite.io/v1") // Your API Endpoint
+    .setProject("<YOUR_PROJECT_ID>") // Your project ID
+    .setKey("<YOUR_API_KEY>") // Your API key
+
+let sites = Sites(client)
+
+let variable = try await sites.createVariable(
+    siteId: "<SITE_ID>",
+    key: "<KEY>",
+    value: "<VALUE>",
+    secret: false // optional
+)
+```
+```server-go
+package main
+
+import (
+    "fmt"
+    "github.com/appwrite/sdk-for-go/appwrite"
+)
+
+client := appwrite.NewClient(
+    appwrite.WithEndpoint("https://<REGION>.cloud.appwrite.io/v1"),
+    appwrite.WithProject("<YOUR_PROJECT_ID>"),
+    appwrite.WithKey("<YOUR_API_KEY>"),
+)
+
+sites := appwrite.NewSites(client)
+
+response, error := sites.CreateVariable(
+    "<SITE_ID>",
+    "<KEY>",
+    "<VALUE>",
+    appwrite.WithCreateVariableSecret(false),
+)
+```
+```server-rust
+use appwrite::Client;
+use appwrite::services::Sites;
+
+#[tokio::main]
+async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    let client = Client::new();
+    client.set_endpoint("https://<REGION>.cloud.appwrite.io/v1"); // Your API Endpoint
+    client.set_project("<YOUR_PROJECT_ID>"); // Your project ID
+    client.set_key("<YOUR_API_KEY>"); // Your API key
+
+    let sites = Sites::new(&client);
+
+    let result = sites.create_variable(
+        "<SITE_ID>",
+        "<KEY>",
+        "<VALUE>",
+        Some(false) // optional
+    ).await?;
+
+    let _ = result;
+
+    Ok(())
+}
+```
+{% /multicode %}
+
+## List variables {% #list-variables %}
+
+{% multicode %}
+```server-nodejs
+import { Client, Sites } from 'node-appwrite';
+
+const client = new Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1') // Your API Endpoint
+    .setProject('<YOUR_PROJECT_ID>') // Your project ID
+    .setKey('<YOUR_API_KEY>'); // Your API key
+
+const sites = new Sites(client);
+
+const result = await sites.listVariables({
+    siteId: '<SITE_ID>'
+});
+```
+```server-deno
+import { Client, Sites } from "npm:node-appwrite";
+
+const client = new Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1') // Your API Endpoint
+    .setProject('<YOUR_PROJECT_ID>') // Your project ID
+    .setKey('<YOUR_API_KEY>'); // Your API key
+
+const sites = new Sites(client);
+
+const result = await sites.listVariables({
+    siteId: '<SITE_ID>'
+});
+```
+```server-php
+<?php
+
+use Appwrite\Client;
+use Appwrite\Services\Sites;
+
+$client = (new Client())
+    ->setEndpoint('https://<REGION>.cloud.appwrite.io/v1') // Your API Endpoint
+    ->setProject('<YOUR_PROJECT_ID>') // Your project ID
+    ->setKey('<YOUR_API_KEY>'); // Your API key
+
+$sites = new Sites($client);
+
+$result = $sites->listVariables(
+    siteId: '<SITE_ID>'
+);
+```
+```server-python
+from appwrite.client import Client
+from appwrite.services.sites import Sites
+from appwrite.models import VariableList
+
+client = Client()
+client.set_endpoint('https://<REGION>.cloud.appwrite.io/v1') # Your API Endpoint
+client.set_project('<YOUR_PROJECT_ID>') # Your project ID
+client.set_key('<YOUR_API_KEY>') # Your API key
+
+sites = Sites(client)
+
+result: VariableList = sites.list_variables(
+    site_id = '<SITE_ID>'
+)
+
+print(result.model_dump())
+```
+```server-ruby
+require 'appwrite'
+
+include Appwrite
+
+client = Client.new
+    .set_endpoint('https://<REGION>.cloud.appwrite.io/v1') # Your API Endpoint
+    .set_project('<YOUR_PROJECT_ID>') # Your project ID
+    .set_key('<YOUR_API_KEY>') # Your API key
+
+sites = Sites.new(client)
+
+result = sites.list_variables(
+    site_id: '<SITE_ID>'
+)
+```
+```server-dotnet
+using Appwrite;
+using Appwrite.Models;
+using Appwrite.Services;
+
+Client client = new Client()
+    .SetEndPoint("https://<REGION>.cloud.appwrite.io/v1") // Your API Endpoint
+    .SetProject("<YOUR_PROJECT_ID>") // Your project ID
+    .SetKey("<YOUR_API_KEY>"); // Your API key
+
+Sites sites = new Sites(client);
+
+VariableList result = await sites.ListVariables(
+    siteId: "<SITE_ID>"
+);
+```
+```server-dart
+import 'package:dart_appwrite/dart_appwrite.dart';
+
+Client client = Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1') // Your API Endpoint
+    .setProject('<YOUR_PROJECT_ID>') // Your project ID
+    .setKey('<YOUR_API_KEY>'); // Your API key
+
+Sites sites = Sites(client);
+
+VariableList result = await sites.listVariables(
+    siteId: '<SITE_ID>',
+);
+```
+```server-kotlin
+import io.appwrite.Client
+import io.appwrite.coroutines.CoroutineCallback
+import io.appwrite.services.Sites
+
+val client = Client()
+    .setEndpoint("https://<REGION>.cloud.appwrite.io/v1") // Your API Endpoint
+    .setProject("<YOUR_PROJECT_ID>") // Your project ID
+    .setKey("<YOUR_API_KEY>") // Your API key
+
+val sites = Sites(client)
+
+val response = sites.listVariables(
+    siteId = "<SITE_ID>"
+)
+```
+```server-java
+import io.appwrite.Client;
+import io.appwrite.coroutines.CoroutineCallback;
+import io.appwrite.services.Sites;
+
+Client client = new Client()
+    .setEndpoint("https://<REGION>.cloud.appwrite.io/v1") // Your API Endpoint
+    .setProject("<YOUR_PROJECT_ID>") // Your project ID
+    .setKey("<YOUR_API_KEY>"); // Your API key
+
+Sites sites = new Sites(client);
+
+sites.listVariables(
+    "<SITE_ID>", // siteId
+    new CoroutineCallback<>((result, error) -> {
+        if (error != null) {
+            error.printStackTrace();
+            return;
+        }
+
+        System.out.println(result);
+    })
+);
+```
+```server-swift
+import Appwrite
+
+let client = Client()
+    .setEndpoint("https://<REGION>.cloud.appwrite.io/v1") // Your API Endpoint
+    .setProject("<YOUR_PROJECT_ID>") // Your project ID
+    .setKey("<YOUR_API_KEY>") // Your API key
+
+let sites = Sites(client)
+
+let variableList = try await sites.listVariables(
+    siteId: "<SITE_ID>"
+)
+```
+```server-go
+package main
+
+import (
+    "fmt"
+    "github.com/appwrite/sdk-for-go/appwrite"
+)
+
+client := appwrite.NewClient(
+    appwrite.WithEndpoint("https://<REGION>.cloud.appwrite.io/v1"),
+    appwrite.WithProject("<YOUR_PROJECT_ID>"),
+    appwrite.WithKey("<YOUR_API_KEY>"),
+)
+
+sites := appwrite.NewSites(client)
+
+response, error := sites.ListVariables(
+    "<SITE_ID>",
+)
+```
+```server-rust
+use appwrite::Client;
+use appwrite::services::Sites;
+
+#[tokio::main]
+async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    let client = Client::new();
+    client.set_endpoint("https://<REGION>.cloud.appwrite.io/v1"); // Your API Endpoint
+    client.set_project("<YOUR_PROJECT_ID>"); // Your project ID
+    client.set_key("<YOUR_API_KEY>"); // Your API key
+
+    let sites = Sites::new(&client);
+
+    let result = sites.list_variables(
+        "<SITE_ID>"
+    ).await?;
+
+    let _ = result;
+
+    Ok(())
+}
+```
+{% /multicode %}
+
+## Get a variable {% #get-variable %}
+
+{% multicode %}
+```server-nodejs
+import { Client, Sites } from 'node-appwrite';
+
+const client = new Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1') // Your API Endpoint
+    .setProject('<YOUR_PROJECT_ID>') // Your project ID
+    .setKey('<YOUR_API_KEY>'); // Your API key
+
+const sites = new Sites(client);
+
+const result = await sites.getVariable({
+    siteId: '<SITE_ID>',
+    variableId: '<VARIABLE_ID>'
+});
+```
+```server-deno
+import { Client, Sites } from "npm:node-appwrite";
+
+const client = new Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1') // Your API Endpoint
+    .setProject('<YOUR_PROJECT_ID>') // Your project ID
+    .setKey('<YOUR_API_KEY>'); // Your API key
+
+const sites = new Sites(client);
+
+const result = await sites.getVariable({
+    siteId: '<SITE_ID>',
+    variableId: '<VARIABLE_ID>'
+});
+```
+```server-php
+<?php
+
+use Appwrite\Client;
+use Appwrite\Services\Sites;
+
+$client = (new Client())
+    ->setEndpoint('https://<REGION>.cloud.appwrite.io/v1') // Your API Endpoint
+    ->setProject('<YOUR_PROJECT_ID>') // Your project ID
+    ->setKey('<YOUR_API_KEY>'); // Your API key
+
+$sites = new Sites($client);
+
+$result = $sites->getVariable(
+    siteId: '<SITE_ID>',
+    variableId: '<VARIABLE_ID>'
+);
+```
+```server-python
+from appwrite.client import Client
+from appwrite.services.sites import Sites
+from appwrite.models import Variable
+
+client = Client()
+client.set_endpoint('https://<REGION>.cloud.appwrite.io/v1') # Your API Endpoint
+client.set_project('<YOUR_PROJECT_ID>') # Your project ID
+client.set_key('<YOUR_API_KEY>') # Your API key
+
+sites = Sites(client)
+
+result: Variable = sites.get_variable(
+    site_id = '<SITE_ID>',
+    variable_id = '<VARIABLE_ID>'
+)
+
+print(result.model_dump())
+```
+```server-ruby
+require 'appwrite'
+
+include Appwrite
+
+client = Client.new
+    .set_endpoint('https://<REGION>.cloud.appwrite.io/v1') # Your API Endpoint
+    .set_project('<YOUR_PROJECT_ID>') # Your project ID
+    .set_key('<YOUR_API_KEY>') # Your API key
+
+sites = Sites.new(client)
+
+result = sites.get_variable(
+    site_id: '<SITE_ID>',
+    variable_id: '<VARIABLE_ID>'
+)
+```
+```server-dotnet
+using Appwrite;
+using Appwrite.Models;
+using Appwrite.Services;
+
+Client client = new Client()
+    .SetEndPoint("https://<REGION>.cloud.appwrite.io/v1") // Your API Endpoint
+    .SetProject("<YOUR_PROJECT_ID>") // Your project ID
+    .SetKey("<YOUR_API_KEY>"); // Your API key
+
+Sites sites = new Sites(client);
+
+Variable result = await sites.GetVariable(
+    siteId: "<SITE_ID>",
+    variableId: "<VARIABLE_ID>"
+);
+```
+```server-dart
+import 'package:dart_appwrite/dart_appwrite.dart';
+
+Client client = Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1') // Your API Endpoint
+    .setProject('<YOUR_PROJECT_ID>') // Your project ID
+    .setKey('<YOUR_API_KEY>'); // Your API key
+
+Sites sites = Sites(client);
+
+Variable result = await sites.getVariable(
+    siteId: '<SITE_ID>',
+    variableId: '<VARIABLE_ID>',
+);
+```
+```server-kotlin
+import io.appwrite.Client
+import io.appwrite.coroutines.CoroutineCallback
+import io.appwrite.services.Sites
+
+val client = Client()
+    .setEndpoint("https://<REGION>.cloud.appwrite.io/v1") // Your API Endpoint
+    .setProject("<YOUR_PROJECT_ID>") // Your project ID
+    .setKey("<YOUR_API_KEY>") // Your API key
+
+val sites = Sites(client)
+
+val response = sites.getVariable(
+    siteId = "<SITE_ID>",
+    variableId = "<VARIABLE_ID>"
+)
+```
+```server-java
+import io.appwrite.Client;
+import io.appwrite.coroutines.CoroutineCallback;
+import io.appwrite.services.Sites;
+
+Client client = new Client()
+    .setEndpoint("https://<REGION>.cloud.appwrite.io/v1") // Your API Endpoint
+    .setProject("<YOUR_PROJECT_ID>") // Your project ID
+    .setKey("<YOUR_API_KEY>"); // Your API key
+
+Sites sites = new Sites(client);
+
+sites.getVariable(
+    "<SITE_ID>", // siteId
+    "<VARIABLE_ID>", // variableId
+    new CoroutineCallback<>((result, error) -> {
+        if (error != null) {
+            error.printStackTrace();
+            return;
+        }
+
+        System.out.println(result);
+    })
+);
+```
+```server-swift
+import Appwrite
+
+let client = Client()
+    .setEndpoint("https://<REGION>.cloud.appwrite.io/v1") // Your API Endpoint
+    .setProject("<YOUR_PROJECT_ID>") // Your project ID
+    .setKey("<YOUR_API_KEY>") // Your API key
+
+let sites = Sites(client)
+
+let variable = try await sites.getVariable(
+    siteId: "<SITE_ID>",
+    variableId: "<VARIABLE_ID>"
+)
+```
+```server-go
+package main
+
+import (
+    "fmt"
+    "github.com/appwrite/sdk-for-go/appwrite"
+)
+
+client := appwrite.NewClient(
+    appwrite.WithEndpoint("https://<REGION>.cloud.appwrite.io/v1"),
+    appwrite.WithProject("<YOUR_PROJECT_ID>"),
+    appwrite.WithKey("<YOUR_API_KEY>"),
+)
+
+sites := appwrite.NewSites(client)
+
+response, error := sites.GetVariable(
+    "<SITE_ID>",
+    "<VARIABLE_ID>",
+)
+```
+```server-rust
+use appwrite::Client;
+use appwrite::services::Sites;
+
+#[tokio::main]
+async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    let client = Client::new();
+    client.set_endpoint("https://<REGION>.cloud.appwrite.io/v1"); // Your API Endpoint
+    client.set_project("<YOUR_PROJECT_ID>"); // Your project ID
+    client.set_key("<YOUR_API_KEY>"); // Your API key
+
+    let sites = Sites::new(&client);
+
+    let result = sites.get_variable(
+        "<SITE_ID>",
+        "<VARIABLE_ID>"
+    ).await?;
+
+    let _ = result;
+
+    Ok(())
+}
+```
+{% /multicode %}
+
+## Update a variable {% #update-variable %}
+
+You can change a variable's `key`, `value`, or `secret` flag. Marking a variable as secret is one-way. Once set, the value is no longer readable from the Console or API.
+
+{% multicode %}
+```server-nodejs
+import { Client, Sites } from 'node-appwrite';
+
+const client = new Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1') // Your API Endpoint
+    .setProject('<YOUR_PROJECT_ID>') // Your project ID
+    .setKey('<YOUR_API_KEY>'); // Your API key
+
+const sites = new Sites(client);
+
+const result = await sites.updateVariable({
+    siteId: '<SITE_ID>',
+    variableId: '<VARIABLE_ID>',
+    key: '<KEY>',
+    value: '<VALUE>', // optional
+    secret: false // optional
+});
+```
+```server-deno
+import { Client, Sites } from "npm:node-appwrite";
+
+const client = new Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1') // Your API Endpoint
+    .setProject('<YOUR_PROJECT_ID>') // Your project ID
+    .setKey('<YOUR_API_KEY>'); // Your API key
+
+const sites = new Sites(client);
+
+const result = await sites.updateVariable({
+    siteId: '<SITE_ID>',
+    variableId: '<VARIABLE_ID>',
+    key: '<KEY>',
+    value: '<VALUE>', // optional
+    secret: false // optional
+});
+```
+```server-php
+<?php
+
+use Appwrite\Client;
+use Appwrite\Services\Sites;
+
+$client = (new Client())
+    ->setEndpoint('https://<REGION>.cloud.appwrite.io/v1') // Your API Endpoint
+    ->setProject('<YOUR_PROJECT_ID>') // Your project ID
+    ->setKey('<YOUR_API_KEY>'); // Your API key
+
+$sites = new Sites($client);
+
+$result = $sites->updateVariable(
+    siteId: '<SITE_ID>',
+    variableId: '<VARIABLE_ID>',
+    key: '<KEY>',
+    value: '<VALUE>', // optional
+    secret: false // optional
+);
+```
+```server-python
+from appwrite.client import Client
+from appwrite.services.sites import Sites
+from appwrite.models import Variable
+
+client = Client()
+client.set_endpoint('https://<REGION>.cloud.appwrite.io/v1') # Your API Endpoint
+client.set_project('<YOUR_PROJECT_ID>') # Your project ID
+client.set_key('<YOUR_API_KEY>') # Your API key
+
+sites = Sites(client)
+
+result: Variable = sites.update_variable(
+    site_id = '<SITE_ID>',
+    variable_id = '<VARIABLE_ID>',
+    key = '<KEY>',
+    value = '<VALUE>', # optional
+    secret = False # optional
+)
+
+print(result.model_dump())
+```
+```server-ruby
+require 'appwrite'
+
+include Appwrite
+
+client = Client.new
+    .set_endpoint('https://<REGION>.cloud.appwrite.io/v1') # Your API Endpoint
+    .set_project('<YOUR_PROJECT_ID>') # Your project ID
+    .set_key('<YOUR_API_KEY>') # Your API key
+
+sites = Sites.new(client)
+
+result = sites.update_variable(
+    site_id: '<SITE_ID>',
+    variable_id: '<VARIABLE_ID>',
+    key: '<KEY>',
+    value: '<VALUE>', # optional
+    secret: false # optional
+)
+```
+```server-dotnet
+using Appwrite;
+using Appwrite.Models;
+using Appwrite.Services;
+
+Client client = new Client()
+    .SetEndPoint("https://<REGION>.cloud.appwrite.io/v1") // Your API Endpoint
+    .SetProject("<YOUR_PROJECT_ID>") // Your project ID
+    .SetKey("<YOUR_API_KEY>"); // Your API key
+
+Sites sites = new Sites(client);
+
+Variable result = await sites.UpdateVariable(
+    siteId: "<SITE_ID>",
+    variableId: "<VARIABLE_ID>",
+    key: "<KEY>",
+    value: "<VALUE>", // optional
+    secret: false // optional
+);
+```
+```server-dart
+import 'package:dart_appwrite/dart_appwrite.dart';
+
+Client client = Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1') // Your API Endpoint
+    .setProject('<YOUR_PROJECT_ID>') // Your project ID
+    .setKey('<YOUR_API_KEY>'); // Your API key
+
+Sites sites = Sites(client);
+
+Variable result = await sites.updateVariable(
+    siteId: '<SITE_ID>',
+    variableId: '<VARIABLE_ID>',
+    key: '<KEY>',
+    value: '<VALUE>', // (optional)
+    secret: false, // (optional)
+);
+```
+```server-kotlin
+import io.appwrite.Client
+import io.appwrite.coroutines.CoroutineCallback
+import io.appwrite.services.Sites
+
+val client = Client()
+    .setEndpoint("https://<REGION>.cloud.appwrite.io/v1") // Your API Endpoint
+    .setProject("<YOUR_PROJECT_ID>") // Your project ID
+    .setKey("<YOUR_API_KEY>") // Your API key
+
+val sites = Sites(client)
+
+val response = sites.updateVariable(
+    siteId = "<SITE_ID>",
+    variableId = "<VARIABLE_ID>",
+    key = "<KEY>",
+    value = "<VALUE>", // optional
+    secret = false // optional
+)
+```
+```server-java
+import io.appwrite.Client;
+import io.appwrite.coroutines.CoroutineCallback;
+import io.appwrite.services.Sites;
+
+Client client = new Client()
+    .setEndpoint("https://<REGION>.cloud.appwrite.io/v1") // Your API Endpoint
+    .setProject("<YOUR_PROJECT_ID>") // Your project ID
+    .setKey("<YOUR_API_KEY>"); // Your API key
+
+Sites sites = new Sites(client);
+
+sites.updateVariable(
+    "<SITE_ID>", // siteId
+    "<VARIABLE_ID>", // variableId
+    "<KEY>", // key
+    "<VALUE>", // value (optional)
+    false, // secret (optional)
+    new CoroutineCallback<>((result, error) -> {
+        if (error != null) {
+            error.printStackTrace();
+            return;
+        }
+
+        System.out.println(result);
+    })
+);
+```
+```server-swift
+import Appwrite
+
+let client = Client()
+    .setEndpoint("https://<REGION>.cloud.appwrite.io/v1") // Your API Endpoint
+    .setProject("<YOUR_PROJECT_ID>") // Your project ID
+    .setKey("<YOUR_API_KEY>") // Your API key
+
+let sites = Sites(client)
+
+let variable = try await sites.updateVariable(
+    siteId: "<SITE_ID>",
+    variableId: "<VARIABLE_ID>",
+    key: "<KEY>",
+    value: "<VALUE>", // optional
+    secret: false // optional
+)
+```
+```server-go
+package main
+
+import (
+    "fmt"
+    "github.com/appwrite/sdk-for-go/appwrite"
+)
+
+client := appwrite.NewClient(
+    appwrite.WithEndpoint("https://<REGION>.cloud.appwrite.io/v1"),
+    appwrite.WithProject("<YOUR_PROJECT_ID>"),
+    appwrite.WithKey("<YOUR_API_KEY>"),
+)
+
+sites := appwrite.NewSites(client)
+
+response, error := sites.UpdateVariable(
+    "<SITE_ID>",
+    "<VARIABLE_ID>",
+    "<KEY>",
+    appwrite.WithUpdateVariableValue("<VALUE>"),
+    appwrite.WithUpdateVariableSecret(false),
+)
+```
+```server-rust
+use appwrite::Client;
+use appwrite::services::Sites;
+
+#[tokio::main]
+async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    let client = Client::new();
+    client.set_endpoint("https://<REGION>.cloud.appwrite.io/v1"); // Your API Endpoint
+    client.set_project("<YOUR_PROJECT_ID>"); // Your project ID
+    client.set_key("<YOUR_API_KEY>"); // Your API key
+
+    let sites = Sites::new(&client);
+
+    let result = sites.update_variable(
+        "<SITE_ID>",
+        "<VARIABLE_ID>",
+        "<KEY>",
+        Some("<VALUE>"), // optional
+        Some(false) // optional
+    ).await?;
+
+    let _ = result;
+
+    Ok(())
+}
+```
+{% /multicode %}
+
+## Delete a variable {% #delete-variable %}
+
+{% multicode %}
+```server-nodejs
+import { Client, Sites } from 'node-appwrite';
+
+const client = new Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1') // Your API Endpoint
+    .setProject('<YOUR_PROJECT_ID>') // Your project ID
+    .setKey('<YOUR_API_KEY>'); // Your API key
+
+const sites = new Sites(client);
+
+const result = await sites.deleteVariable({
+    siteId: '<SITE_ID>',
+    variableId: '<VARIABLE_ID>'
+});
+```
+```server-deno
+import { Client, Sites } from "npm:node-appwrite";
+
+const client = new Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1') // Your API Endpoint
+    .setProject('<YOUR_PROJECT_ID>') // Your project ID
+    .setKey('<YOUR_API_KEY>'); // Your API key
+
+const sites = new Sites(client);
+
+const result = await sites.deleteVariable({
+    siteId: '<SITE_ID>',
+    variableId: '<VARIABLE_ID>'
+});
+```
+```server-php
+<?php
+
+use Appwrite\Client;
+use Appwrite\Services\Sites;
+
+$client = (new Client())
+    ->setEndpoint('https://<REGION>.cloud.appwrite.io/v1') // Your API Endpoint
+    ->setProject('<YOUR_PROJECT_ID>') // Your project ID
+    ->setKey('<YOUR_API_KEY>'); // Your API key
+
+$sites = new Sites($client);
+
+$result = $sites->deleteVariable(
+    siteId: '<SITE_ID>',
+    variableId: '<VARIABLE_ID>'
+);
+```
+```server-python
+from appwrite.client import Client
+from appwrite.services.sites import Sites
+
+client = Client()
+client.set_endpoint('https://<REGION>.cloud.appwrite.io/v1') # Your API Endpoint
+client.set_project('<YOUR_PROJECT_ID>') # Your project ID
+client.set_key('<YOUR_API_KEY>') # Your API key
+
+sites = Sites(client)
+
+result = sites.delete_variable(
+    site_id = '<SITE_ID>',
+    variable_id = '<VARIABLE_ID>'
+)
+```
+```server-ruby
+require 'appwrite'
+
+include Appwrite
+
+client = Client.new
+    .set_endpoint('https://<REGION>.cloud.appwrite.io/v1') # Your API Endpoint
+    .set_project('<YOUR_PROJECT_ID>') # Your project ID
+    .set_key('<YOUR_API_KEY>') # Your API key
+
+sites = Sites.new(client)
+
+result = sites.delete_variable(
+    site_id: '<SITE_ID>',
+    variable_id: '<VARIABLE_ID>'
+)
+```
+```server-dotnet
+using Appwrite;
+using Appwrite.Models;
+using Appwrite.Services;
+
+Client client = new Client()
+    .SetEndPoint("https://<REGION>.cloud.appwrite.io/v1") // Your API Endpoint
+    .SetProject("<YOUR_PROJECT_ID>") // Your project ID
+    .SetKey("<YOUR_API_KEY>"); // Your API key
+
+Sites sites = new Sites(client);
+
+await sites.DeleteVariable(
+    siteId: "<SITE_ID>",
+    variableId: "<VARIABLE_ID>"
+);
+```
+```server-dart
+import 'package:dart_appwrite/dart_appwrite.dart';
+
+Client client = Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1') // Your API Endpoint
+    .setProject('<YOUR_PROJECT_ID>') // Your project ID
+    .setKey('<YOUR_API_KEY>'); // Your API key
+
+Sites sites = Sites(client);
+
+await sites.deleteVariable(
+    siteId: '<SITE_ID>',
+    variableId: '<VARIABLE_ID>',
+);
+```
+```server-kotlin
+import io.appwrite.Client
+import io.appwrite.coroutines.CoroutineCallback
+import io.appwrite.services.Sites
+
+val client = Client()
+    .setEndpoint("https://<REGION>.cloud.appwrite.io/v1") // Your API Endpoint
+    .setProject("<YOUR_PROJECT_ID>") // Your project ID
+    .setKey("<YOUR_API_KEY>") // Your API key
+
+val sites = Sites(client)
+
+val response = sites.deleteVariable(
+    siteId = "<SITE_ID>",
+    variableId = "<VARIABLE_ID>"
+)
+```
+```server-java
+import io.appwrite.Client;
+import io.appwrite.coroutines.CoroutineCallback;
+import io.appwrite.services.Sites;
+
+Client client = new Client()
+    .setEndpoint("https://<REGION>.cloud.appwrite.io/v1") // Your API Endpoint
+    .setProject("<YOUR_PROJECT_ID>") // Your project ID
+    .setKey("<YOUR_API_KEY>"); // Your API key
+
+Sites sites = new Sites(client);
+
+sites.deleteVariable(
+    "<SITE_ID>", // siteId
+    "<VARIABLE_ID>", // variableId
+    new CoroutineCallback<>((result, error) -> {
+        if (error != null) {
+            error.printStackTrace();
+            return;
+        }
+
+        System.out.println(result);
+    })
+);
+```
+```server-swift
+import Appwrite
+
+let client = Client()
+    .setEndpoint("https://<REGION>.cloud.appwrite.io/v1") // Your API Endpoint
+    .setProject("<YOUR_PROJECT_ID>") // Your project ID
+    .setKey("<YOUR_API_KEY>") // Your API key
+
+let sites = Sites(client)
+
+let result = try await sites.deleteVariable(
+    siteId: "<SITE_ID>",
+    variableId: "<VARIABLE_ID>"
+)
+```
+```server-go
+package main
+
+import (
+    "fmt"
+    "github.com/appwrite/sdk-for-go/appwrite"
+)
+
+client := appwrite.NewClient(
+    appwrite.WithEndpoint("https://<REGION>.cloud.appwrite.io/v1"),
+    appwrite.WithProject("<YOUR_PROJECT_ID>"),
+    appwrite.WithKey("<YOUR_API_KEY>"),
+)
+
+sites := appwrite.NewSites(client)
+
+response, error := sites.DeleteVariable(
+    "<SITE_ID>",
+    "<VARIABLE_ID>",
+)
+```
+```server-rust
+use appwrite::Client;
+use appwrite::services::Sites;
+
+#[tokio::main]
+async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    let client = Client::new();
+    client.set_endpoint("https://<REGION>.cloud.appwrite.io/v1"); // Your API Endpoint
+    client.set_project("<YOUR_PROJECT_ID>"); // Your project ID
+    client.set_key("<YOUR_API_KEY>"); // Your API key
+
+    let sites = Sites::new(&client);
+
+    sites.delete_variable(
+        "<SITE_ID>",
+        "<VARIABLE_ID>"
+    ).await?;
+
+    Ok(())
+}
+```
+{% /multicode %}
+
+# Read variables in your site {% #read-variables %}
+
+Read variables inside your site using your framework's standard environment lookup. For SSR sites, variables are read at runtime; for static sites, variables marked for build are inlined at build time.
+
+For framework-specific guidance such as Next.js, SvelteKit, or Astro, see the [framework adapters](/docs/products/sites/frameworks).
+
+# Appwrite-injected variables {% #appwrite-variables %}
+
+Appwrite passes the following environment variables into every site deployment by default. They take precedence over your own variables, so do not set keys with the `APPWRITE_` prefix.
+
+{% partial file="sites-env-vars.md" /%}
+
+# Secret variables {% #secret-variables %}
+
+Mark a variable as **Secret** to hide its value from the Console and API after creation. Only the site runtime can read the value at build and runtime. Team members and external integrations cannot retrieve it after creation.
+
+You can mark a variable as secret either when you create it or by updating an existing variable. Marking a variable as secret cannot be reversed. To replace a secret value, delete the variable and create a new one with the same key.
+
+# Limits {% #limits %}
+
+| Field          | Limit                                          |
+|----------------|------------------------------------------------|
+| Variable ID    | 36 characters, `a-z A-Z 0-9 . - _`             |
+| Key            | 255 characters                                 |
+| Value          | 8192 characters                                |

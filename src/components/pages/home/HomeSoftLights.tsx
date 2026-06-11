@@ -39,6 +39,23 @@ const variants = {
       'lg:-right-[46%] lg:h-[1060px] lg:w-[1880px]',
     ),
   },
+  /** Docs hero: pink wash below, brand mint green (#85DBD8) at the top instead of purple. */
+  docs: {
+    left: cn(
+      'absolute -left-[42%] bottom-[-32%] h-[480px] w-[820px]',
+      'bg-[radial-gradient(ellipse_at_center,rgba(253,54,110,0.2)_0%,rgba(253,54,110,0.07)_38%,transparent_72%)]',
+      'dark:bg-[radial-gradient(ellipse_at_center,rgba(253,54,110,0.12)_0%,rgba(253,54,110,0.04)_38%,transparent_72%)]',
+      'sm:-left-[38%] sm:h-[560px] sm:w-[980px]',
+      'lg:-left-[36%] lg:h-[640px] lg:w-[1120px]',
+    ),
+    right: cn(
+      'absolute -right-[40%] top-[-28%] h-[500px] w-[840px]',
+      'bg-[radial-gradient(ellipse_at_center,rgba(133,219,216,0.17)_0%,rgba(133,219,216,0.06)_40%,transparent_74%)]',
+      'dark:bg-[radial-gradient(ellipse_at_center,rgba(133,219,216,0.11)_0%,rgba(133,219,216,0.04)_40%,transparent_74%)]',
+      'sm:-right-[36%] sm:top-[-30%] sm:h-[580px] sm:w-[1000px]',
+      'lg:-right-[34%] lg:top-[-32%] lg:h-[660px] lg:w-[1140px]',
+    ),
+  },
   testimonials: {
     left: cn(
       'absolute -left-[44%] bottom-[-34%] h-[500px] w-[860px]',

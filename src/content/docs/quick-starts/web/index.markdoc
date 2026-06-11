@@ -1,0 +1,213 @@
+---
+layout: article
+title: Start with Web
+description: Build JavaScript or Typescript web apps with Appwrite. Add authentication, user management, file storage, and more. Read our guide to get started!
+difficulty: beginner
+readtime: 3
+back: /docs/quick-starts
+---
+
+Learn how to add Appwrite to your web apps.
+{% section #step-1 step=1 title="Create project" %}
+Head to the [Appwrite Console](https://cloud.appwrite.io/console).
+
+{% only_dark %}
+![Create project screen](/images/docs/quick-starts/dark/create-project.avif)
+{% /only_dark %}
+{% only_light %}
+![Create project screen](/images/docs/quick-starts/create-project.avif)
+{% /only_light %}
+
+If this is your first time using Appwrite, create an account and create your first project.
+
+Then, under **Add a platform**, add a **Web app**.
+The **Hostname** should be `localhost` or the domain on which you're hosting your web app.
+
+{% partial file="note-on-cors.md" /%}
+
+{% only_dark %}
+![Add a platform](/images/docs/quick-starts/dark/add-platform.avif)
+{% /only_dark %}
+{% only_light %}
+![Add a platform](/images/docs/quick-starts/add-platform.avif)
+{% /only_light %}
+
+You can skip optional steps.
+
+{% /section %}
+{% section #step-2 step=2 title="Install Appwrite" %}
+You can install the Appwrite Web SDK using a package manager.
+```sh
+npm install appwrite
+```
+
+You can also add the Appwrite Web SDK using CDN by adding a script tag to your HTML file. The SDK will be available globally through the `Appwrite` namespace.
+
+```html
+<script src="https://cdn.jsdelivr.net/npm/appwrite@17.0.0"></script>
+```
+{% /section %}
+{% section #step-3 step=3 title="Initialize Appwrite" %}
+
+If you installed via npm, you can import `Client` and `Account` from the Appwrite SDK.
+
+```client-web
+import { Client, Account } from 'appwrite';
+
+export const client = new Client();
+
+client
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+    .setProject('<PROJECT_ID>'); // Replace with your project ID
+
+export const account = new Account(client);
+export { ID } from 'appwrite';
+```
+
+If you're using CDN, the library loads directly in your browser as a global object, so you access it through Appwrite instead of imports.
+
+```js
+const client = new Appwrite.Client()
+
+client
+    .setEndpoint('https://cloud.appwrite.io/v1')
+    .setProject('<PROJECT_ID>') // Replace with your project ID
+
+const account = new Appwrite.Account(client)
+const tablesDB = new Appwrite.TablesDB(client)
+```
+{% /section %}
+
+{% section #step-4 step=4 title="Using TypeScript" %}
+If you prefer TypeScript, you can import TypeScript models from the Appwrite SDK.
+
+```ts
+// appwrite.ts
+
+import { Client, TablesDB, Account } from "appwrite";
+// Import type models for Appwrite
+import { type Models } from 'appwrite';
+
+const client: Client = new Client();
+
+client
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+    .setProject('<PROJECT_ID>'); // Replace with your project ID
+
+export const account: Account = new Account(client);
+export const tablesDB: TablesDB = new TablesDB(client);
+
+// You then use the imported type definitions like this
+const authUser: Models.Session = await account.createEmailPasswordSession({
+  email,
+  password
+});
+```
+{% /section %}
+
+{% section #step-5 step=5 title="Extending TypeScript models" %}
+Sometimes you'll need to extend TypeScript models with your own type definitions.
+
+For example, when you fetch a list of rows from a table, you can define the expected structure of the rows like this.
+```ts
+interface Idea extends Models.Row {
+    title: string;
+    description: string;
+    userId: string;
+}
+```
+
+When you fetch rows, you can use this new `Idea` interface like this.
+
+```ts
+const response = await tablesDB.listRows({
+    databaseId: ideasDatabaseId,
+    tableId: ideasTableId,
+    queries: [Query.orderDesc("$createdAt"), Query.limit(queryLimit)]
+});
+const ideas = response.rows as Idea[];
+```
+{% /section %}
+
+{% section #step-6 step=6 title="All set" %}
+The Appwrite SDK works with your favorite Web frameworks.
+
+Learn to use Appwrite by adding authentication to a simple web app.
+{% cards %}
+{% cards_item href="/docs/quick-starts/nextjs" title="Next.js" %}
+Get started with Appwrite and Next.js
+{% /cards_item %}
+{% cards_item href="/docs/quick-starts/react" title="React" %}
+Get started with Appwrite and React
+{% /cards_item %}
+{% cards_item href="/docs/quick-starts/vue" title="Vue.js" %}
+Get started with Appwrite and Vue.js
+{% /cards_item %}
+{% cards_item href="/docs/quick-starts/nuxt" title="Nuxt" %}
+Get started with Appwrite and Nuxt
+{% /cards_item %}
+{% cards_item href="/docs/quick-starts/sveltekit" title="SvelteKit" %}
+Get started with Appwrite and SvelteKit
+{% /cards_item %}
+{% cards_item href="/docs/quick-starts/angular" title="Angular" %}
+Get started with Appwrite and Angular
+{% /cards_item %}
+{% /cards %}
+
+Learn to use Appwrite by building an idea tracker app.
+{% cards %}
+{% cards_item href="/docs/tutorials/react" title="React" %}
+Get started with Appwrite and React
+{% /cards_item %}
+{% cards_item href="/docs/tutorials/vue" title="Vue.js" %}
+Get started with Appwrite and Vue.js
+{% /cards_item %}
+{% cards_item href="/docs/tutorials/nuxt" title="Nuxt" %}
+Get started with Appwrite and Nuxt
+{% /cards_item %}
+{% cards_item href="/docs/tutorials/sveltekit" title="SvelteKit" %}
+Get started with Appwrite and SvelteKit
+{% /cards_item %}
+{% /cards %}
+{% /section %}
+
+{% section #step-7 step=7 title="Type safety with TypeScript" %}
+## Type safety with TypeScript
+
+For better type safety in TypeScript projects, define interfaces and use generics:
+
+```typescript
+interface User {
+    name: string;
+    email: string;
+    isVerified: boolean;
+}
+
+import { Client, TablesDB } from "appwrite";
+
+const client = new Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+    .setProject('<PROJECT_ID>');
+
+const databases = new TablesDB(client);
+
+// Type-safe database operations
+try {
+    const users = await databases.listRows<User>({
+        databaseId: '[DATABASE_ID]',
+        tableId: '[TABLE_ID]'
+    });
+
+    users.rows.forEach(user => {
+        console.log(`User: ${user.name} (${user.email})`);
+    });
+} catch (error) {
+    console.log(error);
+}
+```
+
+{% info title="Generate types automatically" %}
+Use the [Appwrite CLI](/docs/products/databases/type-generation) to generate TypeScript interfaces automatically: `appwrite types ./types`
+{% /info %}
+
+{% /section %}

@@ -2,10 +2,11 @@ import { useMemo } from 'react'
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
 import { cn } from '@/lib/utils'
+import { CodeBlock } from '@/components/global/shared/CodeBlock'
 import {
-  CodeBlock,
-  type CodeBlockLanguage,
-} from '@/components/global/shared/CodeBlock'
+  resolveFenceCodeLanguage,
+  resolveFenceCodeLabel,
+} from '@/lib/code-language'
 
 interface StreamingMarkdownProps {
   content: string
@@ -26,81 +27,11 @@ function normalizeStreamingMarkdown(content: string): string {
   return normalized
 }
 
-function normalizeCodeLanguage(className?: string): CodeBlockLanguage {
+function resolveMarkdownCodeLanguage(className?: string): ReturnType<
+  typeof resolveFenceCodeLanguage
+> {
   const language = className?.match(/language-([a-zA-Z0-9_-]+)/)?.[1]
-  if (!language) return 'plaintext'
-
-  const normalized = language.toLowerCase()
-  const aliases: Record<string, CodeBlockLanguage> = {
-    js: 'javascript',
-    ts: 'typescript',
-    shell: 'bash',
-    sh: 'bash',
-    zsh: 'bash',
-    yml: 'markup',
-    yaml: 'markup',
-    html: 'markup',
-    xml: 'markup',
-    md: 'plaintext',
-    text: 'plaintext',
-  }
-
-  const resolved = aliases[normalized] ?? normalized
-  const supported = new Set<CodeBlockLanguage>([
-    'javascript',
-    'typescript',
-    'json',
-    'dart',
-    'swift',
-    'kotlin',
-    'java',
-    'bash',
-    'powershell',
-    'php',
-    'python',
-    'ruby',
-    'go',
-    'csharp',
-    'markup',
-    'plaintext',
-    'env',
-    'node',
-    'deno',
-    'bun',
-    'dotnet',
-  ])
-
-  return supported.has(resolved as CodeBlockLanguage)
-    ? (resolved as CodeBlockLanguage)
-    : 'plaintext'
-}
-
-function formatCodeLanguageLabel(language: CodeBlockLanguage): string {
-  const labels: Partial<Record<CodeBlockLanguage, string>> = {
-    javascript: 'JavaScript',
-    typescript: 'TypeScript',
-    json: 'JSON',
-    dart: 'Dart',
-    swift: 'Swift',
-    kotlin: 'Kotlin',
-    java: 'Java',
-    bash: 'Bash',
-    powershell: 'PowerShell',
-    php: 'PHP',
-    python: 'Python',
-    ruby: 'Ruby',
-    go: 'Go',
-    csharp: 'C#',
-    markup: 'Markup',
-    plaintext: 'Plain text',
-    env: '.env',
-    node: 'Node.js',
-    deno: 'Deno',
-    bun: 'Bun',
-    dotnet: '.NET',
-  }
-
-  return labels[language] ?? language
+  return resolveFenceCodeLanguage(language)
 }
 
 function isExternalDomainLink(href?: string): boolean {
@@ -199,12 +130,14 @@ export function StreamingMarkdown({
             }
 
             if (deferCodeBlocks) {
-              const language = normalizeCodeLanguage(className)
+              const language = resolveMarkdownCodeLanguage(className)
               return (
                 <div className="mt-2 mb-3.5 overflow-hidden rounded-xl border border-border bg-background">
                   <div className="flex h-10 items-center border-b border-border px-3">
                     <span className="text-[11px] font-medium text-muted-foreground">
-                      {formatCodeLanguageLabel(language)}
+                      {resolveFenceCodeLabel(
+                        className?.match(/language-([a-zA-Z0-9_-]+)/)?.[1],
+                      )}
                     </span>
                   </div>
                   <pre className="overflow-x-auto p-4 text-[12px] font-mono leading-relaxed">
@@ -217,7 +150,7 @@ export function StreamingMarkdown({
             return (
               <CodeBlock
                 code={rawCode.replace(/\n$/, '')}
-                language={normalizeCodeLanguage(className)}
+                language={resolveMarkdownCodeLanguage(className)}
                 copyInside
                 showCopy
                 showFullscreen

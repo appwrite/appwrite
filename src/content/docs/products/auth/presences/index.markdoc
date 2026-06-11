@@ -1,0 +1,410 @@
+---
+layout: article
+title: Presences
+description: Track which signed-in users are active right now and broadcast their status in realtime with the Appwrite Presences API.
+---
+
+Authentication tells you **who a user is**. Presences tell you **whether they are around right now**. The Appwrite **Presences API** records a live status for each signed-in user and broadcasts every change over [Realtime](/docs/apis/realtime), so your app can render online indicators, "viewing this page" cues, typing signals, and collaboration banners without writing any socket plumbing.
+
+A presence is a short-lived record attached to a user. It carries a `userId`, a `status` string, an optional `metadata` JSON object for richer context, and an `expiresAt` timestamp that controls automatic cleanup. Presences are written by either the user's own session or a server SDK, and read by any client with the right [permissions](/docs/advanced/platform/permissions).
+
+# Set the user's presence {% #set-the-users-presence %}
+
+Once a user is signed in, upsert their presence on the events that should mark them as active, for example on app launch, on a window focus, or on a heartbeat timer. `userId` is filled in automatically from the session, so you only need to pass the fields that change.
+
+{% multicode %}
+```client-web
+import { Client, Presences, ID, Permission, Role } from "appwrite";
+
+const client = new Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+    .setProject('<PROJECT_ID>');
+
+const presences = new Presences(client);
+
+const presence = await presences.upsert({
+    presenceId: ID.unique(),
+    status: 'online',
+    metadata: { page: '/dashboard' },
+    permissions: [
+        Permission.read(Role.users())
+    ]
+});
+```
+
+```client-flutter
+import 'package:appwrite/appwrite.dart';
+
+final client = Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+    .setProject('<PROJECT_ID>');
+
+final presences = Presences(client);
+
+final presence = await presences.upsert(
+    presenceId: ID.unique(),
+    status: 'online',
+    metadata: { 'page': '/dashboard' },
+    permissions: [
+        Permission.read(Role.users()),
+    ],
+);
+```
+
+```client-apple
+import Appwrite
+
+let client = Client()
+    .setEndpoint("https://<REGION>.cloud.appwrite.io/v1")
+    .setProject("<PROJECT_ID>")
+
+let presences = Presences(client)
+
+let presence = try await presences.upsert(
+    presenceId: ID.unique(),
+    status: "online",
+    metadata: ["page": "/dashboard"],
+    permissions: [
+        Permission.read(Role.users())
+    ]
+)
+```
+
+```client-android-kotlin
+import io.appwrite.Client
+import io.appwrite.ID
+import io.appwrite.Permission
+import io.appwrite.Role
+import io.appwrite.services.Presences
+
+val client = Client(context)
+    .setEndpoint("https://<REGION>.cloud.appwrite.io/v1")
+    .setProject("<PROJECT_ID>")
+
+val presences = Presences(client)
+
+val presence = presences.upsert(
+    presenceId = ID.unique(),
+    status = "online",
+    metadata = mapOf("page" to "/dashboard"),
+    permissions = listOf(
+        Permission.read(Role.users())
+    )
+)
+```
+{% /multicode %}
+
+Store the returned `$id` somewhere your client can reach again (for example a context object, a state store, or `localStorage`) so subsequent updates reuse the same record instead of creating a new one every time. The same call updates the existing presence in place when called with an existing `presenceId`.
+
+# Update on activity changes {% #update-on-activity-changes %}
+
+Most apps update presence on a few specific signals:
+
+- **Window focus and blur** to flip between `online` and `away`.
+- **Route changes** to update the `page` field in `metadata` and show "viewing this page".
+- **Typing events** in a chat or comment box to set `status: 'typing'` and clear it when the user stops.
+- **A heartbeat timer** (for example every 30 seconds) to push the `expiresAt` forward and keep the record alive while the user is active.
+
+```client-web
+async function setStatus(status, metadata = {}) {
+    await presences.upsert({
+        presenceId,
+        status,
+        metadata,
+        permissions: [
+            Permission.read(Role.users())
+        ]
+    });
+}
+
+window.addEventListener('focus', () => setStatus('online'));
+window.addEventListener('blur',  () => setStatus('away'));
+```
+
+There is no fixed heartbeat interval enforced by the server, so pick whichever cadence matches your UX. Anything shorter than the `expiresAt` you choose will keep the presence alive without gaps.
+
+# Show other users' presence {% #show-other-users-presence %}
+
+List the presences the current user can read to paint the initial "online now" view, a list of viewers on a page, or a typing dot in a chat. The list call honors the same [permissions](/docs/advanced/platform/permissions) you set on each record, so each client only sees the statuses it is allowed to render.
+
+{% multicode %}
+```client-web
+import { Client, Presences } from "appwrite";
+
+const client = new Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+    .setProject('<PROJECT_ID>');
+
+const presences = new Presences(client);
+
+const result = await presences.list();
+
+const onlineUsers = new Map(
+    result.presences.map(presence => [presence.userId, presence])
+);
+```
+
+```client-flutter
+import 'package:appwrite/appwrite.dart';
+
+final client = Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+    .setProject('<PROJECT_ID>');
+
+final presences = Presences(client);
+
+final result = await presences.list();
+
+final onlineUsers = {
+    for (final presence in result.presences) presence.userId: presence
+};
+```
+
+```client-apple
+import Appwrite
+
+let client = Client()
+    .setEndpoint("https://<REGION>.cloud.appwrite.io/v1")
+    .setProject("<PROJECT_ID>")
+
+let presences = Presences(client)
+
+let result = try await presences.list()
+
+var onlineUsers: [String: Any] = [:]
+for presence in result.presences {
+    onlineUsers[presence.userId] = presence
+}
+```
+
+```client-android-kotlin
+import io.appwrite.Client
+import io.appwrite.services.Presences
+
+val client = Client(context)
+    .setEndpoint("https://<REGION>.cloud.appwrite.io/v1")
+    .setProject("<PROJECT_ID>")
+
+val presences = Presences(client)
+
+val result = presences.list()
+
+val onlineUsers = result.presences
+    .associateBy { it.userId }
+    .toMutableMap()
+```
+{% /multicode %}
+
+Then subscribe to the global `presences` channel to keep that snapshot live. Apply the same patch to the same `onlineUsers` map on every event, add or replace on upsert or update, remove on delete.
+
+{% multicode %}
+```client-web
+import { Client, Realtime, Channel } from "appwrite";
+
+const client = new Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+    .setProject('<PROJECT_ID>');
+
+const realtime = new Realtime(client);
+
+await realtime.subscribe(Channel.presences(), response => {
+    const presence = response.payload;
+    if (response.events.includes('presences.*.delete')) {
+        onlineUsers.delete(presence.userId);
+    } else {
+        onlineUsers.set(presence.userId, presence);
+    }
+});
+```
+
+```client-flutter
+import 'package:appwrite/appwrite.dart';
+
+final client = Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+    .setProject('<PROJECT_ID>');
+
+final realtime = Realtime(client);
+
+final subscription = realtime.subscribe([Channel.presences()]);
+
+subscription.stream.listen((response) {
+    final presence = response.payload;
+    if (response.events.contains('presences.*.delete')) {
+        onlineUsers.remove(presence['userId']);
+    } else {
+        onlineUsers[presence['userId']] = presence;
+    }
+});
+```
+
+```client-apple
+import Appwrite
+
+let client = Client()
+    .setEndpoint("https://<REGION>.cloud.appwrite.io/v1")
+    .setProject("<PROJECT_ID>")
+
+let realtime = Realtime(client)
+
+let subscription = realtime.subscribe(channels: [Channel.presences()]) { response in
+    guard let payload = response.payload as? [String: Any],
+          let userId = payload["userId"] as? String else { return }
+
+    if (response.events?.contains("presences.*.delete") == true) {
+        onlineUsers.removeValue(forKey: userId)
+    } else {
+        onlineUsers[userId] = payload
+    }
+}
+```
+
+```client-android-kotlin
+import io.appwrite.Channel
+import io.appwrite.Client
+import io.appwrite.services.Realtime
+
+val client = Client(context)
+    .setEndpoint("https://<REGION>.cloud.appwrite.io/v1")
+    .setProject("<PROJECT_ID>")
+
+val realtime = Realtime(client)
+
+realtime.subscribe(Channel.presences()) { response ->
+    val payload = response.payload as? Map<String, Any?> ?: return@subscribe
+    val userId = payload["userId"] as? String ?: return@subscribe
+
+    if (response.events.contains("presences.*.delete")) {
+        onlineUsers.remove(userId)
+    } else {
+        onlineUsers[userId] = payload
+    }
+}
+```
+{% /multicode %}
+
+# Clear presence on sign out {% #clear-presence-on-sign-out %}
+
+A presence outlives the session that created it by default, so when a user signs out you should delete their presence record explicitly. This emits a `delete` event on the presence channels, so every subscribed client sees the user go offline immediately instead of waiting for the record to expire.
+
+{% multicode %}
+```client-web
+await presences.delete({ presenceId });
+await account.deleteSession({ sessionId: 'current' });
+```
+
+```client-flutter
+await presences.delete(presenceId: presenceId);
+await account.deleteSession(sessionId: 'current');
+```
+
+```client-apple
+try await presences.delete(presenceId: presenceId)
+try await account.deleteSession(sessionId: "current")
+```
+
+```client-android-kotlin
+presences.delete(presenceId = presenceId)
+account.deleteSession(sessionId = "current")
+```
+{% /multicode %}
+
+If a user closes the browser tab or loses connection without signing out, the record will still disappear on its own when `expiresAt` is reached, which is why short heartbeat windows work well for true "live" indicators.
+
+# Scoping who can see a presence {% #scoping-who-can-see-a-presence %}
+
+Presences use the standard Appwrite [permissions system](/docs/advanced/platform/permissions). Set read permissions on each record to match how your app already groups users:
+
+- `Role.users()` for any signed-in user, useful for a global "X users online" counter.
+- `Role.team('<TEAM_ID>')` for collaboration features that should only show statuses to teammates.
+- `Role.user('<USER_ID>')` for one-to-one features such as DMs, where only the recipient should see the sender's typing state.
+
+Pass a `permissions` array to `upsert()` to attach roles to a presence. For example, to share a typing indicator only with the recipient of a DM:
+
+{% multicode %}
+```client-web
+import { Client, Presences, ID, Permission, Role } from "appwrite";
+
+const client = new Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+    .setProject('<PROJECT_ID>');
+
+const presences = new Presences(client);
+
+const presence = await presences.upsert({
+    presenceId: ID.unique(),
+    status: 'typing',
+    permissions: [
+        Permission.read(Role.user('<RECIPIENT_USER_ID>'))
+    ]
+});
+```
+
+```client-flutter
+import 'package:appwrite/appwrite.dart';
+
+final client = Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+    .setProject('<PROJECT_ID>');
+
+final presences = Presences(client);
+
+final presence = await presences.upsert(
+    presenceId: ID.unique(),
+    status: 'typing',
+    permissions: [
+        Permission.read(Role.user('<RECIPIENT_USER_ID>')),
+    ],
+);
+```
+
+```client-apple
+import Appwrite
+
+let client = Client()
+    .setEndpoint("https://<REGION>.cloud.appwrite.io/v1")
+    .setProject("<PROJECT_ID>")
+
+let presences = Presences(client)
+
+let presence = try await presences.upsert(
+    presenceId: ID.unique(),
+    status: "typing",
+    permissions: [
+        Permission.read(Role.user("<RECIPIENT_USER_ID>"))
+    ]
+)
+```
+
+```client-android-kotlin
+import io.appwrite.Client
+import io.appwrite.ID
+import io.appwrite.Permission
+import io.appwrite.Role
+import io.appwrite.services.Presences
+
+val client = Client(context)
+    .setEndpoint("https://<REGION>.cloud.appwrite.io/v1")
+    .setProject("<PROJECT_ID>")
+
+val presences = Presences(client)
+
+val presence = presences.upsert(
+    presenceId = ID.unique(),
+    status = "typing",
+    permissions = listOf(
+        Permission.read(Role.user("<RECIPIENT_USER_ID>"))
+    )
+)
+```
+{% /multicode %}
+
+Presence read and subscribe events both honour these permissions, so a user will never receive a status update for a presence they could not have read with a direct GET.
+
+If you do not pass a `permissions` array when upserting a presence, Appwrite defaults to giving read access only to the user who created it, so no other client can subscribe to it. To share a presence more broadly, you must set permissions explicitly.
+
+# Where to next {% #where-to-next %}
+
+- [Realtime: Presences](/docs/apis/realtime/presences). The full concept reference, including channel patterns, expiry behaviour, and server-side usage.
+- [Realtime channels](/docs/apis/realtime/channels). See how `presences` fits alongside `account`, `teams`, and `rows`.
+- [Permissions](/docs/advanced/platform/permissions). Refresher on how `Role.team()` and `Role.user()` work.

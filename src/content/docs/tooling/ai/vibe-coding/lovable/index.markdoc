@@ -1,0 +1,35 @@
+---
+layout: article
+title: Lovable
+description: Learn how to connect the Appwrite docs MCP server to Lovable for AI-assisted development with access to Appwrite documentation.
+---
+
+{% section #add-mcp-server step=1 title="Add MCP server" %}
+
+To connect the Appwrite docs MCP server to Lovable:
+
+1. Go to **Settings** → **Connectors** → **Personal connectors**.
+2. Click **New MCP server**.
+3. Enter the following details:
+    - **Server name**: `Appwrite Docs`
+    - **Server URL**: `https://mcp-for-docs.appwrite.io`
+    - **Authentication**: Select **No authentication**
+4. Click **Add server**.
+
+The Appwrite docs MCP server will now appear in your list of personal connectors.
+
+{% /section %}
+
+{% section #test-the-integration step=2 title="Test the integration" %}
+
+Once connected, Lovable has access to Appwrite documentation context. You can use prompts like:
+
+**Example prompts:**
+
+- `How do I set up real-time subscriptions in Appwrite?`
+- `Show me how to authenticate users with OAuth`
+- `What are the best practices for database queries?`
+- `How do I implement file uploads with Appwrite Storage?`
+- `Show me an example of using Appwrite Functions`
+
+{% /section %}

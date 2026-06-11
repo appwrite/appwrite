@@ -1612,3 +1612,15 @@ html[data-init-ticket-video-capturing] [data-init-ticket-video-capture] * {
   pointer-events: none;
 }
 
+/* CodeBlock (prism-react-renderer): no fill — page/dialog background shows through */
+pre.prism-code,
+pre.prism-code code,
+pre.prism-code .token-line,
+pre.prism-code .token-line > span {
+  background: transparent !important;
+  background-color: transparent !important;
+  border: none !important;
+  outline: none !important;
+  box-shadow: none !important;
+}
+

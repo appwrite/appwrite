@@ -1,0 +1,14 @@
+---
+layout: article
+title: Abuse policy
+description: Guidelines on abusive behavior, prohibited activities, and reporting mechanisms under our Fair Use Policy.
+---
+
+Appwrite is committed to providing a fair, secure, and high-quality experience for all users. This Abuse Policy, as part of our overall Fair Use Policy, outlines unacceptable behaviors and the steps you can take to report any suspected abuse. Our goal is to maintain a safe environment where everyone can build, innovate, and collaborate without fear of harmful or illegal activity.
+
+{% partial file="prohibited-activities.md" /%}
+
+# Reporting Abuse {% #reporting-abuse %}
+If you observe or suspect any prohibited activity, please report it as soon as possible to [abuse@appwrite.io](mailto:abuse@appwrite.io).
+
+Please include any relevant details (e.g., specific URLs, project IDs, or screenshots) so that we can effectively investigate and address the issue. We will review each report confidentially and take any necessary actions, which may include account suspension, service termination, or referral to law enforcement.

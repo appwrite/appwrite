@@ -1,0 +1,31 @@
+---
+layout: article
+title: Image Transformations
+description: Learn how to transform images using Appwrite's storage API.
+---
+
+{% info title="Note" %} 
+Changes will take effect on April 1st, 2025. Check out this [blog post](/blog/post/announcing-image-transformations-pricing) for more information.
+{% /info %}
+
+Appwrite enables the transformation of images before retrieval using the [getFilePreview](/docs/references/cloud/client-web/storage#getFilePreview) endpoint. This functionality supports resizing images by width and height, adjusting quality, and applying filters such as opacity, border colour, border radius, and more.
+
+### Origin Image
+
+An "origin image" represents the original, unmodified image file in Appwrite Storage. Each origin image serves as the base for unlimited transformations, allowing the creation of multiple variants without incurring additional origin image charges.
+
+How it works:
+
+1. Upload an image to Appwrite Storage
+2. Use the `getFilePreview` method to apply transformations to the image
+3. Retrieve transformed images through the preview endpoint
+4. Pay only for unique origin images, regardless of transformation count
+
+For example, suppose there are around 100 images in storage. If only 50 of these images undergo transformations, but transformations are applied around 200 times, the origin image transformations are only 50 and **not 200**.
+
+## Pricing
+
+- Currently, this feature is **unavailable on the free plan**.
+- Pro and Scale plans include 100 origin images per month. Additional usage is available at $5 per 1000 origin images.
+
+For detailed information about the different pricing options and features, please visit the [pricing page](/pricing).

@@ -1,4 +1,4 @@
-import { createFileRoute, Link, redirect } from '@tanstack/react-router'
+import { createFileRoute, Link } from '@tanstack/react-router'
 import {
   ArrowRight,
   BadgeCheck,
@@ -36,9 +36,8 @@ import { TestimonialsSection } from '@/components/pages/home/TestimonialsSection
 import { ProductBentoVisual } from '@/components/pages/home/product-bento/ProductBentoVisual'
 import { StandaloneCommandCenterScope } from '@/components/global/providers/KeyboardShortcuts'
 import { Button } from '@/components/ui/button'
-import { getActiveProfileFeatures } from '@/lib/console-profiles'
 import { marketingProductToolkit } from '@/lib/marketing/product-toolkit'
-import { consoleAccountQueryOptions } from '@/lib/react-query/hooks/auth'
+import { marketingPageLoader } from '@/lib/marketing/route-loader'
 import { pageTitle } from '@/lib/utils/page-title'
 
 const frameworkTools = [
@@ -205,17 +204,10 @@ const securityItems: {
 ]
 
 export const Route = createFileRoute('/home')({
-  ssr: false,
+  ssr: true,
   head: () => ({ meta: [{ title: pageTitle('Home') }] }),
   loader: async ({ context }) => {
-    if (typeof window === 'undefined') return
-    if (!getActiveProfileFeatures().marketing) {
-      throw redirect({ to: '/', replace: true })
-    }
-
-    void context.queryClient
-      .prefetchQuery(consoleAccountQueryOptions())
-      .catch(() => {})
+    await marketingPageLoader(context.queryClient)
   },
   component: HomePage,
 })

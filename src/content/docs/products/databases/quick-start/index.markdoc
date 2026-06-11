@@ -1,0 +1,375 @@
+---
+layout: article
+title: Start with Databases
+description: Get started with Appwrite Databases. Follow a step-by-step guide to create your first database, define tables, and perform basic data operations.
+---
+
+
+{% section #create-database step=1 title="Create database" %}
+Head to your [Appwrite Console](https://cloud.appwrite.io/console/) and create a database and name it `Oscar`.
+Optionally, add a custom database ID.
+{% /section %}
+
+{% section #create-table step=2 title="Create table" %}
+Create a table and name it `My books`. Optionally, add a custom table ID.
+
+Navigate to **Columns** and create columns by clicking **Create column** and select **String**.
+Columns define the structure of your table's rows. Enter **Column key** and **Size**. For example, `title` and `100`.
+
+Navigate to **Settings** > **Permissions** and add a new role **Any**.
+Check the **CREATE** and **READ** permissions, so anyone can create and read rows.
+{% /section %}
+
+
+{% section #create-rows step=3 title="Create rows" %}
+To create a row use the `createRow` method.
+
+In the **Settings** menu, find your project ID and replace `<PROJECT_ID>` in the example.
+
+Navigate to the `Oscar` database, copy the database ID, and replace `<DATABASE_ID>`.
+Then, in the `My books` table, copy the table ID, and replace `<TABLE_ID>`.
+
+{% multicode %}
+```client-web
+import { Client, ID, TablesDB } from "appwrite";
+
+const client = new Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+    .setProject('<PROJECT_ID>');
+
+const tablesDB = new TablesDB(client);
+
+const promise = tablesDB.createRow({
+    databaseId: '<DATABASE_ID>',
+    tableId: '<TABLE_ID>',
+    rowId: ID.unique(),
+    data: { title: "Hamlet" }
+});
+
+promise.then(function (response) {
+    console.log(response);
+}, function (error) {
+    console.log(error);
+});
+```
+```client-flutter
+import 'package:appwrite/appwrite.dart';
+
+void main() async {
+    final client = Client()
+        .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+        .setProject('<PROJECT_ID>');
+
+    final tablesDB = TablesDB(client);
+
+    try {
+        final row = tablesDB.createRow(
+            databaseId: '<DATABASE_ID>',
+            tableId: '<TABLE_ID>',
+            rowId: ID.unique(),
+            data: { "title": "Hamlet" }
+        );
+    } on AppwriteException catch(e) {
+        print(e);
+    }
+}
+```
+```client-apple
+import Appwrite
+import AppwriteModels
+
+func main() async throws {
+    let client = Client()
+        .setEndpoint("https://<REGION>.cloud.appwrite.io/v1")
+        .setProject("<PROJECT_ID>")
+
+    let tablesDB = TablesDB(client)
+
+    do {
+        let row = try await tablesDB.createRow(
+            databaseId: "<DATABASE_ID>",
+            tableId: "<TABLE_ID>",
+            rowId: ID.unique(),
+            data: ["title" : "hamlet"]
+        )
+    } catch {
+        print(error.localizedDescription)
+    }
+}
+```
+```client-android-kotlin
+import io.appwrite.Client
+import io.appwrite.services.TablesDB
+
+suspend fun main() {
+    val client = Client(applicationContext)
+        .setEndpoint("https://<REGION>.cloud.appwrite.io/v1")
+        .setProject("<PROJECT_ID>")
+
+    val tablesDB = TablesDB(client)
+
+    try {
+        val row = tablesDB.createRow(
+            databaseId = "<DATABASE_ID>",
+            tableId = "<TABLE_ID>",
+            rowId = ID.unique(),
+            data = mapOf("title" to "hamlet"),
+        )
+    } catch (e: Exception) {
+        Log.e("Appwrite", "Error: " + e.message)
+    }
+}
+```
+{% /multicode %}
+
+The response should look similar to this.
+
+```json
+{
+    "title": "Hamlet",
+    "$id": "65013138dcd8618e80c4",
+    "$permissions": [],
+    "$createdAt": "2023-09-13T03:49:12.905+00:00",
+    "$updatedAt": "2023-09-13T03:49:12.905+00:00",
+    "$databaseId": "650125c64b3c25ce4bc4",
+    "$tableId": "650125cff227cf9f95ad"
+}
+```
+
+{% /section %}
+
+{% section #list-rows step=4 title="List rows" %}
+To read and query data from your table, use the `listRows` endpoint.
+
+Like the previous step, replace `<PROJECT_ID>`, `<DATABASE_ID>`, and `<TABLE_ID>` with their respective IDs.
+{% multicode %}
+```client-web
+import { Client, Query, TablesDB } from "appwrite";
+
+const client = new Client()
+    .setEndpoint("https://<REGION>.cloud.appwrite.io/v1")
+    .setProject("<PROJECT_ID>")
+
+const tablesDB = new TablesDB(client);
+
+const promise = tablesDB.listRows({
+    databaseId: "<DATABASE_ID>",
+    tableId: "<TABLE_ID>",
+    queries: [
+        Query.equal('title', 'Hamlet')
+    ]
+});
+
+promise.then(function (response) {
+    console.log(response);
+}, function (error) {
+    console.log(error);
+});
+```
+```client-flutter
+import 'package:appwrite/appwrite.dart';
+
+void main() async {
+    final client = Client()
+        .setEndpoint("https://<REGION>.cloud.appwrite.io/v1")
+        .setProject("<PROJECT_ID>")
+
+    final tablesDB = TablesDB(client);
+
+    try {
+        final rows = await tablesDB.listRows(
+            databaseId: '<DATABASE_ID>',
+            tableId: '<TABLE_ID>',
+            queries: [
+                Query.equal('title', 'Hamlet')
+            ]
+        );
+    } on AppwriteException catch(e) {
+        print(e);
+    }
+}
+```
+```client-apple
+import Appwrite
+import AppwriteModels
+
+func main() async throws{
+    let client = Client()
+        .setEndpoint("https://<REGION>.cloud.appwrite.io/v1")
+        .setProject("<PROJECT_ID>")
+
+    let tablesDB = TablesDB(client)
+
+    do {
+        let rows = try await tablesDB.listRows(
+            databaseId: "<DATABASE_ID>",
+            tableId: "<TABLE_ID>",
+            queries: [
+                Query.equal("title", value: "Hamlet")
+            ]
+        )
+    } catch {
+        print(error.localizedDescription)
+    }
+}
+```
+```client-android-kotlin
+import io.appwrite.Client
+import io.appwrite.Query
+import io.appwrite.services.TablesDB
+
+suspend fun main() {
+    val client = Client(applicationContext)
+        .setEndpoint("https://<REGION>.cloud.appwrite.io/v1")
+        .setProject("<PROJECT_ID>")
+
+    val tablesDB = TablesDB(client)
+
+    try {
+        val rows = tablesDB.listRows(
+            databaseId = "<DATABASE_ID>",
+            tableId = "<TABLE_ID>",
+            queries = listOf(
+                Query.equal("title", "Hamlet")
+            )
+        )
+    } catch (e: AppwriteException) {
+        Log.e("Appwrite", "Error: " + e.message)
+    }
+}
+```
+
+{% /multicode %}
+{% /section %}
+
+{% section #type-safety step=5 title="Type safety with models" %}
+For added type safety and better development experience, mobile and native SDKs support custom model types with the `nestedType` parameter.
+
+Define a data class or model that matches your table structure:
+
+{% multicode %}
+```client-android-kotlin
+data class Book(
+    val title: String,
+    val author: String? = null,
+    val pages: Int? = null,
+    val isAvailable: Boolean = true
+)
+
+val tablesDB = TablesDB(client)
+
+try {
+    // Use nestedType for type-safe responses
+    val books = tablesDB.listRows(
+        databaseId = "<DATABASE_ID>",
+        tableId = "<TABLE_ID>",
+        nestedType = Book::class.java
+    )
+
+    for (book in books.rows) {
+        Log.d("Appwrite", "Book: ${book.title} by ${book.author}")
+    }
+} catch (e: AppwriteException) {
+    Log.e("Appwrite", "Error: ${e.message}")
+}
+```
+```client-apple
+struct Book: Codable {
+    let title: String
+    let author: String?
+    let pages: Int?
+    let isAvailable: Bool
+}
+
+let tablesDB = TablesDB(client)
+
+do {
+    // Use nestedType for type-safe responses
+    let books = try await tablesDB.listRows(
+        databaseId: "<DATABASE_ID>",
+        tableId: "<TABLE_ID>",
+        nestedType: Book.self
+    )
+
+    for book in books.rows {
+        print("Book: \(book.title) by \(book.author ?? "Unknown")")
+    }
+} catch {
+    print(error.localizedDescription)
+}
+```
+```client-web
+// Web SDK supports generics for type safety
+interface Book {
+    title: string;
+    author?: string;
+    pages?: number;
+    isAvailable: boolean;
+}
+
+const tablesDB = new TablesDB(client);
+
+try {
+    const books = await tablesDB.listRows<Book>({
+        databaseId: '<DATABASE_ID>',
+        tableId: '<TABLE_ID>'
+    });
+
+    books.rows.forEach(book => {
+        console.log(`Book: ${book.title} by ${book.author}`);
+    });
+} catch (error) {
+    console.log(error);
+}
+```
+{% /multicode %}
+
+{% info title="Automatic type generation" %}
+You can automatically generate type definitions for your tables using the [Appwrite CLI type generation](/docs/products/databases/type-generation) feature. Run `appwrite types collection` to generate models for your collections.
+{% /info %}
+
+### Model methods
+
+Models returned by native SDKs include helpful methods for data manipulation:
+
+{% tabs %}
+{% tabsitem #kotlin title="Kotlin/Java" %}
+```kotlin
+val book = books.rows.first()
+
+// Convert to Map for debugging or manual manipulation
+val bookMap = book.toMap()
+Log.d("Appwrite", bookMap.toString())
+
+// Create model from Map
+val bookData = mapOf(
+    "title" to "The Great Gatsby",
+    "author" to "F. Scott Fitzgerald"
+)
+val newBook = Book.from(bookData, Book::class.java)
+```
+{% /tabsitem %}
+
+{% tabsitem #swift title="Swift" %}
+```swift
+let book = books.rows.first!
+
+// Convert to dictionary for debugging
+let bookMap = book.toMap()
+print(bookMap)
+
+// Create model from dictionary
+let bookData: [String: Any] = [
+    "title": "The Great Gatsby",
+    "author": "F. Scott Fitzgerald"
+]
+let newBook = Book.from(map: bookData)
+
+// Encode to JSON
+let jsonData = try JSONEncoder().encode(book)
+let jsonString = String(data: jsonData, encoding: .utf8)
+```
+{% /tabsitem %}
+{% /tabs %}
+
+{% /section %}

@@ -1,0 +1,79 @@
+---
+layout: article
+title: Coolify
+description: Learn how to self-host Appwrite on your infrastructure with Coolify.
+---
+
+Coolify is an open-source, self-hosted platform that simplifies application deployment through an intuitive interface and automated workflows. With its one-click deployment feature, you can quickly deploy various services, including Appwrite's comprehensive backend solution. To explore the full range of supported services, visit the [Coolify Docs](https://coolify.io/docs/services/appwrite). This guide will walk you through setting up Appwrite on your Coolify instance and provide necessary troubleshooting tips.
+
+# Prerequisites {% #prerequisites %}
+
+Before starting, ensure your server meets the [minimum requirements](/docs/advanced/self-hosting#system-requirements) for hosting Appwrite with Coolify.
+
+# Installation {% #installation %}
+
+Install Coolify on your server using the command below:
+
+```bash
+curl -sSL https://coolify.io/install | bash
+```
+
+Once the installation is complete, open the Coolify dashboard in your web browser.
+
+1. Sign up for a new account.
+2. Click the **Create Project** button to start a new project.
+3. Select or create an environment type. By default, a **production** environment is already available.
+4. Click **Add new resource**.
+5. Search for and select **Appwrite** from the list of services.
+
+The configuration fields will be pre-filled with the recommended settings, but you can customize them. When ready, click the **Deploy** button to initiate the deployment process.
+
+After deployment, access your Appwrite instance's console by clicking the console link in the **Links** section of the Appwrite service.
+
+# Configuration {% #configuration %}
+
+Coolify automatically handles most configurations, like the environment variables. You can modify these variables and redeploy the service to apply the changes. However, to enable additional features, you may need to configure some environment variables manually.
+
+**Assistant**
+To enable the assistant, which allows you to generate code snippets and assist with documentation for your Appwrite project, set your OpenAI API key:
+
+```bash
+_APP_ASSISTANT_OPENAI_API_KEY=sk-1234567890
+```
+
+**SMS Notifications**
+To enable SMS-based OTP authentication, configure the following environment variables:
+
+```bash
+_APP_SMS_FROM=123456789
+_APP_SMS_PROVIDER=sms://username:password@mock
+```
+
+**Email Notifications**
+To enable email notifications, configure these environment variables:
+
+```bash
+_APP_SMTP_HOST=smtp.example.com
+_APP_SMTP_PASSWORD=password
+_APP_SMTP_PORT=587
+_APP_SMTP_SECURE=true
+_APP_SMTP_USERNAME=username
+```
+
+**GitHub Integration**
+To enable GitHub authentication for your Appwrite console, set these environment variables:
+
+```bash
+_APP_VCS_GITHUB_APP_ID
+_APP_VCS_GITHUB_APP_NAME
+_APP_VCS_GITHUB_CLIENT_ID
+_APP_VCS_GITHUB_CLIENT_SECRET
+_APP_VCS_GITHUB_PRIVATE_KEY
+```
+
+The [Github Docs](https://docs.github.com/en/apps/creating-github-apps/about-creating-github-apps/about-creating-github-apps) provide more information on configuring your Github app.
+
+# Troubleshooting {% #troubleshooting %}
+
+1. **Site redirected you too many times**
+   If you encounter the error `ERR_TOO_MANY_REDIRECTS` with the default Coolify configuration, turn off the **Strip Prefixes** option in the **Settings** page for the Appwrite console and Appwrite Realtime service. If you're using Cloudflare and the issue persists, update the SSL/TLS encryption setting to Full in the Cloudflare dashboard. From the dashboard, navigate to `Your Domain` -> `SSL/TLS` -> `Overview` and change the setting to Full.

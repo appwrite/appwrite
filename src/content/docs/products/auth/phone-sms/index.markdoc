@@ -1,0 +1,184 @@
+---
+layout: article
+title: Phone (SMS) login
+description: Enhance security with SMS and phone authentication in Appwrite. Add multi-factor authentication via SMS, verify phone numbers, and protect user accounts.
+---
+
+{% info title="Note" %}
+OTPs are billed per message, with rates varying by country. See the [phone OTP rates](/docs/advanced/platform/phone-otp#rates) for more information.
+{% /info %}
+
+Phone authentication lets users create accounts using their phone numbers and log in through SMS messages.
+
+Create and use [mock phone numbers](/docs/products/auth/security#mock-phone-numbers) to initiate a phone authentication process without an actual phone number.
+
+# Send SMS message {% #init %}
+
+Phone authentication is done using a two-step authentication process. When using phone authentication, the authentication request is initiated from the client application and an SMS message is sent to the user's phone. The SMS message will contain a secret the user can use to log in.
+
+Send an SMS message to initiate the authentication process. If the phone number has never been used, a **new account is created** using the provided `userId`, then the user will receive an SMS. If the phone number is already attached to an account, the **user ID is ignored** and the user will receive an SMS with the authentication code.
+
+{% multicode %}
+
+```client-web
+import { Client, Account, ID } from "appwrite";
+
+const client = new Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+    .setProject('<PROJECT_ID>');
+
+const account = new Account(client);
+
+const token = await account.createPhoneToken({
+    userId: ID.unique(),
+    phone: '+14255550123'
+});
+
+const userId = token.userId;
+```
+
+```client-flutter
+import 'package:appwrite/appwrite.dart';
+
+final client = Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+    .setProject('<PROJECT_ID>');
+
+final account = Account(client);
+
+final token = await account.createPhoneToken(
+    userId: ID.unique(),
+    phone: '+14255550123'
+);
+
+final userId = token.userId;
+```
+```client-apple
+import Appwrite
+
+let client = Client()
+    .setEndpoint("https://<REGION>.cloud.appwrite.io/v1")
+    .setProject("<PROJECT_ID>");
+
+let account = Account(client);
+
+let token = try await account.createPhoneToken(
+    userId: ID.unique(),
+    phone: "+14255550123"
+);
+
+let userId = token.userId;
+```
+
+```client-android-kotlin
+import io.appwrite.Client
+import io.appwrite.services.Account
+import io.appwrite.ID
+
+val client = Client()
+    .setEndpoint("https://<REGION>.cloud.appwrite.io/v1")
+    .setProject("<PROJECT_ID>");
+
+val account = Account(client);
+
+val token = account.createPhoneToken(
+    userId = ID.unique(),
+    phone = "+14255550123"
+);
+
+val userId = token.userId;
+```
+
+```graphql
+mutation {
+    accountCreatePhoneToken(userId: "unique()", phone: "+14255550123") {
+        _id
+        userId
+        secret
+        expire
+    }
+}
+```
+
+{% /multicode %}
+
+# Login {% #login %}
+
+After initiating the phone authentication process, the returned user ID and secret are used to confirm the user. The secret will usually be a 6-digit number in the SMS message sent to the user.
+
+{% multicode %}
+
+```client-web
+import { Client, Account, ID } from "appwrite";
+
+const client = new Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+    .setProject('<PROJECT_ID>');
+
+const account = new Account(client);
+
+const session = await account.createSession({
+    userId: userId,
+    secret: '<SECRET>'
+});
+```
+
+```client-flutter
+import 'package:appwrite/appwrite.dart';
+
+final client = Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+    .setProject('<PROJECT_ID>');
+
+final account = Account(client);
+
+final session = await account.createSession(
+    userId: userId,
+    secret: '<SECRET>'
+);
+```
+```client-apple
+import Appwrite
+
+let client = Client()
+    .setEndpoint("https://<REGION>.cloud.appwrite.io/v1")
+    .setProject("<PROJECT_ID>");
+
+let account = Account(client);
+
+let session = try await account.createSession(
+    userId: userId,
+    secret: "<SECRET>"
+);
+```
+```client-android-kotlin
+import io.appwrite.Client
+import io.appwrite.services.Account
+import io.appwrite.ID
+
+val client = Client()
+    .setEndpoint("https://<REGION>.cloud.appwrite.io/v1")
+    .setProject("<PROJECT_ID>");
+
+val account = Account(client);
+
+val session = account.createSession(
+    userId = userId,
+    secret = "<SECRET>"
+);
+```
+
+```graphql
+mutation {
+    accountCreateSession(userId: "<USER_ID>", secret: "<SECRET>") {
+        _id
+        userId
+        provider
+        expire
+    }
+}
+```
+
+{% /multicode %}
+
+After the secret is verified, a session will be created.

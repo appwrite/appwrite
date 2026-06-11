@@ -1,0 +1,144 @@
+---
+layout: article
+title: Sites
+description: Harness the full power of self-hosted sites with Appwrite. Explore site deployment, management, and integration in your self-hosted environment.
+---
+
+This guide covers how to configure sites in your self-hosted Appwrite instance. For GitHub repository integration with sites, see the [version control configuration](/docs/advanced/self-hosting/configuration/version-control).
+
+# Configure sites runtimes {% #sites %}
+
+Not all site runtimes are enabled by default. Enable the runtimes that you need and disable unused runtimes to save disk space on your server.
+To enable a runtime, add it to the `_APP_SITES_RUNTIMES` environment variable as a comma-separated list.
+
+The three runtimes currently available for Sites are the Static, Node.js 22, and Flutter 3.41 runtimes.
+
+```bash
+_APP_SITES_RUNTIMES=static-1,node-22,flutter-3.41
+```
+
+You can also configure the maximum timeout that can be set on individual Appwrite Sites. The maximum configurable timeout can be increased by changing the `_APP_SITES_TIMEOUT` environment variable. This environment variable changes the configurable maximum but does not alter existing configurations of individual sites.
+
+{% partial file="update-variables.md" /%}
+
+# Add an apex domain for sites {% #root-domain %}
+
+Appwrite allows you to add an apex domain to your instance's configuration that you can publicly expose your Site on.
+
+{% info title="What is an apex domain?" %}
+
+An apex domain, also known as a root domain, is the highest level of a domain name without any subdomains. For example, `myapp.com` is an apex domain, while `appwrite.myapp.com` is a subdomain of the apex domain.
+
+{% /info %}
+
+To add an apex domain, you must first configure either one of the following environment variables in your `.env` file:
+
+- `_APP_DOMAIN_TARGET_A`: Set this to the IPv4 address of your server.
+- `_APP_DOMAIN_TARGET_AAAA`: Set this to the IPv6 address of your server.
+
+Head to the **Domains** tab of your site, and add your apex domain (e.g., `myapp.com`) as a new domain pointed to the active deployment.
+
+Next, head to your DNS provider and create an A or AAAA record for your root domain pointing to the server's IP address. This will allow Appwrite to serve your sites from the apex domain.
+
+{% info title="DNS conflicts" %}
+Make sure to remove any pre-existing `A` and `AAAA` records in the DNS settings of your domain, as these can conflict with your current configuration.
+{% /info %}
+
+# SSL certificates for sites domains {% #ssl-certificates %}
+
+Before setting up SSL certificates, ensure you have configured your DNS settings properly. You'll need to create a CNAME, A, or AAAA record that points your wildcard domain (e.g. `*.sites.appwrite.myapp.com`) to your Appwrite domain.
+
+Appwrite does not handle certificates for sites domains (e.g. `6772722a00331315adc3.sites.appwrite.myapp.com`)
+out of the box, since they require wildcard certificates.
+There are two ways to handle certificate generation.
+
+## Manual certificate generation
+
+The simplest way to generate certificates for domains is to use the Appwrite SSL command.
+
+```bash
+docker compose exec appwrite ssl --domain="6772722a00331315adc3.sites.appwrite.myapp.com"
+```
+
+The certificate should be generated within a few seconds.
+If you encounter any issues, you can check the certificate worker logs.
+
+```bash
+docker compose logs appwrite-worker-certificates
+```
+
+Note that you'll need to run this command for each domain, and repeat it every time you create a new site.
+If you have many sites or frequently create new ones, consider using the automated certificate generation method below.
+
+## Automated certificate generation
+
+For automated certificate generation, Appwrite uses Traefik's DNS Challenge feature.
+This is required for wildcard certificates (like `*.appwrite.myapp.com`)
+because Let's Encrypt uses the DNS-01 challenge to validate wildcard domain ownership.
+
+### Using DNS challenge with DigitalOcean
+
+To configure Traefik for automated certificate generation with DigitalOcean,
+you need to modify your `docker-compose.yml`:
+
+1. Add the following under the `traefik` service's `command` section.
+
+```yaml
+command:
+    # ... existing commands ...
+    - --certificatesresolvers.digitalocean.acme.dnschallenge=true
+    - --certificatesresolvers.digitalocean.acme.dnschallenge.provider=digitalocean
+    - --certificatesresolvers.digitalocean.acme.email=$_APP_SYSTEM_SECURITY_EMAIL_ADDRESS
+    - --certificatesresolvers.digitalocean.acme.storage=/storage/certificates/digitalocean.json
+```
+
+2. Add environment variables under the `traefik` service.
+
+```yaml
+environment:
+    - DO_AUTH_TOKEN=$_APP_DOMAIN_DO_TOKEN
+```
+
+3. Add the following `labels` under the `appwrite` service.
+
+```yaml
+labels:
+    # ... existing labels ...
+    - traefik.http.routers.appwrite_api_https.tls.certresolver=digitalocean
+    - traefik.http.routers.appwrite_api_https.tls.domains[0].main=$_APP_DOMAIN_TARGET_CNAME
+    - traefik.http.routers.appwrite_api_https.tls.domains[0].sans=*.$_APP_DOMAIN_TARGET_CNAME
+```
+
+4. Ensure these environment variables are properly configured in your `.env` file before proceeding:
+    - `_APP_SYSTEM_SECURITY_EMAIL_ADDRESS` must be set to a valid email for Let's Encrypt notifications
+    - `_APP_DOMAIN_SITES` must be correctly set to your site domain (e.g., `sites.example.com`)
+    - `_APP_DOMAIN_DO_TOKEN` must be set to a valid DigitalOcean API token (generate this in the DigitalOcean Console)
+
+5. Apply the changes.
+
+```bash
+docker compose up -d --force-recreate
+```
+
+### Troubleshooting DNS propagation
+
+If certificate generation fails, first check the Traefik logs to identify the specific issue.
+
+```bash
+docker compose logs traefik
+```
+
+A common issue is DNS propagation delays. If the logs show DNS verification failures, you can configure longer timeouts in your `docker-compose.yml` under the `traefik` service.
+
+```yaml
+environment:
+    - DO_AUTH_TOKEN=$_APP_DOMAIN_DO_TOKEN
+    - DO_POLLING_INTERVAL=1m
+    - DO_PROPAGATION_TIMEOUT=1h
+```
+
+{% info title="Rate limits" %}
+Let's Encrypt has strict rate limits for certificate requests. If you encounter rate limit errors in the logs, you may need to wait a few hours before trying again.
+{% /info %}
+
+For other DNS providers, refer to [Traefik's DNS providers documentation](https://doc.traefik.io/traefik/https/acme/#providers).

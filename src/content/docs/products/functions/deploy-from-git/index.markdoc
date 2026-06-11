@@ -1,0 +1,93 @@
+---
+layout: article
+title: Deploy from Git
+description: Learn to version and update your Appwrite Functions' code with deployments.
+---
+
+Appwrite Functions are mini-applications in Appwrite with their own endpoints. 
+Each function can have many deployments, which can be thought of as versions of the mini-application.
+
+Appwrite Functions can be automatically deployed from Git repositories, 
+so you can track changes to your function's code naturally as a part of you development workflow.
+
+# Create deployment {% #create-deployment %} 
+
+The recommended way to manage your Appwrite Function deployments is to use a version control system, like Git. 
+This offers simple versioning and collaboration that will easily fit into the rest of your development workflow.
+
+You can only use Git deployment for Appwrite Functions connected to Git. 
+[Create a new function with Git](/docs/products/functions/functions#create-function) or 
+connect your existing function to a Git repository in your function's **Settings** > **Configuration** > **Git settings** > **Connect Git**. 
+
+1. Using Git, checkout the branch you configured as the production branch when creating the Appwrite Function.
+2. Create a new commit.
+3. Push your new commit.
+4. A new deployment will be automatically created, built and activated.
+
+## Commits to the production branch {% #commits-to-production-branch %}
+
+When you push a commit to the production branch, usually `main`, a new deployment will be created, built, and activated.
+This means, the new deployments will **immediately replace the current active deployment** and handle all incoming requests.
+
+## Commits to other branches {% #commits-to-other-branches %}
+
+When you push a commit to a branch other than the production branch, a new deployment will be created, but it will not be activated.
+This means, the new deployment will not handle any incoming requests until it is activated.
+
+# Git configuration
+If you need to update your Git configuration, navigate to **Functions** > your function > 
+**Settings** > **Configuration** > **Git settings**. 
+
+## Build triggers {% #build-triggers %}
+
+Build triggers control which Git changes create automatic deployments. You can configure branch filters and path filters with glob patterns.
+
+**Branch filters** match branch names. Add patterns to limit automatic deployments to specific branches.
+
+```txt
+main
+staging
+preview/**
+```
+
+**Path filters** match files changed in a commit or pull request. Leave this field empty to create deployments for all file changes, or add patterns to deploy only when specific files change.
+
+```txt
+functions/api/**
+packages/shared/**
+!docs/**
+```
+
+Use these formats to write glob patterns.
+
+{% partial file="git-glob-patterns.md" /%}
+
+## Entry point {% #entry-point %}
+The entry point is the code file contains the exported function that will be executed when the function is called.
+This entry point has a specific format that must be followed. You can find examples using a [starter template](/docs/products/functions/templates)
+or following the [developing functions docs](/docs/products/functions/develop).
+
+## Root directory {% #root-directory %}
+
+The root directory is the root of the code that will be copied to the executor. 
+If you have a monorepo, you can specify the subdirectory that contains the function's code using the root directory setting.
+
+## Share code between multiple functions {% #share-code-between-multiple-functions %}
+
+If you're sharing code between multiple Appwrite Functions in a monorepo, referencing files outside of the entry point file will not work.
+To share code between multiple functions, set the root directory to be the common root of the mono repo, and use `cd <working directory>`
+in your **Build settings** to navigate to the function's directory before building.
+
+Another option is to use submodules in your Git repository to include shared code in each function's repository.
+
+# Debugging {% #debugging %}
+- If you updated your function's configuration but the deployment is not working as expected,
+you may need to first redeploy your function before the changes take effect.
+
+- If you notice your function is missing dependencies during build or at runtimes, update it's build settings.
+Navigate to **Functions** > your function > **Settings** > **Configuration** > **Build settings**. 
+These commands will be ran before the function is built and can be used to install dependencies.
+
+- If you're missing some code files at build time, make sure they are included in the Git configuration's **Root directory**. Only files in the root directory folder will be copied to the executor.
+
+- If you're self-hosting Appwrite, you will need to configure some [environment variables](/docs/advanced/self-hosting/functions) to enable Git deployments.

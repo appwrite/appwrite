@@ -1,0 +1,150 @@
+---
+layout: article
+title: Zed
+description: Learn how you can use Zed with Appwrite by adding Appwrite MCP servers and installing Appwrite skills for AI-assisted development.
+---
+
+{% section #quick-start-prompts step=1 title="Quick start prompts" %}
+
+Get started quickly with these pre-built prompts for common Appwrite integrations:
+
+{% cards %}
+{% cards_item href="/docs/tooling/ai/quickstart-prompts/nextjs" title="Next.js" icon="icon-nextjs" %}
+{% /cards_item %}
+{% cards_item href="/docs/tooling/ai/quickstart-prompts/tanstack-start" title="TanStack Start" icon="web-icon-tanstack" %}
+{% /cards_item %}
+{% /cards %}
+
+{% arrow_link href="/docs/tooling/ai/quickstart-prompts" %}
+Browse all quick start prompts
+{% /arrow_link %}
+
+{% /section %}
+
+{% section #step-2 step=2 title="Add MCP servers" %}
+
+Connect Appwrite MCP servers to Zed for deeper integration with the Appwrite API and documentation.
+
+Before you begin, ensure you have the following **pre-requisites** installed on your system:
+
+{% tabs %}
+{% tabsitem #api-server-prerequisites title="API server" %}
+
+[uv](https://docs.astral.sh/uv/getting-started/installation/) must be installed on your system.
+
+{% /tabsitem %}
+
+{% tabsitem #docs-server-prerequisites title="Docs server" %}
+
+No additional prerequisites. The docs server runs as a remote HTTP endpoint.
+
+{% /tabsitem %}
+{% /tabs %}
+
+In Zed, open the **Command Palette** (press `CMD + Shift + P` on MacOS or `CTRL + Shift + P` on Linux), run the `agent: add context server` action, and choose which MCP server you want to configure:
+
+{% tabs %}
+{% tabsitem #api-only title="API server" %}
+
+In the **Local** tab, update the JSON configuration to include the API server:
+
+```json
+{
+  "appwrite-api": {
+    "command": "uvx",
+    "args": [
+      "mcp-server-appwrite"
+    ],
+    "env": {
+      "APPWRITE_PROJECT_ID": "your-project-id",
+      "APPWRITE_API_KEY": "your-api-key",
+      "APPWRITE_ENDPOINT": "https://<REGION>.cloud.appwrite.io/v1"
+    }
+  }
+}
+
+```
+
+**Configuration:**
+
+- Replace `your-project-id` with your actual Appwrite project ID
+- Replace `your-api-key` with your Appwrite API key
+- Replace `<REGION>` with your Appwrite Cloud region (e.g., `nyc`, `fra`)
+
+{% /tabsitem %}
+
+{% tabsitem #docs-only title="Docs server" %}
+
+In the **Remote** tab, update the JSON configuration to include the docs server:
+
+```json
+{
+  "appwrite-docs": {
+    "url": "https://mcp-for-docs.appwrite.io"
+  }
+}
+
+```
+
+{% /tabsitem %}
+{% /tabs %}
+
+Click **Add Server** after adding each configuration. You can also review the configured servers in the **Model Context Protocol (MCP) Servers** section of Zed's Agent settings.
+
+{% /section %}
+
+{% section #step-3 step=3 title="Install Appwrite skills" %}
+
+Install Appwrite skills to give Zed's agent SDK-specific knowledge about Appwrite.
+
+Run the following command in your project directory:
+
+```bash
+npx skills add appwrite/agent-skills
+```
+
+When prompted:
+
+1. Select the Appwrite skills that match the SDKs you use in your project.
+2. Select **Zed** as one of the AI tools that should use the installed skills.
+3. Choose whether to install the skills at the project level or globally.
+4. Select **symlink** as the installation method.
+
+Zed loads skills from `~/.agents/skills/` for global installs and `<worktree>/.agents/skills/` for project-local installs. Each skill must be a direct child of the `skills` folder and include a `SKILL.md` file.
+
+{% /section %}
+
+{% section #step-4 step=4 title="Test the integration" %}
+
+Open the Agent panel in Zed and test your MCP integrations. You can try out the following example prompts based on the MCP server you have configured:
+
+{% tabs %}
+{% tabsitem #test-api title="API server" %}
+
+**Example prompts:**
+
+- `Create a new user in my Appwrite project`
+- `List all databases in my project`
+- `Show me the tables in my database`
+- `Create a new row in my table`
+- `Delete a specific user by ID`
+
+{% /tabsitem %}
+
+{% tabsitem #test-docs title="Docs server" %}
+
+**Example prompts:**
+
+- `How do I set up real-time subscriptions in Appwrite?`
+- `Show me how to authenticate users with OAuth`
+- `What are the best practices for database queries?`
+- `How do I implement file uploads with Appwrite Storage?`
+- `Show me an example of using Appwrite Functions`
+
+{% /tabsitem %}
+
+{% /tabs %}
+
+![Zed Agent using the Appwrite docs MCP](/images/docs/mcp/zed/zed-agent-chat.avif)
+
+{% /section %}

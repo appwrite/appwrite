@@ -1,0 +1,68 @@
+---
+layout: article
+title: Billing
+description: Understand Appwrite's billing features, like budget caps, billing periods, taxes, and more.
+---
+
+Appwrite allows you to configure billing per organization.
+You can access your organizations billing information under the **Billing** tab of your organization.
+
+# Plans {% #plans %}
+You can view or change your organization's plan under the **Billing** section.
+You'll also find the expected cost, as well as the start and end date of the current billing period.
+
+## Billing period {% #billing-period %}
+Billing periods begin the day you change your plan, and lasts 30 days.
+Your resource limits are reset at the beginning of each billing period.
+
+Charges are applied at different times:
+- **Projects and add-ons** are billed at the start of the billing period
+- **Additional usage** (like bandwidth, execution time, and GB-hours) is billed at the start of the following billing period based on your actual usage
+
+# Payment history {% #payment-history %}
+You can view and download you past invoices under **Payment history**.
+You can click the three-dots menu to view and download your invoices.
+
+# Payment methods {% #payment-methods %}
+Appwrite Cloud accepts credit and debit cards as payment methods and will bill the card at the end of each billing cycle.
+Appwrite accepts Visa, Mastercard, American Express, Discover & Diners Club, China UnionPay, Japan Credit Bureau (JCB), Cartes Bancaires, and eftpos Australia.
+
+# Billing address {% #billing-address %}
+Your billing address will be displayed on your invoices and used when Appwrite Cloud bills your payment method at the end of a billing cycle.
+
+# Tax ID {% #tax-id %}
+If you'd like you or your company's tax ID displayed on your generated invoice, you can provide it under **Tax ID**.
+
+# Budget cap {% #budget-cap %}
+Appwrite allows you to set budget caps for your organization.
+Appwrite will automatically scale your projects by purchasing add-ons as they require more resources.
+Budget caps limit the amount of automatic scaling and prevent unexpected bills.
+This budget cap does **not include the plan's recurring cost**, only add-ons.
+
+You can enable budget caps under **Budget cap**, toggle the option **Enable budget cap**.
+You will be able to set a budget cap in USD.
+
+## Budget alerts {% #budget-alerts %}
+When you enable budget cap, you'll be able to configure alerts under **Budget alerts** to warn you when your organization is near the budget cap.
+By default, an email alert will be sent at 75% of the budget cap. You can add up to three checkpoints that send budget alerts when reached.
+
+# Redeem credit {% #redeem-credit %}
+If you received a redeemable code for Appwrite Cloud credits, you can redeem them in the **Available credit** section.
+When you redeem credit, the credit balance will be automatically applied to the next billing cycle.
+
+# Recurring payments for Indian developers {% #recurring-payments-for-indian-developers %}
+
+The Reserve Bank of India (RBI) mandates additional security measures for recurring payments on **Indian cards**.
+Appwrite is obligated to ask for verification before billing your card.
+Appwrite asks for verification for up to $150 in case you use add-ons.
+Confirming the verification will not charge your card.
+When you are charged at the end of the billing period,
+you will not be charged more than your monthly plan plus add-ons used.
+
+If you set a budget cap, the verification will remain at $150, but the budget cap will still be applied for your add-ons.
+Again, you will not be charged when confirming the verification.
+When you are charged at the end of the billing period,
+you will not be charged more than your monthly plan plus add-ons used.
+
+If you need higher limits, [contact us](mailto:billing@appwrite.io).
+

@@ -1,0 +1,74 @@
+---
+layout: article
+title: Migrate from Firebase
+description: Migrate seamlessly from Firebase to Appwrite. Learn how to transfer data, authentication, and services from Firebase to leverage Appwrite's capabilities.
+difficulty: beginner
+readtime: 20
+---
+
+Appwrite migrations help you quickly migrate your data from Firebase or other [sources](/docs/advanced/migrations#sources) to Appwrite. You can follow the instructions on the Appwrite Console migration wizard or use this guide to perform your data migration. While migrations are a great way to move your data from other services to Appwrite and get started quickly, they're not perfect. Make sure to understand the different [limitations](#limitations) before completing your migration.
+
+{% info title="Charges" %}
+When you migrate data from Firebase to Appwrite Cloud, the resource usage during the migration will not count towards your Appwrite Cloud usage charges. However, Firebase, may have data transfer charges.
+{% /info %}
+
+{% section #create-service-account step=1 title="Create service account" %}
+
+To begin migrating to Appwrite, follow these steps.
+
+1. Open your Firebase console.
+
+1. Access your **Project Settings** by clicking the gear icon.
+
+1. Click on **Service Accounts**, then click on the **Manage service account permissions** link, which will redirect you to the Google Cloud Console.
+
+1. Click on **Create Service Account**, provide a name, ID, and description, and click **Continue**.
+
+1. Grant the service account the following roles
+
+| Role                    | Description                                                                  |
+|-------------------------|------------------------------------------------------------------------------|
+| Firebase Viewer         | Read access to your entire Firebase project, including Database and Storage. |
+| Identity Toolkit Viewer | Read access to your users, including their hash config.                      |
+
+{% /section %}
+
+{% section #create-api-key step=2 title="Create API key" %}
+
+1. Find the service account you just created.
+
+1. Click the triple-dot icon to the right to see more options and click the **Manage keys** button.
+
+1. Click **Add Key** and select **Create new key**. Choose **JSON** as the key type and click **Create**. This will download a JSON file to your computer.
+
+{% /section %}
+
+{% section #start-migration step=3 title="Start Migration" %}
+
+1. Create a new project and navigate to the **Migrations** tab in **Project Settings**.
+
+1. Click on the **Create Migration** button and select **Firebase** as your source.
+
+1. Paste the contents of your JSON file into the textbox and follow the migration wizard to select which resources you need to migrate. Finally click **Start migration** to begin the migration process.
+
+{% /section %}
+{% section #next-steps step=4 title="Next steps" %}
+
+1. In your Appwrite Console, navigate to **Overview** > **Integrations** > **Platforms**, add the platforms for your Web, Flutter, Android, and iOS apps. Appwrite will reject requests from unknown web, Flutter, and mobile apps to protect from malicious attacks. You app **must be added as a platform** for Appwrite to accept requests.
+
+1. Remember to [add appropriate permissions](/docs/advanced/platform/permissions) to the migrated resources to protect user data and privacy.
+
+1. Migrate functions manually, by [pick a runtime](/docs/products/functions/runtimes) and [learn to develop Appwrite Functions](/docs/products/functions/develop).
+
+1. Explore Appwrite's unique features by exploring the rest of the [Appwrite Documentation](/docs).
+
+{% /section %}
+
+# Limitations {% #limitations %}
+
+Not all vendors make their APIs publicly accessible or easy to use for extracting and fully owning your data. Furthermore, due to varying design philosophies, certain resources cannot be migrated on a one-to-one basis. Below, you'll find a list of some known limitations when migrating data from Firebase to Appwrite. It's advisable to review this list before initiating your migration or deploying your product in a production environment.
+
+- Appwrite Migrations only supports Firestore as a database source; Realtime Database is currently not supported.
+- At the moment, only top-level row migration is supported. Nested rows will not be migrated automatically.
+- OAuth users will not be migrated because the sessions are managed by the third-party OAuth provider. Users will need to re-authenticate with your OAuth provider after the migration is complete.
+- Functions are not automatically migrated because of syntax and runtime differences.

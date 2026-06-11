@@ -1,0 +1,104 @@
+---
+layout: article
+title: MCP server for Appwrite API
+description: Enable LLMs and code-generation tools to interact with the Appwrite API
+---
+
+The MCP server for Appwrite API allows LLMs and code-generation tools to interact with the Appwrite platform and perform various operations on your Appwrite resources, such as creating users, managing databases, and more, using natural language commands.
+
+Here are some of the key benefits of using the MCP server:
+
+- **Direct API interaction**: Enables LLMs to perform actions directly on your Appwrite project
+- **Real-time data access**: Allows LLMs to fetch and manipulate live data from your Appwrite instance
+- **Simplified workflows**: Facilitates complex operations through simple natural language prompts
+- **Automatic service discovery**: All supported Appwrite services are automatically registered, no configuration needed
+
+# Pre-requisites {% #pre-requisites %}
+
+## Appwrite API key
+
+Before launching the MCP server, you must [set up an Appwrite project](https://cloud.appwrite.io) and create an **API key** with the necessary scopes enabled.
+
+{% only_light %}
+![Appwrite API key](/images/docs/mcp/appwrite/appwrite-api-secret.avif)
+{% /only_light %}
+{% only_dark %}
+![Appwrite API key](/images/docs/mcp/appwrite/dark/appwrite-api-secret.avif)
+{% /only_dark %}
+
+Ensure you save the **API key** along with the **project ID**, **region** and **endpoint URL** from the Settings page of your project as you'll need them later.
+
+## Install uv
+
+Install [uv](https://docs.astral.sh/uv/getting-started/installation/) on your system with:
+
+{% tabs %}
+{% tabsitem #uv-linux-macos title="Linux and MacOS" %}
+
+```bash
+curl -LsSf https://astral.sh/uv/install.sh | sh
+```
+
+{% /tabsitem %}
+
+{% tabsitem #uv-windows title="Windows" %}
+
+```powershell
+powershell -ExecutionPolicy ByPass -c "irm https://astral.sh/uv/install.ps1 | iex"
+``` 
+
+{% /tabsitem %}
+{% /tabs %}
+
+You can verify the installation by running the following command in your terminal:
+
+```bash
+uv
+```
+
+# Installation {% #installation %}
+
+{% partial file="mcp-add-ides-tools.md" /%}
+
+## How it works
+
+The MCP server starts in a compact workflow where only two MCP tools are exposed to the model:
+
+- `appwrite_search_tools` - Searches the full Appwrite tool catalog at runtime
+- `appwrite_call_tool` - Calls a specific Appwrite tool by name
+
+The full Appwrite tool catalog stays internal and is searched at runtime, using less of the model's context.
+
+# Usage {% #usage %}
+
+Once configured, your AI assistant will have access to your Appwrite project. You can ask questions like:
+
+## Example 1: List users
+
+Run the following prompt in your preferred code editor/LLM after enabling the MCP server: 
+
+```
+List users in my Appwrite project
+```
+
+![List users in Appwrite project](/images/docs/mcp/claude-desktop/claude-list-users.avif)
+
+## Example 2: Search a site
+
+Run the following prompt in your preferred code editor/LLM after enabling the MCP server: 
+
+```
+Get the details of my portfolio site from Appwrite
+```
+
+![Search for portfolio site in Appwrite project](/images/docs/mcp/vscode/copilot-chat.avif)
+
+## Example 3: Create a user
+
+Run the following prompt in your preferred code editor/LLM after enabling the MCP server: 
+
+```
+Add a user john.doe@example.com to the Appwrite project
+```
+
+![Create user in Appwrite project](/images/docs/mcp/cursor/cursor-create-user.avif)

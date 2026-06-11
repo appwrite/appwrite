@@ -1,0 +1,54 @@
+---
+layout: article
+title: Database Reads and Writes
+description: Learn how Appwrite handles database reads and writes and their associated costs.
+---
+{% info title="Note" %}
+Updated pricing will take effect on April 10th, 2025. Check out this [blog post](/blog/post/announcing-database-reads-and-writes-pricing) for more information.
+{% /info %}
+
+Appwrite provides powerful database capabilities through its [Database API](/docs/products/databases), allowing you to perform read and write operations across your application data. Understanding how these operations are counted and billed is essential for planning your application's scalability.
+
+## Database Operations
+
+Database operations in Appwrite are categorized into two types:
+
+**Read Operations**: Any action that retrieves data from your database, including:
+- Fetching rows with `getRow` or `listRows`.
+
+**Write Operations**: Any action that modifies data in your database, including:
+- Creating rows with `createRow`.
+- Updating rows with `updateRow`.
+- Deleting rows with `deleteRow`.
+
+How it works:
+1. Perform database operations through the Appwrite SDK or API.
+2. Appwrite automatically tracks and logs these operations.
+3. Operations are counted based on the number of rows affected, not API calls.
+4. Quotas are refreshed monthly based on your subscription plan.
+
+For example, if you fetch a table of 50 rows with a single API call, this counts as 50 read operations, not as a single operation. If your query returns no rows, this counts as a single operation.
+
+## Pricing
+
+### Free Plan
+- **Included**: 500,000 read operations and 250,000 write operations per month.
+- **Overage**: Not available (operations are throttled when limits are reached).
+
+### Pro and Scale Plans
+- **Included**: 1,750,000 read operations and 750,000 write operations per month.
+- **Overage**: $0.060 per 100,000 additional read operations and $0.10 per 100,000 additional write operations.
+
+### Enterprise Plan
+- **Included**: Unlimited read and write operations.
+- **Overage**: Not applicable.
+
+For detailed information about the different pricing options and features, please visit the [pricing page](/pricing).
+
+## Best Practices
+
+To optimize your database operations and control costs:
+1. **Use efficient queries**: Filter data on the server side rather than retrieving large datasets and filtering client-side.
+2. **Implement pagination**: Use the `limit` and `offset` parameters to retrieve only the data you need.
+3. **Monitor usage**: Keep track of your database operations through the Appwrite Console.
+4. **Consider caching**: Cache frequently accessed data to reduce repeated read operations.

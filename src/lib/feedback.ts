@@ -93,3 +93,50 @@ export async function submitFeedback(
 
   return true
 }
+
+export type DocsFeedbackType = 'positive' | 'negative'
+
+export interface SubmitDocsFeedbackParams {
+  type: DocsFeedbackType
+  route: string
+  comment: string
+  email: string
+  userId?: string
+}
+
+/**
+ * Submits docs page feedback to the Growth server (`/feedback/docs`).
+ * Returns false when VITE_GROWTH_ENDPOINT is not configured.
+ */
+export async function submitDocsFeedback(
+  params: SubmitDocsFeedbackParams,
+): Promise<boolean> {
+  if (!GROWTH_ENDPOINT?.trim()) {
+    return false
+  }
+
+  const response = await fetch(
+    `${GROWTH_ENDPOINT.replace(/\/$/, '')}/feedback/docs`,
+    {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        email: params.email,
+        type: params.type,
+        route: params.route,
+        comment: params.comment,
+        metaFields: {
+          userId: params.userId,
+        },
+      }),
+    },
+  )
+
+  if (response.status >= 400) {
+    throw new Error('Failed to submit feedback')
+  }
+
+  return true
+}

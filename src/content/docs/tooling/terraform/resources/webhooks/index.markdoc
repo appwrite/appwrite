@@ -1,0 +1,64 @@
+---
+layout: article
+title: Webhooks
+description: Register Appwrite webhooks with Terraform to deliver events to your HTTP endpoints.
+---
+
+The `appwrite_webhook` resource registers a **URL** and **event** subscriptions so Appwrite can notify your services when resources change. Configure **`tls`** for TLS verification on the webhook URL, **`auth_username`** and **`auth_password`** when your endpoint expects HTTP basic authentication, and read **`secret`** from Terraform state when you verify **incoming** webhook signatures on your server.
+
+See the Terraform Registry: [webhook](https://registry.terraform.io/providers/appwrite/appwrite/latest/docs/resources/webhook). The [provider repository](https://github.com/appwrite/terraform-provider-appwrite) lists the full argument reference.
+
+# Resource {% #resource %}
+
+| Resource | Purpose |
+|----------|---------|
+| `appwrite_webhook` | Register a webhook URL and subscribe to Appwrite events |
+
+# Examples {% #examples %}
+
+## Basic {% #basic %}
+
+```hcl
+resource "appwrite_webhook" "user_events" {
+  name   = "user-events"
+  url    = "https://api.example.com/webhooks/users"
+  events = ["users.*.create", "users.*.update"]
+  tls    = true
+}
+```
+
+## TLS and HTTP basic auth to your endpoint {% #authenticated %}
+
+```hcl
+resource "appwrite_webhook" "authenticated" {
+  name          = "authenticated webhook"
+  url           = "https://api.example.com/webhooks/secure"
+  events        = ["databases.*.collections.*.documents.*.create"]
+  auth_username = "webhook"
+  auth_password = var.webhook_password
+  tls           = true
+}
+```
+
+Use the read-only **`secret`** attribute when configuring **signature verification** for payloads Appwrite sends to your URL (see [Webhooks](/docs/advanced/platform/webhooks) in the platform docs).
+
+# Data sources {% #data-sources %}
+
+The **`appwrite_webhook`** data source reads a webhook that already exists by ID. Use it to reference an existing webhook from other resources or outputs without recreating it in Terraform.
+
+```hcl
+data "appwrite_webhook" "slack" {
+  id = "64f2cd7e27bda9f23ab6"
+}
+
+output "webhook_url" {
+  value = data.appwrite_webhook.slack.url
+}
+```
+
+See the [Terraform Registry](https://registry.terraform.io/providers/appwrite/appwrite/latest/docs/data-sources/webhook) for the full attribute list.
+
+# Related {% #related %}
+
+- [Configuration](/docs/tooling/terraform/provider): authentication and endpoints
+- [Webhooks](/docs/advanced/platform/webhooks): event delivery, headers, and signatures

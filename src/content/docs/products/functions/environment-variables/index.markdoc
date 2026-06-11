@@ -1,0 +1,1316 @@
+---
+layout: article
+title: Environment variables
+description: Set environment variables for your Appwrite Functions to pass constants and secrets at build and runtime.
+---
+
+Appwrite Functions can read environment variables at build and runtime. Use them to pass constants and secrets such as API keys, connection strings, and feature flags without hardcoding them in your source.
+
+A function reads from three sources, in this order of precedence:
+
+1. **Project variables** are shared across every function and site in your project. Set them once and every function inherits them automatically. See [project variables](/docs/advanced/platform/environment-variables) for the platform-wide reference.
+2. **Function variables** are scoped to a single function. Override a project variable for one function by setting the same key on the function itself.
+3. **Appwrite-injected variables** are set by Appwrite at execution time (for example, `APPWRITE_FUNCTION_PROJECT_ID`). These take final precedence and cannot be overridden.
+
+{% info title="Redeployment required" %}
+Variable changes only take effect on the next deployment. Redeploy your function after creating, updating, or deleting variables.
+{% /info %}
+
+# Manage in the Console {% #console %}
+
+1. Navigate to your function in the Appwrite Console.
+2. Open the **Settings** tab > **Environment variables** section.
+3. Click **Create variable** and enter a key and value.
+4. Optionally select the **Secret** checkbox to prevent any team member from reading the value after creation.
+5. Click **Create**, then redeploy the function for the change to take effect.
+
+{% only_dark %}
+![Function environment variables](/images/docs/functions/dark/env-variables.avif)
+{% /only_dark %}
+{% only_light %}
+![Function environment variables](/images/docs/functions/env-variables.avif)
+{% /only_light %}
+
+You can also configure global variables that apply to all your functions from your project's **Settings** page. See [project variables](/docs/advanced/platform/environment-variables) for details.
+
+# Manage with a Server SDK {% #server-sdks %}
+
+You can also manage function variables programmatically using a [Server SDK](/docs/sdks#server). Each call requires an [API key](/docs/advanced/platform/api-keys) with the `functions.write` scope to create, update, or delete variables, or the `functions.read` scope to list and read them.
+
+## Create a variable {% #create-variable %}
+
+{% multicode %}
+```server-nodejs
+import { Client, Functions } from 'node-appwrite';
+
+const client = new Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1') // Your API Endpoint
+    .setProject('<YOUR_PROJECT_ID>') // Your project ID
+    .setKey('<YOUR_API_KEY>'); // Your API key
+
+const functions = new Functions(client);
+
+const result = await functions.createVariable({
+    functionId: '<FUNCTION_ID>',
+    key: '<KEY>',
+    value: '<VALUE>',
+    secret: false // optional
+});
+```
+```server-deno
+import { Client, Functions } from "npm:node-appwrite";
+
+const client = new Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1') // Your API Endpoint
+    .setProject('<YOUR_PROJECT_ID>') // Your project ID
+    .setKey('<YOUR_API_KEY>'); // Your API key
+
+const functions = new Functions(client);
+
+const result = await functions.createVariable({
+    functionId: '<FUNCTION_ID>',
+    key: '<KEY>',
+    value: '<VALUE>',
+    secret: false // optional
+});
+```
+```server-php
+<?php
+
+use Appwrite\Client;
+use Appwrite\Services\Functions;
+
+$client = (new Client())
+    ->setEndpoint('https://<REGION>.cloud.appwrite.io/v1') // Your API Endpoint
+    ->setProject('<YOUR_PROJECT_ID>') // Your project ID
+    ->setKey('<YOUR_API_KEY>'); // Your API key
+
+$functions = new Functions($client);
+
+$result = $functions->createVariable(
+    functionId: '<FUNCTION_ID>',
+    key: '<KEY>',
+    value: '<VALUE>',
+    secret: false // optional
+);
+```
+```server-python
+from appwrite.client import Client
+from appwrite.services.functions import Functions
+from appwrite.models import Variable
+
+client = Client()
+client.set_endpoint('https://<REGION>.cloud.appwrite.io/v1') # Your API Endpoint
+client.set_project('<YOUR_PROJECT_ID>') # Your project ID
+client.set_key('<YOUR_API_KEY>') # Your API key
+
+functions = Functions(client)
+
+result: Variable = functions.create_variable(
+    function_id = '<FUNCTION_ID>',
+    key = '<KEY>',
+    value = '<VALUE>',
+    secret = False # optional
+)
+
+print(result.model_dump())
+```
+```server-ruby
+require 'appwrite'
+
+include Appwrite
+
+client = Client.new
+    .set_endpoint('https://<REGION>.cloud.appwrite.io/v1') # Your API Endpoint
+    .set_project('<YOUR_PROJECT_ID>') # Your project ID
+    .set_key('<YOUR_API_KEY>') # Your API key
+
+functions = Functions.new(client)
+
+result = functions.create_variable(
+    function_id: '<FUNCTION_ID>',
+    key: '<KEY>',
+    value: '<VALUE>',
+    secret: false # optional
+)
+```
+```server-dotnet
+using Appwrite;
+using Appwrite.Models;
+using Appwrite.Services;
+
+Client client = new Client()
+    .SetEndPoint("https://<REGION>.cloud.appwrite.io/v1") // Your API Endpoint
+    .SetProject("<YOUR_PROJECT_ID>") // Your project ID
+    .SetKey("<YOUR_API_KEY>"); // Your API key
+
+Functions functions = new Functions(client);
+
+Variable result = await functions.CreateVariable(
+    functionId: "<FUNCTION_ID>",
+    key: "<KEY>",
+    value: "<VALUE>",
+    secret: false // optional
+);
+```
+```server-dart
+import 'package:dart_appwrite/dart_appwrite.dart';
+
+Client client = Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1') // Your API Endpoint
+    .setProject('<YOUR_PROJECT_ID>') // Your project ID
+    .setKey('<YOUR_API_KEY>'); // Your API key
+
+Functions functions = Functions(client);
+
+Variable result = await functions.createVariable(
+    functionId: '<FUNCTION_ID>',
+    key: '<KEY>',
+    value: '<VALUE>',
+    secret: false, // (optional)
+);
+```
+```server-kotlin
+import io.appwrite.Client
+import io.appwrite.coroutines.CoroutineCallback
+import io.appwrite.services.Functions
+
+val client = Client()
+    .setEndpoint("https://<REGION>.cloud.appwrite.io/v1") // Your API Endpoint
+    .setProject("<YOUR_PROJECT_ID>") // Your project ID
+    .setKey("<YOUR_API_KEY>") // Your API key
+
+val functions = Functions(client)
+
+val response = functions.createVariable(
+    functionId = "<FUNCTION_ID>",
+    key = "<KEY>",
+    value = "<VALUE>",
+    secret = false // optional
+)
+```
+```server-java
+import io.appwrite.Client;
+import io.appwrite.coroutines.CoroutineCallback;
+import io.appwrite.services.Functions;
+
+Client client = new Client()
+    .setEndpoint("https://<REGION>.cloud.appwrite.io/v1") // Your API Endpoint
+    .setProject("<YOUR_PROJECT_ID>") // Your project ID
+    .setKey("<YOUR_API_KEY>"); // Your API key
+
+Functions functions = new Functions(client);
+
+functions.createVariable(
+    "<FUNCTION_ID>", // functionId
+    "<KEY>", // key
+    "<VALUE>", // value
+    false, // secret (optional)
+    new CoroutineCallback<>((result, error) -> {
+        if (error != null) {
+            error.printStackTrace();
+            return;
+        }
+
+        System.out.println(result);
+    })
+);
+```
+```server-swift
+import Appwrite
+
+let client = Client()
+    .setEndpoint("https://<REGION>.cloud.appwrite.io/v1") // Your API Endpoint
+    .setProject("<YOUR_PROJECT_ID>") // Your project ID
+    .setKey("<YOUR_API_KEY>") // Your API key
+
+let functions = Functions(client)
+
+let variable = try await functions.createVariable(
+    functionId: "<FUNCTION_ID>",
+    key: "<KEY>",
+    value: "<VALUE>",
+    secret: false // optional
+)
+```
+```server-go
+package main
+
+import (
+    "fmt"
+    "github.com/appwrite/sdk-for-go/appwrite"
+)
+
+client := appwrite.NewClient(
+    appwrite.WithEndpoint("https://<REGION>.cloud.appwrite.io/v1"),
+    appwrite.WithProject("<YOUR_PROJECT_ID>"),
+    appwrite.WithKey("<YOUR_API_KEY>"),
+)
+
+functions := appwrite.NewFunctions(client)
+
+response, error := functions.CreateVariable(
+    "<FUNCTION_ID>",
+    "<KEY>",
+    "<VALUE>",
+    appwrite.WithCreateVariableSecret(false),
+)
+```
+```server-rust
+use appwrite::Client;
+use appwrite::services::Functions;
+
+#[tokio::main]
+async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    let client = Client::new();
+    client.set_endpoint("https://<REGION>.cloud.appwrite.io/v1"); // Your API Endpoint
+    client.set_project("<YOUR_PROJECT_ID>"); // Your project ID
+    client.set_key("<YOUR_API_KEY>"); // Your API key
+
+    let functions = Functions::new(&client);
+
+    let result = functions.create_variable(
+        "<FUNCTION_ID>",
+        "<KEY>",
+        "<VALUE>",
+        Some(false) // optional
+    ).await?;
+
+    let _ = result;
+
+    Ok(())
+}
+```
+{% /multicode %}
+
+## List variables {% #list-variables %}
+
+{% multicode %}
+```server-nodejs
+import { Client, Functions } from 'node-appwrite';
+
+const client = new Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1') // Your API Endpoint
+    .setProject('<YOUR_PROJECT_ID>') // Your project ID
+    .setKey('<YOUR_API_KEY>'); // Your API key
+
+const functions = new Functions(client);
+
+const result = await functions.listVariables({
+    functionId: '<FUNCTION_ID>'
+});
+```
+```server-deno
+import { Client, Functions } from "npm:node-appwrite";
+
+const client = new Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1') // Your API Endpoint
+    .setProject('<YOUR_PROJECT_ID>') // Your project ID
+    .setKey('<YOUR_API_KEY>'); // Your API key
+
+const functions = new Functions(client);
+
+const result = await functions.listVariables({
+    functionId: '<FUNCTION_ID>'
+});
+```
+```server-php
+<?php
+
+use Appwrite\Client;
+use Appwrite\Services\Functions;
+
+$client = (new Client())
+    ->setEndpoint('https://<REGION>.cloud.appwrite.io/v1') // Your API Endpoint
+    ->setProject('<YOUR_PROJECT_ID>') // Your project ID
+    ->setKey('<YOUR_API_KEY>'); // Your API key
+
+$functions = new Functions($client);
+
+$result = $functions->listVariables(
+    functionId: '<FUNCTION_ID>'
+);
+```
+```server-python
+from appwrite.client import Client
+from appwrite.services.functions import Functions
+from appwrite.models import VariableList
+
+client = Client()
+client.set_endpoint('https://<REGION>.cloud.appwrite.io/v1') # Your API Endpoint
+client.set_project('<YOUR_PROJECT_ID>') # Your project ID
+client.set_key('<YOUR_API_KEY>') # Your API key
+
+functions = Functions(client)
+
+result: VariableList = functions.list_variables(
+    function_id = '<FUNCTION_ID>'
+)
+
+print(result.model_dump())
+```
+```server-ruby
+require 'appwrite'
+
+include Appwrite
+
+client = Client.new
+    .set_endpoint('https://<REGION>.cloud.appwrite.io/v1') # Your API Endpoint
+    .set_project('<YOUR_PROJECT_ID>') # Your project ID
+    .set_key('<YOUR_API_KEY>') # Your API key
+
+functions = Functions.new(client)
+
+result = functions.list_variables(
+    function_id: '<FUNCTION_ID>'
+)
+```
+```server-dotnet
+using Appwrite;
+using Appwrite.Models;
+using Appwrite.Services;
+
+Client client = new Client()
+    .SetEndPoint("https://<REGION>.cloud.appwrite.io/v1") // Your API Endpoint
+    .SetProject("<YOUR_PROJECT_ID>") // Your project ID
+    .SetKey("<YOUR_API_KEY>"); // Your API key
+
+Functions functions = new Functions(client);
+
+VariableList result = await functions.ListVariables(
+    functionId: "<FUNCTION_ID>"
+);
+```
+```server-dart
+import 'package:dart_appwrite/dart_appwrite.dart';
+
+Client client = Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1') // Your API Endpoint
+    .setProject('<YOUR_PROJECT_ID>') // Your project ID
+    .setKey('<YOUR_API_KEY>'); // Your API key
+
+Functions functions = Functions(client);
+
+VariableList result = await functions.listVariables(
+    functionId: '<FUNCTION_ID>',
+);
+```
+```server-kotlin
+import io.appwrite.Client
+import io.appwrite.coroutines.CoroutineCallback
+import io.appwrite.services.Functions
+
+val client = Client()
+    .setEndpoint("https://<REGION>.cloud.appwrite.io/v1") // Your API Endpoint
+    .setProject("<YOUR_PROJECT_ID>") // Your project ID
+    .setKey("<YOUR_API_KEY>") // Your API key
+
+val functions = Functions(client)
+
+val response = functions.listVariables(
+    functionId = "<FUNCTION_ID>"
+)
+```
+```server-java
+import io.appwrite.Client;
+import io.appwrite.coroutines.CoroutineCallback;
+import io.appwrite.services.Functions;
+
+Client client = new Client()
+    .setEndpoint("https://<REGION>.cloud.appwrite.io/v1") // Your API Endpoint
+    .setProject("<YOUR_PROJECT_ID>") // Your project ID
+    .setKey("<YOUR_API_KEY>"); // Your API key
+
+Functions functions = new Functions(client);
+
+functions.listVariables(
+    "<FUNCTION_ID>", // functionId
+    new CoroutineCallback<>((result, error) -> {
+        if (error != null) {
+            error.printStackTrace();
+            return;
+        }
+
+        System.out.println(result);
+    })
+);
+```
+```server-swift
+import Appwrite
+
+let client = Client()
+    .setEndpoint("https://<REGION>.cloud.appwrite.io/v1") // Your API Endpoint
+    .setProject("<YOUR_PROJECT_ID>") // Your project ID
+    .setKey("<YOUR_API_KEY>") // Your API key
+
+let functions = Functions(client)
+
+let variableList = try await functions.listVariables(
+    functionId: "<FUNCTION_ID>"
+)
+```
+```server-go
+package main
+
+import (
+    "fmt"
+    "github.com/appwrite/sdk-for-go/appwrite"
+)
+
+client := appwrite.NewClient(
+    appwrite.WithEndpoint("https://<REGION>.cloud.appwrite.io/v1"),
+    appwrite.WithProject("<YOUR_PROJECT_ID>"),
+    appwrite.WithKey("<YOUR_API_KEY>"),
+)
+
+functions := appwrite.NewFunctions(client)
+
+response, error := functions.ListVariables(
+    "<FUNCTION_ID>",
+)
+```
+```server-rust
+use appwrite::Client;
+use appwrite::services::Functions;
+
+#[tokio::main]
+async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    let client = Client::new();
+    client.set_endpoint("https://<REGION>.cloud.appwrite.io/v1"); // Your API Endpoint
+    client.set_project("<YOUR_PROJECT_ID>"); // Your project ID
+    client.set_key("<YOUR_API_KEY>"); // Your API key
+
+    let functions = Functions::new(&client);
+
+    let result = functions.list_variables(
+        "<FUNCTION_ID>"
+    ).await?;
+
+    let _ = result;
+
+    Ok(())
+}
+```
+{% /multicode %}
+
+## Get a variable {% #get-variable %}
+
+{% multicode %}
+```server-nodejs
+import { Client, Functions } from 'node-appwrite';
+
+const client = new Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1') // Your API Endpoint
+    .setProject('<YOUR_PROJECT_ID>') // Your project ID
+    .setKey('<YOUR_API_KEY>'); // Your API key
+
+const functions = new Functions(client);
+
+const result = await functions.getVariable({
+    functionId: '<FUNCTION_ID>',
+    variableId: '<VARIABLE_ID>'
+});
+```
+```server-deno
+import { Client, Functions } from "npm:node-appwrite";
+
+const client = new Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1') // Your API Endpoint
+    .setProject('<YOUR_PROJECT_ID>') // Your project ID
+    .setKey('<YOUR_API_KEY>'); // Your API key
+
+const functions = new Functions(client);
+
+const result = await functions.getVariable({
+    functionId: '<FUNCTION_ID>',
+    variableId: '<VARIABLE_ID>'
+});
+```
+```server-php
+<?php
+
+use Appwrite\Client;
+use Appwrite\Services\Functions;
+
+$client = (new Client())
+    ->setEndpoint('https://<REGION>.cloud.appwrite.io/v1') // Your API Endpoint
+    ->setProject('<YOUR_PROJECT_ID>') // Your project ID
+    ->setKey('<YOUR_API_KEY>'); // Your API key
+
+$functions = new Functions($client);
+
+$result = $functions->getVariable(
+    functionId: '<FUNCTION_ID>',
+    variableId: '<VARIABLE_ID>'
+);
+```
+```server-python
+from appwrite.client import Client
+from appwrite.services.functions import Functions
+from appwrite.models import Variable
+
+client = Client()
+client.set_endpoint('https://<REGION>.cloud.appwrite.io/v1') # Your API Endpoint
+client.set_project('<YOUR_PROJECT_ID>') # Your project ID
+client.set_key('<YOUR_API_KEY>') # Your API key
+
+functions = Functions(client)
+
+result: Variable = functions.get_variable(
+    function_id = '<FUNCTION_ID>',
+    variable_id = '<VARIABLE_ID>'
+)
+
+print(result.model_dump())
+```
+```server-ruby
+require 'appwrite'
+
+include Appwrite
+
+client = Client.new
+    .set_endpoint('https://<REGION>.cloud.appwrite.io/v1') # Your API Endpoint
+    .set_project('<YOUR_PROJECT_ID>') # Your project ID
+    .set_key('<YOUR_API_KEY>') # Your API key
+
+functions = Functions.new(client)
+
+result = functions.get_variable(
+    function_id: '<FUNCTION_ID>',
+    variable_id: '<VARIABLE_ID>'
+)
+```
+```server-dotnet
+using Appwrite;
+using Appwrite.Models;
+using Appwrite.Services;
+
+Client client = new Client()
+    .SetEndPoint("https://<REGION>.cloud.appwrite.io/v1") // Your API Endpoint
+    .SetProject("<YOUR_PROJECT_ID>") // Your project ID
+    .SetKey("<YOUR_API_KEY>"); // Your API key
+
+Functions functions = new Functions(client);
+
+Variable result = await functions.GetVariable(
+    functionId: "<FUNCTION_ID>",
+    variableId: "<VARIABLE_ID>"
+);
+```
+```server-dart
+import 'package:dart_appwrite/dart_appwrite.dart';
+
+Client client = Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1') // Your API Endpoint
+    .setProject('<YOUR_PROJECT_ID>') // Your project ID
+    .setKey('<YOUR_API_KEY>'); // Your API key
+
+Functions functions = Functions(client);
+
+Variable result = await functions.getVariable(
+    functionId: '<FUNCTION_ID>',
+    variableId: '<VARIABLE_ID>',
+);
+```
+```server-kotlin
+import io.appwrite.Client
+import io.appwrite.coroutines.CoroutineCallback
+import io.appwrite.services.Functions
+
+val client = Client()
+    .setEndpoint("https://<REGION>.cloud.appwrite.io/v1") // Your API Endpoint
+    .setProject("<YOUR_PROJECT_ID>") // Your project ID
+    .setKey("<YOUR_API_KEY>") // Your API key
+
+val functions = Functions(client)
+
+val response = functions.getVariable(
+    functionId = "<FUNCTION_ID>",
+    variableId = "<VARIABLE_ID>"
+)
+```
+```server-java
+import io.appwrite.Client;
+import io.appwrite.coroutines.CoroutineCallback;
+import io.appwrite.services.Functions;
+
+Client client = new Client()
+    .setEndpoint("https://<REGION>.cloud.appwrite.io/v1") // Your API Endpoint
+    .setProject("<YOUR_PROJECT_ID>") // Your project ID
+    .setKey("<YOUR_API_KEY>"); // Your API key
+
+Functions functions = new Functions(client);
+
+functions.getVariable(
+    "<FUNCTION_ID>", // functionId
+    "<VARIABLE_ID>", // variableId
+    new CoroutineCallback<>((result, error) -> {
+        if (error != null) {
+            error.printStackTrace();
+            return;
+        }
+
+        System.out.println(result);
+    })
+);
+```
+```server-swift
+import Appwrite
+
+let client = Client()
+    .setEndpoint("https://<REGION>.cloud.appwrite.io/v1") // Your API Endpoint
+    .setProject("<YOUR_PROJECT_ID>") // Your project ID
+    .setKey("<YOUR_API_KEY>") // Your API key
+
+let functions = Functions(client)
+
+let variable = try await functions.getVariable(
+    functionId: "<FUNCTION_ID>",
+    variableId: "<VARIABLE_ID>"
+)
+```
+```server-go
+package main
+
+import (
+    "fmt"
+    "github.com/appwrite/sdk-for-go/appwrite"
+)
+
+client := appwrite.NewClient(
+    appwrite.WithEndpoint("https://<REGION>.cloud.appwrite.io/v1"),
+    appwrite.WithProject("<YOUR_PROJECT_ID>"),
+    appwrite.WithKey("<YOUR_API_KEY>"),
+)
+
+functions := appwrite.NewFunctions(client)
+
+response, error := functions.GetVariable(
+    "<FUNCTION_ID>",
+    "<VARIABLE_ID>",
+)
+```
+```server-rust
+use appwrite::Client;
+use appwrite::services::Functions;
+
+#[tokio::main]
+async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    let client = Client::new();
+    client.set_endpoint("https://<REGION>.cloud.appwrite.io/v1"); // Your API Endpoint
+    client.set_project("<YOUR_PROJECT_ID>"); // Your project ID
+    client.set_key("<YOUR_API_KEY>"); // Your API key
+
+    let functions = Functions::new(&client);
+
+    let result = functions.get_variable(
+        "<FUNCTION_ID>",
+        "<VARIABLE_ID>"
+    ).await?;
+
+    let _ = result;
+
+    Ok(())
+}
+```
+{% /multicode %}
+
+## Update a variable {% #update-variable %}
+
+You can change a variable's `key`, `value`, or `secret` flag. Marking a variable as secret is one-way. Once set, the value is no longer readable from the Console or API.
+
+{% multicode %}
+```server-nodejs
+import { Client, Functions } from 'node-appwrite';
+
+const client = new Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1') // Your API Endpoint
+    .setProject('<YOUR_PROJECT_ID>') // Your project ID
+    .setKey('<YOUR_API_KEY>'); // Your API key
+
+const functions = new Functions(client);
+
+const result = await functions.updateVariable({
+    functionId: '<FUNCTION_ID>',
+    variableId: '<VARIABLE_ID>',
+    key: '<KEY>',
+    value: '<VALUE>', // optional
+    secret: false // optional
+});
+```
+```server-deno
+import { Client, Functions } from "npm:node-appwrite";
+
+const client = new Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1') // Your API Endpoint
+    .setProject('<YOUR_PROJECT_ID>') // Your project ID
+    .setKey('<YOUR_API_KEY>'); // Your API key
+
+const functions = new Functions(client);
+
+const result = await functions.updateVariable({
+    functionId: '<FUNCTION_ID>',
+    variableId: '<VARIABLE_ID>',
+    key: '<KEY>',
+    value: '<VALUE>', // optional
+    secret: false // optional
+});
+```
+```server-php
+<?php
+
+use Appwrite\Client;
+use Appwrite\Services\Functions;
+
+$client = (new Client())
+    ->setEndpoint('https://<REGION>.cloud.appwrite.io/v1') // Your API Endpoint
+    ->setProject('<YOUR_PROJECT_ID>') // Your project ID
+    ->setKey('<YOUR_API_KEY>'); // Your API key
+
+$functions = new Functions($client);
+
+$result = $functions->updateVariable(
+    functionId: '<FUNCTION_ID>',
+    variableId: '<VARIABLE_ID>',
+    key: '<KEY>',
+    value: '<VALUE>', // optional
+    secret: false // optional
+);
+```
+```server-python
+from appwrite.client import Client
+from appwrite.services.functions import Functions
+from appwrite.models import Variable
+
+client = Client()
+client.set_endpoint('https://<REGION>.cloud.appwrite.io/v1') # Your API Endpoint
+client.set_project('<YOUR_PROJECT_ID>') # Your project ID
+client.set_key('<YOUR_API_KEY>') # Your API key
+
+functions = Functions(client)
+
+result: Variable = functions.update_variable(
+    function_id = '<FUNCTION_ID>',
+    variable_id = '<VARIABLE_ID>',
+    key = '<KEY>',
+    value = '<VALUE>', # optional
+    secret = False # optional
+)
+
+print(result.model_dump())
+```
+```server-ruby
+require 'appwrite'
+
+include Appwrite
+
+client = Client.new
+    .set_endpoint('https://<REGION>.cloud.appwrite.io/v1') # Your API Endpoint
+    .set_project('<YOUR_PROJECT_ID>') # Your project ID
+    .set_key('<YOUR_API_KEY>') # Your API key
+
+functions = Functions.new(client)
+
+result = functions.update_variable(
+    function_id: '<FUNCTION_ID>',
+    variable_id: '<VARIABLE_ID>',
+    key: '<KEY>',
+    value: '<VALUE>', # optional
+    secret: false # optional
+)
+```
+```server-dotnet
+using Appwrite;
+using Appwrite.Models;
+using Appwrite.Services;
+
+Client client = new Client()
+    .SetEndPoint("https://<REGION>.cloud.appwrite.io/v1") // Your API Endpoint
+    .SetProject("<YOUR_PROJECT_ID>") // Your project ID
+    .SetKey("<YOUR_API_KEY>"); // Your API key
+
+Functions functions = new Functions(client);
+
+Variable result = await functions.UpdateVariable(
+    functionId: "<FUNCTION_ID>",
+    variableId: "<VARIABLE_ID>",
+    key: "<KEY>",
+    value: "<VALUE>", // optional
+    secret: false // optional
+);
+```
+```server-dart
+import 'package:dart_appwrite/dart_appwrite.dart';
+
+Client client = Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1') // Your API Endpoint
+    .setProject('<YOUR_PROJECT_ID>') // Your project ID
+    .setKey('<YOUR_API_KEY>'); // Your API key
+
+Functions functions = Functions(client);
+
+Variable result = await functions.updateVariable(
+    functionId: '<FUNCTION_ID>',
+    variableId: '<VARIABLE_ID>',
+    key: '<KEY>',
+    value: '<VALUE>', // (optional)
+    secret: false, // (optional)
+);
+```
+```server-kotlin
+import io.appwrite.Client
+import io.appwrite.coroutines.CoroutineCallback
+import io.appwrite.services.Functions
+
+val client = Client()
+    .setEndpoint("https://<REGION>.cloud.appwrite.io/v1") // Your API Endpoint
+    .setProject("<YOUR_PROJECT_ID>") // Your project ID
+    .setKey("<YOUR_API_KEY>") // Your API key
+
+val functions = Functions(client)
+
+val response = functions.updateVariable(
+    functionId = "<FUNCTION_ID>",
+    variableId = "<VARIABLE_ID>",
+    key = "<KEY>",
+    value = "<VALUE>", // optional
+    secret = false // optional
+)
+```
+```server-java
+import io.appwrite.Client;
+import io.appwrite.coroutines.CoroutineCallback;
+import io.appwrite.services.Functions;
+
+Client client = new Client()
+    .setEndpoint("https://<REGION>.cloud.appwrite.io/v1") // Your API Endpoint
+    .setProject("<YOUR_PROJECT_ID>") // Your project ID
+    .setKey("<YOUR_API_KEY>"); // Your API key
+
+Functions functions = new Functions(client);
+
+functions.updateVariable(
+    "<FUNCTION_ID>", // functionId
+    "<VARIABLE_ID>", // variableId
+    "<KEY>", // key
+    "<VALUE>", // value (optional)
+    false, // secret (optional)
+    new CoroutineCallback<>((result, error) -> {
+        if (error != null) {
+            error.printStackTrace();
+            return;
+        }
+
+        System.out.println(result);
+    })
+);
+```
+```server-swift
+import Appwrite
+
+let client = Client()
+    .setEndpoint("https://<REGION>.cloud.appwrite.io/v1") // Your API Endpoint
+    .setProject("<YOUR_PROJECT_ID>") // Your project ID
+    .setKey("<YOUR_API_KEY>") // Your API key
+
+let functions = Functions(client)
+
+let variable = try await functions.updateVariable(
+    functionId: "<FUNCTION_ID>",
+    variableId: "<VARIABLE_ID>",
+    key: "<KEY>",
+    value: "<VALUE>", // optional
+    secret: false // optional
+)
+```
+```server-go
+package main
+
+import (
+    "fmt"
+    "github.com/appwrite/sdk-for-go/appwrite"
+)
+
+client := appwrite.NewClient(
+    appwrite.WithEndpoint("https://<REGION>.cloud.appwrite.io/v1"),
+    appwrite.WithProject("<YOUR_PROJECT_ID>"),
+    appwrite.WithKey("<YOUR_API_KEY>"),
+)
+
+functions := appwrite.NewFunctions(client)
+
+response, error := functions.UpdateVariable(
+    "<FUNCTION_ID>",
+    "<VARIABLE_ID>",
+    "<KEY>",
+    appwrite.WithUpdateVariableValue("<VALUE>"),
+    appwrite.WithUpdateVariableSecret(false),
+)
+```
+```server-rust
+use appwrite::Client;
+use appwrite::services::Functions;
+
+#[tokio::main]
+async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    let client = Client::new();
+    client.set_endpoint("https://<REGION>.cloud.appwrite.io/v1"); // Your API Endpoint
+    client.set_project("<YOUR_PROJECT_ID>"); // Your project ID
+    client.set_key("<YOUR_API_KEY>"); // Your API key
+
+    let functions = Functions::new(&client);
+
+    let result = functions.update_variable(
+        "<FUNCTION_ID>",
+        "<VARIABLE_ID>",
+        "<KEY>",
+        Some("<VALUE>"), // optional
+        Some(false) // optional
+    ).await?;
+
+    let _ = result;
+
+    Ok(())
+}
+```
+{% /multicode %}
+
+## Delete a variable {% #delete-variable %}
+
+{% multicode %}
+```server-nodejs
+import { Client, Functions } from 'node-appwrite';
+
+const client = new Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1') // Your API Endpoint
+    .setProject('<YOUR_PROJECT_ID>') // Your project ID
+    .setKey('<YOUR_API_KEY>'); // Your API key
+
+const functions = new Functions(client);
+
+const result = await functions.deleteVariable({
+    functionId: '<FUNCTION_ID>',
+    variableId: '<VARIABLE_ID>'
+});
+```
+```server-deno
+import { Client, Functions } from "npm:node-appwrite";
+
+const client = new Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1') // Your API Endpoint
+    .setProject('<YOUR_PROJECT_ID>') // Your project ID
+    .setKey('<YOUR_API_KEY>'); // Your API key
+
+const functions = new Functions(client);
+
+const result = await functions.deleteVariable({
+    functionId: '<FUNCTION_ID>',
+    variableId: '<VARIABLE_ID>'
+});
+```
+```server-php
+<?php
+
+use Appwrite\Client;
+use Appwrite\Services\Functions;
+
+$client = (new Client())
+    ->setEndpoint('https://<REGION>.cloud.appwrite.io/v1') // Your API Endpoint
+    ->setProject('<YOUR_PROJECT_ID>') // Your project ID
+    ->setKey('<YOUR_API_KEY>'); // Your API key
+
+$functions = new Functions($client);
+
+$result = $functions->deleteVariable(
+    functionId: '<FUNCTION_ID>',
+    variableId: '<VARIABLE_ID>'
+);
+```
+```server-python
+from appwrite.client import Client
+from appwrite.services.functions import Functions
+
+client = Client()
+client.set_endpoint('https://<REGION>.cloud.appwrite.io/v1') # Your API Endpoint
+client.set_project('<YOUR_PROJECT_ID>') # Your project ID
+client.set_key('<YOUR_API_KEY>') # Your API key
+
+functions = Functions(client)
+
+result = functions.delete_variable(
+    function_id = '<FUNCTION_ID>',
+    variable_id = '<VARIABLE_ID>'
+)
+```
+```server-ruby
+require 'appwrite'
+
+include Appwrite
+
+client = Client.new
+    .set_endpoint('https://<REGION>.cloud.appwrite.io/v1') # Your API Endpoint
+    .set_project('<YOUR_PROJECT_ID>') # Your project ID
+    .set_key('<YOUR_API_KEY>') # Your API key
+
+functions = Functions.new(client)
+
+result = functions.delete_variable(
+    function_id: '<FUNCTION_ID>',
+    variable_id: '<VARIABLE_ID>'
+)
+```
+```server-dotnet
+using Appwrite;
+using Appwrite.Models;
+using Appwrite.Services;
+
+Client client = new Client()
+    .SetEndPoint("https://<REGION>.cloud.appwrite.io/v1") // Your API Endpoint
+    .SetProject("<YOUR_PROJECT_ID>") // Your project ID
+    .SetKey("<YOUR_API_KEY>"); // Your API key
+
+Functions functions = new Functions(client);
+
+await functions.DeleteVariable(
+    functionId: "<FUNCTION_ID>",
+    variableId: "<VARIABLE_ID>"
+);
+```
+```server-dart
+import 'package:dart_appwrite/dart_appwrite.dart';
+
+Client client = Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1') // Your API Endpoint
+    .setProject('<YOUR_PROJECT_ID>') // Your project ID
+    .setKey('<YOUR_API_KEY>'); // Your API key
+
+Functions functions = Functions(client);
+
+await functions.deleteVariable(
+    functionId: '<FUNCTION_ID>',
+    variableId: '<VARIABLE_ID>',
+);
+```
+```server-kotlin
+import io.appwrite.Client
+import io.appwrite.coroutines.CoroutineCallback
+import io.appwrite.services.Functions
+
+val client = Client()
+    .setEndpoint("https://<REGION>.cloud.appwrite.io/v1") // Your API Endpoint
+    .setProject("<YOUR_PROJECT_ID>") // Your project ID
+    .setKey("<YOUR_API_KEY>") // Your API key
+
+val functions = Functions(client)
+
+val response = functions.deleteVariable(
+    functionId = "<FUNCTION_ID>",
+    variableId = "<VARIABLE_ID>"
+)
+```
+```server-java
+import io.appwrite.Client;
+import io.appwrite.coroutines.CoroutineCallback;
+import io.appwrite.services.Functions;
+
+Client client = new Client()
+    .setEndpoint("https://<REGION>.cloud.appwrite.io/v1") // Your API Endpoint
+    .setProject("<YOUR_PROJECT_ID>") // Your project ID
+    .setKey("<YOUR_API_KEY>"); // Your API key
+
+Functions functions = new Functions(client);
+
+functions.deleteVariable(
+    "<FUNCTION_ID>", // functionId
+    "<VARIABLE_ID>", // variableId
+    new CoroutineCallback<>((result, error) -> {
+        if (error != null) {
+            error.printStackTrace();
+            return;
+        }
+
+        System.out.println(result);
+    })
+);
+```
+```server-swift
+import Appwrite
+
+let client = Client()
+    .setEndpoint("https://<REGION>.cloud.appwrite.io/v1") // Your API Endpoint
+    .setProject("<YOUR_PROJECT_ID>") // Your project ID
+    .setKey("<YOUR_API_KEY>") // Your API key
+
+let functions = Functions(client)
+
+let result = try await functions.deleteVariable(
+    functionId: "<FUNCTION_ID>",
+    variableId: "<VARIABLE_ID>"
+)
+```
+```server-go
+package main
+
+import (
+    "fmt"
+    "github.com/appwrite/sdk-for-go/appwrite"
+)
+
+client := appwrite.NewClient(
+    appwrite.WithEndpoint("https://<REGION>.cloud.appwrite.io/v1"),
+    appwrite.WithProject("<YOUR_PROJECT_ID>"),
+    appwrite.WithKey("<YOUR_API_KEY>"),
+)
+
+functions := appwrite.NewFunctions(client)
+
+response, error := functions.DeleteVariable(
+    "<FUNCTION_ID>",
+    "<VARIABLE_ID>",
+)
+```
+```server-rust
+use appwrite::Client;
+use appwrite::services::Functions;
+
+#[tokio::main]
+async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    let client = Client::new();
+    client.set_endpoint("https://<REGION>.cloud.appwrite.io/v1"); // Your API Endpoint
+    client.set_project("<YOUR_PROJECT_ID>"); // Your project ID
+    client.set_key("<YOUR_API_KEY>"); // Your API key
+
+    let functions = Functions::new(&client);
+
+    functions.delete_variable(
+        "<FUNCTION_ID>",
+        "<VARIABLE_ID>"
+    ).await?;
+
+    Ok(())
+}
+```
+{% /multicode %}
+
+# Read variables in your function {% #read-variables %}
+
+Once a variable is set, you can read it inside your function using your runtime language's standard environment lookup.
+
+{% multicode %}
+```server-nodejs
+export default async ({ req, res, log }) => {
+    return res.text(process.env.MY_VAR);
+}
+```
+```server-deno
+export default async ({ req, res, log }) => {
+    return res.text(Deno.env.get('MY_VAR'));
+}
+```
+```server-php
+<?php
+
+return function ($context) {
+    return $context->res->text(getenv('MY_VAR'));
+};
+```
+```server-python
+def main(context):
+    return context.res.text(os.environ['MY_VAR'])
+```
+```server-ruby
+def main(context)
+    return context.res.text(ENV['MY_VAR'])
+end
+```
+```server-dotnet
+namespace DotNetRuntime;
+
+public class Handler {
+    public async Task<RuntimeOutput> Main(RuntimeContext Context) {
+        var myVar = Environment.GetEnvironmentVariable("MY_VAR");
+        return Context.Res.Text(myVar);
+    }
+}
+```
+```server-dart
+import 'dart:io';
+import 'dart:async';
+
+Future<dynamic> main(final context) async {
+    return context.res.text(Platform.environment['MY_VAR']);
+}
+```
+```server-kotlin
+import io.openruntimes.kotlin.RuntimeContext
+import io.openruntimes.kotlin.RuntimeOutput
+
+class Handler {
+    suspend fun main(context: RuntimeContext): RuntimeOutput {
+        return context.res.text(System.getenv("MY_VAR"))
+    }
+}
+```
+```server-java
+import io.openruntimes.java.RuntimeContext;
+import io.openruntimes.java.RuntimeOutput;
+
+public class Handler {
+    public RuntimeOutput main(RuntimeContext context) throws Exception {
+        return context.res.text(System.getenv("MY_VAR"));
+    }
+}
+```
+```server-swift
+import Foundation
+
+func main(context: RuntimeContext) async throws -> RuntimeOutput {
+    return context.res.text(ProcessInfo.processInfo.environment["MY_VAR"] ?? "")
+}
+```
+```server-go
+package handler
+
+import (
+    "os"
+
+    "github.com/open-runtimes/types-for-go/v4/openruntimes"
+)
+
+func Main(Context openruntimes.Context) openruntimes.Response {
+    return Context.Res.Text(os.Getenv("MY_VAR"))
+}
+```
+```server-rust
+use openruntimes::{Context, Response};
+use std::env;
+
+pub fn main(context: Context) -> Response {
+    context
+        .res
+        .text(env::var("MY_VAR").unwrap_or_default(), None, None)
+}
+```
+{% /multicode %}
+
+# Appwrite-injected variables {% #appwrite-variables %}
+
+Appwrite passes the following environment variables into every function deployment by default. They take precedence over your own variables, so do not set keys with the `APPWRITE_` prefix.
+
+{% partial file="functions-env-vars.md" /%}
+
+During the build process, dynamic API keys are automatically provided as the environment variable `APPWRITE_FUNCTION_API_KEY`. This environment variable does not need to be initialized.
+
+# Secret variables {% #secret-variables %}
+
+Mark a variable as **Secret** to hide its value from the Console and API after creation. Only the function runtime can read the value at build and runtime. Team members and external integrations cannot retrieve it after creation.
+
+You can mark a variable as secret either when you create it or by updating an existing variable. Marking a variable as secret cannot be reversed. To replace a secret value, delete the variable and create a new one with the same key.
+
+# Limits {% #limits %}
+
+| Field          | Limit                                          |
+|----------------|------------------------------------------------|
+| Variable ID    | 36 characters, `a-z A-Z 0-9 . - _`             |
+| Key            | 255 characters                                 |
+| Value          | 8192 characters                                |

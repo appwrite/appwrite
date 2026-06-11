@@ -1,0 +1,176 @@
+---
+layout: article
+title: Release policy
+description: Understand how Appwrite releases and versions its platforms and APIs.
+---
+We value the trust of developers in Appwrite as the backbone of their applications.
+Our release policy is designed to provide developers with a reliable and consistent experience when using Appwrite.
+We are committed to providing support for our API, SDKs, and product versions for a reasonable length of time,
+and we follow industry-standard versioning protocols.
+Appwrite will prioritize security updates and will release new versions as soon as possible to fix any security vulnerabilities.
+
+# Schedule {% #schedule %}
+
+We work to release a new minor version of the product every quarter, which will include new features and enhancements.
+
+We prioritize the timely release of patch versions with bug fixes and security updates on top of these feature releases,
+and we make every effort to ensure that our releases are thoroughly tested and stable before they are made available to developers.
+
+In rare cases where there are significant delays or changes to our release schedule, we will notify through our website's [changelog](/changelog), [Discord](https://appwrite.io/discord),
+newsletter, and other communication channels.
+
+# Scope  {% #scope %}
+Appwrite will provide two phases of continued support for older versions of Appwrite.
+
+{% table %}
+* Phase {% width=100 %}
+* Scope
+---
+* Support
+* Receive continued bug fixes and security updates.
+---
+* Extended security support
+* Receives only security updates.
+{% /table %}
+
+# Support  {% #support %}
+Appwrite commits to the continued support of our software with extended support policies for security related fixes for older versions of Appwrite.
+Supported versions will continue to receive bug fixes and security updates. Extended security support versions will only receive security updates.
+{% table %}
+* Releases {% width=100 %}
+* Current Version
+* Support
+* Extended Security Support
+---
+* API
+* `v1`
+* 3 latest versions
+* 10 years
+---
+* SDK
+* [See list](/docs/sdks)
+* 5 latest versions
+* 10 years
+---
+* Self-hosted
+* `1.5.x`
+* Latest major version `>= 1.x.x`
+* 10 years
+---
+* Runtimes
+* [See list](/docs/products/functions/runtimes)
+* 24 months
+* Per vendor
+{% /table %}
+# API versions {% #api-versions %}
+
+We are committed to providing developers with a stable and reliable API.
+Appwrite API versions don’t change very often but are reserved for breaking changes.
+
+Currently, the latest stable version of the Appwrite API is `/v1`.
+We use this prefix in all our API endpoint paths to allow API versioning.
+Any new Appwrite version will retain **backward compatibility** for any supported API version
+as long as this API version is still under maintenance support.
+
+We will provide standard maintenance support for the last 3 API versions.
+Once a version is no longer in this maintenance period, we will continue to provide support for security fixes for an additional ten years.
+Based on usage, we may decide to extend support for a specific version.
+Self-hosted versions of Appwrite will receive continued support for the latest major version of Appwrite.
+
+If you need **extended support** for older versions of Appwrite, [contact us](/contact-us) for more information.
+
+# SDK versioning {% #sdk-verversioningsions %}
+
+For our different SDKs, we follow the Semantic Versioning (semver) protocol to assign versions to our releases. This means that we assign version numbers using a three-part system: major, minor, and patch. The major version changes when we make significant changes to our API or product, which may require significant changes to developers' code. The minor version changes when we add new features or functionality that do not significantly impact developers' systems. Finally, the patch version changes when we make bug fixes or minor improvements.
+
+All Appwrite SDKs will have backward compatibility with the Appwrite APIs. In case a new version of the API or product has been released, you should expect your applications to continue working properly without any action from your side.
+Once we release a major version of the SDK and you decide to upgrade, look in the [changelog of the relevant SDK on GitHub](/docs/sdks) to understand what changes have been made and what adjustments are required.
+
+We provide early notice to developers and slowly introduce breaking changes to let developers adjust their application at a reasonable pace.
+We will also continue to support the last five major versions of each SDK to provide developers with more flexibility and time to adjust their apps to take advantage of new features.
+
+# Self-hosted versioning {% #self-hosted-versioning %}
+
+When you self-host Appwrite, we also follow the Semantic Versioning (semver) protocol for versioning our releases. This means that we assign version numbers using a three-part system: major, minor, and patch. The major version changes when we make significant changes to our API or product, which may require significant changes to developers' apps. The minor version changes when we add new features or functionality that do not significantly impact developers' existing apps. Finally, the patch version changes when we make bug fixes or minor improvements.
+
+Appwrite Cloud receives the latest features and updates first. If you want access to the newest features and capabilities as soon as they are released, we recommend using Appwrite Cloud. Self-hosted releases are typically updated about 2 months after major feature releases to Cloud, allowing time to finalize migrations and prepare the release for self-hosted environments. [Contact us](/contact-us/enterprise) for more advanced self-hosting capabilities.
+
+All the self-hosted versions of Appwrite `>=1.x.x` continue to have support and backward compatibility with the Appwrite API and SDKs within each major version.
+In case a new version of the product has been released and you decide to update, you should expect your applications to continue working properly without any action from your side.
+
+Once we release a version of the product and you decide to upgrade, look in the [changelog](https://github.com/appwrite/appwrite/releases) to understand if your version requires migration of data from your previous setup.
+This is usually required when we make adjustments to the under the hood data structure for supporting new features and improving maintainability.
+If this is the case, you could use our [built-in migration tool](/docs/advanced/self-hosting/update#running-the-migration) for helping you to upgrade your self-hosted Appwrite version.
+
+{% arrow_link href="/docs/advanced/self-hosting/update" %}
+Learn more about updating self-hosted Appwrite
+{% /arrow_link %}
+
+# Runtime versioning {% #runtime-versioning %}
+
+[Appwrite Function runtimes](/docs/products/functions/runtimes) are built around a combination of operating system, programming language, and software libraries that are subject to maintenance and security updates.
+Appwrite will support and maintain runtimes as a package, which covers the specific combination of operating system, programming language, and software libraries.
+
+Appwrite will support the latest stable versions of our [Appwrite Function runtime environment](/docs/products/functions/runtimes) for a minimum of 24 months after its initial release as long as security updates for components of the specific runtime are still provided.
+You can review the [list of supported runtimes](/docs/products/functions/runtimes) on Appwrite.
+
+In most cases, the end-of-life date of a language version or operating system is known well in advance.
+The links below give end-of-life schedules for each language that Appwrite supports as a managed runtime.
+
+## Runtimes language {% #runtime-languages %}
+
+{% table %}
+* Language {% width=150 %}
+* LTS policy
+---
+* Node.js
+* [https://nodejs.org](https://nodejs.org)
+---
+* Python
+* [devguide.python.org](https://devguide.python.org)
+---
+* Ruby
+* [www.ruby-lang.org](https://www.ruby-lang.org)
+---
+* Java
+* [www.oracle.com](https://www.oracle.com)
+---
+* .NET Core
+* [dotnet.microsoft.com](https://dotnet.microsoft.com)
+---
+* PHP
+* [https://www.php.net](https://www.php.net)
+---
+* Dart
+* [https://dart.dev/](https://dart.dev/)
+---
+* Deno
+* [https://deno.com/runtime](https://deno.com/runtime)
+---
+* Go
+* [https://go.dev/](https://go.dev/)
+---
+* Swift
+* [https://developer.apple.com/swift](https://developer.apple.com/swift)
+---
+* Kotlin
+* [https://kotlinlang.org](https://kotlinlang.org)
+---
+* C++
+* [https://en.cppreference.com/w/](https://en.cppreference.com/w/)
+{% /table %}
+
+## Runtimes OS {% #runtime-os %}
+{% table %}
+* OS {% width=150 %}
+* LTS policy
+---
+* Alpine
+* [https://www.alpinelinux.org](https://www.alpinelinux.org)
+---
+* Debian
+* [https://www.debian.org/](https://www.debian.org/)
+---
+* Ubuntu
+* [https://releases.ubuntu.com/](https://releases.ubuntu.com/)
+{% /table %}

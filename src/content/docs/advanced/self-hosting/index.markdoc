@@ -1,0 +1,173 @@
+---
+layout: article
+title: Self-hosting
+description: Set up your self-hosted Appwrite instance easily. Read the installation guide to configure and deploy Appwrite on your infrastructure for complete control.
+---
+
+Appwrite was designed from the ground up with self-hosting in mind. You can install and run Appwrite on any operating system that can run a [Docker CLI](https://www.docker.com/products/docker-desktop). Self-hosted Appwrite instances can be configured flexibly with access to the same features found on Appwrite Cloud.
+
+{% info title="Upgrading from older versions" %}
+If you are migrating from an older version of Appwrite, you need to follow the [migration instructions](/docs/advanced/self-hosting/production/updates)
+{% /info %}
+
+# Cloud vs Self-hosting {% #cloud-vs-self-hosting %}
+
+Choose the deployment method that fits your needs.
+
+| Feature | Appwrite Cloud | Self-hosting |
+|---------|---------------|--------------|
+| Setup | Zero setup | Manual setup required |
+| Maintenance | Fully managed | You manage updates and scaling |
+| Data control | Managed infrastructure | Full control over data location |
+| Compliance | Built-in compliance | Configure for your requirements |
+| Scaling | Automatic | Manual configuration |
+
+# When to self-host {% #when-to-self-host %}
+
+Self-hosting is ideal when you need data control or have specific compliance requirements.
+
+**Consider self-hosting if:**
+- You want to manage your own infrastructure
+- You're a hobbyist or want to experiment with Appwrite in a playground environment
+- You need to develop against a local instance of Appwrite
+
+**Appwrite Cloud is recommended if:**
+- You want to focus on building features, not managing infrastructure
+- Your team lacks extensive DevOps experience
+- You expect self-hosting to save costs (it often costs more when factoring in time and expertise)
+{% info title="Enterprise self-hosting" %}
+For compliance features and dedicated support, explore [enterprise self-hosting solutions](/contact-us/enterprise).
+{% /info %}
+
+# Quick start {% #quick-start %}
+
+The fastest way to get started with Appwrite self-hosting:
+
+1. **Use a one-click deployment** - Choose from [marketplace installations](#one-click-deployments) for instant setup
+2. **Or follow the manual installation** - Use our [Docker installation guide](/docs/advanced/self-hosting/installation) for custom setups
+3. **Configure services** - Set up [email](/docs/advanced/self-hosting/configuration/email), [storage](/docs/advanced/self-hosting/configuration/storage), and other services
+
+# Deployment options {% #deployment-options %}
+
+Choose the deployment method that best fits your needs:
+
+## One-click deployments {% #one-click-deployments %}
+
+**Recommended:** Use these pre-configured marketplace apps for instant setup:
+
+{% table %}
+* &nbsp; {% width=48 %}
+* Provider
+* Installation Link
+---
+* {% only_dark %}{% icon_image src="/images/one-click/dark/digitalocean.svg" alt="DigitalOcean logo" size="m" /%}{% /only_dark %}
+{% only_light %}{% icon_image src="/images/one-click/digitalocean.svg" alt="DigitalOcean logo" size="m" /%}{% /only_light %}
+* DigitalOcean
+* [Click to install](https://marketplace.digitalocean.com/apps/appwrite)
+---
+* {% only_dark %}{% icon_image src="/images/one-click/dark/gitpod.svg" alt="Gitpod logo" size="m" /%}{% /only_dark %}
+{% only_light %}{% icon_image src="/images/one-click/gitpod.svg" alt="Gitpod logo" size="m" /%}{% /only_light %}
+* Gitpod
+* [Click to install](https://gitpod.io/#https://github.com/appwrite/integration-for-gitpod)
+---
+* {% only_dark %}{% icon_image src="/images/one-click/dark/akamai.svg" alt="Akamai logo" size="m" /%}{% /only_dark %}
+{% only_light %}{% icon_image src="/images/one-click/akamai.svg" alt="Akamai logo" size="m" /%}{% /only_light %}
+* Akamai Compute
+* [Click to install](https://www.linode.com/marketplace/apps/appwrite/appwrite/)
+---
+* {% only_dark %}{% icon_image src="/images/one-click/dark/aws.svg" alt="AWS logo" size="m" /%}{% /only_dark %}
+{% only_light %}{% icon_image src="/images/one-click/aws.svg" alt="AWS logo" size="m" /%}{% /only_light %}
+* AWS Marketplace
+* [Click to install](https://aws.amazon.com/marketplace/pp/prodview-2hiaeo2px4md6)
+{% /table %}
+
+## Cloud platforms {% #cloud-platforms %}
+
+For custom deployments on major cloud providers:
+
+{% cards %}
+{% cards_item href="/docs/advanced/self-hosting/platforms/aws" title="Amazon Web Services" %}
+One-click AWS Marketplace deployment with custom configuration options.
+{% /cards_item %}
+
+{% cards_item href="/docs/advanced/self-hosting/platforms/digitalocean" title="DigitalOcean" %}
+Marketplace installation with simple Droplet configuration.
+{% /cards_item %}
+
+{% cards_item href="/docs/advanced/self-hosting/platforms/google-cloud" title="Google Cloud" %}
+Deploy using Cloud Run, Compute Engine, or other Google Cloud services.
+{% /cards_item %}
+
+{% cards_item href="/docs/advanced/self-hosting/platforms/azure" title="Microsoft Azure" %}
+Deploy using Container Apps, Virtual Machines, or other Azure services.
+{% /cards_item %}
+{% /cards %}
+
+## Platform-as-a-Service (PaaS) {% #paas-platforms %}
+
+Deploy Appwrite on modern PaaS platforms for simplified management:
+
+{% cards %}
+{% cards_item href="/docs/advanced/self-hosting/platforms/coolify" title="Coolify" %}
+Open-source platform for easy self-hosting with one-click deployments.
+{% /cards_item %}
+{% /cards %}
+
+# Configuration {% #configuration %}
+
+After deployment, configure Appwrite to enable additional features:
+
+{% cards %}
+{% cards_item href="/docs/advanced/self-hosting/configuration/email" title="Email delivery" %}
+Set up SMTP providers for user verification, password recovery, and notifications.
+{% /cards_item %}
+
+{% cards_item href="/docs/advanced/self-hosting/configuration/sms" title="SMS Delivery" %}
+Configure SMS providers for phone authentication and two-factor authentication.
+{% /cards_item %}
+
+{% cards_item href="/docs/advanced/self-hosting/configuration/storage" title="Storage Backends" %}
+Connect external storage providers like AWS S3, Backblaze, or Wasabi.
+{% /cards_item %}
+
+{% cards_item href="/docs/advanced/self-hosting/configuration/functions" title="Functions Runtime" %}
+Enable serverless functions with custom runtimes and execution environments.
+{% /cards_item %}
+{% /cards %}
+
+# Production readiness {% #production-readiness %}
+
+Ensure your Appwrite deployment is production-ready:
+
+## Security considerations {% #security %}
+
+- **Environment Variables** - Secure sensitive configuration using environment variables
+- **TLS Certificates** - Enable HTTPS with automated certificate management
+- **Network Security** - Configure firewalls and security groups appropriately
+- **Access Control** - Implement proper authentication and authorization
+
+## Performance optimization {% #performance %}
+
+- **Resource Scaling** - Monitor and scale CPU, memory, and storage resources
+- **Database Performance** - Optimize database connections and queries
+- **CDN Integration** - Use content delivery networks for static assets
+- **Load Balancing** - Distribute traffic across multiple instances
+
+## Monitoring and maintenance {% #monitoring %}
+
+- **Health Checks** - Set up monitoring for service availability and performance
+- **Log Management** - Centralize and analyze application logs
+- **Backup Strategy** - Implement regular database and file backups
+- **Update Management** - Keep Appwrite updated with the latest releases
+
+# Get started {% #get-started %}
+
+Ready to self-host Appwrite? Choose your preferred path:
+
+**One-Click Deploy** - Use a [marketplace installation](#one-click-deployments) for instant setup (recommended)
+
+**Manual Installation** - Follow our [Docker installation guide](/docs/advanced/self-hosting/installation) for custom setups
+
+**Cloud Platform** - [Choose a cloud platform](#cloud-platforms) for production hosting with custom configuration
+
+**Platform-as-a-Service** - Deploy on [Coolify](/docs/advanced/self-hosting/platforms/coolify) or similar platforms for simplified management

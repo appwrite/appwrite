@@ -1,0 +1,95 @@
+---
+layout: article
+title: Payload
+description: Understand the structure of Appwrite Realtime subscription payloads and learn how to work with the response data.
+---
+
+When you receive an update from a Realtime subscription, the payload contains information about the event and the affected resource. Understanding this structure helps you handle updates effectively in your application.
+
+# Response structure {% #response-structure %}
+
+The payload from the subscription will contain the following properties:
+
+{% table %}
+* Name
+* Type
+* Description
+---
+* events
+* string[]
+* The [Appwrite events](/docs/advanced/platform/events) that triggered this update.
+---
+* channels
+* string[]
+* An array of [channels](/docs/apis/realtime/channels) that can receive this message.
+---
+* timestamp
+* string
+* The [ISO 8601 timestamp](https://en.wikipedia.org/wiki/ISO_8601) in UTC timezone from the server
+---
+* payload
+* object
+* Payload contains the data equal to the response model.
+{% /table %}
+
+# Example {% #example %}
+
+If you subscribe to the `rows` channel and a row the user is allowed to read is updated, you will receive an object containing information about the event and the updated row.
+
+The response will look like this:
+
+```json
+{
+  "events": [
+    "tablesdb.default.tables.sample.rows.63c98b9baea0938e1206.update",
+    "tablesdb.*.tables.*.rows.*.update",
+    "tablesdb.default.tables.*.rows.63c98b9baea0938e1206.update",
+    "tablesdb.*.tables.*.rows.63c98b9baea0938e1206.update",
+    "tablesdb.*.tables.sample.rows.63c98b9baea0938e1206.update",
+    "tablesdb.default.tables.sample.rows.*.update",
+    "tablesdb.*.tables.sample.rows.*.update",
+    "tablesdb.default.tables.*.rows.*.update",
+    "tablesdb.default.tables.sample.rows.63c98b9baea0938e1206",
+    "tablesdb.*.tables.*.rows.*",
+    "tablesdb.default.tables.*.rows.63c98b9baea0938e1206",
+    "tablesdb.*.tables.*.rows.63c98b9baea0938e1206",
+    "tablesdb.*.tables.sample.rows.63c98b9baea0938e1206",
+    "tablesdb.default.tables.sample.rows.*",
+    "tablesdb.*.tables.sample.rows.*",
+    "tablesdb.default.tables.*.rows.*",
+    "tablesdb.default.tables.sample",
+    "tablesdb.*.tables.*",
+    "tablesdb.default.tables.*",
+    "tablesdb.*.tables.sample",
+    "tablesdb.default",
+    "tablesdb.*"
+  ],
+  "channels": [
+    "rows",
+    "tablesdb.default.tables.sample.rows",
+    "tablesdb.default.tables.sample.rows.63c98b9baea0938e1206"
+  ],
+  "timestamp": "2023-01-19T18:30:04.051+00:00",
+  "payload": {
+    "ip": "127.0.0.1",
+    "stringArray": [
+      "sss"
+    ],
+    "email": "joe@example.com",
+    "stringRequired": "req",
+    "float": 3.3,
+    "boolean": false,
+    "integer": 3,
+    "enum": "apple",
+    "stringDefault": "default",
+    "datetime": "2023-01-19T10:27:09.428+00:00",
+    "url": "https://appwrite.io",
+    "$id": "63c98b9baea0938e1206",
+    "$createdAt": "2023-01-19T18:27:39.715+00:00",
+    "$updatedAt": "2023-01-19T18:30:04.040+00:00",
+    "$permissions": [],
+    "$tableId": "sample",
+    "$databaseId": "default"
+  }
+}
+```

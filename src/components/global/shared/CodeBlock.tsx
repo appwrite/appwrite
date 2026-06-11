@@ -7,15 +7,20 @@
  * Supports: JavaScript, TypeScript, Node/Deno/Bun, Python, PHP, Ruby, Dart, Swift, Kotlin, Java,
  * Go, C#/.NET, JSON, Bash, PowerShell, HCL (Terraform), markup, plaintext, and .env (dotenv).
  * Uses prism-react-renderer; extra languages are loaded on demand. Built-in Prism themes;
- * background matches page (--background).
+ * Editor surface is transparent so the page background shows through the frame.
  */
 
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState, type CSSProperties } from 'react'
 import { Copy, Check, Maximize2 } from 'lucide-react'
-import { Highlight, Prism, themes } from 'prism-react-renderer'
+import { Highlight, Prism } from 'prism-react-renderer'
 import { useTheme } from 'next-themes'
+import {
+  buildCodeBlockPrismTheme,
+  CODE_BLOCK_PRISM_SURFACE_CLASS,
+  resolvePrismPreSurfaceStyle,
+  stripPrismTokenBackground,
+} from '@/lib/code-block-prism-theme'
 import { cn } from '@/lib/utils'
-import { isResolvedThemeDarkChrome } from '@/lib/html-theme'
 import { Button } from '@/components/ui/button'
 import { WizardLayout } from '@/components/global/shared/WizardLayout'
 import { toast } from 'sonner'
@@ -61,6 +66,12 @@ export type CodeBlockLanguage =
   | 'plaintext'
   | 'env'
   | 'hcl'
+  | 'rust'
+  | 'graphql'
+  | 'http'
+  | 'groovy'
+  | 'docker'
+  | 'css'
   // Appwrite runtime keys (map to Prism languages below)
   | 'node'
   | 'deno'
@@ -79,7 +90,12 @@ function getPrismLanguage(lang: CodeBlockLanguage): string {
   return RUNTIME_TO_PRISM[lang] ?? lang
 }
 
-function getLanguageLabel(lang: CodeBlockLanguage): string {
+/** Markdown fences often end with a trailing newline that Prism renders as a blank line. */
+export function normalizeCodeBlockContent(code: string): string {
+  return code.endsWith('\n') ? code.slice(0, -1) : code
+}
+
+export function getCodeLanguageLabel(lang: CodeBlockLanguage): string {
   const labels: Partial<Record<CodeBlockLanguage, string>> = {
     javascript: 'JavaScript',
     typescript: 'TypeScript',
@@ -99,6 +115,12 @@ function getLanguageLabel(lang: CodeBlockLanguage): string {
     plaintext: 'Plain text',
     env: '.env',
     hcl: 'Terraform',
+    rust: 'Rust',
+    graphql: 'GraphQL',
+    http: 'HTTP',
+    groovy: 'Groovy',
+    docker: 'Dockerfile',
+    css: 'CSS',
     node: 'Node.js',
     deno: 'Deno',
     bun: 'Bun',
@@ -123,6 +145,12 @@ const EXTRA_LANGUAGES: string[] = [
   'csharp',
   'markup',
   'hcl',
+  'rust',
+  'graphql',
+  'http',
+  'groovy',
+  'docker',
+  'css',
 ]
 
 const PRISM_LOADERS: Record<string, () => Promise<unknown>> = {
@@ -147,6 +175,12 @@ const PRISM_LOADERS: Record<string, () => Promise<unknown>> = {
   go: () => import('prismjs/components/prism-go'),
   csharp: () => import('prismjs/components/prism-csharp'),
   hcl: () => import('prismjs/components/prism-hcl'),
+  rust: () => import('prismjs/components/prism-rust'),
+  graphql: () => import('prismjs/components/prism-graphql'),
+  http: () => import('prismjs/components/prism-http'),
+  groovy: () => import('prismjs/components/prism-groovy'),
+  docker: () => import('prismjs/components/prism-docker'),
+  css: () => import('prismjs/components/prism-css'),
 }
 
 const loadedLanguages = new Set<string>()
@@ -161,6 +195,28 @@ function loadLanguage(lang: string): Promise<void> {
 }
 
 export type CodeBlockVariant = 'default' | 'headless'
+
+export type CodeBlockSurface = 'default' | 'muted' | 'transparent'
+
+function resolveCodeBlockSurface(
+  surface?: CodeBlockSurface,
+  transparentBackground?: boolean,
+): CodeBlockSurface {
+  if (transparentBackground) return 'transparent'
+  return surface ?? 'default'
+}
+
+const SURFACE_FRAME_CLASS: Record<CodeBlockSurface, string> = {
+  default: 'bg-transparent',
+  muted: 'bg-transparent',
+  transparent: 'bg-transparent',
+}
+
+const SURFACE_PRE_CLASS: Record<CodeBlockSurface, string> = {
+  default: CODE_BLOCK_PRISM_SURFACE_CLASS,
+  muted: CODE_BLOCK_PRISM_SURFACE_CLASS,
+  transparent: CODE_BLOCK_PRISM_SURFACE_CLASS,
+}
 
 export interface CodeBlockProps {
   code: string
@@ -183,7 +239,12 @@ export interface CodeBlockProps {
   className?: string
   /** Optional label above the block (e.g. "Code") */
   label?: string
-  /** Render with transparent background (keeps border and highlighting) */
+  /**
+   * Editor surface inside the frame.
+   * `muted` matches parent cards (`bg-card/50`) in docs tabs/multicode.
+   */
+  surface?: CodeBlockSurface
+  /** @deprecated Prefer `surface="transparent"` */
   transparentBackground?: boolean
   /** Show fullscreen button (default false) */
   showFullscreen?: boolean
@@ -200,10 +261,12 @@ export function CodeBlock({
   fixedHeight,
   className,
   label,
+  surface,
   transparentBackground = false,
   showFullscreen = false,
   wrapLines = false,
 }: CodeBlockProps) {
+  const resolvedSurface = resolveCodeBlockSurface(surface, transparentBackground)
   const [copied, setCopied] = useState(false)
   const [isFullscreenOpen, setIsFullscreenOpen] = useState(false)
   const preRef = useRef<HTMLPreElement>(null)
@@ -245,18 +308,21 @@ export function CodeBlock({
   }, [prismLanguage, needsExtra])
 
   const handleCopy = () => {
-    navigator.clipboard.writeText(code)
+    navigator.clipboard.writeText(displayCode)
     setCopied(true)
     toast.success('Copied to clipboard')
     setTimeout(() => setCopied(false), 2000)
   }
 
   const effectiveLanguage = extrasReady ? prismLanguage : 'plaintext'
-  const prismTheme = isResolvedThemeDarkChrome(resolvedTheme)
-    ? themes.vsDark
-    : themes.vsLight
+  const displayCode = useMemo(() => normalizeCodeBlockContent(code), [code])
+  const prismTheme = useMemo(
+    () => buildCodeBlockPrismTheme(resolvedTheme),
+    [resolvedTheme],
+  )
 
   const isHeadless = variant === 'headless'
+  const isNestedSurface = resolvedSurface === 'muted'
 
   const preOverflowClasses = wrapLines
     ? 'overflow-x-hidden whitespace-pre-wrap break-words [overflow-wrap:anywhere]'
@@ -328,8 +394,10 @@ export function CodeBlock({
           'relative flex w-full flex-col overflow-hidden',
           isHeadless
             ? 'rounded-none border-0 shadow-none'
-            : 'rounded-xl border border-border',
-          transparentBackground ? 'bg-transparent' : 'bg-background',
+            : isNestedSurface
+              ? 'rounded-none border-0 shadow-none'
+              : 'rounded-xl border border-border',
+          SURFACE_FRAME_CLASS[resolvedSurface],
           fixedHeight && 'min-h-0',
         )}
         style={fixedHeight ? { height: fixedHeight } : undefined}
@@ -344,7 +412,7 @@ export function CodeBlock({
             )}
           >
             <span className="text-[11px] font-medium text-muted-foreground">
-              {getLanguageLabel(language)}
+              {getCodeLanguageLabel(language)}
             </span>
             <div className="flex items-center gap-1">
               {renderCopyButton()}
@@ -352,7 +420,11 @@ export function CodeBlock({
             </div>
           </div>
         )}
-        <Highlight theme={prismTheme} code={code} language={effectiveLanguage}>
+        <Highlight
+          theme={prismTheme}
+          code={displayCode}
+          language={effectiveLanguage}
+        >
           {({
             className: preClassName,
             style,
@@ -364,31 +436,38 @@ export function CodeBlock({
               ref={preRef}
               onWheel={handleWheel}
               className={cn(
-                'rounded-none p-4 text-[12px] font-mono',
+                'rounded-none text-[12px] font-mono',
+                isNestedSurface ? 'px-0 py-2' : 'p-4',
                 preOverflowClasses,
                 fixedHeight && 'min-h-0 flex-1 overflow-y-auto',
-                transparentBackground ? '!bg-transparent' : '!bg-background',
                 preClassName,
+                SURFACE_PRE_CLASS[resolvedSurface],
               )}
-              style={{
-                ...style,
-                margin: 0,
-                backgroundColor: transparentBackground
-                  ? 'transparent'
-                  : 'var(--background)',
-              }}
+              style={resolvePrismPreSurfaceStyle(style as CSSProperties)}
             >
-              <code className="text-left block">
-                {tokens.map((line, i) => (
-                  <div
-                    key={i}
-                    {...getLineProps({ line, className: lineWrapClasses })}
-                  >
-                    {line.map((token, key) => (
-                      <span key={key} {...getTokenProps({ token })} />
-                    ))}
-                  </div>
-                ))}
+              <code className="block bg-transparent text-left">
+                {tokens.map((line, i) => {
+                  const lineProps = getLineProps({
+                    line,
+                    className: cn(lineWrapClasses, 'bg-transparent'),
+                  })
+                  lineProps.style = stripPrismTokenBackground(
+                    lineProps.style as CSSProperties,
+                  )
+                  return (
+                    <div key={i} {...lineProps}>
+                      {line.map((token, key) => {
+                        const tokenProps = getTokenProps({ token })
+                        if (tokenProps.style) {
+                          tokenProps.style = stripPrismTokenBackground(
+                            tokenProps.style as CSSProperties,
+                          )
+                        }
+                        return <span key={key} {...tokenProps} />
+                      })}
+                    </div>
+                  )
+                })}
               </code>
             </pre>
           )}
@@ -396,7 +475,7 @@ export function CodeBlock({
       </div>
       {showFullscreen && isFullscreenOpen && (
         <WizardLayout
-          title={`${getLanguageLabel(language)} example`}
+          title={`${getCodeLanguageLabel(language)} example`}
           fullscreen
           useSidebar={false}
           constrainWidth={false}
@@ -409,7 +488,7 @@ export function CodeBlock({
           <div>
             <Highlight
               theme={prismTheme}
-              code={code}
+              code={displayCode}
               language={effectiveLanguage}
             >
               {({
@@ -424,24 +503,33 @@ export function CodeBlock({
                     'p-6 text-[12px] font-mono',
                     preOverflowClasses,
                     preClassName,
+                    CODE_BLOCK_PRISM_SURFACE_CLASS,
                   )}
-                  style={{
-                    ...style,
-                    margin: 0,
-                    backgroundColor: 'var(--background)',
-                  }}
+                  style={resolvePrismPreSurfaceStyle(style as CSSProperties)}
                 >
-                  <code className="text-left block">
-                    {tokens.map((line, i) => (
-                      <div
-                        key={i}
-                        {...getLineProps({ line, className: lineWrapClasses })}
-                      >
-                        {line.map((token, key) => (
-                          <span key={key} {...getTokenProps({ token })} />
-                        ))}
-                      </div>
-                    ))}
+                  <code className="block bg-transparent text-left">
+                    {tokens.map((line, i) => {
+                      const lineProps = getLineProps({
+                        line,
+                        className: cn(lineWrapClasses, 'bg-transparent'),
+                      })
+                      lineProps.style = stripPrismTokenBackground(
+                        lineProps.style as CSSProperties,
+                      )
+                      return (
+                        <div key={i} {...lineProps}>
+                          {line.map((token, key) => {
+                            const tokenProps = getTokenProps({ token })
+                            if (tokenProps.style) {
+                              tokenProps.style = stripPrismTokenBackground(
+                                tokenProps.style as CSSProperties,
+                              )
+                            }
+                            return <span key={key} {...tokenProps} />
+                          })}
+                        </div>
+                      )
+                    })}
                   </code>
                 </pre>
               )}

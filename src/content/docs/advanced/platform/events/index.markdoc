@@ -1,0 +1,77 @@
+---
+layout: article
+title: Events
+description: Harness the power of events in Appwrite. Explore event-driven architecture, event types, and how to use events to create dynamic applications.
+---
+
+Appwrite provides a variety of events that allows your application to react to changes as they happen.
+An event will fire when a change occurs in your Appwrite project, like when a new user registers or a new file is uploaded to Appwrite.
+You can subscribe to these events with Appwrite [Functions](/docs/products/functions), [Realtime](/docs/apis/realtime), or [Webhooks](/docs/advanced/platform/webhooks).
+
+You can subscribe to events for specific resources using their ID or subscribe to changes of all resources of the same type by using a wildcard character * instead of an ID.
+You can also filter for events of specific actions like create, update, upsert, or delete.
+
+
+You can find a list of events for Storage, Databases, Functions, Sites, and Authentication services below.
+
+{% accordion %}
+{% accordion_item title="Authentication" %}
+{% partial file="auth-events.md" /%}
+{% /accordion_item %}
+{% accordion_item title="Databases" %}
+{% partial file="databases-events.md" /%}
+
+{% info title="Note" %}
+Collections, documents, and attributes have been deprecated in favour of tables, rows, and columns. The `databases.*` event prefix has been replaced by `tablesdb.*`.
+{% /info %}
+{% /accordion_item %}
+{% accordion_item title="Storage" %}
+{% partial file="storage-events.md" /%}
+{% /accordion_item %}
+{% accordion_item title="Functions" %}
+{% partial file="functions-events.md" /%}
+{% /accordion_item %}
+{% accordion_item title="Sites" %}
+{% partial file="sites-events.md" /%}
+{% /accordion_item %}
+{% accordion_item title="Messaging" %}
+{% partial file="messaging-events.md" /%}
+{% /accordion_item %}
+{% /accordion %}
+
+# Known limitations {% #known-limitations %}
+
+When events fire, only existing subscriptions for that event will receive the update. If your client or server side integrations lose network connection temporarily, delivery of the event is not guaranteed.
+
+For self-hosted instances, when the Appwrite containers are shut down and restarted, events with pending webhooks and subscription updates will not be delivered.
+
+A change to a resource can cause multiple events to fire. For example adding a new row with ID `"lion-king"` to a table with the ID `"movies"` will cause all of the below events to fire.
+
+```json
+{
+  "events": [
+      "tablesdb.default.tables.movies.rows.lion-king.create",
+      "tablesdb.*.tables.*.rows.*.create",
+      "tablesdb.default.tables.*.rows.lion-king.create",
+      "tablesdb.*.tables.*.rows.lion-king.create",
+      "tablesdb.*.tables.movies.rows.lion-king.create",
+      "tablesdb.default.tables.movies.rows.*.create",
+      "tablesdb.*.tables.movies.rows.*.create",
+      "tablesdb.default.tables.*.rows.*.create",
+      "tablesdb.default.tables.movies.rows.lion-king",
+      "tablesdb.*.tables.*.rows.*",
+      "tablesdb.default.tables.*.rows.lion-king",
+      "tablesdb.*.tables.*.rows.lion-king",
+      "tablesdb.*.tables.movies.rows.lion-king",
+      "tablesdb.default.tables.movies.rows.*",
+      "tablesdb.*.tables.movies.rows.*",
+      "tablesdb.default.tables.*.rows.*",
+      "tablesdb.default.tables.movies",
+      "tablesdb.*.tables.*",
+      "tablesdb.default.tables.*",
+      "tablesdb.*.tables.movies",
+      "tablesdb.default",
+      "tablesdb.*"
+  ]
+}
+```

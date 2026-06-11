@@ -1,0 +1,418 @@
+---
+layout: article
+title: Multi-tenancy with Teams
+description: Learn how to implement multi-tenancy in your applications using Appwrite Teams.
+---
+
+Appwrite Teams provides an effective way to implement multi-tenancy in your applications. Create a team for each tenant to handle multi-tenant apps with built-in data isolation.
+
+{% arrow_link href="/docs/products/auth/teams" %}
+Learn more about Teams
+{% /arrow_link %}
+
+# What is multi-tenancy?
+
+Multi-tenancy is a design pattern where a single instance of software serves multiple user groups (tenants). With Appwrite Teams, you can:
+
+- Create a team for each tenant in your application
+- Control access to resources using team-based permissions
+- Define different roles within each tenant
+- Scale to unlimited tenants without code changes
+
+# Common use cases
+
+- **SaaS applications**: Organizations that need isolated data and users
+- **Collaborative tools**: Projects with different access levels
+- **Educational platforms**: Schools with teachers and students
+- **Business software**: Companies with department-based access control
+
+# Create teams for tenants
+
+When a new tenant signs up, create a dedicated team that serves as their isolated environment.
+
+{% multicode %}
+```client-web
+import { Client, Teams, ID } from "appwrite";
+
+const client = new Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+    .setProject('<PROJECT_ID>');
+
+const teams = new Teams(client);
+
+// Create team for a new tenant
+const tenantTeam = await teams.create(
+    'example_corp', // Team ID for tenant
+    'Example Corp',   // Tenant name
+    ['owner', 'admin', 'member'] // Tenant roles
+);
+```
+```client-flutter
+import 'package:appwrite/appwrite.dart';
+
+final client = Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+    .setProject('<PROJECT_ID>');
+
+final teams = Teams(client);
+
+// Create team for a new tenant
+final tenantTeam = await teams.create(
+    teamId: 'example_corp', // Team ID for tenant
+    name: 'Example Corp',   // Tenant name
+    roles: ['owner', 'admin', 'member'] // Tenant roles
+);
+```
+```client-apple
+import Appwrite
+
+let client = Client()
+    .setEndpoint("https://<REGION>.cloud.appwrite.io/v1")
+    .setProject("<PROJECT_ID>")
+
+let teams = Teams(client)
+
+// Create team for a new tenant
+let tenantTeam = try await teams.create(
+    teamId: "example_corp", // Team ID for tenant
+    name: "Example Corp",   // Tenant name
+    roles: ["owner", "admin", "member"] // Tenant roles
+)
+```
+```client-android-kotlin
+import io.appwrite.Client
+import io.appwrite.ID
+import io.appwrite.services.Teams
+
+val client = Client(context)
+    .setEndpoint("https://<REGION>.cloud.appwrite.io/v1")
+    .setProject("<PROJECT_ID>")
+
+val teams = Teams(client)
+
+// Create team for a new tenant
+val tenantTeam = teams.create(
+    teamId = "example_corp", // Team ID for tenant
+    name = "Example Corp",   // Tenant name
+    roles = listOf("owner", "admin", "member") // Tenant roles
+)
+```
+{% /multicode %}
+
+# Add members to tenants
+
+Invite users to join a tenant using team memberships. Each member can be assigned different roles for access control.
+
+{% multicode %}
+```client-web
+import { Client, Teams } from "appwrite";
+
+const client = new Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+    .setProject('<PROJECT_ID>');
+
+const teams = new Teams(client);
+
+// Invite a member to the tenant
+const membership = await teams.createMembership(
+    'example_corp',      // Team/tenant ID
+    ['admin'],           // Member's role in the tenant
+    'user@example.com',  // User's email
+    undefined,           // userId (optional)
+    undefined,           // phone (optional)
+    'https://example.com/accept-invite' // Redirect URL after accepting
+);
+```
+```client-flutter
+import 'package:appwrite/appwrite.dart';
+
+final client = Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+    .setProject('<PROJECT_ID>');
+
+final teams = Teams(client);
+
+// Invite a member to the tenant
+final membership = await teams.createMembership(
+    teamId: 'example_corp',   // Team/tenant ID
+    roles: ['admin'],         // Member's role in the tenant
+    email: 'user@example.com', // User's email
+    url: 'https://example.com/accept-invite' // Redirect URL after accepting
+);
+```
+```client-apple
+import Appwrite
+
+let client = Client()
+    .setEndpoint("https://<REGION>.cloud.appwrite.io/v1")
+    .setProject("<PROJECT_ID>")
+
+let teams = Teams(client)
+
+// Invite a member to the tenant
+let membership = try await teams.createMembership(
+    teamId: "example_corp",    // Team/tenant ID
+    roles: ["admin"],          // Member's role in the tenant
+    email: "user@example.com", // User's email
+    url: "https://example.com/accept-invite" // Redirect URL after accepting
+)
+```
+```client-android-kotlin
+import io.appwrite.Client
+import io.appwrite.services.Teams
+
+val client = Client(context)
+    .setEndpoint("https://<REGION>.cloud.appwrite.io/v1")
+    .setProject("<PROJECT_ID>")
+
+val teams = Teams(client)
+
+// Invite a member to the tenant
+val membership = teams.createMembership(
+    teamId = "example_corp",    // Team/tenant ID
+    roles = listOf("admin"),    // Member's role in the tenant
+    email = "user@example.com", // User's email
+    url = "https://example.com/accept-invite" // Redirect URL after accepting
+)
+```
+{% /multicode %}
+
+# Secure resources with team permissions
+
+Control access to rows and resources using team-based permissions. This ensures data isolation between tenants.
+
+{% multicode %}
+```client-web
+import { Client, TablesDB, ID, Permission, Role } from "appwrite";
+
+const client = new Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+    .setProject('<PROJECT_ID>');
+
+const tablesDB = new TablesDB(client);
+
+// Create a row that only members of "Example Corp" tenant can access
+const row = await tablesDB.createRow(
+    'invoices_db',
+    'invoices',
+    ID.unique(),
+    {
+        title: 'Q2 Invoice',
+        amount: 2500.00,
+        customer: 'Example Customer',
+        status: 'pending',
+        tenant_id: 'example_corp'
+    },
+    [
+        // All Example Corp team members can read
+        Permission.read(Role.team('example_corp')),
+
+        // Only admins can update
+        Permission.write(Role.team('example_corp', ['admin']))
+    ]
+);
+```
+```client-flutter
+import 'package:appwrite/appwrite.dart';
+
+final client = Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+    .setProject('<PROJECT_ID>');
+
+final tablesDB = TablesDB(client);
+
+// Create a row that only members of "Example Corp" tenant can access
+final row = await tablesDB.createRow(
+    databaseId: 'invoices_db',
+    tableId: 'invoices',
+    rowId: ID.unique(),
+    data: {
+        'title': 'Q2 Invoice',
+        'amount': 2500.00,
+        'customer': 'Example Customer',
+        'status': 'pending',
+        'tenant_id': 'example_corp'
+    },
+    permissions: [
+        // All Example Corp team members can read
+        Permission.read(Role.team('example_corp')),
+
+        // Only admins can update
+        Permission.write(Role.team('example_corp', ['admin']))
+    ]
+);
+```
+```client-apple
+import Appwrite
+
+let client = Client()
+    .setEndpoint("https://<REGION>.cloud.appwrite.io/v1")
+    .setProject("<PROJECT_ID>")
+
+let tablesDB = TablesDB(client)
+
+// Create a row that only members of "Example Corp" tenant can access
+let row = try await tablesDB.createRow(
+    databaseId: "invoices_db",
+    tableId: "invoices",
+    rowId: ID.unique(),
+    data: [
+        "title": "Q2 Invoice",
+        "amount": 2500.00,
+        "customer": "Example Customer",
+        "status": "pending",
+        "tenant_id": "example_corp"
+    ],
+    permissions: [
+        // All Example Corp team members can read
+        Permission.read(Role.team("example_corp")),
+
+        // Only admins can update
+        Permission.write(Role.team("example_corp", ["admin"]))
+    ]
+)
+```
+```client-android-kotlin
+import io.appwrite.Client
+import io.appwrite.ID
+import io.appwrite.services.TablesDB
+import io.appwrite.models.Permission
+import io.appwrite.models.Role
+
+val client = Client(context)
+    .setEndpoint("https://<REGION>.cloud.appwrite.io/v1")
+    .setProject("<PROJECT_ID>")
+
+val tablesDB = TablesDB(client)
+
+// Create a row that only members of "Example Corp" tenant can access
+val row = tablesDB.createRow(
+    databaseId = "invoices_db",
+    tableId = "invoices",
+    rowId = ID.unique(),
+    data = mapOf(
+        "title" to "Q2 Invoice",
+        "amount" to 2500.00,
+        "customer" to "Example Customer",
+        "status" to "pending",
+        "tenant_id" to "example_corp"
+    ),
+    permissions = listOf(
+        // All Example Corp team members can read
+        Permission.read(Role.team("example_corp")),
+
+        // Only admins can update
+        Permission.write(Role.team("example_corp", listOf("admin")))
+    )
+)
+```
+{% /multicode %}
+
+# Query tenant data
+
+When querying data, users will automatically only see rows they have permission to access based on their team memberships.
+
+{% multicode %}
+```client-web
+import { Client, TablesDB, Query } from "appwrite";
+
+const client = new Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+    .setProject('<PROJECT_ID>');
+
+const tablesDB = new TablesDB(client);
+
+// Current user will only see invoices they have access to
+const rows = await tablesDB.listRows(
+    'invoices_db',
+    'invoices'
+);
+
+// For specific tenant data, you can add a query filter
+const tenantDocuments = await tablesDB.listRows(
+    'invoices_db',
+    'invoices',
+    [
+        Query.equal('tenant_id', 'example_corp')
+    ]
+);
+```
+```client-flutter
+import 'package:appwrite/appwrite.dart';
+
+final client = Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+    .setProject('<PROJECT_ID>');
+
+final tablesDB = TablesDB(client);
+
+// Current user will only see invoices they have access to
+final rows = await tablesDB.listRows(
+    databaseId: 'invoices_db',
+    tableId: 'invoices',
+);
+
+// For specific tenant data, you can add a query filter
+final tenantDocuments = await tablesDB.listRows(
+    databaseId: 'invoices_db',
+    tableId: 'invoices',
+    queries: [
+        Query.equal('tenant_id', 'example_corp')
+    ]
+);
+```
+```client-apple
+import Appwrite
+
+let client = Client()
+    .setEndpoint("https://<REGION>.cloud.appwrite.io/v1")
+    .setProject("<PROJECT_ID>")
+
+let tablesDB = TablesDB(client)
+
+// Current user will only see invoices they have access to
+let rows = try await tablesDB.listRows(
+    databaseId: "invoices_db",
+    tableId: "invoices"
+)
+
+// For specific tenant data, you can add a query filter
+let tenantDocuments = try await tablesDB.listRows(
+    databaseId: "invoices_db",
+    tableId: "invoices",
+    queries: [
+        Query.equal(key: "tenant_id", value: "example_corp")
+    ]
+)
+```
+```client-android-kotlin
+import io.appwrite.Client
+import io.appwrite.services.TablesDB
+import io.appwrite.Query
+
+val client = Client(context)
+    .setEndpoint("https://<REGION>.cloud.appwrite.io/v1")
+    .setProject("<PROJECT_ID>")
+
+val tablesDB = TablesDB(client)
+
+// Current user will only see invoices they have access to
+val rows = tablesDB.listRows(
+    databaseId = "invoices_db",
+    tableId = "invoices"
+)
+
+// For specific tenant data, you can add a query filter
+val tenantDocuments = tablesDB.listRows(
+    databaseId = "invoices_db",
+    tableId = "invoices",
+    queries = listOf(
+        Query.equal("tenant_id", "example_corp")
+    )
+)
+```
+{% /multicode %}
+
+{% arrow_link href="/docs/products/auth/team-invites" %}
+Learn how to manage team invitations
+{% /arrow_link %}

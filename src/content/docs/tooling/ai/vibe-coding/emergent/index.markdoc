@@ -1,0 +1,99 @@
+---
+layout: article
+title: Emergent
+description: Learn how to connect Appwrite MCP servers to Emergent for AI-assisted development with access to the Appwrite API and documentation.
+---
+
+{% section #add-mcp-server step=1 title="Add MCP server" %}
+
+To connect Appwrite MCP servers to Emergent:
+
+1. On the homepage, click **Advanced Controls**.
+2. Click **Select MCP Tools**.
+3. Click **New MCP Server**.
+4. Enter a name for your server (e.g., `appwrite` or `appwrite-docs`).
+5. Paste one of the following JSON configurations:
+
+{% tabs %}
+{% tabsitem #api-server title="API server" %}
+
+```json
+{
+  "mcpServers": {
+    "appwrite-api": {
+      "command": "uvx",
+      "args": [
+        "mcp-server-appwrite"
+      ],
+      "env": {
+        "APPWRITE_PROJECT_ID": "your-project-id",
+        "APPWRITE_API_KEY": "your-api-key",
+        "APPWRITE_ENDPOINT": "https://<REGION>.cloud.appwrite.io/v1"
+      }
+    }
+  }
+}
+
+```
+
+**Configuration:**
+
+- Replace `your-project-id` with your actual Appwrite project ID
+- Replace `your-api-key` with your Appwrite API key
+- Replace `<REGION>` with your Appwrite Cloud region (e.g., `fra`, `nyc`)
+
+{% /tabsitem %}
+
+{% tabsitem #docs-server title="Docs server" %}
+
+```json
+{
+  "mcpServers": {
+    "appwrite-docs": {
+      "command": "npx",
+      "args": [
+        "mcp-remote",
+        "<https://mcp-for-docs.appwrite.io>"
+      ]
+    }
+  }
+}
+
+```
+
+{% /tabsitem %}
+{% /tabs %}
+
+{% /section %}
+
+{% section #test-the-integration step=2 title="Test the integration" %}
+
+Once connected, you can use natural language to interact with Appwrite. Try prompts like:
+
+{% tabs %}
+{% tabsitem #test-api title="API server" %}
+
+**Example prompts:**
+
+- `Create a new user in my Appwrite project`
+- `List all databases in my project`
+- `Show me the collections in my database`
+- `Create a new document in my collection`
+- `Delete a specific user by ID`
+
+{% /tabsitem %}
+
+{% tabsitem #test-docs title="Docs server" %}
+
+**Example prompts:**
+
+- `How do I set up real-time subscriptions in Appwrite?`
+- `Show me how to authenticate users with OAuth`
+- `What are the best practices for database queries?`
+- `How do I implement file uploads with Appwrite Storage?`
+- `Show me an example of using Appwrite Functions`
+
+{% /tabsitem %}
+{% /tabs %}
+
+{% /section %}

@@ -1,0 +1,110 @@
+---
+layout: article
+title: Compression
+description: 
+---
+
+Appwrite is leveraging compression algorithms to both boost the performance of your app and to reduce and optimize bandwidth and storage costs for Appwrite developers. This page provides an in-depth explanation of the compression algorithms supported by Appwrite for API responses, image transformations, and storage buckets.
+
+# API {% #api %}
+
+Appwrite supports two primary algorithms for text-based responses: **Brotli** and **Gzip**. These algorithms are integral for improving data transfer speeds across the HTTP based APIs, especially when dealing with textual content, which tends to be highly compressible.
+
+- **Brotli**: Chosen for its superior compression efficiency, especially for smaller files. Brotli performs best in HTTP/2 and HTTP/3 environments, where smaller payloads mean faster transfers and lower bandwidth consumption. Its efficiency also allows for quicker decompression on modern clients.
+- **Gzip**: Gzip remains supported for backward compatibility and for clients that do not yet fully support Brotli. Though Gzip has a lower compression ratio compared to Brotli, it is still a reliable fallback for older browsers and HTTP/1.1 connections.
+- **Zstd**: Zstd offers very high compression ratios and significantly faster decompression speeds, making it ideal for server-to-server communication and large data transfers. While its browser support is limited compared to Brotli and Gzip, Zstd excels in scenarios where performance and efficiency are critical for backend processes.
+
+## Conditions {% #conditions %}
+Compression in Appwrite is triggered dynamically based on several conditions. This ensures that we only compress data when it is beneficial for performance and that we avoid unnecessary overhead for small payloads or non-textual data.
+
+1. **MIME types**: Only text-based MIME types are eligible for compression. These include:
+- `text/plain`
+- `text/css`
+- `text/javascript`
+- `application/javascript`
+- `text/html`
+- `application/json`
+- `image/svg+xml`
+- `application/xml+rss`
+   
+This selection is based on the nature of these content types being easily compressible, resulting in significant size reductions without loss of information.
+
+2. **Response size**: Compression is applied when the size of the response exceeds **1KB**. This threshold has been selected based on testing to minimize the CPU overhead of compression for small payloads, where the gains in bandwidth reduction are negligible.
+
+3. **Client-side support**: Clients indicate their support for specific compression algorithms via the `Accept-Encoding` HTTP header. Appwrite prioritizes compression based on the following client-provided values:
+   - `br`: Indicates support for Brotli compression.
+   - `zstd`: Indicates support for Zstandard compression.
+   - `gzip`: Indicates support for Gzip compression.
+   - `identity`: Indicates that no compression is supported or requested.
+
+## Prioritizations {% #prioritizations %}
+Appwrite prioritizes Brotli over Gzip due to Brotli’s more efficient compression ratio, especially when dealing with text-based content like HTML, CSS, and JSON files. Brotli uses a sliding window dictionary that results in higher compression ratios at slower speeds, but in an HTTP/2 or HTTP/3 environment, the benefits outweigh the costs. Gzip is used as a fallback when Brotli is not supported by the client.
+
+| Algorithm {% width=120 %} | Ratio {% width=120 %}            | Browsers              | Notes                                             |
+|-----------|-------------------|-----------------------|---------------------------------------------------|
+| Brotli    | High              | All modern browsers   | Optimal for small text files; highly efficient.   |
+| Gzip      | Medium            | Universal             | Broad compatibility with older and modern clients.|
+| Zstd      | Very High         | Limited               | High performance with faster decompression speeds, ideal for server-to-server communication. |
+| Identity  | None              | Universal             | Used when no compression is applied or supported. |
+
+## Enabling compression {% #enabling-compression-1 %}
+Compression is enabled by default for eligible API responses in Appwrite. You do not need to manually enable it; Appwrite dynamically selects the best algorithm based on the client’s `Accept-Encoding` headers and the MIME type of the response.
+
+# Image transformations {% #image-transformations %}
+Appwrite's API supports the [compression of image files](/docs/products/storage/images) during manipulation and preview generation. The primary reason for compressing images is to minimize file sizes while maintaining visual quality, thus reducing both bandwidth usage and storage costs.
+
+Appwrite supports both legacy and modern image formats, including:
+
+- **PNG**, **JPEG**, **GIF**: These are traditional formats supported for compatibility reasons. PNG supports lossless compression, while JPEG and GIF are lossy but optimized for small sizes.
+- **WebP**: A modern format developed by Google, offering better compression rates than JPEG, PNG, or GIF while maintaining equivalent quality.
+- **AVIF**: The most modern image format supported by Appwrite, which offers even higher compression rates than WebP. AVIF is based on the AV1 video codec and is optimized for high-performance image rendering with minimal bandwidth use.
+
+## Supported API endpoints {% #supported-api-endpoints %}
+
+Appwrite applies image compression exclusively through the Image Preview API. This ensures that any dynamic operations, such as generating previews, resizing images, or converting between formats, are optimized for performance and reduced file size. Images uploaded through the Storage API remain in their original format and quality without automatic compression to preserve your source of truth.
+
+## Prioritization {% #prioritization %}
+
+Appwrite does not apply any image compression by default. Developers have full control over the output compression by specifying it in the query string when using the Image Preview API. This allows for precise customization to suit various use cases.
+
+Appwrite supports modern image formats like WebP and AVIF for their exceptional compression rates and compatibility with most browsers. While WebP is often the default choice for conversions, AVIF is recommended when seeking optimal performance and minimal file sizes.
+
+```javascript
+import { Client, Storage } from "appwrite";
+
+const client = new Client();
+const storage = new Storage(client);
+
+client
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1') // Your API Endpoint
+    .setProject('<PROJECT_ID>') // Your project ID
+;
+
+const result = storage.getFilePreview(
+    'photos',           // bucket ID
+    'sunset.png',       // file ID
+    1800,               // width, will be resized using this value.
+    0,                  // height, ignored when 0
+    'center',           // crop center
+    '90',               // slight compression
+    5,                  // border width
+    'CDCA30',           // border color
+    15,                 // border radius
+    1,                  // full opacity
+    0,                  // no rotation
+    'FFFFFF',           // background color
+    'webp'              // output jpg format
+);
+
+console.log(result.href);
+```
+
+| Algorithm {% width=120 %} | Formats           | Ratio {% width=120 %}             | Notes                |
+| --------- | ----------------- | ----------------- | -------------------- |
+| WebP      | PNG, JPEG, GIF    | High              | Great balance of compression efficiency and visual quality |
+| AVIF      | PNG, JPEG, GIF    | Best              | Highest compression rate for modern use cases |
+| JPEG      | JPEG              | Medium            | Legacy support for lossy compression |
+| PNG       | PNG               | Lossless          | Necessary for lossless compression requirements |
+
+## Enabling compression {% #enabling-compression-2 %}
+You can enable image compression through the **Image Preview API** by specifying the desired output format in API calls. For example, requesting a WebP or AVIF conversion automatically triggers Appwrite's compression algorithms to optimize the image size.

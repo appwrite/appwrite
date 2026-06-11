@@ -1,0 +1,436 @@
+import { useState, type ComponentType } from 'react'
+import { useLocation } from '@tanstack/react-router'
+import {
+  ArrowUpRight,
+  BookOpen,
+  Braces,
+  ChevronDown,
+  ChevronLeft,
+  ChevronRight,
+  Clock,
+  Cog,
+  Command,
+  Database,
+  FileText,
+  Folder,
+  Globe,
+  Home,
+  Layers,
+  Play,
+  Puzzle,
+  Radio,
+  RefreshCw,
+  Send,
+  Server,
+  Share2,
+  Shield,
+  Sparkles,
+  Terminal,
+  Type,
+  UserCircle,
+  Users,
+  X,
+  Zap,
+  type LucideIcon,
+} from 'lucide-react'
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from '@/components/ui/collapsible'
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@/components/ui/tooltip'
+import { GraphqlIcon } from '@/components/global/shared/GraphqlIcon'
+import { TerraformIcon } from '@/components/global/shared/TerraformIcon'
+import { DOCS_NAV_ACTIVE_BG_CLASS } from '@/lib/docs/nav-styles'
+import { DOCS_GLOBAL_NAV } from '@/lib/docs/navigation'
+import { isDocsNavGroup } from '@/lib/docs/navigation'
+import type { DocsNavLink, DocsNavTree } from '@/lib/docs/types'
+import { cn } from '@/lib/utils'
+import { DocsRouteLink } from './DocsRouteLink'
+
+const DOCS_MENU_ICON_STROKE = 1.25
+
+const ICON_MAP: Record<string, LucideIcon> = {
+  home: Home,
+  play: Play,
+  'book-open': BookOpen,
+  cog: Cog,
+  'document-text': FileText,
+  clock: Clock,
+  puzzle: Puzzle,
+  document: FileText,
+  'user-group': Users,
+  database: Database,
+  folder: Folder,
+  zap: Zap,
+  send: Send,
+  globe: Globe,
+  'user-circle': UserCircle,
+  sparkles: Sparkles,
+  terminal: Terminal,
+  share: Share2,
+  shield: Shield,
+  server: Server,
+  rest: Braces,
+  command: Command,
+  text: Type,
+  platform: Layers,
+  refresh: RefreshCw,
+  radio: Radio,
+}
+
+type DocsCustomNavIconProps = {
+  className?: string
+  isActive?: boolean
+}
+
+function DocsTerraformNavIcon({ className, isActive }: DocsCustomNavIconProps) {
+  return (
+    <TerraformIcon
+      variant="nav"
+      className={cn(isActive && 'opacity-100', className)}
+    />
+  )
+}
+
+function DocsGraphqlNavIcon({ className, isActive }: DocsCustomNavIconProps) {
+  return (
+    <GraphqlIcon
+      variant="nav"
+      className={cn(isActive && 'opacity-100', className)}
+    />
+  )
+}
+
+const CUSTOM_ICON_MAP: Record<string, ComponentType<DocsCustomNavIconProps>> = {
+  terraform: DocsTerraformNavIcon,
+  graphql: DocsGraphqlNavIcon,
+}
+
+function isDocsNavActive(href: string, pathname: string): boolean {
+  const normalized = pathname.replace(/\/+$/, '') || '/'
+  if (href === '/docs') return normalized === '/docs'
+  if (href.startsWith('http')) return false
+  return normalized === href || normalized.startsWith(`${href}/`)
+}
+
+function DocsGlobalNavItem({
+  item,
+  pathname,
+  collapsed,
+  isMobile = false,
+  onNavigate,
+}: {
+  item: DocsNavLink
+  pathname: string
+  collapsed: boolean
+  isMobile?: boolean
+  onNavigate?: () => void
+}) {
+  const isActive = isDocsNavActive(item.href, pathname)
+  const CustomIcon = item.icon ? CUSTOM_ICON_MAP[item.icon] : null
+  const Icon = item.icon && !CustomIcon ? ICON_MAP[item.icon] : null
+  const external = item.href.startsWith('http') || item.openInNewTab
+
+  const className = cn(
+    'group flex w-full items-center gap-2.5 rounded-md px-2.5 py-1.5 text-[13px] font-medium transition-colors duration-150',
+    'focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1 focus-visible:ring-offset-background',
+    isActive
+      ? cn(DOCS_NAV_ACTIVE_BG_CLASS, 'text-foreground')
+      : 'text-muted-foreground hover:bg-accent/50 hover:text-foreground',
+    collapsed && !isMobile && 'justify-center px-0',
+    isMobile && 'gap-3 px-3 py-2.5 text-[14px]',
+  )
+
+  const content = (
+    <>
+      {CustomIcon ? (
+        <CustomIcon
+          isActive={isActive}
+          className={cn('h-4 w-4 shrink-0', isMobile && 'h-[18px] w-[18px]')}
+        />
+      ) : Icon ? (
+        <Icon
+          className={cn('h-4 w-4 shrink-0', isMobile && 'h-[18px] w-[18px]')}
+          strokeWidth={DOCS_MENU_ICON_STROKE}
+        />
+      ) : null}
+      {(!collapsed || isMobile) && <span className="flex-1 text-left">{item.label}</span>}
+      {(!collapsed || isMobile) && external ? (
+        <ArrowUpRight
+          className="size-3 shrink-0 text-muted-foreground/50"
+          strokeWidth={DOCS_MENU_ICON_STROKE}
+          aria-hidden
+        />
+      ) : null}
+      {(!collapsed || isMobile) && item.new ? (
+        <span className="rounded bg-muted px-1.5 py-0.5 text-[10px] font-medium text-muted-foreground">
+          New
+        </span>
+      ) : null}
+    </>
+  )
+
+  const link = external ? (
+    <a
+      href={item.href}
+      target="_blank"
+      rel="noopener noreferrer"
+      onClick={onNavigate}
+      className={className}
+      aria-label={`${item.label} (opens in new tab)`}
+    >
+      {content}
+    </a>
+  ) : (
+    <DocsRouteLink href={item.href} onClick={onNavigate} className={className}>
+      {content}
+    </DocsRouteLink>
+  )
+
+  if (collapsed && !isMobile && (Icon || CustomIcon)) {
+    return (
+      <Tooltip delayDuration={0}>
+        <TooltipTrigger asChild>{link}</TooltipTrigger>
+        <TooltipContent side="right" sideOffset={8}>
+          <p>
+            {item.label}
+            {external ? ' (opens in new tab)' : ''}
+          </p>
+        </TooltipContent>
+      </Tooltip>
+    )
+  }
+
+  return link
+}
+
+function DocsGlobalNavCategory({
+  label,
+  items,
+  pathname,
+  collapsed,
+  isMobile = false,
+  collapsible = false,
+  initiallyCollapsed = false,
+  onNavigate,
+}: {
+  label?: string
+  items: DocsNavLink[]
+  pathname: string
+  collapsed: boolean
+  isMobile?: boolean
+  collapsible?: boolean
+  initiallyCollapsed?: boolean
+  onNavigate?: () => void
+}) {
+  const [open, setOpen] = useState(!(initiallyCollapsed ?? false))
+
+  const itemList = (
+    <div className="space-y-0.5">
+      {items.map((item) => (
+        <DocsGlobalNavItem
+          key={item.href}
+          item={item}
+          pathname={pathname}
+          collapsed={collapsed}
+          isMobile={isMobile}
+          onNavigate={onNavigate}
+        />
+      ))}
+    </div>
+  )
+
+  if (!label) return itemList
+
+  if (collapsible && (!collapsed || isMobile)) {
+    return (
+      <Collapsible open={open} onOpenChange={setOpen}>
+        <CollapsibleTrigger
+          className={cn(
+            'mb-1.5 flex w-full cursor-pointer items-center gap-1 rounded-md px-2.5 py-1 text-[11px] font-medium uppercase tracking-wider text-muted-foreground/60 transition-colors hover:bg-accent/50 hover:text-muted-foreground',
+            isMobile && 'px-3',
+          )}
+          aria-expanded={open}
+        >
+          <span className="flex-1 text-left">{label}</span>
+          {open ? (
+            <ChevronDown
+              className="size-3.5 shrink-0 text-muted-foreground/50"
+              strokeWidth={DOCS_MENU_ICON_STROKE}
+            />
+          ) : (
+            <ChevronRight
+              className="size-3.5 shrink-0 text-muted-foreground/50"
+              strokeWidth={DOCS_MENU_ICON_STROKE}
+            />
+          )}
+        </CollapsibleTrigger>
+        <CollapsibleContent>{itemList}</CollapsibleContent>
+      </Collapsible>
+    )
+  }
+
+  return (
+    <div className="space-y-0.5">
+      {(!collapsed || isMobile) && (
+        <p
+          className={cn(
+            'mb-1.5 px-2.5 text-[11px] font-medium uppercase tracking-wider text-muted-foreground/60',
+            isMobile && 'px-3',
+          )}
+        >
+          {label}
+        </p>
+      )}
+      {itemList}
+    </div>
+  )
+}
+
+function DocsGlobalNavTree({
+  navigation,
+  pathname,
+  collapsed,
+  isMobile = false,
+  onNavigate,
+}: {
+  navigation: DocsNavTree
+  pathname: string
+  collapsed: boolean
+  isMobile?: boolean
+  onNavigate?: () => void
+}) {
+  return (
+    <div className="space-y-6">
+      {navigation.map((entry, index) =>
+        isDocsNavGroup(entry) ? (
+          <DocsGlobalNavCategory
+            key={entry.label ?? index}
+            label={entry.label}
+            items={entry.items}
+            pathname={pathname}
+            collapsed={collapsed}
+            isMobile={isMobile}
+            collapsible={entry.collapsible}
+            initiallyCollapsed={entry.initiallyCollapsed}
+            onNavigate={onNavigate}
+          />
+        ) : (
+          <DocsGlobalNavItem
+            key={entry.href}
+            item={entry}
+            pathname={pathname}
+            collapsed={collapsed}
+            isMobile={isMobile}
+            onNavigate={onNavigate}
+          />
+        ),
+      )}
+    </div>
+  )
+}
+
+type DocsGlobalSidebarProps = {
+  mobileOpen: boolean
+  onMobileClose: () => void
+}
+
+export function DocsGlobalSidebar({
+  mobileOpen,
+  onMobileClose,
+}: DocsGlobalSidebarProps) {
+  const location = useLocation()
+  const pathname = location.pathname
+  const [collapsed, setCollapsed] = useState(false)
+
+  return (
+    <TooltipProvider>
+      <div
+        className={cn(
+          'relative z-20 hidden h-full flex-shrink-0 @[1024px]:block',
+          'transition-[width] duration-150 ease-out',
+          collapsed ? 'w-[60px]' : 'w-[220px]',
+        )}
+      >
+        <aside
+          className={cn(
+            'flex h-full w-full flex-col overflow-hidden border-r border-border bg-background',
+            '[transform:translateZ(0)] [backface-visibility:hidden]',
+          )}
+        >
+          <nav
+            className="flex-1 space-y-6 overflow-y-auto px-3 py-4"
+            role="navigation"
+            aria-label="Docs navigation"
+          >
+            <DocsGlobalNavTree
+              navigation={DOCS_GLOBAL_NAV}
+              pathname={pathname}
+              collapsed={collapsed}
+            />
+          </nav>
+        </aside>
+
+        <button
+          type="button"
+          onClick={() => setCollapsed(!collapsed)}
+          className="absolute right-0 top-1/2 z-10 flex h-6 w-6 shrink-0 -translate-y-1/2 translate-x-1/2 cursor-pointer items-center justify-center rounded-md border border-border bg-card text-muted-foreground transition-colors hover:bg-accent hover:text-foreground focus:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+          aria-label={collapsed ? 'Expand docs navigation' : 'Collapse docs navigation'}
+        >
+          <ChevronLeft
+            className={cn(
+              'h-3.5 w-3.5 transition-transform duration-200',
+              collapsed && 'rotate-180',
+            )}
+            strokeWidth={DOCS_MENU_ICON_STROKE}
+          />
+        </button>
+      </div>
+
+      <aside
+        className={cn(
+          'fixed left-0 top-0 z-[130] flex h-[100dvh] max-h-[100dvh] w-[280px] flex-col overflow-hidden border-r border-border bg-background',
+          'transition-transform duration-200 ease-out [backface-visibility:hidden]',
+          mobileOpen ? 'translate-x-0' : '-translate-x-full',
+          '@[1024px]:hidden',
+        )}
+        role="dialog"
+        aria-modal="true"
+        aria-label="Docs navigation"
+        inert={!mobileOpen ? true : undefined}
+      >
+        <div className="flex h-14 items-center justify-between px-4">
+          <p className="text-[14px] font-semibold text-foreground">Documentation</p>
+          <button
+            type="button"
+            onClick={onMobileClose}
+            className="flex h-8 w-8 cursor-pointer items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-accent hover:text-foreground focus:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            aria-label="Close navigation"
+          >
+            <X className="h-5 w-5" strokeWidth={DOCS_MENU_ICON_STROKE} />
+          </button>
+        </div>
+
+        <nav
+          className="flex-1 space-y-6 overflow-y-auto px-4 py-2"
+          role="navigation"
+          aria-label="Mobile docs navigation"
+        >
+          <DocsGlobalNavTree
+            navigation={DOCS_GLOBAL_NAV}
+            pathname={pathname}
+            collapsed={false}
+            isMobile
+            onNavigate={onMobileClose}
+          />
+        </nav>
+      </aside>
+    </TooltipProvider>
+  )
+}

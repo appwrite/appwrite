@@ -1,0 +1,89 @@
+---
+layout: article
+title: Magic URL login
+description: Add magic URL to your authentication in Appwrite. Explore the convenience of passwordless login and email-based authentication using magic links.
+---
+
+Magic URL is a password-less way to authenticate users. When a user logs in by providing their email, they will receive an email with a "magic" link that contains a secret used to log in the user. The user can simply click the link to be logged in.
+
+# Send email {% #init %}
+
+Initialize the log in process with the [Create Magic URL Token](/docs/references/cloud/client-web/account#createMagicURLToken) route. If the email has never been used, a **new account is created** using the provided `userId`, then the user will receive an email. If the email is already attached to an account, the **user ID is ignored** and the user will receive a magic link in their email.
+
+{% multicode %}
+```client-web
+import { Client, Account, ID } from "appwrite";
+
+const client = new Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1') // Your API Endpoint
+    .setProject('<PROJECT_ID>');                 // Your project ID
+
+const account = new Account(client);
+
+const token = await account.createMagicURLToken(
+    ID.unique(),
+    'email@example.com',
+    'https://example.com/verify'
+);
+```
+
+```graphql
+mutation {
+    accountCreateMagicURLToken(
+        userId: "ID.unique()",
+        email: "email@example.com",
+        url: "https://example.com/verify"
+    ) {
+        _id
+        _createdAt
+        userId
+        secret
+        expire
+    }
+}
+```
+
+{% /multicode %}
+
+The `url` parameter specifies where users will be redirected after clicking the magic link.
+The secret and userId will be automatically appended as query parameters to this URL.
+
+# Login {% #login %}
+
+After the user clicks the magic link in their email, they will be redirected to your specified URL with the secret and userId as query parameters. Use these parameters to create a session.
+
+{% multicode %}
+
+```client-web
+import { Client, Account } from "appwrite";
+
+const client = new Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1') // Your API Endpoint
+    .setProject('<PROJECT_ID>');                // Your project ID
+
+const account = new Account(client);
+
+const urlParams = new URLSearchParams(window.location.search);
+const secret = urlParams.get('secret');
+const userId = urlParams.get('userId');
+
+const user = await account.createSession({
+    userId,
+    secret
+});
+```
+```graphql
+mutation {
+    accountCreateSession(
+        userId: "unique()",
+        secret: "<SECRET>"
+    ) {
+        _id
+        _createdAt
+        userId
+        expire
+        provider
+    }
+}
+```
+{% /multicode %}

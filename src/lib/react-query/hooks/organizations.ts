@@ -1548,6 +1548,7 @@ export function useOrganizationPlan(
   const {
     data: planData,
     isLoading,
+    isFetched,
     error,
     refetch,
   } = useQuery({
@@ -1559,6 +1560,7 @@ export function useOrganizationPlan(
   return {
     plan: planData,
     isLoading,
+    isFetched,
     error,
     refetch,
   }

@@ -1,0 +1,41 @@
+---
+layout: article
+title: Model Context Protocol
+description: Enable LLMs and code-generation tools to interact with your Appwrite project
+---
+
+Appwrite offers [Model Context Protocol](https://modelcontextprotocol.io) (MCP) servers that allow LLMs to directly interact with Appwrite's API and docs. Using MCP servers, you can use applications such as Claude Code, Codex, Cursor, Claude Desktop, and others to operate on your Appwrite project as well as gain context about the latest updates to Appwrite's SDKs, APIs, and CLI.
+
+# What is MCP?
+
+The Model Context Protocol (MCP) is an open standard that enables Large Language Models (LLMs) and AI code-generation tools to interact with APIs and documentation in a structured manner. MCP servers provide a bridge between LLMs and external services, allowing them to perform actions such as querying databases, managing users, and accessing files.
+
+The key benefits of using MCP servers include:
+
+- **Enhanced capabilities**: LLMs can perform complex tasks by interacting with APIs, going beyond simple text generation.
+- **Improved context**: By accessing up-to-date documentation and API definitions, LLMs can provide more accurate and relevant responses.
+- **Seamless integration**: MCP servers can be easily integrated with popular AI tools and code editors, enhancing their functionality.
+
+# Available MCP servers
+
+Appwrite currently offers the following MCP servers:
+
+{% cards %}
+
+{% cards_item href="/docs/tooling/ai/mcp-servers/api" title="MCP server for Appwrite API" icon="icon-globe-alt"%}
+{% /cards_item %}
+
+{% cards_item href="/docs/tooling/ai/mcp-servers/docs" title="MCP server for Appwrite docs" icon="icon-document-text" %}
+{% /cards_item %}
+
+{% /cards %}
+
+## Why use Appwrite's MCP servers?
+
+Some **popular use cases** for Appwrite's MCP servers include:
+
+- **Code generation**: Automatically generate code snippets or entire files based on user input and context.
+- **Documentation lookup**: Quickly find relevant documentation for specific API endpoints or SDK features.
+- **Project management**: Create, update, or delete resources in your Appwrite project using natural language commands.
+- **Debugging assistance**: Get help with debugging issues by providing context about your project and recent changes.
+- **Learning and exploration**: Explore Appwrite's features and capabilities through interactive conversations with LLMs.

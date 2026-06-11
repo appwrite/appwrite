@@ -1,0 +1,92 @@
+---
+layout: article
+title: Security
+description: Learn how Appwrite keeps your project, users, and data secure through security measures and compliance.
+---
+
+Appwrite helps you build secure apps by applying various security and compliance measures.
+Appwrite is compliant with [GDPR](/docs/advanced/security/gdpr), [CCPA](/docs/advanced/security/ccpa),
+[HIPAA](/docs/advanced/security/hipaa), and [SOC 2](/docs/advanced/security/soc2).
+
+Appwrite also employs [enhanced password protection and encryption](/docs/products/auth/security), [rate limits](/docs/advanced/security/abuse-protection),
+[robust permission systems](/docs/advanced/platform/permissions), and [HTTPS/TLS](/docs/advanced/security/tls) to protect you and your users' data.
+
+# Compliance {% #compliance %}
+
+The safeguarding of your and your users' data is taken seriously at Appwrite.
+Appwrite works to achieve compliance with a variety of standards to protect sensitive data, as well as maintain trust and credibility.
+
+{% cards %}
+{% cards_item href="/docs/advanced/security/gdpr" title="GDPR" %}
+Appwrite is GDPR compliant. Learn about our measures, privacy policy, and find our data processing agreement.
+{% /cards_item %}
+
+{% cards_item href="/docs/advanced/security/pci" title="PCI" %}
+Appwrite uses Stripe to handle payment and payment information securely. Learn about Appwrite's PCI compliance.
+{% /cards_item %}
+
+{% cards_item href="/docs/advanced/security/soc2" title="SOC 2" %}
+Appwrite is SOC2 Type I compliant. Learn about Appwrite's measures to meet SOC 2 standards.
+{% /cards_item %}
+
+{% cards_item href="/docs/advanced/security/hipaa" title="HIPAA" %}
+Appwrite is HIPAA compliant. Learn about Appwrite's measures to protect personal health information.
+{% /cards_item %}
+
+{% cards_item href="/docs/advanced/security/ccpa" title="CCPA" %}
+Appwrite is CCPA compliant. Learn about our measures to protect consumer privacy under the California Consumer Privacy Act.
+{% /cards_item %}
+{% /cards %}
+
+# Measures {% #measures %}
+
+Appwrite employs a variety of measures to help you build secure applications, faster.
+Learn about the different ways Appwrite protects you and your users' data and privacy.
+
+{% cards %}
+{% cards_item href="/docs/products/auth/security" title="Authentication" %}
+Secure authentication methods to
+protect your users and promote better passwords.
+{% /cards_item %}
+
+{% cards_item href="/docs/advanced/security/encryption" title="Encryption" %}
+Appwrite encrypts sensitive data and files
+in Appwrite Databases and Storage.
+{% /cards_item %}
+
+{% cards_item href="/docs/advanced/security/https" title="HTTPS" %}
+Appwrite Cloud enforces HTTPS on all endpoints to prevent on-path
+attacks like packet sniffing.
+{% /cards_item %}
+
+{% cards_item href="/docs/advanced/security/https" title="TLS" %}
+Appwrite assigns TLS certificates on all
+Appwrite and user provided domains connected to Appwrite.
+{% /cards_item %}
+
+{% cards_item href="/docs/advanced/security/backups" title="Backups" %}
+Appwrite Cloud uses regular backups to prevent
+data loss and improve resiliency.
+{% /cards_item %}
+
+{% cards_item href="/docs/advanced/security/penetration-tests" title="Penetration tests" %}
+Appwrite employs regular third-party penetration tests
+to find vulnerabilities.
+{% /cards_item %}
+
+{% cards_item href="/docs/advanced/security/audit-logs" title="Audit logs" %}
+Appwrite provides detailed audit logs for each
+product to track and discover suspicious activity.
+{% /cards_item %}
+
+{% cards_item href="/docs/advanced/security/abuse-protection" title="Abuse protection" %}
+Appwrite protects against common abuse methods
+like DoS and brute-force attacks.
+{% /cards_item %}
+
+{% /cards %}
+
+# Reporting vulnerabilities {% #reporting-vulnerabilities %}
+If you discover security vulnerabilities, please contact us at security@appwrite.io.
+Please avoid **posting a public issue** on GitHub or elsewhere online to prevent malicious actors
+from abusing the vulnerabilities before the Appwrite team has chance to patch the issue.

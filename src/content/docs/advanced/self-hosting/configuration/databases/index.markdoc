@@ -1,0 +1,99 @@
+---
+layout: article
+title: Databases
+description: Configure the database backend for your self-hosted Appwrite instance. Learn about the supported database options and their configuration.
+---
+
+Appwrite supports MongoDB and MariaDB as database backends. The database is selected during [installation](/docs/advanced/self-hosting/installation) via the setup wizard and **cannot be changed after installation**.
+
+Regardless of which database you choose, the Appwrite API remains the same. Only the underlying storage engine differs.
+
+{% info title="Default database" %}
+MongoDB is the default database as of Appwrite 1.9.0.
+{% /info %}
+
+# CLI installation {% #cli-installation %}
+
+If you prefer to skip the setup wizard, you can set the database directly using the `--database` flag:
+
+{% tabs %}
+{% tabsitem #unix title="macOS and Linux" %}
+```bash
+docker run -it --rm \
+    --volume /var/run/docker.sock:/var/run/docker.sock \
+    --volume "$(pwd)"/appwrite:/usr/src/code/appwrite:rw \
+    --entrypoint="install" \
+    appwrite/appwrite:1.9.0 \
+    --database=mongodb
+```
+{% /tabsitem %}
+
+{% tabsitem #cmd title="Windows (CMD)" %}
+```cmd
+docker run -it --rm ^
+    --volume //var/run/docker.sock:/var/run/docker.sock ^
+    --volume "%cd%"/appwrite:/usr/src/code/appwrite:rw ^
+    --entrypoint="install" ^
+    appwrite/appwrite:1.9.0 ^
+    --database=mongodb
+```
+{% /tabsitem %}
+
+{% tabsitem #powershell title="Windows (PowerShell)" %}
+```powershell
+docker run -it --rm `
+    --volume /var/run/docker.sock:/var/run/docker.sock `
+    --volume ${pwd}/appwrite:/usr/src/code/appwrite:rw `
+    --entrypoint="install" `
+    appwrite/appwrite:1.9.0 `
+    --database=mongodb
+```
+{% /tabsitem %}
+{% /tabs %}
+
+Accepted values are `mongodb` and `mariadb`.
+
+# Supported databases {% #supported-databases %}
+
+## MongoDB {% #mongodb %}
+
+MongoDB is a document-based database and the default option for new Appwrite installations. It is configured as a replica set (`rs0`) automatically during installation.
+
+- **Docker image:** `mongo:8.2.5`
+- **Container name:** `appwrite-mongodb`
+- **Default port:** `27017`
+
+## MariaDB {% #mariadb %}
+
+MariaDB is a relational SQL database. It was the default database in Appwrite versions prior to 1.9.0.
+
+- **Docker image:** `mariadb:10.11`
+- **Container name:** `appwrite-mariadb`
+- **Default port:** `3306`
+
+# Environment variables {% #environment-variables %}
+
+Both database backends use the same environment variables. The values differ depending on which database was selected during installation.
+
+| Variable | Description | MongoDB default | MariaDB default |
+|---|---|---|---|
+| `_APP_DB_ADAPTER` | Database adapter type | `mongodb` | `mariadb` |
+| `_APP_DB_HOST` | Database server hostname | `mongodb` | `mariadb` |
+| `_APP_DB_PORT` | Database server port | `27017` | `3306` |
+| `_APP_DB_SCHEMA` | Database name | `appwrite` | `appwrite` |
+| `_APP_DB_USER` | Database user | `user` | `user` |
+| `_APP_DB_PASS` | Database user password | `password` | `password` |
+| `_APP_DB_ROOT_PASS` | Database root password | `rootsecretpassword` | `rootsecretpassword` |
+
+The Docker Compose profile controls which database container runs. This is set automatically by the installer:
+
+- `COMPOSE_PROFILES=mongodb` for MongoDB installations
+- `COMPOSE_PROFILES=mariadb` for MariaDB installations
+
+{% info title="Change default passwords" %}
+Always change the default database passwords before deploying to production. Update both the environment variables and the database credentials.
+{% /info %}
+
+# Backups {% #backups %}
+
+For database backup procedures, see the [Backups](/docs/advanced/self-hosting/production/backups) guide, which covers both MongoDB and MariaDB backup and restore commands.

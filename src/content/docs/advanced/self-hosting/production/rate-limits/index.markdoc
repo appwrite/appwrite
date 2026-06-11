@@ -1,0 +1,48 @@
+---
+layout: article
+title: Rate limits
+description: Configure rate limiting for your self-hosted Appwrite instance to protect against abuse and attacks.
+---
+
+If you disabled rate limits during development, make sure you re-enable them when moving to production environments. Rate limiting can be enabled by setting the `_APP_OPTIONS_ABUSE` environment variable to `enabled`.
+
+Rate limits are an important mechanism to protect your app. Without rate limits, malicious actors can spam your APIs to perform [denial-of-service type attacks](https://en.wikipedia.org/wiki/Denial-of-service_attack) or brute-force user passwords.
+
+# How rate limits work {% #how-rate-limits-work %}
+
+Rate limits in self-hosted Appwrite apply differently depending on how you're accessing the API:
+
+- **Client SDKs**: Rate limits apply to all requests from client applications
+- **Server SDKs with API keys**: Rate limits do not apply when using API keys
+
+{% arrow_link href="/docs/advanced/platform/rate-limits" %}
+Learn more about how rate limits work
+{% /arrow_link %}
+
+# Abuse log retention {% #abuse-logs %}
+
+Configure how long abuse attempt logs are retained using the `_APP_MAINTENANCE_RETENTION_ABUSE` environment variable. The default value is `86400` seconds (1 day).
+
+```bash
+_APP_MAINTENANCE_RETENTION_ABUSE=86400
+```
+
+Shorter retention periods reduce storage usage, while longer periods provide better security audit trails.
+
+# Development vs production {% #development-vs-production %}
+
+For development environments, you can temporarily disable rate limits to avoid interruptions during testing:
+
+```bash
+_APP_OPTIONS_ABUSE=disabled
+```
+
+**Important**: Always re-enable rate limits before deploying to production by setting:
+
+```bash
+_APP_OPTIONS_ABUSE=enabled
+```
+
+{% arrow_link href="/docs/advanced/self-hosting/configuration/environment-variables" %}
+Learn more about environment variables
+{% /arrow_link %}

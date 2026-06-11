@@ -1,0 +1,48 @@
+---
+layout: article
+title: TLS Certificates
+description: Secure your self-hosted Appwrite instance with TLS certificates. Learn how to obtain, configure, and manage TLS certificates for enhanced security.
+---
+
+Appwrite uses Let's Encrypt to auto-generate TLS certificates for your Appwrite instance to ensure your API traffic is appropriately encrypted. For Appwrite to properly generate certificates, a few conditions need to be met.
+
+1. You need to use a public-facing domain with a known TLD pointing to your Appwrite instance.
+2. Your `_APP_ENV` [environment variable](https://appwrite.io/docs/environment-variables) should be set for production mode. The default Appwrite setup comes with this predefined setting, so you should be OK unless you change it.
+3. You need to ensure you have a valid email address set on `_APP_SYSTEM_SECURITY_EMAIL_ADDRESS`. The default setup comes with `certs@appwrite.io` as the default value. While this address will work, it's recommended to change it to your own email.
+4. Currently, Appwrite is using the [ACME](https://letsencrypt.org/docs/client-options/) HTTP challenge to issue an TLS certificate. This forces us to generate certificates for port 443 when the challenge itself is performed on port 80. At this point, other ports will not work. To overcome this limit, you can set Appwrite on a separate sub-domain or use your own certificate or proxy server in front of Appwrite.
+
+# Debugging  {% #debugging %}
+
+If you're still struggling with your certificates, check the Appwrite certificates worker log. You can do that with the following command:
+
+```bash
+docker compose logs appwrite-worker-certificates
+```
+
+# Generation cycle {% #generation-cycle %}
+
+Appwrite auto-generates a certificate for your main domain when you first visit it. If your browser shows an insecure connection warning, you must proceed to trigger certificate generation. The domain in environment variable `_APP_DOMAIN` is considered your main domain. If you didn't set this variable, the first domain you visit would be marked as the main domain for your Appwrite instance. Appwrite follows this concept of the main domain to prevent generating certificates for domains you don't own. Keep in mind that you can always add additional domains as **Custom Domains** in your project settings to enable certificate generation for any domain.
+
+Certificate renewal is done as a part of the Appwrite maintenance task. Unless modified with environment variable `_APP_MAINTENANCE_INTERVAL`, this task runs every 24 hours. During this task, Appwrite looks for certificates due for renewal and renews them. One maintenance cycle only attempts to renew up to 200 certificates to respect the Let's Encrypt API limit. Every Let's Encrypt certificate is valid for 90 days, but Appwrite starts to renew them 30 days before the expiration.
+
+# Manual generation  {% #manual-generation %}
+
+Since Appwrite generates and renews certificates automatically, a manual generation is seldom required. A manual generation can be useful when you hit the API limit and don't want to wait for the next maintenance cycle to renew the certificate. Use the following command to generate a certificate for your main domain:
+
+```bash
+docker compose exec appwrite ssl
+```
+
+If you want to generate a certificate for a specific domain, pass it as a parameter into the command:
+
+```bash
+docker compose exec appwrite ssl domain="api.myapp.com"
+```
+
+# Development and localhost {% #development-and-localhost %}
+
+You can't issue a [signed certificate for localhost](https://letsencrypt.org/docs/certificates-for-localhost/). This is because nobody uniquely owns that hostname and not an Appwrite specific limitation, just the way the internet works. By default, Appwrite will issue a self-signed certificate that is good enough for development.
+
+When using a self-signed certificate, you should enable `client.setSelfSigned()` method in your SDK of choice. This will allow your application to trust and connect with your local Appwrite server.
+
+{% partial file="update-variables.md" /%}

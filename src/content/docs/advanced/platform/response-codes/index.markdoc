@@ -1,0 +1,229 @@
+---
+layout: article
+title: Response codes
+description: Understand Appwrite platform response codes for effective error handling. Learn how to interpret and handle response codes to enhance your application's reliability.
+---
+
+Appwrite uses conventional HTTP response codes to indicate the success or failure of an API request.
+
+- Codes in the `2xx` range indicate success.
+- Codes in the `4xx` range indicate an error caused by invalid request, usually caused by user error.
+- Codes in the `5xx` range indicate an error with Appwrite, please check Docker container logs.
+
+# Response codes {% #response-codes %}
+| Code | Text                   | Description                                                                                                                                                                                    |
+|------|------------------------|------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| 200  | OK                     | Success!                                                                                                                                                                                       |
+| 201  | Created                | The requested resource has been created successfully.                                                                                                                                          |
+| 202  | Accepted               | The requested change has been accepted for processing but has not been completed.                                                                                                              |
+| 204  | No Content             | The server has successfully fulfilled the request and that there is no additional content to send in the response payload body. This status will usually return on successful delete operations. |
+| 301  | Moved Permanently      | The URL of the requested resource has been changed permanently. The new URL is given in the response.                                                                                           |
+| 304  | Not Modified           | There was no new data to return.                                                                                                                                                                |
+| 400  | Bad Request            | The request was invalid or cannot be otherwise served. An accompanying error message will explain further. Requests with wrong or invalid input will yield this response.                       |
+| 401  | Unauthorized           | Missing or incorrect authentication credentials can happen when the API key or user permission is not sufficient.                                                                          |
+| 403  | Forbidden              | The request is understood, but it has been refused, or access is not allowed. An accompanying error message will explain why. Make sure to register your app in your project's dashboard platform list. |
+| 404  | Not Found              | The URI requested is invalid or the resource requested, such as a user, does not exist.                                                                                                       |
+| 409  | Conflict               | This response is sent when a request conflicts with the current state of the server. This status code will usually appear when you're trying to create an already existing resource.           |
+| 413  | Payload Too Large      | This indicates that the request entity is larger than limits defined by server. This status code will usually appear happen when uploading a file or function that is too large                 |
+| 416  | Invalid Range          | Invalid value in the range or content-range headers. Usually returned while uploading or downloading files using the range header but the provided range value is not valid.                  |
+| 429  | Too Many Requests      | Returned in when a request cannot be served due to the application's rate limit having been exhausted for the resource. See [Rate Limits](/docs/advanced/platform/rate-limits).                              |
+| 500  | Internal Server Error  | Something is broken. Contact our [team](/support), or raise a [GitHub issue](https://github.com/appwrite/appwrite/issues/new).                                                                  |
+| 501  | Not Implemented        | The feature is not implemented. Usually returned when the project owner has disabled an auth method or an entire service.                                                                      |
+| 503  | Service Unavailable    | The Appwrite servers are up but overloaded with requests. Try again later.                                                                                                                      |
+| 504  | Gateway timeout        | The Appwrite servers are up, but the request couldn't be serviced due to some failure within the stack. Try again later.                                                                       |
+
+# Error messages {% #error-messages %}
+
+When the Appwrite APIs return error messages, it does so in JSON format. For example, an error might look like this:
+
+```json
+{
+    "message": "Invalid id: Parameter must be a valid number",
+    "type": "argument_invalid",
+    "code": 400
+}
+```
+
+# Error types {% #error-types %}
+
+Appwrite also passes convenient error types in addition to the HTTP response codes to help you get more fine-grained control over what went wrong and allowing you to display relevant error messages in your applications. Error types are convenient to identify the type of error that occurred.
+
+For example, a `400` HTTP response code could indicate a Bad Request due to a variety of reasons, and error types can help you pinpoint the exact `400` error. Appwrite currently supports the following error types:
+
+## Platform errors {% #platform-errors %}
+Platform errors are not related to an individual product, but can occur across the Appwrite platform.
+| Code | Type | Description |
+| ---- | ---- | ----------- |
+| 400  | general_mock | General errors thrown by the mock controller used for testing. |
+| 400  | general_argument_invalid | The request contains one or more invalid arguments. Please refer to the endpoint documentation. |
+| 400  | general_query_limit_exceeded | Query limit exceeded for the current column. Usage of more than 100 query values on a single column is prohibited. |
+| 400  | general_query_invalid | The query's syntax is invalid. Please check the query and try again. |
+| 400  | general_cursor_not_found | The cursor is invalid. This can happen if the item represented by the cursor has been deleted. |
+| 400  | general_provider_failure | VCS (Version Control System) provider failed to process the request. We believe this is an error with the VCS provider. Try again, or contact support for more information. |
+| 400  | project_unknown | The project ID is either missing or not valid. Please check the value of the `X-Appwrite-Project` header to ensure the correct project ID is being used. |
+| 400  | project_invalid_success_url | Invalid redirect URL for OAuth success. |
+| 400  | project_invalid_failure_url | Invalid redirect URL for OAuth failure. |
+| 400  | project_reserved_project | The project ID is reserved. Please choose another project ID. |
+| 400  | project_smtp_config_invalid | Provided SMTP config is invalid. Please check the configured values and try again. |
+| 401  | project_key_expired | The project key has expired. Please generate a new key using the Appwrite console. |
+| 401  | rule_verification_failed | Domain verification failed. Please check if your DNS records are correct and try again. |
+| 401  | project_template_default_deletion | You can't delete default template. If you are trying to reset your template changes, you can ignore this error as it's already been reset. |
+| 403  | general_unknown_origin | The request originated from an unknown origin. If you trust this domain, please list it as a trusted platform in the Appwrite console. |
+| 401  | general_access_forbidden | Access to this API is forbidden. |
+| 401  | general_unauthorized_scope | The current user or API key does not have the required scopes to access the requested resource. |
+| 404  | general_route_not_found | The requested route was not found. Please refer to the API docs and try again. |
+| 404  | webhook_not_found | Webhook with the requested ID could not be found. |
+| 404  | rule_resource_not_found | Resource could not be found. Please check if the `resourceId` and `resourceType` are correct, or if the resource actually exists. |
+| 404  | rule_not_found | Rule with the requested ID could not be found. Please check if the ID provided is correct or if the rule actually exists. |
+| 404  | key_not_found | Key with the requested ID could not be found. |
+| 404  | platform_not_found | Platform with the requested ID could not be found. |
+| 404  | project_not_found | Project with the requested ID could not be found. Please check the value of the `X-Appwrite-Project` header to ensure the correct project ID is being used. |
+| 404  | router_host_not_found | Host is not trusted. This could occur because you have not configured a custom domain. Add a custom domain to your project first and try again. |
+| 405  | general_not_implemented | This method was not fully implemented yet. If you believe this is a mistake, please upgrade your Appwrite server version. |
+| 409  | project_already_exists | Project with the requested ID already exists. Try again with a different ID or use `unique()` to generate a unique ID. |
+| 409  | rule_already_exists | Domain is already used. Please try again with a different domain. |
+| 412  | project_provider_disabled | The chosen OAuth provider is disabled. You can enable the OAuth provider using the Appwrite console. |
+| 429  | general_rate_limit_exceeded | Rate limit for the current endpoint has been exceeded. Please try again after some time. |
+| 500  | general_unknown | An unknown error has occurred. Please check the logs for more information. |
+| 500  | general_server_error | An internal server error occurred. |
+| 500  | general_protocol_unsupported | The request cannot be fulfilled with the current protocol. Please check the value of the `_APP_OPTIONS_FORCE_HTTPS` environment variable. |
+| 500  | general_codes_disabled | Invitation codes are disabled on this server. Please contact the server administrator. |
+| 500  | router_domain_not_configured | `_APP_DOMAIN`, `_APP_DOMAIN_TARGET`, and `_APP_DOMAIN_FUNCTIONS` environment variables have not been configured. Please configure the domain environment variables before accessing the Appwrite Console via any IP address or hostname other than localhost. This value could be an IP like 203.0.113.0 or a hostname like example.com. |
+| 501  | general_usage_disabled | Usage stats is not configured. Please check the value of the `_APP_USAGE_STATS` environment variable of your Appwrite server. |
+| 501  | project_provider_unsupported | The chosen OAuth provider is unsupported. Please check the Create OAuth2 Session docs for the complete list of supported OAuth providers. |
+| 503  | general_service_disabled | The requested service is disabled. You can enable the service from the Appwrite console. |
+| 503  | general_smtp_disabled | SMTP is disabled on your Appwrite instance. You can learn more about setting up SMTP in our docs. |
+| 503  | general_phone_disabled | Phone provider is not configured. Please check the `_APP_SMS_PROVIDER` environment variable of your Appwrite server. |
+
+## Authentication errors {% #authentication-errors %}
+Errors found when using Appwrite Authentication.
+| Code | Type | Description |
+| ---- | ---- | ----------- |
+| 400  | user_password_mismatch | Passwords do not match. Please check the password and confirm password. |
+| 400  | password_recently_used | The password you are trying to use is similar to your previous password. For your security, please choose a different password and try again. |
+| 400  | password_personal_data | The password you are trying to use contains references to your name, email, phone or userID. For your security, please choose a different password and try again. |
+| 400  | user_phone_not_found | The current user does not have a phone number associated with their account. |
+| 400  | user_missing_id | Missing ID from OAuth2 provider. |
+| 400  | user_oauth2_bad_request | OAuth2 provider rejected the bad request. |
+| 401  | user_jwt_invalid | The JWT token is invalid. Please check the value of the `X-Appwrite-JWT` header to ensure the correct token is being used. |
+| 401  | user_blocked | The current user has been blocked. You can unblock the user by making a request to the User API's "Update User Status" endpoint or in the Appwrite Console's Auth section. |
+| 401  | user_invalid_token | Invalid token passed in the request. |
+| 401  | user_email_not_whitelisted | Console registration is restricted to specific emails. Contact your administrator for more information. |
+| 401  | user_invalid_code | The specified code is not valid. Contact your administrator for more information. |
+| 401  | user_ip_not_whitelisted | Console registration is restricted to specific IPs. Contact your administrator for more information. |
+| 401  | user_invalid_credentials | Invalid credentials. Please check the email and password. |
+| 401  | user_anonymous_console_prohibited | Anonymous users cannot be created for the console project. |
+| 401  | user_session_already_exists | Creation of anonymous users is prohibited when a session is active. |
+| 401  | user_unauthorized | The current user is not authorized to perform the requested action. |
+| 401  | user_oauth2_unauthorized | OAuth2 provider rejected the unauthorized request. |
+| 401  | team_invalid_secret | The team invitation secret is invalid. Please request a new invitation and try again. |
+| 401  | team_invite_mismatch | The invite does not belong to the current user. |
+| 404  | user_not_found | User with the requested ID could not be found. |
+| 404  | user_session_not_found | The current user session could not be found. |
+| 404  | user_identity_not_found | The identity could not be found. Please sign in with OAuth provider to create identity first. |
+| 404  | team_not_found | Team with the requested ID could not be found. |
+| 404  | team_invite_not_found | The requested team invitation could not be found. |
+| 404  | team_membership_mismatch | The membership ID does not belong to the team ID. |
+| 404  | membership_not_found | Membership with the requested ID could not be found. |
+| 409  | user_already_exists | A user with the same id, email, or phone already exists in this project. |
+| 409  | user_email_already_exists | A user with the same email already exists in the current project. |
+| 409  | user_phone_already_exists | A user with the same phone number already exists in the current project. |
+| 409  | team_invite_already_exists | User has already been invited or is already a member of this team |
+| 409  | team_already_exists | Team with requested ID already exists. Please choose a different ID and try again. |
+| 409  | membership_already_confirmed | Membership is already confirmed. |
+| 412  | user_password_reset_required | The current user requires a password reset. |
+| 424  | user_oauth2_provider_error | OAuth2 provider returned some error. |
+| 501  | user_count_exceeded | The current project has exceeded the maximum number of users. Please check your user limit in the Appwrite console. |
+| 501  | user_auth_method_unsupported | The requested authentication method is either disabled or unsupported. Please check the supported authentication methods in the Appwrite console. |
+
+## Databases errors {% #databases-errors %}
+Errors found when using Appwrite Databases.
+| Code | Type | Description |
+| ---- | ---- | ----------- |
+| 400  | table_limit_exceeded | The maximum number of tables has been reached. |
+| 400  | row_invalid_structure | The row structure is invalid. Please ensure the columns match the table definition. |
+| 400  | row_missing_data | The row data is missing. Try again with row data populated. |
+| 400  | row_missing_payload | The row data and permissions are missing. You must provide either row data or permissions to be updated. |
+| 400  | column_unknown | The column required for the index could not be found. Please confirm all your columns are in the available state. |
+| 400  | column_not_available | The requested column is not yet available. Please try again later. |
+| 400  | column_format_unsupported | The requested column format is not supported. |
+| 400  | column_default_unsupported | Default values cannot be set for array or required columns. |
+| 400  | column_limit_exceeded | The maximum number of columns has been reached. |
+| 400  | column_value_invalid | The column value is invalid. Please check the type, range and value of the column. |
+| 400  | column_type_invalid | The column type is invalid. |
+| 400  | index_limit_exceeded | The maximum number of indexes has been reached. |
+| 400  | index_invalid | Index invalid. |
+| 403  | row_delete_restricted | Row cannot be deleted because it is referenced by another row. |
+| 404  | execution_not_found | Execution with the requested ID could not be found. |
+| 404  | database_not_found | Database not found |
+| 404  | table_not_found | Table with the requested ID could not be found. |
+| 404  | row_not_found | Row with the requested ID could not be found. |
+| 404  | column_not_found | Column with the requested ID could not be found. |
+| 404  | index_not_found | Index with the requested ID could not be found. |
+| 409  | database_already_exists | Database already exists |
+| 409  | table_already_exists | A table with the requested ID already exists. Try again with a different ID or use `unique()` to generate a unique ID. |
+| 409  | row_already_exists | Row with the requested ID already exists. Try again with a different ID or use `unique()` to generate a unique ID. |
+| 409  | row_update_conflict | Remote row is newer than local. |
+| 409  | column_already_exists | Column with the requested ID already exists. Try again with a different ID or use `unique()` to generate a unique ID. |
+| 409  | index_already_exists | Index with the requested ID already exists. Try again with a different ID or use `unique()` to generate a unique ID. |
+
+## Storage errors {% #storage-errors %}
+Errors found when using Appwrite Storage.
+| Code | Type | Description |
+| ---- | ---- | ----------- |
+| 400  | storage_device_not_found | The requested storage device could not be found. |
+| 400  | storage_file_empty | Empty file passed to the endpoint. |
+| 400  | storage_file_type_unsupported | The given file extension is not supported. |
+| 400  | storage_invalid_file_size | The file size is either not valid or exceeds the maximum allowed size. Please check the file or the value of the `_APP_STORAGE_LIMIT` environment variable. |
+| 400  | storage_invalid_content_range | The content range is invalid. Please check the value of the `Content-Range` header. |
+| 400  | storage_invalid_appwrite_id | The value for `x-appwrite-id` header is invalid. Please check the value of the `x-appwrite-id` header is a valid id and not `unique()`. |
+| 403  | storage_invalid_file | The uploaded file is invalid. Please check the file and try again. |
+| 404  | storage_file_not_found | The requested file could not be found. |
+| 404  | storage_bucket_not_found | Storage bucket with the requested ID could not be found. |
+| 409  | storage_file_already_exists | A storage file with the requested ID already exists. |
+| 409  | storage_bucket_already_exists | A storage bucket with the requested ID already exists. Try again with a different ID or use `unique()` to generate a unique ID. |
+| 416  | storage_invalid_range | The requested range is not satisfiable. Please check the value of the `Range` header. |
+
+## Functions errors {% #functions-errors %}
+Errors found when using Appwrite Functions.
+| Code | Type | Description |
+| ---- | ---- | ----------- |
+| 400  | build_not_ready | Build with the requested ID is building and not ready for execution. |
+| 400  | build_in_progress | Build with the requested ID is already in progress. Please wait before you can retry. |
+| 404  | installation_not_found | Installation with the requested ID could not be found. Check to see if the ID is correct, or create the installation. |
+| 404  | provider_repository_not_found | VCS (Version Control System) repository with the requested ID could not be found. Check to see if the ID is correct, and if it belongs to installationId you provided. |
+| 404  | repository_not_found | Repository with the requested ID could not be found. Check to see if the ID is correct, or create the repository. |
+| 404  | function_not_found | Function with the requested ID could not be found. |
+| 404  | function_runtime_unsupported | The requested runtime is either inactive or unsupported. Please check the value of the `_APP_FUNCTIONS_RUNTIMES` environment variable. |
+| 404  | function_runtime_unsupported | Entrypoint for your Appwrite Function is missing. Please specify it when making deployment or update the entrypoint under your function's "Settings" > "Configuration" > "Entrypoint". |
+| 404  | build_not_found | Build with the requested ID could not be found. |
+| 404  | deployment_not_found | Deployment with the requested ID could not be found. |
+| 404  | variable_not_found | Variable with the requested ID could not be found. |
+| 409  | provider_contribution_conflict | External contribution is already authorized. |
+| 409  | variable_already_exists | Variable with the same ID already exists in this project. Try again with a different ID. |
+
+## Migrations errors {% #migrations-errors %}
+Errors when using Appwrite Migrations.
+| Code | Type | Description |
+| ---- | ---- | ----------- |
+| 404  | migration_not_found | Migration with the requested ID could not be found. Please verify that the provided ID is correct and try again. |
+| 409  | migration_already_exists | Migration with the requested ID already exists. Try again with a different ID. |
+| 409  | migration_in_progress | Migration is already in progress. You can check the status of the migration in your Appwrite Console's "Settings" > "Migrations". |
+
+
+## Avatars errors {% #avatars-errors %}
+Errors from the Appwrite Avatars API.
+| Code | Type | Description |
+| ---- | ---- | ----------- |
+| 404  | avatar_set_not_found | The requested avatar set could not be found. |
+| 404  | avatar_not_found | The request avatar could not be found. |
+| 404  | avatar_image_not_found | The requested image was not found at the URL. |
+| 404  | avatar_remote_url_failed | Failed to fetch favicon from the requested URL. |
+| 404  | avatar_icon_not_found | The requested favicon could not be found. |
+
+## GraphQL errors {% #graphql-errors %}
+Errors from the Appwrite GraphQL API.
+| Code | Type | Description |
+| ---- | ---- | ----------- |
+| 400  | graphql_no_query | Param "query" is not optional. |
+| 400  | graphql_too_many_queries | Too many queries. |
