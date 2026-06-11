@@ -37,13 +37,14 @@ ENV VITE_PLAUSIBLE_SCRIPT_SRC=${VITE_PLAUSIBLE_SCRIPT_SRC}
 ARG VITE_SENTRY_DSN
 ENV VITE_SENTRY_DSN=${VITE_SENTRY_DSN}
 
-# Build-only: enables Sentry sourcemap upload (see vite.config.ts)
-ARG SENTRY_AUTH_TOKEN
-ENV SENTRY_AUTH_TOKEN=${SENTRY_AUTH_TOKEN}
-
 RUN bun install --frozen-lockfile
 COPY . .
-RUN bun run build
+# SENTRY_AUTH_TOKEN is mounted as a BuildKit secret (never baked into a layer) and
+# exposed in the environment only for this build step, to enable Sentry sourcemap
+# upload (see vite.config.ts). Absent secret -> empty token -> upload is skipped.
+RUN --mount=type=secret,id=sentry_auth_token \
+    SENTRY_AUTH_TOKEN="$(cat /run/secrets/sentry_auth_token 2>/dev/null || true)" \
+    bun run build
 
 FROM base AS prod-deps
 

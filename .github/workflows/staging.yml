@@ -60,7 +60,8 @@ jobs:
                       "VITE_INSTRUMENTATION_SCRIPT_SRC=${{ vars.VITE_INSTRUMENTATION_SCRIPT_SRC }}"
                       "VITE_PLAUSIBLE_SCRIPT_SRC=${{ vars.VITE_PLAUSIBLE_SCRIPT_SRC }}"
                       "VITE_SENTRY_DSN=${{ vars.VITE_SENTRY_DSN }}"
-                      "SENTRY_AUTH_TOKEN=${{ secrets.SENTRY_AUTH_TOKEN }}"
+                  secrets: |
+                      sentry_auth_token=${{ secrets.SENTRY_AUTH_TOKEN }}
 
     deploy:
         needs: build
