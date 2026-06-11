@@ -240,7 +240,7 @@ Http::init()
                         $sdks[] = $sdk;
 
                         $updates->setAttribute('sdks', $sdks);
-                        $updates->setAttribute('accessedAt', Datetime::now());
+                        $updates->setAttribute('accessedAt', DateTime::now());
                     }
                 }
 
