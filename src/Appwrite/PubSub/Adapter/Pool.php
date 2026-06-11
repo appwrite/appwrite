@@ -19,7 +19,21 @@ class Pool implements Adapter
 
     public function subscribe($channels, $callback): void
     {
-        $this->delegate(__FUNCTION__, \func_get_args());
+        $maxRetries = 5;
+        $retries = 0;
+
+        while (true) {
+            try {
+                $this->delegate(__FUNCTION__, \func_get_args());
+                return;
+            } catch (\RedisException $e) {
+                $retries++;
+                if ($retries >= $maxRetries) {
+                    throw $e;
+                }
+                \sleep($retries);
+            }
+        }
     }
 
     public function publish($channel, $message): void
