@@ -6,10 +6,8 @@ use Appwrite\Extend\Exception;
 use Closure;
 use Throwable;
 use Utopia\Console;
-use Utopia\Database\Database;
 use Utopia\Database\Document;
-use Utopia\Database\Validator\Authorization;
-use Utopia\Lock\Distributed as DistributedLock;
+use Utopia\Lock\Lock as UtopiaLock;
 use Utopia\Logger\Log;
 use Utopia\Logger\Logger;
 use Utopia\System\System;
@@ -44,41 +42,23 @@ final class Lock
     /** @var array<string,int> */
     private static array $lastReportAt = [];
 
+    /**
+     * @var Closure(string, int, Closure(UtopiaLock): mixed): mixed
+     */
+    private readonly Closure $withLock;
+
     public function __construct(
-        private readonly \Redis $redis,
+        Closure $withLock,
         Telemetry $telemetry,
-        private readonly Database $dbForPlatform,
-        private readonly Authorization $authorization,
         private readonly Log $log,
         private readonly ?Logger $logger,
         Document $project,
     ) {
+        $this->withLock = $withLock;
         $this->enabled = System::getEnv('_APP_LOCKING_ENABLED', 'enabled') !== 'disabled';
         $this->attempts = $telemetry->createCounter('lock.attempts', null, 'Distributed lock acquire outcomes');
         $sequence = $project->getSequence();
         $this->projectInternalId = ($sequence !== null && $sequence !== '') ? (string) $sequence : 'unknown';
-    }
-
-    /**
-     * Throttled single-attribute write under a per-attribute skip-on-contention
-     * lock with authorization bypass. For idempotent timestamp-style updates
-     * (accessedAt, mcpAccessedAt) where regional pods writing the same value
-     * would thrash the platform DB.
-     */
-    public function set(
-        string $collection,
-        string $id,
-        string $attribute,
-        string $value,
-    ): void {
-        $key = "lock:platform:{$this->projectInternalId}:{$collection}:{$id}:{$attribute}";
-        $this->execute($key, $collection, function () use ($collection, $id, $attribute, $value) {
-            $this->authorization->skip(fn () => $this->dbForPlatform->updateDocument(
-                $collection,
-                $id,
-                new Document([$attribute => $value])
-            ));
-        });
     }
 
     /**
@@ -87,8 +67,7 @@ final class Lock
      */
     public function run(string $collection, string $id, Closure $fn): void
     {
-        $key = "lock:platform:{$this->projectInternalId}:{$collection}:{$id}";
-        $this->execute($key, $collection, $fn);
+        $this->execute($this->key($collection, $id), $collection, $fn);
     }
 
     /**
@@ -98,9 +77,7 @@ final class Lock
      */
     public function runOrFail(string $collection, string $id, Closure $fn): mixed
     {
-        $key = "lock:platform:{$this->projectInternalId}:{$collection}:{$id}";
-
-        return $this->execute($key, $collection, $fn, ttl: self::FAIL_TTL_SECONDS, orFail: true);
+        return $this->execute($this->key($collection, $id), $collection, $fn, ttl: self::FAIL_TTL_SECONDS, orFail: true);
     }
 
     /**
@@ -142,39 +119,54 @@ final class Lock
             return $fn();
         }
 
-        $lock = new DistributedLock($this->redis, $key, $ttl);
         $labels = ['target' => $target, 'project' => $this->projectInternalId];
+        $lockCallbackStarted = false;
 
         try {
-            $acquired = $orFail ? $lock->acquire($waitTimeout) : $lock->tryAcquire();
+            return ($this->withLock)($key, $ttl, function (UtopiaLock $lock) use ($key, $target, $fn, $orFail, $waitTimeout, $labels, &$lockCallbackStarted) {
+                $lockCallbackStarted = true;
+
+                try {
+                    $acquired = $orFail ? $lock->acquire($waitTimeout) : $lock->tryAcquire();
+                } catch (\RedisException $e) {
+                    $this->attempts->add(1, ['outcome' => self::OUTCOME_BACKEND_ERROR, ...$labels]);
+                    $this->reportError(self::OUTCOME_BACKEND_ERROR, $key, $target, $e);
+
+                    return $fn();
+                }
+
+                if (! $acquired) {
+                    if ($orFail) {
+                        $this->attempts->add(1, ['outcome' => self::OUTCOME_CONTENDED, ...$labels]);
+                        // No custom message: the lock key embeds collection and document ID.
+                        throw new Exception(Exception::GENERAL_RESOURCE_LOCKED);
+                    }
+                    $this->attempts->add(1, ['outcome' => self::OUTCOME_SKIPPED, ...$labels]);
+
+                    return;
+                }
+
+                $this->attempts->add(1, ['outcome' => self::OUTCOME_ACQUIRED, ...$labels]);
+                try {
+                    return $fn();
+                } finally {
+                    try {
+                        $lock->release();
+                    } catch (Throwable $e) {
+                        $this->attempts->add(1, ['outcome' => self::OUTCOME_RELEASE_ERROR, ...$labels]);
+                        $this->reportError(self::OUTCOME_RELEASE_ERROR, $key, $target, $e);
+                    }
+                }
+            });
         } catch (\RedisException $e) {
+            if ($lockCallbackStarted) {
+                throw $e;
+            }
+
             $this->attempts->add(1, ['outcome' => self::OUTCOME_BACKEND_ERROR, ...$labels]);
             $this->reportError(self::OUTCOME_BACKEND_ERROR, $key, $target, $e);
 
             return $fn();
-        }
-
-        if (! $acquired) {
-            if ($orFail) {
-                $this->attempts->add(1, ['outcome' => self::OUTCOME_CONTENDED, ...$labels]);
-                // No custom message — the lock key embeds collection + document id.
-                throw new Exception(Exception::GENERAL_RESOURCE_LOCKED);
-            }
-            $this->attempts->add(1, ['outcome' => self::OUTCOME_SKIPPED, ...$labels]);
-
-            return null;
-        }
-
-        $this->attempts->add(1, ['outcome' => self::OUTCOME_ACQUIRED, ...$labels]);
-        try {
-            return $fn();
-        } finally {
-            try {
-                $lock->release();
-            } catch (Throwable $e) {
-                $this->attempts->add(1, ['outcome' => self::OUTCOME_RELEASE_ERROR, ...$labels]);
-                $this->reportError(self::OUTCOME_RELEASE_ERROR, $key, $target, $e);
-            }
         }
     }
 
@@ -188,6 +180,17 @@ final class Lock
         $parts = explode(':', $key, 5);
 
         return $parts[3] ?? 'unknown';
+    }
+
+    /**
+     * Shared platform lock key builder. Exposed so higher-level decorators can
+     * keep the platform key shape centralized while adding narrower scopes.
+     */
+    public function key(string $collection, string $id, ?string $attribute = null): string
+    {
+        $key = "lock:platform:{$this->projectInternalId}:{$collection}:{$id}";
+
+        return $attribute === null ? $key : "{$key}:{$attribute}";
     }
 
     /**
