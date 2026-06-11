@@ -1281,7 +1281,12 @@ $server->onClose(function (int $connection) use ($realtime, $stats, $register, $
 
     try {
         if (array_key_exists($connection, $realtime->connections)) {
-            $stats->decr($realtime->connections[$connection]['projectId'], 'connectionsTotal');
+            // A connection can exist without a stored projectId (e.g. it was torn down
+            // before subscribing, or only carries an authorization entry), so guard every
+            // project-scoped bookkeeping call. $projectId is read defensively above.
+            if (!empty($projectId)) {
+                $stats->decr($projectId, 'connectionsTotal');
+            }
             $register->get('telemetry.connectionCounter')->add(-1);
             $register->get('telemetry.workerClientCounter')->add(-1, $register->get('telemetry.workerAttributes'));
             $subscriptionsBeforeClose = \count($realtime->getSubscriptionMetadata($connection));
@@ -1289,12 +1294,12 @@ $server->onClose(function (int $connection) use ($realtime, $stats, $register, $
                 $register->get('telemetry.workerSubscriptionCounter')->add(-$subscriptionsBeforeClose, $register->get('telemetry.workerAttributes'));
             }
 
-            $projectId = $realtime->connections[$connection]['projectId'];
             /** @var array<string, Document> $presencesById */
             $presencesById = $realtime->connections[$connection]['presences'] ?? [];
 
             if (
                 !empty($presencesById)
+                && !empty($projectId)
                 && $projectId !== 'console'
             ) {
                 go(function () use ($presencesById, $projectId, $userId, $container, $presenceState): void {
@@ -1385,9 +1390,11 @@ $server->onClose(function (int $connection) use ($realtime, $stats, $register, $
                 });
             }
 
-            triggerStats([
-                METRIC_REALTIME_CONNECTIONS => -1,
-            ], $projectId);
+            if (!empty($projectId)) {
+                triggerStats([
+                    METRIC_REALTIME_CONNECTIONS => -1,
+                ], $projectId);
+            }
         }
         $success = true;
     } catch (\Throwable $th) {
