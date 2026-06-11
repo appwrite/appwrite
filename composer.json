@@ -59,7 +59,7 @@
         "utopia-php/audit": "^2.4",
         "utopia-php/auth": "0.5.*",
         "utopia-php/cache": "^3.0",
-        "utopia-php/cli": "0.23.*",
+        "utopia-php/cli": "^0.24",
         "utopia-php/compression": "0.1.*",
         "utopia-php/config": "1.*",
         "utopia-php/console": "0.1.*",
@@ -78,11 +78,11 @@
         "utopia-php/logger": "0.8.*",
         "utopia-php/messaging": "1.0.*",
         "utopia-php/migration": "1.*",
-        "utopia-php/platform": "1.0.0-rc5",
+        "utopia-php/platform": "^1.0@RC",
         "utopia-php/pools": "1.*",
         "utopia-php/span": "3.0.*",
         "utopia-php/preloader": "0.2.*",
-        "utopia-php/queue": "0.20.*",
+        "utopia-php/queue": "^0.21",
         "utopia-php/servers": "0.4.*",
         "utopia-php/registry": "0.5.*",
         "utopia-php/storage": "2.*",
@@ -100,12 +100,6 @@
         "league/csv": "9.14.*",
         "enshrined/svg-sanitize": "0.22.*"
     },
-    "repositories": [
-        {
-            "type": "vcs",
-            "url": "https://github.com/utopia-php/lock"
-        }
-    ],
     "require-dev": {
         "ext-fileinfo": "*",
         "appwrite/sdk-generator": "^2.0",

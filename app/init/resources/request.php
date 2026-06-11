@@ -14,7 +14,6 @@ use Appwrite\Event\Webhook;
 use Appwrite\Extend\Exception;
 use Appwrite\Functions\EventProcessor;
 use Appwrite\GraphQL\Schema;
-use Appwrite\Locking\Lock;
 use Appwrite\Network\Cors;
 use Appwrite\Network\Platform;
 use Appwrite\Network\Validator\Origin;
@@ -45,7 +44,6 @@ use Utopia\Domains\Domain;
 use Utopia\Http\Http;
 use Utopia\Locale\Locale;
 use Utopia\Logger\Log;
-use Utopia\Logger\Logger;
 use Utopia\Pools\Group;
 use Utopia\Queue\Publisher;
 use Utopia\Queue\Queue;
@@ -66,10 +64,6 @@ return function (Container $context): void {
     $context->set('log', fn () => new Log(), []);
 
     $context->set('logger', fn ($register) => $register->get('logger'), ['register']);
-
-    $context->set('lock', function (\Redis $redis, Telemetry $telemetry, Database $dbForPlatform, Authorization $authorization, Log $log, ?Logger $logger, Document $project): Lock {
-        return new Lock($redis, $telemetry, $dbForPlatform, $authorization, $log, $logger, $project);
-    }, ['redis', 'telemetry', 'dbForPlatform', 'authorization', 'log', 'logger', 'project']);
 
     $context->set('authorization', fn () => new Authorization(), []);
 
