@@ -108,30 +108,6 @@ class XList extends Action
         $branches = $github->listBranches($owner, $repositoryName, $limit, $page, $search);
         $fetched = \count($branches);
         $total = $fetched < $limit ? $offset + $fetched : $offset + $fetched + 1;
-        $cursorQuery = \current(Query::getCursorQueries($queries, false));
-
-        if ($cursorQuery instanceof Query) {
-            $cursor = $cursorQuery->getValue();
-            $cursorDirection = $cursorQuery->getMethod() === Query::TYPE_CURSOR_AFTER
-                ? Database::CURSOR_AFTER
-                : Database::CURSOR_BEFORE;
-
-            $cursorIndex = \array_search($cursor, $branches, true);
-            if ($cursorIndex === false) {
-                throw new Exception(Exception::GENERAL_CURSOR_NOT_FOUND, "Branch '{$cursor}' for the 'cursor' value not found.");
-            }
-
-            $offset += $cursorDirection === Database::CURSOR_AFTER ? $cursorIndex + 1 : 0;
-
-            if ($cursorDirection === Database::CURSOR_BEFORE) {
-                $start = \max(0, $cursorIndex - $limit);
-                $branches = \array_slice($branches, $start, $cursorIndex - $start);
-            } else {
-                $branches = \array_slice($branches, $offset, $limit);
-            }
-        } else {
-            $branches = \array_slice($branches, $offset, $limit);
-        }
 
         $response->dynamic(new Document([
             'branches' => \array_map(function ($branch) {
