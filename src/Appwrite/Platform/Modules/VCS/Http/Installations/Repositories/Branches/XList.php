@@ -96,7 +96,7 @@ class XList extends Action
             throw new Exception(Exception::PROVIDER_REPOSITORY_NOT_FOUND);
         }
 
-        $branches = $github->listBranches($owner, $repositoryName, search: $search);
+        $branches = $github->listBranches($owner, $repositoryName, 100, 1, $search);
 
         $total = \count($branches);
         [
