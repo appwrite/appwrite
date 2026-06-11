@@ -12,7 +12,7 @@ concurrency:
 
 env:
     ENVIRONMENT: staging
-    PROJECT: vibes
+    PROJECT: console
     DECLARATIVE_OWNER: appwrite-labs
     DECLARATIVE_REPOSITORY: assets-applications
     REGISTRY_GITHUB: ghcr.io
