@@ -25,9 +25,8 @@ export function Tabs({ children }: { children: ReactNode }) {
       registerTab: (id: string, title: string) => {
         setTabs((prev) => {
           if (prev.some((tab) => tab.id === id)) return prev
-          const next = [...prev, { id, title }]
-          if (!activeId) setActiveId(id)
-          return next
+          if (prev.length === 0) setActiveId(id)
+          return [...prev, { id, title }]
         })
       },
       tabs,
@@ -48,7 +47,7 @@ export function Tabs({ children }: { children: ReactNode }) {
                 className={cn(
                   'shrink-0 cursor-pointer border-b-2 px-3 py-2 text-[13px] transition-colors',
                   activeId === tab.id
-                    ? 'border-[var(--brand-cta)] text-foreground'
+                    ? 'border-white text-foreground'
                     : 'border-transparent text-muted-foreground hover:text-foreground',
                 )}
               >

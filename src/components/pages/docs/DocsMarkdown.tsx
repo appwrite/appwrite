@@ -11,6 +11,7 @@ import {
 import { cn } from '@/lib/utils'
 import { Cards, CardsItem } from './markdoc/Cards'
 import { Fence } from './markdoc/Fence'
+import { MarkdocIcon, MarkdocIconImage } from './markdoc/Icon'
 import { Info } from './markdoc/Info'
 import { MultiCode } from './markdoc/MultiCode'
 import { DocsImage } from './markdoc/DocsImage'
@@ -44,6 +45,8 @@ const markdocComponents = {
   TabsItem,
   Cards,
   CardsItem,
+  MarkdocIcon,
+  MarkdocIconImage,
   Heading,
   Link: DocsLink,
   Image: DocsImage,

@@ -1,6 +1,6 @@
 import { ArrowRight } from 'lucide-react'
 import { Children, cloneElement, isValidElement, type ReactNode } from 'react'
-import { resolveMarkdocCardIcon } from '@/lib/docs/markdoc-card-icons'
+import { resolveMarkdocCardIcon, MARKDOC_BRAND_ICON_CLASS } from '@/lib/docs/markdoc-icons'
 import { PUBLIC_ICON_MUTED_CLASSES } from '@/lib/public-icon-classes'
 import { cn } from '@/lib/utils'
 import { DocsRouteLink } from '../DocsRouteLink'
@@ -72,10 +72,10 @@ function CardItemIcon({ icon }: { icon: string }) {
         <img
           src={resolved.src}
           alt=""
-          className={cn('size-4 object-contain', PUBLIC_ICON_MUTED_CLASSES)}
+          className={cn(MARKDOC_BRAND_ICON_CLASS, PUBLIC_ICON_MUTED_CLASSES)}
         />
       ) : (
-        <resolved.Icon className="size-4 text-muted-foreground" aria-hidden />
+        <resolved.Icon className="size-5 shrink-0 text-muted-foreground" aria-hidden />
       )}
     </span>
   )

@@ -1,5 +1,6 @@
 import { useTheme } from 'next-themes'
 import type { ReactNode } from 'react'
+import { Children, isValidElement, useMemo } from 'react'
 import {
   Table,
   TableBody,

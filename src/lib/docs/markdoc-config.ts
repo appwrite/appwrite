@@ -22,6 +22,16 @@ export const docsMarkdocConfig: Config = {
     arrow_link: { render: 'ArrowLink', attributes: { href: { type: String }, title: { type: String } } },
     call_to_action: { render: 'CallToAction', attributes: { href: { type: String }, title: { type: String } } },
     blockquote: { render: 'Blockquote' },
+    icon: {
+      selfClosing: true,
+      render: 'MarkdocIcon',
+      attributes: { icon: { type: String }, size: { type: String } },
+    },
+    icon_image: {
+      selfClosing: true,
+      render: 'MarkdocIconImage',
+      attributes: { src: { type: String }, alt: { type: String }, size: { type: String } },
+    },
     table: { render: 'MarkdocTableTag' },
   },
   nodes: {
@@ -52,8 +62,8 @@ export const docsMarkdocConfig: Config = {
     thead: { render: 'MarkdocTableHeader' },
     tbody: { render: 'MarkdocTableBody' },
     tr: { render: 'MarkdocTableRow' },
-    th: { render: 'MarkdocTableHead' },
-    td: { render: 'MarkdocTableCell' },
+    th: { render: 'MarkdocTableHead', attributes: { width: { type: Number } } },
+    td: { render: 'MarkdocTableCell', attributes: { width: { type: Number } } },
   },
 }
 
