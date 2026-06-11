@@ -673,9 +673,6 @@ class Builds extends Action
             Span::add('build.node_modules_cache.enabled', $cacheKey !== '');
             Span::add('build.node_modules_cache.key', $cacheKey);
 
-            $cacheDebugLogs = $this->getNodeModulesCacheDebugLog($cacheKey, $runtime, $version, $command, $source);
-            $deployment = $this->appendBuildLog($dbForProject, $queueForRealtime, $deployment, $cacheDebugLogs);
-
             $response = null;
             $err = null;
 
@@ -866,7 +863,7 @@ class Builds extends Action
 
             ['logs' => $logs, 'detectionLogs' => $detectionLogs] = $this->splitSiteDetectionLogs($logs);
 
-            $deployment->setAttribute('buildLogs', $cacheDebugLogs . $logs);
+            $deployment->setAttribute('buildLogs', $logs);
 
             $adapter = null;
             if ($resource->getCollection() === 'sites' && ! empty($detectionLogs)) {
@@ -1321,45 +1318,6 @@ class Builds extends Action
         ];
 
         return \substr(\hash('sha256', \json_encode($hashContext, JSON_THROW_ON_ERROR)), 0, 48);
-    }
-
-    protected function getNodeModulesCacheDebugLog(string $cacheKey, array $runtime, string $version, string $command, string $source): string
-    {
-        $date = \date('H:i:s');
-        $runtimeKey = $runtime['key'] ?? '';
-        $prefix = "\033[90m[$date] \033[90m[\033[0mappwrite\033[90m]\033[36m";
-
-        if ($cacheKey !== '') {
-            return $prefix . " build cache requested. key={$cacheKey} source={$source} \033[0m\n";
-        }
-
-        $reason = match (true) {
-            $version !== 'v5' => 'runtime version is not v5',
-            $command === '' || $command === '0' => 'build command is empty',
-            default => 'cache key unavailable',
-        };
-
-        return $prefix . " build cache not requested. reason={$reason} runtime={$runtimeKey} version={$version} source={$source} \033[0m\n";
-    }
-
-    protected function appendBuildLog(Database $dbForProject, Realtime $queueForRealtime, Document $deployment, string $log): Document
-    {
-        if ($log === '') {
-            return $deployment;
-        }
-
-        $logs = $deployment->getAttribute('buildLogs', '') . $log;
-        $deployment->setAttribute('buildLogs', $logs);
-
-        $deployment = $dbForProject->updateDocument('deployments', $deployment->getId(), new Document([
-            'buildLogs' => $logs,
-        ]));
-
-        $queueForRealtime
-            ->setPayload($deployment->getArrayCopy())
-            ->trigger();
-
-        return $deployment;
     }
 
     protected function prepareSiteBuildCommand(string $command, string $outputDirectory): string
