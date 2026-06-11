@@ -96,26 +96,19 @@ class XList extends Action
             throw new Exception(Exception::PROVIDER_REPOSITORY_NOT_FOUND);
         }
 
-        $branches = [];
-        $page = 1;
-        while (true) {
-            $pageBranches = $github->listBranches($owner, $repositoryName, 100, $page, $search);
-            $branches = array_merge($branches, $pageBranches);
-            if (count($pageBranches) < 100) {
-                break;
-            }
-            $page++;
-        }
-
-        $total = \count($branches);
         [
             'limit' => $limit,
             'offset' => $offset,
         ] = Query::groupByType($queries);
-        $cursorQuery = \current(Query::getCursorQueries($queries, false));
 
         $limit ??= APP_LIMIT_LIST_DEFAULT;
         $offset ??= 0;
+
+        $page = (int) floor($offset / $limit) + 1;
+        $branches = $github->listBranches($owner, $repositoryName, $limit, $page, $search);
+        $fetched = \count($branches);
+        $total = $fetched < $limit ? $offset + $fetched : $offset + $fetched + 1;
+        $cursorQuery = \current(Query::getCursorQueries($queries, false));
 
         if ($cursorQuery instanceof Query) {
             $cursor = $cursorQuery->getValue();
