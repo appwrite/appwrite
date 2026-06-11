@@ -15,6 +15,7 @@ use Appwrite\Extend\Exception;
 use Appwrite\Functions\EventProcessor;
 use Appwrite\GraphQL\Schema;
 use Appwrite\Locking\Lock;
+use Appwrite\Locking\PlatformLock;
 use Appwrite\Network\Cors;
 use Appwrite\Network\Platform;
 use Appwrite\Network\Validator\Origin;
@@ -68,19 +69,23 @@ return function (Container $context): void {
 
     $context->set('logger', fn ($register) => $register->get('logger'), ['register']);
 
-    $context->set('lock', function (Group $pools, Telemetry $telemetry, Database $dbForPlatform, Authorization $authorization, Log $log, ?Logger $logger, Document $project): Lock {
+    $context->set('lock', function (Group $pools, Telemetry $telemetry, Log $log, ?Logger $logger, Document $project): Lock {
         return new Lock(
             fn (string $key, int $ttl, Closure $callback): mixed => $pools->get('lock')->use(
                 fn (\Redis $redis): mixed => $callback(new DistributedLock($redis, $key, $ttl))
             ),
             $telemetry,
-            $dbForPlatform,
-            $authorization,
             $log,
             $logger,
             $project
         );
-    }, ['pools', 'telemetry', 'dbForPlatform', 'authorization', 'log', 'logger', 'project']);
+    }, ['pools', 'telemetry', 'log', 'logger', 'project']);
+
+    $context->set('platformLock', fn (Lock $lock, Database $dbForPlatform, Authorization $authorization): PlatformLock => new PlatformLock(
+        $lock,
+        $dbForPlatform,
+        $authorization,
+    ), ['lock', 'dbForPlatform', 'authorization']);
 
     $context->set('authorization', fn () => new Authorization(), []);
 

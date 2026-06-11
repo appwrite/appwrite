@@ -17,6 +17,7 @@ use Appwrite\Extend\Exception;
 use Appwrite\Extend\Exception as AppwriteException;
 use Appwrite\Functions\EventProcessor;
 use Appwrite\Locking\Lock;
+use Appwrite\Locking\PlatformLock;
 use Appwrite\Platform\Modules\Storage\Config\CacheControl;
 use Appwrite\Platform\Modules\Storage\Config\StorageCacheControl;
 use Appwrite\SDK\Method;
@@ -101,7 +102,8 @@ Http::init()
     ->inject('apiKey')
     ->inject('authorization')
     ->inject('lock')
-    ->action(function (Route $route, Request $request, Database $dbForPlatform, Database $dbForProject, AuditContext $auditContext, Document $project, User $user, ?Document $session, array $servers, string $mode, Document $team, ?Key $apiKey, Authorization $authorization, Lock $lock) {
+    ->inject('platformLock')
+    ->action(function (Route $route, Request $request, Database $dbForPlatform, Database $dbForProject, AuditContext $auditContext, Document $project, User $user, ?Document $session, array $servers, string $mode, Document $team, ?Key $apiKey, Authorization $authorization, Lock $lock, PlatformLock $platformLock) {
 
         /**
          * Handle user authentication and session validation.
@@ -388,7 +390,7 @@ Http::init()
         if ($project->getId() !== 'console') {
             $accessedAt = $project->getAttribute('accessedAt', 0);
             if (DateTime::formatTz(DateTime::addSeconds(new \DateTime(), -APP_PROJECT_ACCESS)) > $accessedAt) {
-                $lock->set('projects', $project->getId(), 'accessedAt', DateTime::now());
+                $platformLock->set('projects', $project->getId(), 'accessedAt', DateTime::now());
             }
         }
 
@@ -405,7 +407,7 @@ Http::init()
                         'accessedAt' => $user->getAttribute('accessedAt')
                     ]));
                 } else {
-                    $lock->set('users', $user->getId(), 'accessedAt', $user->getAttribute('accessedAt'));
+                    $platformLock->set('users', $user->getId(), 'accessedAt', $user->getAttribute('accessedAt'));
                 }
             }
         }
