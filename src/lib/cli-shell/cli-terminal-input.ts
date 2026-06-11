@@ -42,7 +42,7 @@ export type CliTerminalInputSession = {
   onData: (data: string) => void
   showPrompt: () => void
   /** Move to a fresh line and show the prompt (used after welcome/bootstrap output). */
-  prepareInputLine: () => void
+  prepareInputLine: (force?: boolean) => void
   /** Reset input state before writing static welcome output. */
   resetForWelcome: () => void
   /** Allow prompt rendering after welcome/bootstrap static output is written. */
@@ -92,10 +92,17 @@ export function createCliTerminalInputHandler(
     awaitingPrompt = false
   }
 
-  const prepareInputLine = () => {
+  const prepareInputLine = (force = false) => {
     if (!welcomeOutputComplete || options.terminal.cols <= 0) return
 
-    if (promptVisible && inputBuffer.length === 0 && cursorPos === 0) {
+    if (
+      promptVisible &&
+      inputBuffer.length === 0 &&
+      cursorPos === 0
+    ) {
+      if (force) {
+        redrawInputLine()
+      }
       return
     }
 

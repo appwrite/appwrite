@@ -47,14 +47,18 @@ export function ProjectCliShell() {
   const { open, fullscreen, height, panelEverOpened } = useCliShell()
   const [isCollapsing, setIsCollapsing] = useState(false)
   const [isResizing, setIsResizing] = useState(false)
+  const prevOpenRef = useRef(open)
 
   useEffect(() => {
+    const wasOpen = prevOpenRef.current
+    prevOpenRef.current = open
+
     if (open) {
       setIsCollapsing(false)
       return
     }
 
-    if (!panelEverOpened) return
+    if (!panelEverOpened || !wasOpen) return
 
     setIsCollapsing(true)
     const timer = window.setTimeout(

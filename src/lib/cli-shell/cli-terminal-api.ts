@@ -10,7 +10,7 @@ export type CliTerminalApi = {
   /** Scroll the viewport to the active input line, then focus for typing. */
   focusInputLine?: () => void
   showInputPrompt?: () => void
-  prepareInputLine?: () => void
+  prepareInputLine?: (force?: boolean) => void
   resetForWelcome?: () => void
   markWelcomeComplete?: () => void
   clearScreen?: () => void

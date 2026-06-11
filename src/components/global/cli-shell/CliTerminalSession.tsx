@@ -110,7 +110,6 @@ export function CliTerminalSession({
   const fitAddonRef = useRef<FitAddon | null>(null)
   const searchAddonRef = useRef<SearchAddon | null>(null)
   const isSessionRunningRef = useRef(isSessionRunning)
-  const showInputPromptRef = useRef<(() => void) | null>(null)
   const inputSessionRef = useRef<ReturnType<
     typeof createCliTerminalInputHandler
   > | null>(null)
@@ -138,7 +137,7 @@ export function CliTerminalSession({
   const terminalSearchOpenRef = useRef(terminalSearchOpen)
   const setTerminalSearchOpenRef = useRef(setTerminalSearchOpen)
   const searchCaseSensitiveRef = useRef(searchCaseSensitive)
-  const prevOpenForFitRef = useRef(open)
+  const prevOpenForFitRef = useRef(false)
   const wasPanelResizingRef = useRef(isPanelResizing)
   const prevIsFocusedRef = useRef(isFocused)
 
@@ -228,9 +227,6 @@ export function CliTerminalSession({
         }
 
         fitAddon.fit()
-        if (welcomeCompleteRef.current) {
-          showInputPromptRef.current?.()
-        }
         // Refit once layout settles (e.g. horizontal scrollbar in narrow panes).
         requestAnimationFrame(() => {
           try {
@@ -242,9 +238,6 @@ export function CliTerminalSession({
               (next.cols !== terminal.cols || next.rows !== terminal.rows)
             ) {
               fitAddon.fit()
-            }
-            if (welcomeCompleteRef.current) {
-              showInputPromptRef.current?.()
             }
           } catch {
             /* container may have zero size during layout */
@@ -449,8 +442,6 @@ export function CliTerminalSession({
           ),
       }
 
-      showInputPromptRef.current = inputSession.showPrompt
-
       registerTerminalRef.current(currentSessionId, api)
 
       const resultsDisposable = searchAddon.onDidChangeResults((results) => {
@@ -486,7 +477,6 @@ export function CliTerminalSession({
         resizeObserver.disconnect()
         unregisterTerminalRef.current(currentSessionId)
         terminal.dispose()
-        showInputPromptRef.current = null
         inputSessionRef.current = null
         terminalRef.current = null
         fitAddonRef.current = null

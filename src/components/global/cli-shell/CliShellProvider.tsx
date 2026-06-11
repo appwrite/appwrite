@@ -213,7 +213,8 @@ export function CliShellProvider({ projectId, children }: CliShellProviderProps)
     projectId,
   )
   const height = clampCliShellHeightPx(heightPx)
-  const [panelEverOpened, setPanelEverOpened] = useState(open)
+  /** Mount the terminal panel immediately so it can warm up while collapsed. */
+  const [panelEverOpened, setPanelEverOpened] = useState(true)
 
   const [status, setStatus] = useState<CliShellStatus>('idle')
   const [runningSessionId, setRunningSessionId] = useState<string | null>(null)
@@ -289,6 +290,11 @@ export function CliShellProvider({ projectId, children }: CliShellProviderProps)
   const heightBeforeFullscreenRef = useRef<number | null>(null)
 
   const [fullscreen, setFullscreen] = useState(false)
+  const openRef = useRef(open)
+  openRef.current = open
+  const statusRef = useRef(status)
+  statusRef.current = status
+  const syncCliShellPromptOnOpenRef = useRef<() => void>(() => {})
 
   const BOOTSTRAP_LINE_MIN_INTERVAL_MS = 250
 
@@ -297,20 +303,23 @@ export function CliShellProvider({ projectId, children }: CliShellProviderProps)
     return terminalApisRef.current.get(id) ?? null
   }, [])
 
-  const showInputPromptIfIdle = useCallback((sessionId?: string) => {
-    const id = sessionId ?? focusedSessionIdRef.current
-    if (runningSessionIdRef.current === id) return
+  const showInputPromptIfIdle = useCallback(
+    (sessionId?: string, force = false) => {
+      const id = sessionId ?? focusedSessionIdRef.current
+      if (runningSessionIdRef.current === id) return
 
-    const api = getTerminalApi(sessionId)
-    if (!api) return
+      const api = getTerminalApi(sessionId)
+      if (!api) return
 
-    if (api.prepareInputLine) {
-      api.prepareInputLine()
-      return
-    }
+      if (api.prepareInputLine) {
+        api.prepareInputLine(force)
+        return
+      }
 
-    api.showInputPrompt?.()
-  }, [getTerminalApi])
+      api.showInputPrompt?.()
+    },
+    [getTerminalApi],
+  )
 
   const writeWelcome = useCallback(async (api: CliTerminalApi) => {
     for (const line of createCliShellWelcomeLines()) {
@@ -355,12 +364,12 @@ export function CliShellProvider({ projectId, children }: CliShellProviderProps)
     return shouldShowPrompt
   }, [])
 
-  const registerTerminal = useCallback(
-    (sessionId: string, api: CliTerminalApi) => {
-      terminalApisRef.current.set(sessionId, api)
-    },
-    [],
-  )
+  const registerTerminal = useCallback((sessionId: string, api: CliTerminalApi) => {
+    terminalApisRef.current.set(sessionId, api)
+    requestAnimationFrame(() => {
+      syncCliShellPromptOnOpenRef.current()
+    })
+  }, [])
 
   const writeSessionWelcome = useCallback(
     async (sessionId: string): Promise<boolean> => {
@@ -384,13 +393,23 @@ export function CliShellProvider({ projectId, children }: CliShellProviderProps)
         let shouldShowPrompt = false
         if (sessionId === activeSessionIdRef.current) {
           shouldShowPrompt = flushPendingBootstrapMessages(sessionId)
+          if (
+            !shouldShowPrompt &&
+            statusRef.current === 'ready' &&
+            containerRef.current
+          ) {
+            if (!bootstrapReadyAnnouncedRef.current) {
+              bootstrapReadyAnnouncedRef.current = true
+            }
+            shouldShowPrompt = true
+          }
         }
 
         api.markWelcomeComplete?.()
 
         const isActiveRoot = sessionId === activeSessionIdRef.current
-        if (isActiveRoot && shouldShowPrompt) {
-          showInputPromptIfIdle(sessionId)
+        if (isActiveRoot && shouldShowPrompt && openRef.current) {
+          showInputPromptIfIdle(sessionId, true)
         } else if (!isActiveRoot) {
           showInputPromptIfIdle(sessionId)
         }
@@ -438,8 +457,8 @@ export function CliShellProvider({ projectId, children }: CliShellProviderProps)
       }
       api.writeln(`${CLI_TERMINAL_MUTED}${text}${CLI_TERMINAL_RESET}`)
       bootstrapLastWrittenRef.current = text
-      if (text === CLI_BOOTSTRAP_READY_MESSAGE) {
-        showInputPromptIfIdle(activeId)
+      if (text === CLI_BOOTSTRAP_READY_MESSAGE && openRef.current) {
+        showInputPromptIfIdle(activeId, true)
       }
       return
     }
@@ -579,26 +598,37 @@ export function CliShellProvider({ projectId, children }: CliShellProviderProps)
     }
   }, [open])
 
+  const syncCliShellPromptOnOpen = useCallback(() => {
+    if (!openRef.current || runningSessionIdRef.current !== null) return
+
+    if (
+      statusRef.current === 'ready' &&
+      containerRef.current &&
+      !bootstrapReadyAnnouncedRef.current
+    ) {
+      finalizeBootstrapLine(CLI_BOOTSTRAP_READY_MESSAGE)
+    }
+
+    const activeId = activeSessionIdRef.current
+    if (!terminalContentReadyRef.current.has(activeId)) return
+    if (!bootstrapReadyAnnouncedRef.current) return
+
+    showInputPromptIfIdle(activeId, true)
+  }, [finalizeBootstrapLine, showInputPromptIfIdle])
+
+  syncCliShellPromptOnOpenRef.current = syncCliShellPromptOnOpen
+
   useEffect(() => {
     if (!open) return
-    if (status !== 'ready' || !containerRef.current) return
-    if (bootstrapReadyAnnouncedRef.current) return
 
-    finalizeBootstrapLine(CLI_BOOTSTRAP_READY_MESSAGE)
-  }, [finalizeBootstrapLine, open, status])
-
-  useEffect(() => {
-    if (!open || runningSessionIdRef.current !== null) return
-
-    const timer = window.setTimeout(() => {
-      const activeId = activeSessionIdRef.current
-      if (!terminalContentReadyRef.current.has(activeId)) return
-      if (!bootstrapReadyAnnouncedRef.current) return
-      showInputPromptIfIdle(activeId)
-    }, CLI_SHELL_COLLAPSE_MS)
+    syncCliShellPromptOnOpen()
+    const timer = window.setTimeout(
+      syncCliShellPromptOnOpen,
+      CLI_SHELL_COLLAPSE_MS,
+    )
 
     return () => clearTimeout(timer)
-  }, [open, showInputPromptIfIdle])
+  }, [open, status, syncCliShellPromptOnOpen])
 
   useEffect(() => {
     if (!open && fullscreen) {
