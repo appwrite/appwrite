@@ -149,6 +149,10 @@ function createUser(Hash $hash, string $userId, ?string $email, ?string $passwor
             throw new Exception(Exception::USER_EMAIL_FREE);
         }
 
+        if ((($project->getId() === 'console') || ($plan['supportsCorporateEmailValidation'] ?? false)) && ($project->getAttribute('auths', [])['corporateEmails'] ?? false) && !($emailMetadata['emailIsCorporate'] ?? true)) {
+            throw new Exception(Exception::USER_EMAIL_NOT_CORPORATE);
+        }
+
         $hashedPassword = null;
 
         $isHashed = !$hash instanceof Plaintext;
@@ -1611,6 +1615,10 @@ Http::patch('/v1/users/:userId/email')
 
         if ((($project->getId() === 'console') || ($plan['supportsFreeEmailValidation'] ?? false)) && ($project->getAttribute('auths', [])['freeEmails'] ?? false) && ($emailMetadata['emailIsFree'] ?? false)) {
             throw new Exception(Exception::USER_EMAIL_FREE);
+        }
+
+        if ((($project->getId() === 'console') || ($plan['supportsCorporateEmailValidation'] ?? false)) && ($project->getAttribute('auths', [])['corporateEmails'] ?? false) && !($emailMetadata['emailIsCorporate'] ?? true)) {
+            throw new Exception(Exception::USER_EMAIL_NOT_CORPORATE);
         }
 
         $user

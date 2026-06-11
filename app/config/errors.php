@@ -54,11 +54,6 @@ return [
         'description' => 'Rate limit for the current endpoint has been exceeded. Please try again after some time.',
         'code' => 429,
     ],
-    Exception::GENERAL_RESOURCE_LOCKED => [
-        'name' => Exception::GENERAL_RESOURCE_LOCKED,
-        'description' => 'The requested resource is currently being modified by another request. Please retry after a brief delay.',
-        'code' => 409,
-    ],
     Exception::GENERAL_SMTP_DISABLED => [
         'name' => Exception::GENERAL_SMTP_DISABLED,
         'description' => 'SMTP is disabled on your Appwrite instance. You can <a href="/docs/email-delivery">learn more about setting up SMTP</a> in our docs.',
@@ -244,6 +239,11 @@ return [
     Exception::USER_EMAIL_NOT_CANONICAL => [
         'name' => Exception::USER_EMAIL_NOT_CANONICAL,
         'description' => 'This email address must already be in its canonical form. Please remove aliases, tags, or provider-specific variations and try again.',
+        'code' => 400,
+    ],
+    Exception::USER_EMAIL_NOT_CORPORATE => [
+        'name' => Exception::USER_EMAIL_NOT_CORPORATE,
+        'description' => 'Only corporate email addresses are allowed. Please use a work email address and try again.',
         'code' => 400,
     ],
     Exception::USER_PASSWORD_MISMATCH => [
