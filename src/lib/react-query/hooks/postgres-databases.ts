@@ -23,6 +23,9 @@ import {
   buildPostgresListSchemasSql,
   buildPostgresListTablesCountSql,
   buildPostgresListTablesSql,
+  buildPostgresTableColumnsSql,
+  buildPostgresTableIndexesSql,
+  buildPostgresTableInfoSql,
   POSTGRES_LIST_COLUMNS_SQL,
   POSTGRES_LIST_SCHEMAS_SQL,
   POSTGRES_SIDEBAR_LIST_PAGE_SIZE,
@@ -30,6 +33,9 @@ import {
   type PostgresListSchemasOptions,
   type PostgresListTablesOptions,
   type PostgresSchemaRow,
+  type PostgresTableColumnRow,
+  type PostgresTableIndexRow,
+  type PostgresTableInfoRow,
   type PostgresTableRow,
 } from '@/lib/postgres-sql'
 import { parsePostgresTableId } from '@/lib/postgres-database-routes'
@@ -255,6 +261,57 @@ export async function fetchPostgresColumns(projectId: string, databaseId: string
   }
 }
 
+export async function fetchPostgresTableColumns(
+  projectId: string,
+  databaseId: string,
+  tableId: string,
+) {
+  const { schema, table } = parsePostgresTableId(tableId)
+  const execution = await executePostgresDatabaseSql(
+    projectId,
+    databaseId,
+    buildPostgresTableColumnsSql(schema, table),
+  )
+  const rows = executionResultRows<PostgresTableColumnRow>(execution)
+  return {
+    columns: rows.filter((row) => row.column_name),
+    total: rows.length,
+  }
+}
+
+export async function fetchPostgresTableIndexes(
+  projectId: string,
+  databaseId: string,
+  tableId: string,
+) {
+  const { schema, table } = parsePostgresTableId(tableId)
+  const execution = await executePostgresDatabaseSql(
+    projectId,
+    databaseId,
+    buildPostgresTableIndexesSql(schema, table),
+  )
+  const rows = executionResultRows<PostgresTableIndexRow>(execution)
+  return {
+    indexes: rows.filter((row) => row.index_name),
+    total: rows.length,
+  }
+}
+
+export async function fetchPostgresTableInfo(
+  projectId: string,
+  databaseId: string,
+  tableId: string,
+) {
+  const { schema, table } = parsePostgresTableId(tableId)
+  const execution = await executePostgresDatabaseSql(
+    projectId,
+    databaseId,
+    buildPostgresTableInfoSql(schema, table),
+  )
+  const rows = executionResultRows<PostgresTableInfoRow>(execution)
+  return rows[0] ?? null
+}
+
 export async function fetchPostgresTableRows(
   projectId: string,
   databaseId: string,
@@ -436,6 +493,80 @@ export function postgresDatabaseCredentialsQueryOptions(
     refetchOnWindowFocus: false,
     refetchOnReconnect: false,
     gcTime: projectId && databaseId ? 5 * 60 * 1000 : 0,
+  })
+}
+
+export function postgresTableColumnsQueryOptions(
+  projectId: string | null | undefined,
+  databaseId: string | null | undefined,
+  tableId: string | null | undefined,
+) {
+  return queryOptions({
+    queryKey: [
+      'postgres-table-columns',
+      'project',
+      projectId,
+      databaseId,
+      tableId,
+    ],
+    queryFn: () =>
+      fetchPostgresTableColumns(projectId!, databaseId!, tableId!),
+    enabled: !!projectId && !!databaseId && !!tableId && tableId !== '-',
+    staleTime: DEFAULT_STALE_TIME,
+    retry: false,
+    refetchOnMount: false,
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: false,
+    gcTime: projectId && databaseId && tableId ? 5 * 60 * 1000 : 0,
+  })
+}
+
+export function postgresTableIndexesQueryOptions(
+  projectId: string | null | undefined,
+  databaseId: string | null | undefined,
+  tableId: string | null | undefined,
+) {
+  return queryOptions({
+    queryKey: [
+      'postgres-table-indexes',
+      'project',
+      projectId,
+      databaseId,
+      tableId,
+    ],
+    queryFn: () =>
+      fetchPostgresTableIndexes(projectId!, databaseId!, tableId!),
+    enabled: !!projectId && !!databaseId && !!tableId && tableId !== '-',
+    staleTime: DEFAULT_STALE_TIME,
+    retry: false,
+    refetchOnMount: false,
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: false,
+    gcTime: projectId && databaseId && tableId ? 5 * 60 * 1000 : 0,
+  })
+}
+
+export function postgresTableInfoQueryOptions(
+  projectId: string | null | undefined,
+  databaseId: string | null | undefined,
+  tableId: string | null | undefined,
+) {
+  return queryOptions({
+    queryKey: [
+      'postgres-table-info',
+      'project',
+      projectId,
+      databaseId,
+      tableId,
+    ],
+    queryFn: () => fetchPostgresTableInfo(projectId!, databaseId!, tableId!),
+    enabled: !!projectId && !!databaseId && !!tableId && tableId !== '-',
+    staleTime: DEFAULT_STALE_TIME,
+    retry: false,
+    refetchOnMount: false,
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: false,
+    gcTime: projectId && databaseId && tableId ? 5 * 60 * 1000 : 0,
   })
 }
 
@@ -742,6 +873,59 @@ export function usePostgresTableRows(
   }
 }
 
+export function usePostgresTableColumns(
+  projectId: string | null | undefined,
+  databaseId: string | null | undefined,
+  tableId: string | null | undefined,
+) {
+  const { data, isLoading, isFetching, error, refetch } = useQuery(
+    postgresTableColumnsQueryOptions(projectId, databaseId, tableId),
+  )
+  return {
+    columns: data?.columns ?? [],
+    total: data?.total ?? 0,
+    isLoading,
+    isFetching,
+    error,
+    refetch,
+  }
+}
+
+export function usePostgresTableIndexes(
+  projectId: string | null | undefined,
+  databaseId: string | null | undefined,
+  tableId: string | null | undefined,
+) {
+  const { data, isLoading, isFetching, error, refetch } = useQuery(
+    postgresTableIndexesQueryOptions(projectId, databaseId, tableId),
+  )
+  return {
+    indexes: data?.indexes ?? [],
+    total: data?.total ?? 0,
+    isLoading,
+    isFetching,
+    error,
+    refetch,
+  }
+}
+
+export function usePostgresTableInfo(
+  projectId: string | null | undefined,
+  databaseId: string | null | undefined,
+  tableId: string | null | undefined,
+) {
+  const { data, isLoading, isFetching, error, refetch } = useQuery(
+    postgresTableInfoQueryOptions(projectId, databaseId, tableId),
+  )
+  return {
+    tableInfo: data ?? null,
+    isLoading,
+    isFetching,
+    error,
+    refetch,
+  }
+}
+
 export function useExecutePostgresSql(
   projectId: string,
   databaseId: string,
@@ -762,6 +946,15 @@ export function useExecutePostgresSql(
       })
       void queryClient.invalidateQueries({
         queryKey: ['postgres-table-rows', 'project', projectId, databaseId],
+      })
+      void queryClient.invalidateQueries({
+        queryKey: ['postgres-table-columns', 'project', projectId, databaseId],
+      })
+      void queryClient.invalidateQueries({
+        queryKey: ['postgres-table-indexes', 'project', projectId, databaseId],
+      })
+      void queryClient.invalidateQueries({
+        queryKey: ['postgres-table-info', 'project', projectId, databaseId],
       })
     },
   })

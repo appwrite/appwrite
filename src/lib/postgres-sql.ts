@@ -196,6 +196,187 @@ export type PostgresColumnRow = {
   ordinal_position: number | string
 }
 
+export type PostgresTableColumnRow = {
+  column_name: string
+  data_type: string
+  udt_name: string
+  is_nullable: string
+  column_default: string | null
+  character_maximum_length: number | string | null
+  numeric_precision: number | string | null
+  numeric_scale: number | string | null
+  datetime_precision: number | string | null
+  ordinal_position: number | string
+  is_primary_key: boolean | string
+  column_comment: string | null
+  check_constraints: string | null
+  foreign_keys: string | null
+}
+
+export type PostgresTableIndexRow = {
+  index_name: string
+  index_definition: string
+  is_unique: boolean | string
+  is_primary: boolean | string
+  index_algorithm: string | null
+  index_condition: string | null
+  index_include: string | null
+  index_comment: string | null
+}
+
+export type PostgresTableInfoRow = {
+  table_schema: string
+  table_name: string
+  table_type: string
+  total_bytes: number | string | null
+  table_comment: string | null
+  estimated_rows: number | string | null
+}
+
+export function buildPostgresTableColumnsSql(schema: string, table: string): string {
+  const schemaLit = quotePostgresStringLiteral(schema)
+  const tableLit = quotePostgresStringLiteral(table)
+  return `
+SELECT
+  c.column_name,
+  c.data_type,
+  c.udt_name,
+  c.is_nullable,
+  c.column_default,
+  c.character_maximum_length,
+  c.numeric_precision,
+  c.numeric_scale,
+  c.datetime_precision,
+  c.ordinal_position,
+  CASE WHEN pk.column_name IS NOT NULL THEN true ELSE false END AS is_primary_key,
+  pg_catalog.col_description(pgc.oid, c.ordinal_position::int) AS column_comment,
+  checks.check_constraints,
+  fkeys.foreign_keys
+FROM information_schema.columns c
+JOIN pg_catalog.pg_class pgc
+  ON pgc.relname = c.table_name
+JOIN pg_catalog.pg_namespace n
+  ON n.oid = pgc.relnamespace
+  AND n.nspname = c.table_schema
+LEFT JOIN (
+  SELECT kcu.column_name
+  FROM information_schema.table_constraints tc
+  JOIN information_schema.key_column_usage kcu
+    ON tc.constraint_name = kcu.constraint_name
+    AND tc.table_schema = kcu.table_schema
+    AND tc.table_name = kcu.table_name
+  WHERE tc.constraint_type = 'PRIMARY KEY'
+    AND tc.table_schema = ${schemaLit}
+    AND tc.table_name = ${tableLit}
+) pk ON c.column_name = pk.column_name
+LEFT JOIN (
+  SELECT
+    ccu.column_name,
+    string_agg(
+      tc.constraint_name || '::' || cc.check_clause,
+      E'\\n'
+      ORDER BY tc.constraint_name
+    ) AS check_constraints
+  FROM information_schema.table_constraints tc
+  JOIN information_schema.check_constraints cc
+    ON tc.constraint_name = cc.constraint_name
+    AND tc.constraint_schema = cc.constraint_schema
+  JOIN information_schema.constraint_column_usage ccu
+    ON ccu.constraint_name = tc.constraint_name
+    AND ccu.constraint_schema = tc.constraint_schema
+    AND ccu.table_schema = tc.table_schema
+    AND ccu.table_name = tc.table_name
+  WHERE tc.table_schema = ${schemaLit}
+    AND tc.table_name = ${tableLit}
+    AND tc.constraint_type = 'CHECK'
+  GROUP BY ccu.column_name
+) checks ON checks.column_name = c.column_name
+LEFT JOIN (
+  SELECT
+    src.column_name,
+    string_agg(
+      tc.constraint_name || '::' || ref.table_schema || '.' || ref.table_name || '(' || ref.column_name || ')',
+      E'\\n'
+      ORDER BY tc.constraint_name, src.ordinal_position
+    ) AS foreign_keys
+  FROM information_schema.table_constraints tc
+  JOIN information_schema.key_column_usage src
+    ON src.constraint_name = tc.constraint_name
+    AND src.table_schema = tc.table_schema
+    AND src.table_name = tc.table_name
+  JOIN information_schema.referential_constraints rc
+    ON rc.constraint_name = tc.constraint_name
+    AND rc.constraint_schema = tc.constraint_schema
+  JOIN information_schema.key_column_usage ref
+    ON ref.constraint_name = rc.unique_constraint_name
+    AND ref.constraint_schema = rc.unique_constraint_schema
+    AND ref.ordinal_position = src.ordinal_position
+  WHERE tc.table_schema = ${schemaLit}
+    AND tc.table_name = ${tableLit}
+    AND tc.constraint_type = 'FOREIGN KEY'
+  GROUP BY src.column_name
+) fkeys ON fkeys.column_name = c.column_name
+WHERE c.table_schema = ${schemaLit}
+  AND c.table_name = ${tableLit}
+ORDER BY c.ordinal_position
+`.trim()
+}
+
+export function buildPostgresTableIndexesSql(schema: string, table: string): string {
+  const schemaLit = quotePostgresStringLiteral(schema)
+  const tableLit = quotePostgresStringLiteral(table)
+  return `
+SELECT
+  i.relname AS index_name,
+  pg_get_indexdef(i.oid) AS index_definition,
+  ix.indisunique AS is_unique,
+  ix.indisprimary AS is_primary,
+  am.amname AS index_algorithm,
+  pg_get_expr(ix.indpred, ix.indrelid) AS index_condition,
+  pg_catalog.obj_description(i.oid, 'pg_class') AS index_comment,
+  (
+    SELECT string_agg(a.attname, ', ' ORDER BY u.ord)
+    FROM unnest(ix.indkey) WITH ORDINALITY AS u(attnum, ord)
+    JOIN pg_attribute a
+      ON a.attrelid = t.oid
+      AND a.attnum = u.attnum
+      AND NOT a.attisdropped
+    WHERE u.ord > ix.indnkeyatts
+  ) AS index_include
+FROM pg_class t
+JOIN pg_namespace n ON n.oid = t.relnamespace
+JOIN pg_index ix ON ix.indrelid = t.oid
+JOIN pg_class i ON i.oid = ix.indexrelid
+JOIN pg_am am ON am.oid = i.relam
+WHERE n.nspname = ${schemaLit}
+  AND t.relname = ${tableLit}
+ORDER BY i.relname
+`.trim()
+}
+
+export function buildPostgresTableInfoSql(schema: string, table: string): string {
+  const schemaLit = quotePostgresStringLiteral(schema)
+  const tableLit = quotePostgresStringLiteral(table)
+  return `
+SELECT
+  n.nspname AS table_schema,
+  c.relname AS table_name,
+  CASE c.relkind
+    WHEN 'r' THEN 'BASE TABLE'
+    WHEN 'v' THEN 'VIEW'
+    WHEN 'm' THEN 'MATERIALIZED VIEW'
+    ELSE c.relkind::text
+  END AS table_type,
+  pg_total_relation_size(c.oid) AS total_bytes,
+  obj_description(c.oid) AS table_comment,
+  c.reltuples::bigint AS estimated_rows
+FROM pg_class c
+JOIN pg_namespace n ON n.oid = c.relnamespace
+WHERE n.nspname = ${schemaLit}
+  AND c.relname = ${tableLit}
+`.trim()
+}
+
 export function executionResultRows<T extends Record<string, unknown>>(
   execution: Models.DedicatedDatabaseExecution,
 ): T[] {

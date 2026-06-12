@@ -25,6 +25,7 @@ import { PostgresHistorySidebarPanel } from './_components/PostgresHistorySideba
 import { PostgresQueriesSidebarPanel } from './_components/PostgresQueriesSidebarPanel'
 import { PostgresSchemaSelector } from './_components/PostgresSchemaSelector'
 import { PostgresSidebarDatabaseBar } from './_components/PostgresSidebarDatabaseBar'
+import { PostgresTableContextMenu } from './_components/PostgresTableContextMenu'
 import { POSTGRES_TOP_HEADER_BAR_CLASS } from './_components/postgres-chrome'
 
 type SchemaTablesSidebarProps = {
@@ -283,21 +284,28 @@ export function SchemaTablesSidebar({
                         table.table_name,
                       )
                       return (
-                        <button
+                        <PostgresTableContextMenu
                           key={id}
-                          type="button"
-                          onClick={() => onSelectTable(id)}
-                          className={cn(
-                            'flex w-full cursor-pointer items-center rounded-md px-3 py-2 text-left transition-colors',
-                            selectedTableId === id
-                              ? 'bg-background text-foreground shadow-sm'
-                              : 'text-muted-foreground hover:bg-background/70 hover:text-foreground',
-                          )}
+                          projectId={projectId}
+                          databaseId={databaseId}
+                          tableId={id}
+                          tableName={table.table_name}
                         >
-                          <span className="truncate text-[13px] font-medium">
-                            {table.table_name}
-                          </span>
-                        </button>
+                          <button
+                            type="button"
+                            onClick={() => onSelectTable(id)}
+                            className={cn(
+                              'flex w-full cursor-pointer items-center rounded-md px-3 py-2 text-left transition-colors',
+                              selectedTableId === id
+                                ? 'bg-background text-foreground shadow-sm'
+                                : 'text-muted-foreground hover:bg-background/70 hover:text-foreground',
+                            )}
+                          >
+                            <span className="truncate text-[13px] font-medium">
+                              {table.table_name}
+                            </span>
+                          </button>
+                        </PostgresTableContextMenu>
                       )
                     })}
                     <div

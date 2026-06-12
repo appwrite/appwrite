@@ -1,6 +1,7 @@
 import {
   Type,
   Hash,
+  Binary,
   ToggleLeft,
   Calendar,
   Mail,
@@ -16,25 +17,52 @@ import {
 /**
  * Get the appropriate icon component for a column type
  *
- * @param type - The column type (e.g., 'string', 'integer', 'point', etc.)
+ * @param type - The column type (e.g., 'string', 'integer', 'int4', 'point', etc.)
  * @returns The Lucide icon component for that column type
  */
 export function getColumnIcon(type: string): LucideIcon {
-  switch (type) {
+  const normalized = type.toLowerCase().trim()
+
+  switch (normalized) {
     case 'string':
     case 'varchar':
     case 'text':
     case 'mediumtext':
     case 'longtext':
+    case 'bpchar':
+    case 'char':
+    case 'character varying':
       return Type
     case 'integer':
+    case 'int':
+    case 'int2':
+    case 'int4':
+    case 'int8':
     case 'bigint':
+    case 'smallint':
+    case 'serial':
+    case 'bigserial':
+    case 'smallserial':
+      return Binary
     case 'float':
+    case 'float4':
+    case 'float8':
     case 'double':
+    case 'double precision':
+    case 'real':
+    case 'numeric':
+    case 'decimal':
       return Hash
     case 'boolean':
+    case 'bool':
       return ToggleLeft
     case 'datetime':
+    case 'timestamp':
+    case 'timestamptz':
+    case 'timestamp with time zone':
+    case 'timestamp without time zone':
+    case 'date':
+    case 'time':
       return Calendar
     case 'email':
       return Mail
@@ -44,6 +72,9 @@ export function getColumnIcon(type: string): LucideIcon {
       return MapPin
     case 'enum':
       return Columns3
+    case 'json':
+    case 'jsonb':
+      return FileJson
     case 'point':
       return MapPin
     case 'linestring':

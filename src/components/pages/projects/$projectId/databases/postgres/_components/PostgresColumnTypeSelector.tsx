@@ -1,0 +1,227 @@
+import { useMemo, useState } from 'react'
+import { Check, ChevronDown } from 'lucide-react'
+import { Button } from '@/components/ui/button'
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from '@/components/ui/command'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from '@/components/ui/popover'
+import {
+  createDefaultPostgresColumnTypeState,
+  formatPostgresColumnTypeLabel,
+  formatPostgresColumnTypePropertyLimits,
+  getPostgresColumnTypeDefinition,
+  getPostgresColumnTypePropertyPlaceholder,
+  getPostgresColumnTypePropertyRangeError,
+  getPostgresColumnTypePropertyValue,
+  getPostgresColumnTypeSearchValue,
+  POSTGRES_COLUMN_TYPE_DEFINITIONS,
+  POSTGRES_COLUMN_TYPE_GROUPS,
+  type PostgresColumnTypeId,
+  type PostgresColumnTypeProperty,
+  type PostgresColumnTypeState,
+} from '@/lib/postgres-column-types'
+import { cn } from '@/lib/utils'
+
+type PostgresColumnTypeSelectorProps = {
+  value: PostgresColumnTypeState
+  onChange: (value: PostgresColumnTypeState) => void
+  allowSerialTypes?: boolean
+}
+
+function PostgresColumnTypePropertyField({
+  property,
+  value,
+  onChange,
+}: {
+  property: PostgresColumnTypeProperty
+  value: PostgresColumnTypeState
+  onChange: (value: PostgresColumnTypeState) => void
+}) {
+  const propertyValue = getPostgresColumnTypePropertyValue(value, property.key)
+  const inputId = `postgres-column-${property.key}`
+  const limitsLabel = formatPostgresColumnTypePropertyLimits(property)
+  const rangeError = getPostgresColumnTypePropertyRangeError(
+    property,
+    propertyValue,
+  )
+
+  const handleChange = (nextValue: number | undefined) => {
+    onChange({
+      ...value,
+      [property.key]: nextValue,
+    })
+  }
+
+  return (
+    <div className="space-y-2">
+      <div className="flex items-start justify-between gap-3">
+        <Label htmlFor={inputId} className="text-[12px] font-medium leading-snug">
+          {property.label}
+        </Label>
+        <span className="shrink-0 text-right text-[11px] font-medium tabular-nums text-muted-foreground">
+          {limitsLabel}
+        </span>
+      </div>
+      {property.hint ? (
+        <p className="text-[11px] text-muted-foreground">{property.hint}</p>
+      ) : null}
+      {property.optional && property.optionalEmptyLabel ? (
+        <p className="text-[11px] text-muted-foreground">
+          Leave empty for {property.optionalEmptyLabel}.
+        </p>
+      ) : null}
+      <Input
+        id={inputId}
+        type="number"
+        min={property.min}
+        max={property.max}
+        value={propertyValue ?? ''}
+        placeholder={getPostgresColumnTypePropertyPlaceholder(property)}
+        aria-invalid={rangeError ? true : undefined}
+        onChange={(event) => {
+          const raw = event.target.value.trim()
+          if (!raw) {
+            handleChange(undefined)
+            return
+          }
+          const parsed = Number.parseInt(raw, 10)
+          handleChange(Number.isFinite(parsed) ? parsed : undefined)
+        }}
+        className={cn(
+          'tabular-nums',
+          rangeError && 'border-destructive focus-visible:ring-destructive/30',
+        )}
+      />
+      {rangeError ? (
+        <p className="text-[12px] text-destructive">{rangeError}</p>
+      ) : null}
+    </div>
+  )
+}
+
+export function PostgresColumnTypeSelector({
+  value,
+  onChange,
+  allowSerialTypes = true,
+}: PostgresColumnTypeSelectorProps) {
+  const [open, setOpen] = useState(false)
+  const definition = getPostgresColumnTypeDefinition(value.typeId)
+
+  const visibleDefinitions = useMemo(
+    () =>
+      POSTGRES_COLUMN_TYPE_DEFINITIONS.filter(
+        (entry) => allowSerialTypes || !entry.createOnly,
+      ),
+    [allowSerialTypes],
+  )
+
+  const handleTypeChange = (nextTypeId: PostgresColumnTypeId) => {
+    onChange(createDefaultPostgresColumnTypeState(nextTypeId))
+  }
+
+  return (
+    <div className="space-y-3">
+      <div className="space-y-2">
+        <Label htmlFor="postgres-column-type" className="text-[12px] font-medium">
+          Type <span className="text-destructive">*</span>
+        </Label>
+        <Popover open={open} onOpenChange={setOpen}>
+          <PopoverTrigger asChild>
+            <Button
+              id="postgres-column-type"
+              variant="outline"
+              role="combobox"
+              aria-expanded={open}
+              className="h-9 w-full justify-between gap-2 text-[13px] font-normal"
+            >
+              <span className="truncate">{formatPostgresColumnTypeLabel(value)}</span>
+              <ChevronDown className="h-4 w-4 shrink-0 opacity-50" />
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent
+            className="z-[200] max-h-[min(360px,var(--radix-popover-content-available-height))] w-[var(--radix-popover-trigger-width)] overflow-hidden p-0"
+            align="start"
+            onWheelCapture={(event) => {
+              event.stopPropagation()
+            }}
+          >
+            <Command>
+              <CommandInput
+                placeholder="Search types..."
+                className="h-9 text-[13px]"
+              />
+              <CommandList className="max-h-[280px] overflow-y-auto overscroll-contain">
+                <CommandEmpty className="py-4 text-center text-[13px] text-muted-foreground">
+                  No types found
+                </CommandEmpty>
+                {POSTGRES_COLUMN_TYPE_GROUPS.map((group) => {
+                  const options = visibleDefinitions.filter(
+                    (entry) => entry.group === group,
+                  )
+                  if (options.length === 0) return null
+
+                  return (
+                    <CommandGroup
+                      key={group}
+                      heading={group}
+                      className="[&_[cmdk-group-heading]]:text-[11px] [&_[cmdk-group-heading]]:uppercase [&_[cmdk-group-heading]]:tracking-wider"
+                    >
+                      {options.map((entry) => (
+                        <CommandItem
+                          key={entry.id}
+                          value={getPostgresColumnTypeSearchValue(entry)}
+                          className="text-[13px]"
+                          onSelect={() => {
+                            handleTypeChange(entry.id)
+                            setOpen(false)
+                          }}
+                        >
+                          <Check
+                            className={cn(
+                              'mr-2 h-4 w-4 shrink-0',
+                              value.typeId === entry.id
+                                ? 'opacity-100'
+                                : 'opacity-0',
+                            )}
+                          />
+                          {entry.label}
+                        </CommandItem>
+                      ))}
+                    </CommandGroup>
+                  )
+                })}
+              </CommandList>
+            </Command>
+          </PopoverContent>
+        </Popover>
+      </div>
+
+      {definition.properties.length > 0 ? (
+        <div className="space-y-3 rounded-lg border border-border bg-muted/20 px-3 py-3">
+          <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+            Type options
+          </p>
+          {definition.properties.map((property) => (
+            <PostgresColumnTypePropertyField
+              key={property.key}
+              property={property}
+              value={value}
+              onChange={onChange}
+            />
+          ))}
+        </div>
+      ) : null}
+    </div>
+  )
+}

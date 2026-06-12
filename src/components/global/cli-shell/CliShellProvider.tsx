@@ -194,6 +194,22 @@ export function useCliShellOptional() {
   return useContext(CliShellContext)
 }
 
+function isEditablePageFocusTarget(element: Element | null): boolean {
+  if (!element || element === document.body) return false
+  if (
+    element.closest(
+      '.monaco-editor, [data-postgres-sql-editor], [contenteditable="true"]',
+    )
+  ) {
+    return true
+  }
+  return (
+    element instanceof HTMLInputElement ||
+    element instanceof HTMLTextAreaElement ||
+    element instanceof HTMLSelectElement
+  )
+}
+
 type CliShellProviderProps = {
   projectId: string
   children: ReactNode
@@ -1040,25 +1056,45 @@ export function CliShellProvider({ projectId, children }: CliShellProviderProps)
     [getTerminalApi, writeSystemLine],
   )
 
-  const focusSession = useCallback((sessionId: string) => {
-    const api = terminalApisRef.current.get(sessionId)
-    if (!api) return false
-    if (terminalSearchOpen) return true
-    requestAnimationFrame(() => {
-      if (api.focusInputLine) {
-        api.focusInputLine()
-        return
-      }
-      api.focus()
-    })
-    return true
-  }, [terminalSearchOpen])
+  const focusSession = useCallback(
+    (sessionId: string, options?: { force?: boolean }) => {
+      const api = terminalApisRef.current.get(sessionId)
+      if (!api) return false
+      if (terminalSearchOpen) return true
+      requestAnimationFrame(() => {
+        if (
+          !options?.force &&
+          isEditablePageFocusTarget(document.activeElement)
+        ) {
+          return
+        }
+        if (api.focusInputLine) {
+          api.focusInputLine()
+          return
+        }
+        api.focus()
+      })
+      return true
+    },
+    [terminalSearchOpen],
+  )
+
+  const prevCliOpenRef = useRef<boolean | null>(null)
 
   useEffect(() => {
-    if (!open || terminalSearchOpen) return
+    const prevOpen = prevCliOpenRef.current
+    prevCliOpenRef.current = open
+
+    if (prevOpen === null) {
+      // Already open on first mount: prepare terminal without stealing page focus.
+      return
+    }
+
+    if (!open || prevOpen || terminalSearchOpen) return
+
     const sessionId = focusedSessionIdRef.current
     const timer = window.setTimeout(() => {
-      focusSession(sessionId)
+      focusSession(sessionId, { force: true })
       if (typeof window !== 'undefined') {
         window.dispatchEvent(new Event('resize'))
       }
@@ -1076,7 +1112,7 @@ export function CliShellProvider({ projectId, children }: CliShellProviderProps)
       const rootId = getCliShellSessionRootId(sessionId, sessionsRef.current)
       setActiveSessionIdState(rootId)
       setFocusedSessionId(sessionId)
-      focusSession(sessionId)
+      focusSession(sessionId, { force: true })
     },
     [focusSession],
   )
@@ -1084,7 +1120,7 @@ export function CliShellProvider({ projectId, children }: CliShellProviderProps)
   const focusSessionPane = useCallback(
     (sessionId: string) => {
       setFocusedSessionId(sessionId)
-      focusSession(sessionId)
+      focusSession(sessionId, { force: true })
     },
     [focusSession],
   )
@@ -1143,7 +1179,7 @@ export function CliShellProvider({ projectId, children }: CliShellProviderProps)
       setFocusedSessionId(nextSessionId)
 
       const focusNewSession = (attempt = 0) => {
-        if (focusSession(nextSessionId) || attempt >= 30) return
+        if (focusSession(nextSessionId, { force: true }) || attempt >= 30) return
         requestAnimationFrame(() => focusNewSession(attempt + 1))
       }
       requestAnimationFrame(() => focusNewSession())
@@ -1191,7 +1227,7 @@ export function CliShellProvider({ projectId, children }: CliShellProviderProps)
     setFocusedSessionId(nextSessionId)
 
     const focusNewSession = (attempt = 0) => {
-      if (focusSession(nextSessionId) || attempt >= 30) return
+      if (focusSession(nextSessionId, { force: true }) || attempt >= 30) return
       requestAnimationFrame(() => focusNewSession(attempt + 1))
     }
     requestAnimationFrame(() => focusNewSession())

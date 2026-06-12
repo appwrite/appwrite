@@ -1,0 +1,162 @@
+import { useEffect, useMemo, useState } from 'react'
+import { useParams } from '@tanstack/react-router'
+import { canShowTableSecuritySettings } from '@/lib/console-access-checks'
+import { useConsoleProfile } from '@/hooks/use-console-profile'
+import { useOrganizationScopes } from '@/lib/react-query/hooks/organizations'
+import { useProject } from '@/lib/react-query/hooks/projects'
+import {
+  usePostgresTableColumns,
+  usePostgresTableIndexes,
+} from '@/lib/react-query/hooks'
+import type { PostgresTableTab } from '@/lib/postgres-database-routes'
+import { PostgresShell } from './PostgresShell'
+import { PostgresTableHeader } from './_components/PostgresTableHeader'
+import { PostgresTableColumnsPanel } from './_components/PostgresTableColumnsPanel'
+import { PostgresTableIndexesPanel } from './_components/PostgresTableIndexesPanel'
+import { PostgresTablePropertiesPanel } from './_components/PostgresTablePropertiesPanel'
+export type TableStructureViewProps = {
+  databaseId: string
+  tableId: string
+  activeTab: Exclude<PostgresTableTab, 'rows'>
+}
+
+export function TableStructureView({
+  databaseId,
+  tableId,
+  activeTab,
+}: TableStructureViewProps) {
+  return (
+    <PostgresShell databaseId={databaseId} tableId={tableId}>
+      <TableStructureContent
+        databaseId={databaseId}
+        tableId={tableId}
+        activeTab={activeTab}
+      />
+    </PostgresShell>
+  )
+}
+
+function TableStructureContent({
+  databaseId,
+  tableId,
+  activeTab,
+}: TableStructureViewProps) {
+  const { projectId } = useParams({ strict: false }) as { projectId: string }
+  const { project } = useProject(projectId)
+  const { features } = useConsoleProfile()
+  const { access } = useOrganizationScopes(project?.teamId ?? undefined)
+  const canWrite = canShowTableSecuritySettings(access, features)
+
+  const {
+    total: columnCount,
+    refetch: refetchColumns,
+    isFetching: columnsFetching,
+  } = usePostgresTableColumns(projectId, databaseId, tableId)
+  const {
+    total: indexCount,
+    refetch: refetchIndexes,
+    isFetching: indexesFetching,
+  } = usePostgresTableIndexes(projectId, databaseId, tableId)
+
+  const [columnCreateOpen, setColumnCreateOpen] = useState(false)
+  const [indexCreateOpen, setIndexCreateOpen] = useState(false)
+  const [searchValue, setSearchValue] = useState('')
+
+  useEffect(() => {
+    setSearchValue('')
+  }, [activeTab, tableId])
+
+  const headerProps = useMemo(() => {
+    const searchProps =
+      activeTab === 'columns' || activeTab === 'indexes'
+        ? {
+            searchPlaceholder:
+              activeTab === 'columns'
+                ? 'Search columns...'
+                : 'Search indexes...',
+            searchValue,
+            onSearchChange: setSearchValue,
+          }
+        : {}
+
+    if (activeTab === 'columns') {
+      return {
+        ...searchProps,
+        createLabel: canWrite ? 'Add column' : undefined,
+        onCreate: canWrite ? () => setColumnCreateOpen(true) : undefined,
+        createDisabled: !canWrite,
+        createDisabledTooltip: canWrite
+          ? undefined
+          : "You don't have permission to modify table structure.",
+        showRefresh: true,
+        onRefresh: () => void refetchColumns(),
+        isRefreshing: columnsFetching,
+      }
+    }
+    if (activeTab === 'indexes') {
+      return {
+        ...searchProps,
+        createLabel: canWrite ? 'Create index' : undefined,
+        onCreate: canWrite ? () => setIndexCreateOpen(true) : undefined,
+        createDisabled: !canWrite,
+        createDisabledTooltip: canWrite
+          ? undefined
+          : "You don't have permission to modify table structure.",
+        showRefresh: true,
+        onRefresh: () => void refetchIndexes(),
+        isRefreshing: indexesFetching,
+      }
+    }
+    return {}
+  }, [
+    activeTab,
+    canWrite,
+    columnsFetching,
+    indexesFetching,
+    refetchColumns,
+    refetchIndexes,
+    searchValue,
+  ])
+
+  return (
+    <div className="flex h-full min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
+      <div className="shrink-0 bg-background">
+        <PostgresTableHeader
+          projectId={projectId}
+          databaseId={databaseId}
+          tableId={tableId}
+          activeTab={activeTab}
+          columnCount={columnCount}
+          indexCount={indexCount}
+          {...headerProps}
+        />
+      </div>
+      <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
+        {activeTab === 'columns' ? (
+          <PostgresTableColumnsPanel
+            databaseId={databaseId}
+            tableId={tableId}
+            search={searchValue}
+            createDialogOpen={columnCreateOpen}
+            onCreateDialogOpenChange={setColumnCreateOpen}
+          />
+        ) : null}
+        {activeTab === 'indexes' ? (
+          <PostgresTableIndexesPanel
+            databaseId={databaseId}
+            tableId={tableId}
+            search={searchValue}
+            createDialogOpen={indexCreateOpen}
+            onCreateDialogOpenChange={setIndexCreateOpen}
+          />
+        ) : null}
+        {activeTab === 'settings' ? (
+          <PostgresTablePropertiesPanel
+            databaseId={databaseId}
+            tableId={tableId}
+          />
+        ) : null}
+      </div>
+    </div>
+  )
+}

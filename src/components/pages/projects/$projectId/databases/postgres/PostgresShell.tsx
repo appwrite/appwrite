@@ -91,7 +91,7 @@ function PostgresShellLayout({
 }: PostgresShellLayoutProps) {
   const navigate = useNavigate()
   const { activeTab, openTableTab } = usePostgresSidebar()
-  const selectedTableId = databaseTab ? undefined : activeTab.tableId
+  const selectedTableId = databaseTab ? undefined : activeTab.tableId ?? tableId
 
   const handleOpenTable = (nextTableId: string) => {
     openTableTab(nextTableId)
@@ -107,7 +107,7 @@ function PostgresShellLayout({
           databaseName={database.name}
         />
       ) : null}
-      {databaseTab ? (
+      {databaseTab && databaseTab !== 'sql' ? (
         <div className="shrink-0 bg-background">
           <PostgresDatabaseHeader databaseTab={databaseTab} />
         </div>

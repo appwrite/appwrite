@@ -196,12 +196,6 @@ export function CliTerminalSession({
     } catch {
       /* container may have zero size during layout */
     }
-
-    requestAnimationFrame(() => {
-      if (isFocusedRef.current) {
-        terminal.focus()
-      }
-    })
   }, [])
 
   const fitTerminal = useCallback(() => {
@@ -538,7 +532,7 @@ export function CliTerminalSession({
     const wasFocused = prevIsFocusedRef.current
     prevIsFocusedRef.current = isFocused
     if (!open || !isFocused || !isVisible || terminalSearchOpen) return
-    if (wasFocused === isFocused) return
+    if (wasFocused || !isFocused) return
     requestAnimationFrame(() => {
       const terminal = terminalRef.current
       if (!terminal) return

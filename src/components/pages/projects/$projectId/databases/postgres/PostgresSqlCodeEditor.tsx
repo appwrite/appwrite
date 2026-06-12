@@ -47,6 +47,10 @@ let getCompletionCatalog: () => PostgresSqlCompletionCatalog = () => ({
 
 function focusEditorInstance(editorInstance: editor.IStandaloneCodeEditor) {
   requestAnimationFrame(() => {
+    const model = editorInstance.getModel()
+    if (model) {
+      editorInstance.setPosition(model.getFullModelRange().getEndPosition())
+    }
     editorInstance.focus()
   })
 }

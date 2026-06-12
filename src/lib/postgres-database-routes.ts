@@ -6,6 +6,8 @@ export type PostgresNavParams = {
   tableId?: string
 }
 
+export type PostgresTableTab = 'rows' | 'columns' | 'indexes' | 'settings'
+
 /** Database-level views (sidebar nav below schemas/tables). */
 export type PostgresDatabaseTab =
   | 'sql'
@@ -68,14 +70,37 @@ export function postgresNav(params: PostgresNavBase) {
   const base = postgresNavBase(params)
 
   return {
-    tables(p: { tableId?: string }) {
+    table(p: { tableId: string }) {
+      const tableBase = { ...base, tableId: p.tableId }
       return {
-        to: '/projects/$projectId/databases/postgres/$databaseId/tables/$tableId/rows' as const,
-        params: {
-          ...base,
-          tableId: p.tableId ?? '-',
+        rows() {
+          return {
+            to: '/projects/$projectId/databases/postgres/$databaseId/tables/$tableId/rows' as const,
+            params: tableBase,
+          }
+        },
+        columns() {
+          return {
+            to: '/projects/$projectId/databases/postgres/$databaseId/tables/$tableId/columns' as const,
+            params: tableBase,
+          }
+        },
+        indexes() {
+          return {
+            to: '/projects/$projectId/databases/postgres/$databaseId/tables/$tableId/indexes' as const,
+            params: tableBase,
+          }
+        },
+        settings() {
+          return {
+            to: '/projects/$projectId/databases/postgres/$databaseId/tables/$tableId/settings' as const,
+            params: tableBase,
+          }
         },
       }
+    },
+    tables(p: { tableId?: string }) {
+      return this.table({ tableId: p.tableId ?? '-' }).rows()
     },
     sql() {
       return {
@@ -129,9 +154,9 @@ export function postgresDatabaseHome(params: PostgresNavParams) {
   if (!params.tableId || params.tableId === '-') {
     return postgresNav(params).sql()
   }
-  return postgresNav(params).tables({ tableId: params.tableId })
+  return postgresNav(params).table({ tableId: params.tableId }).rows()
 }
 
 export function postgresTableRows(params: PostgresNavParams & { tableId: string }) {
-  return postgresDatabaseHome(params)
+  return postgresNav(params).table({ tableId: params.tableId }).rows()
 }
