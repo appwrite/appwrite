@@ -3311,4 +3311,59 @@ final class FunctionsCustomServerTest extends Scope
             $this->cleanupFunction($functionId);
         }
     }
+
+    /**
+     * Regression test for: omitting providerRepositoryId in updateFunction must not silently
+     * clear the VCS connection while leaving the platform repository record intact.
+     *
+     * Before the fix, calling updateFunction without providerRepositoryId on a connected
+     * function would write null/empty to the function document (making it look disconnected
+     * in the console) but would NOT delete the repositories record in the platform DB, so
+     * GitHub webhooks would keep finding the record and keep triggering builds.
+     *
+     * This test covers the API-observable side:
+     *   1. Omitting providerRepositoryId on a non-connected function keeps the field empty.
+     *   2. Passing providerRepositoryId="" (explicit disconnect) on a non-connected function
+     *      is a no-op and does not cause errors.
+     *
+     * The full scenario (connected function + omit providerRepositoryId) requires a live
+     * VCS installation and is validated in VCSCustomServerTest.
+     */
+    public function testUpdateFunctionPreservesVcsOnOmittedProviderRepositoryId(): void
+    {
+        $functionId = $this->setupFunction([
+            'functionId' => ID::unique(),
+            'name' => 'VCS Preserve Test',
+            'runtime' => 'node-22',
+            'entrypoint' => 'index.js',
+            'commands' => '',
+        ]);
+
+        // 1. Update without providerRepositoryId — field should stay empty, no error
+        $response = $this->updateFunction($functionId, [
+            'name' => 'VCS Preserve Test',
+            'runtime' => 'node-22',
+        ]);
+        $this->assertSame(200, $response['headers']['status-code']);
+        $this->assertSame('', $response['body']['providerRepositoryId']);
+        $this->assertSame('', $response['body']['installationId']);
+        $this->assertSame('', $response['body']['providerBranch']);
+
+        // 2. Update with providerRepositoryId="" explicit on non-connected function — no-op, no error
+        $response = $this->updateFunction($functionId, [
+            'name' => 'VCS Preserve Test',
+            'runtime' => 'node-22',
+            'providerRepositoryId' => '',
+        ]);
+        $this->assertSame(200, $response['headers']['status-code']);
+        $this->assertSame('', $response['body']['providerRepositoryId']);
+
+        // 3. Verify GET also reflects the unchanged state
+        $response = $this->getFunction($functionId);
+        $this->assertSame(200, $response['headers']['status-code']);
+        $this->assertSame('', $response['body']['providerRepositoryId']);
+        $this->assertSame('', $response['body']['installationId']);
+
+        $this->cleanupFunction($functionId);
+    }
 }
