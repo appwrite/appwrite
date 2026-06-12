@@ -1,4 +1,5 @@
 import { createFileRoute } from '@tanstack/react-router'
+import { MARKETING_PAGE_ROUTE_STATIC_DATA } from '@/lib/marketing/route-static-data'
 import { ConsoleLayout } from '@/components/global/layout/ConsoleLayout'
 import { StandaloneCommandCenterScope } from '@/components/global/providers/KeyboardShortcuts'
 import { View } from '@/components/pages/pricing/View'
@@ -10,6 +11,7 @@ import {
 import { pageTitle } from '@/lib/utils/page-title'
 
 export const Route = createFileRoute('/pricing')({
+  staticData: MARKETING_PAGE_ROUTE_STATIC_DATA,
   ssr: true,
   head: () => ({
     meta: [

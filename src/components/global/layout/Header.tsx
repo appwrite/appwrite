@@ -91,7 +91,6 @@ import { AppwriteWordmark } from '@/components/global/shared/AppwriteWordmark'
 import { resolveInitHeaderNavCta } from '@/lib/init/events'
 import { isMacPlatform } from '@/lib/keyboard-shortcuts/display'
 import { useChangelogNavBadge } from '@/hooks/use-changelog-nav-badge'
-import { isConsoleRightPanePath } from '@/lib/docs/docs-preview-context'
 import {
   getMarketingPageUrl,
   isMarketingPageExternal,
@@ -210,8 +209,7 @@ export function ConsoleHeader({
   const supportsMultiTenancy = features.multiTenancy
   const overrides = useDebugOverrides()
   const { access } = useOrganizationScopes(project?.teamId)
-  const showAIAssistant =
-    overrides.showAIAssistant && isConsoleRightPanePath(location.pathname)
+  const showAIAssistant = overrides.showAIAssistant && !showMarketingNav
   const showConnectAndCreate = canShowConnectSection(access, features)
   const canCreateProjectFlag = canCreateProject(access, features)
   const canCreateDatabaseFlag = canCreateDatabase(access, features)

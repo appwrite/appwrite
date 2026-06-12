@@ -1,4 +1,5 @@
 import { createFileRoute, Link } from '@tanstack/react-router'
+import { MARKETING_PAGE_ROUTE_STATIC_DATA } from '@/lib/marketing/route-static-data'
 import {
   ArrowRight,
   BadgeCheck,
@@ -204,6 +205,7 @@ const securityItems: {
 ]
 
 export const Route = createFileRoute('/home')({
+  staticData: MARKETING_PAGE_ROUTE_STATIC_DATA,
   ssr: true,
   head: () => ({ meta: [{ title: pageTitle('Home') }] }),
   loader: async ({ context }) => {

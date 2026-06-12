@@ -1,3 +1,5 @@
+import { isMarketingPagePath } from '@/lib/marketing/is-marketing-page'
+
 const CONSOLE_RIGHT_PANE_PREFIXES = [
   '/projects/',
   '/organizations/',
@@ -20,6 +22,7 @@ function matchesConsoleRightPanePath(pathname: string): boolean {
  * authenticated console. Marketing, docs, and other public pages keep it closed.
  */
 export function isConsoleRightPanePath(pathname: string): boolean {
+  if (isMarketingPagePath(pathname)) return false
   return matchesConsoleRightPanePath(pathname)
 }
 

@@ -1,8 +1,10 @@
 import { createFileRoute } from '@tanstack/react-router'
+import { MARKETING_PAGE_ROUTE_STATIC_DATA } from '@/lib/marketing/route-static-data'
 import { generateLlmsTxt } from '@/lib/docs/llm'
 import { respondWithClientStaticFile } from '@/lib/marketing/static-exports'
 
 export const Route = createFileRoute('/llms/txt')({
+  staticData: MARKETING_PAGE_ROUTE_STATIC_DATA,
   ssr: true,
   server: {
     handlers: {

@@ -1,4 +1,5 @@
 import { createFileRoute, notFound } from '@tanstack/react-router'
+import { MARKETING_PAGE_ROUTE_STATIC_DATA } from '@/lib/marketing/route-static-data'
 import { ChangelogSeenSync } from '@/components/pages/changelog/ChangelogSeenSync'
 import { DetailView } from '@/components/pages/changelog/DetailView'
 import { getChangelogEntry } from '@/lib/changelog/content'
@@ -7,6 +8,7 @@ import { marketingPageLoader } from '@/lib/marketing/route-loader'
 import { pageTitle } from '@/lib/utils/page-title'
 
 export const Route = createFileRoute('/changelog/entry/$entry')({
+  staticData: MARKETING_PAGE_ROUTE_STATIC_DATA,
   ssr: true,
   loader: async ({ context, params }) => {
     await marketingPageLoader(context.queryClient)

@@ -87,6 +87,7 @@ import {
 import { isClientQueryEnabled } from '@/lib/react-query/hooks/constants'
 import { useAuth } from '@/components/global/auth/RequireAuth'
 import { useConsoleRightPane } from '@/components/global/providers/ConsoleRightPaneContext'
+import { useIsMarketingPage } from '@/hooks/use-is-marketing-page'
 import { isConsoleRightPanePath } from '@/lib/docs/docs-preview-context'
 import { listConsoleProjects } from '@/lib/appwrite/console-projects'
 import { getApiEndpoint, sdk } from '@/lib/appwrite/sdk'
@@ -135,6 +136,7 @@ export function AIChatProvider({ children }: { children: React.ReactNode }) {
     () => isAssistantBlockedPath(location.pathname),
     [location.pathname],
   )
+  const isMarketingPage = useIsMarketingPage()
   const isConsolePath = useMemo(
     () => isConsoleRightPanePath(location.pathname),
     [location.pathname],
@@ -150,25 +152,25 @@ export function AIChatProvider({ children }: { children: React.ReactNode }) {
   const hasRestoredOpenPrefRef = useRef(false)
 
   const openChat = useCallback(() => {
-    if (isAssistantBlocked || !isConsolePath) return
+    if (isAssistantBlocked || isMarketingPage || !isConsolePath) return
     showAssistant()
     setIsOpen(true)
-  }, [isAssistantBlocked, isConsolePath, setIsOpen, showAssistant])
+  }, [isAssistantBlocked, isConsolePath, isMarketingPage, setIsOpen, showAssistant])
   const closeChat = useCallback(() => {
     setIsOpen(false)
     hideRightPane()
   }, [hideRightPane, setIsOpen])
   const toggleChat = useCallback(() => {
-    if (isAssistantBlocked || !isConsolePath) return
+    if (isAssistantBlocked || isMarketingPage || !isConsolePath) return
     if (activeContent === 'assistant') {
       closeChat()
       return
     }
     openChat()
-  }, [activeContent, closeChat, isAssistantBlocked, isConsolePath, openChat])
+  }, [activeContent, closeChat, isAssistantBlocked, isConsolePath, isMarketingPage, openChat])
 
   useEffect(() => {
-    if (!isConsolePath) {
+    if (!isConsolePath || isMarketingPage) {
       if (isOpen) {
         setIsOpen(false)
       }
@@ -176,7 +178,7 @@ export function AIChatProvider({ children }: { children: React.ReactNode }) {
         hideRightPane()
       }
     }
-  }, [activeContent, hideRightPane, isConsolePath, isOpen, setIsOpen])
+  }, [activeContent, hideRightPane, isConsolePath, isMarketingPage, isOpen, setIsOpen])
 
   useEffect(() => {
     if (isAssistantBlocked && isOpen) {

@@ -1,4 +1,5 @@
 import { createFileRoute } from '@tanstack/react-router'
+import { MARKETING_PAGE_ROUTE_STATIC_DATA } from '@/lib/marketing/route-static-data'
 import { ChangelogSeenSync } from '@/components/pages/changelog/ChangelogSeenSync'
 import { View } from '@/components/pages/changelog/View'
 import { getChangelogEntriesPage } from '@/lib/changelog/content'
@@ -7,6 +8,7 @@ import { marketingPageLoader } from '@/lib/marketing/route-loader'
 import { pageTitle } from '@/lib/utils/page-title'
 
 export const Route = createFileRoute('/changelog/')({
+  staticData: MARKETING_PAGE_ROUTE_STATIC_DATA,
   ssr: true,
   head: () => ({
     meta: [

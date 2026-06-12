@@ -15,6 +15,7 @@ import { consoleAccountQueryOptions } from '@/lib/react-query/hooks/auth'
 import { AccountAccessBlockedScreen } from '@/components/global/auth/AccountAccessBlockedScreen'
 import { ConsoleImpersonationBanner } from '@/components/global/shared/ConsoleImpersonationBanner'
 import { getActiveProfileFeatures } from '@/lib/console-profiles'
+import { isMarketingPagePath } from '@/lib/marketing/is-marketing-page'
 
 // Helper function to check if we're on an auth page
 function isAuthPage(pathname: string): boolean {
@@ -33,26 +34,7 @@ function isAuthPage(pathname: string): boolean {
 export function isOptionalAuthPage(pathname: string): boolean {
   const features = getActiveProfileFeatures()
   if (pathname === '/init') return features.init
-  if (!features.marketing) return false
-
-  return (
-    pathname === '/home' ||
-    pathname === '/pricing' ||
-    pathname === '/company' ||
-    pathname === '/assets' ||
-    pathname === '/partners' ||
-    pathname === '/education' ||
-    pathname === '/startups' ||
-    pathname === '/community' ||
-    pathname === '/changelog' ||
-    pathname.startsWith('/changelog/') ||
-    pathname === '/terms' ||
-    pathname === '/privacy' ||
-    pathname === '/cookies' ||
-    pathname === '/baa' ||
-    pathname === '/docs' ||
-    pathname.startsWith('/docs/')
-  )
+  return isMarketingPagePath(pathname)
 }
 
 // Helper function to extract redirect from search params

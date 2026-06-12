@@ -6,6 +6,7 @@ import { useAuth } from '@/components/global/auth/RequireAuth'
 import { useDebugOverrides } from '@/lib/debug-overrides'
 import { useRightPaneWidth } from '@/lib/react-query/hooks/auth'
 import { clampRightPaneWidthPx } from '@/lib/right-pane/constants'
+import { useIsMarketingPage } from '@/hooks/use-is-marketing-page'
 import { isConsoleRightPanePath } from '@/lib/docs/docs-preview-context'
 import { cn } from '@/lib/utils'
 import { AIChatPanelContent } from './AIChat'
@@ -40,6 +41,7 @@ export function ConsoleRightPane() {
   const panelRef = useRef<HTMLDivElement>(null)
   const [isResizing, setIsResizing] = useState(false)
 
+  const isMarketingPage = useIsMarketingPage()
   const isConsolePath = useMemo(
     () => isConsoleRightPanePath(location.pathname),
     [location.pathname],
@@ -49,7 +51,7 @@ export function ConsoleRightPane() {
     [location.pathname],
   )
   const resolvedContent =
-    !isConsolePath
+    isMarketingPage || !isConsolePath
       ? null
       : activeContent === 'assistant' &&
           overrides.showAIAssistant &&
