@@ -1,10 +1,15 @@
 import { createFileRoute, redirect } from '@tanstack/react-router'
 import { PostgresShell } from '@/components/pages/projects/$projectId/databases/postgres/PostgresShell'
-import { TabPlaceholder } from '@/components/pages/projects/$projectId/databases/postgres/TabPlaceholder'
+import { View as PostgresMonitorView } from '@/components/pages/projects/$projectId/databases/postgres/Monitor'
 import { prefetchPostgresShellData } from '@/components/pages/projects/$projectId/databases/postgres/postgres-tab-route-loader'
 import { POSTGRES_DATABASE_TAB_LABELS } from '@/lib/postgres-database-routes'
 import { pageTitle } from '@/lib/utils/page-title'
 import { getActiveProfileFeatures } from '@/lib/console-profiles'
+import {
+  postgresConnectionStatesQueryOptions,
+  postgresMetricsSnapshotQueryOptions,
+  postgresTableActivityQueryOptions,
+} from '@/lib/react-query/hooks/postgres-metrics'
 
 export const Route = createFileRoute(
   '/_public/projects/$projectId/databases/postgres/$databaseId/monitor',
@@ -31,20 +36,36 @@ export const Route = createFileRoute(
   }),
   loader: async ({ params, context }) => {
     if (typeof window === 'undefined') return { database: null }
-    return prefetchPostgresShellData(
-      context.queryClient,
-      params.projectId,
-      params.databaseId,
+    const { projectId, databaseId } = params
+    const { queryClient } = context
+    const shellData = await prefetchPostgresShellData(
+      queryClient,
+      projectId,
+      databaseId,
     )
+    await Promise.all([
+      queryClient.ensureQueryData(
+        postgresMetricsSnapshotQueryOptions(projectId, databaseId),
+      ),
+      queryClient.ensureQueryData(
+        postgresConnectionStatesQueryOptions(projectId, databaseId),
+      ),
+      queryClient.ensureQueryData(
+        postgresTableActivityQueryOptions(projectId, databaseId),
+      ),
+    ]).catch(() => {
+      /* Monitor still renders with per-query error states */
+    })
+    return shellData
   },
   component: PostgresMonitorPage,
 })
 
 function PostgresMonitorPage() {
-  const { databaseId } = Route.useParams()
+  const { projectId, databaseId } = Route.useParams()
   return (
     <PostgresShell databaseId={databaseId} databaseTab="monitor">
-      <TabPlaceholder tab="monitor" />
+      <PostgresMonitorView projectId={projectId} databaseId={databaseId} />
     </PostgresShell>
   )
 }

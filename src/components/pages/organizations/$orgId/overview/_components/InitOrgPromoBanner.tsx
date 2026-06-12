@@ -1,10 +1,10 @@
-import { useRef } from 'react'
 import { Link } from '@tanstack/react-router'
-import { InitHeroBackground } from '@/components/pages/init/_components/InitHeroBackground'
 import { InitWordmark } from '@/components/pages/init/_components/InitWordmark'
 import { Badge } from '@/components/ui/badge'
-import type { InitOrgPromoPhase } from '@/lib/init/org-promo-banner'
-import { useInitOrgPromoBannerContent } from '@/lib/init/use-init-org-promo-banner'
+import {
+  getStaticInitOrgPromoBannerContent,
+  type InitOrgPromoPhase,
+} from '@/lib/init/org-promo-banner'
 import type { LaunchEventCta } from '@/lib/init/types'
 import type { ReactNode } from 'react'
 
@@ -49,70 +49,59 @@ function InitOrgPromoBannerLink({
 }
 
 export function InitOrgPromoBanner() {
-  const bannerRef = useRef<HTMLDivElement>(null)
-  const content = useInitOrgPromoBannerContent()
-
+  const content = getStaticInitOrgPromoBannerContent()
   if (!content) return null
 
   return (
-    <div className="overflow-hidden border-b border-border">
+    <div className="relative w-full shrink-0 overflow-hidden border-b border-border bg-background">
       <div
-        ref={bannerRef}
-        className="group/banner relative min-h-14 overflow-visible bg-background [clip-path:inset(0_-100vw_0_-100vw)]"
+        aria-hidden
+        className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle,var(--border)_1px,transparent_1px)] bg-[length:18px_18px] opacity-60"
+      />
+      <InitOrgPromoBannerLink
+        cta={content.cta}
+        className="group/banner relative flex h-14 w-full cursor-pointer items-center justify-center gap-2 px-4 sm:gap-2.5 sm:px-6"
       >
-        <InitHeroBackground
-          containerRef={bannerRef}
-          compact
-          fullWidthMotion
-          active
-        />
-
         <div
           aria-hidden
-          className="pointer-events-none absolute inset-0 z-[1] bg-muted/0 transition-colors duration-300 ease-out group-hover/banner:bg-muted/30"
+          className="pointer-events-none absolute inset-0 bg-muted/0 transition-colors duration-300 ease-out group-hover/banner:bg-muted/30"
         />
-
-        <InitOrgPromoBannerLink
-          cta={content.cta}
-          className="relative z-10 mx-auto flex min-h-14 w-full max-w-7xl cursor-pointer items-center justify-center gap-2 px-4 py-3 sm:gap-2.5 sm:px-6"
+        <InitWordmark className="relative z-10 shrink-0 text-[20px] text-foreground transition-colors duration-300 ease-out group-hover/banner:text-foreground sm:text-[22px]" />
+        <span
+          aria-hidden
+          className="relative z-10 hidden shrink-0 text-muted-foreground/40 sm:inline"
         >
-          <InitWordmark className="shrink-0 text-[20px] text-foreground transition-colors duration-300 ease-out group-hover/banner:text-foreground sm:text-[22px]" />
-          <span
-            aria-hidden
-            className="hidden shrink-0 text-muted-foreground/40 sm:inline"
-          >
-            ·
-          </span>
-          <span className="hidden shrink-0 text-[10px] font-semibold uppercase tracking-[0.2em] text-muted-foreground md:inline">
-            {content.dateRangeLabel}
-          </span>
-          {content.badgeLabel ? (
-            <>
-              <span
-                aria-hidden
-                className="hidden shrink-0 text-muted-foreground/40 md:inline"
-              >
-                ·
-              </span>
-              <Badge
-                variant={BADGE_VARIANT[content.phase]}
-                className="text-[10px] shrink-0"
-              >
-                {content.badgeLabel}
-              </Badge>
-            </>
-          ) : null}
-          <span
-            aria-hidden
-            className="hidden shrink-0 text-muted-foreground/40 sm:inline"
-          >
-            ·
-          </span>
-          <p className="min-w-0 truncate text-[13px] text-muted-foreground transition-colors duration-300 ease-out group-hover/banner:text-foreground/80">
-            {content.message}
-          </p>
-        </InitOrgPromoBannerLink>
-      </div>
+          ·
+        </span>
+        <span className="relative z-10 hidden shrink-0 text-[10px] font-semibold uppercase tracking-[0.2em] text-muted-foreground md:inline">
+          {content.dateRangeLabel}
+        </span>
+        {content.badgeLabel ? (
+          <>
+            <span
+              aria-hidden
+              className="relative z-10 hidden shrink-0 text-muted-foreground/40 md:inline"
+            >
+              ·
+            </span>
+            <Badge
+              variant={BADGE_VARIANT[content.phase]}
+              className="relative z-10 text-[10px] shrink-0"
+            >
+              {content.badgeLabel}
+            </Badge>
+          </>
+        ) : null}
+        <span
+          aria-hidden
+          className="relative z-10 hidden shrink-0 text-muted-foreground/40 sm:inline"
+        >
+          ·
+        </span>
+        <p className="relative z-10 min-w-0 truncate text-[13px] text-muted-foreground transition-colors duration-300 ease-out group-hover/banner:text-foreground/80">
+          {content.message}
+        </p>
+      </InitOrgPromoBannerLink>
     </div>
   )
 }

@@ -219,10 +219,10 @@ function HomePage() {
         header={{
           marketingNav: true,
         }}
+        headerBanner={<InitOrgPromoBanner />}
         showFooter
         footer={{ expanded: true }}
       >
-        <InitOrgPromoBanner />
         <section className="relative isolate overflow-hidden border-b border-border bg-background">
           <HomeSoftLights />
           <div

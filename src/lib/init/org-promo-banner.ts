@@ -1,3 +1,4 @@
+import { getEnvProfileFeatures } from '@/lib/console-profiles'
 import { parseDateOnly } from './dates'
 import { resolveInitCurrentDay, resolveInitRecapMode } from './event-visibility'
 import { getActiveLaunchEvent } from './events'
@@ -105,4 +106,10 @@ export function getInitOrgPromoBannerContent(options?: {
   mockCurrentDay?: number | null
 }): InitOrgPromoBannerContent | null {
   return resolveInitOrgPromoBanner(getActiveLaunchEvent(options?.now), options)
+}
+
+/** Static promo banner content (env profile + calendar only; no API or client hooks). */
+export function getStaticInitOrgPromoBannerContent(): InitOrgPromoBannerContent | null {
+  if (!getEnvProfileFeatures().init) return null
+  return getInitOrgPromoBannerContent()
 }
