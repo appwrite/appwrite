@@ -34,6 +34,9 @@ trait StorageBase
         $signatures = [\md5_file($path)];
 
         $handle = \fopen($path, 'rb');
+        if ($handle === false) {
+            return $signatures;
+        }
         $binary = '';
         $parts = 0;
         while (!\feof($handle)) {
