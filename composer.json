@@ -100,6 +100,12 @@
         "league/csv": "9.14.*",
         "enshrined/svg-sanitize": "0.22.*"
     },
+    "repositories": [
+        {
+            "type": "vcs",
+            "url": "https://github.com/utopia-php/lock"
+        }
+    ],
     "require-dev": {
         "ext-fileinfo": "*",
         "appwrite/sdk-generator": "^2.0",
