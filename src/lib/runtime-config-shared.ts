@@ -29,13 +29,49 @@ export const RUNTIME_CONFIG_PLACEHOLDER = '__APPWRITE_RUNTIME_CONFIG__'
 
 export const RUNTIME_CONFIG_WINDOW_KEY = '__APP_CONFIG__'
 
+/** Default Appwrite Cloud API endpoint when no env override is configured. */
+export const DEFAULT_CLOUD_APPWRITE_ENDPOINT = 'https://cloud.appwrite.io/v1'
+
 type EnvRecord = Record<string, string | undefined>
+
+function readEnvValue(env: EnvRecord, key: string): string {
+  return (env[key] ?? '').toString().trim()
+}
+
+/**
+ * Read the Appwrite API endpoint from env. Accepts VITE_APPWRITE_ENDPOINT (primary),
+ * APPWRITE_ENDPOINT, and PUBLIC_APPWRITE_ENDPOINT so Helm/runtime configs that use
+ * the server-side name still reach the browser.
+ */
+export function readAppwriteEndpointFromEnv(env: EnvRecord): string {
+  return (
+    readEnvValue(env, 'VITE_APPWRITE_ENDPOINT') ||
+    readEnvValue(env, 'APPWRITE_ENDPOINT') ||
+    readEnvValue(env, 'PUBLIC_APPWRITE_ENDPOINT')
+  )
+}
+
+/**
+ * Fallback when no endpoint env var is set. Self-hosted consoles use the current
+ * host (same-origin API). Cloud consoles must not use the frontend host (e.g.
+ * vibes.appwrite.io) as the API endpoint.
+ */
+export function resolveAppwriteEndpointFallback(
+  consoleProfile: string,
+  location?: { protocol: string; host: string },
+): string {
+  const normalized = consoleProfile.toLowerCase().trim().replace(/\s+/g, '-')
+  if (normalized === 'self-hosted' && location) {
+    return `${location.protocol}//${location.host}/v1`
+  }
+  return DEFAULT_CLOUD_APPWRITE_ENDPOINT
+}
 
 /** Build the config object from a plain env record (process.env or import.meta.env). */
 export function readRuntimeConfigFromEnv(env: EnvRecord): RuntimeConfig {
-  const read = (key: string): string => (env[key] ?? '').toString().trim()
+  const read = readEnvValue
   return {
-    appwriteEndpoint: read('VITE_APPWRITE_ENDPOINT'),
+    appwriteEndpoint: readAppwriteEndpointFromEnv(env),
     consoleProfile: read('VITE_CONSOLE_PROFILE'),
     fingerprintKey:
       read('VITE_CONSOLE_FINGERPRINT_KEY') ||

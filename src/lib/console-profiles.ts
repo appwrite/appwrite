@@ -1,5 +1,6 @@
 import { getDebugEndpointBaseUrl } from '@/lib/debug-endpoint'
 import { getRuntimeConfig } from '@/lib/runtime-config'
+import { resolveAppwriteEndpointFallback } from '@/lib/runtime-config-shared'
 
 /**
  * Console profile configuration for different Appwrite deployments.
@@ -209,8 +210,9 @@ function detectProfileFromEndpoint(): ConsoleProfileId {
   }
 
   if (typeof window !== 'undefined') {
+    const config = getRuntimeConfig()
     return isCloudEndpoint(
-      `${window.location.protocol}//${window.location.host}/v1`,
+      resolveAppwriteEndpointFallback(config.consoleProfile, window.location),
     )
       ? 'cloud'
       : 'self-hosted'

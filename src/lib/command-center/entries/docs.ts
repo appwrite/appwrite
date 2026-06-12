@@ -9,7 +9,7 @@ import type { CommandEntry } from '../types'
 const DOCS: CommandEntry[] = [
   {
     id: 'docs.action.search',
-    scopes: ['docs'],
+    scopes: ['docs', 'project', 'organization', 'account'],
     kind: 'action',
     group: 'Search',
     label: 'Search documentation',

@@ -4,6 +4,7 @@
  */
 
 import { getRuntimeConfig } from '@/lib/runtime-config'
+import { resolveAppwriteEndpointFallback } from '@/lib/runtime-config-shared'
 
 export type EndpointPresetId = 'production' | 'stage' | 'localhost' | 'custom'
 
@@ -101,13 +102,15 @@ export function getDebugEndpointBaseUrl(): string | null {
  * Returns the API URL from VITE_APPWRITE_ENDPOINT when present.
  */
 export function getEnvEndpointBaseUrl(): string | null {
-  const envEndpoint = getRuntimeConfig().appwriteEndpoint
-  if (envEndpoint.trim()) {
-    return normalizeUrl(envEndpoint.trim())
+  const config = getRuntimeConfig()
+  if (config.appwriteEndpoint.trim()) {
+    return normalizeUrl(config.appwriteEndpoint.trim())
   }
 
   if (typeof window !== 'undefined') {
-    return normalizeUrl(`${window.location.protocol}//${window.location.host}/v1`)
+    return normalizeUrl(
+      resolveAppwriteEndpointFallback(config.consoleProfile, window.location),
+    )
   }
 
   return null

@@ -13,20 +13,35 @@ const docsNoteContentClassName = cn(
   '[&_a]:font-medium [&_a]:text-foreground/85 [&_a]:underline [&_a]:decoration-dotted [&_a]:decoration-muted-foreground/60 [&_a]:underline-offset-[3px] [&_a]:[text-decoration-thickness:1px] hover:[&_a]:text-foreground/90 hover:[&_a]:decoration-muted-foreground hover:[&_a]:[text-decoration-thickness:2px]',
 )
 
-export function Info({ title, children }: { title: string; children?: ReactNode }) {
+export function Info({
+  title,
+  children,
+  compact = false,
+}: {
+  title: string
+  children?: ReactNode
+  compact?: boolean
+}) {
   return (
     <Alert
       variant="default"
       className="not-prose my-6 gap-y-2 border-border bg-muted/30 [&>svg]:text-muted-foreground"
     >
       <InfoIcon className="h-4 w-4" />
-      <AlertTitle className="line-clamp-none min-h-0 text-[15px] font-medium leading-[1.45] text-foreground">
+      <AlertTitle
+        className={cn(
+          'line-clamp-none min-h-0 font-medium leading-[1.45] text-foreground',
+          compact ? 'text-[13px]' : 'text-[15px]',
+        )}
+      >
         {title}
       </AlertTitle>
       {children ? (
         <AlertDescription
           className={cn(
-            'text-[15px] leading-[1.65] text-muted-foreground sm:text-[16px] sm:leading-[1.65]',
+            compact
+              ? 'text-[13px] leading-[1.6] text-muted-foreground sm:text-[14px]'
+              : 'text-[15px] leading-[1.65] text-muted-foreground sm:text-[16px] sm:leading-[1.65]',
             docsNoteContentClassName,
           )}
         >

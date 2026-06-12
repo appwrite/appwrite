@@ -1,5 +1,9 @@
+'use client'
+
 import { Link } from '@tanstack/react-router'
-import type { ReactNode } from 'react'
+import type { MouseEvent, ReactNode } from 'react'
+import { useDocsPreviewNavigation } from '@/lib/docs/docs-preview-navigation'
+import { buildConsoleUrl, openInNewTab } from '@/lib/utils/context-menu'
 import { cn } from '@/lib/utils'
 
 type DocsRouteLinkProps = {
@@ -30,11 +34,31 @@ export function DocsRouteLink({
   className,
   onClick,
 }: DocsRouteLinkProps) {
+  const previewNav = useDocsPreviewNavigation()
   const route = docsHrefToRoute(href)
+
+  if (previewNav && route) {
+    const handlePreviewClick = (event: MouseEvent<HTMLAnchorElement>) => {
+      event.preventDefault()
+      event.stopPropagation()
+      onClick?.()
+      if (!route.params) {
+        openInNewTab(buildConsoleUrl('/docs/'))
+        return
+      }
+      previewNav.navigateToSlug(route.params._splat)
+    }
+
+    return (
+      <a href={href} className={className} onClick={handlePreviewClick}>
+        {children}
+      </a>
+    )
+  }
 
   if (!route) {
     return (
-      <a href={href} className={className}>
+      <a href={href} className={className} onClick={onClick}>
         {children}
       </a>
     )

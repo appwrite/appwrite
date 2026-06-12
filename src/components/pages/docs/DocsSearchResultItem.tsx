@@ -20,8 +20,10 @@ export function DocsSearchResultItem({
 
   return (
     <CommandItem
-      value={`${entry.title} ${entry.slug} ${entry.description} ${breadcrumbLabel}`}
+      value={`${entry.slug} ${entry.title}`}
+      keywords={[entry.description, breadcrumbLabel, ...entry.breadcrumbs].join(' ')}
       onSelect={() => onSelect(entry.slug)}
+      onMouseDown={(event) => event.preventDefault()}
       className={className ?? 'items-start gap-3 py-3'}
     >
       <FileText className="mt-0.5 size-4 shrink-0 text-muted-foreground" />

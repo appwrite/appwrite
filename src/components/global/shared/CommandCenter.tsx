@@ -76,6 +76,11 @@ import { canSeeProjectNavItem } from '@/lib/console-access-checks'
 import { FULL_ACCESS } from '@/lib/console-roles'
 import { useCommandCenterResourceSearch } from '@/hooks/use-command-center-resource-search'
 import { DocsSearchView } from '@/components/pages/docs/DocsSearchView'
+import { useDocsPreview } from '@/components/global/providers/DocsPreview'
+import {
+  buildConsoleUrl,
+  openInNewWindow,
+} from '@/lib/utils/context-menu'
 import type {
   CommandCenterContext,
   CreateResourceType,
@@ -300,16 +305,30 @@ export function CommandCenter({
     [],
   )
 
+  const { openDocsPreview } = useDocsPreview()
+
   const handleDocsSelect = useCallback(
     (slug: string) => {
-      onOpenChange(false)
-      if (!slug) {
-        navigate({ to: '/docs/' })
+      if (isDocsContext) {
+        onOpenChange(false)
+        if (!slug) {
+          navigate({ to: '/docs/' })
+          return
+        }
+        navigate({ to: '/docs/$', params: { _splat: slug } })
         return
       }
-      navigate({ to: '/docs/$', params: { _splat: slug } })
+
+      if (!slug) {
+        onOpenChange(false)
+        openInNewWindow(buildConsoleUrl('/docs/'))
+        return
+      }
+
+      openDocsPreview(slug)
+      onOpenChange(false)
     },
-    [navigate, onOpenChange],
+    [navigate, onOpenChange, isDocsContext, openDocsPreview],
   )
 
   const ctx: CommandContext = useMemo(
@@ -326,7 +345,7 @@ export function CommandCenter({
       },
       closeCommandCenter,
       openShortcutsPage,
-      openDocsSearchPage: isDocsContext ? openDocsSearchPage : undefined,
+      openDocsSearchPage,
       handlers: {
         onProjectCreate: onCreateResource,
         onOrgInviteMember: onInviteMember,
@@ -346,7 +365,6 @@ export function CommandCenter({
       closeCommandCenter,
       openShortcutsPage,
       openDocsSearchPage,
-      isDocsContext,
       onCreateResource,
       onInviteMember,
       onOrgCreateProject,

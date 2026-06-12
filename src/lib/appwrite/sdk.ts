@@ -48,6 +48,7 @@ import {
 } from '@/lib/debug-endpoint'
 import { wrapServiceObject } from '@/lib/appwrite/slow-call-reporting'
 import { getRuntimeConfig } from '@/lib/runtime-config'
+import { resolveAppwriteEndpointFallback } from '@/lib/runtime-config-shared'
 import { clearConsoleAccountCache } from '@/lib/console-account-cache'
 import {
   fetchConsoleAccount,
@@ -76,7 +77,7 @@ function isMultiRegionSupported(url: URL): boolean {
 /**
  * Single source of truth for API endpoints.
  * - Debug override (from debug menu) takes precedence when set.
- * - No region: returns base endpoint (override, VITE_APPWRITE_ENDPOINT, or current host).
+ * - No region: returns base endpoint (override, runtime env, or profile-aware fallback).
  * - With region: when the base is a multi-region cloud host, returns
  *   region-specific endpoint by prefixing the region subdomain to the base
  *   host (e.g. base https://stage.cloud.appwrite.io/v1 → https://fra.stage.cloud.appwrite.io/v1).
@@ -90,16 +91,18 @@ export function getApiEndpoint(region?: string): string {
     if (debugBase) {
       baseEndpoint = debugBase
     } else {
+      const config = getRuntimeConfig()
       baseEndpoint =
-        getRuntimeConfig().appwriteEndpoint ||
-        `${window.location.protocol}//${window.location.host}/v1`
+        config.appwriteEndpoint ||
+        resolveAppwriteEndpointFallback(config.consoleProfile, window.location)
     }
   } else {
+    const config = getRuntimeConfig()
     baseEndpoint =
-      getRuntimeConfig().appwriteEndpoint ||
+      config.appwriteEndpoint ||
       (typeof window !== 'undefined'
-        ? `${window.location.protocol}//${window.location.host}/v1`
-        : '')
+        ? resolveAppwriteEndpointFallback(config.consoleProfile, window.location)
+        : resolveAppwriteEndpointFallback(config.consoleProfile))
   }
 
   if (!baseEndpoint) {

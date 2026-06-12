@@ -82,9 +82,8 @@ const SERVER_ENTRY_POINT = './dist/server/server.js'
 // Public runtime config, read once from the process env (constant per process)
 // and stamped into every HTML response in place of the build-time placeholder —
 // see src/lib/runtime-config-shared.ts and src/routes/__root.tsx.
-const RUNTIME_CONFIG_JSON = serializeRuntimeConfig(
-  readRuntimeConfigFromEnv(process.env),
-)
+const RUNTIME_CONFIG = readRuntimeConfigFromEnv(process.env)
+const RUNTIME_CONFIG_JSON = serializeRuntimeConfig(RUNTIME_CONFIG)
 
 function injectRuntimeConfig(html: string): string {
   return html.split(RUNTIME_CONFIG_PLACEHOLDER).join(RUNTIME_CONFIG_JSON)
@@ -107,6 +106,12 @@ const log = {
   header: (message: string) => {
     console.log(`\n${message}\n`)
   },
+}
+
+if (!RUNTIME_CONFIG.appwriteEndpoint) {
+  log.warning(
+    'VITE_APPWRITE_ENDPOINT (or APPWRITE_ENDPOINT) is not set; the browser will use the cloud default or the current host for self-hosted.',
+  )
 }
 
 // Preloading configuration from environment variables

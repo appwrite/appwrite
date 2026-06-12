@@ -41,10 +41,12 @@ export function Heading({
   level = 1,
   id,
   children,
+  compact = false,
 }: {
   level?: number
   id?: string
   children: ReactNode
+  compact?: boolean
 }) {
   const text = extractText(children)
   const { title, id: headingId } = resolveHeadingId(text, id)
@@ -55,17 +57,37 @@ export function Heading({
   const displayLevel = Math.min(level + 1, 6)
   const className = cn(
     'scroll-mt-24 font-aeonik-pro text-foreground/95 text-balance',
-    level === 1 &&
-      'mb-4 mt-8 text-[20px] font-normal leading-[1.3] first:mt-0 sm:text-[22px]',
-    level === 2 &&
-      'mb-3 mt-7 text-[17px] font-semibold leading-snug sm:text-[18px]',
-    level === 3 && 'mb-2 mt-6 text-[16px] font-semibold sm:text-[17px]',
-    level >= 4 && 'mb-2 mt-5 text-[15px] font-semibold',
+    compact
+      ? [
+          level === 1 &&
+            'mb-3 mt-6 text-[16px] font-normal leading-[1.3] first:mt-0 sm:text-[17px]',
+          level === 2 &&
+            'mb-2 mt-5 text-[14px] font-semibold leading-snug sm:text-[15px]',
+          level === 3 && 'mb-2 mt-4 text-[13px] font-semibold sm:text-[14px]',
+          level >= 4 && 'mb-1.5 mt-3 text-[12px] font-semibold sm:text-[13px]',
+        ]
+      : [
+          level === 1 &&
+            'mb-4 mt-8 text-[20px] font-normal leading-[1.3] first:mt-0 sm:text-[22px]',
+          level === 2 &&
+            'mb-3 mt-7 text-[17px] font-semibold leading-snug sm:text-[18px]',
+          level === 3 && 'mb-2 mt-6 text-[16px] font-semibold sm:text-[17px]',
+          level >= 4 && 'mb-2 mt-5 text-[15px] font-semibold',
+        ],
   )
 
   const headingProps = { id: headingId, className: cn(className, 'group') }
-  const linkIconSizeClass =
-    level === 1 ? 'size-[18px]' : level === 2 ? 'size-4' : 'size-3.5'
+  const linkIconSizeClass = compact
+    ? level === 1
+      ? 'size-4'
+      : level === 2
+        ? 'size-3.5'
+        : 'size-3'
+    : level === 1
+      ? 'size-[18px]'
+      : level === 2
+        ? 'size-4'
+        : 'size-3.5'
 
   const content = (
     <DocsHeadingLink headingId={headingId} linkIconSizeClass={linkIconSizeClass}>

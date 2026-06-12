@@ -37,17 +37,13 @@ import {
   AccordionTrigger,
 } from '@/components/ui/accordion'
 
-const markdocComponents = {
+const baseMarkdocComponents = {
   MultiCode,
   Fence,
-  Info,
   Tabs,
   TabsItem,
-  Cards,
-  CardsItem,
   MarkdocIcon,
   MarkdocIconImage,
-  Heading,
   Link: DocsLink,
   Image: DocsImage,
   OnlyLight,
@@ -60,19 +56,6 @@ const markdocComponents = {
   MarkdocTableRow,
   MarkdocTableHead,
   MarkdocTableCell,
-  Accordion: ({ children }: { children?: React.ReactNode }) => (
-    <Accordion type="single" collapsible className="not-prose my-6">
-      {children}
-    </Accordion>
-  ),
-  AccordionItem: ({ title, children }: { title?: string; children?: React.ReactNode }) => (
-    <AccordionItem value={title ?? 'item'} className="rounded-lg border border-border px-4">
-      <AccordionTrigger className={cn(DOCS_BODY_TEXT_CLASS, 'font-medium hover:no-underline')}>
-        {title}
-      </AccordionTrigger>
-      <AccordionContent className={DOCS_BODY_TEXT_CLASS}>{children}</AccordionContent>
-    </AccordionItem>
-  ),
   Section: () => null,
   ArrowLink: ({ href, title }: { href?: string; title?: string }) => (
     <DocsLink href={href}>{title}</DocsLink>
@@ -105,20 +88,70 @@ const markdocComponents = {
   ),
 }
 
-type DocsMarkdownProps = {
-  content: string
+function createMarkdocComponents(compact: boolean) {
+  return {
+    ...baseMarkdocComponents,
+    Info: (props: { title: string; children?: React.ReactNode }) => (
+      <Info {...props} compact={compact} />
+    ),
+    Cards,
+    CardsItem: (props: React.ComponentProps<typeof CardsItem>) => (
+      <CardsItem {...props} compact={compact} />
+    ),
+    Heading: (props: React.ComponentProps<typeof Heading>) => (
+      <Heading {...props} compact={compact} />
+    ),
+    Accordion: ({ children }: { children?: React.ReactNode }) => (
+      <Accordion type="single" collapsible className="not-prose my-6">
+        {children}
+      </Accordion>
+    ),
+    AccordionItem: ({ title, children }: { title?: string; children?: React.ReactNode }) => (
+      <AccordionItem value={title ?? 'item'} className="rounded-lg border border-border px-4">
+        <AccordionTrigger
+          className={
+            compact
+              ? 'text-[13px] font-medium hover:no-underline sm:text-[14px]'
+              : cn(DOCS_BODY_TEXT_CLASS, 'font-medium hover:no-underline')
+          }
+        >
+          {title}
+        </AccordionTrigger>
+        <AccordionContent
+          className={cn(
+            compact
+              ? 'text-[13px] leading-[1.6] text-muted-foreground sm:text-[14px]'
+              : DOCS_BODY_TEXT_CLASS,
+          )}
+        >
+          {children}
+        </AccordionContent>
+      </AccordionItem>
+    ),
+  }
 }
 
-export function DocsMarkdown({ content }: DocsMarkdownProps) {
+type DocsMarkdownProps = {
+  content: string
+  compact?: boolean
+}
+
+export function DocsMarkdown({ content, compact = false }: DocsMarkdownProps) {
   const rendered = useMemo(() => {
     const ast = Markdoc.parse(content)
     const transformed = Markdoc.transform(ast, docsMarkdocConfig)
-    return Markdoc.renderers.react(transformed, React, { components: markdocComponents })
-  }, [content])
+    return Markdoc.renderers.react(transformed, React, {
+      components: createMarkdocComponents(compact),
+    })
+  }, [content, compact])
 
   return (
     <div
-      className={cn(DOCS_PROSE_WRAPPER_CLASS, ...DOCS_PROSE_DETAIL_CLASSES)}
+      className={cn(
+        DOCS_PROSE_WRAPPER_CLASS,
+        ...DOCS_PROSE_DETAIL_CLASSES,
+        compact && 'text-[14px] leading-[1.65] sm:text-[15px]',
+      )}
     >
       {rendered}
     </div>

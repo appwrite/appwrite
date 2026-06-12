@@ -28,6 +28,10 @@ import {
   AIChatProvider,
   AIChatPanel,
 } from '@/components/global/providers/AIChat'
+import {
+  DocsPreviewPanel,
+  DocsPreviewProvider,
+} from '@/components/global/providers/DocsPreview'
 import { DebugMenu } from '@/components/global/providers/DebugMenu'
 import { PromoBannerProvider } from '@/components/global/providers/PromoBanner'
 import { DebugModeProvider } from '@/components/global/providers/DebugMode'
@@ -432,32 +436,36 @@ function RootDocument({ children }: { children: React.ReactNode }) {
             ) : null}
             <SentryContextProvider>
               <DebugModeProvider>
-                {features.aiAssistant ? (
-                  <AIChatProvider>
+                <DocsPreviewProvider>
+                  {features.aiAssistant ? (
+                    <AIChatProvider>
+                      <PromoBannerProvider>
+                        <div className="flex w-full min-w-0 overflow-hidden root-container">
+                          <div className="root-scroll-container flex-1 overflow-hidden min-h-0 h-full">
+                            {children}
+                          </div>
+                          <AIChatPanel />
+                          <DocsPreviewPanel />
+                        </div>
+                        <ClientOnly>
+                          <DebugMenu />
+                        </ClientOnly>
+                      </PromoBannerProvider>
+                    </AIChatProvider>
+                  ) : (
                     <PromoBannerProvider>
                       <div className="flex w-full min-w-0 overflow-hidden root-container">
                         <div className="root-scroll-container flex-1 overflow-hidden min-h-0 h-full">
                           {children}
                         </div>
-                        <AIChatPanel />
+                        <DocsPreviewPanel />
                       </div>
                       <ClientOnly>
                         <DebugMenu />
                       </ClientOnly>
                     </PromoBannerProvider>
-                  </AIChatProvider>
-                ) : (
-                  <PromoBannerProvider>
-                    <div className="flex w-full min-w-0 overflow-hidden root-container">
-                      <div className="root-scroll-container flex-1 overflow-hidden min-h-0 h-full">
-                        {children}
-                      </div>
-                    </div>
-                    <ClientOnly>
-                      <DebugMenu />
-                    </ClientOnly>
-                  </PromoBannerProvider>
-                )}
+                  )}
+                </DocsPreviewProvider>
               </DebugModeProvider>
             </SentryContextProvider>
             <ClientOnly>

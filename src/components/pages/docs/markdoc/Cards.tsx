@@ -89,6 +89,7 @@ export function CardsItem({
   image,
   children,
   cardIndex = 0,
+  compact = false,
 }: {
   href?: string
   title?: string
@@ -96,6 +97,7 @@ export function CardsItem({
   image?: string
   children?: ReactNode
   cardIndex?: number
+  compact?: boolean
 }) {
   const lightVariant = getCardLightVariant(href ?? title ?? '', cardIndex)
   const resolvedIcon = resolveMarkdocCardIcon({ icon, image, title, href })
@@ -106,10 +108,22 @@ export function CardsItem({
       <div className="relative z-10 flex h-full flex-col">
         {resolvedIcon ? <CardItemIcon resolved={resolvedIcon} /> : null}
         {title ? (
-          <h3 className="text-[17px] font-semibold text-foreground/90 sm:text-[18px]">{title}</h3>
+          <h3
+            className={cn(
+              'font-semibold text-foreground/90',
+              compact ? 'text-[15px] sm:text-[16px]' : 'text-[17px] sm:text-[18px]',
+            )}
+          >
+            {title}
+          </h3>
         ) : null}
         {children ? (
-          <div className="mt-2 flex-1 text-[13px] leading-[1.6] text-muted-foreground sm:text-[14px]">
+          <div
+            className={cn(
+              'mt-2 flex-1 leading-[1.6] text-muted-foreground',
+              compact ? 'text-[12px] sm:text-[13px]' : 'text-[13px] sm:text-[14px]',
+            )}
+          >
             {children}
           </div>
         ) : null}
