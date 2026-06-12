@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Tests\Unit\Messaging;
 
 use Appwrite\Messaging\Adapter\Realtime;
@@ -9,7 +11,7 @@ use Utopia\Database\Helpers\ID;
 use Utopia\Database\Helpers\Permission;
 use Utopia\Database\Helpers\Role;
 
-class MessagingTest extends TestCase
+final class MessagingTest extends TestCase
 {
     public function setUp(): void
     {
@@ -53,56 +55,56 @@ class MessagingTest extends TestCase
         $receivers = array_keys($realtime->getSubscribers($event));
 
         $this->assertCount(1, $receivers);
-        $this->assertEquals(1, $receivers[0]);
+        $this->assertSame(1, $receivers[0]);
 
         $event['roles'] = [Role::users()->toString()];
 
         $receivers = array_keys($realtime->getSubscribers($event));
 
         $this->assertCount(1, $receivers);
-        $this->assertEquals(1, $receivers[0]);
+        $this->assertSame(1, $receivers[0]);
 
         $event['roles'] = [Role::user(ID::custom('123'))->toString()];
 
         $receivers = array_keys($realtime->getSubscribers($event));
 
         $this->assertCount(1, $receivers);
-        $this->assertEquals(1, $receivers[0]);
+        $this->assertSame(1, $receivers[0]);
 
         $event['roles'] = [Role::team(ID::custom('abc'))->toString()];
 
         $receivers = array_keys($realtime->getSubscribers($event));
 
         $this->assertCount(1, $receivers);
-        $this->assertEquals(1, $receivers[0]);
+        $this->assertSame(1, $receivers[0]);
 
         $event['roles'] = [Role::team(ID::custom('abc'), 'administrator')->toString()];
 
         $receivers = array_keys($realtime->getSubscribers($event));
 
         $this->assertCount(1, $receivers);
-        $this->assertEquals(1, $receivers[0]);
+        $this->assertSame(1, $receivers[0]);
 
         $event['roles'] = [Role::team(ID::custom('abc'), 'moderator')->toString()];
 
         $receivers = array_keys($realtime->getSubscribers($event));
 
         $this->assertCount(1, $receivers);
-        $this->assertEquals(1, $receivers[0]);
+        $this->assertSame(1, $receivers[0]);
 
         $event['roles'] = [Role::team(ID::custom('def'))->toString()];
 
         $receivers = array_keys($realtime->getSubscribers($event));
 
         $this->assertCount(1, $receivers);
-        $this->assertEquals(1, $receivers[0]);
+        $this->assertSame(1, $receivers[0]);
 
         $event['roles'] = [Role::team(ID::custom('def'), 'guest')->toString()];
 
         $receivers = array_keys($realtime->getSubscribers($event));
 
         $this->assertCount(1, $receivers);
-        $this->assertEquals(1, $receivers[0]);
+        $this->assertSame(1, $receivers[0]);
 
         $event['roles'] = [Role::user(ID::custom('456'))->toString()];
 
@@ -128,7 +130,7 @@ class MessagingTest extends TestCase
         $receivers = array_keys($realtime->getSubscribers($event));
 
         $this->assertCount(1, $receivers);
-        $this->assertEquals(1, $receivers[0]);
+        $this->assertSame(1, $receivers[0]);
 
         $event['project'] = '2';
 
@@ -217,7 +219,7 @@ class MessagingTest extends TestCase
             ],
         ];
         $receivers = array_keys($realtime->getSubscribers($event));
-        $this->assertEquals([1], $receivers);
+        $this->assertSame([1], $receivers);
 
         // Channels recomputed: sub-a's channel is gone
         $this->assertSame(['files'], $realtime->connections[1]['channels']);
@@ -250,7 +252,7 @@ class MessagingTest extends TestCase
                 'channels' => ['documents'],
             ],
         ];
-        $this->assertEquals([1], array_keys($realtime->getSubscribers($event)));
+        $this->assertSame([1], array_keys($realtime->getSubscribers($event)));
     }
 
     public function testUnsubscribeSubscriptionKeepsConnectionWhenLastSubRemoved(): void
@@ -301,7 +303,7 @@ class MessagingTest extends TestCase
                 'channels' => ['files'],
             ],
         ];
-        $this->assertEquals([1], array_keys($realtime->getSubscribers($event)));
+        $this->assertSame([1], array_keys($realtime->getSubscribers($event)));
     }
 
     public function testSubscribeAfterOnOpenEmptySentinelPreservesUnion(): void

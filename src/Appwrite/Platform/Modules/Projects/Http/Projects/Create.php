@@ -83,6 +83,13 @@ class Create extends Action
         $auths = [
             'limit' => 0,
             'maxSessions' => 0,
+            'passwordStrength' => [
+                'min' => 8,
+                'uppercase' => false,
+                'lowercase' => false,
+                'number' => false,
+                'symbols' => false,
+            ],
             'passwordHistory' => 0,
             'passwordDictionary' => false,
             'duration' => TOKEN_EXPIRATION_LOGIN_LONG,
@@ -90,6 +97,7 @@ class Create extends Action
             'disposableEmails' => false,
             'canonicalEmails' => false,
             'freeEmails' => false,
+            'corporateEmails' => false,
             'mockNumbers' => [],
             'sessionAlerts' => false,
             'membershipsUserName' => false,

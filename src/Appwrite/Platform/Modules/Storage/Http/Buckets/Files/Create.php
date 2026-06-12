@@ -187,7 +187,7 @@ class Create extends Action
         $fileTmpName = (\is_array($file['tmp_name']) && isset($file['tmp_name'][0])) ? $file['tmp_name'][0] : $file['tmp_name'];
         $fileSize = (\is_array($file['size']) && isset($file['size'][0])) ? $file['size'][0] : $file['size'];
 
-        $contentRange = $request->getHeader('content-range');
+        $contentRange = $request->getHeaderLine('content-range');
         $fileId = $fileId === 'unique()' ? ID::unique() : $fileId;
         $chunk = 1;
         $chunks = 1;
@@ -196,7 +196,7 @@ class Create extends Action
             $start = $request->getContentRangeStart();
             $end = $request->getContentRangeEnd();
             $fileSize = $request->getContentRangeSize();
-            $fileId = $request->getHeader('x-appwrite-id', $fileId);
+            $fileId = $request->getHeaderLine('x-appwrite-id', $fileId);
             // TODO make `end >= $fileSize` in next breaking version
             if (is_null($start) || is_null($end) || is_null($fileSize) || $end > $fileSize) {
                 throw new Exception(Exception::STORAGE_INVALID_CONTENT_RANGE);
@@ -260,8 +260,8 @@ class Create extends Action
         };
 
         try {
-            $locks($lockKey, 600, function () use ($bucket, &$chunks, $contentRange, $dbForProject, $deviceForFiles, $fileId, $fileName, $fileSize, &$metadata, $path, $permissions, $response, &$completed): void {
-                $file = $dbForProject->getDocument('bucket_' . $bucket->getSequence(), $fileId);
+            $locks($lockKey, 600, function () use ($authorization, $bucket, &$chunks, $contentRange, $dbForProject, $deviceForFiles, $fileId, $fileName, $fileSize, &$metadata, $path, $permissions, $response, &$completed): void {
+                $file = $authorization->skip(fn () => $dbForProject->getDocument('bucket_' . $bucket->getSequence(), $fileId));
                 if (!$file->isEmpty()) {
                     $chunks = $file->getAttribute('chunksTotal', 1);
                     $uploaded = $file->getAttribute('chunksUploaded', 0);
@@ -325,7 +325,7 @@ class Create extends Action
         }
 
         $finalizeUpload = function (int $chunksUploaded) use ($authorization, $bucket, &$chunks, $contentRange, $dbForProject, $deviceForFiles, $fileId, $fileName, $fileSize, &$metadata, $mergeUploadMetadata, $path, $permissions, $queueForEvents, $response): void {
-            $file = $dbForProject->getDocument('bucket_' . $bucket->getSequence(), $fileId);
+            $file = $authorization->skip(fn () => $dbForProject->getDocument('bucket_' . $bucket->getSequence(), $fileId));
             $uploaded = 0;
 
             if (!$file->isEmpty()) {

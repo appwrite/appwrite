@@ -6,7 +6,6 @@ use Appwrite\Network\Validator\Redirect;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Specification\Format\OpenAPI3;
-use Appwrite\SDK\Specification\Format\Swagger2;
 use Appwrite\SDK\Specification\Specification;
 use Appwrite\Utopia\Request as AppwriteRequest;
 use Appwrite\Utopia\Response as AppwriteResponse;
@@ -62,7 +61,6 @@ class Specs extends Action
     protected function getFormatInstance(string $format, array $arguments)
     {
         return match ($format) {
-            'swagger2' => new Swagger2(...$arguments),
             'open-api3' => new OpenAPI3(...$arguments),
             default => throw new Exception('Format not found: ' . $format)
         };
@@ -139,6 +137,16 @@ class Specs extends Action
                     'description' => 'Your project ID',
                     'in' => 'header',
                 ],
+                'ProjectPath' => [
+                    'type' => 'apiKey',
+                    'name' => 'project',
+                    'description' => 'Your project ID',
+                    'in' => 'query',
+                    'x-appwrite' => [
+                        'location' => 'path',
+                        'param' => 'project_id',
+                    ],
+                ],
                 'JWT' => [
                     'type' => 'apiKey',
                     'name' => 'X-Appwrite-JWT',
@@ -194,6 +202,16 @@ class Specs extends Action
                     'name' => 'X-Appwrite-Project',
                     'description' => 'Your project ID',
                     'in' => 'header',
+                ],
+                'ProjectPath' => [
+                    'type' => 'apiKey',
+                    'name' => 'project',
+                    'description' => 'Your project ID',
+                    'in' => 'query',
+                    'x-appwrite' => [
+                        'location' => 'path',
+                        'param' => 'project_id',
+                    ],
                 ],
                 'Key' => [
                     'type' => 'apiKey',
@@ -262,6 +280,16 @@ class Specs extends Action
                     'name' => 'X-Appwrite-Project',
                     'description' => 'Your project ID',
                     'in' => 'header',
+                ],
+                'ProjectPath' => [
+                    'type' => 'apiKey',
+                    'name' => 'project',
+                    'description' => 'Your project ID',
+                    'in' => 'query',
+                    'x-appwrite' => [
+                        'location' => 'path',
+                        'param' => 'project_id',
+                    ],
                 ],
                 'Key' => [
                     'type' => 'apiKey',
@@ -630,7 +658,7 @@ class Specs extends Action
                 $platform
             ];
 
-            foreach (['swagger2', 'open-api3'] as $format) {
+            foreach (['open-api3'] as $format) {
                 $formatInstance = $this->getFormatInstance($format, $arguments);
                 $specs = new Specification($formatInstance);
 

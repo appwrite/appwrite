@@ -1,8 +1,10 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Tests\E2E\Services\Health;
 
-class TimeTest extends HealthBase
+final class TimeTest extends HealthBase
 {
     public function testTimeSuccess(): void
     {

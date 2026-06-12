@@ -24,10 +24,11 @@ use Appwrite\SDK\Language\REST;
 use Appwrite\SDK\Language\Ruby;
 use Appwrite\SDK\Language\Rust;
 use Appwrite\SDK\Language\Swift;
+use Appwrite\SDK\Language\Unity;
 use Appwrite\SDK\Language\Web;
 use Appwrite\SDK\SDK;
+use Appwrite\Spec\OpenAPI3;
 use Appwrite\Spec\StaticSpec;
-use Appwrite\Spec\Swagger2;
 use CzProject\GitPhp\Git;
 use Utopia\Agents\Adapters\OpenAI;
 use Utopia\Agents\DiffCheck\DiffCheck;
@@ -301,14 +302,14 @@ class SDKs extends Action
                 }
 
                 Console::info("━━━ {$language['name']} SDK ({$platform['name']}, {$version}) ━━━");
-                $specFormat = $language['spec'] ?? 'swagger2';
+                $specFormat = $language['spec'] ?? 'openapi3';
                 $spec = null;
                 if ($specFormat === 'static') {
                     Console::log('  Using static SDK spec...');
                 } else {
                     Console::log('  Fetching API spec...');
 
-                    $specPath = __DIR__ . '/../../../../app/config/specs/swagger2-' . $version . '-' . $language['family'] . '.json';
+                    $specPath = __DIR__ . '/../../../../app/config/specs/open-api3-' . $version . '-' . $language['family'] . '.json';
 
                     if (!file_exists($specPath)) {
                         throw new \Exception('Spec file not found: ' . $specPath . '. Please run "docker compose exec appwrite specs --version=' . $version . '" first to generate the specs.');
@@ -431,6 +432,11 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
                         $cover = '';
                         $config = new DotNet();
                         break;
+                    case 'unity':
+                        $cover = '';
+                        $config = new Unity();
+                        $config->setPackageName('io.appwrite.unity');
+                        break;
                     case 'android':
                         $config = new Android();
                         break;
@@ -477,7 +483,7 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
                             licenseName: 'BSD-3-Clause',
                             licenseURL: 'https://raw.githubusercontent.com/appwrite/appwrite/master/LICENSE',
                         )
-                        : new Swagger2($spec)
+                        : new OpenAPI3($spec)
                 );
 
                 $sdk

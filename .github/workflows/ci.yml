@@ -139,6 +139,26 @@ jobs:
       - name: Run Linter
         run: composer lint
 
+  refactor:
+    name: Checks / Refactor
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@accd6127cb78bee3e8082180cb391013d204ef9f # 2.37.0
+        with:
+          php-version: '8.3'
+          tools: composer:v2
+          coverage: none
+
+      - name: Install dependencies
+        run: composer install --prefer-dist --no-progress --ignore-platform-reqs
+
+      - name: Run Rector
+        run: composer refactor:check
+
   analyze:
     name: Checks / Analyze
     runs-on: ubuntu-latest
@@ -209,44 +229,74 @@ jobs:
     outputs:
       databases: ${{ steps.generate.outputs.databases }}
       modes: ${{ steps.generate.outputs.modes }}
+      services: ${{ steps.generate.outputs.services }}
     steps:
       - name: Generate matrix
         id: generate
         uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
         with:
           script: |
-            const allDatabases = ['MariaDB', 'PostgreSQL', 'MongoDB'];
-            const allModes = ['dedicated', 'shared'];
+            const runner4 = `runs-on=${context.runId}/runner=4cpu-linux-x64/volume=120g/spot=false/extras=otel`;
+            const runner8 = `runs-on=${context.runId}/runner=8cpu-linux-x64/volume=120g/spot=false/extras=otel`;
 
-            const defaultDatabases = ['MongoDB'];
-            const defaultModes = ['dedicated'];
+            const services = [
+              { name: 'Account',           runner: runner4, functional: true,  processes: null, timeout: 20 },
+              { name: 'Avatars',           runner: runner4, functional: true,  processes: null, timeout: 20 },
+              { name: 'Console',           runner: runner4, functional: true,  processes: null, timeout: 20 },
+              { name: 'Databases',         runner: runner8, functional: false, processes: 3,    timeout: 30 },
+              { name: 'TablesDB',          runner: runner8, functional: false, processes: 3,    timeout: 30 },
+              { name: 'Functions',         runner: runner4, functional: false, processes: null, timeout: 20 },
+              { name: 'FunctionsSchedule', runner: runner4, functional: true,  processes: null, timeout: 20 },
+              { name: 'GraphQL',           runner: runner4, functional: false, processes: null, timeout: 20 },
+              { name: 'Health',            runner: runner4, functional: true,  processes: null, timeout: 20 },
+              { name: 'Advisor',           runner: runner4, functional: true,  processes: null, timeout: 20 },
+              { name: 'Locale',            runner: runner4, functional: true,  processes: null, timeout: 20 },
+              { name: 'Projects',          runner: runner4, functional: true,  processes: null, timeout: 20 },
+              { name: 'Realtime',          runner: runner4, functional: false, processes: null, timeout: 20 },
+              { name: 'Sites',             runner: runner4, functional: true,  processes: null, timeout: 20 },
+              { name: 'Proxy',             runner: runner4, functional: true,  processes: null, timeout: 20 },
+              { name: 'Storage',           runner: runner4, functional: true,  processes: null, timeout: 20 },
+              { name: 'Tokens',            runner: runner4, functional: true,  processes: null, timeout: 20 },
+              { name: 'Teams',             runner: runner4, functional: true,  processes: null, timeout: 20 },
+              { name: 'Users',             runner: runner4, functional: true,  processes: null, timeout: 20 },
+              { name: 'ProjectWebhooks',   runner: runner4, functional: false, processes: null, timeout: 20 },
+              { name: 'Webhooks',          runner: runner4, functional: true,  processes: null, timeout: 20 },
+              { name: 'VCS',               runner: runner4, functional: true,  processes: null, timeout: 20 },
+              { name: 'Messaging',         runner: runner4, functional: true,  processes: null, timeout: 20 },
+              { name: 'Migrations',        runner: runner4, functional: true,  processes: 1,    timeout: 20 },
+              { name: 'Project',           runner: runner4, functional: true,  processes: null, timeout: 20 },
+              { name: 'Presences',         runner: runner4, functional: true,  processes: null, timeout: 20 },
+            ];
+            core.setOutput('services', JSON.stringify(services));
 
             const pr = context.payload.pull_request;
-            if (!pr) {
-              core.setOutput('databases', JSON.stringify(allDatabases));
-              core.setOutput('modes', JSON.stringify(allModes));
+
+            const isDatabaseVersionChanged = async () => {
+              const getContent = (ref) => github.rest.repos.getContent({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                path: 'composer.lock',
+                ref,
+              });
+
+              const getDbVersion = (lock) => lock.packages?.find(p => p.name === 'utopia-php/database')?.version;
+              const [{ data: base }, { data: head }] = await Promise.all([
+                getContent(pr.base.sha),
+                getContent(pr.head.sha),
+              ]);
+
+              const decode = (content) => JSON.parse(Buffer.from(content, 'base64').toString());
+              return getDbVersion(decode(base.content)) !== getDbVersion(decode(head.content));
+            };
+
+            if (!pr || await isDatabaseVersionChanged()) {
+              core.setOutput('databases', JSON.stringify(['MariaDB', 'PostgreSQL', 'MongoDB']));
+              core.setOutput('modes', JSON.stringify(['dedicated', 'shared']));
               return;
             }
 
-            const getContent = (ref) => github.rest.repos.getContent({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              path: 'composer.lock',
-              ref,
-            });
-
-            const getDbVersion = (lock) => lock.packages?.find(p => p.name === 'utopia-php/database')?.version;
-
-            const [{ data: base }, { data: head }] = await Promise.all([
-              getContent(pr.base.sha),
-              getContent(pr.head.sha),
-            ]);
-
-            const decode = (content) => JSON.parse(Buffer.from(content, 'base64').toString());
-            const databaseChanged = getDbVersion(decode(base.content)) !== getDbVersion(decode(head.content));
-
-            core.setOutput('databases', JSON.stringify(databaseChanged ? allDatabases : defaultDatabases));
-            core.setOutput('modes', JSON.stringify(databaseChanged ? allModes : defaultModes));
+            core.setOutput('databases', JSON.stringify(['MongoDB']));
+            core.setOutput('modes', JSON.stringify(['dedicated']));
 
   build:
     name: Build
@@ -379,7 +429,7 @@ jobs:
       - name: Wait for Open Runtimes
         timeout-minutes: 3
         run: |
-          while ! docker compose logs openruntimes-executor | grep -q "Executor is ready."; do
+          while ! docker logs exc1 | grep -q "Executor is ready."; do
             echo "Waiting for Executor to come online"
             sleep 1
           done
@@ -405,8 +455,8 @@ jobs:
           docker compose logs
 
   e2e_service:
-    name: Tests / E2E / ${{ matrix.database }} (${{ matrix.mode }}) / ${{ matrix.service }}
-    runs-on: ${{ matrix.runner || format('runs-on={0}/runner=4cpu-linux-x64/volume=120g/spot=false', github.run_id) }}
+    name: Tests / E2E / ${{ matrix.database }} (${{ matrix.mode }}) / ${{ matrix.service.name }}
+    runs-on: ${{ matrix.service.runner }}
     needs: [build, matrix]
     permissions:
       contents: read
@@ -417,45 +467,7 @@ jobs:
       matrix:
         database: ${{ fromJSON(needs.matrix.outputs.databases) }}
         mode: ${{ fromJSON(needs.matrix.outputs.modes) }}
-        service: [
-          Account,
-          Avatars,
-          Console,
-          Databases,
-          TablesDB,
-          Functions,
-          FunctionsSchedule,
-          GraphQL,
-          Health,
-          Advisor,
-          Locale,
-          Projects,
-          Realtime,
-          Sites,
-          Proxy,
-          Storage,
-          Tokens,
-          Teams,
-          Users,
-          ProjectWebhooks,
-          Webhooks,
-          VCS,
-          Messaging,
-          Migrations,
-          Project,
-          Presences
-        ]
-        include:
-          - service: Databases
-            runner: runs-on=${{ github.run_id }}/runner=8cpu-linux-x64/volume=120g/spot=false
-            paratest_processes: 3
-            timeout_minutes: 30
-          - service: TablesDB
-            runner: runs-on=${{ github.run_id }}/runner=8cpu-linux-x64/volume=120g/spot=false
-            paratest_processes: 3
-            timeout_minutes: 30
-          - service: Migrations
-            paratest_processes: 1
+        service: ${{ fromJSON(needs.matrix.outputs.services) }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
@@ -513,7 +525,7 @@ jobs:
       - name: Wait for Open Runtimes
         timeout-minutes: 3
         run: |
-          while ! docker compose logs openruntimes-executor | grep -q "Executor is ready."; do
+          while ! docker logs exc1 | grep -q "Executor is ready."; do
             echo "Waiting for Executor to come online"
             sleep 1
           done
@@ -523,20 +535,19 @@ jobs:
         with:
           max_attempts: 2
           retry_wait_seconds: 60
-          timeout_minutes: ${{ matrix.timeout_minutes || 20 }}
+          timeout_minutes: ${{ matrix.service.timeout }}
           job_id: ${{ job.check_run_id }}
           github_token: ${{ secrets.GITHUB_TOKEN }}
-          test_dir: tests/e2e/Services/${{ matrix.service }}
+          test_dir: tests/e2e/Services/${{ matrix.service.name }}
           command: |
-            SERVICE_PATH="/usr/src/code/tests/e2e/Services/${{ matrix.service }}"
+            SERVICE_PATH="/usr/src/code/tests/e2e/Services/${{ matrix.service.name }}"
 
-            # Services that rely on sequential test method execution (shared static state)
-            FUNCTIONAL_FLAG="--functional"
-            case "${{ matrix.service }}" in
-              Databases|TablesDB|Functions|Realtime|GraphQL|ProjectWebhooks) FUNCTIONAL_FLAG="" ;;
-            esac
+            FUNCTIONAL_FLAG=""
+            if [ "${{ matrix.service.functional }}" = "true" ]; then
+              FUNCTIONAL_FLAG="--functional"
+            fi
 
-            PARATEST_PROCESSES="${{ matrix.paratest_processes }}"
+            PARATEST_PROCESSES="${{ matrix.service.processes }}"
             if [ -z "$PARATEST_PROCESSES" ]; then
               PARATEST_PROCESSES="$(nproc)"
             fi
@@ -545,7 +556,7 @@ jobs:
               -e _APP_E2E_RESPONSE_FORMAT="${{ github.event.inputs.response_format }}" \
               -e _TESTS_OAUTH2_GITHUB_CLIENT_ID="${{ secrets.TESTS_OAUTH2_GITHUB_CLIENT_ID }}" \
               -e _TESTS_OAUTH2_GITHUB_CLIENT_SECRET="${{ secrets.TESTS_OAUTH2_GITHUB_CLIENT_SECRET }}" \
-              appwrite vendor/bin/paratest --processes "$PARATEST_PROCESSES" $FUNCTIONAL_FLAG "$SERVICE_PATH" --exclude-group abuseEnabled --exclude-group screenshots --log-junit tests/e2e/Services/${{ matrix.service }}/junit.xml
+              appwrite vendor/bin/paratest --processes "$PARATEST_PROCESSES" $FUNCTIONAL_FLAG "$SERVICE_PATH" --exclude-group abuseEnabled --exclude-group screenshots --log-junit tests/e2e/Services/${{ matrix.service.name }}/junit.xml
 
       - name: Failure Logs
         if: failure()
@@ -667,7 +678,7 @@ jobs:
       - name: Wait for Open Runtimes
         timeout-minutes: 3
         run: |
-          while ! docker compose logs openruntimes-executor | grep -q "Executor is ready."; do
+          while ! docker logs exc1 | grep -q "Executor is ready."; do
             echo "Waiting for Executor to come online"
             sleep 1
           done

@@ -77,6 +77,7 @@ class Get extends Action
         return [
             'password-dictionary' => Response::MODEL_POLICY_PASSWORD_DICTIONARY,
             'password-history' => Response::MODEL_POLICY_PASSWORD_HISTORY,
+            'password-strength' => Response::MODEL_POLICY_PASSWORD_STRENGTH,
             'password-personal-data' => Response::MODEL_POLICY_PASSWORD_PERSONAL_DATA,
             'session-alert' => Response::MODEL_POLICY_SESSION_ALERT,
             'session-duration' => Response::MODEL_POLICY_SESSION_DURATION,
@@ -108,6 +109,18 @@ class Get extends Action
                     'total' => $auths['passwordHistory'] ?? 0,
                 ]),
                 Response::MODEL_POLICY_PASSWORD_HISTORY,
+            ],
+            'password-strength' => [
+                new Document(\array_merge([
+                    'min' => 8,
+                    'uppercase' => false,
+                    'lowercase' => false,
+                    'number' => false,
+                    'symbols' => false,
+                ], $auths['passwordStrength'] ?? [], [
+                    '$id' => 'password-strength',
+                ])),
+                Response::MODEL_POLICY_PASSWORD_STRENGTH,
             ],
             'password-personal-data' => [
                 new Document([
@@ -159,6 +172,7 @@ class Get extends Action
                     'userPhone' => $auths['membershipsUserPhone'] ?? false,
                     'userName' => $auths['membershipsUserName'] ?? false,
                     'userMFA' => $auths['membershipsMfa'] ?? false,
+                    'userAccessedAt' => $auths['membershipsUserAccessedAt'] ?? false,
                 ]),
                 Response::MODEL_POLICY_MEMBERSHIP_PRIVACY,
             ],

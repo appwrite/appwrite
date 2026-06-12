@@ -44,6 +44,12 @@ class PolicyMembershipPrivacy extends PolicyBase
                 'description' => 'Whether user MFA status is visible in memberships.',
                 'default' => false,
                 'example' => true,
+            ])
+            ->addRule('userAccessedAt', [
+                'type' => self::TYPE_BOOLEAN,
+                'description' => 'Whether user last access time is visible in memberships.',
+                'default' => false,
+                'example' => true,
             ]);
     }
 
