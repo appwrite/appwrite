@@ -103,6 +103,15 @@ class Create extends Action
         // Map aggregate permissions into the multiple permissions they represent.
         $permissions = Permission::aggregate($permissions) ?? [];
 
+        // Resolve the data-plane database BEFORE writing the metadata row. For a
+        // dedicated product database this throws while provisioning (no DSN yet);
+        // writing the row first would leave an orphaned collection with no backing
+        // collection, which lists fine but fails every document operation.
+        /**
+         * @var Database $dbForDatabases
+         */
+        $dbForDatabases = $getDatabasesDB($database);
+
         try {
             $collection = $dbForProject->createDocument('database_' . $database->getSequence(), new Document([
                 '$id' => $collectionId,
@@ -121,11 +130,6 @@ class Create extends Action
         } catch (NotFoundException) {
             throw new Exception(Exception::DATABASE_NOT_FOUND, params: [$databaseId]);
         }
-
-        /**
-         * @var Database $dbForDatabases
-         */
-        $dbForDatabases = $getDatabasesDB($database);
 
         $collectionKey = 'database_' . $database->getSequence() . '_collection_' . $collection->getSequence();
         $databaseKey = 'database_' . $database->getSequence();
