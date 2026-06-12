@@ -3,14 +3,10 @@ import { Link } from '@tanstack/react-router'
 import { InitHeroBackground } from '@/components/pages/init/_components/InitHeroBackground'
 import { InitWordmark } from '@/components/pages/init/_components/InitWordmark'
 import { Badge } from '@/components/ui/badge'
-import { useDebugOverrides } from '@/lib/debug-overrides'
-import {
-  getInitOrgPromoBannerContent,
-  type InitOrgPromoPhase,
-} from '@/lib/init/org-promo-banner'
+import type { InitOrgPromoPhase } from '@/lib/init/org-promo-banner'
+import { useInitOrgPromoBannerContent } from '@/lib/init/use-init-org-promo-banner'
 import type { LaunchEventCta } from '@/lib/init/types'
 import type { ReactNode } from 'react'
-import { useConsoleProfile } from '@/hooks/use-console-profile'
 
 const BADGE_VARIANT: Record<InitOrgPromoPhase, 'info' | 'success' | 'warning'> =
   {
@@ -54,14 +50,7 @@ function InitOrgPromoBannerLink({
 
 export function InitOrgPromoBanner() {
   const bannerRef = useRef<HTMLDivElement>(null)
-  const { features } = useConsoleProfile()
-  const { mockInitCurrentDay } = useDebugOverrides()
-
-  if (!features.init) return null
-
-  const content = getInitOrgPromoBannerContent({
-    mockCurrentDay: mockInitCurrentDay,
-  })
+  const content = useInitOrgPromoBannerContent()
 
   if (!content) return null
 

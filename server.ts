@@ -64,6 +64,10 @@
  */
 
 import path from 'node:path'
+import {
+  getMarketingPrerenderHtmlFile,
+  MARKETING_PRERENDER_PATHS,
+} from './src/lib/marketing/prerender-paths.ts'
 
 // Configuration
 const SERVER_PORT = Number(process.env.PORT ?? 3000)
@@ -102,11 +106,15 @@ const INCLUDE_PATTERNS = (process.env.ASSET_PRELOAD_INCLUDE_PATTERNS ?? '')
   .map((pattern: string) => convertGlobToRegExp(pattern))
 
 // Parse comma-separated exclude patterns (no defaults)
-const EXCLUDE_PATTERNS = (process.env.ASSET_PRELOAD_EXCLUDE_PATTERNS ?? '')
-  .split(',')
-  .map((s) => s.trim())
-  .filter(Boolean)
-  .map((pattern: string) => convertGlobToRegExp(pattern))
+const EXCLUDE_PATTERNS = [
+  convertGlobToRegExp('*.html'),
+  convertGlobToRegExp('llms-full.txt'),
+  ...(process.env.ASSET_PRELOAD_EXCLUDE_PATTERNS ?? '')
+    .split(',')
+    .map((s) => s.trim())
+    .filter(Boolean)
+    .map((pattern: string) => convertGlobToRegExp(pattern)),
+]
 
 // Verbose logging flag
 const VERBOSE = process.env.ASSET_PRELOAD_VERBOSE_LOGGING === 'true'
@@ -179,7 +187,16 @@ interface PreloadResult {
  * Check if a file is eligible for preloading based on configured patterns
  */
 function isFileEligibleForPreloading(relativePath: string): boolean {
-  const fileName = relativePath.split(/[/\\]/).pop() ?? relativePath
+  const normalized = relativePath.split(/[/\\]/).join('/')
+  const fileName = normalized.split('/').pop() ?? normalized
+
+  if (
+    normalized === 'llms-full.txt' ||
+    normalized.startsWith('llms-full/') ||
+    fileName.endsWith('.html')
+  ) {
+    return false
+  }
 
   // If include patterns are specified, file must match at least one
   if (INCLUDE_PATTERNS.length > 0) {
@@ -369,6 +386,30 @@ async function initializeStaticRoutes(
           log.error(`Failed to load ${filepath}: ${error.message}`)
         }
       }
+    }
+
+    // Serve prerendered marketing HTML at clean URLs (/home, not /home.html).
+    for (const urlPath of MARKETING_PRERENDER_PATHS) {
+      const htmlFile = getMarketingPrerenderHtmlFile(urlPath)
+      if (!htmlFile) continue
+
+      const filepath = path.join(clientDirectory, htmlFile)
+      const file = Bun.file(filepath)
+      if (!(await file.exists())) continue
+
+      routes[urlPath] = () =>
+        new Response(Bun.file(filepath), {
+          headers: {
+            'Content-Type': 'text/html; charset=utf-8',
+            'Cache-Control': 'public, max-age=3600',
+          },
+        })
+
+      skipped.push({
+        route: urlPath,
+        size: file.size,
+        type: 'text/html; charset=utf-8',
+      })
     }
 
     // Show detailed file overview only when verbose mode is enabled

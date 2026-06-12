@@ -39,12 +39,10 @@ ENV VITE_SENTRY_DSN=${VITE_SENTRY_DSN}
 
 RUN bun install --frozen-lockfile
 COPY . .
-# SENTRY_AUTH_TOKEN is mounted as a BuildKit secret (never baked into a layer) and
-# exposed in the environment only for this build step, to enable Sentry sourcemap
-# upload (see vite.config.ts). Absent secret -> empty token -> upload is skipped.
+# FOR_SITES=true disables client/server sourcemaps and prerender marketing pages at build time.
 RUN --mount=type=secret,id=sentry_auth_token \
     SENTRY_AUTH_TOKEN="$(cat /run/secrets/sentry_auth_token 2>/dev/null || true)" \
-    bun run build
+    FOR_SITES=true bun run build:node
 
 FROM base AS prod-deps
 

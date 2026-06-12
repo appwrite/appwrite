@@ -2,29 +2,19 @@ import { EmptyState } from '@/components/global/shared/EmptyState'
 import { Play, Table2 } from 'lucide-react'
 
 type SqlWorkbenchPanelEmptyStateProps = {
-  variant: 'results' | 'table-rows' | 'query-no-rows'
+  variant: 'results' | 'query-no-rows'
 }
 
 export function SqlWorkbenchPanelEmptyState({
   variant,
 }: SqlWorkbenchPanelEmptyStateProps) {
   const emptyState =
-    variant === 'table-rows' ? (
+    variant === 'query-no-rows' ? (
       <EmptyState
         variant="centered"
         icon={Table2}
         iconSize="md"
-        title="No rows in this table"
-        description="This table is empty. Run a SELECT query or insert rows with SQL to populate it."
-        isEmpty
-        className="w-full"
-      />
-    ) : variant === 'query-no-rows' ? (
-      <EmptyState
-        variant="centered"
-        icon={Table2}
-        iconSize="md"
-        title="Query returned no rows"
+        title="No results for query"
         description="The query completed successfully but did not return any data."
         isEmpty
         className="w-full"

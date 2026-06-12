@@ -39,19 +39,21 @@ export function generateLlmsTxt(): string {
   return `# Appwrite\n\n${lines.join('\n')}\n`
 }
 
-export function generateLlmsFullTxt(): string {
+export async function generateLlmsFullTxt(): Promise<string> {
   const base = 'https://appwrite.io'
-  const sections = DOCS_PAGES.map((page) => {
-    const pageData = getDocsPage(page.slug)
-    if (!pageData) return null
+  const sections = await Promise.all(
+    DOCS_PAGES.map(async (page) => {
+      const pageData = await getDocsPage(page.slug)
+      if (!pageData) return null
 
-    const href = page.slug ? `${base}/docs/${page.slug}` : `${base}/docs`
-    let body = stripFrontmatter(pageData.rawContent)
-    body = stripFirstH1(body)
-    body = demoteHeadings(body)
+      const href = page.slug ? `${base}/docs/${page.slug}` : `${base}/docs`
+      let body = stripFrontmatter(pageData.rawContent)
+      body = stripFirstH1(body)
+      body = demoteHeadings(body)
 
-    return `## ${page.title}\n\nURL: ${href}\n\n${body.trim()}`
-  }).filter(Boolean)
+      return `## ${page.title}\n\nURL: ${href}\n\n${body.trim()}`
+    }),
+  )
 
-  return sections.join('\n\n---\n\n') + '\n'
+  return sections.filter(Boolean).join('\n\n---\n\n') + '\n'
 }

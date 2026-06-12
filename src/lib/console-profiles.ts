@@ -235,6 +235,47 @@ function getProfileFromEnv(): ConsoleProfileId {
   return detectProfileFromEndpoint()
 }
 
+/**
+ * Profile id from VITE_CONSOLE_PROFILE only (defaults to cloud).
+ * Avoids endpoint detection so prerendered marketing HTML matches hydration.
+ */
+export function getEnvProfileId(): ConsoleProfileId {
+  const env = import.meta.env?.VITE_CONSOLE_PROFILE as string | undefined
+  const normalized = env?.toLowerCase().trim().replace(/\s+/g, '-')
+  if (
+    normalized &&
+    VALID_PROFILE_IDS.includes(normalized as ConsoleProfileId)
+  ) {
+    return normalized as ConsoleProfileId
+  }
+  return 'cloud'
+}
+
+/** Feature flags from VITE_CONSOLE_PROFILE only (no localStorage or endpoint fallback). */
+export function getEnvProfileFeatures(): ConsoleProfileFeatures {
+  const profileId = getEnvProfileId()
+  return applyCloudOnlyFeatureGates(
+    profileId,
+    CONSOLE_PROFILES[profileId].features,
+  )
+}
+
+/**
+ * Profile features for the Init org promo banner.
+ * Uses debug localStorage override when set; otherwise env-only (not endpoint detection).
+ */
+export function getInitOrgPromoBannerProfileFeatures(): ConsoleProfileFeatures {
+  const stored = getStoredProfile()
+  if (!stored) {
+    return getEnvProfileFeatures()
+  }
+  const canonical = CONSOLE_PROFILES[stored.id]
+  return applyCloudOnlyFeatureGates(stored.id, {
+    ...canonical.features,
+    ...stored.features,
+  } as ConsoleProfileFeatures)
+}
+
 /** Store the full profile object (actual value), not just the id. */
 const DEBUG_PROFILE_KEY = 'debug:consoleProfile'
 

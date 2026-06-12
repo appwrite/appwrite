@@ -9,7 +9,7 @@ import { ID, Query } from '@appwrite.io/console'
 import type { Models } from '@appwrite.io/console'
 import { getProjectRegion, sdk } from '@/lib/appwrite/sdk'
 import { getActiveProfileFeatures } from '@/lib/console-profiles'
-import { DEFAULT_STALE_TIME } from './constants'
+import { DEFAULT_STALE_TIME, isClientQueryEnabled } from './constants'
 
 export const ASSISTANT_MESSAGES_PAGE_SIZE = 25
 
@@ -59,7 +59,8 @@ export interface AssistantMessageContext {
 export const ASSISTANT_ATTACHMENTS_BUCKET_ID = 'attachements'
 
 export function assistantConversationsQueryOptions() {
-  const enabled = getActiveProfileFeatures().aiAssistant
+  const enabled =
+    isClientQueryEnabled && getActiveProfileFeatures().aiAssistant
   return queryOptions({
     queryKey: ['assistant', 'conversations'],
     queryFn: fetchAssistantConversations,
@@ -72,7 +73,10 @@ export function assistantMessagesQueryOptions(
   conversationId: string | null | undefined,
   limit: number = ASSISTANT_MESSAGES_PAGE_SIZE,
 ) {
-  const enabled = !!conversationId && getActiveProfileFeatures().aiAssistant
+  const enabled =
+    !!conversationId &&
+    isClientQueryEnabled &&
+    getActiveProfileFeatures().aiAssistant
   return queryOptions({
     queryKey: ['assistant', 'messages', conversationId, limit],
     queryFn: () => fetchAssistantMessages(conversationId!, limit),
@@ -105,7 +109,9 @@ export async function fetchAssistantAttachmentFiles(fileIds: string[]) {
 export function assistantAttachmentFilesQueryOptions(fileIds: string[]) {
   const uniqueFileIds = [...new Set(fileIds.filter(Boolean))]
   const enabled =
-    uniqueFileIds.length > 0 && getActiveProfileFeatures().aiAssistant
+    uniqueFileIds.length > 0 &&
+    isClientQueryEnabled &&
+    getActiveProfileFeatures().aiAssistant
   return queryOptions({
     queryKey: ['assistant', 'attachments', ...uniqueFileIds],
     queryFn: () => fetchAssistantAttachmentFiles(uniqueFileIds),

@@ -1,6 +1,7 @@
 import { createRouter } from '@tanstack/react-router'
 import * as Sentry from '@sentry/tanstackstart-react'
 import * as TanstackQuery from './integrations/tanstack-query/root-provider'
+import { setupQueryClientRouterIntegration } from './integrations/tanstack-query/ssr-integration'
 
 // Import the generated route tree
 import { routeTree } from './routeTree.gen'
@@ -56,8 +57,7 @@ export const getRouter = () => {
     },
   })
 
-  // SSR is disabled - app runs as SPA (client-side only)
-  // No need for SSR query integration
+  setupQueryClientRouterIntegration(router, rqContext.queryClient)
 
   if (!router.isServer) {
     clearStaleChunkReloadGuard()

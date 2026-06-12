@@ -5,8 +5,8 @@
   "scripts": {
     "dev": "tsr generate && vite dev --port 3000",
     "start": "bun run server.ts",
-    "build": "tsr generate && bun run scripts/generate-docs-static-exports.ts && vite build --sourcemap",
-    "build:node": "tsr generate && FOR_SITES=true vite build",
+    "build": "tsr generate && bun run scripts/generate-docs-static-exports.ts && vite build",
+    "build:node": "tsr generate && bun run scripts/generate-docs-static-exports.ts && FOR_SITES=true vite build",
     "serve": "vite preview",
     "test": "vitest run",
     "lint": "eslint",

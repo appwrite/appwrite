@@ -10,6 +10,10 @@ import {
   almostnodeBuildPlugin,
   ensureAlmostnodePatchCache,
 } from './src/lib/cli-shell/vite-almostnode-plugin'
+import {
+  isMarketingPrerenderPath,
+  MARKETING_PRERENDER_PATHS,
+} from './src/lib/marketing/prerender-paths'
 
 const projectRoot = path.dirname(fileURLToPath(import.meta.url))
 const almostnodeDist = path.resolve(projectRoot, 'node_modules/almostnode/dist')
@@ -36,6 +40,7 @@ const decimalJsShim = path.resolve(
 const almostnodeSrc = path.resolve(projectRoot, 'node_modules/almostnode/src')
 
 export default defineConfig(async () => {
+  const isSitesBuild = process.env.FOR_SITES === 'true'
   const sentryPlugins =
     process.env.VITE_SENTRY_DSN && process.env.SENTRY_AUTH_TOKEN
       ? [
@@ -56,7 +61,23 @@ export default defineConfig(async () => {
         projects: ['./tsconfig.json'],
       }),
       tailwindcss(),
-      tanstackStart(),
+      tanstackStart(
+        isSitesBuild
+          ? {
+              prerender: {
+                enabled: true,
+                crawlLinks: false,
+                concurrency: 8,
+                failOnError: true,
+                filter: ({ path }) => isMarketingPrerenderPath(path),
+              },
+              pages: MARKETING_PRERENDER_PATHS.map((path) => ({
+                path,
+                prerender: { enabled: true },
+              })),
+            }
+          : undefined,
+      ),
       devtoolsJson(),
       almostnodeBuildPlugin(almostnodeDist, almostnodeCacheDir),
       viteReact(),
@@ -148,6 +169,11 @@ export default defineConfig(async () => {
     },
     build: {
       outDir: 'dist',
+      sourcemap: isSitesBuild
+        ? false
+        : process.env.SENTRY_AUTH_TOKEN
+          ? 'hidden'
+          : false,
     },
     test: {
       globals: true,

@@ -160,6 +160,16 @@ export const PostgresSqlCodeEditor = forwardRef<
     [],
   )
 
+  useEffect(() => {
+    const editorInstance = editorRef.current
+    if (!editorInstance) return
+
+    const frame = requestAnimationFrame(() => {
+      attachUndoRedoListeners(editorInstance)
+    })
+    return () => cancelAnimationFrame(frame)
+  }, [attachUndoRedoListeners, tabId])
+
   const handleEditorMount = useCallback(
     (
       editorInstance: editor.IStandaloneCodeEditor,
@@ -248,7 +258,6 @@ export const PostgresSqlCodeEditor = forwardRef<
     >
       <div className="absolute inset-0 overflow-hidden">
         <CodeEditor
-          key={`postgres-sql-${projectId}-${databaseId}-${tabId}`}
           value={sql}
           onChange={handleSqlChange}
           language="sql"

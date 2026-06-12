@@ -1,14 +1,35 @@
-const partialModules = import.meta.glob('/src/content/docs-partials/*.md', {
+const partialLoaders = import.meta.glob('/src/content/docs-partials/*.md', {
   query: '?raw',
   import: 'default',
-  eager: true,
-}) as Record<string, string>
+}) as Record<string, () => Promise<string>>
+
+const partialPathByFileName = new Map<string, string>()
+for (const modulePath of Object.keys(partialLoaders)) {
+  const fileName = modulePath.split('/').pop()
+  if (fileName) partialPathByFileName.set(fileName, modulePath)
+}
 
 const partialCache = new Map<string, string>()
 
-for (const [path, content] of Object.entries(partialModules)) {
-  const fileName = path.split('/').pop()
-  if (fileName) partialCache.set(fileName, content)
+async function loadPartial(fileName: string): Promise<string> {
+  const cached = partialCache.get(fileName)
+  if (cached !== undefined) return cached
+
+  const modulePath = partialPathByFileName.get(fileName)
+  if (!modulePath) {
+    partialCache.set(fileName, '')
+    return ''
+  }
+
+  const loader = partialLoaders[modulePath]
+  if (!loader) {
+    partialCache.set(fileName, '')
+    return ''
+  }
+
+  const content = await loader()
+  partialCache.set(fileName, content)
+  return content
 }
 
 export function resolvePartials(content: string): string {
@@ -16,4 +37,14 @@ export function resolvePartials(content: string): string {
   return content.replace(partialRegex, (_, fileName: string) => {
     return partialCache.get(fileName) ?? ''
   })
+}
+
+/** Load referenced partials into cache before synchronous {@link resolvePartials}. */
+export async function preloadPartialsForContent(content: string): Promise<void> {
+  const partialRegex = /\{%\s*partial\s+file="([^"]+)"\s*\/%\}/g
+  const fileNames = new Set<string>()
+  for (const match of content.matchAll(partialRegex)) {
+    fileNames.add(match[1]!)
+  }
+  await Promise.all([...fileNames].map((fileName) => loadPartial(fileName)))
 }

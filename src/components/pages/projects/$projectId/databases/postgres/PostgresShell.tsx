@@ -1,9 +1,5 @@
 import { getErrorMessage } from '@/lib/utils/error-formatting'
-import {
-  usePostgresDatabase,
-  usePostgresSchemas,
-  usePostgresTables,
-} from '@/lib/react-query/hooks'
+import { usePostgresDatabase } from '@/lib/react-query/hooks'
 import { postgresTableRows, type PostgresDatabaseTab } from '@/lib/postgres-database-routes'
 import { useNavigate, useParams } from '@tanstack/react-router'
 import { AlertCircle } from 'lucide-react'
@@ -33,21 +29,6 @@ export function PostgresShell({
 
   const { database, isLoading: databaseLoading, error: databaseError } =
     usePostgresDatabase(projectId, databaseId)
-  const {
-    schemas,
-    isLoading: schemasLoading,
-    isFetching: schemasFetching,
-  } = usePostgresSchemas(projectId, databaseId)
-  const {
-    tables,
-    isLoading: tablesLoading,
-    isFetching: tablesFetching,
-  } = usePostgresTables(projectId, databaseId)
-
-  const sidebarLoading =
-    (schemasLoading || schemasFetching || tablesLoading || tablesFetching) &&
-    schemas.length === 0 &&
-    tables.length === 0
 
   const showDesktopSidebar = useMediaMinWidth(1024)
 
@@ -82,9 +63,6 @@ export function PostgresShell({
       tableId={tableId}
       databaseTab={databaseTab}
       database={database}
-      schemas={schemas}
-      tables={tables}
-      sidebarLoading={sidebarLoading}
       showDesktopSidebar={showDesktopSidebar}
     >
       {children}
@@ -98,9 +76,6 @@ type PostgresShellLayoutProps = {
   tableId?: string
   databaseTab?: PostgresDatabaseTab
   database: NonNullable<ReturnType<typeof usePostgresDatabase>['database']>
-  schemas: string[]
-  tables: ReturnType<typeof usePostgresTables>['tables']
-  sidebarLoading: boolean
   showDesktopSidebar: boolean
   children: ReactNode
 }
@@ -111,9 +86,6 @@ function PostgresShellLayout({
   tableId,
   databaseTab,
   database,
-  schemas,
-  tables,
-  sidebarLoading,
   showDesktopSidebar,
   children,
 }: PostgresShellLayoutProps) {
@@ -157,12 +129,9 @@ function PostgresShellLayout({
               projectId={projectId}
               databaseId={databaseId}
               databaseName={database.name}
-              schemas={schemas}
-              tables={tables}
               selectedTableId={selectedTableId}
               databaseTab={databaseTab}
               editorActive={editorActive}
-              isLoading={sidebarLoading}
               onSelectTable={handleOpenTable}
             />
           }

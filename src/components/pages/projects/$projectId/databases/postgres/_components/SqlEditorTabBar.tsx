@@ -200,7 +200,7 @@ export function SqlEditorTabBar({
   const tabList = (
     <div
       ref={tabListRef}
-      className="flex min-w-0 flex-1 items-end gap-0.5 overflow-x-auto pt-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+      className="flex min-w-0 flex-1 items-end gap-1.5 overflow-x-auto pt-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
     >
       {tabs.map((tab) => (
         <SortableTab

@@ -19,7 +19,7 @@ export const Route = createFileRoute('/docs/$')({
         }
 
         const slug = splat.slice(0, -3)
-        const markdown = getDocsMarkdownExport(slug)
+        const markdown = await getDocsMarkdownExport(slug)
         if (!markdown) {
           return new Response('Not found', { status: 404 })
         }
@@ -33,7 +33,7 @@ export const Route = createFileRoute('/docs/$')({
       },
     },
   },
-  loader: ({ params }) => {
+  loader: async ({ params }) => {
     const splat = params._splat ?? ''
     if (splat.endsWith('.md')) {
       throw notFound()
@@ -48,7 +48,7 @@ export const Route = createFileRoute('/docs/$')({
       })
     }
 
-    const page = getDocsPage(splat)
+    const page = await getDocsPage(splat)
     if (!page) {
       throw notFound()
     }

@@ -271,6 +271,54 @@ export function buildPostgresSavedQueriesScopePrefs(
   }
 }
 
+// ---------------------------------------------------------------------------
+// Databases: PostgreSQL sidebar selected schema (account prefs, per database)
+// ---------------------------------------------------------------------------
+
+/**
+ * Preference key for the schema shown in the Data sidebar panel.
+ * Full key: `console.postgresSelectedSchema.<databaseId>`
+ * Value: schema name string (e.g. `"public"`).
+ */
+export const USER_PREFS_KEY_POSTGRES_SELECTED_SCHEMA_PREFIX =
+  'console.postgresSelectedSchema'
+
+export function getPostgresSelectedSchemaKey(databaseId: string): string {
+  return `${USER_PREFS_KEY_POSTGRES_SELECTED_SCHEMA_PREFIX}.${databaseId}`
+}
+
+export function parsePostgresSelectedSchema(
+  prefs: UserPrefs | null | undefined,
+  databaseId: string,
+): string | null {
+  if (!prefs || !databaseId) return null
+  const key = getPostgresSelectedSchemaKey(databaseId)
+  const value = prefs[key]
+  if (typeof value !== 'string') return null
+  const trimmed = value.trim()
+  return trimmed.length > 0 ? trimmed : null
+}
+
+export function buildPostgresSelectedSchemaPrefs(
+  databaseId: string,
+  schema: string,
+): UserPrefs {
+  return {
+    [getPostgresSelectedSchemaKey(databaseId)]: schema.trim(),
+  }
+}
+
+export function resolvePostgresSelectedSchema(args: {
+  schemas: string[]
+  persisted: string | null
+}): string | null {
+  const { schemas, persisted } = args
+  if (persisted) return persisted
+  if (schemas.length === 0) return null
+  if (schemas.includes('public')) return 'public'
+  return schemas[0] ?? null
+}
+
 export function resolvePostgresSavedQueriesScope(args: {
   persisted: PostgresSavedQueryScope | null
   hasTeamLevel: boolean

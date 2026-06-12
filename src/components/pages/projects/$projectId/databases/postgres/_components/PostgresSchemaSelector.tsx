@@ -1,0 +1,174 @@
+import { useEffect, useId, useRef, useState } from 'react'
+import { ChevronDown, Loader2 } from 'lucide-react'
+import { Button } from '@/components/ui/button'
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandList,
+} from '@/components/ui/command'
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from '@/components/ui/popover'
+import { Label } from '@/components/ui/label'
+import { cn } from '@/lib/utils'
+
+type PostgresSchemaSelectorProps = {
+  value: string | null | undefined
+  schemas: string[]
+  total: number
+  isLoading?: boolean
+  isFetching?: boolean
+  isFetchingNextPage?: boolean
+  hasNextPage?: boolean
+  onSelect: (schema: string) => void
+  onSearchChange: (search: string) => void
+  onLoadMore: () => void
+  onOpenChange?: (open: boolean) => void
+}
+
+export function PostgresSchemaSelector({
+  value,
+  schemas,
+  total,
+  isLoading = false,
+  isFetching = false,
+  isFetchingNextPage = false,
+  hasNextPage = false,
+  onSelect,
+  onSearchChange,
+  onLoadMore,
+  onOpenChange,
+}: PostgresSchemaSelectorProps) {
+  const triggerId = useId()
+  const [open, setOpen] = useState(false)
+  const [search, setSearch] = useState('')
+  const listScrollRef = useRef<HTMLDivElement>(null)
+  const sentinelRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    if (!open) setSearch('')
+  }, [open])
+
+  useEffect(() => {
+    onSearchChange(search)
+  }, [onSearchChange, search])
+
+  useEffect(() => {
+    const sentinel = sentinelRef.current
+    const root = listScrollRef.current
+    if (!sentinel || !root || !open || !hasNextPage || isFetchingNextPage) return
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const [entry] = entries
+        if (entry.isIntersecting && hasNextPage && !isFetchingNextPage) {
+          onLoadMore()
+        }
+      },
+      { root, rootMargin: '120px', threshold: 0.1 },
+    )
+
+    observer.observe(sentinel)
+    return () => observer.disconnect()
+  }, [hasNextPage, isFetchingNextPage, onLoadMore, open])
+
+  const displayValue = value?.trim() || 'Select schema'
+  const showInitialLoading = isLoading && schemas.length === 0
+
+  return (
+    <div className="space-y-2">
+      <Label htmlFor={triggerId} className="text-[13px]">
+        Schema
+      </Label>
+      <Popover
+        open={open}
+        onOpenChange={(nextOpen) => {
+          setOpen(nextOpen)
+          onOpenChange?.(nextOpen)
+        }}
+      >
+        <PopoverTrigger asChild>
+          <Button
+            id={triggerId}
+            variant="outline"
+            className={cn(
+              'h-8 min-w-0 w-full justify-between gap-1.5 text-[13px] font-normal',
+              !value && 'text-muted-foreground',
+            )}
+          >
+            <span className="truncate">{displayValue}</span>
+            <ChevronDown className="h-3.5 w-3.5 shrink-0 opacity-50" />
+          </Button>
+        </PopoverTrigger>
+      <PopoverContent
+        className="min-w-[var(--radix-popover-trigger-width)] max-w-[320px] p-0"
+        align="start"
+      >
+        <Command shouldFilter={false}>
+          <div className="relative">
+            <CommandInput
+              placeholder="Search schemas"
+              value={search}
+              onValueChange={setSearch}
+              className={cn('h-9', isFetching && 'pr-8')}
+            />
+            <div
+              className={cn(
+                'pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 transition-opacity duration-200',
+                isFetching ? 'opacity-100' : 'opacity-0',
+              )}
+              aria-hidden
+            >
+              <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+            </div>
+          </div>
+          <CommandList ref={listScrollRef} className="max-h-[240px]">
+            {showInitialLoading ? (
+              <div className="px-3 py-6 text-center text-[12px] text-muted-foreground">
+                Loading schemas…
+              </div>
+            ) : schemas.length === 0 ? (
+              <CommandEmpty>No schemas found</CommandEmpty>
+            ) : (
+              <CommandGroup>
+                {schemas.map((schema) => (
+                  <button
+                    key={schema}
+                    type="button"
+                    onClick={() => {
+                      onSelect(schema)
+                      setOpen(false)
+                    }}
+                    className={cn(
+                      'flex w-full cursor-pointer items-center rounded-sm px-2 py-1.5 text-left text-[13px] outline-none transition-colors hover:bg-accent hover:text-accent-foreground',
+                      schema === value && 'bg-accent/50',
+                    )}
+                  >
+                    <span className="truncate">{schema}</span>
+                  </button>
+                ))}
+                <div ref={sentinelRef} className="h-px w-full shrink-0" aria-hidden />
+                {isFetchingNextPage ? (
+                  <div className="flex items-center justify-center py-2">
+                    <Loader2 className="h-3.5 w-3.5 animate-spin text-muted-foreground" />
+                  </div>
+                ) : null}
+              </CommandGroup>
+            )}
+          </CommandList>
+          {total > schemas.length ? (
+            <div className="border-t border-border px-3 py-2 text-[11px] tabular-nums text-muted-foreground">
+              Showing {schemas.length.toLocaleString()} of{' '}
+              {total.toLocaleString()} schemas
+            </div>
+          ) : null}
+        </Command>
+      </PopoverContent>
+      </Popover>
+    </div>
+  )
+}

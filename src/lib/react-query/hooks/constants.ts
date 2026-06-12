@@ -10,6 +10,9 @@
  */
 export const DEFAULT_STALE_TIME = 30 * 1000 // 30 seconds
 
+/** Use in query `enabled` to skip browser-only API calls during SSR/prerender. */
+export const isClientQueryEnabled = typeof window !== 'undefined'
+
 /**
  * Long stale time for rarely-changing data (5 minutes)
  * Used for data that doesn't change often (e.g., organizations, projects, frameworks).

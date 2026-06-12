@@ -2,24 +2,171 @@ import type { Models } from '@appwrite.io/console'
 import { format } from 'sql-formatter'
 import { quotePostgresIdentifier } from '@/lib/postgres-database-routes'
 
-export const POSTGRES_LIST_SCHEMAS_SQL = `
-SELECT schema_name
-FROM information_schema.schemata
-WHERE schema_name NOT IN ('pg_catalog', 'information_schema', 'pg_toast')
+const POSTGRES_SCHEMAS_SYSTEM_FILTER = `
+  schema_name NOT IN ('pg_catalog', 'information_schema', 'pg_toast')
   AND schema_name NOT LIKE 'pg_temp_%'
   AND schema_name NOT LIKE 'pg_toast_temp_%'
+`.trim()
+
+export const POSTGRES_SIDEBAR_LIST_PAGE_SIZE = 50
+
+export function quotePostgresStringLiteral(value: string): string {
+  return `'${value.replace(/'/g, "''")}'`
+}
+
+export function escapePostgresLikePattern(value: string): string {
+  return value
+    .replace(/\\/g, '\\\\')
+    .replace(/%/g, '\\%')
+    .replace(/_/g, '\\_')
+}
+
+export type PostgresListSchemasOptions = {
+  search?: string
+  limit?: number
+  offset?: number
+}
+
+function appendPostgresSqlLimitOffset(
+  sql: string,
+  limit?: number,
+  offset?: number,
+): string {
+  if (limit == null || !Number.isFinite(limit)) return sql
+  const safeLimit = Math.max(1, Math.floor(limit))
+  const safeOffset =
+    offset != null && Number.isFinite(offset)
+      ? Math.max(0, Math.floor(offset))
+      : 0
+  return `${sql}\nLIMIT ${safeLimit} OFFSET ${safeOffset}`
+}
+
+export function buildPostgresListSchemasSql(
+  options?: PostgresListSchemasOptions,
+): string {
+  const conditions = [POSTGRES_SCHEMAS_SYSTEM_FILTER]
+
+  const search = options?.search?.trim()
+  if (search) {
+    const pattern = `%${escapePostgresLikePattern(search)}%`
+    conditions.push(
+      `schema_name ILIKE ${quotePostgresStringLiteral(pattern)} ESCAPE ${quotePostgresStringLiteral('\\')}`,
+    )
+  }
+
+  const base = `
+SELECT schema_name
+FROM information_schema.schemata
+WHERE ${conditions.join('\n  AND ')}
 ORDER BY schema_name
 `.trim()
 
-export const POSTGRES_LIST_TABLES_SQL = `
-SELECT table_schema, table_name, table_type
-FROM information_schema.tables
-WHERE table_schema NOT IN ('pg_catalog', 'information_schema', 'pg_toast')
+  return appendPostgresSqlLimitOffset(
+    base,
+    options?.limit,
+    options?.offset,
+  )
+}
+
+export function buildPostgresListSchemasCountSql(
+  options?: Pick<PostgresListSchemasOptions, 'search'>,
+): string {
+  const conditions = [POSTGRES_SCHEMAS_SYSTEM_FILTER]
+
+  const search = options?.search?.trim()
+  if (search) {
+    const pattern = `%${escapePostgresLikePattern(search)}%`
+    conditions.push(
+      `schema_name ILIKE ${quotePostgresStringLiteral(pattern)} ESCAPE ${quotePostgresStringLiteral('\\')}`,
+    )
+  }
+
+  return `
+SELECT COUNT(*) AS total
+FROM information_schema.schemata
+WHERE ${conditions.join('\n  AND ')}
+`.trim()
+}
+
+export const POSTGRES_LIST_SCHEMAS_SQL = buildPostgresListSchemasSql()
+
+const POSTGRES_TABLES_SYSTEM_SCHEMA_FILTER = `
+  table_schema NOT IN ('pg_catalog', 'information_schema', 'pg_toast')
   AND table_schema NOT LIKE 'pg_temp_%'
   AND table_schema NOT LIKE 'pg_toast_temp_%'
-  AND table_type IN ('BASE TABLE', 'VIEW')
+`.trim()
+
+export type PostgresListTablesOptions = {
+  schema?: string
+  search?: string
+  limit?: number
+  offset?: number
+}
+
+export function buildPostgresListTablesSql(
+  options?: PostgresListTablesOptions,
+): string {
+  const conditions = [
+    POSTGRES_TABLES_SYSTEM_SCHEMA_FILTER,
+    `table_type IN ('BASE TABLE', 'VIEW')`,
+  ]
+
+  const schema = options?.schema?.trim()
+  if (schema) {
+    conditions.push(`table_schema = ${quotePostgresStringLiteral(schema)}`)
+  }
+
+  const search = options?.search?.trim()
+  if (search) {
+    const pattern = `%${escapePostgresLikePattern(search)}%`
+    conditions.push(
+      `table_name ILIKE ${quotePostgresStringLiteral(pattern)} ESCAPE ${quotePostgresStringLiteral('\\')}`,
+    )
+  }
+
+  const base = `
+SELECT table_schema, table_name, table_type
+FROM information_schema.tables
+WHERE ${conditions.join('\n  AND ')}
 ORDER BY table_schema, table_name
 `.trim()
+
+  return appendPostgresSqlLimitOffset(
+    base,
+    options?.limit,
+    options?.offset,
+  )
+}
+
+export function buildPostgresListTablesCountSql(
+  options?: Pick<PostgresListTablesOptions, 'schema' | 'search'>,
+): string {
+  const conditions = [
+    POSTGRES_TABLES_SYSTEM_SCHEMA_FILTER,
+    `table_type IN ('BASE TABLE', 'VIEW')`,
+  ]
+
+  const schema = options?.schema?.trim()
+  if (schema) {
+    conditions.push(`table_schema = ${quotePostgresStringLiteral(schema)}`)
+  }
+
+  const search = options?.search?.trim()
+  if (search) {
+    const pattern = `%${escapePostgresLikePattern(search)}%`
+    conditions.push(
+      `table_name ILIKE ${quotePostgresStringLiteral(pattern)} ESCAPE ${quotePostgresStringLiteral('\\')}`,
+    )
+  }
+
+  return `
+SELECT COUNT(*) AS total
+FROM information_schema.tables
+WHERE ${conditions.join('\n  AND ')}
+`.trim()
+}
+
+export const POSTGRES_LIST_TABLES_SQL = buildPostgresListTablesSql()
 
 export const POSTGRES_LIST_COLUMNS_SQL = `
 SELECT table_schema, table_name, column_name, data_type, is_nullable, ordinal_position

@@ -86,6 +86,7 @@ import {
   type AssistantConversation,
   type AssistantMessage,
 } from '@/lib/react-query/hooks'
+import { isClientQueryEnabled } from '@/lib/react-query/hooks/constants'
 import { useAuth } from '@/components/global/auth/RequireAuth'
 import {
   AI_CHAT_PANEL_DEFAULT_WIDTH_PX,
@@ -140,7 +141,7 @@ export function AIChatProvider({ children }: { children: React.ReactNode }) {
   )
   const { data: account } = useQuery({
     ...consoleAccountQueryOptions(),
-    enabled: !isAssistantBlocked,
+    enabled: !isAssistantBlocked && isClientQueryEnabled,
   })
   const { isOpen, setIsOpen } = useAIChatPanelOpen(account)
   const [activeConversationId, setActiveConversationId] = useState<

@@ -1,6 +1,9 @@
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import {
+  infiniteQueryOptions,
+  keepPreviousData,
   queryOptions,
+  useInfiniteQuery,
   useMutation,
   useQuery,
   useQueryClient,
@@ -16,10 +19,16 @@ import {
   buildPostgresCountSql,
   buildPostgresSelectSql,
   executionResultRows,
+  buildPostgresListSchemasCountSql,
+  buildPostgresListSchemasSql,
+  buildPostgresListTablesCountSql,
+  buildPostgresListTablesSql,
   POSTGRES_LIST_COLUMNS_SQL,
   POSTGRES_LIST_SCHEMAS_SQL,
-  POSTGRES_LIST_TABLES_SQL,
+  POSTGRES_SIDEBAR_LIST_PAGE_SIZE,
   type PostgresColumnRow,
+  type PostgresListSchemasOptions,
+  type PostgresListTablesOptions,
   type PostgresSchemaRow,
   type PostgresTableRow,
 } from '@/lib/postgres-sql'
@@ -27,12 +36,15 @@ import { parsePostgresTableId } from '@/lib/postgres-database-routes'
 import {
   buildPostgresSavedQueriesPrefs,
   buildPostgresSavedQueriesScopePrefs,
+  buildPostgresSelectedSchemaPrefs,
   MAX_SAVED_POSTGRES_QUERIES,
   MAX_SAVED_POSTGRES_QUERY_NAME_LENGTH,
   MAX_SAVED_POSTGRES_QUERY_SQL_CHARS,
   parsePostgresSavedQueries,
   parsePostgresSavedQueriesScope,
+  parsePostgresSelectedSchema,
   resolvePostgresSavedQueriesScope,
+  resolvePostgresSelectedSchema,
   type SavedPostgresQuery,
 } from '@/lib/user-prefs-keys'
 import {
@@ -95,6 +107,56 @@ export async function executePostgresDatabaseSql(
   return normalizePostgresExecutionResult(execution)
 }
 
+function parsePostgresCountTotal(
+  execution: Models.DedicatedDatabaseExecution,
+  fallback = 0,
+): number {
+  const rows = executionResultRows<{ total?: number | string }>(execution)
+  const totalRaw = rows[0]?.total
+  if (typeof totalRaw === 'number' && Number.isFinite(totalRaw)) return totalRaw
+  const parsed = Number.parseInt(String(totalRaw ?? fallback), 10)
+  return Number.isFinite(parsed) ? parsed : fallback
+}
+
+export async function fetchPostgresSchemasPage(
+  projectId: string,
+  databaseId: string,
+  options?: Pick<PostgresListSchemasOptions, 'search'> & {
+    page?: number
+    limit?: number
+  },
+) {
+  const limit = options?.limit ?? POSTGRES_SIDEBAR_LIST_PAGE_SIZE
+  const page = options?.page ?? 0
+  const offset = page * limit
+  const search = options?.search?.trim() || undefined
+
+  const [dataExecution, countExecution] = await Promise.all([
+    executePostgresDatabaseSql(
+      projectId,
+      databaseId,
+      buildPostgresListSchemasSql({ search, limit, offset }),
+    ),
+    executePostgresDatabaseSql(
+      projectId,
+      databaseId,
+      buildPostgresListSchemasCountSql({ search }),
+    ),
+  ])
+
+  const rows = executionResultRows<PostgresSchemaRow>(dataExecution)
+  const schemas = rows.map((row) => row.schema_name).filter(Boolean)
+  const total = parsePostgresCountTotal(countExecution, schemas.length)
+
+  return {
+    schemas,
+    total,
+    page,
+    limit,
+    hasMore: offset + schemas.length < total,
+  }
+}
+
 export async function fetchPostgresSchemas(projectId: string, databaseId: string) {
   const execution = await executePostgresDatabaseSql(
     projectId,
@@ -108,11 +170,68 @@ export async function fetchPostgresSchemas(projectId: string, databaseId: string
   }
 }
 
-export async function fetchPostgresTables(projectId: string, databaseId: string) {
+function normalizePostgresTablesListOptions(
+  options?: PostgresListTablesOptions,
+): PostgresListTablesOptions | undefined {
+  if (!options) return undefined
+  const schema = options.schema?.trim() || undefined
+  const search = options.search?.trim() || undefined
+  if (!schema && !search) return undefined
+  return { schema, search }
+}
+
+export async function fetchPostgresTablesPage(
+  projectId: string,
+  databaseId: string,
+  options: {
+    schema: string
+    search?: string
+    page?: number
+    limit?: number
+  },
+) {
+  const schema = options.schema.trim()
+  const limit = options.limit ?? POSTGRES_SIDEBAR_LIST_PAGE_SIZE
+  const page = options.page ?? 0
+  const offset = page * limit
+  const search = options.search?.trim() || undefined
+
+  const [dataExecution, countExecution] = await Promise.all([
+    executePostgresDatabaseSql(
+      projectId,
+      databaseId,
+      buildPostgresListTablesSql({ schema, search, limit, offset }),
+    ),
+    executePostgresDatabaseSql(
+      projectId,
+      databaseId,
+      buildPostgresListTablesCountSql({ schema, search }),
+    ),
+  ])
+
+  const rows = executionResultRows<PostgresTableRow>(dataExecution)
+  const tables = rows.filter((row) => row.table_schema && row.table_name)
+  const total = parsePostgresCountTotal(countExecution, tables.length)
+
+  return {
+    tables,
+    total,
+    page,
+    limit,
+    hasMore: offset + tables.length < total,
+  }
+}
+
+export async function fetchPostgresTables(
+  projectId: string,
+  databaseId: string,
+  options?: PostgresListTablesOptions,
+) {
+  const normalized = normalizePostgresTablesListOptions(options)
   const execution = await executePostgresDatabaseSql(
     projectId,
     databaseId,
-    POSTGRES_LIST_TABLES_SQL,
+    buildPostgresListTablesSql(normalized),
   )
   const rows = executionResultRows<PostgresTableRow>(execution)
   return {
@@ -215,10 +334,20 @@ export function postgresSchemasQueryOptions(
 export function postgresTablesQueryOptions(
   projectId: string | null | undefined,
   databaseId: string | null | undefined,
+  options?: PostgresListTablesOptions,
 ) {
+  const normalized = normalizePostgresTablesListOptions(options)
   return queryOptions({
-    queryKey: ['postgres-tables', 'project', projectId, databaseId],
-    queryFn: () => fetchPostgresTables(projectId!, databaseId!),
+    queryKey: [
+      'postgres-tables',
+      'project',
+      projectId,
+      databaseId,
+      normalized?.schema,
+      normalized?.search,
+    ],
+    queryFn: () =>
+      fetchPostgresTables(projectId!, databaseId!, normalized),
     enabled: !!projectId && !!databaseId,
     staleTime: DEFAULT_STALE_TIME,
     retry: false,
@@ -383,6 +512,163 @@ export function usePostgresTables(
   }
 }
 
+export function postgresSidebarSchemasInfiniteQueryOptions(
+  projectId: string | null | undefined,
+  databaseId: string | null | undefined,
+  search: string,
+) {
+  const normalizedSearch = search.trim() || undefined
+  return infiniteQueryOptions({
+    queryKey: [
+      'postgres-schemas',
+      'project',
+      projectId,
+      databaseId,
+      'sidebar',
+      normalizedSearch,
+    ],
+    queryFn: ({ pageParam }) =>
+      fetchPostgresSchemasPage(projectId!, databaseId!, {
+        search: normalizedSearch,
+        page: pageParam,
+      }),
+    initialPageParam: 0,
+    getNextPageParam: (lastPage) =>
+      lastPage.hasMore ? lastPage.page + 1 : undefined,
+    enabled: !!projectId && !!databaseId,
+    staleTime: DEFAULT_STALE_TIME,
+    retry: false,
+    refetchOnMount: false,
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: false,
+    gcTime: projectId && databaseId ? 5 * 60 * 1000 : 0,
+  })
+}
+
+export function postgresSidebarTablesInfiniteQueryOptions(
+  projectId: string | null | undefined,
+  databaseId: string | null | undefined,
+  schema: string | null | undefined,
+  search: string,
+) {
+  const normalizedSearch = search.trim() || undefined
+  return infiniteQueryOptions({
+    queryKey: [
+      'postgres-tables',
+      'project',
+      projectId,
+      databaseId,
+      'sidebar',
+      schema,
+      normalizedSearch,
+    ],
+    queryFn: ({ pageParam }) =>
+      fetchPostgresTablesPage(projectId!, databaseId!, {
+        schema: schema!,
+        search: normalizedSearch,
+        page: pageParam,
+      }),
+    initialPageParam: 0,
+    getNextPageParam: (lastPage) =>
+      lastPage.hasMore ? lastPage.page + 1 : undefined,
+    enabled: !!projectId && !!databaseId && !!schema,
+    staleTime: DEFAULT_STALE_TIME,
+    retry: false,
+    refetchOnMount: false,
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: false,
+    gcTime: projectId && databaseId && schema ? 5 * 60 * 1000 : 0,
+  })
+}
+
+export function usePostgresSidebarSchemas(
+  projectId: string | null | undefined,
+  databaseId: string | null | undefined,
+  search: string,
+) {
+  const normalizedSearch = search.trim()
+  const {
+    data,
+    isLoading,
+    isFetching,
+    isFetchingNextPage,
+    error,
+    refetch,
+    fetchNextPage,
+    hasNextPage,
+  } = useInfiniteQuery({
+    ...postgresSidebarSchemasInfiniteQueryOptions(
+      projectId,
+      databaseId,
+      normalizedSearch,
+    ),
+    placeholderData: keepPreviousData,
+  })
+
+  const schemas = useMemo(
+    () => data?.pages.flatMap((page) => page.schemas) ?? [],
+    [data?.pages],
+  )
+  const total = data?.pages[0]?.total ?? schemas.length
+
+  return {
+    schemas,
+    total,
+    isLoading,
+    isFetching,
+    isFetchingNextPage,
+    error,
+    refetch,
+    fetchNextPage,
+    hasNextPage: hasNextPage ?? false,
+  }
+}
+
+export function usePostgresSidebarTables(
+  projectId: string | null | undefined,
+  databaseId: string | null | undefined,
+  schema: string | null | undefined,
+  search: string,
+) {
+  const normalizedSearch = search.trim()
+  const {
+    data,
+    isLoading,
+    isFetching,
+    isFetchingNextPage,
+    error,
+    refetch,
+    fetchNextPage,
+    hasNextPage,
+  } = useInfiniteQuery({
+    ...postgresSidebarTablesInfiniteQueryOptions(
+      projectId,
+      databaseId,
+      schema,
+      normalizedSearch,
+    ),
+    placeholderData: keepPreviousData,
+  })
+
+  const tables = useMemo(
+    () => data?.pages.flatMap((page) => page.tables) ?? [],
+    [data?.pages],
+  )
+  const total = data?.pages[0]?.total ?? tables.length
+
+  return {
+    tables,
+    total,
+    isLoading,
+    isFetching,
+    isFetchingNextPage,
+    error,
+    refetch,
+    fetchNextPage,
+    hasNextPage: hasNextPage ?? false,
+  }
+}
+
 export function usePostgresColumns(
   projectId: string | null | undefined,
   databaseId: string | null | undefined,
@@ -482,6 +768,68 @@ export function useExecutePostgresSql(
 }
 
 export type PostgresSavedQueryLevel = 'user' | 'team'
+
+export function usePostgresSelectedSchema(
+  databaseId: string | null | undefined,
+  knownSchemas: string[],
+  account: { prefs?: Record<string, unknown> } | undefined,
+) {
+  const queryClient = useQueryClient()
+  const [selectedSchema, setSelectedSchemaState] = useState<string | null>(null)
+  const initializedDatabaseIdRef = useRef<string | null>(null)
+
+  useEffect(() => {
+    if (!databaseId) return
+    if (initializedDatabaseIdRef.current === databaseId) return
+    if (!account) return
+
+    const next = resolvePostgresSelectedSchema({
+      schemas: knownSchemas,
+      persisted: parsePostgresSelectedSchema(
+        account.prefs as Record<string, unknown> | undefined,
+        databaseId,
+      ),
+    })
+    setSelectedSchemaState(next)
+    initializedDatabaseIdRef.current = databaseId
+  }, [account, databaseId, knownSchemas])
+
+  useEffect(() => {
+    initializedDatabaseIdRef.current = null
+  }, [databaseId])
+
+  useEffect(() => {
+    if (selectedSchema || knownSchemas.length === 0) return
+    setSelectedSchemaState(
+      resolvePostgresSelectedSchema({ schemas: knownSchemas, persisted: null }),
+    )
+  }, [knownSchemas, selectedSchema])
+
+  const setSelectedSchema = useCallback(
+    (schema: string) => {
+      const trimmed = schema.trim()
+      if (!trimmed) return
+      setSelectedSchemaState(trimmed)
+      if (!databaseId || !account) return
+
+      void updateAccountPrefs({
+        ...(account.prefs ?? {}),
+        ...buildPostgresSelectedSchemaPrefs(databaseId, trimmed),
+      })
+        .then((updatedAccount) => {
+          syncConsoleAccountAfterMutation(queryClient, {
+            apiResult: updatedAccount,
+          })
+        })
+        .catch(() => {
+          /* keep local selection on prefs write failure */
+        })
+    },
+    [account, databaseId, queryClient],
+  )
+
+  return { selectedSchema, setSelectedSchema }
+}
 
 export function usePostgresSavedQueryScope(
   databaseId: string | null | undefined,
