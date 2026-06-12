@@ -653,6 +653,27 @@ final class VCSConsoleClientTest extends Scope
         $this->assertEquals('main', $function['body']['providerBranch']);
     }
 
+    public function testUpdateFunctionOmitProviderRepositoryIdPreservesVcs(): void
+    {
+        $data = $this->setupFunctionUsingVCS();
+
+        // Omit providerRepositoryId entirely — should preserve VCS connection, not clear it
+        $function = $this->client->call(Client::METHOD_PUT, '/functions/' . $data['functionId'], array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'name' => 'Test',
+            'runtime' => 'php-8.0',
+            'entrypoint' => 'index.php',
+            'timeout' => 10,
+        ]);
+
+        $this->assertEquals(200, $function['headers']['status-code']);
+        $this->assertNotEmpty($function['body']['providerRepositoryId']);
+        $this->assertNotEmpty($function['body']['installationId']);
+        $this->assertNotEmpty($function['body']['providerBranch']);
+    }
+
     public function testCreateRepository(): void
     {
         $installationId = $this->setupInstallation();
