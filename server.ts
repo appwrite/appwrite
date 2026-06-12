@@ -586,6 +586,16 @@ async function initializeServer() {
     hostname: '::',
     idleTimeout: 0,
     routes: {
+      // Liveness/readiness probe
+      '/health': () =>
+        new Response('OK', {
+          status: 200,
+          headers: {
+            'Content-Type': 'text/plain; charset=utf-8',
+            'Cache-Control': 'no-store',
+          },
+        }),
+
       // Serve static assets (preloaded or on-demand)
       ...routes,
 
