@@ -1,7 +1,10 @@
 import type { QueryClient } from '@tanstack/react-query'
 import { redirect } from '@tanstack/react-router'
 import { getActiveProfileFeatures } from '@/lib/console-profiles'
-import { consoleAccountQueryOptions } from '@/lib/react-query/hooks/auth'
+import {
+  consoleAccountQueryOptions,
+  isConsoleAccountQuerySettled,
+} from '@/lib/react-query/hooks/auth'
 import { organizationPlanQueryOptions } from '@/lib/react-query/hooks/organizations'
 
 export function assertMarketingProfileEnabled() {
@@ -15,10 +18,13 @@ export async function prefetchOptionalAuthHeaderData(
 ) {
   if (typeof window === 'undefined') return
 
+  const accountQuery = consoleAccountQueryOptions()
+  if (isConsoleAccountQuerySettled(queryClient)) {
+    return
+  }
+
   try {
-    const account = await queryClient.ensureQueryData(
-      consoleAccountQueryOptions(),
-    )
+    const account = await queryClient.ensureQueryData(accountQuery)
     const orgId = account.prefs?.organization as string | undefined
     if (orgId) {
       await queryClient.ensureQueryData(organizationPlanQueryOptions(orgId))

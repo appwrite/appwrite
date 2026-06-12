@@ -1,6 +1,9 @@
 import { createFileRoute } from '@tanstack/react-router'
 import { isOptionalAuthPage } from '@/components/global/auth/RequireAuth'
-import { consoleAccountQueryOptions } from '@/lib/react-query/hooks/auth'
+import {
+  consoleAccountQueryOptions,
+  isConsoleAccountQuerySettled,
+} from '@/lib/react-query/hooks/auth'
 
 export const Route = createFileRoute('/_public')({
   ssr: false,
@@ -11,7 +14,9 @@ export const Route = createFileRoute('/_public')({
 
       if (isOptionalAuthPage(location.pathname)) {
         // Init is public-first: render immediately; account loads in the background.
-        void queryClient.prefetchQuery(accountQuery).catch(() => {})
+        if (!isConsoleAccountQuerySettled(queryClient)) {
+          void queryClient.prefetchQuery(accountQuery).catch(() => {})
+        }
         return { currentUser: null }
       }
 

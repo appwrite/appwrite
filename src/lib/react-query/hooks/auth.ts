@@ -123,6 +123,9 @@ export function getConsoleAccountFromCache(
 /** Account query stays fresh for the session; only explicit invalidation refetches. */
 export const CONSOLE_ACCOUNT_STALE_TIME_MS = Number.POSITIVE_INFINITY
 
+/** Keep settled account state for the session (including guest 401). */
+export const CONSOLE_ACCOUNT_GC_TIME_MS = Number.POSITIVE_INFINITY
+
 export type { FetchConsoleAccountOptions }
 export {
   fetchConsoleAccount,
@@ -221,12 +224,22 @@ export function consoleAccountQueryOptions(options?: {
     queryKey: ['account', 'console', revision],
     queryFn: () => fetchConsoleAccount({ revision }),
     staleTime: CONSOLE_ACCOUNT_STALE_TIME_MS,
+    gcTime: CONSOLE_ACCOUNT_GC_TIME_MS,
     retry: false,
     refetchOnMount: false,
     refetchOnWindowFocus: false,
     refetchOnReconnect: false,
     enabled: typeof window !== 'undefined',
   })
+}
+
+export function isConsoleAccountQuerySettled(
+  queryClient: QueryClient,
+  revision?: number,
+): boolean {
+  const { queryKey } = consoleAccountQueryOptions({ revision })
+  const state = queryClient.getQueryState(queryKey)
+  return state?.status === 'success' || state?.status === 'error'
 }
 
 // ============================================================================

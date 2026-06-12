@@ -88,6 +88,7 @@ import { ConsoleHeaderLogo } from '@/components/global/shared/ConsoleHeaderLogo'
 import { AppwriteWordmark } from '@/components/global/shared/AppwriteWordmark'
 import { resolveInitHeaderNavCta } from '@/lib/init/events'
 import { isMacPlatform } from '@/lib/keyboard-shortcuts/display'
+import { useChangelogNavBadge } from '@/hooks/use-changelog-nav-badge'
 
 type MarketingHeaderNavItem = {
   label: string
@@ -111,6 +112,26 @@ const DEFAULT_MARKETING_HEADER_NAV: readonly MarketingHeaderNavItem[] = [
 
 const ACCOUNT_MENU_ITEM_CLASS =
   'flex cursor-pointer items-center gap-2 rounded px-2 py-1.5 text-[13px] text-muted-foreground hover:bg-accent hover:text-foreground focus:bg-accent focus:text-foreground'
+
+function MarketingNavLabel({
+  label,
+  showNewIndicator,
+}: {
+  label: string
+  showNewIndicator?: boolean
+}) {
+  return (
+    <span className="relative">
+      {label}
+      {showNewIndicator ? (
+        <span
+          className="absolute -right-1.5 -top-1 size-1.5 rounded-full bg-[var(--brand-cta)]"
+          aria-hidden
+        />
+      ) : null}
+    </span>
+  )
+}
 
 interface ConsoleHeaderProps {
   onMenuClick?: () => void
@@ -148,7 +169,7 @@ export function ConsoleHeader({
     account,
     signOut,
     isAuthenticated,
-    isPending: isAuthPending,
+    isFetched: isAuthFetched,
   } = useAuth()
   const operatorAccount = account as OperatorAccount | undefined
   const showAdminSection = isOperatorAccount(operatorAccount)
@@ -244,9 +265,9 @@ export function ConsoleHeader({
     ? resolveInitHeaderNavCta({ mockCurrentDay: overrides.mockInitCurrentDay })
     : null
   const isOptionalAuth = isOptionalAuthPage(location.pathname)
-  const optionalAuthPending = isOptionalAuth && isAuthPending
+  const optionalAuthPending = isOptionalAuth && !isAuthFetched
   const showGuestHeader =
-    isOptionalAuth && !isAuthPending && !isAuthenticated
+    isOptionalAuth && isAuthFetched && !isAuthenticated
   const authRedirect = location.pathname
   const marketingNavItems =
     marketingNav === true
@@ -256,6 +277,7 @@ export function ConsoleHeader({
         : []
   const showMarketingNav = marketingNavItems.length > 0
   const showMarketingLinks = showMarketingNav && !centerSearch
+  const showChangelogBadge = useChangelogNavBadge()
   const showCenterSearch = centerSearch && !hideSearch
   const showRightSearch = !hideSearch && !centerSearch
   const searchModKey = isMacPlatform() ? '⌘' : 'Ctrl'
@@ -311,8 +333,16 @@ export function ConsoleHeader({
                       <a
                         href={item.href}
                         className="flex h-10 items-center justify-between rounded-md px-3 text-[13px] font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+                        {...(item.href === '/changelog' && showChangelogBadge
+                          ? { 'aria-label': 'Changelog, new updates' }
+                          : {})}
                       >
-                        {item.label}
+                        <MarketingNavLabel
+                          label={item.label}
+                          showNewIndicator={
+                            item.href === '/changelog' && showChangelogBadge
+                          }
+                        />
                         {item.hasMenuIndicator ? (
                           <ChevronDown className="size-3.5" aria-hidden />
                         ) : null}
@@ -425,8 +455,16 @@ export function ConsoleHeader({
                   key={item.label}
                   href={item.href}
                   className="inline-flex h-9 items-center gap-1 rounded-md px-2.5 text-[13px] font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+                  {...(item.href === '/changelog' && showChangelogBadge
+                    ? { 'aria-label': 'Changelog, new updates' }
+                    : {})}
                 >
-                  {item.label}
+                  <MarketingNavLabel
+                    label={item.label}
+                    showNewIndicator={
+                      item.href === '/changelog' && showChangelogBadge
+                    }
+                  />
                   {item.hasMenuIndicator ? (
                     <ChevronDown className="size-3.5" aria-hidden />
                   ) : null}

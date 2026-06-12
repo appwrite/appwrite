@@ -30,6 +30,17 @@ export function isHttpForbiddenError(error: unknown): boolean {
   return e.code === 403 || e.status === 403
 }
 
+/** True when the API responded with HTTP 401 (no active console session). */
+export function isHttpUnauthorizedError(error: unknown): boolean {
+  if (!error || typeof error !== 'object') return false
+  const e = error as { code?: number; status?: number; name?: string }
+  return (
+    e.code === 401 ||
+    e.status === 401 ||
+    e.name === 'UnauthorizedError'
+  )
+}
+
 /** Console / cloud support contact (e.g. blocked account screen). */
 export const APPWRITE_SUPPORT_EMAIL = 'support@appwrite.io'
 

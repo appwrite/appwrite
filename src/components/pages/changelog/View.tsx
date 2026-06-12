@@ -1,19 +1,18 @@
-'use client'
-
 import { Link } from '@tanstack/react-router'
-import { useMemo, useState } from 'react'
 import {
   MarketingCtaSection,
   MarketingHeroSection,
 } from '@/components/pages/marketing/MarketingSections'
 import { Button } from '@/components/ui/button'
-import { getChangelogEntriesPage } from '@/lib/changelog/content'
-import { ChangelogEntryCard } from './ChangelogEntryCard'
+import type { ChangelogEntry } from '@/lib/changelog/types'
+import { ChangelogTimeline } from './ChangelogTimeline'
 
-export function View() {
-  const [page, setPage] = useState(1)
-  const { entries, nextPage } = useMemo(() => getChangelogEntriesPage(page), [page])
+type ViewProps = {
+  entries: ChangelogEntry[]
+  nextPage: number | null
+}
 
+export function View({ entries, nextPage }: ViewProps) {
   return (
     <div className="relative overflow-x-hidden bg-background">
       <MarketingHeroSection
@@ -24,29 +23,10 @@ export function View() {
 
       <section className="border-b border-border py-16 sm:py-20">
         <div className="mx-auto max-w-[49.375rem] px-4 sm:px-6">
-          <ol className="relative grid min-w-0 gap-20 border-s border-border ps-8 sm:ps-0 sm:[&>li]:ps-8">
-            {entries.map((entry) => (
-              <li key={entry.slug} className="relative min-w-0">
-                <span
-                  className="absolute start-0 top-1 hidden size-2.5 -translate-x-1/2 rounded-full border-2 border-border bg-background sm:block"
-                  aria-hidden
-                />
-                <ChangelogEntryCard entry={entry} />
-              </li>
-            ))}
-          </ol>
-
-          {nextPage ? (
-            <div className="mt-20 flex justify-center">
-              <Button
-                variant="outline"
-                className="min-w-44"
-                onClick={() => setPage(nextPage)}
-              >
-                Load more
-              </Button>
-            </div>
-          ) : null}
+          <ChangelogTimeline
+            initialEntries={entries}
+            initialNextPage={nextPage}
+          />
         </div>
       </section>
 

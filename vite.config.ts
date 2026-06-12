@@ -11,8 +11,8 @@ import {
   ensureAlmostnodePatchCache,
 } from './src/lib/cli-shell/vite-almostnode-plugin'
 import {
+  getAllMarketingPrerenderPaths,
   isMarketingPrerenderPath,
-  MARKETING_PRERENDER_PATHS,
 } from './src/lib/marketing/prerender-paths'
 
 const projectRoot = path.dirname(fileURLToPath(import.meta.url))
@@ -73,7 +73,7 @@ export default defineConfig(async () => {
                 failOnError: true,
                 filter: ({ path }) => isMarketingPrerenderPath(path),
               },
-              pages: MARKETING_PRERENDER_PATHS.map((path) => ({
+              pages: getAllMarketingPrerenderPaths().map((path) => ({
                 path,
                 prerender: { enabled: true },
               })),

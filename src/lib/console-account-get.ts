@@ -3,11 +3,15 @@ import { getConsoleAccountQueryRevision } from '@/lib/console-impersonation'
 import {
   clearConsoleAccountCache,
   clearConsoleAccountInflight,
+  clearConsoleAccountUnauthenticatedError,
   getConsoleAccountInflight,
   getConsoleAccountSync,
+  getConsoleAccountUnauthenticatedError,
   setConsoleAccountCache,
   setConsoleAccountInflight,
+  setConsoleAccountUnauthenticatedError,
 } from '@/lib/console-account-cache'
+import { isHttpUnauthorizedError } from '@/lib/utils/error-formatting'
 
 type RawConsoleAccountGet = () => Promise<Models.User>
 
@@ -47,6 +51,11 @@ export async function fetchConsoleAccount(
   if (!force) {
     const cached = getConsoleAccountSync(revision)
     if (cached) return cached
+
+    const cachedUnauthenticated = getConsoleAccountUnauthenticatedError(revision)
+    if (cachedUnauthenticated) {
+      throw cachedUnauthenticated
+    }
   } else {
     clearConsoleAccountCache(revision)
   }
@@ -57,7 +66,14 @@ export async function fetchConsoleAccount(
   const promise = rawConsoleAccountGet()
     .then((account) => {
       setConsoleAccountCache(account, revision)
+      clearConsoleAccountUnauthenticatedError(revision)
       return account
+    })
+    .catch((error) => {
+      if (isHttpUnauthorizedError(error)) {
+        setConsoleAccountUnauthenticatedError(revision, error)
+      }
+      throw error
     })
     .finally(() => {
       clearConsoleAccountInflight(revision, promise)

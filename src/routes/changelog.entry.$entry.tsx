@@ -1,4 +1,5 @@
 import { createFileRoute, notFound } from '@tanstack/react-router'
+import { ChangelogSeenSync } from '@/components/pages/changelog/ChangelogSeenSync'
 import { DetailView } from '@/components/pages/changelog/DetailView'
 import { getChangelogEntry } from '@/lib/changelog/content'
 import { MarketingPageShell } from '@/lib/marketing/MarketingPageShell'
@@ -36,6 +37,7 @@ function ChangelogEntryPage() {
 
   return (
     <MarketingPageShell>
+      <ChangelogSeenSync />
       <DetailView entry={entry} />
     </MarketingPageShell>
   )

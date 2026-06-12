@@ -65,8 +65,8 @@
 
 import path from 'node:path'
 import {
+  getAllMarketingPrerenderPaths,
   getMarketingPrerenderHtmlFile,
-  MARKETING_PRERENDER_PATHS,
 } from './src/lib/marketing/prerender-paths.ts'
 import {
   RUNTIME_CONFIG_PLACEHOLDER,
@@ -418,7 +418,7 @@ async function initializeStaticRoutes(
     }
 
     // Serve prerendered marketing HTML at clean URLs (/home, not /home.html).
-    for (const urlPath of MARKETING_PRERENDER_PATHS) {
+    for (const urlPath of getAllMarketingPrerenderPaths(CLIENT_DIRECTORY)) {
       const htmlFile = getMarketingPrerenderHtmlFile(urlPath)
       if (!htmlFile) continue
 

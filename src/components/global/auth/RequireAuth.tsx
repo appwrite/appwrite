@@ -44,6 +44,8 @@ export function isOptionalAuthPage(pathname: string): boolean {
     pathname === '/education' ||
     pathname === '/startups' ||
     pathname === '/community' ||
+    pathname === '/changelog' ||
+    pathname.startsWith('/changelog/') ||
     pathname === '/terms' ||
     pathname === '/privacy' ||
     pathname === '/cookies' ||
@@ -187,6 +189,8 @@ export interface AuthData {
   isLoading: boolean
   /** True until the account query has settled (including before client-only fetch starts). */
   isPending: boolean
+  /** True after the account query has completed at least once (success or error). */
+  isFetched: boolean
   isAuthenticated: boolean
   isMfaRequired: boolean
   /** Present when `account.get` returned 403 (blocked / forbidden console access). */
@@ -294,6 +298,7 @@ export function RequireAuth({
     data: account,
     isLoading,
     isPending,
+    isFetched,
     error,
   } = useQuery(
     consoleAccountQueryOptions({ revision: consoleImpersonationRevision }),
@@ -309,6 +314,7 @@ export function RequireAuth({
     account,
     isLoading,
     isPending,
+    isFetched,
     isAuthenticated,
     isMfaRequired,
     accountAccessBlocked,
@@ -375,6 +381,7 @@ export function useAuth(): AuthData {
     data: account,
     isLoading,
     isPending,
+    isFetched,
     error,
   } = useQuery(
     consoleAccountQueryOptions({ revision: consoleImpersonationRevision }),
@@ -389,6 +396,7 @@ export function useAuth(): AuthData {
     account,
     isLoading,
     isPending,
+    isFetched,
     isAuthenticated: !!account && !error,
     isMfaRequired: isMfaRequiredError(error),
     accountAccessBlocked,

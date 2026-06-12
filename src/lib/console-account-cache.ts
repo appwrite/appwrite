@@ -5,6 +5,7 @@ const GLOBAL_CACHE_KEY = '__vibesConsoleAccountCache'
 type ConsoleAccountGlobalCache = {
   resolved: Map<number, Models.User>
   inflight: Map<number, Promise<Models.User>>
+  unauthenticated: Map<number, unknown>
 }
 
 function getGlobalCache(): ConsoleAccountGlobalCache {
@@ -15,6 +16,7 @@ function getGlobalCache(): ConsoleAccountGlobalCache {
     g[GLOBAL_CACHE_KEY] = {
       resolved: new Map(),
       inflight: new Map(),
+      unauthenticated: new Map(),
     }
   }
   return g[GLOBAL_CACHE_KEY]
@@ -33,15 +35,39 @@ export function setConsoleAccountCache(
   getGlobalCache().resolved.set(revision, account)
 }
 
+export function getConsoleAccountUnauthenticatedError(
+  revision: number,
+): unknown | undefined {
+  return getGlobalCache().unauthenticated.get(revision)
+}
+
+export function setConsoleAccountUnauthenticatedError(
+  revision: number,
+  error: unknown,
+): void {
+  getGlobalCache().unauthenticated.set(revision, error)
+}
+
+export function clearConsoleAccountUnauthenticatedError(revision?: number): void {
+  const cache = getGlobalCache()
+  if (revision === undefined) {
+    cache.unauthenticated.clear()
+    return
+  }
+  cache.unauthenticated.delete(revision)
+}
+
 export function clearConsoleAccountCache(revision?: number): void {
   const cache = getGlobalCache()
   if (revision === undefined) {
     cache.resolved.clear()
     cache.inflight.clear()
+    cache.unauthenticated.clear()
     return
   }
   cache.resolved.delete(revision)
   cache.inflight.delete(revision)
+  cache.unauthenticated.delete(revision)
 }
 
 export function getConsoleAccountInflight(

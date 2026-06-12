@@ -2,6 +2,11 @@
  * Marketing routes prerendered at build time (FOR_SITES production builds).
  * Console, auth, and docs stay SSR/SPA at runtime.
  */
+import {
+  getChangelogEntryPrerenderPaths,
+  getChangelogEntryPrerenderPathsFromClient,
+} from '../changelog/prerender-paths'
+
 export const MARKETING_PRERENDER_PATHS = [
   '/home',
   '/pricing',
@@ -20,9 +25,23 @@ export const MARKETING_PRERENDER_PATHS = [
   '/llms-full/txt',
 ] as const
 
+export function getAllMarketingPrerenderPaths(
+  clientDirectory?: string,
+): readonly string[] {
+  const changelogPaths = clientDirectory
+    ? getChangelogEntryPrerenderPathsFromClient(clientDirectory)
+    : getChangelogEntryPrerenderPaths()
+
+  return [...MARKETING_PRERENDER_PATHS, ...changelogPaths]
+}
+
 export function isMarketingPrerenderPath(path: string): boolean {
   const normalized = path.replace(/\/+$/, '') || '/'
-  return (MARKETING_PRERENDER_PATHS as readonly string[]).includes(normalized)
+  if ((MARKETING_PRERENDER_PATHS as readonly string[]).includes(normalized)) {
+    return true
+  }
+
+  return normalized.startsWith('/changelog/entry/')
 }
 
 /** Prerendered HTML pages (excludes llms txt exports). */
