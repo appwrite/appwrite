@@ -2,7 +2,9 @@
 
 namespace Appwrite\Platform\Modules\VCS\Http\GitHub\Events;
 
+use Appwrite\Event\Message\Delete as DeleteMessage;
 use Appwrite\Event\Publisher\Build as BuildPublisher;
+use Appwrite\Event\Publisher\Delete as DeletePublisher;
 use Appwrite\Extend\Exception;
 use Appwrite\Platform\Action;
 use Appwrite\Platform\Modules\VCS\Http\GitHub\Deployment;
@@ -42,6 +44,7 @@ class Create extends Action
             ->inject('authorization')
             ->inject('getProjectDB')
             ->inject('publisherForBuilds')
+            ->inject('publisherForDeletes')
             ->inject('platform')
             ->callback($this->action(...));
     }
@@ -54,6 +57,7 @@ class Create extends Action
         Authorization $authorization,
         callable $getProjectDB,
         BuildPublisher $publisherForBuilds,
+        DeletePublisher $publisherForDeletes,
         array $platform
     ) {
         $this->preprocessEvent($request);
@@ -77,7 +81,7 @@ class Create extends Action
         $parsedPayload = $github->getEvent($event, $payload);
 
         match ($event) {
-            $github::EVENT_INSTALLATION => $this->handleInstallationEvent($parsedPayload, $dbForPlatform, $authorization),
+            $github::EVENT_INSTALLATION => $this->handleInstallationEvent($parsedPayload, $dbForPlatform, $authorization, $publisherForDeletes),
             $github::EVENT_PUSH => $this->handlePushEvent($parsedPayload, $githubAppId, $privateKey, $github, $dbForPlatform, $authorization, $publisherForBuilds, $getProjectDB, $platform),
             $github::EVENT_PULL_REQUEST => $this->handlePullRequestEvent($parsedPayload, $privateKey, $githubAppId, $github, $dbForPlatform, $authorization, $publisherForBuilds, $getProjectDB, $platform),
             default => null,
@@ -95,12 +99,12 @@ class Create extends Action
         array $parsedPayload,
         Database $dbForPlatform,
         Authorization $authorization,
+        DeletePublisher $publisherForDeletes,
     ) {
         if ($parsedPayload["action"] !== "deleted") {
             return;
         }
 
-        // TODO: Use worker for this job instead (update function/site as well)
         $providerInstallationId = $parsedPayload["installationId"];
 
         $installations = $dbForPlatform->find('installations', [
@@ -109,16 +113,17 @@ class Create extends Action
         ]);
 
         foreach ($installations as $installation) {
-            $repositories = $authorization->skip(fn () => $dbForPlatform->find('repositories', [
-                Query::equal('installationInternalId', [$installation->getSequence()]),
-                Query::limit(1000)
-            ]));
-
-            foreach ($repositories as $repository) {
-                $authorization->skip(fn () => $dbForPlatform->deleteDocument('repositories', $repository->getId()));
-            }
+            $project = $authorization->skip(fn () => $dbForPlatform->getDocument('projects', $installation->getAttribute('projectId')));
 
             $authorization->skip(fn () => $dbForPlatform->deleteDocument('installations', $installation->getId()));
+
+            if (!$project->isEmpty()) {
+                $publisherForDeletes->enqueue(new DeleteMessage(
+                    project: $project,
+                    type: DELETE_TYPE_DOCUMENT,
+                    document: $installation,
+                ));
+            }
         }
     }
 
