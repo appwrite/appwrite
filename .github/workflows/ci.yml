@@ -429,7 +429,7 @@ jobs:
       - name: Wait for Open Runtimes
         timeout-minutes: 3
         run: |
-          while ! docker compose logs openruntimes-executor | grep -q "Executor is ready."; do
+          while ! docker logs exc1 | grep -q "Executor is ready."; do
             echo "Waiting for Executor to come online"
             sleep 1
           done
@@ -525,7 +525,7 @@ jobs:
       - name: Wait for Open Runtimes
         timeout-minutes: 3
         run: |
-          while ! docker compose logs openruntimes-executor | grep -q "Executor is ready."; do
+          while ! docker logs exc1 | grep -q "Executor is ready."; do
             echo "Waiting for Executor to come online"
             sleep 1
           done
@@ -678,7 +678,7 @@ jobs:
       - name: Wait for Open Runtimes
         timeout-minutes: 3
         run: |
-          while ! docker compose logs openruntimes-executor | grep -q "Executor is ready."; do
+          while ! docker logs exc1 | grep -q "Executor is ready."; do
             echo "Waiting for Executor to come online"
             sleep 1
           done
