@@ -1,5 +1,6 @@
 export {
   ApiExplorer,
+  ApiExplorerDownloadSpecButton,
   ApiExplorerPlatformToggle,
   type ApiExplorerProps,
 } from './ApiExplorer'

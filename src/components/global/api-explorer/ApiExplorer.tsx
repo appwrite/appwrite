@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { Check, Copy, Loader2, AlertCircle } from 'lucide-react'
+import { Check, Copy, Download, ChevronDown, Loader2, AlertCircle } from 'lucide-react'
 import { toast } from 'sonner'
 import { cn, truncateMiddle } from '@/lib/utils'
 import { StartTruncatedText } from '@/components/global/shared/StartTruncatedText'
@@ -16,6 +16,12 @@ import {
   AccordionTrigger,
 } from '@/components/ui/accordion'
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
 import { useAuth } from '@/components/global/auth/RequireAuth'
 import { CodeBlock, type CodeBlockLanguage } from '@/components/global/shared/CodeBlock'
 import {
@@ -43,6 +49,7 @@ import {
   groupMethodsByResource,
   groupServicesByProduct,
   isMultipartMethod,
+  downloadOpenApiSpec,
   loadParsedApiSpec,
   buildDefaultBodyFormValues,
   buildInitialParamFormValues,
@@ -149,6 +156,74 @@ export function ApiExplorerPlatformToggle({
         Client API
       </ToggleGroupItem>
     </ToggleGroup>
+  )
+}
+
+type ApiExplorerDownloadSpecButtonProps = {
+  className?: string
+}
+
+const OPENAPI_SPEC_OPTIONS: {
+  value: ApiExplorerProjectPlatform
+  label: string
+}[] = [
+  { value: 'server', label: 'Server API' },
+  { value: 'client', label: 'Client API' },
+]
+
+export function ApiExplorerDownloadSpecButton({
+  className,
+}: ApiExplorerDownloadSpecButtonProps) {
+  const [isDownloading, setIsDownloading] = useState(false)
+
+  const handleDownload = useCallback(
+    async (platform: ApiExplorerProjectPlatform) => {
+      setIsDownloading(true)
+      try {
+        await downloadOpenApiSpec(platform)
+      } catch {
+        toast.error('Failed to download OpenAPI spec')
+      } finally {
+        setIsDownloading(false)
+      }
+    },
+    [],
+  )
+
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          disabled={isDownloading}
+          className={cn(
+            'h-9 shrink-0 border-border bg-transparent text-[13px] text-muted-foreground hover:bg-accent hover:text-foreground disabled:opacity-50',
+            className,
+          )}
+        >
+          {isDownloading ? (
+            <Loader2 className="mr-1.5 h-4 w-4 animate-spin" />
+          ) : (
+            <Download className="mr-1.5 h-4 w-4" />
+          )}
+          OpenAPI spec
+          <ChevronDown className="ml-1.5 h-3.5 w-3.5" />
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end">
+        {OPENAPI_SPEC_OPTIONS.map((option) => (
+          <DropdownMenuItem
+            key={option.value}
+            disabled={isDownloading}
+            onClick={() => handleDownload(option.value)}
+          >
+            {option.label}
+          </DropdownMenuItem>
+        ))}
+      </DropdownMenuContent>
+    </DropdownMenu>
   )
 }
 
@@ -763,7 +838,7 @@ function ServiceListPanel({
                     </span>
                   </AccordionTrigger>
                   <AccordionContent className="pb-2 pt-0">
-                    <div className="ml-2.5 space-y-0.5 border-l border-border/70 pl-2.5">
+                    <div className="ml-1.5 space-y-0.5 border-l border-border/70 pl-1.5">
                       {group.services.map((service) => {
                         const isActive = service.id === selectedServiceId
                         return (

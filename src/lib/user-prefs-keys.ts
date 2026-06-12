@@ -237,6 +237,75 @@ export function buildPostgresSavedQueriesPrefs(
   }
 }
 
+/**
+ * Preference key prefix for recent PostgreSQL query runs.
+ * Full key: `console.postgresQueryHistory.<databaseId>`
+ * Value: JSON string of PostgresQueryHistoryEntry[].
+ */
+export const USER_PREFS_KEY_POSTGRES_QUERY_HISTORY_PREFIX =
+  'console.postgresQueryHistory'
+
+export const MAX_POSTGRES_QUERY_HISTORY_ENTRIES = 30
+
+export interface PostgresQueryHistoryEntry {
+  id: string
+  sql: string
+  ranAt: number
+}
+
+export function getPostgresQueryHistoryKey(databaseId: string): string {
+  return `${USER_PREFS_KEY_POSTGRES_QUERY_HISTORY_PREFIX}.${databaseId}`
+}
+
+export function parsePostgresQueryHistory(
+  prefs: UserPrefs | null | undefined,
+  databaseId: string,
+): PostgresQueryHistoryEntry[] {
+  if (!prefs || !databaseId) return []
+  const key = getPostgresQueryHistoryKey(databaseId)
+  if (typeof prefs[key] !== 'string') return []
+  try {
+    const raw = JSON.parse(prefs[key] as string)
+    if (!Array.isArray(raw)) return []
+    return raw
+      .filter(
+        (item): item is PostgresQueryHistoryEntry =>
+          item != null &&
+          typeof item === 'object' &&
+          typeof (item as PostgresQueryHistoryEntry).id === 'string' &&
+          typeof (item as PostgresQueryHistoryEntry).sql === 'string' &&
+          typeof (item as PostgresQueryHistoryEntry).ranAt === 'number' &&
+          Number.isFinite((item as PostgresQueryHistoryEntry).ranAt),
+      )
+      .map((item) => {
+        const entry = item as PostgresQueryHistoryEntry
+        const sql = String(entry.sql).trim()
+        if (!sql) return null
+        return {
+          id: entry.id,
+          sql: sql.slice(0, MAX_SAVED_POSTGRES_QUERY_SQL_CHARS),
+          ranAt: entry.ranAt,
+        }
+      })
+      .filter((entry): entry is PostgresQueryHistoryEntry => entry != null)
+      .slice(0, MAX_POSTGRES_QUERY_HISTORY_ENTRIES)
+  } catch {
+    return []
+  }
+}
+
+export function mergePostgresQueryHistoryIntoPrefs(
+  prefs: UserPrefs,
+  databaseId: string,
+  history: PostgresQueryHistoryEntry[],
+): UserPrefs {
+  const key = getPostgresQueryHistoryKey(databaseId)
+  return {
+    ...prefs,
+    [key]: JSON.stringify(history.slice(0, MAX_POSTGRES_QUERY_HISTORY_ENTRIES)),
+  }
+}
+
 export type PostgresSavedQueryScope = 'user' | 'team'
 
 /**

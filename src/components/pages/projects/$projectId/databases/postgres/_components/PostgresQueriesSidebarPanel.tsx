@@ -84,13 +84,9 @@ function SavedQueryButton({
 
 function SavedQueryScopeToggle({
   savedQueryLevel,
-  userQueryCount,
-  teamQueryCount,
   onChange,
 }: {
   savedQueryLevel: PostgresSavedQueryLevel
-  userQueryCount: number
-  teamQueryCount: number
   onChange: (level: PostgresSavedQueryLevel) => void
 }) {
   return (
@@ -111,22 +107,12 @@ function SavedQueryScopeToggle({
         className="h-9 flex-1 text-[12px] font-medium data-[state=on]:bg-background data-[state=on]:text-foreground"
       >
         For me
-        {userQueryCount > 0 ? (
-          <span className="ml-1 text-[10px] tabular-nums text-muted-foreground">
-            {userQueryCount}
-          </span>
-        ) : null}
       </ToggleGroupItem>
       <ToggleGroupItem
         value="team"
         className="h-9 flex-1 text-[12px] font-medium data-[state=on]:bg-background data-[state=on]:text-foreground"
       >
         For team
-        {teamQueryCount > 0 ? (
-          <span className="ml-1 text-[10px] tabular-nums text-muted-foreground">
-            {teamQueryCount}
-          </span>
-        ) : null}
       </ToggleGroupItem>
     </ToggleGroup>
   )
@@ -217,8 +203,6 @@ export function PostgresQueriesSidebarPanel({
         <div className="shrink-0 border-t border-border pt-2">
           <SavedQueryScopeToggle
             savedQueryLevel={savedQueryLevel}
-            userQueryCount={userQueries.length}
-            teamQueryCount={teamQueries.length}
             onChange={setSavedQueryLevel}
           />
         </div>

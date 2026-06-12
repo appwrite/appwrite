@@ -11,6 +11,19 @@ const specLoaders: Record<
 }
 
 const parsedCache = new Map<ApiSpecPlatform, ParsedApiSpec>()
+const rawSpecCache = new Map<ApiSpecPlatform, OpenApiSpec>()
+
+export async function loadRawApiSpec(
+  platform: ApiSpecPlatform = 'server',
+): Promise<OpenApiSpec> {
+  const cached = rawSpecCache.get(platform)
+  if (cached) return cached
+
+  const loader = specLoaders[platform]
+  const module = await loader()
+  rawSpecCache.set(platform, module.default)
+  return module.default
+}
 
 export async function loadParsedApiSpec(
   platform: ApiSpecPlatform = 'server',
@@ -18,13 +31,33 @@ export async function loadParsedApiSpec(
   const cached = parsedCache.get(platform)
   if (cached) return cached
 
-  const loader = specLoaders[platform]
-  const module = await loader()
-  const parsed = parseOpenApiSpec(module.default, platform)
+  const spec = await loadRawApiSpec(platform)
+  const parsed = parseOpenApiSpec(spec, platform)
   parsedCache.set(platform, parsed)
   return parsed
 }
 
+function downloadJsonFile(content: string, filename: string): void {
+  const blob = new Blob([content], { type: 'application/json' })
+  const url = URL.createObjectURL(blob)
+  const link = document.createElement('a')
+  link.href = url
+  link.download = filename
+  document.body.appendChild(link)
+  link.click()
+  document.body.removeChild(link)
+  URL.revokeObjectURL(url)
+}
+
+export async function downloadOpenApiSpec(
+  platform: ApiSpecPlatform,
+): Promise<void> {
+  const spec = await loadRawApiSpec(platform)
+  const content = JSON.stringify(spec, null, 2)
+  downloadJsonFile(content, `appwrite-open-api3-${platform}.json`)
+}
+
 export function clearParsedApiSpecCache(): void {
   parsedCache.clear()
+  rawSpecCache.clear()
 }

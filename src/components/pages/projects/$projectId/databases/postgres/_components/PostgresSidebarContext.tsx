@@ -1,8 +1,13 @@
 import type { Models } from '@appwrite.io/console'
-import type { SavedPostgresQuery } from '@/lib/user-prefs-keys'
+import {
+  MAX_POSTGRES_QUERY_HISTORY_ENTRIES,
+  type PostgresQueryHistoryEntry,
+  type SavedPostgresQuery,
+} from '@/lib/user-prefs-keys'
 import { useParams } from '@tanstack/react-router'
 import { useAuth } from '@/components/global/auth/RequireAuth'
 import {
+  usePostgresQueryHistory,
   usePostgresSavedQueryScope,
   type PostgresSavedQueryLevel,
 } from '@/lib/react-query/hooks/postgres-databases'
@@ -20,16 +25,11 @@ import {
   type ReactNode,
 } from 'react'
 
-const MAX_RECENT_QUERIES = 30
 const DEFAULT_SQL = 'SELECT NOW() AS current_time;'
 
 export type PostgresSidebarPanel = 'schemas' | 'queries' | 'history'
 
-export type PostgresRecentQuery = {
-  id: string
-  sql: string
-  ranAt: number
-}
+export type PostgresRecentQuery = PostgresQueryHistoryEntry
 
 export type SqlEditorTab = {
   id: string
@@ -136,9 +136,12 @@ export function PostgresSidebarProvider({
     account,
     teamId,
   )
+  const { recentQueries, persistRecentQueries } = usePostgresQueryHistory(
+    databaseId,
+    account,
+  )
 
   const [panel, setPanel] = useState<PostgresSidebarPanel>('schemas')
-  const [recentQueries, setRecentQueries] = useState<PostgresRecentQuery[]>([])
   const [selectedQueryKey, setSelectedQueryKey] = useState<string | null>(null)
   const initialTabStateRef = useRef(createInitialTabState())
   const [tabs, setTabs] = useState(initialTabStateRef.current.tabs)
@@ -173,28 +176,31 @@ export function PostgresSidebarProvider({
     [activeTabId],
   )
 
-  const addRecentQuery = useCallback((sql: string) => {
-    const trimmed = sql.trim()
-    if (!trimmed) return
+  const addRecentQuery = useCallback(
+    (sql: string) => {
+      const trimmed = sql.trim()
+      if (!trimmed) return
 
-    setRecentQueries((prev) => {
-      const existing = prev.find((entry) => entry.sql === trimmed)
+      const existing = recentQueries.find((entry) => entry.sql === trimmed)
       const nextEntry: PostgresRecentQuery = {
         id: existing?.id ?? crypto.randomUUID(),
         sql: trimmed,
         ranAt: Date.now(),
       }
-      const without = prev.filter((entry) => entry.sql !== trimmed)
-      return [nextEntry, ...without].slice(0, MAX_RECENT_QUERIES)
-    })
-  }, [])
+      const without = recentQueries.filter((entry) => entry.sql !== trimmed)
+      persistRecentQueries(
+        [nextEntry, ...without].slice(0, MAX_POSTGRES_QUERY_HISTORY_ENTRIES),
+      )
+    },
+    [persistRecentQueries, recentQueries],
+  )
 
   const clearRecentQueries = useCallback(() => {
-    setRecentQueries([])
+    persistRecentQueries([])
     setSelectedQueryKey((key) =>
       key?.startsWith('recent:') ? null : key,
     )
-  }, [])
+  }, [persistRecentQueries])
 
   const openQueryTab = useCallback((sql: string) => {
     const trimmed = sql.trim()

@@ -46,7 +46,7 @@ export function SchemaTablesSidebar({
   onSelectTable,
 }: SchemaTablesSidebarProps) {
   const { account } = useAuth()
-  const { panel, setPanel, recentQueries } = usePostgresSidebar()
+  const { panel, setPanel } = usePostgresSidebar()
 
   const [schemaPickerOpen, setSchemaPickerOpen] = useState(false)
   const [schemaPickerSearch, setSchemaPickerSearch] = useState('')
@@ -204,11 +204,6 @@ export function SchemaTablesSidebar({
             className="h-8 flex-1 px-1.5 text-[11px] font-medium data-[state=on]:bg-background data-[state=on]:text-foreground sm:text-[12px]"
           >
             History
-            {recentQueries.length > 0 ? (
-              <span className="ml-1 text-[10px] tabular-nums text-muted-foreground">
-                {recentQueries.length}
-              </span>
-            ) : null}
           </ToggleGroupItem>
         </ToggleGroup>
       </div>

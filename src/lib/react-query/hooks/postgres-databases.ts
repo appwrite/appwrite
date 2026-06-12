@@ -46,12 +46,16 @@ import {
   MAX_SAVED_POSTGRES_QUERIES,
   MAX_SAVED_POSTGRES_QUERY_NAME_LENGTH,
   MAX_SAVED_POSTGRES_QUERY_SQL_CHARS,
+  mergePostgresQueryHistoryIntoPrefs,
+  parsePostgresQueryHistory,
   parsePostgresSavedQueries,
   parsePostgresSavedQueriesScope,
   parsePostgresSelectedSchema,
   resolvePostgresSavedQueriesScope,
   resolvePostgresSelectedSchema,
+  type PostgresQueryHistoryEntry,
   type SavedPostgresQuery,
+  type UserPrefs,
 } from '@/lib/user-prefs-keys'
 import {
   getConsoleAccountFromCache,
@@ -1270,4 +1274,82 @@ export function usePostgresSavedQueries(
     isDeleting: deleteUserMutation.isPending || deleteTeamMutation.isPending,
     hasTeamLevel: !!teamId,
   }
+}
+
+const POSTGRES_QUERY_HISTORY_PERSIST_DEBOUNCE_MS = 400
+
+/**
+ * Persisted PostgreSQL query history for a database
+ * (`console.postgresQueryHistory.<databaseId>`).
+ */
+export function usePostgresQueryHistory(
+  databaseId: string | null | undefined,
+  account: { prefs?: Record<string, unknown> } | undefined,
+) {
+  const queryClient = useQueryClient()
+  const recentQueries: PostgresQueryHistoryEntry[] =
+    databaseId && account?.prefs
+      ? parsePostgresQueryHistory(account.prefs, databaseId)
+      : []
+
+  const persistTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  const updateMutation = useMutation({
+    mutationFn: async (value: PostgresQueryHistoryEntry[]) => {
+      if (!account || !databaseId) {
+        throw new Error('Account or database not available')
+      }
+      return await updateAccountPrefs(
+        mergePostgresQueryHistoryIntoPrefs(
+          (account.prefs ?? {}) as UserPrefs,
+          databaseId,
+          value,
+        ),
+      )
+    },
+    onSuccess: (updatedAccount) => {
+      syncConsoleAccountAfterMutation(queryClient, {
+        apiResult: updatedAccount,
+      })
+    },
+  })
+
+  const persistRecentQueries = useCallback(
+    (value: PostgresQueryHistoryEntry[]) => {
+      if (!account || !databaseId) return
+      const patch = mergePostgresQueryHistoryIntoPrefs(
+        (account.prefs ?? {}) as UserPrefs,
+        databaseId,
+        value,
+      )
+      queryClient.setQueriesData<{ prefs?: Record<string, unknown> }>(
+        { queryKey: ['account', 'console'] },
+        (current) =>
+          current
+            ? {
+                ...current,
+                prefs: { ...current.prefs, ...patch },
+              }
+            : current,
+      )
+      if (persistTimerRef.current !== null) {
+        clearTimeout(persistTimerRef.current)
+      }
+      persistTimerRef.current = setTimeout(() => {
+        persistTimerRef.current = null
+        updateMutation.mutate(value)
+      }, POSTGRES_QUERY_HISTORY_PERSIST_DEBOUNCE_MS)
+    },
+    [account, databaseId, queryClient, updateMutation],
+  )
+
+  useEffect(() => {
+    return () => {
+      if (persistTimerRef.current !== null) {
+        clearTimeout(persistTimerRef.current)
+      }
+    }
+  }, [])
+
+  return { recentQueries, persistRecentQueries }
 }

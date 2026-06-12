@@ -5,3 +5,6 @@ export const POSTGRES_TOP_HEADER_BAR_CLASS =
 /** Matches Monaco `editor.background` (--editor-bg in dark, --background in light). */
 export const POSTGRES_SQL_EDITOR_SURFACE_CLASS =
   'bg-[var(--editor-bg,var(--background))]'
+
+/** Format document in the Postgres SQL editor (Shift+Alt+F). */
+export const POSTGRES_SQL_FORMAT_SHORTCUT_RAW = 'shift+alt+f'

@@ -27,6 +27,8 @@ type PostgresSqlCodeEditorProps = {
   onSqlChange: (value: string) => void
   onRun?: () => void
   canRun?: boolean
+  onFormat?: () => void
+  canFormat?: boolean
   onUndoRedoStateChange?: (state: {
     canUndo: boolean
     canRedo: boolean
@@ -67,6 +69,8 @@ export const PostgresSqlCodeEditor = forwardRef<
     onSqlChange,
     onRun,
     canRun = false,
+    onFormat,
+    canFormat = false,
     onUndoRedoStateChange,
   },
   ref,
@@ -77,6 +81,8 @@ export const PostgresSqlCodeEditor = forwardRef<
 
   const onRunRef = useRef(onRun)
   const canRunRef = useRef(canRun)
+  const onFormatRef = useRef(onFormat)
+  const canFormatRef = useRef(canFormat)
   const sqlRef = useRef(sql)
   const editorRef = useRef<editor.IStandaloneCodeEditor | null>(null)
   const keyDownDisposeRef = useRef<IDisposable | null>(null)
@@ -104,7 +110,9 @@ export const PostgresSqlCodeEditor = forwardRef<
   useEffect(() => {
     onRunRef.current = onRun
     canRunRef.current = canRun
-  }, [onRun, canRun])
+    onFormatRef.current = onFormat
+    canFormatRef.current = canFormat
+  }, [onRun, canRun, onFormat, canFormat])
 
   useEffect(() => {
     sqlRef.current = sql
@@ -209,32 +217,47 @@ export const PostgresSqlCodeEditor = forwardRef<
       keyDownDisposeRef.current?.dispose()
       keyDownDisposeRef.current = null
 
-      if (!onRunRef.current) return
+      if (onRunRef.current) {
+        editorInstance.addAction({
+          id: `postgres-run-query-${projectId}-${databaseId}`,
+          label: 'Run query',
+          keybindings: [monaco.KeyMod.CtrlCmd | monaco.KeyCode.Enter],
+          run: () => {
+            if (canRunRef.current) {
+              onRunRef.current?.()
+            }
+          },
+        })
 
-      editorInstance.addAction({
-        id: `postgres-run-query-${projectId}-${databaseId}`,
-        label: 'Run query',
-        keybindings: [monaco.KeyMod.CtrlCmd | monaco.KeyCode.Enter],
-        run: () => {
-          if (canRunRef.current) {
-            onRunRef.current?.()
-          }
-        },
-      })
+        keyDownDisposeRef.current = editorInstance.onKeyDown((e) => {
+          const isRunKey =
+            e.keyCode === monaco.KeyCode.Enter &&
+            (e.ctrlKey || e.metaKey) &&
+            !e.shiftKey &&
+            !e.altKey
 
-      keyDownDisposeRef.current = editorInstance.onKeyDown((e) => {
-        const isRunKey =
-          e.keyCode === monaco.KeyCode.Enter &&
-          (e.ctrlKey || e.metaKey) &&
-          !e.shiftKey &&
-          !e.altKey
+          if (!isRunKey || !canRunRef.current) return
 
-        if (!isRunKey || !canRunRef.current) return
+          e.preventDefault()
+          e.stopPropagation()
+          onRunRef.current?.()
+        })
+      }
 
-        e.preventDefault()
-        e.stopPropagation()
-        onRunRef.current?.()
-      })
+      if (onFormatRef.current) {
+        editorInstance.addAction({
+          id: `postgres-format-sql-${projectId}-${databaseId}`,
+          label: 'Format SQL',
+          keybindings: [
+            monaco.KeyMod.Shift | monaco.KeyMod.Alt | monaco.KeyCode.KeyF,
+          ],
+          run: () => {
+            if (canFormatRef.current) {
+              onFormatRef.current?.()
+            }
+          },
+        })
+      }
 
       const model = editorInstance.getModel()
       if (model && model.getValue() !== sqlRef.current) {

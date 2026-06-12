@@ -2,6 +2,7 @@ import { useCallback, useState } from 'react'
 import { useNavigate, useParams, useSearch } from '@tanstack/react-router'
 import {
   ApiExplorer,
+  ApiExplorerDownloadSpecButton,
   ApiExplorerPlatformToggle,
 } from '@/components/global/api-explorer'
 import { ServiceHeader } from '../shared/ServiceHeader'
@@ -63,7 +64,10 @@ export function View() {
         searchValue={searchValue}
         onSearchChange={setSearchValue}
         beforeRefreshButtons={
-          <ApiExplorerPlatformToggle value={platform} onChange={setPlatform} />
+          <>
+            <ApiExplorerDownloadSpecButton />
+            <ApiExplorerPlatformToggle value={platform} onChange={setPlatform} />
+          </>
         }
         showToolbarBottomBorder
       />

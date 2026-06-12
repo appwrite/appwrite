@@ -6,8 +6,13 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from '@/components/ui/tooltip'
+import { usePlatform } from '@/hooks/use-keyboard-shortcuts'
+import { formatDisplayKeys } from '@/lib/keyboard-shortcuts/display'
 import { cn } from '@/lib/utils'
-import { POSTGRES_SQL_EDITOR_SURFACE_CLASS } from './postgres-chrome'
+import {
+  POSTGRES_SQL_EDITOR_SURFACE_CLASS,
+  POSTGRES_SQL_FORMAT_SHORTCUT_RAW,
+} from './postgres-chrome'
 
 type SqlEditorActionBarProps = {
   canUndo: boolean
@@ -63,6 +68,12 @@ export function SqlEditorActionBar({
   onFormat,
   onRun,
 }: SqlEditorActionBarProps) {
+  const { isMac } = usePlatform()
+  const formatShortcutLabel = formatDisplayKeys(
+    POSTGRES_SQL_FORMAT_SHORTCUT_RAW,
+    isMac,
+  ).join('')
+
   return (
     <div
       className={cn(
@@ -129,22 +140,28 @@ export function SqlEditorActionBar({
 
         <ActionDivider />
 
-        <DisabledActionTooltip
-          disabled={!canFormat}
-          reason="Write SQL before formatting."
-        >
-          <Button
-            type="button"
-            variant="ghost"
-            size="sm"
-            className="h-8 gap-1.5 px-2.5 text-[12px] font-medium text-muted-foreground hover:bg-muted/70 hover:text-foreground"
-            onClick={onFormat}
-            disabled={!canFormat}
-          >
-            <Braces className="h-3.5 w-3.5 shrink-0" />
-            Format
-          </Button>
-        </DisabledActionTooltip>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <span className="inline-flex">
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                className="h-8 gap-1.5 px-2.5 text-[12px] font-medium text-muted-foreground hover:bg-muted/70 hover:text-foreground"
+                onClick={onFormat}
+                disabled={!canFormat}
+              >
+                <Braces className="h-3.5 w-3.5 shrink-0" />
+                Format
+              </Button>
+            </span>
+          </TooltipTrigger>
+          <TooltipContent side="top" sideOffset={6} className="text-[12px]">
+            {canFormat
+              ? `Format SQL (${formatShortcutLabel})`
+              : 'Write SQL before formatting.'}
+          </TooltipContent>
+        </Tooltip>
 
         <ActionDivider />
 

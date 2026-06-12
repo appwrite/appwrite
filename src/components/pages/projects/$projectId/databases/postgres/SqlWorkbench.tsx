@@ -141,6 +141,8 @@ export function SqlWorkbench({
               onSqlChange={onSqlChange}
               onRun={onRun}
               canRun={canRunQuery}
+              onFormat={() => onSqlChange(formatPostgresSql(sql))}
+              canFormat={canFormatQuery}
               onUndoRedoStateChange={({ canUndo: nextCanUndo, canRedo: nextCanRedo }) => {
                 setCanUndo(nextCanUndo)
                 setCanRedo(nextCanRedo)
