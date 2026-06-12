@@ -40,7 +40,11 @@ export function Cards({ children }: { children: ReactNode }) {
     return cloneElement(child, { cardIndex: index } as { cardIndex: number })
   })
 
-  return <div className="not-prose my-8 grid grid-cols-1 gap-4 md:grid-cols-2">{items}</div>
+  return (
+    <div className="not-prose my-8 grid grid-cols-1 gap-4 @[640px]:grid-cols-2">
+      {items}
+    </div>
+  )
 }
 
 function CardHoverLight({ variant }: { variant: number }) {
@@ -111,7 +115,9 @@ export function CardsItem({
           <h3
             className={cn(
               'font-semibold text-foreground/90',
-              compact ? 'text-[15px] sm:text-[16px]' : 'text-[17px] sm:text-[18px]',
+              compact
+                ? 'text-[15px] @[480px]:text-[16px]'
+                : 'text-[17px] @[640px]:text-[18px]',
             )}
           >
             {title}
@@ -121,7 +127,9 @@ export function CardsItem({
           <div
             className={cn(
               'mt-2 flex-1 leading-[1.6] text-muted-foreground',
-              compact ? 'text-[12px] sm:text-[13px]' : 'text-[13px] sm:text-[14px]',
+              compact
+                ? 'text-[12px] @[480px]:text-[13px]'
+                : 'text-[13px] @[640px]:text-[14px]',
             )}
           >
             {children}

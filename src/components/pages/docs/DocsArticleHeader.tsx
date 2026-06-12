@@ -29,7 +29,7 @@ type StickyBounds = {
 }
 
 const DOCS_STICKY_TITLE_CLASS =
-  'min-w-0 truncate font-aeonik-pro text-[15px] font-medium leading-tight text-foreground sm:text-[17px]'
+  'min-w-0 truncate font-aeonik-pro text-[15px] font-medium leading-tight text-foreground @[560px]:text-[17px]'
 
 export function DocsArticleHeader({
   title,
@@ -184,12 +184,16 @@ export function DocsArticleHeader({
           </div>
 
           {actions ? (
-            <div className="hidden shrink-0 items-center gap-2 sm:flex">{actions}</div>
+            <div className="hidden shrink-0 items-center gap-2 @[560px]:flex">
+              {actions}
+            </div>
           ) : null}
         </div>
 
         {actions ? (
-          <div className="mt-5 flex flex-wrap items-center gap-2 sm:hidden">{actions}</div>
+          <div className="mt-5 flex flex-wrap items-center gap-2 @[560px]:hidden">
+            {actions}
+          </div>
         ) : null}
 
         <div className="mt-10 h-px w-full bg-border" aria-hidden />

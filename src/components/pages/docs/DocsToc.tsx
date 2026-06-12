@@ -42,7 +42,7 @@ export function DocsToc({ items }: DocsTocProps) {
     <aside
       aria-hidden={items.length === 0 ? true : undefined}
       className={cn(
-        'sticky top-12 z-10 hidden w-full min-w-[192px] max-w-[208px] shrink-0 self-start overflow-y-auto overscroll-y-contain pt-8 lg:block',
+        'sticky top-12 z-10 hidden w-full min-w-[192px] max-w-[208px] shrink-0 self-start overflow-y-auto overscroll-y-contain pt-8 @[900px]:block',
         'max-h-[calc(100dvh-5rem)]',
       )}
     >

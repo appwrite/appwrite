@@ -56,7 +56,7 @@ import {
   useProject,
   useOrganizationScopes,
 } from '@/lib/react-query/hooks'
-import { useNavigate } from '@tanstack/react-router'
+import { useNavigate, useLocation } from '@tanstack/react-router'
 import { useConsoleProfile } from '@/hooks/use-console-profile'
 import {
   DEFAULT_GROUP_LABELS,
@@ -77,10 +77,7 @@ import { FULL_ACCESS } from '@/lib/console-roles'
 import { useCommandCenterResourceSearch } from '@/hooks/use-command-center-resource-search'
 import { DocsSearchView } from '@/components/pages/docs/DocsSearchView'
 import { useDocsPreview } from '@/components/global/providers/DocsPreview'
-import {
-  buildConsoleUrl,
-  openInNewWindow,
-} from '@/lib/utils/context-menu'
+import { isConsoleDocsPreviewPath } from '@/lib/docs/docs-preview-context'
 import type {
   CommandCenterContext,
   CreateResourceType,
@@ -278,10 +275,11 @@ export function CommandCenter({
   const isMobile = useIsMobile()
   const { isMac } = usePlatform()
   const navigate = useNavigate()
+  const location = useLocation()
   const { features } = useConsoleProfile()
   const isOrgContext = context === 'org'
   const isProjectContext = context === 'project'
-  const isDocsContext = context === 'docs'
+  const isConsoleDocsPreviewContext = isConsoleDocsPreviewPath(location.pathname)
 
   // RBAC: resolve org/team for scopes
   const { project } = useProject(
@@ -309,26 +307,20 @@ export function CommandCenter({
 
   const handleDocsSelect = useCallback(
     (slug: string) => {
-      if (isDocsContext) {
-        onOpenChange(false)
-        if (!slug) {
-          navigate({ to: '/docs/' })
-          return
-        }
-        navigate({ to: '/docs/$', params: { _splat: slug } })
+      onOpenChange(false)
+
+      if (isConsoleDocsPreviewContext) {
+        openDocsPreview(slug)
         return
       }
 
       if (!slug) {
-        onOpenChange(false)
-        openInNewWindow(buildConsoleUrl('/docs/'))
+        navigate({ to: '/docs/' })
         return
       }
-
-      openDocsPreview(slug)
-      onOpenChange(false)
+      navigate({ to: '/docs/$', params: { _splat: slug } })
     },
-    [navigate, onOpenChange, isDocsContext, openDocsPreview],
+    [navigate, onOpenChange, isConsoleDocsPreviewContext, openDocsPreview],
   )
 
   const ctx: CommandContext = useMemo(

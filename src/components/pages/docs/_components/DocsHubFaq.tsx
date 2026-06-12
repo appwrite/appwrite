@@ -5,7 +5,13 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from '@/components/ui/accordion'
-import { MarketingSectionHeading } from '@/components/pages/marketing/MarketingSections'
+import { DocsHomeSectionHeading } from './DocsHomeSectionHeading'
+import {
+  docsContentPaddingX,
+  docsPreviewSectionPaddingY,
+  docsSectionPaddingY,
+} from '@/lib/docs/docs-container'
+import { cn } from '@/lib/utils'
 import { DOCS_PROSE_LINK_CLASS } from '@/lib/docs/prose-link'
 import { DocsRouteLink } from '../DocsRouteLink'
 
@@ -181,16 +187,22 @@ const FAQ_ITEMS: DocsHubFaqItem[] = [
   },
 ]
 
-export function DocsHubFaq() {
+type DocsHubFaqProps = {
+  variant?: 'page' | 'preview'
+}
+
+export function DocsHubFaq({ variant = 'page' }: DocsHubFaqProps) {
+  const sectionPaddingY =
+    variant === 'preview' ? docsPreviewSectionPaddingY : docsSectionPaddingY
+
   return (
-    <section className="border-b border-border py-12 sm:py-16">
-      <div className="mx-auto w-full max-w-7xl px-4 sm:px-6">
-        <div className="grid gap-8 lg:grid-cols-[minmax(0,0.9fr)_minmax(0,1.4fr)] lg:gap-12">
-          <MarketingSectionHeading
-            align="left"
-            size="md"
+    <section className={cn('border-b border-border', sectionPaddingY)}>
+      <div className={cn('mx-auto w-full max-w-7xl', docsContentPaddingX)}>
+        <div className="grid gap-8 @[900px]:grid-cols-[minmax(0,0.9fr)_minmax(0,1.4fr)] @[900px]:gap-12">
+          <DocsHomeSectionHeading
             title="Common questions"
             description="Quick answers when you are new to Appwrite or deciding how to navigate these docs."
+            variant={variant}
           />
 
           <Accordion type="single" collapsible className="w-full">

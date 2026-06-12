@@ -8,7 +8,8 @@ import {
   DocsSearchProvider,
   useDocsSearchContext,
 } from '@/components/pages/docs/DocsSearchProvider'
-import { resetConsoleShellDocumentScroll } from '@/lib/utils'
+import { DOCS_CONTAINER } from '@/lib/docs/docs-container'
+import { cn, resetConsoleShellDocumentScroll } from '@/lib/utils'
 
 type DocsPageShellProps = {
   children: ReactNode
@@ -67,7 +68,7 @@ function DocsPageShellLayout({ children }: DocsPageShellProps) {
       footer={{ expanded: false }}
     >
       <DocsScrollToTop />
-      <div className="min-w-0">{children}</div>
+      <div className={cn(DOCS_CONTAINER, 'min-w-0 w-full')}>{children}</div>
     </ConsoleLayout>
   )
 }

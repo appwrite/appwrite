@@ -2,7 +2,7 @@ import { cn } from '@/lib/utils'
 
 /** Shared body copy scale for docs articles. */
 export const DOCS_BODY_TEXT_CLASS =
-  'text-[16px] leading-[1.7] text-muted-foreground sm:text-[17px] sm:leading-[1.65]'
+  'text-[16px] leading-[1.7] text-muted-foreground @[640px]:text-[17px] @[640px]:leading-[1.65]'
 
 /** Sidebar TOC links — smaller than article body. */
 export const DOCS_TOC_LINK_TEXT_CLASS =
@@ -18,7 +18,7 @@ export const DOCS_PAGE_EYEBROW_CLASS =
   'text-[12px] font-semibold uppercase tracking-[0.12em] text-muted-foreground'
 
 export const DOCS_PAGE_TITLE_CLASS =
-  'font-aeonik-pro text-balance text-[26px] font-normal leading-none tracking-tight text-foreground sm:text-[30px]'
+  'font-aeonik-pro text-balance text-[26px] font-normal leading-none tracking-tight text-foreground @[640px]:text-[30px]'
 
 export const DOCS_PAGE_DESCRIPTION_CLASS = cn(
   'mt-4 max-w-2xl',
@@ -32,7 +32,7 @@ export const DOCS_PROSE_DETAIL_CLASSES = [
   '[&_p]:my-0 [&_p+p]:mt-4',
   '[&_ul]:my-4 [&_ul]:list-disc [&_ul]:space-y-1.5 [&_ul]:ps-5',
   '[&_ol]:my-4 [&_ol]:list-decimal [&_ol]:space-y-1.5 [&_ol]:ps-5',
-  '[&_li]:my-0 [&_li]:leading-[1.7] sm:[&_li]:leading-[1.65]',
+  '[&_li]:my-0 [&_li]:leading-[1.7] @[640px]:[&_li]:leading-[1.65]',
   '[&_strong]:font-semibold [&_strong]:text-foreground/90',
   '[&_code]:rounded-md [&_code]:border [&_code]:border-border [&_code]:bg-muted/50 [&_code]:px-1.5 [&_code]:py-0.5 [&_code]:font-mono [&_code]:text-[13px] [&_code]:text-foreground/85',
   '[&_hr]:my-8 [&_hr]:border-border',

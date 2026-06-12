@@ -89,7 +89,7 @@ export function DocsTutorialsScroll() {
           {DOCS_HOME_TUTORIALS.map((tutorial, index) => (
             <CarouselItem
               key={tutorial.href}
-              className="basis-[280px] pl-4 sm:basis-[300px]"
+              className="basis-[280px] pl-4 @[480px]:basis-[300px]"
             >
               <DocsRouteLink
                 href={tutorial.href}
@@ -123,7 +123,7 @@ export function DocsTutorialsScroll() {
         <div
           aria-hidden
           className={cn(
-            'pointer-events-none absolute right-0 top-0 bottom-0 z-10 w-20 bg-gradient-to-l from-background via-background/80 to-transparent transition-opacity duration-200 sm:w-24',
+            'pointer-events-none absolute right-0 top-0 bottom-0 z-10 w-20 bg-gradient-to-l from-background via-background/80 to-transparent transition-opacity duration-200 @[480px]:w-24',
             showRightFade ? 'opacity-100' : 'opacity-0',
           )}
         />

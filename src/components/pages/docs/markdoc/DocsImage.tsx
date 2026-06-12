@@ -68,7 +68,7 @@ export function DocsImage({ src, alt = '', title }: DocsImageProps) {
   const imageClassName = cn(
     'h-full w-full transition-opacity duration-300',
     loaded ? 'opacity-100' : 'opacity-0',
-    contain ? 'object-contain p-3 sm:p-4' : 'object-cover',
+    contain ? 'object-contain p-3 @[480px]:p-4' : 'object-cover',
   )
 
   return (
@@ -134,7 +134,7 @@ export function DocsImage({ src, alt = '', title }: DocsImageProps) {
               <DialogContent
                 showCloseButton
                 overlayClassName="bg-background/95"
-                className="max-h-[92dvh] w-[min(96vw,1200px)] max-w-[min(96vw,1200px)] gap-0 overflow-hidden border-0 bg-transparent p-0 shadow-none sm:max-w-[min(96vw,1200px)]"
+                className="max-h-[92dvh] w-[min(96vw,1200px)] max-w-[min(96vw,1200px)] gap-0 overflow-hidden border-0 bg-transparent p-0 shadow-none"
               >
                 <DialogTitle className="sr-only">
                   {alt.trim() ? alt : 'Expanded image'}

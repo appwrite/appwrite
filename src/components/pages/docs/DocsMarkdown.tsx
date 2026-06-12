@@ -111,7 +111,7 @@ function createMarkdocComponents(compact: boolean) {
         <AccordionTrigger
           className={
             compact
-              ? 'text-[13px] font-medium hover:no-underline sm:text-[14px]'
+              ? 'text-[13px] font-medium hover:no-underline @[480px]:text-[14px]'
               : cn(DOCS_BODY_TEXT_CLASS, 'font-medium hover:no-underline')
           }
         >
@@ -120,7 +120,7 @@ function createMarkdocComponents(compact: boolean) {
         <AccordionContent
           className={cn(
             compact
-              ? 'text-[13px] leading-[1.6] text-muted-foreground sm:text-[14px]'
+              ? 'text-[13px] leading-[1.6] text-muted-foreground @[480px]:text-[14px]'
               : DOCS_BODY_TEXT_CLASS,
           )}
         >
@@ -150,7 +150,7 @@ export function DocsMarkdown({ content, compact = false }: DocsMarkdownProps) {
       className={cn(
         DOCS_PROSE_WRAPPER_CLASS,
         ...DOCS_PROSE_DETAIL_CLASSES,
-        compact && 'text-[14px] leading-[1.65] sm:text-[15px]',
+        compact && 'text-[14px] leading-[1.65] @[480px]:text-[15px]',
       )}
     >
       {rendered}

@@ -60,18 +60,21 @@ export function Heading({
     compact
       ? [
           level === 1 &&
-            'mb-3 mt-6 text-[16px] font-normal leading-[1.3] first:mt-0 sm:text-[17px]',
+            'mb-3 mt-6 text-[16px] font-normal leading-[1.3] first:mt-0 @[480px]:text-[17px]',
           level === 2 &&
-            'mb-2 mt-5 text-[14px] font-semibold leading-snug sm:text-[15px]',
-          level === 3 && 'mb-2 mt-4 text-[13px] font-semibold sm:text-[14px]',
-          level >= 4 && 'mb-1.5 mt-3 text-[12px] font-semibold sm:text-[13px]',
+            'mb-2 mt-5 text-[14px] font-semibold leading-snug @[480px]:text-[15px]',
+          level === 3 &&
+            'mb-2 mt-4 text-[13px] font-semibold @[480px]:text-[14px]',
+          level >= 4 &&
+            'mb-1.5 mt-3 text-[12px] font-semibold @[480px]:text-[13px]',
         ]
       : [
           level === 1 &&
-            'mb-4 mt-8 text-[20px] font-normal leading-[1.3] first:mt-0 sm:text-[22px]',
+            'mb-4 mt-8 text-[20px] font-normal leading-[1.3] first:mt-0 @[640px]:text-[22px]',
           level === 2 &&
-            'mb-3 mt-7 text-[17px] font-semibold leading-snug sm:text-[18px]',
-          level === 3 && 'mb-2 mt-6 text-[16px] font-semibold sm:text-[17px]',
+            'mb-3 mt-7 text-[17px] font-semibold leading-snug @[640px]:text-[18px]',
+          level === 3 &&
+            'mb-2 mt-6 text-[16px] font-semibold @[640px]:text-[17px]',
           level >= 4 && 'mb-2 mt-5 text-[15px] font-semibold',
         ],
   )

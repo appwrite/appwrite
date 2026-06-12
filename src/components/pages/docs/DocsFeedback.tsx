@@ -170,7 +170,7 @@ export function DocsFeedback() {
               exit={prefersReducedMotion ? undefined : { opacity: 0 }}
               transition={expandTransition}
             >
-              <div className="flex flex-col gap-4 px-5 py-5 sm:flex-row sm:items-center sm:justify-between sm:px-6">
+              <div className="flex flex-col gap-4 px-5 py-5 @[560px]:flex-row @[560px]:items-center @[560px]:justify-between @[560px]:px-6">
                 <div className="min-w-0">
                   <p className="text-[14px] font-semibold text-foreground">
                     Was this page helpful?
@@ -221,7 +221,7 @@ export function DocsFeedback() {
                     className="overflow-hidden"
                   >
                     <div className="border-t border-border" />
-                    <div className="space-y-4 px-5 py-5 sm:px-6">
+                    <div className="space-y-4 px-5 py-5 @[560px]:px-6">
                       <div className="space-y-2">
                         <label
                           htmlFor="docs-feedback-message"
@@ -284,7 +284,7 @@ export function DocsFeedback() {
                       ) : null}
                     </div>
 
-                    <div className="flex flex-col-reverse gap-2 border-t border-border bg-muted/30 px-5 py-4 sm:flex-row sm:justify-end sm:px-6">
+                    <div className="flex flex-col-reverse gap-2 border-t border-border bg-muted/30 px-5 py-4 @[560px]:flex-row @[560px]:justify-end @[560px]:px-6">
                       <Button
                         type="button"
                         variant="outline"

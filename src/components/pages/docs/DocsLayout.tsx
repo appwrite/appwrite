@@ -1,5 +1,7 @@
 import type { ReactNode } from 'react'
+import { DOCS_CONTAINER } from '@/lib/docs/docs-container'
 import { getDocsSectionNav } from '@/lib/docs/navigation'
+import { cn } from '@/lib/utils'
 import type { DocsTocItem } from '@/lib/docs/types'
 import { DocsArticleHeader } from './DocsArticleHeader'
 import { DocsFeedback } from './DocsFeedback'
@@ -37,9 +39,12 @@ export function DocsLayout({
       <div className="min-w-0 flex-1 overflow-visible">
         <div
           data-docs-page-shell
-          className="mx-auto w-full max-w-7xl overflow-visible pb-8 pl-8 pr-4 pt-8 sm:pl-10 sm:pr-6 sm:pt-10 lg:pl-12"
+          className={cn(
+            DOCS_CONTAINER,
+            'mx-auto w-full max-w-7xl overflow-visible pb-8 pl-8 pr-4 pt-8 @[480px]:pl-10 @[480px]:pr-6 @[480px]:pt-10 @[900px]:pl-12',
+          )}
         >
-          <div className="grid items-start gap-8 overflow-visible lg:grid-cols-[minmax(0,52rem)_1px_minmax(192px,208px)] lg:gap-x-12 xl:gap-x-16">
+          <div className="grid items-start gap-8 overflow-visible @[900px]:grid-cols-[minmax(0,52rem)_1px_minmax(192px,208px)] @[900px]:gap-x-12 @[1080px]:gap-x-16">
             <article className="min-w-0">
               <DocsArticleHeader
                 title={title}
@@ -55,7 +60,7 @@ export function DocsLayout({
             </article>
             <div
               aria-hidden
-              className="hidden w-px self-stretch bg-border lg:block"
+              className="hidden w-px self-stretch bg-border @[900px]:block"
             />
             <DocsToc items={toc} />
           </div>

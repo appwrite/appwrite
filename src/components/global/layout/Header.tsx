@@ -359,8 +359,9 @@ export function ConsoleHeader({
             const linkOrgId =
               project?.teamId ||
               (account?.prefs?.organization as string | undefined)
-            const logoDestination =
-              showGuestHeader && features.init
+            const logoDestination = showMarketingNav
+              ? ({ to: '/home' } as const)
+              : showGuestHeader && features.init
                 ? ({ to: '/init' } as const)
                 : linkOrgId
                   ? ({

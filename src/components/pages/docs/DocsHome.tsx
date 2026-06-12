@@ -1,10 +1,17 @@
-import { MarketingSectionHeading } from '@/components/pages/marketing/MarketingSections'
+import { DocsHomeSectionHeading } from './_components/DocsHomeSectionHeading'
 import {
   DOCS_HOME_INTEGRATIONS,
   DOCS_HOME_INTEGRATION_ICONS,
   DOCS_HOME_MIGRATIONS,
   DOCS_HOME_MIGRATION_ICONS,
 } from '@/lib/docs/home-content'
+import {
+  docsContentPaddingX,
+  docsGridFiveCol,
+  docsGridTwoCol,
+  docsPreviewSectionPaddingY,
+  docsSectionPaddingY,
+} from '@/lib/docs/docs-container'
 import { PUBLIC_ICON_MUTED_CLASSES } from '@/lib/public-icon-classes'
 import { cn } from '@/lib/utils'
 import { DocsAiSection } from './_components/DocsAiSection'
@@ -12,6 +19,7 @@ import { DocsHubFaq } from './_components/DocsHubFaq'
 import { DocsProductsBento } from './_components/DocsProductsBento'
 import { DocsTutorialsScroll } from './_components/DocsTutorialsScroll'
 import { DocsHeroSection } from './DocsHeroSection'
+import { DocsPreviewHeroSection } from './DocsPreviewHeroSection'
 import { DocsRouteLink } from './DocsRouteLink'
 
 const TEXT_CARD_CLASS =
@@ -22,6 +30,7 @@ type DocsHomeSectionProps = {
   description?: React.ReactNode
   children: React.ReactNode
   className?: string
+  variant?: 'page' | 'preview'
 }
 
 function DocsHomeSection({
@@ -29,21 +38,19 @@ function DocsHomeSection({
   description,
   children,
   className,
+  variant = 'page',
 }: DocsHomeSectionProps) {
+  const sectionPaddingY =
+    variant === 'preview' ? docsPreviewSectionPaddingY : docsSectionPaddingY
+
   return (
-    <section className={cn('border-b border-border py-12 sm:py-16', className)}>
-      <div className="mx-auto w-full max-w-7xl px-4 sm:px-6">
-        <MarketingSectionHeading
-          align="left"
-          size="md"
+    <section className={cn('border-b border-border', sectionPaddingY, className)}>
+      <div className={cn('mx-auto w-full max-w-7xl', docsContentPaddingX)}>
+        <DocsHomeSectionHeading
           title={title}
-          description={typeof description === 'string' ? description : undefined}
+          description={description}
+          variant={variant}
         />
-        {typeof description !== 'string' && description ? (
-          <div className="mt-4 max-w-3xl text-[14px] leading-7 text-muted-foreground">
-            {description}
-          </div>
-        ) : null}
         <div className="mt-8">{children}</div>
       </div>
     </section>
@@ -106,25 +113,31 @@ function MigrationIcon({ title, iconSrc }: { title: string; iconSrc?: string }) 
   return <Icon className="size-4 shrink-0 text-muted-foreground" aria-hidden />
 }
 
-export function DocsHome() {
+type DocsHomeProps = {
+  variant?: 'page' | 'preview'
+}
+
+export function DocsHome({ variant = 'page' }: DocsHomeProps) {
   return (
     <>
-      <DocsHeroSection />
+      {variant === 'preview' ? <DocsPreviewHeroSection /> : <DocsHeroSection />}
 
       <DocsHomeSection
+        variant={variant}
         title="Explore capabilities"
         description="All the core functionalities you need with a scalable and flexible API. Explore Appwrite's product offerings."
       >
         <DocsProductsBento />
       </DocsHomeSection>
 
-      <DocsAiSection />
+      <DocsAiSection variant={variant} />
 
       <DocsHomeSection
+        variant={variant}
         title="Explore ways to integrate"
         description="Choose how you integrate with Appwrite. Explore references for the Appwrite SDK, REST API, GraphQL API, or Realtime API."
       >
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+        <div className={cn('grid gap-4', docsGridTwoCol)}>
           {DOCS_HOME_INTEGRATIONS.map((item) => (
             <DocsRouteLink key={item.href} href={item.href} className={TEXT_CARD_CLASS}>
               <div className="flex items-start gap-3">
@@ -144,6 +157,7 @@ export function DocsHome() {
       </DocsHomeSection>
 
       <DocsHomeSection
+        variant={variant}
         title="Show me some code"
         description="If you learn best from code examples, follow one of our tutorials."
       >
@@ -151,10 +165,11 @@ export function DocsHome() {
       </DocsHomeSection>
 
       <DocsHomeSection
+        variant={variant}
         title="Migrate to Appwrite"
         description="Own your data with automatic data migrations."
       >
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
+        <div className={cn('grid gap-4', docsGridFiveCol)}>
           {DOCS_HOME_MIGRATIONS.map((item) => (
             <DocsRouteLink key={item.href} href={item.href} className={TEXT_CARD_CLASS}>
               <div className="flex items-center gap-2">
@@ -171,7 +186,7 @@ export function DocsHome() {
         </div>
       </DocsHomeSection>
 
-      <DocsHubFaq />
+      <DocsHubFaq variant={variant} />
     </>
   )
 }

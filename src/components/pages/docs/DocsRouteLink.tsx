@@ -1,9 +1,12 @@
 'use client'
 
-import { Link } from '@tanstack/react-router'
+import { Link, useLocation } from '@tanstack/react-router'
 import type { MouseEvent, ReactNode } from 'react'
+import { useDocsPreview } from '@/components/global/providers/DocsPreview'
+import { isConsoleDocsPreviewPath } from '@/lib/docs/docs-preview-context'
+import { docsHrefToPreviewSlug } from '@/lib/docs/docs-href'
+import type { DocsPreviewView } from '@/lib/docs/docs-preview-menu'
 import { useDocsPreviewNavigation } from '@/lib/docs/docs-preview-navigation'
-import { buildConsoleUrl, openInNewTab } from '@/lib/utils/context-menu'
 import { cn } from '@/lib/utils'
 
 type DocsRouteLinkProps = {
@@ -11,6 +14,8 @@ type DocsRouteLinkProps = {
   children: ReactNode
   className?: string
   onClick?: () => void
+  /** Preview pane view when opened from the console (defaults to article). */
+  previewView?: DocsPreviewView
 }
 
 export function docsHrefToRoute(href: string) {
@@ -33,20 +38,25 @@ export function DocsRouteLink({
   children,
   className,
   onClick,
+  previewView = 'article',
 }: DocsRouteLinkProps) {
+  const location = useLocation()
   const previewNav = useDocsPreviewNavigation()
+  const { openDocsPreview } = useDocsPreview()
   const route = docsHrefToRoute(href)
+  const previewSlug = docsHrefToPreviewSlug(href)
+  const canUsePreviewPane = isConsoleDocsPreviewPath(location.pathname)
 
-  if (previewNav && route) {
+  if (previewSlug !== null && (canUsePreviewPane || previewNav)) {
     const handlePreviewClick = (event: MouseEvent<HTMLAnchorElement>) => {
       event.preventDefault()
       event.stopPropagation()
       onClick?.()
-      if (!route.params) {
-        openInNewTab(buildConsoleUrl('/docs/'))
+      if (previewNav) {
+        previewNav.navigateToSlug(previewSlug, previewView)
         return
       }
-      previewNav.navigateToSlug(route.params._splat)
+      openDocsPreview(previewSlug, { view: previewView })
     }
 
     return (

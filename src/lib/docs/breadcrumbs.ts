@@ -1,4 +1,8 @@
 import { DOCS_PAGE_MAP } from './generated/manifest'
+import {
+  canShowDocsPreviewMenu,
+  type DocsPreviewView,
+} from './docs-preview-menu'
 import { DOCS_GLOBAL_NAV } from './navigation/global'
 import { isDocsNavGroup } from './navigation/index'
 import { DOCS_SECTION_NAVS, type DocsSectionNavConfig } from './navigation/sections'
@@ -125,6 +129,13 @@ export function formatDocsBreadcrumbs(breadcrumbs: string[]): string {
 export type DocsBreadcrumbItem = {
   label: string
   slug: string | null
+  /** When set, preview pane opens this target as a menu instead of an article. */
+  view?: DocsPreviewView
+}
+
+function menuViewForSlug(slug: string | null): DocsPreviewView | undefined {
+  if (slug === null || slug === '') return undefined
+  return canShowDocsPreviewMenu(slug) ? 'menu' : undefined
 }
 
 export const DOCS_HOME_BREADCRUMB: DocsBreadcrumbItem = {
@@ -152,6 +163,46 @@ function getGlobalNavRootItem(slug: string): DocsBreadcrumbItem | null {
     }
   }
   return null
+}
+
+function getGlobalNavItemBySlug(slug: string): DocsBreadcrumbItem | null {
+  const href = slug ? `/docs/${slug}` : '/docs'
+  for (const group of DOCS_GLOBAL_NAV) {
+    if (!('items' in group)) continue
+    for (const item of group.items) {
+      if (item.href === href) {
+        return { label: item.label, slug: hrefToDocsSlug(item.href) }
+      }
+    }
+  }
+  return null
+}
+
+function getSectionMenuBreadcrumbItems(
+  config: DocsSectionNavConfig,
+): DocsBreadcrumbItem[] {
+  const crumbs: DocsBreadcrumbItem[] = [DOCS_HOME_BREADCRUMB]
+  const parentSlug = hrefToDocsSlug(config.parent.href)
+
+  if (
+    parentSlug !== null &&
+    parentSlug !== '' &&
+    parentSlug !== config.prefix &&
+    canShowDocsPreviewMenu(parentSlug)
+  ) {
+    const parentNav = getGlobalNavItemBySlug(parentSlug)
+    crumbs.push({
+      ...(parentNav ?? { label: config.parent.label, slug: parentSlug }),
+      view: 'menu',
+    })
+  }
+
+  crumbs.push({
+    label: config.parent.label,
+    slug: config.prefix,
+    view: 'menu',
+  })
+  return crumbs
 }
 
 function appendSlugPathBreadcrumbItems(
@@ -187,8 +238,18 @@ function appendSlugPathBreadcrumbItems(
 export function getDocsPageBreadcrumbItems(
   slug: string,
   pageMap: DocsPageLookup = DOCS_PAGE_MAP,
+  options?: { previewView?: DocsPreviewView },
 ): DocsBreadcrumbItem[] {
   if (!slug) return [DOCS_HOME_BREADCRUMB]
+
+  if (options?.previewView === 'menu' && canShowDocsPreviewMenu(slug)) {
+    const config = DOCS_SECTION_NAVS.find((entry) => entry.prefix === slug)
+    if (config) return getSectionMenuBreadcrumbItems(config)
+    const globalNav = getGlobalNavItemBySlug(slug)
+    if (globalNav) {
+      return [DOCS_HOME_BREADCRUMB, { ...globalNav, view: 'menu' }]
+    }
+  }
 
   const config = getSectionConfig(slug)
   const href = slugToHref(slug)
@@ -197,17 +258,23 @@ export function getDocsPageBreadcrumbItems(
 
   if (config) {
     const parentSlug = hrefToDocsSlug(config.parent.href)
+    const parentCrumbSlug = parentSlug === '' ? config.prefix : parentSlug
     const crumbs: DocsBreadcrumbItem[] = [
       {
         label: config.parent.label,
-        slug: parentSlug === '' ? config.prefix : parentSlug,
+        slug: parentCrumbSlug,
+        view: menuViewForSlug(parentCrumbSlug),
       },
     ]
     const navMatch = findNavItem(config.navigation, href)
 
     if (navMatch) {
       if (navMatch.groupLabel) {
-        crumbs.push({ label: navMatch.groupLabel, slug: null })
+        crumbs.push({
+          label: navMatch.groupLabel,
+          slug: config.prefix,
+          view: 'menu',
+        })
       }
       crumbs.push({ label: navMatch.itemLabel, slug })
       items = crumbs
@@ -217,7 +284,12 @@ export function getDocsPageBreadcrumbItems(
   } else {
     const crumbs: DocsBreadcrumbItem[] = []
     const globalRoot = getGlobalNavRootItem(slug)
-    if (globalRoot) crumbs.push(globalRoot)
+    if (globalRoot) {
+      crumbs.push({
+        ...globalRoot,
+        view: menuViewForSlug(globalRoot.slug),
+      })
+    }
 
     items = appendSlugPathBreadcrumbItems(
       crumbs,

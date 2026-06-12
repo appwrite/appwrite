@@ -6,6 +6,7 @@ import {
   DocsHubCategorySection,
   getHubCategoryTocItem,
 } from '@/components/pages/docs/_components/DocsHubCategorySection'
+import { docsGridTwoCol } from '@/lib/docs/docs-container'
 import { getTutorialsHubCategories } from '@/lib/docs/tutorials-hub'
 import { cn } from '@/lib/utils'
 
@@ -26,7 +27,7 @@ export function View() {
       <div className="space-y-12">
         {categories.map((category) => (
           <DocsHubCategorySection key={category.title} title={category.title}>
-            <ul className="grid gap-3 sm:grid-cols-2">
+            <ul className={cn('grid gap-3', docsGridTwoCol)}>
               {category.tutorials.map((tutorial) => (
                 <li key={tutorial.href}>
                   {tutorial.draft ? (

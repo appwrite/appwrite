@@ -1,4 +1,5 @@
 import type { LucideIcon } from 'lucide-react'
+import { docsGridFourCol } from '@/lib/docs/docs-container'
 import { DOCS_HOME_PRODUCTS } from '@/lib/docs/home-content'
 import { cn } from '@/lib/utils'
 import { DocsRouteLink } from '../DocsRouteLink'
@@ -27,12 +28,12 @@ function productTileBorderClass(index: number, count: number): string {
 
   return cn(
     'border-b border-border last:border-b-0',
-    'sm:border-b-0',
-    smCol < smCols - 1 && 'sm:border-r sm:border-border',
-    smRow < smRows - 1 && 'sm:border-b sm:border-border',
-    'xl:border-b-0 xl:border-r-0',
-    xlCol < xlCols - 1 && 'xl:border-r xl:border-border',
-    xlRow < xlRows - 1 && 'xl:border-b xl:border-border',
+    '@[560px]:border-b-0',
+    smCol < smCols - 1 && '@[560px]:border-r @[560px]:border-border',
+    smRow < smRows - 1 && '@[560px]:border-b @[560px]:border-border',
+    '@[1080px]:border-b-0 @[1080px]:border-r-0',
+    xlCol < xlCols - 1 && '@[1080px]:border-r @[1080px]:border-border',
+    xlRow < xlRows - 1 && '@[1080px]:border-b @[1080px]:border-border',
   )
 }
 
@@ -58,7 +59,7 @@ function ProductTileIcon({ icon: Icon }: { icon: LucideIcon }) {
 export function DocsProductsBento() {
   return (
     <div className="overflow-hidden rounded-xl border border-border bg-card/45">
-      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4">
+      <div className={cn('grid', docsGridFourCol)}>
         {DOCS_HOME_PRODUCTS.map((product, index) => {
           const Icon = product.icon
 

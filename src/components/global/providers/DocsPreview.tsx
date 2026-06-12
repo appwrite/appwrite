@@ -23,8 +23,21 @@ import {
   BreadcrumbSeparator,
 } from '@/components/ui/breadcrumb'
 import { DocsMarkdown } from '@/components/pages/docs/DocsMarkdown'
-import { docsHrefToRoute } from '@/components/pages/docs/DocsRouteLink'
+import { DocsHome } from '@/components/pages/docs/DocsHome'
+import { DocsPreviewArticleHeader } from '@/components/pages/docs/DocsPreviewArticleHeader'
+import { DocsPreviewMenu } from '@/components/pages/docs/DocsPreviewMenu'
+import { docsHrefToPreviewSlug } from '@/lib/docs/docs-href'
 import { getDocsPageBreadcrumbItems } from '@/lib/docs/breadcrumbs'
+import {
+  DOCS_CONTAINER,
+  docsContentPaddingX,
+} from '@/lib/docs/docs-container'
+import {
+  canShowDocsPreviewMenu,
+  resolveDocsPreviewView,
+  type DocsPreviewView,
+} from '@/lib/docs/docs-preview-menu'
+import { isConsoleDocsPreviewPath } from '@/lib/docs/docs-preview-context'
 import { DocsPreviewNavigationProvider } from '@/lib/docs/docs-preview-navigation'
 import { getDocsPage } from '@/lib/docs/content'
 import { CLI_SHELL_COLLAPSED_HEIGHT_PX } from '@/lib/cli-shell/constants'
@@ -39,13 +52,6 @@ import { cn } from '@/lib/utils'
 const DOCS_PREVIEW_PANEL_MIN_WIDTH_PX = 400
 const DOCS_PREVIEW_PANEL_MAX_WIDTH_PX = 800
 const DOCS_PREVIEW_PANEL_DEFAULT_WIDTH_PX = 640
-
-const DOCS_PREVIEW_PAGE_TITLE_CLASS =
-  'font-aeonik-pro text-balance text-[18px] font-normal leading-tight tracking-tight text-foreground sm:text-[20px]'
-
-const DOCS_PREVIEW_PAGE_DESCRIPTION_CLASS = cn(
-  'mt-2.5 max-w-2xl text-[13px] leading-[1.6] text-muted-foreground sm:text-[14px]',
-)
 
 const AUTH_ROUTE_PATHNAMES = new Set([
   '/sign-in',
@@ -65,10 +71,15 @@ function getDocsPreviewUrl(slug: string): string {
   return slug ? buildConsoleUrl(`/docs/${slug}`) : buildConsoleUrl('/docs/')
 }
 
+type DocsPreviewOpenOptions = {
+  view?: DocsPreviewView
+}
+
 type DocsPreviewContextValue = {
   isOpen: boolean
   slug: string | null
-  openDocsPreview: (slug: string) => void
+  view: DocsPreviewView
+  openDocsPreview: (slug: string, options?: DocsPreviewOpenOptions) => void
   closeDocsPreview: () => void
 }
 
@@ -80,6 +91,7 @@ export function useDocsPreview() {
     return {
       isOpen: false,
       slug: null,
+      view: 'article',
       openDocsPreview: () => {},
       closeDocsPreview: () => {},
     }
@@ -89,42 +101,51 @@ export function useDocsPreview() {
 
 export function DocsPreviewProvider({ children }: { children: ReactNode }) {
   const location = useLocation()
-  const isBlocked = useMemo(
+  const isAuthBlocked = useMemo(
     () => isDocsPreviewBlockedPath(location.pathname),
     [location.pathname],
   )
+  const isPreviewAllowed = useMemo(
+    () => !isAuthBlocked && isConsoleDocsPreviewPath(location.pathname),
+    [isAuthBlocked, location.pathname],
+  )
   const [isOpen, setIsOpen] = useState(false)
   const [slug, setSlug] = useState<string | null>(null)
+  const [view, setView] = useState<DocsPreviewView>('article')
 
   const openDocsPreview = useCallback(
-    (nextSlug: string) => {
-      if (isBlocked) return
+    (nextSlug: string, options?: DocsPreviewOpenOptions) => {
+      if (!isPreviewAllowed) return
       setSlug(nextSlug)
+      setView(resolveDocsPreviewView(nextSlug, options?.view))
       setIsOpen(true)
     },
-    [isBlocked],
+    [isPreviewAllowed],
   )
 
   const closeDocsPreview = useCallback(() => {
     setIsOpen(false)
     setSlug(null)
+    setView('article')
   }, [])
 
   useEffect(() => {
-    if (isBlocked && isOpen) {
+    if (!isPreviewAllowed && isOpen) {
       setIsOpen(false)
       setSlug(null)
+      setView('article')
     }
-  }, [isBlocked, isOpen])
+  }, [isPreviewAllowed, isOpen])
 
   const value = useMemo(
     () => ({
       isOpen,
       slug,
+      view,
       openDocsPreview,
       closeDocsPreview,
     }),
-    [isOpen, slug, openDocsPreview, closeDocsPreview],
+    [isOpen, slug, view, openDocsPreview, closeDocsPreview],
   )
 
   return (
@@ -135,23 +156,35 @@ export function DocsPreviewProvider({ children }: { children: ReactNode }) {
 }
 
 export function DocsPreviewPanel() {
-  const { isOpen, slug, openDocsPreview, closeDocsPreview } = useDocsPreview()
+  const { isOpen, slug, view, openDocsPreview, closeDocsPreview } =
+    useDocsPreview()
   const panelRef = useRef<HTMLDivElement>(null)
   const contentRef = useRef<HTMLDivElement>(null)
   const [width, setWidth] = useState(DOCS_PREVIEW_PANEL_DEFAULT_WIDTH_PX)
   const [isResizing, setIsResizing] = useState(false)
 
+  const showMenu =
+    slug !== null &&
+    slug !== '' &&
+    view === 'menu' &&
+    canShowDocsPreviewMenu(slug)
+
   const { data: page, isLoading, isError } = useQuery({
     queryKey: ['docs', 'page', slug],
     queryFn: () => getDocsPage(slug!),
-    enabled: isOpen && slug !== null && isClientQueryEnabled,
+    enabled:
+      isOpen &&
+      slug !== null &&
+      slug !== '' &&
+      !showMenu &&
+      isClientQueryEnabled,
     staleTime: 5 * 60 * 1000,
     retry: false,
   })
 
   useEffect(() => {
     contentRef.current?.scrollTo({ top: 0, behavior: 'auto' })
-  }, [slug])
+  }, [slug, view])
 
   const handleMouseDown = useCallback((event: React.MouseEvent) => {
     event.preventDefault()
@@ -198,31 +231,30 @@ export function DocsPreviewPanel() {
   }, [slug])
 
   const breadcrumbItems = useMemo(
-    () => (slug === null ? [] : getDocsPageBreadcrumbItems(slug)),
-    [slug],
-  )
-
-  const handleBreadcrumbSelect = useCallback(
-    (itemSlug: string | null) => {
-      if (itemSlug === null || itemSlug === slug) return
-      if (itemSlug === '') {
-        openInNewTab(buildConsoleUrl('/docs/'))
-        return
-      }
-      openDocsPreview(itemSlug)
-    },
-    [openDocsPreview, slug],
+    () =>
+      slug === null
+        ? []
+        : getDocsPageBreadcrumbItems(slug, undefined, {
+            previewView: showMenu ? 'menu' : 'article',
+          }),
+    [slug, showMenu],
   )
 
   const navigatePreviewSlug = useCallback(
-    (nextSlug: string) => {
-      if (nextSlug === '') {
-        openInNewTab(buildConsoleUrl('/docs/'))
-        return
-      }
-      openDocsPreview(nextSlug)
+    (nextSlug: string, nextView: DocsPreviewView = 'article') => {
+      const resolvedView = resolveDocsPreviewView(nextSlug, nextView)
+      if (nextSlug === slug && resolvedView === view) return
+      openDocsPreview(nextSlug, { view: nextView })
     },
-    [openDocsPreview],
+    [openDocsPreview, slug, view],
+  )
+
+  const handleBreadcrumbSelect = useCallback(
+    (itemSlug: string | null, itemView?: DocsPreviewView) => {
+      if (itemSlug === null) return
+      navigatePreviewSlug(itemSlug, itemView ?? 'article')
+    },
+    [navigatePreviewSlug],
   )
 
   const handleContentClick = useCallback(
@@ -236,167 +268,189 @@ export function DocsPreviewPanel() {
       const href = anchor.getAttribute('href')
       if (!href || href.startsWith('#')) return
 
-      const route = docsHrefToRoute(href)
-      if (!route) return
+      const previewSlug = docsHrefToPreviewSlug(href)
+      if (previewSlug === null) return
 
       event.preventDefault()
-      if (!route.params) {
-        openInNewTab(buildConsoleUrl('/docs/'))
-        return
-      }
-      openDocsPreview(route.params._splat)
+      navigatePreviewSlug(previewSlug, 'article')
     },
-    [openDocsPreview],
+    [navigatePreviewSlug],
   )
 
   if (!isOpen || slug === null) return null
 
-  return (
-    <div
-      ref={panelRef}
-      style={{ width: `${width}px` }}
-      className="relative flex h-full shrink-0 flex-col border-l border-border bg-background"
-    >
-      <div
-        onMouseDown={handleMouseDown}
-        className={cn(
-          'absolute left-0 top-0 z-10 flex h-full w-1.5 cursor-col-resize items-center justify-center transition-colors hover:bg-primary/20 dark:hover:bg-sidebar-accent/60',
-          isResizing && 'bg-primary/30 dark:bg-sidebar-accent/70',
-        )}
-      />
+  const isDocsHome = slug === ''
 
-      <div className="flex h-14 min-h-14 shrink-0 items-center justify-between gap-3 border-b border-border px-3">
-        <p className="min-w-0 truncate text-[13px] font-semibold text-foreground">
-          Docs
-        </p>
-        <div className="flex shrink-0 items-center gap-1">
-          <Button
-            type="button"
-            variant="ghost"
-            size="sm"
-            className="h-8 px-2 text-[12px]"
-            onClick={handleOpenInNewWindow}
-          >
-            <ExternalLink className="mr-1.5 h-3.5 w-3.5" />
-            Open in new window
-          </Button>
+  return (
+    <DocsPreviewNavigationProvider navigateToSlug={navigatePreviewSlug}>
+      <div
+        ref={panelRef}
+        style={{ width: `${width}px` }}
+        className={cn(
+          DOCS_CONTAINER,
+          'relative flex h-full shrink-0 flex-col border-l border-border bg-background',
+        )}
+      >
+        <div
+          onMouseDown={handleMouseDown}
+          className={cn(
+            'absolute left-0 top-0 z-10 flex h-full w-1.5 cursor-col-resize items-center justify-center transition-colors hover:bg-primary/20 dark:hover:bg-sidebar-accent/60',
+            isResizing && 'bg-primary/30 dark:bg-sidebar-accent/70',
+          )}
+        />
+
+        <div className="flex h-14 min-h-14 shrink-0 items-center justify-between gap-3 border-b border-border px-3">
           <button
             type="button"
-            onClick={closeDocsPreview}
-            className="flex h-7 w-7 cursor-pointer items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
-            aria-label="Close documentation preview"
+            onClick={() => navigatePreviewSlug('')}
+            className="min-w-0 truncate text-left text-[13px] font-semibold text-foreground transition-colors hover:text-foreground/80"
           >
-            <X className="h-3.5 w-3.5" />
+            Docs
           </button>
-        </div>
-      </div>
-
-      {breadcrumbItems.length > 0 ? (
-        <div className="shrink-0 border-b border-border px-4 py-2.5 sm:px-6">
-          <Breadcrumb>
-            <BreadcrumbList className="flex-nowrap gap-1 text-[11px] sm:text-[12px]">
-              {breadcrumbItems.map((item, index) => {
-                const isLast = index === breadcrumbItems.length - 1
-                const isClickable = !isLast && item.slug !== null
-
-                return (
-                  <span key={`${item.label}-${index}`} className="contents">
-                    {index > 0 ? (
-                      <BreadcrumbSeparator className="shrink-0" />
-                    ) : null}
-                    <BreadcrumbItem className="min-w-0">
-                      {isLast ? (
-                        <BreadcrumbPage className="truncate font-normal">
-                          {item.label}
-                        </BreadcrumbPage>
-                      ) : isClickable ? (
-                        <BreadcrumbLink asChild>
-                          <button
-                            type="button"
-                            onClick={() => handleBreadcrumbSelect(item.slug)}
-                            className="max-w-[9rem] truncate text-left sm:max-w-[11rem]"
-                          >
-                            {item.label}
-                          </button>
-                        </BreadcrumbLink>
-                      ) : (
-                        <span className="max-w-[9rem] truncate text-muted-foreground sm:max-w-[11rem]">
-                          {item.label}
-                        </span>
-                      )}
-                    </BreadcrumbItem>
-                  </span>
-                )
-              })}
-            </BreadcrumbList>
-          </Breadcrumb>
-        </div>
-      ) : null}
-
-      <DocsPreviewNavigationProvider navigateToSlug={navigatePreviewSlug}>
-        <div
-          ref={contentRef}
-          onClick={handleContentClick}
-          className="min-h-0 flex-1 overflow-y-auto px-4 py-6 sm:px-6"
-        >
-        {isLoading ? (
-          <div className="flex h-full min-h-[240px] items-center justify-center text-[13px] text-muted-foreground">
-            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-            Loading documentation...
-          </div>
-        ) : isError || !page ? (
-          <div className="flex h-full min-h-[240px] flex-col items-center justify-center gap-3 px-4 text-center">
-            <p className="text-[13px] text-muted-foreground">
-              Could not load this documentation page.
-            </p>
+          <div className="flex shrink-0 items-center gap-1">
             <Button
               type="button"
-              variant="outline"
+              variant="ghost"
               size="sm"
-              className="h-9 text-[13px]"
+              className="h-8 px-2 text-[12px]"
               onClick={handleOpenInNewWindow}
             >
               <ExternalLink className="mr-1.5 h-3.5 w-3.5" />
               Open in new window
             </Button>
+            <button
+              type="button"
+              onClick={closeDocsPreview}
+              className="flex h-7 w-7 cursor-pointer items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+              aria-label="Close documentation preview"
+            >
+              <X className="h-3.5 w-3.5" />
+            </button>
           </div>
-        ) : (
-          <article className="min-w-0">
-            <header className="mb-6">
-              <h1 className={DOCS_PREVIEW_PAGE_TITLE_CLASS}>
-                {page.meta.title}
-                <span className="text-[var(--brand-cta)]">_</span>
-              </h1>
-              {page.meta.description ? (
-                <p className={DOCS_PREVIEW_PAGE_DESCRIPTION_CLASS}>
-                  {page.meta.description}
-                </p>
-              ) : null}
-              <div className="mt-6 h-px w-full bg-border" aria-hidden />
-            </header>
-            <DocsMarkdown content={page.content} compact />
-          </article>
-        )}
         </div>
-      </DocsPreviewNavigationProvider>
 
-      <div
-        className="flex shrink-0 items-center border-t border-border bg-background px-4 sm:px-6"
-        style={{
-          height: CLI_SHELL_COLLAPSED_HEIGHT_PX,
-          minHeight: CLI_SHELL_COLLAPSED_HEIGHT_PX,
-          maxHeight: CLI_SHELL_COLLAPSED_HEIGHT_PX,
-        }}
-      >
-        <Button
-          type="button"
-          size="sm"
-          className="h-8 w-full text-[13px]"
-          onClick={handleOpenInDocs}
+        {!isDocsHome && breadcrumbItems.length > 0 ? (
+          <div
+            className={cn(
+              'shrink-0 border-b border-border py-2.5',
+              docsContentPaddingX,
+            )}
+          >
+            <Breadcrumb>
+              <BreadcrumbList className="flex-nowrap gap-1 text-[11px] @[480px]:text-[12px]">
+                {breadcrumbItems.map((item, index) => {
+                  const isLast = index === breadcrumbItems.length - 1
+                  const isClickable =
+                    !isLast &&
+                    item.slug !== null &&
+                    (item.slug !== slug || item.view === 'menu')
+
+                  return (
+                    <span key={`${item.label}-${index}`} className="contents">
+                      {index > 0 ? (
+                        <BreadcrumbSeparator className="shrink-0" />
+                      ) : null}
+                      <BreadcrumbItem className="min-w-0">
+                        {isLast ? (
+                          <BreadcrumbPage className="truncate font-normal">
+                            {item.label}
+                          </BreadcrumbPage>
+                        ) : isClickable ? (
+                          <BreadcrumbLink asChild>
+                            <button
+                              type="button"
+                              onClick={() =>
+                                handleBreadcrumbSelect(item.slug, item.view)
+                              }
+                              className="max-w-[9rem] cursor-pointer truncate text-left @[480px]:max-w-[11rem]"
+                            >
+                              {item.label}
+                            </button>
+                          </BreadcrumbLink>
+                        ) : (
+                          <span className="max-w-[9rem] truncate text-muted-foreground @[480px]:max-w-[11rem]">
+                            {item.label}
+                          </span>
+                        )}
+                      </BreadcrumbItem>
+                    </span>
+                  )
+                })}
+              </BreadcrumbList>
+            </Breadcrumb>
+          </div>
+        ) : null}
+
+        <div
+          ref={contentRef}
+          onClick={handleContentClick}
+          className={cn(
+            'min-h-0 w-full min-w-0 flex-1 overflow-y-auto',
+            isDocsHome ? 'py-0' : 'py-6',
+            docsContentPaddingX,
+          )}
         >
-          Open in docs
-        </Button>
+          {isDocsHome ? (
+            <DocsHome variant="preview" />
+          ) : showMenu ? (
+            <DocsPreviewMenu slug={slug} scrollContainerRef={contentRef} />
+          ) : isLoading ? (
+            <div className="flex h-full min-h-[240px] items-center justify-center text-[13px] text-muted-foreground">
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              Loading documentation...
+            </div>
+          ) : isError || !page ? (
+            <div className="flex h-full min-h-[240px] flex-col items-center justify-center gap-3 px-4 text-center">
+              <p className="text-[13px] text-muted-foreground">
+                Could not load this documentation page.
+              </p>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                className="h-9 text-[13px]"
+                onClick={handleOpenInNewWindow}
+              >
+                <ExternalLink className="mr-1.5 h-3.5 w-3.5" />
+                Open in new window
+              </Button>
+            </div>
+          ) : (
+            <article className="min-w-0">
+              <DocsPreviewArticleHeader
+                title={page.meta.title}
+                description={page.meta.description}
+                readingTimeMinutes={page.meta.readingTimeMinutes}
+                slug={page.meta.slug}
+                toc={page.toc}
+                scrollContainerRef={contentRef}
+              />
+              <DocsMarkdown content={page.content} compact />
+            </article>
+          )}
+        </div>
+
+        <div
+          className={cn(
+            'flex shrink-0 items-center border-t border-border bg-background',
+            docsContentPaddingX,
+          )}
+          style={{
+            height: CLI_SHELL_COLLAPSED_HEIGHT_PX,
+            minHeight: CLI_SHELL_COLLAPSED_HEIGHT_PX,
+            maxHeight: CLI_SHELL_COLLAPSED_HEIGHT_PX,
+          }}
+        >
+          <Button
+            type="button"
+            size="sm"
+            className="h-8 w-full text-[13px]"
+            onClick={handleOpenInDocs}
+          >
+            Open in docs
+          </Button>
+        </div>
       </div>
-    </div>
+    </DocsPreviewNavigationProvider>
   )
 }

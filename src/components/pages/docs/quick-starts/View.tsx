@@ -5,6 +5,7 @@ import {
   DocsHubCategorySection,
   getHubCategoryTocItem,
 } from '@/components/pages/docs/_components/DocsHubCategorySection'
+import { docsGridQuickStarts } from '@/lib/docs/docs-container'
 import { QUICK_STARTS_HUB_CATEGORIES } from '@/lib/docs/quick-starts-hub'
 import { PUBLIC_ICON_MUTED_CLASSES } from '@/lib/public-icon-classes'
 import { cn } from '@/lib/utils'
@@ -28,7 +29,7 @@ export function View() {
       <div className="space-y-12">
         {QUICK_STARTS_HUB_CATEGORIES.map((category) => (
           <DocsHubCategorySection key={category.title} title={category.title}>
-            <ul className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+            <ul className={cn('grid gap-3', docsGridQuickStarts)}>
               {category.items.map((item) => (
                 <li key={item.href}>
                   <DocsRouteLink

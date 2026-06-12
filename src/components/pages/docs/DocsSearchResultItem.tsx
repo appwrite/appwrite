@@ -21,7 +21,6 @@ export function DocsSearchResultItem({
   return (
     <CommandItem
       value={`${entry.slug} ${entry.title}`}
-      keywords={[entry.description, breadcrumbLabel, ...entry.breadcrumbs].join(' ')}
       onSelect={() => onSelect(entry.slug)}
       onMouseDown={(event) => event.preventDefault()}
       className={className ?? 'items-start gap-3 py-3'}

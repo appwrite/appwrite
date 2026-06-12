@@ -40,8 +40,8 @@ export function Info({
         <AlertDescription
           className={cn(
             compact
-              ? 'text-[13px] leading-[1.6] text-muted-foreground sm:text-[14px]'
-              : 'text-[15px] leading-[1.65] text-muted-foreground sm:text-[16px] sm:leading-[1.65]',
+              ? 'text-[13px] leading-[1.6] text-muted-foreground @[480px]:text-[14px]'
+              : 'text-[15px] leading-[1.65] text-muted-foreground @[640px]:text-[16px] @[640px]:leading-[1.65]',
             docsNoteContentClassName,
           )}
         >
