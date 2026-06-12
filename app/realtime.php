@@ -1222,7 +1222,10 @@ $server->onMessage(function (int $connection, string $message) use ($container, 
             $outboundBytes += $bytes;
 
             if ($project !== null && !$project->isEmpty()) {
-                triggerStats([METRIC_REALTIME_OUTBOUND => $bytes], $project->getId());
+                triggerStats([
+                    METRIC_REALTIME_OUTBOUND => $bytes,
+                    METRIC_REALTIME_CONNECTIONS_MESSAGES_SENT => 1,
+                ], $project->getId());
             }
         }
 
