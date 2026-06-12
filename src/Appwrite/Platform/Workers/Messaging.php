@@ -49,12 +49,16 @@ use Utopia\Storage\Device;
 use Utopia\Storage\Device\Local;
 use Utopia\Storage\Storage;
 use Utopia\System\System;
+use Utopia\Telemetry\Adapter as Telemetry;
+use Utopia\Telemetry\Counter;
 
 use function Swoole\Coroutine\batch;
 
 class Messaging extends Action
 {
     private ?SMSAdapter $adapter = null;
+
+    private ?Counter $sendCounter = null;
 
     public static function getName(): string
     {
@@ -74,6 +78,7 @@ class Messaging extends Action
             ->inject('dbForProject')
             ->inject('deviceForFiles')
             ->inject('publisherForUsage')
+            ->inject('telemetry')
             ->callback($this->action(...));
     }
 
@@ -84,6 +89,7 @@ class Messaging extends Action
      * @param Database $dbForProject
      * @param Device $deviceForFiles
      * @param UsagePublisher $publisherForUsage
+     * @param Telemetry $telemetry
      * @return void
      * @throws \Exception
      */
@@ -93,9 +99,12 @@ class Messaging extends Action
         Log $log,
         Database $dbForProject,
         Device $deviceForFiles,
-        UsagePublisher $publisherForUsage
+        UsagePublisher $publisherForUsage,
+        Telemetry $telemetry
     ): void {
         Runtime::setHookFlags(SWOOLE_HOOK_ALL ^ SWOOLE_HOOK_TCP);
+
+        $this->sendCounter = $telemetry->createCounter('worker.messaging.send');
         $payload = $message->getPayload();
 
         if (empty($payload)) {
@@ -142,6 +151,8 @@ class Messaging extends Action
         $targetIds = $message->getAttribute('targets', []);
         $userIds = $message->getAttribute('users', []);
         $providerType = $message->getAttribute('providerType');
+
+        Span::add('message.provider_type', $providerType);
 
         $default = $dbForProject->findOne('providers', [
             Query::equal('enabled', [true]),
@@ -267,6 +278,11 @@ class Messaging extends Action
         foreach ($providers as $provider) {
             $message->setAttribute('search', "{$message->getAttribute('search')} {$provider->getAttribute('name')} {$provider->getAttribute('provider')} {$provider->getAttribute('type')}");
         }
+
+        Span::add('message.providers', \implode(',', \array_unique(\array_map(
+            fn (Document $provider) => $provider->getAttribute('provider'),
+            \array_values($providers)
+        ))));
 
         $message->setAttribute('deliveredTotal', $deliveredTotal);
         $message->setAttribute('deliveredAt', DateTime::now());
@@ -533,6 +549,25 @@ class Messaging extends Action
         ] = $this->retrySend($batch, $message, $provider, $providerType, $adapter, $dbForProject, $deviceForFiles, $project);
 
         $failed = $recipients - $delivered;
+
+        if ($delivered > 0) {
+            $this->sendCounter?->add($delivered, [
+                'type' => $provider->getAttribute('type'),
+                'provider' => $provider->getAttribute('provider'),
+                'origin' => MESSAGE_SEND_TYPE_EXTERNAL,
+                'result' => 'success',
+            ]);
+        }
+
+        if ($failed > 0) {
+            $this->sendCounter?->add($failed, [
+                'type' => $provider->getAttribute('type'),
+                'provider' => $provider->getAttribute('provider'),
+                'origin' => MESSAGE_SEND_TYPE_EXTERNAL,
+                'result' => 'failure',
+            ]);
+        }
+
         $usage = new UsageContext();
         $usage
             ->addMetric(METRIC_MESSAGES, $recipients)
@@ -803,7 +838,27 @@ class Messaging extends Action
             $from
         );
 
-        $this->adapter->send($sms);
+        $provider = \strtolower($this->adapter->getName());
+
+        try {
+            $this->adapter->send($sms);
+        } catch (\Throwable $error) {
+            $this->sendCounter?->add(\count($recipients), [
+                'type' => MESSAGE_TYPE_SMS,
+                'provider' => $provider,
+                'origin' => MESSAGE_SEND_TYPE_INTERNAL,
+                'result' => 'failure',
+            ]);
+
+            throw $error;
+        }
+
+        $this->sendCounter?->add(\count($recipients), [
+            'type' => MESSAGE_TYPE_SMS,
+            'provider' => $provider,
+            'origin' => MESSAGE_SEND_TYPE_INTERNAL,
+            'result' => 'success',
+        ]);
     }
 
 

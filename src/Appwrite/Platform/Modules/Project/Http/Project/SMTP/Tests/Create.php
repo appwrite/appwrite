@@ -152,6 +152,7 @@ class Create extends Action
                 project: $project,
                 recipient: $email,
                 subject: $subject,
+                template: 'smtp-test',
                 bodyTemplate: APP_CE_CONFIG_DIR . '/locale/templates/email-base-styled.tpl',
                 body: $template->render(),
                 smtp: [
