@@ -427,7 +427,7 @@ function HomePage() {
                         className={`relative flex min-h-0 flex-1 flex-col px-3 pb-3 sm:px-3.5 sm:pb-3.5 ${item.mobileVisualTall ? 'max-lg:min-h-[460px]' : ''}`}
                       >
                         <div
-                          className={`relative isolate min-h-0 flex-1 overflow-hidden rounded-lg border border-border bg-muted/20 shadow-sm ${
+                          className={`relative isolate min-h-0 flex-1 overflow-hidden rounded-lg border border-border bg-muted/20 ${
                             item.mobileVisualTall
                               ? 'min-h-[280px] lg:min-h-[15rem]'
                               : item.compact

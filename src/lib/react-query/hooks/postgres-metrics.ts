@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from 'react'
 import { queryOptions, useQuery } from '@tanstack/react-query'
 import { executePostgresDatabaseSql } from './postgres-databases'
 import {
+  POSTGRES_METRICS_CONNECTION_APPS_SQL,
   POSTGRES_METRICS_CONNECTION_STATES_SQL,
   POSTGRES_METRICS_SNAPSHOT_SQL,
   POSTGRES_METRICS_TABLE_ACTIVITY_SQL,
@@ -9,10 +10,12 @@ import {
 import {
   appendPostgresMetricsSample,
   buildPostgresMetricsSample,
+  parsePostgresConnectionApps,
   parsePostgresConnectionStates,
   parsePostgresMetricsSnapshot,
   parsePostgresTableActivity,
   readPostgresMetricsSamples,
+  type PostgresConnectionAppRow,
   type PostgresConnectionStateRow,
   type PostgresMetricsSample,
   type PostgresMetricsSnapshot,
@@ -46,6 +49,19 @@ export async function fetchPostgresConnectionStates(
     30,
   )
   return parsePostgresConnectionStates(execution)
+}
+
+export async function fetchPostgresConnectionApps(
+  projectId: string,
+  databaseId: string,
+): Promise<PostgresConnectionAppRow[]> {
+  const execution = await executePostgresDatabaseSql(
+    projectId,
+    databaseId,
+    POSTGRES_METRICS_CONNECTION_APPS_SQL,
+    30,
+  )
+  return parsePostgresConnectionApps(execution)
 }
 
 export async function fetchPostgresTableActivity(
@@ -83,8 +99,25 @@ export function postgresConnectionStatesQueryOptions(
   databaseId: string | null | undefined,
 ) {
   return queryOptions({
-    queryKey: ['postgres', 'metrics', 'connections', projectId, databaseId],
+    queryKey: ['postgres', 'metrics', 'connection-states', projectId, databaseId],
     queryFn: () => fetchPostgresConnectionStates(projectId!, databaseId!),
+    enabled: !!projectId && !!databaseId,
+    staleTime: DEFAULT_STALE_TIME,
+    refetchOnMount: false,
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: false,
+    retry: false,
+    gcTime: projectId && databaseId ? 5 * 60 * 1000 : 0,
+  })
+}
+
+export function postgresConnectionAppsQueryOptions(
+  projectId: string | null | undefined,
+  databaseId: string | null | undefined,
+) {
+  return queryOptions({
+    queryKey: ['postgres', 'metrics', 'connection-apps', projectId, databaseId],
+    queryFn: () => fetchPostgresConnectionApps(projectId!, databaseId!),
     enabled: !!projectId && !!databaseId,
     staleTime: DEFAULT_STALE_TIME,
     refetchOnMount: false,
@@ -135,6 +168,21 @@ export function usePostgresConnectionStates(
   )
   return {
     states: query.data ?? [],
+    isLoading: query.isLoading,
+    error: query.error,
+    refetch: query.refetch,
+  }
+}
+
+export function usePostgresConnectionApps(
+  projectId: string | null | undefined,
+  databaseId: string | null | undefined,
+) {
+  const query = useQuery(
+    postgresConnectionAppsQueryOptions(projectId, databaseId),
+  )
+  return {
+    apps: query.data ?? [],
     isLoading: query.isLoading,
     error: query.error,
     refetch: query.refetch,

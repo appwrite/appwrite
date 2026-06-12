@@ -15,70 +15,11 @@ import {
   isHtmlDarkChrome,
   isResolvedThemeDarkChrome,
 } from '@/lib/html-theme'
-
-/** Editor dark background (--editor-bg in .dark); use #09090b so Monaco --vscode-editor-background matches */
-const APP_DARK_BG_HEX = '#09090b'
-const APP_DARK_THEME_ID = 'app-dark'
-const APP_LIGHT_THEME_ID = 'app-light'
-
-function rgbCssToHex(rgb: string): string | null {
-  const m = rgb.match(/rgba?\((\d+),\s*(\d+),\s*(\d+)/)
-  if (!m) return null
-  return (
-    '#' +
-    [Number(m[1]), Number(m[2]), Number(m[3])]
-      .map((x) => x.toString(16).padStart(2, '0'))
-      .join('')
-  )
-}
-
-/** Resolve a theme color variable to hex (browser computes oklch etc. to rgb). */
-function cssVarToHex(
-  varName: string,
-  kind: 'background' | 'foreground',
-  fallback: string,
-): string {
-  if (typeof document === 'undefined') return fallback
-  const el = document.createElement('div')
-  el.style.cssText =
-    kind === 'background'
-      ? `position:absolute;left:-9999px;top:0;width:1px;height:1px;background:var(${varName})`
-      : `position:absolute;left:-9999px;color:var(${varName})`
-  document.documentElement.appendChild(el)
-  const raw =
-    kind === 'background'
-      ? getComputedStyle(el).backgroundColor
-      : getComputedStyle(el).color
-  document.documentElement.removeChild(el)
-  if (!raw || raw === 'transparent') return fallback
-  const hex = rgbCssToHex(raw)
-  return hex && /^#[0-9a-fA-F]{6}$/.test(hex) ? hex : fallback
-}
-
-/** Read editor background hex: use --editor-bg from .dark, or compute from --background. */
-function getAppBackgroundHex(): string {
-  if (typeof document === 'undefined') return APP_DARK_BG_HEX
-  const root = document.documentElement
-  const editorBg = getComputedStyle(root).getPropertyValue('--editor-bg').trim()
-  if (editorBg && editorBg.startsWith('#')) return editorBg
-  // Fallback: compute from --background (div must inherit .dark to get dark --background)
-  const el = document.createElement('div')
-  el.className = 'dark'
-  el.style.cssText =
-    'position:absolute;width:0;height:0;background:var(--background)'
-  document.body.appendChild(el)
-  const rgb = getComputedStyle(el).backgroundColor
-  document.body.removeChild(el)
-  const m = rgb.match(/rgb\((\d+),\s*(\d+),\s*(\d+)\)/)
-  if (m)
-    return (
-      '#' +
-      [Number(m[1]), Number(m[2]), Number(m[3])]
-        .map((x) => x.toString(16).padStart(2, '0'))
-        .join('')
-    )
-  return APP_DARK_BG_HEX
-}
+import {
+  applyMonacoAppTheme,
+  defineMonacoAppTheme,
+  monacoAppThemeId,
+} from '@/lib/monaco-app-theme'
 
 export type CodeEditorLanguage =
   | 'javascript'
@@ -151,6 +92,7 @@ export const CodeEditor = forwardRef<CodeEditorRef, CodeEditorProps>(
       resolvedTheme ?? (isDarkChrome ? 'dark-chrome' : 'light-chrome')
 
     const editorRef = useRef<editor.IStandaloneCodeEditor | null>(null)
+    const monacoRef = useRef<typeof import('monaco-editor') | null>(null)
     const valueRef = useRef(value)
 
     useEffect(() => {
@@ -159,58 +101,30 @@ export const CodeEditor = forwardRef<CodeEditorRef, CodeEditorProps>(
 
     const handleBeforeMount = useCallback(
       (monaco: typeof import('monaco-editor')) => {
-        const bgLight = cssVarToHex('--background', 'background', '#ffffff')
-        const fgLight = cssVarToHex('--foreground', 'foreground', '#18181b')
-        const mutedLight = cssVarToHex(
-          '--muted-foreground',
-          'foreground',
-          '#71717a',
-        )
-        monaco.editor.defineTheme(APP_LIGHT_THEME_ID, {
-          base: 'vs',
-          inherit: true,
-          rules: [],
-          colors: {
-            'editor.background': bgLight,
-            'editorGutter.background': bgLight,
-            'editor.foreground': fgLight,
-            'editor.lineHighlightBackground': bgLight,
-            'editorLineNumber.foreground': mutedLight,
-            'editorCursor.foreground': fgLight,
-            'editor.selectionBackground': '#e5e7eb',
-            'editorWidget.background': bgLight,
-            'editorSuggestWidget.background': bgLight,
-            'minimap.background': bgLight,
-            'minimapGutter.background': bgLight,
-          },
-        })
-
-        const bgDark = getAppBackgroundHex()
-        monaco.editor.defineTheme(APP_DARK_THEME_ID, {
-          base: 'vs-dark',
-          inherit: true,
-          rules: [],
-          colors: {
-            'editor.background': bgDark,
-            'editorGutter.background': bgDark,
-            'editor.lineHighlightBackground': bgDark,
-            'editorWidget.background': bgDark,
-            'editorSuggestWidget.background': bgDark,
-            'minimap.background': bgDark,
-            'minimapGutter.background': bgDark,
-          },
-        })
+        monacoRef.current = monaco
+        defineMonacoAppTheme(monaco, resolvedTheme, isDarkChrome)
       },
-      [],
+      [isDarkChrome, resolvedTheme],
     )
 
     const handleEditorMount: OnMount = useCallback(
       (editorInstance, monaco) => {
         editorRef.current = editorInstance
+        monacoRef.current = monaco
+        applyMonacoAppTheme(monaco, resolvedTheme, isDarkChrome)
         onEditorMount?.(editorInstance, monaco)
       },
-      [onEditorMount],
+      [isDarkChrome, onEditorMount, resolvedTheme],
     )
+
+    useEffect(() => {
+      const monaco = monacoRef.current
+      if (!monaco) return
+      applyMonacoAppTheme(monaco, resolvedTheme, isDarkChrome)
+      editorRef.current?.updateOptions({
+        theme: monacoAppThemeId(resolvedTheme, isDarkChrome),
+      })
+    }, [isDarkChrome, resolvedTheme])
 
     useEffect(() => {
       return () => {
@@ -253,12 +167,13 @@ export const CodeEditor = forwardRef<CodeEditorRef, CodeEditorProps>(
           onChange={handleChange}
           beforeMount={handleBeforeMount}
           onMount={handleEditorMount}
-          theme={isDarkChrome ? APP_DARK_THEME_ID : APP_LIGHT_THEME_ID}
+          theme={monacoAppThemeId(resolvedTheme, isDarkChrome)}
           loading={null}
           options={{
             readOnly,
             minimap: { enabled: minimap },
             lineNumbers,
+            renderLineHighlight: 'none',
             scrollBeyondLastLine: false,
             fontSize: 13,
             fontFamily:

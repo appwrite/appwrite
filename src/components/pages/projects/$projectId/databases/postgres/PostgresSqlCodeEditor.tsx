@@ -45,6 +45,12 @@ let getCompletionCatalog: () => PostgresSqlCompletionCatalog = () => ({
   columns: [],
 })
 
+function focusEditorInstance(editorInstance: editor.IStandaloneCodeEditor) {
+  requestAnimationFrame(() => {
+    editorInstance.focus()
+  })
+}
+
 export const PostgresSqlCodeEditor = forwardRef<
   PostgresSqlCodeEditorRef,
   PostgresSqlCodeEditorProps
@@ -166,6 +172,7 @@ export const PostgresSqlCodeEditor = forwardRef<
 
     const frame = requestAnimationFrame(() => {
       attachUndoRedoListeners(editorInstance)
+      focusEditorInstance(editorInstance)
     })
     return () => cancelAnimationFrame(frame)
   }, [attachUndoRedoListeners, tabId])
@@ -239,6 +246,8 @@ export const PostgresSqlCodeEditor = forwardRef<
         editorInstance.pushUndoStop()
         isApplyingExternalSqlRef.current = false
       }
+
+      focusEditorInstance(editorInstance)
     },
     [attachUndoRedoListeners, databaseId, projectId],
   )

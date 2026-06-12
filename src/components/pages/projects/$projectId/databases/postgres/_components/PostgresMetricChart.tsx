@@ -4,13 +4,16 @@ import {
   Area,
   AreaChart,
   CartesianGrid,
+  ReferenceLine,
   ResponsiveContainer,
   Tooltip,
   XAxis,
   YAxis,
 } from 'recharts'
 import { Info } from 'lucide-react'
+import { Badge } from '@/components/ui/badge'
 import { cn } from '@/lib/utils'
+import { POSTGRES_USAGE_PLACEHOLDER_NOTE } from '@/lib/postgres-usage-placeholder-metrics'
 import {
   Tooltip as UITooltip,
   TooltipContent,
@@ -35,6 +38,13 @@ type PostgresMetricChartProps = {
   formatY?: (value: number) => string
   formatSecondaryY?: (value: number) => string
   emptyMessage?: string
+  /** When set with usageQuota, shows "value / quota" in the chart header. */
+  usageValue?: number | null
+  usageQuota?: number | null
+  usageQuotaLabel?: string
+  /** Renders sample-data styling until usage service metrics are wired up. */
+  isPlaceholder?: boolean
+  placeholderNote?: string
   className?: string
 }
 
@@ -115,6 +125,11 @@ export function PostgresMetricChart({
   formatY = (v) => v.toFixed(1),
   formatSecondaryY,
   emptyMessage = 'Collecting samples. Keep this view open to build a time series from live SQL metrics.',
+  usageValue,
+  usageQuota,
+  usageQuotaLabel = 'available',
+  isPlaceholder = false,
+  placeholderNote = POSTGRES_USAGE_PLACEHOLDER_NOTE,
   className,
 }: PostgresMetricChartProps) {
   const gradientId = `postgres-metric-gradient-${id}`
@@ -143,10 +158,31 @@ export function PostgresMetricChart({
     const vals = data.flatMap((d) => [
       d.value,
       ...(d.secondaryValue != null ? [d.secondaryValue] : []),
+      ...(usageQuota != null && usageQuota > 0 ? [usageQuota] : []),
     ])
     const samples = collectYAxisTickSamples(vals, formatY)
     return measureYAxisWidth(samples, (v) => formatYAxisTickCompact(v, formatY))
-  }, [data, formatY])
+  }, [data, formatY, usageQuota])
+
+  const yAxisDomain = useMemo(() => {
+    if (usageQuota == null || usageQuota <= 0) {
+      return undefined
+    }
+    return [
+      0,
+      (max: number) => Math.max(max, usageQuota),
+    ] as [number, (max: number) => number]
+  }, [usageQuota])
+
+  const showUsageSummary =
+    usageValue != null &&
+    usageQuota != null &&
+    usageQuota > 0 &&
+    Number.isFinite(usageValue)
+
+  const usagePercent = showUsageSummary
+    ? (usageValue / usageQuota) * 100
+    : null
 
   const showEmpty = data.length < 2
 
@@ -155,13 +191,19 @@ export function PostgresMetricChart({
       id={`postgres-metric-chart-${id}`}
       className={cn(
         'scroll-mt-[calc(4rem+env(safe-area-inset-top))] w-full overflow-hidden rounded-lg border border-border bg-card',
+        isPlaceholder && 'border-dashed',
         className,
       )}
     >
       <div className="flex flex-col gap-3 border-b border-border px-4 py-4 sm:flex-row sm:items-start sm:justify-between">
         <div className="min-w-0 flex-1">
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2">
             <h3 className="text-[14px] font-medium text-foreground">{title}</h3>
+            {isPlaceholder ? (
+              <Badge variant="info" className="text-[10px] shrink-0">
+                Sample data
+              </Badge>
+            ) : null}
             <TooltipProvider delayDuration={0}>
               <UITooltip>
                 <TooltipTrigger asChild>
@@ -181,6 +223,19 @@ export function PostgresMetricChart({
               </UITooltip>
             </TooltipProvider>
           </div>
+          {showUsageSummary ? (
+            <div className="mt-2 flex items-baseline gap-2">
+              <span className="text-[24px] font-semibold tabular-nums text-foreground">
+                {formatY(usageValue)}
+              </span>
+              <span className="text-[13px] text-muted-foreground">
+                / {formatY(usageQuota)} {usageQuotaLabel}
+                {usagePercent != null
+                  ? ` · ${usagePercent.toFixed(1)}%`
+                  : null}
+              </span>
+            </div>
+          ) : null}
           {hasSecondary ? (
             <div className="mt-2 flex flex-wrap items-center gap-3 text-[11px] text-muted-foreground">
               <span className="inline-flex items-center gap-1.5">
@@ -283,7 +338,16 @@ export function PostgresMetricChart({
                   tickFormatter={yAxisTickFormatter}
                   dx={0}
                   width={yAxisWidth}
+                  domain={yAxisDomain}
                 />
+                {usageQuota != null && usageQuota > 0 ? (
+                  <ReferenceLine
+                    y={usageQuota}
+                    stroke="hsl(var(--muted-foreground) / 0.45)"
+                    strokeDasharray="4 4"
+                    ifOverflow="extendDomain"
+                  />
+                ) : null}
                 <Tooltip
                   content={({ active, payload }) => {
                     if (!active || !payload?.length) return null
@@ -301,6 +365,13 @@ export function PostgresMetricChart({
                           {unit
                             ? `${formatY(row.value)} ${unit}`
                             : formatY(row.value)}
+                          {usageQuota != null && usageQuota > 0 ? (
+                            <span className="font-normal text-muted-foreground">
+                              {' '}
+                              ·{' '}
+                              {((row.value / usageQuota) * 100).toFixed(1)}%
+                            </span>
+                          ) : null}
                         </p>
                         {row.secondaryValue != null && secondaryLabel ? (
                           <p className="mt-1 text-[12px] text-muted-foreground">
@@ -342,7 +413,7 @@ export function PostgresMetricChart({
 
       <div className="border-t border-border bg-muted/30 px-4 py-3">
         <p className="text-[12px] leading-relaxed text-muted-foreground">
-          {description}
+          {isPlaceholder ? placeholderNote : description}
         </p>
       </div>
     </div>

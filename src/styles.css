@@ -154,6 +154,7 @@ code {
 
 .crazy {
   /* Secret wild theme - neon colors, high saturation, crazy combinations */
+  --editor-bg: oklch(0.25 0.25 300);
   --background: oklch(0.25 0.25 300);
   --foreground: oklch(0.95 0.3 120);
   --card: oklch(0.3 0.28 280);
@@ -209,6 +210,7 @@ code {
 
 .stealth {
   /* Secret stealth theme - tactical colors, olive greens, khaki, dark earth tones */
+  --editor-bg: oklch(0.18 0.04 110);
   --background: oklch(0.18 0.04 110);
   --foreground: oklch(0.92 0.03 85);
   --card: oklch(0.22 0.05 105);
@@ -791,6 +793,13 @@ html:is(.crazy, .stealth, .premium, .high-contrast, .barbie, .nineties) .upgrade
 
 html:is(.crazy, .stealth, .premium, .high-contrast, .barbie, .nineties) .upgrade-button-wrapper:hover::before {
   animation: none;
+}
+
+/* Monaco editor surfaces follow console theme tokens (incl. stealth, premium, etc.). */
+.monaco-editor,
+.monaco-editor .monaco-editor-background,
+.monaco-editor .margin {
+  background-color: var(--editor-bg, var(--background)) !important;
 }
 
 /* Find in file highlight in Monaco editor */

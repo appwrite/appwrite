@@ -92,7 +92,6 @@ function PostgresShellLayout({
   const navigate = useNavigate()
   const { activeTab, openTableTab } = usePostgresSidebar()
   const selectedTableId = databaseTab ? undefined : activeTab.tableId
-  const editorActive = !databaseTab && tableId === '-'
 
   const handleOpenTable = (nextTableId: string) => {
     openTableTab(nextTableId)
@@ -131,7 +130,6 @@ function PostgresShellLayout({
               databaseName={database.name}
               selectedTableId={selectedTableId}
               databaseTab={databaseTab}
-              editorActive={editorActive}
               onSelectTable={handleOpenTable}
             />
           }

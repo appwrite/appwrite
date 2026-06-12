@@ -5,9 +5,10 @@ import {
 import { ROWS_DEFAULT_PAGE_SIZE } from '@/lib/react-query/hooks/constants'
 import {
   parsePostgresTableId,
+  postgresNav,
   postgresTableRows,
 } from '@/lib/postgres-database-routes'
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { useNavigate, useParams } from '@tanstack/react-router'
 import { useAuth } from '@/components/global/auth/RequireAuth'
 import { canSaveTeamFilters } from '@/lib/console-access-checks'
@@ -60,24 +61,9 @@ function WorkspaceContent({ databaseId, tableId }: PostgresWorkspaceProps) {
     openTableTab,
   } = usePostgresSidebar()
 
-  const isDatabaseLevelView = tableId === '-'
-  const preferQueryTabRef = useRef(false)
-
   useEffect(() => {
-    preferQueryTabRef.current = false
-  }, [tableId])
-
-  useEffect(() => {
-    if (!isDatabaseLevelView) {
-      if (preferQueryTabRef.current) return
-      openTableTab(tableId)
-    }
-  }, [isDatabaseLevelView, openTableTab, tableId])
-
-  const handleCreateTab = useCallback(() => {
-    preferQueryTabRef.current = true
-    createTab()
-  }, [createTab])
+    openTableTab(tableId)
+  }, [openTableTab, tableId])
 
   const activeTableId = activeTab.tableId
   const selectedTable = activeTableId
@@ -139,7 +125,17 @@ function WorkspaceContent({ databaseId, tableId }: PostgresWorkspaceProps) {
     (tabId: string) => {
       setActiveTabId(tabId)
       const tab = tabs.find((entry) => entry.id === tabId)
-      if (!tab?.tableId || tab.tableId === tableId) return
+      if (!tab) return
+
+      if (!tab.tableId) {
+        navigate({
+          ...postgresNav({ projectId, databaseId }).sql(),
+          replace: true,
+        })
+        return
+      }
+
+      if (tab.tableId === tableId) return
 
       navigate({
         ...postgresTableRows({
@@ -204,7 +200,7 @@ function WorkspaceContent({ databaseId, tableId }: PostgresWorkspaceProps) {
         sql={activeTab.sql}
         onSqlChange={updateActiveTabSql}
         onSelectTab={handleSelectTab}
-        onCreateTab={handleCreateTab}
+        onCreateTab={createTab}
         onCloseTab={closeTab}
         onReorderTabs={reorderTabs}
         onRun={handleRunSql}

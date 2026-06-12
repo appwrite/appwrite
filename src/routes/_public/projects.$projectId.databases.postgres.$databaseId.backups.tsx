@@ -2,7 +2,10 @@ import { createFileRoute, redirect } from '@tanstack/react-router'
 import { PostgresShell } from '@/components/pages/projects/$projectId/databases/postgres/PostgresShell'
 import { TabPlaceholder } from '@/components/pages/projects/$projectId/databases/postgres/TabPlaceholder'
 import { prefetchPostgresShellData } from '@/components/pages/projects/$projectId/databases/postgres/postgres-tab-route-loader'
-import { POSTGRES_DATABASE_TAB_LABELS } from '@/lib/postgres-database-routes'
+import {
+  POSTGRES_DATABASE_TAB_LABELS,
+  postgresNav,
+} from '@/lib/postgres-database-routes'
 import { pageTitle } from '@/lib/utils/page-title'
 import { getActiveProfileFeatures } from '@/lib/console-profiles'
 
@@ -12,12 +15,10 @@ export const Route = createFileRoute(
   beforeLoad: ({ params }) => {
     if (!getActiveProfileFeatures().databaseBackups) {
       throw redirect({
-        to: '/projects/$projectId/databases/postgres/$databaseId/tables/$tableId/rows',
-        params: {
+        ...postgresNav({
           projectId: params.projectId,
           databaseId: params.databaseId,
-          tableId: '-',
-        },
+        }).sql(),
         replace: true,
       })
     }

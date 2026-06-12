@@ -207,6 +207,7 @@ import { Route as PublicProjectsProjectIdFunctionsFunctionIdSettingsDangerZoneRo
 import { Route as PublicProjectsProjectIdFunctionsFunctionIdSettingsBuildRouteImport } from './routes/_public/projects.$projectId.functions.$functionId.settings.build'
 import { Route as PublicProjectsProjectIdFunctionsFunctionIdDomainsAddRouteImport } from './routes/_public/projects.$projectId.functions.$functionId.domains.add'
 import { Route as PublicProjectsProjectIdDatabasesPostgresDatabaseIdVisualizerRouteImport } from './routes/_public/projects.$projectId.databases.postgres.$databaseId.visualizer'
+import { Route as PublicProjectsProjectIdDatabasesPostgresDatabaseIdSqlRouteImport } from './routes/_public/projects.$projectId.databases.postgres.$databaseId.sql'
 import { Route as PublicProjectsProjectIdDatabasesPostgresDatabaseIdSettingsRouteImport } from './routes/_public/projects.$projectId.databases.postgres.$databaseId.settings'
 import { Route as PublicProjectsProjectIdDatabasesPostgresDatabaseIdMonitorRouteImport } from './routes/_public/projects.$projectId.databases.postgres.$databaseId.monitor'
 import { Route as PublicProjectsProjectIdDatabasesPostgresDatabaseIdInsightsRouteImport } from './routes/_public/projects.$projectId.databases.postgres.$databaseId.insights'
@@ -1430,6 +1431,13 @@ const PublicProjectsProjectIdDatabasesPostgresDatabaseIdVisualizerRoute =
         PublicProjectsProjectIdDatabasesPostgresDatabaseIdRoute,
     } as any,
   )
+const PublicProjectsProjectIdDatabasesPostgresDatabaseIdSqlRoute =
+  PublicProjectsProjectIdDatabasesPostgresDatabaseIdSqlRouteImport.update({
+    id: '/sql',
+    path: '/sql',
+    getParentRoute: () =>
+      PublicProjectsProjectIdDatabasesPostgresDatabaseIdRoute,
+  } as any)
 const PublicProjectsProjectIdDatabasesPostgresDatabaseIdSettingsRoute =
   PublicProjectsProjectIdDatabasesPostgresDatabaseIdSettingsRouteImport.update({
     id: '/settings',
@@ -2092,6 +2100,7 @@ export interface FileRoutesByFullPath {
   '/projects/$projectId/databases/postgres/$databaseId/insights': typeof PublicProjectsProjectIdDatabasesPostgresDatabaseIdInsightsRoute
   '/projects/$projectId/databases/postgres/$databaseId/monitor': typeof PublicProjectsProjectIdDatabasesPostgresDatabaseIdMonitorRoute
   '/projects/$projectId/databases/postgres/$databaseId/settings': typeof PublicProjectsProjectIdDatabasesPostgresDatabaseIdSettingsRoute
+  '/projects/$projectId/databases/postgres/$databaseId/sql': typeof PublicProjectsProjectIdDatabasesPostgresDatabaseIdSqlRoute
   '/projects/$projectId/databases/postgres/$databaseId/visualizer': typeof PublicProjectsProjectIdDatabasesPostgresDatabaseIdVisualizerRoute
   '/projects/$projectId/functions/$functionId/domains/add': typeof PublicProjectsProjectIdFunctionsFunctionIdDomainsAddRoute
   '/projects/$projectId/functions/$functionId/settings/build': typeof PublicProjectsProjectIdFunctionsFunctionIdSettingsBuildRoute
@@ -2317,6 +2326,7 @@ export interface FileRoutesByTo {
   '/projects/$projectId/databases/postgres/$databaseId/insights': typeof PublicProjectsProjectIdDatabasesPostgresDatabaseIdInsightsRoute
   '/projects/$projectId/databases/postgres/$databaseId/monitor': typeof PublicProjectsProjectIdDatabasesPostgresDatabaseIdMonitorRoute
   '/projects/$projectId/databases/postgres/$databaseId/settings': typeof PublicProjectsProjectIdDatabasesPostgresDatabaseIdSettingsRoute
+  '/projects/$projectId/databases/postgres/$databaseId/sql': typeof PublicProjectsProjectIdDatabasesPostgresDatabaseIdSqlRoute
   '/projects/$projectId/databases/postgres/$databaseId/visualizer': typeof PublicProjectsProjectIdDatabasesPostgresDatabaseIdVisualizerRoute
   '/projects/$projectId/functions/$functionId/domains/add': typeof PublicProjectsProjectIdFunctionsFunctionIdDomainsAddRoute
   '/projects/$projectId/functions/$functionId/settings/build': typeof PublicProjectsProjectIdFunctionsFunctionIdSettingsBuildRoute
@@ -2574,6 +2584,7 @@ export interface FileRoutesById {
   '/_public/projects/$projectId/databases/postgres/$databaseId/insights': typeof PublicProjectsProjectIdDatabasesPostgresDatabaseIdInsightsRoute
   '/_public/projects/$projectId/databases/postgres/$databaseId/monitor': typeof PublicProjectsProjectIdDatabasesPostgresDatabaseIdMonitorRoute
   '/_public/projects/$projectId/databases/postgres/$databaseId/settings': typeof PublicProjectsProjectIdDatabasesPostgresDatabaseIdSettingsRoute
+  '/_public/projects/$projectId/databases/postgres/$databaseId/sql': typeof PublicProjectsProjectIdDatabasesPostgresDatabaseIdSqlRoute
   '/_public/projects/$projectId/databases/postgres/$databaseId/visualizer': typeof PublicProjectsProjectIdDatabasesPostgresDatabaseIdVisualizerRoute
   '/_public/projects/$projectId/functions/$functionId/domains/add': typeof PublicProjectsProjectIdFunctionsFunctionIdDomainsAddRoute
   '/_public/projects/$projectId/functions/$functionId/settings/build': typeof PublicProjectsProjectIdFunctionsFunctionIdSettingsBuildRoute
@@ -2832,6 +2843,7 @@ export interface FileRouteTypes {
     | '/projects/$projectId/databases/postgres/$databaseId/insights'
     | '/projects/$projectId/databases/postgres/$databaseId/monitor'
     | '/projects/$projectId/databases/postgres/$databaseId/settings'
+    | '/projects/$projectId/databases/postgres/$databaseId/sql'
     | '/projects/$projectId/databases/postgres/$databaseId/visualizer'
     | '/projects/$projectId/functions/$functionId/domains/add'
     | '/projects/$projectId/functions/$functionId/settings/build'
@@ -3057,6 +3069,7 @@ export interface FileRouteTypes {
     | '/projects/$projectId/databases/postgres/$databaseId/insights'
     | '/projects/$projectId/databases/postgres/$databaseId/monitor'
     | '/projects/$projectId/databases/postgres/$databaseId/settings'
+    | '/projects/$projectId/databases/postgres/$databaseId/sql'
     | '/projects/$projectId/databases/postgres/$databaseId/visualizer'
     | '/projects/$projectId/functions/$functionId/domains/add'
     | '/projects/$projectId/functions/$functionId/settings/build'
@@ -3313,6 +3326,7 @@ export interface FileRouteTypes {
     | '/_public/projects/$projectId/databases/postgres/$databaseId/insights'
     | '/_public/projects/$projectId/databases/postgres/$databaseId/monitor'
     | '/_public/projects/$projectId/databases/postgres/$databaseId/settings'
+    | '/_public/projects/$projectId/databases/postgres/$databaseId/sql'
     | '/_public/projects/$projectId/databases/postgres/$databaseId/visualizer'
     | '/_public/projects/$projectId/functions/$functionId/domains/add'
     | '/_public/projects/$projectId/functions/$functionId/settings/build'
@@ -4791,6 +4805,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PublicProjectsProjectIdDatabasesPostgresDatabaseIdVisualizerRouteImport
       parentRoute: typeof PublicProjectsProjectIdDatabasesPostgresDatabaseIdRoute
     }
+    '/_public/projects/$projectId/databases/postgres/$databaseId/sql': {
+      id: '/_public/projects/$projectId/databases/postgres/$databaseId/sql'
+      path: '/sql'
+      fullPath: '/projects/$projectId/databases/postgres/$databaseId/sql'
+      preLoaderRoute: typeof PublicProjectsProjectIdDatabasesPostgresDatabaseIdSqlRouteImport
+      parentRoute: typeof PublicProjectsProjectIdDatabasesPostgresDatabaseIdRoute
+    }
     '/_public/projects/$projectId/databases/postgres/$databaseId/settings': {
       id: '/_public/projects/$projectId/databases/postgres/$databaseId/settings'
       path: '/settings'
@@ -5729,6 +5750,7 @@ interface PublicProjectsProjectIdDatabasesPostgresDatabaseIdRouteChildren {
   PublicProjectsProjectIdDatabasesPostgresDatabaseIdInsightsRoute: typeof PublicProjectsProjectIdDatabasesPostgresDatabaseIdInsightsRoute
   PublicProjectsProjectIdDatabasesPostgresDatabaseIdMonitorRoute: typeof PublicProjectsProjectIdDatabasesPostgresDatabaseIdMonitorRoute
   PublicProjectsProjectIdDatabasesPostgresDatabaseIdSettingsRoute: typeof PublicProjectsProjectIdDatabasesPostgresDatabaseIdSettingsRoute
+  PublicProjectsProjectIdDatabasesPostgresDatabaseIdSqlRoute: typeof PublicProjectsProjectIdDatabasesPostgresDatabaseIdSqlRoute
   PublicProjectsProjectIdDatabasesPostgresDatabaseIdVisualizerRoute: typeof PublicProjectsProjectIdDatabasesPostgresDatabaseIdVisualizerRoute
   PublicProjectsProjectIdDatabasesPostgresDatabaseIdIndexRoute: typeof PublicProjectsProjectIdDatabasesPostgresDatabaseIdIndexRoute
   PublicProjectsProjectIdDatabasesPostgresDatabaseIdTablesTableIdRowsRoute: typeof PublicProjectsProjectIdDatabasesPostgresDatabaseIdTablesTableIdRowsRoute
@@ -5746,6 +5768,8 @@ const PublicProjectsProjectIdDatabasesPostgresDatabaseIdRouteChildren: PublicPro
       PublicProjectsProjectIdDatabasesPostgresDatabaseIdMonitorRoute,
     PublicProjectsProjectIdDatabasesPostgresDatabaseIdSettingsRoute:
       PublicProjectsProjectIdDatabasesPostgresDatabaseIdSettingsRoute,
+    PublicProjectsProjectIdDatabasesPostgresDatabaseIdSqlRoute:
+      PublicProjectsProjectIdDatabasesPostgresDatabaseIdSqlRoute,
     PublicProjectsProjectIdDatabasesPostgresDatabaseIdVisualizerRoute:
       PublicProjectsProjectIdDatabasesPostgresDatabaseIdVisualizerRoute,
     PublicProjectsProjectIdDatabasesPostgresDatabaseIdIndexRoute:

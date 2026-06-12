@@ -21,7 +21,6 @@ type PostgresDatabaseNavProps = {
   projectId: string
   databaseId: string
   activeTab?: PostgresDatabaseTab
-  editorActive?: boolean
 }
 
 const navLinkClass = (active: boolean) =>
@@ -36,7 +35,6 @@ export function PostgresDatabaseNav({
   projectId,
   databaseId,
   activeTab,
-  editorActive = false,
 }: PostgresDatabaseNavProps) {
   const { features } = useConsoleProfile()
   const { project } = useProject(projectId)
@@ -47,7 +45,7 @@ export function PostgresDatabaseNav({
 
   return (
     <div className="shrink-0 space-y-0.5 border-t border-border bg-background px-2.5 py-2">
-      <Link {...nav.editor()} className={navLinkClass(editorActive)}>
+      <Link {...nav.sql()} className={navLinkClass(activeTab === 'sql')}>
         <SearchCode className="h-3.5 w-3.5 shrink-0" />
         <span>SQL editor</span>
       </Link>

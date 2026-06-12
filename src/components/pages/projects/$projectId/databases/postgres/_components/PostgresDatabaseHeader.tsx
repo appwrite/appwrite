@@ -15,7 +15,11 @@ export function PostgresDatabaseHeader({
     <ServiceHeader
       title={POSTGRES_DATABASE_TAB_LABELS[databaseTab]}
       fullWidthBorder
-      fullWidth={databaseTab === 'visualizer' || databaseTab === 'monitor'}
+      fullWidth={
+        databaseTab === 'sql' ||
+        databaseTab === 'visualizer' ||
+        databaseTab === 'monitor'
+      }
     />
   )
 }

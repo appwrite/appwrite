@@ -1,6 +1,10 @@
 import { createFileRoute, redirect } from '@tanstack/react-router'
 import { pageTitle } from '@/lib/utils/page-title'
-import { postgresDatabaseHome, postgresTableId } from '@/lib/postgres-database-routes'
+import {
+  postgresDatabaseHome,
+  postgresNav,
+  postgresTableId,
+} from '@/lib/postgres-database-routes'
 import {
   postgresDatabaseQueryOptions,
   postgresTablesQueryOptions,
@@ -48,7 +52,7 @@ export const Route = createFileRoute(
     }
 
     throw redirect({
-      ...postgresDatabaseHome({ projectId, databaseId, tableId: '-' }),
+      ...postgresNav({ projectId, databaseId }).sql(),
       replace: true,
     })
   },

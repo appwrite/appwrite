@@ -8,6 +8,7 @@ export type PostgresNavParams = {
 
 /** Database-level views (sidebar nav below schemas/tables). */
 export type PostgresDatabaseTab =
+  | 'sql'
   | 'visualizer'
   | 'monitor'
   | 'insights'
@@ -19,6 +20,7 @@ export const POSTGRES_DATABASE_TAB_LABELS: Record<
   PostgresDatabaseTab,
   string
 > = {
+  sql: 'SQL editor',
   visualizer: 'Visualizer',
   monitor: 'Monitor',
   insights: 'Insights',
@@ -75,8 +77,14 @@ export function postgresNav(params: PostgresNavBase) {
         },
       }
     },
+    sql() {
+      return {
+        to: '/projects/$projectId/databases/postgres/$databaseId/sql' as const,
+        params: base,
+      }
+    },
     editor() {
-      return this.tables({ tableId: '-' })
+      return this.sql()
     },
     visualizer() {
       return {
@@ -118,6 +126,9 @@ export function postgresNav(params: PostgresNavBase) {
 }
 
 export function postgresDatabaseHome(params: PostgresNavParams) {
+  if (!params.tableId || params.tableId === '-') {
+    return postgresNav(params).sql()
+  }
   return postgresNav(params).tables({ tableId: params.tableId })
 }
 

@@ -18,6 +18,10 @@ export type PostgresMetricsSnapshotRow = {
   database_size_bytes?: number | string
   total_connections?: number | string
   active_queries?: number | string
+  idle_in_transaction?: number | string
+  long_running_queries?: number | string
+  server_started_at?: string
+  uptime_seconds?: number | string
 }
 
 export type PostgresMetricsSnapshot = {
@@ -25,6 +29,8 @@ export type PostgresMetricsSnapshot = {
   activeConnections: number
   totalConnections: number
   activeQueries: number
+  idleInTransaction: number
+  longRunningQueries: number
   xactCommit: number
   xactRollback: number
   blksRead: number
@@ -39,10 +45,14 @@ export type PostgresMetricsSnapshot = {
   tempBytes: number
   databaseSizeBytes: number
   cacheHitRatio: number
+  uptimeSeconds: number
+  serverStartedAt: number | null
 }
 
 export type PostgresMetricsSample = PostgresMetricsSnapshot & {
   transactionsPerMin: number
+  commitsPerMin: number
+  rollbacksPerMin: number
   tuplesReadPerMin: number
   tuplesWrittenPerMin: number
   blockReadsPerMin: number
@@ -53,12 +63,19 @@ export type PostgresConnectionStateRow = {
   count: number
 }
 
+export type PostgresConnectionAppRow = {
+  applicationName: string
+  count: number
+}
+
 export type PostgresTableActivityRow = {
   schema: string
   tableName: string
   totalBytes: number
   liveTuples: number
   deadTuples: number
+  seqScans: number
+  idxScans: number
   writeOperations: number
   readOperations: number
 }
@@ -71,6 +88,33 @@ function toFiniteNumber(value: unknown, fallback = 0): number {
   if (typeof value === 'number' && Number.isFinite(value)) return value
   const parsed = Number.parseFloat(String(value ?? fallback))
   return Number.isFinite(parsed) ? parsed : fallback
+}
+
+function parseServerStartedAt(value: unknown): number | null {
+  if (typeof value === 'number' && Number.isFinite(value)) return value
+  if (typeof value === 'string' && value.trim()) {
+    const parsed = Date.parse(value)
+    return Number.isFinite(parsed) ? parsed : null
+  }
+  return null
+}
+
+/** Human-readable PostgreSQL server uptime from `pg_postmaster_start_time()`. */
+export function formatPostgresUptime(seconds: number): string {
+  if (!Number.isFinite(seconds) || seconds <= 0) return '—'
+
+  const days = Math.floor(seconds / 86_400)
+  const hours = Math.floor((seconds % 86_400) / 3_600)
+  const minutes = Math.floor((seconds % 3_600) / 60)
+
+  if (days > 0) {
+    return hours > 0 ? `${days}d ${hours}h` : `${days}d`
+  }
+  if (hours > 0) {
+    return minutes > 0 ? `${hours}h ${minutes}m` : `${hours}h`
+  }
+  if (minutes > 0) return `${minutes}m`
+  return '< 1m'
 }
 
 export function parsePostgresMetricsSnapshot(
@@ -90,6 +134,8 @@ export function parsePostgresMetricsSnapshot(
     activeConnections: toFiniteNumber(row.active_connections),
     totalConnections: toFiniteNumber(row.total_connections),
     activeQueries: toFiniteNumber(row.active_queries),
+    idleInTransaction: toFiniteNumber(row.idle_in_transaction),
+    longRunningQueries: toFiniteNumber(row.long_running_queries),
     xactCommit: toFiniteNumber(row.xact_commit),
     xactRollback: toFiniteNumber(row.xact_rollback),
     blksRead,
@@ -104,6 +150,8 @@ export function parsePostgresMetricsSnapshot(
     tempBytes: toFiniteNumber(row.temp_bytes),
     databaseSizeBytes: toFiniteNumber(row.database_size_bytes),
     cacheHitRatio: blockTotal > 0 ? (blksHit / blockTotal) * 100 : 100,
+    uptimeSeconds: toFiniteNumber(row.uptime_seconds),
+    serverStartedAt: parseServerStartedAt(row.server_started_at),
   }
 }
 
@@ -118,6 +166,18 @@ export function parsePostgresConnectionStates(
   }))
 }
 
+export function parsePostgresConnectionApps(
+  execution: Models.DedicatedDatabaseExecution,
+): PostgresConnectionAppRow[] {
+  return executionResultRows<{
+    application_name?: string
+    count?: number | string
+  }>(execution).map((row) => ({
+    applicationName: String(row.application_name ?? 'unknown'),
+    count: toFiniteNumber(row.count),
+  }))
+}
+
 export function parsePostgresTableActivity(
   execution: Models.DedicatedDatabaseExecution,
 ): PostgresTableActivityRow[] {
@@ -127,6 +187,8 @@ export function parsePostgresTableActivity(
     total_bytes?: number | string
     live_tuples?: number | string
     dead_tuples?: number | string
+    seq_scans?: number | string
+    idx_scans?: number | string
     write_operations?: number | string
     read_operations?: number | string
   }>(execution).map((row) => ({
@@ -135,6 +197,8 @@ export function parsePostgresTableActivity(
     totalBytes: toFiniteNumber(row.total_bytes),
     liveTuples: toFiniteNumber(row.live_tuples),
     deadTuples: toFiniteNumber(row.dead_tuples),
+    seqScans: toFiniteNumber(row.seq_scans),
+    idxScans: toFiniteNumber(row.idx_scans),
     writeOperations: toFiniteNumber(row.write_operations),
     readOperations: toFiniteNumber(row.read_operations),
   }))
@@ -158,6 +222,8 @@ export function buildPostgresMetricsSample(
     return {
       ...snapshot,
       transactionsPerMin: 0,
+      commitsPerMin: 0,
+      rollbacksPerMin: 0,
       tuplesReadPerMin: 0,
       tuplesWrittenPerMin: 0,
       blockReadsPerMin: 0,
@@ -165,14 +231,22 @@ export function buildPostgresMetricsSample(
   }
 
   const elapsedMs = snapshot.timestamp - previous.timestamp
+  const commitsPerMin = perMinuteRate(
+    snapshot.xactCommit,
+    previous.xactCommit,
+    elapsedMs,
+  )
+  const rollbacksPerMin = perMinuteRate(
+    snapshot.xactRollback,
+    previous.xactRollback,
+    elapsedMs,
+  )
 
   return {
     ...snapshot,
-    transactionsPerMin: perMinuteRate(
-      snapshot.xactCommit + snapshot.xactRollback,
-      previous.xactCommit + previous.xactRollback,
-      elapsedMs,
-    ),
+    transactionsPerMin: commitsPerMin + rollbacksPerMin,
+    commitsPerMin,
+    rollbacksPerMin,
     tuplesReadPerMin: perMinuteRate(
       snapshot.tupReturned + snapshot.tupFetched,
       previous.tupReturned + previous.tupFetched,

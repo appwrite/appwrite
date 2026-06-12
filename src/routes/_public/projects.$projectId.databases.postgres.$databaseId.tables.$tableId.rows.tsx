@@ -11,7 +11,7 @@ import {
   postgresTablesQueryOptions,
   projectQueryOptions,
 } from '@/lib/react-query/hooks'
-import { postgresDatabaseHome } from '@/lib/postgres-database-routes'
+import { postgresNav } from '@/lib/postgres-database-routes'
 import { ROWS_DEFAULT_PAGE_SIZE } from '@/lib/react-query/hooks/constants'
 import { pageTitle } from '@/lib/utils/page-title'
 
@@ -27,27 +27,6 @@ async function prefetchPostgresRouteData(
   await queryClient.ensureQueryData(
     postgresDatabaseQueryOptions(projectId, databaseId),
   )
-
-  if (tableId === '-') {
-    await Promise.allSettled([
-      queryClient.ensureQueryData(
-        postgresSchemasQueryOptions(projectId, databaseId),
-      ),
-      queryClient.ensureQueryData(
-        postgresTablesQueryOptions(projectId, databaseId),
-      ),
-      queryClient.ensureQueryData(
-        postgresColumnsQueryOptions(projectId, databaseId),
-      ),
-      queryClient.ensureQueryData(
-        postgresDatabaseConnectionsQueryOptions(projectId, databaseId),
-      ),
-      queryClient.ensureQueryData(
-        postgresDatabaseCredentialsQueryOptions(projectId, databaseId),
-      ),
-    ])
-    return
-  }
 
   let tablesData: { tables?: { table_schema: string; table_name: string }[] } | null =
     null
@@ -66,7 +45,7 @@ async function prefetchPostgresRouteData(
 
   if (tablesData && !tableExists) {
     throw redirect({
-      ...postgresDatabaseHome({ projectId, databaseId, tableId: '-' }),
+      ...postgresNav({ projectId, databaseId }).sql(),
       replace: true,
     })
   }
@@ -78,17 +57,15 @@ async function prefetchPostgresRouteData(
     queryClient.ensureQueryData(
       postgresColumnsQueryOptions(projectId, databaseId),
     ),
-    tableId !== '-'
-      ? queryClient.ensureQueryData(
-          postgresTableRowsQueryOptions(
-            projectId,
-            databaseId,
-            tableId,
-            DEFAULT_PAGE - 1,
-            ROWS_DEFAULT_PAGE_SIZE,
-          ),
-        )
-      : Promise.resolve(),
+    queryClient.ensureQueryData(
+      postgresTableRowsQueryOptions(
+        projectId,
+        databaseId,
+        tableId,
+        DEFAULT_PAGE - 1,
+        ROWS_DEFAULT_PAGE_SIZE,
+      ),
+    ),
     queryClient.ensureQueryData(
       postgresDatabaseCredentialsQueryOptions(projectId, databaseId),
     ),
@@ -98,6 +75,17 @@ async function prefetchPostgresRouteData(
 export const Route = createFileRoute(
   '/_public/projects/$projectId/databases/postgres/$databaseId/tables/$tableId/rows',
 )({
+  beforeLoad: ({ params }) => {
+    if (params.tableId === '-') {
+      throw redirect({
+        ...postgresNav({
+          projectId: params.projectId,
+          databaseId: params.databaseId,
+        }).sql(),
+        replace: true,
+      })
+    }
+  },
   head: () => ({
     meta: [{ title: pageTitle('PostgreSQL', 'Databases') }],
   }),

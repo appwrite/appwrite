@@ -2,10 +2,14 @@ import { createFileRoute, redirect } from '@tanstack/react-router'
 import { PostgresShell } from '@/components/pages/projects/$projectId/databases/postgres/PostgresShell'
 import { View as PostgresMonitorView } from '@/components/pages/projects/$projectId/databases/postgres/Monitor'
 import { prefetchPostgresShellData } from '@/components/pages/projects/$projectId/databases/postgres/postgres-tab-route-loader'
-import { POSTGRES_DATABASE_TAB_LABELS } from '@/lib/postgres-database-routes'
+import {
+  POSTGRES_DATABASE_TAB_LABELS,
+  postgresNav,
+} from '@/lib/postgres-database-routes'
 import { pageTitle } from '@/lib/utils/page-title'
 import { getActiveProfileFeatures } from '@/lib/console-profiles'
 import {
+  postgresConnectionAppsQueryOptions,
   postgresConnectionStatesQueryOptions,
   postgresMetricsSnapshotQueryOptions,
   postgresTableActivityQueryOptions,
@@ -17,12 +21,10 @@ export const Route = createFileRoute(
   beforeLoad: ({ params }) => {
     if (!getActiveProfileFeatures().usageStats) {
       throw redirect({
-        to: '/projects/$projectId/databases/postgres/$databaseId/tables/$tableId/rows',
-        params: {
+        ...postgresNav({
           projectId: params.projectId,
           databaseId: params.databaseId,
-          tableId: '-',
-        },
+        }).sql(),
         replace: true,
       })
     }
@@ -49,6 +51,9 @@ export const Route = createFileRoute(
       ),
       queryClient.ensureQueryData(
         postgresConnectionStatesQueryOptions(projectId, databaseId),
+      ),
+      queryClient.ensureQueryData(
+        postgresConnectionAppsQueryOptions(projectId, databaseId),
       ),
       queryClient.ensureQueryData(
         postgresTableActivityQueryOptions(projectId, databaseId),

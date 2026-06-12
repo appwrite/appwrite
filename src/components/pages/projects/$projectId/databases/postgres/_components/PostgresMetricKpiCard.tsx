@@ -74,9 +74,12 @@ export function PostgresMetricKpiCard({
             value={Math.min(100, Math.max(0, progress))}
             className={cn(
               'h-1.5',
-              progressTone === 'critical' && '[&>div]:bg-red-500',
-              progressTone === 'warning' && '[&>div]:bg-amber-500',
-              progressTone === 'normal' && '[&>div]:bg-primary',
+              progressTone === 'critical' &&
+                '[&_[data-slot=progress-indicator]]:bg-red-500',
+              progressTone === 'warning' &&
+                '[&_[data-slot=progress-indicator]]:bg-amber-500',
+              progressTone === 'normal' &&
+                'bg-[var(--chart-brand)]/15 [&_[data-slot=progress-indicator]]:bg-[var(--chart-brand)]',
             )}
           />
           <p className="text-[11px] text-muted-foreground">

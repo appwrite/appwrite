@@ -33,7 +33,6 @@ type SchemaTablesSidebarProps = {
   databaseName: string
   selectedTableId?: string
   databaseTab?: PostgresDatabaseTab
-  editorActive?: boolean
   onSelectTable: (tableId: string) => void
 }
 
@@ -43,7 +42,6 @@ export function SchemaTablesSidebar({
   databaseName,
   selectedTableId,
   databaseTab,
-  editorActive,
   onSelectTable,
 }: SchemaTablesSidebarProps) {
   const { account } = useAuth()
@@ -342,7 +340,6 @@ export function SchemaTablesSidebar({
         projectId={projectId}
         databaseId={databaseId}
         activeTab={databaseTab}
-        editorActive={editorActive}
       />
       <PostgresSpecificationCard
         projectId={projectId}

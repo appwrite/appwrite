@@ -31,7 +31,24 @@ SELECT
     WHERE datname = current_database()
       AND state = 'active'
       AND pid != pg_backend_pid()
-  ) AS active_queries
+  ) AS active_queries,
+  (
+    SELECT count(*)::bigint
+    FROM pg_stat_activity
+    WHERE datname = current_database()
+      AND state = 'idle in transaction'
+      AND pid != pg_backend_pid()
+  ) AS idle_in_transaction,
+  (
+    SELECT count(*)::bigint
+    FROM pg_stat_activity
+    WHERE datname = current_database()
+      AND state = 'active'
+      AND query_start < now() - interval '10 seconds'
+      AND pid != pg_backend_pid()
+  ) AS long_running_queries,
+  pg_postmaster_start_time() AS server_started_at,
+  EXTRACT(EPOCH FROM (now() - pg_postmaster_start_time()))::bigint AS uptime_seconds
 FROM pg_stat_database d
 WHERE d.datname = current_database()
 `.trim()
@@ -47,6 +64,18 @@ GROUP BY state
 ORDER BY count DESC
 `.trim()
 
+export const POSTGRES_METRICS_CONNECTION_APPS_SQL = `
+SELECT
+  COALESCE(NULLIF(application_name, ''), 'unknown') AS application_name,
+  count(*)::bigint AS count
+FROM pg_stat_activity
+WHERE datname = current_database()
+  AND pid != pg_backend_pid()
+GROUP BY application_name
+ORDER BY count DESC
+LIMIT 12
+`.trim()
+
 export const POSTGRES_METRICS_TABLE_ACTIVITY_SQL = `
 SELECT
   schemaname,
@@ -54,6 +83,8 @@ SELECT
   pg_total_relation_size(relid)::bigint AS total_bytes,
   n_live_tup::bigint AS live_tuples,
   n_dead_tup::bigint AS dead_tuples,
+  seq_scan::bigint AS seq_scans,
+  idx_scan::bigint AS idx_scans,
   (n_tup_ins + n_tup_upd + n_tup_del)::bigint AS write_operations,
   (seq_scan + idx_scan)::bigint AS read_operations
 FROM pg_stat_user_tables
