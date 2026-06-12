@@ -1,4 +1,6 @@
-const GROWTH_ENDPOINT = import.meta.env.VITE_GROWTH_ENDPOINT as string | undefined
+import { getRuntimeConfig } from '@/lib/runtime-config'
+
+const GROWTH_ENDPOINT = getRuntimeConfig().growthEndpoint
 
 function getGrowthBaseUrl(): string | null {
   const trimmed = GROWTH_ENDPOINT?.trim()

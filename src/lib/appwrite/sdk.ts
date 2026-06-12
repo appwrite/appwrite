@@ -47,6 +47,7 @@ import {
   subscribeToDebugEndpointChange,
 } from '@/lib/debug-endpoint'
 import { wrapServiceObject } from '@/lib/appwrite/slow-call-reporting'
+import { getRuntimeConfig } from '@/lib/runtime-config'
 import { clearConsoleAccountCache } from '@/lib/console-account-cache'
 import {
   fetchConsoleAccount,
@@ -90,12 +91,12 @@ export function getApiEndpoint(region?: string): string {
       baseEndpoint = debugBase
     } else {
       baseEndpoint =
-        import.meta.env.VITE_APPWRITE_ENDPOINT ||
+        getRuntimeConfig().appwriteEndpoint ||
         `${window.location.protocol}//${window.location.host}/v1`
     }
   } else {
     baseEndpoint =
-      import.meta.env.VITE_APPWRITE_ENDPOINT ||
+      getRuntimeConfig().appwriteEndpoint ||
       (typeof window !== 'undefined'
         ? `${window.location.protocol}//${window.location.host}/v1`
         : '')

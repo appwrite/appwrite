@@ -1,4 +1,5 @@
 import { getDebugEndpointBaseUrl } from '@/lib/debug-endpoint'
+import { getRuntimeConfig } from '@/lib/runtime-config'
 
 /**
  * Console profile configuration for different Appwrite deployments.
@@ -202,10 +203,8 @@ function detectProfileFromEndpoint(): ConsoleProfileId {
     }
   }
 
-  const envEndpoint = import.meta.env?.VITE_APPWRITE_ENDPOINT as
-    | string
-    | undefined
-  if (envEndpoint?.trim()) {
+  const envEndpoint = getRuntimeConfig().appwriteEndpoint
+  if (envEndpoint.trim()) {
     return isCloudEndpoint(envEndpoint) ? 'cloud' : 'self-hosted'
   }
 
@@ -224,7 +223,7 @@ function getProfileFromEnv(): ConsoleProfileId {
   if (typeof import.meta === 'undefined' || !import.meta.env) {
     return detectProfileFromEndpoint()
   }
-  const env = import.meta.env?.VITE_CONSOLE_PROFILE as string | undefined
+  const env = getRuntimeConfig().consoleProfile
   const normalized = env?.toLowerCase().trim().replace(/\s+/g, '-')
   if (
     normalized &&
@@ -240,7 +239,7 @@ function getProfileFromEnv(): ConsoleProfileId {
  * Avoids endpoint detection so prerendered marketing HTML matches hydration.
  */
 export function getEnvProfileId(): ConsoleProfileId {
-  const env = import.meta.env?.VITE_CONSOLE_PROFILE as string | undefined
+  const env = getRuntimeConfig().consoleProfile
   const normalized = env?.toLowerCase().trim().replace(/\s+/g, '-')
   if (
     normalized &&

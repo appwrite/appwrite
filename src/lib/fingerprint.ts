@@ -10,13 +10,9 @@
  * reference console - local clock drift otherwise causes "Invalid console fingerprint".
  */
 
-const SECRET =
-  (typeof import.meta !== 'undefined' &&
-    import.meta.env?.VITE_CONSOLE_FINGERPRINT_KEY) ||
-  (typeof import.meta !== 'undefined' &&
-    (import.meta.env as Record<string, string>)
-      ?.PUBLIC_CONSOLE_FINGERPRINT_KEY) ||
-  ''
+import { getRuntimeConfig } from '@/lib/runtime-config'
+
+const SECRET = getRuntimeConfig().fingerprintKey
 const CACHE_TTL_MS = 60 * 60 * 1000 // 1 hour
 
 const GLOBAL_SERVER_TIME_KEY = '__vibesFingerprintServerTime__'

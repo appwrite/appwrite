@@ -4,10 +4,10 @@
  * If VITE_GROWTH_ENDPOINT is not set, submission is skipped (no request is sent).
  */
 
+import { getRuntimeConfig } from '@/lib/runtime-config'
+
 /** Set VITE_GROWTH_ENDPOINT in .env to enable feedback submission (e.g. https://growth.example.com) */
-const GROWTH_ENDPOINT = import.meta.env.VITE_GROWTH_ENDPOINT as
-  | string
-  | undefined
+const GROWTH_ENDPOINT = getRuntimeConfig().growthEndpoint
 
 /** Custom field IDs used by the Growth feedback API */
 export const FEEDBACK_CUSTOM_FIELDS = {

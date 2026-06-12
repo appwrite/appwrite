@@ -6,18 +6,14 @@ COPY bun.lock bun.lock
 
 FROM base AS build
 
-# Build-time public config inlined by Vite (import.meta.env.VITE_*)
-ARG VITE_APPWRITE_ENDPOINT
-ENV VITE_APPWRITE_ENDPOINT=${VITE_APPWRITE_ENDPOINT}
-
+# Brand constants are identical across environments, so they stay inlined by Vite
+# (import.meta.env.VITE_*) at build time. All per-environment public config
+# (endpoint, profile, fingerprint key, growth endpoint, Stripe key, Sentry DSN,
+# instrumentation/Plausible script srcs) is now supplied at RUNTIME via the
+# container env and injected into the browser by runtime-config.ts — so a single
+# image can be promoted across environments.
 ARG VITE_APPWRITE_PROJECT_ID
 ENV VITE_APPWRITE_PROJECT_ID=${VITE_APPWRITE_PROJECT_ID}
-
-ARG VITE_STRIPE_PUBLISHABLE_KEY
-ENV VITE_STRIPE_PUBLISHABLE_KEY=${VITE_STRIPE_PUBLISHABLE_KEY}
-
-ARG VITE_GROWTH_ENDPOINT
-ENV VITE_GROWTH_ENDPOINT=${VITE_GROWTH_ENDPOINT}
 
 ARG VITE_COMPANY_NAME
 ENV VITE_COMPANY_NAME=${VITE_COMPANY_NAME}
@@ -27,15 +23,6 @@ ENV VITE_CONTACT_SALES_URL=${VITE_CONTACT_SALES_URL}
 
 ARG VITE_LEGAL_EMAIL
 ENV VITE_LEGAL_EMAIL=${VITE_LEGAL_EMAIL}
-
-ARG VITE_INSTRUMENTATION_SCRIPT_SRC
-ENV VITE_INSTRUMENTATION_SCRIPT_SRC=${VITE_INSTRUMENTATION_SCRIPT_SRC}
-
-ARG VITE_PLAUSIBLE_SCRIPT_SRC
-ENV VITE_PLAUSIBLE_SCRIPT_SRC=${VITE_PLAUSIBLE_SCRIPT_SRC}
-
-ARG VITE_SENTRY_DSN
-ENV VITE_SENTRY_DSN=${VITE_SENTRY_DSN}
 
 RUN bun install --frozen-lockfile
 COPY . .
@@ -57,8 +44,10 @@ ENV PORT=3000
 COPY --from=build /app/dist/ dist
 COPY --from=prod-deps /app/node_modules/ node_modules
 COPY server.ts server.ts
-# server.ts imports this module at runtime; it isn't bundled into dist
+
+# server.ts imports these modules at runtime; they aren't bundled into dist
 COPY src/lib/marketing/prerender-paths.ts src/lib/marketing/prerender-paths.ts
+COPY src/lib/runtime-config-shared.ts src/lib/runtime-config-shared.ts
 
 EXPOSE 3000
 CMD ["bun", "run", "server.ts"]
