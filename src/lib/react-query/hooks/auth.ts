@@ -52,11 +52,13 @@ import {
   clearLegacyStorageFilesTablePaneWidthLocalStorage,
   hasAIChatPanelOpenPref,
   hasAIChatPanelWidthPref,
+  hasRightPaneWidthPref,
   hasBuildNotificationsOptedOutPref,
   hasCliShellHeightPref,
   hasStorageFilesTablePaneWidthPref,
   mergeAIChatPanelOpenIntoPrefs,
   mergeAIChatPanelWidthPxIntoPrefs,
+  mergeRightPaneWidthPxIntoPrefs,
   mergeAuthPasswordStrengthComplianceOpenIntoPrefs,
   mergeApiExplorerColumnsLayoutIntoPrefs,
   mergeApiExplorerExpandedProductGroupIntoPrefs,
@@ -73,6 +75,7 @@ import {
   mergeStorageFilesTablePaneWidthPxIntoPrefs,
   parseAIChatPanelOpen,
   parseAIChatPanelWidthPx,
+  parseRightPaneWidthPx,
   parseAuthPasswordStrengthComplianceOpen,
   parseApiExplorerColumnsLayout,
   parseApiExplorerExpandedProductGroup,
@@ -1346,6 +1349,7 @@ export function useApiExplorerExpandedProductGroup(
 // ============================================================================
 
 const AI_CHAT_PANEL_WIDTH_PERSIST_DEBOUNCE_MS = 250
+const RIGHT_PANE_WIDTH_PERSIST_DEBOUNCE_MS = 250
 
 async function migrateLegacyBrowserPrefsToAccount(
   account: ConsoleAccountCache,
@@ -1368,6 +1372,22 @@ async function migrateLegacyBrowserPrefsToAccount(
     if (legacyWidth !== null) {
       next = mergeAIChatPanelWidthPxIntoPrefs(next, legacyWidth)
       changed = true
+    }
+  }
+
+  if (!hasRightPaneWidthPref(prefs)) {
+    if (hasAIChatPanelWidthPref(next)) {
+      next = mergeRightPaneWidthPxIntoPrefs(
+        next,
+        parseAIChatPanelWidthPx(next),
+      )
+      changed = true
+    } else {
+      const legacyWidth = readLegacyAIChatPanelWidthFromLocalStorage()
+      if (legacyWidth !== null) {
+        next = mergeRightPaneWidthPxIntoPrefs(next, legacyWidth)
+        changed = true
+      }
     }
   }
 
@@ -1553,16 +1573,16 @@ export function useAuthPasswordStrengthComplianceOpen(
 }
 
 /**
- * AI assistant panel width (`console.aiChat.panelWidthPx`).
+ * Shared console right pane width (`console.rightPane.widthPx`).
  * Debounces writes while resizing.
  */
-export function useAIChatPanelWidth(
+export function useRightPaneWidth(
   account: ConsoleAccountCache | undefined,
 ) {
   const queryClient = useQueryClient()
   useMigrateLegacyBrowserPrefsToAccount(account)
 
-  const widthPx = parseAIChatPanelWidthPx(
+  const widthPx = parseRightPaneWidthPx(
     account?.prefs as UserPrefs | undefined,
   )
 
@@ -1574,14 +1594,14 @@ export function useAIChatPanelWidth(
         throw new Error('Account data not available')
       }
       return await updateAccountPrefs(
-        mergeAIChatPanelWidthPxIntoPrefs(
+        mergeRightPaneWidthPxIntoPrefs(
           (account.prefs ?? {}) as UserPrefs,
           value,
         ),
       )
     },
     onMutate: async (value) => {
-      const patch = mergeAIChatPanelWidthPxIntoPrefs(
+      const patch = mergeRightPaneWidthPxIntoPrefs(
         (account?.prefs ?? {}) as UserPrefs,
         value,
       )
@@ -1611,7 +1631,7 @@ export function useAIChatPanelWidth(
       if (persistTimerRef.current !== null) {
         clearTimeout(persistTimerRef.current)
       }
-      const patch = mergeAIChatPanelWidthPxIntoPrefs(
+      const patch = mergeRightPaneWidthPxIntoPrefs(
         (account.prefs ?? {}) as UserPrefs,
         nextValue,
       )
@@ -1628,7 +1648,7 @@ export function useAIChatPanelWidth(
       persistTimerRef.current = setTimeout(() => {
         persistTimerRef.current = null
         updateMutation.mutate(nextValue)
-      }, AI_CHAT_PANEL_WIDTH_PERSIST_DEBOUNCE_MS)
+      }, RIGHT_PANE_WIDTH_PERSIST_DEBOUNCE_MS)
     },
     [account, queryClient, updateMutation, widthPx],
   )
@@ -1642,6 +1662,15 @@ export function useAIChatPanelWidth(
   }, [])
 
   return { widthPx, setWidthPx }
+}
+
+/**
+ * @deprecated Use {@link useRightPaneWidth}. Kept for compatibility.
+ */
+export function useAIChatPanelWidth(
+  account: ConsoleAccountCache | undefined,
+) {
+  return useRightPaneWidth(account)
 }
 
 const CLI_SHELL_HEIGHT_PERSIST_DEBOUNCE_MS = 250

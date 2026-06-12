@@ -48,10 +48,7 @@ import {
   openInNewWindow,
 } from '@/lib/utils/context-menu'
 import { cn } from '@/lib/utils'
-
-const DOCS_PREVIEW_PANEL_MIN_WIDTH_PX = 400
-const DOCS_PREVIEW_PANEL_MAX_WIDTH_PX = 800
-const DOCS_PREVIEW_PANEL_DEFAULT_WIDTH_PX = 640
+import { useConsoleRightPane } from './ConsoleRightPaneContext'
 
 const AUTH_ROUTE_PATHNAMES = new Set([
   '/sign-in',
@@ -101,6 +98,7 @@ export function useDocsPreview() {
 
 export function DocsPreviewProvider({ children }: { children: ReactNode }) {
   const location = useLocation()
+  const { showDocs, hideRightPane } = useConsoleRightPane()
   const isAuthBlocked = useMemo(
     () => isDocsPreviewBlockedPath(location.pathname),
     [location.pathname],
@@ -116,26 +114,31 @@ export function DocsPreviewProvider({ children }: { children: ReactNode }) {
   const openDocsPreview = useCallback(
     (nextSlug: string, options?: DocsPreviewOpenOptions) => {
       if (!isPreviewAllowed) return
+      showDocs()
       setSlug(nextSlug)
       setView(resolveDocsPreviewView(nextSlug, options?.view))
       setIsOpen(true)
     },
-    [isPreviewAllowed],
+    [isPreviewAllowed, showDocs],
   )
 
   const closeDocsPreview = useCallback(() => {
     setIsOpen(false)
     setSlug(null)
     setView('article')
-  }, [])
+    hideRightPane()
+  }, [hideRightPane])
 
   useEffect(() => {
-    if (!isPreviewAllowed && isOpen) {
-      setIsOpen(false)
-      setSlug(null)
-      setView('article')
+    if (!isPreviewAllowed) {
+      if (isOpen) {
+        setIsOpen(false)
+        setSlug(null)
+        setView('article')
+      }
+      hideRightPane()
     }
-  }, [isPreviewAllowed, isOpen])
+  }, [hideRightPane, isPreviewAllowed, isOpen])
 
   const value = useMemo(
     () => ({
@@ -155,13 +158,10 @@ export function DocsPreviewProvider({ children }: { children: ReactNode }) {
   )
 }
 
-export function DocsPreviewPanel() {
+export function DocsPreviewContent() {
   const { isOpen, slug, view, openDocsPreview, closeDocsPreview } =
     useDocsPreview()
-  const panelRef = useRef<HTMLDivElement>(null)
   const contentRef = useRef<HTMLDivElement>(null)
-  const [width, setWidth] = useState(DOCS_PREVIEW_PANEL_DEFAULT_WIDTH_PX)
-  const [isResizing, setIsResizing] = useState(false)
 
   const showMenu =
     slug !== null &&
@@ -185,40 +185,6 @@ export function DocsPreviewPanel() {
   useEffect(() => {
     contentRef.current?.scrollTo({ top: 0, behavior: 'auto' })
   }, [slug, view])
-
-  const handleMouseDown = useCallback((event: React.MouseEvent) => {
-    event.preventDefault()
-    setIsResizing(true)
-  }, [])
-
-  useEffect(() => {
-    if (!isResizing) return
-
-    const handleMouseMove = (event: MouseEvent) => {
-      const newWidth = window.innerWidth - event.clientX
-      const clampedWidth = Math.min(
-        DOCS_PREVIEW_PANEL_MAX_WIDTH_PX,
-        Math.max(DOCS_PREVIEW_PANEL_MIN_WIDTH_PX, newWidth),
-      )
-      setWidth(clampedWidth)
-    }
-
-    const handleMouseUp = () => {
-      setIsResizing(false)
-    }
-
-    document.addEventListener('mousemove', handleMouseMove)
-    document.addEventListener('mouseup', handleMouseUp)
-    document.body.style.cursor = 'col-resize'
-    document.body.style.userSelect = 'none'
-
-    return () => {
-      document.removeEventListener('mousemove', handleMouseMove)
-      document.removeEventListener('mouseup', handleMouseUp)
-      document.body.style.cursor = ''
-      document.body.style.userSelect = ''
-    }
-  }, [isResizing])
 
   const handleOpenInNewWindow = useCallback(() => {
     if (slug === null) return
@@ -284,21 +250,11 @@ export function DocsPreviewPanel() {
   return (
     <DocsPreviewNavigationProvider navigateToSlug={navigatePreviewSlug}>
       <div
-        ref={panelRef}
-        style={{ width: `${width}px` }}
         className={cn(
           DOCS_CONTAINER,
-          'relative flex h-full shrink-0 flex-col border-l border-border bg-background',
+          'flex h-full min-h-0 flex-col',
         )}
       >
-        <div
-          onMouseDown={handleMouseDown}
-          className={cn(
-            'absolute left-0 top-0 z-10 flex h-full w-1.5 cursor-col-resize items-center justify-center transition-colors hover:bg-primary/20 dark:hover:bg-sidebar-accent/60',
-            isResizing && 'bg-primary/30 dark:bg-sidebar-accent/70',
-          )}
-        />
-
         <div className="flex h-14 min-h-14 shrink-0 items-center justify-between gap-3 border-b border-border px-3">
           <button
             type="button"
@@ -453,4 +409,9 @@ export function DocsPreviewPanel() {
       </div>
     </DocsPreviewNavigationProvider>
   )
+}
+
+/** @deprecated Use {@link ConsoleRightPane} with {@link DocsPreviewContent}. */
+export function DocsPreviewPanel() {
+  return null
 }

@@ -1,5 +1,12 @@
 import { useKeyboardShortcut } from '@/hooks/use-keyboard-shortcuts'
 
+/** Cmd/Ctrl+K must work inside Monaco and other text fields. */
+export const OPEN_COMMAND_CENTER_SHORTCUT_OPTIONS = {
+  capture: true,
+  ignoreInputs: false,
+  stopPropagation: true,
+} as const
+
 interface UseGlobalCommandShortcutsOptions {
   commandCenterOpen: boolean
   onOpenCommandCenter: () => void
@@ -18,8 +25,13 @@ export function useGlobalCommandShortcuts({
 }: UseGlobalCommandShortcutsOptions) {
   const active = enabled && !commandCenterOpen
 
-  useKeyboardShortcut('meta+k', onOpenCommandCenter, { enabled: active, capture: true })
-  useKeyboardShortcut('control+k', onOpenCommandCenter, { enabled: active, capture: true })
+  const openCommandCenterShortcut = {
+    ...OPEN_COMMAND_CENTER_SHORTCUT_OPTIONS,
+    enabled: active,
+  }
+
+  useKeyboardShortcut('meta+k', onOpenCommandCenter, openCommandCenterShortcut)
+  useKeyboardShortcut('control+k', onOpenCommandCenter, openCommandCenterShortcut)
 
   useKeyboardShortcut(
     '/',

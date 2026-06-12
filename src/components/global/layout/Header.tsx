@@ -29,6 +29,8 @@ import {
   ShieldAlert,
   Home,
   LayoutDashboard,
+  BookOpen,
+  Clock,
 } from 'lucide-react'
 import {
   useAuth,
@@ -89,6 +91,11 @@ import { AppwriteWordmark } from '@/components/global/shared/AppwriteWordmark'
 import { resolveInitHeaderNavCta } from '@/lib/init/events'
 import { isMacPlatform } from '@/lib/keyboard-shortcuts/display'
 import { useChangelogNavBadge } from '@/hooks/use-changelog-nav-badge'
+import { isConsoleRightPanePath } from '@/lib/docs/docs-preview-context'
+import {
+  getMarketingPageUrl,
+  isMarketingPageExternal,
+} from '@/lib/marketing/urls'
 
 type MarketingHeaderNavItem = {
   label: string
@@ -203,7 +210,8 @@ export function ConsoleHeader({
   const supportsMultiTenancy = features.multiTenancy
   const overrides = useDebugOverrides()
   const { access } = useOrganizationScopes(project?.teamId)
-  const showAIAssistant = overrides.showAIAssistant
+  const showAIAssistant =
+    overrides.showAIAssistant && isConsoleRightPanePath(location.pathname)
   const showConnectAndCreate = canShowConnectSection(access, features)
   const canCreateProjectFlag = canCreateProject(access, features)
   const canCreateDatabaseFlag = canCreateDatabase(access, features)
@@ -278,6 +286,10 @@ export function ConsoleHeader({
   const showMarketingNav = marketingNavItems.length > 0
   const showMarketingLinks = showMarketingNav && !centerSearch
   const showChangelogBadge = useChangelogNavBadge()
+  const docsHref = getMarketingPageUrl('/docs', features.marketing)
+  const changelogHref = getMarketingPageUrl('/changelog', features.marketing)
+  const homeHref = getMarketingPageUrl('/home', features.marketing)
+  const marketingNavLinksExternal = isMarketingPageExternal(features.marketing)
   const showCenterSearch = centerSearch && !hideSearch
   const showRightSearch = !hideSearch && !centerSearch
   const searchModKey = isMacPlatform() ? '⌘' : 'Ctrl'
@@ -1155,33 +1167,92 @@ export function ConsoleHeader({
                     )}
                   </div>
 
-                  {(showMarketingNav || features.marketing) && (
-                    <>
-                      <DropdownMenuSeparator className="my-1 bg-border" />
+                  <>
+                    <DropdownMenuSeparator className="my-1 bg-border" />
 
+                    {showMarketingNav ? (
                       <DropdownMenuItem asChild>
-                        {showMarketingNav ? (
-                          <Link
-                            {...(orgId
-                              ? {
-                                  to: '/organizations/$orgId',
-                                  params: { orgId },
-                                }
-                              : { to: '/' })}
-                            className={ACCOUNT_MENU_ITEM_CLASS}
-                          >
-                            <LayoutDashboard className="h-4 w-4" />
-                            <span>Console</span>
-                          </Link>
-                        ) : (
-                          <Link to="/home" className={ACCOUNT_MENU_ITEM_CLASS}>
-                            <Home className="h-4 w-4" />
-                            <span>Home</span>
-                          </Link>
-                        )}
+                        <Link
+                          {...(orgId
+                            ? {
+                                to: '/organizations/$orgId',
+                                params: { orgId },
+                              }
+                            : { to: '/' })}
+                          className={ACCOUNT_MENU_ITEM_CLASS}
+                        >
+                          <LayoutDashboard className="h-4 w-4" />
+                          <span>Console</span>
+                        </Link>
                       </DropdownMenuItem>
-                    </>
-                  )}
+                    ) : marketingNavLinksExternal ? (
+                      <DropdownMenuItem asChild>
+                        <a
+                          href={homeHref}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className={ACCOUNT_MENU_ITEM_CLASS}
+                        >
+                          <Home className="h-4 w-4" />
+                          <span>Home</span>
+                        </a>
+                      </DropdownMenuItem>
+                    ) : (
+                      <DropdownMenuItem asChild>
+                        <Link to="/home" className={ACCOUNT_MENU_ITEM_CLASS}>
+                          <Home className="h-4 w-4" />
+                          <span>Home</span>
+                        </Link>
+                      </DropdownMenuItem>
+                    )}
+
+                    <DropdownMenuItem asChild>
+                      {marketingNavLinksExternal ? (
+                        <a
+                          href={docsHref}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className={ACCOUNT_MENU_ITEM_CLASS}
+                        >
+                          <BookOpen className="h-4 w-4" />
+                          <span>Docs</span>
+                        </a>
+                      ) : (
+                        <Link to="/docs" className={ACCOUNT_MENU_ITEM_CLASS}>
+                          <BookOpen className="h-4 w-4" />
+                          <span>Docs</span>
+                        </Link>
+                      )}
+                    </DropdownMenuItem>
+
+                    <DropdownMenuItem asChild>
+                      {marketingNavLinksExternal ? (
+                        <a
+                          href={changelogHref}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className={ACCOUNT_MENU_ITEM_CLASS}
+                          {...(showChangelogBadge
+                            ? { 'aria-label': 'Changelog, new updates' }
+                            : {})}
+                        >
+                          <Clock className="h-4 w-4" />
+                          <span>Changelog</span>
+                        </a>
+                      ) : (
+                        <Link
+                          to="/changelog"
+                          className={ACCOUNT_MENU_ITEM_CLASS}
+                          {...(showChangelogBadge
+                            ? { 'aria-label': 'Changelog, new updates' }
+                            : {})}
+                        >
+                          <Clock className="h-4 w-4" />
+                          <span>Changelog</span>
+                        </Link>
+                      )}
+                    </DropdownMenuItem>
+                  </>
 
                   {showAdminSection && (
                     <>

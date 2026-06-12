@@ -1,8 +1,27 @@
-const CONSOLE_DOCS_PREVIEW_PREFIXES = [
+const CONSOLE_RIGHT_PANE_PREFIXES = [
   '/projects/',
   '/organizations/',
   '/account',
 ] as const
+
+function matchesConsoleRightPanePath(pathname: string): boolean {
+  const normalized = pathname.replace(/\/+$/, '') || '/'
+
+  if (normalized === '/') return false
+
+  return CONSOLE_RIGHT_PANE_PREFIXES.some(
+    (prefix) =>
+      normalized === prefix.replace(/\/$/, '') || normalized.startsWith(prefix),
+  )
+}
+
+/**
+ * Console right pane (docs preview, assistant) is only available inside the
+ * authenticated console. Marketing, docs, and other public pages keep it closed.
+ */
+export function isConsoleRightPanePath(pathname: string): boolean {
+  return matchesConsoleRightPanePath(pathname)
+}
 
 /**
  * Docs preview pane is only available inside the authenticated console
@@ -10,12 +29,5 @@ const CONSOLE_DOCS_PREVIEW_PREFIXES = [
  * public pages should navigate to /docs instead.
  */
 export function isConsoleDocsPreviewPath(pathname: string): boolean {
-  const normalized = pathname.replace(/\/+$/, '') || '/'
-
-  if (normalized === '/') return false
-
-  return CONSOLE_DOCS_PREVIEW_PREFIXES.some(
-    (prefix) =>
-      normalized === prefix.replace(/\/$/, '') || normalized.startsWith(prefix),
-  )
+  return matchesConsoleRightPanePath(pathname)
 }

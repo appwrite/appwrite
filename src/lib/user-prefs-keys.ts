@@ -6,6 +6,11 @@
  */
 
 import {
+  clampRightPaneWidthPx,
+  RIGHT_PANE_MAX_WIDTH_PX,
+  RIGHT_PANE_MIN_WIDTH_PX,
+} from '@/lib/right-pane/constants'
+import {
   clampCliShellSessionsSidebarWidthPx,
   clampPostgresSqlEditorHeightPx,
   clampTableViewSidebarWidthPx,
@@ -1311,6 +1316,51 @@ export function mergeAIChatPanelWidthPxIntoPrefs(
   return {
     ...prefs,
     [USER_PREFS_KEY_AI_CHAT_PANEL_WIDTH_PX]: String(clamped),
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Console right pane width (account prefs) — shared by docs, assistant, etc.
+// ---------------------------------------------------------------------------
+
+/** Full key: `console.rightPane.widthPx` - shared right pane width in pixels. */
+export const USER_PREFS_KEY_RIGHT_PANE_WIDTH_PX = 'console.rightPane.widthPx'
+
+export function parseRightPaneWidthPx(
+  prefs: UserPrefs | null | undefined,
+): number {
+  const raw = prefs?.[USER_PREFS_KEY_RIGHT_PANE_WIDTH_PX]
+  const n =
+    typeof raw === 'number'
+      ? raw
+      : typeof raw === 'string'
+        ? parseInt(raw, 10)
+        : NaN
+  if (
+    Number.isFinite(n) &&
+    n >= RIGHT_PANE_MIN_WIDTH_PX &&
+    n <= RIGHT_PANE_MAX_WIDTH_PX
+  ) {
+    return n
+  }
+
+  const legacyAiChatWidth = parseAIChatPanelWidthPx(prefs)
+  return clampRightPaneWidthPx(legacyAiChatWidth)
+}
+
+export function hasRightPaneWidthPref(
+  prefs: UserPrefs | null | undefined,
+): boolean {
+  return prefs?.[USER_PREFS_KEY_RIGHT_PANE_WIDTH_PX] !== undefined
+}
+
+export function mergeRightPaneWidthPxIntoPrefs(
+  prefs: UserPrefs,
+  widthPx: number,
+): UserPrefs {
+  return {
+    ...prefs,
+    [USER_PREFS_KEY_RIGHT_PANE_WIDTH_PX]: String(clampRightPaneWidthPx(widthPx)),
   }
 }
 

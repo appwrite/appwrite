@@ -24,14 +24,12 @@ import {
   isLegacyTheme,
   LEGACY_ICON_SRC,
 } from '@/lib/legacy-theme-assets'
+import { AIChatProvider } from '@/components/global/providers/AIChat'
+import { DocsPreviewProvider } from '@/components/global/providers/DocsPreview'
 import {
-  AIChatProvider,
-  AIChatPanel,
-} from '@/components/global/providers/AIChat'
-import {
-  DocsPreviewPanel,
-  DocsPreviewProvider,
-} from '@/components/global/providers/DocsPreview'
+  ConsoleRightPane,
+  ConsoleRightPaneProvider,
+} from '@/components/global/providers/ConsoleRightPane'
 import { DebugMenu } from '@/components/global/providers/DebugMenu'
 import { PromoBannerProvider } from '@/components/global/providers/PromoBanner'
 import { DebugModeProvider } from '@/components/global/providers/DebugMode'
@@ -436,36 +434,39 @@ function RootDocument({ children }: { children: React.ReactNode }) {
             ) : null}
             <SentryContextProvider>
               <DebugModeProvider>
-                <DocsPreviewProvider>
+                <ConsoleRightPaneProvider>
                   {features.aiAssistant ? (
                     <AIChatProvider>
+                      <DocsPreviewProvider>
+                        <PromoBannerProvider>
+                          <div className="flex w-full min-w-0 overflow-hidden root-container">
+                            <div className="root-scroll-container flex-1 overflow-hidden min-h-0 h-full">
+                              {children}
+                            </div>
+                            <ConsoleRightPane />
+                          </div>
+                          <ClientOnly>
+                            <DebugMenu />
+                          </ClientOnly>
+                        </PromoBannerProvider>
+                      </DocsPreviewProvider>
+                    </AIChatProvider>
+                  ) : (
+                    <DocsPreviewProvider>
                       <PromoBannerProvider>
                         <div className="flex w-full min-w-0 overflow-hidden root-container">
                           <div className="root-scroll-container flex-1 overflow-hidden min-h-0 h-full">
                             {children}
                           </div>
-                          <AIChatPanel />
-                          <DocsPreviewPanel />
+                          <ConsoleRightPane />
                         </div>
                         <ClientOnly>
                           <DebugMenu />
                         </ClientOnly>
                       </PromoBannerProvider>
-                    </AIChatProvider>
-                  ) : (
-                    <PromoBannerProvider>
-                      <div className="flex w-full min-w-0 overflow-hidden root-container">
-                        <div className="root-scroll-container flex-1 overflow-hidden min-h-0 h-full">
-                          {children}
-                        </div>
-                        <DocsPreviewPanel />
-                      </div>
-                      <ClientOnly>
-                        <DebugMenu />
-                      </ClientOnly>
-                    </PromoBannerProvider>
+                    </DocsPreviewProvider>
                   )}
-                </DocsPreviewProvider>
+                </ConsoleRightPaneProvider>
               </DebugModeProvider>
             </SentryContextProvider>
             <ClientOnly>

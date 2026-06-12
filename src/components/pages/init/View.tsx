@@ -3,6 +3,7 @@ import { useQuery } from '@tanstack/react-query'
 import { ConsoleLayout } from '@/components/global/layout/ConsoleLayout'
 import { CommandCenter } from '@/components/global/shared/CommandCenter'
 import { useKeyboardShortcut } from '@/hooks/use-keyboard-shortcuts'
+import { OPEN_COMMAND_CENTER_SHORTCUT_OPTIONS } from '@/lib/keyboard-shortcuts/use-global-command-shortcuts'
 import { useDebugOverrides } from '@/lib/debug-overrides'
 import { getActiveLaunchEvent } from '@/lib/init/events'
 import { applyInitEventVisibility } from '@/lib/init/event-visibility'
@@ -73,8 +74,8 @@ function InitPageContent({
     }
   }, [account, baseEvent, presence])
 
-  useKeyboardShortcut('meta+k', () => setCommandCenterOpen(true))
-  useKeyboardShortcut('control+k', () => setCommandCenterOpen(true))
+  useKeyboardShortcut('meta+k', () => setCommandCenterOpen(true), OPEN_COMMAND_CENTER_SHORTCUT_OPTIONS)
+  useKeyboardShortcut('control+k', () => setCommandCenterOpen(true), OPEN_COMMAND_CENTER_SHORTCUT_OPTIONS)
 
   useEffect(() => {
     const frame = requestAnimationFrame(() => scrollToInitDayFromHash())

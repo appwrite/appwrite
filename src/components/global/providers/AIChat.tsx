@@ -16,7 +16,6 @@ import {
   Query,
   type RealtimeResponseEvent,
 } from '@appwrite.io/console'
-import { useDebugOverrides } from '@/lib/debug-overrides'
 import { useDebugMode } from '@/components/global/providers/DebugMode'
 import { toast } from 'sonner'
 import {
@@ -82,17 +81,13 @@ import {
   useProject,
   consoleAccountQueryOptions,
   useAIChatPanelOpen,
-  useAIChatPanelWidth,
   type AssistantConversation,
   type AssistantMessage,
 } from '@/lib/react-query/hooks'
 import { isClientQueryEnabled } from '@/lib/react-query/hooks/constants'
 import { useAuth } from '@/components/global/auth/RequireAuth'
-import {
-  AI_CHAT_PANEL_DEFAULT_WIDTH_PX,
-  AI_CHAT_PANEL_MAX_WIDTH_PX,
-  AI_CHAT_PANEL_MIN_WIDTH_PX,
-} from '@/lib/user-prefs-keys'
+import { useConsoleRightPane } from '@/components/global/providers/ConsoleRightPaneContext'
+import { isConsoleRightPanePath } from '@/lib/docs/docs-preview-context'
 import { listConsoleProjects } from '@/lib/appwrite/console-projects'
 import { getApiEndpoint, sdk } from '@/lib/appwrite/sdk'
 import { useAvifSupport } from '@/lib/avif-support'
@@ -135,8 +130,13 @@ function isAssistantBlockedPath(pathname: string): boolean {
 
 export function AIChatProvider({ children }: { children: React.ReactNode }) {
   const location = useLocation()
+  const { activeContent, showAssistant, hideRightPane } = useConsoleRightPane()
   const isAssistantBlocked = useMemo(
     () => isAssistantBlockedPath(location.pathname),
+    [location.pathname],
+  )
+  const isConsolePath = useMemo(
+    () => isConsoleRightPanePath(location.pathname),
     [location.pathname],
   )
   const { data: account } = useQuery({
@@ -147,22 +147,51 @@ export function AIChatProvider({ children }: { children: React.ReactNode }) {
   const [activeConversationId, setActiveConversationId] = useState<
     string | null
   >(null)
+  const hasRestoredOpenPrefRef = useRef(false)
 
   const openChat = useCallback(() => {
-    if (isAssistantBlocked) return
+    if (isAssistantBlocked || !isConsolePath) return
+    showAssistant()
     setIsOpen(true)
-  }, [isAssistantBlocked, setIsOpen])
-  const closeChat = useCallback(() => setIsOpen(false), [setIsOpen])
+  }, [isAssistantBlocked, isConsolePath, setIsOpen, showAssistant])
+  const closeChat = useCallback(() => {
+    setIsOpen(false)
+    hideRightPane()
+  }, [hideRightPane, setIsOpen])
   const toggleChat = useCallback(() => {
-    if (isAssistantBlocked) return
-    setIsOpen((prev) => !prev)
-  }, [isAssistantBlocked, setIsOpen])
+    if (isAssistantBlocked || !isConsolePath) return
+    if (activeContent === 'assistant') {
+      closeChat()
+      return
+    }
+    openChat()
+  }, [activeContent, closeChat, isAssistantBlocked, isConsolePath, openChat])
+
+  useEffect(() => {
+    if (!isConsolePath) {
+      if (isOpen) {
+        setIsOpen(false)
+      }
+      if (activeContent === 'assistant') {
+        hideRightPane()
+      }
+    }
+  }, [activeContent, hideRightPane, isConsolePath, isOpen, setIsOpen])
 
   useEffect(() => {
     if (isAssistantBlocked && isOpen) {
       setIsOpen(false)
+      hideRightPane()
     }
-  }, [isAssistantBlocked, isOpen, setIsOpen])
+  }, [hideRightPane, isAssistantBlocked, isOpen, setIsOpen])
+
+  useEffect(() => {
+    if (hasRestoredOpenPrefRef.current || !account || isAssistantBlocked || !isOpen) {
+      return
+    }
+    hasRestoredOpenPrefRef.current = true
+    showAssistant()
+  }, [account, isAssistantBlocked, isOpen, showAssistant])
 
   return (
     <AIChatContext.Provider
@@ -255,9 +284,6 @@ function applyPlaceholderValues(
   return resolved
 }
 
-const MIN_WIDTH = AI_CHAT_PANEL_MIN_WIDTH_PX
-const MAX_WIDTH = AI_CHAT_PANEL_MAX_WIDTH_PX
-const DEFAULT_WIDTH = AI_CHAT_PANEL_DEFAULT_WIDTH_PX
 const AUTO_SCROLL_BOTTOM_THRESHOLD = 24
 
 interface AssistantMessageRowProps {
@@ -1574,9 +1600,8 @@ function AssistantBubbleDebugControls({
   )
 }
 
-export function AIChatPanel() {
-  const overrides = useDebugOverrides()
-  const { isOpen, closeChat, activeConversationId, setActiveConversationId } =
+export function AIChatPanelContent() {
+  const { closeChat, activeConversationId, setActiveConversationId } =
     useAIChat()
   const params = useParams({ strict: false }) as {
     projectId?: string
@@ -1588,7 +1613,6 @@ export function AIChatPanel() {
     () => isAssistantBlockedPath(location.pathname),
     [location.pathname],
   )
-  const showPanel = overrides.showAIAssistant
   const { isDebugModeOpen } = useDebugMode()
   const [bubbleDebugMode, setBubbleDebugMode] =
     useState<BubbleActivityDebugMode>('auto')
@@ -1643,12 +1667,10 @@ export function AIChatPanel() {
   const [isWaitingForAttachments, setIsWaitingForAttachments] = useState(false)
   const [conversationsPopoverOpen, setConversationsPopoverOpen] =
     useState(false)
-  const [isResizing, setIsResizing] = useState(false)
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const messagesContainerRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLTextAreaElement>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
-  const panelRef = useRef<HTMLDivElement>(null)
   const copiedMessageTimeoutRef = useRef<number | null>(null)
   const previousConversationIdRef = useRef<string | null>(null)
   const previousLatestMessageIdRef = useRef<string | null>(null)
@@ -1679,7 +1701,6 @@ export function AIChatPanel() {
     params.projectId ?? assistantConversationProjectId(activeConversation)
   const { project, isLoading: projectLoading } = useProject(contextProjectId)
   const { account } = useAuth()
-  const { widthPx: width, setWidthPx: setWidth } = useAIChatPanelWidth(account)
   const queryClient = useQueryClient()
   const accountId = (account as { $id?: string } | undefined)?.$id ?? null
   const organizationId =
@@ -1843,7 +1864,7 @@ export function AIChatPanel() {
 
   const { activityRef: bubbleActivityRef, registerKeystroke: registerTypingKeystroke } =
     useTypingSpeedActivity(
-      isOpen && showPanel && !isAssistantBlocked,
+      !isAssistantBlocked,
       isThinking,
       bubbleDebugMode,
     )
@@ -1919,12 +1940,10 @@ export function AIChatPanel() {
     messagesEndRef.current?.scrollIntoView({ behavior: 'auto' })
   }, [isThinking, latestMessage?.contentText, messages.length])
 
-  // Focus input when panel opens
+  // Focus input when panel content mounts
   useEffect(() => {
-    if (isOpen) {
-      window.setTimeout(() => inputRef.current?.focus(), 300)
-    }
-  }, [isOpen])
+    window.setTimeout(() => inputRef.current?.focus(), 300)
+  }, [])
 
   useEffect(() => {
     return () => {
@@ -1972,43 +1991,6 @@ export function AIChatPanel() {
       setIsLoadingOlderMessages(false)
     }
   }, [isFetchingMessages, isLoadingOlderMessages])
-
-  // Handle resize drag
-  const handleMouseDown = useCallback((e: React.MouseEvent) => {
-    e.preventDefault()
-    setIsResizing(true)
-  }, [])
-
-  useEffect(() => {
-    if (!isResizing) return
-
-    const handleMouseMove = (e: MouseEvent) => {
-      if (!panelRef.current) return
-
-      // Calculate new width based on mouse position from right edge of viewport
-      const newWidth = window.innerWidth - e.clientX
-      const clampedWidth = Math.min(MAX_WIDTH, Math.max(MIN_WIDTH, newWidth))
-      setWidth(clampedWidth)
-    }
-
-    const handleMouseUp = () => {
-      setIsResizing(false)
-    }
-
-    document.addEventListener('mousemove', handleMouseMove)
-    document.addEventListener('mouseup', handleMouseUp)
-
-    // Add cursor style to body during resize
-    document.body.style.cursor = 'col-resize'
-    document.body.style.userSelect = 'none'
-
-    return () => {
-      document.removeEventListener('mousemove', handleMouseMove)
-      document.removeEventListener('mouseup', handleMouseUp)
-      document.body.style.cursor = ''
-      document.body.style.userSelect = ''
-    }
-  }, [isResizing])
 
   const resolveConversationProjectId = async (): Promise<string | null> => {
     const directContextProjectId =
@@ -2354,27 +2336,11 @@ export function AIChatPanel() {
     }
   }
 
-  if (!showPanel || isAssistantBlocked || !isOpen) return null
+  if (isAssistantBlocked) return null
 
   return (
-    <div
-      ref={panelRef}
-      style={{ width: `${width}px` }}
-      className={cn(
-        'relative flex h-full shrink-0 flex-col border-l border-border bg-background [&_button:not(:disabled)]:cursor-pointer',
-      )}
-    >
-      {/* Resize Handle */}
-      <div
-        onMouseDown={handleMouseDown}
-        className={cn(
-          'absolute left-0 top-0 z-10 flex h-full w-1.5 cursor-col-resize items-center justify-center transition-colors hover:bg-primary/20 dark:hover:bg-sidebar-accent/60',
-          isResizing && 'bg-primary/30 dark:bg-sidebar-accent/70',
-        )}
-      />
-
-      <div className="flex h-full min-h-0">
-        <div className="flex min-w-0 flex-1 flex-col">
+    <div className="flex h-full min-h-0">
+      <div className="flex min-w-0 flex-1 flex-col">
           <div className="flex h-14 min-h-14 shrink-0 items-center justify-between border-b border-border px-3">
             <div className="min-w-0">
               <div className="flex items-center gap-1">
@@ -2925,9 +2891,13 @@ export function AIChatPanel() {
             </p>
           </div>
         </div>
-      </div>
     </div>
   )
+}
+
+/** @deprecated Use {@link ConsoleRightPane} with {@link AIChatPanelContent}. */
+export function AIChatPanel() {
+  return null
 }
 
 function makeConversationTitle(text: string): string {

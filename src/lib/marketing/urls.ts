@@ -11,7 +11,9 @@ export type MarketingPagePath =
   | '/education'
   | '/startups'
   | '/community'
+  | '/docs'
   | '/changelog'
+  | '/home'
 
 /**
  * Resolves a marketing page path to a relative route when marketing is enabled,

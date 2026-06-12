@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, useCallback, useRef } from 'react'
+import { useState, useEffect, useLayoutEffect, useMemo, useCallback, useRef } from 'react'
 import { cn } from '@/lib/utils'
 import { useIsMobile } from '@/hooks/use-mobile'
 import {
@@ -6,6 +6,7 @@ import {
   usePlatform,
 } from '@/hooks/use-keyboard-shortcuts'
 import { formatDisplayKeys } from '@/lib/keyboard-shortcuts/display'
+import { OPEN_COMMAND_CENTER_SHORTCUT_OPTIONS } from '@/lib/keyboard-shortcuts/use-global-command-shortcuts'
 import {
   KeyboardShortcutsView,
   ShortcutKeyBadges,
@@ -269,6 +270,8 @@ export function CommandCenter({
   const [searchScope, setSearchScope] = useState<ResourceScope | null>(null)
   const inputRef = useRef<HTMLInputElement | null>(null)
   const docsInputRef = useRef<HTMLInputElement | null>(null)
+  const focusReturnRef = useRef<HTMLElement | null>(null)
+  const wasOpenRef = useRef(false)
   const displayedResourceCommandsRef = useRef<RuntimeCommand[]>([])
   const prevSearchScopeRef = useRef<typeof searchScope>(null)
   const currentPage = pages[pages.length - 1]
@@ -374,14 +377,13 @@ export function CommandCenter({
     inputRef.current?.focus()
   }, [currentPage])
 
-  useKeyboardShortcut('meta+k', focusSearchInput, {
+  const refocusSearchShortcut = {
+    ...OPEN_COMMAND_CENTER_SHORTCUT_OPTIONS,
     enabled: open,
-    ignoreInputs: false,
-  })
-  useKeyboardShortcut('control+k', focusSearchInput, {
-    enabled: open,
-    ignoreInputs: false,
-  })
+  }
+
+  useKeyboardShortcut('meta+k', focusSearchInput, refocusSearchShortcut)
+  useKeyboardShortcut('control+k', focusSearchInput, refocusSearchShortcut)
   useKeyboardShortcut(
     '/',
     (e) => {
@@ -1240,6 +1242,26 @@ export function CommandCenter({
     [filteredGroups],
   )
 
+  // Capture focus before Radix moves it into the dialog; restore on close (e.g. Escape).
+  useLayoutEffect(() => {
+    if (open && !wasOpenRef.current) {
+      const el = document.activeElement
+      focusReturnRef.current = el instanceof HTMLElement ? el : null
+    }
+    wasOpenRef.current = open
+  }, [open])
+
+  const restoreFocusOnClose = useCallback(() => {
+    const el = focusReturnRef.current
+    focusReturnRef.current = null
+    if (!el?.isConnected) return
+
+    requestAnimationFrame(() => {
+      if (!el.isConnected) return
+      el.focus({ preventScroll: true })
+    })
+  }, [])
+
   // Auto-focus the search input whenever the dialog opens or the user
   // navigates between sub-pages. Radix Dialog's initial focus can land on
   // the close button instead of the input, so we focus explicitly.
@@ -1348,6 +1370,10 @@ export function CommandCenter({
         aria-describedby={undefined}
         onEscapeKeyDown={(e) => {
           if (handleEscape(e)) return
+        }}
+        onCloseAutoFocus={(e) => {
+          e.preventDefault()
+          restoreFocusOnClose()
         }}
       >
         <VisuallyHidden>

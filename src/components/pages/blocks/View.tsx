@@ -4,6 +4,7 @@ import { useAuth } from '@/components/global/auth/RequireAuth'
 import { ConsoleLayout } from '@/components/global/layout/ConsoleLayout'
 import { CommandCenter } from '@/components/global/shared/CommandCenter'
 import { useKeyboardShortcut } from '@/hooks/use-keyboard-shortcuts'
+import { OPEN_COMMAND_CENTER_SHORTCUT_OPTIONS } from '@/lib/keyboard-shortcuts/use-global-command-shortcuts'
 import { isOperatorAccount, type OperatorAccount } from '@/lib/operator-account'
 import { BlocksList } from './BlocksList'
 import { ComposeBlock } from './ComposeBlock'
@@ -19,8 +20,8 @@ export function BlocksConsoleView() {
   const [draft, setDraft] = useState('')
   const [focusedProjectId, setFocusedProjectId] = useState<string | null>(null)
 
-  useKeyboardShortcut('meta+k', () => setCommandCenterOpen(true))
-  useKeyboardShortcut('control+k', () => setCommandCenterOpen(true))
+  useKeyboardShortcut('meta+k', () => setCommandCenterOpen(true), OPEN_COMMAND_CENTER_SHORTCUT_OPTIONS)
+  useKeyboardShortcut('control+k', () => setCommandCenterOpen(true), OPEN_COMMAND_CENTER_SHORTCUT_OPTIONS)
 
   useEffect(() => {
     if (!account) return
