@@ -182,7 +182,7 @@ class Update extends Base
 
         $isConnected = !empty($site->getAttribute('providerRepositoryId', ''));
 
-        // If providerRepositoryId is omitted (null) and site is already connected, preserve existing VCS values
+        // Omitted providerRepositoryId (null) on a connected site — preserve existing VCS values
         if ($isConnected && $providerRepositoryId === null) {
             $providerRepositoryId = $site->getAttribute('providerRepositoryId', '');
             $installationId = $site->getAttribute('installationId', '');

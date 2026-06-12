@@ -3313,21 +3313,8 @@ final class FunctionsCustomServerTest extends Scope
     }
 
     /**
-     * Regression test for: omitting providerRepositoryId in updateFunction must not silently
-     * clear the VCS connection while leaving the platform repository record intact.
-     *
-     * Before the fix, calling updateFunction without providerRepositoryId on a connected
-     * function would write null/empty to the function document (making it look disconnected
-     * in the console) but would NOT delete the repositories record in the platform DB, so
-     * GitHub webhooks would keep finding the record and keep triggering builds.
-     *
-     * This test covers the API-observable side:
-     *   1. Omitting providerRepositoryId on a non-connected function keeps the field empty.
-     *   2. Passing providerRepositoryId="" (explicit disconnect) on a non-connected function
-     *      is a no-op and does not cause errors.
-     *
-     * The full scenario (connected function + omit providerRepositoryId) requires a live
-     * VCS installation and is validated in VCSCustomServerTest.
+     * Regression: omitting providerRepositoryId must not clear VCS fields or leave
+     * the platform repository record orphaned (causing ghost GitHub builds).
      */
     public function testUpdateFunctionPreservesVcsOnOmittedProviderRepositoryId(): void
     {

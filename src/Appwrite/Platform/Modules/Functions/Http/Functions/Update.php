@@ -182,7 +182,7 @@ class Update extends Base
 
         $isConnected = !empty($function->getAttribute('providerRepositoryId', ''));
 
-        // If providerRepositoryId is omitted (null) and function is already connected, preserve existing VCS values
+        // Omitted providerRepositoryId (null) on a connected function — preserve existing VCS values
         if ($isConnected && $providerRepositoryId === null) {
             $providerRepositoryId = $function->getAttribute('providerRepositoryId', '');
             $installationId = $function->getAttribute('installationId', '');
