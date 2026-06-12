@@ -1,3 +1,44 @@
+/** Normalize any browser color string to `rgb(r, g, b)` for canvas / Three.js. */
+function normalizeComputedColorToRgb(computed: string, fallback: string): string {
+  if (!computed || computed === 'rgba(0, 0, 0, 0)') return fallback
+
+  const rgbMatch = computed.match(/rgba?\((\d+),\s*(\d+),\s*(\d+)/i)
+  if (rgbMatch) {
+    return `rgb(${rgbMatch[1]}, ${rgbMatch[2]}, ${rgbMatch[3]})`
+  }
+
+  const canvas = document.createElement('canvas')
+  const ctx = canvas.getContext('2d')
+  if (!ctx) return fallback
+
+  try {
+    ctx.fillStyle = computed
+    const normalized = ctx.fillStyle
+    if (normalized.startsWith('#')) {
+      const hex = normalized.slice(1)
+      const full =
+        hex.length === 3
+          ? `${hex[0]}${hex[0]}${hex[1]}${hex[1]}${hex[2]}${hex[2]}`
+          : hex
+      const r = Number.parseInt(full.slice(0, 2), 16)
+      const g = Number.parseInt(full.slice(2, 4), 16)
+      const b = Number.parseInt(full.slice(4, 6), 16)
+      if (![r, g, b].some(Number.isNaN)) {
+        return `rgb(${r}, ${g}, ${b})`
+      }
+    }
+
+    const normalizedMatch = normalized.match(/rgba?\((\d+),\s*(\d+),\s*(\d+)/i)
+    if (normalizedMatch) {
+      return `rgb(${normalizedMatch[1]}, ${normalizedMatch[2]}, ${normalizedMatch[3]})`
+    }
+  } catch {
+    // Fall through to fallback.
+  }
+
+  return fallback
+}
+
 /** Resolve any CSS color expression (var, color-mix, etc.) to computed `rgb(...)`. */
 export function getCssColorExpression(expression: string, fallback: string): string {
   if (typeof document === 'undefined') return fallback
@@ -10,8 +51,7 @@ export function getCssColorExpression(expression: string, fallback: string): str
   const computed = getComputedStyle(probe).color
   probe.remove()
 
-  if (!computed || computed === 'rgba(0, 0, 0, 0)') return fallback
-  return computed
+  return normalizeComputedColorToRgb(computed, fallback)
 }
 
 /** Resolve a CSS custom property to a computed `rgb(...)` string for canvas / Three.js. */

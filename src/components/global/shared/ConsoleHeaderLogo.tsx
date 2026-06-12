@@ -1,6 +1,8 @@
 import { useEffect, useLayoutEffect, useRef, useSyncExternalStore } from 'react'
 import { cn } from '@/lib/utils'
 import { useConsoleProfile } from '@/hooks/use-console-profile'
+import { useIsLegacyTheme } from '@/hooks/use-is-legacy-theme'
+import { LegacyAppwriteIcon } from '@/components/global/shared/LegacyAppwriteBrand'
 
 let logoCloudLockedUntilPointerLeave = false
 const logoCloudLockListeners = new Set<() => void>()
@@ -83,6 +85,7 @@ function FilledCloudMark({ className }: { className?: string }) {
  */
 export function ConsoleHeaderLogo({ className }: { className?: string }) {
   const { isCloud } = useConsoleProfile()
+  const isLegacyTheme = useIsLegacyTheme()
   const rootRef = useRef<HTMLDivElement>(null)
   const cloudLockedUntilLeave = useSyncExternalStore(
     subscribeLogoCloudLock,
@@ -115,6 +118,10 @@ export function ConsoleHeaderLogo({ className }: { className?: string }) {
       parent.removeEventListener('pointercancel', unlockCloud)
     }
   }, [isCloud])
+
+  if (isLegacyTheme) {
+    return <LegacyAppwriteIcon className={className} />
+  }
 
   if (!isCloud) {
     return (

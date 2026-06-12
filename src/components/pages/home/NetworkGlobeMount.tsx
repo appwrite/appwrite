@@ -3,7 +3,7 @@
 import { lazy, Suspense, useEffect, useState } from 'react'
 import { cn } from '@/lib/utils'
 import {
-  NETWORK_SEGMENT_COLORS,
+  NETWORK_SEGMENT_CSS_VARS,
   NETWORK_SEGMENT_LABELS,
 } from '@/lib/home/build-network-globe-data'
 import type { NetworkSegment } from '@/lib/home/network-locations'
@@ -28,7 +28,7 @@ function NetworkGlobeLegend({ className }: { className?: string }) {
         <span key={segment} className="flex items-center gap-1.5 text-[12px]">
           <span
             className="size-2 shrink-0 rounded-full"
-            style={{ backgroundColor: NETWORK_SEGMENT_COLORS[segment] }}
+            style={{ backgroundColor: NETWORK_SEGMENT_CSS_VARS[segment] }}
             aria-hidden
           />
           <span className="text-foreground">{NETWORK_SEGMENT_LABELS[segment]}</span>

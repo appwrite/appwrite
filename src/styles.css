@@ -385,6 +385,54 @@ code {
  * 90s web - hidden debug theme: Win-gray, classic blue links, neon accents,
  * CRT scanlines + grid + faux starfield. Debug menu only.
  */
+/*
+ * Legacy - hidden debug theme: classic Appwrite console (light workspace, dark sidebar, pink accents).
+ * Debug menu only.
+ */
+.legacy {
+  color-scheme: light;
+  --legacy-header-bg: #fff5f7;
+  --legacy-card-shadow:
+    0 1px 2px rgba(28, 43, 62, 0.05), 0 6px 18px rgba(28, 43, 62, 0.05);
+  --editor-bg: #ffffff;
+  --background: #eef1f5;
+  --foreground: #2a3544;
+  --card: #ffffff;
+  --card-foreground: #2a3544;
+  --popover: #ffffff;
+  --popover-foreground: #2a3544;
+  --primary: #f02e65;
+  --primary-foreground: #ffffff;
+  --secondary: #e4e8ef;
+  --secondary-foreground: #2a3544;
+  --muted: #e8ecf2;
+  --muted-foreground: #6b7c93;
+  --accent: #e8ecf2;
+  --accent-foreground: #2a3544;
+  --destructive: #ff453a;
+  --destructive-foreground: #ffffff;
+  --border: #e4e8ef;
+  --input: #e8ecf2;
+  --ring: #f02e65;
+  --chart-1: #2ebde5;
+  --chart-2: #f02e65;
+  --chart-3: #00bc5d;
+  --chart-4: #f38500;
+  --chart-5: #a1c4ff;
+  --chart-brand: #f02e65;
+  --network-globe-edge: #7c67fe;
+  --network-globe-region: #f38500;
+  --radius: 0.5rem;
+  --sidebar: #1c2b3e;
+  --sidebar-foreground: #ffffff;
+  --sidebar-primary: #f02e65;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: #243447;
+  --sidebar-accent-foreground: #ffffff;
+  --sidebar-border: #243447;
+  --sidebar-ring: #f02e65;
+}
+
 .nineties {
   color-scheme: light;
   --radius: 0.25rem;
@@ -472,6 +520,36 @@ code {
   .font-inter-overview {
     font-family: var(--font-inter-overview);
   }
+
+  /* Hero/marketing headline gradient — tints from --brand-cta (theme primary on debug palettes). */
+  .text-gradient-brand {
+    background-image: linear-gradient(
+      145deg,
+      color-mix(in oklch, var(--brand-cta) 45%, var(--background)) 0%,
+      color-mix(in oklch, var(--brand-cta) 72%, var(--foreground)) 18%,
+      var(--foreground) 46%
+    );
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+
+  html:is(.dark, .crazy, .stealth, .premium, .high-contrast) .text-gradient-brand {
+    background-image: linear-gradient(
+      145deg,
+      color-mix(in oklch, var(--brand-cta) 55%, var(--foreground)) 0%,
+      color-mix(in oklch, var(--brand-cta) 88%, var(--foreground)) 28%,
+      var(--foreground) 62%
+    );
+  }
+
+  .scale-area-curve {
+    opacity: 0.8;
+  }
+
+  html:is(.dark, .crazy, .stealth, .premium, .high-contrast) .scale-area-curve {
+    opacity: 0.95;
+  }
 }
 
 @layer base {
@@ -482,11 +560,24 @@ code {
   html {
     --brand-cta: #fd366e;
     --brand-cta-foreground: #ffffff;
+    /* Network globe segment accents (purple edges, orange regions). */
+    --network-globe-edge: #7c67fe;
+    --network-globe-region: #fe9567;
   }
 
-  html:is(.crazy, .stealth, .premium, .high-contrast, .barbie, .nineties) {
+  html.dark {
+    --network-globe-edge: #9b8aff;
+    --network-globe-region: #ffb088;
+  }
+
+  html:is(.crazy, .stealth, .premium, .high-contrast, .barbie, .nineties, .legacy) {
     --brand-cta: var(--primary);
     --brand-cta-foreground: var(--primary-foreground);
+  }
+
+  html:is(.crazy, .stealth, .premium, .high-contrast) {
+    --network-globe-edge: #9b8aff;
+    --network-globe-region: #ffb088;
   }
 
   * {
@@ -561,6 +652,116 @@ code {
   html.nineties ::selection {
     background-color: oklch(0.92 0.18 95);
     color: oklch(0.14 0.03 285);
+  }
+
+  /*
+   * Legacy console: dark project sidebar on a light workspace (classic split chrome).
+   * Descendants use sidebar-scoped tokens so Tailwind utilities read correctly inside the nav.
+   */
+  html.legacy .console-sidebar {
+    --background: var(--sidebar);
+    --foreground: var(--sidebar-foreground);
+    --muted: var(--sidebar-accent);
+    --muted-foreground: #8b9cb3;
+    --accent: var(--sidebar-accent);
+    --accent-foreground: var(--sidebar-accent-foreground);
+    --border: var(--sidebar-border);
+    --card: var(--sidebar-accent);
+    --ring: var(--sidebar-ring);
+    --secondary: var(--sidebar-accent);
+    --secondary-foreground: var(--sidebar-foreground);
+    background-color: var(--sidebar);
+    border-color: var(--sidebar-border);
+    color: var(--sidebar-foreground);
+  }
+
+  html.legacy .console-sidebar img[alt='Appwrite'] {
+    filter: brightness(0) invert(1);
+  }
+
+  html.legacy .console-sidebar p.uppercase {
+    color: #6d7f99;
+  }
+
+  html.legacy .project-layout-container > div[class*='sticky'] > header {
+    background-color: #ffffff;
+    border-color: #e4e8ef;
+  }
+
+  html.legacy .legacy-theme-header {
+    background-color: var(--legacy-header-bg);
+  }
+
+  html.legacy .legacy-theme-header h1 {
+    color: #f02e65 !important;
+    font-weight: 600 !important;
+    font-size: 1.625rem !important;
+    letter-spacing: -0.02em;
+  }
+
+  html.legacy .project-layout-container .rounded-xl.border.border-border,
+  html.legacy .project-layout-container .rounded-xl.border.border-border.bg-card\/50 {
+    background-color: #ffffff;
+    border-color: #e8ebf0;
+    box-shadow: var(--legacy-card-shadow);
+  }
+
+  html.legacy
+    .project-layout-container
+    [role='tab'][aria-selected='true']
+    .text-\[18px\] {
+    color: #f02e65;
+  }
+
+  html.legacy
+    .project-layout-container
+    [role='tab'][aria-selected='true']
+    .text-\[12px\]:not(.font-medium) {
+    color: color-mix(in srgb, #f02e65 70%, #6b7c93);
+  }
+
+  html.legacy .project-layout-container [role='tab'][aria-selected='true'] {
+    color: #f02e65;
+  }
+
+  html.legacy
+    .project-layout-container
+    [role='tab'][aria-selected='true']
+    .bg-foreground,
+  html.legacy
+    .project-layout-container
+    [role='tablist']
+    [aria-selected='true']
+    .bg-foreground {
+    background-color: #f02e65;
+  }
+
+  html.legacy
+    .project-layout-container
+    [role='tablist']
+    a[role='tab'][aria-selected='true'],
+  html.legacy
+    .project-layout-container
+    [role='tablist']
+    button[role='tab'][aria-selected='true'] {
+    color: #f02e65;
+  }
+
+  html.legacy .legacy-theme-header [role='tab'] {
+    color: color-mix(in srgb, #f02e65 68%, #6b7c93);
+  }
+
+  html.legacy .legacy-theme-header [role='tab'][aria-selected='true'] {
+    color: #f02e65 !important;
+  }
+
+  html.legacy .legacy-theme-header .border-border {
+    border-color: color-mix(in srgb, #f02e65 10%, #e4e8ef);
+  }
+
+  html.legacy {
+    --brand-cta: #f02e65;
+    --brand-cta-foreground: #ffffff;
   }
 
   /* Base document setup. We deliberately keep html/body at `height: 100%` and

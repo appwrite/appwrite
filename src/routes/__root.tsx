@@ -16,6 +16,15 @@ import { useEffect, useState } from 'react'
 import { Toaster } from '@/components/ui/sonner'
 import { ThemeProvider, useTheme } from 'next-themes'
 import {
+  applyFaviconHref,
+  FAVICON_MAP,
+  getDefaultFaviconVariant,
+} from '@/lib/favicon'
+import {
+  isLegacyTheme,
+  LEGACY_ICON_SRC,
+} from '@/lib/legacy-theme-assets'
+import {
   AIChatProvider,
   AIChatPanel,
 } from '@/components/global/providers/AIChat'
@@ -65,7 +74,7 @@ const THEME_SCRIPT = `(function(){
     if (t === 'classic') { localStorage.setItem('theme', 'dark'); t = 'dark'; }
     var r = t === 'system' ? (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light') : t;
     var e = document.documentElement;
-    ['light','dark','system','crazy','stealth','classic','premium','high-contrast','barbie','nineties'].forEach(function(c){e.classList.remove(c);});
+    ['light','dark','system','crazy','stealth','classic','premium','high-contrast','barbie','nineties','legacy'].forEach(function(c){e.classList.remove(c);});
     e.classList.add(r);
   } catch (e) {}
 })()`
@@ -210,6 +219,23 @@ function MigrateRemovedThemes() {
   return null
 }
 
+/** Swap favicon to the classic Appwrite mark while the legacy debug theme is active. */
+function LegacyThemeFavicon() {
+  const { theme, resolvedTheme } = useTheme()
+
+  useEffect(() => {
+    if (isLegacyTheme(theme, resolvedTheme)) {
+      applyFaviconHref(LEGACY_ICON_SRC, { cacheBust: false })
+      return
+    }
+
+    const variant = getDefaultFaviconVariant()
+    applyFaviconHref(FAVICON_MAP[variant], { cacheBust: false })
+  }, [theme, resolvedTheme])
+
+  return null
+}
+
 /**
  * Renders ThemeProvider only after client mount. next-themes uses React context
  * in a way that can fail during SSR (renderToPipeableStream) with "Cannot read
@@ -239,9 +265,11 @@ function ClientThemeProvider({ children }: { children: React.ReactNode }) {
         'high-contrast',
         'barbie',
         'nineties',
+        'legacy',
       ]}
     >
       <MigrateRemovedThemes />
+      <LegacyThemeFavicon />
       {children}
     </ThemeProvider>
   )

@@ -248,7 +248,7 @@ function HomePage() {
               </a>
             </Button>
 
-            <h1 className="font-aeonik-pro mt-6 max-w-6xl bg-[linear-gradient(145deg,#e8a8b6_0%,#c97d92_18%,var(--foreground)_46%)] bg-clip-text pb-3 text-balance text-[48px] font-normal leading-[1.04] tracking-[-0.022em] text-transparent dark:bg-[linear-gradient(145deg,#f8a1ba_0%,#ff7fa5_28%,#fff_62%)] lg:text-[76px]">
+            <h1 className="font-aeonik-pro text-gradient-brand mt-6 max-w-6xl pb-3 text-balance text-[48px] font-normal leading-[1.04] tracking-[-0.022em] lg:text-[76px]">
               Build faster and scale bigger than ever
               <span className="text-[var(--brand-cta)]">_</span>
             </h1>

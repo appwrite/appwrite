@@ -6,6 +6,8 @@ import {
   AccordionTrigger,
 } from '@/components/ui/accordion'
 import { useConsoleProfile } from '@/hooks/use-console-profile'
+import { useIsLegacyTheme } from '@/hooks/use-is-legacy-theme'
+import { LegacyAppwriteIcon } from '@/components/global/shared/LegacyAppwriteBrand'
 import { getFooterPolicyLinks } from '@/lib/legal/policies'
 import {
   getMarketingPageUrl,
@@ -176,6 +178,7 @@ function FooterGroupLinks({ links }: { links: readonly FooterLink[] }) {
 export function ConsoleFooter({ expanded = false }: ConsoleFooterProps) {
   const currentYear = new Date().getFullYear()
   const { isCloud, features } = useConsoleProfile()
+  const isLegacyTheme = useIsLegacyTheme()
   const cloudStatusEnabled = isCloud && features.systemStatus
   const expandedFooterGroups = getExpandedFooterGroups(features.marketing)
 
@@ -230,8 +233,18 @@ export function ConsoleFooter({ expanded = false }: ConsoleFooterProps) {
         {/* Left section: Logo, Resource Links, and Social Icons */}
         <div className="flex min-w-0 flex-shrink items-center gap-2">
           {/* Logo - inline SVG with currentColor so theme (black/white) works on Safari/iOS */}
-          <div className="flex flex-shrink-0 items-center py-1.5 pe-2.5 ps-0 text-foreground opacity-60">
-            <AppwriteMark className="h-4 w-4" />
+          <div
+            className={
+              isLegacyTheme
+                ? 'flex flex-shrink-0 items-center py-1.5 pe-2.5 ps-0'
+                : 'flex flex-shrink-0 items-center py-1.5 pe-2.5 ps-0 text-foreground opacity-60'
+            }
+          >
+            {isLegacyTheme ? (
+              <LegacyAppwriteIcon className="h-4 w-auto" />
+            ) : (
+              <AppwriteMark className="h-4 w-4" />
+            )}
           </div>
 
           {/* Separator */}

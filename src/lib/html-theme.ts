@@ -10,6 +10,33 @@ const DARK_CHROME_CLASSES = [
   'high-contrast',
 ] as const
 
+/** Theme class names next-themes sets on `<html>` (excludes `system`). */
+export const HTML_THEME_CLASSES = [
+  'light',
+  'dark',
+  'crazy',
+  'stealth',
+  'premium',
+  'high-contrast',
+  'barbie',
+  'nineties',
+  'legacy',
+] as const
+
+/** Active theme class on `<html>`, or light/dark from system preference when unset. */
+export function getHtmlThemeKey(): string {
+  if (typeof document === 'undefined') return 'light'
+
+  const root = document.documentElement
+  for (const theme of HTML_THEME_CLASSES) {
+    if (root.classList.contains(theme)) return theme
+  }
+
+  return window.matchMedia('(prefers-color-scheme: dark)').matches
+    ? 'dark'
+    : 'light'
+}
+
 export function isHtmlDarkChrome(): boolean {
   if (typeof document === 'undefined') return false
   const list = document.documentElement.classList

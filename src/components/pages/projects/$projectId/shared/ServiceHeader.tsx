@@ -358,60 +358,60 @@ export const ServiceHeader = forwardRef<ServiceHeaderRef, ServiceHeaderProps>(
 
     return (
       <div className={cn('min-w-0 w-full', fullWidthBorder && 'w-full')}>
-        {/* Title Row - hidden when collapsed */}
-        {!isCollapsed && !hideTitle && (
-          <div
-            className={cn(
-              'flex flex-col gap-1 px-4 pt-6 sm:px-6',
-              hasTabs ? 'pb-4' : contentAfterBorder ? 'pb-4' : 'pb-6',
-              fullWidthBorder && !fullWidth && 'mx-auto w-full max-w-7xl',
-              fullWidthBorder && fullWidth && 'w-full',
-            )}
-          >
-            {breadcrumbs && breadcrumbs.length > 0 && (
-              <nav className="flex items-center gap-1 text-[13px]">
-                {breadcrumbs.map((breadcrumb, index) => (
-                  <React.Fragment key={breadcrumb.label}>
-                    {breadcrumb.href ? (
-                      <Link
-                        to={breadcrumb.href}
-                        className="text-muted-foreground transition-colors hover:text-foreground"
-                      >
-                        {breadcrumb.label}
-                      </Link>
-                    ) : (
-                      <span className="text-muted-foreground">
-                        {breadcrumb.label}
-                      </span>
-                    )}
-                    {index < breadcrumbs.length - 1 && (
-                      <ChevronRight className="h-3.5 w-3.5 text-muted-foreground" />
-                    )}
-                  </React.Fragment>
-                ))}
-              </nav>
-            )}
-            <div
-              className={cn(
-                SERVICE_HEADER_TITLE_CONTAINER,
-                'flex min-w-0 flex-col gap-3 @[720px]:flex-row @[720px]:items-center @[720px]:justify-between @[720px]:gap-x-4',
-              )}
-            >
-              <h1 className="min-w-0 text-[17px] font-semibold text-foreground @[720px]:flex-1">
-                {title}
-              </h1>
-              {titleRightContent ? (
-                <div className="flex min-w-0 max-w-full items-center justify-end gap-2 @[560px]:gap-3">
-                  {titleRightContent}
+        {!isCollapsed && (!hideTitle || hasTabs) && (
+          <div className="legacy-theme-header">
+            {/* Title Row - hidden when collapsed */}
+            {!hideTitle && (
+              <div
+                className={cn(
+                  'flex flex-col gap-1 px-4 pt-6 sm:px-6',
+                  hasTabs ? 'pb-4' : contentAfterBorder ? 'pb-4' : 'pb-6',
+                  fullWidthBorder && !fullWidth && 'mx-auto w-full max-w-7xl',
+                  fullWidthBorder && fullWidth && 'w-full',
+                )}
+              >
+                {breadcrumbs && breadcrumbs.length > 0 && (
+                  <nav className="flex items-center gap-1 text-[13px]">
+                    {breadcrumbs.map((breadcrumb, index) => (
+                      <React.Fragment key={breadcrumb.label}>
+                        {breadcrumb.href ? (
+                          <Link
+                            to={breadcrumb.href}
+                            className="text-muted-foreground transition-colors hover:text-foreground"
+                          >
+                            {breadcrumb.label}
+                          </Link>
+                        ) : (
+                          <span className="text-muted-foreground">
+                            {breadcrumb.label}
+                          </span>
+                        )}
+                        {index < breadcrumbs.length - 1 && (
+                          <ChevronRight className="h-3.5 w-3.5 text-muted-foreground" />
+                        )}
+                      </React.Fragment>
+                    ))}
+                  </nav>
+                )}
+                <div
+                  className={cn(
+                    SERVICE_HEADER_TITLE_CONTAINER,
+                    'flex min-w-0 flex-col gap-3 @[720px]:flex-row @[720px]:items-center @[720px]:justify-between @[720px]:gap-x-4',
+                  )}
+                >
+                  <h1 className="min-w-0 text-[17px] font-semibold text-foreground @[720px]:flex-1">
+                    {title}
+                  </h1>
+                  {titleRightContent ? (
+                    <div className="flex min-w-0 max-w-full items-center justify-end gap-2 @[560px]:gap-3">
+                      {titleRightContent}
+                    </div>
+                  ) : null}
                 </div>
-              ) : null}
-            </div>
-          </div>
-        )}
+              </div>
+            )}
 
-        {/* Tabs Row - border extends full width, content is constrained */}
-        {!isCollapsed && (
-          <>
+            {/* Tabs Row - border extends full width, content is constrained */}
             {fullWidthBorder ? (
               <div
                 className={cn(
@@ -485,7 +485,7 @@ export const ServiceHeader = forwardRef<ServiceHeaderRef, ServiceHeaderProps>(
             ) : contentAfterBorder ? null : (
               <div className="border-b border-border" />
             )}
-          </>
+          </div>
         )}
 
         {/* Content after border separator */}

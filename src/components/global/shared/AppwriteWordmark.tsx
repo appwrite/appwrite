@@ -1,4 +1,6 @@
 import { cn } from '@/lib/utils'
+import { useIsLegacyTheme } from '@/hooks/use-is-legacy-theme'
+import { LegacyAppwriteLogo } from '@/components/global/shared/LegacyAppwriteBrand'
 
 /**
  * Full "Appwrite" wordmark for loaders; word uses --foreground, mark uses --brand-cta
@@ -11,6 +13,14 @@ export function AppwriteWordmark({
   className?: string
   'aria-label'?: string
 }) {
+  const isLegacyTheme = useIsLegacyTheme()
+
+  if (isLegacyTheme) {
+    return (
+      <LegacyAppwriteLogo className={className} aria-label={ariaLabel} />
+    )
+  }
+
   return (
     <svg
       width={132}

@@ -15,6 +15,7 @@ const CONSOLE_THEME_CLASSES = [
   'high-contrast',
   'barbie',
   'nineties',
+  'legacy',
 ] as const
 
 function rgbChannelsToHex(

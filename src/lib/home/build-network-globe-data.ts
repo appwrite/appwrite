@@ -1,4 +1,4 @@
-import { withAlpha } from '@/lib/css-theme-colors'
+import { getCssColorExpression, withAlpha } from '@/lib/css-theme-colors'
 import type {
   InitGlobeArc,
   InitGlobeMarker,
@@ -11,6 +11,14 @@ import {
   type NetworkSegment,
 } from '@/lib/home/network-locations'
 
+/** CSS variables for legend swatches (SSR-safe, follows active theme). */
+export const NETWORK_SEGMENT_CSS_VARS: Record<NetworkSegment, string> = {
+  'pop-locations': 'var(--brand-cta)',
+  edges: 'var(--network-globe-edge)',
+  regions: 'var(--network-globe-region)',
+}
+
+/** @deprecated Use {@link getNetworkSegmentColors} or {@link NETWORK_SEGMENT_CSS_VARS}. */
 export const NETWORK_SEGMENT_COLORS: Record<NetworkSegment, string> = {
   'pop-locations': 'rgb(253, 54, 110)',
   edges: 'rgb(124, 103, 254)',
@@ -38,8 +46,14 @@ const SEGMENT_LAYER: Record<
 export function getNetworkSegmentColors(): Record<NetworkSegment, string> {
   return {
     'pop-locations': getInitGlobeBrandRgb(),
-    edges: NETWORK_SEGMENT_COLORS.edges,
-    regions: NETWORK_SEGMENT_COLORS.regions,
+    edges: getCssColorExpression(
+      'var(--network-globe-edge)',
+      NETWORK_SEGMENT_COLORS.edges,
+    ),
+    regions: getCssColorExpression(
+      'var(--network-globe-region)',
+      NETWORK_SEGMENT_COLORS.regions,
+    ),
   }
 }
 

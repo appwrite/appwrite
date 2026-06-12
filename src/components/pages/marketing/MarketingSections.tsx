@@ -67,7 +67,7 @@ export function MarketingHeroSection({
             'font-aeonik-pro text-balance font-normal leading-none tracking-tight',
             eyebrow || leading ? 'mt-4' : '',
             gradientTitle
-              ? 'bg-[linear-gradient(145deg,#e8a8b6_0%,#c97d92_18%,var(--foreground)_46%)] bg-clip-text text-transparent dark:bg-[linear-gradient(145deg,#f8a1ba_0%,#ff7fa5_28%,#fff_62%)] sm:text-[40px] lg:text-[48px] text-[32px]'
+              ? 'text-gradient-brand sm:text-[40px] lg:text-[48px] text-[32px]'
               : 'text-foreground sm:text-[40px] lg:text-[48px] text-[32px]',
             isCenter && 'mx-auto max-w-4xl',
             !isCenter && 'max-w-3xl',

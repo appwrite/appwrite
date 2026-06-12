@@ -52,6 +52,8 @@ import {
   TooltipTrigger,
 } from '@/components/ui/tooltip'
 import { OnboardingCard } from './OnboardingCard'
+import { useIsLegacyTheme } from '@/hooks/use-is-legacy-theme'
+import { LEGACY_ICON_SRC } from '@/lib/legacy-theme-assets'
 
 interface NavItem {
   id: string
@@ -286,6 +288,7 @@ export function ConsoleSidebar({
     !features.orgRoles ||
     (!scopesLoading && canShowProjectSettings(access, features))
   const showGetStarted = canShowGetStartedSection(access, features)
+  const isLegacyTheme = useIsLegacyTheme()
 
   // Handle keyboard navigation within sidebar within sidebar
   const handleKeyDown = useCallback((e: React.KeyboardEvent) => {
@@ -468,7 +471,7 @@ export function ConsoleSidebar({
       >
         <aside
           className={cn(
-            'flex h-full w-full flex-col overflow-hidden border-r border-border bg-background',
+            'console-sidebar flex h-full w-full flex-col overflow-hidden border-r border-border bg-background',
             '[transform:translateZ(0)] [backface-visibility:hidden]',
           )}
         >
@@ -528,7 +531,7 @@ export function ConsoleSidebar({
       {/* Mobile Sidebar - GPU-accelerated transform; inert when closed so it's skipped in tab order */}
       <aside
         className={cn(
-          'fixed left-0 top-0 z-[130] flex h-[100dvh] max-h-[100dvh] w-[280px] flex-col overflow-hidden border-r border-border bg-background',
+          'console-sidebar fixed left-0 top-0 z-[130] flex h-[100dvh] max-h-[100dvh] w-[280px] flex-col overflow-hidden border-r border-border bg-background',
           'transition-transform duration-200 ease-out [backface-visibility:hidden]',
           mobileOpen ? 'translate-x-0' : '-translate-x-full',
         )}
@@ -541,9 +544,9 @@ export function ConsoleSidebar({
         <div className="flex h-14 items-center justify-between px-4">
           <div className="flex items-center gap-2.5">
             <img
-              src="https://appwrite.io/images/logos/logo.svg"
+              src={isLegacyTheme ? LEGACY_ICON_SRC : 'https://appwrite.io/images/logos/logo.svg'}
               alt="Appwrite"
-              className="h-6 w-6"
+              className={isLegacyTheme ? 'h-6 w-auto' : 'h-6 w-6'}
             />
           </div>
           <button

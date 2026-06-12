@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useTheme } from 'next-themes'
+import { isLegacyTheme, LEGACY_LOGO_SRC } from '@/lib/legacy-theme-assets'
 
 export function AppwriteLogo({ className }: { className?: string }) {
   const [mounted, setMounted] = useState(false)
@@ -8,6 +9,10 @@ export function AppwriteLogo({ className }: { className?: string }) {
   useEffect(() => {
     setMounted(true)
   }, [])
+
+  if (mounted && isLegacyTheme(theme, resolvedTheme)) {
+    return <img src={LEGACY_LOGO_SRC} alt="Appwrite" className={className} />
+  }
 
   // Determine which logo to use based on theme
   // appwrite-light.svg has dark fill (#19191C) - use on light backgrounds

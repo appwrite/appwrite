@@ -99,11 +99,11 @@ function ScaleAreaCurve({ className }: { className?: string }) {
           x2="0"
           y2="280"
         >
-          <stop offset="0%" stopColor="var(--chart-brand)" stopOpacity={0.2} />
-          <stop offset="38%" stopColor="var(--chart-brand)" stopOpacity={0.1} />
-          <stop offset="62%" stopColor="var(--chart-brand)" stopOpacity={0.04} />
-          <stop offset="82%" stopColor="var(--chart-brand)" stopOpacity={0.012} />
-          <stop offset="100%" stopColor="var(--chart-brand)" stopOpacity={0} />
+          <stop offset="0%" stopColor="var(--brand-cta)" stopOpacity={0.2} />
+          <stop offset="38%" stopColor="var(--brand-cta)" stopOpacity={0.1} />
+          <stop offset="62%" stopColor="var(--brand-cta)" stopOpacity={0.04} />
+          <stop offset="82%" stopColor="var(--brand-cta)" stopOpacity={0.012} />
+          <stop offset="100%" stopColor="var(--brand-cta)" stopOpacity={0} />
         </linearGradient>
       </defs>
       <path
@@ -113,7 +113,7 @@ function ScaleAreaCurve({ className }: { className?: string }) {
       <path
         d="M0 228 C28 220 56 210 86 198 C114 186 142 170 172 152 C200 134 228 118 256 100 C286 82 314 64 342 46 C368 30 386 22 400 14"
         fill="none"
-        stroke="var(--chart-brand)"
+        stroke="var(--brand-cta)"
         strokeWidth={2}
         vectorEffect="non-scaling-stroke"
       />
@@ -155,10 +155,10 @@ function ScaleStatCards() {
 function ScaleChart() {
   return (
     <div className="relative left-1/2 w-screen -translate-x-1/2">
-      <div className="relative min-h-[22rem] w-full overflow-hidden bg-card/40 dark:bg-background sm:min-h-[26rem] lg:min-h-[28rem]">
+      <div className="relative min-h-[22rem] w-full overflow-hidden bg-transparent sm:min-h-[26rem] lg:min-h-[28rem]">
         <div className="pointer-events-none absolute inset-0" aria-hidden>
           <ScaleChartBackground />
-          <ScaleAreaCurve className="opacity-80 dark:opacity-95" />
+          <ScaleAreaCurve className="scale-area-curve" />
         </div>
       </div>
     </div>

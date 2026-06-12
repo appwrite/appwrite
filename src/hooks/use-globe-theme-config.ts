@@ -1,16 +1,10 @@
 import { useEffect, useState, useSyncExternalStore } from 'react'
 import { buildInitGlobeConfig } from '@/lib/init/init-globe-theme'
+import {
+  getHtmlThemeKey,
+  isResolvedThemeDarkChrome,
+} from '@/lib/html-theme'
 import type { GlobeConfig } from '@/components/ui/globe'
-
-function getResolvedTheme(): 'light' | 'dark' {
-  if (typeof document === 'undefined') return 'light'
-
-  const root = document.documentElement
-  if (root.classList.contains('dark')) return 'dark'
-  if (root.classList.contains('light')) return 'light'
-
-  return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'
-}
 
 function subscribeToTheme(onStoreChange: () => void) {
   const observer = new MutationObserver(onStoreChange)
@@ -38,16 +32,16 @@ export function useGlobeThemeConfig(): {
     setMounted(true)
   }, [])
 
-  const resolvedTheme = useSyncExternalStore(
+  const themeKey = useSyncExternalStore(
     subscribeToTheme,
-    () => (mounted ? getResolvedTheme() : 'light'),
-    () => 'light',
+    () => (mounted ? getHtmlThemeKey() : 'pending'),
+    () => 'pending',
   )
 
-  const themeKey = !mounted ? 'pending' : resolvedTheme
-  const config: GlobeConfig | null = mounted
-    ? buildInitGlobeConfig(resolvedTheme === 'dark')
-    : null
+  const config: GlobeConfig | null =
+    mounted && themeKey !== 'pending'
+      ? buildInitGlobeConfig(isResolvedThemeDarkChrome(themeKey))
+      : null
 
   return { config, themeKey }
 }

@@ -37,7 +37,7 @@ export function DocsHeroSection() {
           </Button>
         </div>
 
-        <h1 className="font-aeonik-pro mt-6 max-w-[600px] text-balance bg-[linear-gradient(145deg,#e8a8b6_0%,#c97d92_18%,var(--foreground)_46%)] bg-clip-text text-[32px] font-normal leading-[1.08] tracking-tight text-transparent dark:bg-[linear-gradient(145deg,#f8a1ba_0%,#ff7fa5_28%,#fff_62%)] sm:mt-8 sm:text-[40px] lg:text-[48px]">
+        <h1 className="font-aeonik-pro text-gradient-brand mt-6 max-w-[600px] text-balance text-[32px] font-normal leading-[1.08] tracking-tight sm:mt-8 sm:text-[40px] lg:text-[48px]">
           Ship faster with Appwrite
         </h1>
 

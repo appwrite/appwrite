@@ -527,7 +527,7 @@ export function View({ projectId, initialData }: ViewProps) {
   return (
     <div>
       {/* Custom Header with Project Info */}
-      <div>
+      <div className="legacy-theme-header">
         {/* Title Row */}
         <div className="mx-auto w-full max-w-7xl px-4 py-4 sm:px-6">
           <div className="flex flex-col gap-2 lg:flex-row lg:items-center lg:justify-between">

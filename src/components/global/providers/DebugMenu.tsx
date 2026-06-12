@@ -419,6 +419,7 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
       { label: '🔆 High contrast', themeValue: 'high-contrast' },
       { label: '💖 Barbie', themeValue: 'barbie' },
       { label: '📟 90s web', themeValue: 'nineties' },
+      { label: '🏛️ Legacy', themeValue: 'legacy' },
     ]
     const themeOptions: MenuItem[] = themeSource.map((opt) => ({
       label: opt.label,
