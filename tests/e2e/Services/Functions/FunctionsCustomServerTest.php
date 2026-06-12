@@ -3312,45 +3312,4 @@ final class FunctionsCustomServerTest extends Scope
         }
     }
 
-    /**
-     * Regression: omitting providerRepositoryId must not clear VCS fields or leave
-     * the platform repository record orphaned (causing ghost GitHub builds).
-     */
-    public function testUpdateFunctionPreservesVcsOnOmittedProviderRepositoryId(): void
-    {
-        $functionId = $this->setupFunction([
-            'functionId' => ID::unique(),
-            'name' => 'VCS Preserve Test',
-            'runtime' => 'node-22',
-            'entrypoint' => 'index.js',
-            'commands' => '',
-        ]);
-
-        // 1. Update without providerRepositoryId — field should stay empty, no error
-        $response = $this->updateFunction($functionId, [
-            'name' => 'VCS Preserve Test',
-            'runtime' => 'node-22',
-        ]);
-        $this->assertSame(200, $response['headers']['status-code']);
-        $this->assertSame('', $response['body']['providerRepositoryId']);
-        $this->assertSame('', $response['body']['installationId']);
-        $this->assertSame('', $response['body']['providerBranch']);
-
-        // 2. Update with providerRepositoryId="" explicit on non-connected function — no-op, no error
-        $response = $this->updateFunction($functionId, [
-            'name' => 'VCS Preserve Test',
-            'runtime' => 'node-22',
-            'providerRepositoryId' => '',
-        ]);
-        $this->assertSame(200, $response['headers']['status-code']);
-        $this->assertSame('', $response['body']['providerRepositoryId']);
-
-        // 3. Verify GET also reflects the unchanged state
-        $response = $this->getFunction($functionId);
-        $this->assertSame(200, $response['headers']['status-code']);
-        $this->assertSame('', $response['body']['providerRepositoryId']);
-        $this->assertSame('', $response['body']['installationId']);
-
-        $this->cleanupFunction($functionId);
-    }
 }

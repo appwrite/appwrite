@@ -190,6 +190,7 @@ class Update extends Base
             $providerRootDirectory = $providerRootDirectory ?: $site->getAttribute('providerRootDirectory', '');
             $repositoryId = $site->getAttribute('repositoryId', '');
             $repositoryInternalId = $site->getAttribute('repositoryInternalId', '');
+            $installation = $dbForPlatform->getDocument('installations', $installationId);
         }
 
         // Git disconnect logic. Disconnecting only when providerRepositoryId is empty, allowing for continue updates without disconnecting git
