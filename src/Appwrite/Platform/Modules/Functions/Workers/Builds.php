@@ -686,6 +686,11 @@ class Builds extends Action
                 deployment: $deployment
             );
 
+            $cacheKey = $this->getNodeModulesCacheKey($project, $resource, $runtime, $version, $command);
+
+            Span::add('build.node_modules_cache.enabled', $cacheKey !== '');
+            Span::add('build.node_modules_cache.key', $cacheKey);
+
             $response = null;
             $err = null;
 
@@ -699,7 +704,7 @@ class Builds extends Action
             $span = Span::current();
 
             Co::join([
-                Co\go(function () use ($executor, &$response, $project, $deployment, $source, $resource, $runtime, $vars, $command, $cpus, $memory, $timeout, &$err, $version, $span) {
+                Co\go(function () use ($executor, &$response, $project, $deployment, $source, $resource, $runtime, $vars, $command, $cacheKey, $cpus, $memory, $timeout, &$err, $version, $span) {
                     try {
                         if ($version === 'v2') {
                             $command = 'tar -zxf /tmp/code.tar.gz -C /usr/code && cd /usr/local/src/ && ./build.sh';
@@ -726,7 +731,8 @@ class Builds extends Action
                             destination: APP_STORAGE_BUILDS . "/app-{$project->getId()}",
                             variables: $vars,
                             command: $command,
-                            outputDirectory: $outputDirectory ?? ''
+                            outputDirectory: $outputDirectory ?? '',
+                            cacheKey: $cacheKey
                         );
 
                     } catch (ExecutorTimeout $error) {
@@ -1313,6 +1319,23 @@ class Builds extends Action
         }
 
         return '';
+    }
+
+    protected function getNodeModulesCacheKey(Document $project, Document $resource, array $runtime, string $version, string $command): string
+    {
+        if ($version !== 'v5' || $command === '' || $command === '0') {
+            return '';
+        }
+
+        $hashContext = [
+            'version' => 'v1',
+            'projectId' => $project->getId(),
+            'resourceType' => $resource->getCollection(),
+            'resourceId' => $resource->getId(),
+            'runtime' => $runtime['image'] ?? '',
+        ];
+
+        return \substr(\hash('sha256', \json_encode($hashContext, JSON_THROW_ON_ERROR)), 0, 48);
     }
 
     protected function prepareSiteBuildCommand(string $command, string $outputDirectory): string
