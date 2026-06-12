@@ -1,0 +1,12 @@
+---
+layout: changelog
+title: "Introducing Enum SDK support: Enhanced dev experience"
+date: 2024-02-28
+cover: /images/changelog/2024-02-28.avif
+---
+
+We are excited to announce a significant enhancement to the development experience across all Appwrite client and server-side SDKs with Enum SDK Support. This enhancement is designed to streamline the development process, improve code quality, and facilitate seamless integration with Appwrite's backend services.
+
+{% arrow_link href="/blog/post/introducing-enum-sdk-support" %}
+Read the announcement to learn more
+{% /arrow_link %}

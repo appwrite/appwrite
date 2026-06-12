@@ -1,0 +1,12 @@
+---
+layout: changelog
+title: Introducing new runtimes to the Appwrite ecosystem
+date: 2024-03-01
+cover: /images/changelog/2024-03-01.avif
+---
+
+Previously, we completely reimagined Functions to be more flexible and innovative yet familiar to developers. Now, Appwrite expands and updates the runtime ecosystem available on Appwrite Cloud with Bun 1.0.29, Node 21, Ruby 3.3, Deno 1.40, PHP 8.3, Python 3.12, Kotlin 1.9, Java 18, Swift 5.9 and Dart 3.3 support.
+
+{% arrow_link href="/blog/post/announcing-more-and-updated-runtimes" %}
+Read the announcement to learn more
+{% /arrow_link %}

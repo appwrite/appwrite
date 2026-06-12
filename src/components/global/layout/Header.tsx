@@ -106,7 +106,7 @@ const DEFAULT_MARKETING_HEADER_NAV: readonly MarketingHeaderNavItem[] = [
   { label: 'Enterprise', href: 'https://appwrite.io/contact-us/enterprise' },
   { label: 'Customers', href: 'https://appwrite.io/blog/category/customer-stories' },
   { label: 'Blog', href: 'https://appwrite.io/blog' },
-  { label: 'Changelog', href: 'https://appwrite.io/changelog' },
+  { label: 'Changelog', href: '/changelog' },
 ] as const
 
 const ACCOUNT_MENU_ITEM_CLASS =

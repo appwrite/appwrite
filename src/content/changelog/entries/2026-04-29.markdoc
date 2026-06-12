@@ -1,0 +1,27 @@
+---
+layout: changelog
+title: "Realtime: persistent WebSocket and message-driven subscriptions"
+date: 2026-04-29
+---
+
+Appwrite [**Realtime**](/docs/apis/realtime) now keeps a **single WebSocket** per client session and applies **incremental, message-based** subscription changes instead of encoding subscription state mainly in the connection URL and reconnecting for every add or remove.
+
+Previously, subscription details were often encoded in the **WebSocket URL query string**. That tied you to **URL length limits** in browsers, proxies, and servers, which capped how many [channels](/docs/apis/realtime/channels) you could combine and how much metadata you could send on one connection. It also squeezed [Realtime queries](/blog/post/announcing-realtime-queries) for server-side filtering, because every extra filter still had to fit in the same limited URL. Channels and queries are now carried **over the open socket**, so you are not constrained by query-string size the same way.
+
+In **client SDKs**, you can now:
+
+- **Per-subscription lifecycle**: Call `unsubscribe()` on a subscription handle to stop that listener only; other subscriptions on the same `Realtime` instance keep running.
+- **`update()`**: Change `channels` and `queries` on an existing subscription in place, without recreating the client.
+- **`disconnect()`**: Close the WebSocket and drop every active subscription in one call when your app is done with Realtime (for example on component unmount).
+
+Together, the Realtime protocol change and matching SDK APIs reduce unnecessary reconnects, make UI-driven subscription changes easier to reason about, and move subscription state off the WebSocket URL onto incremental messages over the open connection.
+
+Read the announcement on the blog for context and examples, and see the [Realtime documentation](/docs/apis/realtime) for how this maps to your platform.
+
+{% arrow_link href="/blog/post/announcing-message-based-realtime-sdk" %}
+Read the blog announcement
+{% /arrow_link %}
+
+{% arrow_link href="/docs/apis/realtime/subscribe" %}
+Manage subscriptions in the docs
+{% /arrow_link %}

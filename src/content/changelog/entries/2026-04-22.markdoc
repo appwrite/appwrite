@@ -1,0 +1,14 @@
+---
+layout: changelog
+title: "Webhooks API: manage webhooks with Server SDKs"
+date: 2026-04-22
+cover: /images/blog/announcing-webhooks-api/cover.avif
+---
+
+Webhooks can now be created, updated, and deleted programmatically using the Appwrite Server SDKs. Two new API key scopes, `webhooks.read` and `webhooks.write`, control access to the new endpoints.
+
+This makes it possible to provision webhooks as part of CI/CD pipelines, migration scripts, or any workflow where managing webhooks through the Console is not practical.
+
+{% arrow_link href="/blog/post/announcing-webhooks-api" %}
+Read the announcement
+{% /arrow_link %}

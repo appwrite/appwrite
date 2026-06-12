@@ -1,0 +1,29 @@
+---
+layout: changelog
+title: "Skip total counts for faster list queries"
+date: 2025-11-19
+cover: /images/changelog/2025-11-19.avif
+---
+You can now skip totals with a simple `total=false` flag and get faster, lighter list responses without the extra database work.
+
+# What’s new
+
+- Added a new request flag: `total=false` on all `list*` endpoints
+- When enabled, Appwrite **skips the COUNT query** entirely
+- Response includes `total: 0` while still returning items normally
+- Fully backwards-compatible: default behaviour remains unchanged
+- Works best with cursor-based pagination
+- Applies consistently across all list-like API calls
+
+# Immediate benefits
+
+- Faster API responses for large and filtered result sets
+- Lower database and CPU load, improving stability under heavy read traffic
+- Better UX for infinite scroll and mobile clients that don’t rely on totals
+- Reduced cloud infrastructure cost by avoiding unnecessary COUNT operations
+
+This feature is now live on both Appwrite Cloud and Self-hosted instances
+
+{% arrow_link href="/docs/products/databases/pagination#skip-totals" %}
+Learn more from the documentation
+{% /arrow_link %}

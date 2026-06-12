@@ -1,0 +1,16 @@
+---
+layout: changelog
+title: New SDK versions released for Web, Flutter, and Android
+date: 2024-04-25
+---
+
+New SDK versions have been released for Web, Flutter, and Android.
+
+- Web 14.0.1: Fixes issues with realtime connections not closing when unsubscribe is called. [Go to release](https://github.com/appwrite/sdk-for-web/releases/tag/14.0.1)
+
+- Flutter 12.0.3: Bumps dependency versions, including Appwrite Web SDK and its fixes. [Go to release](https://github.com/appwrite/sdk-for-flutter/releases/tag/12.0.3 )
+
+- Android 5.1.0: Resolves OkHttp dependency conflicts with latest AGP versions. 
+[Go to release](https://github.com/appwrite/sdk-for-android/releases/tag/5.1.0)
+
+Keep in mind that these SDK versions are for Appwrite 1.5.x, Cloud is on 1.4.x.

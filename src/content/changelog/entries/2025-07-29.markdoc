@@ -1,0 +1,33 @@
+---
+layout: changelog
+title: Console and deployment improvements for smoother workflows
+date: 2025-07-29
+---
+
+We've shipped several improvements to fix broken flows and clean up the developer experience across Sites, Functions, and the Appwrite Console.
+
+## What's new
+
+- When creating Sites or Functions, the default Git branch now auto-suggests your GitHub default branch (not the first one).
+- Site screenshots now use the Storage API preview route.
+- The Git deployment modal now auto-fills your production branch.
+- Emails now include preview text for better notification previews.
+- Domain validation status now updates in realtime.
+
+## Fixes
+
+- No more double Git deployments.
+- Git-related issues no longer cause build failures.
+- Site settings now save correctly even if the first deployment fails.
+- Deployment activation now reflects properly in realtime.
+- DB filters now work as expected.
+- Broken links to API keys path are now fixed.
+- Console no longer adds a `null` header when executing functions.
+- Fixed a bug where Console project URLs showed "undefined" in self-hosted environments.
+- Multiple UI alignment and responsiveness issues resolved.
+
+These improvements are now live on Appwrite Cloud, and we'd love to hear about your experience with them.
+
+{% arrow_link href="https://appwrite.io/discord" %}
+Join the discussion on Discord
+{% /arrow_link %}

@@ -1,0 +1,14 @@
+---
+layout: changelog
+title: Appwrite is now GDPR compliant
+date: 2024-01-09
+cover: /images/changelog/2024-01-09.avif
+---
+
+At Appwrite, we take your data seriously. Therefore, we are excited to announce that Appwrite is now GDPR Compliant.
+
+We have always kept strict internal policies with regard to personal data and privacy. But to be GDPR compliant, one must undertake the necessary steps and show proof. We have now done this, and we’re pleased that we are now certified with the European General Data Protection Regulation (GDPR) standards.
+
+{% arrow_link href="/blog/post/announcing-appwrite-is-gdpr-compliant" %}
+Read the full announcement
+{% /arrow_link %}

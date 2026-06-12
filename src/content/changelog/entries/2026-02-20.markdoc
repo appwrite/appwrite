@@ -1,0 +1,13 @@
+---
+layout: changelog
+title: "DNS: TXT record encoding and truncation handling"
+date: 2026-02-20
+---
+
+Two fixes are now live for DNS used by custom domains and network features.
+
+**TXT records:** TXT records now support payloads longer than 255 bytes by using chunked encoding (splitting into 255-byte chunks per RFC 1035), and empty TXT rdata is encoded as a single zero-length character-string so encoding and decoding stay correct.
+
+**Response truncation:** When a response is truncated and the authority section is dropped to fit size limits, NODATA (NOERROR with no answers) and NXDOMAIN responses are now marked non-authoritative so they remain valid and pass validation.
+
+Now live on Appwrite Cloud.

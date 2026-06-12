@@ -1,0 +1,32 @@
+---
+layout: changelog
+title: Announcing Appwrite 1.8.1 for self-hosted deployments
+date: 2025-12-31
+cover: /images/blog/appwrite-1-8-1-self-hosted-release/cover.avif
+---
+
+After multiple updates and fixes, we have now released Appwrite 1.8.1 for self-hosting!
+
+Most notably, this release includes:
+
+- Added branch-only deployments support
+- Added TanStack Start sites support
+- Added Next.js standalone support
+- Added Resend integration
+- Added option to enable/disable image transformations per-bucket
+- Added operators support
+- Added function and sites stats
+- Added disable count feature
+- Added ElevenLabs site template
+- Added suggested environment variables
+- Updated GeoDB database
+- Updated Flutter default build runtime
+- Upgraded runtimes
+
+Head over to our [migration guide](https://appwrite.io/docs/advanced/self-hosting/production/updates) to learn how you can upgrade your Appwrite instance. Please run the [migrate command](https://appwrite.io/docs/advanced/self-hosting/production/updates#running-the-migration) even if upgrading from 1.8.0.
+
+For the complete list of updates and fixes, check out the [release notes](https://github.com/appwrite/appwrite/releases/tag/1.8.1) on GitHub.
+
+{% arrow_link href="/docs/advanced/self-hosting/production/updates" %}
+Upgrade your self-hosted instance
+{% /arrow_link %}

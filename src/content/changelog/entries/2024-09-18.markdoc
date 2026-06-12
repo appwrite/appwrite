@@ -1,0 +1,16 @@
+---
+layout: changelog
+title: "Appwrite 1.6 is now available"
+date: 2024-09-18
+cover: /images/changelog/2024-09-18.avif
+---
+
+Appwrite 1.6 is now available for self hosting! Packed with all the updates and improvements from [Appwrite Init](https://appwrite.io/init), this release puts a strong emphasis on the functions ecosystem including scheduled and delayed executions, dynamic API keys and the introduction of binary executions. With the addition of Go to the function runtimes, we continue to broaden our ecosystem to meet your needs. The all new CLI and Local Development offer an improved developer experience when working with functions. Furthermore, new features like Mock numbers and session alerts strengthen security and development flexibility.
+
+In addition to these new features, we've addressed several important issues, from resolving large function build errors to improving Git integration during deployments. These fixes, along with updates to function execution metrics and database attribute management, ensure an overall smoother experience. 
+
+We're excited to see what you build! Head over to our [migration guide](https://appwrite.io/docs/advanced/self-hosting/update) to learn how you can upgrade your Appwrite instance. For the complete list of updates and fixes, check out the changelog below.
+
+{% arrow_link href="https://github.com/appwrite/appwrite/releases/tag/1.6.0" %}
+View the changelog on GitHub
+{% /arrow_link %}

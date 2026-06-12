@@ -1,0 +1,16 @@
+---
+layout: changelog
+title: 'User impersonation for Appwrite Auth'
+date: 2026-03-14
+cover: /images/blog/announcing-user-impersonation/cover.avif
+---
+
+Trusted operators can now impersonate users in Appwrite Auth to reproduce issues, validate permissions, and provide hands-on support without sharing credentials.
+
+This release adds a new `impersonator` capability on users, available from the Appwrite Console and the Users API, plus direct SDK support for targeting a user by ID, email, or phone.
+
+Impersonated requests still begin from a real authenticated user session, and internal audit logs continue to attribute actions to the original impersonator while recording the impersonated target in internal audit payload data.
+
+{% arrow_link href="/blog/post/announcing-user-impersonation" %}
+Read the announcement to learn more
+{% /arrow_link %}

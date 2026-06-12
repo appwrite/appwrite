@@ -1,0 +1,19 @@
+---
+layout: changelog
+title: "New runtimes and expanded capabilities"
+date: 2024-11-15
+---
+
+We've added support for new function runtimes and capabilities:
+
+- Added support for the latest runtimes, including:
+  - Node.js 22
+  - Dart 3.5
+  - Bun 1.1
+- Improved error reporting on the Functions executor, ensuring similar errors are grouped together for easier debugging.
+
+These updates ensure Appwrite supports the latest tools and helps you debug faster.
+
+{% arrow_link href="/docs/products/functions/runtimes" %}
+Learn more about supported runtimes
+{% /arrow_link %}

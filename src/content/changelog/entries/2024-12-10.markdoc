@@ -1,0 +1,18 @@
+---
+layout: changelog
+title: Memberships privacy is now available for all plans
+date: 2024-12-10
+cover: /images/blog/memberships-privacy-announcement/cover.avif
+---
+
+You can now manage memberships privacy across all Appwrite plans, helping you protect sensitive member details.
+
+With this feature, you can mark specific membership details like the user's name, email, and multi-factor authentication status as private.
+
+To configure these settings, head to **Auth > Security > Memberships Privacy** in the Console.
+
+If you have any questions or feedback, please let us know on [Discord](https://appwrite.io/discord).
+
+{% arrow_link href="https://appwrite.io/docs/products/auth/teams#memberships-privacy" %}
+Read more about memberships privacy
+{% /arrow_link %}

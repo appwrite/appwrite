@@ -1,0 +1,18 @@
+---
+layout: changelog
+title: "Realtime Channel helpers: Type-safe subscriptions made simple"
+date: 2026-02-13
+cover: /images/blog/announcing-realtime-channel-helpers/cover.avif
+---
+
+Appwrite Realtime now includes Channel helpers, a fluent, type-safe API for building channel subscriptions. Instead of manually writing channel strings, you use the `Channel` class with IDE autocomplete and compile-time validation.
+
+Channel helpers support all available channels, event type filtering with `.create()`, `.update()`, and `.delete()`, and flexible wildcards by omitting IDs. Existing string-based subscriptions continue to work.
+
+Available across all Appwrite client SDKs: Web, Flutter, Apple, and Android.
+
+Now live on Appwrite Cloud.
+
+{% arrow_link href="/blog/post/announcing-realtime-channel-helpers" %}
+Read the announcement to learn more
+{% /arrow_link %}

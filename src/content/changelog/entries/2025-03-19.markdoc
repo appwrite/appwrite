@@ -1,0 +1,17 @@
+---
+layout: changelog
+title: Update to budget limits in Appwrite Cloud
+date: 2025-03-19
+---
+
+We've updated how budget limits work in Appwrite Cloud to provide more control over organization scaling.
+
+## What's changed
+- Previously, setting the budget to **0** meant the budget was disabled (unlimited usage), and **null** was not supported.
+- Now, **null** explicitly disables the budget, while **0** is a valid budget limit, meaning the organization will not scale beyond its allocated resources.
+
+This change ensures clearer budget management and better control over scaling limits.
+
+{% arrow_link href="/docs/advanced/platform/pro#resource-limits" %}
+Learn more about budget limits
+{% /arrow_link %}

@@ -1,0 +1,12 @@
+---
+layout: changelog
+title: "Announcing 2FA: Making your users more secure than ever"
+date: 2024-02-28
+cover: /images/changelog/2024-02-28-2.avif
+---
+
+At Appwrite, our mission is to eliminate technical barriers. A key part of this mission is making your applications more secure. With Appwrite 1.5, we’re excited to announce that we are adding support for Two-Factor Authentication (2FA) to Appwrite Authentication, providing an extra layer of security for your end users' accounts.
+
+{% arrow_link href="/blog/post/announcing-two-factor-authentication" %}
+Read the announcement to learn more
+{% /arrow_link %}

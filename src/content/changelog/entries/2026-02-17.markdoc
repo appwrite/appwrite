@@ -1,0 +1,16 @@
+---
+layout: changelog
+title: "Advanced filtering across the Console"
+date: 2026-02-17
+cover: /images/changelog/2026-02-17.avif
+---
+
+Debugging and monitoring just got easier. The Appwrite Console now supports advanced filtering for function executions, site logs, and deployments.
+
+Filter by status, trigger type, HTTP method, response status code, duration, request path, or time range, and combine multiple filters to quickly find exactly what you need.
+
+For example, surface all failed function executions from the last hour, or find slow site requests exceeding 5 seconds. 
+
+Now live on Appwrite Cloud.
+
+

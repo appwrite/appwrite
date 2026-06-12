@@ -1,0 +1,19 @@
+---
+layout: changelog
+title: Improved workflow and usability
+date: 2024-12-09
+---
+
+We've updated Appwrite Cloud to improve usability and workflows:
+
+- Table content no longer gets truncated in views.
+- The database deletion flow has been redesigned to prevent accidental deletions.
+- Usage cards now have a cleaner, simpler view.
+- Fixed broken links on the billing page.
+- Removed bulk deletions from the database table for added safety.
+
+These changes make the console easier to use. Try them out and share your experience with us.
+
+{% arrow_link href="https://appwrite.io/discord" %}
+Join the discussion on Discord
+{% /arrow_link %}

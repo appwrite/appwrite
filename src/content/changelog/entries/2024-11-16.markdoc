@@ -1,0 +1,19 @@
+---
+layout: changelog
+title: "Performance improvements to Appwrite Cloud"
+date: 2024-11-16
+---
+
+We've made several updates to improve performance on Appwrite Cloud:
+
+- Increased the default CPU for function runtimes on the free tier from 0.5 CPU to 1 CPU.
+- Updated Python runtimes to include the `--preload` flag in Gunicorn, resulting in faster cold starts.
+- Improved the rules fetching logic in the Appwrite router to make better use of caching, reducing latency by up to 50ms for functions executed via domains.
+- Updated Redis HA clusters to improve redundancy and high availability for caching, queues, pub-sub, and shared state services.
+- Adjusted our API and CDN compression logic to avoid compressing small responses, improving performance and making usage stats more accurate.
+
+These updates aim to make your projects faster and more reliable, especially under high-demand scenarios.
+
+{% arrow_link href="https://appwrite.io/discord" %}
+Join the discussion on Discord
+{% /arrow_link %}

@@ -1,0 +1,16 @@
+---
+layout: changelog
+title: "Leveling up the Appwrite Functions ecosystem"
+date: 2024-08-21
+cover: /images/changelog/2024-08-21.avif
+---
+
+We're excited to announce major improvements to Appwrite Functions, making them more versatile and powerful than ever before. 
+
+With the new functions, you can stay within the Appwrite ecosystem. The fully integrated features reduce friction points, allowing you to focus on development while trusting that your Functions will run smoothly and automatically.
+
+Previously, Appwrite Functions faced limitations in handling file-based tasks and real-time operations due to slow synchronous execution and cumbersome API key management. With the introduction of easier Appwrite SDK integration within Functions, these constraints are lifted, opening doors to more use cases and more efficient workflows.
+
+{% arrow_link href="/blog/post/introducing-functions-ecosystem" %}
+Read the announcement to learn more
+{% /arrow_link %}

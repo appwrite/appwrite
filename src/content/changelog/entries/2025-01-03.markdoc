@@ -1,0 +1,45 @@
+---
+layout: changelog
+title: Billing improvements, UI fixes, and performance updates
+date: 2025-01-03
+---
+
+We've shipped several improvements to make Appwrite easier to use, including a clearer billing system, UI updates, and fixes for collections and mobile experiences.
+
+# What's new
+
+- The Git authorize page now shows the new Appwrite logo
+- Plan retrieval process has been updated for better performance
+
+# Improvements
+
+- Better billing flow that reminds you to add a billing address
+- Plan features are now shown directly instead of plan names
+- GitHub education plan users can now see their estimated usage and upgrade options more clearly
+- Filtered new users count to exclude future days for more accurate reporting
+- Credit changes are now highlighted when applying them to plans
+- Improved focus handling for conditional inputs
+- Clearer deployment cancellation messages
+
+# Fixes
+
+- Fixed database and collection IDs staying consistent during page changes
+- Fixed error display for budget updates
+- Fixed markdown and styles in AI assistant
+- Fixed padding on addons
+- Fixed byte dropdown calculations for max values
+- Fixed missing custom IDs in messages
+- Mobile users can now create collections properly
+- Fixed title case inconsistencies in use-case displays
+- Fixed default indexing key updates
+- Fixed various minor issues in Domain, Functions, Template, and Project screens
+- Fixed topic target display issues
+
+These updates aim to improve your overall Appwrite experience. You can join our Discord community to discuss these changes and more,
+or email us at [billing@appwrite.io](mailto:billing@appwrite.io) for any questions about billing.
+
+We're always looking forward to your feedback!
+
+{% arrow_link href="https://appwrite.io/discord" %}
+Join the discussion on Discord
+{% /arrow_link %}

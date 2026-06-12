@@ -1,0 +1,14 @@
+---
+layout: changelog
+title: "CNAME flattening support for Appwrite Sites"
+date: 2026-03-06
+cover: /images/blog/announcing-cname-flattening/cover.avif
+---
+
+You can now connect a custom domain to Appwrite Sites without changing your nameservers. Appwrite Sites now supports CNAME flattening and similar apex-domain features provided by modern DNS providers.
+
+Instead of migrating nameservers to Appwrite, you can add a DNS record with your existing provider, verify the domain in the Console, and go live. This works with CNAME flattening (Cloudflare), ALIAS records (Route 53), and ANAME records, depending on your provider.
+
+{% arrow_link href="/blog/post/announcing-cname-flattening" %}
+Read the announcement
+{% /arrow_link %}

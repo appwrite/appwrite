@@ -1,0 +1,13 @@
+---
+layout: changelog
+title: Introducing support for server-side rendering
+date: 2024-02-27
+cover: /images/changelog/2024-02-27.avif
+---
+
+We're excited to introduce support for server-side rendering (SSR) authentication patterns. This change enhances the developer experience when building with popular frameworks that provide SSR as an option, such as Next.js, SvelteKit, Nuxt, Astro, Remix, and more.
+
+{% arrow_link href="/blog/post/introducing-support-for-server-side-rendering" %}
+Read the announcement to learn more
+{% /arrow_link %}
+

@@ -1,0 +1,19 @@
+---
+layout: changelog
+title: "Database relationships are out of beta"
+date: 2026-05-13
+cover: /images/blog/relationships-are-out-of-beta/cover.avif
+---
+
+Database relationships in Appwrite are graduating from experimental to **production-ready**. After a year of performance, ergonomics, and capability improvements, they are now a first-class way to model connected data.
+
+**What's shipped over the past year**
+
+- **Opt-in relationship loading**: Related rows are no longer pulled in automatically, you select exactly which relationships to load using query selection. Smaller payloads, faster responses.
+- **Filter queries on relationships**: Filter across related data using dot notation, like `Query.equal('author.name', ['Jake'])`. All comparison operators are supported, including `equal`, `notEqual`, `greaterThan`, `lessThan`, `between`, `contains`, and spatial queries.
+- **12-18x faster relationship operations**: A full internal overhaul made every relationship read, write, and join dramatically faster, with no configuration changes required.
+- **CSV export support**: Relationship fields export cleanly as IDs from the Console.
+
+{% arrow_link href="/blog/post/relationships-are-out-of-beta" %}
+Read the announcement to learn more
+{% /arrow_link %}

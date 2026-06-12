@@ -1,0 +1,20 @@
+---
+layout: changelog
+title: "Introducing Appwrite Arena"
+date: 2026-03-17
+cover: /images/blog/announcing-appwrite-arena/cover.avif
+---
+
+Appwrite Arena is now live: an open-source benchmark for evaluating how well AI models understand and generate Appwrite code.
+
+Arena includes 191 questions across 9 Appwrite service categories and evaluates models in two modes: with and without Appwrite Skills.
+
+Scoring combines deterministic multiple-choice evaluation with AI-judged open-ended answers, giving a balanced view of both factual accuracy and real-world reasoning.
+
+{% arrow_link href="/blog/post/announcing-appwrite-arena" %}
+Read the announcement
+{% /arrow_link %}
+
+{% arrow_link href="/docs/tooling/arena" %}
+View Arena documentation
+{% /arrow_link %}

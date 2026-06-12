@@ -1,0 +1,9 @@
+---
+layout: changelog
+title: "SMS rates updated to match upstream providers"
+date: 2026-02-22
+---
+
+SMS pricing for Phone OTP has been updated to reflect current rates from our upstream providers. We continuously work with our vendors to ensure the best availability and local delivery for OTP messages worldwide. Per-country rates have been adjusted across the board so that our documentation and billing stay in sync with carrier and provider changes: some destinations saw rate decreases, others increases, and the pricing table has been reorganized for clarity.
+
+See the [Phone OTP documentation](/docs/advanced/platform/phone-otp) for the full per-country SMS pricing table.

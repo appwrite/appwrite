@@ -1,0 +1,12 @@
+---
+layout: changelog
+title: "Appwrite plugin for Cursor"
+date: 2026-04-06
+cover: /images/blog/announcing-appwrite-cursor-plugin/cover.avif
+---
+
+The Appwrite plugin is now available on the [Cursor Marketplace](https://cursor.com/marketplace/appwrite). Install it to get agent skills, MCP servers, and deployment commands for Appwrite, all in a single setup.
+
+{% arrow_link href="/blog/post/announcing-appwrite-cursor-plugin" %}
+Read the announcement
+{% /arrow_link %}

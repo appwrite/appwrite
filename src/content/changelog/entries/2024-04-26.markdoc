@@ -1,0 +1,51 @@
+---
+layout: changelog
+title: Appwrite 1.5.5 is released
+date: 2024-04-26
+cover:
+---
+
+Appwrite 1.5.5 is released with fixes for Databases, MFA, and Console.
+
+Fixes:
+- Array updates where elements are removed do not work.
+- Change SMS verification message to only have the OTP
+- Add missing 'apis' attribute to projects collection
+- Fix wrong refresh var for Autodesk OAuth 2 provider
+- Remove a redundant call to fetch the topic document again by @ItzNotABug
+- Fixed rate-limit problems for chunked uploads
+- Fix delete message event not firing
+- Fix worker crash when using custom SMTP provider
+- Fix MFA recovery code removal
+- Add recovery code to List factors 
+- Fix MFA challenge type check
+- Delete related attributes on delete collection
+- Fix delete MFA authenticator response model
+- Fix MFA with admin mode (Server SDKs)
+
+Experience improvements:
+- New `recoverycode` added to the list of MFA factors, making it easier to implement drop-downs and selectors for MFA factors.
+
+Console fixes:
+- Bump console to version 4.0.6
+- Infinite redirects to verify page when MFA is enabled on Console.
+- Attribute state not properly reflected in Console.
+- Missing file extension validation on Function form.
+- Add new locale Taiwan (TW) by @xuelink 
+- Add Hong Kong (HK) to locales @deanurag 
+- Add French Polynesia flag
+
+Misc:
+- Enable auto-upgrade for MariaDB container
+- Update getEnv to use system lib
+
+You can update by following the upgrade docs.
+
+Note that upgrading from 1.5.x -> 1.5.5 requires running migration. For a detailed view of changes, visit the full release notes.
+
+Please remember to back up and run migration.
+
+{% arrow_link href="https://github.com/appwrite/appwrite/releases/tag/1.5.5" %}
+View the changelog on GitHub
+{% /arrow_link %}
+

@@ -1,0 +1,14 @@
+---
+layout: changelog
+title: Faster and safer Functions development in your local environment
+date: 2024-08-19
+cover: /images/changelog/2024-08-19.avif
+---
+
+We are excited to announce a new addition to Appwrite Functions that makes function development faster and more enjoyable. With local development, the entire flow, including coding, testing, and debugging, becomes fast and reliable.
+
+We have always been committed to making your experience with Appwrite the best it can be, and local development aims to address community feature requests and enhancements from the past couple of months.
+
+{% arrow_link href="/blog/post/announcing-local-development" %}
+Read the announcement to learn more
+{% /arrow_link %}

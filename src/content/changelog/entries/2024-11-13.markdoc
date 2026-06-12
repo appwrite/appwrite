@@ -1,0 +1,16 @@
+---
+layout: changelog
+title: "Bug fixes and stability updates"
+date: 2024-11-13
+---
+
+We've resolved several issues to improve reliability across Appwrite:
+
+- Fixed a bug where 409 responses during runtime creation were incorrectly treated as errors. Requests now retry until the runtime is ready.
+- Fixed CDN 502 errors by refining the server compression strategy.
+- Addressed storage provider 503 errors by adding retry logic, following storage provider's recommended guidelines.
+
+These fixes improve stability and make Appwrite more reliable for your projects.
+
+If you have any questions about these changes, notice anything unexpected, or need clarification, please don't hesitate to reach out to our support team.
+Your feedback helps us improve and ensure a smooth experience for everyone.

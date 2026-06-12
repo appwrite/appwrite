@@ -1,0 +1,12 @@
+---
+layout: changelog
+title: Introducing new compute capabilities for Appwrite Functions
+date: 2025-01-07
+cover: /images/changelog/2025-01-07.avif
+---
+
+At Appwrite, we're always working to make our serverless platform better for developers like you. Our latest update to Appwrite Functions brings some exciting improvements, especially when it comes to customizing CPU and memory settings for your runtimes. This means better performance, more flexibility, and the chance to explore new and innovative use cases. We've also updated our pricing model to keep things sustainable and fair for everyone. Keep reading to learn more about these updates and how they can benefit your projects.
+
+{% arrow_link href="/blog/post/introducing-new-compute-capabilities-appwrite-functions" %}
+Read the announcement to learn more
+{% /arrow_link %}

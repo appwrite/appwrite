@@ -1,0 +1,13 @@
+---
+layout: changelog
+title: Introducing Go, high-performance Functions runtime and SDK
+date: 2024-08-22
+cover: /images/changelog/2024-08-22.avif
+---
+Compiled programming languages are well known for outperforming interpreted ones thanks to a compilation step. Today, Appwrite welcomes a new runtime for writing simple and performant functions, [Go](https://go.dev/).
+
+The new runtime allowed achieve up to 5x faster cold starts and a base execution time of less than 1 millisecond. That means your functions will start running much quicker, and once they're up, they'll fly.
+
+{% arrow_link href="/blog/post/announcing-go-support" %}
+Read the announcement to learn more
+{% /arrow_link %}

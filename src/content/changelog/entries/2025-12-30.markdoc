@@ -1,0 +1,14 @@
+---
+layout: changelog
+title: "Announcing Full Schema Creation: Provision complete tables in one atomic call"
+date: 2025-12-30
+cover: /images/blog/full-schema.avif
+---
+
+Introducing a new Database feature called Full Schema Creation.
+
+With Full Schema Creation, you can define an entire table, its attributes and indexes, in a single, synchronous request. When the call returns, the table is immediately ready for reads and writes. If anything fails along the way, nothing is created. No partial schemas. No waiting. No brittle setup scripts.
+
+{% arrow_link href="/blog/post/announcing-full-schema-creation" %}
+Read the full announcement
+{% /arrow_link %}

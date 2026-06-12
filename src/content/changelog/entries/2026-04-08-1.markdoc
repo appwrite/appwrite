@@ -1,0 +1,12 @@
+---
+layout: changelog
+title: "Introducing the Appwrite Rust SDK"
+date: 2026-04-08
+cover: /images/blog/announcing-appwrite-rust-sdk/cover.avif
+---
+
+Appwrite now supports Rust as an official server SDK. The SDK provides async, type-safe access to all Appwrite server-side APIs, including Databases, Auth, Storage, Functions, and Messaging. It is available on [crates.io](https://crates.io/crates/appwrite).
+
+{% arrow_link href="/blog/post/announcing-appwrite-rust-sdk" %}
+Read the announcement
+{% /arrow_link %}

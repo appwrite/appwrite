@@ -1,0 +1,21 @@
+---
+layout: changelog
+title: "Performance improvements for Functions and static sites"
+date: 2025-10-01
+---
+
+We've shipped major performance improvements across functions and static sites.
+
+**Function cold starts are now 58% faster** in the Frankfurt (FRA) region with more consistent start times across executions.
+
+**Static sites are now served directly through our edge proxies**, eliminating the need for dedicated runtimes. This means:
+
+- No more cold starts for static sites
+- Automatic caching for all static site assets
+- Over 99% of requests served locally from 120+ global PoPs
+
+These improvements are now live on Appwrite Cloud. Please don't hesitate to share your experience and feedback with us.
+
+{% arrow_link href="/discord" %}
+Join the discussion on Discord
+{% /arrow_link %}

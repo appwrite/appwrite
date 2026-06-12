@@ -1,0 +1,15 @@
+---
+layout: changelog
+title: "The Appwrite plugin is now in the official Claude marketplace"
+date: 2026-06-08
+---
+
+The [**Appwrite plugin**](https://claude.com/plugins/appwrite) for Claude Code is now listed in the official Claude marketplace. Adding the Appwrite marketplace as a separate step is no longer required, so a single command installs the plugin along with its agent skills and MCP servers for the Appwrite API and documentation:
+
+```bash
+claude plugin install appwrite@claude-plugins-official
+```
+
+{% arrow_link href="/docs/tooling/ai/agents/claude-code" %}
+Learn more
+{% /arrow_link %}

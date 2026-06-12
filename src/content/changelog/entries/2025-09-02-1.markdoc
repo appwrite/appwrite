@@ -1,0 +1,27 @@
+---
+layout: changelog
+title: "Announcing time helper queries: Cleaner, more expressive time-based queries"
+date: 2025-09-02
+cover: /images/blog/announcing-time-helper-queries/cover.avif
+---
+A new set of database queries, **time helper queries**, is now live.
+
+Filtering by time is one of the most common patterns in real-world apps. Until now, this often meant adding extra conditions that made your queries longer and harder to read.
+
+With time helper queries, you can now handle time-based filtering in a simple and expressive way. You’ll find four new options:
+
+- `createdBefore`: Find rows created before a given date
+- `createdAfter`: Find rows created after a given date
+- `updatedBefore`: Find rows updated before a given date
+- `updatedAfter`: Find rows updated after a given date
+
+That means you can:
+- Reduce boilerplate in your code
+- Write cleaner, more readable queries
+- Make time-based filtering faster and easier to manage
+
+Available now on **Appwrite Cloud and Self-hosted.**
+
+{% arrow_link href="/blog/post/announcing-time-helper-queries" %}
+Read the announcement to learn more
+{% /arrow_link %}

@@ -1,0 +1,16 @@
+---
+layout: changelog
+title: Meet the new Appwrite
+date: 2023-09-21
+cover: /images/changelog/2023-09-21.avif
+---
+
+Unveiling Appwrite's new fresh look and feel with a new brand, website and experience.
+
+- New brand, new logo, and new design that aligns with our growth
+- Design elements inspired by the community and reflects our values
+- New documentation with improved navigation, search, and more beginner friendly tutorials
+
+{% arrow_link href="/blog/post/meet-the-new-appwrite" %}
+Read the full announcement
+{% /arrow_link %}

@@ -1,0 +1,21 @@
+---
+layout: changelog
+title: "Introducing pricing for image transformations"
+date: 2025-03-03
+---
+
+To ensure the sustainability of Appwrite Cloud as it continues to scale, we're introducing pricing for image transformations starting April 1st, 2025.
+
+## What's changing
+
+- **Origin images used in transformations** will now be counted toward usage and billed according to your plan
+- **Pro and Scale plans** will include 100 origin images per month at no additional charge
+- **Additional origin images** will be available at $5 per 1,000 images
+
+## What you should do
+
+Review your current image transformation usage through your organization's usage page or the usage section of specific projects to understand your usage patterns and plan accordingly.
+
+{% arrow_link href="/docs/advanced/platform/image-transformations#pricing" %}
+View detailed pricing information
+{% /arrow_link %}

@@ -1,0 +1,11 @@
+---
+layout: changelog
+title: "Introducing Express Builds for Pro and Scale customers"
+date: 2024-08-10
+---
+
+We are pleased to announce a significant improvement to Appwrite Cloud, designed to enhance your developer experience.
+
+As Appwrite Cloud continues to grow, we’ve introduced **Express Builds** to ensure faster and more efficient processing times for Pro and Scale customers. With dedicated priority queues, your build jobs will now experience reduced wait times, allowing for smoother workflows and quicker deployments.
+
+**Express Builds** are now available to all Pro and Scale customers, offering faster processing times through dedicated resources. Additionally, due to these changes, all users can expect overall improvements in build efficiency.

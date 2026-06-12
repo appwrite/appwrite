@@ -1,0 +1,14 @@
+---
+layout: changelog
+title: "Appwrite Cloud is now Generally Available"
+date: 2025-08-06
+cover: /images/changelog/2025-08-06.avif
+---
+
+Appwrite Cloud was designed to make it easier to build with Appwrite because we know self-hosting is not for everyone.
+
+Today, Appwrite Cloud is powering over 300,000 projects, and we are both proud and excited to announce its transition to general availability.
+
+{% arrow_link href="/cloud-ga" %}
+Read the announcement to learn more
+{% /arrow_link %}

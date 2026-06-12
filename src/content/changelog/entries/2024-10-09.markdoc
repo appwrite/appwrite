@@ -1,0 +1,14 @@
+---
+layout: changelog
+title: Announcing Deno support on Appwrite Cloud
+date: 2024-10-09
+cover: /images/changelog/2024-10-09.avif
+---
+
+Today, Appwrite expands the Cloud Function ecosystem with a new, powerful runtime that offers developers simplicity and security: introducing Deno support.
+
+With [Deno](https://deno.com/), you can write modern, fast, and secure cloud functions in JavaScript and TypeScript, which includes all-in-one tooling such as a [linter](https://docs.deno.com/runtime/reference/cli/linter/), [test runner](https://docs.deno.com/runtime/reference/cli/test/), [formatter](https://docs.deno.com/runtime/reference/cli/formatter/) and more, as well as [web standards API support](https://docs.deno.com/runtime/reference/web_platform_apis/).
+
+{% arrow_link href="/blog/post/deno-runtime-announcment" %}
+Read the announcement to learn more
+{% /arrow_link %}

@@ -1,0 +1,23 @@
+---
+layout: changelog
+title: "Introducing the Appwrite MCP server for docs"
+date: 2025-09-09
+cover: /images/changelog/2025-09-09.avif
+---
+
+While the Appwrite docs are constantly getting updated and improved, LLMs often struggle to provide accurate and up-to-date information due to missing context.
+
+Appwrite's new MCP server for docs solves this problem by enabling AI assistants to access and search through Appwrite's documentation directly.
+
+With this MCP server, AI assistants can:
+
+- Search through Appwrite documentation
+- Retrieve specific guides and references
+- Generate code snippets using the latest APIs
+- Provide contextual help for Appwrite features
+
+This makes it easier for developers to get instant, accurate answers about Appwrite directly from their AI development environment.
+
+{% arrow_link href="/docs/tooling/mcp/docs" %}
+Learn more in the documentation
+{% /arrow_link %}

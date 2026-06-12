@@ -1,0 +1,16 @@
+---
+layout: changelog
+title: "Announcing File Tokens: secure file sharing without the hassle"
+date: 2025-05-23
+cover: /images/changelog/2025-05-23.avif
+---
+
+Until now, sharing files from Appwrite often meant navigating permissions, managing access, or making files public, even when all you wanted was to send a file to someone outside your project. We introduce a new feature that will make file sharing a whole lot easier.
+
+Introducing **File Tokens.**
+
+This feature lets you share files easily and securely**,** without modifying permissions or changing project access. Just generate a token and share the link.
+
+{% arrow_link href="/blog/post/announcing-file-tokens" %}
+Read the announcement to learn more
+{% /arrow_link %}

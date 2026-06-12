@@ -1,0 +1,26 @@
+---
+layout: changelog
+title: "Education plan: project limit reduced to 2"
+date: 2026-04-07
+---
+
+Due to a substantial increase in abuse, malicious activity, and breaches of our fair use guidelines, including running commercial projects, we are reducing the [Education plan](/education)'s project limit from 10 to 2.
+
+We understand this is not ideal. However, the recurring abuse of Education program resources had grown to a point where it was not feasible for our team to manually address each violation and we took this decision to protect the reliability and trust between Appwrite Cloud and the larger developer community.
+
+Each Education plan project still remains Pro-equivalent, with unlimited databases, buckets, functions, and sites, plus 2TB bandwidth, 150GB storage, and 200K monthly active users per project. The only exclusion is email support. Here's a simple comparison of a project on the Free plan versus the Education plan:
+
+| Feature | Free plan | Education plan |
+| --- | --- | --- |
+| Databases per project | 1 | Unlimited |
+| Buckets per project | 1 | Unlimited |
+| Functions per project | 2 | Unlimited |
+| Sites per project | Unlimited | Unlimited |
+| Bandwidth | 5GB / month | 2TB / month |
+| Storage | 2GB | 150GB |
+| Monthly active users | 75,000 | 200,000 |
+| Project pausing | After 1 week of inactivity | Never |
+
+For existing Education plan members with more than 2 projects, all current projects will remain active. However, they will not be able to create additional projects.
+
+We will continue looking for other ways to create value for Education plan members, through better learning content, hackathons, and more.

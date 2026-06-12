@@ -1,0 +1,16 @@
+---
+layout: changelog
+title: "Announcing Database Upsert: Simplify your database interactions"
+date: 2025-07-08
+cover: /images/changelog/2025-07-08.avif
+---
+
+We're excited to introduce Database Upsert in Appwrite.
+
+You can now create or update a document in a single API call. If the document does not exist, it is created. If it does, it is updated. The server handles all the logic for you.
+
+This feature can help reduce the number of network calls and allow race-free writes, simplifying your database interactions overall. 
+
+{% arrow_link href="/blog/post/announcing-database-upsert" %}
+Read the announcement to learn more
+{% /arrow_link %}

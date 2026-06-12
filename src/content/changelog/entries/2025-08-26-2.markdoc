@@ -1,0 +1,27 @@
+---
+layout: changelog
+title: "Introducing the TablesDB API with updated terminology"
+date: 2025-08-26
+cover: /images/blog/announcing-appwrite-databases-new-ui/cover.avif
+---
+Announcing significant updates to Appwrite Databases!
+
+Appwrite Databases is now transitioning to a more familiar relational model, moving away from the documents and collections terminology.
+
+Here’s what’s changed:
+
+- Collections → Tables
+- Documents → Rows
+- Attributes → Columns
+
+This makes it easy for you to work with structured data while maintaining backwards compatibility.
+
+To support the terminology change, we’ve added the **TablesDB API**.
+
+A new API layer that helps you work with relational database concepts like tables, columns, and rows, without requiring any changes to your existing apps. 
+
+While old collection methods still work with essential security & maintenance. All new features will now land in the TablesDB API.
+
+{% arrow_link href="/blog/post/announcing-appwrite-databases-new-ui" %}
+Read the announcement to learn more
+{% /arrow_link %}

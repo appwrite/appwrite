@@ -1,0 +1,14 @@
+---
+layout: changelog
+title: Introducing Appwrite's React Native SDK in open beta
+date: 2024-04-09
+cover: /images/changelog/2024-04-09.avif
+---
+
+We’re excited to announce the new React Native SDK in open beta.
+
+This will allow more mobile developers to benefit from Appwrite, giving everything you need to build your mobile applications backend, without the hassle of building it yourself.
+
+{% arrow_link href="/blog/post/introducing-appwrite-react-native-sdk" %}
+Read the announcement to learn more
+{% /arrow_link %}

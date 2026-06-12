@@ -1,0 +1,24 @@
+---
+layout: changelog
+title: "Announcing Encrypted string attribute support: Built-in encryption for sensitive fields"
+date: 2025-07-10
+cover: /images/changelog/2025-07-10.avif
+---
+
+We’re adding another layer of security to the Appwrite database: Encrypted string attribute support.
+
+Now you can mark sensitive fields, like full names, admin notes, or IP addresses, to be encrypted at rest, without writing a single line of encryption logic.
+
+Key Features:
+
+- Server-side AES-128-GCM encryption
+- Non-queryable for added protection
+- Simple setup via Appwrite Console
+
+Available on Appwrite Cloud Pro and Scale plan, and self-hosted. 
+
+
+{% arrow_link href="/blog/post/announcing-encrypted-string-attributes" %}
+Read the announcement to learn more
+{% /arrow_link %}
+

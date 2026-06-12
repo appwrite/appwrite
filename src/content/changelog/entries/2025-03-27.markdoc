@@ -1,0 +1,27 @@
+---
+layout: changelog
+title: Appwrite Cloud backups now faster
+date: 2025-03-27
+cover: /images/changelog/2025-03-27.avif
+---
+
+Appwrite Cloud backups are now considerably faster, reducing wait times and improving reliability.
+
+## What's changed
+
+We made key changes to the backup infrastructure by moving data reading operations inside the network, and implementing I/O optimizations for storage operations.
+
+Internal testing revealed notable time savings across database backups:
+
+- **3 minute backup → 1.5 minutes** (2x faster)
+- **3.5 minute backup → 1.2 minutes** (3x faster)
+- **6.7 minute backup → 2 minutes** (3.4x faster)
+- **34.2 minute backup → 5.2 minutes** (6.6x faster)
+
+Most databases showed at least a 2x reduction in backup time, with many achieving up to 7x faster backups.
+
+These optimizations improve the efficiency of data recovery and management. Your actual performance gains may vary depending on database size and structure.
+
+{% arrow_link href="/docs/products/databases/backups" %}
+Learn more about backups
+{% /arrow_link %}

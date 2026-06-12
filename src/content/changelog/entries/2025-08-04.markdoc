@@ -1,0 +1,20 @@
+---
+layout: changelog
+title: "Announcing Atomic numeric operations: Safe, server-side increments and decrements"
+date: 2025-08-04
+cover: /images/changelog/2025-08-04.avif
+---
+
+Introducing: Atomic numeric operations
+
+A new Database feature that lets you increment or decrement numeric fields directly on the server, without fetching the full document. It’s fast, safe, bandwidth-efficient, and concurrency-friendly.
+
+Before this feature, updating a number meant fetching the entire document, modifying it on the client, and writing it back, a process prone to race conditions, unnecessary bandwidth use, and extra logic to handle edge cases.
+
+With **Atomic numeric operations,** you simply send a delta (like `+1` or `-3`), and Appwrite applies the update atomically on the server. No full document reads, no conflicts, no custom logic. Just consistent, permission-aware updates that work reliably under load.
+
+This feature is now live for both **Appwrite Cloud** and **Self-Hosted** environments.
+
+{% arrow_link href="/blog/post/announcing-atomic-numeric-operations" %}
+Read the announcement to learn more
+{% /arrow_link %}

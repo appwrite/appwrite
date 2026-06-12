@@ -1,0 +1,14 @@
+---
+layout: changelog
+title: New Phone SMS OTP Pricing for India
+date: 2025-02-05
+---
+
+We're excited to announce that phone OTP for India is now 30x cheaper, down from $0.09 to $0.003 per OTP. 
+Starting February 10th, charges will apply for phone OTP login attempts. Check your project's usage on the Console and visit our [rates page](https://appwrite.io/docs/advanced/platform/phone-otp#rates) for more details.
+
+Do you have questions? Reach out to us on Discord.
+
+{% arrow_link href="https://appwrite.io/discord" %}
+Join the conversation on Discord
+{% /arrow_link %}

@@ -1,0 +1,16 @@
+---
+layout: changelog
+title: "Rust runtime for Appwrite Functions"
+date: 2026-05-04
+cover: /images/blog/announcing-rust-runtime/cover.avif
+---
+
+Appwrite Functions now supports **Rust 1.83** as a first-class runtime. You can write functions in Rust, deploy them through the Appwrite CLI or Console, and pair them with the official [Appwrite Rust SDK](https://crates.io/crates/appwrite) for type-safe, async access to every server API.
+
+The runtime gives you compiled, memory-safe performance for the hot paths in your backend, payment and webhook signature verification, image processing, data transformation, and any workload where latency and predictability matter. It is available on Appwrite Cloud today.
+
+A new **Starter** template for Rust is available in the function templates catalog, and the [Functions documentation](/docs/products/functions/develop) covers the runtime contract, request and response helpers, environment variables, dynamic API keys, and end-to-end examples for the new runtime.
+
+{% arrow_link href="/blog/post/announcing-rust-runtime" %}
+Read the announcement
+{% /arrow_link %}

@@ -1,0 +1,11 @@
+---
+layout: changelog
+title: "Flutter 3.41 and Dart 3.11 are now available on Appwrite Cloud"
+date: 2026-04-02
+---
+
+Appwrite Cloud now supports **Flutter 3.41** and **Dart 3.11** runtimes.
+
+You can now select Flutter 3.41 when deploying **Sites** and Dart 3.11 when deploying **Functions**.
+
+These runtime upgrades include the latest stable improvements from the Flutter and Dart ecosystems, including language and tooling updates, performance optimizations, and ongoing platform compatibility improvements.

@@ -1,0 +1,14 @@
+---
+layout: changelog
+title: "Announcing hosting for Flutter web: deploy your Flutter web apps with Appwrite"
+date: 2025-05-20
+cover: /images/changelog/2025-05-20.avif
+---
+
+Appwrite Sites now offers native support for Flutter web applications. This new feature allows you to deploy Flutter web applications directly from your Appwrite projects with seamless backend integration.
+
+With framework auto-detection and optimized build settings, you can now extend your Flutter applications to the web while leveraging the same Appwrite backend services you use for mobile apps.
+
+{% arrow_link href="/blog/post/hosting-flutter-web" %}
+Read the announcement to learn more
+{% /arrow_link %}

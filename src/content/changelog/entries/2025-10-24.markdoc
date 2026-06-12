@@ -1,0 +1,17 @@
+---
+layout: changelog
+title: "Email verification for Cloud accounts"
+date: 2025-10-24
+---
+
+Email verification is now required for all new and existing accounts on Appwrite Cloud.
+
+As a new user, if you create your account using an email and password, you will be prompted to verify your email address during the signup process.
+
+As an existing user, if you have not yet verified your email address, you will be prompted to verify your email address the next time you access the Appwrite Console.
+
+If you have any questions or need assistance, please create a support post on [Discord](https://appwrite.io/discord).
+
+{% arrow_link href="https://discord.com/channels/564160730845151244/1072905050399191082" %}
+Open Discord
+{% /arrow_link %}

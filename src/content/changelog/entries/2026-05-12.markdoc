@@ -1,0 +1,14 @@
+---
+layout: changelog
+title: "Store 64-bit integers with BigInt columns"
+date: 2026-05-12
+cover: /images/blog/announcing-bigint-columns/cover.avif
+---
+
+Appwrite Databases now supports **BigInt** columns, giving you a 64-bit signed integer type alongside the existing 32-bit `integer`. Use BigInt when your values may exceed the ±2.1 billion range of a regular integer, for example large counters, high-resolution timestamps, or external IDs from systems that use 64-bit keys.
+
+BigInt columns accept optional `min`, `max`, and `default` parameters and work with [Operators](/docs/products/databases/operators) for atomic server-side updates, just like regular integers.
+
+{% arrow_link href="/blog/post/announcing-bigint-columns" %}
+Read the announcement
+{% /arrow_link %}

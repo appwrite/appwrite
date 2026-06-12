@@ -1,0 +1,12 @@
+---
+layout: changelog
+title: Appwrite achieves SOC 2 Type 1 compliance
+date: 2024-05-02
+cover: /images/changelog/2024-05-04.avif
+---
+
+We are excited to announce that Appwrite has achieved SOC 2 Type 1 compliance (System and Organization Controls). This demonstrates our dedication to maintaining the highest information security standards for all industries.
+
+{% arrow_link href="/blog/post/appwrite-is-now-soc-2-type-1-compliant" %}
+Read the announcement to learn more
+{% /arrow_link %}

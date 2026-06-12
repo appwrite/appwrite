@@ -1,4 +1,4 @@
-import { useRef, useCallback, useMemo } from 'react'
+import { useEffect, useRef, useCallback, useMemo, useState } from 'react'
 import { Link } from '@tanstack/react-router'
 import { PUBLIC_ICON_MUTED_CLASSES } from '@/lib/public-icon-classes'
 import { cn } from '@/lib/utils'
@@ -52,8 +52,9 @@ import {
   TooltipTrigger,
 } from '@/components/ui/tooltip'
 import { OnboardingCard } from './OnboardingCard'
-import { useIsLegacyTheme } from '@/hooks/use-is-legacy-theme'
-import { LEGACY_ICON_SRC } from '@/lib/legacy-theme-assets'
+import { useTheme } from 'next-themes'
+import { getConsoleHeaderLogoClass } from '@/lib/html-theme'
+import { ConsoleHeaderLogo } from '@/components/global/shared/ConsoleHeaderLogo'
 
 interface NavItem {
   id: string
@@ -288,7 +289,18 @@ export function ConsoleSidebar({
     !features.orgRoles ||
     (!scopesLoading && canShowProjectSettings(access, features))
   const showGetStarted = canShowGetStartedSection(access, features)
-  const isLegacyTheme = useIsLegacyTheme()
+  const [themeMounted, setThemeMounted] = useState(false)
+  const { theme, resolvedTheme } = useTheme()
+
+  useEffect(() => {
+    setThemeMounted(true)
+  }, [])
+
+  const headerLogoClassName = getConsoleHeaderLogoClass(
+    theme,
+    resolvedTheme,
+    themeMounted,
+  )
 
   // Handle keyboard navigation within sidebar within sidebar
   const handleKeyDown = useCallback((e: React.KeyboardEvent) => {
@@ -542,11 +554,9 @@ export function ConsoleSidebar({
       >
         {/* Mobile Header */}
         <div className="flex h-14 items-center justify-between px-4">
-          <div className="flex items-center gap-2.5">
-            <img
-              src={isLegacyTheme ? LEGACY_ICON_SRC : 'https://appwrite.io/images/logos/logo.svg'}
-              alt="Appwrite"
-              className={isLegacyTheme ? 'h-6 w-auto' : 'h-6 w-6'}
+          <div className="flex items-center gap-2.5" aria-label="Appwrite">
+            <ConsoleHeaderLogo
+              className={cn('h-6 w-6 shrink-0', headerLogoClassName)}
             />
           </div>
           <button

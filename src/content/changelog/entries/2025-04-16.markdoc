@@ -1,0 +1,22 @@
+---
+layout: changelog
+title: "Announcing the Appwrite Network: Appwrite’s vision for a global cloud infrastructure"
+date: 2025-04-16
+cover: /images/changelog/2025-04-15.avif
+---
+
+We’re excited to launch the **Appwrite Network**, a global network of cloud regions and edge locations designed to enhance Appwrite Cloud’s availability, performance, and regulatory compliance.
+
+Starting today, all Pro users can access three regions: **Frankfurt (FRA)**, our first region, and two new regions in **New York City (NYC)** and **Sydney (SYD)**. These new regions will be available to all Cloud users in the coming weeks, with more regions to follow.
+
+# Key features of the Appwrite Network
+
+- **Reduced latency with global coverage:** By distributing regions and edge locations worldwide, we minimize physical distance and routing delays, ensuring faster response times and better user experiences.
+
+- **Regional data control with global access:** Choose where your data resides to meet local regulations and optimize for performance, while still ensuring global availability through Appwrite’s interconnected network.
+
+- **Global CDN with built-in DDoS protection:** Deliver content faster with our CDN powered by strategically placed PoPs, and stay secure with integrated DDoS mitigation that filters threats in real-time.
+
+We’re just getting started with the Appwrite Network and can’t wait to share what’s next. Thanks for being part of the journey, together, we’re shaping the future of cloud platforms for developers.
+
+[Read the announcement to learn more](/blog/post/the-appwrite-network).

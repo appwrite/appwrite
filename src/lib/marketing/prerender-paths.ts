@@ -14,6 +14,7 @@ export const MARKETING_PRERENDER_PATHS = [
   '/education',
   '/partners',
   '/community',
+  '/changelog',
   '/assets',
   '/llms/txt',
   '/llms-full/txt',

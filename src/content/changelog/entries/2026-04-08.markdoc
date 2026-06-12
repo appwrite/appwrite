@@ -1,0 +1,26 @@
+---
+layout: changelog
+title: "Separate build and runtime compute specs for Sites and Functions"
+date: 2026-04-08
+cover: /images/changelog/2026-04-08.avif
+---
+
+You can now choose **independent compute specifications** for the **build** and **runtime** phases of [Sites](/docs/products/sites) and [Functions](/docs/products/functions). Each spec sets CPU and memory for that phase, so you can tune both performance and spend: right-size compute for heavy builds or busy runtimes without paying for peak capacity in the phase that does not need it.
+
+# Sites
+
+- **Build specification:** CPU and memory used while installing dependencies and producing your deployment artifact.
+- **Runtime specification:** CPU and memory used when your site handles traffic, including server-side rendering (SSR).
+
+# Functions
+
+- **Build specification:** CPU and memory used while building and packaging your function deployment.
+- **Runtime specification:** CPU and memory available to each function execution.
+
+Build steps (dependency installs, compilers, bundlers) often need different resources than steady execution or request handling. For example, a large frontend build may benefit from more RAM during CI-style build, while a lightweight API or static output might need fewer resources at runtime, or the opposite if runtime work is heavy. Setting build and runtime specs separately lets you align capacity with each phase instead of over-provisioning for both, which helps control cost as well as latency and reliability.
+
+Configure these under each resource’s **Settings > Resource limits** in the [Appwrite Console](https://cloud.appwrite.io). On Appwrite Cloud, customizing specs beyond the default is **available on the Pro plan**; Starter organizations see an upgrade prompt when adjusting CPU and RAM.
+
+{% arrow_link href="/docs/advanced/platform/compute" %}
+Read the Compute docs to learn more
+{% /arrow_link %}

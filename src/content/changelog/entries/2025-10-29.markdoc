@@ -1,0 +1,22 @@
+---
+layout: changelog
+title: "New Cloud regions announced: Singapore and Toronto"
+date: 2025-10-29
+cover: /images/changelog/2025-10-29.avif
+---
+
+We’ve expanded the Appwrite Cloud to two brand-new regions!
+
+Starting today, the Singapore (SGP) and Toronto (TOR) regions are live and ready for your projects.
+
+This means you can:
+Create new projects directly in the regions SGP or TOR.
+
+Or migrate your existing projects to take advantage of these new locations.
+
+If your users are based in Southeast Asia, the Singapore region will help you deliver a faster and more reliable experience.
+If your users are in Canada or the U.S. Northeast, the Toronto region will help you do the same, closer to where your users are.
+
+{% arrow_link href="https://appwrite.io/docs/products/network/regions" %}
+Learn more about regions
+{% /arrow_link %}

@@ -1,0 +1,14 @@
+---
+layout: changelog
+title: "Security update: Axios npm incident"
+date: 2026-03-31
+cover: /images/blog/security-update-regarding-the-axios-npm-incident/cover.avif
+---
+
+We have reviewed Appwrite's production repositories, SDKs, and tooling chain following the recent Axios npm supply chain incident, and confirmed that Appwrite SDKs and tooling were not impacted by the compromised Axios releases.
+
+Our JavaScript and TypeScript SDKs use native platform APIs such as `fetch` rather than Axios. While no direct exposure was found in Appwrite deliverables, we still added extra safeguards to our TypeScript SDK workflow, including stronger lockfile handling, stricter CI install behavior, and improved dependency visibility during release review.
+
+{% arrow_link href="/blog/post/security-update-regarding-the-axios-npm-incident" %}
+Read the full security update
+{% /arrow_link %}

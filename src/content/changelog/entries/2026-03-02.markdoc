@@ -1,0 +1,15 @@
+---
+layout: changelog
+title: Edge runtimes just got more resilient
+date: 2026-03-02
+---
+
+We've rolled out infrastructure improvements to strengthen runtime stability across regions, including NYC, after identifying DNS-related instability under load.
+
+What's improved:
+
+- DNS resilience under network partitions
+- More powerful instance types and tuning of runtime resource allocations improve performance alongside noisy neighbours
+- Improvements to runtime monitoring and alerting
+
+These changes reduce DNS-related latency, improve cold start reliability, and minimize blast radius during node-level issues.

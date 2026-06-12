@@ -1,0 +1,27 @@
+---
+layout: changelog
+title: "Database AI suggestions"
+date: 2025-11-28
+cover: /images/blog/announcing-database-ai-suggestions/cover.avif
+---
+This release introduces AI-assisted schema generation to simplify database schema creation.
+
+**What’s new:**
+
+- Added **Database AI suggestions** in the Console
+- Automatic column and index suggestions based on table name and context
+- Added sample data generation when creating a new table, allowing you to quickly populate example records that match the schema
+- Example: Creating a table called `Orders` suggests columns `orderId`, `userId`, `totalAmount`, and `status`
+
+**Benefits:**
+
+- Faster setup: Define schemas in seconds instead of manually creating each column
+- Consistency: Field names and types aligned across tables
+- Best practices: Suggested indexes and common fields included by default
+- Flexibility: Suggestions can be reviewed, modified, or skipped before applying
+
+This update is available now on the Appwrite Console.
+
+{% arrow_link href="/blog/post/announcing-database-ai-suggestions" %}
+Read the announcement to learn more
+{% /arrow_link %}

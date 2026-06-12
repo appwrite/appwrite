@@ -1,0 +1,14 @@
+---
+layout: changelog
+title: Announcing the Appwrite OSS Program
+date: 2023-12-28
+cover: /images/changelog/oss-progam.avif
+---
+
+Appwrite's newest initiative to support open-source projects and their maintainers.
+
+After successfully completing the OSS Fund, we’re excited to announce our newest initiative to support the open-source community and its maintainers, the Appwrite OSS program.
+
+{% arrow_link href="/blog/post/announcing-the-appwrite-oss-program" %}
+Read the full announcement
+{% /arrow_link %}

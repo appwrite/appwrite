@@ -1,0 +1,14 @@
+---
+layout: changelog
+title: Appwrite 1.5 is now available on Cloud
+date: 2024-04-29
+cover: /images/changelog/2024-04-22.avif
+---
+
+After announcing many new products and features during Init as part of the 1.5 release, we saw great excitement within the community to get started with the newly presented Appwrite 1.5. Although already available on self-hosted, the new Appwrite products and features were yet to be released to Cloud. 
+
+Today, we are excited to say the wait is finally over as we announce the release of Appwrite 1.5 to the Cloud.
+
+{% arrow_link href="/blog/post/appwrite-1.5-now-available-on-cloud" %}
+Read the announcement to learn more
+{% /arrow_link %}

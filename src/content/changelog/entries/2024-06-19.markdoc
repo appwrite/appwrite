@@ -1,0 +1,12 @@
+---
+layout: changelog
+title: Announcing Appwrite's public roadmap
+date: 2024-06-19
+cover: /images/changelog/2024-06-19.avif
+---
+
+We are excited to announce the launch of Appwrite’s public roadmap on GitHub. The new roadmap is part of our commitment to the Appwrite community and our core values of transparency and collaboration. It was one of the most highly requested features by the Appwrite community and will serve as a tool for increased collaboration among the core team, contributors, maintainers, and Appwrite developers.
+
+{% arrow_link href="/blog/post/public-roadmap-announcement" %}
+Read the announcement to learn more
+{% /arrow_link %}

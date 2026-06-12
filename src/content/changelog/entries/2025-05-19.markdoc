@@ -1,0 +1,16 @@
+---
+layout: changelog
+title: "Announcing Appwrite Sites: The open source Vercel alternative"
+date: 2025-05-19
+cover: /images/changelog/2025-05-19.avif
+---
+
+You love using Appwrite to power your backend, but when it’s time to actually *ship* your website, you’re bouncing between tools, platforms, and extra accounts. That ends today.
+
+Introducing **Appwrite Sites**.
+
+A new Appwrite product that lets you deploy and host your websites and web apps *right inside Appwrite*. No more juggling services. No more gluing things together. No more multiple subscriptions. Just build, deploy, and go live. All in one place, and it's 100% open source, the kind that lets you (really) self-host and (really) own your data.
+
+{% arrow_link href="/blog/post/announcing-appwrite-sites" %}
+Read the announcement to learn more
+{% /arrow_link %}

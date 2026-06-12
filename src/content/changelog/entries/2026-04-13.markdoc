@@ -1,0 +1,14 @@
+---
+layout: changelog
+title: "Appwrite MCP server no longer requires service flags"
+date: 2026-04-13
+cover: /images/blog/announcing-appwrite-mcp-server-2/cover.avif
+---
+
+The Appwrite MCP server has been updated with a simplified setup. You no longer need to pass service-selection flags like `--users`, `--databases`, or `--storage` when configuring the server.
+
+The server now exposes only two tools to the model, `appwrite_search_tools` and `appwrite_call_tool`, while the full Appwrite tool catalog is searched at runtime, using less of the model's context.
+
+{% arrow_link href="/blog/post/announcing-appwrite-mcp-server-2" %}
+Read the announcement
+{% /arrow_link %}

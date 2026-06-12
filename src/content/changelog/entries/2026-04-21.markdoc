@@ -1,0 +1,22 @@
+---
+layout: changelog
+title: "More control over your API protocols"
+date: 2026-04-21
+cover: /images/changelog/2026-04-21.avif
+---
+
+You can now choose exactly which **API protocols** your project exposes from the Appwrite Console. A new project setting lets you explicitly enable or disable each protocol so your application only talks to Appwrite the way you intend.
+
+The following protocols can be toggled independently:
+
+- **REST** – standard HTTP API requests from client SDKs.
+- **GraphQL** – GraphQL API access for queries and mutations.
+- **WebSocket** – realtime subscriptions over WebSocket connections.
+
+Turning off protocols you don’t use helps you:
+
+- **Reduce exposure** by removing entry points your app doesn’t need.
+- **Minimize the abuse surface** available to malicious traffic.
+- **Enforce stricter access patterns** that match your architecture.
+
+You’ll find this under **Project settings** in your [Appwrite Console](https://cloud.appwrite.io).

@@ -1,0 +1,14 @@
+---
+layout: changelog
+title: "Enforce minimum length and character rules with Password strength"
+date: 2026-06-09
+cover: /images/blog/announcing-password-strength/cover.avif
+---
+
+Appwrite Auth now lets you enforce **Password strength** on your project. Set a minimum length and require any combination of an uppercase letter, a lowercase letter, a number, and a special character, so passwords that are too weak are rejected when users sign up or change their password.
+
+Password strength is configured from the **Auth** > **Security** tab in the Appwrite Console, alongside [password history](/docs/products/auth/security#password-history) and the [password dictionary](/docs/products/auth/security#password-dictionary). Existing users keep their current password and only need to meet the new rules the next time they change it.
+
+{% arrow_link href="/blog/post/announcing-password-strength" %}
+Read the announcement
+{% /arrow_link %}

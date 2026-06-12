@@ -1,0 +1,21 @@
+---
+layout: changelog
+title: "You can now disable image transformations for buckets"
+date: 2025-11-21
+---
+
+You can now disable image transformations for any storage bucket.
+
+Image transformations allow actions like resizing, cropping, and format conversion through the Appwrite Storage API. With this update, you have full control to turn off these operations when they're not needed, reducing the chance of unintentional processing or costs.
+
+This update is useful if you:
+
+- Want to avoid unexpected transformation charges.
+- Need to restrict buckets to serve only original files.
+- Want greater control over how images are accessed and displayed.
+
+You can find the toggle in your bucket settings under **Image transformations**.
+
+{% arrow_link href="https://appwrite.io/discord" %}
+Join the conversation on Discord
+{% /arrow_link %}

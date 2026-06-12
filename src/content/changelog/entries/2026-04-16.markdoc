@@ -1,0 +1,14 @@
+---
+layout: changelog
+title: "Keys API: manage API keys with Server SDKs"
+date: 2026-04-16
+cover: /images/blog/improve-devex-dev-keys/cover.avif
+---
+
+API keys can now be created, updated, and deleted programmatically using the Appwrite server SDKs. Two new API key scopes, `keys.read` and `keys.write`, control access to the new endpoints.
+
+This enables automated key provisioning for CI/CD pipelines, multi-tenant platforms, key rotation workflows, and any scenario where managing keys through the Console is not practical.
+
+{% arrow_link href="/blog/post/announcing-api-keys-api" %}
+Read the announcement
+{% /arrow_link %}

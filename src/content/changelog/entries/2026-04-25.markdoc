@@ -1,0 +1,19 @@
+---
+layout: changelog
+title: "Build timeouts increased to 45 minutes (Pro and above)"
+date: 2026-04-25
+---
+
+We have raised the **maximum build duration** for [Sites](/docs/products/sites) and [Functions](/docs/products/functions) on Appwrite Cloud from **15 minutes to 45 minutes** for organizations on the **Pro plan and above**. Free plan organizations keep the **15-minute** build limit, so the longer window is an explicit benefit of upgrading when your workloads need it.
+
+Build pipelines are rarely constant-time: cold dependency caches, larger lockfiles, native compilation, first-time container layer pulls, and multi-stage bundling can push wall-clock time well beyond a minimal compile on a warm workstation. A 15-minute cap often fails builds that are otherwise healthy, especially after cache invalidation, dependency upgrades, or when parity with a longer-running CI job matters. For Pro and above, extending the ceiling to **45 minutes** reduces those false negatives, improves predictability when you are tuning [compute for build versus runtime](/docs/advanced/platform/compute), and removes pressure to split deployments or strip build steps solely to stay under a short timeout.
+
+On eligible plans, you get fewer interrupted builds on legitimate workloads, less time spent re-running jobs after transient slowdowns, and closer alignment between what you can run locally or in your own CI and what Appwrite Cloud will accept during the build phase. Teams shipping larger frontends, monorepo-style repositories, or functions with heavier packaging steps should see the clearest gain. Compare plans and limits on the [pricing page](/pricing).
+
+{% arrow_link href="/docs/advanced/platform/compute" %}
+Learn about build and runtime compute
+{% /arrow_link %}
+
+{% arrow_link href="/pricing" %}
+View plans and pricing
+{% /arrow_link %}

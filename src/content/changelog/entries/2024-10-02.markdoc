@@ -1,0 +1,16 @@
+---
+layout: changelog
+title: "WebP support now available for Safari on all devices"
+date: 2024-10-02
+cover: /images/changelog/2024-10-02.avif
+---
+
+We’re happy to share that Appwrite Cloud users now have full WebP support across all versions of Safari browsers and devices.
+
+WebP’s superior compression reduces image sizes by up to 30%, improving page load times, bandwidth usage, and overall performance.
+
+This update is now available to all Appwrite Cloud users and provides faster delivery and greater efficiency for developers across all platforms.
+
+{% arrow_link href="/blog/post/webp-support-for-safari" %}
+Read the announcement to learn more
+{% /arrow_link %}

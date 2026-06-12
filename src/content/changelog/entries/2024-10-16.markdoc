@@ -1,0 +1,12 @@
+---
+layout: changelog
+title: "Deno 2.0 support for local function development"
+date: 2024-10-16
+cover: /images/blog/deno-2-appwrite-functions/cover.avif
+---
+
+Appwrite now supports Deno 2.0 for local function development. When you run `appwrite init functions`, you'll see Deno as an available runtime option. This allows you to develop and test your functions locally using Deno's modern, secure, and fast runtime.
+
+With Deno 2.0, you can take advantage of built-in tools like the linter, test runner, and formatter, making local development much easier.
+
+{% arrow_link href="/blog/post/deno-2-appwrite-functions" %} Learn more about Deno 2.0 in our blog {% /arrow_link %}

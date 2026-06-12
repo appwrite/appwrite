@@ -1,0 +1,12 @@
+---
+layout: changelog
+title: "Introducing Roles: Enhanced collaboration and security in Appwrite"
+date: 2024-09-25
+cover: /images/changelog/2024-09-25.avif
+---
+
+We’re excited to announce a new feature available in the Pro and Scale plans: Roles. This enhancement is designed to bring granular permissions to the Appwrite Console, improving both team collaboration and security across your projects.
+
+{% arrow_link href="/blog/post/announcing-roles-for-enhanced-collaboration-and-security" %}
+Read the announcement to learn more
+{% /arrow_link %}

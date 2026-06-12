@@ -1,0 +1,12 @@
+---
+layout: changelog
+title: Appwrite Messaging is free for six months
+date: 2024-05-08
+cover: /images/changelog/2024-05-08.avif
+---
+
+When we introduced Messaging during Init, we were overwhelmed by the excitement within the Appwrite community. Now we can also announce that Messaging will be free for the next six months.
+
+{% arrow_link href="/blog/post/appwrite-messaging-is-free-for-six-months" %}
+Read the announcement to learn more
+{% /arrow_link %}

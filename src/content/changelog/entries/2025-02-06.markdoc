@@ -1,0 +1,27 @@
+---
+layout: changelog
+title: "Appwrite 1.6.1 is now available"
+date: 2025-02-06
+cover: /images/changelog/2025-02-06.avif
+---
+
+We're excited to announce a new update packed with features, fixes, and improvements to enhance your self-hosted Appwrite instance! This release focuses on performance, stability, and expanded functionality.
+
+Most notably, this release includes:
+
+* Improved compatibility for webp requests
+* Additional function runtime versions such as Node 22, Dart 3.5, and Bun 1.1
+* A realtime heartbeat to keep realtime connections alive
+* Updated Console for various bug fixes and improvements
+* Improved handling of HTTP requests
+* A fix for `users.createSession()`
+* Replacing 'Expires' with 'Cache-Control: private' header to avoid CDN caching
+
+We're excited to see what you build! Head over to our [migration guide](https://appwrite.io/docs/advanced/self-hosting/update) to learn how you can upgrade your Appwrite instance.
+
+For the complete list of updates and fixes, check out the changelog below.
+
+{% arrow_link
+   href="https://github.com/appwrite/appwrite/releases/tag/1.6.1" %}
+View the changelog on GitHub
+{% /arrow_link %}

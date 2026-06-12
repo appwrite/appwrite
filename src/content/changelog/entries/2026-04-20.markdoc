@@ -1,0 +1,12 @@
+---
+layout: changelog
+title: "Appwrite plugin for Claude Code"
+date: 2026-04-20
+cover: /images/blog/announcing-appwrite-claude-code-plugin/cover.avif
+---
+
+The Appwrite plugin is now available for Claude Code. Install it to get agent skills for the Appwrite CLI and every major SDK, along with MCP servers for the Appwrite API and documentation, all in a single setup.
+
+{% arrow_link href="/blog/post/announcing-appwrite-claude-code-plugin" %}
+Read the announcement
+{% /arrow_link %}

@@ -1,0 +1,15 @@
+---
+layout: changelog
+title: Changelog
+date: 2023-12-23
+cover: /images/changelog/2023-12-23.avif
+---
+
+Appwrite's capabilities grow everyday and it's difficult to keep up.
+To help everyone stay updated, we added a dedicated changelog page to the Appwrite website. 
+
+You can now find all of Appwrite's latest features, changes, and announcements all in one place.
+
+{% arrow_link href="/blog/post/announcing-new-changelog" %}
+Read the full announcement
+{% /arrow_link %}

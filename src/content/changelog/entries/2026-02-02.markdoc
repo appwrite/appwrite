@@ -1,0 +1,39 @@
+---
+layout: changelog
+title: "GraphQL schema is now public"
+date: 2026-02-02
+---
+
+You can now run introspection queries on Appwrite's GraphQL API. With introspection enabled, you get:
+
+- **IDE autocomplete** for queries, mutations, and fields
+- **Schema exploration** using tools like GraphQL Playground, Insomnia, or Postman
+- **Type generation** for strongly-typed clients in your preferred language
+
+Here's how to fetch the schema using the Appwrite SDK:
+
+```client-web
+import { Client, Graphql } from "appwrite";
+
+const client = new Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+    .setProject('<PROJECT_ID>');
+
+const graphql = new Graphql(client);
+
+const schema = await graphql.query({
+    query: `{
+        __schema {
+            types { name }
+            queryType { fields { name } }
+            mutationType { fields { name } }
+        }
+    }`
+});
+
+console.log(schema.data);
+```
+
+{% arrow_link href="/docs/apis/graphql" %}
+Learn more about Appwrite's GraphQL API
+{% /arrow_link %}

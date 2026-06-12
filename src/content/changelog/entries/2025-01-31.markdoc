@@ -1,0 +1,21 @@
+---
+layout: changelog
+title: Upload safeguards and Messaging improvements
+date: 2025-01-31
+---
+
+Appwrite Cloud now includes a new warning system for active uploads and improvements to help you manage your apps more effectively.
+
+## What's new
+- Upload protection: The Console now warns you before accidentally leaving a page during file uploads to prevent data loss
+- Messaging: When sending messages via server SDK, you can now see the complete list of recipients in message details
+
+## Fixes
+- Function wizard: Fixed navigation issues during function creation to prevent getting stuck in the setup process
+- Text corrections: Updated labels in Storage settings for better clarity
+
+These updates are live now. Try them out and share any feedback you have with us.
+
+{% arrow_link href="https://appwrite.io/discord" %}
+Join the conversation on Discord
+{% /arrow_link %}

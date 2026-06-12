@@ -1,0 +1,18 @@
+---
+layout: changelog
+title: Appwrite 1.4
+date: 2023-08-30
+cover: /images/changelog/2023-08-30.avif
+---
+
+We’ve just released Appwrite 1.4 with the goals to eliminate barriers to get started, maximize flexibility to grow, and deliver improved security for peace of mind.
+
+Notable new features: 
+- Next generation of Appwrite Functions brings Git deployments, http executions, intuitive syntax, and reliable logging.
+- Command center for quicker console navigation and keyboard shortcuts
+- AI assistant to help you search docs and answer questions.
+- One-Click migrations lets you migrate from Firebase, Supabase, and NHost. You can also migrate between Appwrite Cloud and self-hosted.
+
+{% arrow_link href="https://dev.to/appwrite/appwrite-14-brings-command-center-ai-one-click-migrations-and-upgraded-functions-1ch2" %}
+Read the full announcement
+{% /arrow_link %}

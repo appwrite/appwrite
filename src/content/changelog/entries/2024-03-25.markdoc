@@ -1,0 +1,26 @@
+---
+layout: changelog
+title: Appwrite 1.5.4 released
+date: 2024-03-25
+cover: /images/changelog/2024-03-25.avif
+---
+
+Appwrite 1.5.4 brings several fixes and a miscellaneous update to enhance your development experience with our platform. 
+
+Fixes:
+* Updated executor version to resolve Docker conflict errors when running Appwrite Functions
+* Improved webhooks to fix failed connections
+* Adjusted msg91 parameters to better match their new terminology
+* Fixed 401 error displayed for Appwrite Function domains when permissions are not configured
+* Fixed Appwrite Functions build command by adjusting trim behavior
+
+Misc:
+* Upgraded console to version 1.5.4 for an improved user interface and added features
+
+You can update by following the [upgrade docs]( https://appwrite.io/docs/advanced/self-hosting/update).
+
+Note that upgrading from 1.5.x -> 1.5.4 does not require running migration. For a detailed view of changes, visit the full [release notes](https://github.com/appwrite/appwrite/releases).
+
+{% arrow_link href="https://github.com/appwrite/appwrite/releases" %}
+Visit release notes
+{% /arrow_link %}

@@ -1,0 +1,21 @@
+---
+layout: changelog
+title: "Free plan update: Automatic pausing of inactive projects"
+date: 2026-02-20
+---
+
+To reduce idle infrastructure costs and keep the Free plan sustainable at scale, projects on the Free plan with no development activity for 7 consecutive days will be automatically paused.
+
+**What "paused" means**  
+
+- Data is not deleted
+- The project is not accessible to users while paused
+- No background processes run (backups, cron jobs, scheduled functions)
+- Projects can be reactivated anytime from the Appwrite Console and become active immediately
+
+**Why this change**  
+Running cloud infrastructure incurs ongoing costs, even for inactive projects. Automatically pausing idle projects ensures resources are prioritized for developers actively building, while keeping the Free plan sustainable long term.
+
+**Important**  
+Projects that require continuous availability should be on a paid plan. Free plan projects remain active as long as they show development activity in the Console.
+We will continue evolving the Free plan to keep it generous, sustainable, and aligned with active builders.

@@ -1,0 +1,16 @@
+---
+layout: changelog
+title: "Announcing: A new Init. Faster. Smoother. Better."
+date: 2024-08-07
+cover: /images/changelog/2024-08-07.avif
+---
+
+Init is about to begin, and we’re bringing you many new features and products to be excited about. Experience everything new with Appwrite during the week of August 19 to 23.
+
+The first [Init](https://appwrite.io/blog/post/announcing-init) earlier this year was a blast, and all of you who joined made it a week to remember and will go down in the history of Appwrite. Now we’re back with another Init to celebrate everything new with Appwrite. Get ready to *not* break a sweat with the new and improved Appwrite. Bringing you a faster, smoother, better experience.
+
+Keep reading to learn more!
+
+{% arrow_link href="/blog/post/announcing-init-faster-smoother-better" %}
+Read the announcement to learn more
+{% /arrow_link %}

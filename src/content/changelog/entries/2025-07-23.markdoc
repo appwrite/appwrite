@@ -1,0 +1,26 @@
+---
+layout: changelog
+title: "Pricing update to Appwrite's Free plan"
+date: 2025-07-23
+---
+
+Starting September 1st, 2025, the Free plan will be limited to two projects per organization.
+
+
+**What does this mean for developers on the Free plan?**
+
+If you have more than two projects in your organization on a Free plan, **you’ll have full access to all of them until the 1st of September 2025.** After that, you’ll need to reduce the number of projects to two or fewer, or upgrade to a paid plan.
+
+You can pick which ones to keep in your Appwrite Console as of today.
+
+Everyone on the Free plan has received an email with detailed information. Did you not receive this email? Let us know at billing@appwrite.io.
+
+**Keeping Appwrite sustainable**
+
+We built Appwrite with the help of the open-source community for all developers, from students to enterprises and everything in between. Ensuring that all developers can benefit from Appwrite will always be our priority. 
+Appwrite’s Free plan will continue to provide the tools you need to start building real apps, without compromising on core capabilities. 
+All the core building blocks of Appwrite, Databases, Authentication, Storage, Functions, Messaging, and Sites will remain available on the Free plan.
+
+If you have questions, need help planning, or want to discuss custom needs, please contact us at billing@appwrite.io. We’re here to support you through the transition and ensure you can keep building without interruptions.
+
+Thank you for being part of this journey with us.

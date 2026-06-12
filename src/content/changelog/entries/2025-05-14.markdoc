@@ -1,0 +1,32 @@
+---
+layout: changelog
+title: "Appwrite 1.6.2 is now available"
+date: 2025-05-14
+cover: /images/changelog/2025-05-14.avif
+---
+
+We're excited to announce a new update packed with some important fixes for your self-hosted Appwrite instance!
+
+Most notably, this release includes:
+
+* New push notification options for iOS and Android
+* Support for S3 endpoint URL
+* Figma OAuth2 provider
+* Fix for disabling email OTP auth method
+* Fix for resending team invitation emails
+* Fix for Amazon OAuth2 provider
+* Fix for Slack OAuth2 provider
+* Fix for high CPU usage in the appwrite container
+
+We're excited to see what you build! Head over to our [migration guide](https://appwrite.io/docs/advanced/self-hosting/update) to learn how you can upgrade your Appwrite instance.
+
+{% info title="Important" %}
+Please run the [migrate command](https://appwrite.io/docs/upgrade#migration) even if upgrading from 1.6.x.
+{% /info %}
+
+For the complete list of updates and fixes, check out the changelog below.
+
+{% arrow_link
+   href="https://github.com/appwrite/appwrite/releases/tag/1.6.2" %}
+View the changelog on GitHub
+{% /arrow_link %}

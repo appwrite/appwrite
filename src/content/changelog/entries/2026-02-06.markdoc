@@ -1,0 +1,16 @@
+---
+layout: changelog
+title: "Relationship queries and up to 18x faster relationship performance"
+date: 2026-02-06
+cover: /images/blog/announcing-relationship-queries/cover.avif
+---
+
+Appwrite Databases now supports filter queries directly on relationship columns using dot notation. Query across related data with operators like `equal`, `notEqual`, `greaterThan`, `lessThan`, `between`, and more, without needing to fetch and filter application-side.
+
+Additionally, all relationship operations are now 12-18x faster across the board, with no configuration changes needed.
+
+Now live on Appwrite Cloud.
+
+{% arrow_link href="/blog/post/announcing-relationship-queries" %}
+Read the announcement to learn more
+{% /arrow_link %}

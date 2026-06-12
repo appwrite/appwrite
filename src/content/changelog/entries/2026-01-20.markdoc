@@ -1,0 +1,27 @@
+---
+layout: changelog
+title: "Announcing Screenshots API: Generate pixel-perfect webpage screenshots on demand"
+date: 2026-01-21
+cover: /images/blog/announcing-screenshots-api/cover.avif
+---
+
+We're excited to announce the **Screenshots API**, a new addition to Appwrite Avatars that lets you generate fully customizable webpage screenshots with a single API call.
+
+No more headless browser infrastructure to maintain. No more environment-specific workarounds. Just simple, reliable screenshot generation.
+
+# What you can do
+
+- Capture any public webpage as an image
+- Simulate an authenticated experience via custom request headers
+- Control browser viewport size and device scale
+- Render in light or dark theme
+- Simulate different locales, timezones, and geolocation
+- Pre-grant browser permissions
+- Generate full-page or viewport-only screenshots
+- Customize output format, dimensions, and quality
+
+The Screenshots API is available today as part of Appwrite Avatars and is already being used in production by [Imagine](https://imagine.dev).
+
+{% arrow_link href="/docs/products/avatars/screenshots" %}
+Get started with Screenshots API
+{% /arrow_link %}

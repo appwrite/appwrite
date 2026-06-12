@@ -1,0 +1,23 @@
+---
+layout: changelog
+title: "Announcing inversion queries: Exclusion rules made simple"
+date: 2025-09-04
+cover: /images/blog/announcing-inversion-queries/cover.avif
+---
+Excluding data often meant fetching too much and then filtering it out in your app, which wasted reads and added extra logic.
+
+To make those exclusions simpler and more efficient, we’ve added **inversion queries**:
+
+- `notSearch`
+- `notContains`
+- `notBetween`
+- `notStartsWith`
+- `notEndsWith`
+
+With these, you can express “everything except …” rules directly in your queries, keeping them cleaner, reducing wasted reads, and cutting down on payload sizes.
+
+Now live on **Appwrite Cloud + Self-hosted**.
+
+{% arrow_link href="/blog/post/announcing-inversion-queries" %}
+Read the announcement to learn more
+{% /arrow_link %}

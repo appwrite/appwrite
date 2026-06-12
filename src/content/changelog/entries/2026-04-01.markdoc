@@ -1,0 +1,14 @@
+---
+layout: changelog
+title: "MongoDB support for self-hosted Appwrite"
+date: 2026-04-01
+cover: /images/blog/appwrite-mongodb-partnership-self-hosted/cover.avif
+---
+
+Appwrite now supports MongoDB as a database for self-hosted installations. Starting with Appwrite 1.9.0, you can choose between MongoDB and MariaDB when setting up your instance. MongoDB is the new default.
+
+The new web-based installation wizard walks you through the setup, including database selection, in just a few steps. Your Appwrite API stays the same regardless of which database you pick; only the underlying database changes.
+
+{% arrow_link href="/blog/post/appwrite-mongodb-partnership-self-hosted" %}
+Read the announcement
+{% /arrow_link %}

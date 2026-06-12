@@ -1,0 +1,21 @@
+---
+layout: changelog
+title: "Announcing new TablesDB UI: A spreadsheet-like way to manage your data"
+date: 2025-08-26
+cover: /images/blog/announcing-appwrite-databases-new-ui/cover.avif
+---
+We’re excited to introduce a completely new TablesDB UI for Appwrite Databases
+
+Experience a spreadsheet‑like editing workflow, right inside the Console.
+
+You can now:
+
+- Edit records inline
+- Perform bulk actions
+- Navigate with arrow keys and shortcuts
+
+A faster way to patch production, clean up test data, and stay in flow.
+
+{% arrow_link href="/blog/post/announcing-appwrite-databases-new-ui" %}
+Read the announcement to learn more
+{% /arrow_link %}

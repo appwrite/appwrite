@@ -1,0 +1,13 @@
+---
+layout: changelog
+title: "Announcing Messaging: Push, Email and SMS directly from your Appwrite backend"
+date: 2024-02-26
+cover: /images/changelog/2024-02-26.avif
+---
+
+It has been requested over and over again by Appwrite developers. It's a product that is hard to build from scratch and much needed for you and your application to have effective communication with your users. Therefore, we're excited to present you with **Messaging**. With just a few lines of backend code, you can set up a full-functioning messaging service for your application that covers three significant communication channels under one unified API.
+
+{% arrow_link href="/blog/post/announcing-appwrite-messaging" %}
+Read the announcement to learn more
+{% /arrow_link %}
+

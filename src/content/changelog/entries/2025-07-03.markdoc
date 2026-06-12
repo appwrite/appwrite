@@ -1,0 +1,16 @@
+---
+layout: changelog
+title: "Announcing Bulk API: Handle heavy data workloads with ease"
+date: 2025-07-03
+cover: /images/changelog/2025-07-03.avif
+---
+
+We're excited to introduce another Appwrite Databases feature, **Bulk API**.
+
+Previously, writing or modifying large amounts of data in Appwrite Databases required sending one request per document.
+
+With the new Bulk API, you can create, update, or delete multiple documents in one go, vastly speeding up your workflows and reducing network overhead.
+
+{% arrow_link href="/blog/post/announcing-bulk-api" %}
+Read the announcement to learn more
+{% /arrow_link %}

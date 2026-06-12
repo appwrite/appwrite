@@ -1,0 +1,19 @@
+---
+layout: changelog
+title: Database improvements and fixes
+date: 2025-01-17
+---
+
+We've released several Database updates to make your experience better:
+
+- Improved handling of database indexes and attributes
+- Fixed various validation issues across database operations
+- Enhanced error handling and exception management
+- Improved query validation for complex searches
+
+This update also includes several other optimizations to improve database performance and reliability.
+You can join our [Discord community](https://discord.gg/appwrite) to share your feedback. We'd love to hear about your experience.
+
+{% arrow_link href="/docs/products/databases" %}
+Learn more about Appwrite Databases
+{% /arrow_link %}

@@ -1,0 +1,15 @@
+---
+layout: changelog
+title: "Announcing Init: a new era begins"
+date: 2025-05-08
+cover: /images/changelog/2025-05-08.avif
+---
+We are about to blow your socks off with what comes next for Appwrite. 
+
+Init brings you a new week of major announcements from 19-23 May 2025. For those new to [Init](/blog/post/announcing-init): it’s the start of something new here at Appwrite as we announce new products and features every day, for a week. 
+
+We can’t disclose anything just yet, but we can say that this launch will forever change the way you build with Appwrite. A major stepping stone into a new Appwrite era, all with one mission of making software development accessible and fun for all.
+
+{% arrow_link href="/blog/post/init-may-2025" %}
+Read the announcement to learn more
+{% /arrow_link %}

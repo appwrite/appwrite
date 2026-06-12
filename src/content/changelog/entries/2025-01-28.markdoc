@@ -1,0 +1,14 @@
+---
+layout: changelog
+title: Introducing the Appwrite Partners program
+date: 2025-01-28
+cover: /images/changelog/2025-01-28.avif
+---
+
+We’re excited to introduce the Appwrite Partners program, a new initiative to help agencies, development studios, system integrators, and freelancers deliver exceptional solutions, scale faster, and achieve long-term success. By partnering with Appwrite, you gain access to cutting-edge tools, expert support, and a team of innovators on a mission to make software accessible and enjoyable for all creators.
+
+{% arrow_link href="/blog/post/appwrite-partners-program" %}
+Read the announcement to learn more
+{% /arrow_link %}
+
+

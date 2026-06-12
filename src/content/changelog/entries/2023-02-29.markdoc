@@ -1,0 +1,19 @@
+---
+layout: changelog
+title: "New Database operators: OR & contains query methods"
+date: 2024-02-29
+cover: /images/changelog/2024-02-29.avif
+---
+
+We’re excited to announce the addition of two new database operators for performing queries, the `or` and `contains` operators for Appwrite Databases. 
+
+You can now:
+
+- Perform a broader search by matching against any text within a substring
+- Group queries together for advanced filtering and search capabilities
+
+With these new database improvements you have more possibilities for data retrieval and manipulation, and add powerful new queries and logic to Appwrite Databases for you to manage your data.
+
+{% arrow_link href="/blog/post/introducing-new-database-operators" %}
+Read the announcement to learn more
+{% /arrow_link %}

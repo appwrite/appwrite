@@ -26,6 +26,7 @@ import { Route as PublicRouteImport } from './routes/_public'
 import { Route as ProtectedRouteImport } from './routes/_protected'
 import { Route as AuthRouteImport } from './routes/_auth'
 import { Route as DocsIndexRouteImport } from './routes/docs/index'
+import { Route as ChangelogIndexRouteImport } from './routes/changelog.index'
 import { Route as PublicIndexRouteImport } from './routes/_public/index'
 import { Route as LlmsTxtRouteImport } from './routes/llms.txt'
 import { Route as LlmsFullTxtRouteImport } from './routes/llms-full.txt'
@@ -49,6 +50,7 @@ import { Route as AuthMfaRouteImport } from './routes/_auth/mfa'
 import { Route as AuthJoinRouteImport } from './routes/_auth/join'
 import { Route as ApiHelloRouteImport } from './routes/_api/hello'
 import { Route as PublicAccountIndexRouteImport } from './routes/_public/account.index'
+import { Route as ChangelogEntryEntryRouteImport } from './routes/changelog.entry.$entry'
 import { Route as PublicProjectsProjectIdRouteImport } from './routes/_public/projects.$projectId'
 import { Route as PublicOrganizationsOrgIdRouteImport } from './routes/_public/organizations.$orgId'
 import { Route as PublicDebugOrgSetupPreviewRouteImport } from './routes/_public/debug.org-setup-preview'
@@ -354,6 +356,11 @@ const DocsIndexRoute = DocsIndexRouteImport.update({
   path: '/',
   getParentRoute: () => DocsRoute,
 } as any)
+const ChangelogIndexRoute = ChangelogIndexRouteImport.update({
+  id: '/changelog/',
+  path: '/changelog/',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const PublicIndexRoute = PublicIndexRouteImport.update({
   id: '/',
   path: '/',
@@ -469,6 +476,11 @@ const PublicAccountIndexRoute = PublicAccountIndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => PublicAccountRoute,
+} as any)
+const ChangelogEntryEntryRoute = ChangelogEntryEntryRouteImport.update({
+  id: '/changelog/entry/$entry',
+  path: '/changelog/entry/$entry',
+  getParentRoute: () => rootRouteImport,
 } as any)
 const PublicProjectsProjectIdRoute = PublicProjectsProjectIdRouteImport.update({
   id: '/projects/$projectId',
@@ -1985,6 +1997,7 @@ export interface FileRoutesByFullPath {
   '/llms-full/txt': typeof LlmsFullTxtRoute
   '/llms/txt': typeof LlmsTxtRoute
   '/': typeof PublicIndexRoute
+  '/changelog': typeof ChangelogIndexRoute
   '/docs/': typeof DocsIndexRoute
   '/account/billing-addresses': typeof PublicAccountBillingAddressesRoute
   '/account/payment-methods': typeof PublicAccountPaymentMethodsRoute
@@ -1995,6 +2008,7 @@ export interface FileRoutesByFullPath {
   '/debug/org-setup-preview': typeof PublicDebugOrgSetupPreviewRoute
   '/organizations/$orgId': typeof PublicOrganizationsOrgIdRouteWithChildren
   '/projects/$projectId': typeof PublicProjectsProjectIdRouteWithChildren
+  '/changelog/entry/$entry': typeof ChangelogEntryEntryRoute
   '/account/': typeof PublicAccountIndexRoute
   '/init/calendar/$eventSlug': typeof ApiInitCalendarEventSlugRoute
   '/init/ticket/$eventSlug': typeof ApiInitTicketEventSlugRoute
@@ -2244,6 +2258,7 @@ export interface FileRoutesByTo {
   '/llms-full/txt': typeof LlmsFullTxtRoute
   '/llms/txt': typeof LlmsTxtRoute
   '/': typeof PublicIndexRoute
+  '/changelog': typeof ChangelogIndexRoute
   '/docs': typeof DocsIndexRoute
   '/account/billing-addresses': typeof PublicAccountBillingAddressesRoute
   '/account/payment-methods': typeof PublicAccountPaymentMethodsRoute
@@ -2252,6 +2267,7 @@ export interface FileRoutesByTo {
   '/account/sessions': typeof PublicAccountSessionsRoute
   '/debug/error-preview': typeof PublicDebugErrorPreviewRoute
   '/debug/org-setup-preview': typeof PublicDebugOrgSetupPreviewRoute
+  '/changelog/entry/$entry': typeof ChangelogEntryEntryRoute
   '/account': typeof PublicAccountIndexRoute
   '/init/calendar/$eventSlug': typeof ApiInitCalendarEventSlugRoute
   '/init/ticket/$eventSlug': typeof ApiInitTicketEventSlugRoute
@@ -2477,6 +2493,7 @@ export interface FileRoutesById {
   '/llms-full/txt': typeof LlmsFullTxtRoute
   '/llms/txt': typeof LlmsTxtRoute
   '/_public/': typeof PublicIndexRoute
+  '/changelog/': typeof ChangelogIndexRoute
   '/docs/': typeof DocsIndexRoute
   '/_public/account/billing-addresses': typeof PublicAccountBillingAddressesRoute
   '/_public/account/payment-methods': typeof PublicAccountPaymentMethodsRoute
@@ -2487,6 +2504,7 @@ export interface FileRoutesById {
   '/_public/debug/org-setup-preview': typeof PublicDebugOrgSetupPreviewRoute
   '/_public/organizations/$orgId': typeof PublicOrganizationsOrgIdRouteWithChildren
   '/_public/projects/$projectId': typeof PublicProjectsProjectIdRouteWithChildren
+  '/changelog/entry/$entry': typeof ChangelogEntryEntryRoute
   '/_public/account/': typeof PublicAccountIndexRoute
   '/_api/init/calendar/$eventSlug': typeof ApiInitCalendarEventSlugRoute
   '/_api/init/ticket/$eventSlug': typeof ApiInitTicketEventSlugRoute
@@ -2740,6 +2758,7 @@ export interface FileRouteTypes {
     | '/llms-full/txt'
     | '/llms/txt'
     | '/'
+    | '/changelog'
     | '/docs/'
     | '/account/billing-addresses'
     | '/account/payment-methods'
@@ -2750,6 +2769,7 @@ export interface FileRouteTypes {
     | '/debug/org-setup-preview'
     | '/organizations/$orgId'
     | '/projects/$projectId'
+    | '/changelog/entry/$entry'
     | '/account/'
     | '/init/calendar/$eventSlug'
     | '/init/ticket/$eventSlug'
@@ -2999,6 +3019,7 @@ export interface FileRouteTypes {
     | '/llms-full/txt'
     | '/llms/txt'
     | '/'
+    | '/changelog'
     | '/docs'
     | '/account/billing-addresses'
     | '/account/payment-methods'
@@ -3007,6 +3028,7 @@ export interface FileRouteTypes {
     | '/account/sessions'
     | '/debug/error-preview'
     | '/debug/org-setup-preview'
+    | '/changelog/entry/$entry'
     | '/account'
     | '/init/calendar/$eventSlug'
     | '/init/ticket/$eventSlug'
@@ -3231,6 +3253,7 @@ export interface FileRouteTypes {
     | '/llms-full/txt'
     | '/llms/txt'
     | '/_public/'
+    | '/changelog/'
     | '/docs/'
     | '/_public/account/billing-addresses'
     | '/_public/account/payment-methods'
@@ -3241,6 +3264,7 @@ export interface FileRouteTypes {
     | '/_public/debug/org-setup-preview'
     | '/_public/organizations/$orgId'
     | '/_public/projects/$projectId'
+    | '/changelog/entry/$entry'
     | '/_public/account/'
     | '/_api/init/calendar/$eventSlug'
     | '/_api/init/ticket/$eventSlug'
@@ -3477,6 +3501,8 @@ export interface RootRouteChildren {
   ApiHelloRoute: typeof ApiHelloRoute
   LlmsFullTxtRoute: typeof LlmsFullTxtRoute
   LlmsTxtRoute: typeof LlmsTxtRoute
+  ChangelogIndexRoute: typeof ChangelogIndexRoute
+  ChangelogEntryEntryRoute: typeof ChangelogEntryEntryRoute
   ApiInitCalendarEventSlugRoute: typeof ApiInitCalendarEventSlugRoute
   ApiInitTicketEventSlugRoute: typeof ApiInitTicketEventSlugRoute
 }
@@ -3601,6 +3627,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/docs/'
       preLoaderRoute: typeof DocsIndexRouteImport
       parentRoute: typeof DocsRoute
+    }
+    '/changelog/': {
+      id: '/changelog/'
+      path: '/changelog'
+      fullPath: '/changelog'
+      preLoaderRoute: typeof ChangelogIndexRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/_public/': {
       id: '/_public/'
@@ -3762,6 +3795,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/account/'
       preLoaderRoute: typeof PublicAccountIndexRouteImport
       parentRoute: typeof PublicAccountRoute
+    }
+    '/changelog/entry/$entry': {
+      id: '/changelog/entry/$entry'
+      path: '/changelog/entry/$entry'
+      fullPath: '/changelog/entry/$entry'
+      preLoaderRoute: typeof ChangelogEntryEntryRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/_public/projects/$projectId': {
       id: '/_public/projects/$projectId'
@@ -6568,6 +6608,8 @@ const rootRouteChildren: RootRouteChildren = {
   ApiHelloRoute: ApiHelloRoute,
   LlmsFullTxtRoute: LlmsFullTxtRoute,
   LlmsTxtRoute: LlmsTxtRoute,
+  ChangelogIndexRoute: ChangelogIndexRoute,
+  ChangelogEntryEntryRoute: ChangelogEntryEntryRoute,
   ApiInitCalendarEventSlugRoute: ApiInitCalendarEventSlugRoute,
   ApiInitTicketEventSlugRoute: ApiInitTicketEventSlugRoute,
 }

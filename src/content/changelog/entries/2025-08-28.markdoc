@@ -1,0 +1,21 @@
+---
+layout: changelog
+title: "New Cloud region available: San Francisco (SFO)"
+date: 2025-08-28
+cover: /images/changelog/2025-08-28.avif
+---
+
+We’ve expanded the Appwrite Cloud to a brand-new region.
+
+Starting today, the **San Francisco (SFO)** region is now live and ready for your projects.
+
+This means you can:
+
+- Create new projects directly in SFO
+- Or [migrate](/blog/post/change-regions-with-migrations) your existing projects to take advantage of the new location
+
+If your users are on the U.S. West Coast, the SFO region will help you deliver a faster and reliable experience to your users.
+
+{% arrow_link href="/docs/products/network/regions" %}
+Learn more about Regions
+{% /arrow_link %}

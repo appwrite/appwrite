@@ -1,0 +1,29 @@
+---
+layout: changelog
+title: "Appwrite Cloud: Realtime usage limits and billing enforcement"
+date: 2026-03-23
+---
+
+Starting **April 30, 2026**, we will begin actively enforcing Realtime usage limits and billing on Appwrite Cloud.
+
+Since launching Appwrite Cloud in beta, we have not actively enforced Cloud limits for Realtime. We are now transitioning to full enforcement so that usage is measured and billed according to your plan. This change ensures fair usage across the platform and allows us to continue investing in Realtime and the rest of the Cloud offering.
+
+**Realtime limits:**
+
+- **Messages:** Free plan includes 2M messages/month; Pro include 6M messages/month. Additional messages are billed at $2.50 per 1M.
+- **Concurrent connections:** Free 250, Pro 500. Additional connections are $5 per 1,000.
+- **Max message size:** 256 KB on Free; 3 MB on Pro.
+
+Bandwidth consumed by the Realtime service also counts toward your plan’s **general bandwidth** allowance, the same pool used by your other Appwrite Cloud traffic (for example, API and Storage). See your plan’s bandwidth limits on the [pricing page](/pricing).
+
+You can view your current Realtime usage in the **billing usage breakdown** in the Appwrite Cloud console. Full details and plan comparison are on our [pricing page](/pricing).
+
+To improve performance and reduce costs, we recommend using [Realtime queries](/blog/post/announcing-realtime-queries) to filter events server-side so your app receives only the updates it needs. Fewer messages mean lower usage and a better experience for your users.
+
+{% arrow_link href="/pricing" %}
+View pricing and limits
+{% /arrow_link %}
+
+{% arrow_link href="/blog/post/announcing-realtime-queries" %}
+Reduce messages with Realtime queries
+{% /arrow_link %}

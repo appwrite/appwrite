@@ -1,0 +1,27 @@
+---
+layout: changelog
+title: Node.js 22 upgrade, execution stability, and UX fixes
+date: 2025-08-25
+---
+
+We've shipped updates and bug fixes across Functions, Sites, and the Console to improve stability and developer experience.
+
+# What's new {% #what-s-new %}
+- **Node.js 22** runtime updated from 22.9 → 22.18
+- You can now **filter function executions by `deploymentId`** for easier debugging
+- **Avatar API favicon endpoint** now supports SVG icons
+
+# Fixes and improvements {% #fixes-and-improvements %}
+- **Dynamic keys** no longer cause random execution failures
+- **Executions with >1MB of logs** no longer fail
+- **Cookies now work** correctly in SSR Appwrite Sites
+- Fixed **Flutter onboarding flow** that was not working in some cases
+- Fixed **newspaper-like fonts** in error pages
+- **Index length configuration** is now accessible to all users
+- Multiple fixes to **improve layout, alignment, and responsiveness**
+
+These changes are now live. Let us know if they improve your workflows or if you run into anything unexpected.
+
+{% arrow_link href="https://appwrite.io/discord" %}
+Join the discussion on Discord
+{% /arrow_link %}

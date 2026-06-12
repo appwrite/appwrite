@@ -1,0 +1,12 @@
+---
+layout: changelog
+title: "Appwrite 1.5.11 is released"
+date: 2024-09-17
+cover: /images/changelog/2024-09-17.avif
+---
+
+A security issue was identified in the open-runtimes/executor repository, that resulted in stack traces from errors being included in build and execution logs, which in some cases, could expose sensitive information.
+
+For users of Appwrite Cloud we have deployed a security patch and rotated any affected keys to safeguard against potential misuse. We have also verified our logs to ensure no exploitation of this issue occurred. Therefore, no further action is required on your part.
+
+For developers using self-hosted Appwrite instances, we strongly recommend upgrading to [version 1.5.11](https://github.com/appwrite/appwrite/releases/tag/1.5.11) to apply the security patch and prevent any further exposure. Since this is a patch release, no migrations are required. Please refer to our [documentation to upgrade](https://appwrite.io/docs/advanced/self-hosting/update) your instance. 

@@ -1,0 +1,23 @@
+---
+layout: changelog
+title: "Announcing: Document imports from CSV files"
+date: 2025-07-01
+cover: /images/changelog/2025-07-01.avif
+---
+
+We're introducing a new way to populate your Appwrite databases: **document imports from CSV files**.
+
+Using this feature, you can now import documents into your database using just a CSV file without any custom scripts.
+
+Whether you’re:
+
+- Migrating data from another tool
+- Seeding test environments
+- Importing FAQs, inventory, or structured content
+
+You can do it all with a simple CSV file.
+
+{% arrow_link href="/blog/post/announcing-csv-imports" %}
+Read the announcement to learn more
+{% /arrow_link %}
+

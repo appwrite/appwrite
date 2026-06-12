@@ -1,0 +1,19 @@
+---
+layout: changelog
+title: Announcing Appwrite Pro
+date: 2023-12-20
+cover: /images/changelog/2023-12-20.avif
+---
+
+Appwrite Pro is now available for Appwrite Cloud developers.
+
+Previously, all Appwrite Cloud developers used the Free plan with unrestricted resources.
+With Pro, you can choose between two different plans for your organization(s):
+
+- Free: a free plan that provides an easy starting point for budding projects
+- Pro: for developers who need more resources to scale their apps,
+  customized branding in emails and messages, more team members per organization, and premium support.
+
+{% arrow_link href="/blog/post/announcing-appwrite-pro" %}
+Read the full announcement
+{% /arrow_link %}

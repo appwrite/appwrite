@@ -1,0 +1,71 @@
+---
+layout: changelog
+title: Appwrite 1.5.10 is released
+date: 2024-08-14
+cover: /images/changelog/2024-08-14.avif
+---
+
+Appwrite 1.5.10 is now available. See below for all the improvements and fixes from 1.5.8 to 1.5.10.
+
+Notable changes:
+
+* Bump console to version 4.3.30
+* Add Darija (Moroccan Arabic) translation file
+* Support Twilio messaging service SID
+* Improve cache performance
+* Add HK in translations
+* Update password abuse
+* Remove detailed trace
+* Remove relationship attributes from realtime event payloads
+* Sanitize URLs in emails
+
+Fixes:
+
+* Fix migration stuck at "Starting Data Migration [...]"
+* Fix domain check
+* Fix "API must be called in the coroutine"
+* Bump executor version from 0.5.5 to 0.5.7
+* Ensure usage is counted for errors
+* Fix MFA for OAuth2 only accounts
+* Delete expired targets per project
+* Don't set the target field if the existing target document is false
+* Disable validation for project DBs during migration
+* Add `default` to collection attributes in migration
+* Fix create bucket endpoint validator for maximum file size
+* Disable validation for subquery to prevent error
+* Fix 'Missing required attribute "expire"' on `users.createSession()`
+* Fix certificate emails
+* Fix browser-cached deleted file
+* Fix migration of firebase
+* Fix `path` for vcs function deployments
+* Fix calculations
+* Fix bugs with migrations
+* Fix queueForUsage not triggering for domain executions
+* Fix realtime permission change
+
+Miscellaneous:
+
+* Add profiler for debugging
+* Document APIs that don't support redirects
+* Bump base image from 0.9.0 to 0.9.1
+* Use latest Platform and add Core module
+* Add test to validate headers aren't overridden
+* Fix hyperlink in storage docs
+* Update cache & database
+* Fix flaky certificate test
+* Fix flaky function test
+* Update account API reference
+* Update functions API reference
+* Implement deploymentsStorage metric for projects API
+* Add new audit events
+* Move mbSeconds into 1.5.x
+* Clean projects cache while migrating
+* Use git tags for function template
+
+You can update by following the [upgrade docs](/docs/advanced/self-hosting/update).
+
+Note that upgrading to 1.5.10 requires running a [migration](/docs/advanced/self-hosting/update#running-the-migration).
+
+{% arrow_link href="https://github.com/appwrite/appwrite/releases/tag/1.5.10" %}
+View the changelog on GitHub
+{% /arrow_link %}

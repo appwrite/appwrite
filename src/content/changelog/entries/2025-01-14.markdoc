@@ -1,0 +1,21 @@
+---
+layout: changelog
+title: New function runtimes and GitHub identity improvements
+date: 2025-01-14
+---
+
+We've added new runtimes and resolved identity conflicts to make Appwrite even more developer-friendly.
+
+## What's new
+- New function runtimes: You can now use PHP 8.3, Ruby 3.3, and Python 3.12 in your functions.
+- SMS pricing and usage: Added usage tracking and cost breakdowns for phone OTP and verification. Find in the organization usage and project settings usage tabs.
+
+## Fixes
+- Identity conflict resolution: We've fixed an issue where GitHub installations were tied to OAuth identities, causing errors when using multiple Appwrite accounts.
+  OAuth identities and GitHub installations are now separated to ensure smooth functionality across all accounts.
+
+These changes are now live! Try them out and share your experience with us.
+
+{% arrow_link href="https://appwrite.io/discord" %}
+Join the discussion on Discord
+{% /arrow_link %}

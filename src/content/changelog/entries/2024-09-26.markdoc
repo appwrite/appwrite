@@ -1,0 +1,14 @@
+---
+layout: changelog
+title: "Announcing Appwrite’s Hacktoberfest 2024 Hackathon: Build, innovate, and win!"
+date: 2024-09-26
+cover: /images/changelog/2024-09-26.avif
+---
+
+[Hacktoberfest](https://hacktoberfest.com/) is almost here, and we’re excited to announce that Appwrite will be hosting our own **Hacktoberfest 2024 Hackathon**! Whether you're a seasoned developer or just dipping your toes into open-source, this is the perfect opportunity to create something impactful while being part of the global Hacktoberfest movement.
+
+From **October 1st to October 31st**, join thousands of developers worldwide as we work together to push the boundaries of creativity and innovation. This year, we’re looking for projects that showcase not only technical skills but also a fresh perspective on the tools and problems that matter most to the developer community.
+
+{% arrow_link href="/blog/post/appwrite-hacktoberfest-hackathon-2024" %}
+Read the announcement to learn more
+{% /arrow_link %}

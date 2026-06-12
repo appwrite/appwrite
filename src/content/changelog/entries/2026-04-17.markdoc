@@ -1,0 +1,14 @@
+---
+layout: changelog
+title: "TTL-based list response caching"
+date: 2026-04-17
+cover: /images/blog/announcing-list-cache-ttl/cover.avif
+---
+
+You can now cache `listRows` responses by passing a `ttl` parameter (in seconds). The first request executes normally and stores the result in an in-memory cache. Subsequent identical requests return the cached response instantly until the TTL expires. The cache is permission-aware, so users with different roles never see each other's cached data.
+
+Set `ttl` between `1` and `86400` (24 hours). The default is `0` (caching disabled). Row writes do not invalidate the cache. To force a purge, call `updateTable` with `purge` set to `true`.
+
+{% arrow_link href="/blog/post/announcing-list-cache-ttl" %}
+Read the full announcement
+{% /arrow_link %}

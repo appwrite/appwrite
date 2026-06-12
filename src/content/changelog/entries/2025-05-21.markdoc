@@ -1,0 +1,16 @@
+---
+layout: changelog
+title: "Announcing Dev Keys: faster local development without rate limits"
+date: 2025-05-21
+cover: /images/changelog/2025-05-21.avif
+---
+
+Introducing **Dev Keys.**
+
+A new Appwrite feature that lets you bypass rate limits *during local development*. No more slowdowns. No more artificial blockers. Just fast, uninterrupted building.
+
+And they’re built specifically for you.
+
+{% arrow_link href="/blog/post/announcing-dev-keys" %}
+Read the announcement to learn more
+{% /arrow_link %}

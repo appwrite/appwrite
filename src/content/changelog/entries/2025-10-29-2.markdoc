@@ -1,0 +1,16 @@
+---
+layout: changelog
+title: "Appwrite Sites now offers unlimited sites on the free plan"
+date: 2025-10-29
+cover: /images/blog/sites-free-plan.avif
+---
+
+When we launched Appwrite Sites in early access, our goal was clear: make deploying modern web projects as easy and integrated as building them. From the start, we intended for developers to have full flexibility, to deploy, test, and scale without limits.
+
+But before opening things up, we needed to ensure that the platform was stable, fast, and reliable for everyone. That’s why, during the initial rollout, we limited Sites to one per project. This gave us the room to validate performance, harden our infrastructure, and refine the developer experience.
+
+Now that Appwrite Sites has matured, it’s time to lift that constraint.  On the free plan, you can deploy unlimited sites per project.
+
+{% arrow_link href="/blog/post/unlimited-appwrite-sites-free-plan" %}
+Read the announcement
+{% /arrow_link %}

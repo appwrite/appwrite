@@ -1,0 +1,15 @@
+---
+layout: changelog
+title: "Expanded event support for users.create"
+date: 2024-11-14
+---
+
+The `users.create` event now triggers for OAuth, CreateTeamMemberships, and other user creation methods.
+This improvement makes it easier to automate workflows like welcome emails or user initialization across different scenarios.
+
+To support this, we've updated the internal event architecture to handle more complex event types.
+This lays the foundation for even more flexible event handling in the future.
+
+{% arrow_link href="/docs/advanced/platform/events" %}
+Learn more about events in Appwrite
+{% /arrow_link %}

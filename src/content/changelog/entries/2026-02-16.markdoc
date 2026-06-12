@@ -1,0 +1,18 @@
+---
+layout: changelog
+title: "Realtime queries: Server-side event filtering for subscriptions"
+date: 2026-02-16
+cover: /images/blog/announcing-realtime-queries/cover.avif
+---
+
+Appwrite Realtime now supports passing SDK queries when subscribing to channels. Events are filtered server-side based on your queries, so your callbacks only receive updates that match your conditions.
+
+You can use queries like `Query.equal()`, `Query.notEqual()`, `Query.greaterThan()`, and more, and combine them with `Query.and()` and `Query.or()` for precise filtering. You can also subscribe to the same channel multiple times with different filters to handle different subsets of events independently.
+
+Available across all Appwrite client SDKs: Web, Flutter, Apple, and Android.
+
+Now live on Appwrite Cloud.
+
+{% arrow_link href="/blog/post/announcing-realtime-queries" %}
+Read the announcement to learn more
+{% /arrow_link %}

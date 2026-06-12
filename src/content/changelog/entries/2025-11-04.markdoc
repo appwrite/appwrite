@@ -1,0 +1,28 @@
+---
+layout: changelog
+title: "Announcing DB operators: Update multiple fields without fetching the entire row"
+date: 2025-11-04
+cover: /images/blog/announcing-db-operators/cover.avif
+---
+Updating just one field in a row, like incrementing a counter or adding a tag, used to require reading and rewriting the entire document. This added latency, wasted bandwidth, and created risks of lost updates under high concurrency.
+
+**What’s new:**
+
+- Introduced DB Operators v1, enabling inline, atomic field-level updates.
+- Support for numeric, array, string, and date operations.
+- Perform multiple field updates in a single atomic call.
+- Type-safe SDK methods for clarity and safety.
+- Transaction-ready, can be combined with other database operations.
+
+**Immediate benefits**
+
+- Always consistent. No race conditions or lost updates.
+- Lower latency and bandwidth usage.
+- Cleaner, more expressive code. One call, clear intent.
+- Composable updates across multiple fields.
+
+Live now on Appwrite Cloud. Coming soon to self-hosted deployments.
+
+{% arrow_link href="/blog/post/announcing-db-operators" %}
+Read the announcement to learn more
+{% /arrow_link %}

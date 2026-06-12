@@ -1,0 +1,20 @@
+---
+layout: changelog
+title: "Usage metrics now include OPTIONS requests and 4XX responses"
+date: 2025-02-26
+---
+
+We've improved our usage metrics system to now properly account for OPTIONS requests and 4XX responses. These request types were wrongly omitted previously.
+
+## What's changed
+
+- **OPTIONS requests**: Pre-flight CORS requests are now included in your usage metrics
+- **4XX error responses**: Client error responses are now counted in usage calculations
+
+This change gives you a more accurate view of your application's actual traffic pattern and helps us better scale our infrastructure to support your needs.
+
+No action is required from your side.
+
+{% arrow_link href="/docs/advanced/platform/pro#check-resource-usage" %}
+Learn more about usage metrics
+{% /arrow_link %}

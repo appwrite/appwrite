@@ -1,0 +1,12 @@
+---
+layout: changelog
+title: Appwrite joins the OpenJS Foundation
+date: 2024-09-24
+cover: /images/changelog/2024-09-24.avif
+---
+
+We’re excited to share that Appwrite is now an official Silver Member of the OpenJS Foundation. By joining forces with the OpenJS Foundation, we’re doubling down on our promise to give back to the open source community.
+
+{% arrow_link href="/blog/post/announcing-openjsfoundation-silver-membership" %}
+Read the announcement to learn more
+{% /arrow_link %}

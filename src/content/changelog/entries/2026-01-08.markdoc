@@ -1,0 +1,23 @@
+---
+layout: changelog
+title: "Free plan function limit reduced to 2"
+date: 2026-01-08
+---
+
+Starting today, the Free plan now allows a maximum of two functions per project, reduced from the previous limit of five.
+
+**What does this mean for developers on the Free plan?**
+
+If you currently have more than two functions in your project on the Free plan, you'll continue to have full access to all of them for now. However, you won't be able to create new functions until you reduce the count or upgrade to a paid plan.
+
+**Why this change?**
+
+We've observed increasing abuse on the platform, including users running torrents, long-lived traffic that resembles attacks, and other misuse of the platform as free hosting for non-stop jobs. By reducing the number of free functions, we're making it harder for bad actors to exploit the platform while keeping Appwrite stable and fair for developers building legitimate applications.
+
+Appwrite's Free plan continues to provide all the core building blocks you need to build real applications, including Databases, Authentication, Storage, Functions, Messaging, and Sites.
+
+If you have questions or need help planning your migration, please contact us at billing@appwrite.io.
+
+{% arrow_link href="/docs/products/functions" %}
+Learn more about Appwrite Functions
+{% /arrow_link %}

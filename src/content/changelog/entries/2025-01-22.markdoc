@@ -1,0 +1,22 @@
+---
+layout: changelog
+title: "Push notifications: new delivery options and controls"
+date: 2025-01-22
+cover: /images/changelog/2025-01-22.avif
+---
+
+We've introduced new additions to Appwrite Messaging that give you greater control over how you send and handle push notifications in your apps.
+
+## What's new
+
+- **Background updates for iOS**: We've added support for silent background updates on iOS, with equivalent data-only notifications available for Android.
+- **Critical alerts for iOS**: You can now send notifications that bypass Do Not Disturb and notification settings.
+- **Priority controls for all platforms**: We've added options to manage delivery speed and battery usage across platforms.
+- **Badge numbers for iOS**: The badge parameter now accepts integers instead of strings for better type safety.
+- **Optional title and body for all platforms**: You can now send notifications without title and body for background and data-only updates.
+
+These updates will help you build better notification experiences for your users. Try them out and share your feedback with us.
+
+{% arrow_link href="/blog/post/announcing-new-push-notifications-features" %}
+Read the announcement to learn more
+{% /arrow_link %}

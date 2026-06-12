@@ -1,0 +1,11 @@
+---
+layout: changelog
+title: Introducing the new Appwrite CLI
+date: 2024-08-20
+cover: /images/changelog/2024-08-20.avif
+---
+We're excited to announce the new Appwrite CLI. This iteration focuses on local development and an enhanced CI/CD experience. Now, you can test changes to your functions locally, and easily apply changes to your Appwrite collection. 
+
+{% arrow_link href="/blog/post/introducing-new-appwrite-cli" %}
+Read the announcement to learn more
+{% /arrow_link %}

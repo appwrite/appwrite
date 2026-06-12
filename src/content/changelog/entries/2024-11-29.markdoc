@@ -1,0 +1,25 @@
+---
+layout: changelog
+title: Fixes and improvements to Appwrite Cloud
+date: 2024-11-29
+---
+
+We've shipped several updates and improvements to Appwrite Cloud for a smoother experience:
+
+- The backups feature popup modal now appears only on Cloud environments, avoiding confusion for self-hosted users.
+- Improved database screen UI for self-hosted users by removing an unnecessary column.
+- Added clearer guidance for ID-related fields when creating attributes in modals.
+- Resolved an issue in the Billing tab where organizations without invoices caused a broken view. The tab now handles this scenario correctly.
+- Improved consistency by utilizing an `.env` variable for the growth endpoint.
+- Adjusted the pill component's height to prevent text overflow issues
+- Provided better messaging to indicate when credits have expired.
+- Updated and corrected the text in the plan summary section.
+- Resolved an issue with modals failing to show correctly in Safari.
+- Improved API performance under load.
+- Improved Functions performance for more stable and consistent function executions.
+
+These updates are aimed at improving the overall usability and performance of Appwrite Cloud. Let us know if you encounter any issues!
+
+{% arrow_link href="https://cloud.appwrite.io/console" %}
+Explore the Console to see the updates
+{% /arrow_link %}

@@ -1,0 +1,14 @@
+---
+layout: changelog
+title: "Announcing deployment retention for Functions and Sites"
+date: 2026-05-15
+cover: /images/blog/announcing-deployment-retention/cover.avif
+---
+
+Appwrite now supports deployment retention for [Functions](/docs/products/functions/deployments#deployment-retention) and [Sites](/docs/products/sites/deployments#deployment-retention), letting you automatically delete old non-active deployments after a retention window you control. Deployment artifacts count toward your project's storage allowance on [Appwrite Cloud](/pricing), so retention reclaims that space and reduces storage overage on builds you would never roll back to.
+
+The active deployment is always kept. Set `deploymentRetention` to `0` to keep non-active deployments forever, or choose a day-based value up to `36500` days. You can configure it from the Console or through the Functions and Sites APIs.
+
+{% arrow_link href="/blog/post/announcing-deployment-retention" %}
+Read the announcement
+{% /arrow_link %}

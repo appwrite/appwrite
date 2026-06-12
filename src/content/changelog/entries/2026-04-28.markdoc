@@ -1,0 +1,17 @@
+---
+layout: changelog
+title: "New filter, sort, and pagination flags in the Appwrite CLI"
+date: 2026-04-28
+---
+
+The Appwrite CLI **19.1.0** adds dedicated flags for filtering, sorting, and pagination on `list-*` commands, so you no longer need to hand-write Appwrite query JSON for `--queries` on common one-offs.
+
+The new flags include `--where`, `--sort-asc`, `--sort-desc`, `--limit`, `--offset`, `--cursor-after`, `--cursor-before`, and `--select`. The `--queries` flag is still supported and is combined with the new flags when both are used. See the [19.1.0 release notes](https://github.com/appwrite/sdk-for-cli/releases/tag/19.1.0) for more details.
+
+{% arrow_link href="/docs/tooling/command-line/commands#filter-sort-paginate" %}
+Read the CLI commands reference
+{% /arrow_link %}
+
+{% arrow_link href="/docs/tooling/command-line/installation#update-your-cli" %}
+Update the CLI to the latest version
+{% /arrow_link %}

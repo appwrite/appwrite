@@ -1,0 +1,14 @@
+---
+layout: changelog
+title: "New SDK versions released"
+date: 2024-10-03
+cover:
+---
+
+We've released version [16.0.2](https://github.com/appwrite/sdk-for-web/releases/tag/16.0.2) of the Web SDK to fix bugs with creating an OAuth2 session and cookies missing from requests.
+
+We've also released version [0.10.1](https://github.com/appwrite/sdk-for-dotnet/releases/tag/0.10.1) of the .NET SDK to a bug with creating files bigger than 5MB.
+
+{% arrow_link href="/docs/sdks" %}
+See all SDKs
+{% /arrow_link %}

@@ -1,0 +1,31 @@
+---
+layout: changelog
+title: "Announcing Transactions API: Reliable multi-record writes across tables"
+date: 2025-10-09
+cover: /images/blog/announcing-transactions-api/cover.avif
+---
+
+Handling multi-step workflows across tables often means dealing with partial writes and manual rollback logic.  
+
+With the new **Transactions API**, you can now execute multiple operations as a single atomic action, either all succeed or none do.
+
+# What's new:
+
+- New Transactions API for managing multi-step writes  
+- Support for staging multiple `create`, `update`, and `delete` operations across tables  
+- Atomic commit and automatic rollback on failure  
+- Configurable timeout for idle transactions (default: 5 minutes)
+
+# Benefits:
+
+- **ACID compliance:** Ensures atomicity, consistency, isolation, and durability across all staged operations.  
+- **All-or-nothing writes:** Prevents partial data states and inconsistent records.  
+- **Automatic rollback:** Appwrite handles cleanup on failure, no manual scripts required.  
+- **Reduced race conditions:** All operations are validated and committed together.  
+- **Simplified logic:** Consolidate multi-table operations without adding client-side complexity.
+
+This update is live on Appwrite Cloud. 
+
+{% arrow_link href="/blog/post/announcing-transactions-api" %}
+Read the announcement to learn more
+{% /arrow_link %}

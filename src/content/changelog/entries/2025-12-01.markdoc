@@ -1,0 +1,24 @@
+---
+layout: changelog
+title: "Fixed file token URL consistency for non-expiring tokens"
+date: 2025-12-01
+---
+
+File tokens allow you to generate custom URLs for accessing files in Storage buckets.
+
+We've fixed two issues with non-expiring file tokens:
+
+- **Unexpected expiration**: Non-expiring tokens were incorrectly expiring after 15 minutes, despite being configured to never expire.
+- **Inconsistent URLs**: Each request generated a different URL for the same non-expiring token, breaking caching and causing unnecessary revalidation.
+
+With this fix:
+
+- Non-expiring file tokens now generate consistent URLs across all requests.
+- URLs remain valid indefinitely as intended.
+- Improved reliability for long-term file sharing and caching strategies.
+
+This update is now live on Appwrite Cloud.
+
+{% arrow_link href="https://appwrite.io/discord" %}
+Join the conversation on Discord
+{% /arrow_link %}

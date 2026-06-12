@@ -1,0 +1,27 @@
+---
+layout: changelog
+title: "Control automatic Git deployments with build triggers"
+date: 2026-05-29
+cover: /images/blog/announcing-git-deployment-triggers/cover.avif
+---
+
+Appwrite now supports **Git deployment triggers** for Functions and Sites. Use **branch filters** and **path filters** to control which Git pushes and pull requests create automatic deployments.
+
+- **Branch filters** match branch names, such as `main`, `staging`, or `preview/**`.
+- **Path filters** match changed files, such as `apps/web/**`, `functions/api/**`, or `packages/shared/**`.
+
+You can prefix a pattern with `!` to exclude matching branches or paths.
+
+This is especially useful for monorepos, staging branches, preview workflows, and projects where a change to one folder should not rebuild every connected Function or Site.
+
+{% arrow_link href="/blog/post/announcing-git-deployment-triggers" %}
+Read the announcement
+{% /arrow_link %}
+
+{% arrow_link href="/docs/products/sites/deploy-from-git#build-triggers" %}
+Build triggers for Sites
+{% /arrow_link %}
+
+{% arrow_link href="/docs/products/functions/deploy-from-git#build-triggers" %}
+Build triggers for Functions
+{% /arrow_link %}

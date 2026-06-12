@@ -1,0 +1,16 @@
+---
+layout: changelog
+title: "Announcing HEIC and AVIF support: modern image formats now in Appwrite"
+date: 2025-05-22
+cover: /images/changelog/2025-05-22.avif
+---
+
+We’re excited to share we have added support for two new image formats in Appwrite Storage: **HEIC** and **AVIF.** This will give you more tools to manage, manipulate, and serve images the way you need.
+
+You can generate image previews directly in **.heic** and **.avif** formats, which are natively supported in Appwrite.
+
+No converters. No extra steps. Just fast, flexible image handling built in.
+
+{% arrow_link href="/blog/post/new-image-formats-avif-heic" %}
+Read the announcement to learn more
+{% /arrow_link %}

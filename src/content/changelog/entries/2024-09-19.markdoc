@@ -1,0 +1,13 @@
+---
+layout: changelog
+title: "Appwrite is now CCPA compliant: Build privacy-first applications with confidence"
+date: 2024-09-19
+cover: /images/changelog/2024-09-19.avif
+---
+At Appwrite, we're committed to helping you build secure, privacy-focused applications that meet the highest data protection standards. Now, Appwrite is fully CCPA-compliant, providing secure and reliable data management.
+
+The California Consumer Privacy Act (CCPA) is a landmark data privacy law that enhances consumer rights for residents of California. The CCPA is designed to enhance privacy rights and consumer protections for residents of California. It was signed into law in 2018 and enacted on January 1, 2020. The law aims to give California residents more control over the personal data that businesses collect about them. Although CCPA is specific to California residents, its impact is often felt nationwide and across borders. Many companies that do business in California implement CCPA protections for all users simply because it's easier than maintaining separate data policies for different regions.
+
+{% arrow_link href="/blog/post/announcing-appwrite-is-ccpa-compliant" %}
+Read the announcement to learn more
+{% /arrow_link %}

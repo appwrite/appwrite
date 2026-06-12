@@ -1,0 +1,29 @@
+---
+layout: changelog
+title: "Self-hosted Appwrite 1.8.0 is now available"
+date: 2025-10-21
+cover: /images/changelog/2025-10-21.avif
+---
+
+Self-hosted Appwrite 1.8.0 is now available, bringing a host of new features, improvements, and bug fixes to enhance your experience.
+
+Some of the key highlights include:
+
+* Added Flutter 3.32 and Dart 3.8 runtimes
+* Added increment + decrement routes
+* Added support for React Native schemes
+* Updated origin validation for web extensions
+* Added CSV imports
+* Added realtime support for the Bulk API
+* Added native sign in with Apple function template
+* Added TablesDB service
+* Added spatial type attributes
+* Added support for transactions
+* Updated SMTP Messaging emails to send using BCC
+
+Refer to the [release notes](https://github.com/appwrite/appwrite/releases/tag/1.8.0) for the full list of changes.
+
+{% arrow_link
+   href="https://appwrite.io/docs/advanced/self-hosting/production/updates" %}
+Upgrade your self-hosted instance
+{% /arrow_link %}

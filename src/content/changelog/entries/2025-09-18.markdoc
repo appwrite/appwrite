@@ -1,0 +1,26 @@
+---
+layout: changelog
+title: "Announcing API for spatial columns: Build scalable location-aware apps with ease"
+date: 2025-09-18
+cover: /images/blog/announcing-spatial-columns/cover.avif
+---
+Working with geo data usually means storing raw coordinates and writing custom logic that slows down as your dataset grows.
+
+But now, you can build scalable geo workflows right out of the box.
+
+## What's new:
+- New column types: `Point`, `Line` and `Polygon`
+- New index type: `Spatial`
+- 12 new geo query operators: `crosses`, `notCrosses`, `distanceEqual`, `distanceNotEqual` and more.
+
+## Benefits: 
+
+- Native support for geo logic: Handle geofencing, routing, and compliance zones without custom hacks.
+- Scales with your data: Spatial indexes keep queries fast even with a large volume of records.
+- Simpler development: Reduce app-side complexity by keeping geo operations inside the database.
+
+This update is live on Appwrite Cloud.
+
+{% arrow_link href="/blog/post/announcing-spatial-columns" %}
+Read the announcement to learn more
+{% /arrow_link %}

@@ -1,0 +1,58 @@
+---
+layout: changelog
+title: "JavaScript SDKs now use object arguments"
+date: 2025-09-02
+---
+
+We've updated the Appwrite JavaScript SDKs to support **object-based arguments** instead of positional ones.
+
+This change makes SDK calls easier to read, less error-prone, and more maintainable.
+
+**Before (positional arguments):**
+
+```js
+const result = storage.getFilePreview(
+  '<BUCKET_ID>',
+  '<FILE_ID>',
+  undefined, // width
+  undefined, // height
+  ImageGravity.Center,
+  undefined, // quality
+  undefined, // borderWidth
+  undefined, // borderColor
+  undefined, // borderRadius
+  undefined, // opacity
+  undefined, // rotation
+  undefined, // background
+  ImageFormat.Jpg,
+  '<TOKEN>'
+);
+// Required passing undefined for unused optional parameters
+```
+
+**After (object arguments):**
+
+```js
+const result = storage.getFilePreview({
+  bucketId: '<BUCKET_ID>',
+  fileId: '<FILE_ID>',
+  gravity: ImageGravity.Center,
+  output: ImageFormat.Jpg,
+  token: '<TOKEN>'
+});
+// No more undefined values needed!
+```
+
+{% info title="What about existing code?" %}
+Positional arguments still work, but they've been marked as deprecated. Your IDE will show warnings, and you can migrate over time.
+{% /info %}
+
+This update is now available in the following SDK versions:
+
+* `appwrite@19.0.0` ([Web](https://github.com/appwrite/sdk-for-web/releases/tag/19.0.0))
+* `node-appwrite@18.0.0` ([Node.js](https://github.com/appwrite/sdk-for-node/releases/tag/18.0.0))
+* `react-native-appwrite@0.12.0` ([React Native](https://github.com/appwrite/sdk-for-react-native/releases/tag/0.12.0))
+
+{% arrow_link href="https://appwrite.io/discord" %}
+Join the discussion on Discord
+{% /arrow_link %}

@@ -1,0 +1,20 @@
+---
+layout: changelog
+title: Appwrite 1.5 has been released to self hosted
+date: 2024-03-08
+cover: /images/changelog/2024-03-08.avif
+---
+
+Appwrite 1.5 has been released to self hosted.
+
+You can now build with
+- Messaging
+- Improved SSR support
+- 2FA
+- Enum SDK support
+- OR and Contains queries
+- New and updated runtimes
+
+{% arrow_link href="/blog/post/everything-new-with-appwrite-1.5" %}
+Read the recap article to learn more
+{% /arrow_link %}

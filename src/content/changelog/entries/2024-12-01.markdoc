@@ -1,0 +1,13 @@
+---
+layout: changelog
+title: Changes to Free plan bandwidth limits
+date: 2024-12-01
+---
+
+We have updated the Free plan's bandwidth limit from 10GB to 5GB to maintain platform sustainability and performance.
+
+The Free plan remains tailored for projects in the development stage or hobby projects, which typically use less than 5GB of bandwidth.
+
+Learn how to optimize your projects for costs and performance in [this article](https://appwrite.io/blog/post/how-to-optimize-your-appwrite-project).
+
+If you have any questions, please contact us at [pricing@appwrite.io](mailto:pricing@appwrite.io).

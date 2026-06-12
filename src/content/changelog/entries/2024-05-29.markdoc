@@ -1,0 +1,90 @@
+---
+layout: changelog
+title: Appwrite 1.5.7 is released
+date: 2024-05-29
+cover:
+---
+
+Appwrite 1.5.7 is released with fixes for Databases, Functions and Console.
+
+Fixes:
+- Fix database exception wrapping
+- Fix exception wrap order
+- Fix membership query to use internalId
+- Fix vcs silent mode
+- Fix function domain permissions
+- Fix tests required for Cloud
+- Fix OAuth error code
+- Fix connection reclaim logic.
+- Fix shared queue name
+- Fix syntax error
+- Fix missing id attribute error
+- Fix tests for CL
+- Fix project deletes for shared tables
+- Handle SQL error code 'HY000' in realtime
+- Fix: Don't Override `robots.txt` for Other Domains
+- Escape function build command
+- Create failed execution from worker if deployment doesn't exist
+- Fix: admin mode on console
+- Fix file size default limit
+- Fix: Python failing builds
+- Fix shared project delete
+- Fix Textmagic class name
+- Prevent functions domain and subdomain to be added as custom domain
+- Fix don't publish max users exceed
+- Fix invalid cache document id
+- Fix not hiding tokens for clients via realtime
+
+Miscellaneous:
+- Upload 400s to separate error logger
+- Admin mode use teamInternalId
+- Chore: update avatars API
+- Use internal ids for query
+- Remove cloud related scripts
+- Update VCS Comment
+- Transaction and reconnection fixes
+- Feat configurable collections
+- Remove var_dump calls
+- Storage DO adapter http version
+- Update executor version
+- Comment timer tick
+- Update db for relationships and object as array attributes fixes
+- Bump executor version to 0.5.1
+- Update database
+- Reclaim only current connection
+- Match memberships on internal ID
+- Chore: queue retry update
+- Chore task addition
+- Databases.php collection not found
+- Handle string error codes
+- Migration Logging Improvements
+- Remove logger code from avatars.php
+- Update chunk size to 7 MB
+- Shared tables support
+- Ensure namespace is set if override equals shared tables
+- Disable sending realtime stats
+- Increase chunk size to 10 MB
+- Update executor image name to exc-1
+- Catch DB errors on delete
+- Update Logger and migrations, implement sampler.
+- Increase shared tables projects
+- Feat: improve cold start error, merge to cloud
+- Add tests for scheduled functions
+- Remove throw PdoException in Error hook
+- Refactor localdevice injection
+- Usage SMS per country code count
+- GetEnv on worker.php
+- Feat get env
+- Chore: remove compose version
+- Chore update executor host default var
+- Wrap realtime stats in an edition check
+- Update executor image name
+- Feat: improve header demo values
+- Feat: add warning header
+
+You can update by following the [upgrade docs](https://appwrite.io/docs/advanced/self-hosting/update).
+
+{% arrow_link href="https://github.com/appwrite/appwrite/releases/tag/1.5.7" %}
+View the changelog on GitHub
+{% /arrow_link %}
+

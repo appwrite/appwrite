@@ -1,0 +1,34 @@
+---
+layout: changelog
+title: "Announcing CSV exports: Effortless data extraction, right from your Console"
+date: 2026-02-04
+cover: /images/blog/announcing-csv-export/cover.avif
+---
+Appwrite now supports exporting data to CSV directly from the Console. This feature simplifies data extraction and reporting without requiring SDKs or custom scripts.
+
+**What's new**
+
+CSV export introduces a new option in the Appwrite Console for downloading CSV files from your database tables.
+
+That means, you can:
+
+- Apply filters or queries before export.
+- Choose specific attributes (columns) to include.
+- Set a custom delimiter and optional header row.
+- Run exports asynchronously in the background.
+- Receive email notifications with a short-lived download link once the export completes.
+- Export relationship fields as IDs by default.
+
+**Immediate benefits:**
+
+- Enables data export without SDKs or scripts.
+- Customizable exports with query filters and column selection.
+- Non-blocking execution via background jobs.
+- Secure: Exports respect Appwrite's document permissions.
+- Supports standard CSV formatting options (delimiter, headers, filenames).
+
+Now live on Appwrite Cloud.
+
+{% arrow_link href="/blog/post/announcing-csv-export" %}
+Read the announcement to learn more
+{% /arrow_link %}

@@ -1,0 +1,14 @@
+---
+layout: changelog
+title: Introducing mock numbers and session alerts in Auth
+date: 2024-08-23
+cover: /images/changelog/2024-08-23.avif
+---
+
+We’ve listened to your feedback and are introducing two new features designed to simplify phone authentication testing and bolster account security.
+
+Mock numbers allow you to set up a list of phone numbers with a predefined, static verification code, which is perfect for app reviews and testing. Session alerts will help your users maintain their account security.
+
+{% arrow_link href="/blog/post/announcing-mock-numbers-session-alerts" %}
+Read the announcement to learn more
+{% /arrow_link %}

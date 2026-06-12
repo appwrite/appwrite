@@ -1,0 +1,16 @@
+---
+layout: changelog
+title: Init. The start of something new
+date: 2024-02-20
+cover: /images/changelog/2024-02-20.avif
+---
+
+We are very excited to announce Init. 
+
+A new way to experience everything new with Appwrite.
+
+Starting on the 26th of February, we will celebrate a new product and/or feature daily and share content to support you in getting started.
+
+{% arrow_link href="/blog/post/announcing-init" %}
+Read the announcement to learn more
+{% /arrow_link %}

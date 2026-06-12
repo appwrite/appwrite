@@ -1,0 +1,27 @@
+---
+layout: changelog
+title: "Announcing Appwrite's new pricing plans"
+date: 2025-08-08
+cover: /images/changelog/2025-08-08.avif
+---
+
+We are updating Appwrite’s pricing as part of Appwrite Cloud’s move from beta to General Availability. For an extended period, Appwrite Cloud beta remained free for all users. As of January 2024, we introduced pricing for beta. Today, we are introducing a new base price and an updated pricing model that aligns with developer needs and industry standards. This will include pricing for Appwrite Sites and Messaging.
+
+# Apwrite’s new pricing
+
+This new structure and pricing are designed to be more predictable and better aligned with how teams *actually* use Appwrite. Below is a brief overview of the pricing changes, which we elaborate on in the official announcement.
+
+Starting September 1st, 2025, the following pricing changes will go into effect:
+
+- The base price for Pro will go from $15 to $25 per month
+- The per-seat pricing model is moving to a per-project pricing model
+- Resources will be per project instead of per organization, and we will be giving you more resources per project
+- The bandwidth resources on Pro and Scale will increase by +500%, from 300GB to 2TB per month per project
+- The additional bandwidth price has decreased by 62%, from $40 per 100GB to $15 per 100GB
+- The price for GB hours has decreased by 33%, from $0.09 per GB hour to $0.06 per GB hour
+- The additional storage price has decreased by 6.7%, from $3 per 100GB to $2.8 per 100GB
+- Appwrite Messaging and Sites now have resource limits on Free, Pro, and Scale plans
+
+{% arrow_link href="/blog/post/appwrite-pricing-update" %}
+Read the announcement to learn more
+{% /arrow_link %}

@@ -1,0 +1,16 @@
+---
+layout: changelog
+title: Announcing new Appwrite AI integrations
+date: 2024-05-14
+cover: /images/changelog/2024-05-14.avif
+---
+
+The AI hype is real and will be around for many years to come. In 2021 alone, AI startups worldwide raised nearly $50 billion in venture capital across approximately 1,500 deals, reflecting a significant increase from previous years. So it’s no surprise that many of you are looking to build AI powered applications. But that’s easier said than done, as building AI powered applications can be tricky. We don’t want it to be. That’s why we’re happy to share multiple AI related announcements designed to enhance the Appwrite experience and adapt to new possibilities for devs building with Appwrite.
+
+- New knowledge base for AI
+- New third party AI integration tutorials
+- New AI-powered Function templates
+
+{% arrow_link href="/blog/post/announcing-appwrite-new-ai-integrations" %}
+Read the announcement to learn more
+{% /arrow_link %}

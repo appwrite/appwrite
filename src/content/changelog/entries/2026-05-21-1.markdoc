@@ -1,0 +1,17 @@
+---
+layout: changelog
+title: "Up to 7x faster Appwrite Storage uploads with parallel chunks"
+description: Appwrite SDKs now upload Storage chunks in parallel on runtimes with native concurrency. Our Node SDK benchmarks show up to 7.10x faster uploads on large files, with no API changes for developers.
+date: 2026-05-21
+cover: /images/blog/faster-storage-uploads-parallel-chunks/cover.avif
+---
+
+Appwrite SDKs now upload **Storage** file chunks **in parallel** where the host runtime supports overlapping HTTP requests. Chunking, concurrency limits, and ordering are handled **inside the client**; your **`createFile`** calls stay the same.
+
+In our Node SDK benchmarks, a 1.28 GB upload dropped from 4 minutes 44 seconds to under 40 seconds, up to a **7.10x** improvement at the default concurrency of 8. Smaller files see proportionally smaller gains since they have fewer chunks to overlap.
+
+Available on Appwrite Cloud today.
+
+{% arrow_link href="/blog/post/faster-storage-uploads-parallel-chunks" %}
+Read the announcement
+{% /arrow_link %}

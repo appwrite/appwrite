@@ -1,0 +1,12 @@
+---
+layout: changelog
+title: Announcing the Appwrite Education program in collaboration with GitHub
+date: 2024-11-12
+cover: /images/changelog/2024-11-12.avif
+---
+
+We’re excited to announce our newest initiative: the [Appwrite Education](https://appwrite.io/education) program. We’re partnering with GitHub for this new program to contribute to the future education of millions of developers connected to the [GitHub Student Developer Pack](https://education.github.com/pack).
+
+{% arrow_link href="/blog/post/announcing-appwrite-education-program" %}
+Read the announcement to learn more
+{% /arrow_link %}
