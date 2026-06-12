@@ -68,11 +68,27 @@ import {
   getMarketingPrerenderHtmlFile,
   MARKETING_PRERENDER_PATHS,
 } from './src/lib/marketing/prerender-paths.ts'
+import {
+  RUNTIME_CONFIG_PLACEHOLDER,
+  readRuntimeConfigFromEnv,
+  serializeRuntimeConfig,
+} from './src/lib/runtime-config-shared.ts'
 
 // Configuration
 const SERVER_PORT = Number(process.env.PORT ?? 3000)
 const CLIENT_DIRECTORY = './dist/client'
 const SERVER_ENTRY_POINT = './dist/server/server.js'
+
+// Public runtime config, read once from the process env (constant per process)
+// and stamped into every HTML response in place of the build-time placeholder —
+// see src/lib/runtime-config-shared.ts and src/routes/__root.tsx.
+const RUNTIME_CONFIG_JSON = serializeRuntimeConfig(
+  readRuntimeConfigFromEnv(process.env),
+)
+
+function injectRuntimeConfig(html: string): string {
+  return html.split(RUNTIME_CONFIG_PLACEHOLDER).join(RUNTIME_CONFIG_JSON)
+}
 
 // Logging utilities for professional output
 const log = {
@@ -368,8 +384,21 @@ async function initializeStaticRoutes(
           loaded.push({ ...metadata, size: bytes.byteLength })
           totalPreloadedBytes += bytes.byteLength
         } else {
-          // Serve large or filtered files on-demand
-          routes[route] = () => {
+          // Serve large or filtered files on-demand. HTML documents get the
+          // runtime config stamped in (prerendered pages would otherwise carry
+          // build-time config frozen into window.__APP_CONFIG__).
+          routes[route] = async () => {
+            if (metadata.type.includes('text/html')) {
+              return new Response(
+                injectRuntimeConfig(await Bun.file(filepath).text()),
+                {
+                  headers: {
+                    'Content-Type': metadata.type,
+                    'Cache-Control': 'public, max-age=3600',
+                  },
+                },
+              )
+            }
             const fileOnDemand = Bun.file(filepath)
             return new Response(fileOnDemand, {
               headers: {
@@ -397,8 +426,8 @@ async function initializeStaticRoutes(
       const file = Bun.file(filepath)
       if (!(await file.exists())) continue
 
-      routes[urlPath] = () =>
-        new Response(Bun.file(filepath), {
+      routes[urlPath] = async () =>
+        new Response(injectRuntimeConfig(await Bun.file(filepath).text()), {
           headers: {
             'Content-Type': 'text/html; charset=utf-8',
             'Cache-Control': 'public, max-age=3600',
@@ -599,10 +628,21 @@ async function initializeServer() {
       // Serve static assets (preloaded or on-demand)
       ...routes,
 
-      // Fallback to TanStack Start handler for all other routes
-      '/*': (req: Request) => {
+      // Fallback to TanStack Start handler for all other routes. HTML responses
+      // get the runtime config stamped in (the SSR shell emits a placeholder).
+      '/*': async (req: Request) => {
         try {
-          return handler.fetch(req)
+          const res = await handler.fetch(req)
+          const contentType = res.headers.get('content-type') ?? ''
+          if (!contentType.includes('text/html')) return res
+          const html = await res.text()
+          const headers = new Headers(res.headers)
+          headers.delete('content-length')
+          return new Response(injectRuntimeConfig(html), {
+            status: res.status,
+            statusText: res.statusText,
+            headers,
+          })
         } catch (error) {
           log.error(`Server handler error: ${String(error)}`)
           return internalServerErrorResponse()

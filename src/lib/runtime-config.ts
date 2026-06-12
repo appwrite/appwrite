@@ -1,30 +1,33 @@
 /**
- * Runtime (not build-time) public config.
+ * Runtime (not build-time) public config — Vite-app side.
  *
- * Historically these values were read via `import.meta.env.VITE_*`, which Vite
- * inlines as string literals at build time. That forces a separate image per
- * environment. Instead we read them at runtime so a single image can be promoted
- * across environments:
+ * Values were historically read via `import.meta.env.VITE_*`, which Vite inlines
+ * as string literals at build time and forces a separate image per environment.
+ * Instead we read them at runtime so a single image can be promoted across
+ * environments:
  *
- *   - Server (SSR): values come from `process.env` (injected by the container env).
- *   - Client: the SSR shell serializes the config into `window.__APP_CONFIG__`
- *     (see `getRuntimeConfigScript()` rendered in `__root.tsx`), and the client
- *     reads from there.
+ *   - Server (SSR): values come from `process.env`.
+ *   - Client: the SSR shell serializes config into `window.__APP_CONFIG__`
+ *     (see `getRuntimeConfigScript()` in `__root.tsx`) and the client reads it.
+ *   - Prerendered (FOR_SITES) pages would freeze config at build time, so the
+ *     shell emits a placeholder server-side and `server.ts` replaces it from the
+ *     live env at serve time (see runtime-config-shared.ts).
+ *
+ * Bun-safe primitives live in `runtime-config-shared.ts`; this module adds the
+ * `import.meta.env`-dependent pieces and is only ever Vite-processed.
  *
  * Consumers should read via `getRuntimeConfig()` rather than `import.meta.env`.
  */
 
-export interface RuntimeConfig {
-  appwriteEndpoint: string
-  consoleProfile: string
-  /** HMAC key for the console fingerprint token. Public (ships to the browser). */
-  fingerprintKey: string
-  growthEndpoint: string
-  stripePublishableKey: string
-  sentryDsn: string
-  instrumentationScriptSrc: string
-  plausibleScriptSrc: string
-}
+import {
+  RUNTIME_CONFIG_PLACEHOLDER,
+  RUNTIME_CONFIG_WINDOW_KEY,
+  readRuntimeConfigFromEnv,
+  serializeRuntimeConfig,
+  type RuntimeConfig,
+} from '@/lib/runtime-config-shared'
+
+export type { RuntimeConfig }
 
 const EMPTY_CONFIG: RuntimeConfig = {
   appwriteEndpoint: '',
@@ -37,35 +40,19 @@ const EMPTY_CONFIG: RuntimeConfig = {
   plausibleScriptSrc: '',
 }
 
-const WINDOW_KEY = '__APP_CONFIG__'
-
 /**
- * Read config on the server from the process environment.
+ * Read config on the server.
  *
  * `import.meta.env.DEV` is a static build flag, so the dev branch is tree-shaken
- * out of the production server bundle — that keeps any literal `VITE_*` references
- * from being inlined here. The reads use a local variable (`env[...]`), which Vite
- * does NOT statically replace, so values stay truly runtime in production.
+ * out of the production server bundle — no `VITE_*` literals get inlined here.
+ * In dev, Vite populates `import.meta.env` from `.env`; in production we read the
+ * live `process.env`.
  */
 function readServerRuntimeConfig(): RuntimeConfig {
   const env: Record<string, string | undefined> = import.meta.env.DEV
     ? (import.meta.env as unknown as Record<string, string | undefined>)
     : process.env
-
-  const read = (key: string): string => (env[key] ?? '').toString().trim()
-
-  return {
-    appwriteEndpoint: read('VITE_APPWRITE_ENDPOINT'),
-    consoleProfile: read('VITE_CONSOLE_PROFILE'),
-    fingerprintKey:
-      read('VITE_CONSOLE_FINGERPRINT_KEY') ||
-      read('PUBLIC_CONSOLE_FINGERPRINT_KEY'),
-    growthEndpoint: read('VITE_GROWTH_ENDPOINT'),
-    stripePublishableKey: read('VITE_STRIPE_PUBLISHABLE_KEY'),
-    sentryDsn: read('VITE_SENTRY_DSN'),
-    instrumentationScriptSrc: read('VITE_INSTRUMENTATION_SCRIPT_SRC'),
-    plausibleScriptSrc: read('VITE_PLAUSIBLE_SCRIPT_SRC'),
-  }
+  return readRuntimeConfigFromEnv(env)
 }
 
 let cached: RuntimeConfig | null = null
@@ -79,7 +66,7 @@ export function getRuntimeConfig(): RuntimeConfig {
   if (cached) return cached
   if (typeof window !== 'undefined') {
     const injected = (window as unknown as Record<string, unknown>)[
-      WINDOW_KEY
+      RUNTIME_CONFIG_WINDOW_KEY
     ] as Partial<RuntimeConfig> | undefined
     cached = { ...EMPTY_CONFIG, ...(injected ?? {}) }
   } else {
@@ -88,21 +75,20 @@ export function getRuntimeConfig(): RuntimeConfig {
   return cached
 }
 
-// <, >, & and the JS line/paragraph separators (U+2028/U+2029) must be escaped
-// so the serialized JSON can't break out of the surrounding <script> element.
-const SCRIPT_UNSAFE = new RegExp('[<>&\\u2028\\u2029]', 'g')
-
 /**
  * Inline script (rendered by the SSR shell) that publishes the config to the
- * browser before the app bundle runs. Reads via `getRuntimeConfig()` so the
- * string is identical on server and during client hydration (no mismatch):
- * the server serializes process-env values, the client reflects the already-set
- * window value.
+ * browser before the app bundle runs.
+ *
+ *   - Dev / client hydration: emit the real values. In dev there's no server.ts
+ *     to substitute; on the client we reflect the already-set `window` value so
+ *     the markup matches what the server injected (no hydration mismatch).
+ *   - Production server (SSR or prerender): emit a placeholder. `server.ts`
+ *     replaces it with the live config at serve time, so a single image carries
+ *     no environment-specific values.
  */
 export function getRuntimeConfigScript(): string {
-  const json = JSON.stringify(getRuntimeConfig()).replace(
-    SCRIPT_UNSAFE,
-    (ch) => '\\u' + ch.charCodeAt(0).toString(16).padStart(4, '0'),
-  )
-  return `window.${WINDOW_KEY}=${json}`
+  if (import.meta.env.DEV || typeof window !== 'undefined') {
+    return `window.${RUNTIME_CONFIG_WINDOW_KEY}=${serializeRuntimeConfig(getRuntimeConfig())}`
+  }
+  return `window.${RUNTIME_CONFIG_WINDOW_KEY}=${RUNTIME_CONFIG_PLACEHOLDER}`
 }

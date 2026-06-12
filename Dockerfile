@@ -44,8 +44,9 @@ ENV PORT=3000
 COPY --from=build /app/dist/ dist
 COPY --from=prod-deps /app/node_modules/ node_modules
 COPY server.ts server.ts
-# server.ts imports this module at runtime; it isn't bundled into dist
+# server.ts imports these modules at runtime; they aren't bundled into dist
 COPY src/lib/marketing/prerender-paths.ts src/lib/marketing/prerender-paths.ts
+COPY src/lib/runtime-config-shared.ts src/lib/runtime-config-shared.ts
 
 EXPOSE 3000
 CMD ["bun", "run", "server.ts"]
