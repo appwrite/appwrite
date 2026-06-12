@@ -7,10 +7,10 @@
  * tags[], customFields (JSON string), optional attachment.
  */
 
+import { getRuntimeConfig } from '@/lib/runtime-config'
+
 /** Set VITE_GROWTH_ENDPOINT in .env (e.g. https://growth.example.com) */
-const GROWTH_ENDPOINT = import.meta.env.VITE_GROWTH_ENDPOINT as
-  | string
-  | undefined
+const GROWTH_ENDPOINT = getRuntimeConfig().growthEndpoint
 
 /** Custom field IDs used by the Growth support API (main support form) */
 export const SUPPORT_CUSTOM_FIELDS = {

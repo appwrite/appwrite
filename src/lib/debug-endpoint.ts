@@ -3,6 +3,8 @@
  * Stores the actual endpoint URL in localStorage (not a preset key).
  */
 
+import { getRuntimeConfig } from '@/lib/runtime-config'
+
 export type EndpointPresetId = 'production' | 'stage' | 'localhost' | 'custom'
 
 export const ENDPOINT_PRESETS: Record<
@@ -99,10 +101,8 @@ export function getDebugEndpointBaseUrl(): string | null {
  * Returns the API URL from VITE_APPWRITE_ENDPOINT when present.
  */
 export function getEnvEndpointBaseUrl(): string | null {
-  const envEndpoint = import.meta.env?.VITE_APPWRITE_ENDPOINT as
-    | string
-    | undefined
-  if (envEndpoint?.trim()) {
+  const envEndpoint = getRuntimeConfig().appwriteEndpoint
+  if (envEndpoint.trim()) {
     return normalizeUrl(envEndpoint.trim())
   }
 

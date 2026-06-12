@@ -5,6 +5,7 @@
  */
 
 import { loadStripe, type Stripe } from '@stripe/stripe-js'
+import { getRuntimeConfig } from '@/lib/runtime-config'
 
 let stripePromise: Promise<Stripe | null> | null = null
 
@@ -110,10 +111,7 @@ export async function confirmPayment(config: {
   paymentMethod?: string
   publishableKey?: string
 }): Promise<void> {
-  const envKey =
-    typeof import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY === 'string'
-      ? import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY
-      : undefined
+  const envKey = getRuntimeConfig().stripePublishableKey || undefined
   const stripe = await getStripeInstance(
     config.publishableKey ??
       (typeof window !== 'undefined'

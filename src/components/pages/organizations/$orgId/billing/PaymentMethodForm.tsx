@@ -10,6 +10,7 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { Loader2 } from 'lucide-react'
+import { getRuntimeConfig } from '@/lib/runtime-config'
 import {
   warningAlertContainerClassName,
   warningAlertTextClassName,
@@ -157,7 +158,7 @@ export function PaymentMethodForm({
 
   const stripePublishableKey =
     typeof window !== 'undefined'
-      ? import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY ||
+      ? getRuntimeConfig().stripePublishableKey ||
         (window as Window & { __STRIPE_PUBLISHABLE_KEY__?: string })
           .__STRIPE_PUBLISHABLE_KEY__
       : undefined

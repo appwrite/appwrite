@@ -7,8 +7,9 @@ import { useAuth } from '@/components/global/auth/RequireAuth'
 import { useProject } from '@/lib/react-query/hooks'
 import { organizationPlanQueryOptions } from '@/lib/react-query/hooks/organizations'
 import { useConsoleProfile } from '@/hooks/use-console-profile'
+import { getRuntimeConfig } from '@/lib/runtime-config'
 
-const isSentryEnabled = () => !!import.meta.env.VITE_SENTRY_DSN
+const isSentryEnabled = () => !!getRuntimeConfig().sentryDsn
 
 /**
  * Extracts project ID from URL pathname

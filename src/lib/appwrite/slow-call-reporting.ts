@@ -4,11 +4,12 @@
  */
 
 import * as Sentry from '@sentry/tanstackstart-react'
+import { getRuntimeConfig } from '@/lib/runtime-config'
 
 export const SLOW_CALL_THRESHOLD_MS = 5000
 
 function isSentryEnabled(): boolean {
-  return !!import.meta.env.VITE_SENTRY_DSN
+  return !!getRuntimeConfig().sentryDsn
 }
 
 function reportSlowSdkCall(

@@ -13,6 +13,7 @@ import {
   tryReloadForStaleChunk,
 } from '@/lib/stale-chunk-error'
 import { isIndexedDBMutationError } from '@/lib/upload-queue/indexeddb'
+import { getRuntimeConfig } from '@/lib/runtime-config'
 
 function NotFoundComponent() {
   return (
@@ -76,10 +77,11 @@ export const getRouter = () => {
     window.addEventListener('error', onWindowError)
   }
 
-  // Initialize Sentry on client side only when VITE_SENTRY_DSN is set
-  if (!router.isServer && import.meta.env.VITE_SENTRY_DSN) {
+  // Initialize Sentry on client side only when the Sentry DSN is set
+  const sentryDsn = getRuntimeConfig().sentryDsn
+  if (!router.isServer && sentryDsn) {
     Sentry.init({
-      dsn: import.meta.env.VITE_SENTRY_DSN,
+      dsn: sentryDsn,
       // Disable PII collection - we don't want to collect IP addresses or other personal data
       sendDefaultPii: false,
       // Don't send 401 Unauthorized to Sentry - we catch these and redirect to login

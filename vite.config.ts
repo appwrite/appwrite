@@ -41,8 +41,10 @@ const almostnodeSrc = path.resolve(projectRoot, 'node_modules/almostnode/src')
 
 export default defineConfig(async () => {
   const isSitesBuild = process.env.FOR_SITES === 'true'
+  // Source-map upload is a build-time concern, gated only on the auth token.
+  // The runtime Sentry DSN is injected via runtime config (see runtime-config.ts).
   const sentryPlugins =
-    process.env.VITE_SENTRY_DSN && process.env.SENTRY_AUTH_TOKEN
+    process.env.SENTRY_AUTH_TOKEN
       ? [
           (
             await import('@sentry/tanstackstart-react/vite')

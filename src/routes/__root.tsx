@@ -5,6 +5,10 @@ import {
   createRootRouteWithContext,
 } from '@tanstack/react-router'
 import appCss from '../styles.css?url'
+import {
+  getRuntimeConfig,
+  getRuntimeConfigScript,
+} from '@/lib/runtime-config'
 
 import type { QueryClient } from '@tanstack/react-query'
 import { useQueryClient } from '@tanstack/react-query'
@@ -90,11 +94,10 @@ function normalizeInstrumentationModuleSrc(raw: string): string {
   }
 }
 
-if (import.meta.env.VITE_INSTRUMENTATION_SCRIPT_SRC) {
+const instrumentationScriptSrc = getRuntimeConfig().instrumentationScriptSrc
+if (instrumentationScriptSrc) {
   scripts.push({
-    src: normalizeInstrumentationModuleSrc(
-      import.meta.env.VITE_INSTRUMENTATION_SCRIPT_SRC,
-    ),
+    src: normalizeInstrumentationModuleSrc(instrumentationScriptSrc),
     type: 'module',
   })
 }
@@ -112,10 +115,8 @@ if (PLAUSIBLE_SCRIPT_SRC) {
  * is client-only, so preloads follow the build env until the user refreshes after switching.
  */
 function getHeadFontPreloads() {
-  const raw = (
-    import.meta.env?.VITE_CONSOLE_PROFILE as string | undefined
-  )
-    ?.toLowerCase()
+  const raw = getRuntimeConfig()
+    .consoleProfile.toLowerCase()
     .trim()
     .replace(/\s+/g, '-')
   if (raw === 'self-hosted') {
@@ -376,6 +377,9 @@ function RootDocument({ children }: { children: React.ReactNode }) {
         <HeadContent />
       </head>
       <body suppressHydrationWarning>
+        {/* Publish runtime config to the browser before the app bundle runs.
+            Must precede <Scripts /> so module-level config reads see it. */}
+        <ScriptOnce>{getRuntimeConfigScript()}</ScriptOnce>
         <ScriptOnce>{THEME_SCRIPT}</ScriptOnce>
         {PLAUSIBLE_SCRIPT_SRC ? (
           <ScriptOnce>{PLAUSIBLE_INIT_SCRIPT}</ScriptOnce>

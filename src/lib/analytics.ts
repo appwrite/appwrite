@@ -1,6 +1,6 @@
-export const PLAUSIBLE_SCRIPT_SRC = (
-  import.meta.env.VITE_PLAUSIBLE_SCRIPT_SRC as string | undefined
-)?.trim()
+import { getRuntimeConfig } from '@/lib/runtime-config'
+
+export const PLAUSIBLE_SCRIPT_SRC = getRuntimeConfig().plausibleScriptSrc
 
 export const ANALYTICS_ENABLED = Boolean(PLAUSIBLE_SCRIPT_SRC)
 
