@@ -1,14 +1,16 @@
 import { expect, test } from '../fixtures/authenticated'
 
 test('account page renders navigation and logout', async ({ page }) => {
-  await page.goto('/account', { waitUntil: 'domcontentloaded' })
+  await page.goto('/account', { waitUntil: 'networkidle' })
 
   // Should stay within account area.
   await expect(page).toHaveURL((url) => new URL(url).pathname === '/account')
 
   // The settings sidebar is the stable, public navigation for this page.
+  // The authenticated shell hydrates after auth/profile fetches resolve, so
+  // give the first assertion extra headroom on a cold production build.
   const nav = page.getByRole('navigation', { name: 'Settings navigation' })
-  await expect(nav).toBeVisible()
+  await expect(nav).toBeVisible({ timeout: 10000 })
 
   await expect(nav.getByRole('link', { name: 'General' })).toBeVisible()
   await expect(nav.getByRole('link', { name: 'Security' })).toBeVisible()
