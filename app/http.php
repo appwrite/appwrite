@@ -13,7 +13,6 @@ use Swoole\Table;
 use Swoole\Timer;
 use Utopia\Audit\Adapter\Database as AdapterDatabase;
 use Utopia\Audit\Adapter\SQL as AuditAdapterSQL;
-use Utopia\Audit\Audit;
 use Utopia\Compression\Compression;
 use Utopia\Config\Config;
 use Utopia\Console;
@@ -195,6 +194,35 @@ $container->set('bus', fn ($register) => $register->get('bus')->setResolver(fn (
 
 include __DIR__ . '/controllers/general.php';
 
+/**
+ * Build index Documents from raw config, filtering out types the adapter
+ * doesn't support (e.g. fulltext on SQLite).
+ *
+ * @param array<int, array<string, mixed>> $rawIndexes
+ * @return array<int, Document>
+ */
+function buildSupportedIndexes(Database $database, array $rawIndexes): array
+{
+    $adapter = $database->getAdapter();
+    $supportsFulltext = $adapter->getSupportForFulltextIndex();
+
+    $documents = [];
+    foreach ($rawIndexes as $index) {
+        if ($index['type'] === Database::INDEX_FULLTEXT && !$supportsFulltext) {
+            continue;
+        }
+        $documents[] = new Document([
+            '$id' => ID::custom($index['$id']),
+            'type' => $index['type'],
+            'attributes' => $index['attributes'],
+            'lengths' => $index['lengths'] ?? [],
+            'orders' => $index['orders'] ?? [],
+        ]);
+    }
+
+    return $documents;
+}
+
 function createDatabase(Container $resources, string $resourceKey, string $dbName, array $collections, mixed $pools, ?callable $extraSetup = null): void
 {
     $max = 15;
@@ -266,13 +294,7 @@ function createDatabase(Container $resources, string $resourceKey, string $dbNam
             'format' => $attr['format'] ?? ''
         ]), $collection['attributes']);
 
-        $indexes = array_map(fn ($index) => new Document([
-            '$id' => ID::custom($index['$id']),
-            'type' => $index['type'],
-            'attributes' => $index['attributes'],
-            'lengths' => $index['lengths'] ?? [],
-            'orders' => $index['orders'] ?? [],
-        ]), $collection['indexes']);
+        $indexes = buildSupportedIndexes($database, $collection['indexes']);
 
         $database->createCollection($key, $attributes, $indexes);
         $collectionsCreated++;
@@ -305,8 +327,16 @@ $http->on(Constant::EVENT_START, function ($http) use ($payloadSize, $totalWorke
 
             if ($dbForPlatform->getCollection(AuditAdapterSQL::COLLECTION)->isEmpty()) {
                 $adapter = new AdapterDatabase($dbForPlatform);
-                $audit = new Audit($adapter);
-                $audit->setup();
+                $indexDocs = array_filter(
+                    $adapter->getIndexDocuments(),
+                    fn ($doc) => $doc->getAttribute('type') !== Database::INDEX_FULLTEXT
+                        || $dbForPlatform->getAdapter()->getSupportForFulltextIndex()
+                );
+                $dbForPlatform->createCollection(
+                    AuditAdapterSQL::COLLECTION,
+                    $adapter->getAttributeDocuments(),
+                    $indexDocs,
+                );
             }
 
             if ($dbForPlatform->getDocument('buckets', 'default')->isEmpty()) {
@@ -349,13 +379,7 @@ $http->on(Constant::EVENT_START, function ($http) use ($payloadSize, $totalWorke
                     'format' => $attr['format'] ?? ''
                 ]), $files['attributes']);
 
-                $indexes = array_map(fn ($index) => new Document([
-                    '$id' => ID::custom($index['$id']),
-                    'type' => $index['type'],
-                    'attributes' => $index['attributes'],
-                    'lengths' => $index['lengths'] ?? [],
-                    'orders' => $index['orders'] ?? [],
-                ]), $files['indexes']);
+                $indexes = buildSupportedIndexes($dbForPlatform, $files['indexes']);
 
                 $dbForPlatform->createCollection('bucket_' . $bucket->getSequence(), $attributes, $indexes);
             }
@@ -395,13 +419,7 @@ $http->on(Constant::EVENT_START, function ($http) use ($payloadSize, $totalWorke
                     'format' => $attr['format'] ?? ''
                 ]), $files['attributes']);
 
-                $indexes = array_map(fn ($index) => new Document([
-                    '$id' => ID::custom($index['$id']),
-                    'type' => $index['type'],
-                    'attributes' => $index['attributes'],
-                    'lengths' => $index['lengths'] ?? [],
-                    'orders' => $index['orders'] ?? [],
-                ]), $files['indexes']);
+                $indexes = buildSupportedIndexes($dbForPlatform, $files['indexes']);
 
                 $authorization->skip(fn () => $dbForPlatform->createCollection('bucket_' . $bucket->getSequence(), $attributes, $indexes));
             }
@@ -457,8 +475,16 @@ $http->on(Constant::EVENT_START, function ($http) use ($payloadSize, $totalWorke
 
             if ($dbForProject->getCollection(AuditAdapterSQL::COLLECTION)->isEmpty()) {
                 $adapter = new AdapterDatabase($dbForProject);
-                $audit = new Audit($adapter);
-                $audit->setup();
+                $indexDocs = array_filter(
+                    $adapter->getIndexDocuments(),
+                    fn ($doc) => $doc->getAttribute('type') !== Database::INDEX_FULLTEXT
+                        || $dbForProject->getAdapter()->getSupportForFulltextIndex()
+                );
+                $dbForProject->createCollection(
+                    AuditAdapterSQL::COLLECTION,
+                    $adapter->getAttributeDocuments(),
+                    $indexDocs,
+                );
             }
 
             $collectionsCreated = 0;
@@ -471,7 +497,7 @@ $http->on(Constant::EVENT_START, function ($http) use ($payloadSize, $totalWorke
                 }
 
                 $attributes = \array_map(fn ($attribute) => new Document($attribute), $collection['attributes']);
-                $indexes = \array_map(fn (array $index) => new Document($index), $collection['indexes']);
+                $indexes = buildSupportedIndexes($dbForProject, $collection['indexes']);
 
                 $dbForProject->createCollection($key, $attributes, $indexes);
                 $collectionsCreated++;
