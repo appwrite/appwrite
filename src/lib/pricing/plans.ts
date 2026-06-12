@@ -74,6 +74,6 @@ export const pricingPlans: readonly PricingPlan[] = [
     cta: 'Contact us',
     ctaVariant: 'outline',
     href: CONTACT_ENTERPRISE_URL,
-    internal: false,
+    internal: true,
   },
 ]

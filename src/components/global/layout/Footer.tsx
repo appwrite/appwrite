@@ -98,6 +98,11 @@ function getExpandedFooterGroups(marketing: boolean): readonly ExpandedFooterGro
         href: getMarketingPageUrl('/partners', marketing),
         external: isMarketingPageExternal(marketing),
       },
+      {
+        label: 'Enterprise',
+        href: getMarketingPageUrl('/enterprise', marketing),
+        external: isMarketingPageExternal(marketing),
+      },
     ],
   },
   {

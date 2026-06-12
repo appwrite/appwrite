@@ -1,17 +1,21 @@
-import type { LucideIcon } from 'lucide-react'
+import type { MarketingFaqItem } from '@/components/pages/marketing/MarketingFaqSection'
+import type { MarketingFeatureItem } from '@/components/pages/marketing/MarketingSections'
 import {
   Activity,
   Building2,
   Cloud,
+  Compass,
+  GraduationCap,
   Headphones,
   Lock,
   Server,
   Shield,
+  ShieldAlert,
+  ShieldCheck,
+  UserRoundCheck,
   Users,
   Zap,
 } from 'lucide-react'
-import type { MarketingFaqItem } from '@/components/pages/marketing/MarketingFaqSection'
-import type { MarketingFeatureItem } from '@/components/pages/marketing/MarketingSections'
 
 export const ENTERPRISE_FORM_ID = 'enterprise-contact-form'
 
@@ -19,14 +23,76 @@ export const enterpriseHero = {
   eyebrow: 'Enterprise',
   title: 'Appwrite for Enterprise',
   description:
-    'Enterprise teams partner with Appwrite to give developers an all-in-one development platform. Reduce backend complexity, accelerate delivery, and scale with dedicated support, custom resources, and enterprise-grade security.',
+    'Replace a patchwork of backend vendors with one platform. Enterprise teams reduce integration overhead, accelerate delivery, and scale with custom resources, dedicated support, and flexible deployment.',
 } as const
 
+export const enterprisePlatformSection = {
+  title: 'One platform for your entire stack',
+  description:
+    'Reduce vendor sprawl and integration overhead. Appwrite unifies the backend services enterprise teams need to build, deploy, and protect modern applications without juggling multiple contracts or stitching vendors together.',
+} as const
+
+export const enterpriseSecuritySection = {
+  eyebrow: 'Trust center',
+  title: 'Security and compliance',
+  description:
+    'Compliance artifacts, agreements, and enterprise governance built for security reviews and procurement. Enterprise plans include access to SOC 2 reporting, data processing agreements, and advanced identity controls.',
+} as const
+
+export type EnterpriseComplianceFramework = {
+  name: string
+  summary?: string
+}
+
+export const enterpriseComplianceFrameworks: EnterpriseComplianceFramework[] = [
+  {
+    name: 'SOC 2 Type II',
+    summary: 'Audited security controls',
+  },
+  {
+    name: 'HIPAA',
+    summary: 'Healthcare workloads',
+  },
+  {
+    name: 'GDPR',
+    summary: 'EU data processing',
+  },
+  {
+    name: 'CCPA',
+    summary: 'California privacy',
+  },
+]
+
+export type EnterpriseSecurityControl = {
+  title: string
+  icon: 'shield' | 'lock' | 'server'
+  items: string[]
+}
+
+export const enterpriseSecurityControls: EnterpriseSecurityControl[] = [
+  {
+    title: 'Compliance',
+    icon: 'shield',
+    items: ['SOC 2 Type II report', 'DPA', 'HIPAA-aligned controls'],
+  },
+  {
+    title: 'Identity',
+    icon: 'lock',
+    items: ['SSO', 'Custom organization roles', 'Activity logs'],
+  },
+  {
+    title: 'Protection',
+    icon: 'server',
+    items: ['Firewall and WAF', '90-day log retention', 'Custom backup policies'],
+  },
+]
+
 export const enterpriseStats = [
-  { value: '40M+', label: 'Developers reached' },
-  { value: '120+', label: 'CDN points of presence' },
-  { value: '24/7', label: 'Enterprise support on Slack' },
-  { value: '99.99%', label: 'Uptime SLA available' },
+  { value: '40M+', label: 'Developers worldwide' },
+  { value: '120+', label: 'CDN locations' },
+  { value: '24/7', label: 'Slack support' },
+  { value: '99.99%', label: 'Uptime SLA' },
+  { value: 'SOC 2', label: 'Type II certified' },
 ] as const
 
 export const enterpriseValueProps: MarketingFeatureItem[] = [
@@ -63,11 +129,6 @@ export const enterprisePlanCapabilities: MarketingFeatureItem[] = [
     icon: Activity,
   },
   {
-    title: 'Success manager',
-    description: 'A dedicated partner for onboarding, architecture reviews, and ongoing optimization.',
-    icon: Users,
-  },
-  {
     title: 'Volume discounts',
     description: 'Pricing aligned to your usage profile across bandwidth, storage, and compute.',
     icon: Building2,
@@ -88,12 +149,17 @@ export const enterprisePlanCapabilities: MarketingFeatureItem[] = [
     icon: Zap,
   },
   {
-    title: 'Bring your own Cloud',
-    description: 'Run Appwrite in your cloud account with enterprise controls and support.',
-    icon: Cloud,
+    title: 'Firewall',
+    description: 'Appwrite Firewall with WAF capabilities to filter malicious traffic and protect applications at the edge.',
+    icon: ShieldCheck,
   },
   {
-    title: 'SOC-2, HIPAA, and BAA',
+    title: 'Premium DDoS protection',
+    description: 'Enhanced network-level DDoS mitigation for high-traffic production workloads and mission-critical availability.',
+    icon: ShieldAlert,
+  },
+  {
+    title: 'SOC-2 and HIPAA',
     description: 'Compliance options for regulated industries and enterprise procurement requirements.',
     icon: Shield,
   },
@@ -119,41 +185,47 @@ export const enterprisePlanCapabilities: MarketingFeatureItem[] = [
   },
 ]
 
+export const enterpriseDeploymentSection = {
+  title: 'Cloud or self-hosted',
+  description:
+    'Run Enterprise on fully managed Appwrite Cloud or as a premium self-hosted edition in your environment.',
+  sharedBenefitsTitle: 'Included with both Cloud and self-hosted Enterprise',
+} as const
+
+export const enterpriseDeploymentSharedBenefits: MarketingFeatureItem[] = [
+  {
+    title: '24/7 support',
+    description: 'Round-the-clock Slack and email from our engineering team.',
+    icon: Headphones,
+  },
+  {
+    title: 'Customer success manager',
+    description: 'Dedicated partner for onboarding and ongoing success.',
+    icon: UserRoundCheck,
+  },
+  {
+    title: 'Consultancy',
+    description: 'Architecture and deployment guidance for your stack.',
+    icon: Compass,
+  },
+  {
+    title: 'Training',
+    description: 'Hands-on sessions to onboard your developers.',
+    icon: GraduationCap,
+  },
+]
+
 export const enterpriseDeploymentOptions: MarketingFeatureItem[] = [
   {
     title: 'Appwrite Cloud',
     description:
-      'Managed infrastructure with global CDN, automatic scaling, and the fastest path to production.',
+      'Fully managed infrastructure with a plan customized to your needs: increased limits, predictable fixed pricing, uptime SLAs, and global CDN.',
     icon: Cloud,
   },
   {
-    title: 'Bring your own Cloud',
+    title: 'Self-hosted edition',
     description:
-      'Deploy in your AWS, GCP, or Azure environment while Appwrite provides enterprise support and guidance.',
-    icon: Building2,
-  },
-  {
-    title: 'Self-hosted enterprise',
-    description:
-      'Advanced self-hosting options for teams that need full infrastructure control with dedicated support.',
-    icon: Server,
-  },
-]
-
-export const enterpriseSecurityHighlights: MarketingFeatureItem[] = [
-  {
-    title: 'Compliance ready',
-    description: 'SOC-2, HIPAA, and BAA options to support security reviews and procurement.',
-    icon: Shield,
-  },
-  {
-    title: 'Identity and access',
-    description: 'SSO, custom organization roles, and activity logs for enterprise governance.',
-    icon: Lock,
-  },
-  {
-    title: 'Network protection',
-    description: 'Firewall, WAF, and edge capabilities for applications exposed to the internet.',
+      'A premium, cloud-equal edition with advanced management tools. The same platform and tooling Appwrite uses to run Cloud at 500K projects scale, deployed in your environment.',
     icon: Server,
   },
 ]
@@ -162,8 +234,8 @@ export const enterpriseFormBullets = [
   'Custom bandwidth, storage, and compute limits',
   'Dedicated success manager and 24/7 Slack support',
   'Uptime SLAs and volume-based pricing',
-  'SOC-2, HIPAA, BAA, SSO, and activity logs',
-  'Bring your own Cloud and advanced self-hosting options',
+  'SOC-2, HIPAA, SSO, and activity logs',
+  'Custom Cloud limits with fixed pricing, or premium self-hosted with enterprise management tools',
 ] as const
 
 export const enterpriseCompanySizeOptions = [
@@ -176,6 +248,18 @@ export const enterpriseCompanySizeOptions = [
   { value: '5000+ employees', label: '5000+ employees' },
 ] as const
 
+export const enterprisePreferredDeploymentOptions = [
+  { value: 'Appwrite Cloud', label: 'Appwrite Cloud' },
+  { value: 'Self-hosted edition', label: 'Self-hosted edition' },
+  { value: 'Not sure yet', label: 'Not sure yet' },
+] as const
+
+export const enterpriseTimelineOptions = [
+  { value: 'Exploring options', label: 'Exploring options' },
+  { value: 'Evaluating vendors', label: 'Evaluating vendors' },
+  { value: 'Ready to buy', label: 'Ready to buy' },
+] as const
+
 export const enterpriseFaqItems: MarketingFaqItem[] = [
   {
     question: 'Who is the Enterprise plan for?',
@@ -185,12 +269,12 @@ export const enterpriseFaqItems: MarketingFaqItem[] = [
   {
     question: 'How is Enterprise pricing determined?',
     answer:
-      'Pricing is based on your usage profile, support requirements, and deployment model. Our team works with you to build a plan that matches your scale and procurement process.',
+      'Pricing is based on your usage profile, support requirements, and deployment model. Cloud Enterprise plans offer customized limits with predictable fixed pricing. Our team works with you to build a plan that matches your scale and procurement process.',
   },
   {
-    question: 'Can we deploy in our own cloud?',
+    question: 'Can we self-host Appwrite?',
     answer:
-      'Yes. Bring your own Cloud and advanced self-hosting options are available for teams that need infrastructure control while retaining enterprise support from Appwrite.',
+      'Yes. The Enterprise self-hosted edition is a premium, cloud-equal release with advanced management tools. It is the same platform Appwrite uses to run Cloud at 500K projects scale, deployed in your environment with dedicated support, SLAs, and compliance features.',
   },
   {
     question: 'What support is included?',
@@ -200,7 +284,7 @@ export const enterpriseFaqItems: MarketingFaqItem[] = [
   {
     question: 'What compliance options are available?',
     answer:
-      'Enterprise plans can include SOC-2, HIPAA, and BAA support, along with SSO, activity logs, and custom backup policies for security and governance workflows.',
+      'Enterprise plans can include SOC-2 and HIPAA support, along with SSO, activity logs, and custom backup policies for security and governance workflows.',
   },
   {
     question: 'How do we get started?',

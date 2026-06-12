@@ -1,18 +1,31 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { CheckCircle2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
 import { Textarea } from '@/components/ui/textarea'
 import { cn } from '@/lib/utils'
+
+export type ApplicationFormSelectOption = {
+  value: string
+  label: string
+}
 
 export type ApplicationFormField = {
   name: string
   label: string
-  type: 'text' | 'email' | 'url' | 'textarea'
+  type: 'text' | 'email' | 'url' | 'textarea' | 'select'
   placeholder: string
   required?: boolean
   colSpan?: 1 | 2
+  options?: ApplicationFormSelectOption[]
 }
 
 type MarketingApplicationFormProps = {
@@ -22,6 +35,7 @@ type MarketingApplicationFormProps = {
   className?: string
   successTitle?: string
   successDescription?: string
+  defaultValues?: Record<string, string>
 }
 
 export function MarketingApplicationForm({
@@ -31,11 +45,26 @@ export function MarketingApplicationForm({
   className,
   successTitle = 'Thank you for your submission',
   successDescription = 'Our team will review your application and get back to you soon.',
+  defaultValues,
 }: MarketingApplicationFormProps) {
-  const [values, setValues] = useState<Record<string, string>>({})
+  const [values, setValues] = useState<Record<string, string>>(() => defaultValues ?? {})
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [submitted, setSubmitted] = useState(false)
+
+  useEffect(() => {
+    if (!defaultValues) return
+
+    setValues((current) => {
+      const next = { ...current }
+      for (const [key, value] of Object.entries(defaultValues)) {
+        if (!next[key]?.trim()) {
+          next[key] = value
+        }
+      }
+      return next
+    })
+  }, [defaultValues])
 
   const handleChange = (name: string, value: string) => {
     setValues((current) => ({ ...current, [name]: value }))
@@ -61,7 +90,7 @@ export function MarketingApplicationForm({
   }
 
   const resetForm = () => {
-    setValues({})
+    setValues(defaultValues ?? {})
     setSubmitted(false)
     setError(null)
   }
@@ -102,6 +131,22 @@ export function MarketingApplicationForm({
                 onChange={(event) => handleChange(field.name, event.target.value)}
                 className="min-h-28"
               />
+            ) : field.type === 'select' ? (
+              <Select
+                value={values[field.name] ?? ''}
+                onValueChange={(value) => handleChange(field.name, value)}
+              >
+                <SelectTrigger id={field.name} className="w-full">
+                  <SelectValue placeholder={field.placeholder} />
+                </SelectTrigger>
+                <SelectContent>
+                  {field.options?.map((option) => (
+                    <SelectItem key={option.value} value={option.value}>
+                      {option.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             ) : (
               <Input
                 id={field.name}

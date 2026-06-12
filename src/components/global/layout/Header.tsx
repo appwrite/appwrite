@@ -110,7 +110,7 @@ const DEFAULT_MARKETING_HEADER_NAV: readonly MarketingHeaderNavItem[] = [
   },
   { label: 'Docs', href: '/docs' },
   { label: 'Pricing', href: '/pricing' },
-  { label: 'Enterprise', href: 'https://appwrite.io/contact-us/enterprise' },
+  { label: 'Enterprise', href: '/enterprise' },
   { label: 'Customers', href: 'https://appwrite.io/blog/category/customer-stories' },
   { label: 'Blog', href: 'https://appwrite.io/blog' },
   { label: 'Changelog', href: '/changelog' },
@@ -209,6 +209,13 @@ export function ConsoleHeader({
   const supportsMultiTenancy = features.multiTenancy
   const overrides = useDebugOverrides()
   const { access } = useOrganizationScopes(project?.teamId)
+  const marketingNavItems =
+    marketingNav === true
+      ? DEFAULT_MARKETING_HEADER_NAV
+      : marketingNav
+        ? marketingNav
+        : []
+  const showMarketingNav = marketingNavItems.length > 0
   const showAIAssistant = overrides.showAIAssistant && !showMarketingNav
   const showConnectAndCreate = canShowConnectSection(access, features)
   const canCreateProjectFlag = canCreateProject(access, features)
@@ -275,13 +282,6 @@ export function ConsoleHeader({
   const showGuestHeader =
     isOptionalAuth && isAuthFetched && !isAuthenticated
   const authRedirect = location.pathname
-  const marketingNavItems =
-    marketingNav === true
-      ? DEFAULT_MARKETING_HEADER_NAV
-      : marketingNav
-        ? marketingNav
-        : []
-  const showMarketingNav = marketingNavItems.length > 0
   const showMarketingLinks = showMarketingNav && !centerSearch
   const showChangelogBadge = useChangelogNavBadge()
   const docsHref = getMarketingPageUrl('/docs', features.marketing)

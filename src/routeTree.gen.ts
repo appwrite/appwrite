@@ -15,6 +15,7 @@ import { Route as PrivacyRouteImport } from './routes/privacy'
 import { Route as PricingRouteImport } from './routes/pricing'
 import { Route as PartnersRouteImport } from './routes/partners'
 import { Route as HomeRouteImport } from './routes/home'
+import { Route as EnterpriseRouteImport } from './routes/enterprise'
 import { Route as EducationRouteImport } from './routes/education'
 import { Route as DocsRouteImport } from './routes/docs'
 import { Route as CookiesRouteImport } from './routes/cookies'
@@ -302,6 +303,11 @@ const PartnersRoute = PartnersRouteImport.update({
 const HomeRoute = HomeRouteImport.update({
   id: '/home',
   path: '/home',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const EnterpriseRoute = EnterpriseRouteImport.update({
+  id: '/enterprise',
+  path: '/enterprise',
   getParentRoute: () => rootRouteImport,
 } as any)
 const EducationRoute = EducationRouteImport.update({
@@ -1969,6 +1975,7 @@ export interface FileRoutesByFullPath {
   '/cookies': typeof CookiesRoute
   '/docs': typeof DocsRouteWithChildren
   '/education': typeof EducationRoute
+  '/enterprise': typeof EnterpriseRoute
   '/home': typeof HomeRoute
   '/partners': typeof PartnersRoute
   '/pricing': typeof PricingRoute
@@ -2231,6 +2238,7 @@ export interface FileRoutesByTo {
   '/company': typeof CompanyRoute
   '/cookies': typeof CookiesRoute
   '/education': typeof EducationRoute
+  '/enterprise': typeof EnterpriseRoute
   '/home': typeof HomeRoute
   '/partners': typeof PartnersRoute
   '/pricing': typeof PricingRoute
@@ -2465,6 +2473,7 @@ export interface FileRoutesById {
   '/cookies': typeof CookiesRoute
   '/docs': typeof DocsRouteWithChildren
   '/education': typeof EducationRoute
+  '/enterprise': typeof EnterpriseRoute
   '/home': typeof HomeRoute
   '/partners': typeof PartnersRoute
   '/pricing': typeof PricingRoute
@@ -2730,6 +2739,7 @@ export interface FileRouteTypes {
     | '/cookies'
     | '/docs'
     | '/education'
+    | '/enterprise'
     | '/home'
     | '/partners'
     | '/pricing'
@@ -2992,6 +3002,7 @@ export interface FileRouteTypes {
     | '/company'
     | '/cookies'
     | '/education'
+    | '/enterprise'
     | '/home'
     | '/partners'
     | '/pricing'
@@ -3225,6 +3236,7 @@ export interface FileRouteTypes {
     | '/cookies'
     | '/docs'
     | '/education'
+    | '/enterprise'
     | '/home'
     | '/partners'
     | '/pricing'
@@ -3492,6 +3504,7 @@ export interface RootRouteChildren {
   CookiesRoute: typeof CookiesRoute
   DocsRoute: typeof DocsRouteWithChildren
   EducationRoute: typeof EducationRoute
+  EnterpriseRoute: typeof EnterpriseRoute
   HomeRoute: typeof HomeRoute
   PartnersRoute: typeof PartnersRoute
   PricingRoute: typeof PricingRoute
@@ -3549,6 +3562,13 @@ declare module '@tanstack/react-router' {
       path: '/home'
       fullPath: '/home'
       preLoaderRoute: typeof HomeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/enterprise': {
+      id: '/enterprise'
+      path: '/enterprise'
+      fullPath: '/enterprise'
+      preLoaderRoute: typeof EnterpriseRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/education': {
@@ -6599,6 +6619,7 @@ const rootRouteChildren: RootRouteChildren = {
   CookiesRoute: CookiesRoute,
   DocsRoute: DocsRouteWithChildren,
   EducationRoute: EducationRoute,
+  EnterpriseRoute: EnterpriseRoute,
   HomeRoute: HomeRoute,
   PartnersRoute: PartnersRoute,
   PricingRoute: PricingRoute,

@@ -77,3 +77,38 @@ export async function submitStartupsApplication(
     companyUrl,
   })
 }
+
+export type EnterpriseApplicationPayload = {
+  firstName: string
+  lastName: string
+  email: string
+  companyName: string
+  companySize?: string
+  companyWebsite: string
+  preferredDeployment?: string
+  timeline?: string
+  useCase: string
+  cloudEmail?: string
+}
+
+export async function submitEnterpriseApplication(
+  payload: EnterpriseApplicationPayload,
+): Promise<boolean> {
+  const companyWebsite = payload.companyWebsite.startsWith('http')
+    ? payload.companyWebsite
+    : `https://${payload.companyWebsite}`
+
+  return postGrowthJson('/conversations/enterprises', {
+    firstName: payload.firstName,
+    lastName: payload.lastName,
+    email: payload.email,
+    message: payload.useCase,
+    companyName: payload.companyName,
+    companySize: payload.companySize,
+    companyWebsite,
+    preferredDeployment: payload.preferredDeployment,
+    timeline: payload.timeline,
+    cloudEmail: payload.cloudEmail,
+    platform: 'appwrite',
+  })
+}

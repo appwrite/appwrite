@@ -1,8 +1,8 @@
 import { UpgradePlanLink } from '@/components/global/shared/UpgradePlanLink'
+import { CONTACT_ENTERPRISE_URL } from '@/lib/pricing/constants'
 
 const CONTACT_SALES_URL =
-  import.meta.env.VITE_CONTACT_SALES_URL ||
-  'https://appwrite.io/contact-us/enterprise'
+  import.meta.env.VITE_CONTACT_SALES_URL || CONTACT_ENTERPRISE_URL
 
 type SpecificationsUpgradeNoteProps = {
   orgId?: string | null

@@ -12,6 +12,7 @@ type MarketingHeroSectionProps = {
   align?: 'center' | 'left'
   gradientTitle?: boolean
   children?: ReactNode
+  footer?: ReactNode
   className?: string
 }
 
@@ -23,6 +24,7 @@ export function MarketingHeroSection({
   align = 'center',
   gradientTitle = false,
   children,
+  footer,
   className,
 }: MarketingHeroSectionProps) {
   const isCenter = align === 'center'
@@ -94,6 +96,9 @@ export function MarketingHeroSection({
           >
             {children}
           </div>
+        ) : null}
+        {footer ? (
+          <div className={cn(isCenter && 'mx-auto max-w-4xl')}>{footer}</div>
         ) : null}
       </div>
     </section>
@@ -256,9 +261,95 @@ export function MarketingFeatureGrid({
   )
 }
 
+type MarketingBentoFeatureCardProps = {
+  title?: string
+  items: MarketingFeatureItem[]
+  className?: string
+}
+
+export function MarketingBentoFeatureCard({
+  title,
+  items,
+  className,
+}: MarketingBentoFeatureCardProps) {
+  return (
+    <div className={cn('overflow-hidden rounded-xl border border-border bg-card/45', className)}>
+      {title ? (
+        <div className="border-b border-border bg-muted/15 px-4 py-3 text-center">
+          <h3 className="text-[13px] font-normal text-foreground">{title}</h3>
+        </div>
+      ) : null}
+      <div className="grid grid-cols-2">
+        {items.map((item, index) => {
+          const Icon = item.icon
+          return (
+            <article
+              key={item.title}
+              className={cn(
+                'px-4 py-4',
+                index % 2 === 1 && 'border-l border-border',
+                index >= 2 && 'border-t border-border',
+              )}
+            >
+              <span className="flex size-7 items-center justify-center rounded-md border border-border bg-muted/40">
+                <Icon className="size-3.5 text-[var(--brand-cta)]" aria-hidden />
+              </span>
+              <h4 className="mt-3 text-[13px] font-semibold text-foreground">{item.title}</h4>
+              <p className="mt-1 text-[12px] leading-5 text-muted-foreground">{item.description}</p>
+            </article>
+          )
+        })}
+      </div>
+    </div>
+  )
+}
+
 export type MarketingStatItem = {
   value: string
   label: string
+}
+
+type MarketingHeroStatsProps = {
+  items: MarketingStatItem[]
+  className?: string
+}
+
+export function MarketingHeroStats({ items, className }: MarketingHeroStatsProps) {
+  return (
+    <div
+      className={cn(
+        'mt-10 border-t border-border/60 pt-8 sm:mt-12 sm:pt-10',
+        className,
+      )}
+    >
+      <dl
+        className={cn(
+          'grid grid-cols-2',
+          items.length === 5 ? 'sm:grid-cols-3 lg:grid-cols-5' : 'sm:grid-cols-4',
+        )}
+      >
+        {items.map((item, index) => (
+          <div
+            key={item.label}
+            className={cn(
+              'flex flex-col-reverse items-center gap-1.5 px-3 py-4 text-center sm:gap-2 sm:px-4 sm:py-5',
+              index % 2 === 1 && 'border-l border-border/60',
+              index >= 2 && 'border-t border-border/60 sm:border-t-0',
+              index > 0 && 'sm:border-l sm:border-border/60',
+              items.length === 5 && index >= 3 && 'sm:border-t sm:border-border/60 lg:border-t-0',
+            )}
+          >
+            <dt className="max-w-[10rem] text-[11px] font-medium leading-snug text-muted-foreground sm:text-[12px] sm:leading-5">
+              {item.label}
+            </dt>
+            <dd className="font-aeonik-pro text-[26px] font-normal tabular-nums tracking-tight text-foreground sm:text-[30px]">
+              {item.value}
+            </dd>
+          </div>
+        ))}
+      </dl>
+    </div>
+  )
 }
 
 type MarketingStatGridProps = {

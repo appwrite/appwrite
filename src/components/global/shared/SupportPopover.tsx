@@ -31,10 +31,10 @@ import { useConsoleProfile } from '@/hooks/use-console-profile'
 import { navigateToUpgradeWizard } from '@/lib/open-upgrade-wizard'
 import { useDebugOverrides } from '@/lib/debug-overrides'
 import { getSupportHoursInLocalTime } from '@/lib/support'
+import { CONTACT_ENTERPRISE_URL } from '@/lib/pricing/constants'
 
 const CONTACT_SALES_URL =
-  import.meta.env.VITE_CONTACT_SALES_URL ||
-  'https://appwrite.io/contact-us/enterprise'
+  import.meta.env.VITE_CONTACT_SALES_URL || CONTACT_ENTERPRISE_URL
 
 interface SupportPopoverProps {
   orgId?: string | null

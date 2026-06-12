@@ -190,9 +190,7 @@ export function ComparePlansSection() {
                   className={cn('h-10 flex-1 text-[13px]', outlineTierButtonClassName)}
                   asChild
                 >
-                  <a href={href} target="_blank" rel="noopener noreferrer">
-                    {label}
-                  </a>
+                  <Link to={href}>{label}</Link>
                 </Button>
               )
             }

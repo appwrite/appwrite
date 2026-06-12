@@ -1,8 +1,7 @@
 import { Link } from '@tanstack/react-router'
 import { Button } from '@/components/ui/button'
+import { CONTACT_ENTERPRISE_URL } from '@/lib/pricing/constants'
 import { cn } from '@/lib/utils'
-
-const CONTACT_ENTERPRISE_URL = 'https://appwrite.io/contact-us/enterprise'
 
 type PricingTier = {
   id: string
@@ -49,7 +48,7 @@ const pricingTiers: PricingTier[] = [
     cta: 'Contact us',
     ctaVariant: 'outline',
     href: CONTACT_ENTERPRISE_URL,
-    internal: false,
+    internal: true,
   },
 ]
 

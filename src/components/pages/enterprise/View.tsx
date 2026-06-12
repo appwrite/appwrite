@@ -1,0 +1,288 @@
+import { useMemo } from 'react'
+import { Check } from 'lucide-react'
+import { Link } from '@tanstack/react-router'
+import { TrustedByLogo } from '@/components/global/shared/TrustedByLogo'
+import { useAuth } from '@/components/global/auth/RequireAuth'
+import { SecurityComplianceSection } from '@/components/pages/enterprise/SecurityComplianceSection'
+import { HomeSoftLights, SectionSoftLight } from '@/components/pages/home/HomeSoftLights'
+import { MarketingApplicationForm } from '@/components/pages/marketing/MarketingApplicationForm'
+import { MarketingFaqSection } from '@/components/pages/marketing/MarketingFaqSection'
+import { MarketingProductPills } from '@/components/pages/marketing/MarketingProductPills'
+import {
+  MarketingBentoFeatureCard,
+  MarketingFeatureGrid,
+  MarketingHeroSection,
+  MarketingHeroStats,
+  MarketingSectionHeading,
+} from '@/components/pages/marketing/MarketingSections'
+import { Button } from '@/components/ui/button'
+import { homeCustomerLogos } from '@/lib/home/customer-logos'
+import {
+  ENTERPRISE_FORM_ID,
+  enterpriseCompanySizeOptions,
+  enterpriseDeploymentOptions,
+  enterpriseDeploymentSection,
+  enterpriseDeploymentSharedBenefits,
+  enterpriseFaqItems,
+  enterpriseFormBullets,
+  enterpriseHero,
+  enterprisePlanCapabilities,
+  enterprisePlatformSection,
+  enterprisePreferredDeploymentOptions,
+  enterpriseStats,
+  enterpriseTimelineOptions,
+  enterpriseValueProps,
+} from '@/lib/enterprise/content'
+import { submitEnterpriseApplication } from '@/lib/marketing/growth-forms'
+import { marketingProductToolkit } from '@/lib/marketing/product-toolkit'
+import { trackEvent } from '@/lib/analytics'
+
+const ENTERPRISE_FORM_FIELDS = [
+  { name: 'firstName', label: 'First name', type: 'text' as const, placeholder: 'Walter' },
+  { name: 'lastName', label: 'Last name', type: 'text' as const, placeholder: "O'Brien" },
+  {
+    name: 'email',
+    label: 'Work email address',
+    type: 'email' as const,
+    placeholder: 'walter@company.com',
+  },
+  {
+    name: 'companyName',
+    label: 'Company name',
+    type: 'text' as const,
+    placeholder: 'Acme Corp',
+  },
+  {
+    name: 'companySize',
+    label: 'Company size',
+    type: 'select' as const,
+    placeholder: 'Select size',
+    required: false,
+    options: [...enterpriseCompanySizeOptions],
+  },
+  {
+    name: 'companyWebsite',
+    label: 'Company website',
+    type: 'text' as const,
+    placeholder: 'appwrite.io or https://appwrite.io',
+  },
+  {
+    name: 'preferredDeployment',
+    label: 'Preferred deployment',
+    type: 'select' as const,
+    placeholder: 'Select deployment',
+    required: false,
+    options: [...enterprisePreferredDeploymentOptions],
+  },
+  {
+    name: 'timeline',
+    label: 'Timeline',
+    type: 'select' as const,
+    placeholder: 'Select timeline',
+    required: false,
+    options: [...enterpriseTimelineOptions],
+  },
+  {
+    name: 'useCase',
+    label: 'Please share more information about your use case',
+    type: 'textarea' as const,
+    placeholder: 'Describe your use case and how our Enterprise plan can support it',
+    colSpan: 2 as const,
+  },
+]
+
+function scrollToForm() {
+  document.getElementById(ENTERPRISE_FORM_ID)?.scrollIntoView({ behavior: 'smooth' })
+}
+
+export function View() {
+  const { account, isAuthenticated } = useAuth()
+
+  const formDefaultValues = useMemo(() => {
+    if (!isAuthenticated || !account) return undefined
+
+    const nameParts = account.name?.trim().split(/\s+/) ?? []
+    const firstName = nameParts[0] ?? ''
+    const lastName = nameParts.slice(1).join(' ')
+
+    return {
+      ...(firstName ? { firstName } : {}),
+      ...(lastName ? { lastName } : {}),
+      ...(account.email ? { email: account.email } : {}),
+    }
+  }, [account, isAuthenticated])
+
+  return (
+    <div className="relative overflow-x-hidden bg-background">
+      <MarketingHeroSection
+        eyebrow={enterpriseHero.eyebrow}
+        title={enterpriseHero.title}
+        description={enterpriseHero.description}
+        gradientTitle
+        footer={<MarketingHeroStats items={[...enterpriseStats]} />}
+      >
+        <Button variant="brandCta" size="lg" className="h-10 text-[14px]" onClick={scrollToForm}>
+          Contact sales
+        </Button>
+        <Button variant="outline" size="lg" className="h-10 text-[14px]" asChild>
+          <Link to="/pricing">Compare plans</Link>
+        </Button>
+      </MarketingHeroSection>
+
+      <section className="border-b border-border py-16 sm:py-20">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6">
+          <MarketingSectionHeading
+            title="Why enterprise teams choose Appwrite"
+            description="Give your developers a complete backend platform so they can focus on product innovation instead of infrastructure glue code."
+            size="md"
+          />
+          <div className="mt-10">
+            <MarketingFeatureGrid items={enterpriseValueProps} columns={4} />
+          </div>
+        </div>
+      </section>
+
+      <section className="border-b border-border bg-muted/20 py-14 sm:py-16">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6">
+          <MarketingSectionHeading
+            title="Trusted by teams at scale"
+            description="From global enterprises to fast-growing product companies, teams rely on Appwrite to ship secure applications."
+            size="md"
+          />
+          <div className="mt-10 grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
+            {homeCustomerLogos.map((logo) => (
+              <div
+                key={logo.src}
+                className="flex min-h-20 items-center justify-center rounded-xl border border-border bg-card/45 px-4 py-5"
+              >
+                <TrustedByLogo
+                  src={logo.src}
+                  alt={logo.alt}
+                  width={logo.width}
+                  height={logo.height}
+                  mask={logo.mask}
+                  maskSrc={logo.maskSrc}
+                  inverseMask={logo.inverseMask}
+                  interactive={false}
+                  className="max-h-8 w-auto opacity-90"
+                />
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <section className="relative isolate overflow-hidden border-b border-border py-16 sm:py-20">
+        <SectionSoftLight tone="purple" position="left" />
+        <div className="relative z-[1] mx-auto max-w-7xl px-4 sm:px-6">
+          <MarketingSectionHeading
+            title={enterprisePlatformSection.title}
+            description={enterprisePlatformSection.description}
+            size="md"
+          />
+          <div className="mt-10">
+            <MarketingProductPills
+              build={marketingProductToolkit.build}
+              deploy={marketingProductToolkit.deploy}
+              protect={marketingProductToolkit.protect}
+            />
+          </div>
+        </div>
+      </section>
+
+      <section className="relative isolate overflow-hidden border-b border-border py-16 sm:py-20">
+        <SectionSoftLight tone="teal" position="right" />
+        <div className="relative z-[1] mx-auto max-w-7xl px-4 sm:px-6">
+          <MarketingSectionHeading
+            title="Everything in Pro, plus enterprise capabilities"
+            description="Operational and pricing features for teams that need more than standard Pro limits."
+            size="md"
+          />
+          <div className="mt-10">
+            <MarketingFeatureGrid items={enterprisePlanCapabilities} columns={3} />
+          </div>
+        </div>
+      </section>
+
+      <section className="relative isolate overflow-hidden border-b border-border bg-muted/20 py-16 sm:py-20">
+        <SectionSoftLight tone="orange" position="left" align="top" />
+        <div className="relative z-[1] mx-auto max-w-7xl px-4 sm:px-6">
+          <MarketingSectionHeading
+            title={enterpriseDeploymentSection.title}
+            description={enterpriseDeploymentSection.description}
+            size="md"
+          />
+          <div className="mt-10">
+            <MarketingFeatureGrid items={enterpriseDeploymentOptions} columns={2} />
+          </div>
+
+          <div className="mt-12 border-t border-border pt-10">
+            <div className="mx-auto max-w-3xl sm:max-w-4xl lg:max-w-5xl">
+              <MarketingBentoFeatureCard
+                title={enterpriseDeploymentSection.sharedBenefitsTitle}
+                items={enterpriseDeploymentSharedBenefits}
+              />
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <SecurityComplianceSection onContactSales={scrollToForm} />
+
+      <MarketingFaqSection
+        title="Enterprise FAQ"
+        description="Common questions about pricing, support, compliance, and getting started."
+        items={enterpriseFaqItems}
+      />
+
+      <section id={ENTERPRISE_FORM_ID} className="relative scroll-mt-28 border-b border-border">
+        <HomeSoftLights variant="testimonials" className="opacity-40" />
+        <div className="relative mx-auto max-w-7xl px-4 py-16 sm:px-6 sm:py-20">
+          <div className="grid gap-12 lg:grid-cols-[minmax(0,0.9fr)_minmax(0,1.2fr)] lg:items-start">
+            <div>
+              <MarketingSectionHeading
+                align="left"
+                size="md"
+                title="Talk to our enterprise team"
+                description="Ready to explore a custom plan? Share your requirements and one of our experts will follow up with a tailored proposal."
+              />
+              <ul className="mt-6 space-y-3">
+                {enterpriseFormBullets.map((item) => (
+                  <li key={item} className="flex items-center gap-2 text-[13px] text-foreground">
+                    <Check className="size-4 shrink-0 text-[var(--brand-cta)]" aria-hidden />
+                    {item}
+                  </li>
+                ))}
+              </ul>
+            </div>
+
+            <div className="rounded-xl border border-border bg-card/50 p-6 sm:p-8">
+              <MarketingApplicationForm
+                fields={ENTERPRISE_FORM_FIELDS}
+                defaultValues={formDefaultValues}
+                submitLabel="Submit"
+                successTitle="Thank you for your submission"
+                successDescription="Your details have been sent successfully. Our team will get back to you as soon as possible."
+                onSubmit={async (values) => {
+                  await submitEnterpriseApplication({
+                    firstName: values.firstName ?? '',
+                    lastName: values.lastName ?? '',
+                    email: values.email ?? '',
+                    companyName: values.companyName ?? '',
+                    companySize: values.companySize || undefined,
+                    companyWebsite: values.companyWebsite ?? '',
+                    preferredDeployment: values.preferredDeployment || undefined,
+                    timeline: values.timeline || undefined,
+                    useCase: values.useCase ?? '',
+                    cloudEmail: isAuthenticated ? account?.email : undefined,
+                  })
+                  trackEvent('Form Submitted', { form: 'enterprise' })
+                }}
+              />
+            </div>
+          </div>
+        </div>
+      </section>
+    </div>
+  )
+}

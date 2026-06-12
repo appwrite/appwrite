@@ -19,10 +19,10 @@ import {
   resolveOrganizationPlanDisplayLabel,
 } from '@/lib/utils/plan-filter'
 import { cn } from '@/lib/utils'
+import { CONTACT_ENTERPRISE_URL } from '@/lib/pricing/constants'
 
 const CONTACT_SALES_URL =
-  import.meta.env.VITE_CONTACT_SALES_URL ||
-  'https://appwrite.io/contact-us/enterprise'
+  import.meta.env.VITE_CONTACT_SALES_URL || CONTACT_ENTERPRISE_URL
 
 const ENTERPRISE_INTRO =
   'Custom plans for teams that need negotiated limits, compliance, premium support, and tailored billing.'

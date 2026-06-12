@@ -1,29 +1,16 @@
 /**
  * Marketing routes prerendered at build time (FOR_SITES production builds).
  * Console, auth, and docs stay SSR/SPA at runtime.
+ *
+ * Node-only: do not import this module from client components.
  */
 import {
   getChangelogEntryPrerenderPaths,
   getChangelogEntryPrerenderPathsFromClient,
 } from '../changelog/prerender-paths'
+import { MARKETING_PAGE_PATHS } from './marketing-page-paths'
 
-export const MARKETING_PRERENDER_PATHS = [
-  '/home',
-  '/pricing',
-  '/privacy',
-  '/terms',
-  '/cookies',
-  '/baa',
-  '/company',
-  '/startups',
-  '/education',
-  '/partners',
-  '/community',
-  '/changelog',
-  '/assets',
-  '/llms/txt',
-  '/llms-full/txt',
-] as const
+export const MARKETING_PRERENDER_PATHS = MARKETING_PAGE_PATHS
 
 export function getAllMarketingPrerenderPaths(
   clientDirectory?: string,

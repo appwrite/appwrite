@@ -36,6 +36,7 @@ import {
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { APPWRITE_SUPPORT_EMAIL } from '@/lib/utils/error-formatting'
+import { CONTACT_ENTERPRISE_URL } from '@/lib/pricing/constants'
 
 const SUBJECT_MAX = 128
 
@@ -43,8 +44,7 @@ const SUBJECT_PLACEHOLDER = 'Brief summary of your issue'
 const MESSAGE_PLACEHOLDER =
   'Describe your issue or question in detail. Include any relevant context (e.g. project, SDK version, error messages) so we can help faster.'
 const CONTACT_SALES_URL =
-  import.meta.env.VITE_CONTACT_SALES_URL ||
-  'https://appwrite.io/contact-us/enterprise'
+  import.meta.env.VITE_CONTACT_SALES_URL || CONTACT_ENTERPRISE_URL
 const SUPPORT_DISCORD_URL = 'https://appwrite.io/discord'
 const SUPPORT_GITHUB_ISSUES_URL =
   'https://github.com/appwrite/appwrite/issues/new/choose'

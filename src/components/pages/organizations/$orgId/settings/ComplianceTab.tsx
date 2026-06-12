@@ -5,11 +5,11 @@ import {
   type SettingsCardItem,
 } from '@/components/global/shared/settings-search/SettingsCardsList'
 import { SOC2_SETTINGS_KEYWORDS } from '@/lib/settings-search/org-settings-cards'
+import { CONTACT_ENTERPRISE_URL } from '@/lib/pricing/constants'
 
 const COMPANY_NAME = import.meta.env.VITE_COMPANY_NAME || 'Appwrite'
 const CONTACT_SALES_URL =
-  import.meta.env.VITE_CONTACT_SALES_URL ||
-  'https://appwrite.io/contact-us/enterprise'
+  import.meta.env.VITE_CONTACT_SALES_URL || CONTACT_ENTERPRISE_URL
 const LEGAL_EMAIL = import.meta.env.VITE_LEGAL_EMAIL || 'legal@appwrite.io'
 
 export function ComplianceTab() {
