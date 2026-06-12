@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "c8e8a31556be2ad12d15a25969c4d59f",
+    "content-hash": "88a81318fcd7a046a15ef118bd9b4a7b",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -3682,16 +3682,16 @@
         },
         {
             "name": "utopia-php/database",
-            "version": "5.9.0",
+            "version": "dev-fix-mongo-transaction-write-conflict-retry",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/database.git",
-                "reference": "477bae83e27631f78c159f45b0441c0c7dc69050"
+                "reference": "298837fcd1c8070983636eaa57ab8fdc30288d84"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/database/zipball/477bae83e27631f78c159f45b0441c0c7dc69050",
-                "reference": "477bae83e27631f78c159f45b0441c0c7dc69050",
+                "url": "https://api.github.com/repos/utopia-php/database/zipball/298837fcd1c8070983636eaa57ab8fdc30288d84",
+                "reference": "298837fcd1c8070983636eaa57ab8fdc30288d84",
                 "shasum": ""
             },
             "require": {
@@ -3736,9 +3736,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/database/issues",
-                "source": "https://github.com/utopia-php/database/tree/5.9.0"
+                "source": "https://github.com/utopia-php/database/tree/fix-mongo-transaction-write-conflict-retry"
             },
-            "time": "2026-05-17T15:57:21+00:00"
+            "time": "2026-06-12T05:41:38+00:00"
         },
         {
             "name": "utopia-php/detector",
@@ -8359,9 +8359,17 @@
             "time": "2026-05-30T17:09:26+00:00"
         }
     ],
-    "aliases": [],
+    "aliases": [
+        {
+            "package": "utopia-php/database",
+            "version": "dev-fix-mongo-transaction-write-conflict-retry",
+            "alias": "5.9.0",
+            "alias_normalized": "5.9.0.0"
+        }
+    ],
     "minimum-stability": "dev",
     "stability-flags": {
+        "utopia-php/database": 20,
         "utopia-php/http": 5,
         "utopia-php/platform": 5
     },
