@@ -245,7 +245,7 @@ export function MarketingFeatureGrid({
           >
             <div className="flex flex-col gap-3">
               <span className="flex size-7 items-center justify-center rounded-md border border-border bg-muted/40">
-                <Icon className="size-3.5 text-[var(--brand-cta)]" aria-hidden />
+                <Icon className="size-3.5 text-muted-foreground" aria-hidden />
               </span>
               <div>
                 <h3 className="text-[14px] font-semibold text-foreground">{item.title}</h3>
@@ -292,7 +292,7 @@ export function MarketingBentoFeatureCard({
               )}
             >
               <span className="flex size-7 items-center justify-center rounded-md border border-border bg-muted/40">
-                <Icon className="size-3.5 text-[var(--brand-cta)]" aria-hidden />
+                <Icon className="size-3.5 text-muted-foreground" aria-hidden />
               </span>
               <h4 className="mt-3 text-[13px] font-semibold text-foreground">{item.title}</h4>
               <p className="mt-1 text-[12px] leading-5 text-muted-foreground">{item.description}</p>
@@ -440,7 +440,7 @@ export function MarketingInvolvementCards({
           const inner = (
             <>
               <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-muted text-muted-foreground">
-                <Icon className="size-5 text-[var(--brand-cta)]" aria-hidden />
+                <Icon className="size-5 text-muted-foreground" aria-hidden />
               </div>
               <div className="min-w-0 flex-1">
                 <p className="text-[13px] font-medium text-foreground">{item.title}</p>
