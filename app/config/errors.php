@@ -655,6 +655,11 @@ return [
         'description' => 'Site with the requested ID could not be found.',
         'code' => 404,
     ],
+    Exception::SITES_DEPLOYMENT_SIZE_EXCEEDED => [
+        'name' => Exception::SITES_DEPLOYMENT_SIZE_EXCEEDED,
+        'description' => 'The deployment size exceeds the maximum allowed size. Please check the file or the value of the _APP_COMPUTE_SIZE_LIMIT environment variable.',
+        'code' => 400,
+    ],
     Exception::SITE_ALREADY_EXISTS => [
         'name' => Exception::SITE_ALREADY_EXISTS,
         'description' => 'Site with the requested ID already exists. Try again with a different ID or use ID.unique() to generate a unique ID.',
