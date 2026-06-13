@@ -30,6 +30,7 @@ export function ProductPageLayout({ content }: ProductPageLayoutProps) {
         leading={<ProductHeroIcon icon={ProductIcon} name={product.name} />}
         title={content.hero.title}
         description={content.hero.description}
+        wideFooter={content.hero.stats?.length === 5}
         footer={
           content.hero.stats?.length || heroLogoStrip ? (
             <>

@@ -11,6 +11,7 @@ type MarketingHeroSectionProps = {
   description: string
   align?: 'center' | 'left'
   gradientTitle?: boolean
+  wideFooter?: boolean
   children?: ReactNode
   footer?: ReactNode
   className?: string
@@ -23,6 +24,7 @@ export function MarketingHeroSection({
   description,
   align = 'center',
   gradientTitle = false,
+  wideFooter = false,
   children,
   footer,
   className,
@@ -98,7 +100,14 @@ export function MarketingHeroSection({
           </div>
         ) : null}
         {footer ? (
-          <div className={cn(isCenter && 'mx-auto max-w-4xl')}>{footer}</div>
+          <div
+            className={cn(
+              isCenter && 'mx-auto w-full',
+              wideFooter ? 'max-w-7xl' : 'max-w-4xl',
+            )}
+          >
+            {footer}
+          </div>
         ) : null}
       </div>
     </section>
@@ -315,6 +324,8 @@ type MarketingHeroStatsProps = {
 }
 
 export function MarketingHeroStats({ items, className }: MarketingHeroStatsProps) {
+  const isWide = items.length >= 5
+
   return (
     <div
       className={cn(
@@ -325,24 +336,36 @@ export function MarketingHeroStats({ items, className }: MarketingHeroStatsProps
       <dl
         className={cn(
           'grid grid-cols-2',
-          items.length === 5 ? 'sm:grid-cols-3 lg:grid-cols-5' : 'sm:grid-cols-4',
+          isWide ? 'sm:grid-cols-5' : 'sm:grid-cols-4',
         )}
       >
         {items.map((item, index) => (
           <div
             key={item.label}
             className={cn(
-              'flex flex-col-reverse items-center gap-1.5 px-3 py-4 text-center sm:gap-2 sm:px-4 sm:py-5',
+              'flex flex-col-reverse items-center gap-1.5 py-4 text-center sm:gap-2 sm:py-5',
+              isWide ? 'px-2 sm:px-3' : 'px-3 sm:px-4',
               index % 2 === 1 && 'border-l border-border/60',
               index >= 2 && 'border-t border-border/60 sm:border-t-0',
               index > 0 && 'sm:border-l sm:border-border/60',
-              items.length === 5 && index >= 3 && 'sm:border-t sm:border-border/60 lg:border-t-0',
             )}
           >
-            <dt className="max-w-[10rem] text-[11px] font-medium leading-snug text-muted-foreground sm:text-[12px] sm:leading-5">
+            <dt
+              className={cn(
+                'text-[11px] font-medium leading-snug text-muted-foreground sm:text-[12px] sm:leading-5',
+                isWide ? 'max-w-[9.5rem] sm:max-w-none' : 'max-w-[10rem]',
+              )}
+            >
               {item.label}
             </dt>
-            <dd className="font-aeonik-pro text-[26px] font-normal tabular-nums tracking-tight text-foreground sm:text-[30px]">
+            <dd
+              className={cn(
+                'font-aeonik-pro font-normal tabular-nums tracking-tight text-foreground',
+                isWide
+                  ? 'text-[22px] sm:text-[26px] lg:text-[30px]'
+                  : 'text-[26px] sm:text-[30px]',
+              )}
+            >
               {item.value}
             </dd>
           </div>

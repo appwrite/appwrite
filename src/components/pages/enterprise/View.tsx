@@ -119,6 +119,7 @@ export function View() {
         title={enterpriseHero.title}
         description={enterpriseHero.description}
         gradientTitle
+        wideFooter={enterpriseStats.length === 5}
         footer={<MarketingHeroStats items={[...enterpriseStats]} />}
       >
         <Button variant="brandCta" size="lg" className="h-10 text-[14px]" onClick={scrollToForm}>
