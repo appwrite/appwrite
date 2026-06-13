@@ -45,9 +45,13 @@ COPY --from=build /app/dist/ dist
 COPY --from=prod-deps /app/node_modules/ node_modules
 COPY server.ts server.ts
 
-# server.ts imports these modules at runtime; they aren't bundled into dist
-COPY src/lib/marketing/prerender-paths.ts src/lib/marketing/prerender-paths.ts
-COPY src/lib/runtime-config-shared.ts src/lib/runtime-config-shared.ts
+# WORKAROUND: server.ts imports a handful of modules from src/ at runtime that
+# aren't bundled into dist (marketing/prerender-paths, runtime-config-shared, and
+# their transitive imports). Cherry-picking individual files here is fragile —
+# every new local import in that tree silently breaks the production image while
+# dev/CI stay green. Until server.ts and its runtime deps are bundled into a
+# self-contained dist, copy the whole src/ tree so transitive imports resolve.
+COPY src/ src/
 
 EXPOSE 3000
 CMD ["bun", "run", "server.ts"]
