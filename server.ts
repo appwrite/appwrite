@@ -60,8 +60,7 @@
  *   - Default: text/,application/javascript,application/json,application/xml,image/svg+xml
  *
  * Usage:
- *   bun run server.ts              (local dev / when src/ is present)
- *   bun run dist/server-bun.js     (production Docker image; bundled via build:server)
+ *   bun run server.ts
  */
 
 import path from 'node:path'
