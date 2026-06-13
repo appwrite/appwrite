@@ -16,7 +16,7 @@ import {
   MarketingSectionHeading,
 } from '@/components/pages/marketing/MarketingSections'
 import { Button } from '@/components/ui/button'
-import { homeCustomerLogos } from '@/lib/home/customer-logos'
+import { allCustomerLogos } from '@/lib/home/customer-logos'
 import {
   ENTERPRISE_FORM_ID,
   enterpriseCompanySizeOptions,
@@ -149,11 +149,11 @@ export function View() {
             description="From global enterprises to fast-growing product companies, teams rely on Appwrite to ship secure applications."
             size="md"
           />
-          <div className="mt-10 grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
-            {homeCustomerLogos.map((logo) => (
+          <div className="mt-10 grid grid-cols-3 gap-3 sm:grid-cols-4 lg:grid-cols-6">
+            {allCustomerLogos.map((logo) => (
               <div
                 key={logo.src}
-                className="flex min-h-20 items-center justify-center rounded-xl border border-border bg-card/45 px-4 py-5"
+                className="flex min-h-14 items-center justify-center rounded-lg border border-border bg-card/45 px-3 py-3"
               >
                 <TrustedByLogo
                   src={logo.src}
@@ -164,7 +164,11 @@ export function View() {
                   maskSrc={logo.maskSrc}
                   inverseMask={logo.inverseMask}
                   interactive={false}
-                  className="max-h-8 w-auto opacity-90"
+                  className={
+                    logo.size === 'lg'
+                      ? 'max-h-5 w-auto opacity-90 sm:max-h-6'
+                      : 'max-h-4 w-auto opacity-90 sm:max-h-5'
+                  }
                 />
               </div>
             ))}

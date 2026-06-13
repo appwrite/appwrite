@@ -29,6 +29,7 @@ import { Route as AuthRouteImport } from './routes/_auth'
 import { Route as DocsIndexRouteImport } from './routes/docs/index'
 import { Route as ChangelogIndexRouteImport } from './routes/changelog.index'
 import { Route as PublicIndexRouteImport } from './routes/_public/index'
+import { Route as ProductsProductIdRouteImport } from './routes/products.$productId'
 import { Route as LlmsTxtRouteImport } from './routes/llms.txt'
 import { Route as LlmsFullTxtRouteImport } from './routes/llms-full.txt'
 import { Route as DocsTutorialsRouteImport } from './routes/docs/tutorials'
@@ -371,6 +372,11 @@ const PublicIndexRoute = PublicIndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => PublicRoute,
+} as any)
+const ProductsProductIdRoute = ProductsProductIdRouteImport.update({
+  id: '/products/$productId',
+  path: '/products/$productId',
+  getParentRoute: () => rootRouteImport,
 } as any)
 const LlmsTxtRoute = LlmsTxtRouteImport.update({
   id: '/llms/txt',
@@ -2003,6 +2009,7 @@ export interface FileRoutesByFullPath {
   '/docs/tutorials': typeof DocsTutorialsRoute
   '/llms-full/txt': typeof LlmsFullTxtRoute
   '/llms/txt': typeof LlmsTxtRoute
+  '/products/$productId': typeof ProductsProductIdRoute
   '/': typeof PublicIndexRoute
   '/changelog': typeof ChangelogIndexRoute
   '/docs/': typeof DocsIndexRoute
@@ -2265,6 +2272,7 @@ export interface FileRoutesByTo {
   '/docs/tutorials': typeof DocsTutorialsRoute
   '/llms-full/txt': typeof LlmsFullTxtRoute
   '/llms/txt': typeof LlmsTxtRoute
+  '/products/$productId': typeof ProductsProductIdRoute
   '/': typeof PublicIndexRoute
   '/changelog': typeof ChangelogIndexRoute
   '/docs': typeof DocsIndexRoute
@@ -2501,6 +2509,7 @@ export interface FileRoutesById {
   '/docs/tutorials': typeof DocsTutorialsRoute
   '/llms-full/txt': typeof LlmsFullTxtRoute
   '/llms/txt': typeof LlmsTxtRoute
+  '/products/$productId': typeof ProductsProductIdRoute
   '/_public/': typeof PublicIndexRoute
   '/changelog/': typeof ChangelogIndexRoute
   '/docs/': typeof DocsIndexRoute
@@ -2767,6 +2776,7 @@ export interface FileRouteTypes {
     | '/docs/tutorials'
     | '/llms-full/txt'
     | '/llms/txt'
+    | '/products/$productId'
     | '/'
     | '/changelog'
     | '/docs/'
@@ -3029,6 +3039,7 @@ export interface FileRouteTypes {
     | '/docs/tutorials'
     | '/llms-full/txt'
     | '/llms/txt'
+    | '/products/$productId'
     | '/'
     | '/changelog'
     | '/docs'
@@ -3264,6 +3275,7 @@ export interface FileRouteTypes {
     | '/docs/tutorials'
     | '/llms-full/txt'
     | '/llms/txt'
+    | '/products/$productId'
     | '/_public/'
     | '/changelog/'
     | '/docs/'
@@ -3514,6 +3526,7 @@ export interface RootRouteChildren {
   ApiHelloRoute: typeof ApiHelloRoute
   LlmsFullTxtRoute: typeof LlmsFullTxtRoute
   LlmsTxtRoute: typeof LlmsTxtRoute
+  ProductsProductIdRoute: typeof ProductsProductIdRoute
   ChangelogIndexRoute: typeof ChangelogIndexRoute
   ChangelogEntryEntryRoute: typeof ChangelogEntryEntryRoute
   ApiInitCalendarEventSlugRoute: typeof ApiInitCalendarEventSlugRoute
@@ -3661,6 +3674,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/'
       preLoaderRoute: typeof PublicIndexRouteImport
       parentRoute: typeof PublicRoute
+    }
+    '/products/$productId': {
+      id: '/products/$productId'
+      path: '/products/$productId'
+      fullPath: '/products/$productId'
+      preLoaderRoute: typeof ProductsProductIdRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/llms/txt': {
       id: '/llms/txt'
@@ -6629,6 +6649,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiHelloRoute: ApiHelloRoute,
   LlmsFullTxtRoute: LlmsFullTxtRoute,
   LlmsTxtRoute: LlmsTxtRoute,
+  ProductsProductIdRoute: ProductsProductIdRoute,
   ChangelogIndexRoute: ChangelogIndexRoute,
   ChangelogEntryEntryRoute: ChangelogEntryEntryRoute,
   ApiInitCalendarEventSlugRoute: ApiInitCalendarEventSlugRoute,

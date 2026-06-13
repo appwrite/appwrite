@@ -95,18 +95,24 @@ import {
   getMarketingPageUrl,
   isMarketingPageExternal,
 } from '@/lib/marketing/urls'
+import {
+  isMarketingProductsNavItem,
+  MarketingProductsMobileNav,
+  MarketingProductsNavPopover,
+} from '@/components/pages/marketing/MarketingProductsNavMenu'
 
 type MarketingHeaderNavItem = {
   label: string
   href: string
+  menu?: 'products'
   hasMenuIndicator?: boolean
 }
 
 const DEFAULT_MARKETING_HEADER_NAV: readonly MarketingHeaderNavItem[] = [
   {
     label: 'Products',
-    href: 'https://appwrite.io/products/auth',
-    hasMenuIndicator: true,
+    href: '/products/auth',
+    menu: 'products',
   },
   { label: 'Docs', href: '/docs' },
   { label: 'Pricing', href: '/pricing' },
@@ -136,6 +142,59 @@ function MarketingNavLabel({
         />
       ) : null}
     </span>
+  )
+}
+
+function MarketingNavLink({
+  item,
+  showChangelogBadge,
+  className,
+}: {
+  item: MarketingHeaderNavItem
+  showChangelogBadge: boolean
+  className?: string
+}) {
+  return (
+    <a
+      href={item.href}
+      className={cn(
+        'inline-flex h-9 items-center gap-1 rounded-md px-2.5 text-[13px] font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-foreground',
+        className,
+      )}
+      {...(item.href === '/changelog' && showChangelogBadge
+        ? { 'aria-label': 'Changelog, new updates' }
+        : {})}
+    >
+      <MarketingNavLabel
+        label={item.label}
+        showNewIndicator={item.href === '/changelog' && showChangelogBadge}
+      />
+    </a>
+  )
+}
+
+function MarketingMobileNavLink({
+  item,
+  showChangelogBadge,
+}: {
+  item: MarketingHeaderNavItem
+  showChangelogBadge: boolean
+}) {
+  return (
+    <SheetClose asChild>
+      <a
+        href={item.href}
+        className="flex h-10 items-center justify-between rounded-md px-3 text-[13px] font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+        {...(item.href === '/changelog' && showChangelogBadge
+          ? { 'aria-label': 'Changelog, new updates' }
+          : {})}
+      >
+        <MarketingNavLabel
+          label={item.label}
+          showNewIndicator={item.href === '/changelog' && showChangelogBadge}
+        />
+      </a>
+    </SheetClose>
   )
 }
 
@@ -338,27 +397,17 @@ export function ConsoleHeader({
                   className="flex flex-col p-2"
                   aria-label="Website navigation"
                 >
-                  {marketingNavItems.map((item) => (
-                    <SheetClose asChild key={item.label}>
-                      <a
-                        href={item.href}
-                        className="flex h-10 items-center justify-between rounded-md px-3 text-[13px] font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
-                        {...(item.href === '/changelog' && showChangelogBadge
-                          ? { 'aria-label': 'Changelog, new updates' }
-                          : {})}
-                      >
-                        <MarketingNavLabel
-                          label={item.label}
-                          showNewIndicator={
-                            item.href === '/changelog' && showChangelogBadge
-                          }
-                        />
-                        {item.hasMenuIndicator ? (
-                          <ChevronDown className="size-3.5" aria-hidden />
-                        ) : null}
-                      </a>
-                    </SheetClose>
-                  ))}
+                  {marketingNavItems.map((item) =>
+                    isMarketingProductsNavItem(item) ? (
+                      <MarketingProductsMobileNav key={item.label} />
+                    ) : (
+                      <MarketingMobileNavLink
+                        key={item.label}
+                        item={item}
+                        showChangelogBadge={showChangelogBadge}
+                      />
+                    ),
+                  )}
                 </nav>
               </SheetContent>
             </Sheet>
@@ -461,26 +510,17 @@ export function ConsoleHeader({
               className="ml-2 hidden min-w-0 items-center gap-1 @[1280px]:flex @[1536px]:absolute @[1536px]:left-1/2 @[1536px]:ml-0 @[1536px]:-translate-x-1/2"
               aria-label="Website navigation"
             >
-              {marketingNavItems.map((item) => (
-                <a
-                  key={item.label}
-                  href={item.href}
-                  className="inline-flex h-9 items-center gap-1 rounded-md px-2.5 text-[13px] font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
-                  {...(item.href === '/changelog' && showChangelogBadge
-                    ? { 'aria-label': 'Changelog, new updates' }
-                    : {})}
-                >
-                  <MarketingNavLabel
-                    label={item.label}
-                    showNewIndicator={
-                      item.href === '/changelog' && showChangelogBadge
-                    }
+              {marketingNavItems.map((item) =>
+                isMarketingProductsNavItem(item) ? (
+                  <MarketingProductsNavPopover key={item.label} />
+                ) : (
+                  <MarketingNavLink
+                    key={item.label}
+                    item={item}
+                    showChangelogBadge={showChangelogBadge}
                   />
-                  {item.hasMenuIndicator ? (
-                    <ChevronDown className="size-3.5" aria-hidden />
-                  ) : null}
-                </a>
-              ))}
+                ),
+              )}
             </nav>
           ) : null}
 

@@ -63,6 +63,13 @@ export const homeCustomerLogos: HomeCustomerLogo[] = [
     height: 27,
     inverseMask: true,
   },
+  {
+    src: '/images/logos/trusted-by/store-alert.svg',
+    alt: 'StoreAlert',
+    width: 148,
+    height: 32,
+    size: 'lg',
+  },
 ]
 
 export const HOME_LOGO_GRID_COUNT = 12
@@ -93,6 +100,9 @@ export function buildAllHomeLogos(): HomeCustomerLogo[] {
 
   return logos
 }
+
+/** Stable list of every customer logo (case studies + enterprise strip). */
+export const allCustomerLogos: HomeCustomerLogo[] = buildAllHomeLogos()
 
 export function pickRandomHomeLogos(count = HOME_LOGO_GRID_COUNT): HomeCustomerLogo[] {
   const shuffled = shuffleHomeCaseStudies(buildAllHomeLogos())

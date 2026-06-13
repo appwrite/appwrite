@@ -183,36 +183,78 @@ export function AiTileSoftLight({ tone }: { tone: AiTileSoftLightTone }) {
 }
 
 /** Neutral ambient wash for product bento visual frames — single top-left light. */
-export function ProductBentoSoftLights() {
+export function ProductBentoSoftLights({
+  blend = false,
+  expanded = false,
+}: {
+  blend?: boolean
+  expanded?: boolean
+}) {
   return (
     <div
-      className="pointer-events-none absolute inset-0 z-0 overflow-hidden rounded-lg bg-[radial-gradient(ellipse_at_0%_0%,color-mix(in_srgb,var(--foreground)_4%,transparent)_0%,transparent_62%)] transition-opacity duration-300 group-hover:opacity-70 motion-reduce:group-hover:opacity-100"
+      className={cn(
+        'pointer-events-none absolute inset-0 z-0 transition-opacity duration-300 group-hover:opacity-70 motion-reduce:group-hover:opacity-100',
+        blend
+          ? cn(
+              'overflow-visible',
+              expanded
+                ? 'bg-[radial-gradient(ellipse_120%_100%_at_50%_50%,color-mix(in_srgb,var(--foreground)_6%,transparent)_0%,transparent_75%)]'
+                : 'bg-[radial-gradient(ellipse_at_50%_42%,color-mix(in_srgb,var(--foreground)_6%,transparent)_0%,transparent_70%)]',
+            )
+          : 'overflow-hidden rounded-lg bg-[radial-gradient(ellipse_at_0%_0%,color-mix(in_srgb,var(--foreground)_4%,transparent)_0%,transparent_62%)]',
+      )}
       aria-hidden
     />
   )
 }
 
+/** Always-on brand glow behind product page hero visuals (16:9 frame). */
+export function ProductPageBrandLight() {
+  return (
+    <div className="pointer-events-none absolute inset-0 overflow-visible" aria-hidden>
+      <div className="absolute -left-[22%] top-[2%] h-[96%] w-[144%] bg-[radial-gradient(ellipse_at_center,rgba(133,219,216,0.14)_0%,rgba(133,219,216,0.045)_42%,transparent_76%)] dark:bg-[radial-gradient(ellipse_at_center,rgba(133,219,216,0.09)_0%,rgba(133,219,216,0.028)_42%,transparent_76%)]" />
+      <div className="absolute -right-[22%] bottom-[2%] h-[96%] w-[144%] bg-[radial-gradient(ellipse_at_center,rgba(124,103,254,0.11)_0%,rgba(124,103,254,0.034)_42%,transparent_76%)] dark:bg-[radial-gradient(ellipse_at_center,rgba(124,103,254,0.075)_0%,rgba(124,103,254,0.022)_42%,transparent_76%)]" />
+      <div className="absolute left-1/2 top-1/2 h-[88%] w-[72%] -translate-x-1/2 -translate-y-1/2 bg-[radial-gradient(ellipse_at_center,color-mix(in_srgb,var(--brand-cta)_10%,transparent)_0%,transparent_68%)] dark:bg-[radial-gradient(ellipse_at_center,color-mix(in_srgb,var(--brand-cta)_7%,transparent)_0%,transparent_68%)]" />
+    </div>
+  )
+}
+
 /** Brand-tinted ambient light that fades in when a product bento tile is hovered. */
-export function ProductBentoHoverLight({ tall = false }: { tall?: boolean }) {
+export function ProductBentoHoverLight({
+  tall = false,
+  unclipped = false,
+  productPage = false,
+}: {
+  tall?: boolean
+  unclipped?: boolean
+  productPage?: boolean
+}) {
   return (
     <div
-      className="product-bento-hover-light pointer-events-none absolute inset-0 overflow-hidden opacity-0 transition-opacity duration-300 group-hover:opacity-70 motion-reduce:transition-none motion-reduce:group-hover:opacity-0 dark:group-hover:opacity-55"
+      className={cn(
+        'product-bento-hover-light pointer-events-none absolute inset-0 opacity-0 transition-opacity duration-300 group-hover:opacity-70 motion-reduce:transition-none motion-reduce:group-hover:opacity-0 dark:group-hover:opacity-55',
+        unclipped ? 'overflow-visible' : 'overflow-hidden',
+      )}
       aria-hidden
     >
       <div
         className={cn(
           'absolute bg-[radial-gradient(ellipse_at_center,rgba(133,219,216,0.09)_0%,rgba(133,219,216,0.03)_45%,transparent_78%)] dark:bg-[radial-gradient(ellipse_at_center,rgba(133,219,216,0.06)_0%,rgba(133,219,216,0.018)_45%,transparent_78%)]',
-          tall
-            ? '-left-[28%] top-[-28%] h-[440px] w-[680px]'
-            : '-left-[38%] top-[-38%] h-[300px] w-[440px]',
+          productPage
+            ? '-left-[18%] top-[0%] h-full w-[136%]'
+            : tall
+              ? '-left-[28%] top-[-28%] h-[440px] w-[680px]'
+              : '-left-[38%] top-[-38%] h-[300px] w-[440px]',
         )}
       />
       <div
         className={cn(
           'absolute bg-[radial-gradient(ellipse_at_center,rgba(124,103,254,0.07)_0%,rgba(124,103,254,0.022)_45%,transparent_78%)] dark:bg-[radial-gradient(ellipse_at_center,rgba(124,103,254,0.05)_0%,rgba(124,103,254,0.015)_45%,transparent_78%)]',
-          tall
-            ? '-right-[28%] bottom-[-28%] h-[400px] w-[640px]'
-            : '-right-[38%] bottom-[-38%] h-[280px] w-[420px]',
+          productPage
+            ? '-right-[18%] bottom-[0%] h-full w-[136%]'
+            : tall
+              ? '-right-[28%] bottom-[-28%] h-[400px] w-[640px]'
+              : '-right-[38%] bottom-[-38%] h-[280px] w-[420px]',
         )}
       />
     </div>

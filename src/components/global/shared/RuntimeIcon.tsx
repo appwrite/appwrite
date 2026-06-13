@@ -1,4 +1,4 @@
-import { Code, FileCode } from 'lucide-react'
+import { Brain, Code, FileCode } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { LanguageIcon } from './LanguageIcon'
 
@@ -19,6 +19,10 @@ function getRuntimeLanguage(runtime: string): string | null {
 
   const normalized = runtime.toLowerCase()
 
+  if (normalized.startsWith('python-ml')) {
+    return 'python-ml'
+  }
+
   // Extract base runtime name (e.g., "node-22.0" -> "node", "python-3.11" -> "python")
   const baseRuntime = normalized.split('-')[0]
 
@@ -37,6 +41,7 @@ function getRuntimeLanguage(runtime: string): string | null {
     swift: 'swift',
     kotlin: 'kotlin',
     dotnet: 'dotnet',
+    cpp: 'cpp',
     rust: 'rust',
   }
 
@@ -53,6 +58,10 @@ export function RuntimeIcon({
   }
 
   const language = getRuntimeLanguage(runtime)
+
+  if (language === 'python-ml') {
+    return <Brain className={cn(sizeClasses[size], 'text-muted-foreground', className)} />
+  }
 
   if (language) {
     return (

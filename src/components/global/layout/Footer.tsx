@@ -54,13 +54,37 @@ function getExpandedFooterGroups(marketing: boolean): readonly ExpandedFooterGro
   {
     title: 'Products',
     links: [
-      { label: 'Auth', href: 'https://appwrite.io/products/auth', external: true },
-      { label: 'Databases', href: 'https://appwrite.io/products/databases', external: true },
-      { label: 'Storage', href: 'https://appwrite.io/products/storage', external: true },
-      { label: 'Functions', href: 'https://appwrite.io/products/functions', external: true },
-      { label: 'Messaging', href: 'https://appwrite.io/products/messaging', external: true },
+      {
+        label: 'Auth',
+        href: marketing ? '/products/auth' : 'https://appwrite.io/products/auth',
+        external: !marketing,
+      },
+      {
+        label: 'Databases',
+        href: marketing ? '/products/databases' : 'https://appwrite.io/products/databases',
+        external: !marketing,
+      },
+      {
+        label: 'Storage',
+        href: marketing ? '/products/storage' : 'https://appwrite.io/products/storage',
+        external: !marketing,
+      },
+      {
+        label: 'Functions',
+        href: marketing ? '/products/functions' : 'https://appwrite.io/products/functions',
+        external: !marketing,
+      },
+      {
+        label: 'Messaging',
+        href: marketing ? '/products/messaging' : 'https://appwrite.io/products/messaging',
+        external: !marketing,
+      },
       { label: 'Realtime', href: 'https://appwrite.io/products/realtime', external: true },
-      { label: 'Hosting', href: 'https://appwrite.io/products/sites', external: true },
+      {
+        label: 'Hosting',
+        href: marketing ? '/products/sites' : 'https://appwrite.io/products/sites',
+        external: !marketing,
+      },
       { label: 'Network', href: 'https://appwrite.io/products/network', external: true },
     ],
   },
