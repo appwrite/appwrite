@@ -68,6 +68,9 @@ importers:
       '@radix-ui/react-dialog':
         specifier: ^1.1.15
         version: 1.1.15(@types/react-dom@19.2.3(@types/react@19.2.15))(@types/react@19.2.15)(react-dom@19.1.1(react@19.1.1))(react@19.1.1)
+      '@radix-ui/react-dismissable-layer':
+        specifier: ^1.1.11
+        version: 1.1.11(@types/react-dom@19.2.3(@types/react@19.2.15))(@types/react@19.2.15)(react-dom@19.1.1(react@19.1.1))(react@19.1.1)
       '@radix-ui/react-dropdown-menu':
         specifier: ^2.1.16
         version: 2.1.16(@types/react-dom@19.2.3(@types/react@19.2.15))(@types/react@19.2.15)(react-dom@19.1.1(react@19.1.1))(react@19.1.1)
@@ -209,6 +212,12 @@ importers:
       date-fns:
         specifier: ^4.1.0
         version: 4.3.0
+      decimal.js:
+        specifier: ^10.6.0
+        version: 10.6.0
+      decimal.js-light:
+        specifier: ^2.5.1
+        version: 2.5.1
       embla-carousel-react:
         specifier: ^8.6.0
         version: 8.6.0(react@19.1.1)
@@ -242,6 +251,9 @@ importers:
       node-appwrite:
         specifier: ^20.2.1
         version: 20.3.0
+      pako:
+        specifier: ^2.1.0
+        version: 2.1.0
       prism-react-renderer:
         specifier: ^2.4.1
         version: 2.4.1(react@19.1.1)
@@ -281,6 +293,9 @@ importers:
       sonner:
         specifier: ^2.0.7
         version: 2.0.7(react-dom@19.1.1(react@19.1.1))(react@19.1.1)
+      sprintf-js:
+        specifier: ^1.1.3
+        version: 1.1.3
       sql-formatter:
         specifier: ^15.8.1
         version: 15.8.1
