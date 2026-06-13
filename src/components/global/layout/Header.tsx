@@ -100,6 +100,7 @@ import {
   MarketingProductsMobileNav,
   MarketingProductsNavPopover,
 } from '@/components/pages/marketing/MarketingProductsNavMenu'
+import { MarketingGitHubStarsLink } from '@/components/pages/marketing/MarketingGitHubStarsLink'
 
 type MarketingHeaderNavItem = {
   label: string
@@ -408,6 +409,7 @@ export function ConsoleHeader({
                       />
                     ),
                   )}
+                  <MarketingGitHubStarsLink mobile />
                 </nav>
               </SheetContent>
             </Sheet>
@@ -521,6 +523,7 @@ export function ConsoleHeader({
                   />
                 ),
               )}
+              <MarketingGitHubStarsLink />
             </nav>
           ) : null}
 

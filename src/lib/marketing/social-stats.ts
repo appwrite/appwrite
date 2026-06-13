@@ -1,6 +1,15 @@
+import githubStarsData from '@/lib/generated/github-stars.json'
+
+function formatStars(count: number): string {
+  if (count >= 1000) {
+    return `${(count / 1000).toFixed(1).replace(/\.0$/, '')}K`
+  }
+  return String(count)
+}
+
 export const MARKETING_SOCIAL_STATS = {
   github: {
-    stat: '56.2K',
+    stat: formatStars(githubStarsData.stars),
     link: 'https://github.com/appwrite/appwrite',
     commits: '27K+',
     pullRequests: '4.7K+',

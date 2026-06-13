@@ -1,4 +1,4 @@
-import { CheckCircle2, KeyRound, Lock, Mail, Smartphone, UserPlus } from 'lucide-react'
+import { KeyRound, Lock, Mail, Smartphone, UserPlus } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import { Switch } from '@/components/ui/switch'
 import {
@@ -13,21 +13,6 @@ const AUTH_METHODS = [
   { label: 'Phone', icon: Smartphone, enabled: true },
   { label: 'Anonymous', icon: UserPlus, enabled: false },
   { label: 'JWT', icon: Lock, enabled: true },
-] as const
-
-const PASSWORD_CHARACTER_RULES = [
-  { label: 'Uppercase', enabled: true },
-  { label: 'Lowercase', enabled: true },
-  { label: 'Numbers', enabled: true },
-  { label: 'Symbols', enabled: true },
-] as const
-
-const COMPLIANCE_STANDARDS = [
-  { name: 'NIST SP 800-63B', compliant: true },
-  { name: 'OWASP ASVS L2', compliant: true },
-  { name: 'PCI DSS 4.0', compliant: true },
-  { name: 'Microsoft Entra ID', compliant: true },
-  { name: 'CIS Controls', compliant: false },
 ] as const
 
 export function AuthSecurityVisual() {
@@ -83,92 +68,28 @@ export function AuthSecurityVisual() {
       </div>
 
       <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
-        <div className="overflow-hidden rounded-xl border border-border bg-card/50 md:col-span-2 xl:col-span-2">
-          <div className="border-b border-border px-4 py-3">
-            <p className="text-[13px] font-semibold text-foreground">Password strength</p>
-            <p className="mt-1 text-[12px] leading-5 text-muted-foreground">
-              Presets, minimum length, character rules, and compliance against common standards.
-            </p>
+        <div className="rounded-xl border border-border bg-card/50 p-4">
+          <p className="text-[12px] font-semibold text-foreground">Password policies</p>
+          <p className="mt-1 text-[11px] leading-5 text-muted-foreground">
+            Strength presets, compliance checks, and reuse rules.
+          </p>
+          <div className="mt-3 space-y-2">
+            <MockSwitchRow label="Dictionary check" checked />
+            <MockSwitchRow label="Personal data check" checked />
           </div>
-
-          <div className="grid divide-y border-border md:grid-cols-2 md:divide-x md:divide-y-0">
-            <div className="space-y-3 p-4">
-              <div>
-                <p className="text-[11px] font-medium text-muted-foreground">Preset</p>
-                <div className="mt-1.5 flex items-center justify-between gap-2 rounded-lg border border-foreground/10 bg-muted/40 px-3 py-2">
-                  <span className="text-[12px] font-medium text-foreground">Strong</span>
-                  <span className="text-[10px] text-muted-foreground">12 chars, all types</span>
-                </div>
-              </div>
-
-              <div>
-                <p className="text-[11px] font-medium text-muted-foreground">Minimum length</p>
-                <p className="mt-1 text-[13px] font-semibold text-foreground">12 characters</p>
-              </div>
-
-              <div>
-                <p className="text-[11px] font-medium text-muted-foreground">
-                  Required character types
-                </p>
-                <div className="mt-1.5 flex flex-wrap gap-1.5">
-                  {PASSWORD_CHARACTER_RULES.map((rule) => (
-                    <Badge
-                      key={rule.label}
-                      variant={rule.enabled ? 'success' : 'inactive'}
-                      className="text-[10px]"
-                    >
-                      {rule.label}
-                    </Badge>
-                  ))}
-                </div>
-              </div>
-
-              <div className="space-y-2 border-t border-border pt-3">
-                <MockSwitchRow label="Dictionary check" description="Block common passwords" checked />
-                <MockSwitchRow
-                  label="Personal data check"
-                  description="Reject passwords with user info"
-                  checked
-                />
-                <div className="flex flex-wrap gap-1.5 pt-0.5">
-                  <Badge variant="inactive" className="text-[10px]">
-                    History: 5 passwords
-                  </Badge>
-                </div>
-              </div>
-            </div>
-
-            <div className="p-4">
-              <div className="flex flex-wrap items-center gap-2">
-                <p className="text-[12px] font-semibold text-foreground">Compliance</p>
-                <Badge variant="success" className="text-[10px]">
-                  4/5 compliant
-                </Badge>
-              </div>
-              <p className="mt-1 text-[11px] leading-5 text-muted-foreground">
-                Compare your policy against NIST, OWASP, PCI DSS, and other guidance.
-              </p>
-              <div className="mt-3 space-y-2">
-                {COMPLIANCE_STANDARDS.map((standard) => (
-                  <div
-                    key={standard.name}
-                    className="flex items-center justify-between gap-2 rounded-lg border border-border bg-background/80 px-2.5 py-2"
-                  >
-                    <span className="text-[11px] font-medium text-foreground">{standard.name}</span>
-                    {standard.compliant ? (
-                      <span className="inline-flex items-center gap-1 text-[10px] font-medium text-emerald-600 dark:text-emerald-400">
-                        <CheckCircle2 className="size-3" aria-hidden />
-                        Compliant
-                      </span>
-                    ) : (
-                      <Badge variant="warning" className="text-[10px]">
-                        Gap
-                      </Badge>
-                    )}
-                  </div>
-                ))}
-              </div>
-            </div>
+          <div className="mt-3 flex flex-wrap gap-1.5">
+            <Badge variant="inactive" className="text-[10px]">
+              Strong preset
+            </Badge>
+            <Badge variant="inactive" className="text-[10px]">
+              Min 12 chars
+            </Badge>
+            <Badge variant="inactive" className="text-[10px]">
+              History: 5
+            </Badge>
+            <Badge variant="success" className="text-[10px]">
+              4/7 compliant
+            </Badge>
           </div>
         </div>
 
@@ -181,9 +102,9 @@ export function AuthSecurityVisual() {
           </div>
         </div>
 
-        <div className="rounded-xl border border-border bg-card/50 p-4 md:col-span-2 xl:col-span-3">
+        <div className="rounded-xl border border-border bg-card/50 p-4 md:col-span-2 xl:col-span-1">
           <p className="text-[12px] font-semibold text-foreground">Auth methods</p>
-          <div className="mt-3 grid gap-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5">
+          <div className="mt-3 grid gap-2 sm:grid-cols-2 xl:grid-cols-1">
             {AUTH_METHODS.map((method) => {
               const Icon = method.icon
               return (

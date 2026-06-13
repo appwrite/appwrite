@@ -37,7 +37,7 @@ export const authProductFeatures: ProductFeatureContent[] = [
     id: 'security',
     title: 'Security policies you control',
     description:
-      'Fine-tune Auth from the Console Policies and Settings tabs. Set session length and limits, password strength presets with compliance checks, email signup rules, membership privacy, and which auth methods are enabled for your project.',
+      'Fine-tune Auth from the Console Policies and Settings tabs. Set session length and limits, password strength and history, email signup rules, membership privacy, and which auth methods are enabled for your project.',
     docsHref: '/docs/products/auth/security',
     docsLabel: 'Security docs',
     layout: 'stacked',

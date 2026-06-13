@@ -1,3 +1,5 @@
+import { ArrowUpRight } from 'lucide-react'
+import { Link } from '@tanstack/react-router'
 import {
   Accordion,
   AccordionContent,
@@ -6,9 +8,15 @@ import {
 } from '@/components/ui/accordion'
 import { MarketingSectionHeading } from './MarketingSections'
 
+export type MarketingFaqLink = {
+  label: string
+  href: string
+}
+
 export type MarketingFaqItem = {
   question: string
   answer: string
+  links?: MarketingFaqLink[]
 }
 
 type MarketingFaqSectionProps = {
@@ -42,7 +50,21 @@ export function MarketingFaqSection({
                   </span>
                 </AccordionTrigger>
                 <AccordionContent className="text-[13px] leading-6 text-muted-foreground">
-                  {item.answer}
+                  <p>{item.answer}</p>
+                  {item.links?.length ? (
+                    <div className="mt-3 flex flex-wrap gap-x-4 gap-y-2">
+                      {item.links.map((link) => (
+                        <Link
+                          key={link.href}
+                          to={link.href}
+                          className="inline-flex items-center gap-1 font-medium text-foreground transition-colors hover:text-muted-foreground"
+                        >
+                          {link.label}
+                          <ArrowUpRight className="size-3" aria-hidden />
+                        </Link>
+                      ))}
+                    </div>
+                  ) : null}
                 </AccordionContent>
               </AccordionItem>
             ))}

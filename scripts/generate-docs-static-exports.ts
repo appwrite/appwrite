@@ -1,6 +1,6 @@
 /**
- * Generates static docs exports for SEO and LLM crawlers.
- * Run: bun run scripts/generate-docs-static-exports.ts
+ * Generates static docs exports for SEO and LLM crawlers (llms.txt, llms-full.txt, sitemap.xml).
+ * Not part of the build. Run manually when docs change: bun run generate:docs-exports
  */
 import { mkdir, readFile, readdir, writeFile } from 'node:fs/promises'
 import { dirname, join, relative } from 'node:path'
