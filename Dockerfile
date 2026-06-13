@@ -40,18 +40,9 @@ FROM base AS final
 ENV NODE_ENV=production
 ENV PORT=3000
 
-# server.ts (Bun.serve) serves dist/client and the dist/server SSR handler
+# dist/ includes dist/server-bun.js (Bun entry bundled at build time from server.ts)
 COPY --from=build /app/dist/ dist
 COPY --from=prod-deps /app/node_modules/ node_modules
-COPY server.ts server.ts
-
-# WORKAROUND: server.ts imports a handful of modules from src/ at runtime that
-# aren't bundled into dist (marketing/prerender-paths, runtime-config-shared, and
-# their transitive imports). Cherry-picking individual files here is fragile —
-# every new local import in that tree silently breaks the production image while
-# dev/CI stay green. Until server.ts and its runtime deps are bundled into a
-# self-contained dist, copy the whole src/ tree so transitive imports resolve.
-COPY src/ src/
 
 EXPOSE 3000
-CMD ["bun", "run", "server.ts"]
+CMD ["bun", "run", "dist/server-bun.js"]

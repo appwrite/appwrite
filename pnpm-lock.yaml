@@ -239,6 +239,9 @@ importers:
       node-appwrite:
         specifier: ^20.2.1
         version: 20.3.0
+      pako:
+        specifier: ^2.1.0
+        version: 2.1.0
       prism-react-renderer:
         specifier: ^2.4.1
         version: 2.4.1(react@19.1.1)
