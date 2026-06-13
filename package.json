@@ -167,7 +167,7 @@
     "prettier": "^3.5.3",
     "sharp": "^0.34.5",
     "typescript": "^5.7.2",
-    "vite": "npm:rolldown-vite@latest",
+    "vite": "npm:rolldown-vite@7.3.1",
     "vite-plugin-devtools-json": "^1.0.0",
     "vitest": "^3.0.5",
     "vitest-mock-extended": "^3.1.0",
