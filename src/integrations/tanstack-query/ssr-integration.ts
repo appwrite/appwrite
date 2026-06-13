@@ -1,5 +1,4 @@
-import { dehydrate, hydrate } from '@tanstack/query-core'
-import type { QueryClient } from '@tanstack/react-query'
+import { dehydrate, hydrate, type QueryClient } from '@tanstack/react-query'
 import type { AnyRouter } from '@tanstack/react-router'
 
 /**
